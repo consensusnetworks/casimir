@@ -1,2 +1,3 @@
 # Casimir
-:space_invader:
+
+👾 Making human-to-chain interaction pleasant and secure
