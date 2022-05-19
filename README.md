@@ -12,8 +12,6 @@
 
 Casimir is an all-in-one platform that allows users to trade, stake and track their assets while holding their own keys. One of Casimir's primary objectives is to help crypto users get rewarded for participating-in and strengthening the networks they rely on – through easy staking to the most reliable (big and small) validators on PoS networks.
 
-**Supporting infrastructure:**
+**Supporting infrastructure and contracts:**
 - [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack)
-
-**Tokens and contracts:**
 - [🦮 NewFi](https://github.com/consensusnetworks/newfi)
