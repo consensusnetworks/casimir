@@ -1,6 +1,6 @@
 # Casimir
 
-![Discord](https://consensusnetworks-shields.herokuapp.com/discord/976524855279226880?logo=discord)
+[![Discord](https://consensusnetworks-shields.herokuapp.com/discord/976524855279226880?logo=discord)](https://discord.com/invite/Vy2b3gSZx8)
 [![GitHub discussions](https://consensusnetworks-shields.herokuapp.com/github/discussions/consensusnetworks/casimir)](https://github.com/consensusnetworks/casimir/discussions)
 [![GitHub issues](https://consensusnetworks-shields.herokuapp.com/github/issues/consensusnetworks/casimir)](https://github.com/consensusnetworks/casimir/issues)
 [![GitHub milestones](https://consensusnetworks-shields.herokuapp.com/github/milestones/all/consensusnetworks/casimir)](https://github.com/consensusnetworks/casimir/milestones)
@@ -14,7 +14,7 @@ Casimir is an all-in-one platform that allows users to trade, stake and track th
 
 ## Status
 
-Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked a few internal design and development resources below to show what's coming.
+Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked a few internal design and development resources below to show what's coming. [Join our discord](https://discord.com/invite/Vy2b3gSZx8) if you want to chat about the project!
 
 #### Design
 
