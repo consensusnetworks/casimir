@@ -22,7 +22,7 @@ Visit the design walk-through @ [🎨 Casimir Figma](https://www.figma.com/proto
 
 | [![Design walk-through](https://user-images.githubusercontent.com/32200924/169935678-7695b4dd-b186-459c-9823-7bdce8cc7ebb.png)](https://www.figma.com/proto/nJmTNPoWNuhEX0lS1FIIPQ/Casimir?node-id=427%3A29434&scaling=min-zoom&starting-point-node-id=427%3A29490) |
 | :--: |
-| Walk-through screenshot – click to launch full view in Figma |
+| Walk-through screenshot – click to launch the full view in Figma |
 
 #### Development
 
