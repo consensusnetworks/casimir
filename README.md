@@ -10,8 +10,6 @@
 
 Casimir is an all-in-one platform that allows users to trade, stake and track their assets while holding their own keys. One of Casimir's primary objectives is to reward crypto users for directly participating-in and strengthening the networks they rely on – by helping them stake directly to the most reliable (big and small) validators on PoS networks.
 
-**See supporting infrastructure and contracts @** [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more to come).
-
 ## Status
 
 Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked a few internal design and development resources below to share what we are working on.
@@ -21,3 +19,5 @@ Casimir is an early work-in-progress – we will share more of the codebase shor
 | [![Design walk-through](https://user-images.githubusercontent.com/32200924/169935678-7695b4dd-b186-459c-9823-7bdce8cc7ebb.png)](https://www.figma.com/proto/nJmTNPoWNuhEX0lS1FIIPQ/Casimir?node-id=427%3A29434&scaling=min-zoom&starting-point-node-id=427%3A29490) |
 | :--: |
 | Walk-through screenshot – click to launch in Figma! |
+
+**See supporting infrastructure and contracts @** [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more networks to come).
