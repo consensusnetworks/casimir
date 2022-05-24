@@ -14,7 +14,7 @@ Casimir is an all-in-one platform that allows users to trade, stake and track th
 
 ## Status
 
-Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked a few internal design and development resources below to show what's coming. [Join our discord](https://discord.com/invite/Vy2b3gSZx8) if you want to chat about the project!
+Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked a few internal design and development resources below to show what's coming. Feel free to [join our discord](https://discord.com/invite/Vy2b3gSZx8) if you want to discuss the project.
 
 #### Design
 
