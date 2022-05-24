@@ -26,7 +26,7 @@ Visit the design walk-through @ [🎨 Casimir Figma](https://www.figma.com/proto
 
 #### Development
 
-See the supporting infrastructure and contracts @ [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more networks to come).
+See the supporting infrastructure and contracts @ [💎 Ethereum Stack](https://github.com/consensusnetworks/ethereum-stack) and [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more networks to come).
 
 ## License
 
