@@ -14,7 +14,7 @@ Casimir is an all-in-one platform that allows users to trade, stake and track th
 
 Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked a few internal design and development resources below to share what we are working on.
 
-### Design
+#### Design
 
 Visit design walk-through @ [🎨 Casimir Figma](https://www.figma.com/proto/nJmTNPoWNuhEX0lS1FIIPQ/Casimir?node-id=427%3A29434&scaling=min-zoom&starting-point-node-id=427%3A29490) (screenshot below).
 
@@ -22,6 +22,6 @@ Visit design walk-through @ [🎨 Casimir Figma](https://www.figma.com/proto/nJm
 | :--: |
 | Walk-through screenshot – click to launch full view in Figma |
 
-### Development
+#### Development
 
 See supporting infrastructure and contracts @ [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more networks to come).
