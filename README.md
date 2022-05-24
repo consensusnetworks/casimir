@@ -12,4 +12,7 @@ Casimir is an all-in-one platform that allows users to trade, stake and track th
 
 **Supporting infrastructure and contracts:**
 - [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack)
-- [🦮 NewFi](https://github.com/consensusnetworks/newfi)
+
+## Status
+
+Casimir and its supporting projects are a work-in-progress – we will share more soon.
