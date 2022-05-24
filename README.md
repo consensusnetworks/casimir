@@ -18,10 +18,10 @@ Casimir is an all-in-one platform that allows users to trade, stake and track th
 Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked a few internal design and development resources below to share what we are working on.
 
 ### Design walk-through
-| [![Design walk-through](https://www.figma.com/proto/nJmTNPoWNuhEX0lS1FIIPQ/Casimir?node-id=427%3A29434&scaling=min-zoom&starting-point-node-id=427%3A29490)](https://www.figma.com/proto/nJmTNPoWNuhEX0lS1FIIPQ/Casimir?node-id=427%3A29434&scaling=min-zoom&starting-point-node-id=427%3A29490) |
-|--|
-| Design walk-through screenshot – click through the design in Figma to see more. |
 
-Open and walk-through the design in ![Figma](https://img.shields.io/badge/figma-%23F24E1E.svg?style=for-the-badge&logo=figma&logoColor=white)
+
+| [![Design walk-through](https://user-images.githubusercontent.com/32200924/169935678-7695b4dd-b186-459c-9823-7bdce8cc7ebb.png)](https://www.figma.com/proto/nJmTNPoWNuhEX0lS1FIIPQ/Casimir?node-id=427%3A29434&scaling=min-zoom&starting-point-node-id=427%3A29490) |
+|--|
+| Design walk-through screenshot – click through the design in ![Figma](https://img.shields.io/badge/figma-%23F24E1E.svg?style=for-the-badge&logo=figma&logoColor=white) to see more! |
 
 
