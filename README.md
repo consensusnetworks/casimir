@@ -18,7 +18,7 @@ Casimir is an early work-in-progress – we will share more of the codebase shor
 
 #### Design
 
-Visit design walk-through @ [🎨 Casimir Figma](https://www.figma.com/proto/nJmTNPoWNuhEX0lS1FIIPQ/Casimir?node-id=427%3A29434&scaling=min-zoom&starting-point-node-id=427%3A29490) (screenshot below).
+Visit the design walk-through @ [🎨 Casimir Figma](https://www.figma.com/proto/nJmTNPoWNuhEX0lS1FIIPQ/Casimir?node-id=427%3A29434&scaling=min-zoom&starting-point-node-id=427%3A29490) (screenshot below).
 
 | [![Design walk-through](https://user-images.githubusercontent.com/32200924/169935678-7695b4dd-b186-459c-9823-7bdce8cc7ebb.png)](https://www.figma.com/proto/nJmTNPoWNuhEX0lS1FIIPQ/Casimir?node-id=427%3A29434&scaling=min-zoom&starting-point-node-id=427%3A29490) |
 | :--: |
@@ -26,7 +26,7 @@ Visit design walk-through @ [🎨 Casimir Figma](https://www.figma.com/proto/nJm
 
 #### Development
 
-See supporting infrastructure and contracts @ [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more networks to come).
+See the supporting infrastructure and contracts @ [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more networks to come).
 
 ## License
 
