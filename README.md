@@ -29,5 +29,6 @@ See the supporting infrastructure and contracts @ [💎 Ethereum Stack](https://
 ## License
 
 This respository is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
 
