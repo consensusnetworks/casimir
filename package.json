@@ -1,0 +1,19 @@
+{
+  "name": "casimir",
+  "version": "0.0.1",
+  "description": "Decentralized staking and asset management",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/consensusnetworks/casimir.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/consensusnetworks/casimir/issues"
+  },
+  "homepage": "https://github.com/consensusnetworks/casimir#readme"
+}
