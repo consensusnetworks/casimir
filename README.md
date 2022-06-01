@@ -25,6 +25,8 @@ Visit the design walk-through @ [🎨 Casimir Figma](https://www.figma.com/proto
 
 ### Development
 
+See ongoing tasks @ [📋 Casimir Project](https://github.com/orgs/consensusnetworks/projects/9/views/1?visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C%22Labels%22%2C%22Repository%22%2C%22Milestone%22%5D).
+
 See the supporting infrastructure and contracts @ [💎 Ethereum Stack](https://github.com/consensusnetworks/ethereum-stack) and [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more networks to come).
 
 ## License
