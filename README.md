@@ -13,7 +13,7 @@ Casimir is an all-in-one platform that allows users to trade, stake and track th
 
 ## Status
 
-Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked a few internal design and development resources below to show what's coming. Feel free to [join our discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
+Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked a few internal design and development resources below to show what's coming. Feel free to join [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
 
 ### Design
 
@@ -25,7 +25,7 @@ Visit the design walk-through @ [🎨 Casimir Figma](https://www.figma.com/proto
 
 ### Development
 
-See ongoing tasks @ [📋 Casimir Project](https://github.com/orgs/consensusnetworks/projects/9/views/1?visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C%22Labels%22%2C%22Repository%22%2C%22Milestone%22%5D).
+See ongoing tasks @ [📋 Casimir Project](https://github.com/orgs/consensusnetworks/projects/9/views/1).
 
 See the supporting infrastructure and contracts @ [💎 Ethereum Stack](https://github.com/consensusnetworks/ethereum-stack) and [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more networks to come).
 
