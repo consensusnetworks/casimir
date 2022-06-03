@@ -2,7 +2,12 @@
   "name": "casimir",
   "version": "0.0.1",
   "description": "Decentralized staking and asset management",
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
+    "dev": "npm run dev --workspace @casimir/website",
+    "lint": "eslint --ext .vue,.ts ./ --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -15,5 +20,33 @@
   "bugs": {
     "url": "https://github.com/consensusnetworks/casimir/issues"
   },
-  "homepage": "https://github.com/consensusnetworks/casimir#readme"
+  "homepage": "https://github.com/consensusnetworks/casimir#readme",
+  "devDependencies": {
+    "@types/node": "^17.0.38",
+    "@typescript-eslint/eslint-plugin": "^5.27.0",
+    "@typescript-eslint/parser": "^5.27.0",
+    "@vue/eslint-config-typescript": "^10.0.0",
+    "eslint": "^8.16.0",
+    "eslint-plugin-vue": "^8.7.1",
+    "lint-staged": "^13.0.0",
+    "release-it": "^15.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,vue}": "npm run lint"
+  },
+  "release-it": {
+    "npm": {
+      "publish": false
+    },
+    "github": {
+      "release": true
+    },
+    "git": {
+      "changelog": "npx auto-changelog --stdout --commit-limit false --unreleased --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs",
+      "commitMessage": "Release v${version} (skip deploy)"
+    },
+    "hooks": {
+      "after:bump": "npx auto-changelog -p"
+    }
+  }
 }

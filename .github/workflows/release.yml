@@ -1,0 +1,138 @@
+name: Release
+on:
+  push:
+    tags: [v*]
+
+env:
+  PROJECT: casimir
+  STAGE: prod
+  AWS_REGION: us-east-2
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Get the tag name
+        run: |
+          echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Set the tag name for testing
+        if: ${{ github.actor == 'nektos/act' }}
+        run: |
+          echo "TAG=v0.0.0-test" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Build and deploy email templates
+        run: npm run deploy:templates
+
+      - name: Build and deploy website
+        run: npm run deploy
+
+      - name: Sync released version files to develop
+        if: ${{ github.actor != 'nektos/act' }}
+        run: |
+          git config --global user.name 'robosupport'
+          git config --global user.email 'support@consensusnetworks.com'
+          git fetch
+          git checkout $TARGET_BRANCH
+          git checkout ${GITHUB_REF##*/} -- package.json package-lock.json CHANGELOG.md
+          git add -A
+          git diff-index --quiet HEAD ||  git commit -am "Sync released version files (skip deploy)"
+          git push origin $TARGET_BRANCH
+        env:
+          TARGET_BRANCH: develop
+
+      - name: Set deployment outputs
+        run: |
+          export "STACK_KEY=${PROJECT^}${SERVICE^}Stack${STAGE^}"
+          export "DNS_KEY=${PROJECT^}${SERVICE^}DnsName${STAGE^}"
+          export "ARN_KEY=${PROJECT^}${SERVICE^}StackId${STAGE^}"
+          echo "WEBSITE_DNS=$(cat cdk-outputs.json | jq -r --arg stack_key "$STACK_KEY" --arg dns_key "$DNS_KEY" '.[$stack_key][$dns_key]')" >> $GITHUB_ENV
+          echo "WEBSITE_ARN=$(cat cdk-outputs.json | jq -r --arg stack_key "$STACK_KEY" --arg arn_key "$ARN_KEY" '.[$stack_key][$arn_key]')" >> $GITHUB_ENV
+        env:
+          SERVICE: website
+
+      - name: Select success emoji
+        if: ${{ success() }}
+        run: echo 'EMOJI=:rocket:' >> $GITHUB_ENV
+
+      - name: Select failure emoji
+        if: ${{ failure() }}
+        run: echo 'EMOJI=:see_no_evil:' >> $GITHUB_ENV
+
+      - name: Notify slack
+        if: ${{ success() || failure() }}
+        uses: slackapi/slack-github-action@v1.18.0
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": ":trumpet: Production Release → :space_invader: Casimir"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Release* · <https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG }}|${{ env.TAG }}>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment* · <https://${{ env.AWS_REGION }}.console.aws.amazon.com/cloudformation/home?region=${{ env.AWS_REGION }}#/stacks/stackinfo?stackId=${{ env.WEBSITE_ARN }}|${{ env.STAGE }}>"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Deployment completed with _${{ job.status }}_ ${{ env.EMOJI }}"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View",
+                        "emoji": true
+                      },
+                      "style": "primary",
+                      "value": "view",
+                      "url": "https://casimir.co"
+                    },
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "Inspect Logs",
+                        "emoji": true
+                      },
+                      "value": "inspect_logs",
+                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

@@ -11,9 +11,13 @@
 
 Casimir is an all-in-one platform that allows users to trade, stake and track their assets while holding their own keys. One of Casimir's primary objectives is to reward crypto users for directly participating-in and strengthening the networks they rely on – by helping them stake directly to the most reliable (big and small) validators on PoS networks.
 
+See ongoing tasks @ [📋 Casimir Project](https://github.com/orgs/consensusnetworks/projects/9/views/1).
+
+See the supporting infrastructure and contracts @ [💎 Ethereum Stack](https://github.com/consensusnetworks/ethereum-stack) and [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more networks to come).
+
 ## Status
 
-Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked a few internal design and development resources below to show what's coming. Feel free to join @ [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
+Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked an internal design resource below to show what's coming. Feel free to join @ [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
 
 ### Design
 
@@ -23,11 +27,42 @@ Visit the design walk-through @ [🎨 Casimir Figma](https://www.figma.com/proto
 | :--: |
 | Walk-through screenshot – click to launch the full view in Figma |
 
-### Development
+## Setup
 
-See ongoing tasks @ [📋 Casimir Project](https://github.com/orgs/consensusnetworks/projects/9/views/1).
+Get started contributing to Casimir.
 
-See the supporting infrastructure and contracts @ [💎 Ethereum Stack](https://github.com/consensusnetworks/ethereum-stack) and [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more networks to come).
+### Prerequisites
+
+Make sure your development environment has the necessary prerequisites.
+
+1. [Node.js (v16.x)](https://nodejs.org/en/download/) – we use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
+
+2. [VSCode](https://code.visualstudio.com/) – you could also use another editor, but this helps us guarantee linter/formatter features.
+
+3. [AWS CLI](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
+
+### Install
+
+Clone the repository, checkout a new branch from develop, and install all dependencies.
+
+```zsh
+git clone https://github.com/consensusnetworks/casimir.git
+cd casimir
+git checkout -b feature/stake-button develop
+npm install
+```
+
+> This will install all workspace dependencies for this monorepo.
+
+## 💻 Development
+
+Run the development server for the default application ([apps/website](apps/website/) in this case) and backend services.
+
+```zsh
+npm run dev
+```
+
+> This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile.
 
 ## License
 

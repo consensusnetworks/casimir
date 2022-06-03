@@ -1,0 +1,31 @@
+name: Promote
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  promote:
+    name: Promote
+    runs-on: ubuntu-latest
+
+    # Skip any pushes with commit flag '(skip deploy)'
+    if: ${{ !contains(github.event.head_commit.message, '(skip deploy)') }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: master
+          token: ${{ github.token }}
+      - name: Reset promotion branch
+        run: |
+          git fetch origin develop:develop
+          git reset --hard develop
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          branch: develop
+          reviewers: robosupport
+          token: ${{ github.token }}
+          title: "Promote develop to master"

@@ -1,0 +1,22 @@
+name: Pull request
+
+on:
+  pull_request:
+    branches:
+      - master
+      - develop
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Test resources
+        run: |
+          npm install
+          npm run build
+          npm run test
+        working-directory: infrastructure/cdk

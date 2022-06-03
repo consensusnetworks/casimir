@@ -1,0 +1,8 @@
+.env
+__pycache__
+.secrets
+.DS_Store
+node_modules
+template.out
+aws.env
+*.log
