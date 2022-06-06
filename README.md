@@ -17,15 +17,7 @@ See the supporting infrastructure and contracts @ [💎 Ethereum Stack](https://
 
 ## Status
 
-Casimir is an early work-in-progress – we will share more of the codebase shortly. In the meantime, we linked an internal design resource below to show what's coming. Feel free to join @ [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
-
-### Design
-
-Visit the design walk-through @ [🎨 Casimir Figma](https://www.figma.com/proto/nJmTNPoWNuhEX0lS1FIIPQ/Casimir?node-id=427%3A29434&scaling=min-zoom&starting-point-node-id=427%3A29490) (screenshot below).
-
-| [![Design walk-through](https://user-images.githubusercontent.com/32200924/169935678-7695b4dd-b186-459c-9823-7bdce8cc7ebb.png)](https://www.figma.com/proto/nJmTNPoWNuhEX0lS1FIIPQ/Casimir?node-id=427%3A29434&scaling=min-zoom&starting-point-node-id=427%3A29490) |
-| :--: |
-| Walk-through screenshot – click to launch the full view in Figma |
+Casimir is an early work-in-progress – we will share more information in the initial version of our [website](apps/website/). In the meantime, feel free to join @ [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
 
 ## Setup
 
