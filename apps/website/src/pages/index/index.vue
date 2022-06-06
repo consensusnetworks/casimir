@@ -1,9 +1,11 @@
 <template>
   <div>
-    <span>Hello, world</span>
+    <section class="mt-6 flex">
+      <span class="m-auto">Hello, world</span>
+    </section>
   </div>
 </template>
 
 <script lang="ts" setup>
-console.log('Hello, Steve')
+console.log('Hello, world')
 </script>
