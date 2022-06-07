@@ -48,5 +48,8 @@
     "hooks": {
       "after:bump": "npx auto-changelog -p"
     }
+  },
+  "dependencies": {
+    "@heroicons/vue": "^1.0.6"
   }
 }
