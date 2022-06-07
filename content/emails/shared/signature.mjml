@@ -1,0 +1,6 @@
+<mj-section>
+  <mj-column>
+    <mj-text font-size="14px" font-family="Inter">Happy hodling,</mj-text>
+    <mj-text font-size="20px" color="#F36F38" font-family="Inter">The Casimir Team</mj-text>
+  </mj-column>
+</mj-section>

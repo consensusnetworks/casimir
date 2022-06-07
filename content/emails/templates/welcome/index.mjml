@@ -1,0 +1,28 @@
+<mjml>
+  <mj-head>
+    <mj-title>Casimir</mj-title>
+    <mj-font name="Inter" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"></mj-font>
+  </mj-head>
+  <mj-body>
+
+    <mj-section>
+      <mj-column>
+        <mj-image width="500px" src="../../shared/header.svg"></mj-image>
+        <mj-divider border-color="#000000"></mj-divider>
+        <mj-text font-size="32px" font-weight="600" color="#000000" font-family="Inter">Welcome to Casimir</mj-text>
+        <mj-text font-size="14px" font-family="Inter">You'll be the first to hear updates from us as we prepare to launch the Casimir platform.</mj-text>
+
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+        <mj-button font-size="20px" font-family="Inter" background-color="#F36F38" href="https://casimir.co/blog">Explore our content</mj-button>
+      </mj-column>
+    </mj-section>
+    
+    <mj-include path="../../shared/signature.mjml"></mj-include>
+    <mj-include path="../../shared/footer.mjml"></mj-include>
+
+  </mj-body>
+</mjml>

@@ -1,0 +1,13 @@
+<mj-section background-color="#f5f5f5">
+  <mj-column>
+    <mj-text font-family="Inter">
+      <a href="https://discord.gg/4vZXQmf6mT"><img src="https://casimir.co/discord.svg" width="24px" /></a>
+      <a href="https://twitter.com/casimir"><img src="https://casimir.co/twitter.svg" width="24px" /></a>
+    </mj-text>
+    <mj-text font-size="12px" font-family="Inter">
+        <a href="https://casimir.co/privacy">Privacy</a>
+        <a href="https://casimir.co/terms">Terms</a>
+        <a ses:tags="unsubscribeLinkTag:click;" href="https://casimir.co/unsubscribe">Unsubscribe</a>
+    </mj-text>
+  </mj-column>
+</mj-section>

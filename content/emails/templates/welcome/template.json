@@ -1,0 +1,9 @@
+{
+  "TemplateName": "%name%",
+  "EmailTemplateRequest": {
+    "Subject": "Welcome to Casimir",
+    "TemplateDescription": "Welcome email for new user",
+    "TextPart": "%text%",
+    "HtmlPart": "%html%"
+  }
+}
