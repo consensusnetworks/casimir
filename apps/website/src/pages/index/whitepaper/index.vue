@@ -9,7 +9,7 @@ import { ArrowLeftIcon , DownloadIcon } from '@heroicons/vue/outline'
       <img
         src="blob.svg"
         alt=""
-        class="absolute -top-20 right-0 -z-4 w-[75%]"
+        class="absolute -top-20 right-0 -z-1 w-[75%]"
       >
     </div>
     <div class="bg-black px-[50px] py-[100px] text-white">

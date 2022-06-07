@@ -3,42 +3,46 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
 </script>
 
 <template>
-  <div>
-    <div class="grid grid-cols-2 gap2">
-      <div class="pl-[100px] pt-[80px] pb-[50px] max-w-[560px]">
-        <button 
-          class="flex bg-[#F36F38]/[0.13] hover:bg-[#F36F38]/[0.25] py-1 rounded-3xl text-[#F36F38] w-[270px] text-sm"
-          @click="$router.push('/whitepaper')"
-        >
-          <span class="bg-white px-4 rounded-3xl mr-2 ml-1">Casimir</span>
-          Read the whitepaper
-          <ArrowRightIcon class="w-[15px] h-[20px] mx-2" />
-        </button>
-        <h1 class="header-text text-[#101828] my-4">
-          Infrastructure to manage your digital assets
-        </h1>
-        <span class="body-text text-[#667085]">
-          Non-custodial cross chain staking platform with high performing validators and nodes
-        </span>
-
-        <div class="mt-10 grid grid-cols-5 gap-2 ">
-          <input
-            type="text"
-            placeholder="Enter your email"
-            class="border border-[#D0D5DD] rounded-md px-4 py-2 col-span-3 input-text text-[#F36F38]"
+  <div class="pb-[50px]">
+    <div class="flex flex-row flex-wrap">
+      <div class="pl-[100px] pt-[80px] pb-[50px] pr-[10px] basis-1/2 ">
+        <div class="max-w-[560px]">
+          <button 
+            class="flex bg-[#F36F38]/[0.13] hover:bg-[#F36F38]/[0.25] py-1 rounded-3xl text-[#F36F38] w-[270px] text-sm"
+            @click="$router.push('/whitepaper')"
           >
-          <button class="bg-[#F36F38] button-text text-white py-2 px-4 rounded-md w-[130px] hover:bg-[#F36F38]/[.75]">
-            Get Started
+            <span class="bg-white px-4 rounded-3xl mr-2 ml-1">Casimir</span>
+            Read the whitepaper
+            <ArrowRightIcon class="w-[15px] h-[20px] mx-2" />
           </button>
+          <h1 class="header-text text-[#101828] my-4">
+            Infrastructure to manage your digital assets
+          </h1>
+          <span class="body-text text-[#667085]">
+            Non-custodial cross chain staking platform with high performing validators and nodes
+          </span>
+
+          <div class="mt-10 grid grid-cols-5 gap-2 ">
+            <input
+              type="text"
+              placeholder="Enter your email"
+              class="border border-[#D0D5DD] rounded-md px-4 py-2 col-span-3 input-text text-[#F36F38]"
+            >
+            <button class="bg-[#F36F38] button-text text-white py-2 px-4 rounded-md w-[130px] hover:bg-[#F36F38]/[.75]">
+              Get Started
+            </button>
+          </div>
+          <span class="small-text text-[#667085]"> We won't spam you, promise</span>
         </div>
-        <span class="small-text text-[#667085]"> We won't spam you, promise</span>
       </div>
-      <div class="linear-bg relative shrink overflow-hidden">
-        <img
-          src="web-demo.svg"
-          alt=""
-          class="absolute bottom-0 right-0 w-[70%]"
-        >
+      <div class="basis-1/2">
+        <div class="linear-bg w-full h-full pt-[30%] pl-[30%]">
+          <img
+            src="web-demo.svg"
+            alt=""
+            class="float-right h-[100%]"
+          >
+        </div>
       </div>
     </div>
     <div class="flex-row mt-[40px] body-text text-center">

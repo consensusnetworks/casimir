@@ -5,9 +5,11 @@ module.exports = {
     theme: {
         extend: {
             colors: {},
-            fontFamily: {
-                // 'main': ['Inter', 'sans-serif'],
-            }
+            screens: {
+                'laptop': '450px',
+                'tablet': '450px',
+                'mobile': '450px'
+            },
         }
     },
     plugins: []
