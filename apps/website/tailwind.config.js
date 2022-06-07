@@ -6,7 +6,7 @@ module.exports = {
         extend: {
             colors: {},
             fontFamily: {
-                'sans': ['open Sauce One']
+                // 'main': ['Inter', 'sans-serif'],
             }
         }
     },
