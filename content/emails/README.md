@@ -20,8 +20,8 @@ Install and enable the [MJML VSCode extension](https://marketplace.visualstudio.
     {
         "TemplateName": "%name%",
         "EmailTemplateRequest": {
-            "Subject": "<your-subject>",
-            "TemplateDescription": "<your-description>",
+            "Subject": "your-subject",
+            "TemplateDescription": "your-description",
             "TextPart": "%text%",
             "HtmlPart": "%html%"
         }
