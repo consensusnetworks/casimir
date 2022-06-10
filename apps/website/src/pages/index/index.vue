@@ -38,7 +38,7 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
       <div class="basis-1/2">
         <div class="linear-bg w-full h-full pt-[30%] pl-[30%]">
           <img
-            src="web-demo.svg"
+            src="/web-demo.svg"
             alt=""
             class="float-right h-[100%]"
           >
@@ -53,7 +53,7 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
           target="_blank"
         >
           <img
-            src="cosmos.svg"
+            src="/cosmos.svg"
             alt=""
             class="h-[25px]"
           >
@@ -63,7 +63,7 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
           target="_blank"
         >
           <img
-            src="iotex.svg"
+            src="/iotex.svg"
             alt=""
             class="h-[25px]"
           >
@@ -73,7 +73,7 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
           target="_blank"
         >
           <img
-            src="livepeer.svg"
+            src="/livepeer.svg"
             alt=""
             class="h-[25px]"
           >
@@ -83,7 +83,7 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
           target="_blank"
         >
           <img
-            src="kava.png"
+            src="/kava.png"
             alt=""
             class="h-[25px]"
           >
@@ -93,7 +93,7 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
           target="_blank"
         >
           <img
-            src="p.svg"
+            src="/p.svg"
             alt=""
             class="h-[25px]"
           >
@@ -103,7 +103,7 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
           target="_blank"
         >
           <img
-            src="factom.svg"
+            src="/factom.svg"
             alt=""
             class="h-[25px]"
           >

@@ -33,11 +33,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Build and deploy email templates
-        run: npm run deploy:templates
-
       - name: Build and deploy website
         run: npm run deploy
+
+      - name: Build and deploy email templates
+        run: npm run deploy:templates
 
       - name: Sync released version files to develop
         if: ${{ github.actor != 'nektos/act' }}

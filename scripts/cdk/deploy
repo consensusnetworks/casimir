@@ -1,0 +1,36 @@
+#!/bin/sh
+# Deploy CDK app to a cluster
+#
+# Example:
+#
+#    scripts/cdk/deploy -d ./path/to/cdk-directory
+#
+# Further information:
+# See https://docs.aws.amazon.com/cdk/api/v2/docs/aws-construct-library.html
+#
+
+# Get args
+while getopts d: flag
+do
+    case "${flag}" in
+        d) DIRECTORY=${OPTARG};;
+    esac
+done
+
+if [ -z "$(ls -A $DIRECTORY)" ]; then
+    echo "⚠️ CDK source directory is empty"
+else
+    echo "🚀 Deploying CDK app"
+    OUT_DIR=$(pwd)/cdk-outputs.json
+    cd $DIRECTORY
+    npm install
+    npm run cdk bootstrap
+    npm run cdk synth
+    npm run cdk diff
+    npm run cdk deploy -- --all --require-approval never --outputs-file $OUT_DIR
+fi
+
+
+
+
+
