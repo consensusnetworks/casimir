@@ -8,7 +8,7 @@
       .vector-position {
         position: absolute;
         top: 40px;
-        left: 405px;
+        left: 65px;
       }
       .float-right {
        float: right;
