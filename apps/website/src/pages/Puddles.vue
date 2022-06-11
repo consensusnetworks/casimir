@@ -15,8 +15,8 @@ onMounted(() => {
     })
     const randomPuddle = Math.floor(Math.random() * puddleStyles.value.length)
     puddleStyles.value[randomPuddle] = {
-      'fill': 'rgba(249, 158, 76, 0.80)',
-      'filter': 'drop-shadow( 12px 0px 2px rgba(0, 0, 0, .45))',
+      'fill': 'rgba(249, 158, 76, 10)',
+      'filter': 'drop-shadow( 12px 0px 2px rgba(0, 0, 0, .65))',
       'transition': ' all 3.5s ease-out',
     }
   }, 3000)
@@ -393,7 +393,9 @@ onMounted(() => {
   0% {
     opacity: 0;
   }
-
+  25% {
+    opacity: 1;
+  }
   100% {
     opacity: 1;
   }
