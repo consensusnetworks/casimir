@@ -17,6 +17,8 @@ async function onSubmit() {
   try {
     email.value = ''
     // Change success message display to show
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     document.getElementById('success-message').style.display = 'block'
     const response = await fetch(`${baseUrl}/api/users/signup`, requestOptions)
     console.log('response :>> ', response)
@@ -27,6 +29,8 @@ async function onSubmit() {
 }
 
 const hideSuccessMessage = () => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   document.getElementById('success-message').style.display = 'none'
 }
 
@@ -107,7 +111,7 @@ onMounted(() => {
         </form>
       </div>
       <div class="basis-1/2 relative">
-        <Puddles class="absolute right-0 top-0" />
+        <Puddles class="absolute right-[-300px] top-[-200px]" />
       </div>
     </div>
     <div class="w-full h-[400px] relative my-[100px]">

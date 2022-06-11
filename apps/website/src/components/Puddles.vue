@@ -29,12 +29,18 @@ onMounted(() => {
 <template>
   <div>
     <svg
-      width="650"
-      height="470"
+      width="1010"
+      height="770"
       viewBox="0 0 2530 1460"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
+      <circle
+        r="72.5557"
+        transform="matrix(0.317039 0.682961 -1.18303 -0.183027 9055.17 99.1054)"
+        :style="{'filter': 'red'}"
+        class="puddle-animation"
+      />
       <circle
         r="72.5557"
         transform="matrix(0.317039 0.682961 -1.18303 -0.183027 1055.17 99.1054)"
