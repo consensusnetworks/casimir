@@ -1,6 +1,6 @@
 {
   "name": "casimir",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "Decentralized staking and asset management",
   "workspaces": [
     "apps/*",
@@ -51,11 +51,13 @@
       "publish": false
     },
     "github": {
+      "tagName": "v${version}",
+      "releaseName": "v${version}",
       "release": true
     },
     "git": {
       "changelog": "npx auto-changelog --stdout --commit-limit false --unreleased --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs",
-      "commitMessage": "Release v${version} (skip deploy)"
+      "commitMessage": "Release v${version}"
     },
     "hooks": {
       "after:bump": "npx auto-changelog -p"

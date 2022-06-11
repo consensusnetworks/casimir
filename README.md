@@ -17,7 +17,7 @@ See the supporting infrastructure and contracts @ [💎 Ethereum Stack](https://
 
 ## Status
 
-Casimir is an early work-in-progress – we will share more information in the initial version of our [website](apps/website/). In the meantime, feel free to join @ [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
+Casimir is an early work-in-progress – check out our website for more information about what we're building. Also, in the meantime, feel free to join @ [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
 
 ## Setup
 
