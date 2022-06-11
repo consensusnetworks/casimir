@@ -22,7 +22,7 @@
     <mj-wrapper background-color="#fff" padding="0 0">
 
       <!-- HEADER -->
-      <mj-section background-color="rgb(196, 196, 196, 0.25)" background-size="cover" padding-bottom="70px">
+      <mj-section background-color="rgba(196, 196, 196, 0.25)" background-size="cover" padding-bottom="70px">
         <mj-column width="600px" padding="10px 30px">
           <mj-text align="left" font-size="40px" height="25px" font-weight="500" font-family="Poppins, sans-serif">Casimir</mj-text>
           <mj-text align="left" font-size="20px" font-weight="400" font-family="Poppins, sans-serif">Welcome on board</mj-text>
@@ -38,7 +38,7 @@
       </mj-section>
 
       <!-- ACTION BANNER -->
-      <mj-section  background-color="rgb(249, 158, 76, 0.25)">
+      <mj-section  background-color="rgba(249, 158, 76, 0.25)">
         <mj-column css-class="">
           <mj-image width="200px" src="../../shared/assets/whitepaper-sc.png"></mj-image>
         </mj-column>
@@ -48,7 +48,7 @@
         <mj-column>
           <mj-text font-size="22px" font-weight="700" font-family="Inter">Read The Whitepaper</mj-text>
           <mj-text font-family="Inter" font-weight="400" font-size="14px" >Learn our process and what makes us stand out!</mj-text>
-          <mj-button width="100%" background-color="rgb(249, 158, 76, 1)" border-radius="5px" font-size="20px" font-weight="500" href="https://casimir.co/whitepaper" targer="_blank">
+          <mj-button width="100%" background-color="rgba(249, 158, 76, 1)" border-radius="5px" font-size="20px" font-weight="500" href="https://casimir.co/whitepaper" target="_blank">
             WHITEPAPER
           </mj-button>
         </mj-column>

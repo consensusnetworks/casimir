@@ -37,9 +37,7 @@ export class UsersStack extends Stack {
             code: lambda.Code.fromAsset('../../services/users/dist'),
             environment: {
                 PROJECT: process.env.PROJECT as string,
-                STAGE: process.env.STAGE as string,
-                AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID as string,
-                AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY as string
+                STAGE: process.env.STAGE as string
             }
         })
 
