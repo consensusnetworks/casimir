@@ -1,0 +1,19 @@
+{
+  "name": "@casimir/users",
+  "version": "0.0.1",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "npx esno index.ts",
+    "build": "esbuild index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@aws-sdk/client-pinpoint": "^3.95.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.97",
+    "@types/node": "^17.0.38",
+    "esbuild": "^0.14.42",
+    "esno": "^0.16.3"
+  }
+}

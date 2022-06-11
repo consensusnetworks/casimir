@@ -1,0 +1,26 @@
+#!/bin/sh
+# Destroy the CDK app from the CDK cluster
+#
+# Example:
+#
+#    scripts/cdk/destroy -d ./path/to/cdk-directory
+#
+# Further information:
+# See https://github.com/nektos/act
+#
+
+# Get args
+while getopts d: flag
+do
+    case "${flag}" in
+        d) DIRECTORY=${OPTARG};;
+    esac
+done
+
+if [ -z "$(ls -A $DIRECTORY)" ]; then
+    echo "⚠️ CDK source directory is empty"
+else
+    cd $DIRECTORY
+    npm install
+    npx cdk destroy '**' --force --require-approval never
+fi

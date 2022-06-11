@@ -1,12 +1,5 @@
-<template>
-  <Suspense>
-    <component :is="layout">
-      <RouterView />
-    </component>
-  </Suspense>
-</template>
-
 <script lang="ts" setup>
+
 import { useRoute, RouterView } from 'vue-router'
 import { ref, markRaw, watch } from 'vue'
 import DefaultLayout from '@/layouts/default-layout.vue'
@@ -21,4 +14,15 @@ watch(() => route.path, (value) => {
         layout.value = markRaw(DefaultLayout)
     }
 })
+
 </script>
+
+<template>
+  <Suspense>
+    <component :is="layout">
+      <RouterView />
+    </component>
+  </Suspense>
+</template>
+
+

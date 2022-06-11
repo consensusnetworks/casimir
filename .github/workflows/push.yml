@@ -16,7 +16,7 @@ jobs:
 
     # Skip any pushes with commit flag '(skip deploy)'
     # Comment out for testing
-    if: ${{ !contains(github.event.head_commit.message, '(skip deploy)') }}
+    # if: ${{ !contains(github.event.head_commit.message, '(skip deploy)') }}
 
     steps:
       - name: Check out the repo
@@ -25,7 +25,7 @@ jobs:
       - name: Set the stage for testing
         if: ${{ github.actor == 'nektos/act' }}
         run: |
-          echo "STAGE=dev" >> $GITHUB_ENV
+          echo "STAGE=prod" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -33,93 +33,108 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+        
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build common lib
+        run: npm run build
+        working-directory: common/lib
+
+      - name: Build website app
+        run: npm run build
+        working-directory: apps/website
+
+      - name: Build users service
+        run: npm run build
+        working-directory: services/users
+
+      - name: Deploy cdk infrastructure
+        run: npm run deploy
 
       - name: Build and deploy email templates
         run: npm run deploy:templates
-        
-      - name: Build and deploy stacks
-        run: npm run deploy
 
-      - name: Set deployment outputs
-        run: |
-          export "STACK_KEY=${PROJECT^}${SERVICE^}Stack${STAGE^}"
-          export "DNS_KEY=${PROJECT^}${SERVICE^}DnsName${STAGE^}"
-          export "ARN_KEY=${PROJECT^}${SERVICE^}StackId${STAGE^}"
-          echo "WEBSITE_DNS=$(cat cdk-outputs.json | jq -r --arg stack_key "$STACK_KEY" --arg dns_key "$DNS_KEY" '.[$stack_key][$dns_key]')" >> $GITHUB_ENV
-          echo "WEBSITE_ARN=$(cat cdk-outputs.json | jq -r --arg stack_key "$STACK_KEY" --arg arn_key "$ARN_KEY" '.[$stack_key][$arn_key]')" >> $GITHUB_ENV
-        env:
-          SERVICE: website
+      # - name: Set deployment outputs
+      #   run: |
+      #     export "STACK_KEY=${PROJECT^}${SERVICE^}Stack${STAGE^}"
+      #     export "DNS_KEY=${PROJECT^}${SERVICE^}DnsName${STAGE^}"
+      #     export "ARN_KEY=${PROJECT^}${SERVICE^}StackId${STAGE^}"
+      #     echo "WEBSITE_DNS=$(cat cdk-outputs.json | jq -r --arg stack_key "$STACK_KEY" --arg dns_key "$DNS_KEY" '.[$stack_key][$dns_key]')" >> $GITHUB_ENV
+      #     echo "WEBSITE_ARN=$(cat cdk-outputs.json | jq -r --arg stack_key "$STACK_KEY" --arg arn_key "$ARN_KEY" '.[$stack_key][$arn_key]')" >> $GITHUB_ENV
+      #   env:
+      #     SERVICE: website
 
-      - name: Select success emoji
-        if: ${{ success() }}
-        run: echo 'EMOJI=:rocket:' >> $GITHUB_ENV
+      # - name: Select success emoji
+      #   if: ${{ success() }}
+      #   run: echo 'EMOJI=:rocket:' >> $GITHUB_ENV
 
-      - name: Select failure emoji
-        if: ${{ failure() }}
-        run: echo 'EMOJI=:see_no_evil:' >> $GITHUB_ENV
+      # - name: Select failure emoji
+      #   if: ${{ failure() }}
+      #   run: echo 'EMOJI=:see_no_evil:' >> $GITHUB_ENV
 
-      - name: Notify slack
-        if: ${{ success() || failure() }}
-        uses: slackapi/slack-github-action@v1.18.0
-        with:
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": ":construction: Development Deployment → :space_invader: Casimir"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Branch* · <https://github.com/${{ github.repository }}/tree/${{ env.BRANCH }}|${{ env.BRANCH }}>"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Environment* · <https://${{ env.AWS_REGION }}.console.aws.amazon.com/cloudformation/home?region=${{ env.AWS_REGION }}#/stacks/stackinfo?stackId=${{ env.WEBSITE_ARN }}|${{ env.STAGE }}>"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Deployment completed with _${{ job.status }}_ ${{ env.EMOJI }}"
-                  }
-                },
-                {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "Preview",
-                        "emoji": true
-                      },
-                      "style": "primary",
-                      "value": "preview",
-                      "url": "http://${{ env.WEBSITE_DNS }}"
-                    },
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "Inspect Logs",
-                        "emoji": true
-                      },
-                      "value": "inspect_logs",
-                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                    }
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      # - name: Notify slack
+      #   if: ${{ success() || failure() }}
+      #   uses: slackapi/slack-github-action@v1.18.0
+      #   with:
+      #     payload: |
+      #       {
+      #         "blocks": [
+      #           {
+      #             "type": "header",
+      #             "text": {
+      #               "type": "plain_text",
+      #               "text": ":construction: Development Deployment → :space_invader: Casimir"
+      #             }
+      #           },
+      #           {
+      #             "type": "section",
+      #             "fields": [
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*Branch* · <https://github.com/${{ github.repository }}/tree/${{ env.BRANCH }}|${{ env.BRANCH }}>"
+      #               },
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*Environment* · <https://${{ env.AWS_REGION }}.console.aws.amazon.com/cloudformation/home?region=${{ env.AWS_REGION }}#/stacks/stackinfo?stackId=${{ env.WEBSITE_ARN }}|${{ env.STAGE }}>"
+      #               }
+      #             ]
+      #           },
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": "Deployment completed with _${{ job.status }}_ ${{ env.EMOJI }}"
+      #             }
+      #           },
+      #           {
+      #             "type": "actions",
+      #             "elements": [
+      #               {
+      #                 "type": "button",
+      #                 "text": {
+      #                   "type": "plain_text",
+      #                   "text": "Preview",
+      #                   "emoji": true
+      #                 },
+      #                 "style": "primary",
+      #                 "value": "preview",
+      #                 "url": "http://${{ env.WEBSITE_DNS }}"
+      #               },
+      #               {
+      #                 "type": "button",
+      #                 "text": {
+      #                   "type": "plain_text",
+      #                   "text": "Inspect Logs",
+      #                   "emoji": true
+      #                 },
+      #                 "value": "inspect_logs",
+      #                 "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      #               }
+      #             ]
+      #           }
+      #         ]
+      #       }
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #     SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

@@ -1,0 +1,81 @@
+<mjml background-color="#ffffff">
+  <mj-head>
+    <mj-font name="Inter" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+    <mj-attributes>
+      <mj-class name="primary" color="#F99E4C" />
+    </mj-attributes>
+    <mj-style>
+      .vector-position {
+        position: absolute;
+        top: 40px;
+        left: 405px;
+      }
+      .float-right {
+       float: right;
+      }
+      .float-left {
+        float: left;
+      }
+    </mj-style>
+  </mj-head>
+
+  <mj-body>
+    <mj-wrapper background-color="#fff" padding="0 0">
+
+      <!-- HEADER -->
+      <mj-section background-color="rgba(196, 196, 196, 0.25)" background-size="cover" padding-bottom="70px">
+        <mj-column width="600px" padding="10px 30px">
+          <mj-text align="left" font-size="40px" height="25px" font-weight="500" font-family="Poppins, sans-serif">Casimir</mj-text>
+          <mj-text align="left" font-size="20px" font-weight="400" font-family="Poppins, sans-serif">Welcome on board</mj-text>
+          <mj-image src="https://casimir.co/email-vector.svg" css-class="vector-position" alt="" />
+        </mj-column>
+      </mj-section>
+
+      <!-- BODY STATMENT -->
+      <mj-section padding="40px 0px">
+        <mj-column width="450px">
+          <mj-text color="#525252" font-family="Inter" align="center">Thanks for signing up! We are excited for you joining the Casamir community and keep an eye out for upcoming events.</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <!-- ACTION BANNER -->
+      <mj-section  background-color="rgba(249, 158, 76, 0.25)">
+        <mj-column css-class="">
+          <mj-image width="200px" src="https://casimir.co/whitepaper-sc.png"></mj-image>
+        </mj-column>
+        <mj-raw>
+          <!-- right paragraph -->
+        </mj-raw>
+        <mj-column>
+          <mj-text font-size="22px" font-weight="700" font-family="Inter">Read The Whitepaper</mj-text>
+          <mj-text font-family="Inter" font-weight="400" font-size="14px" >Learn our process and what makes us stand out!</mj-text>
+          <mj-button width="100%" background-color="rgba(249, 158, 76, 1)" border-radius="5px" font-size="20px" font-weight="500" href="https://casimir.co/whitepaper" target="_blank">
+            WHITEPAPER
+          </mj-button>
+        </mj-column>
+      </mj-section>
+
+
+        <!-- FOTTER -->
+      <mj-section padding="40px 10px 10px 10px">
+        <mj-column>
+          <mj-image width="35px" css-class="float-right" href="https://mobile.twitter.com/CasimirAssets" target="_blank" src="https://casimir.co/twitter-grey.png" />
+        </mj-column>
+        <mj-column>
+          <mj-image href="https://discord.gg/hkJD9gnN" target="_blank" width="35px" src="https://casimir.co/discord-grey.png" />
+        </mj-column>
+        <mj-column>
+          <mj-image href="https://github.com/consensusnetworks/casimir" css-class="float-left" target="_blank" width="35px" src="https://casimir.co/github-grey.png" />
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0px">
+        <mj-column width="30%"></mj-column>
+        <mj-column width="40%">
+          <mj-image src="https://casimir.co/copyright.png" />
+        </mj-column>
+        <mj-column width="30%"></mj-column>
+      </mj-section>
+    </mj-wrapper>
+  </mj-body>
+</mjml>

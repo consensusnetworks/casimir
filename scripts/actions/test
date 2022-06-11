@@ -1,0 +1,44 @@
+#!/bin/sh
+# Test the GitHub Actions workflows in `.github/workflows`
+#
+# Example:
+#
+#    scripts/actions/test -w workflow-to-test
+#
+# Further information:
+# See https://github.com/nektos/act
+#
+
+# Get args
+while getopts w: flag
+do
+    case "${flag}" in
+        w) WORKFLOW=${OPTARG};;
+    esac
+done
+
+# Create local env and secrets files
+touch .secrets
+
+# Set default profile and override if specified in .env 
+PROFILE=consensus-networks-dev
+export $(xargs < .env)
+
+echo "👾 Creating environment for '$PROFILE'"
+
+# From .env
+echo SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL >> .secrets
+
+# From AWS CLI
+echo AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id --profile $PROFILE) >> .secrets
+echo AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key --profile $PROFILE) >> .secrets
+
+# Run selected workflow
+echo "🚀 Running $WORKFLOW workflow"
+act $WORKFLOW \
+--rebuild \
+--secret-file .secrets \
+--verbose
+
+# Remove secrets
+rm -rf .secrets

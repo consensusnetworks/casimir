@@ -1,0 +1,52 @@
+#!/bin/sh
+# Mock AWS resources and run tests in localstack
+#
+# Example:
+#
+#    scripts/cdk/mock -d ./path/to/cdk-directory -s name-of-service (i.e. users)
+#
+# Further information:
+# See https://localstack.cloud/
+#
+
+# Set defaults
+profile="consensus-networks-dev"
+
+# Override PROFILE from .env if set
+export $(xargs < .env)
+if [ -n "$PROFILE" ]; then
+    profile=$PROFILE
+fi
+
+# Get args
+while getopts d:s: flag
+do
+    case "${flag}" in
+        d) DIRECTORY=${OPTARG};;
+        s) SERVICE=${OPTARG};;
+    esac
+done
+
+# Get variables from root .env
+export $(xargs < .env)
+
+if [ -z "$(ls -A $DIRECTORY)" ]; then
+    echo "⚠️ CDK source directory is empty"
+else
+    echo "🚀 Deploying local CDK app"
+    cd $DIRECTORY
+
+    # Get variables from cdk .env
+    export $(xargs < .env)
+
+    # Get environment variables from .env or process
+    project=$(perl -ne 'print ucfirst' <<< $PROJECT)
+    service=$(perl -ne 'print ucfirst' <<< $SERVICE)
+    stage=$(perl -ne 'print ucfirst' <<< $STAGE)
+
+    # Deploy CDK app
+    npm install
+    npx cdk synth    
+    sam local start-api -p 4000 -t ./cdk.out/${project}${service}Stack${stage}.template.json --profile $profile
+
+fi

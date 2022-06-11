@@ -1,0 +1,60 @@
+#!/bin/bash
+# Create or update a Pinpoint template
+#
+# Example:
+#
+#    scripts/pinpoint/deploy -d ./path/to/pinpoint-template-directory
+#
+# Further information:
+# See https://awscli.amazonaws.com/v2/documentation/api/latest/reference/pinpoint/create-email-template.html
+#
+
+# Get args
+while getopts d: flag
+do
+    case "${flag}" in
+        d) directory=${OPTARG};;
+    esac
+done
+
+# Get variables from root .env
+export $(xargs < .env)
+
+# Get environment variables from .env or process
+project=$(perl -ne 'print ucfirst' <<< $PROJECT)
+stage=$(perl -ne 'print ucfirst' <<< $STAGE)
+
+# Loop over template folders
+for template_path in $directory/* ; do
+    if [ -d "$template_path" ]; then
+        # Get current directory name
+        template_dir=${template_path##*/}
+        template=$(perl -ne 'print ucfirst' <<< $template_dir)
+        name=$(echo $project$template$stage)
+        echo "Handling $name template"
+
+        raw_html=$(mjml $template_path/index.mjml --config.minify true)
+        html=$(echo $raw_html | sed -e 's/"/\\\\"/g')
+
+        text=$(echo $raw_html | html-to-text --ignore-image --noLinkBrackets | sed -e 's/"/\\\\"/g')
+        text=$(while IFS= read -r line; do echo "$line\\\\r\\\\n"; done <<< "$text" | tr -d '\n')
+
+        mkdir -p $template_path/template.out        
+        cat $template_path/template.json | sed -e "s~%name%~$name~" -e 's/%name%/\&/g' -e "s~%html%~$html~" -e 's/%html%/\&/g' -e "s~%text%~$text~" -e 's/%text%/\&/g' > $template_path/template.out/template.json
+
+        { 
+            echo "Attempting to create pinpoint template..."
+            aws pinpoint create-email-template --cli-input-json file://$template_path/template.out/template.json --profile $PROFILE --region us-east-1 && \
+            echo "✅ Successfully created pinpoint template"
+            }  ||  {
+            echo "Template already exists. Updating pinpoint template..."
+            aws pinpoint update-email-template --cli-input-json file://$template_path/template.out/template.json --profile $PROFILE --region us-east-1 && \
+            echo "✅ Successfully updated pinpoint template"
+        }
+
+        rm -rf $template_path/template.out
+
+    fi
+done
+
+echo "👾 Done!"

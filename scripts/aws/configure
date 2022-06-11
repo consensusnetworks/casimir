@@ -1,0 +1,45 @@
+#!/bin/sh
+# Configure process for a specific AWS profile
+#
+# Example:
+#
+#    scripts/aws/configure -p profile-to-use -s stage-to-use
+#
+# Further information:
+# See https://docs.aws.amazon.com/
+#
+
+# Set defaults
+profile="consensus-networks-dev"
+stage="dev"
+
+# Override PROFILE from .env if set
+export $(xargs < .env)
+if [ -n "$PROFILE" ]; then
+    profile=$PROFILE
+fi
+
+# Override STAGE from .env if set
+export $(xargs < .env)
+if [ -n "$STAGE" ]; then
+    stage=$STAGE
+fi
+
+# Override with -p arg from command line if set
+while getopts p:s: flag
+do
+    case "${flag}" in
+        p) profile=${OPTARG};;
+        s) stage=${OPTARG};;
+    esac
+done
+
+echo "👾 Configuring '$stage' environment for '$profile'"
+
+export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id --profile $profile)
+export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key --profile $profile)
+
+if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+    echo "🙈 Could not find AWS credentials for profile '$profile'"
+    exit 1
+fi
