@@ -8,7 +8,7 @@ import { pascalCase } from '@casimir/lib'
 import { SignupResponse } from '../env'
 
 const appId = 'e80548536df34c7fb4a58bf64933190e'
-const sourceEmail = 'searley@consensusnetworks.com' // 'team@casimir.co'
+const sourceEmail = 'support@consensusnetworks.com' // 'team@casimir.co'
 const project = process.env.PROJECT || 'casimir'
 const stage = process.env.STAGE || 'dev'
 

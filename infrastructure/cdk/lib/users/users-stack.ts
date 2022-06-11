@@ -2,6 +2,7 @@ import { Duration, Stack, StackProps } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
+import * as iam from 'aws-cdk-lib/aws-iam'
 
 /**
  * Class representing the users stack.
@@ -39,16 +40,27 @@ export class UsersStack extends Stack {
                 PROJECT: process.env.PROJECT as string,
                 STAGE: process.env.STAGE as string
             },
-            timeout: Duration.seconds(10)
+            timeout: Duration.seconds(25)
         })
+
+        const pinpointPolicy = new iam.PolicyStatement({
+            actions: ['mobiletargeting:*', 'mobileanalytics:*'],
+            resources: ['*'],
+        })
+
+        lambdaHandler.role?.attachInlinePolicy(
+            new iam.Policy(this, `${project}${service}PinpointPolicy${stage}`, {
+                statements: [pinpointPolicy]
+            })
+        )
 
         // Todo update to use new api gateway version when stable
         // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-apigateway-readme.html#apigateway-v2
         new apigateway.LambdaRestApi(this, `${project}${service}ApiGateway${stage}`, {
             restApiName: `${project}${service}UsersApiGateway${stage}`,
             handler: lambdaHandler,
-            // Todo restrict cors
             defaultCorsPreflightOptions: {
+                allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
                 allowOrigins: apigateway.Cors.ALL_ORIGINS,
                 allowMethods: apigateway.Cors.ALL_METHODS
             }

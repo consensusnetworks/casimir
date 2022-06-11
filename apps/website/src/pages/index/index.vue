@@ -1,33 +1,27 @@
 <script lang="ts">
 import { ArrowRightIcon } from '@heroicons/vue/solid'
-import { ref, computed } from 'vue'
-
-export default {
-  setup() {
-    const email = ref('')
-    async function onSubmit() {
-      console.log(email.value)
-      const requestOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.value })
-      }
-      try {
-        const response = await fetch(
-          'http://localhost:4000/api/users/signup',
-          requestOptions
-        )
-        console.log('response :>> ', response)
-        const data = await response.json()
-      } catch (err) {
-        console.log('err with onSubmit :>> ', err)
-      }
-    }
-    return {
-      email,
-      onSubmit,
-    }
-  },
+import { ref } from 'vue'
+const email = ref('')
+async function onSubmit() {
+  console.log(email.value)
+  const requestOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.value })
+  }
+  const baseUrl = import.meta.env.PROD
+    ? 'https://w47s4clcwi.execute-api.us-east-2.amazonaws.com/prod'
+    : 'http://localhost:4000'
+  try {
+    const response = await fetch(
+      `${baseUrl}/api/users/signup`,
+      requestOptions
+    )
+    console.log('response :>> ', response)
+    const data = await response.json()
+  } catch (err) {
+    console.log('err with onSubmit :>> ', err)
+  }
 }
 </script>
 
@@ -197,13 +191,11 @@ export default {
 }
 
 .linear-bg {
-  background: linear-gradient(
-    307.15deg,
-    #f36f38 -3.58%,
-    #f36f38 -3.58%,
-    #f36f38 -3.57%,
-    rgba(243, 111, 56, 0.16) 137.28%
-  );
+  background: linear-gradient(307.15deg,
+      #f36f38 -3.58%,
+      #f36f38 -3.58%,
+      #f36f38 -3.57%,
+      rgba(243, 111, 56, 0.16) 137.28%);
 }
 
 #email-form {
