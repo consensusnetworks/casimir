@@ -1,22 +1,80 @@
-<mjml>
+<mjml background-color="#ffffff">
   <mj-head>
-    <mj-title>Casimir</mj-title>
-    <mj-font name="Inter" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"></mj-font>
+    <mj-attributes>
+      <mj-class name="primary" color="#F99E4C" />
+    </mj-attributes>
+    <mj-style>
+      .vector-position {
+        position: absolute;
+        top: 40px;
+        left: 405px;
+      }
+      .float-right {
+       float: right;
+      }
+      .float-left {
+        float: left;
+      }
+    </mj-style>
   </mj-head>
+
   <mj-body>
+    <mj-wrapper background-color="#fff" padding="0 0">
 
-    <mj-section>
-      <mj-column>
-        <mj-image width="800px" src="../../shared/header.svg"></mj-image>
-        <mj-divider border-color="#000000"></mj-divider>
-        <mj-text font-size="32px" font-weight="600" color="#000000" font-family="Inter">Welcome to Casimir</mj-text>
-        <mj-text font-size="14px" font-family="Inter">You'll be the first to hear updates from us as we prepare to launch the Casimir asset management platform.</mj-text>
-        <mj-button font-size="20px" font-family="Inter" background-color="#F36F38" href="https://casimir.co/blog">Explore our content</mj-button>
-      </mj-column>
-    </mj-section>
-    
-    <mj-include path="../../shared/signature.mjml"></mj-include>
-    <mj-include path="../../shared/footer.mjml"></mj-include>
+      <!-- HEADER -->
+      <mj-section background-color="rgb(196, 196, 196, 0.25)" background-size="cover" padding-bottom="70px">
+        <mj-column width="600px" padding="10px 30px">
+          <mj-text align="left" font-size="40px" height="25px" font-weight="500" font-family="Poppins, sans-serif">Casimir</mj-text>
+          <mj-text align="left" font-size="20px" font-weight="400" font-family="Poppins, sans-serif">Welcome on board</mj-text>
+          <mj-image src="../../shared/assets/email-vector.svg" css-class="vector-position" alt="" />
+        </mj-column>
+      </mj-section>
 
+      <!-- BODY STATMENT -->
+      <mj-section padding="40px 0px">
+        <mj-column width="450px">
+          <mj-text color="#525252" font-family="Inter" align="center">Thanks for signing up! We are excited for you joining the Casamir community and keep an eye out for upcoming events.</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <!-- ACTION BANNER -->
+      <mj-section  background-color="rgb(249, 158, 76, 0.25)">
+        <mj-column css-class="">
+          <mj-image width="200px" src="../../shared/assets/whitepaper-sc.png"></mj-image>
+        </mj-column>
+        <mj-raw>
+          <!-- right paragraph -->
+        </mj-raw>
+        <mj-column>
+          <mj-text font-size="22px" font-weight="700" font-family="Inter">Read The Whitepaper</mj-text>
+          <mj-text font-family="Inter" font-weight="400" font-size="14px" >Learn our process and what makes us stand out!</mj-text>
+          <mj-button width="100%" background-color="rgb(249, 158, 76, 1)" border-radius="5px" font-size="20px" font-weight="500" href="https://casimir.co/whitepaper" targer="_blank">
+            WHITEPAPER
+          </mj-button>
+        </mj-column>
+      </mj-section>
+
+
+        <!-- FOTTER -->
+      <mj-section padding="40px 10px 10px 10px">
+        <mj-column>
+          <mj-image width="35px" css-class="float-right" href="https://mobile.twitter.com/CasimirAssets" target="_blank" src="../../shared/assets/twitter-grey.png" />
+        </mj-column>
+        <mj-column>
+          <mj-image href="https://discord.gg/hkJD9gnN" target="_blank" width="35px" src="../../shared/assets/discord-grey.png" />
+        </mj-column>
+        <mj-column>
+          <mj-image href="https://github.com/consensusnetworks/casimir" css-class="float-left" target="_blank" width="35px" src="../../shared/assets/github-grey.png" />
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0px">
+        <mj-column width="30%"></mj-column>
+        <mj-column width="40%">
+          <mj-image src="../../shared/assets/copyright.png" />
+        </mj-column>
+        <mj-column width="30%"></mj-column>
+      </mj-section>
+    </mj-wrapper>
   </mj-body>
 </mjml>
