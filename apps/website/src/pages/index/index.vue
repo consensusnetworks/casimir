@@ -22,6 +22,7 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
             Non-custodial cross chain staking platform with high performing validators and nodes
           </span>
 
+          <!-- Add form with submit and post to localhost:4000/api/users/signup and email in body -->
           <div class="mt-10 grid grid-cols-5 gap-2 ">
             <input
               type="text"

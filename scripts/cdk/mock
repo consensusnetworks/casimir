@@ -37,7 +37,7 @@ else
 
     # Deploy CDK app
     npm install
-    npm run cdk synth    
+    npx cdk synth    
     sam local start-api -t ./cdk.out/${project}${service}Stack${stage}.template.json
 
 fi

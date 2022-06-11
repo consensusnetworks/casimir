@@ -36,7 +36,6 @@ export class UsersStack extends Stack {
             name: `${project}${service}PinpointApp${stage}`
         })
 
-        // Todo set path alias for services
         const lambdaHandler = new lambda.Function(this, `${project}${service}Api${stage}`, {
             runtime: lambda.Runtime.NODEJS_14_X,
             handler: 'index.handler',

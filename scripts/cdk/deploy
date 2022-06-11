@@ -23,11 +23,10 @@ else
     echo "🚀 Deploying CDK app"
     OUT_DIR=$(pwd)/cdk-outputs.json
     cd $DIRECTORY
-    npm install
-    npm run cdk bootstrap
-    npm run cdk synth
-    npm run cdk diff
-    npm run cdk deploy -- --all --require-approval never --outputs-file $OUT_DIR
+    npx cdk bootstrap
+    npx cdk synth
+    npx cdk diff
+    npx cdk deploy -- --all --require-approval never --outputs-file $OUT_DIR
 fi
 
 

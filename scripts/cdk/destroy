@@ -22,5 +22,5 @@ if [ -z "$(ls -A $DIRECTORY)" ]; then
 else
     cd $DIRECTORY
     npm install
-    npm run cdk destroy -- --force --all --require-approval never
+    npx cdk destroy -- --force --all --require-approval never
 fi
