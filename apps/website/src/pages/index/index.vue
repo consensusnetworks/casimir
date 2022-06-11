@@ -28,15 +28,15 @@ async function onSubmit() {
 
 
 const slideshowProgress = ref(0)
-const currentSlide = ref(0)
+const currentSlide = ref(2)
 onMounted(() => {
-  // setInterval(() => {
-  //   slideshowProgress.value += .05
-  //   if (slideshowProgress.value >= 100) {
-  //     slideshowProgress.value = 0
-  //     currentSlide.value = (currentSlide.value + 1) !== 3 ? currentSlide.value + 1 : 0
-  //   }
-  // }, 0.00000005)
+  setInterval(() => {
+    slideshowProgress.value += .05
+    if (slideshowProgress.value >= 100) {
+      slideshowProgress.value = 0
+      currentSlide.value = (currentSlide.value + 1) !== 3 ? currentSlide.value + 1 : 0
+    }
+  }, 0.00000005)
 })
 
 </script>
@@ -93,7 +93,7 @@ onMounted(() => {
               Get Started
             </button>
           </div>
-          <span class="small-text text-[#667085] pl-[5px]">We won't spam you, promise</span>
+          <span class="small-text text-[#667085] pl-[5px]">We won't spam you. We promise.</span>
         </form>
       </div>
       <div class="basis-1/2 pl-[20px] pt-[100px]">
@@ -105,16 +105,16 @@ onMounted(() => {
         v-if="currentSlide === 0"
         class="slideshow"
       >
-        <div class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5]">
-          <div class="p-[3.8vw] text-center basis-1/2 min-w-[375px]">
+        <div class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]">
+          <div class="text-center min-w-[325px] w-[50%] min-h-[300px]">
             <img
-              src="/dashboard.png"
-              class="ml-[100px] h-[5vh] object-cover"
+              src="/Dashboard.png"
+              class="p-[5%] h-[90%] object-cover"
               alt=""
             >
           </div>
-          <div class="basis-1/2 min-w[375px] bg-">
-            <h1 class="text-[3vw] p-[3.8vw]  align-center">
+          <div class="min-w-[50%] w-[50%] text-center">
+            <h1 class="text-[32px] p-[2.5%] min-w-[325px] text-left ">
               <span class="text-[#F36F38] font-extrabold">Manage</span> your assets and earnings across chains. See all
               of your coins and NFTs in one dashboard.
             </h1>
@@ -125,27 +125,20 @@ onMounted(() => {
         v-if="currentSlide === 1"
         class="slideshow"
       >
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <h1 class="text-[32px] p-[80px] ml-[20px]  align-center">
+        <div class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]">
+          <div class="min-w-[50%] w-[50%] text-center">
+            <h1 class="text-[32px] p-[2.5%] min-w-[325px] text-left ">
               <span class="text-[#F36F38] font-extrabold">Earn</span> by staking your assets to high performing
               validators. Participate in liquidity pools. Help keep staking decentralized with a strong set of
               independent validators.
             </h1>
           </div>
-          <div class="relative">
+          <div class="text-center min-w-[325px] w-[50%] min-h-[300px]">
             <img
               src="/earn.png"
-              class="h-[190px] absolute top-[160px] right-[420px] object-cover"
+              class="p-[5%] h-[90%] object-cover"
               alt=""
             >
-            <div class="relative">
-              <img
-                src="/earn2.png"
-                class="h-[190px] absolute top-[70px] right-[190px] object-cover"
-                alt=""
-              >
-            </div>
           </div>
         </div>
       </div>
@@ -153,30 +146,23 @@ onMounted(() => {
         v-if="currentSlide === 2"
         class="slideshow"
       >
-        <div class="grid grid-cols-2 gap-4">
-          <div class="relative">
+        <div class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]">
+          <div class="text-center min-w-[325px] w-[50%] min-h-[300px]">
             <img
               src="/earn3.png"
-              class="h-[190px] absolute top-[160px] left-[420px] object-cover"
+              class="p-[5%] h-[90%] object-cover"
               alt=""
             >
-            <div class="relative">
-              <img
-                src="/learn.png"
-                class="h-[190px] absolute top-[70px] left-[190px] object-cover"
-                alt=""
-              >
-            </div>
           </div>
-          <div>
-            <h1 class="text-[32px] p-[80px] ml-[20px]  align-center">
-              <span class="text-[#F36F38] font-extrabold">Learn</span> about the latest airdops, mints and up to date
-              protocol news. Stay safe with built in security features like smart contract scanning.
+          <div class="min-w-[50%] w-[50%] text-center">
+            <h1 class="text-[32px] p-[2.5%] min-w-[325px] text-left ">
+              <span class="text-[#F36F38] font-extrabold">Learn</span> about the latest airdops, mints, and
+              protocol news. Stay safe with built-in security features like smart contract scanning.
             </h1>
           </div>
         </div>
       </div>
-      <div class="w-full h-1 absolute bottom-0 border">
+      <div class="w-full h-1 border border-red ">
         <div
           class="bg-[#F36F38]/[.5] h-full"
           :style="{ 'width': slideshowProgress + '%' }"
@@ -239,16 +225,16 @@ onMounted(() => {
 <style>
 .body-text {
   font-family: Inter;
-  font-size: 1.75vw;
+  font-size: 24px;
   font-weight: 300;
-  line-height: 3.75vh;
+  line-height: 30px;
 }
 
 .header-text {
   font-family: Inter;
-  font-size: 4.0vw;
+  font-size: 60px;
   font-weight: 600;
-  line-height: 8vh;
+  line-height: 64px;
 }
 
 .input-text {
@@ -267,7 +253,7 @@ onMounted(() => {
 
 .small-text {
   font-family: Inter;
-  font-size: 1vw;
+  font-size: 12px;
   font-weight: 400;
   line-height: 20px;
 }
@@ -291,7 +277,6 @@ onMounted(() => {
 }
 
 .slideshow {
-  height: 100%;
   animation: appear 1.5s ease-in-out;
 }
 </style>

@@ -42,7 +42,6 @@ export class WebsiteStack extends Stack {
       accessControl: BucketAccessControl.PRIVATE
     })
 
-    // Todo set path alias for apps
     new BucketDeployment(this, `${project}${service}BucketDeployment${stage}`, {
       destinationBucket: bucket,
       sources: [Source.asset('../../apps/website/dist')]
