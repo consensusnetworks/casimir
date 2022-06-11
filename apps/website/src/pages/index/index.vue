@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ArrowRightIcon } from '@heroicons/vue/solid'
 import { ref, onMounted } from 'vue'
-import Puddles from '../Puddles.vue'
+import Puddles from '@/components/Puddles.vue'
 
 const email = ref('')
 async function onSubmit() {
@@ -46,7 +46,7 @@ const hideMessages = () => {
 // Create function that does email validation
 function validateEmail(email: string) {
   
-  const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+  const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
   const valid = re.test(String(email).toLowerCase())
   console.log('valid :>> ', valid)
   return valid

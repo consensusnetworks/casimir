@@ -26,7 +26,7 @@
       <mj-section background-color="rgba(196, 196, 196, 0.25)" background-size="cover" padding-bottom="70px">
         <mj-column width="600px" padding="10px 30px">
           <mj-text align="left" font-size="40px" height="25px" font-weight="500" font-family="Poppins, sans-serif">Casimir</mj-text>
-          <mj-text align="left" font-size="20px" font-weight="400" font-family="Poppins, sans-serif">Welcome on board</mj-text>
+          <mj-text align="left" font-size="20px" font-weight="400" font-family="Poppins, sans-serif">Welcome aboard</mj-text>
           <mj-image src="https://casimir.co/email-vector.svg" css-class="vector-position" alt="" />
         </mj-column>
       </mj-section>
@@ -34,7 +34,7 @@
       <!-- BODY STATMENT -->
       <mj-section padding="40px 0px">
         <mj-column width="450px">
-          <mj-text color="#525252" font-family="Inter" align="center">Thanks for signing up! We are excited for you joining the Casimir community and keep an eye out for upcoming events.</mj-text>
+          <mj-text color="#525252" font-family="Inter" align="center">Thanks for signing up! We are excited for you joining the Casimir community. Keep an eye out for upcoming events.</mj-text>
         </mj-column>
       </mj-section>
 

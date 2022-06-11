@@ -60,20 +60,42 @@ export class WebsiteStack extends Stack {
 
       const certificate = new certmgr.DnsValidatedCertificate(this, `${project}${service}Cert${stage}`, {
         domainName: domain,
+        subjectAlternativeNames: [`www.${domain}`],
         hostedZone,
         region: 'us-east-1'
       })
 
       const distribution = new Distribution(this, `${project}${service}Distribution${stage}`, {
         defaultRootObject: 'index.html',
+        errorResponses: [
+          {
+            httpStatus: 403,
+            responseHttpStatus: 200,
+            responsePagePath: '/index.html',
+            ttl: Duration.minutes(30)
+          },
+          {
+            httpStatus: 404,
+            responseHttpStatus: 200,
+            responsePagePath: '/index.html',
+            ttl: Duration.minutes(30)
+          }
+        ],
         defaultBehavior: {
           origin: new S3Origin(bucket, { originAccessIdentity }),
         },
-        domainNames: [domain],
+        domainNames: [domain, `www.${domain}`],
         certificate
       })
 
       new route53.ARecord(this, `${project}${service}DnsARecord${stage}`, {
+        zone: hostedZone as route53.IHostedZone,
+        target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
+        ttl: Duration.minutes(1),
+      })
+
+      new route53.ARecord(this, `${project}${service}DnsARecordWww${stage}`, {
+        recordName: 'www.' + domain,
         zone: hostedZone as route53.IHostedZone,
         target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
         ttl: Duration.minutes(1),
