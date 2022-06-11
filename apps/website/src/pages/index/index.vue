@@ -96,8 +96,8 @@ onMounted(() => {
           <span class="small-text text-[#667085] pl-[5px]">We won't spam you. We promise.</span>
         </form>
       </div>
-      <div class="basis-1/2">
-        <Puddles />
+      <div class="basis-1/2 relative">
+        <Puddles class="absolute right-0 top-0" />
       </div>
     </div>
     <div class="w-full h-[400px] relative my-[100px]">
