@@ -92,7 +92,7 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*Branch* · <https://github.com/${{ github.repository }}/tree/${{ env.BRANCH }}|${{ env.BRANCH }}>"
+                      "text": "*Branch* · <https://github.com/${{ github.repository }}/tree/develop|develop>"
                     },
                     {
                       "type": "mrkdwn",
