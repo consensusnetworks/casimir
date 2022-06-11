@@ -37,18 +37,6 @@ onMounted(() => {
     >
       <circle
         r="72.5557"
-        transform="matrix(0.317039 0.682961 -1.18303 -0.183027 1605.17 270.1054)"
-        :style="puddleStyles[57]"
-        class="puddle-animation"
-      />
-      <circle
-        r="72.5557"
-        transform="matrix(0.317039 0.682961 -1.18303 -0.183027 1825.17 380.1054)"
-        :style="puddleStyles[56]"
-        class="puddle-animation"
-      />
-      <circle
-        r="72.5557"
         transform="matrix(0.317039 0.682961 -1.18303 -0.183027 1055.17 99.1054)"
         :style="puddleStyles[0]"
         class="puddle-animation"
@@ -382,6 +370,18 @@ onMounted(() => {
         r="72.5557"
         transform="matrix(0.317039 0.682961 -1.18303 -0.183027 171.67 609.153)"
         :style="puddleStyles[55]"
+        class="puddle-animation"
+      />
+      <circle
+        r="72.5557"
+        transform="matrix(0.317039 0.682961 -1.18303 -0.183027 1605.17 270.1054)"
+        :style="puddleStyles[57]"
+        class="puddle-animation"
+      />
+      <circle
+        r="72.5557"
+        transform="matrix(0.317039 0.682961 -1.18303 -0.183027 1825.17 380.1054)"
+        :style="puddleStyles[56]"
         class="puddle-animation"
       />
     </svg>

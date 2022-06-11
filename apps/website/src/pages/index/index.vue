@@ -224,7 +224,6 @@ onMounted(() => {
             class="border"
           >
         </a>
-
         <a
           href="https://discord.gg/hkJD9gnN"
           target="_blank"
@@ -325,6 +324,10 @@ onMounted(() => {
 }
 
 #success-message {
+  display: none;
+}
+
+#invalid-message {
   display: none;
 }
 </style>
