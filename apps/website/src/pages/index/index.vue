@@ -30,13 +30,13 @@ async function onSubmit() {
 const slideshowProgress = ref(0)
 const currentSlide = ref(0)
 onMounted(() => {
-  setInterval(() => {
-    slideshowProgress.value += .05
-    if (slideshowProgress.value >= 100) {
-      slideshowProgress.value = 0
-      currentSlide.value = (currentSlide.value + 1) !== 3 ? currentSlide.value + 1 : 0
-    }
-  }, 0.00000005)
+  // setInterval(() => {
+  //   slideshowProgress.value += .05
+  //   if (slideshowProgress.value >= 100) {
+  //     slideshowProgress.value = 0
+  //     currentSlide.value = (currentSlide.value + 1) !== 3 ? currentSlide.value + 1 : 0
+  //   }
+  // }, 0.00000005)
 })
 
 </script>
@@ -49,22 +49,22 @@ onMounted(() => {
           class="flex bg-[#F36F38]/[0.13] hover:bg-[#F36F38]/[0.25] py-1 rounded-3xl text-[#F36F38] w-[270px] text-sm"
           @click="$router.push('/whitepaper')"
         >
-          <span class="bg-white px-4 rounded-3xl mr-2 ml-1">Casimir</span>
+          <span class="bg-white px-4 rounded-3xl ml-1">Casimir</span> &nbsp;
           Read the whitepaper
           <ArrowRightIcon class="w-[15px] h-[20px] mx-2" />
         </button>
-        <h1 class="header-text text-[#101828] my-4">
+        <h1 class="header-text text-[#101828] mt-4 pb-0">
           <span
-            class="mr-2 text-[#F36F38]"
+            class="text-[#F36F38]"
             @click="$router.push('/')"
           >
             Your
           </span>
           digital assets
         </h1>
-        <h1 class="header-text text-[#101828] my-4">
+        <h1 class="header-text text-[#101828] mb-4">
           <span
-            class="mr-2 text-[#c4c4c4]"
+            class=" text-[#c4c4c4]"
             @click="$router.push('/')"
           >
             All
@@ -100,21 +100,21 @@ onMounted(() => {
         <Puddles />
       </div>
     </div>
-    <div class="w-full h-[400px] bg-[#c4c4c4]/[.5] relative my-[100px]">
+    <div class="w-full h-[400px] relative my-[100px]">
       <div
         v-if="currentSlide === 0"
         class="slideshow"
       >
-        <div class="grid grid-cols-2 gap-4">
-          <div class="p-[50px] text-center">
+        <div class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5]">
+          <div class="p-[3.8vw] text-center basis-1/2 min-w-[375px]">
             <img
-              src="dashboard.png"
-              class="ml-[100px] h-[300px] object-cover"
+              src="/dashboard.png"
+              class="ml-[100px] h-[5vh] object-cover"
               alt=""
             >
           </div>
-          <div>
-            <h1 class="text-[42px] p-[50px]  align-center">
+          <div class="basis-1/2 min-w[375px] bg-">
+            <h1 class="text-[3vw] p-[3.8vw]  align-center">
               <span class="text-[#F36F38] font-extrabold">Manage</span> your assets and earnings across chains. See all
               of your coins and NFTs in one dashboard.
             </h1>
@@ -135,13 +135,13 @@ onMounted(() => {
           </div>
           <div class="relative">
             <img
-              src="earn.png"
+              src="/earn.png"
               class="h-[190px] absolute top-[160px] right-[420px] object-cover"
               alt=""
             >
             <div class="relative">
               <img
-                src="earn2.png"
+                src="/earn2.png"
                 class="h-[190px] absolute top-[70px] right-[190px] object-cover"
                 alt=""
               >
@@ -156,13 +156,13 @@ onMounted(() => {
         <div class="grid grid-cols-2 gap-4">
           <div class="relative">
             <img
-              src="earn3.png"
+              src="/earn3.png"
               class="h-[190px] absolute top-[160px] left-[420px] object-cover"
               alt=""
             >
             <div class="relative">
               <img
-                src="learn.png"
+                src="/learn.png"
                 class="h-[190px] absolute top-[70px] left-[190px] object-cover"
                 alt=""
               >
@@ -190,7 +190,7 @@ onMounted(() => {
             class="w-[25px]"
           >
             <img
-              src="twitter.svg"
+              src="/twitter.svg"
               alt=""
               class="border"
             >
@@ -202,7 +202,7 @@ onMounted(() => {
             class="w-[25px]"
           >
             <img
-              src="discord.svg"
+              src="/discord.svg"
               alt=""
             >
           </a>
@@ -213,14 +213,14 @@ onMounted(() => {
             class="w-[25px]"
           >
             <img
-              src="github.svg"
+              src="/github.svg"
               alt=""
             >
           </a>
         </div>
         <div class="flex justify-center w-full pt-4">
           <img
-            src="copyrightIcon.svg"
+            src="/copyrightIcon.svg"
             alt=""
             class="w-[20px]"
           >
@@ -239,16 +239,16 @@ onMounted(() => {
 <style>
 .body-text {
   font-family: Inter;
-  font-size: 18px;
+  font-size: 1.75vw;
   font-weight: 300;
-  line-height: 30px;
+  line-height: 3.75vh;
 }
 
 .header-text {
   font-family: Inter;
-  font-size: 60px;
+  font-size: 4.0vw;
   font-weight: 600;
-  line-height: 72px;
+  line-height: 8vh;
 }
 
 .input-text {
@@ -267,7 +267,7 @@ onMounted(() => {
 
 .small-text {
   font-family: Inter;
-  font-size: 14px;
+  font-size: 1vw;
   font-weight: 400;
   line-height: 20px;
 }

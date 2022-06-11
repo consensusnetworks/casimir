@@ -1,4 +1,6 @@
 import { createApp } from 'vue'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import App from '@/App.vue'
 import '@/index.css'
 import { createRouter, createWebHistory } from 'vue-router'

@@ -1,30 +1,28 @@
 <script lang="ts" setup>
-    import { ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+const puddleStyles = ref([]) as any
+const stylesArray = new Array(56).fill({
+  'fill': 'rgba(196, 196, 196, 0.10)',
+  'filter': 'drop-shadow( 10px 0px 2px rgba(0, 0, 0, .25))',
+})
+puddleStyles.value = stylesArray
+
+onMounted(() => {
+  setInterval(() => {
+    puddleStyles.value = new Array(56).fill({
+      'fill': 'rgba(196, 196, 196, 0.10)',
+      'filter': 'drop-shadow( 10px 0px 2px rgba(0, 0, 0, .25))'
+    })
+    const randomPuddle = Math.floor(Math.random() * puddleStyles.value.length)
+    puddleStyles.value[randomPuddle] = {
+      'fill': 'rgba(249, 158, 76, 0.80)',
+      'filter': 'drop-shadow( 12px 0px 2px rgba(0, 0, 0, .45))',
+      'transition': ' all 3.5s ease-out',
+    }
+  }, 3000)
+})
 
 
-  const puddleStyles = ref([]) as any
-  const stylesArray = new Array(56).fill({
-    'fill': 'rgba(196, 196, 196, 0.10)',
-    'filter': 'drop-shadow( 10px 0px 2px rgba(0, 0, 0, .25))',
-  }) 
-  puddleStyles.value = stylesArray
-  
-  onMounted(() => {
-    setInterval(() => {
-      puddleStyles.value = new Array(56).fill({
-        'fill': 'rgba(196, 196, 196, 0.10)',
-        'filter': 'drop-shadow( 10px 0px 2px rgba(0, 0, 0, .25))'
-      }) 
-      const randomPuddle = Math.floor(Math.random() * puddleStyles.value.length)
-      puddleStyles.value[randomPuddle] = {
-        'fill': 'rgba(249, 158, 76, 0.80)',
-        'filter': 'drop-shadow( 12px 0px 2px rgba(0, 0, 0, .45))',
-        'transition':' all 3.5s ease-out',
-      }
-    }, 3000)
-  })
-
-  
 
 </script>
 
@@ -43,7 +41,7 @@
         :style="puddleStyles[0]"
         class="puddle-animation"
       />
-      <circle 
+      <circle
         r="72.5557"
         transform="matrix(0.317039 0.682961 -1.18303 -0.183027 1923.29 600.267)"
         :style="puddleStyles[1]"
@@ -63,7 +61,6 @@
         class="puddle-animation"
       />
       <circle
-            
         r="72.5557"
         transform="matrix(0.317039 0.682961 -1.18303 -0.183027 1272.2 224.396)"
         :style="puddleStyles[4]"
@@ -380,11 +377,11 @@
 </template>
 
 <style>
-
 @keyframes appear {
   0% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
