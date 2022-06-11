@@ -1,6 +1,5 @@
 import { Stack, StackProps } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
-import * as awspinpoint from 'aws-cdk-lib/aws-pinpoint'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
 
@@ -32,19 +31,15 @@ export class UsersStack extends Stack {
         const stage = process.env.STAGE?.replace(/\b\w/g, c => c.toUpperCase())
         const service = 'Users'
 
-        const pinpointApp = new awspinpoint.CfnApp(this, `${project}${service}PinpointApp${stage}`, {
-            name: `${project}${service}PinpointApp${stage}`
-        })
-
         const lambdaHandler = new lambda.Function(this, `${project}${service}Api${stage}`, {
             runtime: lambda.Runtime.NODEJS_14_X,
             handler: 'index.handler',
             code: lambda.Code.fromAsset('../../services/users/dist'),
             environment: {
-                APP_ID: pinpointApp.ref,
-                SOURCE_EMAIL: 'team@casimir.co',
                 PROJECT: process.env.PROJECT as string,
-                STAGE: process.env.STAGE as string
+                STAGE: process.env.STAGE as string,
+                AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID as string,
+                AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY as string
             }
         })
 

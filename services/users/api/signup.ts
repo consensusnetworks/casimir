@@ -7,8 +7,8 @@ import { APIGatewayEvent } from 'aws-lambda'
 import { pascalCase } from '@casimir/lib'
 import { SignupResponse } from '../env'
 
-const appId = process.env.APP_ID
-const sourceEmail = process.env.SOURCE_EMAIL
+const appId = 'e80548536df34c7fb4a58bf64933190e'
+const sourceEmail = 'team@casimir.co'
 const project = process.env.PROJECT || 'casimir'
 const stage = process.env.STAGE || 'dev'
 

@@ -9,6 +9,9 @@
     "services/*"
   ],
   "scripts": {
+    "config": "scripts/aws/configure",
+    "premock": "npm run config & ",
+    "mock": "scripts/cdk/mock -d infrastructure/cdk -s users",
     "predeploy": "npm run build --workspace @casimir/website",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "deploy:templates": "scripts/pinpoint/deploy -d content/emails/templates",
