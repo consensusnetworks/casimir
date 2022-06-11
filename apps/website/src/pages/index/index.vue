@@ -249,7 +249,7 @@ onMounted(() => {
     </div>
     <div class="flex flex-wrap justify-center">
       <img
-        src="/copyrightIcon.svg"
+        src="/CopyrightIcon.svg"
         alt=""
         class="w-[20px]"
       >
