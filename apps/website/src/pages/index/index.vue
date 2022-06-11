@@ -5,7 +5,12 @@ import Puddles from '@/components/Puddles.vue'
 
 const email = ref('')
 async function onSubmit() {
-  console.log(email.value)
+  const validEmail = validateEmail(email.value)
+  if (!validEmail) {
+    document.getElementById('invalid-message').style.display = 'block'
+    return
+  }
+  console.log('validEmail :>> ', validEmail)
   const requestOptions = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -16,18 +21,25 @@ async function onSubmit() {
     : 'http://localhost:4000'
   try {
     email.value = ''
-    // Change success message display to show
     document.getElementById('success-message').style.display = 'block'
     const response = await fetch(`${baseUrl}/api/users/signup`, requestOptions)
-    console.log('response :>> ', response)
-    const data = await response.json()
+    // const data = await response.json()
   } catch (err) {
     console.log('err with onSubmit :>> ', err)
   }
 }
 
-const hideSuccessMessage = () => {
+const hideMessages = () => {
   document.getElementById('success-message').style.display = 'none'
+  document.getElementById('invalid-message').style.display = 'none'
+}
+
+// Create function that does email validation
+function validateEmail(email) {
+  const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+  const valid = re.test(String(email).toLowerCase())
+  console.log('valid :>> ', valid)
+  return valid
 }
 
 const slideshowProgress = ref(0)
@@ -49,27 +61,21 @@ onMounted(() => {
     <div class="flex flex-wrap">
       <div class="pl-[100px] pt-[80px] basis-1/2 ">
         <button
-          class="flex bg-[#F36F38]/[0.13] hover:bg-[#F36F38]/[0.25] px-4 py-1 rounded-3xl text-[#F36F38] w-max text-sm"
+          class="flex bg-[#F36F38]/[0.13] hover:bg-[#F36F38]/[0.25] py-1 rounded-3xl text-[#F36F38] w-[270px] text-sm"
           @click="$router.push('/whitepaper')"
         >
-          Casimir
+          <span class="bg-white px-4 rounded-3xl ml-1">Casimir</span> &nbsp;
           Read the whitepaper
           <ArrowRightIcon class="w-[15px] h-[20px] mx-2" />
         </button>
         <h1 class="header-text text-[#101828] mt-4 pb-0">
-          <span
-            class="text-[#F36F38]"
-            @click="$router.push('/')"
-          >
+          <span class="text-[#F36F38]" @click="$router.push('/')">
             Your
           </span>
           digital assets
         </h1>
         <h1 class="header-text text-[#101828] mb-4">
-          <span
-            class=" text-[#c4c4c4]"
-            @click="$router.push('/')"
-          >
+          <span class=" text-[#c4c4c4]" @click="$router.push('/')">
             All
           </span>
           in one place
@@ -77,19 +83,15 @@ onMounted(() => {
         <h1 class="body-text text-[#667085] py-[40px]">
           Non-custodial digital asset management and staking
         </h1>
-        <form
-          id="email-form"
-          novalidate
-          @submit.prevent="onSubmit"
-        >
+        <form id="email-form" novalidate @submit.prevent="onSubmit">
           <div class="mt-10 grid grid-cols-5 gap-2 ">
             <input
               v-model="email"
               type="text"
               placeholder="Enter your email"
               class="border border-[#D0D5DD] rounded-md px-4 py-2 col-span-3 input-text text-[#F36F38]"
-              @click="hideSuccessMessage"
-            >
+              @click="hideMessages"
+            />
             <button
               type="submit"
               class="bg-[#F36F38] button-text text-white py-2 px-4 rounded-md w-[130px] hover:bg-[#F36F38]/[.75]"
@@ -97,24 +99,23 @@ onMounted(() => {
               Get Started
             </button>
           </div>
-          <div
-            id="success-message"
-            class="small-text text-[#077d01] pl-[5px]"
-          >
+          <div id="success-message" class="small-text text-[#077d01] pl-[5px]">
             Thank you for submitting!
           </div>
-          <span class="small-text text-[#667085] pl-[5px]">We won't spam you. We promise.</span>
+          <div id="invalid-message" class="small-text text-[#7d0101] pl-[5px]">
+            Please enter a valid email.
+          </div>
+          <span class="small-text text-[#667085] pl-[5px]"
+            >We won't spam you. We promise.</span
+          >
         </form>
       </div>
-      <div class="basis-1/2 relative">
-        <Puddles class="absolute right-0 top-0" />
+      <div class="basis-1/2 pl-[20px] pt-[100px]">
+        <Puddles />
       </div>
     </div>
     <div class="w-full h-[400px] relative my-[100px]">
-      <div
-        v-if="currentSlide === 0"
-        class="slideshow"
-      >
+      <div v-if="currentSlide === 0" class="slideshow">
         <div
           class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]"
         >
@@ -123,7 +124,7 @@ onMounted(() => {
               src="/Dashboard.png"
               class="p-[5%] h-[90%] object-cover"
               alt=""
-            >
+            />
           </div>
           <div class="min-w-[50%] w-[50%] text-center">
             <h1 class="text-[32px] p-[2.5%] min-w-[325px] text-left ">
@@ -134,10 +135,7 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      <div
-        v-if="currentSlide === 1"
-        class="slideshow"
-      >
+      <div v-if="currentSlide === 1" class="slideshow">
         <div
           class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]"
         >
@@ -150,27 +148,16 @@ onMounted(() => {
             </h1>
           </div>
           <div class="text-center min-w-[325px] w-[50%] min-h-[300px]">
-            <img
-              src="/earn.png"
-              class="p-[5%] h-[90%] object-cover"
-              alt=""
-            >
+            <img src="/earn.png" class="p-[5%] h-[90%] object-cover" alt="" />
           </div>
         </div>
       </div>
-      <div
-        v-if="currentSlide === 2"
-        class="slideshow"
-      >
+      <div v-if="currentSlide === 2" class="slideshow">
         <div
           class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]"
         >
           <div class="text-center min-w-[325px] w-[50%] min-h-[300px]">
-            <img
-              src="/earn3.png"
-              class="p-[5%] h-[90%] object-cover"
-              alt=""
-            >
+            <img src="/earn3.png" class="p-[5%] h-[90%] object-cover" alt="" />
           </div>
           <div class="min-w-[50%] w-[50%] text-center">
             <h1 class="text-[32px] p-[2.5%] min-w-[325px] text-left ">
@@ -194,11 +181,7 @@ onMounted(() => {
             target="_blank"
             class="w-[25px]"
           >
-            <img
-              src="/twitter.svg"
-              alt=""
-              class="border"
-            >
+            <img src="/twitter.svg" alt="" class="border" />
           </a>
 
           <a
@@ -206,10 +189,7 @@ onMounted(() => {
             target="_blank"
             class="w-[25px]"
           >
-            <img
-              src="/discord.svg"
-              alt=""
-            >
+            <img src="/discord.svg" alt="" />
           </a>
 
           <a
@@ -217,23 +197,17 @@ onMounted(() => {
             target="_blank"
             class="w-[25px]"
           >
-            <img
-              src="/github.svg"
-              alt=""
-            >
+            <img src="/github.svg" alt="" />
           </a>
         </div>
         <div class="flex justify-center w-full pt-4">
-          <img
-            src="/CopyrightIcon.svg"
-            alt=""
-            class="w-[20px]"
-          >
+          <img src="/copyrightIcon.svg" alt="" class="w-[20px]" />
           <a
             href="https://consensusnetworks.com/"
             target="_blank"
             class="text-[#F36F38] mx-4"
-          >Consensus Networks</a>
+            >Consensus Networks</a
+          >
           <span> | All Right Reserved</span>
         </div>
       </div>
