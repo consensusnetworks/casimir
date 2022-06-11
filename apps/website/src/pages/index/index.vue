@@ -251,7 +251,7 @@ onMounted(() => {
           </div>
           <div class="flex justify-center w-full pt-4">
             <img
-              src="/copyrightIcon.svg"
+              src="/CopyrightIcon.svg"
               alt=""
               class="w-[20px]"
             >
@@ -329,6 +329,10 @@ onMounted(() => {
 }
 
 #success-message {
+  display: none;
+}
+
+#invalid-message {
   display: none;
 }
 </style>
