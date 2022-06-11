@@ -1,6 +1,6 @@
 {
   "name": "casimir",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Decentralized staking and asset management",
   "workspaces": [
     "apps/*",
