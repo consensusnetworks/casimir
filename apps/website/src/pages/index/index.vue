@@ -202,7 +202,7 @@ import Puddles from './Puddles.vue'
           </a>
           
           <a
-            href="https://casimir.co/github-grey.png"
+            href="https://github.com/consensusnetworks/casimir"
             target="_blank"
             class="w-[25px]"
           >
