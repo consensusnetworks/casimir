@@ -9,16 +9,16 @@ async function onSubmit() {
   const requestOptions = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: email.value })
+    body: JSON.stringify({ email: email.value }),
   }
   const baseUrl = import.meta.env.PROD
     ? 'https://w47s4clcwi.execute-api.us-east-2.amazonaws.com/prod'
     : 'http://localhost:4000'
   try {
-    const response = await fetch(
-      `${baseUrl}/api/users/signup`,
-      requestOptions
-    )
+    email.value = ''
+    // Change success message display to show
+    document.getElementById('success-message').style.display = 'block'
+    const response = await fetch(`${baseUrl}/api/users/signup`, requestOptions)
     console.log('response :>> ', response)
     const data = await response.json()
   } catch (err) {
@@ -26,19 +26,22 @@ async function onSubmit() {
   }
 }
 
+const hideSuccessMessage = () => {
+  document.getElementById('success-message').style.display = 'none'
+}
 
 const slideshowProgress = ref(0)
 const currentSlide = ref(2)
 onMounted(() => {
   setInterval(() => {
-    slideshowProgress.value += .05
+    slideshowProgress.value += 0.05
     if (slideshowProgress.value >= 100) {
       slideshowProgress.value = 0
-      currentSlide.value = (currentSlide.value + 1) !== 3 ? currentSlide.value + 1 : 0
+      currentSlide.value =
+        currentSlide.value + 1 !== 3 ? currentSlide.value + 1 : 0
     }
   }, 0.00000005)
 })
-
 </script>
 
 <template>
@@ -85,6 +88,7 @@ onMounted(() => {
               type="text"
               placeholder="Enter your email"
               class="border border-[#D0D5DD] rounded-md px-4 py-2 col-span-3 input-text text-[#F36F38]"
+              @click="hideSuccessMessage"
             >
             <button
               type="submit"
@@ -92,6 +96,12 @@ onMounted(() => {
             >
               Get Started
             </button>
+          </div>
+          <div
+            id="success-message"
+            class="small-text text-[#077d01] pl-[5px]"
+          >
+            Thank you for submitting!
           </div>
           <span class="small-text text-[#667085] pl-[5px]">We won't spam you. We promise.</span>
         </form>
@@ -105,7 +115,9 @@ onMounted(() => {
         v-if="currentSlide === 0"
         class="slideshow"
       >
-        <div class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]">
+        <div
+          class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]"
+        >
           <div class="text-center min-w-[325px] w-[50%] min-h-[300px]">
             <img
               src="/Dashboard.png"
@@ -115,8 +127,9 @@ onMounted(() => {
           </div>
           <div class="min-w-[50%] w-[50%] text-center">
             <h1 class="text-[32px] p-[2.5%] min-w-[325px] text-left ">
-              <span class="text-[#F36F38] font-extrabold">Manage</span> your assets and earnings across chains. See all
-              of your coins and NFTs in one dashboard.
+              <span class="text-[#F36F38] font-extrabold">Manage</span> your
+              assets and earnings across chains. See all of your coins and NFTs
+              in one dashboard.
             </h1>
           </div>
         </div>
@@ -125,12 +138,15 @@ onMounted(() => {
         v-if="currentSlide === 1"
         class="slideshow"
       >
-        <div class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]">
+        <div
+          class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]"
+        >
           <div class="min-w-[50%] w-[50%] text-center">
             <h1 class="text-[32px] p-[2.5%] min-w-[325px] text-left ">
-              <span class="text-[#F36F38] font-extrabold">Earn</span> by staking your assets to high performing
-              validators. Participate in liquidity pools. Help keep staking decentralized with a strong set of
-              independent validators.
+              <span class="text-[#F36F38] font-extrabold">Earn</span> by staking
+              your assets to high performing validators. Participate in
+              liquidity pools. Help keep staking decentralized with a strong set
+              of independent validators.
             </h1>
           </div>
           <div class="text-center min-w-[325px] w-[50%] min-h-[300px]">
@@ -146,7 +162,9 @@ onMounted(() => {
         v-if="currentSlide === 2"
         class="slideshow"
       >
-        <div class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]">
+        <div
+          class="flex flex-row flex-wrap bg-[#c4c4c4]/[.5] p-10 min-w-[375px]"
+        >
           <div class="text-center min-w-[325px] w-[50%] min-h-[300px]">
             <img
               src="/earn3.png"
@@ -156,8 +174,9 @@ onMounted(() => {
           </div>
           <div class="min-w-[50%] w-[50%] text-center">
             <h1 class="text-[32px] p-[2.5%] min-w-[325px] text-left ">
-              <span class="text-[#F36F38] font-extrabold">Learn</span> about the latest airdops, mints, and
-              protocol news. Stay safe with built-in security features like smart contract scanning.
+              <span class="text-[#F36F38] font-extrabold">Learn</span> about the
+              latest airdops, mints, and protocol news. Stay safe with built-in
+              security features like smart contract scanning.
             </h1>
           </div>
         </div>
@@ -165,7 +184,7 @@ onMounted(() => {
       <div class="w-full h-1 border border-red ">
         <div
           class="bg-[#F36F38]/[.5] h-full"
-          :style="{ 'width': slideshowProgress + '%' }"
+          :style="{ width: slideshowProgress + '%' }"
         />
       </div>
       <div class="grid grid-rows-2 text-center py-[50px]">
@@ -269,14 +288,20 @@ onMounted(() => {
 }
 
 .linear-bg {
-  background: linear-gradient(307.15deg,
-      #f36f38 -3.58%,
-      #f36f38 -3.58%,
-      #f36f38 -3.57%,
-      rgba(243, 111, 56, 0.16) 137.28%);
+  background: linear-gradient(
+    307.15deg,
+    #f36f38 -3.58%,
+    #f36f38 -3.58%,
+    #f36f38 -3.57%,
+    rgba(243, 111, 56, 0.16) 137.28%
+  );
 }
 
 .slideshow {
   animation: appear 1.5s ease-in-out;
+}
+
+#success-message {
+  display: none;
 }
 </style>
