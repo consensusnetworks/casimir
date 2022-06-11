@@ -10,11 +10,11 @@ export default {
       const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.value }),
+        body: JSON.stringify({ email: email.value })
       }
       try {
         const response = await fetch(
-          'localhost:4000/api/users/signup',
+          'http://localhost:4000/api/users/signup',
           requestOptions
         )
         console.log('response :>> ', response)
@@ -53,14 +53,18 @@ export default {
           </span>
 
           <!-- Add form with submit and post to localhost:4000/api/users/signup and email in body -->
-          <form id="email-form" novalidate @submit.prevent="onSubmit">
+          <form
+            id="email-form"
+            novalidate
+            @submit.prevent="onSubmit"
+          >
             <div class="mt-10 grid grid-cols-5 gap-2 ">
               <input
                 v-model="email"
                 type="text"
                 placeholder="Enter your email"
                 class="border border-[#D0D5DD] rounded-md px-4 py-2 col-span-3 input-text text-[#F36F38]"
-              />
+              >
               <button
                 type="submit"
                 class="bg-[#F36F38] button-text text-white py-2 px-4 rounded-md w-[130px] hover:bg-[#F36F38]/[.75]"
@@ -70,38 +74,81 @@ export default {
             </div>
           </form>
           <span class="small-text text-[#667085]">
-            We won't spam you, promise</span
-          >
+            We won't spam you, promise</span>
         </div>
       </div>
       <div class="basis-1/2">
         <div class="linear-bg w-full h-full pt-[30%] pl-[30%]">
-          <img src="/web-demo.svg" alt="" class="float-right h-[100%]" />
+          <img
+            src="/web-demo.svg"
+            alt=""
+            class="float-right h-[100%]"
+          >
         </div>
       </div>
     </div>
     <div class="flex-row mt-[40px] body-text text-center">
-      <span class="text-center text-sm text-[#667085]"
-        >Supporting 12+ protocols and growing</span
-      >
+      <span class="text-center text-sm text-[#667085]">Supporting 12+ protocols and growing</span>
       <div class="flex flex-wrap justify-around px-[35px] mt-[35px]">
-        <a href="https://cosmos.network/" target="_blank">
-          <img src="/cosmos.svg" alt="" class="h-[25px]" />
+        <a
+          href="https://cosmos.network/"
+          target="_blank"
+        >
+          <img
+            src="/cosmos.svg"
+            alt=""
+            class="h-[25px]"
+          >
         </a>
-        <a href="https://iotex.io/start" target="_blank">
-          <img src="/iotex.svg" alt="" class="h-[25px]" />
+        <a
+          href="https://iotex.io/start"
+          target="_blank"
+        >
+          <img
+            src="/iotex.svg"
+            alt=""
+            class="h-[25px]"
+          >
         </a>
-        <a href="https://livepeer.org/" target="_blank">
-          <img src="/livepeer.svg" alt="" class="h-[25px]" />
+        <a
+          href="https://livepeer.org/"
+          target="_blank"
+        >
+          <img
+            src="/livepeer.svg"
+            alt=""
+            class="h-[25px]"
+          >
         </a>
-        <a href="https://www.kava.io/" target="_blank">
-          <img src="/kava.png" alt="" class="h-[25px]" />
+        <a
+          href="https://www.kava.io/"
+          target="_blank"
+        >
+          <img
+            src="/kava.png"
+            alt=""
+            class="h-[25px]"
+          >
         </a>
-        <a href="https://polkadot.network/" target="_blank">
-          <img src="/p.svg" alt="" class="h-[25px]" />
+        <a
+          href="https://polkadot.network/"
+          target="_blank"
+        >
+          <img
+            src="/p.svg"
+            alt=""
+            class="h-[25px]"
+          >
         </a>
-        <a href="https://www.factomprotocol.org/" target="_blank">
-          <img src="/factom.svg" alt="" class="h-[25px]" />
+        <a
+          href="https://www.factomprotocol.org/"
+          target="_blank"
+        >
+          <img
+            src="/factom.svg"
+            alt=""
+            class="h-[25px]"
+          >
         </a>
       </div>
     </div>

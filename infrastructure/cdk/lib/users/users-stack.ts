@@ -1,4 +1,4 @@
-import { Stack, StackProps } from 'aws-cdk-lib'
+import { Duration, Stack, StackProps } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
@@ -38,7 +38,8 @@ export class UsersStack extends Stack {
             environment: {
                 PROJECT: process.env.PROJECT as string,
                 STAGE: process.env.STAGE as string
-            }
+            },
+            timeout: Duration.seconds(10)
         })
 
         // Todo update to use new api gateway version when stable

@@ -8,6 +8,9 @@ export const handler = async (event: APIGatewayEvent): Promise<any | void> => {
     return {
       headers: {
         'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers' : 'Content-Type',
+        'Access-Control-Allow-Methods': 'OPTIONS,POST,PUT,GET,DELETE',
+        'Content-Type': 'application/json'
       },
       statusCode: 200,
       body: {

@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "config": "scripts/aws/configure",
-    "premock": "npm run config & ",
+    "premock": "npm run config & npm run build --workspace @casimir/users",
     "mock": "scripts/cdk/mock -d infrastructure/cdk -s users",
     "predeploy": "npm run build --workspace @casimir/website",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",

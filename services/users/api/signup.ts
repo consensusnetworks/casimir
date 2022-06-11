@@ -8,7 +8,7 @@ import { pascalCase } from '@casimir/lib'
 import { SignupResponse } from '../env'
 
 const appId = 'e80548536df34c7fb4a58bf64933190e'
-const sourceEmail = 'team@casimir.co'
+const sourceEmail = 'searley@consensusnetworks.com' // 'team@casimir.co'
 const project = process.env.PROJECT || 'casimir'
 const stage = process.env.STAGE || 'dev'
 
@@ -21,6 +21,8 @@ const stage = process.env.STAGE || 'dev'
  */
 export default async function signup(event: APIGatewayEvent): Promise<SignupResponse> {
     console.log('EVENT: ', event)
+
+    console.log('AWS_KEY: ', process.env.AWS_ACCESS_KEY_ID)
 
     const { body } = event
     const { email: destEmail } = JSON.parse(body as string)
@@ -75,6 +77,9 @@ export default async function signup(event: APIGatewayEvent): Promise<SignupResp
         return {
             headers: {
                 'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers' : 'Content-Type',
+                'Access-Control-Allow-Methods': 'OPTIONS,POST,PUT,GET,DELETE',
+                'Content-Type': 'application/json'
             },
             statusCode: 200,
             body: data

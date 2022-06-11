@@ -1,5 +1,6 @@
 <mjml background-color="#ffffff">
   <mj-head>
+    <mj-font name="Inter" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
     <mj-attributes>
       <mj-class name="primary" color="#F99E4C" />
     </mj-attributes>
@@ -26,7 +27,7 @@
         <mj-column width="600px" padding="10px 30px">
           <mj-text align="left" font-size="40px" height="25px" font-weight="500" font-family="Poppins, sans-serif">Casimir</mj-text>
           <mj-text align="left" font-size="20px" font-weight="400" font-family="Poppins, sans-serif">Welcome on board</mj-text>
-          <mj-image src="../../shared/assets/email-vector.svg" css-class="vector-position" alt="" />
+          <mj-image src="https://casimir.co/email-vector.svg" css-class="vector-position" alt="" />
         </mj-column>
       </mj-section>
 
@@ -40,7 +41,7 @@
       <!-- ACTION BANNER -->
       <mj-section  background-color="rgba(249, 158, 76, 0.25)">
         <mj-column css-class="">
-          <mj-image width="200px" src="../../shared/assets/whitepaper-sc.png"></mj-image>
+          <mj-image width="200px" src="https://casimir.co/whitepaper-sc.png"></mj-image>
         </mj-column>
         <mj-raw>
           <!-- right paragraph -->
@@ -58,20 +59,20 @@
         <!-- FOTTER -->
       <mj-section padding="40px 10px 10px 10px">
         <mj-column>
-          <mj-image width="35px" css-class="float-right" href="https://mobile.twitter.com/CasimirAssets" target="_blank" src="../../shared/assets/twitter-grey.png" />
+          <mj-image width="35px" css-class="float-right" href="https://mobile.twitter.com/CasimirAssets" target="_blank" src="https://casimir.co/twitter-grey.png" />
         </mj-column>
         <mj-column>
-          <mj-image href="https://discord.gg/hkJD9gnN" target="_blank" width="35px" src="../../shared/assets/discord-grey.png" />
+          <mj-image href="https://discord.gg/hkJD9gnN" target="_blank" width="35px" src="https://casimir.co/discord-grey.png" />
         </mj-column>
         <mj-column>
-          <mj-image href="https://github.com/consensusnetworks/casimir" css-class="float-left" target="_blank" width="35px" src="../../shared/assets/github-grey.png" />
+          <mj-image href="https://github.com/consensusnetworks/casimir" css-class="float-left" target="_blank" width="35px" src="https://casimir.co/github-grey.png" />
         </mj-column>
       </mj-section>
 
       <mj-section padding="0px">
         <mj-column width="30%"></mj-column>
         <mj-column width="40%">
-          <mj-image src="../../shared/assets/copyright.png" />
+          <mj-image src="https://casimir.co/copyright.png" />
         </mj-column>
         <mj-column width="30%"></mj-column>
       </mj-section>

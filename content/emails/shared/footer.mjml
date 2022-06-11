@@ -7,16 +7,16 @@
 
 <mj-section background-color="#f5f5f5">
   <mj-column width="30%">
-    <mj-image width="100px" src="../../shared/assets/twitter-grey.png" />
+    <mj-image width="100px" src="https://casimir.co/twitter-grey.png" />
   </mj-column>
   <mj-column width="30%">
-    <mj-image width="100px" src="../../shared/assets/discord-grey.png" />
+    <mj-image width="100px" src="https://casimir.co/discord-grey.png" />
   </mj-column>
   <mj-column width="30%">
-    <mj-image width="100px" src="../../shared/assets/github-grey.png" />
+    <mj-image width="100px" src="https://casimir.co/github-grey.png" />
   </mj-column> 
   <mj-column width="100%">
-    <mj-image width="20px" src="../../shared/assets/copyright.png" />
+    <mj-image width="20px" src="https://casimir.co/copyright.png" />
     <mj-text>
       <mj-link href="" color="#F99E4C">Consensus Networks</mj-link> | All Rights Reserved
     </mj-text>
