@@ -1,41 +1,43 @@
 <script lang="ts" setup>
 import { ArrowRightIcon } from '@heroicons/vue/solid'
 import { ref, onMounted } from 'vue'
-import Puddles from './Puddles.vue'
+import Puddles from '@/components/Puddles.vue'
 
-  const email = ref('')
-  async function onSubmit() {
-    console.log(email.value)
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value })
-    }
-    try {
-      const response = await fetch(
-        'http://localhost:4000/api/users/signup',
-        requestOptions
-      )
-      console.log('response :>> ', response)
-      const data = await response.json()
-    } catch (err) {
-      console.log('err with onSubmit :>> ', err)
-    }
+const email = ref('')
+async function onSubmit() {
+  console.log(email.value)
+  const requestOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.value })
   }
+  const baseUrl = import.meta.env.PROD
+    ? 'https://w47s4clcwi.execute-api.us-east-2.amazonaws.com/prod'
+    : 'http://localhost:4000'
+  try {
+    const response = await fetch(
+      `${baseUrl}/api/users/signup`,
+      requestOptions
+    )
+    console.log('response :>> ', response)
+    const data = await response.json()
+  } catch (err) {
+    console.log('err with onSubmit :>> ', err)
+  }
+}
 
 
-  const slideshowProgress = ref(0)
-  const currentSlide = ref(0)
-  onMounted(() => {
-      setInterval(() => {
-        slideshowProgress.value = slideshowProgress.value + .1
-        if(slideshowProgress.value >= 100) {
-          slideshowProgress.value = 0
-          currentSlide.value = (currentSlide.value + 1 ) !== 3 ? currentSlide.value + 1 : 0
-        }
-      }, 0.00000002)
-  })
-  
+const slideshowProgress = ref(0)
+const currentSlide = ref(0)
+onMounted(() => {
+  setInterval(() => {
+    slideshowProgress.value += .05
+    if (slideshowProgress.value >= 100) {
+      slideshowProgress.value = 0
+      currentSlide.value = (currentSlide.value + 1) !== 3 ? currentSlide.value + 1 : 0
+    }
+  }, 0.00000005)
+})
 
 </script>
 
@@ -57,7 +59,7 @@ import Puddles from './Puddles.vue'
             @click="$router.push('/')"
           >
             Your
-          </span> 
+          </span>
           digital assets
         </h1>
         <h1 class="header-text text-[#101828] my-4">
@@ -66,7 +68,7 @@ import Puddles from './Puddles.vue'
             @click="$router.push('/')"
           >
             All
-          </span> 
+          </span>
           in one place
         </h1>
         <h1 class="body-text text-[#667085] py-[40px]">
@@ -113,19 +115,22 @@ import Puddles from './Puddles.vue'
           </div>
           <div>
             <h1 class="text-[42px] p-[50px]  align-center">
-              <span class="text-[#F36F38] font-extrabold">Manage</span> your assets and earnings across chains, See all of your Coins and NFTs in one dashbaord
+              <span class="text-[#F36F38] font-extrabold">Manage</span> your assets and earnings across chains. See all
+              of your coins and NFTs in one dashboard.
             </h1>
           </div>
         </div>
       </div>
       <div
-        v-if="currentSlide ===1"
+        v-if="currentSlide === 1"
         class="slideshow"
       >
         <div class="grid grid-cols-2 gap-4">
           <div>
             <h1 class="text-[32px] p-[80px] ml-[20px]  align-center">
-              <span class="text-[#F36F38] font-extrabold">Earn</span> by staking your assets to high performing validators.  Participate in liquidity pools.  Help keep staking decentralized with a strong set of independent validators
+              <span class="text-[#F36F38] font-extrabold">Earn</span> by staking your assets to high performing
+              validators. Participate in liquidity pools. Help keep staking decentralized with a strong set of
+              independent validators.
             </h1>
           </div>
           <div class="relative">
@@ -163,9 +168,10 @@ import Puddles from './Puddles.vue'
               >
             </div>
           </div>
-          <div>          
+          <div>
             <h1 class="text-[32px] p-[80px] ml-[20px]  align-center">
-              <span class="text-[#F36F38] font-extrabold">Learn</span> about the latest airdops, mints and up to date protocol news. Stay safe with built in security features like smart contract scanning
+              <span class="text-[#F36F38] font-extrabold">Learn</span> about the latest airdops, mints and up to date
+              protocol news. Stay safe with built in security features like smart contract scanning.
             </h1>
           </div>
         </div>
@@ -173,7 +179,7 @@ import Puddles from './Puddles.vue'
       <div class="w-full h-1 absolute bottom-0 border">
         <div
           class="bg-[#F36F38]/[.5] h-full"
-          :style="{ 'width': slideshowProgress + '%'}"
+          :style="{ 'width': slideshowProgress + '%' }"
         />
       </div>
       <div class="grid grid-rows-2 text-center py-[50px]">
@@ -189,7 +195,7 @@ import Puddles from './Puddles.vue'
               class="border"
             >
           </a>
-          
+
           <a
             href="https://discord.gg/hkJD9gnN"
             target="_blank"
@@ -200,7 +206,7 @@ import Puddles from './Puddles.vue'
               alt=""
             >
           </a>
-          
+
           <a
             href="https://github.com/consensusnetworks/casimir"
             target="_blank"
@@ -231,7 +237,6 @@ import Puddles from './Puddles.vue'
 </template>
 
 <style>
-
 .body-text {
   font-family: Inter;
   font-size: 18px;
@@ -271,14 +276,22 @@ import Puddles from './Puddles.vue'
   0% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
+}
+
+.linear-bg {
+  background: linear-gradient(307.15deg,
+      #f36f38 -3.58%,
+      #f36f38 -3.58%,
+      #f36f38 -3.57%,
+      rgba(243, 111, 56, 0.16) 137.28%);
 }
 
 .slideshow {
   height: 100%;
   animation: appear 1.5s ease-in-out;
 }
-
 </style>

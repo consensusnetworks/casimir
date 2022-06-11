@@ -12,10 +12,9 @@
     "config": "scripts/aws/configure",
     "premock": "npm run config & npm run build --workspace @casimir/users",
     "mock": "scripts/cdk/mock -d infrastructure/cdk -s users",
-    "predeploy": "npm run build --workspace @casimir/website",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "deploy:templates": "scripts/pinpoint/deploy -d content/emails/templates",
-    "dev": "npm run dev --workspace @casimir/website",
+    "dev": "npm run mock & npm run dev --workspace @casimir/website",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:push": "scripts/actions/test -w push"
@@ -59,8 +58,5 @@
     "hooks": {
       "after:bump": "npx auto-changelog -p"
     }
-  },
-  "dependencies": {
-    "@heroicons/vue": "^1.0.6"
   }
 }

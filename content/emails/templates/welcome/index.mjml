@@ -34,7 +34,7 @@
       <!-- BODY STATMENT -->
       <mj-section padding="40px 0px">
         <mj-column width="450px">
-          <mj-text color="#525252" font-family="Inter" align="center">Thanks for signing up! We are excited for you joining the Casamir community and keep an eye out for upcoming events.</mj-text>
+          <mj-text color="#525252" font-family="Inter" align="center">Thanks for signing up! We are excited for you joining the Casimir community and keep an eye out for upcoming events.</mj-text>
         </mj-column>
       </mj-section>
 
@@ -47,7 +47,7 @@
           <!-- right paragraph -->
         </mj-raw>
         <mj-column>
-          <mj-text font-size="22px" font-weight="700" font-family="Inter">Read The Whitepaper</mj-text>
+          <mj-text font-size="22px" font-weight="700" font-family="Inter">Read the whitepaper</mj-text>
           <mj-text font-family="Inter" font-weight="400" font-size="14px" >Learn our process and what makes us stand out!</mj-text>
           <mj-button width="100%" background-color="rgba(249, 158, 76, 1)" border-radius="5px" font-size="20px" font-weight="500" href="https://casimir.co/whitepaper" target="_blank">
             WHITEPAPER

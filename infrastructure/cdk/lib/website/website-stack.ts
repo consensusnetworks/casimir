@@ -55,13 +55,14 @@ export class WebsiteStack extends Stack {
       
       const domain = 'casimir.co'
 
-      const hostedZone = new route53.HostedZone(this, `${project}${service}HostedZone${stage}`, {
-        zoneName: domain,
+      const hostedZone = route53.HostedZone.fromLookup(this, `${project}${service}HostedZone${stage}`, {
+        domainName: domain,
       })
 
-      const certificate = new certmgr.Certificate(this, `${project}${service}Cert${stage}`, {
+      const certificate = new certmgr.DnsValidatedCertificate(this, `${project}${service}Cert${stage}`, {
         domainName: domain,
-        validation: certmgr.CertificateValidation.fromDns(hostedZone)
+        hostedZone,
+        region: 'us-east-1'
       })
 
       const distribution = new Distribution(this, `${project}${service}Distribution${stage}`, {
