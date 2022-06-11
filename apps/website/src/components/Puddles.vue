@@ -9,7 +9,7 @@ puddleStyles.value = stylesArray
 
 onMounted(() => {
   setInterval(() => {
-    puddleStyles.value = new Array(56).fill({
+    puddleStyles.value = new Array(58).fill({
       'fill': 'rgba(196, 196, 196, 0.10)',
       'filter': 'drop-shadow( 10px 0px 2px rgba(0, 0, 0, .25))'
     })
@@ -37,8 +37,14 @@ onMounted(() => {
     >
       <circle
         r="72.5557"
-        transform="matrix(0.317039 0.682961 -1.18303 -0.183027 9055.17 99.1054)"
-        :style="{'filter': 'red'}"
+        transform="matrix(0.317039 0.682961 -1.18303 -0.183027 1605.17 270.1054)"
+        :style="puddleStyles[57]"
+        class="puddle-animation"
+      />
+      <circle
+        r="72.5557"
+        transform="matrix(0.317039 0.682961 -1.18303 -0.183027 1825.17 380.1054)"
+        :style="puddleStyles[56]"
         class="puddle-animation"
       />
       <circle
