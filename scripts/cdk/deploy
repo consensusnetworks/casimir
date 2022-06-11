@@ -27,7 +27,7 @@ else
     npx cdk synth
     npx cdk diff
     # Log to file and display in console
-    npx cdk deploy '**' --require-approval never --outputs-file $OUT_DIR --verbose --debug
+    npx cdk deploy '**' --require-approval never --outputs-file $OUT_DIR --verbose --debug --force
 fi
 
 

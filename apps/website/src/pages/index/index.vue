@@ -46,10 +46,10 @@ onMounted(() => {
     <div class="flex flex-wrap">
       <div class="pl-[100px] pt-[80px] basis-1/2 ">
         <button
-          class="flex bg-[#F36F38]/[0.13] hover:bg-[#F36F38]/[0.25] py-1 rounded-3xl text-[#F36F38] w-[270px] text-sm"
+          class="flex bg-[#F36F38]/[0.13] hover:bg-[#F36F38]/[0.25] px-4 py-1 rounded-3xl text-[#F36F38] w-max text-sm"
           @click="$router.push('/whitepaper')"
         >
-          <span class="bg-white px-4 rounded-3xl ml-1">Casimir</span> &nbsp;
+          Casimir
           Read the whitepaper
           <ArrowRightIcon class="w-[15px] h-[20px] mx-2" />
         </button>
@@ -96,7 +96,7 @@ onMounted(() => {
           <span class="small-text text-[#667085] pl-[5px]">We won't spam you. We promise.</span>
         </form>
       </div>
-      <div class="basis-1/2 pl-[20px] pt-[100px]">
+      <div class="basis-1/2">
         <Puddles />
       </div>
     </div>
@@ -206,7 +206,7 @@ onMounted(() => {
         </div>
         <div class="flex justify-center w-full pt-4">
           <img
-            src="/copyrightIcon.svg"
+            src="/CopyrightIcon.svg"
             alt=""
             class="w-[20px]"
           >
