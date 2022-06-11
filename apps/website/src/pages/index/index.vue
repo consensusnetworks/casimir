@@ -1,5 +1,34 @@
-<script lang="ts" setup>
+<script lang="ts">
 import { ArrowRightIcon } from '@heroicons/vue/solid'
+import { ref, computed } from 'vue'
+
+export default {
+  setup() {
+    const email = ref('')
+    async function onSubmit() {
+      console.log(email.value)
+      const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.value }),
+      }
+      try {
+        const response = await fetch(
+          'localhost:4000/api/users/signup',
+          requestOptions
+        )
+        console.log('response :>> ', response)
+        const data = await response.json()
+      } catch (err) {
+        console.log('err with onSubmit :>> ', err)
+      }
+    }
+    return {
+      email,
+      onSubmit,
+    }
+  },
+}
 </script>
 
 <template>
@@ -7,7 +36,7 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
     <div class="flex flex-row flex-wrap">
       <div class="pl-[100px] pt-[80px] pb-[50px] pr-[10px] basis-1/2 ">
         <div class="max-w-[560px]">
-          <button 
+          <button
             class="flex bg-[#F36F38]/[0.13] hover:bg-[#F36F38]/[0.25] py-1 rounded-3xl text-[#F36F38] w-[270px] text-sm"
             @click="$router.push('/whitepaper')"
           >
@@ -19,95 +48,60 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
             Infrastructure to manage your digital assets
           </h1>
           <span class="body-text text-[#667085]">
-            Non-custodial cross chain staking platform with high performing validators and nodes
+            Non-custodial cross chain staking platform with high performing
+            validators and nodes
           </span>
 
           <!-- Add form with submit and post to localhost:4000/api/users/signup and email in body -->
-          <div class="mt-10 grid grid-cols-5 gap-2 ">
-            <input
-              type="text"
-              placeholder="Enter your email"
-              class="border border-[#D0D5DD] rounded-md px-4 py-2 col-span-3 input-text text-[#F36F38]"
-            >
-            <button class="bg-[#F36F38] button-text text-white py-2 px-4 rounded-md w-[130px] hover:bg-[#F36F38]/[.75]">
-              Get Started
-            </button>
-          </div>
-          <span class="small-text text-[#667085]"> We won't spam you, promise</span>
+          <form id="email-form" novalidate @submit.prevent="onSubmit">
+            <div class="mt-10 grid grid-cols-5 gap-2 ">
+              <input
+                v-model="email"
+                type="text"
+                placeholder="Enter your email"
+                class="border border-[#D0D5DD] rounded-md px-4 py-2 col-span-3 input-text text-[#F36F38]"
+              />
+              <button
+                type="submit"
+                class="bg-[#F36F38] button-text text-white py-2 px-4 rounded-md w-[130px] hover:bg-[#F36F38]/[.75]"
+              >
+                Get Started
+              </button>
+            </div>
+          </form>
+          <span class="small-text text-[#667085]">
+            We won't spam you, promise</span
+          >
         </div>
       </div>
       <div class="basis-1/2">
         <div class="linear-bg w-full h-full pt-[30%] pl-[30%]">
-          <img
-            src="/web-demo.svg"
-            alt=""
-            class="float-right h-[100%]"
-          >
+          <img src="/web-demo.svg" alt="" class="float-right h-[100%]" />
         </div>
       </div>
     </div>
     <div class="flex-row mt-[40px] body-text text-center">
-      <span class="text-center text-sm text-[#667085]">Supporting 12+ protocols and growing</span>
+      <span class="text-center text-sm text-[#667085]"
+        >Supporting 12+ protocols and growing</span
+      >
       <div class="flex flex-wrap justify-around px-[35px] mt-[35px]">
-        <a
-          href="https://cosmos.network/"
-          target="_blank"
-        >
-          <img
-            src="/cosmos.svg"
-            alt=""
-            class="h-[25px]"
-          >
+        <a href="https://cosmos.network/" target="_blank">
+          <img src="/cosmos.svg" alt="" class="h-[25px]" />
         </a>
-        <a
-          href="https://iotex.io/start"
-          target="_blank"
-        >
-          <img
-            src="/iotex.svg"
-            alt=""
-            class="h-[25px]"
-          >
+        <a href="https://iotex.io/start" target="_blank">
+          <img src="/iotex.svg" alt="" class="h-[25px]" />
         </a>
-        <a
-          href="https://livepeer.org/"
-          target="_blank"
-        >
-          <img
-            src="/livepeer.svg"
-            alt=""
-            class="h-[25px]"
-          >
+        <a href="https://livepeer.org/" target="_blank">
+          <img src="/livepeer.svg" alt="" class="h-[25px]" />
         </a>
-        <a
-          href="https://www.kava.io/"
-          target="_blank"
-        >
-          <img
-            src="/kava.png"
-            alt=""
-            class="h-[25px]"
-          >
+        <a href="https://www.kava.io/" target="_blank">
+          <img src="/kava.png" alt="" class="h-[25px]" />
         </a>
-        <a
-          href="https://polkadot.network/"
-          target="_blank"
-        >
-          <img
-            src="/p.svg"
-            alt=""
-            class="h-[25px]"
-          >
+        <a href="https://polkadot.network/" target="_blank">
+          <img src="/p.svg" alt="" class="h-[25px]" />
         </a>
-        <a
-          href="https://www.factomprotocol.org/"
-          target="_blank"
-        >
-          <img
-            src="/factom.svg"
-            alt=""
-            class="h-[25px]"
-          >
+        <a href="https://www.factomprotocol.org/" target="_blank">
+          <img src="/factom.svg" alt="" class="h-[25px]" />
         </a>
       </div>
     </div>
@@ -155,8 +149,18 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
   letter-spacing: 0em;
 }
 
-
 .linear-bg {
-  background: linear-gradient(307.15deg, #F36F38 -3.58%, #F36F38 -3.58%, #F36F38 -3.57%, rgba(243, 111, 56, 0.16) 137.28%);
+  background: linear-gradient(
+    307.15deg,
+    #f36f38 -3.58%,
+    #f36f38 -3.58%,
+    #f36f38 -3.57%,
+    rgba(243, 111, 56, 0.16) 137.28%
+  );
+}
+
+#email-form {
+  display: flex;
+  flex-direction: row;
 }
 </style>
