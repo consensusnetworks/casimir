@@ -20,17 +20,48 @@ done
 # Get variables from root .env
 export $(xargs < .env)
 
-# Get environment variables from .env or process
-project=$(perl -ne 'print ucfirst' <<< $PROJECT)
-stage=$(perl -ne 'print ucfirst' <<< $STAGE)
+# Set default profile
+profile="consensus-networks-dev"
+
+if [ ${PROFILE+x} ]; then
+    echo "PROFILE is set to '$PROFILE'"
+    profile=$PROFILE
+else
+    export PROFILE="$profile"
+    echo "PROFILE is not set, using default profile $PROFILE"
+fi
+
+# Override project if PROJECT is set in .env
+if [ ${PROJECT+x} ]; then
+    echo "PROJECT is set to '$PROJECT'"
+else
+    export PROJECT="casimir"
+    echo "PROJECT is not set, using default project $PROJECT"
+fi
+
+# Override stage if STAGE is set in .env
+if [ ${STAGE+x} ]; then
+    echo "STAGE is set to '$STAGE'"
+else
+    export STAGE="dev"
+    echo "STAGE is not set, using default stage $STAGE"
+fi
+
+# Set PascalCase variables
+Project=$(perl -ne 'print ucfirst' <<< $PROJECT)
+Stage=$(perl -ne 'print ucfirst' <<< $STAGE)
 
 # Loop over template folders
 for template_path in $directory/* ; do
     if [ -d "$template_path" ]; then
+    
         # Get current directory name
         template_dir=${template_path##*/}
-        template=$(perl -ne 'print ucfirst' <<< $template_dir)
-        name=$(echo $project$template$stage)
+
+        # Set PascalCase variables
+        Template=$(perl -ne 'print ucfirst' <<< $template_dir)
+
+        name=$(echo $Project$Template$Stage)
         echo "Handling $name template"
 
         raw_html=$(mjml $template_path/index.mjml --config.minify true)
@@ -44,11 +75,11 @@ for template_path in $directory/* ; do
 
         { 
             echo "Attempting to create pinpoint template..."
-            aws pinpoint create-email-template --cli-input-json file://$template_path/template.out/template.json --profile $PROFILE --region us-east-1 && \
+            aws pinpoint create-email-template --cli-input-json file://$template_path/template.out/template.json --profile $profile --region us-east-1 && \
             echo "✅ Successfully created pinpoint template"
             }  ||  {
             echo "Template already exists. Updating pinpoint template..."
-            aws pinpoint update-email-template --cli-input-json file://$template_path/template.out/template.json --profile $PROFILE --region us-east-1 && \
+            aws pinpoint update-email-template --cli-input-json file://$template_path/template.out/template.json --profile $profile --region us-east-1 && \
             echo "✅ Successfully updated pinpoint template"
         }
 

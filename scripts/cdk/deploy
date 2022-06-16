@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Deploy CDK app to a cluster
 #
 # Example:
@@ -6,29 +6,37 @@
 #    scripts/cdk/deploy -d ./path/to/cdk-directory
 #
 # Further information:
-# See https://docs.aws.amazon.com/cdk/api/v2/docs/aws-construct-library.html
+# See https://docs.aws.amazon.com/cdk/api/v2/
 #
 
 # Get args
 while getopts d: flag
 do
     case "${flag}" in
-        d) DIRECTORY=${OPTARG};;
+        d) directory=${OPTARG};;
     esac
 done
 
-if [ -z "$(ls -A $DIRECTORY)" ]; then
-    echo "⚠️ CDK source directory is empty"
-else
-    echo "🚀 Deploying CDK app"
-    OUT_DIR=$(pwd)/cdk-outputs.json
-    cd $DIRECTORY
-    npx cdk bootstrap
-    npx cdk synth
-    npx cdk diff
-    # Log to file and display in console
-    npx cdk deploy '**' --require-approval never --outputs-file $OUT_DIR --verbose --debug --force
+if [ -z "$directory" ]; then
+    echo "⚠️ CDK source directory is not set – please specify as -d ./path/to/cdk-directory"
+    exit 1
 fi
+
+if [ -z "$(ls -A $directory)" ]; then
+    echo "⚠️ CDK source directory is empty – please make sure you have a valid CDK source directory"
+    exit 1
+fi
+
+echo "🚀 Deploying CDK app"
+OUT_DIR=$(pwd)/cdk-outputs.json
+cd $directory
+
+# Deploy CDK app
+npx cdk bootstrap
+npx cdk synth
+npx cdk diff
+# Log outputs for parsing in workflow
+npx cdk deploy '**' --require-approval never --outputs-file $OUT_DIR --force
 
 
 

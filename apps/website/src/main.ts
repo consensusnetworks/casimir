@@ -6,6 +6,8 @@ import '@/index.css'
 import { createRouter, createWebHistory } from 'vue-router'
 import routes from '~pages'
 
+console.log('Local mocking is', import.meta.env.PUBLIC_MOCK ? 'enabled' : 'disabled')
+
 const app = createApp(App)
 const router = createRouter({
   history: createWebHistory(),

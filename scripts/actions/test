@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Test the GitHub Actions workflows in `.github/workflows`
 #
 # Example:
@@ -9,36 +9,38 @@
 # See https://github.com/nektos/act
 #
 
+# Set default profile
+profile="consensus-networks-dev"
+
+if [ ${PROFILE+x} ]; then
+    echo "PROFILE is set to '$PROFILE'"
+    profile=$PROFILE
+else
+    export PROFILE="$profile"
+    echo "PROFILE is not set, using default profile $PROFILE"
+fi
+
 # Get args
 while getopts w: flag
 do
     case "${flag}" in
-        w) WORKFLOW=${OPTARG};;
+        w) workflow=${OPTARG};;
     esac
 done
 
-# Create local env and secrets files
-touch .secrets
-
-# Set default profile and override if specified in .env 
-PROFILE=consensus-networks-dev
-export $(xargs < .env)
-
-echo "👾 Creating environment for '$PROFILE'"
+echo "👾 Creating environment for '$profile'"
 
 # From .env
-echo SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL >> .secrets
+SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL
 
 # From AWS CLI
-echo AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id --profile $PROFILE) >> .secrets
-echo AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key --profile $PROFILE) >> .secrets
+aws_access_key_id=$(aws configure get aws_access_key_id --profile $profile)
+aws_secret_access_key=$(aws configure get aws_secret_access_key --profile $profile)
 
 # Run selected workflow
-echo "🚀 Running $WORKFLOW workflow"
-act $WORKFLOW \
+echo "🚀 Running $workflow workflow"
+act $workflow \
 --rebuild \
---secret-file .secrets \
+--secret AWS_ACCESS_KEY_ID=$aws_access_key_id \
+--secret AWS_SECRET_ACCESS_KEY=$aws_secret_access_key \
 --verbose
-
-# Remove secrets
-rm -rf .secrets

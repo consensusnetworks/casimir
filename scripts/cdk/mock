@@ -1,52 +1,94 @@
-#!/bin/sh
+#!/bin/bash
 # Mock AWS resources and run tests in localstack
 #
 # Example:
 #
-#    scripts/cdk/mock -d ./path/to/cdk-directory -s name-of-service (i.e. users)
+#    scripts/cdk/mock -d ./path/to/cdk-directory -s string-of-services (i.e. -s users,analytics)
 #
 # Further information:
-# See https://localstack.cloud/
+# See https://docs.aws.amazon.com/cdk/api/v2/
 #
-
-# Set defaults
-profile="consensus-networks-dev"
-
-# Override PROFILE from .env if set
-export $(xargs < .env)
-if [ -n "$PROFILE" ]; then
-    profile=$PROFILE
-fi
 
 # Get args
 while getopts d:s: flag
 do
     case "${flag}" in
-        d) DIRECTORY=${OPTARG};;
-        s) SERVICE=${OPTARG};;
+        d) directory=${OPTARG};;
+        s) services=${OPTARG};;
     esac
 done
+
+# Check required args
+if [ -z "$directory" ]; then
+    echo "⚠️ CDK source directory is not set – please specify as -d ./path/to/cdk-directory"
+    exit 1
+fi
+
+if [ -z "$(ls -A $directory)" ]; then
+    echo "⚠️ CDK source directory is empty – please make sure you have a valid CDK source directory"
+    exit 1
+fi
+
+if [ -z "$services" ]; then
+    echo "⚠️ Services to mock are not set – please specify as -s string-of-services (i.e. -s users,analytics)"
+    exit 1
+fi
 
 # Get variables from root .env
 export $(xargs < .env)
 
-if [ -z "$(ls -A $DIRECTORY)" ]; then
-    echo "⚠️ CDK source directory is empty"
+# Set default profile
+profile="consensus-networks-dev"
+
+if [ ${PROFILE+x} ]; then
+    echo "PROFILE is set to '$PROFILE'"
+    profile=$PROFILE
 else
-    echo "🚀 Deploying local CDK app"
-    cd $DIRECTORY
-
-    # Get variables from cdk .env
-    export $(xargs < .env)
-
-    # Get environment variables from .env or process
-    project=$(perl -ne 'print ucfirst' <<< $PROJECT)
-    service=$(perl -ne 'print ucfirst' <<< $SERVICE)
-    stage=$(perl -ne 'print ucfirst' <<< $STAGE)
-
-    # Deploy CDK app
-    npm install
-    npx cdk synth    
-    sam local start-api -p 4000 -t ./cdk.out/${project}${service}Stack${stage}.template.json --profile $profile
-
+    export PROFILE="$profile"
+    echo "PROFILE is not set, using default profile $PROFILE"
 fi
+
+# Override project if PROJECT is set in .env
+if [ ${PROJECT+x} ]; then
+    echo "PROJECT is set to '$PROJECT'"
+else
+    export PROJECT="casimir"
+    echo "PROJECT is not set, using default project $PROJECT"
+fi
+
+# Override stage if STAGE is set in .env
+if [ ${STAGE+x} ]; then
+    echo "STAGE is set to '$STAGE'"
+else
+    export STAGE="dev"
+    echo "STAGE is not set, using default stage $STAGE"
+fi
+
+# Set PascalCase variables
+Project=$(perl -ne 'print ucfirst' <<< $PROJECT)
+Stage=$(perl -ne 'print ucfirst' <<< $STAGE)
+
+echo "🎨 Mocking CDK app"
+cd $directory
+
+# Mock CDK app
+npm install
+npx cdk synth
+
+# Loop over comma-separated string of services
+IFS=',' read -r -a service_list <<< "$services"
+port=4000
+
+for service in "${service_list[@]}"
+do
+    port=$(( port + 1 ))
+    export $(echo PUBLIC_${service^^}_URL=http://localhost:$port)
+    echo "🎨 Mocking service $service on port $port"
+    Service=$(perl -ne 'print ucfirst' <<< $service)
+    sam local start-api \
+    --port $port \
+    --template ./cdk.out/${Project}${Service}Stack${Stage}.template.json \
+    --profile $profile & # Run in parallel
+done
+
+export PUBLIC_MOCK=true

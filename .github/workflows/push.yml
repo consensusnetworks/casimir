@@ -25,7 +25,7 @@ jobs:
       - name: Set the stage for testing
         if: ${{ github.actor == 'nektos/act' }}
         run: |
-          echo "STAGE=prod" >> $GITHUB_ENV
+          echo "STAGE=dev" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1

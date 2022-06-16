@@ -35,9 +35,9 @@ Make sure your development environment has the necessary prerequisites.
 
 4. [Eslint VSCode Extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) – linter and formatter.
 
-> *Note: AWS credentials usage is not yet set up, but we will require the AWS CLI when it is.*
-<br /><br />
-*5. [AWS CLI](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.*
+5. [AWS CLI](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
+
+6. [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) - optional tool for local mocking backend services.
 
 ### Install
 
@@ -54,13 +54,23 @@ npm install
 
 ## 💻 Development
 
-Run the development server for the default application ([apps/website](apps/website/) in this case) and backend services.
+For local development, you have a few options:
+
+1. For frontend changes – run the development server and use the `dev` stage backend services.
+
+    ```zsh
+    npm run dev
+    ```
+
+    > This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set PROFILE="some-other-name" in .env if you want to override).
+
+2. For fullstack changes – Run the development server and live-mock the local backend services.
 
 ```zsh
-npm run dev
+npm run dev:mock
 ```
 
-> This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile.
+> You will need the SAM CLI to run this.
 
 ## License
 

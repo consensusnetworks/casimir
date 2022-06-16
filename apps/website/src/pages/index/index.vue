@@ -18,9 +18,9 @@ async function onSubmit() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: email.value }),
   }
-  const baseUrl = import.meta.env.PROD
-    ? 'https://w47s4clcwi.execute-api.us-east-2.amazonaws.com/prod'
-    : 'http://localhost:4000'
+
+  const baseUrl = getBaseUrl()
+
   try {
     email.value = ''
     // Change success message display to show
@@ -34,6 +34,15 @@ async function onSubmit() {
   }
 }
 
+function getBaseUrl() {
+  // Todo replace with custom subdomain for simplicity
+  if (import.meta.env.PROD) {
+    return 'https://w47s4clcwi.execute-api.us-east-2.amazonaws.com/prod'
+  } else {
+    return import.meta.env.PUBLIC_MOCK ? import.meta.env.PUBLIC_USERS_MOCK : 'https://37sgxzp20c.execute-api.us-east-2.amazonaws.com/prod'
+  }
+}
+
 const hideMessages = () => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -43,13 +52,14 @@ const hideMessages = () => {
   document.getElementById('invalid-message').style.display = 'none'
 }
 
-// Create function that does email validation
+/**
+ * 
+ * 
+ * @param email {string} email string from user input to validate
+ */
 function validateEmail(email: string) {
-  
   const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-  const valid = re.test(String(email).toLowerCase())
-  console.log('valid :>> ', valid)
-  return valid
+  return re.test(String(email).toLowerCase())
 }
 
 const slideshowProgress = ref(0)
@@ -164,9 +174,7 @@ onMounted(() => {
         v-if="currentSlide === 1"
         class="flex flex-wrap slideshow"
       >
-        <div
-          class="min-w-[375px] w-1/2 pl-[50px] pt-[50px]"
-        >
+        <div class="min-w-[375px] w-1/2 pl-[50px] pt-[50px]">
           <img
             src="/earn.png"
             class="p-[5%] h-[90%] object-cover"
@@ -186,9 +194,7 @@ onMounted(() => {
         v-if="currentSlide === 2"
         class="flex flex-wrap slideshow"
       >
-        <div
-          class="min-w-[375px] w-1/2 pl-[50px] pt-[50px]"
-        >
+        <div class="min-w-[375px] w-1/2 pl-[50px] pt-[50px]">
           <img
             src="/earn3.png"
             class="p-[5%] h-[90%] object-cover"
@@ -310,13 +316,11 @@ onMounted(() => {
 }
 
 .linear-bg {
-  background: linear-gradient(
-    307.15deg,
-    #f36f38 -3.58%,
-    #f36f38 -3.58%,
-    #f36f38 -3.57%,
-    rgba(243, 111, 56, 0.16) 137.28%
-  );
+  background: linear-gradient(307.15deg,
+      #f36f38 -3.58%,
+      #f36f38 -3.58%,
+      #f36f38 -3.57%,
+      rgba(243, 111, 56, 0.16) 137.28%);
 }
 
 .slideshow {

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Configure process for a specific AWS profile
 #
 # Example:
