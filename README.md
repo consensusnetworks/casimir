@@ -64,14 +64,11 @@ You can get up and running without configuration. You can also mock local backen
 
     > This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set PROFILE="some-other-name" in .env if you want to override).
 
-2. For fullstack changes – run the development server and live-mock the local backend services.
+2. For fullstack changes – run the development server and mock the local backend services.
 
     ```zsh
     npm run dev --mock
     ```
-
-    The current mockable backend services include:
-    - [Users Rest API](services/users)
 
     > You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for live-mocking.
 
