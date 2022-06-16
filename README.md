@@ -54,7 +54,7 @@ npm install
 
 ## 💻 Development
 
-For local development, you have a few options:
+You can get up and running without configuration. You can also mock local backend changes and customize your environment.
 
 1. For frontend changes – run the development server and use the `dev` stage backend services.
 
@@ -64,13 +64,23 @@ For local development, you have a few options:
 
     > This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set PROFILE="some-other-name" in .env if you want to override).
 
-2. For fullstack changes – Run the development server and live-mock the local backend services.
+2. For fullstack changes – run the development server and live-mock the local backend services.
 
-```zsh
-npm run dev:mock
-```
+    ```zsh
+    npm run dev --mock
+    ```
 
-> You will need the SAM CLI to run this.
+    The current mockable backend services include:
+    - [Users Rest API](services/users)
+
+    > You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for live-mocking.
+
+3. Optionally customize your local development environment by create a `.env` and adding overrides for common variables.
+
+    ```zsh
+    PROFILE="some-other-aws-name"
+    STAGE="sandbox"
+    ```
 
 ## License
 

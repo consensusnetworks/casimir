@@ -14,11 +14,7 @@
     "mock": "scripts/cdk/mock -d infrastructure/cdk -s users",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "deploy:templates": "scripts/pinpoint/deploy -d content/emails/templates",
-
-    "scriptsample":"(node -e \"if (! require('fs').existsSync('./bin/helpers')){process.exit(1)} \" || npm run setup-helpers) && npm run final-build-step",
-    "devold": "npm run dev --workspace @casimir/website",
-    "argsample": "echo \"The value of --foo is '${npm_config_foo}'\"",
-    "dev": "echo \"The value of --mock is '${npm_config_mock}'\" && (node -e \"if (!process.env.npm_config_mock){process.exit(1)} \" || npm run mock) & npm run dev --workspace @casimir/website",
+    "dev": "(node -e \"if (!\"process.env.npm_config_foo\"){process.exit(1)} \" || npm run mock) & npm run dev --workspace @casimir/website",
 
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
