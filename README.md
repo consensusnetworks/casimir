@@ -70,12 +70,14 @@ You can get up and running without configuration. You can also mock local backen
     npm run dev --mock
     ```
 
-    > You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for live-mocking.
+    > You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
 
-3. Optionally customize your local development environment by create a `.env` and adding overrides for common variables.
+3. Optionally customize and override the defaults for your *local development environment* by creating a `.env` file in the project root and adding values for common variables.
 
     ```zsh
+    # Override AWS profile name (defaults to "consensus-networks-dev")
     PROFILE="some-other-aws-name"
+    # Override the environment stage name (defaults to "dev")
     STAGE="sandbox"
     ```
 

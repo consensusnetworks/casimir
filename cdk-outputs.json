@@ -1,8 +1,0 @@
-{
-  "CasimirUsersStackProd": {
-    "CasimirUsersApiGatewayProdEndpoint97291E6E": "https://w47s4clcwi.execute-api.us-east-2.amazonaws.com/prod/"
-  },
-  "CasimirUsersStackDev": {
-    "CasimirUsersApiGatewayDevEndpoint97291E6E": "https://37sgxzp20c.execute-api.us-east-2.amazonaws.com/prod"
-  }
-}

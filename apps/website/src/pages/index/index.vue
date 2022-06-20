@@ -1,55 +1,36 @@
 <script lang="ts" setup>
 import { ArrowRightIcon } from '@heroicons/vue/solid'
-import { ref, onMounted } from 'vue'
+import { ref, Ref } from 'vue'
 import Puddles from '@/components/Puddles.vue'
+import useSlideshow from '@/composables/slideshow'
+import useUsers from '@/composables/users'
+const { slideshowProgress, currentSlide } = useSlideshow()
+const { signupUser } = useUsers()
+const successMessage: Ref = ref<HTMLDivElement>()
+const invalidMessage: Ref = ref<HTMLDivElement>()
 
 const email = ref('')
 async function onSubmit() {
   const validEmail = validateEmail(email.value)
   if (!validEmail) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    document.getElementById('invalid-message').style.display = 'block'
+    invalidMessage.value.style.display = 'block'
     return
   }
   console.log('validEmail :>> ', validEmail)
-  const requestOptions = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: email.value }),
-  }
-
-  const baseUrl = getBaseUrl()
 
   try {
+    const newEmail = email.value
     email.value = ''
-    // Change success message display to show
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    document.getElementById('success-message').style.display = 'block'
-    const response = await fetch(`${baseUrl}/api/users/signup`, requestOptions)
-    // const data = await response.json()
+    successMessage.value.style.display = 'block'
+    await signupUser(newEmail)
   } catch (err) {
     console.log('err with onSubmit :>> ', err)
   }
 }
 
-function getBaseUrl() {
-  // Todo replace with custom subdomain for simplicity
-  if (import.meta.env.PROD) {
-    return 'https://w47s4clcwi.execute-api.us-east-2.amazonaws.com/prod'
-  } else {
-    return import.meta.env.PUBLIC_MOCK ? import.meta.env.PUBLIC_USERS_MOCK : 'https://37sgxzp20c.execute-api.us-east-2.amazonaws.com/prod'
-  }
-}
-
 const hideMessages = () => {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  document.getElementById('success-message').style.display = 'none'
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  document.getElementById('invalid-message').style.display = 'none'
+  successMessage.value.style.display = 'none'
+  invalidMessage.value.style.display = 'none'
 }
 
 /**
@@ -61,19 +42,6 @@ function validateEmail(email: string) {
   const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
   return re.test(String(email).toLowerCase())
 }
-
-const slideshowProgress = ref(0)
-const currentSlide = ref(2)
-onMounted(() => {
-  setInterval(() => {
-    slideshowProgress.value += 0.05
-    if (slideshowProgress.value >= 100) {
-      slideshowProgress.value = 0
-      currentSlide.value =
-        currentSlide.value + 1 !== 3 ? currentSlide.value + 1 : 0
-    }
-  }, 0.00000005)
-})
 </script>
 
 <template>
@@ -110,7 +78,6 @@ onMounted(() => {
           Non-custodial digital asset management and staking
         </h1>
         <form
-          id="email-form"
           novalidate
           @submit.prevent="onSubmit"
         >
@@ -131,6 +98,7 @@ onMounted(() => {
           </div>
           <div
             id="success-message"
+            ref="successMessage"
             class="small-text text-[#077d01] pl-[5px]"
           >
             Thank you for submitting!
@@ -138,6 +106,7 @@ onMounted(() => {
           <div
             v-show="email.length > 0"
             id="invalid-message"
+            ref="invalidMessage"
             class="small-text text-[#7d0101] pl-[5px]"
           >
             Please enter a valid email.

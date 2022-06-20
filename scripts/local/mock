@@ -1,9 +1,9 @@
 #!/bin/bash
-# Mock AWS resources and run tests in localstack
+# Mock AWS api resources from CDK stacks with SAM CLI
 #
 # Example:
 #
-#    scripts/cdk/mock -d ./path/to/cdk-directory -s string-of-services (i.e. -s users,analytics)
+#    scripts/local/mock -d ./path/to/cdk-directory -s string-of-services (i.e. -s users,analytics)
 #
 # Further information:
 # See https://docs.aws.amazon.com/cdk/api/v2/
@@ -34,36 +34,6 @@ if [ -z "$services" ]; then
     exit 1
 fi
 
-# Get variables from root .env
-export $(xargs < .env)
-
-# Set default profile
-profile="consensus-networks-dev"
-
-if [ ${PROFILE+x} ]; then
-    echo "PROFILE is set to '$PROFILE'"
-    profile=$PROFILE
-else
-    export PROFILE="$profile"
-    echo "PROFILE is not set, using default profile $PROFILE"
-fi
-
-# Override project if PROJECT is set in .env
-if [ ${PROJECT+x} ]; then
-    echo "PROJECT is set to '$PROJECT'"
-else
-    export PROJECT="casimir"
-    echo "PROJECT is not set, using default project $PROJECT"
-fi
-
-# Override stage if STAGE is set in .env
-if [ ${STAGE+x} ]; then
-    echo "STAGE is set to '$STAGE'"
-else
-    export STAGE="dev"
-    echo "STAGE is not set, using default stage $STAGE"
-fi
-
 # Set PascalCase variables
 Project=$(perl -ne 'print ucfirst' <<< $PROJECT)
 Stage=$(perl -ne 'print ucfirst' <<< $STAGE)
@@ -73,22 +43,22 @@ cd $directory
 
 # Mock CDK app
 npm install
-npx cdk synth
 
 # Loop over comma-separated string of services
 IFS=',' read -r -a service_list <<< "$services"
-port=4000
 
 for service in "${service_list[@]}"
 do
-    port=$(( port + 1 ))
-    export $(echo PUBLIC_${service^^}_URL=http://localhost:$port)
-    echo "🎨 Mocking service $service on port $port"
+    npm run build --workspace @casimir/$service
+    npx cdk bootstrap
+    npx cdk synth
+    SERVICE=$(echo $service | tr '[:lower:]' '[:upper:]')
+    portname=PUBLIC_${SERVICE}_PORT
+    port=$(echo ${!portname})
+    echo "🎨 Mocking $service service on port $port"
     Service=$(perl -ne 'print ucfirst' <<< $service)
     sam local start-api \
     --port $port \
     --template ./cdk.out/${Project}${Service}Stack${Stage}.template.json \
-    --profile $profile & # Run in parallel
+    --profile $PROFILE & # Run in parallel
 done
-
-export PUBLIC_MOCK=true

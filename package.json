@@ -9,13 +9,9 @@
     "services/*"
   ],
   "scripts": {
-    "config": "scripts/aws/configure",
-    "premock": "npm run config & npm run build --workspace @casimir/users",
-    "mock": "scripts/cdk/mock -d infrastructure/cdk -s users",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "deploy:templates": "scripts/pinpoint/deploy -d content/emails/templates",
-    "dev": "(node -e \"if (!\"process.env.npm_config_foo\"){process.exit(1)} \" || npm run mock) & npm run dev --workspace @casimir/website",
-
+    "dev": "scripts/local/dev",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:push": "scripts/actions/test -w push",
