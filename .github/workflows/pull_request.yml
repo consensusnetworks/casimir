@@ -17,6 +17,5 @@ jobs:
       - name: Test resources
         run: |
           npm install
-          npm run build
           npm run test
         working-directory: infrastructure/cdk
