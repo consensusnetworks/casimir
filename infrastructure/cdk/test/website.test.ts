@@ -13,9 +13,9 @@ test('Website Created', () => {
 
   const app = new cdk.App()
   const dnsStack = new DnsStack(app, `${project}DnsStack${stage}`, { env: defaultEnv, project, stage })
-  const { domain, dnsRecords, hostedZone, certificate } = dnsStack
-  const websiteStack = new WebsiteStack(app, `${project}WebsiteStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone, certificate })
-  const usersStack = new UsersStack(app, `${project}UsersStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone, certificate })
+  const { domain, dnsRecords, hostedZone } = dnsStack
+  const websiteStack = new WebsiteStack(app, `${project}WebsiteStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
+  const usersStack = new UsersStack(app, `${project}UsersStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
 
   const websiteTemplate = Template.fromStack(websiteStack)
   console.log(websiteTemplate)

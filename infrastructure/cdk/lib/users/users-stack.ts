@@ -13,7 +13,6 @@ export interface UsersStackProps extends StackProps {
     domain: string;
     dnsRecords: Record<string, string>;
     hostedZone: route53.HostedZone;
-    certificate: certmgr.DnsValidatedCertificate;
 }
 
 /**
