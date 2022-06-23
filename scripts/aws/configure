@@ -1,40 +1,43 @@
-#!/bin/sh
+#!/bin/bash
 # Configure process for a specific AWS profile
 #
 # Example:
 #
-#    scripts/aws/configure -p profile-to-use -s stage-to-use
+#    scripts/aws/configure
 #
 # Further information:
 # See https://docs.aws.amazon.com/
 #
 
-# Set defaults
+# Get variables from root .env
+export $(xargs < .env)
+
+# Set default profile
 profile="consensus-networks-dev"
-stage="dev"
 
-# Override PROFILE from .env if set
-export $(xargs < .env)
-if [ -n "$PROFILE" ]; then
+if [ ${PROFILE+x} ]; then
+    echo "PROFILE is set to '$PROFILE'"
     profile=$PROFILE
+else
+    export PROFILE="$profile"
+    echo "PROFILE is not set, using default profile '$PROFILE'"
 fi
 
-# Override STAGE from .env if set
-export $(xargs < .env)
-if [ -n "$STAGE" ]; then
-    stage=$STAGE
+# Override project if PROJECT is set in .env
+if [ ${PROJECT+x} ]; then
+    echo "PROJECT is set to '$PROJECT'"
+else
+    export PROJECT="casimir"
+    echo "PROJECT is not set, using default project '$PROJECT'"
 fi
 
-# Override with -p arg from command line if set
-while getopts p:s: flag
-do
-    case "${flag}" in
-        p) profile=${OPTARG};;
-        s) stage=${OPTARG};;
-    esac
-done
-
-echo "👾 Configuring '$stage' environment for '$profile'"
+# Override stage if STAGE is set in .env
+if [ ${STAGE+x} ]; then
+    echo "STAGE is set to '$STAGE'"
+else
+    export STAGE="dev"
+    echo "STAGE is not set, using default stage $STAGE"
+fi
 
 export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id --profile $profile)
 export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key --profile $profile)

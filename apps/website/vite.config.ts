@@ -31,7 +31,8 @@ const config: UserConfig = {
       '.tsx',
       '.vue',
     ]
-  }
+  },
+  envPrefix: 'PUBLIC_'
 }
 
 export default config

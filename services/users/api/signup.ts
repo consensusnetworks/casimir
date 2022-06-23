@@ -5,7 +5,7 @@ import {
 } from '@aws-sdk/client-pinpoint'
 import { APIGatewayEvent } from 'aws-lambda'
 import { pascalCase } from '@casimir/lib'
-import { SignupResponse } from '../env'
+import { APIGatewayResponse } from '../env'
 
 const appId = 'e80548536df34c7fb4a58bf64933190e'
 const sourceEmail = 'team@casimir.co'
@@ -16,13 +16,11 @@ const stage = process.env.STAGE || 'dev'
  * Sends a "Welcome" message to a newly signed up user via Pinpoint.
  *
  * @param event - The client request object
- * @returns A promise of SignupResponse with statusCode and body
+ * @returns A promise of APIGatewayResponse with statusCode and body
  *
  */
-export default async function signup(event: APIGatewayEvent): Promise<SignupResponse> {
+export default async function signup(event: APIGatewayEvent): Promise<APIGatewayResponse> {
     console.log('EVENT: ', event)
-
-    console.log('AWS_KEY: ', process.env.AWS_ACCESS_KEY_ID)
 
     const { body } = event
     const { email: destEmail } = JSON.parse(body as string)
@@ -75,21 +73,12 @@ export default async function signup(event: APIGatewayEvent): Promise<SignupResp
         ])
         console.log(data)
         return {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers' : 'Content-Type',
-                'Access-Control-Allow-Methods': 'OPTIONS,POST,PUT,GET,DELETE',
-                'Content-Type': 'application/json'
-            },
             statusCode: 200,
             body: data
         }
     } catch (error) {
         console.log(error)
         return {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            },
             statusCode: 500,
             body: error as Error
         }

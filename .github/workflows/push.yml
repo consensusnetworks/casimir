@@ -16,7 +16,7 @@ jobs:
 
     # Skip any pushes with commit flag '(skip deploy)'
     # Comment out for testing
-    if: ${{ !contains(github.event.head_commit.message, '(skip deploy)') }}
+    # if: ${{ !contains(github.event.head_commit.message, '(skip deploy)') }}
 
     steps:
       - name: Check out the repo
@@ -25,7 +25,7 @@ jobs:
       - name: Set the stage for testing
         if: ${{ github.actor == 'nektos/act' }}
         run: |
-          echo "STAGE=prod" >> $GITHUB_ENV
+          echo "STAGE=dev" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -44,6 +44,8 @@ jobs:
       - name: Build website app
         run: npm run build
         working-directory: apps/website
+        env:
+          PUBLIC_STAGE: ${{ env.STAGE }}
 
       - name: Build users service
         run: npm run build
@@ -55,13 +57,6 @@ jobs:
       - name: Build and deploy email templates
         run: npm run deploy:templates
 
-      - name: Set deployment outputs
-        run: |
-          export "STACK_KEY=${PROJECT^}${SERVICE^}Stack${STAGE^}"
-          export "DNS_KEY=${PROJECT^}${SERVICE^}DnsName${STAGE^}"
-          export "ARN_KEY=${PROJECT^}${SERVICE^}StackId${STAGE^}"
-          echo "WEBSITE_DNS=$(cat cdk-outputs.json | jq -r --arg stack_key "$STACK_KEY" --arg dns_key "$DNS_KEY" '.[$stack_key][$dns_key]')" >> $GITHUB_ENV
-          echo "WEBSITE_ARN=$(cat cdk-outputs.json | jq -r --arg stack_key "$STACK_KEY" --arg arn_key "$ARN_KEY" '.[$stack_key][$arn_key]')" >> $GITHUB_ENV
         env:
           SERVICE: website
 
@@ -96,7 +91,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Environment* · <https://${{ env.AWS_REGION }}.console.aws.amazon.com/cloudformation/home?region=${{ env.AWS_REGION }}#/stacks/stackinfo?stackId=${{ env.WEBSITE_ARN }}|${{ env.STAGE }}>"
+                      "text": "*Environment* · <https://${{ env.AWS_REGION }}.console.aws.amazon.com/cloudformation/home?region=${{ env.AWS_REGION }}#/stacks|${{ env.STAGE }}>"
                     }
                   ]
                 },
@@ -119,7 +114,7 @@ jobs:
                       },
                       "style": "primary",
                       "value": "preview",
-                      "url": "http://${{ env.WEBSITE_DNS }}"
+                      "url": "http://${{ env.STAGE }}.casimir.co"
                     },
                     {
                       "type": "button",
