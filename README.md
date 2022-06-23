@@ -75,7 +75,7 @@ You can get up and running without configuration. You can also mock local backen
     STAGE="sandbox"
     ```
 
-### Layout
+## Layout
 
 Code is organized into work directories (apps, services, infrastructure, etc.) Individual packages are managed from the project root with [workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces). 
 
@@ -99,7 +99,7 @@ Code is organized into work directories (apps, services, infrastructure, etc.) I
 
 > 🚩 While developing, most likely, you shouldn't have to change into any subdirectories to run commands.
 
-### Editor
+## Editor
 
 Feel free to use any editor, but here's a configuration that works with this codebase.
 
