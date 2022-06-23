@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Test the GitHub Actions workflows in `.github/workflows`
 #
 # Example:
@@ -13,32 +13,49 @@
 while getopts w: flag
 do
     case "${flag}" in
-        w) WORKFLOW=${OPTARG};;
+        w) workflow=${OPTARG};;
     esac
 done
 
-# Create local env and secrets files
-touch .secrets
+if [ -z "$workflow" ]; then
+    echo "⚠️ Workflow is not set – please specify as -w workflow-to-test (i.e. -w push)"
+    exit 1
+fi
 
-# Set default profile and override if specified in .env 
-PROFILE=consensus-networks-dev
+# Get variables from root .env
 export $(xargs < .env)
 
-echo "👾 Creating environment for '$PROFILE'"
+if [ -z "$SLACK_WEBHOOK_URL" ]; then
+    echo "⚠️ SLACK_WEBHOOK_URL is not set – please set a SLACK_WEBHOOK_URL in the root .env file"
+    exit 1
+fi
 
 # From .env
-echo SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL >> .secrets
+SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL
 
-# From AWS CLI
-echo AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id --profile $PROFILE) >> .secrets
-echo AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key --profile $PROFILE) >> .secrets
+# Set default profile
+profile="consensus-networks-dev"
+
+if [ ${PROFILE+x} ]; then
+    echo "PROFILE is set to '$PROFILE'"
+    profile=$PROFILE
+else
+    export PROFILE="$profile"
+    echo "PROFILE is not set, using default profile '$PROFILE'"
+fi
+
+export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id --profile $profile)
+export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key --profile $profile)
+
+if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+    echo "🙈 Could not find AWS credentials for profile '$profile'"
+    exit 1
+fi
 
 # Run selected workflow
-echo "🚀 Running $WORKFLOW workflow"
-act $WORKFLOW \
+echo "🚀 Running $workflow workflow"
+act $workflow \
 --rebuild \
---secret-file .secrets \
+--secret AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+--secret AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
 --verbose
-
-# Remove secrets
-rm -rf .secrets

@@ -19,27 +19,21 @@ See the supporting infrastructure and contracts @ [💎 Ethereum Stack](https://
 
 Casimir is an early work-in-progress – check out our website for more information about what we're building. Also, in the meantime, feel free to join @ [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
 
-## Setup
+## 💻 Development
 
 Get started contributing to Casimir.
 
 ### Prerequisites
 
-Make sure your development environment has the necessary prerequisites.
+Make sure your development environment has these prerequisites.
 
 1. [Node.js (v16.x)](https://nodejs.org/en/download/) – we use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
 
-2. [VSCode](https://code.visualstudio.com/) – you could also use another editor, but this helps us guarantee linter/formatter features.
+2. [AWS CLI (v2.x)](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
 
-3. [Volar VSCode Extension](https://marketplace.visualstudio.com/items?itemName=Vue.volar) – Vue 3 language support (turn off vetur and ts/js language features if you have problems arising from conflicts).
+3. [SAM CLI (v1.x)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) - tool for mocking backend services locally.
 
-4. [Eslint VSCode Extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) – linter and formatter.
-
-> *Note: AWS credentials usage is not yet set up, but we will require the AWS CLI when it is.*
-<br /><br />
-*5. [AWS CLI](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.*
-
-### Install
+### Setup
 
 Clone the repository, checkout a new branch from develop, and install all dependencies.
 
@@ -50,17 +44,70 @@ git checkout -b feature/stake-button develop
 npm install
 ```
 
-> This will install all workspace dependencies for this monorepo.
+> 🚩 This will install all workspace dependencies for this monorepo.
 
-## 💻 Development
+### Serve
 
-Run the development server for the default application ([apps/website](apps/website/) in this case) and backend services.
+You can get up and running without configuration. You can also mock local backend changes and customize your environment.
 
-```zsh
-npm run dev
+1. For frontend changes – run the development server and use the `dev` stage backend services.
+
+    ```zsh
+    npm run dev
+    ```
+
+    > 🚩 This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set PROFILE="some-other-name" in .env if you want to override).
+
+2. For fullstack changes – run the development server and mock the local backend services.
+
+    ```zsh
+    npm run dev --mock
+    ```
+
+    > 🚩 You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
+
+3. Optionally customize and override the defaults for your *local development environment* by creating a `.env` file in the project root and adding values for common variables.
+
+    ```zsh
+    # Override AWS profile name (defaults to "consensus-networks-dev")
+    PROFILE="some-other-aws-name"
+    # Override the environment stage name (defaults to "dev")
+    STAGE="sandbox"
+    ```
+
+## Layout
+
+Code is organized into work directories (apps, services, infrastructure, etc.) Individual packages are managed from the project root with [workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces). 
+
+```tree
+├── .github/ (workflows and issue templates)
+|   └── workflows/ (gh actions workflows)
+├── apps/ (frontend apps)
+|   └── website/ (main web app)
+├── infrastructure/ (deployment resources)
+|   └── cdk/ (aws stacks)
+├── common/ (shared code)
+|   └── lib/ (general utilities)
+├── content/ (static code and text)
+|   └── emails/ (pinpoint templates)
+├── scripts/ (devops and build scripts)
+|   └── local/ (mock and serve tasks)
+├── services/ (backend services)
+|   └── users/ (users lambda api)
+└── package.json (project npm scripts)
 ```
 
-> This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile.
+> 🚩 While developing, most likely, you shouldn't have to change into any subdirectories to run commands.
+
+## Editor
+
+Feel free to use any editor, but here's a configuration that works with this codebase.
+
+1. [VSCode](https://code.visualstudio.com/) – you could also use another editor, but this helps us guarantee linter/formatter features.
+
+2. [Volar VSCode Extension](https://marketplace.visualstudio.com/items?itemName=Vue.volar) – Vue 3 language support (turn off vetur and ts/js language features if you have problems arising from conflicts).
+
+3. [Eslint VSCode Extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) – linter and formatter.
 
 ## License
 

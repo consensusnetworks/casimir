@@ -13,8 +13,8 @@ declare module '*.vue' {
   export default component
 }
 
-declare type SignupResponse = {
+declare type APIGatewayResponse = {
   headers?: any
   statusCode: number
-  body: [UpdateEndpointCommandOutput, SendMessagesCommandOutput] | Error
+  body: [UpdateEndpointCommandOutput, SendMessagesCommandOutput] | any | Error
 }
