@@ -1,16 +1,16 @@
 <template>
   <div>
-    <button id="connect-metamask">
+    <button ref="connectMetamaskButton">
       connect-metamask
     </button>
-    <button id="getAccounts">
+    <button ref="getAccountsButton">
       eth_accounts
     </button>
 
-    <p id="eth-accounts">
-      connected eth_accounts: <span id="getAccountsResult">None yet</span>
+    <p>
+      connected eth_accounts: <span ref="getAccountsResult">None yet</span>
     </p>
-    <form @submit.prevent="transfer">
+    <!-- <form @submit.prevent="transfer">
       <div class="form-group">
         <input
           id="recipientAddress"
@@ -18,31 +18,31 @@
           type="text"
           class="form-control"
           placeholder="To Address"
-        />
+        >
         <input
           id="amount"
           v-model="amount"
           type="text"
           class="form-control"
           placeholder="Amount"
-        />
+        >
         <button @click="transfer(recipientAddress, amount)">
           Transfer
         </button>
       </div>
-    </form>
+    </form> -->
   </div>
 </template>
 
-<script setup>
-import { onMounted } from 'vue'
+<script setup lang="ts">
+import { onMounted, Ref, ref } from 'vue'
 import MetaMaskOnboarding from '@metamask/onboarding'
 const forwarderOrigin = 'http://localhost:9010'
-
+const connectMetamaskButton: Ref = ref<HTMLDivElement>()
+const getAccountsButton: Ref = ref<HTMLButtonElement>()
+const getAccountsResult: Ref = ref<HTMLSpanElement>()
+const ethereum: any = window.ethereum
 onMounted(() => {
-  const connectMetamaskButton = document.getElementById('connect-metamask')
-  const getAccountsButton = document.getElementById('getAccounts')
-  const getAccountsResult = document.getElementById('getAccountsResult')
 
   const onboarding = new MetaMaskOnboarding({ forwarderOrigin })
 
@@ -52,7 +52,7 @@ onMounted(() => {
       // TODO: Disable this button while the request is pending!
       // eslint-disable-next-line no-undef
       await ethereum.request({ method: 'eth_requestAccounts' })
-      connectMetamaskButton.innerHTML = 'Metamask connected'
+      connectMetamaskButton.value.innerHTML = 'Metamask connected'
     } catch (error) {
       console.error(error)
     }
@@ -60,41 +60,40 @@ onMounted(() => {
 
   const onClickInstall = () => {
     console.log('onClickInstall')
-    connectMetamaskButton.innerText = 'Refresh page after installing Metamask'
-    connectMetamaskButton.disabled = true
+    connectMetamaskButton.value.innerText = 'Refresh page after installing Metamask'
+    connectMetamaskButton.value.disabled = true
     // Starts the onboarding process for our end user
     onboarding.startOnboarding()
   }
 
   if (!isMetaMaskInstalled()) {
-    connectMetamaskButton.innerText = 'Click here to install MetaMask!'
-    connectMetamaskButton.onclick = onClickInstall
-    connectMetamaskButton.disabled = false
+    connectMetamaskButton.value.innerText = 'Click here to install MetaMask!'
+    connectMetamaskButton.value.onclick = onClickInstall
+    connectMetamaskButton.value.disabled = false
   } else {
-    connectMetamaskButton.innerText = 'Connect Metamask'
-    connectMetamaskButton.onclick = onClickConnect
-    connectMetamaskButton.disabled = false
+    connectMetamaskButton.value.innerText = 'Connect Metamask'
+    connectMetamaskButton.value.onclick = onClickConnect
+    connectMetamaskButton.value.disabled = false
   }
 
-  getAccountsButton.addEventListener('click', async () => {
+  getAccountsButton.value.addEventListener('click', async () => {
     // eslint-disable-next-line no-undef
     const accounts = await ethereum.request({ method: 'eth_accounts' })
     // TODO: Determine how to get other accounts not currently selected in metamask UI
     if (accounts.length > 0) {
-      accounts.forEach((account) => {
-        getAccountsResult.innerText = ''
+      accounts.forEach((account: string) => {
+        getAccountsResult.value.innerText = ''
         const p = document.createElement('p')
         p.innerText = account
-        getAccountsResult.appendChild(p)
+        getAccountsResult.value.appendChild(p)
       })
     } else {
-      getAccountsResult.innerText = 'No accounts found'
+      getAccountsResult.value.innerText = 'No accounts found'
     }
   })
 })
 
 const isMetaMaskInstalled = () => {
-  const { ethereum } = window
   return Boolean(ethereum && ethereum.isMetaMask)
 }
 </script>

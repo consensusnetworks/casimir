@@ -18,3 +18,9 @@ declare type SignupResponse = {
   statusCode: number
   body: [UpdateEndpointCommandOutput, SendMessagesCommandOutput] | Error
 }
+
+declare global {
+  interface Window {
+    ethereum: any;
+  }
+}
