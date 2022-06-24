@@ -81,7 +81,7 @@ export class UsersStack extends Stack {
         // Todo update to use new api gateway version when stable
         // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-apigateway-readme.html#apigateway-v2
         const apiGateway = new apigateway.LambdaRestApi(this, `${project}${this.service}ApiGateway${stage}`, {
-            restApiName: `${project}${this.service}UsersGateway${stage}`,
+            restApiName: `${project}${this.service}Gateway${stage}`,
             handler: lambdaHandler,
             domainName: {
                 domainName: [dnsRecords.users, serviceDomain].join('.'),
