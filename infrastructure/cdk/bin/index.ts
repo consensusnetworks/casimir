@@ -16,7 +16,7 @@ if (!process.env.PROJECT || !process.env.STAGE) {
 
     const app = new cdk.App()
     const dnsStack = new DnsStack(app, `${project}DnsStack${stage}`, { env: defaultEnv, project, stage })
-    const { domain, dnsRecords, hostedZone, certificate } = dnsStack
-    new WebsiteStack(app, `${project}WebsiteStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone, certificate })
-    new UsersStack(app, `${project}UsersStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone, certificate })
+    const { domain, dnsRecords, hostedZone } = dnsStack
+    new WebsiteStack(app, `${project}WebsiteStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
+    new UsersStack(app, `${project}UsersStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
 }
