@@ -17,9 +17,21 @@ Casimir is an early work-in-progress – check out [our website](https://casimir
 
 Also, in the meantime, feel free to join @ [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
 
+## 📝 Content
+
+Get started contributing to Casimir's content.
+
+### Writing
+
+Writing content is stored in the [content/writing/](content/writing/) directory. See the [Writing Contribution Guide](content/writing/README.md) for detailed usage instructions.
+
+### Emails
+
+AWS Pinpont email templates and shared components are stored in the [content/email/](content/email/) directory. See the [Email Contribution Guide](content/email/README.md) for detailed usage instructions.
+
 ## 💻 Development
 
-Get started contributing to Casimir.
+Get started contributing to Casimir's codebase.
 
 ### Prerequisites
 
@@ -64,7 +76,9 @@ You can get up and running without configuration. You can also mock local backen
 
     > 🚩 You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
 
-3. Optionally customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for common variables.
+### Environment
+
+Optionally customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for any supported variables.
 
     ```zsh
     # Override AWS profile name (defaults to "consensus-networks-dev")
@@ -87,7 +101,7 @@ Code is organized into work directories (apps, services, infrastructure, etc.) I
 ├── common/ (shared code)
 |   └── lib/ (general utilities)
 ├── content/ (static code and text)
-|   └── emails/ (pinpoint templates)
+|   └── email/ (pinpoint templates)
 ├── scripts/ (devops and build scripts)
 |   └── local/ (mock and serve tasks)
 ├── services/ (backend services)
