@@ -11,13 +11,11 @@
 
 Casimir is an all-in-one platform that allows users to trade, stake and track their assets while holding their own keys. One of Casimir's primary objectives is to reward crypto users for directly participating-in and strengthening the networks they rely on – by helping them stake directly to the most reliable (big and small) validators on PoS networks.
 
-See ongoing tasks @ [📋 Casimir Project](https://github.com/orgs/consensusnetworks/projects/9/views/1).
-
-See the supporting infrastructure and contracts @ [💎 Ethereum Stack](https://github.com/consensusnetworks/ethereum-stack) and [🪐 IoTeX Stack](https://github.com/consensusnetworks/iotex-stack) (more networks to come).
-
 ## Status
 
-Casimir is an early work-in-progress – we will share more information in the initial version of our [website](apps/website/). In the meantime, feel free to join @ [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
+Casimir is an early work-in-progress – check out [our website](https://casimir.co) for more information about what we're building. See ongoing tasks @ [📋 Casimir Project](https://github.com/orgs/consensusnetworks/projects/9/views/1).
+
+Also, in the meantime, feel free to join @ [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
 
 ## 💻 Development
 
@@ -56,7 +54,7 @@ You can get up and running without configuration. You can also mock local backen
     npm run dev
     ```
 
-    > 🚩 This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set PROFILE="some-other-name" in .env if you want to override).
+    > 🚩 This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set PROFILE="some-other-name" in a [.env](.env) if you want to override).
 
 2. For fullstack changes – run the development server and mock the local backend services.
 
@@ -66,7 +64,7 @@ You can get up and running without configuration. You can also mock local backen
 
     > 🚩 You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
 
-3. Optionally customize and override the defaults for your *local development environment* by creating a `.env` file in the project root and adding values for common variables.
+3. Optionally customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for common variables.
 
     ```zsh
     # Override AWS profile name (defaults to "consensus-networks-dev")
