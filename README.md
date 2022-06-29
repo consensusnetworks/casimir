@@ -80,12 +80,16 @@ You can get up and running without configuration. You can also mock local backen
 
 Optionally customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for any supported variables.
 
-    ```zsh
-    # Override AWS profile name (defaults to "consensus-networks-dev")
-    PROFILE="some-other-aws-name"
-    # Override the environment stage name (defaults to "dev")
-    STAGE="sandbox"
-    ```
+```zsh
+PROFILE="some-other-aws-name"
+STAGE="sandbox"
+```
+
+*Supported variables*
+| Name | Description | Default |
+| --- | --- | --- |
+| `PROFILE` | AWS profile name | `"consensus-networks-dev"` |
+| `STAGE` | Environment stage name | `"dev"` |
 
 ## Layout
 
