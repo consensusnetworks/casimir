@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
-    "deploy:templates": "scripts/pinpoint/deploy -d content/emails/templates",
+    "deploy:templates": "scripts/pinpoint/deploy -d content/email/templates",
     "dev": "scripts/local/dev",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
