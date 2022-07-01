@@ -28,7 +28,6 @@ Writing content is stored in the [content/writing](content/writing/) directory. 
 ### Emails
 
 AWS Pinpont email templates and shared components are stored in the [content/email](content/email/) directory. See the [Email Contribution Guide](content/email/README.md) for detailed usage instructions.
->>>>>>> develop
 
 ## 💻 Development
 
