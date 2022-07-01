@@ -53,6 +53,6 @@ Templates are deployed with the project GitHub workflows, but you can also deplo
 npm run deploy:templates
 ```
 
-> 🚩 Templates are auto-deployed to `dev` on pushes to the `develop` branch and are auto-deployed 
+> 🚩 Templates are auto-deployed to `dev` on pushes to the `develop` branch and are auto-deployed to `prod` on releases from the `master` branch.
 
 
