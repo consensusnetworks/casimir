@@ -13,9 +13,9 @@ Casimir is an all-in-one platform that allows users to trade, stake and track th
 
 ## Status
 
-Casimir is an early work-in-progress – check out [our website](https://casimir.co) for more information about what we're building. See ongoing tasks @ [📋 Casimir Project](https://github.com/orgs/consensusnetworks/projects/9/views/1).
+Casimir is an early work-in-progress – check out [our website](https://casimir.co) for more information about what we're building. See ongoing tasks on our [project board](https://github.com/orgs/consensusnetworks/projects/9/views/1).
 
-Also, in the meantime, feel free to join @ [💬 Casimir Discord](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
+Also, feel free to join our [discord server](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
 
 ## 📝 Content
 
@@ -23,11 +23,11 @@ Get started contributing to Casimir's content.
 
 ### Writing
 
-Writing content is stored in the [content/writing/](content/writing/) directory. See the [Writing Contribution Guide](content/writing/README.md) for detailed usage instructions.
+Writing content is stored in the [content/writing](content/writing/) directory. See the [Writing Contribution Guide](content/writing/README.md) for detailed usage instructions.
 
 ### Emails
 
-AWS Pinpont email templates and shared components are stored in the [content/email/](content/email/) directory. See the [Email Contribution Guide](content/email/README.md) for detailed usage instructions.
+AWS Pinpont email templates and shared components are stored in the [content/email](content/email/) directory. See the [Email Contribution Guide](content/email/README.md) for detailed usage instructions.
 
 ## 💻 Development
 
@@ -93,7 +93,7 @@ STAGE="sandbox"
 
 ## Layout
 
-Code is organized into work directories (apps, services, infrastructure, etc.) Individual packages are managed from the project root with [workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces). 
+Code is organized into work directories (apps, services, infrastructure – and more listed below). Individual packages are managed from the project root with [workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces). 
 
 ```tree
 ├── .github/ (workflows and issue templates)
