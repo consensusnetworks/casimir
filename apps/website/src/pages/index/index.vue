@@ -14,17 +14,11 @@ const botTrapInput = ref('')
 const timeArrived = ref(new Date().getTime())
 
 async function onSubmit() {
-  const validEmail = validateEmail(email.value)
-  const isBotTrap = botTrapInput.value.length ? true : false
-  if (isBotTrap) return
-  if (!validEmail) {
-    invalidMessage.value.style.display = 'block'
-    return
-  }
+  const isLikelyABot = checkForBot()
+  if (isLikelyABot) return
 
-  const timeNow = new Date().getTime()
-  const timeDiff = timeNow - timeArrived.value
-  if (timeDiff < 3000) {
+  const validEmail = validateEmail(email.value)
+  if (!validEmail) {
     invalidMessage.value.style.display = 'block'
     return
   }
@@ -48,13 +42,32 @@ const hideMessages = () => {
  *
  *
  * @param email {string} email string from user input to validate
+ * @returns {boolean} true if email is valid, false if not
  */
-function validateEmail(email: string) {
+function validateEmail(email: string): boolean {
   const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
   if (email.length < 5 || email.length > 100) {
     return false
   }
   return re.test(String(email).toLowerCase())
+}
+
+/**
+ *
+ *
+ * @returns {boolean} true if bot, false if not
+ */
+function checkForBot(): boolean {
+  const botTrap = botTrapInput.value.length ? true : false
+  if (botTrap) return true
+  const timeNow = new Date().getTime()
+  const timeDiff = timeNow - timeArrived.value
+  if (timeDiff < 3000) {
+    invalidMessage.value.style.display = 'block'
+    return true
+  } else {
+    return false
+  }
 }
 </script>
 
@@ -122,9 +135,9 @@ function validateEmail(email: string) {
           >
             Please enter a valid email.
           </div>
-          <span class="small-text text-[#667085] pl-[5px]"
-            >We won't spam you. We promise.</span
-          >
+          <span class="small-text text-[#667085] pl-[5px]">
+            We won't spam you. We promise.
+          </span>
         </form>
       </div>
       <div class="min-w-[370px] w-1/2 h-[500px] relative overflow-hidden">
