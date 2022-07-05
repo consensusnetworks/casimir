@@ -29,16 +29,28 @@
   },
   "homepage": "https://github.com/consensusnetworks/casimir#readme",
   "devDependencies": {
-    "@types/node": "^17.0.38",
-    "@typescript-eslint/eslint-plugin": "^5.27.0",
-    "@typescript-eslint/parser": "^5.27.0",
+    "@nomiclabs/hardhat-ethers": "^2.0.6",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "@typechain/ethers-v5": "^10.1.0",
+    "@typechain/hardhat": "^6.1.2",
+    "@types/chai": "^4.3.1",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "^17.0.45",
+    "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "@typescript-eslint/parser": "^5.30.5",
     "@vue/eslint-config-typescript": "^10.0.0",
-    "eslint": "^8.16.0",
+    "chai": "^4.3.6",
+    "eslint": "^8.19.0",
     "eslint-plugin-vue": "^8.7.1",
+    "ethereum-waffle": "^3.4.4",
+    "ethers": "^5.6.9",
+    "hardhat": "^2.9.9",
     "html-to-text": "^8.2.0",
     "lint-staged": "^13.0.0",
     "mjml": "^4.12.0",
-    "release-it": "^15.0.0"
+    "release-it": "^15.0.0",
+    "ts-node": "^10.8.2",
+    "typechain": "^8.1.0"
   },
   "lint-staged": {
     "*.{ts,vue}": "npm run lint"
