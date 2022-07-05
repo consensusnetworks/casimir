@@ -1,36 +1,29 @@
 <template>
   <div>
-    <button ref="connectMetamaskButton">
-      connect-metamask
-    </button>
-    <button ref="getAccountsButton">
-      eth_accounts
-    </button>
-
-    <p>
-      connected eth_accounts: <span ref="getAccountsResult">None yet</span>
-    </p>
-    <!-- <form @submit.prevent="transfer">
-      <div class="form-group">
-        <input
-          id="recipientAddress"
-          v-model="recipientAddress"
-          type="text"
-          class="form-control"
-          placeholder="To Address"
-        >
-        <input
-          id="amount"
-          v-model="amount"
-          type="text"
-          class="form-control"
-          placeholder="Amount"
-        >
-        <button @click="transfer(recipientAddress, amount)">
-          Transfer
-        </button>
-      </div>
-    </form> -->
+    <div class="metamask-div">
+      <button ref="connectMetamaskButton">
+        connect-metamask
+      </button>
+      <button ref="getAccountsButton">
+        eth_accounts
+      </button>
+      <p>
+        connected eth_accounts: <span ref="getAccountsResult">None yet</span>
+      </p>
+    </div>
+    <!-- Allow user to connect coinbase wallet -->
+    <div class="coinbase-div">
+      <button ref="connectCoinbaseButton" class="coinbase-btn">
+        connect-coinbase
+      </button>
+      <button ref="getCoinbaseButton" class="coinbase-btn">
+        coinbase_accounts
+      </button>
+      <p>
+        connected coinbase_accounts:
+        <span ref="getCoinbaseResult">None yet</span>
+      </p>
+    </div>
   </div>
 </template>
 
@@ -43,7 +36,6 @@ const getAccountsButton: Ref = ref<HTMLButtonElement>()
 const getAccountsResult: Ref = ref<HTMLSpanElement>()
 const ethereum: any = window.ethereum
 onMounted(() => {
-
   const onboarding = new MetaMaskOnboarding({ forwarderOrigin })
 
   const onClickConnect = async () => {
@@ -60,7 +52,8 @@ onMounted(() => {
 
   const onClickInstall = () => {
     console.log('onClickInstall')
-    connectMetamaskButton.value.innerText = 'Refresh page after installing Metamask'
+    connectMetamaskButton.value.innerText =
+      'Refresh page after installing Metamask'
     connectMetamaskButton.value.disabled = true
     // Starts the onboarding process for our end user
     onboarding.startOnboarding()
@@ -126,5 +119,9 @@ button {
   width: 100%;
   margin-top: 1rem;
   margin-bottom: 1rem;
+}
+
+.coinbase-btn {
+  background-color: blue;
 }
 </style>

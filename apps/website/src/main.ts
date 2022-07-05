@@ -9,7 +9,7 @@ import routes from '~pages'
 const app = createApp(App)
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 })
 app.use(router)
 app.mount('#app')

@@ -2,7 +2,6 @@
 import { ArrowRightIcon } from '@heroicons/vue/solid'
 import { ref, onMounted } from 'vue'
 import Puddles from '@/components/Puddles.vue'
-import Wallet from '../../components/Wallet.vue'
 
 const email = ref('')
 async function onSubmit() {
@@ -123,7 +122,6 @@ onMounted(() => {
             >We won't spam you. We promise.</span
           >
         </form>
-        <Wallet />
       </div>
       <div class="min-w-[370px] w-1/2 h-[500px] relative overflow-hidden">
         <Puddles class="absolute right-[-300px] top-[-200px]" />
