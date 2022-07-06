@@ -58,4 +58,5 @@ act $workflow \
 --rebuild \
 --secret AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
 --secret AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+--secret SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL \
 --verbose
