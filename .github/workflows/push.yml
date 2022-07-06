@@ -57,9 +57,6 @@ jobs:
       - name: Build and deploy email templates
         run: npm run deploy:templates
 
-        env:
-          SERVICE: website
-
       - name: Select success emoji
         if: ${{ success() }}
         run: echo 'EMOJI=:rocket:' >> $GITHUB_ENV
