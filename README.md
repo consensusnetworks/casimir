@@ -56,7 +56,7 @@ npm install
 
 > 🚩 This will install all workspace dependencies for this monorepo.
 
-### Serve
+### Apps
 
 You can get up and running without configuration. You can also mock local backend changes and customize your environment.
 
@@ -75,6 +75,49 @@ You can get up and running without configuration. You can also mock local backen
     ```
 
     > 🚩 You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
+
+### Hardhat
+
+Solidity contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [hardhat.config.ts](hardhat.config.ts) file.
+
+1. Compile the contracts in [contracts/](contracts/).
+    
+    ```zsh
+    npm run task:compile
+    ```
+
+2. Deploy a contract, specifically [contracts/Sample.sol](contracts/Sample.sol) with [scripts/hardhat/sample.ts](scripts/hardhat/sample.ts).
+
+    ```zsh
+    npm run deploy:sample
+    ```
+
+3. Test the Sample with the tests in [scripts/hardhat/test/](scripts/hardhat/test/).
+
+    ```zsh
+    npm run test:contracts
+    ```
+
+4. Start a local Ethereum node.
+
+    ```zsh
+    npm run node:local
+    ```
+
+5. Print all local accounts.
+
+    ```zsh
+    npm run task:accounts
+    ```
+
+*Todo finish sample flow (show usage of compiled contract ABI in app)*
+6. Use a contract in a Casimir app...
+   
+7. Clean [contracts/build/artifacts/](contracts/build/artifacts/) and [contracts/build/cache/](contracts/build/cache/)). (Note, this is useful if you change the Hardhat configuration.)
+
+    ```zsh
+    npm run task:clean
+    ``` 
 
 ### Environment
 

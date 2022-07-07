@@ -15,7 +15,13 @@
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:push": "scripts/actions/test -w push",
-    "release": "release-it"
+    "release": "release-it",
+    "deploy:sample": "npx hardhat run scripts/hardhat/sample.ts",
+    "test:contracts": "npx hardhat test",
+    "task:accounts": "npx hardhat accounts",
+    "task:compile": "npx hardhat compile",
+    "task:clean": "npx hardhat clean",
+    "node:local": "npx hardhat node"
   },
   "repository": {
     "type": "git",
