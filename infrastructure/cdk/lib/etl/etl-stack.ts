@@ -2,9 +2,6 @@ import { Stack, StackProps } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as glue from '@aws-cdk/aws-glue-alpha'
-// import * as glue from 'aws-cdk-lib/aws-glue'
-// import * as lambda from 'aws-cdk-lib/aws-lambda'
-// import { S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 
 export interface EtlStackProps extends StackProps {
     project: string;
@@ -25,8 +22,18 @@ export class EtlStack extends Stack {
             databaseName: databaseName.toLowerCase()
         })
 
-        const eventBucket = new s3.Bucket(this, `${project}${this.service}EventBucket${stage}`)
-        const aggBucket = new s3.Bucket(this, `${project}${this.service}AggBucket${stage}`)
+        const eventBucket = new s3.Bucket(this, `${project}${this.service}EventBucket${stage}`, {
+            bucketName: `${project}-${this.service}-event-bucket-${stage}`.toLowerCase(),
+        })
+
+        const aggBucket = new s3.Bucket(this, `${project}${this.service}AggBucket${stage}`, {
+            bucketName: `${project}-${this.service}-agg-bucket-${stage}`.toLowerCase(),
+        })
+
+        // Output bucket for Athena queries
+        new s3.Bucket(this, `${project}${this.service}OutputBucket${stage}`, {
+            bucketName: `${project}-${this.service}-output-bucket-${stage}`.toLowerCase(),
+        })
 
         const eventTableName = `${project}_${this.service}_Event_Table_${stage}`
         new glue.Table(this, `${project}${this.service}EventTable${stage}`, {
@@ -112,16 +119,5 @@ export class EtlStack extends Stack {
             ],
             dataFormat: glue.DataFormat.JSON,
         })
-
-        // Todo remove after reference commit
-        // const processor = new lambda.Function(this, `${project}${this.service}Processor${stage}`, {
-        //   runtime: lambda.Runtime.NODEJS_14_X,
-        //   handler: 'index.handler',
-        //   code: lambda.Code.fromAsset('../../services/processor')
-        // })
-
-        // processor.addEventSource(new S3EventSource(eventBucket, {
-        //   events: [s3.EventType.OBJECT_CREATED]
-        // }))
     }
 }
