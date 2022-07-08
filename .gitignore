@@ -8,4 +8,4 @@ aws.env
 *.log
 
 # Hardhat
-contracts/build/cache
+contracts/solidity/build/cache
