@@ -113,11 +113,13 @@ Solidity contract development is serviced through [Hardhat](https://hardhat.io/)
 *Todo finish sample flow (show usage of compiled contract ABI in app)*
 6. Use a contract in a Casimir app...
    
-7. Clean [contracts/build/artifacts/](contracts/build/artifacts/) and [contracts/build/cache/](contracts/build/cache/)). (Note, this is useful if you change the Hardhat configuration.)
+7. Clean [contracts/build/artifacts/](contracts/build/artifacts/) and [contracts/build/cache/](contracts/build/cache/)).    
 
     ```zsh
     npm run task:clean
     ``` 
+
+    > 🚩 Note, this is required if you change the Hardhat configuration.
 
 ### Environment
 
