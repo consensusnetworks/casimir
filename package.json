@@ -5,20 +5,24 @@
   "workspaces": [
     "apps/*",
     "common/*",
+    "contracts/*",
     "infrastructure/*",
     "services/*"
   ],
   "scripts": {
-    "config": "scripts/aws/configure",
-    "premock": "npm run config & npm run build --workspace @casimir/users",
-    "mock": "scripts/cdk/mock -d infrastructure/cdk -s users",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
-    "deploy:templates": "scripts/pinpoint/deploy -d content/emails/templates",
-    "dev": "npm run mock & npm run dev --workspace @casimir/website",
+    "deploy:templates": "scripts/pinpoint/deploy -d content/email/templates",
+    "dev": "scripts/local/dev",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:push": "scripts/actions/test -w push",
-    "release": "release-it"
+    "release": "release-it",
+    "deploy:sample": "npm run deploy:sample --workspace @casimir/solidity",
+    "test:contracts": "npm run test:contracts --workspace @casimir/solidity",
+    "task:accounts": "npm run task:accounts --workspace @casimir/solidity",
+    "task:compile": "npm run task:compile --workspace @casimir/solidity",
+    "task:clean": "npm run task:clean --workspace @casimir/solidity",
+    "node:local": "npm run node:local --workspace @casimir/solidity"
   },
   "repository": {
     "type": "git",
@@ -32,11 +36,10 @@
   },
   "homepage": "https://github.com/consensusnetworks/casimir#readme",
   "devDependencies": {
-    "@types/node": "^17.0.38",
-    "@typescript-eslint/eslint-plugin": "^5.27.0",
-    "@typescript-eslint/parser": "^5.27.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "@typescript-eslint/parser": "^5.30.5",
     "@vue/eslint-config-typescript": "^10.0.0",
-    "eslint": "^8.16.0",
+    "eslint": "^8.19.0",
     "eslint-plugin-vue": "^8.7.1",
     "html-to-text": "^8.2.0",
     "lint-staged": "^13.0.0",

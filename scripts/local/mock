@@ -1,0 +1,64 @@
+#!/bin/bash
+# Mock AWS api resources from CDK stacks with SAM CLI
+#
+# Example:
+#
+#    scripts/local/mock -d ./path/to/cdk-directory -s string-of-services (i.e. -s users,analytics)
+#
+# Further information:
+# See https://docs.aws.amazon.com/cdk/api/v2/
+#
+
+# Get args
+while getopts d:s: flag
+do
+    case "${flag}" in
+        d) directory=${OPTARG};;
+        s) services=${OPTARG};;
+    esac
+done
+
+# Check required args
+if [ -z "$directory" ]; then
+    echo "⚠️ CDK source directory is not set – please specify as -d ./path/to/cdk-directory"
+    exit 1
+fi
+
+if [ -z "$(ls -A $directory)" ]; then
+    echo "⚠️ CDK source directory is empty – please make sure you have a valid CDK source directory"
+    exit 1
+fi
+
+if [ -z "$services" ]; then
+    echo "⚠️ Services to mock are not set – please specify as -s string-of-services (i.e. -s users,analytics)"
+    exit 1
+fi
+
+# Set PascalCase variables
+Project=$(perl -ne 'print ucfirst' <<< $PROJECT)
+Stage=$(perl -ne 'print ucfirst' <<< $STAGE)
+
+echo "🎨 Mocking CDK app"
+cd $directory
+
+# Mock CDK app
+npm install
+
+# Loop over comma-separated string of services
+IFS=',' read -r -a service_list <<< "$services"
+
+for service in "${service_list[@]}"
+do
+    npm run build --workspace @casimir/$service
+    npx cdk bootstrap
+    npx cdk synth
+    SERVICE=$(echo $service | tr '[:lower:]' '[:upper:]')
+    portname=PUBLIC_${SERVICE}_PORT
+    port=$(echo ${!portname})
+    echo "🎨 Mocking $service service on port $port"
+    Service=$(perl -ne 'print ucfirst' <<< $service)
+    sam local start-api \
+    --port $port \
+    --template ./cdk.out/${Project}${Service}Stack${Stage}.template.json \
+    --profile $PROFILE & # Run in parallel
+done

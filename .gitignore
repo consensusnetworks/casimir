@@ -6,3 +6,6 @@ node_modules
 template.out
 aws.env
 *.log
+
+# Hardhat
+contracts/solidity/build/cache

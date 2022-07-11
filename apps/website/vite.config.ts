@@ -33,8 +33,17 @@ const config: UserConfig = {
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src'),
       './runtimeConfig': './runtimeConfig.browser',
     },
-    extensions: ['.js', '.json', '.jsx', '.mjs', '.ts', '.tsx', '.vue'],
+    extensions: [
+      '.js',
+      '.json',
+      '.jsx',
+      '.mjs',
+      '.ts',
+      '.tsx',
+      '.vue',
+    ]
   },
+  envPrefix: 'PUBLIC_'
 }
 
 export default config

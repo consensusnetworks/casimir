@@ -69,16 +69,6 @@ jobs:
         env:
           TARGET_BRANCH: develop
 
-      - name: Set deployment outputs
-        run: |
-          export "STACK_KEY=${PROJECT^}${SERVICE^}Stack${STAGE^}"
-          export "DNS_KEY=${PROJECT^}${SERVICE^}DnsName${STAGE^}"
-          export "ARN_KEY=${PROJECT^}${SERVICE^}StackId${STAGE^}"
-          echo "WEBSITE_DNS=$(cat cdk-outputs.json | jq -r --arg stack_key "$STACK_KEY" --arg dns_key "$DNS_KEY" '.[$stack_key][$dns_key]')" >> $GITHUB_ENV
-          echo "WEBSITE_ARN=$(cat cdk-outputs.json | jq -r --arg stack_key "$STACK_KEY" --arg arn_key "$ARN_KEY" '.[$stack_key][$arn_key]')" >> $GITHUB_ENV
-        env:
-          SERVICE: website
-
       - name: Select success emoji
         if: ${{ success() }}
         run: echo 'EMOJI=:rocket:' >> $GITHUB_ENV
@@ -110,7 +100,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Environment* · <https://${{ env.AWS_REGION }}.console.aws.amazon.com/cloudformation/home?region=${{ env.AWS_REGION }}#/stacks/stackinfo?stackId=${{ env.WEBSITE_ARN }}|${{ env.STAGE }}>"
+                      "text": "*Environment* · <https://${{ env.AWS_REGION }}.console.aws.amazon.com/cloudformation/home?region=${{ env.AWS_REGION }}#/stacks|${{ env.STAGE }}>"
                     }
                   ]
                 },

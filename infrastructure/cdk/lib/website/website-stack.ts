@@ -8,6 +8,14 @@ import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment'
 import { Distribution, OriginAccessIdentity } from 'aws-cdk-lib/aws-cloudfront'
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins'
 
+export interface WebsiteStackProps extends StackProps {
+  project: string;
+  stage: string;
+  domain: string;
+  dnsRecords: Record<string, string>;
+  hostedZone: route53.HostedZone;
+}
+
 /**
  * Class representing the website stack.
  *
@@ -16,13 +24,16 @@ import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins'
  */
 export class WebsiteStack extends Stack {
 
+  public readonly service: string = 'Website'
+  public readonly assetPath: string = '../../apps/website/dist'
+
   /**
    * WebsiteStack class constructor.
    * 
    * Shortest name:  {@link (WebsiteStack:constructor)}
    * Full name:      {@link (WebsiteStack:constructor)}
    */
-  constructor(scope: Construct, id: string, props?: StackProps) {
+  constructor(scope: Construct, id: string, props: WebsiteStackProps) {
 
     /**
      * WebsiteStack class constructor super method.
@@ -32,75 +43,68 @@ export class WebsiteStack extends Stack {
      */
     super(scope, id, props)
 
-    // const stackName = Stack.of(this).stackName
-    const project = process.env.PROJECT?.replace(/\b\w/g, c => c.toUpperCase())
-    const stage = process.env.STAGE?.replace(/\b\w/g, c => c.toUpperCase())
-    const service = 'Website'
-    const useDomain = stage === 'Prod'
+    const { project, stage, domain, dnsRecords, hostedZone } = props
 
-    const bucket = new Bucket(this, `${project}${service}Bucket${stage}`, {
+    // Use casimir.co for prod and dev.casimir.co for dev
+    const serviceDomain = stage === 'Prod' ? domain : [stage.toLowerCase(), domain].join('.')
+    
+    const certificate = new certmgr.DnsValidatedCertificate(this, `${project}${this.service}Cert${stage}`, {
+      domainName: serviceDomain,
+      subjectAlternativeNames: [
+        [dnsRecords.website, serviceDomain].join('.')
+      ],
+      hostedZone,
+      region: 'us-east-1'
+    })
+
+    const bucket = new Bucket(this, `${project}${this.service}Bucket${stage}`, {
       accessControl: BucketAccessControl.PRIVATE
     })
 
-    new BucketDeployment(this, `${project}${service}BucketDeployment${stage}`, {
+    new BucketDeployment(this, `${project}${this.service}BucketDeployment${stage}`, {
       destinationBucket: bucket,
-      sources: [Source.asset('../../apps/website/dist')]
+      sources: [Source.asset(this.assetPath)]
     })
 
-    const originAccessIdentity = new OriginAccessIdentity(this, `${project}${service}OriginAccessIdentity${stage}`)
+    const originAccessIdentity = new OriginAccessIdentity(this, `${project}${this.service}OriginAccessIdentity${stage}`)
     bucket.grantRead(originAccessIdentity)
 
-    if (useDomain) {
-      
-      const domain = 'casimir.co'
-
-      const hostedZone = route53.HostedZone.fromLookup(this, `${project}${service}HostedZone${stage}`, {
-        domainName: domain,
-      })
-
-      const certificate = new certmgr.DnsValidatedCertificate(this, `${project}${service}Cert${stage}`, {
-        domainName: domain,
-        subjectAlternativeNames: [`www.${domain}`],
-        hostedZone,
-        region: 'us-east-1'
-      })
-
-      const distribution = new Distribution(this, `${project}${service}Distribution${stage}`, {
-        defaultRootObject: 'index.html',
-        errorResponses: [
-          {
-            httpStatus: 403,
-            responseHttpStatus: 200,
-            responsePagePath: '/index.html',
-            ttl: Duration.minutes(30)
-          },
-          {
-            httpStatus: 404,
-            responseHttpStatus: 200,
-            responsePagePath: '/index.html',
-            ttl: Duration.minutes(30)
-          }
-        ],
-        defaultBehavior: {
-          origin: new S3Origin(bucket, { originAccessIdentity }),
+    const distribution = new Distribution(this, `${project}${this.service}Distribution${stage}`, {
+      defaultRootObject: 'index.html',
+      errorResponses: [
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: Duration.minutes(30)
         },
-        domainNames: [domain, `www.${domain}`],
-        certificate
-      })
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: Duration.minutes(30)
+        }
+      ],
+      defaultBehavior: {
+        origin: new S3Origin(bucket, { originAccessIdentity }),
+      },
+      domainNames: [serviceDomain, [dnsRecords.website, serviceDomain].join('.')],
+      certificate
+    })
 
-      new route53.ARecord(this, `${project}${service}DnsARecord${stage}`, {
-        zone: hostedZone as route53.IHostedZone,
-        target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
-        ttl: Duration.minutes(1),
-      })
+    new route53.ARecord(this, `${project}${this.service}DnsARecord${stage}`, {
+      recordName: serviceDomain,
+      zone: hostedZone as route53.IHostedZone,
+      target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
+      ttl: Duration.minutes(1),
+    })
 
-      new route53.ARecord(this, `${project}${service}DnsARecordWww${stage}`, {
-        recordName: 'www.' + domain,
-        zone: hostedZone as route53.IHostedZone,
-        target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
-        ttl: Duration.minutes(1),
-      })
-    }
+    new route53.ARecord(this, `${project}${this.service}DnsARecordWww${stage}`, {
+      recordName: [dnsRecords.website, serviceDomain].join('.'),
+      zone: hostedZone as route53.IHostedZone,
+      target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
+      ttl: Duration.minutes(1),
+    })
 
   }
 }

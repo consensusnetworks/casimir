@@ -1,0 +1,34 @@
+#!/bin/bash
+# Select ports for services
+#
+
+echo "npm_config_mock is set to '$npm_config_mock'"
+
+# Configure and expose variables
+source scripts/aws/configure
+export PUBLIC_STAGE=${STAGE}
+
+if [ ${npm_config_mock+x} ]; then
+
+    # Set comma-separated list of services to mock
+    services="users"
+
+    # Loop over comma-separated string of services
+    IFS=',' read -r -a service_list <<< "$services"
+    port=3999
+
+    # Todo kill dynamically
+    kill -9 $(lsof -ti:4000,4001,4002)
+
+    export PUBLIC_MOCK_ENABLED=$npm_config_mock
+
+    for service in "${service_list[@]}"
+    do
+        SERVICE=$(echo $service | tr '[:lower:]' '[:upper:]')
+        port=$(( port + 1 ))
+        export PUBLIC_${SERVICE}_PORT=$port
+    done
+    scripts/local/mock -d infrastructure/cdk -s $services & npm run dev --workspace @casimir/website
+else
+    npm run dev --workspace @casimir/website
+fi
