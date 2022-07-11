@@ -62,8 +62,5 @@
     "hooks": {
       "after:bump": "npx auto-changelog -p"
     }
-  },
-  "dependencies": {
-    "@metamask/onboarding": "^1.0.1"
   }
 }
