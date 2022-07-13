@@ -28,7 +28,6 @@
 <script setup lang="ts">
 import { onMounted, Ref, ref } from 'vue'
 import { WalletProvider } from '@/interfaces/WalletProvider'
-import { Web3Provider } from '@/interfaces/Web3Provider'
 import { ethers } from 'ethers'
 
 const connectMetamaskButton: Ref = ref<HTMLDivElement>()
