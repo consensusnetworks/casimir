@@ -1,11 +1,12 @@
 import pinpointClient from '../lib/pinpoint'
 import {
     SendMessagesCommand,
-    UpdateEndpointCommand
+    SendMessagesCommandOutput,
+    UpdateEndpointCommand,
+    UpdateEndpointCommandOutput
 } from '@aws-sdk/client-pinpoint'
-import { APIGatewayEvent } from 'aws-lambda'
+import express from 'express'
 import { pascalCase } from '@casimir/lib'
-import { APIGatewayResponse } from '../env'
 
 const appId = 'e80548536df34c7fb4a58bf64933190e'
 const sourceEmail = 'team@casimir.co'
@@ -15,15 +16,13 @@ const stage = process.env.STAGE || 'dev'
 /**
  * Sends a "Welcome" message to a newly signed up user via Pinpoint.
  *
- * @param event - The client request object
- * @returns A promise of APIGatewayResponse with statusCode and body
+ * @param res - The client request object
+ * @returns A promise of data object with list of Pinpoint responses [UpdateEndpointCommandOutput, SendMessagesCommandOutput]
  *
  */
-export default async function signup(event: APIGatewayEvent): Promise<APIGatewayResponse> {
-    console.log('EVENT: ', event)
-
-    const { body } = event
-    const { email: destEmail } = JSON.parse(body as string)
+export default async function signup(res: express.Request): Promise<{ data: { signup: [UpdateEndpointCommandOutput, SendMessagesCommandOutput] }}> {
+    const { body } = res
+    const { email: destEmail } = body
 
     console.log('Sending welcome message to:', destEmail)
 
@@ -66,21 +65,10 @@ export default async function signup(event: APIGatewayEvent): Promise<APIGateway
     const updateEndpoint = new UpdateEndpointCommand(updateEndpointParams)
     const sendMessage = new SendMessagesCommand(sendMessageParams)
 
-    try {
-        const data = await Promise.all([
-            pinpointClient.send(updateEndpoint),
-            pinpointClient.send(sendMessage)
-        ])
-        console.log(data)
-        return {
-            statusCode: 200,
-            body: data
-        }
-    } catch (error) {
-        console.log(error)
-        return {
-            statusCode: 500,
-            body: error as Error
-        }
-    }
+    const signup = await Promise.all([
+        pinpointClient.send(updateEndpoint),
+        pinpointClient.send(sendMessage)
+    ])
+
+    return { data: { signup } }
 }
