@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "@casimir/diagrams"
+version = "0.0.1"
+description = "Diagrams-as-code notebook for documenting Casimir"
+authors = ["Consensus Networks <robosupport@consensusnetworks.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+diagrams = "^0.21.1"
+
+[tool.poetry.dev-dependencies]
+ipykernel = "^6.15.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
