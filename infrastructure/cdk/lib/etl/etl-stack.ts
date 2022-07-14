@@ -63,7 +63,7 @@ export class EtlStack extends Stack {
                 },
                 {
                     name: 'staked_amount',
-                    type: glue.Schema.BIG_INT,
+                    type: glue.Schema.STRING,
                     comment: 'The amount staked or unstaked in the stake action event'
                 },
                 {
@@ -103,7 +103,7 @@ export class EtlStack extends Stack {
                 },
                 {
                     name: 'total_staked_amount',
-                    type: glue.Schema.BIG_INT,
+                    type: glue.Schema.STRING,
                     comment: 'The total amount that a wallet has staked'
                 },
                 {
