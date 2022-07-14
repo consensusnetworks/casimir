@@ -43,9 +43,13 @@ Make sure your development environment has these prerequisites.
 
 3. [SAM CLI (v1.x)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) - tool for mocking backend services locally.
 
+### Scripts and dependencies
+
+We are using [npm workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) to simplify monorepo development workflows while keeping project-wide resources accessible.
+
 ### Setup
 
-Clone the repository, checkout a new branch from develop, and install all dependencies.
+Clone the repository, checkout a new branch from develop, and install all workspace dependencies.
 
 ```zsh
 git clone https://github.com/consensusnetworks/casimir.git
@@ -54,7 +58,7 @@ git checkout -b feature/stake-button develop
 npm install
 ```
 
-> 🚩 This will install all workspace dependencies for this monorepo.
+> 🚩 'All workspace dependencies' includes `package.json` dependencies listed in the project root and any workspace subdirectories. See [Scripts and dependencies](#-scripts-and-dependencies).
 
 ### Serve
 
@@ -85,7 +89,8 @@ PROFILE="some-other-aws-name"
 STAGE="sandbox"
 ```
 
-*Supported variables*
+#### Supported variables
+
 | Name | Description | Default |
 | --- | --- | --- |
 | `PROFILE` | AWS profile name | `"consensus-networks-dev"` |
@@ -93,7 +98,7 @@ STAGE="sandbox"
 
 ## Layout
 
-Code is organized into work directories (apps, services, infrastructure – and more listed below). Individual packages are managed from the project root with [workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces). 
+Code is organized into work directories (apps, services, infrastructure – and more listed below).
 
 ```tree
 ├── .github/ (workflows and issue templates)
@@ -110,10 +115,10 @@ Code is organized into work directories (apps, services, infrastructure – and 
 |   └── local/ (mock and serve tasks)
 ├── services/ (backend services)
 |   └── users/ (users lambda api)
-└── package.json (project npm scripts)
+└── package.json (project-wide npm dependencies and scripts)
 ```
 
-> 🚩 While developing, most likely, you shouldn't have to change into any subdirectories to run commands.
+> 🚩 While developing, most likely, you shouldn't have to change into any subdirectories to run commands. Individual **npm packages** (directories with a `package.json`) are managed from the project root with [workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces). See [Scripts and dependencies](#-scripts-and-dependencies).
 
 ## Editor
 

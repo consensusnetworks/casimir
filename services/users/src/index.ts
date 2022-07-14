@@ -1,30 +1,21 @@
-import { APIGatewayEvent } from 'aws-lambda'
+import serverless from 'serverless-http'
+import express from 'express'
+import cors from 'cors'
+import { APIGatewayEventRequestContext, APIGatewayProxyEvent } from 'aws-lambda'
 import signup from './api/signup'
-import { APIGatewayResponse } from '../env'
 
-const defaultHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Allow-Methods': 'OPTIONS,POST,PUT,GET,DELETE',
-  'Content-Type': 'application/json'
-}
+const app = express()
+app.use(express.json())
+app.use(cors())
 
-export const handler = async (event: APIGatewayEvent): Promise<APIGatewayResponse> => {
-  if (event.path === '/users/signup') {
-    console.log('SIGNUP')
-    const response = await signup(event)
-    return {
-      headers: defaultHeaders,
-      ...response
-    }
-  } else {
-    console.log('NOT SIGNUP')
-    return {
-      headers: defaultHeaders,
-      statusCode: 404,
-      body: {
-        message: 'Requested route does not exist'
-      }
-    }
-  }
+app.use('/users/signup', async (req: express.Request, res: express.Response) => {
+  const response = await signup(req)
+  res.setHeader('Content-Type', 'application/json')
+  res.status(200)
+  res.json(response)
+})
+
+export const handler = async function (event: APIGatewayProxyEvent, context: APIGatewayEventRequestContext) {
+  const serverlessApp = serverless(app)
+  return await serverlessApp(event, context)
 }

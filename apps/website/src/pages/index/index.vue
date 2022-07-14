@@ -27,9 +27,10 @@ async function onSubmit() {
     const newEmail = email.value
     email.value = ''
     successMessage.value.style.display = 'block'
-    await signupUser(newEmail)
+    const res = await signupUser(newEmail)
+    console.log('Signup result', await res.json())
   } catch (err) {
-    console.log('err with onSubmit :>> ', err)
+    console.log('Signup error', err)
   }
 }
 
@@ -84,13 +85,19 @@ function checkForBot(): boolean {
           <ArrowRightIcon class="w-[15px] h-[20px] mx-2" />
         </button>
         <h1 class="header-text text-[#101828] mt-4 pb-0">
-          <span class="text-[#F36F38]" @click="$router.push('/')">
+          <span
+            class="text-[#F36F38]"
+            @click="$router.push('/')"
+          >
             Your
           </span>
           digital assets
         </h1>
         <h1 class="header-text text-[#101828] mb-4">
-          <span class=" text-[#c4c4c4]" @click="$router.push('/')">
+          <span
+            class=" text-[#c4c4c4]"
+            @click="$router.push('/')"
+          >
             All
           </span>
           in one place
@@ -98,7 +105,10 @@ function checkForBot(): boolean {
         <h1 class="body-text text-[#667085] py-[40px]">
           Non-custodial digital asset management and staking
         </h1>
-        <form novalidate @submit.prevent="onSubmit">
+        <form
+          novalidate
+          @submit.prevent="onSubmit"
+        >
           <div class="mt-10 grid grid-cols-5 gap-2 ">
             <input
               v-model="email"
@@ -106,13 +116,13 @@ function checkForBot(): boolean {
               placeholder="Sign up for early access"
               class="border border-[#D0D5DD] rounded-md px-4 py-2 col-span-3 input-text text-[#F36F38]"
               @click="hideMessages"
-            />
+            >
             <input
               v-model="botTrapInput"
               class="bot-trap"
               type="text"
               placeholder="Bot Trap"
-            />
+            >
             <button
               type="submit"
               class="bg-[#F36F38] button-text text-white py-2 px-4 rounded-md w-[130px] hover:bg-[#F36F38]/[.75]"
@@ -148,13 +158,16 @@ function checkForBot(): boolean {
     <div
       class="border w-full p-[50px] bg-[#c4c4c4]/[.5] mt-[100px] min-w-[395px]"
     >
-      <div v-if="currentSlide === 0" class="flex flex-wrap slideshow">
+      <div
+        v-if="currentSlide === 0"
+        class="flex flex-wrap slideshow"
+      >
         <div class="min-w-[375px] w-1/2 pl-[50px] pt-[50px] slideshow">
           <img
             src="/Dashboard.png"
             class="p-[5%] h-[90%] object-cover"
             alt=""
-          />
+          >
         </div>
         <div class="min-w-[375px] w-1/2 pt-[50px] pr-[50px]">
           <h1 class="text-[42px] text-left ">
@@ -164,9 +177,16 @@ function checkForBot(): boolean {
           </h1>
         </div>
       </div>
-      <div v-if="currentSlide === 1" class="flex flex-wrap slideshow">
+      <div
+        v-if="currentSlide === 1"
+        class="flex flex-wrap slideshow"
+      >
         <div class="min-w-[375px] w-1/2 pl-[50px] pt-[50px]">
-          <img src="/earn.png" class="p-[5%] h-[90%] object-cover" alt="" />
+          <img
+            src="/earn.png"
+            class="p-[5%] h-[90%] object-cover"
+            alt=""
+          >
         </div>
         <div class="min-w-[375px] w-1/2 pt-[50px] pr-[50px]">
           <h1 class="text-[42px] text-left ">
@@ -177,9 +197,16 @@ function checkForBot(): boolean {
           </h1>
         </div>
       </div>
-      <div v-if="currentSlide === 2" class="flex flex-wrap slideshow">
+      <div
+        v-if="currentSlide === 2"
+        class="flex flex-wrap slideshow"
+      >
         <div class="min-w-[375px] w-1/2 pl-[50px] pt-[50px]">
-          <img src="/earn3.png" class="p-[5%] h-[90%] object-cover" alt="" />
+          <img
+            src="/earn3.png"
+            class="p-[5%] h-[90%] object-cover"
+            alt=""
+          >
         </div>
         <div class="min-w-[375px] w-1/2 pt-[50px] pr-[50px]">
           <h1 class="text-[42px] text-left ">
@@ -204,10 +231,21 @@ function checkForBot(): boolean {
           target="_blank"
           class="w-[25px]"
         >
-          <img src="/twitter.svg" alt="" class="border" />
+          <img
+            src="/twitter.svg"
+            alt=""
+            class="border"
+          >
         </a>
-        <a href="https://discord.gg/hkJD9gnN" target="_blank" class="w-[25px]">
-          <img src="/discord.svg" alt="" />
+        <a
+          href="https://discord.gg/hkJD9gnN"
+          target="_blank"
+          class="w-[25px]"
+        >
+          <img
+            src="/discord.svg"
+            alt=""
+          >
         </a>
 
         <a
@@ -215,18 +253,24 @@ function checkForBot(): boolean {
           target="_blank"
           class="w-[25px]"
         >
-          <img src="/github.svg" alt="" />
+          <img
+            src="/github.svg"
+            alt=""
+          >
         </a>
       </div>
     </div>
     <div class="flex flex-wrap justify-center">
-      <img src="/CopyrightIcon.svg" alt="" class="w-[20px]" />
+      <img
+        src="/CopyrightIcon.svg"
+        alt=""
+        class="w-[20px]"
+      >
       <a
         href="https://consensusnetworks.com/"
         target="_blank"
         class="text-[#F36F38] mx-4"
-        >Consensus Networks</a
-      >
+      >Consensus Networks</a>
       <span> | All Right Reserved</span>
     </div>
   </div>
