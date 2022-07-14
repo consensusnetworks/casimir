@@ -48,7 +48,7 @@ export class EtlStack extends Stack {
                 },
                 {
                     name: 'datestring',
-                    type: glue.Schema.TIMESTAMP,
+                    type: glue.Schema.DATE,
                     comment: 'The datestring (MM-DD-YYYY) of the event'
                 },
                 {
@@ -98,7 +98,7 @@ export class EtlStack extends Stack {
                 },
                 {
                     name: 'first_staked_at',
-                    type: glue.Schema.TIMESTAMP,
+                    type: glue.Schema.DATE,
                     comment: 'The first datestring (MM-DD-YYYY) that a wallet staked'
                 },
                 {

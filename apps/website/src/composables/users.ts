@@ -14,8 +14,6 @@ export default function useUsers() {
             },
             body: JSON.stringify({ email })
         }
-
-        console.log(requestOptions)
         const usersBaseUrl = getUsersBaseUrl()
         return await fetch(`${usersBaseUrl}/users/signup`, requestOptions)
     }
