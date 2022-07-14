@@ -5,7 +5,7 @@ import {
 } from '@aws-sdk/client-pinpoint'
 import { APIGatewayEvent } from 'aws-lambda'
 import { pascalCase } from '@casimir/lib'
-import { APIGatewayResponse } from '../env'
+import { APIGatewayResponse } from '../../env'
 
 const appId = 'e80548536df34c7fb4a58bf64933190e'
 const sourceEmail = 'team@casimir.co'

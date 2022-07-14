@@ -1,6 +1,6 @@
 import { APIGatewayEvent } from 'aws-lambda'
 import signup from './api/signup'
-import { APIGatewayResponse } from './env'
+import { APIGatewayResponse } from '../env'
 
 const defaultHeaders = {
   'Access-Control-Allow-Origin': '*',

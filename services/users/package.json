@@ -1,10 +1,11 @@
 {
   "name": "@casimir/users",
   "version": "0.0.1",
-  "main": "index.ts",
+  "main": "src/index.ts",
   "scripts": {
-    "dev": "npx esno index.ts",
-    "build": "esbuild index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+    "dev": "npx esno src/index.ts",
+    "build": "node build.js",
+    "build:watch": "npm run build -- --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
