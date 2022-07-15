@@ -27,9 +27,10 @@ async function onSubmit() {
     const newEmail = email.value
     email.value = ''
     successMessage.value.style.display = 'block'
-    await signupUser(newEmail)
+    const res = await signupUser(newEmail)
+    console.log('Signup result', await res.json())
   } catch (err) {
-    console.log('err with onSubmit :>> ', err)
+    console.log('Signup error', err)
   }
 }
 

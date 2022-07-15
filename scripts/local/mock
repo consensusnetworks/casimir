@@ -41,24 +41,30 @@ Stage=$(perl -ne 'print ucfirst' <<< $STAGE)
 echo "🎨 Mocking CDK app"
 cd $directory
 
+servicesdir="../../services"
+
 # Mock CDK app
 npm install
+npm run cdk:bootstrap --workspace @casimir/cdk
+npm run cdk:synth --workspace @casimir/cdk
 
 # Loop over comma-separated string of services
 IFS=',' read -r -a service_list <<< "$services"
 
 for service in "${service_list[@]}"
 do
-    npm run build --workspace @casimir/$service
-    npx cdk bootstrap
-    npx cdk synth
     SERVICE=$(echo $service | tr '[:lower:]' '[:upper:]')
     portname=PUBLIC_${SERVICE}_PORT
     port=$(echo ${!portname})
     echo "🎨 Mocking $service service on port $port"
     Service=$(perl -ne 'print ucfirst' <<< $service)
+
+    npx concurrently "npm run build:watch --workspace @casimir/$service" & # Run in parallel
+
     sam local start-api \
+    --warm-containers "LAZY" \
     --port $port \
     --template ./cdk.out/${Project}${Service}Stack${Stage}.template.json \
+    --log-file "$servicesdir/$service/mock-logs.txt" \
     --profile $PROFILE & # Run in parallel
 done
