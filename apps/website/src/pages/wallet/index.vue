@@ -2,7 +2,7 @@
   <Wallet />
 </template>
 
-<script setup>
+<script lang="ts" setup>
 import Wallet from '@/components/Wallet.vue'
 </script>
 
