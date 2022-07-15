@@ -59,7 +59,7 @@ do
     echo "🎨 Mocking $service service on port $port"
     Service=$(perl -ne 'print ucfirst' <<< $service)
 
-    npx concurrently "npm run build:watch --workspace @casimir/$service" & # Run in parallel
+    npm run build:watch --workspace @casimir/$service & # Run in parallel
 
     sam local start-api \
     --warm-containers "LAZY" \

@@ -43,10 +43,6 @@ Make sure your development environment has these prerequisites.
 
 3. [SAM CLI (v1.x)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) - tool for mocking backend services locally.
 
-### Scripts and dependencies
-
-We are using [npm workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) to simplify monorepo development workflows while keeping project-wide resources accessible.
-
 ### Setup
 
 Clone the repository, checkout a new branch from develop, and install all workspace dependencies.
@@ -140,6 +136,36 @@ STAGE="sandbox"
 | --- | --- | --- |
 | `PROFILE` | AWS profile name | `"consensus-networks-dev"` |
 | `STAGE` | Environment stage name | `"dev"` |
+
+### Scripts and dependencies
+
+We are using [npm workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) to simplify monorepo development workflows while keeping project-wide resources accessible. The core commands are below.
+
+Install all monorepo dependencies.
+
+```zsh
+npm install
+```
+
+Clean all monorepo dependencies (remove all `node_modules` before a fresh install).
+
+```zsh
+npm run clean
+```
+
+Install a project-wide dev dependency.
+
+```zsh
+npm install -D some-dev-dependency
+```
+
+Install a workspace dependency or dev dependency.
+
+```zsh
+npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/website
+# or
+npm install -D some-dev-dependency --workspace @casimir/workspace-name
+```
 
 ## Layout
 

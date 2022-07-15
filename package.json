@@ -10,6 +10,7 @@
     "services/*"
   ],
   "scripts": {
+    "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "deploy:templates": "scripts/pinpoint/deploy -d content/email/templates",
     "dev": "scripts/local/dev",
@@ -44,7 +45,7 @@
     "html-to-text": "^8.2.0",
     "lint-staged": "^13.0.0",
     "mjml": "^4.12.0",
-    "release-it": "^15.0.0"
+    "release-it": "^10.0.3"
   },
   "lint-staged": {
     "*.{ts,vue}": "npm run lint"

@@ -2,7 +2,10 @@
   <div>
     <div class="connect-wallet-container">
       <div class="metamask-div">
-        <button ref="connectMetamaskButton" @click="connectWallet('metamask')">
+        <button
+          ref="connectMetamaskButton"
+          @click="connectWallet('metamask')"
+        >
           connect-metamask
         </button>
         <p>
@@ -27,10 +30,18 @@
     <div class="form-container">
       <form @submit.prevent="sendTransaction">
         <label for="address">Address</label>
-        <input v-model="mmToAddress" type="text" placeholder="To Address" />
-        <br />
+        <input
+          v-model="mmToAddress"
+          type="text"
+          placeholder="To Address"
+        >
+        <br>
         <label for="amount">Amount</label>
-        <input v-model="mmAmount" type="text" placeholder="Amount Ether" />
+        <input
+          v-model="mmAmount"
+          type="text"
+          placeholder="Amount Ether"
+        >
         <button type="submit">
           Send Transaction
         </button>
@@ -112,6 +123,18 @@ const sendTransaction = async (event: any) => {
 
 onMounted(() => {
   console.log('availableProviders :>> ', availableProviders)
+
+  // Debug extensions
+  console.log('MetaMask', window.ethereum.providerMap.get('MetaMask'))
+  console.log('Coinbase', window.ethereum.providerMap.get('CoinbaseWallet'))
+  const metamaskKeyLists = window.ethereum.providers.filter((provider: any) => provider.isMetaMask).map((provider: any) => Object.keys(provider).sort())
+  metamaskKeyLists.forEach((keys: string[], index: number) => {
+    const otherKeys = metamaskKeyLists[index + 1] || metamaskKeyLists[index - 1] || []
+    // MetaMask chrome extension reliably has more keys than Brave native extension
+    const name = keys.length > otherKeys.length ? 'MetaMask' : 'BraveWallet'
+    const diff = keys.filter((key: string) => !otherKeys.includes(key))
+    console.log(`${name} provider unique keys: \n*${diff.join('\n*')}`)
+  })
 
   // Optional TODO: Set a method that installs metamask for user (if not already installed).
   if (!isMetaMaskInstalled()) {
