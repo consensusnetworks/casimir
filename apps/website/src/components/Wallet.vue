@@ -34,75 +34,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { WalletProvider } from '@/interfaces/WalletProvider'
 import useWallet from '@/composables/wallet'
-
-const metamaskAccountsResult = ref<string>('Address Not Active')
-const coinbaseAccountsResult = ref<string>('Address Not Active')
-const metamaskButtonText = ref<string>('Connect Metamask')
-const coinbaseButtonText = ref<string>('Connect Coinbase')
-const { selectedProvider, toAddress, amount, sendTransaction } = useWallet()
-
-const defaultProviders = {
-  metamask: undefined,
-  coinbase: undefined,
-}
-
-async function requestAccount(provider: WalletProvider) {
-  if (provider.request) {
-    return await provider.request({
-      method: 'eth_requestAccounts',
-    })
-  }
-}
-
-function getAvailableProviders(ethereum: any) {
-  if (!ethereum) return defaultProviders
-  else if (!ethereum.providerMap) {
-    return {
-      metamask: ethereum.isMetaMask ? ethereum : undefined,
-      coinbase: ethereum.isCoinbaseWallet ? ethereum : undefined,
-    }
-  } else {
-    return {
-      metamask: ethereum.providerMap.get('MetaMask'),
-      coinbase: ethereum.providerMap.get('CoinbaseWallet'),
-    }
-  }
-}
-
-const ethereum: any = window.ethereum
-const availableProviders = ref<Record<string, WalletProvider>>(
-  getAvailableProviders(ethereum)
-)
-
-async function connectWallet(provider: string) {
-  try {
-    selectedProvider.value = availableProviders.value[provider]
-    if (!selectedProvider.value) {
-      throw new Error('No provider selected')
-    }
-    const account = await requestAccount(selectedProvider.value)
-
-    // TODO: Turn this into vue native
-    if (provider === 'metamask') {
-      metamaskButtonText.value = 'Metamask Connected'
-      metamaskAccountsResult.value = account[0]
-      coinbaseAccountsResult.value = 'Not Active'
-      coinbaseButtonText.value = 'Connect Coinbase'
-      metamaskButtonText.value = 'Metamask Connected'
-    } else if (provider === 'coinbase') {
-      coinbaseAccountsResult.value = ''
-      coinbaseAccountsResult.value = account[0]
-      metamaskAccountsResult.value = 'Not Active'
-      coinbaseButtonText.value = 'Coinbase Connected'
-      metamaskButtonText.value = 'Connect Metamask'
-    }
-  } catch (error) {
-    console.error(error)
-  }
-}
+const {
+  toAddress,
+  amount,
+  connectWallet,
+  sendTransaction,
+  metamaskButtonText,
+  metamaskAccountsResult,
+  coinbaseButtonText,
+  coinbaseAccountsResult,
+} = useWallet()
 </script>
 
 <style scoped>
