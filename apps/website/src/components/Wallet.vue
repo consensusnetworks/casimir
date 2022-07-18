@@ -83,7 +83,7 @@ const availableProviders = ref<Record<string, WalletProvider>>(
   getAvailableProviders(ethereum)
 )
 
-const connectWallet = async (provider: string) => {
+async function connectWallet(provider: string) {
   try {
     selectedProvider.value = availableProviders.value[provider]
     if (!selectedProvider.value) {
@@ -110,7 +110,7 @@ const connectWallet = async (provider: string) => {
   }
 }
 
-const sendTransaction = async (event: any) => {
+async function sendTransaction() {
   try {
     const web3Provider: ethers.providers.Web3Provider =
       new ethers.providers.Web3Provider(selectedProvider.value)
