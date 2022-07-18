@@ -2,10 +2,7 @@
   <div>
     <div class="connect-wallet-container">
       <div class="metamask-div">
-        <button
-          ref="connectMetamaskButton"
-          @click="connectWallet('metamask')"
-        >
+        <button ref="connectMetamaskButton" @click="connectWallet('metamask')">
           connect-metamask
         </button>
         <p>
@@ -30,21 +27,11 @@
     <div class="form-container">
       <form @submit.prevent="sendTransaction">
         <label for="address">Address</label>
-        <input
-          v-model="mmToAddress"
-          type="text"
-          placeholder="To Address"
-        >
-        <br>
+        <input v-model="mmToAddress" type="text" placeholder="To Address" />
+        <br />
         <label for="amount">Amount</label>
-        <input
-          v-model="mmAmount"
-          type="text"
-          placeholder="Amount Ether"
-        >
-        <button type="submit">
-          Send Transaction
-        </button>
+        <input v-model="mmAmount" type="text" placeholder="Amount Ether" />
+        <button type="submit">Send Transaction</button>
       </form>
     </div>
   </div>
@@ -54,6 +41,8 @@
 import { onMounted, Ref, ref } from 'vue'
 import { WalletProvider } from '@/interfaces/WalletProvider'
 import { ethers } from 'ethers'
+// import { useHelpers } from '@/composables/helpers'
+// const { detectAvailableProviders } = useHelpers()
 
 const connectMetamaskButton: Ref = ref<HTMLDivElement>()
 const connectCoinbaseButton: Ref = ref<HTMLDivElement>()
@@ -63,19 +52,17 @@ const mmToAddress = ref<string>('') // Test to address: 0xD4e5faa8aD7d499Aa03BDD
 const mmAmount = ref<string>('')
 
 const selectedProvider: any = ref({})
-const ethereum: any = window.ethereum
-const availableProviders: { [key: string]: WalletProvider } = {
-  metamask: ethereum.providers.find(
-    (provider: WalletProvider) => provider.isMetaMask
-  ),
-  coinbase: ethereum.providers.find(
-    (provider: WalletProvider) => provider.isCoinbaseWallet
-  ),
-}
+const ethereum: any = window.ethereum ? window.ethereum : undefined
+const availableProviders = ref({})
 
 const connectWallet = async (provider: string) => {
   try {
-    selectedProvider.value = availableProviders[provider]
+    selectedProvider.value = Object.keys(availableProviders).length
+      ? availableProviders.value[provider]
+      : undefined
+    if (!selectedProvider.value) {
+      throw new Error('No provider selected')
+    }
     const account = await selectedProvider.value.request({
       method: 'eth_requestAccounts',
     })
@@ -94,9 +81,8 @@ const connectWallet = async (provider: string) => {
       metamaskAccountsResult.value.innerText = 'Not Active'
     }
 
-    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(
-      selectedProvider.value
-    )
+    const web3Provider: ethers.providers.Web3Provider =
+      new ethers.providers.Web3Provider(selectedProvider.value)
   } catch (error) {
     console.error(error)
   }
@@ -104,9 +90,8 @@ const connectWallet = async (provider: string) => {
 
 const sendTransaction = async (event: any) => {
   try {
-    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(
-      selectedProvider.value
-    )
+    const web3Provider: ethers.providers.Web3Provider =
+      new ethers.providers.Web3Provider(selectedProvider.value)
     const signer = web3Provider.getSigner()
     const etherAmount = ethers.utils.parseEther(mmAmount.value)
     const tx = {
@@ -123,13 +108,17 @@ const sendTransaction = async (event: any) => {
 
 onMounted(() => {
   console.log('availableProviders :>> ', availableProviders)
+  availableProviders.value = detectAvailableProviders(ethereum)
 
   // Debug extensions
   console.log('MetaMask', window.ethereum.providerMap.get('MetaMask'))
   console.log('Coinbase', window.ethereum.providerMap.get('CoinbaseWallet'))
-  const metamaskKeyLists = window.ethereum.providers.filter((provider: any) => provider.isMetaMask).map((provider: any) => Object.keys(provider).sort())
+  const metamaskKeyLists = window.ethereum.providers
+    .filter((provider: any) => provider.isMetaMask)
+    .map((provider: any) => Object.keys(provider).sort())
   metamaskKeyLists.forEach((keys: string[], index: number) => {
-    const otherKeys = metamaskKeyLists[index + 1] || metamaskKeyLists[index - 1] || []
+    const otherKeys =
+      metamaskKeyLists[index + 1] || metamaskKeyLists[index - 1] || []
     // MetaMask chrome extension reliably has more keys than Brave native extension
     const name = keys.length > otherKeys.length ? 'MetaMask' : 'BraveWallet'
     const diff = keys.filter((key: string) => !otherKeys.includes(key))
@@ -146,6 +135,36 @@ onMounted(() => {
 
 const isMetaMaskInstalled = () => {
   return Boolean(ethereum && ethereum.isMetaMask)
+}
+
+const detectAvailableProviders = (ethereum: any) => {
+  if (!ethereum) return { metamask: undefined, coinbase: undefined }
+  if (ethereum && ethereum.providerMap) {
+    const providers: any = {}
+    ethereum.providerMap.forEach((provider: any, name: string) => {
+      providers[name] = provider
+    })
+    return {
+      metamask: providers['MetaMask'],
+      coinbase: providers['CoinbaseWallet'],
+    }
+  } else if (ethereum && ethereum.isCoinbaseWallet) {
+    return {
+      metamask: undefined,
+      coinbase: ethereum,
+    }
+  } else if (ethereum && ethereum.isMetaMask) {
+    // TODO: Distinguish between Brave and MetaMask
+    return {
+      metamask: ethereum,
+      coinbase: undefined,
+    }
+  } else {
+    return {
+      metamask: undefined,
+      coinbase: undefined,
+    }
+  }
 }
 </script>
 
