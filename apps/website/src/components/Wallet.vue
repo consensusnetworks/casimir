@@ -2,25 +2,21 @@
   <div>
     <div class="connect-wallet-container">
       <div class="metamask-div">
-        <button ref="connectMetamaskButton" @click="connectWallet('metamask')">
-          connect-metamask
+        <button @click="connectWallet('metamask')">
+          {{ metamaskButtonText }}
         </button>
         <p>
-          Connected Metamsk Account:
-          <span ref="metamaskAccountsResult">Address Not Active</span>
+          Connected Metamask Account:
+          <span> {{ metamaskAccountsResult }} </span>
         </p>
       </div>
       <div class="coinbase-div">
-        <button
-          ref="connectCoinbaseButton"
-          class="coinbase-btn"
-          @click="connectWallet('coinbase')"
-        >
-          Connect Coinbase
+        <button class="coinbase-btn" @click="connectWallet('coinbase')">
+          {{ coinbaseButtonText }}
         </button>
         <p>
           Connected Coinbase Account:
-          <span ref="coinbaseAccountsResult">Address Not Active</span>
+          <span> {{ coinbaseAccountsResult }} </span>
         </p>
       </div>
     </div>
@@ -38,16 +34,15 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, Ref, ref } from 'vue'
+import { ref } from 'vue'
 import { WalletProvider } from '@/interfaces/WalletProvider'
-import { ethers } from 'ethers'
+import useWallet from '@/composables/wallet'
 
-const connectMetamaskButton: Ref = ref<HTMLDivElement>()
-const connectCoinbaseButton: Ref = ref<HTMLDivElement>()
-const metamaskAccountsResult: Ref = ref<HTMLSpanElement>()
-const coinbaseAccountsResult: Ref = ref<HTMLSpanElement>()
-const toAddress = ref<string>('') // Test to address: 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
-const amount = ref<string>('')
+const metamaskAccountsResult = ref<string>('Address Not Active')
+const coinbaseAccountsResult = ref<string>('Address Not Active')
+const metamaskButtonText = ref<string>('Connect Metamask')
+const coinbaseButtonText = ref<string>('Connect Coinbase')
+const { selectedProvider, toAddress, amount, sendTransaction } = useWallet()
 
 const defaultProviders = {
   metamask: undefined,
@@ -77,7 +72,6 @@ function getAvailableProviders(ethereum: any) {
   }
 }
 
-const selectedProvider = ref<WalletProvider>({})
 const ethereum: any = window.ethereum
 const availableProviders = ref<Record<string, WalletProvider>>(
   getAvailableProviders(ethereum)
@@ -93,36 +87,18 @@ async function connectWallet(provider: string) {
 
     // TODO: Turn this into vue native
     if (provider === 'metamask') {
-      metamaskAccountsResult.value.innerText = ''
-      metamaskAccountsResult.value.innerText = account[0]
-      coinbaseAccountsResult.value.innerText = 'Not Active'
-      connectCoinbaseButton.value.innerHTML = 'Activate Coinbase'
-      connectMetamaskButton.value.innerHTML = 'Metamask Connected'
+      metamaskButtonText.value = 'Metamask Connected'
+      metamaskAccountsResult.value = account[0]
+      coinbaseAccountsResult.value = 'Not Active'
+      coinbaseButtonText.value = 'Connect Coinbase'
+      metamaskButtonText.value = 'Metamask Connected'
     } else if (provider === 'coinbase') {
-      coinbaseAccountsResult.value.innerText = ''
-      coinbaseAccountsResult.value.innerText = account[0]
-      connectCoinbaseButton.value.innerHTML = 'Coinbase Connected'
-      connectMetamaskButton.value.innerHTML = 'Activate Metamask'
-      metamaskAccountsResult.value.innerText = 'Not Active'
+      coinbaseAccountsResult.value = ''
+      coinbaseAccountsResult.value = account[0]
+      metamaskAccountsResult.value = 'Not Active'
+      coinbaseButtonText.value = 'Coinbase Connected'
+      metamaskButtonText.value = 'Connect Metamask'
     }
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-async function sendTransaction() {
-  try {
-    const web3Provider: ethers.providers.Web3Provider =
-      new ethers.providers.Web3Provider(selectedProvider.value)
-    const signer = web3Provider.getSigner()
-    const etherAmount = ethers.utils.parseEther(amount.value)
-    const tx = {
-      to: toAddress.value,
-      value: etherAmount,
-    }
-    signer.sendTransaction(tx).then((txObj) => {
-      console.log('successful txHash: ', txObj.hash)
-    })
   } catch (error) {
     console.error(error)
   }
