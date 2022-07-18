@@ -41,8 +41,6 @@
 import { onMounted, Ref, ref } from 'vue'
 import { WalletProvider } from '@/interfaces/WalletProvider'
 import { ethers } from 'ethers'
-// import { useHelpers } from '@/composables/helpers'
-// const { detectAvailableProviders } = useHelpers()
 
 const connectMetamaskButton: Ref = ref<HTMLDivElement>()
 const connectCoinbaseButton: Ref = ref<HTMLDivElement>()
