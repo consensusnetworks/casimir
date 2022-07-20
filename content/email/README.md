@@ -6,7 +6,7 @@
 
 Install and enable the [MJML VSCode extension](https://marketplace.visualstudio.com/items?itemName=mjmlio.vscode-mjml) to preview templates in development.
 
-### Create a new template
+### Create New Content
 
 1. Create a new directory with the template files.
 
@@ -33,7 +33,7 @@ Install and enable the [MJML VSCode extension](https://marketplace.visualstudio.
 
 4. Extract any shared email template code from the `index.mjml` file and place it in components in the [content/email/shared/](content/email/shared/) directory.
 
-### Live preview a template
+### Live Preview
 
 1. Change into the template directory:
    
@@ -45,7 +45,7 @@ Install and enable the [MJML VSCode extension](https://marketplace.visualstudio.
 
 ## Deployment
 
-### Deploy templates
+### Deploy Templates
 
 Templates are deployed with the project GitHub workflows, but you can also deploy them manually by running the deploy script (**from the project root** `../../`). The stage will default to `dev` (which you can override by following [these instructions](../../README.md#environment)).
    

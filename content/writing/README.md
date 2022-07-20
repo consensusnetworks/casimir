@@ -2,7 +2,7 @@
 
 ## Setup
 
-### Create new writing content
+### Create New Content
 
 1. On GitHub.com, navigate to the main page of the repository.
 2. Above the list of files, click Branches.<br><br><img width="1440" alt="Screen Shot 2022-07-01 at 11 21 06 AM" src="https://user-images.githubusercontent.com/32200924/176924228-71f1f035-4b02-4a9c-ac02-03f95e6efca7.png"><br><br>
