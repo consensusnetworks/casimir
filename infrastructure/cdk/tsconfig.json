@@ -20,8 +20,6 @@
     "inlineSources": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
     "types": ["node", "jest", "mocha"]
   },
   "exclude": [
