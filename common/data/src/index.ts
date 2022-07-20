@@ -4,16 +4,20 @@ import eventSchema from './lib/event.schema.json'
 import aggSchema from './lib/agg.schema.json'
 
 /**
- * Converts a JSON Schema object with table columns to an AWS Glue Schema object with AWS CDK Glue table columns.
+ * Converts a JSON Schema table object to an array of Glue columns.
  *
- * @param jsonSchema {JsonSchema} - Input JSON Schema object
- * @returns {glue.Column[]} AWS Glue Schema object to define table columns
+ * @param jsonSchema {JsonSchema} - Input JSON Schema table object 
+ * @returns {glue.Column[]} Array of Glue columns
  *
  */
- export function jsonToGlueSchema(jsonSchema: JsonSchema): glue.Column[] {
+ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
     return Object.keys(jsonSchema.properties).map((name: string) => {
       const property = jsonSchema.properties[name]
-      const type = glue.Schema[property.type.toUpperCase() as keyof glue.Schema]
+
+      // 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIGINT' | 'TIMESTAMP' | 'JSON' | 'DATE' 
+      const typeKey = property.type.toUpperCase() as keyof glue.Schema
+
+      const type = glue.Schema[typeKey]
       const comment = property.description
       return { name, type, comment } 
     })

@@ -2,11 +2,11 @@ import { Stack, StackProps } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as glue from '@aws-cdk/aws-glue-alpha'
-import { jsonToGlueSchema, eventSchema, aggSchema } from '@casimir/data'
+import { schemaToGlueColumns, eventSchema, aggSchema } from '@casimir/data'
 
 // Get Glue Columns from JSON Schema for each table
-const eventColumns = jsonToGlueSchema(eventSchema)
-const aggColumns = jsonToGlueSchema(aggSchema)
+const eventColumns = schemaToGlueColumns(eventSchema)
+const aggColumns = schemaToGlueColumns(aggSchema)
 
 console.log('eventColumns', eventColumns)
 console.log('aggColumns', aggColumns)
