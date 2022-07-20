@@ -4,7 +4,8 @@ Data schemas and Jupyter Notebooks for Casimir data exploration, analytics and M
 
 ## Prerequisites
 
-If you plan to use @casimir/data as an npm package workspace (to integrate with other npm workspaces in this project), you should follow the [Prerequisites](../../README.md#prerequisites) from the project root. If you plan to use the Jupyter Notebooks in [notebooks/](notebooks/) and want to collaborate in the Casimir data-ops workflows, you need to install the following prerequisite extensions to either: 
+If you plan to use @casimir/data as an npm package workspace (to integrate with other npm workspaces in this project), you should follow the [Prerequisites](../../README.md#prerequisites) from the project root. If you plan to use the Jupyter Notebooks in [notebooks/](notebooks/) and want to collaborate in the Casimir data-ops workflows, you need to install the following prerequisite extensions to either:
+
     - [VSCode Dev for the Web](https://code.visualstudio.com/docs/editor/vscode-web) (press the `.` key when viewing this page in the `develop` branch on [GitHub.com](https://github.com/consensusnetworks/casimir/tree/feature/data-ops/common/data/README.md)), or
     - Your local VSCode editor (#3 below is not needed for this setup)
 
