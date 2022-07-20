@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register'
 import * as cdk from 'aws-cdk-lib'
-import { pascalCase } from '@casimir/lib'
+import { pascalCase } from '@casimir/helpers'
 import { WebsiteStack } from '../lib/website/website-stack'
 import { UsersStack } from '../lib/users/users-stack'
 import { DnsStack } from '../lib/dns/dns-stack'
