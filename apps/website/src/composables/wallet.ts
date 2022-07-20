@@ -13,6 +13,7 @@ export default function useWallet() {
     getAvailableProviders(ethereum)
   )
   const selectedProvider = ref<WalletProvider>({})
+  const selectedAccount = ref<string>('')
   const toAddress = ref<string>('') // Test to address: 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
   const amount = ref<string>('')
 
@@ -27,21 +28,7 @@ export default function useWallet() {
       if (!selectedProvider.value) {
         throw new Error('No provider selected')
       }
-      const account = await requestAccount(selectedProvider.value)
-
-      if (provider === 'metamask') {
-        metamaskButtonText.value = 'Metamask Connected'
-        metamaskAccountsResult.value = account[0]
-        coinbaseAccountsResult.value = 'Not Active'
-        coinbaseButtonText.value = 'Connect Coinbase'
-        metamaskButtonText.value = 'Metamask Connected'
-      } else if (provider === 'coinbase') {
-        coinbaseAccountsResult.value = ''
-        coinbaseAccountsResult.value = account[0]
-        metamaskAccountsResult.value = 'Not Active'
-        coinbaseButtonText.value = 'Coinbase Connected'
-        metamaskButtonText.value = 'Connect Metamask'
-      }
+      selectedAccount.value = await requestAccount(selectedProvider.value)
     } catch (error) {
       console.error(error)
     }
@@ -67,6 +54,7 @@ export default function useWallet() {
 
   return {
     selectedProvider,
+    selectedAccount,
     toAddress,
     amount,
     connectWallet,

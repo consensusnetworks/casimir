@@ -34,8 +34,12 @@
 </template>
 
 <script setup lang="ts">
+import { watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
+
 const {
+  selectedProvider,
+  selectedAccount,
   toAddress,
   amount,
   connectWallet,
@@ -45,6 +49,22 @@ const {
   coinbaseButtonText,
   coinbaseAccountsResult,
 } = useWallet()
+
+watchEffect(() => {
+  if (selectedProvider.value.isMetaMask) {
+    metamaskButtonText.value = 'Metamask Connected'
+    metamaskAccountsResult.value = selectedAccount.value[0]
+    coinbaseAccountsResult.value = 'Not Active'
+    coinbaseButtonText.value = 'Connect Coinbase'
+    metamaskButtonText.value = 'Metamask Connected'
+  } else if (selectedProvider.value.isCoinbaseWallet) {
+    coinbaseAccountsResult.value = ''
+    coinbaseAccountsResult.value = selectedAccount.value[0]
+    metamaskAccountsResult.value = 'Not Active'
+    coinbaseButtonText.value = 'Coinbase Connected'
+    metamaskButtonText.value = 'Connect Metamask'
+  }
+})
 </script>
 
 <style scoped>
