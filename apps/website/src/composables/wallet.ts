@@ -17,11 +17,6 @@ export default function useWallet() {
   const toAddress = ref<string>('') // Test to address: 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
   const amount = ref<string>('')
 
-  const metamaskAccountsResult = ref<string>('Address Not Active')
-  const coinbaseAccountsResult = ref<string>('Address Not Active')
-  const metamaskButtonText = ref<string>('Connect Metamask')
-  const coinbaseButtonText = ref<string>('Connect Coinbase')
-
   async function connectWallet(provider: string) {
     try {
       selectedProvider.value = availableProviders.value[provider]
@@ -59,10 +54,6 @@ export default function useWallet() {
     amount,
     connectWallet,
     sendTransaction,
-    metamaskButtonText,
-    metamaskAccountsResult,
-    coinbaseButtonText,
-    coinbaseAccountsResult,
   }
 }
 
