@@ -12,7 +12,7 @@ console.log('Local mocking is', import.meta.env.PUBLIC_MOCK_ENABLED ? 'enabled' 
 const app = createApp(App)
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 })
 app.use(router)
 app.mount('#app')

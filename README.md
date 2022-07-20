@@ -43,10 +43,6 @@ Make sure your development environment has these prerequisites.
 
 3. [SAM CLI (v1.x)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) - tool for mocking backend services locally.
 
-### Scripts and dependencies
-
-We are using [npm workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) to simplify monorepo development workflows while keeping project-wide resources accessible.
-
 ### Setup
 
 Clone the repository, checkout a new branch from develop, and install all workspace dependencies.
@@ -60,7 +56,7 @@ npm install
 
 > 🚩 'All workspace dependencies' includes `package.json` dependencies listed in the project root and any workspace subdirectories. See [Scripts and dependencies](#-scripts-and-dependencies).
 
-### Serve
+### Apps
 
 You can get up and running without configuration. You can also mock local backend changes and customize your environment.
 
@@ -80,6 +76,51 @@ You can get up and running without configuration. You can also mock local backen
 
     > 🚩 You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
 
+### Hardhat
+
+Solidity contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/solidity/hardhat.config.ts](contracts/solidity/hardhat.config.ts) file.
+
+1. Compile the contracts in [contracts/solidity](contracts/solidity).
+    
+    ```zsh
+    npm run task:compile
+    ```
+
+2. Deploy a contract, specifically [contracts/solidity/src/Sample.sol](contracts/solidity/src/Sample.sol) with [contracts/solidity/deploy/sample.ts](contracts/solidity/deploy/sample.ts).
+
+    ```zsh
+    npm run deploy:sample
+    ```
+
+3. Test the Sample with the tests in [contracts/solidity/test/sample.ts](contracts/solidity/test/sample.ts).
+
+    ```zsh
+    npm run test:contracts
+    ```
+
+4. Start a local Ethereum node.
+
+    ```zsh
+    npm run node:local
+    ```
+
+5. Print all local accounts.
+
+    ```zsh
+    npm run task:accounts
+    ```
+
+*Todo finish sample flow (show usage of compiled contract ABI in app)*
+6. Use a contract in a Casimir app...
+   
+7. Clean [contracts/solidity/build/artifacts](contracts/solidity/build/artifacts) and [contracts/solidity/build/cache](contracts/solidity/build/cache)).    
+
+    ```zsh
+    npm run task:clean
+    ``` 
+
+    > 🚩 Note, this is required if you change the Hardhat configuration.
+
 ### Environment
 
 Optionally customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for any supported variables.
@@ -95,6 +136,36 @@ STAGE="sandbox"
 | --- | --- | --- |
 | `PROFILE` | AWS profile name | `"consensus-networks-dev"` |
 | `STAGE` | Environment stage name | `"dev"` |
+
+### Scripts and dependencies
+
+We are using [npm workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) to simplify monorepo development workflows while keeping project-wide resources accessible. The core commands are below.
+
+Install all monorepo dependencies.
+
+```zsh
+npm install
+```
+
+Clean all monorepo dependencies (remove all `node_modules` before a fresh install).
+
+```zsh
+npm run clean
+```
+
+Install a project-wide dev dependency.
+
+```zsh
+npm install -D some-dev-dependency
+```
+
+Install a workspace dependency or dev dependency.
+
+```zsh
+npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/website
+# or
+npm install -D some-dev-dependency --workspace @casimir/workspace-name
+```
 
 ## Layout
 
