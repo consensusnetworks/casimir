@@ -19,6 +19,15 @@
           <span> {{ coinbaseAccountsResult }} </span>
         </p>
       </div>
+      <div class="ioPay-div">
+        <button class="ioPay-btn" @click="triggerIoPayTransaction">
+          {{ ioPayButtonText }}
+        </button>
+        <p>
+          Connected ioPay Account:
+          <span> {{ ioPayAccountsResult }} </span>
+        </p>
+      </div>
     </div>
     <div class="form-container">
       <form @submit.prevent="sendTransaction">
@@ -36,10 +45,18 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
-const metamaskAccountsResult = ref<string>('Address Not Active')
-const coinbaseAccountsResult = ref<string>('Address Not Active')
+import useIopay from '@/composables/iopay'
+
 const metamaskButtonText = ref<string>('Connect Metamask')
+const metamaskAccountsResult = ref<string>('Address Not Active')
+
 const coinbaseButtonText = ref<string>('Connect Coinbase')
+const coinbaseAccountsResult = ref<string>('Address Not Active')
+
+// Create a separate button for staking
+const ioPayButtonText = ref<string>('Send ioPay transaction')
+// TODO: Update UI to show ioPay address currently in use
+const ioPayAccountsResult = ref<string>('Address Not Active')
 
 const {
   selectedProvider,
@@ -49,6 +66,17 @@ const {
   connectWallet,
   sendTransaction,
 } = useWallet()
+
+const { toIoPayAddress, ioPayAmount, sendIoPayTransaction, stakeIoPay } =
+  useIopay()
+
+async function triggerIoPayTransaction() {
+  // TODO: Remove test address and amount to use form / be dynamic
+  toIoPayAddress.value =
+    'acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme'
+  ioPayAmount.value = '1'
+  await sendIoPayTransaction()
+}
 
 watchEffect(() => {
   if (selectedProvider.value.isMetaMask) {
@@ -100,6 +128,10 @@ button {
 
 .coinbase-btn {
   background-color: blue;
+}
+
+.ioPay-btn {
+  background-color: rgb(0, 218, 180);
 }
 
 .connect-wallet-container {
