@@ -3,7 +3,6 @@ import Antenna from 'iotex-antenna'
 
 import { WsSignerPlugin } from 'iotex-antenna/lib/plugin/ws'
 import { toRau } from 'iotex-antenna/lib/account/utils'
-import sleepPromise from 'sleep-promise'
 
 export default function useIopay() {
   const toIoPayAddress = ref<string>('') // Test to address: 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
@@ -14,7 +13,6 @@ export default function useIopay() {
       const antenna = new Antenna('http://api.testnet.iotex.one:80', {
         signer: new WsSignerPlugin(),
       })
-      await sleepPromise(3000)
       const transResp = await antenna?.iotx.sendTransfer({
         to: `${toIoPayAddress}`,
         from: antenna.iotx.accounts[0].address,
@@ -49,7 +47,6 @@ export default function useIopay() {
       },
       666
     )
-    await sleepPromise(20000)
     console.log(`transResp => ${transResp}`)
   }
 
