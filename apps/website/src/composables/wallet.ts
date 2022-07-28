@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
-import { WalletProvider } from '@/interfaces/WalletProvider'
+import { EthersProvider } from '@/interfaces/EthersProvider'
 import useIopay from '@/composables/iopay'
 
 const { getIoPayAccounts, getIoPayProvider, sendIoPayTransaction } = useIopay()
@@ -13,10 +13,10 @@ const defaultProviders = {
 
 export default function useWallet() {
   const ethereum: any = window.ethereum
-  const availableProviders = ref<Record<string, WalletProvider>>(
+  const availableProviders = ref<Record<string, EthersProvider>>(
     getAvailableProviders(ethereum)
   )
-  const selectedProvider = ref<WalletProvider | string>({}) // Adding string type to support 'iopay' throws new ts errors in sendTransaction
+  const selectedProvider = ref<EthersProvider | string>({}) // Adding string type to support 'iopay' throws new ts errors in sendTransaction
   const selectedAccount = ref<string>('')
   const amount = ref<string>('') // Use '1' to test
   const toAddress = ref<string>('')
@@ -94,7 +94,7 @@ function getAvailableProviders(ethereum: any) {
   }
 }
 
-async function requestAccount(provider: WalletProvider) {
+async function requestAccount(provider: EthersProvider) {
   if (provider.request) {
     return await provider.request({
       method: 'eth_requestAccounts',
