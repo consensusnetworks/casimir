@@ -1,28 +1,35 @@
-import { ref } from 'vue'
 import Antenna from 'iotex-antenna'
-
 import { WsSignerPlugin } from 'iotex-antenna/lib/plugin/ws'
 import { toRau } from 'iotex-antenna/lib/account/utils'
+import useWallet from '@/composables/wallet'
+
+const { toAddress, amount } = useWallet()
 
 export default function useIopay() {
-  const toIoPayAddress = ref<string>('') // Test to address: 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
-  const ioPayAmount = ref<string>('')
+  const signer = new WsSignerPlugin()
+  const antenna = new Antenna('http://api.testnet.iotex.one:80', {
+    signer,
+  })
+
+  const getIoPayAccounts = async () => {
+    return await signer.getAccounts()
+  }
+
+  const getIoPayProvider = () => {
+    return 'iopay'
+    // return antenna
+  }
 
   const sendIoPayTransaction = async () => {
     try {
-      const antenna = new Antenna('http://api.testnet.iotex.one:80', {
-        signer: new WsSignerPlugin(),
-      })
       const transResp = await antenna?.iotx.sendTransfer({
-        to: `${toIoPayAddress}`,
+        to: `${toAddress.value}`,
         from: antenna.iotx.accounts[0].address,
-        value: toRau('1', 'Iotx'),
+        value: toRau(amount.value, 'Iotx'),
         gasLimit: '100000',
         gasPrice: toRau('1', 'Qev'),
         // chainId: 'IoTeXChain',
       })
-
-      console.log('transResp :>> ', transResp)
     } catch (err) {
       // TODO: handle submit error and guide user
       console.log(err)
@@ -30,10 +37,6 @@ export default function useIopay() {
   }
 
   const stakeIoPay = async () => {
-    const antenna = new Antenna('http://api.testnet.iotex.one:80', {
-      signer: new WsSignerPlugin(),
-    })
-
     // TODO: Replace with appropriate abi, etc.
     const transResp = await antenna?.iotx.executeContract(
       {
@@ -47,8 +50,14 @@ export default function useIopay() {
       },
       666
     )
+    // TODO: add setTimeout to simulate what sleep promise did for us?
     console.log(`transResp => ${transResp}`)
   }
 
-  return { toIoPayAddress, ioPayAmount, sendIoPayTransaction, stakeIoPay }
+  return {
+    getIoPayAccounts,
+    getIoPayProvider,
+    sendIoPayTransaction,
+    stakeIoPay,
+  }
 }
