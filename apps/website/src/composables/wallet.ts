@@ -46,11 +46,13 @@ export default function useWallet() {
     try {
       if (
         // TODO: Understand and fix typescript error on next 5 lines
-        selectedProvider.value?.isMetaMask ||
-        selectedProvider.value?.isCoinbaseWallet
+        (selectedProvider.value as EthersProvider).isMetaMask ||
+        (selectedProvider.value as EthersProvider).isCoinbaseWallet
       ) {
         const web3Provider: ethers.providers.Web3Provider =
-          new ethers.providers.Web3Provider(selectedProvider.value)
+          new ethers.providers.Web3Provider(
+            selectedProvider.value as EthersProvider
+          )
         const signer = web3Provider.getSigner()
         const etherAmount = ethers.utils.parseEther(amount.value)
         const tx = {
@@ -60,9 +62,11 @@ export default function useWallet() {
         signer.sendTransaction(tx).then((txObj) => {
           console.log('successful txHash: ', txObj.hash)
         })
+      } else if ((selectedProvider.value as string) === 'iopay') {
+        // TODO: Per iopay.ts line 6, shouldn't I be able to invoke sendIoPayTransaction without arguments?
+        await sendIoPayTransaction(toAddress.value, amount.value)
       } else {
-        // TODO: Add more verbose logic to handle non-browser providers (e.g. iopay, ledger, etc)
-        await sendIoPayTransaction()
+        throw new Error('Provider selected not yet supported')
       }
     } catch (error) {
       console.error(error)

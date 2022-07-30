@@ -44,6 +44,7 @@
 
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
+import { EthersProvider } from '@/interfaces/EthersProvider'
 import useWallet from '@/composables/wallet'
 
 const metamaskButtonText = ref<string>('Connect Metamask')
@@ -64,14 +65,14 @@ const {
 
 watchEffect(() => {
   // TODO: Fix typescript issues
-  if (selectedProvider.value.isMetaMask) {
+  if ((selectedProvider.value as EthersProvider).isMetaMask) {
     metamaskButtonText.value = 'Metamask Connected'
     metamaskAccountsResult.value = selectedAccount.value[0]
     coinbaseButtonText.value = 'Connect Coinbase'
     ioPayButtonText.value = 'Connect ioPay'
     coinbaseAccountsResult.value = 'Not Active'
     ioPayAccountsResult.value = 'Not Active'
-  } else if (selectedProvider.value.isCoinbaseWallet) {
+  } else if ((selectedProvider.value as EthersProvider).isCoinbaseWallet) {
     metamaskButtonText.value = 'Connect Metamask'
     coinbaseButtonText.value = 'Coinbase Connected'
     ioPayButtonText.value = 'Connect ioPay'
