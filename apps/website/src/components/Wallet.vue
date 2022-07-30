@@ -44,7 +44,6 @@
 
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
-import { EthersProvider } from '@/interfaces/EthersProvider'
 import useWallet from '@/composables/wallet'
 
 const metamaskButtonText = ref<string>('Connect Metamask')
