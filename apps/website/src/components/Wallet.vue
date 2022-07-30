@@ -65,21 +65,21 @@ const {
 
 watchEffect(() => {
   // TODO: Fix typescript issues
-  if ((selectedProvider.value as EthersProvider).isMetaMask) {
+  if (selectedProvider.value === 'MetaMask') {
     metamaskButtonText.value = 'Metamask Connected'
-    metamaskAccountsResult.value = selectedAccount.value[0]
+    metamaskAccountsResult.value = selectedAccount.value
     coinbaseButtonText.value = 'Connect Coinbase'
     ioPayButtonText.value = 'Connect ioPay'
     coinbaseAccountsResult.value = 'Not Active'
     ioPayAccountsResult.value = 'Not Active'
-  } else if ((selectedProvider.value as EthersProvider).isCoinbaseWallet) {
+  } else if (selectedProvider.value === 'CoinbaseWallet') {
     metamaskButtonText.value = 'Connect Metamask'
     coinbaseButtonText.value = 'Coinbase Connected'
     ioPayButtonText.value = 'Connect ioPay'
     metamaskAccountsResult.value = 'Not Active'
-    coinbaseAccountsResult.value = selectedAccount.value[0]
+    coinbaseAccountsResult.value = selectedAccount.value
     ioPayAccountsResult.value = 'Not Active'
-  } else if (selectedProvider.value === 'iopay') {
+  } else if (selectedProvider.value === 'IoPay') {
     metamaskButtonText.value = 'Connect Metamask'
     coinbaseButtonText.value = 'Connect Coinbase'
     ioPayButtonText.value = 'Connected'

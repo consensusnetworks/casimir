@@ -16,10 +16,6 @@ export default function useIopay() {
     return await signer.getAccounts()
   }
 
-  const getIoPayProvider = () => {
-    return 'iopay'
-  }
-
   const sendIoPayTransaction = async (toAddress: string, amount: string) => {
     try {
       const transResp = await antenna?.iotx.sendTransfer({
@@ -56,7 +52,6 @@ export default function useIopay() {
 
   return {
     getIoPayAccounts,
-    getIoPayProvider,
     sendIoPayTransaction,
     // stakeIoPay,
   }
