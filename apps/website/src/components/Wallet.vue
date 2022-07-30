@@ -63,7 +63,6 @@ const {
 } = useWallet()
 
 watchEffect(() => {
-  // TODO: Fix typescript issues
   if (selectedProvider.value === 'MetaMask') {
     metamaskButtonText.value = 'Metamask Connected'
     metamaskAccountsResult.value = selectedAccount.value
