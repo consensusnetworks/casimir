@@ -2,7 +2,7 @@
   <div>
     <div class="connect-wallet-container">
       <div class="metamask-div">
-        <button @click="connectWallet('metamask')">
+        <button @click="connectWallet('MetaMask')">
           {{ metamaskButtonText }}
         </button>
         <p>
@@ -11,7 +11,7 @@
         </p>
       </div>
       <div class="coinbase-div">
-        <button class="coinbase-btn" @click="connectWallet('coinbase')">
+        <button class="coinbase-btn" @click="connectWallet('CoinbaseWallet')">
           {{ coinbaseButtonText }}
         </button>
         <p>
@@ -64,7 +64,7 @@ const {
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {
-    metamaskButtonText.value = 'Metamask Connected'
+    metamaskButtonText.value = 'MetaMask Connected'
     metamaskAccountsResult.value = selectedAccount.value
     coinbaseButtonText.value = 'Connect Coinbase'
     ioPayButtonText.value = 'Connect ioPay'
@@ -78,7 +78,7 @@ watchEffect(() => {
     coinbaseAccountsResult.value = selectedAccount.value
     ioPayAccountsResult.value = 'Not Active'
   } else if (selectedProvider.value === 'IoPay') {
-    metamaskButtonText.value = 'Connect Metamask'
+    metamaskButtonText.value = 'Connect MetaMask'
     coinbaseButtonText.value = 'Connect Coinbase'
     ioPayButtonText.value = 'Connected'
     metamaskAccountsResult.value = 'Not Active'

@@ -1,13 +1,14 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
-import { EthersProvider } from '@/interfaces/EthersProvider'
 import useIopay from '@/composables/iopay'
+import useEthers from '@/composables/ethers'
 
+const { requestEthersAccount } = useEthers()
 const { getIoPayAccounts, sendIoPayTransaction } = useIopay()
 
 const defaultProviders = {
-  metamask: undefined,
-  coinbase: undefined,
+  MetaMask: undefined,
+  CoinbaseWallet: undefined,
 }
 
 export default function useWallet() {
@@ -22,17 +23,17 @@ export default function useWallet() {
 
   async function connectWallet(provider: string) {
     try {
-      if (provider === 'metamask') {
+      if (provider === 'MetaMask') {
         selectedProvider.value = 'MetaMask'
         const browserExtensionProvider = availableProviders.value[provider]
         selectedAccount.value = (
-          await requestAccount(browserExtensionProvider)
+          await requestEthersAccount(browserExtensionProvider)
         )[0]
-      } else if (provider === 'coinbase') {
+      } else if (provider === 'CoinbaseWallet') {
         selectedProvider.value = 'CoinbaseWallet'
         const browserExtensionProvider = availableProviders.value[provider]
         selectedAccount.value = (
-          await requestAccount(browserExtensionProvider)
+          await requestEthersAccount(browserExtensionProvider)
         )[0]
       } else if (provider === 'iopay') {
         const accounts = await getIoPayAccounts()
@@ -55,7 +56,7 @@ export default function useWallet() {
       ) {
         let browserExtensionProvider
         if (selectedProvider.value === 'MetaMask') {
-          browserExtensionProvider = availableProviders.value['metamask']
+          browserExtensionProvider = availableProviders.value['MetaMask']
         } else {
           browserExtensionProvider = availableProviders.value['coinbase']
         }
@@ -95,21 +96,13 @@ function getAvailableProviders(ethereum: any) {
   if (!ethereum) return defaultProviders
   else if (!ethereum.providerMap) {
     return {
-      metamask: ethereum.isMetaMask ? ethereum : undefined,
-      coinbase: ethereum.isCoinbaseWallet ? ethereum : undefined,
+      MetaMask: ethereum.isMetaMask ? ethereum : undefined,
+      CoinbaseWallet: ethereum.isCoinbaseWallet ? ethereum : undefined,
     }
   } else {
     return {
-      metamask: ethereum.providerMap.get('MetaMask'),
-      coinbase: ethereum.providerMap.get('CoinbaseWallet'),
+      MetaMask: ethereum.providerMap.get('MetaMask'),
+      CoinbaseWallet: ethereum.providerMap.get('CoinbaseWallet'),
     }
-  }
-}
-
-async function requestAccount(provider: EthersProvider) {
-  if (provider.request) {
-    return await provider.request({
-      method: 'eth_requestAccounts',
-    })
   }
 }

@@ -24,7 +24,7 @@ export default function useIopay() {
         value: toRau(amount, 'Iotx'),
         gasLimit: '100000',
         gasPrice: toRau('1', 'Qev'),
-        // chainId: 'IoTeXChain',
+        chainID: 2,
       })
     } catch (err) {
       // TODO: handle submit error and guide user
