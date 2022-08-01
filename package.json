@@ -9,6 +9,7 @@
     "services/*"
   ],
   "scripts": {
+    "configure:aws": "scripts/aws/configure",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "deploy:templates": "scripts/pinpoint/deploy -d content/email/templates",
     "dev": "scripts/local/dev",

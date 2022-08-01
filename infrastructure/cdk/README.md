@@ -1,8 +1,10 @@
-# Welcome to your CDK TypeScript project
+# Casimir CDK
 
-This is a blank project for TypeScript development with CDK.
+TypeScript infrastructure-as-code with CDK.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Configuration
+
+The `cdk.json` file tells the CDK Toolkit how to execute the Casimir app.
 
 ## Useful commands
 

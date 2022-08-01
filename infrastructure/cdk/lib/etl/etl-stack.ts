@@ -8,9 +8,6 @@ import { schemaToGlueColumns, eventSchema, aggSchema } from '@casimir/data'
 const eventColumns = schemaToGlueColumns(eventSchema)
 const aggColumns = schemaToGlueColumns(aggSchema)
 
-console.log('eventColumns', eventColumns)
-console.log('aggColumns', aggColumns)
-
 export interface EtlStackProps extends StackProps {
     project: string;
     stage: string;

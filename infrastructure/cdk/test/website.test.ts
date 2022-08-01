@@ -7,15 +7,14 @@ import { WebsiteStack } from '../lib/website/website-stack'
 // Todo actually test something
 test('Website Created', () => {
 
-  const defaultEnv = { account: '257202027633', region: 'us-east-2' }
   const project = 'Casimir'
   const stage = 'Test'
 
   const app = new cdk.App()
-  const dnsStack = new DnsStack(app, `${project}DnsStack${stage}`, { env: defaultEnv, project, stage })
+  const dnsStack = new DnsStack(app, `${project}DnsStack${stage}`, { project, stage })
   const { domain, dnsRecords, hostedZone } = dnsStack
-  const websiteStack = new WebsiteStack(app, `${project}WebsiteStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
-  const usersStack = new UsersStack(app, `${project}UsersStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
+  const websiteStack = new WebsiteStack(app, `${project}WebsiteStack${stage}`, { project, stage, domain, dnsRecords, hostedZone })
+  const usersStack = new UsersStack(app, `${project}UsersStack${stage}`, { project, stage, domain, dnsRecords, hostedZone })
 
   const websiteTemplate = Template.fromStack(websiteStack)
   console.log(websiteTemplate)
