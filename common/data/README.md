@@ -16,21 +16,32 @@ The JSON Schemas in [src/schemas](src/schemas/) are the source of truth for the 
 
 The Jupyter Notebooks in [notebooks/](notebooks/) are a supplement for data work, including a documented Athena query sandbox, system diagrams, and flowcharts.
 
+### Prerequisites
+
+Make sure your development environment has these prerequisites.
+
+1. [Python (v3.x)](https://www.python.org/downloads/) – we use [pyenv](https://github.com/pyenv/pyenv#installation) to manage Python versions.
+
+2. [Poetry](https://python-poetry.org/docs/#installation) – this manages and packages Python dependencies.
+
+3. [AWS CLI (v2.x)](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
+
+4. [Jupyter VSCode Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) – this gives us a complete Jupyter Notebook environment in VSCode.
+
 ### Setup
 
-With VSCode, we have a one-time setup.
+With the Poetry and the Jupyter VSCode Extension, we have a one-time setup.
 
-1. Install Poetry
-2. Install Jupyter extension
-3. Run the following **in this directory** (`cd common/data`):
+1. Run the following **from the root directory**:
 
     ```zsh
-    poetry install
-    poetry run ipython kernel install --user --name=casimir-data
+    npm run configure:python
     ```
 
-4. Restart VSCode
+2. Restart VSCode (Jupyter needs this to see your new kernel).
 
-5. Open one of the notebooks in the `notebooks/` directory and select the casimir-data kernel in the top right
+3. Open one of the notebooks in `notebooks/` and select the kernel dropdown in the top right – choose the option with casimir-data in the name.
 
 Now you can run cells in the notebooks upon returning to this workspace in VSCode.
+
+> 🚩 To add Python dependencies to the notebook environment, change into this directory and run `poetry add <package>`.
