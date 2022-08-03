@@ -4,6 +4,7 @@ import useIoPay from '@/composables/iopay'
 import useEthers from '@/composables/ethers'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
+import { ProviderString } from '@/types/ProviderString'
 
 const amount = ref<string>('')
 const toAddress = ref<string>('')
@@ -24,7 +25,6 @@ export default function useWallet() {
   const availableProviders = ref<BrowserProviders>(
     getBrowserProviders(ethereum)
   )
-  type ProviderString = keyof BrowserProviders | 'IoPay' | '' // Why are we adding this type here and not in global namespace?
   const selectedProvider = ref<ProviderString>('')
   const selectedAccount = ref<string>('')
   const setSelectedProvider = (provider: ProviderString) => {
