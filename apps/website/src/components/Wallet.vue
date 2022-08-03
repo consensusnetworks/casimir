@@ -30,7 +30,7 @@
       </div>
     </div>
     <div class="form-container">
-      <form @submit.prevent="sendTransaction">
+      <form @submit.prevent="sendTransaction(selectedProvider)">
         <label for="address">Address</label>
         <input v-model="toAddress" type="text" placeholder="To Address" />
         <br />
