@@ -1,9 +1,8 @@
 import Antenna from 'iotex-antenna'
-import { Ref } from 'vue'
 import { WsSignerPlugin } from 'iotex-antenna/lib/plugin/ws'
 import { toRau } from 'iotex-antenna/lib/account/utils'
 
-export default function useIoPay(toAddress: Ref<string>, amount: Ref<string>) {
+export default function useIoPay() {
   const signer = new WsSignerPlugin()
   const antenna = new Antenna('http://api.testnet.iotex.one:80', {
     signer,
@@ -13,12 +12,12 @@ export default function useIoPay(toAddress: Ref<string>, amount: Ref<string>) {
     return await signer.getAccounts()
   }
 
-  const sendIoPayTransaction = async () => {
+  const sendIoPayTransaction = async (toAddress: string, amount: string) => {
     try {
       const transResp = await antenna?.iotx.sendTransfer({
-        to: `${toAddress.value}`,
+        to: `${toAddress}`,
         from: antenna.iotx.accounts[0].address,
-        value: toRau(amount.value, 'Iotx'),
+        value: toRau(amount, 'Iotx'),
         gasLimit: '100000',
         gasPrice: toRau('1', 'Qev'),
         chainID: 2,

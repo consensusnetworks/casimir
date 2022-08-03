@@ -19,7 +19,7 @@ const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const { getIoPayAccounts, sendIoPayTransaction } = useIoPay(toAddress, amount)
+  const { getIoPayAccounts, sendIoPayTransaction } = useIoPay()
   const ethereum: any = window.ethereum
   const availableProviders = ref<BrowserProviders>(
     getBrowserProviders(ethereum)
@@ -74,7 +74,7 @@ export default function useWallet() {
           console.log('successful txHash: ', txObj.hash)
         })
       } else if (selectedProvider.value === 'IoPay') {
-        await sendIoPayTransaction()
+        await sendIoPayTransaction(toAddress.value, amount.value)
       } else {
         throw new Error('Provider selected not yet supported')
       }
