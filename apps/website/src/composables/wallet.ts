@@ -73,7 +73,6 @@ export default function useWallet() {
           console.log('successful txHash: ', txObj.hash)
         })
       } else if (selectedProvider.value === 'IoPay') {
-        // TODO: Per iopay.ts line 6, shouldn't I be able to invoke sendIoPayTransaction without arguments?
         await sendIoPayTransaction()
       } else {
         throw new Error('Provider selected not yet supported')
