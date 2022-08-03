@@ -32,11 +32,15 @@ Make sure your development environment has these prerequisites.
 
 With the Poetry and the Jupyter VSCode Extension, we have a one-time setup.
 
-1. Run the following **from the root directory**:
+1. Install dependencies and create a Jupyter kernel.
 
     ```zsh
-    npm run configure:python
+    cd common/data
+    poetry install
+    poetry run ipython kernel install --user --name=casimir-data
     ```
+
+    > 🚩 If you have node and npm already set up for this repo, you can run `npm run configure:python --workspace @casimir/data` from the root directory instead.
 
 2. Restart VSCode (Jupyter needs this to see your new kernel).
 
@@ -44,4 +48,4 @@ With the Poetry and the Jupyter VSCode Extension, we have a one-time setup.
 
 Now you can run cells in the notebooks upon returning to this workspace in VSCode.
 
-> 🚩 To add Python dependencies to the notebook environment, change into this directory and run `poetry add <package>`.
+> 🚩 To change Python dependencies for the notebook environment, change into this directory (`cd common/data`) and use the poetry CLI `poetry add <package>` or `poetry remove <package>`.
