@@ -2,44 +2,52 @@ import { ref } from 'vue'
 import { ethers } from 'ethers'
 import useIopay from '@/composables/iopay'
 import useEthers from '@/composables/ethers'
+import { BrowserProviders } from '@/interfaces/BrowserProviders'
+import { EthersProvider } from '@/interfaces/EthersProvider'
 
+const amount = ref<string>('')
+const toAddress = ref<string>('')
 const { requestEthersAccount } = useEthers()
-const { getIoPayAccounts, sendIoPayTransaction } = useIopay()
 
 const defaultProviders = {
   MetaMask: undefined,
   CoinbaseWallet: undefined,
 }
 
-export default function useWallet() {
-  const ethereum: any = window.ethereum
-  const availableProviders = ref<any>(getAvailableProviders(ethereum)) // TODO: Retype this?
-  const selectedProvider = ref<'MetaMask' | 'CoinbaseWallet' | 'IoPay' | ''>('')
-  const selectedAccount = ref<string>('')
-  const amount = ref<string>('')
-  const toAddress = ref<string>('')
-  // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
-  // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
+const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
+// Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
+// Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
-  async function connectWallet(provider: string) {
+export default function useWallet() {
+  const { getIoPayAccounts, sendIoPayTransaction } = useIopay(toAddress, amount)
+  const ethereum: any = window.ethereum
+  const availableProviders = ref<BrowserProviders>(
+    getBrowserProviders(ethereum)
+  )
+  type ProviderString = keyof BrowserProviders | 'IoPay' | ''
+  const selectedProvider = ref<ProviderString>('')
+  const setSelectedProvider = (provider: ProviderString) => {
+    selectedProvider.value = provider
+  }
+  const selectedAccount = ref<string>('')
+  const setSelectedAccount = (address: string) => {
+    selectedAccount.value = address
+  }
+
+  async function connectWallet(provider: ProviderString) {
     try {
-      if (provider === 'MetaMask') {
-        selectedProvider.value = 'MetaMask'
-        const browserExtensionProvider = availableProviders.value[provider]
-        selectedAccount.value = (
-          await requestEthersAccount(browserExtensionProvider)
+      setSelectedProvider(provider)
+      if (ethersProviderList.includes(provider)) {
+        const browserExtensionProvider =
+          availableProviders.value[provider as keyof BrowserProviders]
+        const address = (
+          await requestEthersAccount(browserExtensionProvider as EthersProvider)
         )[0]
-      } else if (provider === 'CoinbaseWallet') {
-        selectedProvider.value = 'CoinbaseWallet'
-        const browserExtensionProvider = availableProviders.value[provider]
-        selectedAccount.value = (
-          await requestEthersAccount(browserExtensionProvider)
-        )[0]
-      } else if (provider === 'iopay') {
+        setSelectedAccount(address)
+      } else if (provider === 'IoPay') {
         const accounts = await getIoPayAccounts()
         const { address } = accounts[0]
-        selectedProvider.value = 'IoPay'
-        selectedAccount.value = address
+        setSelectedAccount(address)
       } else {
         throw new Error('No provider selected')
       }
@@ -48,20 +56,13 @@ export default function useWallet() {
     }
   }
 
-  async function sendTransaction() {
+  async function sendTransaction(provider: string) {
     try {
-      if (
-        selectedProvider.value === 'MetaMask' ||
-        selectedProvider.value === 'CoinbaseWallet'
-      ) {
-        let browserExtensionProvider
-        if (selectedProvider.value === 'MetaMask') {
-          browserExtensionProvider = availableProviders.value['MetaMask']
-        } else {
-          browserExtensionProvider = availableProviders.value['coinbase']
-        }
+      if (ethersProviderList.includes(provider)) {
+        const browserProvider =
+          availableProviders.value[provider as keyof BrowserProviders]
         const web3Provider: ethers.providers.Web3Provider =
-          new ethers.providers.Web3Provider(browserExtensionProvider)
+          new ethers.providers.Web3Provider(browserProvider as EthersProvider)
         const signer = web3Provider.getSigner()
         const etherAmount = ethers.utils.parseEther(amount.value)
         const tx = {
@@ -73,7 +74,7 @@ export default function useWallet() {
         })
       } else if (selectedProvider.value === 'IoPay') {
         // TODO: Per iopay.ts line 6, shouldn't I be able to invoke sendIoPayTransaction without arguments?
-        await sendIoPayTransaction(toAddress.value, amount.value)
+        await sendIoPayTransaction()
       } else {
         throw new Error('Provider selected not yet supported')
       }
@@ -92,7 +93,7 @@ export default function useWallet() {
   }
 }
 
-function getAvailableProviders(ethereum: any) {
+function getBrowserProviders(ethereum: any) {
   if (!ethereum) return defaultProviders
   else if (!ethereum.providerMap) {
     return {

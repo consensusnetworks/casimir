@@ -1,12 +1,9 @@
 import Antenna from 'iotex-antenna'
+import { Ref } from 'vue'
 import { WsSignerPlugin } from 'iotex-antenna/lib/plugin/ws'
 import { toRau } from 'iotex-antenna/lib/account/utils'
-import useWallet from '@/composables/wallet'
 
-// TODO: Figure out why these refe aren't updating
-// const { toAddress, amount } = useWallet()
-
-export default function useIopay() {
+export default function useIopay(toAddress: Ref<string>, amount: Ref<string>) {
   const signer = new WsSignerPlugin()
   const antenna = new Antenna('http://api.testnet.iotex.one:80', {
     signer,
@@ -16,16 +13,17 @@ export default function useIopay() {
     return await signer.getAccounts()
   }
 
-  const sendIoPayTransaction = async (toAddress: string, amount: string) => {
+  const sendIoPayTransaction = async () => {
     try {
       const transResp = await antenna?.iotx.sendTransfer({
-        to: `${toAddress}`,
+        to: `${toAddress.value}`,
         from: antenna.iotx.accounts[0].address,
-        value: toRau(amount, 'Iotx'),
+        value: toRau(amount.value, 'Iotx'),
         gasLimit: '100000',
         gasPrice: toRau('1', 'Qev'),
         chainID: 2,
       })
+      console.log('transResp :>> ', transResp)
     } catch (err) {
       // TODO: handle submit error and guide user
       console.log(err)

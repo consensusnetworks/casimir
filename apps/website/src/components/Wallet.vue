@@ -20,7 +20,7 @@
         </p>
       </div>
       <div class="ioPay-div">
-        <button class="iopay-btn" @click="connectWallet('iopay')">
+        <button class="iopay-btn" @click="connectWallet('IoPay')">
           {{ ioPayButtonText }}
         </button>
         <p>
