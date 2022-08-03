@@ -3,7 +3,7 @@ import { Ref } from 'vue'
 import { WsSignerPlugin } from 'iotex-antenna/lib/plugin/ws'
 import { toRau } from 'iotex-antenna/lib/account/utils'
 
-export default function useIopay(toAddress: Ref<string>, amount: Ref<string>) {
+export default function useIoPay(toAddress: Ref<string>, amount: Ref<string>) {
   const signer = new WsSignerPlugin()
   const antenna = new Antenna('http://api.testnet.iotex.one:80', {
     signer,

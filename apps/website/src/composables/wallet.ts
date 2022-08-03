@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
-import useIopay from '@/composables/iopay'
+import useIoPay from '@/composables/iopay'
 import useEthers from '@/composables/ethers'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
@@ -19,17 +19,17 @@ const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const { getIoPayAccounts, sendIoPayTransaction } = useIopay(toAddress, amount)
+  const { getIoPayAccounts, sendIoPayTransaction } = useIoPay(toAddress, amount)
   const ethereum: any = window.ethereum
   const availableProviders = ref<BrowserProviders>(
     getBrowserProviders(ethereum)
   )
-  type ProviderString = keyof BrowserProviders | 'IoPay' | ''
+  type ProviderString = keyof BrowserProviders | 'IoPay' | '' // Why are we adding this type here and not in global namespace?
   const selectedProvider = ref<ProviderString>('')
+  const selectedAccount = ref<string>('')
   const setSelectedProvider = (provider: ProviderString) => {
     selectedProvider.value = provider
   }
-  const selectedAccount = ref<string>('')
   const setSelectedAccount = (address: string) => {
     selectedAccount.value = address
   }
@@ -40,9 +40,10 @@ export default function useWallet() {
       if (ethersProviderList.includes(provider)) {
         const browserExtensionProvider =
           availableProviders.value[provider as keyof BrowserProviders]
-        const address = (
-          await requestEthersAccount(browserExtensionProvider as EthersProvider)
-        )[0]
+        const accounts = await requestEthersAccount(
+          browserExtensionProvider as EthersProvider
+        )
+        const address = accounts[0]
         setSelectedAccount(address)
       } else if (provider === 'IoPay') {
         const accounts = await getIoPayAccounts()
