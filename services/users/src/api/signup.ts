@@ -6,7 +6,7 @@ import {
     UpdateEndpointCommandOutput
 } from '@aws-sdk/client-pinpoint'
 import express from 'express'
-import { pascalCase } from '@casimir/lib'
+import { pascalCase } from '@casimir/helpers'
 
 const appId = 'e80548536df34c7fb4a58bf64933190e'
 const sourceEmail = 'team@casimir.co'

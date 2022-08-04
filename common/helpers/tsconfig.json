@@ -12,12 +12,6 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
   },
-  "exclude": [
-    "node_modules",
-    "build.js"
-  ],
-  "include": [
-    "./src/*",
-    "env.d.ts"
-  ]
+  "exclude": ["node_modules"],
+  "include": ["./src/*"]
 }
