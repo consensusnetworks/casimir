@@ -29,6 +29,10 @@ Writing content is stored in the [content/writing](content/writing/) directory. 
 
 AWS Pinpont email templates and shared components are stored in the [content/email](content/email/) directory. See the [Email Contribution Guide](content/email/README.md) for detailed usage instructions.
 
+## 📊 Data
+
+Data schemas, data operations/workflows, and analytics and ML notebooks are stored in the [common/data/] directory (also namespaced as the @casimir/data npm workspace). See the [Data Contribution Guide](common/data/README.md) for detailed usage instructions.
+
 ## 💻 Development
 
 Get started contributing to Casimir's codebase.
@@ -42,6 +46,10 @@ Make sure your development environment has these prerequisites.
 2. [AWS CLI (v2.x)](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
 
 3. [SAM CLI (v1.x)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) - tool for mocking backend services locally.
+
+### Scripts and Dependencies
+
+We are using [npm workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) to simplify monorepo development workflows while keeping project-wide resources accessible.
 
 ### Setup
 
@@ -130,7 +138,7 @@ PROFILE="some-other-aws-name"
 STAGE="sandbox"
 ```
 
-#### Supported variables
+#### Supported Variables
 
 | Name | Description | Default |
 | --- | --- | --- |
