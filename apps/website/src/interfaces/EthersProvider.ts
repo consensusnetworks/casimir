@@ -1,5 +1,5 @@
 import { ExternalProvider } from '@ethersproject/providers'
 
-export interface WalletProvider extends ExternalProvider {
+export interface EthersProvider extends ExternalProvider {
   isCoinbaseWallet?: boolean
 }
