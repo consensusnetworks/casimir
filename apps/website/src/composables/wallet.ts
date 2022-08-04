@@ -37,6 +37,7 @@ export default function useWallet() {
   async function connectWallet(provider: ProviderString) {
     try {
       setSelectedProvider(provider)
+      selectedAccount.value = 'Not Active'
       if (ethersProviderList.includes(provider)) {
         const browserExtensionProvider =
           availableProviders.value[provider as keyof BrowserProviders]
