@@ -2,7 +2,7 @@
   <div>
     <div class="connect-wallet-container">
       <div class="metamask-div">
-        <button @click="connectWallet('metamask')">
+        <button @click="connectWallet('MetaMask')">
           {{ metamaskButtonText }}
         </button>
         <p>
@@ -11,7 +11,7 @@
         </p>
       </div>
       <div class="coinbase-div">
-        <button class="coinbase-btn" @click="connectWallet('coinbase')">
+        <button class="coinbase-btn" @click="connectWallet('CoinbaseWallet')">
           {{ coinbaseButtonText }}
         </button>
         <p>
@@ -19,9 +19,18 @@
           <span> {{ coinbaseAccountsResult }} </span>
         </p>
       </div>
+      <div class="ioPay-div">
+        <button class="iopay-btn" @click="connectWallet('IoPay')">
+          {{ ioPayButtonText }}
+        </button>
+        <p>
+          Connected ioPay Account:
+          <span> {{ ioPayAccountsResult }} </span>
+        </p>
+      </div>
     </div>
     <div class="form-container">
-      <form @submit.prevent="sendTransaction">
+      <form @submit.prevent="sendTransaction(selectedProvider)">
         <label for="address">Address</label>
         <input v-model="toAddress" type="text" placeholder="To Address" />
         <br />
@@ -36,10 +45,13 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
-const metamaskAccountsResult = ref<string>('Address Not Active')
-const coinbaseAccountsResult = ref<string>('Address Not Active')
+
 const metamaskButtonText = ref<string>('Connect Metamask')
+const metamaskAccountsResult = ref<string>('Address Not Active')
 const coinbaseButtonText = ref<string>('Connect Coinbase')
+const coinbaseAccountsResult = ref<string>('Address Not Active')
+const ioPayButtonText = ref<string>('Connect ioPay')
+const ioPayAccountsResult = ref<string>('Address Not Active')
 
 const {
   selectedProvider,
@@ -51,18 +63,27 @@ const {
 } = useWallet()
 
 watchEffect(() => {
-  if (selectedProvider.value.isMetaMask) {
-    metamaskButtonText.value = 'Metamask Connected'
-    metamaskAccountsResult.value = selectedAccount.value[0]
-    coinbaseAccountsResult.value = 'Not Active'
+  if (selectedProvider.value === 'MetaMask') {
+    metamaskButtonText.value = 'MetaMask Connected'
+    metamaskAccountsResult.value = selectedAccount.value
     coinbaseButtonText.value = 'Connect Coinbase'
-    metamaskButtonText.value = 'Metamask Connected'
-  } else if (selectedProvider.value.isCoinbaseWallet) {
-    coinbaseAccountsResult.value = ''
-    coinbaseAccountsResult.value = selectedAccount.value[0]
-    metamaskAccountsResult.value = 'Not Active'
-    coinbaseButtonText.value = 'Coinbase Connected'
+    ioPayButtonText.value = 'Connect ioPay'
+    coinbaseAccountsResult.value = 'Not Active'
+    ioPayAccountsResult.value = 'Not Active'
+  } else if (selectedProvider.value === 'CoinbaseWallet') {
     metamaskButtonText.value = 'Connect Metamask'
+    coinbaseButtonText.value = 'Coinbase Connected'
+    ioPayButtonText.value = 'Connect ioPay'
+    metamaskAccountsResult.value = 'Not Active'
+    coinbaseAccountsResult.value = selectedAccount.value
+    ioPayAccountsResult.value = 'Not Active'
+  } else if (selectedProvider.value === 'IoPay') {
+    metamaskButtonText.value = 'Connect MetaMask'
+    coinbaseButtonText.value = 'Connect Coinbase'
+    ioPayButtonText.value = 'Connected'
+    metamaskAccountsResult.value = 'Not Active'
+    coinbaseAccountsResult.value = 'Not Active'
+    ioPayAccountsResult.value = selectedAccount.value || 'Not Active'
   }
 })
 </script>
@@ -100,6 +121,10 @@ button {
 
 .coinbase-btn {
   background-color: blue;
+}
+
+.iopay-btn {
+  background-color: rgb(0, 218, 180);
 }
 
 .connect-wallet-container {
