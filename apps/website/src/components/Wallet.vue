@@ -28,6 +28,15 @@
           <span> {{ ioPayAccountsResult }} </span>
         </p>
       </div>
+      <div class="phantom-div">
+        <button class="phantom-btn" @click="connectWallet('Phantom')">
+          {{ phantomButtonText }}
+        </button>
+        <p>
+          Connected phantom Account:
+          <span> {{ phantomAccountsResult }} </span>
+        </p>
+      </div>
     </div>
     <div class="form-container">
       <form @submit.prevent="sendTransaction(selectedProvider)">
@@ -52,6 +61,8 @@ const coinbaseButtonText = ref<string>('Connect Coinbase')
 const coinbaseAccountsResult = ref<string>('Address Not Active')
 const ioPayButtonText = ref<string>('Connect ioPay')
 const ioPayAccountsResult = ref<string>('Address Not Active')
+const phantomButtonText = ref<string>('Connect Phantom')
+const phantomAccountsResult = ref<string>('Address Not Active')
 
 const {
   selectedProvider,
@@ -125,6 +136,10 @@ button {
 
 .iopay-btn {
   background-color: rgb(0, 218, 180);
+}
+
+.phantom-btn {
+  background-color: purple;
 }
 
 .connect-wallet-container {

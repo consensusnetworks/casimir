@@ -16,15 +16,13 @@ const defaultProviders = {
 }
 
 const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
+const solanaProvidersList = ['Phantom']
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
   const { getIoPayAccounts, sendIoPayTransaction } = useIoPay()
-  const ethereum: any = window.ethereum
-  const availableProviders = ref<BrowserProviders>(
-    getBrowserProviders(ethereum)
-  )
+  const availableProviders = ref<BrowserProviders>(getBrowserProviders())
   const selectedProvider = ref<ProviderString>('')
   const selectedAccount = ref<string>('')
   const setSelectedProvider = (provider: ProviderString) => {
@@ -46,6 +44,17 @@ export default function useWallet() {
         )
         const address = accounts[0]
         setSelectedAccount(address)
+      } else if (solanaProvidersList.includes(provider)) {
+        try {
+          const phantomProvider =
+            availableProviders.value.Phantom[provider as keyof BrowserProviders]
+          const resp = await provider.connect() // TODO: Pick up from here on 8/5
+          console.log(resp.publicKey.toString())
+          // 26qv4GCcx98RihuK3c4T6ozB3J7L6VwCuFVc7Ta2A3Uo
+        } catch (err) {
+          console.log(`Error connecting to ${provider}: ${err}`)
+          // { code: 4001, message: 'User rejected the request.' }
+        }
       } else if (provider === 'IoPay') {
         const accounts = await getIoPayAccounts()
         const { address } = accounts[0]
@@ -94,7 +103,31 @@ export default function useWallet() {
   }
 }
 
-function getBrowserProviders(ethereum: any) {
+function getBrowserProviders() {
+  const ethereum: any = window.ethereum
+  const phantom: any = window.phantom?.solana?.isPhantom
+    ? window.phantom.solana
+    : undefined
+
+  const providers = {
+    MetaMask: undefined,
+    CoinbaseWallet: undefined,
+    Phantom: undefined,
+  }
+  const ethereumProviders = checkForEthereumProviders()
+  providers.MetaMask = ethereumProviders.MetaMask
+  providers.CoinbaseWallet = ethereumProviders.CoinbaseWallet
+  providers.Phantom = phantom
+
+  return providers
+}
+
+function checkForEthereumProviders() {
+  const ethereum = window.ethereum
+  const providers = {
+    MetaMask: undefined,
+    CoinbaseWallet: undefined,
+  }
   if (!ethereum) return defaultProviders
   else if (!ethereum.providerMap) {
     return {
@@ -107,4 +140,5 @@ function getBrowserProviders(ethereum: any) {
       CoinbaseWallet: ethereum.providerMap.get('CoinbaseWallet'),
     }
   }
+  return providers
 }
