@@ -1,4 +1,4 @@
-<img width="25px" alt="Casimir logo" src="content/logos/casimir.png">
+<img width="50px" alt="Casimir logo" src="content/logos/casimir.png">
 
 # Casimir
 
@@ -7,7 +7,7 @@
 [![GitHub milestones](https://consensusnetworks-shields.herokuapp.com/github/milestones/all/consensusnetworks/casimir)](https://github.com/consensusnetworks/casimir/milestones)
 [![Discord](https://consensusnetworks-shields.herokuapp.com/discord/976524855279226880?logo=discord)](https://discord.com/invite/Vy2b3gSZx8)
 
-:ocean: Decentralized staking and asset management
+Decentralized staking and asset management
 
 ## About
 
