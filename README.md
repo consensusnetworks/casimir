@@ -1,3 +1,5 @@
+<img width="25px" alt="Casimir logo" src="content/logos/casimir.png">
+
 # Casimir
 
 [![GitHub discussions](https://consensusnetworks-shields.herokuapp.com/github/discussions/consensusnetworks/casimir)](https://github.com/consensusnetworks/casimir/discussions)
