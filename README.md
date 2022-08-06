@@ -19,22 +19,6 @@ Casimir is an early work-in-progress – check out [our website](https://casimir
 
 Also, feel free to join our [discord server](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
 
-## 📝 Content
-
-Get started contributing to Casimir's content.
-
-### Writing
-
-Writing content is stored in the [content/writing](content/writing/) directory. See the [Writing Contribution Guide](content/writing/README.md) for detailed usage instructions.
-
-### Emails
-
-AWS Pinpont email templates and shared components are stored in the [content/email](content/email/) directory. See the [Email Contribution Guide](content/email/README.md) for detailed usage instructions.
-
-## 📊 Data
-
-Data schemas, data operations/workflows, and analytics and ML notebooks are stored in the [common/data/] directory (also namespaced as the @casimir/data npm workspace). See the [Data Contribution Guide](common/data/README.md) for detailed usage instructions.
-
 ## 💻 Development
 
 Get started contributing to Casimir's codebase.
@@ -176,6 +160,22 @@ npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/
 # or
 npm install -D some-dev-dependency --workspace @casimir/workspace-name
 ```
+
+## 📝 Content
+
+Get started contributing to Casimir's content.
+
+### Writing
+
+Writing content is stored in the [content/writing](content/writing/) directory. See the [Writing Contribution Guide](content/writing/README.md) for detailed usage instructions.
+
+### Emails
+
+AWS Pinpont email templates and shared components are stored in the [content/email](content/email/) directory. See the [Email Contribution Guide](content/email/README.md) for detailed usage instructions.
+
+## 📊 Data
+
+Data schemas, data operations/workflows, and analytics and ML notebooks are stored in the [common/data/] directory (also namespaced as the @casimir/data npm workspace). See the [Data Contribution Guide](common/data/README.md) for detailed usage instructions.
 
 ## Layout
 
