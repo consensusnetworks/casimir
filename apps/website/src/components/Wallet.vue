@@ -57,12 +57,26 @@ import useWallet from '@/composables/wallet'
 
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
-const coinbaseButtonText = ref<string>('Connect Coinbase')
+const coinbaseButtonText = ref<string>('Connect CoinbaseWallet')
 const coinbaseAccountsResult = ref<string>('Address Not Active')
 const ioPayButtonText = ref<string>('Connect ioPay')
 const ioPayAccountsResult = ref<string>('Address Not Active')
 const phantomButtonText = ref<string>('Connect Phantom')
 const phantomAccountsResult = ref<string>('Address Not Active')
+
+const providerButtonTexts = [
+  { provider: 'MetaMask', value: metamaskButtonText },
+  { provider: 'CoinbaseWallet', value: coinbaseButtonText },
+  { provider: 'IoPay', value: ioPayButtonText },
+  { provider: 'Phantom', value: phantomButtonText },
+]
+
+const providerAccountsResults = [
+  metamaskAccountsResult,
+  coinbaseAccountsResult,
+  ioPayAccountsResult,
+  phantomAccountsResult,
+]
 
 const {
   selectedProvider,
@@ -75,28 +89,39 @@ const {
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {
+    resetProviderButtonTexts()
     metamaskButtonText.value = 'MetaMask Connected'
+    resetProviderAccountResults()
     metamaskAccountsResult.value = selectedAccount.value
-    coinbaseButtonText.value = 'Connect Coinbase'
-    ioPayButtonText.value = 'Connect ioPay'
-    coinbaseAccountsResult.value = 'Not Active'
-    ioPayAccountsResult.value = 'Not Active'
   } else if (selectedProvider.value === 'CoinbaseWallet') {
-    metamaskButtonText.value = 'Connect Metamask'
+    resetProviderButtonTexts()
     coinbaseButtonText.value = 'Coinbase Connected'
-    ioPayButtonText.value = 'Connect ioPay'
-    metamaskAccountsResult.value = 'Not Active'
+    resetProviderAccountResults()
     coinbaseAccountsResult.value = selectedAccount.value
-    ioPayAccountsResult.value = 'Not Active'
   } else if (selectedProvider.value === 'IoPay') {
-    metamaskButtonText.value = 'Connect MetaMask'
-    coinbaseButtonText.value = 'Connect Coinbase'
-    ioPayButtonText.value = 'Connected'
-    metamaskAccountsResult.value = 'Not Active'
-    coinbaseAccountsResult.value = 'Not Active'
+    resetProviderButtonTexts()
+    ioPayButtonText.value = 'IoPay Connected'
+    resetProviderAccountResults()
     ioPayAccountsResult.value = selectedAccount.value || 'Not Active'
+  } else if (selectedProvider.value === 'Phantom') {
+    resetProviderButtonTexts()
+    phantomButtonText.value = 'Phantom Connected'
+    resetProviderAccountResults()
+    phantomAccountsResult.value = selectedAccount.value
   }
 })
+
+const resetProviderButtonTexts = () => {
+  providerButtonTexts.forEach((item) => {
+    item.value.value = `Connect ${item.provider}`
+  })
+}
+
+const resetProviderAccountResults = () => {
+  providerAccountsResults.forEach((providerAccountsResult) => {
+    providerAccountsResult.value = 'Address Not Active'
+  })
+}
 </script>
 
 <style scoped>

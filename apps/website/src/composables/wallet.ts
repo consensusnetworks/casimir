@@ -13,6 +13,7 @@ const { requestEthersAccount } = useEthers()
 const defaultProviders = {
   MetaMask: undefined,
   CoinbaseWallet: undefined,
+  Phantom: undefined,
 }
 
 const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
@@ -45,16 +46,11 @@ export default function useWallet() {
         const address = accounts[0]
         setSelectedAccount(address)
       } else if (solanaProvidersList.includes(provider)) {
-        try {
-          const phantomProvider =
-            availableProviders.value.Phantom[provider as keyof BrowserProviders]
-          const resp = await provider.connect() // TODO: Pick up from here on 8/5
-          console.log(resp.publicKey.toString())
-          // 26qv4GCcx98RihuK3c4T6ozB3J7L6VwCuFVc7Ta2A3Uo
-        } catch (err) {
-          console.log(`Error connecting to ${provider}: ${err}`)
-          // { code: 4001, message: 'User rejected the request.' }
-        }
+        const phantomProvider =
+          availableProviders.value[provider as keyof BrowserProviders]
+        const resp = await phantomProvider.connect()
+        const address = resp.publicKey.toString()
+        setSelectedAccount(address)
       } else if (provider === 'IoPay') {
         const accounts = await getIoPayAccounts()
         const { address } = accounts[0]
@@ -106,7 +102,7 @@ export default function useWallet() {
 function getBrowserProviders() {
   const ethereum: any = window.ethereum
   const phantom: any = window.phantom?.solana?.isPhantom
-    ? window.phantom.solana
+    ? window.phantom?.solana
     : undefined
 
   const providers = {
@@ -118,7 +114,6 @@ function getBrowserProviders() {
   providers.MetaMask = ethereumProviders.MetaMask
   providers.CoinbaseWallet = ethereumProviders.CoinbaseWallet
   providers.Phantom = phantom
-
   return providers
 }
 
