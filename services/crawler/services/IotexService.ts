@@ -158,14 +158,7 @@ export class IoTexService {
       throw new Error('Failed to get actions')
     }
 
-    if (actions.actionInfo[0].action.core !== undefined) {
-      const type = actions.actionInfo[0].action.core
-      if (type.stakeCreate !== undefined) {
-        console.log("passed me")
-        return actions.actionInfo.map(a => this.convertToGlueSchema('stakeCreate', a))
-      }
-    }
-    return []
+    return actions.actionInfo
   }
 
   convertToGlueSchema(type: string, action: IActionInfo): any {

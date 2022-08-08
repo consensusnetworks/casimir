@@ -71,17 +71,19 @@ class Crawler {
       const trips = Math.ceil(height / 1000)
 
       for (let i = 0; i < trips; i++) {
-        const blocks = await this.service.getBlockMetasByIndex(i * 1000, 1000)
+        const blocks = await this.service.getBlockMetasByIndex(8000000, 1000)
         if (blocks.length === 0) continue
 
         for (const block of blocks) {
           const actions =  await this.service.getActionsByIndex(block.height, block.num_of_actions)
 
           if (actions.length === 0) continue
-          const ndjson = actions.map(a => JSON.stringify(a)).join('\n')
+
+          const ndjson = actions.filter(a => a.action.core !== undefined && a.action.core.stakeCreate !== undefined).map(a => this.service?.convertToGlueSchema("create_stake", a)).map(a => JSON.stringify(a)).join('\n')
+          
+          if (ndjson.length === 0) continue
           const destination = `${this.config.output}/${block.id}-events.json`
-          console.log(ndjson)
-          // uploadToS3(destination, ndjson)
+          uploadToS3(destination, ndjson)
         }
       }
       return

@@ -125,14 +125,7 @@ class IoTexService {
     if (actions.actionInfo === null) {
       throw new Error("Failed to get actions");
     }
-    if (actions.actionInfo[0].action.core !== void 0) {
-      const type = actions.actionInfo[0].action.core;
-      if (type.stakeCreate !== void 0) {
-        console.log("passed me");
-        return actions.actionInfo.map((a) => this.convertToGlueSchema("stakeCreate", a));
-      }
-    }
-    return [];
+    return actions.actionInfo;
   }
   convertToGlueSchema(type, action) {
     var _a, _b;
