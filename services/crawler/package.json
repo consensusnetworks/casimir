@@ -1,0 +1,49 @@
+{
+    "name": "@casimir/crawler",
+    "version": "1.0.0",
+    "main": "./dist/crawler.cjs",
+    "type": "commonjs",
+    "exports": {
+      "require": "./dist/crawler.cjs"
+    },
+    "scripts": {
+      "test": "rm -rf ./dist && npm run build && tap ./test.js --no-timeout --no-coverage --reporter specy",
+      "build:services": "esbuild ./services/** --platform=node --target=node16 --format=cjs --outdir=./dist/services",
+      "build:cjs": "esbuild ./Crawler.ts --platform=node --target=node16 --format=cjs --outfile=./dist/crawler.cjs",
+      "build": "rm -rf ./dist && npm run build:cjs && npm run build:services"
+    },
+    "author": "hawyar",
+    "dependencies": {
+      "@aws-sdk/client-athena": "^3.121.0",
+      "@aws-sdk/client-glue": "^3.121.0",
+      "@aws-sdk/client-s3": "^3.120.0",
+      "@aws-sdk/lib-storage": "^3.121.0",
+      "@helium/crypto": "^4.3.1",
+      "@helium/http": "^4.4.0",
+      "@helium/transactions": "^4.3.1",
+      "@iotexproject/iotex-address-ts": "^1.0.4",
+      "accumulate.js": "^0.4.0",
+      "arg": "^5.0.2",
+      "esbuild": "^0.14.47",
+      "iotex-antenna": "^0.30.10",
+      "json-bigint": "^1.0.0",
+      "nanospinner": "^1.1.0",
+      "picocolors": "^1.0.0",
+      "web3-eth": "^1.7.4"
+    },
+    "devDependencies": {
+      "@types/json-bigint": "^1.0.1",
+      "@types/tap": "^15.0.7",
+      "tap": "^16.3.0",
+      "ts-standard": "^11.0.0",
+      "tsx": "^3.6.0",
+      "typescript": "^4.7.4"
+    },
+    "ts-standard": {
+      "ignore": [
+        "bin",
+        "dist"
+      ]
+    }
+  }
+  
