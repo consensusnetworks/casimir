@@ -28,11 +28,14 @@ __export(Crawler_exports, {
   crawler: () => crawler
 });
 module.exports = __toCommonJS(Crawler_exports);
+var import_client_s3 = require("@aws-sdk/client-s3");
+var import_credential_provider_node = require("@aws-sdk/credential-provider-node");
+var import_lib_storage = require("@aws-sdk/lib-storage");
 var import_IotexService = require("./services/IotexService");
 var import_events = __toESM(require("events"));
-var import_fs = __toESM(require("fs"));
 const EE = new import_events.default();
-const defaultOutputLocation = "s3://";
+const defaultOutputLocation = "s3://casimir-etl-event-bucket-dev";
+let s3 = null;
 var Chain = /* @__PURE__ */ ((Chain2) => {
   Chain2["Iotex"] = "iotex";
   Chain2["Accumulate"] = "accumulate";
@@ -68,19 +71,73 @@ class Crawler {
       throw new Error("Service is not initialized");
     }
     this.running = true;
+    s3 = await newS3Client();
     if (this.service instanceof import_IotexService.IoTexService) {
       const { chainMeta } = await this.service.getChainMetadata();
       const height = parseInt(chainMeta.height);
       const trips = Math.ceil(height / 1e3);
-      if (!import_fs.default.existsSync("./_output")) {
-        import_fs.default.mkdirSync("./_output");
-      }
       for (let i = 0; i < trips; i++) {
-        console.log("beep");
+        const blocks = await this.service.getBlockMetasByIndex(i * 1e3, 1e3);
+        if (blocks.length === 0)
+          continue;
+        for (const block of blocks) {
+          const actions = await this.service.getActionsByIndex(block.height, block.num_of_actions);
+          if (actions.length === 0)
+            continue;
+          const ndjson = actions.map((a) => JSON.stringify(a)).join("\n");
+          const destination = `${this.config.output}/${block.id}-events.json`;
+          console.log(ndjson);
+        }
       }
       return;
     }
     throw new Error("not implemented yet");
+  }
+}
+async function newS3Client(opt) {
+  if ((opt == null ? void 0 : opt.region) === void 0) {
+    opt = {
+      region: "us-east-2"
+    };
+  }
+  if (opt.credentials === void 0) {
+    opt = {
+      credentials: await (0, import_credential_provider_node.defaultProvider)()
+    };
+  }
+  const client = new import_client_s3.S3Client(opt);
+  return client;
+}
+async function uploadToS3(destination, data) {
+  if (!destination.startsWith("s3://")) {
+    throw new Error("Invalid destination");
+  }
+  const [bucket, ...keys] = destination.split(":/")[1].split("/").splice(1);
+  if (bucket === "")
+    throw new Error("bucket name cannot be empty");
+  if (keys.length === 0) {
+    throw new Error("path cannot be empty");
+  }
+  console.log(`Uploading to ${keys}`);
+  try {
+    if (s3 === null) {
+      throw new Error("s3 client is not initialized");
+    }
+    const upload = new import_lib_storage.Upload({
+      client: s3,
+      params: {
+        Bucket: bucket,
+        Key: keys.join("/"),
+        Body: data
+      },
+      leavePartsOnError: true
+    });
+    upload.on("httpUploadProgress", (progess) => {
+      console.log(`Uploading ${progess.loaded}/${progess.total}`);
+    });
+    await upload.done();
+  } catch (err) {
+    throw new Error("Unable to upload to S3");
   }
 }
 async function crawler(config) {

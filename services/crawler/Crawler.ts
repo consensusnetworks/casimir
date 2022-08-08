@@ -6,8 +6,11 @@ import { Upload } from '@aws-sdk/lib-storage'
 import { IoTexService, newIotexService } from './services/IotexService'
 import EventEmitter from 'events'
 
+
 const EE = new EventEmitter()
-const defaultOutputLocation = 's3://'
+const defaultOutputLocation = "s3://casimir-etl-event-bucket-dev"
+let s3: S3Client | null = null
+
 
 export enum Chain {
   Iotex = 'iotex',
@@ -60,25 +63,26 @@ class Crawler {
     }
 
     this.running = true
+    s3 = await newS3Client()
 
     if (this.service instanceof IoTexService) {
       const { chainMeta } = await this.service.getChainMetadata()
       const height = parseInt(chainMeta.height)
       const trips = Math.ceil(height / 1000)
 
-      if (!fs.existsSync("./_output")) {
-        fs.mkdirSync("./_output")
-      }
-
       for (let i = 0; i < trips; i++) {
-        // const blocks = await this.service.getBlockMetasByIndex(i * 1000, 1000)
-        // if (blocks.length === 0) continue
+        const blocks = await this.service.getBlockMetasByIndex(i * 1000, 1000)
+        if (blocks.length === 0) continue
 
-        // for (const block of blocks) {
-        //   const ws = fs.createWriteStream(`./_output/${block.id}-events.json`, { flags: 'a' })
-        //   const actions =  await this.service.getActionsByIndex(parseInt(block.height), block.num_of_actions)
-        //   actions.forEach(action => ws.write(JSONbig.stringify(action) + '\n'))
-        // }
+        for (const block of blocks) {
+          const actions =  await this.service.getActionsByIndex(block.height, block.num_of_actions)
+
+          if (actions.length === 0) continue
+          const ndjson = actions.map(a => JSON.stringify(a)).join('\n')
+          const destination = `${this.config.output}/${block.id}-events.json`
+          console.log(ndjson)
+          // uploadToS3(destination, ndjson)
+        }
       }
       return
     }
@@ -103,7 +107,7 @@ async function newS3Client (opt?: S3ClientConfig): Promise<S3Client> {
   return client
 }
 
-async function uploadToS3 (data: string | Buffer | Uint8Array, destination: string): Promise<void> {
+async function uploadToS3 (destination: string, data: string | Buffer |  ReadableStream): Promise<void> {
   if (!destination.startsWith('s3://')) {
     throw new Error('Invalid destination')
   }
@@ -116,11 +120,14 @@ async function uploadToS3 (data: string | Buffer | Uint8Array, destination: stri
     throw new Error('path cannot be empty')
   }
 
-  try {
-    const s3Client = await newS3Client()
+  console.log(`Uploading to ${keys}`)
 
+  try {
+    if (s3 === null) {
+      throw new Error('s3 client is not initialized')
+    }
     const upload = new Upload({
-      client: s3Client,
+      client: s3,
       params: {
         Bucket: bucket,
         Key: keys.join('/'),

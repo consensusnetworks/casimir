@@ -111,78 +111,49 @@ class IoTexService {
     const meta = await this.client.iotx.getServerMeta({});
     return meta;
   }
-  async getDepositToRewardingFundActions(start, count) {
-    var _a, _b;
-    const actions = await this.getActionsByIndex(start, count);
-    const depositToRewardingFundActions = [];
-    for (const action of actions) {
-      if (((_b = (_a = action == null ? void 0 : action.action) == null ? void 0 : _a.core) == null ? void 0 : _b.depositToRewardingFund) != null) {
-        depositToRewardingFundActions.push(action.action.core.depositToRewardingFund);
-      }
-    }
-    return depositToRewardingFundActions;
-  }
-  async getClaimRewardingFundActions(start, count) {
-    var _a, _b;
-    const actions = await this.getActionsByIndex(start, count);
-    const claimRewardingFundActions = [];
-    for (const action of actions) {
-      if (((_b = (_a = action.action) == null ? void 0 : _a.core) == null ? void 0 : _b.claimFromRewardingFund) !== void 0) {
-        claimRewardingFundActions.push(action.action.core.claimFromRewardingFund);
-      }
-    }
-    return claimRewardingFundActions;
-  }
-  async getGrantRewardActions(start, count) {
-    const actions = await this.getActionsByIndex(start, count);
-    if (actions.length === 0) {
-      throw new Error("Failed to get actions");
-    }
-    return await Promise.all(actions.filter((b) => {
-      var _a;
-      return ((_a = b.action.core) == null ? void 0 : _a.grantReward) !== void 0;
-    }).map(async (b) => {
-      var _a, _b, _c, _d;
-      b.action.senderPubKey = Buffer.from(b.action.senderPubKey).toString("hex");
-      b.action.signature = Buffer.from(b.action.signature).toString("hex");
-      const blockMeta = await this.getBlockMetaByHash(b.blkHash);
-      const reciept = await this.getTxReceipt(b.actHash);
-      return {
-        type: "grant_reward",
-        datestring: new Date(b.timestamp.seconds * 1e3).toISOString().split("T")[0],
-        address: blockMeta.blkMetas[0].hash,
-        grant_type: (_b = (_a = b.action.core) == null ? void 0 : _a.grantReward) == null ? void 0 : _b.type,
-        blocks_hash: b.blkHash,
-        receipt: (_d = (_c = reciept.receiptInfo) == null ? void 0 : _c.receipt) == null ? void 0 : _d.contractAddress
-      };
-    }));
-  }
-  async getTxReceipt(action) {
-    const tx = await this.client.iotx.getReceiptByAction({
-      actionHash: action
-    });
+  async getTxReceipt(actionHash) {
+    const tx = await this.client.iotx.getReceiptByAction({ actionHash });
     return tx;
   }
-  async getActionsByIndex(start, count) {
-    if (start < 0 || count < 0) {
-      throw new Error("start and count must be greater than 0");
-    }
-    if (count === 0) {
-      count = 100;
-    }
-    if (start === 0) {
-      start = 1;
-    }
+  async getActionsByIndex(index, count) {
     const actions = await this.client.iotx.getActions({
       byIndex: {
-        start,
+        start: index,
         count
       }
     });
     if (actions.actionInfo === null) {
       throw new Error("Failed to get actions");
     }
-    return actions.actionInfo;
+    if (actions.actionInfo[0].action.core !== void 0) {
+      const type = actions.actionInfo[0].action.core;
+      if (type.stakeCreate !== void 0) {
+        console.log("passed me");
+        return actions.actionInfo.map((a) => this.convertToGlueSchema("stakeCreate", a));
+      }
+    }
+    return [];
+  }
+  convertToGlueSchema(type, action) {
+    var _a, _b;
+    switch (type) {
+      case "create_stake":
+        if (((_a = action.action.core) == null ? void 0 : _a.stakeCreate) === void 0)
+          throw new Error("Invalid action type");
+        const s = (_b = action.action.core) == null ? void 0 : _b.stakeCreate;
+        return {
+          type: "create_stake",
+          datestring: new Date(action.timestamp.seconds * 1e3).toISOString(),
+          address: Buffer.from(action.action.senderPubKey).toString("hex"),
+          staked_candidate: s.candidateName,
+          staked_amout: s.stakedAmount,
+          staked_duration: s.stakedDuration,
+          auto_stake: action.action.core.stakeCreate.autoStake
+        };
+      default:
+        console.log(action.action.core);
+        throw new Error("Unknown action type");
+    }
   }
   async getGasPrice() {
     const { gasPrice } = await this.client.iotx.suggestGasPrice({});
