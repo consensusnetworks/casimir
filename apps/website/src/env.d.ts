@@ -3,7 +3,7 @@
 
 import {
   SendMessagesCommandOutput,
-  UpdateEndpointCommandOutput
+  UpdateEndpointCommandOutput,
 } from '@aws-sdk/client-pinpoint'
 
 declare module '*.vue' {
@@ -21,6 +21,7 @@ declare type APIGatewayResponse = {
 
 declare global {
   interface Window {
-    ethereum: any;
+    ethereum: any
+    phantom: any
   }
 }

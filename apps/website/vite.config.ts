@@ -32,11 +32,7 @@ const config: UserConfig = {
       include: [/iotex-antenna/, /node_modules/],
     },
     rollupOptions: {
-      plugins: [
-        inject({
-          Buffer: ['buffer', 'Buffer'],
-        }),
-      ],
+      plugins: [inject({ Buffer: ['buffer', 'Buffer'] })],
     },
   },
   resolve: {
