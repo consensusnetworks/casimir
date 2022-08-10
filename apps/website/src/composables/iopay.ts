@@ -4,7 +4,7 @@ import { toRau } from 'iotex-antenna/lib/account/utils'
 
 export default function useIoPay() {
   const signer = new WsSignerPlugin()
-  const antenna = new Antenna('http://api.testnet.iotex.one:80', {
+  const antenna = new Antenna('http://api.testnet.iotex.one:80', 2, {
     signer,
   })
 
@@ -19,8 +19,7 @@ export default function useIoPay() {
         from: antenna.iotx.accounts[0].address,
         value: toRau(amount, 'Iotx'),
         gasLimit: '100000',
-        gasPrice: toRau('1', 'Qev'),
-        chainID: 2,
+        gasPrice: toRau('1', 'Qev')
       })
       console.log('transResp :>> ', transResp)
     } catch (err) {
