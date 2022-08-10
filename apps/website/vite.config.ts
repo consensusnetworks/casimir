@@ -4,8 +4,6 @@ import { fileURLToPath } from 'url'
 import * as path from 'path'
 import pages from 'vite-plugin-pages'
 import inject from '@rollup/plugin-inject'
-import NodeModulesPolyfills from '@esbuild-plugins/node-modules-polyfill'
-import NodeGlobalsPolyfillPlugin from '@esbuild-plugins/node-globals-polyfill'
 
 const config: UserConfig = {
   plugins: [
@@ -14,31 +12,20 @@ const config: UserConfig = {
       dirs: [{ dir: 'src/pages', baseRoute: '' }],
       extensions: ['vue', 'md'],
     }),
+    inject({
+      Buffer: ['buffer', 'Buffer']
+    })
   ],
-  optimizeDeps: {
-    esbuildOptions: {
-      plugins: [
-        NodeModulesPolyfills(),
-        NodeGlobalsPolyfillPlugin({
-          process: true,
-          define: true,
-        }),
-      ],
-    },
-    include: ['iotex-antenna'],
+  define: {
+    'global': {}
   },
-  build: {
-    commonjsOptions: {
-      include: [/iotex-antenna/, /node_modules/],
-    },
-    rollupOptions: {
-      plugins: [inject({ Buffer: ['buffer', 'Buffer'] })],
-    },
+  optimizeDeps: {
+    include: ['buffer', 'events']
   },
   resolve: {
     alias: {
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src'),
-      './runtimeConfig': './runtimeConfig.browser',
+      './runtimeConfig': './runtimeConfig.browser'
     },
     extensions: ['.js', '.json', '.jsx', '.mjs', '.ts', '.tsx', '.vue'],
   },

@@ -5,12 +5,7 @@ import useEthers from '@/composables/ethers'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
 import { ProviderString } from '@/types/ProviderString'
-import {
-  Connection,
-  Transaction,
-  SystemProgram,
-  PublicKey,
-} from '@solana/web3.js'
+import { Connection, Transaction, SystemProgram, PublicKey } from '@solana/web3.js'
 
 const amount = ref<string>('0.00001')
 const toAddress = ref<string>('7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F')
