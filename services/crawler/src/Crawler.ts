@@ -1,31 +1,30 @@
 
-import fs from 'fs'
 import { S3Client, S3ClientConfig } from '@aws-sdk/client-s3'
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
 import { Upload } from '@aws-sdk/lib-storage'
-import { IoTexService, newIotexService } from './services/IotexService'
+import { IotexService, newIotexService } from './services/IotexService'
 import EventEmitter from 'events'
-
+import process from 'process'
 
 const EE = new EventEmitter()
 const defaultOutputLocation = "s3://casimir-etl-event-bucket-dev"
 let s3: S3Client | null = null
+let lastIndex: number = 0
 
-
-export enum Chain {
+export enum CHAIN {
   Iotex = 'iotex',
   Accumulate = 'accumulate'
 }
 
 export interface CrawlerConfig {
-  chain: Chain
-  output: `s3://${string}` | `./${string}` | `../${string}`
+  chain: CHAIN
+  output?: `s3://${string}` | `./${string}` | `../${string}`
   verbose: boolean
 }
 
 class Crawler {
   config: CrawlerConfig
-  service: IoTexService | null
+  service: IotexService | null
   running: boolean
   EE: EventEmitter
   init: Date
@@ -38,7 +37,7 @@ class Crawler {
   }
 
   async _init (): Promise<void> {
-    if (this.config.chain === Chain.Iotex) {
+    if (this.config.chain === CHAIN.Iotex) {
       const service = await newIotexService()
       this.service = service
 
@@ -65,24 +64,21 @@ class Crawler {
     this.running = true
     s3 = await newS3Client()
 
-    if (this.service instanceof IoTexService) {
+    if (this.service instanceof IotexService) {
       const { chainMeta } = await this.service.getChainMetadata()
       const height = parseInt(chainMeta.height)
       const trips = Math.ceil(height / 1000)
 
       for (let i = 0; i < trips; i++) {
-        const blocks = await this.service.getBlockMetasByIndex(8000000, 1000)
+        const blocks = await this.service.getBlockMetasByIndex(i * 1000, 1000)
         if (blocks.length === 0) continue
 
         for (const block of blocks) {
           const actions =  await this.service.getActionsByIndex(block.height, block.num_of_actions)
-
           if (actions.length === 0) continue
-
-          const ndjson = actions.filter(a => a.action.core !== undefined && a.action.core.stakeCreate !== undefined).map(a => this.service?.convertToGlueSchema("create_stake", a)).map(a => JSON.stringify(a)).join('\n')
-          
-          if (ndjson.length === 0) continue
+          const ndjson = actions.map((a: any) => JSON.stringify(a)).join('\n')
           const destination = `${this.config.output}/${block.id}-events.json`
+          lastIndex = block.height
           uploadToS3(destination, ndjson)
         }
       }
@@ -152,7 +148,7 @@ async function uploadToS3 (destination: string, data: string | Buffer |  Readabl
 
 export async function crawler (config: CrawlerConfig): Promise<Crawler> {
   const c = new Crawler({
-    chain: config?.chain ?? Chain.Iotex,
+    chain: config?.chain ?? CHAIN.Iotex,
     output: config?.output ?? defaultOutputLocation,
     verbose: config?.verbose ?? false
   })
