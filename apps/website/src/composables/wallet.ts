@@ -13,17 +13,19 @@ import {
 } from '@solana/web3.js'
 
 const amount = ref<string>('1')
-const toAddress = ref<string>('7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F')
+const toAddress = ref<string>('')
 const { requestEthersAccount } = useEthers()
 
 const defaultProviders = {
   MetaMask: undefined,
   CoinbaseWallet: undefined,
   Phantom: undefined,
+  Keplr: undefined,
 }
 
 const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
 const solanaProvidersList = ['Phantom']
+const cosmosProvidersList = ['Keplr']
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
@@ -60,6 +62,8 @@ export default function useWallet() {
         solanaPublicKey.value = resp.publicKey
         const address = resp.publicKey.toString()
         setSelectedAccount(address)
+      } else if (provider === 'Keplr') {
+        console.log('keplr')
       } else if (provider === 'IoPay') {
         const accounts = await getIoPayAccounts()
         const { address } = accounts[0]
@@ -77,8 +81,9 @@ export default function useWallet() {
       if (ethersProviderList.includes(provider)) {
         const browserProvider =
           availableProviders.value[provider as keyof BrowserProviders]
-        const web3Provider: ethers.providers.Web3Provider =
-          new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+        const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(
+          browserProvider as EthersProvider
+        )
         const signer = web3Provider.getSigner()
         const etherAmount = ethers.utils.parseEther(amount.value)
         const tx = {
@@ -133,16 +138,18 @@ function getBrowserProviders() {
   const phantom: any = window.phantom?.solana?.isPhantom
     ? window.phantom?.solana
     : undefined
+  const keplr: any = window.keplr
 
   const providers = {
     MetaMask: undefined,
     CoinbaseWallet: undefined,
-    Phantom: undefined,
+    Phantom: phantom,
+    Keplr: keplr,
   }
+
   const ethereumProviders = checkForEthereumProviders()
   providers.MetaMask = ethereumProviders.MetaMask
   providers.CoinbaseWallet = ethereumProviders.CoinbaseWallet
-  providers.Phantom = phantom
   return providers
 }
 

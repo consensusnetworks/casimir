@@ -37,6 +37,15 @@
           <span> {{ phantomAccountsResult }} </span>
         </p>
       </div>
+      <div class="keplr-div">
+        <button class="keplr-btn" @click="connectWallet('Keplr')">
+          {{ keplrButtonText }}
+        </button>
+        <p>
+          Connected keplr Account:
+          <span> {{ keplrAccountsResult }} </span>
+        </p>
+      </div>
     </div>
     <div class="form-container">
       <form @submit.prevent="sendTransaction(selectedProvider)">
@@ -45,7 +54,9 @@
         <br />
         <label for="amount">Amount</label>
         <input v-model="amount" type="text" placeholder="Amount" />
-        <button type="submit">Send Transaction</button>
+        <button type="submit">
+          Send Transaction
+        </button>
       </form>
     </div>
   </div>
@@ -63,6 +74,8 @@ const ioPayButtonText = ref<string>('Connect ioPay')
 const ioPayAccountsResult = ref<string>('Address Not Active')
 const phantomButtonText = ref<string>('Connect Phantom')
 const phantomAccountsResult = ref<string>('Address Not Active')
+const keplrButtonText = ref<string>('Connect Keplr')
+const keplrAccountsResult = ref<string>('Address Not Active')
 
 const providerButtonTexts = [
   { provider: 'MetaMask', value: metamaskButtonText },
@@ -108,6 +121,11 @@ watchEffect(() => {
     phantomButtonText.value = 'Phantom Connected'
     resetProviderAccountResults()
     phantomAccountsResult.value = selectedAccount.value
+  } else if (selectedProvider.value === 'Keplr') {
+    resetProviderButtonTexts()
+    keplrButtonText.value = 'Keplr Connected'
+    resetProviderAccountResults()
+    keplrAccountsResult.value = selectedAccount.value
   }
 })
 
@@ -165,6 +183,10 @@ button {
 
 .phantom-btn {
   background-color: purple;
+}
+
+.keplr-btn {
+  background-color: rgb(0, 166, 255);
 }
 
 .connect-wallet-container {
