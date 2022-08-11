@@ -130,13 +130,13 @@ class Crawler {
 
   }
 
-  signalOnExit(): void {
-    signal((code, signal) => {
-      this.manifest.stopped = new Date()
-      this.setCrawlerManifest(this.manifest as CrawlerManifest)
-      console.log(this.manifest)
-    })
-  }
+  // signalOnExit(): void {
+  //   signal((code, signal) => {
+  //     this.manifest.stopped = new Date()
+  //     this.setCrawlerManifest(this.manifest as CrawlerManifest)
+  //     console.log(this.manifest)
+  //   })
+  // }
 
   async start (): Promise<void> {
     if (this.service == null) {
@@ -247,6 +247,6 @@ export async function crawler (config: CrawlerConfig): Promise<Crawler> {
   })
 
   await c.prepare()
-  c.signalOnExit()
+  // c.signalOnExit()
   return c
 }
