@@ -44,7 +44,7 @@
         <input v-model="toAddress" type="text" placeholder="To Address" />
         <br />
         <label for="amount">Amount</label>
-        <input v-model="amount" type="text" placeholder="Amount Ether" />
+        <input v-model="amount" type="text" placeholder="Amount" />
         <button type="submit">Send Transaction</button>
       </form>
     </div>

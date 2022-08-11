@@ -58,7 +58,6 @@ export default function useWallet() {
           availableProviders.value[provider as keyof BrowserProviders]
         const resp = await phantomProvider.connect()
         solanaPublicKey.value = resp.publicKey
-        console.log('solanaPublicKey.value :>> ', solanaPublicKey.value)
         const address = resp.publicKey.toString()
         setSelectedAccount(address)
       } else if (provider === 'IoPay') {
