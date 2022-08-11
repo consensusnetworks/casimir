@@ -18,10 +18,12 @@
         "@iotexproject/iotex-address-ts": "^1.0.4",
         "arg": "^5.0.2",
         "esbuild": "^0.14.47",
-        "iotex-antenna": "^0.31.3"
+        "iotex-antenna": "^0.31.3",
+        "signal-exit": "^3.0.7"
     },
     "devDependencies": {
         "@types/json-bigint": "^1.0.1",
+        "@types/signal-exit": "^3.0.1",
         "ava": "^4.3.1",
         "ts-node": "^10.9.1",
         "ts-standard": "^11.0.0",

@@ -1,7 +1,7 @@
 import test from 'ava';
 import { crawler } from './src/Crawler';
 import { newIotexService } from './src/services/IotexService';
-import { CHAIN } from "./src/Crawler"
+import { Chain } from "./src/Crawler"
 
 test('init Iotext service', async t => {
   const service = await newIotexService()
@@ -10,7 +10,7 @@ test('init Iotext service', async t => {
 
 test('init crawler', async t => {
   const testcrawler = await crawler({
-    chain: CHAIN.Iotex,
+    chain: Chain.Iotex,
     verbose: true
   })
   // await testcrawler.start()

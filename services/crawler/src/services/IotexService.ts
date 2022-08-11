@@ -111,6 +111,16 @@ export class IotexService {
     return metas
   }
 
+  convertEthToIotx (eth: string): string {
+    const add = from(eth)
+    return add.string()
+  }
+
+  convertIotxToEth (iotx: string): string {
+    const add = from(iotx)
+    return add.stringEth()
+  }
+
   async getAccountActions (address: string, count: number): Promise<any> {
     const account = await this.client.iotx.getAccount({
       address
@@ -137,6 +147,7 @@ export class IotexService {
     return tx
   }
 
+  // Gets iotex actions by block heigh
   async getActionsByIndex (index: number, count: number): Promise<any> {
     const actions = await this.client.iotx.getActions({
       byIndex: {
@@ -144,14 +155,16 @@ export class IotexService {
         count: count
       }
     })
-    return actions.actionInfo.map((action: IActionInfo) => {
+    const s = actions.actionInfo.map((action: IActionInfo) => {
       const core = action.action.core
       if (core === undefined) return
       const type = Object.keys(core).filter(k => k !== undefined)[Object.keys(core).length - 2]
       return this.convertToGlueSchema(type, action)
     })
+    return s
   }
 
+  // Depending on the action type it transforms the object according to the Glue schemas
   private convertToGlueSchema(type: string, action: IActionInfo): any {
     const core= action.action.core
 
@@ -230,21 +243,6 @@ export class IotexService {
           default:
             console.log(type)
     }
-  }
-
-  async getGasPrice (): Promise<any> {
-    const { gasPrice } = await this.client.iotx.suggestGasPrice({})
-    return gasPrice
-  }
-
-  convertEthToIotx (eth: string): string {
-    const add = from(eth)
-    return add.string()
-  }
-
-  convertIotxToEth (iotx: string): string {
-    const add = from(iotx)
-    return add.stringEth()
   }
 }
 
