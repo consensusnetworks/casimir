@@ -6,14 +6,15 @@ import { IotexBlock, IotexService, newIotexService } from './services/IotexServi
 import EventEmitter from 'events'
 import signal from "signal-exit"
 
-const defaultOutputLocation = "s3://casimir-etl-event-bucket-dev"
+const defaultEventBucket = "casimir-etl-event-bucket-dev"
+const manifestBucket =  "casimir-crawler-manifest"
+const manifestFile = 'manifest.json'
 
 const EE = new EventEmitter()
 let s3: S3Client | null = null
 
 export enum Chain {
   Iotex = 'iotex',
-  Accumulate = 'accumulate'
 }
 
 export interface CrawlerConfig {
@@ -74,14 +75,12 @@ class Crawler {
   }
 
   private async getCrawlerManifest (): Promise<CrawlerManifest | undefined> {
-    const b = "casimir-crawler-manifest"
-
     if (s3 === null) s3 = await newS3Client()
 
     try {
       const get = new GetObjectCommand({
-        Bucket: b,
-        Key: 'manifest.json'
+        Bucket: manifestBucket,
+        Key: manifestFile
       })
   
       const { $metadata, Body } = await s3.send(get)
@@ -101,8 +100,6 @@ class Crawler {
   private async setCrawlerManifest(manifest: CrawlerManifest): Promise<void> {
     if (s3 === null) s3 = await newS3Client()
 
-    const b = "casimir-crawler-manifest"
-
     const bucketList = new ListBucketsCommand({})
 
     const { Buckets, $metadata } = await s3.send(bucketList)
@@ -113,7 +110,7 @@ class Crawler {
 
     if (bucketExists === undefined) {
       const newBucket = new CreateBucketCommand({
-        Bucket: b
+        Bucket: manifestBucket
       })
 
       const { $metadata } = await s3.send(newBucket)
@@ -122,20 +119,22 @@ class Crawler {
     }
 
     const upload = new PutObjectCommand({
-      Bucket: b,
-      Key: `manifest.json`,
+      Bucket: manifestBucket,
+      Key: manifestFile,
       Body: JSON.stringify(manifest)
     })
-
     const data = await s3.send(upload)
+
     if (data.$metadata.httpStatusCode !== 200) throw new Error('FailedUploadManifest: unable to upload manifest')
     return
+
   }
 
   signalOnExit(): void {
     signal((code, signal) => {
       this.manifest.stopped = new Date()
-      // console.log(this.manifest)
+      this.setCrawlerManifest(this.manifest as CrawlerManifest)
+      console.log(this.manifest)
     })
   }
 
@@ -161,13 +160,20 @@ class Crawler {
           if (actions.length === 0) continue
 
           const ndjson = actions.map((a: any) => JSON.stringify(a)).join('\n')
-          const key = `${this.config.output}/${b.id}-events.json`
-          console.log(`   ${key}`)
+          const key = `${b.id}-events.json`
 
-          this.manifest.lastBlock = b
-          // uploadToS3(key, ndjson).then(() => {
-          //   lastIndex = block.height
-          // })
+          const upload = new PutObjectCommand({
+            Bucket: "casimir-etl-event-bucket-dev",
+            Key: key,
+            Body: ndjson
+          })
+
+          const { $metadata } = await s3.send(upload).finally(() => {
+            this.manifest.lastBlock = b
+          })
+
+          if ($metadata.httpStatusCode !== 200) throw new Error('FailedUploadBlock: unable to upload block')
+          console.log(key)
         }
       }
       return
@@ -206,7 +212,7 @@ async function uploadToS3 (destination: string, data: string | Buffer |  Readabl
     throw new Error('EmptyKey: key cannot be empty')
   }
 
-  console.log(`Uploading to ${keys}`)
+  console.log(`uploading to ${keys}`)
 
   try {
     if (s3 === null) {
@@ -222,10 +228,10 @@ async function uploadToS3 (destination: string, data: string | Buffer |  Readabl
       leavePartsOnError: true
     })
 
-    upload.on('httpUploadProgress', (progess) => {
-      // eslint-disable-next-line
-      console.log(`Uploading ${progess.loaded}/${progess.total}`)
-    })
+    // upload.on('httpUploadProgress', (progess) => {
+    //   // eslint-disable-next-line
+    //   console.log(`   Uploading ${progess.loaded}/${progess.total}`)
+    // })
 
     await upload.done()
   } catch (err) {
@@ -236,7 +242,7 @@ async function uploadToS3 (destination: string, data: string | Buffer |  Readabl
 export async function crawler (config: CrawlerConfig): Promise<Crawler> {
   const c = new Crawler({
     chain: config?.chain ?? Chain.Iotex,
-    output: config?.output ?? defaultOutputLocation,
+    output: config?.output ?? `s3://${defaultEventBucket}`,
     verbose: config?.verbose ?? false
   })
 
@@ -244,4 +250,3 @@ export async function crawler (config: CrawlerConfig): Promise<Crawler> {
   c.signalOnExit()
   return c
 }
-
