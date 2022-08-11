@@ -104,16 +104,35 @@ Solidity contract development is serviced through [Hardhat](https://hardhat.io/)
     npm run task:accounts
     ```
 
-*Todo finish sample flow (show usage of compiled contract ABI in app)*
-6. Use a contract in a Casimir app...
-   
+6. Use a contract in a Casimir app.
+
+    ```typescript
+    // Todo add Casimir Typescript usage
+    ```
+
 7. Clean [contracts/solidity/build/artifacts](contracts/solidity/build/artifacts) and [contracts/solidity/build/cache](contracts/solidity/build/cache)).    
 
     ```zsh
     npm run task:clean
-    ``` 
+    ```
 
     > 🚩 Note, this is required if you change the Hardhat configuration.
+
+### Speculos
+
+We use [Speculos](https://speculos.dev/) to emulate the Ledger hardware wallet and supported apps.
+
+1. Emulate a Ledger btc wallet.
+
+    ```zsh
+    npm run emulate:ledger --app btc
+    ```
+
+2. Emulate a Ledger eth wallet.
+
+    ```zsh
+    npm run emulate:ledger --app eth
+    ```
 
 ### Environment
 

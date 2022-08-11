@@ -1,0 +1,32 @@
+#!/bin/bash
+# Emulate ledger with speculos
+#
+# Example:
+#
+#    scripts/ledger/emulate -a <app-name>
+#
+# Further information:
+# See https://github.com/LedgerHQ/speculos
+#
+
+# Get args
+while getopts a: flag
+do
+    case "${flag}" in
+        a) app=${OPTARG};;
+    esac
+done
+
+if [ -z "$app" ]; then
+    echo "⚠️ Ledger app is not set – please specify as -a <app-name> (i.e. -a btc)"
+    exit 1
+fi
+
+echo "🚀 Emulating Ledger $app app with speculos"
+
+# Emulate ledger app
+docker pull ghcr.io/ledgerhq/speculos
+docker image tag ghcr.io/ledgerhq/speculos speculos
+docker run --rm -it -v "$(pwd)/apps:/speculos/apps" --publish 41000:41000 speculos --display headless --vnc-port 41000 apps/$app.elf
+
+
