@@ -1,10 +1,13 @@
-import { crawler } from '../src/Crawler';
-import { Chain } from "../src/Crawler"
+import { crawler, Chain } from '../src/index';
 
 test('init crawler', async () => {
-  const testcrawler = await crawler({
+  const supercrawler = await crawler({
     chain: Chain.Iotex,
     verbose: true
   })
-  expect(testcrawler.service).not.toBe(null)
+  // await testcrawler.start()
+  // supercrawler.on("block", block => {
+  //   console.log(block)
+  // })
+  expect(supercrawler.service).not.toBe(null)
 });

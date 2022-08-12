@@ -124,6 +124,12 @@ class IotexService {
     });
     return actions;
   }
+  async readableBlockStream() {
+    const stream = await this.client.iotx.streamBlocks({
+      start: 1
+    });
+    return stream;
+  }
   async getTxReceipt(actionHash) {
     const tx = await this.client.iotx.getReceiptByAction({ actionHash });
     return tx;

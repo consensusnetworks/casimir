@@ -1,5 +1,5 @@
 import Antenna from 'iotex-antenna'
-import { IActionInfo, IGetBlockMetasResponse, IGetChainMetaResponse, IGetReceiptByActionResponse, IGetServerMetaResponse } from 'iotex-antenna/lib/rpc-method/types'
+import { ClientReadableStream, IActionInfo, IGetBlockMetasResponse, IGetChainMetaResponse, IGetReceiptByActionResponse, IGetServerMetaResponse, IStreamBlocksResponse } from 'iotex-antenna/lib/rpc-method/types'
 import { from } from '@iotexproject/iotex-address-ts'
 import { Opts } from 'iotex-antenna/lib/antenna'
 
@@ -26,6 +26,16 @@ export interface IotexBlock {
   num_of_actions: number
 }
 
+export interface EventTableColumns {
+  type: string
+  datestring: string
+  address: string
+  staked_candidate: string
+  staked_amount: number
+  staked_duration: number
+  auto_stake: boolean
+}
+
 enum IotexActionType {
   transfer = 'transfer',
   grantReward = 'grant_reward',
@@ -36,16 +46,6 @@ enum IotexActionType {
   stakeWithdraw = 'stake_withdraw',
   StakeChangeCandidate = 'stake_change_candidate',
   stakeRestake = 'stake_restake',
-}
-
-export interface IotexCreateStake {
-  type: string
-  datestring: string
-  address: string
-  staked_candidate: string
-  staked_amount: number
-  staked_duration: number
-  auto_stake: boolean
 }
 
 export class IotexService {
@@ -141,6 +141,12 @@ export class IotexService {
     return actions
   }
 
+  async readableBlockStream (): Promise<ClientReadableStream<IStreamBlocksResponse>> {
+    const stream = await this.client.iotx.streamBlocks({
+      start: 1
+    })
+    return stream
+  }
 
   async getTxReceipt (actionHash: string): Promise<IGetReceiptByActionResponse> {
     const tx = await this.client.iotx.getReceiptByAction({ actionHash })

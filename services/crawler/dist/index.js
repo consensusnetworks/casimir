@@ -22,16 +22,16 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var Crawler_exports = {};
-__export(Crawler_exports, {
+var src_exports = {};
+__export(src_exports, {
   Chain: () => Chain,
   crawler: () => crawler
 });
-module.exports = __toCommonJS(Crawler_exports);
+module.exports = __toCommonJS(src_exports);
 var import_client_s3 = require("@aws-sdk/client-s3");
 var import_credential_provider_node = require("@aws-sdk/credential-provider-node");
 var import_lib_storage = require("@aws-sdk/lib-storage");
-var import_IotexService = require("./services/IotexService");
+var import_IotexService = require("./providers/IotexService");
 var import_events = __toESM(require("events"));
 var import_signal_exit = __toESM(require("signal-exit"));
 const defaultEventBucket = "casimir-etl-event-bucket-dev";
@@ -51,6 +51,7 @@ class Crawler {
     this.manifest = {
       init: new Date()
     };
+    this.signalOnExit();
   }
   async prepare() {
     if (this.config.chain === "iotex" /* Iotex */) {
@@ -124,8 +125,7 @@ class Crawler {
   signalOnExit() {
     (0, import_signal_exit.default)((code, signal2) => {
       this.manifest.stopped = new Date();
-      this.setCrawlerManifest(this.manifest);
-      console.log(this.manifest);
+      console.log(JSON.stringify(this.manifest));
     });
   }
   async start() {
@@ -149,19 +149,33 @@ class Crawler {
             continue;
           const ndjson = actions.map((a) => JSON.stringify(a)).join("\n");
           const key = `${b.id}-events.json`;
-          const upload = new import_client_s3.PutObjectCommand({
-            Bucket: "casimir-etl-event-bucket-dev",
-            Key: key,
-            Body: ndjson
-          });
-          const { $metadata } = await s3.send(upload).finally(() => {
-            this.manifest.lastBlock = b;
-          });
-          if ($metadata.httpStatusCode !== 200)
-            throw new Error("FailedUploadBlock: unable to upload block");
           console.log(key);
         }
       }
+      return;
+    }
+    throw new Error("not implemented yet");
+  }
+  async stop() {
+    this.manifest.stopped = new Date();
+    await this.setCrawlerManifest(this.manifest);
+  }
+  on(event, cb) {
+    if (event !== "block")
+      throw new Error("InvalidEvent: event is not supported");
+    if (typeof cb !== "function")
+      throw new Error("InvalidCallback: callback is not a function");
+    if (this.service === null)
+      throw new Error("NullService: service is not initialized");
+    if (this.service instanceof import_IotexService.IotexService) {
+      this.service.readableBlockStream().then((s) => {
+        s.on("data", (b) => {
+          cb(b);
+        });
+        s.on("error", (e) => {
+          throw e;
+        });
+      });
       return;
     }
     throw new Error("not implemented yet");
@@ -217,9 +231,18 @@ async function crawler(config) {
     verbose: (config == null ? void 0 : config.verbose) ?? false
   });
   await c.prepare();
-  c.signalOnExit();
   return c;
 }
+async function run() {
+  const supercrawler = await crawler({
+    chain: "iotex" /* Iotex */,
+    verbose: true
+  });
+  supercrawler.on("block", (block) => {
+    console.log(block);
+  });
+}
+run();
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   Chain,

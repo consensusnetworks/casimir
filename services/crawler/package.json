@@ -8,7 +8,7 @@
     },
     "scripts": {
         "test": "jest",
-        "build": "rm -rf ./dist && esbuild src/Crawler.ts src/**/** --platform=node --target=node16 --format=cjs --outdir=dist"
+        "build": "rm -rf ./dist && esbuild src/*.ts src/**/** --platform=node --target=node16 --format=cjs --outdir=dist"
     },
     "author": "hawyar",
     "dependencies": {
