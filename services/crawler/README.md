@@ -2,10 +2,8 @@
 
 The crawler's purpose is to provide historical and real-time blockchain data to its consumers.
 
-
 ### Pre-requisites
 // todo
-
 
 ## Usage
 ```js

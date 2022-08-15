@@ -2,10 +2,9 @@ import Antenna from 'iotex-antenna'
 import { ClientReadableStream, IActionInfo, IGetBlockMetasResponse, IGetChainMetaResponse, IGetReceiptByActionResponse, IGetServerMetaResponse, IStreamBlocksResponse } from 'iotex-antenna/lib/rpc-method/types'
 import { from } from '@iotexproject/iotex-address-ts'
 import { Opts } from 'iotex-antenna/lib/antenna'
-
 const IOTEX_CORE = "http://localhost:14014"
 
-export type IotexServiceOptions = Opts & {
+export type IotexOptions = Opts & {
   provider: string,
   chainId: 1 | 2
 }
@@ -48,11 +47,11 @@ enum IotexActionType {
   stakeRestake = 'stake_restake',
 }
 
-export class IotexService {
+export class Iotex {
   provider: string
   chainId: number
   client: Antenna
-  constructor (opt: IotexServiceOptions) {
+  constructor (opt: IotexOptions) {
     this.provider = opt.provider || IOTEX_CORE
     this.chainId = opt.chainId
     this.client = new Antenna(opt.provider, opt.chainId, {
@@ -252,8 +251,8 @@ export class IotexService {
   }
 }
 
-export async function newIotexService (opt?: IotexServiceOptions): Promise<IotexService> {
-  return new IotexService({
+export async function newIotexService (opt?: IotexOptions): Promise<Iotex> {
+  return new Iotex({
     provider: opt?.provider ?? 'https://api.iotex.one:443',
     chainId: opt?.chainId ?? 1
   })
