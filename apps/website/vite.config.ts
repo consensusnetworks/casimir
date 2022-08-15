@@ -20,14 +20,21 @@ const config: UserConfig = {
     'global': {}
   },
   optimizeDeps: {
-    include: ['buffer', 'events']
+    include: ['buffer', 'events', 'borsh']
+  },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true,
+      include: ['borsh']
+    }
   },
   resolve: {
     alias: {
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src'),
       './runtimeConfig': './runtimeConfig.browser'
     },
-    extensions: ['.js', '.json', '.jsx', '.mjs', '.ts', '.tsx', '.vue'],
+    dedupe: ['bn.js'],
+    extensions: ['.js', '.json', '.jsx', '.mjs', '.ts', '.tsx', '.vue']
   },
   envPrefix: 'PUBLIC_',
 }
