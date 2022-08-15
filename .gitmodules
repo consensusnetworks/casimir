@@ -1,0 +1,9 @@
+[submodule "scripts/ledger/apps/ethereum"]
+	path = scripts/ledger/apps/ethereum
+	url = https://github.com/LedgerHQ/app-ethereum.git
+[submodule "scripts/ledger/apps/speculos"]
+	path = scripts/ledger/apps/speculos
+	url = https://github.com/LedgerHQ/speculos.git
+[submodule "scripts/ledger/apps/ledger-app-builder"]
+	path = scripts/ledger/apps/ledger-app-builder
+	url = https://github.com/LedgerHQ/ledger-app-builder.git

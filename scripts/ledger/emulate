@@ -3,30 +3,56 @@
 #
 # Example:
 #
-#    scripts/ledger/emulate -a <app-name>
+#    scripts/ledger/emulate -a app-name -d device-name (i.e. -a ethereum -d nanos)
 #
 # Further information:
 # See https://github.com/LedgerHQ/speculos
 #
 
 # Get args
-while getopts a: flag
+while getopts a:d: flag
 do
     case "${flag}" in
         a) app=${OPTARG};;
+        d) device=${OPTARG};;
     esac
 done
 
-if [ -z "$app" ]; then
-    echo "⚠️ Ledger app is not set – please specify as -a <app-name> (i.e. -a btc)"
-    exit 1
+if [ ${npm_config_app+x} ]; then
+    app=$npm_config_app
 fi
 
-echo "🚀 Emulating Ledger $app app with speculos"
+if [ ${npm_config_device+x} ]; then
+    device=$npm_config_device
+fi
 
-# Emulate ledger app
-docker pull ghcr.io/ledgerhq/speculos
-docker image tag ghcr.io/ledgerhq/speculos speculos
-docker run --rm -it -v "$(pwd)/apps:/speculos/apps" --publish 41000:41000 speculos --display headless --vnc-port 41000 apps/$app.elf
+if [ -z "$app" ]; then
+    app="ethereum"
+    echo "app is not set, using default app $app"
+fi
+
+if [ -z "$device" ]; then
+    device="nanos"
+    echo "device is not set, using default device $device"
+fi
+
+
+current_dir=$(pwd)
+apps_path=scripts/ledger/apps
+
+# Build ledger app builder and compile app
+echo "🔨 Building $app app on ledger $device"
+echo "Enter sudo password for building priveledged ledger-app-builder"
+sudo docker build . --platform linux/x86_64 --tag ledger-app-builder:latest -f $apps_path/ledger-app-builder/Dockerfile
+echo "Enter sudo password for running priveledged ledger-app-builder"
+echo "Enter 'make' to build app and complete build"
+sudo docker run --platform linux/x86_64 --rm -ti -v "$current_dir/$apps_path/$app:/app" ledger-app-builder:latest
+
+# Emulate ledger app with speculos
+echo "📺 Emulating $app app on ledger $device"
+echo "Enter sudo password for building priveledged speculos"
+sudo docker build . --platform linux/x86_64 --tag speculos:latest -f $apps_path/speculos/Dockerfile
+echo "Enter sudo password for running priveledged speculos"
+sudo docker run --platform linux/x86_64 --rm -it -v "$current_dir/$apps_path:/speculos/apps" --publish 41000:41000 speculos:latest --display headless --vnc-port 41000 $apps_path/$app/app.elf
 
 
