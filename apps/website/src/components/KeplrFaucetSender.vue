@@ -60,8 +60,8 @@ async function onSendClicked(e) {
 
 // Get the faucet's balance
 async function updateFaucetBalance() {
-  console.log('StargateClient :>> ', StargateClient)
-  // const client = await StargateClient.connect(rpcUrl)
+  const client = await StargateClient.connect(rpcUrl)
+  console.log('client :>> ', client)
   // const balances: readonly Coin[] = await client.getAllBalances(faucetAddress)
   // const first: Coin = balances[0]
   // denom.value = first.denom
