@@ -27,7 +27,7 @@ import { StargateClient } from '@cosmjs/stargate'
 
 // export interface FaucetSenderProps {
 //     faucetAddress: string
-//     rpcUrl: string
+//     url: string
 // }
 
 // interface FaucetSenderState {
@@ -44,7 +44,7 @@ const myAddress = ref('Click first')
 const myBalance = ref('Click first')
 const toSend = ref('0')
 const faucetAddress = 'cosmos15aptdqmm7ddgtcrjvc5hs988rlrkze40l4q0he'
-const rpcUrl = 'https://rpc.sentry-01.theta-testnet.polypore.xyz'
+const url = 'https://rpc-cosmoshub.keplr.app'
 
 // TODO: Potentially add an onMounted hook to update the faucet balance per section above this: https://tutorials.cosmos.network/academy/xl-cosmjs/with-keplr.html#getting-testnet-tokens
 
@@ -60,7 +60,12 @@ async function onSendClicked(e) {
 
 // Get the faucet's balance
 async function updateFaucetBalance() {
-  const client = await StargateClient.connect(rpcUrl)
+  const client = await StargateClient.connect({
+    url,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+  })
   console.log('client :>> ', client)
   // const balances: readonly Coin[] = await client.getAllBalances(faucetAddress)
   // const first: Coin = balances[0]
