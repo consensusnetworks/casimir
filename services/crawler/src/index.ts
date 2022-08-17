@@ -1,12 +1,12 @@
 
 import { S3Client, S3ClientConfig, } from '@aws-sdk/client-s3'
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
-import { IotexBlock, Iotex, newIotexService } from './providers/Iotex'
+import { IotexBlock, IotexService, newIotexService } from './providers/Iotex'
 import EventEmitter from 'events'
-import signal from "signal-exit"
+import signal from 'signal-exit'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 
-const defaultEventBucket = "casimir-etl-event-bucket-dev"
+const defaultEventBucket = 'casimir-etl-event-bucket-dev'
 
 const EE = new EventEmitter()
 let s3: S3Client | null = null
@@ -23,7 +23,7 @@ export interface CrawlerConfig {
 
 class Crawler {
   config: CrawlerConfig
-  service: Iotex | null
+  service: IotexService | null
   EE: EventEmitter
   constructor (config: CrawlerConfig) {
     this.config = config
@@ -63,7 +63,7 @@ class Crawler {
 
     if (s3 === null) s3 = await newS3Client()
 
-    if (this.service instanceof Iotex) {
+    if (this.service instanceof IotexService) {
       const { chainMeta } = await this.service.getChainMetadata()
       const height = parseInt(chainMeta.height)
       const trips = Math.ceil(height / 1000)
@@ -81,7 +81,7 @@ class Crawler {
           const key = `${b.id}-events.json`
 
           const upload = new PutObjectCommand({
-            Bucket: "casimir-etl-event-bucket-dev",
+            Bucket: 'casimir-etl-event-bucket-dev',
             Key: key,
             Body: ndjson
           })
@@ -102,7 +102,7 @@ class Crawler {
   async stop(): Promise<void> {
     if (this.service === null) throw new Error('NullService: service is not initialized')
 
-    if (this.service instanceof Iotex) {
+    if (this.service instanceof IotexService) {
       // cleanup
       return
     }
@@ -116,13 +116,13 @@ class Crawler {
 
     if (this.service === null) throw new Error('NullService: service is not initialized')
 
-    if (this.service instanceof Iotex) {
+    if (this.service instanceof IotexService) {
       this.service.readableBlockStream().then((s: any) => {
-        s.on("data", (b: IotexBlock) => {
+        s.on('data', (b: IotexBlock) => {
           cb(b)
         })
 
-        s.on("error", (e: Error) => {
+        s.on('error', (e: Error) => {
           throw e
         })
       })

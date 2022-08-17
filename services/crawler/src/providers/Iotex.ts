@@ -2,7 +2,8 @@ import Antenna from 'iotex-antenna'
 import { ClientReadableStream, IActionInfo, IGetBlockMetasResponse, IGetChainMetaResponse, IGetReceiptByActionResponse, IGetServerMetaResponse, IStreamBlocksResponse } from 'iotex-antenna/lib/rpc-method/types'
 import { from } from '@iotexproject/iotex-address-ts'
 import { Opts } from 'iotex-antenna/lib/antenna'
-const IOTEX_CORE = "http://localhost:14014"
+
+const IOTEX_CORE = 'http://localhost:14014'
 
 export type IotexOptions = Opts & {
   provider: string,
@@ -25,7 +26,7 @@ export interface IotexBlock {
   num_of_actions: number
 }
 
-export interface EventTableColumns {
+export interface EventTableColumn {
   type: string
   datestring: string
   address: string
@@ -47,7 +48,7 @@ enum IotexActionType {
   stakeRestake = 'stake_restake',
 }
 
-export class Iotex {
+export class IotexService {
   provider: string
   chainId: number
   client: Antenna
@@ -152,7 +153,6 @@ export class Iotex {
     return tx
   }
 
-  // Gets iotex actions by block heigh
   async getActionsByIndex (index: number, count: number): Promise<any> {
     const actions = await this.client.iotx.getActions({
       byIndex: {
@@ -169,90 +169,111 @@ export class Iotex {
     return s
   }
 
-  // Depending on the action type it transforms the object according to the Glue schemas
-  private convertToGlueSchema(type: string, action: IActionInfo): any {
+  private convertToGlueSchema(type: string, action: IActionInfo): EventTableColumn {
     const core= action.action.core
 
-    if (core === undefined) return
+    if (core === undefined) throw new Error('core is undefined')
+
+
     switch (type) {
       case 'grantReward':
           return {
               type: IotexActionType.grantReward,
-              date: new Date(action.timestamp.seconds * 1000).toISOString(),
-              block_hash: action.blkHash,
-              reward_type: core.grantReward?.type ?? '', 
+              datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
+              address: '',
+              staked_candidate: '',
+              staked_amount: 0,
+              staked_duration: 0,
+              auto_stake: false
           }
           case 'transfer':
-          return {
-              type: IotexActionType.transfer,
-              date: new Date(action.timestamp.seconds * 1000).toISOString(),
-              payload: typeof core.transfer?.payload === 'string' ? core.transfer.payload : core.transfer !== undefined ? Buffer.from(core.transfer.payload).toString('hex') : '',
-              recipient: core.transfer?.recipient,
-              amount: core.transfer?.amount ?? '',
+            return {
+              type: IotexActionType.grantReward,
+              datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
+              address: '',
+              staked_candidate: '',
+              staked_amount: 0,
+              staked_duration: 0,
+              auto_stake: false
           }
-      case "stakeCreate":
-          return {
-              type: IotexActionType.createStake,
-              date: new Date(action.timestamp.seconds * 1000).toISOString(),
-              staked_candidate: core?.stakeCreate?.candidateName,
-              staked_amount: core.stakeCreate?.stakedAmount,
-              staked_duration: core.stakeCreate?.stakedDuration,
-              auto_stake: core.stakeCreate?.autoStake,
+          case 'stakeCreate':
+            return {
+              type: IotexActionType.grantReward,
+              datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
+              address: '',
+              staked_candidate: '',
+              staked_amount: 0,
+              staked_duration: 0,
+              auto_stake: false
           }
-      case "stakeAddDeposit":
+      case 'stakeAddDeposit':
           return {
-            type: IotexActionType.stakeAddDeposit,
-            date: new Date(action.timestamp.seconds * 1000).toISOString(),
-            amount: core.stakeAddDeposit?.amount,
-            payload: core.stakeAddDeposit?.payload !== undefined ? Buffer.from(core.stakeAddDeposit?.payload).toString('hex') : '',
-            bucket_index: core.stakeAddDeposit?.bucketIndex
-          }
-      case "execution":
+            type: IotexActionType.grantReward,
+            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
+            address: '',
+            staked_candidate: '',
+            staked_amount: 0,
+            staked_duration: 0,
+            auto_stake: false
+        }
+      case 'execution':
           return {
-            type: IotexActionType.execution,
-            date: new Date(action.timestamp.seconds * 1000).toISOString(),
-            contract: core.execution?.contract,
-            amount: core.execution?.amount,
-            data: core.execution?.data !== undefined ? Buffer.from(core.execution.data).toString("hex") : '',
-          }
-          case "putPollResult":
+            type: IotexActionType.grantReward,
+            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
+            address: '',
+            staked_candidate: '',
+            staked_amount: 0,
+            staked_duration: 0,
+            auto_stake: false
+        }
+          case 'putPollResult':
           return {
-            type: IotexActionType.putPollResult,
-            date: new Date(action.timestamp.seconds * 1000).toISOString(),
-            candidates: core.putPollResult?.candidates?.candidates.map(c => c.address) ?? [],
-          }
-      case "stakeWithdraw":
+            type: IotexActionType.grantReward,
+            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
+            address: '',
+            staked_candidate: '',
+            staked_amount: 0,
+            staked_duration: 0,
+            auto_stake: false
+        }
+      case 'stakeWithdraw':
           return {
-            type: IotexActionType.stakeWithdraw,
-            date: new Date(action.timestamp.seconds * 1000).toISOString(),
-            bucket_index: core.stakeWithdraw?.bucketIndex,
-            payload: core.stakeWithdraw?.payload !== undefined ? Buffer.from(core.stakeWithdraw.payload).toString('hex') : '',
-          }
-      case "stakeChangeCandidate":
+            type: IotexActionType.grantReward,
+            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
+            address: '',
+            staked_candidate: '',
+            staked_amount: 0,
+            staked_duration: 0,
+            auto_stake: false
+        }
+      case 'stakeChangeCandidate':
           return {
-            type: IotexActionType.StakeChangeCandidate,
-            date: new Date(action.timestamp.seconds * 1000).toISOString(),
-            candidate: core.stakeChangeCandidate?.candidateName,
-            bucket_index: core.stakeChangeCandidate?.bucketIndex,
-            payload: core.stakeChangeCandidate?.payload !== undefined ? Buffer.from(core.stakeChangeCandidate.payload).toString('hex') : '',
-          }
-      case "stakeRestake":
+            type: IotexActionType.grantReward,
+            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
+            address: '',
+            staked_candidate: '',
+            staked_amount: 0,
+            staked_duration: 0,
+            auto_stake: false
+        }
+      case 'stakeRestake':
           return {
-            type: IotexActionType.stakeRestake,
-            date: new Date(action.timestamp.seconds * 1000).toISOString(),
-            payload: core.stakeRestake?.payload !== undefined ? Buffer.from(core.stakeRestake.payload).toString('hex') : '',
-            auto_stake: core.stakeRestake?.autoStake,
-            staked_duration:core.stakeRestake?.stakedDuration,
-            bucket_index: core.stakeRestake?.bucketIndex
-          }
+            type: IotexActionType.grantReward,
+            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
+            address: '',
+            staked_candidate: '',
+            staked_amount: 0,
+            staked_duration: 0,
+            auto_stake: false
+        }
           default:
-            console.log(type)
+            throw new Error(`Action type ${type} not supported`)
     }
   }
 }
 
-export async function newIotexService (opt?: IotexOptions): Promise<Iotex> {
-  return new Iotex({
+export async function newIotexService (opt?: IotexOptions): Promise<IotexService> {
+  return new IotexService({
     provider: opt?.provider ?? 'https://api.iotex.one:443',
     chainId: opt?.chainId ?? 1
   })
