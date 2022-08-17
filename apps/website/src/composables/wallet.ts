@@ -63,7 +63,13 @@ export default function useWallet() {
         const address = resp.publicKey.toString()
         setSelectedAccount(address)
       } else if (provider === 'Keplr') {
-        console.log('keplr')
+        // TODO: Pick up from here (8/11)
+        const chainIds = ['cosmoshub-4', 'theta-testnet-001']
+        window.keplr.enable(chainIds)
+        const chainId = 'cosmoshub-4' // 'theta-testnet-001'
+        const keplrProvider =
+          availableProviders.value[provider as keyof BrowserProviders]
+        await keplrProvider.enable(chainId)
       } else if (provider === 'IoPay') {
         const accounts = await getIoPayAccounts()
         const { address } = accounts[0]

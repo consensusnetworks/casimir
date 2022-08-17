@@ -46,6 +46,7 @@
           <span> {{ keplrAccountsResult }} </span>
         </p>
       </div>
+      <FaucetSender />
     </div>
     <div class="form-container">
       <form @submit.prevent="sendTransaction(selectedProvider)">
@@ -65,6 +66,7 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
+import FaucetSender from './FaucetSender.vue'
 
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
