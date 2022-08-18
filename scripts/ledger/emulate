@@ -24,13 +24,21 @@ fi
 
 resource_path=scripts/ledger/resources
 
-if [ ! -f "$resource_path/speculos/apps/$app" ]; then
+if [ ! -f "$resource_path/speculos/apps/$app.elf" ]; then
     echo "App $app not ready yet, running compile script"
     npm run compile:ledger --application=$app
+fi
+
+if [[ "$(uname -a)" = *ARM64* ]]; then
+    echo 'Running emulator on ARM64'
+    dockerfile=../custom/speculos-aarch64.Dockerfile
+else
+    echo 'Running emulator on x86_64'
+    dockerfile=./Dockerfile
 fi
 
 # Emulate ledger app with speculos
 echo "📺 Emulating $app app on ledger"
 cd $resource_path/speculos
-docker build . --platform linux/arm64 --tag speculos -f ../custom/speculos-m1.Dockerfile
-sudo docker run --platform linux/arm64 --rm -it -v "$(pwd)/apps:/speculos/apps" speculos --display text apps/$app.elf
+docker build . --tag speculos -f $dockerfile
+sudo docker run --rm -it -v "$(pwd)/apps:/speculos/apps" speculos --display text apps/$app.elf
