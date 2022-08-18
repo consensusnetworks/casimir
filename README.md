@@ -120,7 +120,7 @@ Solidity contract development is serviced through [Hardhat](https://hardhat.io/)
 
 ### Speculos
 
-We use [Speculos](https://speculos.dev/) to emulate applications on the Ledger Nano S hardware wallet. The default app is ethereum – we also support cosmos, iotex, and solana.
+We use [Speculos](https://speculos.dev/) to emulate applications on the Ledger Nano S hardware wallet. The default app is ethereum – we also currently support bitcoin and solana, with additional priority protocols coming soon (such as cosmos and iotex).
 
 1. Emulate ethereum app on ledger.
 
@@ -128,10 +128,10 @@ We use [Speculos](https://speculos.dev/) to emulate applications on the Ledger N
     npm run emulate:ledger # or more explicitly, --app=ethereum
     ```
 
-2. Emulate iotex app on ledger.
+2. Emulate solana app on ledger.
 
     ```zsh
-    npm run emulate:ledger --app=iotex
+    npm run emulate:ledger --app=solana
     ```
 
 ### Environment
