@@ -3,18 +3,17 @@
 #
 # Example:
 #
-#    scripts/ledger/emulate -a app-name -d device-name (i.e. -a ethereum -d nanos)
+#    scripts/ledger/emulate -a app-name (i.e. -a ethereum)
 #
 # Further information:
 # See https://github.com/LedgerHQ/speculos
 #
 
 # Get args
-while getopts a:d: flag
+while getopts a: flag
 do
     case "${flag}" in
         a) app=${OPTARG};;
-        d) device=${OPTARG};;
     esac
 done
 
@@ -23,20 +22,15 @@ if [ -z "$app" ]; then
     echo "app is not set, using default app $app"
 fi
 
-if [ -z "$device" ]; then
-    device="nanos"
-    echo "device is not set, using default device $device"
-fi
-
 resource_path=scripts/ledger/resources
 
-if [ ! -f "$resource_path/speculos/apps/$app-$device" ]; then
-    echo "App $app-$device not ready yet, running compile script"
-    npm run compile:ledger --application=$app --device=$device
+if [ ! -f "$resource_path/speculos/apps/$app" ]; then
+    echo "App $app not ready yet, running compile script"
+    npm run compile:ledger --application=$app
 fi
 
 # Emulate ledger app with speculos
-echo "📺 Emulating $app app on ledger $device"
+echo "📺 Emulating $app app on ledger"
 cd $resource_path/speculos
-docker build . --platform linux/arm64 --tag speculos -f m1.Dockerfile
-sudo docker run --platform linux/arm64 --rm -it -v "$(pwd)/apps:/speculos/apps" speculos --display text apps/$app-$device.elf
+docker build . --platform linux/arm64 --tag speculos -f ../custom/speculos-m1.Dockerfile
+sudo docker run --platform linux/arm64 --rm -it -v "$(pwd)/apps:/speculos/apps" speculos --display text apps/$app.elf

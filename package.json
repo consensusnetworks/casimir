@@ -10,7 +10,8 @@
     "services/*"
   ],
   "scripts": {
-    "emulate:ledger": "scripts/ledger/emulate",
+    "compile:ledger": "scripts/ledger/compile -a $npm_config_application",
+    "emulate:ledger": "scripts/ledger/emulate -a $npm_config_application",
     "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "deploy:templates": "scripts/pinpoint/deploy -d content/email/templates",
