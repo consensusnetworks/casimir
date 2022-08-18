@@ -1,5 +1,5 @@
 #!/bin/bash
-# Emulate ledger with speculos
+# Emulate ledger app
 #
 # Example:
 #
@@ -18,14 +18,6 @@ do
     esac
 done
 
-if [ ${npm_config_app+x} ]; then
-    app=$npm_config_app
-fi
-
-if [ ${npm_config_device+x} ]; then
-    device=$npm_config_device
-fi
-
 if [ -z "$app" ]; then
     app="ethereum"
     echo "app is not set, using default app $app"
@@ -36,23 +28,15 @@ if [ -z "$device" ]; then
     echo "device is not set, using default device $device"
 fi
 
+resource_path=scripts/ledger/resources
 
-current_dir=$(pwd)
-apps_path=scripts/ledger/apps
-
-# Build ledger app builder and compile app
-echo "🔨 Building $app app on ledger $device"
-echo "Enter sudo password for building priveledged ledger-app-builder"
-sudo docker build . --platform linux/x86_64 --tag ledger-app-builder:latest -f $apps_path/ledger-app-builder/Dockerfile
-echo "Enter sudo password for running priveledged ledger-app-builder"
-echo "Enter 'make' to build app and complete build"
-sudo docker run --platform linux/x86_64 --rm -ti -v "$current_dir/$apps_path/$app:/app" ledger-app-builder:latest
+if [ ! -f "$resource_path/speculos/apps/$app-$device" ]; then
+    echo "App $app-$device not ready yet, running compile script"
+    npm run compile:ledger --application=$app --device=$device
+fi
 
 # Emulate ledger app with speculos
 echo "📺 Emulating $app app on ledger $device"
-echo "Enter sudo password for building priveledged speculos"
-sudo docker build . --platform linux/x86_64 --tag speculos:latest -f $apps_path/speculos/Dockerfile
-echo "Enter sudo password for running priveledged speculos"
-sudo docker run --platform linux/x86_64 --rm -it -v "$current_dir/$apps_path:/speculos/apps" --publish 41000:41000 speculos:latest --display headless --vnc-port 41000 $apps_path/$app/app.elf
-
-
+cd $resource_path/speculos
+docker build . --platform linux/arm64 --tag speculos -f m1.Dockerfile
+sudo docker run --platform linux/arm64 --rm -it -v "$(pwd)/apps:/speculos/apps" speculos --display text apps/$app-$device.elf

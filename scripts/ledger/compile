@@ -1,0 +1,43 @@
+#!/bin/bash
+# Compile ledger app
+#
+# Example:
+#
+#    scripts/ledger/compile -a app-name -d device-name (i.e. -a ethereum -d nanos)
+#
+# Further information:
+# See https://github.com/LedgerHQ/speculos
+#
+
+# Get args
+while getopts a:d: flag
+do
+    case "${flag}" in
+        a) app=${OPTARG};;
+        d) device=${OPTARG};;
+    esac
+done
+
+if [ -z "$app" ]; then
+    app="ethereum"
+    echo "app is not set, using default app $app"
+fi
+
+if [ -z "$device" ]; then
+    device="nanos"
+    echo "device is not set, using default device $device"
+fi
+
+resource_path=scripts/ledger/resources
+
+# Compile app
+echo "🔨 Building $app app for ledger $device"
+cd $resource_path/app-$app
+docker pull ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder
+docker tag ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder ledger-app-builder
+echo "Enter sudo password for building priveledged ledger-app-builder"
+sudo docker run --rm -ti -v "$(realpath .):/app" --privileged ledger-app-builder sh -c "make clean && make && exit"
+
+# Copy app to speculos apps folder
+echo "📲 Copying $app app to speculos apps folder"
+cp bin/app.elf ../speculos/apps/$app-$device.elf
