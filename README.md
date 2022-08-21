@@ -134,6 +134,14 @@ We use [Speculos](https://speculos.dev/) to emulate applications on the Ledger N
     npm run emulate:ledger --app=solana
     ```
 
+3. Emulate bitcoin app on ledger.
+
+    ```zsh
+    npm run emulate:ledger --app=bitcoin
+    ```
+
+> 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
+
 ### Environment
 
 Optionally customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for any supported variables.
