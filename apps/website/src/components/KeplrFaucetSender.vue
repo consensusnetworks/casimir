@@ -13,10 +13,18 @@
     <fieldset>
       <legend>Send</legend>
       <p>To faucet:</p>
-      <input value="{{toSend}}" type="number" @model="onToSendChanged" />
+      <input
+        value="{{toSend}}"
+        type="number"
+        @model="onToSendChanged"
+      >
       {{ denom }}
-      <button @click="onSendClicked">Send to faucet</button>
-      <button @click="updateFaucetBalance">Update faucet balance</button>
+      <button @click="onSendClicked">
+        Send to faucet
+      </button>
+      <button @click="updateFaucetBalance">
+        Update faucet balance
+      </button>
     </fieldset>
   </div>
 </template>
@@ -44,7 +52,7 @@ const myAddress = ref('Click first')
 const myBalance = ref('Click first')
 const toSend = ref('0')
 const faucetAddress = 'cosmos15aptdqmm7ddgtcrjvc5hs988rlrkze40l4q0he'
-const url = 'https://rpc-cosmoshub.keplr.app'
+const rpcUrl = 'https://rpc.testnet.cosmos.network:443'
 
 // TODO: Potentially add an onMounted hook to update the faucet balance per section above this: https://tutorials.cosmos.network/academy/xl-cosmjs/with-keplr.html#getting-testnet-tokens
 
@@ -60,12 +68,7 @@ async function onSendClicked(e) {
 
 // Get the faucet's balance
 async function updateFaucetBalance() {
-  const client = await StargateClient.connect({
-    url,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
-  })
+  const client = await StargateClient.connect(rpcUrl)
   console.log('client :>> ', client)
   // const balances: readonly Coin[] = await client.getAllBalances(faucetAddress)
   // const first: Coin = balances[0]
