@@ -1,5 +1,5 @@
 import vue from '@vitejs/plugin-vue'
-import { UserConfig } from 'vite'
+import { Plugin, UserConfig } from 'vite'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
 import pages from 'vite-plugin-pages'
@@ -14,18 +14,22 @@ const config: UserConfig = {
     }),
     inject({
       Buffer: ['buffer', 'Buffer']
-    })
+    }) as Plugin // https://github.com/rollup/plugins/issues/1243
   ],
   define: {
     'global': {}
   },
   optimizeDeps: {
-    include: ['buffer', 'events', 'borsh']
+    include: [
+      'buffer',
+      'borsh'
+    ]
   },
   build: {
+    target: 'esnext',
     commonjsOptions: {
       transformMixedEsModules: true,
-      include: ['borsh']
+      include: [/bn.js/, /js-sha3/, /hash.js/, /aes-js/, /scrypt/, /bech32/, /iotex-antenna/, /iotex-antenna\/lib\/plugin\/ws/]
     }
   },
   resolve: {
@@ -33,7 +37,6 @@ const config: UserConfig = {
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src'),
       './runtimeConfig': './runtimeConfig.browser'
     },
-    dedupe: ['bn.js'],
     extensions: ['.js', '.json', '.jsx', '.mjs', '.ts', '.tsx', '.vue']
   },
   envPrefix: 'PUBLIC_',

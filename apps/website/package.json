@@ -10,7 +10,10 @@
   "dependencies": {
     "@heroicons/vue": "^1.0.6",
     "@solana/web3.js": "^1.50.1",
+    "borsh": "^0.7.0",
+    "buffer": "^6.0.3",
     "ethers": "^5.6.9",
+    "events": "^3.3.0",
     "iotex-antenna": "^0.31.3",
     "vue": "^3.2.25",
     "vue-router": "^4.0.15"

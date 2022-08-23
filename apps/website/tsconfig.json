@@ -13,7 +13,7 @@
       "esnext",
       "dom"
     ],
-    "types": ["vite/client", "vite-plugin-pages/client"],
+    "types": ["./src/env"],
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
