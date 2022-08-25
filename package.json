@@ -23,7 +23,7 @@
     "task:accounts": "npm run task:accounts --workspace @casimir/solidity",
     "task:compile": "npm run task:compile --workspace @casimir/solidity",
     "task:clean": "npm run task:clean --workspace @casimir/solidity",
-    "node:local": "npm run node:local --workspace @casimir/solidity"
+    "dev:ethereum": "scripts/ethereum/dev -c $npm_config_chain"
   },
   "repository": {
     "type": "git",

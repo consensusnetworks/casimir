@@ -6,7 +6,7 @@
         "task:accounts": "npx hardhat accounts",
         "task:compile": "npx hardhat compile",
         "task:clean": "npx hardhat clean",
-        "node:local": "npx hardhat node"
+        "dev:localnode": "npx hardhat node"
     },
     "devDependencies": {
         "@nomiclabs/hardhat-ethers": "^2.0.6",

@@ -1,4 +1,4 @@
-<img width="50px" alt="Casimir logo" src="content/logos/casimir.png">
+<img width="50px" alt="Casimir logo" src="common/data/notebooks/diagrams/resources/casimir.png">
 
 # Casimir
 
@@ -92,13 +92,7 @@ Solidity contract development is serviced through [Hardhat](https://hardhat.io/)
     npm run test:contracts
     ```
 
-4. Start a local Ethereum node.
-
-    ```zsh
-    npm run node:local
-    ```
-
-5. Print all local accounts.
+4. Print all local accounts.
 
     ```zsh
     npm run task:accounts
@@ -106,14 +100,38 @@ Solidity contract development is serviced through [Hardhat](https://hardhat.io/)
 
 *Todo finish sample flow (show usage of compiled contract ABI in app)*
 6. Use a contract in a Casimir app...
-   
-7. Clean [contracts/solidity/build/artifacts](contracts/solidity/build/artifacts) and [contracts/solidity/build/cache](contracts/solidity/build/cache)).    
+
+7. Clean [contracts/solidity/build/artifacts](contracts/solidity/build/artifacts) and [contracts/solidity/build/cache](contracts/solidity/build/cache)).
 
     ```zsh
     npm run task:clean
     ``` 
 
     > 🚩 Note, this is required if you change the Hardhat configuration.
+
+### Local Nodes
+
+Run local cryptonodes for fast and flexible development.
+
+1. Run a local Ethereum node without archived data.
+
+    ```zsh
+    npm run dev:ethereum
+    ```
+
+2. Run a local Ethereum node with archived data from mainnet.
+
+    ```zsh
+    npm run dev:ethereum --fork mainnet
+    ```
+
+3. Run a local Ethereum node with archived data from Goerli testnet.
+
+    ```zsh
+    npm run dev:ethereum --fork testnet
+    ```
+
+> 🚩 Note, while the fork starts with the same state as the specified network, it lives as a local development network.
 
 ### Environment
 

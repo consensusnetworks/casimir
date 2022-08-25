@@ -1,0 +1,53 @@
+#!/bin/bash
+# Run a local ethereum node with Hardhat
+#
+# Example:
+#
+#    scripts/ethereum/dev -f <fork-name>
+#
+# Further information:
+# See https://hardhat.org/hardhat-network/docs/overview
+#
+
+# Get variables from root .env
+export $(xargs < .env)
+
+# Set default profile
+profile="consensus-networks-dev"
+
+if [ ${PROFILE+x} ]; then
+    echo "PROFILE is set to '$PROFILE'"
+    profile=$PROFILE
+else
+    export PROFILE="$profile"
+    echo "PROFILE is not set, using default profile '$PROFILE'"
+fi
+
+# Get args
+while getopts f: flag
+do
+    case "${flag}" in
+        c) fork=${OPTARG};;
+    esac
+done
+
+if [ -z "$fork" ]; then
+    echo "⛓ Running default localnode"
+    npm run dev:localnode --workspace @casimir/solidity
+else
+    # Secret ID is just the name or ARN
+    alchemy_secret_id=consensus-networks-alchemy-$fork
+    echo "🤫 Getting $secret_id for $profile"
+
+    # Get the secret from AWS
+    alchemy_key=$(aws secretsmanager get-secret-value \
+    --secret-id $alchemy_secret_id \
+    --query SecretString \
+    --output text \
+    --profile $profile)
+
+    echo "⛓ Running $fork fork localnode"
+    npm run dev:localnode --workspace @casimir/solidity -- --fork https://eth-$fork.alchemyapi.io/v2/$alchemy_key
+fi
+
+
