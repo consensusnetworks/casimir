@@ -72,21 +72,21 @@ You can get up and running without configuration. You can also mock local backen
 
 ### Hardhat
 
-Solidity contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/solidity/hardhat.config.ts](contracts/solidity/hardhat.config.ts) file.
+EVM contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/evm/hardhat.config.ts](contracts/evm/hardhat.config.ts) file.
 
-1. Compile the contracts in [contracts/solidity](contracts/solidity).
+1. Compile the contracts in [contracts/evm](contracts/evm).
     
     ```zsh
     npm run task:compile
     ```
 
-2. Deploy a contract, specifically [contracts/solidity/src/Sample.sol](contracts/solidity/src/Sample.sol) with [contracts/solidity/deploy/sample.ts](contracts/solidity/deploy/sample.ts).
+2. Deploy a contract, specifically [contracts/evm/src/Sample.sol](contracts/evm/src/Sample.sol) with [contracts/evm/deploy/sample.ts](contracts/evm/deploy/sample.ts).
 
     ```zsh
     npm run deploy:sample
     ```
 
-3. Test the Sample with the tests in [contracts/solidity/test/sample.ts](contracts/solidity/test/sample.ts).
+3. Test the Sample with the tests in [contracts/evm/test/sample.ts](contracts/evm/test/sample.ts).
 
     ```zsh
     npm run test:contracts
@@ -101,7 +101,7 @@ Solidity contract development is serviced through [Hardhat](https://hardhat.io/)
 *Todo finish sample flow (show usage of compiled contract ABI in app)*
 6. Use a contract in a Casimir app...
 
-7. Clean [contracts/solidity/build/artifacts](contracts/solidity/build/artifacts) and [contracts/solidity/build/cache](contracts/solidity/build/cache)).
+7. Clean [contracts/evm/build/artifacts](contracts/evm/build/artifacts) and [contracts/evm/build/cache](contracts/evm/build/cache)).
 
     ```zsh
     npm run task:clean

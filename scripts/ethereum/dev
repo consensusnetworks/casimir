@@ -33,7 +33,7 @@ done
 
 if [ -z "$fork" ]; then
     echo "⛓ Running default localnode"
-    npm run dev:localnode --workspace @casimir/solidity
+    npm run dev:localnode --workspace @casimir/evm
 else
     # Secret ID is just the name or ARN
     alchemy_secret_id=consensus-networks-alchemy-$fork
@@ -47,7 +47,7 @@ else
     --profile $profile)
 
     echo "⛓ Running $fork fork localnode"
-    npm run dev:localnode --workspace @casimir/solidity -- --fork https://eth-$fork.alchemyapi.io/v2/$alchemy_key
+    npm run dev:localnode --workspace @casimir/evm -- --fork https://eth-$fork.alchemyapi.io/v2/$alchemy_key
 fi
 
 
