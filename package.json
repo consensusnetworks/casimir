@@ -23,7 +23,7 @@
     "task:accounts": "npm run task:accounts --workspace @casimir/evm",
     "task:compile": "npm run task:compile --workspace @casimir/evm",
     "task:clean": "npm run task:clean --workspace @casimir/evm",
-    "dev:ethereum": "scripts/ethereum/dev -c $npm_config_chain"
+    "dev:ethereum": "scripts/ethereum/dev -f $npm_config_fork"
   },
   "repository": {
     "type": "git",

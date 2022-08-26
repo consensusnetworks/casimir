@@ -27,7 +27,7 @@ fi
 while getopts f: flag
 do
     case "${flag}" in
-        c) fork=${OPTARG};;
+        f) fork=${OPTARG};;
     esac
 done
 
