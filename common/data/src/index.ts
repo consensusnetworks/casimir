@@ -3,6 +3,7 @@ import { JsonSchema } from './interfaces/JsonSchema'
 import eventSchema from './schemas/event.schema.json'
 import aggSchema from './schemas/agg.schema.json'
 
+
 /**
  * Converts a JSON Schema table object to an array of Glue columns.
  *
@@ -23,4 +24,24 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
   })
 }
 
+export type EventTableColumn = {
+  chain: string
+  network: string
+  provider: string
+  type: string
+  date: string
+  address: string
+  to_address: string
+  candidate: string
+  candidate_list: string[]
+  amount: number
+  duration: number
+  auto: boolean
+  payload: Record<string, unknown>
+}
+
+//todo: Close but not right
+// export type EventTableColumn = {
+//   // [key in keyof typeof eventSchema.properties]: keyof typeof eventSchema.properties[key]['type']
+// }
 export { eventSchema, aggSchema }

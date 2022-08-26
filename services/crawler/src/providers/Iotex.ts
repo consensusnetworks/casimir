@@ -1,7 +1,19 @@
 import Antenna from 'iotex-antenna'
-import { ClientReadableStream, IActionInfo, IGetBlockMetasResponse, IGetChainMetaResponse, IGetReceiptByActionResponse, IGetServerMetaResponse, IStreamBlocksResponse } from 'iotex-antenna/lib/rpc-method/types'
+import {
+  ClientReadableStream,
+  IActionInfo,
+  IGetBlockMetasResponse,
+  IBlockMeta,
+  IGetChainMetaResponse,
+  IGetReceiptByActionResponse,
+  IGetServerMetaResponse,
+  IStreamBlocksResponse,
+  IBlock, IGetActionsResponse
+} from 'iotex-antenna/lib/rpc-method/types'
 import { from } from '@iotexproject/iotex-address-ts'
 import { Opts } from 'iotex-antenna/lib/antenna'
+import { eventSchema, EventTableColumn } from '@casimir/data'
+import {Chain} from '../index'
 
 const IOTEX_CORE = 'http://localhost:14014'
 
@@ -24,16 +36,6 @@ export interface IotexBlock {
   amount: string
   transaction_root: string
   num_of_actions: number
-}
-
-export interface EventTableColumn {
-  type: string
-  datestring: string
-  address: string
-  staked_candidate: string
-  staked_amount: number
-  staked_duration: number
-  auto_stake: boolean
 }
 
 enum IotexActionType {
@@ -72,7 +74,7 @@ export class IotexService {
     return meta
   }
 
-  async getBlockMetasByIndex (start: number, count: number): Promise<IotexBlock[]> {
+  async getBlocks(start: number, count: number): Promise<IGetBlockMetasResponse> {
     if (start < 0 || count < 0) {
       throw new Error('start and count must be greater than 0')
     }
@@ -85,27 +87,13 @@ export class IotexService {
       count = 100
     }
 
-    const { blkMetas } = await this.client.iotx.getBlockMetas({ byIndex: { start: start, count: count } })
-
-    const meta = blkMetas.map(b => {
-      return {
-        type: 'block',
-        id: b.hash,
-        height: b.height,
-        datestring: new Date(b.timestamp.seconds * 1000).toISOString(),
-        producer: b.producerAddress,
-        amount: b.transferAmount,
-        transaction_root: b.txRoot,
-        num_of_actions: b.numActions
-      }
-    })
-    return meta
+    return await this.client.iotx.getBlockMetas({ byIndex: { start: start, count: count } })
   }
 
-  async getBlockMetaByHash (hash: string): Promise<IGetBlockMetasResponse> {
+  async getBlockMeta (blockHash: string): Promise<IGetBlockMetasResponse> {
     const metas = await this.client.iotx.getBlockMetas({
       byHash: {
-        blkHash: hash
+        blkHash: blockHash
       }
     })
     return metas
@@ -153,121 +141,94 @@ export class IotexService {
     return tx
   }
 
-  async getActionsByIndex (index: number, count: number): Promise<any> {
+  async getBlockActions (index: number, count: number): Promise<IActionInfo[]> {
     const actions = await this.client.iotx.getActions({
       byIndex: {
         start: index,
         count: count
       }
     })
-    const s = actions.actionInfo.map((action: IActionInfo) => {
-      const core = action.action.core
-      if (core === undefined) return
-      const type = Object.keys(core).filter(k => k !== undefined)[Object.keys(core).length - 2]
-      return this.convertToGlueSchema(type, action)
-    })
-    return s
+    return actions.actionInfo
   }
 
-  private convertToGlueSchema(type: string, action: IActionInfo): EventTableColumn {
-    const core= action.action.core
+
+  convertToGlueSchema(obj: { type: string, block: IBlockMeta, action: IActionInfo}): EventTableColumn {
+    const core = obj.action.action.core
 
     if (core === undefined) throw new Error('core is undefined')
 
+    const event: EventTableColumn = {
+      chain: Chain.Iotex,
+      network: this.chainId === 1 ? IotexNetworkType.Mainnet : IotexNetworkType.Testnet,
+      provider: 'casimir',
+      date: new Date(obj.block.timestamp.seconds * 1000).toISOString(),
+      type: '',
+      address: obj.block.producerAddress,
+      to_address: '',
+      candidate: '',
+      candidate_list: [],
+      amount: 0,
+      duration:  0,
+      auto: false,
+      payload: {}
+    }
 
-    switch (type) {
+    switch (obj.type) {
       case 'grantReward':
-          return {
-              type: IotexActionType.grantReward,
-              datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
-              address: '',
-              staked_candidate: '',
-              staked_amount: 0,
-              staked_duration: 0,
-              auto_stake: false
-          }
-          case 'transfer':
-            return {
-              type: IotexActionType.grantReward,
-              datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
-              address: '',
-              staked_candidate: '',
-              staked_amount: 0,
-              staked_duration: 0,
-              auto_stake: false
-          }
-          case 'stakeCreate':
-            return {
-              type: IotexActionType.grantReward,
-              datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
-              address: '',
-              staked_candidate: '',
-              staked_amount: 0,
-              staked_duration: 0,
-              auto_stake: false
-          }
+        event.type = IotexActionType.grantReward
+        return event
+      case 'transfer':
+        event.type = IotexActionType.transfer
+
+        if (core.transfer?.amount !== undefined) {
+          event.amount = parseInt(core.transfer?.amount)
+        }
+        return event
+      case 'stakeCreate':
+        if (core.stakeCreate?.autoStake !== undefined) {
+          event.auto = core.stakeCreate.autoStake
+        }
+      event.type = IotexActionType.createStake
+      return event
       case 'stakeAddDeposit':
-          return {
-            type: IotexActionType.grantReward,
-            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
-            address: '',
-            staked_candidate: '',
-            staked_amount: 0,
-            staked_duration: 0,
-            auto_stake: false
+        event.type = IotexActionType.stakeAddDeposit
+        if (core.stakeAddDeposit?.amount !== undefined) {
+          event.amount = parseInt(core.stakeAddDeposit?.amount)
         }
+        if (core.stakeAddDeposit?.payload !== undefined) {
+          console.log(typeof core.stakeAddDeposit.payload)
+        }
+        return event
       case 'execution':
-          return {
-            type: IotexActionType.grantReward,
-            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
-            address: '',
-            staked_candidate: '',
-            staked_amount: 0,
-            staked_duration: 0,
-            auto_stake: false
+        event.type = IotexActionType.execution
+        if (core.execution?.amount !== undefined) {
+          event.amount = parseInt(core.execution?.amount)
         }
-          case 'putPollResult':
-          return {
-            type: IotexActionType.grantReward,
-            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
-            address: '',
-            staked_candidate: '',
-            staked_amount: 0,
-            staked_duration: 0,
-            auto_stake: false
+        return event
+        case 'putPollResult':  
+        event.type =  IotexActionType.putPollResult
+        if (core.putPollResult?.candidates !== undefined) {
+          event.candidate_list = core.putPollResult?.candidates.candidates.map(c => c.address)
         }
+          return event
       case 'stakeWithdraw':
-          return {
-            type: IotexActionType.grantReward,
-            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
-            address: '',
-            staked_candidate: '',
-            staked_amount: 0,
-            staked_duration: 0,
-            auto_stake: false
-        }
+        event.type = IotexActionType.grantReward
+        return event
       case 'stakeChangeCandidate':
-          return {
-            type: IotexActionType.grantReward,
-            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
-            address: '',
-            staked_candidate: '',
-            staked_amount: 0,
-            staked_duration: 0,
-            auto_stake: false
-        }
+        event.type = IotexActionType.StakeChangeCandidate
+        return event
       case 'stakeRestake':
-          return {
-            type: IotexActionType.grantReward,
-            datestring: new Date(action.timestamp.seconds * 1000).toISOString(),
-            address: '',
-            staked_candidate: '',
-            staked_amount: 0,
-            staked_duration: 0,
-            auto_stake: false
+        event.type = IotexActionType.grantReward
+        if (core.stakeRestake?.autoStake !== undefined) {
+          event.auto = core.stakeRestake.autoStake
         }
-          default:
-            throw new Error(`Action type ${type} not supported`)
+
+        if (core.stakeRestake?.stakedDuration !== undefined) {
+          event.duration = core.stakeRestake.stakedDuration
+        }
+        return event
+      default:
+        throw new Error(`Action type ${obj.type} not supported`)
     }
   }
 }

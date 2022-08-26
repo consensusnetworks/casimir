@@ -5,10 +5,12 @@ import { IotexBlock, IotexService, newIotexService } from './providers/Iotex'
 import EventEmitter from 'events'
 import signal from 'signal-exit'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
+import { EventTableColumn } from '@casimir/data'
 
 const defaultEventBucket = 'casimir-etl-event-bucket-dev'
 
 const EE = new EventEmitter()
+
 let s3: S3Client | null = null
 
 export enum Chain {
@@ -54,7 +56,7 @@ class Crawler {
     signal((code, signal) => {
       console.log(signal)
     })
-  }
+  }                      
 
   async start (): Promise<void> {
     if (this.service == null) {
@@ -70,28 +72,33 @@ class Crawler {
 
       for (let i = 0; i < trips; i++) {
         console.log(`Starting trip ${i + 1} of ${trips}`)
-        const blocks = await this.service.getBlockMetasByIndex(i * 1000, 1000)
+        const { blkMetas: blocks } = await this.service.getBlocks(12000000 , 1000)
         if (blocks.length === 0) continue
 
-        for (const b of blocks) {
-          const actions =  await this.service.getActionsByIndex(b.height, b.num_of_actions)        
-          if (actions.length === 0) continue
 
-          const ndjson = actions.map((a: any) => JSON.stringify(a)).join('\n')
-          const key = `${b.id}-events.json`
+        for await (const block of blocks) {
 
-          const upload = new PutObjectCommand({
-            Bucket: 'casimir-etl-event-bucket-dev',
-            Key: key,
-            Body: ndjson
-          })
+          let events: EventTableColumn[] = []
+          const actions =  await this.service.getBlockActions(block.height, block.numActions)
 
-          const { $metadata } = await s3.send(upload).catch((e: Error) => {
-            throw e
-          })
+          if (actions.length === 0 || actions[0].action.core === undefined) continue
 
-          if ($metadata.httpStatusCode !== 200) throw new Error('FailedUploadBlock: unable to upload block')
-          console.log(key)
+            for await (const action of actions) {
+              const core = action.action.core
+
+              if (core === undefined) continue
+              const type = Object.keys(core).filter(k => k !== undefined)[Object.keys(core).length - 2]
+
+              const event = this.service.convertToGlueSchema({type: type, block, action})
+              events.push(event)
+              console.log(event)
+              // const { blkMetas: meta } = await this.service.getBlockMeta(action.blkHash)
+              // const converted = this.service.convertToGlueSchema({type: type, action: action, block: block})
+              events = []
+            }
+          const ndjson = events.map((a: any) => JSON.stringify(a)).join('\n')
+          // const key = `${b.id}-events.json`
+          // await uploadToS3('casimir-etl-event-bucket-dev', key, ndjson)
         }
       }
       return
@@ -147,6 +154,22 @@ async function newS3Client (opt?: S3ClientConfig): Promise<S3Client> {
 
   const client = new S3Client(opt)
   return client
+}
+
+async function uploadToS3(bucket: string, key: string, body: string): Promise<void> {
+  if (s3 === null) s3 = await newS3Client()
+
+  const upload = new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    Body: body
+  })
+
+  const { $metadata } = await s3.send(upload).catch((e: Error) => {
+    throw e
+  })
+
+  if ($metadata.httpStatusCode !== 200) throw new Error('FailedUploadBlock: unable to upload block')
 }
 
 export async function crawler (config: CrawlerConfig): Promise<Crawler> {
