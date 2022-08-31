@@ -7,5 +7,5 @@
         "typescript"
     ],
     "css.lint.unknownAtRules": "ignore",
-    "jupyter.notebookFileRoot": "${workspaceFolder}"
+    "jupyter.notebookFileRoot": "${fileDirname}"
 }
