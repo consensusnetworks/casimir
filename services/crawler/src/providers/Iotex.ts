@@ -8,11 +8,10 @@ import {
   IGetReceiptByActionResponse,
   IGetServerMetaResponse,
   IStreamBlocksResponse,
-  IBlock, IGetActionsResponse
 } from 'iotex-antenna/lib/rpc-method/types'
 import { from } from '@iotexproject/iotex-address-ts'
 import { Opts } from 'iotex-antenna/lib/antenna'
-import { eventSchema, EventTableColumn } from '@casimir/data'
+import { EventTableColumn } from '@casimir/data'
 import {Chain} from '../index'
 
 const IOTEX_CORE = 'http://localhost:14014'
@@ -161,7 +160,7 @@ export class IotexService {
       chain: Chain.Iotex,
       network: this.chainId === 1 ? IotexNetworkType.Mainnet : IotexNetworkType.Testnet,
       provider: 'casimir',
-      date: new Date(obj.block.timestamp.seconds * 1000).toISOString(),
+      date: new Date(obj.block.timestamp.seconds * 1000).toISOString().split('T')[0],
       type: '',
       address: obj.block.producerAddress,
       to_address: '',
@@ -195,9 +194,8 @@ export class IotexService {
         if (core.stakeAddDeposit?.amount !== undefined) {
           event.amount = parseInt(core.stakeAddDeposit?.amount)
         }
-        if (core.stakeAddDeposit?.payload !== undefined) {
-          console.log(typeof core.stakeAddDeposit.payload)
-        }
+        // if (core.stakeAddDeposit?.payload !== undefined) {
+        // }
         return event
       case 'execution':
         event.type = IotexActionType.execution
@@ -222,7 +220,6 @@ export class IotexService {
         if (core.stakeRestake?.autoStake !== undefined) {
           event.auto = core.stakeRestake.autoStake
         }
-
         if (core.stakeRestake?.stakedDuration !== undefined) {
           event.duration = core.stakeRestake.stakedDuration
         }

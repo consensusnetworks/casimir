@@ -1,11 +1,11 @@
 
 import { S3Client, S3ClientConfig, } from '@aws-sdk/client-s3'
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
-import { IotexBlock, IotexService, newIotexService } from './providers/Iotex'
+import { IotexService, newIotexService } from './providers/Iotex'
 import EventEmitter from 'events'
-import signal from 'signal-exit'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { EventTableColumn } from '@casimir/data'
+import { IStreamBlocksResponse } from 'iotex-antenna/lib/rpc-method/types'
 
 const defaultEventBucket = 'casimir-etl-event-bucket-dev'
 
@@ -31,7 +31,6 @@ class Crawler {
     this.config = config
     this.service = null
     this.EE = EE
-    this.signalOnExit()
   }
 
   async prepare (): Promise<void> {
@@ -51,13 +50,6 @@ class Crawler {
     }
     throw new Error('UnknownChain: chain is not supported')
   }
-
-  signalOnExit(): void {
-    signal((code, signal) => {
-      console.log(signal)
-    })
-  }                      
-
   async start (): Promise<void> {
     if (this.service == null) {
       throw new Error('NullService: service is not initialized')
@@ -89,16 +81,13 @@ class Crawler {
               if (core === undefined) continue
               const type = Object.keys(core).filter(k => k !== undefined)[Object.keys(core).length - 2]
 
-              const event = this.service.convertToGlueSchema({type: type, block, action})
+              const event = this.service.convertToGlueSchema({ type, block, action})
               events.push(event)
-              console.log(event)
-              // const { blkMetas: meta } = await this.service.getBlockMeta(action.blkHash)
-              // const converted = this.service.convertToGlueSchema({type: type, action: action, block: block})
-              events = []
             }
-          const ndjson = events.map((a: any) => JSON.stringify(a)).join('\n')
-          // const key = `${b.id}-events.json`
+          const ndjson = events.map(a => JSON.stringify(a)).join('\n')
+          const key = `${block.hash}-events.json`
           // await uploadToS3('casimir-etl-event-bucket-dev', key, ndjson)
+          events = []
         }
       }
       return
@@ -116,7 +105,7 @@ class Crawler {
     throw new Error('not implemented yet')
   }
 
-  on(event: 'block', cb: (b: IotexBlock) => void): void {
+  on(event: 'block', cb: (b: IStreamBlocksResponse) => void): void {
     if (event !== 'block') throw new Error('InvalidEvent: event is not supported')
 
     if (typeof cb !== 'function') throw new Error('InvalidCallback: callback is not a function')
@@ -125,7 +114,7 @@ class Crawler {
 
     if (this.service instanceof IotexService) {
       this.service.readableBlockStream().then((s: any) => {
-        s.on('data', (b: IotexBlock) => {
+        s.on('data', (b: IStreamBlocksResponse) => {
           cb(b)
         })
 
