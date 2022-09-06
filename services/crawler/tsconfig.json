@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+      "target": "es2016",
+      "module": "commonjs",    
+      "rootDir": "./",
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "forceConsistentCasingInFileNames": true,
+      "strict": true,
+      "strictNullChecks": true,                        
+      "noEmit": true,
+      "allowJs": true,
+    }
+  }
+  
