@@ -26,17 +26,6 @@ export enum IotexNetworkType {
   Testnet = 'testnet'
 }
 
-export interface IotexBlock {
-  type: string
-  id: string
-  height: number
-  datestring: string
-  producer: string
-  amount: string
-  transaction_root: string
-  num_of_actions: number
-}
-
 enum IotexActionType {
   transfer = 'transfer',
   grantReward = 'grant_reward',
@@ -163,13 +152,14 @@ export class IotexService {
       date: new Date(obj.block.timestamp.seconds * 1000).toISOString().split('T')[0],
       type: '',
       address: obj.block.producerAddress,
+      height: obj.block.height,
       to_address: '',
       candidate: '',
       candidate_list: [],
       amount: 0,
       duration:  0,
-      auto: false,
-      payload: {}
+      auto_stake: false,
+      // payload: {}
     }
 
     switch (obj.type) {
@@ -185,7 +175,7 @@ export class IotexService {
         return event
       case 'stakeCreate':
         if (core.stakeCreate?.autoStake !== undefined) {
-          event.auto = core.stakeCreate.autoStake
+          event.auto_stake = core.stakeCreate.autoStake
         }
       event.type = IotexActionType.createStake
       return event
@@ -194,8 +184,6 @@ export class IotexService {
         if (core.stakeAddDeposit?.amount !== undefined) {
           event.amount = parseInt(core.stakeAddDeposit?.amount)
         }
-        // if (core.stakeAddDeposit?.payload !== undefined) {
-        // }
         return event
       case 'execution':
         event.type = IotexActionType.execution
@@ -218,7 +206,7 @@ export class IotexService {
       case 'stakeRestake':
         event.type = IotexActionType.grantReward
         if (core.stakeRestake?.autoStake !== undefined) {
-          event.auto = core.stakeRestake.autoStake
+          event.auto_stake = core.stakeRestake.autoStake
         }
         if (core.stakeRestake?.stakedDuration !== undefined) {
           event.duration = core.stakeRestake.stakedDuration

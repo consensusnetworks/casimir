@@ -7,7 +7,6 @@ test('init crawler', async () => {
     chain: Chain.Iotex,
     verbose: true
   })
-  // await supercrawler.start()
   expect(supercrawler.service).not.toBe(null)
 })
 
@@ -16,6 +15,10 @@ test('stream', async () => {
     chain: Chain.Iotex,
     verbose: true
   })
+
   expect(supercrawler).not.toBe(null)
+  // supercrawler.on('block', (block) => {
+  //   console.log(block)
+  // })
 })
 

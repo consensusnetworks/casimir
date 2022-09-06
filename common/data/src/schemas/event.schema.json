@@ -6,11 +6,11 @@
     "properties": {
         "chain": {
             "type": "string",
-            "description": "Name of the chain (e.g. iotex, ethereum )"
+            "description": "Name of the chain (e.g. iotex, ethereum)"
         },
         "network": {
             "type": "string",
-            "description": "Name of the network (e.g. mainnet, testnet )"
+            "description": "Name of the network (e.g. mainnet, testnet)"
         },
         "provider": {
             "type": "string",
@@ -18,15 +18,19 @@
         },
         "type": {
             "type": "string",
-            "description": "The type of event"
+            "description": "Type of the event"
         },
         "date": {
             "type": "string",
-            "description": "The datestring (MM-DD-YYYY) of the event"
+            "description": "The date (MM-DD-YYYY) of the event"
         },
         "address": {
             "type": "string",
             "description": "The address that initiated the event"
+        },
+        "height": {
+            "type": "integer",
+            "description": "The block height of the event"
         },
         "to_address": {
             "type": "string",
@@ -48,13 +52,9 @@
             "type": "string",
             "description": "The duration of the action"
         },
-        "auto": {
+        "auto_stake": {
             "type": "boolean",
-            "description": "Is auto skaing enabled"
-        },
-        "payload": {
-            "type": "string",
-            "description": "The payload associated with the event"
+            "description": "Is auto staking enabled"
         }
     }
 }

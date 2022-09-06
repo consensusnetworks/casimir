@@ -11,8 +11,7 @@
     "devDependencies": {
         "@types/node": "^17.0.38",
         "esbuild": "^0.14.42",
-        "esno": "^0.16.3",
-        "json-schema-to-ts": "^2.5.5"
+        "esno": "^0.16.3"
     },
     "dependencies": {
         "@aws-cdk/aws-glue-alpha": "^2.33.0-alpha.0"
