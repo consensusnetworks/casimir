@@ -30,18 +30,22 @@ if [ ! -f "$resource_path/speculos/apps/$app.elf" ]; then
 fi
 
 if [[ "$(uname -a)" = *ARM64* ]]; then
-    echo 'Running emulator on ARM64'
     dockerfile=../custom/speculos-aarch64.Dockerfile
 else
-    echo 'Running emulator on x86_64'
     dockerfile=./Dockerfile
 fi
 
-# Emulate ledger app with speculos
-echo "📺 Emulating $app app on ledger"
 cd $resource_path/speculos
+
+# Stop current speculos and proxy
+echo "🧹 Cleaning up speculos environment"
+docker ps -q --filter ancestor="speculos:latest" | xargs -r docker stop
+npx kill-port 5001
+
+# Build and run ledger app on speculos with proxy at 5001
+echo "📺 Emulating $app app on ledger"
 docker build . --tag speculos -f $dockerfile
-docker run --rm -it -v "$(pwd)/apps:/speculos/apps" \
+npx esno ../custom/proxy.ts & docker run --rm -it -v "$(pwd)/apps:/speculos/apps" \
 -p 1234:1234 -p 5000:5000 -p 40000:40000 -p 41000:41000 \
 speculos --display headless apps/$app.elf \
 --seed "solve nut you awesome such soccer brain noble flock danger help elbow"

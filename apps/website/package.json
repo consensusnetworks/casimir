@@ -9,6 +9,9 @@
   },
   "dependencies": {
     "@heroicons/vue": "^1.0.6",
+    "@ledgerhq/hw-app-eth": "^6.29.4",
+    "@ledgerhq/hw-transport-node-speculos-http": "^6.27.2",
+    "buffer": "^6.0.3",
     "ethers": "^5.6.9",
     "iotex-antenna": "^0.31.3",
     "vue": "^3.2.25",
@@ -17,6 +20,7 @@
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
+    "@rollup/plugin-inject": "^4.0.4",
     "@vitejs/plugin-vue": "^2.3.3",
     "autoprefixer": "^10.4.7",
     "postcss": "^8.4.14",

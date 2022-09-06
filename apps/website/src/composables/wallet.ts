@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
 import useIoPay from '@/composables/iopay'
+import useLedger from '@/composables/ledger'
 import useEthers from '@/composables/ethers'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
@@ -21,6 +22,7 @@ const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
 
 export default function useWallet() {
   const { getIoPayAccounts, sendIoPayTransaction } = useIoPay()
+  const { getLedgerAccount } = useLedger()
   const ethereum: any = window.ethereum
   const availableProviders = ref<BrowserProviders>(
     getBrowserProviders(ethereum)
@@ -50,6 +52,9 @@ export default function useWallet() {
         const accounts = await getIoPayAccounts()
         const { address } = accounts[0]
         setSelectedAccount(address)
+      } else if (provider === 'Ledger') {
+        const account = await getLedgerAccount()
+        console.log(account)
       } else {
         throw new Error('No provider selected')
       }

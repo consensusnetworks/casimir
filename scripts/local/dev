@@ -1,6 +1,10 @@
 #!/bin/bash
-# Select ports for services
-#
+
+# Todo:
+# - Emulator
+#   - Add emulator:ledger --app="ethereum|solana|bitcoin" support in dev
+#   - Set env var and handle in web example
+#   - Configure for ethereum localnet
 
 echo "npm_config_mock is set to '$npm_config_mock'"
 
