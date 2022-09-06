@@ -1,4 +1,4 @@
-<img width="50px" alt="Casimir logo" src="content/logos/casimir.png">
+<img width="50px" alt="Casimir logo" src="common/data/notebooks/diagrams/resources/casimir.png">
 
 # Casimir
 
@@ -80,33 +80,27 @@ You can get up and running without configuration. You can also mock local backen
 
 ### Hardhat
 
-Solidity contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/solidity/hardhat.config.ts](contracts/solidity/hardhat.config.ts) file.
+EVM contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/evm/hardhat.config.ts](contracts/evm/hardhat.config.ts) file.
 
-1. Compile the contracts in [contracts/solidity](contracts/solidity).
+1. Compile the contracts in [contracts/evm](contracts/evm).
     
     ```zsh
     npm run task:compile
     ```
 
-2. Deploy a contract, specifically [contracts/solidity/src/Sample.sol](contracts/solidity/src/Sample.sol) with [contracts/solidity/deploy/sample.ts](contracts/solidity/deploy/sample.ts).
+2. Deploy a contract, specifically [contracts/evm/src/Sample.sol](contracts/evm/src/Sample.sol) with [contracts/evm/deploy/sample.ts](contracts/evm/deploy/sample.ts).
 
     ```zsh
     npm run deploy:sample
     ```
 
-3. Test the Sample with the tests in [contracts/solidity/test/sample.ts](contracts/solidity/test/sample.ts).
+3. Test the Sample with the tests in [contracts/evm/test/sample.ts](contracts/evm/test/sample.ts).
 
     ```zsh
     npm run test:contracts
     ```
 
-4. Start a local Ethereum node.
-
-    ```zsh
-    npm run node:local
-    ```
-
-5. Print all local accounts.
+4. Print all local accounts.
 
     ```zsh
     npm run task:accounts
@@ -118,13 +112,37 @@ Solidity contract development is serviced through [Hardhat](https://hardhat.io/)
     // Todo add Casimir Typescript usage
     ```
 
-7. Clean [contracts/solidity/build/artifacts](contracts/solidity/build/artifacts) and [contracts/solidity/build/cache](contracts/solidity/build/cache)).    
+7. Clean [contracts/evm/build/artifacts](contracts/evm/build/artifacts) and [contracts/evm/build/cache](contracts/evm/build/cache)).    
 
     ```zsh
     npm run task:clean
     ```
 
     > 🚩 Note, this is required if you change the Hardhat configuration.
+
+### Local Nodes
+
+Run local cryptonodes for fast and flexible development.
+
+1. Run a local Ethereum node without archived data.
+
+    ```zsh
+    npm run dev:ethereum
+    ```
+
+2. Run a local Ethereum node with archived data from mainnet.
+
+    ```zsh
+    npm run dev:ethereum --fork mainnet
+    ```
+
+3. Run a local Ethereum node with archived data from Goerli testnet.
+
+    ```zsh
+    npm run dev:ethereum --fork testnet
+    ```
+
+> 🚩 Note, while the fork starts with the same state as the specified network, it lives as a local development network.
 
 ### Environment
 

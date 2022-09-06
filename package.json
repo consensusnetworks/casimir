@@ -18,12 +18,12 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:push": "scripts/actions/test -w push",
     "release": "release-it",
-    "deploy:sample": "npm run deploy:sample --workspace @casimir/solidity",
-    "test:contracts": "npm run test:contracts --workspace @casimir/solidity",
-    "task:accounts": "npm run task:accounts --workspace @casimir/solidity",
-    "task:compile": "npm run task:compile --workspace @casimir/solidity",
-    "task:clean": "npm run task:clean --workspace @casimir/solidity",
-    "node:local": "npm run node:local --workspace @casimir/solidity"
+    "deploy:sample": "npm run deploy:sample --workspace @casimir/evm",
+    "test:contracts": "npm run test:contracts --workspace @casimir/evm",
+    "task:accounts": "npm run task:accounts --workspace @casimir/evm",
+    "task:compile": "npm run task:compile --workspace @casimir/evm",
+    "task:clean": "npm run task:clean --workspace @casimir/evm",
+    "dev:ethereum": "scripts/ethereum/dev -f $npm_config_fork"
   },
   "repository": {
     "type": "git",

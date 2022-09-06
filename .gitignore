@@ -9,4 +9,4 @@ aws.env
 .idea
 
 # Hardhat
-contracts/solidity/build/cache
+contracts/evm/build/cache
