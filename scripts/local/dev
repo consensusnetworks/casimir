@@ -25,7 +25,7 @@ if [ -n "$mock" ]; then
     port=3999
 
     # Todo kill dynamically
-    kill -9 $(lsof -ti:4000,4001,4002)
+    npx kill-port 4000,4001,4002
 
     export PUBLIC_MOCK="$mock"
 
@@ -42,12 +42,16 @@ fi
 
 if [ -n "$ledger" ]; then
 
-    export PUBLIC_LEDGER="$ledger"
-
     npx kill-port 5001
-    ledger_command="(sleep 2 && npx esno scripts/ledger/proxy.ts) & scripts/ledger/emulate"
+
+    export PUBLIC_LEDGER="$ledger"
+    export PUBLIC_LEDGER_PORT="5001"
+    export PUBLIC_LEDGER_APP="ethereum"
+
+    ledger_command="(sleep 3 && npx esno scripts/ledger/proxy.ts) & scripts/ledger/emulate"
     if [ "$ledger" != "true" ]; then
         ledger_command+="-a $ledger"
+        export PUBLIC_LEDGER_APP="$ledger"
     fi
     commands+=("$ledger_command")
 

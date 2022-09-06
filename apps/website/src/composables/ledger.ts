@@ -4,7 +4,7 @@ import Eth from '@ledgerhq/hw-app-eth'
 
 export default function useLedger() {
 
-    const ledgerEthPath = '44\'/60\'/0\'/0/0'
+    const bip32Path = '44\'/60\'/0\'/0/0'
 
     async function getLedgerEthSigner() {
         const transport = await _getLedgerTransport()
@@ -13,14 +13,14 @@ export default function useLedger() {
 
     async function _getLedgerTransport() {
         if (import.meta.env.PUBLIC_LEDGER) {
-            return await SpeculosHttpTransport.open()
+            return await SpeculosHttpTransport.open(`http://127.0.0.1:${import.meta.env.PUBLIC_LEDGER_PORT}`)
         } else {
             return await TransportWebHID.create()
         }
     }
 
     return {
-        ledgerEthPath,
+        bip32Path,
         getLedgerEthSigner
     }
 }

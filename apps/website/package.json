@@ -10,7 +10,6 @@
   "dependencies": {
     "@heroicons/vue": "^1.0.6",
     "@ledgerhq/hw-app-eth": "^6.29.4",
-    "@ledgerhq/hw-transport-node-speculos-http": "^6.27.2",
     "@ledgerhq/hw-transport-webhid": "^6.27.2",
     "buffer": "^6.0.3",
     "ethers": "^5.6.9",

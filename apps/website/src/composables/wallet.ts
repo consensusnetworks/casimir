@@ -22,7 +22,7 @@ const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
 
 export default function useWallet() {
   const { getIoPayAccounts, sendIoPayTransaction } = useIoPay()
-  const { ledgerEthPath, getLedgerEthSigner } = useLedger()
+  const { bip32Path, getLedgerEthSigner } = useLedger()
   const ethereum: any = window.ethereum
   const availableProviders = ref<BrowserProviders>(
     getBrowserProviders(ethereum)
@@ -54,7 +54,7 @@ export default function useWallet() {
         setSelectedAccount(address)
       } else if (provider === 'Ledger') {
         const ledgerEth = await getLedgerEthSigner()
-        const { address } = await ledgerEth.getAddress(ledgerEthPath)
+        const { address } = await ledgerEth.getAddress(bip32Path)
         console.log(address)
         setSelectedAccount(address)
       } else {
@@ -84,11 +84,16 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'IoPay') {
         await sendIoPayTransaction(toAddress.value, amount.value)
       } else if (selectedProvider.value === 'Ledger') {
+
+        // @ccali11 You will need to send localnet money to the test account first!
+        // Will initialize localnet with money in this account next PR
+
         // const ledgerEth = await getLedgerEthSigner()
         // Create - { to: '', ... }
         // Serialize - ethers.utils.serializeTransaction
         // Sign - ledgerEth.signTransaction
         // Send - (new ethers.providers.JsonRpcProvider("local-hardhat-rpc-url")).sendTransaction
+
       } else {
         throw new Error('Provider selected not yet supported')
       }
