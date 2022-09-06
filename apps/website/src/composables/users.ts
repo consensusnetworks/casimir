@@ -24,7 +24,7 @@ export default function useUsers() {
      * @returns {string} The base URL for the users API
      */
     function getUsersBaseUrl(): string {
-        if (import.meta.env.PUBLIC_MOCK_ENABLED) {
+        if (import.meta.env.PUBLIC_MOCK) {
             return `http://localhost:${import.meta.env.PUBLIC_USERS_PORT}`
         } else {
             return `https://users.${import.meta.env.PUBLIC_STAGE || 'dev'}.casimir.co`

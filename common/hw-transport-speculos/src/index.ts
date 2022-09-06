@@ -1,11 +1,4 @@
-import { DisconnectedDevice } from '@ledgerhq/errors'
 import Transport from '@ledgerhq/hw-transport'
-import { log } from '@ledgerhq/logs'
-
-export type SpeculosHttpTransportOpts = {
-  baseURL?: string;
-  timeout?: number;
-};
 
 /**
  * Speculos TCP transport implementation
@@ -16,12 +9,12 @@ export type SpeculosHttpTransportOpts = {
  * const res = await transport.send(0xE0, 0x01, 0, 0)
  */
 export default class SpeculosHttpTransport extends Transport {
-  opts: SpeculosHttpTransportOpts
+  baseURL: string
   eventStream!: EventSource
 
-  constructor(opts: SpeculosHttpTransportOpts) {
+  constructor(baseURL: string) {
     super()
-    this.opts = opts
+    this.baseURL = baseURL
   }
 
   static isSupported = (): Promise<boolean> => Promise.resolve(true)
@@ -33,12 +26,12 @@ export default class SpeculosHttpTransport extends Transport {
   })
 
   static open = async (
-    opts?: SpeculosHttpTransportOpts
+    baseURL?: string
   ): Promise<SpeculosHttpTransport> => {
     try {
-      opts = opts || { baseURL: 'http://127.0.0.1:5001' }
-      const transport = new SpeculosHttpTransport(opts)
-      const eventSource = new EventSource(`${opts.baseURL}/events?stream=true`)
+      baseURL = baseURL || 'http://127.0.0.1:5001'
+      const transport = new SpeculosHttpTransport(baseURL)
+      const eventSource = new EventSource(`${baseURL}/events?stream=true`)
       eventSource.addEventListener('data', (event) => {
         console.log(event.data)
       })
@@ -60,17 +53,14 @@ export default class SpeculosHttpTransport extends Transport {
    */
   button = async (but: string): Promise<void> => {
     const action = { action: 'press-and-release' }
-    log('speculos-button', 'press-and-release', but)
-    await fetch(`${this.opts.baseURL}/button/${but}`, { method: 'POST', body: JSON.stringify(action) })
+    await fetch(`${this.baseURL}/button/${but}`, { method: 'POST', body: JSON.stringify(action) })
   }
 
   async exchange(apdu: Buffer): Promise<any> {
     const hex = apdu.toString('hex')
-    log('apdu', '=> ' + hex)
-    const response = await fetch(`${this.opts.baseURL}/apdu`, { method: 'POST', body: JSON.stringify({ data: hex }) })
+    const response = await fetch(`${this.baseURL}/apdu`, { method: 'POST', body: JSON.stringify({ data: hex }) })
     // response is {"data": "hex value of response"}
     const data = (await response.json()).data
-    log('apdu', '<= ' + data)
     return Buffer.from(data, 'hex')
   }
 

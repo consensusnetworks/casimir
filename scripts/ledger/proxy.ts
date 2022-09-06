@@ -9,10 +9,10 @@ app.use(cors())
 app.use(
   '/',
   createProxyMiddleware({
-    target: 'http://localhost:5000',
+    target: 'http://127.0.0.1:5000',
     changeOrigin: true
   })
 )
 
 app.listen(5001)
-console.log('Ledger proxy listening at', 'http://localhost:5001')
+console.log('Ledger proxy listening at', 'http://127.0.0.1:5001')

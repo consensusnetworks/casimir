@@ -10,7 +10,7 @@
 #
 
 # Get args
-while getopts a: flag
+while getopts :a: flag
 do
     case "${flag}" in
         a) app=${OPTARG};;

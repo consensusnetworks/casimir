@@ -1,18 +1,21 @@
 #!/bin/bash
 
-# Todo:
-# - Emulator
-#   - Add emulator:ledger --app="ethereum|solana|bitcoin" support in dev
-#   - Set env var and handle in web example
-#   - Configure for ethereum localnet
-
-echo "npm_config_mock is set to '$npm_config_mock'"
+# Get args
+while getopts :m:l: flag
+do
+    case "${flag}" in
+        m) mock=${OPTARG};;
+        l) ledger=${OPTARG};;
+    esac
+done
 
 # Configure and expose variables
 source scripts/aws/configure
 export PUBLIC_STAGE=${STAGE}
 
-if [ ${npm_config_mock+x} ]; then
+commands=("npm run dev --workspace @casimir/website")
+
+if [ -n "$mock" ]; then
 
     # Set comma-separated list of services to mock
     services="users"
@@ -24,7 +27,7 @@ if [ ${npm_config_mock+x} ]; then
     # Todo kill dynamically
     kill -9 $(lsof -ti:4000,4001,4002)
 
-    export PUBLIC_MOCK_ENABLED=$npm_config_mock
+    export PUBLIC_MOCK="$mock"
 
     for service in "${service_list[@]}"
     do
@@ -32,7 +35,22 @@ if [ ${npm_config_mock+x} ]; then
         port=$(( port + 1 ))
         export PUBLIC_${SERVICE}_PORT=$port
     done
-    scripts/local/mock -d infrastructure/cdk -s $services & npm run dev --workspace @casimir/website
-else
-    npm run dev --workspace @casimir/website
+
+    commands+=("scripts/local/mock -d infrastructure/cdk -s $services")
+
 fi
+
+if [ -n "$ledger" ]; then
+
+    export PUBLIC_LEDGER="$ledger"
+
+    npx kill-port 5001
+    ledger_command="(sleep 2 && npx esno scripts/ledger/proxy.ts) & scripts/ledger/emulate"
+    if [ "$ledger" != "true" ]; then
+        ledger_command+="-a $ledger"
+    fi
+    commands+=("$ledger_command")
+
+fi
+
+npx concurrently "${commands[@]}"

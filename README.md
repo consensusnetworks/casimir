@@ -70,6 +70,14 @@ You can get up and running without configuration. You can also mock local backen
 
     > 🚩 You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
 
+3. Emulate a Ledger hardware wallet with [Speculos](#speculos). The default application is ethereum, and we also currently have support for the bitcoin and solana applications.
+
+    ```zsh
+    npm run dev --ledger # or specify --ledger=ethereum, --ledger=bitcoin, or --ledger=solana
+    ```
+
+    > 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
+
 ### Hardhat
 
 Solidity contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/solidity/hardhat.config.ts](contracts/solidity/hardhat.config.ts) file.
@@ -117,30 +125,6 @@ Solidity contract development is serviced through [Hardhat](https://hardhat.io/)
     ```
 
     > 🚩 Note, this is required if you change the Hardhat configuration.
-
-### Speculos
-
-We use [Speculos](https://speculos.dev/) to emulate applications on the Ledger Nano S hardware wallet. The default app is ethereum – we also currently support bitcoin and solana, with additional priority protocols coming soon (such as cosmos and iotex).
-
-1. Emulate ethereum app on ledger.
-
-    ```zsh
-    npm run emulate:ledger # or more explicitly, --app=ethereum
-    ```
-
-2. Emulate solana app on ledger.
-
-    ```zsh
-    npm run emulate:ledger --app=solana
-    ```
-
-3. Emulate bitcoin app on ledger.
-
-    ```zsh
-    npm run emulate:ledger --app=bitcoin
-    ```
-
-> 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
 
 ### Environment
 
