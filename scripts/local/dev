@@ -44,7 +44,6 @@ if [ -n "$speculos" ]; then
 
     npx kill-port 5001
 
-    export PUBLIC_SPECULOS="$speculos"
     export PUBLIC_SPECULOS_PORT="5001"
     export PUBLIC_SPECULOS_APP="ethereum"
 
