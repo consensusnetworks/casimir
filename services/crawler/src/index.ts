@@ -9,7 +9,7 @@ import { IStreamBlocksResponse } from 'iotex-antenna/lib/rpc-method/types'
 import {
   AthenaClient,
   AthenaClientConfig,
-  GetNamedQueryCommand, GetQueryExecutionCommand,
+  GetQueryExecutionCommand,
   StartQueryExecutionCommand
 } from '@aws-sdk/client-athena'
 

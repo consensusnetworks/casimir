@@ -24,7 +24,7 @@
             "type": "integer",
             "description": "The block height of the event"
         },
-        "date": {
+        "created_at": {
             "type": "string",
             "description": "The date (MM-DD-YYYY) of the event"
         },

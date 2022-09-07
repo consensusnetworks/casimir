@@ -149,7 +149,7 @@ export class IotexService {
       chain: Chain.Iotex,
       network: this.chainId === 1 ? IotexNetworkType.Mainnet : IotexNetworkType.Testnet,
       provider: 'casimir',
-      date: new Date(obj.block.timestamp.seconds * 1000).toISOString().split('T')[0],
+      created_at: new Date(obj.block.timestamp.seconds * 1000).toISOString().split('T')[0],
       type: '',
       address: obj.block.producerAddress,
       height: obj.block.height,
