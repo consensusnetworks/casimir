@@ -13,7 +13,7 @@
     "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "deploy:templates": "scripts/pinpoint/deploy -d content/email/templates",
-    "dev": "scripts/local/dev -m \"$npm_config_mock\" -l \"$npm_config_ledger\"",
+    "dev": "scripts/local/dev -m \"$npm_config_mock\" -s \"$npm_config_speculos\"",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:push": "scripts/actions/test -w push",

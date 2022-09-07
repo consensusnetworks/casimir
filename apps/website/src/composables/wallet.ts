@@ -85,14 +85,12 @@ export default function useWallet() {
         await sendIoPayTransaction(toAddress.value, amount.value)
       } else if (selectedProvider.value === 'Ledger') {
 
-        // @ccali11 You will need to send localnet money to the test account first!
-        // Will initialize localnet with money in this account next PR
-
+        // npm run dev:ethereum in another process
         // const ledgerEth = await getLedgerEthSigner()
-        // Create - { to: '', ... }
+        // Create - { to: ... }
         // Serialize - ethers.utils.serializeTransaction
         // Sign - ledgerEth.signTransaction
-        // Send - (new ethers.providers.JsonRpcProvider("local-hardhat-rpc-url")).sendTransaction
+        // Send - (new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545")).sendTransaction
 
       } else {
         throw new Error('Provider selected not yet supported')

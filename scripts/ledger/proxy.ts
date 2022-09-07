@@ -4,7 +4,7 @@ import express from 'express'
 import cors from 'cors'
 import { createProxyMiddleware } from 'http-proxy-middleware'
 
-const port = process.env.PUBLIC_LEDGER_PORT || 5001
+const port = process.env.PUBLIC_SPECULOS_PORT || 5001
 
 const app = express()
 app.use(express.json())

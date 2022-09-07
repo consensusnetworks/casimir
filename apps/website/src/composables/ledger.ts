@@ -12,8 +12,8 @@ export default function useLedger() {
     }
 
     async function _getLedgerTransport() {
-        if (import.meta.env.PUBLIC_LEDGER) {
-            return await SpeculosHttpTransport.open(`http://127.0.0.1:${import.meta.env.PUBLIC_LEDGER_PORT}`)
+        if (import.meta.env.PUBLIC_SPECULOS) {
+            return await SpeculosHttpTransport.open(`http://127.0.0.1:${import.meta.env.PUBLIC_SPECULOS_PORT}`)
         } else {
             return await TransportWebHID.create()
         }

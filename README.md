@@ -73,7 +73,7 @@ You can get up and running without configuration. You can also mock local backen
 3. Emulate a Ledger hardware wallet with [Speculos](#speculos). The default application is ethereum, and we also currently have support for the bitcoin and solana applications.
 
     ```zsh
-    npm run dev --ledger # or specify --ledger=ethereum, --ledger=bitcoin, or --ledger=solana
+    npm run dev --speculos # or specify --speculos=ethereum, --speculos=bitcoin, or --speculos=solana
     ```
 
     > 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.

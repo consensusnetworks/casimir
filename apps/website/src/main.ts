@@ -8,7 +8,7 @@ import routes from '~pages'
 
 console.log('Creating app...', import.meta.env)
 console.log('Local mocking is', import.meta.env.PUBLIC_MOCK ? 'enabled' : 'disabled')
-console.log('Ledger emulator is', import.meta.env.PUBLIC_LEDGER ? 'enabled' : 'disabled')
+console.log('Ledger emulator is', import.meta.env.PUBLIC_SPECULOS ? 'enabled' : 'disabled')
 
 const app = createApp(App)
 const router = createRouter({

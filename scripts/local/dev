@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Get args
-while getopts :m:l: flag
+while getopts :m:s: flag
 do
     case "${flag}" in
         m) mock=${OPTARG};;
-        l) ledger=${OPTARG};;
+        s) speculos=${OPTARG};;
     esac
 done
 
@@ -40,20 +40,20 @@ if [ -n "$mock" ]; then
 
 fi
 
-if [ -n "$ledger" ]; then
+if [ -n "$speculos" ]; then
 
     npx kill-port 5001
 
-    export PUBLIC_LEDGER="$ledger"
-    export PUBLIC_LEDGER_PORT="5001"
-    export PUBLIC_LEDGER_APP="ethereum"
+    export PUBLIC_SPECULOS="$speculos"
+    export PUBLIC_SPECULOS_PORT="5001"
+    export PUBLIC_SPECULOS_APP="ethereum"
 
-    ledger_command="(sleep 3 && npx esno scripts/ledger/proxy.ts) & scripts/ledger/emulate"
-    if [ "$ledger" != "true" ]; then
-        ledger_command+="-a $ledger"
-        export PUBLIC_LEDGER_APP="$ledger"
+    speculos_command="(sleep 3 && npx esno scripts/ledger/proxy.ts) & scripts/ledger/emulate"
+    if [ "$speculos" != "true" ]; then
+        speculos_command+="-a $speculos"
+        export PUBLIC_SPECULOS_APP="$speculos"
     fi
-    commands+=("$ledger_command")
+    commands+=("$speculos_command")
 
 fi
 
