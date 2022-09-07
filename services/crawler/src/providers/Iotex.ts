@@ -161,7 +161,6 @@ export class IotexService {
       auto_stake: false,
       // payload: {}
     }
-
     switch (obj.type) {
       case 'grantReward':
         event.type = IotexActionType.grantReward
