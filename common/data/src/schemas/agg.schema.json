@@ -13,7 +13,7 @@
             "description": "The address of the aggregate"
         },
         "first_staked_at": {
-            "type": "date",
+            "type": "string",
             "description": "The first date (MM-DD-YYYY) that a wallet staked"
         },
         "total_staked_amount": {
