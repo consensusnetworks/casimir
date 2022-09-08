@@ -1,5 +1,5 @@
 
-import { S3Client, S3ClientConfig, } from '@aws-sdk/client-s3'
+import {GetObjectCommand, S3Client, S3ClientConfig,} from '@aws-sdk/client-s3'
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
 import { IotexService, newIotexService } from './providers/Iotex'
 import EventEmitter from 'events'
@@ -145,15 +145,25 @@ class Crawler {
         throw new Error('InvalidQueryExecutionId: query execution id is undefined')
     }
 
-    const queryCmd = new GetQueryExecutionCommand({
-        QueryExecutionId: res.QueryExecutionId
-    })
+    if (s3 === null) s3 = await newS3Client()
 
-    const query = await this.athenaClient.send(queryCmd)
+   const getQueryRes = await s3.send(new GetObjectCommand({
+        Bucket: 'cms-lds-agg',
+        Key: `cms_hcf_aggregates/${res.QueryExecutionId}.csv`
+   }))
 
-    if (query.$metadata.httpStatusCode !== 200) {
-      throw new Error('FailedQuery: unable to query Athena')
+    if (getQueryRes.$metadata.httpStatusCode !== 200) {
+        throw new Error('FailedQuery: unable to query Athena')
     }
+
+    const rawCsv = await getQueryRes.Body?.toString()
+
+    if (rawCsv === undefined) {
+        throw new Error('InvalidCSV: csv is undefined')
+    }
+
+    // const rows = rawCsv.split('\n')
+    // const last = rows[rows.length - 1].split(',')
   }
 
   async stop(): Promise<void> {

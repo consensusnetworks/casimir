@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib'
 import { Template } from 'aws-cdk-lib/assertions'
 import { EtlStack } from '../lib/etl/etl-stack'
+import { eventSchema, aggSchema } from '@casimir/data'
 
 test('ETL stack created', () => {
 
@@ -12,9 +13,28 @@ test('ETL stack created', () => {
   const etlStack = new EtlStack(app, `${project}EtlStack${stage}`, { env: defaultEnv, project, stage })
 
   const etlTemplate = Template.fromStack(etlStack)
-  console.log(etlTemplate)
+
+  const resource = etlTemplate.findResources('AWS::Glue::Table')
+
+  const eventTable = Object.keys(resource).filter(key => key.includes('EventTable'))
+  const eventColumns = resource[eventTable[0]].Properties.TableInput.StorageDescriptor.Columns
+
+  for (const column of eventColumns) {
+    const { Name: name } = column
+    const columnName = Object.keys(eventSchema.properties).filter(key => key === name)[0]
+    expect(columnName).toEqual(name)
+  }
+
+  const aggTable = Object.keys(resource).filter(key => key.includes('AggTable'))[0]
+  const aggColumns = resource[aggTable].Properties.TableInput.StorageDescriptor.Columns
+
+  for (const column of aggColumns) {
+    const { Name: name } = column
+    const columnName = Object.keys(aggSchema.properties).filter(key => key === name)[0]
+    expect(columnName).toEqual(name)
+  }
+
   Object.keys(etlTemplate.findOutputs('*')).forEach(output => {
-    console.log(output)
     expect(output).toBeDefined()
   })
 })

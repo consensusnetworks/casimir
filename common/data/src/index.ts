@@ -17,7 +17,10 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
     // 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIGINT' | 'TIMESTAMP' | 'JSON' | 'DATE' 
     const typeKey = property.type.toUpperCase() as keyof glue.Schema
 
-    const type = name.endsWith('_at') ? glue.Schema.DATE : glue.Schema[typeKey]
+    let type: glue.Type = glue.Schema[typeKey]
+
+    if (name.endsWith('_at')) type = glue.Schema.DATE
+    if (name === 'candidate_list') type = glue.Schema.array(glue.Schema.STRING)
 
     const comment = property.description
     return { name, type, comment }
