@@ -7,6 +7,7 @@ test('init crawler', async () => {
     chain: Chain.Iotex,
     verbose: true
   })
+  await supercrawler.retrieveLastBlock()
   expect(supercrawler.service).not.toBe(null)
 })
 

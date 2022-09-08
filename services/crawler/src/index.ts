@@ -14,7 +14,7 @@ import {
 } from '@aws-sdk/client-athena'
 
 const defaultEventBucket = 'casimir-etl-event-bucket-dev'
-const queryOutputLocation = 's3://cms-lds-agg/cms_hcf_aggregates/'
+const queryOutputLocation = 's3://cms-lds-agg/cms_hcf_aggregates'
 
 const EE = new EventEmitter()
 
@@ -142,28 +142,78 @@ class Crawler {
     }
 
     if (res.QueryExecutionId === undefined) {
-        throw new Error('InvalidQueryExecutionId: query execution id is undefined')
+      throw new Error('InvalidQueryExecutionId: query execution id is undefined')
     }
 
     if (s3 === null) s3 = await newS3Client()
 
-   const getQueryRes = await s3.send(new GetObjectCommand({
+    const getCmd = new GetQueryExecutionCommand({
+      QueryExecutionId: res.QueryExecutionId,
+    })
+
+    const getRes = await this.athenaClient.send(getCmd)
+
+    if (getRes.$metadata.httpStatusCode !== 200) {
+      throw new Error('FailedQuery: unable to query Athena')
+    }
+
+    if (getRes.QueryExecution === undefined) {
+      throw new Error('InvalidQueryExecution: query execution is undefined')
+    }
+
+    let retry = 0
+    let backoff  = 1000
+
+    const queryState = async (): Promise<void> => {
+      const getStateCmd = new GetQueryExecutionCommand({
+        QueryExecutionId: res.QueryExecutionId,
+      })
+
+      if (this.athenaClient === null) throw new Error('NullAthenaClient: athena client is not initialized')
+
+      const getStateRes = await this.athenaClient.send(getStateCmd)
+      if (getStateRes.$metadata.httpStatusCode !== 200) throw new Error('FailedQuery: unable to query Athena')
+      if (getStateRes.QueryExecution === undefined)  throw new Error('InvalidQueryExecution: query execution is undefined')
+      if (getStateRes.QueryExecution.Status === undefined) throw new Error('InvalidQueryExecutionStatus: query execution status is undefined')
+
+      if (getStateRes.QueryExecution.Status.State === 'QUEUED' || getStateRes.QueryExecution.Status.State === 'RUNNING') {
+        setTimeout(() => {
+          queryState()
+          retry++
+          backoff = backoff + 500
+        }, backoff)
+      }
+      if (getStateRes.QueryExecution.Status.State === 'FAILED') throw new Error('QueryFailed: query failed')
+      if (getStateRes.QueryExecution.Status.State === 'SUCCEEDED') return
+    }
+
+    const getResultFromS3 = async (): Promise<string> => {
+      if (s3 === null) throw new Error('NullS3Client: s3 client is not initialized')
+      const {$metadata, Body} = await s3.send(new GetObjectCommand({
         Bucket: 'cms-lds-agg',
-        Key: `cms_hcf_aggregates/${res.QueryExecutionId}.csv`
-   }))
+        Key: 'cms_hcf_aggregates/3d116aad-523e-4763-bdbc-8198dafd5b35.csv'
+      }))
 
-    if (getQueryRes.$metadata.httpStatusCode !== 200) {
-        throw new Error('FailedQuery: unable to query Athena')
+      if ($metadata.httpStatusCode !== 200) throw new Error('FailedQuery: unable retrieve result from S3')
+      if (Body === undefined) throw new Error('InvalidQueryResult: query result is undefined')
+
+      let chunk = ''
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      for await (const data of Body) {
+        chunk += data.toString()
+      }
+      return chunk
     }
 
-    const rawCsv = await getQueryRes.Body?.toString()
+    await queryState()
 
-    if (rawCsv === undefined) {
-        throw new Error('InvalidCSV: csv is undefined')
-    }
+    const raw = await getResultFromS3()
+    const columns = raw.split('\n')[0].split(',').map(c => c.trim().replace(/"/g, ''))
 
-    // const rows = rawCsv.split('\n')
-    // const last = rows[rows.length - 1].split(',')
+    const rows = raw.split('\n').slice(1).map(r => r.split(',').map(c => c.trim().replace(/"/g, '')))
+    const last = rows[rows.length - 1][columns.indexOf('height')]
   }
 
   async stop(): Promise<void> {
@@ -231,6 +281,16 @@ async function newS3Client (opt?: S3ClientConfig): Promise<S3Client> {
   const client = new S3Client(opt)
   return client
 }
+
+async function testme() {
+    const crawler = new Crawler({
+        chain: Chain.Iotex,
+        verbose: true
+    })
+    await crawler.retrieveLastBlock()
+}
+
+testme()
 
 export async function crawler (config: CrawlerConfig): Promise<Crawler> {
   const c = new Crawler({
