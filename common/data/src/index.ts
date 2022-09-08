@@ -43,4 +43,5 @@ export type EventTableColumn = {
 
 // export type EventTableColumn = {
 //   [key in keyof typeof eventSchema.properties]: // what goes here?
-// export { eventSchema, aggSchema }
+
+export { eventSchema, aggSchema }
