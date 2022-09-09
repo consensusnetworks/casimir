@@ -17,10 +17,34 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
     // 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIGINT' | 'TIMESTAMP' | 'JSON' | 'DATE' 
     const typeKey = property.type.toUpperCase() as keyof glue.Schema
 
-    const type = glue.Schema[typeKey]
+    let type: glue.Type = glue.Schema[typeKey]
+
+    if (name.endsWith('_at')) type = glue.Schema.DATE
+    if (name === 'candidate_list') type = glue.Schema.array(glue.Schema.STRING)
+
     const comment = property.description
     return { name, type, comment }
   })
 }
+
+export type EventTableColumn = {
+  chain: string
+  network: string
+  provider: string
+  type: string
+  created_at: string
+  address: string
+  height: number
+  to_address: string
+  candidate: string
+  candidate_list: string[]
+  amount: number
+  duration: number
+  auto_stake: boolean
+  // payload: Record<string, unknown>
+}
+
+// export type EventTableColumn = {
+//   [key in keyof typeof eventSchema.properties]: // what goes here?
 
 export { eventSchema, aggSchema }

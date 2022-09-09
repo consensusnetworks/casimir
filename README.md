@@ -77,6 +77,17 @@ You can get up and running without configuration. You can also mock local backen
     ```
 
     > 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
+    
+4. The commands and flags above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
+
+    ```zsh
+    # @casimir/web
+    npm run dev # or
+    npm run dev:web
+
+    # @casimir/landing
+    npm run dev:landing
+    ```
 
 ### Hardhat
 
@@ -185,7 +196,7 @@ npm install -D some-dev-dependency
 Install a workspace dependency or dev dependency.
 
 ```zsh
-npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/website
+npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/web
 # or
 npm install -D some-dev-dependency --workspace @casimir/workspace-name
 ```
@@ -214,7 +225,8 @@ Code is organized into work directories (apps, services, infrastructure – and 
 ├── .github/ (workflows and issue templates)
 |   └── workflows/ (gh actions workflows)
 ├── apps/ (frontend apps)
-|   └── website/ (main web app)
+    |── landing/ (landing page app)
+|   └── web/ (main web app)
 ├── infrastructure/ (deployment resources)
 |   └── cdk/ (aws stacks)
 ├── common/ (shared code)

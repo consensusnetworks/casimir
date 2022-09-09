@@ -8,7 +8,7 @@ export interface DnsStackProps extends StackProps {
 }
 
 /**
- * Class representing the website stack.
+ * Class representing the dns stack.
  *
  * Shortest name:  {@link DnsStack}
  * Full name:      {@link (DnsStack:class)}
@@ -42,7 +42,7 @@ export class DnsStack extends Stack {
     
     const dnsRecords = {
         wildcard: '*',
-        website: 'www',
+        landing: 'www',
         users: 'users'
     }
 

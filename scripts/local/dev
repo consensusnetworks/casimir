@@ -1,27 +1,43 @@
 #!/bin/bash
-
-# Get args
-while getopts :m:s: flag
-do
-    case "${flag}" in
-        m) mock=${OPTARG};;
-        s) speculos=${OPTARG};;
-    esac
-done
+# Run an application dev server
+#
+# Example:
+#
+#    scripts/local/dev -a app-name -m whether-to-mock-app-services (i.e. -a web -m true)
+#
+# Further information:
+# See https://docs.aws.amazon.com/cdk/api/v2/
+#
 
 # Configure and expose variables
 source scripts/aws/configure
 export PUBLIC_STAGE=${STAGE}
 
-commands=("npm run dev --workspace @casimir/website")
+# Comma-separated list of app services to mock
+services_landing="users"
+services_web=""
+
+# Get args
+while getopts :a:m:s: flag
+do
+    case "${flag}" in
+        a) app=${OPTARG};;
+        m) mock=${OPTARG};;
+        s) speculos=${OPTARG};;
+    esac
+done
+
+if [ -z "$app" ]; then
+    app="web"
+    echo "app is not set, using default app $app"
+fi
+
+commands=("npm run dev --workspace @casimir/$app")
 
 if [ -n "$mock" ]; then
 
-    # Set comma-separated list of services to mock
-    services="users"
-
     # Loop over comma-separated string of services
-    IFS=',' read -r -a service_list <<< "$services"
+    IFS=',' read -r -a service_list <<< services_$app
     port=3999
 
     # Todo kill dynamically

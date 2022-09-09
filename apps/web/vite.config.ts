@@ -8,10 +8,10 @@ import inject from '@rollup/plugin-inject'
 
 const config: UserConfig = {
   plugins: [
-    vue({ include: [/\.vue$/, /\.md$/] }),
+    vue({ include: [/\.vue$/] }),
     pages({
       dirs: [{ dir: 'src/pages', baseRoute: '' }],
-      extensions: ['vue', 'md'],
+      extensions: ['vue'],
     }),
     inject({
       Buffer: ['buffer', 'Buffer']

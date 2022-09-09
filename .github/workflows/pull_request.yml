@@ -17,21 +17,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build common helpers
-        run: npm run build
-        working-directory: common/helpers
+      - name: Build helpers
+        run: npm run build --workspace @casimir/helpers
 
-      - name: Build website app
-        run: npm run build
-        working-directory: apps/website
+      - name: Build landing app
+        run: npm run build --workspace @casimir/landing
         env:
           PUBLIC_STAGE: ${{ env.STAGE }}
 
       - name: Build users service
-        run: npm run build
-        working-directory: services/users
+        run: npm run build --workspace @casimir/users
 
       - name: Test cdk stacks
-        run: |
-          npm run test
-        working-directory: infrastructure/cdk
+        run: npm run test --workspace @casimir/cdk
