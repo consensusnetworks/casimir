@@ -70,6 +70,17 @@ You can get up and running without configuration. You can also mock local backen
 
     > 🚩 You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
 
+3. The commands and flags above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
+
+    ```zsh
+    # @casimir/web
+    npm run dev # or
+    npm run dev:web
+
+    # @casimir/landing
+    npm run dev:landing
+    ```
+
 ### Hardhat
 
 EVM contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/evm/hardhat.config.ts](contracts/evm/hardhat.config.ts) file.

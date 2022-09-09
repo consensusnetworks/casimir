@@ -3,7 +3,7 @@
 #
 # Example:
 #
-#    scripts/local/mock -d ./path/to/cdk-directory -s string-of-services (i.e. -s users,analytics)
+#    scripts/local/mock -d ./path/to/cdk-directory -s <string-of-services (i.e. -s users,analytics)
 #
 # Further information:
 # See https://docs.aws.amazon.com/cdk/api/v2/
