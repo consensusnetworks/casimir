@@ -19,7 +19,7 @@ const queryOutputLocation = 's3://cms-lds-agg/cms_hcf_aggregates'
 const EE = new EventEmitter()
 
 let s3: S3Client | null = null
-const athena: AthenaClient | null = null
+let athena: AthenaClient | null = null
 
 export enum Chain {
   Iotex = 'iotex',
@@ -61,7 +61,6 @@ class Crawler {
     })
 
     if ($metadata.httpStatusCode !== 200) throw new Error('FailedUploadBlock: unable to upload block')
-    console.log(`Uploaded ${key}`)
   }
 
   async prepare (): Promise<void> {
@@ -88,36 +87,43 @@ class Crawler {
 
     if (s3 === null) s3 = await newS3Client()
 
+
     if (this.service instanceof IotexService) {
+
       const { chainMeta } = await this.service.getChainMetadata()
       const height = parseInt(chainMeta.height)
-      const trips = Math.ceil(height / 1000)
+      const blocksPerRequest = 1000
 
-      for (let i = 0; i < trips; i++) {
-        console.log(`Starting trip ${i + 1} of ${trips}`)
-        const { blkMetas: blocks } = await this.service.getBlocks(12000000 , 1000)
+      const lastBlock = await this.retrieveLastBlock()
+
+      const start = lastBlock === 0 ? 0 : lastBlock + 1
+      const trips = Math.ceil(height / blocksPerRequest)
+
+      for (let i = start; i < trips; i++) {
+        const { blkMetas: blocks } = await this.service.getBlocks(i, blocksPerRequest)
+
         if (blocks.length === 0) continue
-
 
         for await (const block of blocks) {
           let events: EventTableColumn[] = []
-          const actions =  await this.service.getBlockActions(block.height, block.numActions)
+          const actions = await this.service.getBlockActions(block.height, block.numActions)
 
           if (actions.length === 0 || actions[0].action.core === undefined) continue
-
             for await (const action of actions) {
               const core = action.action.core
-
               if (core === undefined) continue
+
               const type = Object.keys(core).filter(k => k !== undefined)[Object.keys(core).length - 2]
 
               const event = this.service.convertToGlueSchema({ type, block, action})
               events.push(event)
             }
-          const ndjson = events.map(a => JSON.stringify(a)).join('\n')
-          const key = `${block.hash}-events.json`
-          await this.upload(key, ndjson)
-          events = []
+
+            const ndjson = events.map(a => JSON.stringify(a)).join('\n')
+            events.forEach(e => console.log(e.height +  ' ' + e.address + ' ' + e.type))
+            const key = `${block.hash}-events.json`
+            await this.upload(key, ndjson)
+            events = []
         }
       }
       return
@@ -125,11 +131,11 @@ class Crawler {
     throw new Error('not implemented yet')
   }
 
-  async retrieveLastBlock(): Promise<void> {
+  async retrieveLastBlock(): Promise<number> {
     if (this.athenaClient === null) this.athenaClient = await newAthenaClient()
 
     const execCmd = new StartQueryExecutionCommand({
-      QueryString: 'SELECT * FROM "casimir_etl_database_dev"."casimir_etl_event_table_dev" LIMIT 1',
+      QueryString: 'SELECT * FROM "casimir_etl_database_dev"."casimir_etl_event_table_dev" ORDER BY height DESC LIMIT 1',
       WorkGroup: 'primary',
       ResultConfiguration: {
         OutputLocation: queryOutputLocation,
@@ -189,9 +195,10 @@ class Crawler {
 
     const getResultFromS3 = async (): Promise<string> => {
       if (s3 === null) throw new Error('NullS3Client: s3 client is not initialized')
+
       const {$metadata, Body} = await s3.send(new GetObjectCommand({
         Bucket: 'cms-lds-agg',
-        Key: 'cms_hcf_aggregates/3d116aad-523e-4763-bdbc-8198dafd5b35.csv'
+        Key: `cms_hcf_aggregates/${res.QueryExecutionId}.csv`
       }))
 
       if ($metadata.httpStatusCode !== 200) throw new Error('FailedQuery: unable retrieve result from S3')
@@ -208,12 +215,14 @@ class Crawler {
     }
 
     await queryState()
+    await new Promise(resolve => setTimeout(resolve, 2000))
 
     const raw = await getResultFromS3()
-    const columns = raw.split('\n')[0].split(',').map(c => c.trim().replace(/"/g, ''))
 
-    const rows = raw.split('\n').slice(1).map(r => r.split(',').map(c => c.trim().replace(/"/g, '')))
-    const last = rows[rows.length - 1][columns.indexOf('height')]
+    const index = raw.split('\n')[0].split(',').map(c => c.trim().replace(/"/g, '')).indexOf('height')
+    const last = raw.split('\n')[1].split(',')
+
+    return parseInt(last[index].trim().replace(/"/g, ''))
   }
 
   async stop(): Promise<void> {
@@ -257,11 +266,17 @@ async function newAthenaClient(opt?: AthenaClientConfig): Promise<AthenaClient> 
 
   if (opt.credentials === undefined) {
     opt = {
-      credentials: await defaultProvider()
+      credentials: defaultProvider()
     }
   }
 
+  if (athena === null) {
+    athena = new AthenaClient(opt)
+    return athena
+  }
   const client = new AthenaClient(opt)
+  athena = client
+
   return client
 }
 
@@ -274,20 +289,27 @@ async function newS3Client (opt?: S3ClientConfig): Promise<S3Client> {
 
   if (opt.credentials === undefined) {
     opt = {
-      credentials: await defaultProvider()
+      credentials: defaultProvider()
     }
   }
 
+  if (s3 === null) {
+    s3 = new S3Client(opt)
+    return s3
+  }
+
   const client = new S3Client(opt)
+  s3 = client
+
   return client
 }
 
 async function testme() {
-    const crawler = new Crawler({
+    const superc = await crawler({
         chain: Chain.Iotex,
         verbose: true
     })
-    await crawler.retrieveLastBlock()
+    await superc.start()
 }
 
 testme()
