@@ -185,7 +185,7 @@ npm install -D some-dev-dependency
 Install a workspace dependency or dev dependency.
 
 ```zsh
-npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/website
+npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/web
 # or
 npm install -D some-dev-dependency --workspace @casimir/workspace-name
 ```
@@ -214,7 +214,8 @@ Code is organized into work directories (apps, services, infrastructure – and 
 ├── .github/ (workflows and issue templates)
 |   └── workflows/ (gh actions workflows)
 ├── apps/ (frontend apps)
-|   └── website/ (main web app)
+    |── landing/ (landing page app)
+|   └── web/ (main web app)
 ├── infrastructure/ (deployment resources)
 |   └── cdk/ (aws stacks)
 ├── common/ (shared code)
