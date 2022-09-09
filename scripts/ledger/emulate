@@ -36,6 +36,9 @@ if [ -z "$app" ]; then
     echo "app is not set, using default app $app"
 fi
 
+# Fetch submodules for speculos and ledger apps
+git submodule update --recursive --remote
+
 resource_path=scripts/ledger/resources
 
 if [ ! -f "$resource_path/speculos/apps/$app.elf" ]; then
