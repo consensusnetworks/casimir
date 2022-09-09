@@ -5,8 +5,7 @@ import { EtlStack } from '../lib/etl/etl-stack'
 import { UsersStack } from '../lib/users/users-stack'
 import { WebsiteStack } from '../lib/website/website-stack'
 
-// Todo actually test something
-test('Website Created', () => {
+test('All stacks created', () => {
 
   const defaultEnv = { account: '257202027633', region: 'us-east-2' }
   const project = 'Casimir'

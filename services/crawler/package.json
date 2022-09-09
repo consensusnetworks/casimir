@@ -12,18 +12,18 @@
     },
     "author": "hawyar",
     "dependencies": {
+        "@aws-sdk/client-athena": "^3.163.0",
         "@aws-sdk/client-s3": "^3.120.0",
         "@aws-sdk/lib-storage": "^3.121.0",
         "@iotexproject/iotex-address-ts": "^1.0.4",
         "arg": "^5.0.2",
-        "esbuild": "^0.14.54",
-        "iotex-antenna": "^0.31.3",
-        "signal-exit": "^3.0.7"
+        "iotex-antenna": "^0.31.3"
     },
     "devDependencies": {
         "@types/jest": "^28.1.6",
         "@types/json-bigint": "^1.0.1",
         "@types/signal-exit": "^3.0.1",
+        "esbuild": "^0.15.6",
         "jest": "^28.1.3",
         "ts-jest": "^28.0.7",
         "ts-node": "^10.9.1",
