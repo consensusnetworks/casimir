@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 
-import { ArrowLeftIcon , DownloadIcon } from '@heroicons/vue/outline'
+// import { ArrowLeftIcon , DownloadIcon } from '@heroicons/vue/outline'
 </script>
 
 <template>

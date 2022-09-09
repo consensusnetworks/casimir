@@ -8,7 +8,7 @@ import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment'
 import { Distribution, OriginAccessIdentity } from 'aws-cdk-lib/aws-cloudfront'
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins'
 
-export interface WebsiteStackProps extends StackProps {
+export interface LandingStackProps extends StackProps {
   project: string;
   stage: string;
   domain: string;
@@ -17,29 +17,29 @@ export interface WebsiteStackProps extends StackProps {
 }
 
 /**
- * Class representing the website stack.
+ * Class representing the landing stack.
  *
- * Shortest name:  {@link WebsiteStack}
- * Full name:      {@link (WebsiteStack:class)}
+ * Shortest name:  {@link LandingStack}
+ * Full name:      {@link (LandingStack:class)}
  */
-export class WebsiteStack extends Stack {
+export class LandingStack extends Stack {
 
-  public readonly service: string = 'Website'
-  public readonly assetPath: string = '../../apps/website/dist'
+  public readonly service: string = 'Landing'
+  public readonly assetPath: string = '../../apps/landing/dist'
 
   /**
-   * WebsiteStack class constructor.
+   * LandingStack class constructor.
    * 
-   * Shortest name:  {@link (WebsiteStack:constructor)}
-   * Full name:      {@link (WebsiteStack:constructor)}
+   * Shortest name:  {@link (LandingStack:constructor)}
+   * Full name:      {@link (LandingStack:constructor)}
    */
-  constructor(scope: Construct, id: string, props: WebsiteStackProps) {
+  constructor(scope: Construct, id: string, props: LandingStackProps) {
 
     /**
-     * WebsiteStack class constructor super method.
+     * LandingStack class constructor super method.
      * 
-     * Shortest name:  {@link (WebsiteStack:constructor:super)}
-     * Full name:      {@link (WebsiteStack:constructor:super)}
+     * Shortest name:  {@link (LandingStack:constructor:super)}
+     * Full name:      {@link (LandingStack:constructor:super)}
      */
     super(scope, id, props)
 
@@ -51,7 +51,7 @@ export class WebsiteStack extends Stack {
     const certificate = new certmgr.DnsValidatedCertificate(this, `${project}${this.service}Cert${stage}`, {
       domainName: serviceDomain,
       subjectAlternativeNames: [
-        [dnsRecords.website, serviceDomain].join('.')
+        [dnsRecords.landing, serviceDomain].join('.')
       ],
       hostedZone,
       region: 'us-east-1'
@@ -88,7 +88,7 @@ export class WebsiteStack extends Stack {
       defaultBehavior: {
         origin: new S3Origin(bucket, { originAccessIdentity }),
       },
-      domainNames: [serviceDomain, [dnsRecords.website, serviceDomain].join('.')],
+      domainNames: [serviceDomain, [dnsRecords.landing, serviceDomain].join('.')],
       certificate
     })
 
@@ -100,7 +100,7 @@ export class WebsiteStack extends Stack {
     })
 
     new route53.ARecord(this, `${project}${this.service}DnsARecordWww${stage}`, {
-      recordName: [dnsRecords.website, serviceDomain].join('.'),
+      recordName: [dnsRecords.landing, serviceDomain].join('.'),
       zone: hostedZone as route53.IHostedZone,
       target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
       ttl: Duration.minutes(1),

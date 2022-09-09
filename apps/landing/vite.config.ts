@@ -4,37 +4,16 @@ import { fileURLToPath } from 'url'
 import * as path from 'path'
 import pages from 'vite-plugin-pages'
 
-import NodeModulesPolyfills from '@esbuild-plugins/node-modules-polyfill'
-import NodeGlobalsPolyfillPlugin from '@esbuild-plugins/node-globals-polyfill'
-
 const config: UserConfig = {
   plugins: [
-    vue({ include: [/\.vue$/, /\.md$/] }),
+    vue({ include: [/\.vue$/] }),
     pages({
       dirs: [{ dir: 'src/pages', baseRoute: '' }],
-      extensions: ['vue', 'md'],
+      extensions: ['vue'],
     }),
   ],
   define: {
-    'window.global': [],
-  },
-  optimizeDeps: {
-    include: ['iotex-antenna'],
-    esbuildOptions: {
-      plugins: [
-        NodeModulesPolyfills(),
-        NodeGlobalsPolyfillPlugin({
-          process: true,
-          buffer: true,
-          define: true,
-        }),
-      ],
-    },
-  },
-  build: {
-    commonjsOptions: {
-      include: [/iotex-antenna/, /node_modules/]
-    }
+    'window.global': 'globalThis',
   },
   resolve: {
     alias: {
