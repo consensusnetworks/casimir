@@ -13,10 +13,6 @@
 source scripts/aws/configure
 export PUBLIC_STAGE=${STAGE}
 
-# Comma-separated list of app services to mock
-services_landing="users"
-services_web=""
-
 # Get args
 while getopts :a:m:s: flag
 do
@@ -27,9 +23,12 @@ do
     esac
 done
 
-if [ -z "$app" ]; then
+if [ "$app" == "landing" ]; then
+    services="users"
+else 
+    # Default app
     app="web"
-    echo "app is not set, using default app $app"
+    services=""
 fi
 
 commands=("npm run dev --workspace @casimir/$app")
@@ -37,11 +36,8 @@ commands=("npm run dev --workspace @casimir/$app")
 if [ -n "$mock" ]; then
 
     # Loop over comma-separated string of services
-    IFS=',' read -r -a service_list <<< services_$app
+    IFS=',' read -r -a service_list <<< "$services"
     port=3999
-
-    # Todo kill dynamically
-    npx kill-port 4000,4001,4002
 
     export PUBLIC_MOCK="$mock"
 
@@ -58,7 +54,10 @@ fi
 
 if [ -n "$speculos" ]; then
 
-    npx kill-port 5001
+    # Close existing process if necessary
+    if [ -n $(lsof -ti tcp:5001) ]; then
+        kill -9 $(lsof -ti tcp:5001)
+    fi
 
     export PUBLIC_SPECULOS_PORT="5001"
     export PUBLIC_SPECULOS_APP="ethereum"
@@ -72,4 +71,9 @@ if [ -n "$speculos" ]; then
 
 fi
 
-npx concurrently "${commands[@]}"
+for command in "${commands[@]}"
+do
+    $command &
+done
+
+wait && pkill -P $$
