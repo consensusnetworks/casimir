@@ -1,0 +1,12 @@
+[submodule "scripts/ledger/resources/app-bitcoin"]
+	path = scripts/ledger/resources/app-bitcoin
+	url = https://github.com/LedgerHQ/app-bitcoin-new.git
+[submodule "scripts/ledger/resources/app-ethereum"]
+	path = scripts/ledger/resources/app-ethereum
+	url = https://github.com/LedgerHQ/app-ethereum.git
+[submodule "scripts/ledger/resources/app-solana"]
+	path = scripts/ledger/resources/app-solana
+	url = https://github.com/LedgerHQ/app-solana.git
+[submodule "scripts/ledger/resources/speculos"]
+	path = scripts/ledger/resources/speculos
+	url = https://github.com/LedgerHQ/speculos.git

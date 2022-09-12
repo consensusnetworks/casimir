@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
 import useIoPay from '@/composables/iopay'
+import useLedger from '@/composables/ledger'
 import useEthers from '@/composables/ethers'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
@@ -21,6 +22,7 @@ const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
 
 export default function useWallet() {
   const { getIoPayAccounts, sendIoPayTransaction } = useIoPay()
+  const { bip32Path, getLedgerEthSigner } = useLedger()
   const ethereum: any = window.ethereum
   const availableProviders = ref<BrowserProviders>(
     getBrowserProviders(ethereum)
@@ -50,6 +52,11 @@ export default function useWallet() {
         const accounts = await getIoPayAccounts()
         const { address } = accounts[0]
         setSelectedAccount(address)
+      } else if (provider === 'Ledger') {
+        const ledgerEth = await getLedgerEthSigner()
+        const { address } = await ledgerEth.getAddress(bip32Path)
+        console.log(address)
+        setSelectedAccount(address)
       } else {
         throw new Error('No provider selected')
       }
@@ -76,6 +83,15 @@ export default function useWallet() {
         })
       } else if (selectedProvider.value === 'IoPay') {
         await sendIoPayTransaction(toAddress.value, amount.value)
+      } else if (selectedProvider.value === 'Ledger') {
+
+        // npm run dev:ethereum in another process
+        // const ledgerEth = await getLedgerEthSigner()
+        // Create - { to: ... }
+        // Serialize - ethers.utils.serializeTransaction
+        // Sign - ledgerEth.signTransaction
+        // Send - (new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545")).sendTransaction
+
       } else {
         throw new Error('Provider selected not yet supported')
       }
