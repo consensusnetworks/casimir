@@ -19,13 +19,11 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
 
     let type: glue.Type = glue.Schema[typeKey]
 
-    if (name.endsWith('_at')) type = glue.Schema.DATE
+    if (name.endsWith('at')) type = glue.Schema.DATE
 
     if (name === 'candidate_list') type = glue.Schema.array(glue.Schema.STRING)
 
-    if (name === 'amount') type = glue.Schema.BIG_INT
-
-    if (name === 'total_staked_amount') type = glue.Schema.BIG_INT
+    if (name.endsWith('amount')) type = glue.Schema.BIG_INT
 
     const comment = property.description
     return { name, type, comment }
