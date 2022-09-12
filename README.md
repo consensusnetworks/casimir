@@ -29,11 +29,14 @@ Make sure your development environment has these prerequisites.
 
 1. [Node.js (v16.x)](https://nodejs.org/en/download/) – we use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
 
-2. [Docker Desktop (v4.x)](https://docs.docker.com/desktop/install/mac-install/) - make sure your Docker runs on startup.
+2. [Docker (v4.x)](https://docs.docker.com/engine/install/) - make sure your Docker runs on startup.
 
 3. [AWS CLI (v2.x)](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
 
 4. [SAM CLI (v1.x)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) - tool for mocking backend services locally.
+
+> 🚩 You also need to make sure to have at least one SSH authentication key on your GitHub account (for the git cloning of submodules in various scripts). See [Adding a new SSH key to your GitHub account
+](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
 ### Scripts and Dependencies
 
