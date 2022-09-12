@@ -135,7 +135,7 @@ class Crawler {
     if (this.athenaClient === null) this.athenaClient = await newAthenaClient()
 
     const execCmd = new StartQueryExecutionCommand({
-      QueryString: 'SELECT * FROM "casimir_etl_database_dev"."casimir_etl_event_table_dev" ORDER BY height DESC LIMIT 1',
+      QueryString: 'SELECT height FROM "casimir_etl_database_dev"."casimir_etl_event_table_dev" ORDER BY height DESC LIMIT 1',
       WorkGroup: 'primary',
       ResultConfiguration: {
         OutputLocation: queryOutputLocation,
@@ -143,6 +143,7 @@ class Crawler {
     })
 
     const res = await this.athenaClient.send(execCmd)
+
     if (res.$metadata.httpStatusCode !== 200) {
       throw new Error('FailedQuery: unable to query Athena')
     }
@@ -178,6 +179,7 @@ class Crawler {
       if (this.athenaClient === null) throw new Error('NullAthenaClient: athena client is not initialized')
 
       const getStateRes = await this.athenaClient.send(getStateCmd)
+
       if (getStateRes.$metadata.httpStatusCode !== 200) throw new Error('FailedQuery: unable to query Athena')
       if (getStateRes.QueryExecution === undefined)  throw new Error('InvalidQueryExecution: query execution is undefined')
       if (getStateRes.QueryExecution.Status === undefined) throw new Error('InvalidQueryExecutionStatus: query execution status is undefined')
@@ -215,14 +217,15 @@ class Crawler {
     }
 
     await queryState()
+
+    // wait for athena to write to s3
     await new Promise(resolve => setTimeout(resolve, 2000))
 
     const raw = await getResultFromS3()
 
-    const index = raw.split('\n')[0].split(',').map(c => c.trim().replace(/"/g, '')).indexOf('height')
-    const last = raw.split('\n')[1].split(',')
+    const height = raw.split('\n').filter(l => l !== '')[1].replace(/"/g, '')
 
-    return parseInt(last[index].trim().replace(/"/g, ''))
+    return parseInt(height)
   }
 
   async stop(): Promise<void> {
@@ -303,16 +306,6 @@ async function newS3Client (opt?: S3ClientConfig): Promise<S3Client> {
 
   return client
 }
-
-async function testme() {
-    const superc = await crawler({
-        chain: Chain.Iotex,
-        verbose: true
-    })
-    await superc.start()
-}
-
-testme()
 
 export async function crawler (config: CrawlerConfig): Promise<Crawler> {
   const c = new Crawler({

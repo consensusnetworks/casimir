@@ -45,7 +45,7 @@
             "description": "The list of candidates in a stake action"
         },
         "amount": {
-            "type": "integer",
+            "type": "string",
             "description": "The amount of the currency in the event"
         },
         "duration":{
