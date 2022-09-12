@@ -62,11 +62,12 @@ if [ -n "$speculos" ]; then
     export PUBLIC_SPECULOS_PORT="5001"
     export PUBLIC_SPECULOS_APP="ethereum"
 
-    speculos_command="(sleep 3 && npx esno scripts/ledger/proxy.ts) & scripts/ledger/emulate"
+    speculos_command="scripts/ledger/emulate"
     if [ "$speculos" != "true" ]; then
         speculos_command+="-a $speculos"
         export PUBLIC_SPECULOS_APP="$speculos"
     fi
+    commands+=("sleep 3 && npx esno scripts/ledger/proxy.ts")
     commands+=("$speculos_command")
 
 fi
