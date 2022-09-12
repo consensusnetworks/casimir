@@ -2,7 +2,7 @@
 import 'source-map-support/register'
 import * as cdk from 'aws-cdk-lib'
 import { pascalCase } from '@casimir/helpers'
-import { WebsiteStack } from '../lib/website/website-stack'
+import { LandingStack } from '../lib/landing/landing-stack'
 import { UsersStack } from '../lib/users/users-stack'
 import { DnsStack } from '../lib/dns/dns-stack'
 import { EtlStack } from '../lib/etl/etl-stack'
@@ -20,5 +20,5 @@ if (!process.env.PROJECT || !process.env.STAGE) {
     const { domain, dnsRecords, hostedZone } = dnsStack
     new EtlStack(app, `${project}EtlStack${stage}`, { env: defaultEnv, project, stage })
     new UsersStack(app, `${project}UsersStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
-    new WebsiteStack(app, `${project}WebsiteStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
+    new LandingStack(app, `${project}LandingStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
 }

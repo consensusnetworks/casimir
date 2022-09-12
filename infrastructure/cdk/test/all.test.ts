@@ -3,10 +3,9 @@ import { Template } from 'aws-cdk-lib/assertions'
 import { DnsStack } from '../lib/dns/dns-stack'
 import { EtlStack } from '../lib/etl/etl-stack'
 import { UsersStack } from '../lib/users/users-stack'
-import { WebsiteStack } from '../lib/website/website-stack'
+import { LandingStack } from '../lib/landing/landing-stack'
 
-// Todo actually test something
-test('Website Created', () => {
+test('All stacks created', () => {
 
   const defaultEnv = { account: '257202027633', region: 'us-east-2' }
   const project = 'Casimir'
@@ -16,7 +15,7 @@ test('Website Created', () => {
   const dnsStack = new DnsStack(app, `${project}DnsStack${stage}`, { env: defaultEnv, project, stage })
   const { domain, dnsRecords, hostedZone } = dnsStack
   const etlStack = new EtlStack(app, `${project}EtlStack${stage}`, { env: defaultEnv, project, stage })
-  const websiteStack = new WebsiteStack(app, `${project}WebsiteStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
+  const landingStack = new LandingStack(app, `${project}LandingStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
   const usersStack = new UsersStack(app, `${project}UsersStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
 
   const etlTemplate = Template.fromStack(etlStack)
@@ -26,9 +25,9 @@ test('Website Created', () => {
     expect(output).toBeDefined()
   })
 
-  const websiteTemplate = Template.fromStack(websiteStack)
-  console.log(websiteTemplate)
-  Object.keys(websiteTemplate.findOutputs('*')).forEach(output => {
+  const landingTemplate = Template.fromStack(landingStack)
+  console.log(landingTemplate)
+  Object.keys(landingTemplate.findOutputs('*')).forEach(output => {
     console.log(output)
     expect(output).toBeDefined()
   })

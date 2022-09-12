@@ -13,7 +13,9 @@
     "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "deploy:templates": "scripts/pinpoint/deploy -d content/email/templates",
-    "dev": "scripts/local/dev",
+    "dev": "scripts/local/dev -a \"web\" -m \"$npm_config_mock\"",
+    "dev:ethereum": "scripts/ethereum/dev -f \"$npm_config_fork\"",
+    "dev:landing": "scripts/local/dev -a \"landing\" -m \"$npm_config_mock\"",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:push": "scripts/actions/test -w push",
@@ -22,8 +24,7 @@
     "test:contracts": "npm run test:contracts --workspace @casimir/evm",
     "task:accounts": "npm run task:accounts --workspace @casimir/evm",
     "task:compile": "npm run task:compile --workspace @casimir/evm",
-    "task:clean": "npm run task:clean --workspace @casimir/evm",
-    "dev:ethereum": "scripts/ethereum/dev -f $npm_config_fork"
+    "task:clean": "npm run task:clean --workspace @casimir/evm"
   },
   "repository": {
     "type": "git",

@@ -70,6 +70,17 @@ You can get up and running without configuration. You can also mock local backen
 
     > 🚩 You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
 
+3. The commands and flags above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
+
+    ```zsh
+    # @casimir/web
+    npm run dev # or
+    npm run dev:web
+
+    # @casimir/landing
+    npm run dev:landing
+    ```
+
 ### Hardhat
 
 EVM contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/evm/hardhat.config.ts](contracts/evm/hardhat.config.ts) file.
@@ -174,7 +185,7 @@ npm install -D some-dev-dependency
 Install a workspace dependency or dev dependency.
 
 ```zsh
-npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/website
+npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/web
 # or
 npm install -D some-dev-dependency --workspace @casimir/workspace-name
 ```
@@ -203,7 +214,8 @@ Code is organized into work directories (apps, services, infrastructure – and 
 ├── .github/ (workflows and issue templates)
 |   └── workflows/ (gh actions workflows)
 ├── apps/ (frontend apps)
-|   └── website/ (main web app)
+    |── landing/ (landing page app)
+|   └── web/ (main web app)
 ├── infrastructure/ (deployment resources)
 |   └── cdk/ (aws stacks)
 ├── common/ (shared code)
