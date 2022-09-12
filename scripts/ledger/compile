@@ -29,7 +29,7 @@ echo "🔨 Building $app app for ledger"
 cd $resource_path/app-$app
 docker pull ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder
 docker tag ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder ledger-app-builder
-docker run --rm -v "$(realpath .):/app" ledger-app-builder sh -c "make clean && make && exit"
+docker run --rm -v "$pwd:/app" ledger-app-builder sh -c "make clean && make && exit"
 
 # Copy app to speculos apps folder
 echo "📲 Copying $app app to speculos apps folder"

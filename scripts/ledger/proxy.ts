@@ -19,4 +19,7 @@ app.use(
 )
 
 app.listen(port)
-console.log('🌐 Ledger proxy listening at', `http://127.0.0.1:${port}`)
+
+setTimeout(() => {
+  console.log('🌐 Ledger proxy listening at', `http://127.0.0.1:${port}`)
+}, 5000)

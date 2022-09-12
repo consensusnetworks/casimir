@@ -67,8 +67,8 @@ if [ -n "$speculos" ]; then
         speculos_command+="-a $speculos"
         export PUBLIC_SPECULOS_APP="$speculos"
     fi
-    commands+=("sleep 3 && npx esno scripts/ledger/proxy.ts")
     commands+=("$speculos_command")
+    commands+=("npx esno scripts/ledger/proxy.ts")
 
 fi
 
