@@ -13,7 +13,6 @@ python-dotenv = "^0.20.0"
 s3fs = "^2022.7.1"
 matplotlib = "^3.5.2"
 pandas = "^1.4.3"
-diagrams = "^0.21.1"
 
 [tool.poetry.dev-dependencies]
 jupyter = "^1.0.0"
