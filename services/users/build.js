@@ -14,14 +14,23 @@ esbuild.build({
     platform: 'node',
     target: 'esnext',
     watch: shouldWatch ? {
-        onRebuild(error, result) {
+        onRebuild(error, buildResult) {
             if (error) console.error('Watch build failed', error)
             else {
-                console.log('Watch build succeeded', result)
+                console.log('Watch build succeeded', buildResult)
                 spawn('npm', ['run', 'cdk:synth', '--workspace', '@casimir/cdk'], { stdio: 'inherit' })
             }
+            handleBuildProcessClose(buildResult)
         }
     } : false
 }).then(buildResult => {
     console.log('Build succeeded', buildResult)
+    handleBuildProcessClose(buildResult)
 })
+
+function handleBuildProcessClose(buildProcess) {
+    process.on('SIGINT', () => {
+        console.log('...Stopping esbuild watch process')
+        buildProcess.stop()
+    })
+}

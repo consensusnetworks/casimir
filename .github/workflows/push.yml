@@ -38,8 +38,7 @@ jobs:
         run: npm ci
 
       - name: Build helpers
-        run: npm run build
-        working-directory: common/helpers
+        run: npm run build --workspace @casimir/helpers
 
       - name: Build landing app
         run: npm run build --workspace @casimir/landing

@@ -29,9 +29,13 @@ Make sure your development environment has these prerequisites.
 
 1. [Node.js (v16.x)](https://nodejs.org/en/download/) – we use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
 
-2. [AWS CLI (v2.x)](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
+2. [Docker (v4.x)](https://docs.docker.com/engine/install/) - make sure your Docker runs on startup.
 
-3. [SAM CLI (v1.x)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) - tool for mocking backend services locally.
+3. [AWS CLI (v2.x)](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
+
+4. [SAM CLI (v1.x)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) - tool for mocking backend services locally.
+
+> 🚩 You also need to make sure to have at least one SSH authentication key on your GitHub account (for the git cloning of submodules in various scripts). See [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
 ### Scripts and Dependencies
 
@@ -70,7 +74,15 @@ You can get up and running without configuration. You can also mock local backen
 
     > 🚩 You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
 
-3. The commands and flags above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
+3. Emulate a Ledger hardware wallet with [Speculos](#speculos). The default application is ethereum, and we also currently have support for the bitcoin and solana applications.
+
+    ```zsh
+    npm run dev --speculos # or specify --speculos=ethereum, --speculos=bitcoin, or --speculos=solana
+    ```
+
+    > 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
+    
+4. The commands and flags above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
 
     ```zsh
     # @casimir/web
@@ -109,14 +121,17 @@ EVM contract development is serviced through [Hardhat](https://hardhat.io/). The
     npm run task:accounts
     ```
 
-*Todo finish sample flow (show usage of compiled contract ABI in app)*
-6. Use a contract in a Casimir app...
+6. Use a contract in a Casimir app.
 
-7. Clean [contracts/evm/build/artifacts](contracts/evm/build/artifacts) and [contracts/evm/build/cache](contracts/evm/build/cache)).
+    ```typescript
+    // Todo add Casimir Typescript usage
+    ```
+
+7. Clean [contracts/evm/build/artifacts](contracts/evm/build/artifacts) and [contracts/evm/build/cache](contracts/evm/build/cache)).    
 
     ```zsh
     npm run task:clean
-    ``` 
+    ```
 
     > 🚩 Note, this is required if you change the Hardhat configuration.
 

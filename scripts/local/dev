@@ -13,34 +13,33 @@
 source scripts/aws/configure
 export PUBLIC_STAGE=${STAGE}
 
-# Comma-separated list of app services to mock
-services_landing="users"
-services_web=""
-
 # Get args
-while getopts :a:m: flag
+while getopts :a:m:s: flag
 do
     case "${flag}" in
         a) app=${OPTARG};;
         m) mock=${OPTARG};;
+        s) speculos=${OPTARG};;
     esac
 done
 
-if [ -z "$app" ]; then
+if [ "$app" == "landing" ]; then
+    services="users"
+else 
+    # Default app
     app="web"
-    echo "app is not set, using default app $app"
+    services=""
 fi
+
+commands=("npm run dev --workspace @casimir/$app")
 
 if [ -n "$mock" ]; then
 
     # Loop over comma-separated string of services
-    IFS=',' read -r -a service_list <<< services_$app
+    IFS=',' read -r -a service_list <<< "$services"
     port=3999
 
-    # Todo kill dynamically
-    kill -9 $(lsof -ti:4000,4001,4002)
-
-    export PUBLIC_MOCK_ENABLED=$npm_config_mock
+    export PUBLIC_MOCK="$mock"
 
     for service in "${service_list[@]}"
     do
@@ -48,7 +47,34 @@ if [ -n "$mock" ]; then
         port=$(( port + 1 ))
         export PUBLIC_${SERVICE}_PORT=$port
     done
-    scripts/local/mock -d infrastructure/cdk -s $services & npm run dev --workspace @casimir/$app
-else
-    npm run dev --workspace @casimir/$app
+
+    commands+=("scripts/local/mock -d infrastructure/cdk -s $services")
+
 fi
+
+if [ -n "$speculos" ]; then
+
+    # Close existing process if necessary
+    if [ -n $(lsof -ti tcp:5001) ]; then
+        kill -9 $(lsof -ti tcp:5001)
+    fi
+
+    export PUBLIC_SPECULOS_PORT="5001"
+    export PUBLIC_SPECULOS_APP="ethereum"
+
+    speculos_command="scripts/ledger/emulate"
+    if [ "$speculos" != "true" ]; then
+        speculos_command+="-a $speculos"
+        export PUBLIC_SPECULOS_APP="$speculos"
+    fi
+    commands+=("$speculos_command")
+    commands+=("npx esno scripts/ledger/proxy.ts")
+
+fi
+
+for command in "${commands[@]}"
+do
+    $command &
+done
+
+wait && pkill -P $$

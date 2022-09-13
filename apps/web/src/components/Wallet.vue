@@ -11,7 +11,10 @@
         </p>
       </div>
       <div class="coinbase-div">
-        <button class="coinbase-btn" @click="connectWallet('CoinbaseWallet')">
+        <button
+          class="coinbase-btn"
+          @click="connectWallet('CoinbaseWallet')"
+        >
           {{ coinbaseButtonText }}
         </button>
         <p>
@@ -20,7 +23,10 @@
         </p>
       </div>
       <div class="ioPay-div">
-        <button class="iopay-btn" @click="connectWallet('IoPay')">
+        <button
+          class="iopay-btn"
+          @click="connectWallet('IoPay')"
+        >
           {{ ioPayButtonText }}
         </button>
         <p>
@@ -28,15 +34,31 @@
           <span> {{ ioPayAccountsResult }} </span>
         </p>
       </div>
+      <button 
+        class="ledger-btn" 
+        @click="connectWallet('Ledger')"
+      >
+        Connect Ledger
+      </button>
     </div>
     <div class="form-container">
       <form @submit.prevent="sendTransaction(selectedProvider)">
         <label for="address">Address</label>
-        <input v-model="toAddress" type="text" placeholder="To Address" />
-        <br />
+        <input
+          v-model="toAddress"
+          type="text"
+          placeholder="To Address"
+        >
+        <br>
         <label for="amount">Amount</label>
-        <input v-model="amount" type="text" placeholder="Amount Ether" />
-        <button type="submit">Send Transaction</button>
+        <input
+          v-model="amount"
+          type="text"
+          placeholder="Amount Ether"
+        >
+        <button type="submit">
+          Send Transaction
+        </button>
       </form>
     </div>
   </div>
@@ -125,6 +147,10 @@ button {
 
 .iopay-btn {
   background-color: rgb(0, 218, 180);
+}
+
+.ledger-btn {
+  background-color: rgb(0, 0, 0);
 }
 
 .connect-wallet-container {

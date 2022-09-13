@@ -3,9 +3,8 @@ import { UserConfig } from 'vite'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
 import pages from 'vite-plugin-pages'
-
-import NodeModulesPolyfills from '@esbuild-plugins/node-modules-polyfill'
 import NodeGlobalsPolyfillPlugin from '@esbuild-plugins/node-globals-polyfill'
+import inject from '@rollup/plugin-inject'
 
 const config: UserConfig = {
   plugins: [
@@ -14,20 +13,21 @@ const config: UserConfig = {
       dirs: [{ dir: 'src/pages', baseRoute: '' }],
       extensions: ['vue'],
     }),
+    inject({
+      Buffer: ['buffer', 'Buffer']
+    }) as Plugin // https://github.com/rollup/plugins/issues/1243
   ],
   define: {
-    'window.global': 'globalThis'
+    'global': 'globalThis'
   },
   optimizeDeps: {
     include: ['iotex-antenna'],
     esbuildOptions: {
       plugins: [
-        NodeModulesPolyfills(),
         NodeGlobalsPolyfillPlugin({
           process: true,
-          buffer: true,
-          define: true,
-        }),
+          buffer: true
+        })
       ],
     },
   },
@@ -39,7 +39,7 @@ const config: UserConfig = {
   resolve: {
     alias: {
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src'),
-      './runtimeConfig': './runtimeConfig.browser',
+      './runtimeConfig': './runtimeConfig.browser'
     },
     extensions: [
       '.js',
