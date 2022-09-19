@@ -47,10 +47,10 @@ export default function useWalletConnect() {
     const tx = {
       from: walletConnectAddress.value,
       to: toAddress,
-      gas: '0.00001', // TODO: Make this dynamic
+      gas: '21001', // TODO: Currently set at minimum acceptable; make this dynamic.
       gasPrice: '',
       value: amount,
-      data: 'data',
+      // data: 'data', // TODO: Determine when this is needed.
       nonce: 'nonce',
     }
     try {
