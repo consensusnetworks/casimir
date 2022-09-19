@@ -13,7 +13,7 @@ import {
 } from '@/utils/walletConnect'
 import WalletConnect from '@walletconnect/client'
 
-const connector: Ref<WalletConnect> = ref({}) // TODO: Fix this type error
+const connector: Ref<WalletConnect | undefined> = ref() // TODO: Fix this type error
 const walletConnectAddress: Ref<string> = ref('')
 
 const amount = ref<string>('0.0000001')
@@ -50,10 +50,7 @@ export default function useWallet() {
       setSelectedProvider(provider)
       selectedAccount.value = 'Not Active'
       if (provider === 'WalletConnect') {
-        const walletConnectOptions = enableWalletConnect(
-          connector,
-          walletConnectAddress
-        )
+        const walletConnectOptions = enableWalletConnect()
         connector.value = walletConnectOptions.connector
         walletConnectAddress.value = walletConnectOptions.walletConnectAddress
       } else if (ethersProviderList.includes(provider)) {
@@ -85,7 +82,7 @@ export default function useWallet() {
     selectedAccount.value = ''
     selectedProvider.value = ''
     if (provider === 'WalletConnect') {
-      await disableWalletConnect(connector.value)
+      await disableWalletConnect(connector.value as WalletConnect)
     }
   }
 
@@ -93,7 +90,7 @@ export default function useWallet() {
     try {
       if (provider === 'WalletConnect') {
         await sendWalletConnectTx(
-          connector.value,
+          connector.value as WalletConnect,
           walletConnectAddress.value,
           amount.value,
           toAddress.value
