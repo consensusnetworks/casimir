@@ -11,10 +11,7 @@
         </p>
       </div>
       <div class="coinbase-div">
-        <button
-          class="coinbase-btn"
-          @click="connectWallet('CoinbaseWallet')"
-        >
+        <button class="coinbase-btn" @click="connectWallet('CoinbaseWallet')">
           {{ coinbaseButtonText }}
         </button>
         <p>
@@ -23,10 +20,7 @@
         </p>
       </div>
       <div class="ioPay-div">
-        <button
-          class="iopay-btn"
-          @click="connectWallet('IoPay')"
-        >
+        <button class="iopay-btn" @click="connectWallet('IoPay')">
           {{ ioPayButtonText }}
         </button>
         <p>
@@ -34,31 +28,38 @@
           <span> {{ ioPayAccountsResult }} </span>
         </p>
       </div>
-      <button 
-        class="ledger-btn" 
-        @click="connectWallet('Ledger')"
-      >
+      <button class="ledger-btn" @click="connectWallet('Ledger')">
         Connect Ledger
       </button>
+      <div>
+        <button
+          class="wallet-connect-btn"
+          @click="connectWallet('WalletConnect')"
+        >
+          WalletConnect
+        </button>
+        <button
+          class="wallet-connect-btn"
+          @click="sendTransaction('WalletConnect')"
+        >
+          Send WalletConnect Transaction
+        </button>
+        <button
+          class="wallet-connect-btn"
+          @click="disconnectWallet('WalletConnect')"
+        >
+          Disable WalletConnect
+        </button>
+      </div>
     </div>
     <div class="form-container">
       <form @submit.prevent="sendTransaction(selectedProvider)">
         <label for="address">Address</label>
-        <input
-          v-model="toAddress"
-          type="text"
-          placeholder="To Address"
-        >
-        <br>
+        <input v-model="toAddress" type="text" placeholder="To Address" />
+        <br />
         <label for="amount">Amount</label>
-        <input
-          v-model="amount"
-          type="text"
-          placeholder="Amount Ether"
-        >
-        <button type="submit">
-          Send Transaction
-        </button>
+        <input v-model="amount" type="text" placeholder="Amount Ether" />
+        <button type="submit">Send Transaction</button>
       </form>
     </div>
   </div>
@@ -81,6 +82,7 @@ const {
   toAddress,
   amount,
   connectWallet,
+  disconnectWallet,
   sendTransaction,
 } = useWallet()
 
@@ -189,5 +191,27 @@ form {
 input {
   width: 500px;
   padding: 1rem;
+}
+
+.wallet-connect-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  font-size: 16px;
+  height: 44px;
+  /* width: 50%; */
+  transition: all 0.15s ease-in-out 0s;
+  background-color: rgb(64, 153, 255);
+  border: none;
+  color: rgb(255, 255, 255);
+  box-shadow: rgb(50 50 93 / 11%) 0px 4px 6px 0px,
+    rgb(0 0 0 / 8%) 0px 1px 3px 0px, rgb(0 0 0 / 6%) 0px 0px 1px 0px inset;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 8px 12px;
+  cursor: pointer;
+  will-change: transform;
 }
 </style>

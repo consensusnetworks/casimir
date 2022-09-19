@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { Ref, ref } from 'vue'
 import { ethers } from 'ethers'
 import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
@@ -6,9 +6,20 @@ import useEthers from '@/composables/ethers'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
 import { ProviderString } from '@/types/ProviderString'
+import {
+  enableWalletConnect,
+  disableWalletConnect,
+  sendWalletConnectTx,
+} from '@/utils/walletConnect'
+import WalletConnect from '@walletconnect/client'
 
-const amount = ref<string>('')
-const toAddress = ref<string>('')
+const connector: Ref<WalletConnect> = ref({}) // TODO: Fix this type error
+const walletConnectAddress: Ref<string> = ref('')
+
+const amount = ref<string>('0.0000001')
+const toAddress = ref<string>('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266')
+// Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
+// Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 const { requestEthersAccount } = useEthers()
 
 const defaultProviders = {
@@ -17,8 +28,6 @@ const defaultProviders = {
 }
 
 const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
-// Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
-// Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
   const { getIoPayAccounts, sendIoPayTransaction } = useIoPay()
@@ -40,7 +49,14 @@ export default function useWallet() {
     try {
       setSelectedProvider(provider)
       selectedAccount.value = 'Not Active'
-      if (ethersProviderList.includes(provider)) {
+      if (provider === 'WalletConnect') {
+        const walletConnectOptions = enableWalletConnect(
+          connector,
+          walletConnectAddress
+        )
+        connector.value = walletConnectOptions.connector
+        walletConnectAddress.value = walletConnectOptions.walletConnectAddress
+      } else if (ethersProviderList.includes(provider)) {
         const browserExtensionProvider =
           availableProviders.value[provider as keyof BrowserProviders]
         const accounts = await requestEthersAccount(
@@ -65,9 +81,24 @@ export default function useWallet() {
     }
   }
 
+  async function disconnectWallet(provider: ProviderString) {
+    selectedAccount.value = ''
+    selectedProvider.value = ''
+    if (provider === 'WalletConnect') {
+      await disableWalletConnect(connector.value)
+    }
+  }
+
   async function sendTransaction(provider: string) {
     try {
-      if (ethersProviderList.includes(provider)) {
+      if (provider === 'WalletConnect') {
+        await sendWalletConnectTx(
+          connector.value,
+          walletConnectAddress.value,
+          amount.value,
+          toAddress.value
+        )
+      } else if (ethersProviderList.includes(provider)) {
         const browserProvider =
           availableProviders.value[provider as keyof BrowserProviders]
         const web3Provider: ethers.providers.Web3Provider =
@@ -84,14 +115,12 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'IoPay') {
         await sendIoPayTransaction(toAddress.value, amount.value)
       } else if (selectedProvider.value === 'Ledger') {
-
         // npm run dev:ethereum in another process
         // const ledgerEth = await getLedgerEthSigner()
         // Create - { to: ... }
         // Serialize - ethers.utils.serializeTransaction
         // Sign - ledgerEth.signTransaction
         // Send - (new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545")).sendTransaction
-
       } else {
         throw new Error('Provider selected not yet supported')
       }
@@ -106,6 +135,7 @@ export default function useWallet() {
     toAddress,
     amount,
     connectWallet,
+    disconnectWallet,
     sendTransaction,
   }
 }
