@@ -2,6 +2,9 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 describe('Sample', function () {
+
+  // Todo refactor for PoolManager and stake test
+
   it('Should return the new greeting once it\'s changed', async function () {
     const Sample = await ethers.getContractFactory('Sample')
     const sample = await Sample.deploy('Hello, world!')

@@ -1,7 +1,7 @@
 {
     "name": "@casimir/evm",
     "scripts": {
-        "deploy:sample": "npx hardhat run deploy/sample.ts",
+        "deploy": "npx hardhat run deploy/index.ts",
         "test:contracts": "npx hardhat test",
         "task:accounts": "npx hardhat accounts",
         "task:compile": "npx hardhat compile",
