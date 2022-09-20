@@ -1,4 +1,5 @@
-import { crawler, Chain } from '../src/index'
+import { crawler } from '../src/index'
+import { Chain } from '../src/providers/Base'
 
 jest.setTimeout(20000)
 
@@ -13,13 +14,13 @@ jest.setTimeout(20000)
 //   expect(typeof lastBlock).toBe('number')
 // })
 
-test('init ethereum', async () => {
+test('init crawler for ethereum', async () => {
   const ethCrawler = await crawler({
     chain: Chain.Ethereum,
     verbose: true
   })
 
-  ethCrawler.start()
+  await ethCrawler.start()
   expect(ethCrawler.service).not.toBe(null)
 })
 
