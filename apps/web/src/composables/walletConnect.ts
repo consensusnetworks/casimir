@@ -44,7 +44,10 @@ export default function useWalletConnect() {
     return
   }
 
-  async function sendWalletConnectTx(amount: string, toAddress: string) {
+  async function sendWalletConnectTransaction(
+    amount: string,
+    toAddress: string
+  ) {
     const amountInWei = ethers.utils.parseEther(amount).toString()
 
     // TODO: Better understand and handle gasPrice and gasLimit
@@ -63,7 +66,7 @@ export default function useWalletConnect() {
       const result = await connector.value?.sendTransaction(tx)
       console.log('result :>> ', result)
     } catch (err) {
-      console.log('error in sendWalletConnectTx :>> ', err)
+      console.log('error in sendWalletConnectTransaction :>> ', err)
     }
   }
 
@@ -77,7 +80,7 @@ export default function useWalletConnect() {
 
   return {
     enableWalletConnect,
-    sendWalletConnectTx,
+    sendWalletConnectTransaction,
     disableWalletConnect,
     walletConnectAddress,
   }
