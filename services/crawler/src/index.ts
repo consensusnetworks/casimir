@@ -1,7 +1,6 @@
 
 import {GetObjectCommand, S3Client, S3ClientConfig,} from '@aws-sdk/client-s3'
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
-import { IotexService, newIotexService } from './providers/Iotex'
 import EventEmitter from 'events'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { EventTableColumn } from '@casimir/data'
@@ -13,6 +12,9 @@ import {
   StartQueryExecutionCommand
 } from '@aws-sdk/client-athena'
 
+import { IotexService, newIotexService } from './providers/Iotex'
+import {EthereumService, newEthereumService} from './providers/Ethereum'
+import { Chain } from './providers/Base'
 const defaultEventBucket = 'casimir-etl-event-bucket-dev'
 const queryOutputLocation = 's3://cms-lds-agg/cms_hcf_aggregates'
 
@@ -20,10 +22,6 @@ const EE = new EventEmitter()
 
 let s3: S3Client | null = null
 let athena: AthenaClient | null = null
-
-export enum Chain {
-  Iotex = 'iotex',
-}
 
 export interface CrawlerConfig {
   chain: Chain
@@ -33,7 +31,7 @@ export interface CrawlerConfig {
 
 class Crawler {
   config: CrawlerConfig
-  service: IotexService | null
+  service: IotexService | EthereumService | null
   EE: EventEmitter
   s3Client: S3Client | null
   athenaClient: AthenaClient | null
@@ -78,6 +76,19 @@ class Crawler {
       this.EE.emit('init')
       return
     }
+
+    if (this.config.chain === Chain.Ethereum) {
+      this.service = newEthereumService()
+
+      if (this.config.verbose) {
+        this.EE.on('init', () => {
+          console.log(`Initialized crawler for: ${this.config.chain}`)
+        })
+      }
+
+      this.EE.emit('init')
+      return
+    }
     throw new Error('UnknownChain: chain is not supported')
   }
   async start (): Promise<void> {
@@ -89,7 +100,6 @@ class Crawler {
 
 
     if (this.service instanceof IotexService) {
-
       const { chainMeta } = await this.service.getChainMetadata()
       const height = parseInt(chainMeta.height)
       const blocksPerRequest = 1000
@@ -126,6 +136,16 @@ class Crawler {
             events = []
         }
       }
+      return
+    }
+
+    if (this.service instanceof EthereumService) {
+        const height  = await this.service.currentBlock()
+        for (let i = 0; i < height; i++) {
+          const block = await this.service.client.getBlock(i)
+          // const key = `${block.hash}-events.json`
+          console.log(JSON.stringify(block, null, 2))
+        }
       return
     }
     throw new Error('not implemented yet')
@@ -237,24 +257,28 @@ class Crawler {
     throw new Error('not implemented yet')
   }
 
-  on(event: 'block', cb: (b: IStreamBlocksResponse) => void): void {
-    if (event !== 'block') throw new Error('InvalidEvent: event is not supported')
-
-    if (typeof cb !== 'function') throw new Error('InvalidCallback: callback is not a function')
-
+  on(event: EventStreamType, cb: (b: IStreamBlocksResponse) => void): void {
     if (this.service === null) throw new Error('NullService: service is not initialized')
 
-    if (this.service instanceof IotexService) {
-      this.service.readableBlockStream().then((s: any) => {
-        s.on('data', (b: IStreamBlocksResponse) => {
-          cb(b)
-        })
+    if (event == EventStreamType.IOTEX_BLOCK) {
+      if (this.service instanceof IotexService) {
+        this.service.readableBlockStream().then((s: any) => {
+          s.on('data', (b: IStreamBlocksResponse) => {
+            cb(b)
+          })
 
-        s.on('error', (e: Error) => {
-          throw e
+          s.on('error', (e: Error) => {
+            throw e
+          })
         })
-      })
-      return
+        return
+      }
+    }
+
+    if (event === EventStreamType.ETH_BLOCK) {
+        if (this.service instanceof EthereumService) {
+          // stream it
+        }
     }
     throw new Error('not implemented yet')
   }

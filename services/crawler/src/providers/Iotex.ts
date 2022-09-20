@@ -12,9 +12,7 @@ import {
 import { from } from '@iotexproject/iotex-address-ts'
 import { Opts } from 'iotex-antenna/lib/antenna'
 import { EventTableColumn } from '@casimir/data'
-import {Chain} from '../index'
-
-const IOTEX_CORE = 'http://localhost:14014'
+import { Chain } from './Base'
 
 export type IotexOptions = Opts & {
   provider: string,
@@ -43,7 +41,7 @@ export class IotexService {
   chainId: number
   client: Antenna
   constructor (opt: IotexOptions) {
-    this.provider = opt.provider || IOTEX_CORE
+    this.provider = opt.provider || 'http://localhost:14014'
     this.chainId = opt.chainId
     this.client = new Antenna(opt.provider, opt.chainId, {
       signer: opt.signer,
@@ -54,11 +52,6 @@ export class IotexService {
 
   async getChainMetadata (): Promise<IGetChainMetaResponse> {
     const meta = await this.client.iotx.getChainMeta({})
-    return meta
-  }
-
-  async getServerMetadata (): Promise<IGetServerMetaResponse> {
-    const meta = await this.client.iotx.getServerMeta({})
     return meta
   }
 

@@ -2,15 +2,25 @@ import { crawler, Chain } from '../src/index'
 
 jest.setTimeout(20000)
 
-test('get last block', async () => {
-  const supercrawler = await crawler({
-    chain: Chain.Iotex,
+// test('get last block', async () => {
+//   const supercrawler = await crawler({
+//     chain: Chain.Iotex,
+//     verbose: true
+//   })
+//
+//   expect(supercrawler.service).not.toBe(null)
+//   const lastBlock = await supercrawler.retrieveLastBlock()
+//   expect(typeof lastBlock).toBe('number')
+// })
+
+test('init ethereum', async () => {
+  const ethCrawler = await crawler({
+    chain: Chain.Ethereum,
     verbose: true
   })
 
-  expect(supercrawler.service).not.toBe(null)
-  const lastBlock = await supercrawler.retrieveLastBlock()
-  expect(typeof lastBlock).toBe('number')
+  ethCrawler.start()
+  expect(ethCrawler.service).not.toBe(null)
 })
 
 // test('stream', async () => {
