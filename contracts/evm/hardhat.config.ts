@@ -41,11 +41,15 @@ const config: HardhatUserConfig = {
 }
 
 // Start a local tunnel for using RPC with https
-const localSubdomain = `cn-hh-${os.hostname().toLowerCase()}`
+const localSubdomain = `cn-hh-${os.userInfo().username.toLowerCase()}`
 const localUrl = `https://${localSubdomain}.loca.lt`
 console.log('Your local tunnel is', localUrl)
 localtunnel({ port: 8545, subdomain: localSubdomain }).then((tunnel: localtunnel.Tunnel) => {
-  console.log(`Your https tunnel is ${ localUrl === tunnel.url ? 'now available' : 'not available'}`)
+  if (localUrl === tunnel.url) {
+    console.log('Your local tunnel is now available at', localUrl)
+  } else {
+    console.log('Your desired local tunnel url is not available')
+  }
   process.on('SIGINT', () => {
     tunnel.close()
     process.exit(0)
