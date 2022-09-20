@@ -15,8 +15,11 @@ const defaultProviders = {
 const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
 
 const { requestEthersAccount } = useEthers()
-const { enableWalletConnect, disableWalletConnect, sendWalletConnectTx } =
-  useWalletConnect()
+const {
+  enableWalletConnect,
+  disableWalletConnect,
+  sendWalletConnectTransaction,
+} = useWalletConnect()
 
 const amount = ref<string>('0.01')
 const toAddress = ref<string>('0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203')
@@ -82,7 +85,7 @@ export default function useWallet() {
   async function sendTransaction(provider: string) {
     try {
       if (provider === 'WalletConnect') {
-        await sendWalletConnectTx(amount.value, toAddress.value)
+        await sendWalletConnectTransaction(amount.value, toAddress.value)
       } else if (ethersProviderList.includes(provider)) {
         const browserProvider =
           availableProviders.value[provider as keyof BrowserProviders]
