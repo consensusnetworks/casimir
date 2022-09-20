@@ -1,6 +1,7 @@
 import WalletConnect from '@walletconnect/client'
 import QRCodeModal from '@walletconnect/qrcode-modal'
 import { ref, Ref } from 'vue'
+import { ethers } from 'ethers'
 
 export default function useWalletConnect() {
   const connector: Ref<WalletConnect | undefined> = ref()
@@ -44,17 +45,23 @@ export default function useWalletConnect() {
   }
 
   async function sendWalletConnectTx(amount: string, toAddress: string) {
+    const amountInWei = ethers.utils.parseEther(amount).toString()
+
+    // TODO: Better understand and handle gasPrice and gasLimit
+    const gasLimit = ethers.utils.hexlify(21000).toString()
+    const gasPrice = ethers.utils.hexlify(1000000000).toString()
     const tx = {
       from: walletConnectAddress.value,
       to: toAddress,
-      gas: '21001', // TODO: Currently set at minimum acceptable; make this dynamic.
-      gasPrice: '',
-      value: amount,
+      gas: gasLimit,
+      gasPrice: gasPrice,
+      value: amountInWei,
       // data: 'data', // TODO: Determine when this is needed.
-      nonce: 'nonce',
+      // nonce: 'nonce', // TODO: Determine when this is needed.
     }
     try {
-      await connector.value?.sendTransaction(tx)
+      const result = await connector.value?.sendTransaction(tx)
+      console.log('result :>> ', result)
     } catch (err) {
       console.log('error in sendWalletConnectTx :>> ', err)
     }

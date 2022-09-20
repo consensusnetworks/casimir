@@ -18,7 +18,7 @@ const { requestEthersAccount } = useEthers()
 const { enableWalletConnect, disableWalletConnect, sendWalletConnectTx } =
   useWalletConnect()
 
-const amount = ref<string>('0.0001')
+const amount = ref<string>('0.01')
 const toAddress = ref<string>('0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
