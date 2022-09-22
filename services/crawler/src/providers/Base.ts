@@ -1,7 +1,8 @@
 import { EventTableColumn } from '@casimir/data'
 import { EventEmitter } from 'events'
-import { AthenaClient } from '@aws-sdk/client-athena'
-import { S3Client } from '@aws-sdk/client-s3'
+import { ethers } from 'ethers'
+import Antenna from 'iotex-antenna'
+import {Block} from 'iotex-antenna/protogen/proto/types/blockchain_pb'
 
 export enum Chain {
 	Iotex = 'iotex',
@@ -10,16 +11,14 @@ export enum Chain {
 
 export interface BaseService {
 	chain: Chain
-	provider: any
-	athenaClient: AthenaClient
-	s3Client: S3Client
+	provider: ethers.providers.JsonRpcProvider | Antenna
 	eventEmitter: EventEmitter | null
 	getChainMetadata(): Promise<any>
-	getBlock(hash: string): Promise<any>
+	getBlock(num: number): Promise<any>
 	getTransaction(tx: string): Promise<any>
-	on<T>(event: T, cb: () => void): void
-	getCurrentBlockHeight(): Promise<number>
-	getLastProcessedBlockHeight(): Promise<number>
+	getCurrentBlock(): Promise<any>
+	getLastProcessedEvent(chain: Chain): Promise<EventTableColumn | null>
 	convertToGlueSchema(obj: Record<string,any>): EventTableColumn
-	save(key: string, data: string): void
+	on(event: string, cb: (block: any) => void): void
+	save(key: string, data: string): Promise<void>
 }

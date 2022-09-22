@@ -1,8 +1,10 @@
 import { S3Client, S3ClientConfig, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 import { AthenaClient, AthenaClientConfig } from '@aws-sdk/client-athena'
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
-import {queryOutputLocation} from '@casimir/crawler/src'
-import { StartQueryExecutionCommand, GetQueryExecutionCommand, StartQueryExecutionCommandInput }  from '@aws-sdk/client-athena'
+import { StartQueryExecutionCommand, GetQueryExecutionCommand }  from '@aws-sdk/client-athena'
+import { EventTableColumn } from '@casimir/data'
+import {Chain} from '@casimir/crawler/src/providers/Base'
+import {IotexNetworkType} from '@casimir/crawler/src/providers/Iotex'
 
 /**
  * Converts any string to PascalCase.
@@ -17,9 +19,17 @@ export function pascalCase(str: string): string {
   })
 }
 
+// these are defined to reuse the clients
 let athena: AthenaClient | null = null
 let s3: S3Client | null = null
 
+/**
+ * Creates a new Athena client
+ *
+ * @param opt - Athena client config
+ * @returns Athena client
+ *
+ */
 export async function newAthenaClient(opt?: AthenaClientConfig): Promise<AthenaClient> {
   if (opt?.region === undefined) {
     opt = {
@@ -38,6 +48,13 @@ export async function newAthenaClient(opt?: AthenaClientConfig): Promise<AthenaC
   return client
 }
 
+/**
+ * Creates a new S3 client
+ *
+ * @param opt - S3 client config
+ * @returns S3 client
+ *
+ */
 export async function newS3Client (opt?: S3ClientConfig): Promise<S3Client> {
   if (s3) {
     return s3
@@ -61,6 +78,14 @@ export async function newS3Client (opt?: S3ClientConfig): Promise<S3Client> {
   return client
 }
 
+/**
+ * Uploads data to S3
+ *
+ * @param input.bucket - Bucket destination
+ * @param input.key - Key destination
+ * @param input.data - Data to be uploaded
+ *
+ */
 export async function uploadToS3( input: { bucket: string, key: string,data: string }): Promise<void> {
   if (!s3) {
     s3 = await newS3Client()
@@ -74,6 +99,15 @@ export async function uploadToS3( input: { bucket: string, key: string,data: str
   if ($metadata.httpStatusCode !== 200) throw new Error('Error uploading to s3')
 }
 
+/**
+ * Get data from S3
+ *
+ * @param input.bucket - Bucket destination
+ * @param input.key - Key destination
+ * @param input.data - Data to be uploaded
+ * @return data - Data from S3
+ *
+ */
 export async function getFromS3(bucket: string, key: string): Promise<string> {
   if (!s3) {
     s3 = await newS3Client()
@@ -99,10 +133,17 @@ export async function getFromS3(bucket: string, key: string): Promise<string> {
   return chunk
 }
 
-
 let retry = 0
 let backoff = 300
 
+/**
+ * Poll for Athena query's result
+ *
+ * @param input.bucket - Bucket destination
+ * @param input.key - Key destination
+ * @param input.data - Data to be uploaded
+ *
+ */
 async function pollAthenaQueryOutput(queryId: string): Promise<void> {
   if (!athena) {
     athena = await newAthenaClient()
@@ -131,7 +172,13 @@ async function pollAthenaQueryOutput(queryId: string): Promise<void> {
   return
 }
 
-export async function queryAthena(query: string): Promise<string> {
+/**
+ * Runs a SQL query on Athena table
+ *
+ * @param query - SQL query to run (make sure the correct permissions are set)
+ * @return string - Query result
+ */
+export async function queryAthena(query: string): Promise<EventTableColumn[]> {
 
   if (!athena) {
     athena = await newAthenaClient()
@@ -139,10 +186,9 @@ export async function queryAthena(query: string): Promise<string> {
 
   const execCmd = new StartQueryExecutionCommand({
     QueryString: query,
-    // QueryString: `SELECT height FROM "casimir_etl_database_dev"."casimir_etl_event_table_dev" WHERE chain = '${chain}' ORDER BY height DESC LIMIT 1`,
     WorkGroup: 'primary',
     ResultConfiguration: {
-      OutputLocation: queryOutputLocation,
+      OutputLocation: 's3://cms-lds-agg/cms_hcf_aggregates/'
     }
   })
 
@@ -161,8 +207,32 @@ export async function queryAthena(query: string): Promise<string> {
   // wait for athena to finish writing to s3
   await new Promise(resolve => setTimeout(resolve, 2000))
 
-  const result = await getFromS3('cms-lds-agg', `cms_hcf_aggregates/${QueryExecutionId}.csv`)
+  const raw = await getFromS3('cms-lds-agg', `cms_hcf_aggregates/${QueryExecutionId}.csv`)
 
-  // const height = raw.split('\n').filter(l => l !== '')[1].replace(/"/g, '')
-  return result
+  const rows = raw.split('\n').filter(r => r !== '')
+
+  if (rows.length <= 1) {
+    throw new Error('InvalidQueryResult: query result is empty')
+  }
+
+  const header = rows.splice(0, 1)[0].split(',').map((h: string) => h.trim().replace(/"/g, ''))
+
+  const events: EventTableColumn[] = []
+
+  rows.forEach((curr, i) => {
+    const row = curr.split(',')
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const event: EventTableColumn = {}
+    row.forEach((r, i) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      event[header[i]] = r.trim().replace(/"/g, '')
+    })
+
+    if (event) {
+      events.push(event)
+    }
+  })
+  return events
 }

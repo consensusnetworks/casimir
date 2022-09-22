@@ -12,16 +12,14 @@ import {
 import { from } from '@iotexproject/iotex-address-ts'
 import { Opts } from 'iotex-antenna/lib/antenna'
 import { EventTableColumn } from '@casimir/data'
-import { Chain } from './Base'
-
-export type IotexOptions = Opts & {
-  provider: string,
-  chainId: 1 | 2
-}
+import {BaseService, Chain} from './Base'
+import EventEmitter from 'events'
+import {queryAthena} from '@casimir/helpers'
+import {ethers} from 'ethers'
 
 export enum IotexNetworkType {
-  Mainnet = 'mainnet',
-  Testnet = 'testnet'
+  Mainnet = '4689',
+  Testnet = '4690'
 }
 
 enum IotexActionType {
@@ -36,102 +34,58 @@ enum IotexActionType {
   stakeRestake = 'stake_restake',
 }
 
-export class IotexService {
-  provider: string
-  chainId: number
-  client: Antenna
+export type IotexOptions = Opts
+
+export class IotexService implements BaseService {
+  chain: Chain
+  // provider: Antenna
+  provider: ethers.providers.JsonRpcProvider
+  eventEmitter: EventEmitter | null = null
+
+  private readonly chainId: string
+  // todo: switch to ether and point to iotex rpc
   constructor (opt: IotexOptions) {
-    this.provider = opt.provider || 'http://localhost:14014'
-    this.chainId = opt.chainId
-    this.client = new Antenna(opt.provider, opt.chainId, {
-      signer: opt.signer,
-      timeout: opt.timeout,
-      apiToken: opt.apiToken
+    this.chain = Chain.Iotex
+    this.provider = new ethers.providers.JsonRpcProvider({
+        url: 'https://babel-api.mainnet.iotex.io',
     })
+    // this.provider = new Antenna('https://iotexrpc.com', parseInt(IotexNetworkType.Mainnet), {
+    //   signer: opt.signer,
+    //   timeout: opt.timeout,
+    //   apiToken: opt.apiToken
+    // })
+    this.eventEmitter = null
+    this.chainId = IotexNetworkType.Mainnet
   }
 
-  async getChainMetadata (): Promise<IGetChainMetaResponse> {
-    const meta = await this.client.iotx.getChainMeta({})
-    return meta
+  async getChainMetadata (): Promise<any> {
+    // return await this.provider.getNetwork()
   }
 
-  async getBlocks(start: number, count: number): Promise<IGetBlockMetasResponse> {
-    if (start < 0 || count < 0) {
-      throw new Error('start and count must be greater than 0')
+  async getBlock(num: number): Promise<any> {
+    return await this.provider.getBlock(num)
+  }
+
+  async getLastProcessedEvent(chain: Chain): Promise<EventTableColumn | null> {
+    const event = await queryAthena(`SELECT height FROM "casimir_etl_database_dev"."casimir_etl_event_table_dev" where chain = '${Chain.Iotex}' ORDER BY height DESC limit 1`)
+
+    if (event.length === 1) {
+      return event[0]
     }
 
-    if (start === 0) {
-      start = 1
-    }
-
-    if (count === 0) {
-      count = 100
-    }
-
-    return await this.client.iotx.getBlockMetas({ byIndex: { start: start, count: count } })
+    console.log('More than one event found')
+    return null
   }
 
-  async getBlockMeta (blockHash: string): Promise<IGetBlockMetasResponse> {
-    const metas = await this.client.iotx.getBlockMetas({
-      byHash: {
-        blkHash: blockHash
-      }
-    })
-    return metas
+  // Note: Transactions in ethereum are called actions in Iotex
+  async getTransaction(tx: string): Promise<any> {
+    return await this.provider.getTransaction(tx)
   }
 
-  convertEthToIotx (eth: string): string {
-    const add = from(eth)
-    return add.string()
+  async getCurrentBlock(): Promise<number> {
+    const current = await this.getChainMetadata()
+    return parseInt(current.chainMeta.height)
   }
-
-  convertIotxToEth (iotx: string): string {
-    const add = from(iotx)
-    return add.stringEth()
-  }
-
-  async getAccountActions (address: string, count: number): Promise<any> {
-    const account = await this.client.iotx.getAccount({
-      address
-    })
-
-    if (account.accountMeta === undefined) {
-      return []
-    }
-
-    const actions = await this.client.iotx.getActions({
-      byAddr: {
-        address: account.accountMeta.address,
-        start: 1,
-        count: count || 100
-      }
-    })
-
-    return actions
-  }
-
-  async readableBlockStream (): Promise<ClientReadableStream<IStreamBlocksResponse>> {
-    const stream = await this.client.iotx.streamBlocks({
-      start: 1
-    })
-    return stream
-  }
-
-  async getTxReceipt (actionHash: string): Promise<IGetReceiptByActionResponse> {
-    const tx = await this.client.iotx.getReceiptByAction({ actionHash })
-    return tx
-  }
-
-  async getBlockActions (index: number, count: number): Promise<IActionInfo[]> {
-    const actions = await this.client.iotx.getActions({
-      byIndex: {
-        start: index,
-        count: count
-      }
-    })
-    return actions.actionInfo
-  }
-
 
   convertToGlueSchema(obj: { type: string, block: IBlockMeta, action: IActionInfo}): EventTableColumn {
     const core = obj.action.action.core
@@ -140,9 +94,10 @@ export class IotexService {
 
     const event: EventTableColumn = {
       chain: Chain.Iotex,
-      network: this.chainId === 1 ? IotexNetworkType.Mainnet : IotexNetworkType.Testnet,
+      // 'https://api.iotex.one:443'
+      network: IotexNetworkType.Mainnet,
       provider: 'casimir',
-      created_at: new Date(obj.block.timestamp.seconds * 1000).toISOString().split('T')[0],
+      created_at: new Date(obj.block.timestamp.seconds * 1000).toISOString(),
       type: '',
       address: obj.block.producerAddress,
       height: obj.block.height,
@@ -152,7 +107,6 @@ export class IotexService {
       amount: 0,
       duration:  0,
       auto_stake: false,
-      // payload: {}
     }
     switch (obj.type) {
       case 'grantReward':
@@ -183,7 +137,7 @@ export class IotexService {
           event.amount = parseInt(core.execution?.amount)
         }
         return event
-        case 'putPollResult':  
+        case 'putPollResult':
         event.type =  IotexActionType.putPollResult
         if (core.putPollResult?.candidates !== undefined) {
           event.candidate_list = core.putPollResult?.candidates.candidates.map(c => c.address)
@@ -208,11 +162,40 @@ export class IotexService {
         throw new Error(`Action type ${obj.type} not supported`)
     }
   }
+
+  on(event:string, cb: (block: IStreamBlocksResponse) => void): void {
+    // const stream = this.provider.iotx.streamBlocks({ start: 0 })
+    //
+    // stream.on('data', (block: IStreamBlocksResponse) => {
+    //   cb(block)
+    // })
+    //
+    // stream.on('error', (err: any) => {
+    //   throw new Error(err)
+    // })
+  }
+
+  async save(key: string, data: string): Promise<void> {
+    return
+  }
+
+  // private async getBlocks(start: number, count: number): Promise<IGetBlockMetasResponse> {
+  //   if (start < 0 || count < 0) {
+  //     throw new Error('start and count must be greater than 0')
+  //   }
+  //
+  //   if (start === 0) {
+  //     start = 1
+  //   }
+  //
+  //   if (count === 0) {
+  //     count = 100
+  //   }
+  //
+  //   return await this.provider.iotx.getBlockMetas({ byIndex: { start: start, count: count } })
+  // }
 }
 
-export async function newIotexService (opt?: IotexOptions): Promise<IotexService> {
-  return new IotexService({
-    provider: opt?.provider ?? 'https://api.iotex.one:443',
-    chainId: opt?.chainId ?? 1
-  })
+export async function newIotexService (opt: IotexOptions): Promise<IotexService> {
+  return new IotexService(opt)
 }
