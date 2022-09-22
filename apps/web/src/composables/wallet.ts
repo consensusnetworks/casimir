@@ -3,20 +3,26 @@ import { ethers } from 'ethers'
 import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
 import useEthers from '@/composables/ethers'
+import useWalletConnect from '@/composables/walletConnect'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
 import { ProviderString } from '@/types/ProviderString'
-
-const amount = ref<string>('')
-const toAddress = ref<string>('')
-const { requestEthersAccount } = useEthers()
 
 const defaultProviders = {
   MetaMask: undefined,
   CoinbaseWallet: undefined,
 }
-
 const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
+
+const { requestEthersAccount } = useEthers()
+const {
+  enableWalletConnect,
+  disableWalletConnect,
+  sendWalletConnectTransaction,
+} = useWalletConnect()
+
+const amount = ref<string>('0.01')
+const toAddress = ref<string>('0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
@@ -40,7 +46,9 @@ export default function useWallet() {
     try {
       setSelectedProvider(provider)
       selectedAccount.value = 'Not Active'
-      if (ethersProviderList.includes(provider)) {
+      if (provider === 'WalletConnect') {
+        enableWalletConnect()
+      } else if (ethersProviderList.includes(provider)) {
         const browserExtensionProvider =
           availableProviders.value[provider as keyof BrowserProviders]
         const accounts = await requestEthersAccount(
@@ -65,9 +73,20 @@ export default function useWallet() {
     }
   }
 
+  // TODO: Fold this into the logic of switching to/from other wallet provider depending on front-end implementation
+  async function disconnectWallet(provider: ProviderString) {
+    selectedAccount.value = ''
+    selectedProvider.value = ''
+    if (provider === 'WalletConnect') {
+      await disableWalletConnect()
+    }
+  }
+
   async function sendTransaction(provider: string) {
     try {
-      if (ethersProviderList.includes(provider)) {
+      if (provider === 'WalletConnect') {
+        await sendWalletConnectTransaction(amount.value, toAddress.value)
+      } else if (ethersProviderList.includes(provider)) {
         const browserProvider =
           availableProviders.value[provider as keyof BrowserProviders]
         const web3Provider: ethers.providers.Web3Provider =
@@ -84,14 +103,12 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'IoPay') {
         await sendIoPayTransaction(toAddress.value, amount.value)
       } else if (selectedProvider.value === 'Ledger') {
-
         // npm run dev:ethereum in another process
         // const ledgerEth = await getLedgerEthSigner()
         // Create - { to: ... }
         // Serialize - ethers.utils.serializeTransaction
         // Sign - ledgerEth.signTransaction
         // Send - (new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545")).sendTransaction
-
       } else {
         throw new Error('Provider selected not yet supported')
       }
@@ -106,6 +123,7 @@ export default function useWallet() {
     toAddress,
     amount,
     connectWallet,
+    disconnectWallet,
     sendTransaction,
   }
 }

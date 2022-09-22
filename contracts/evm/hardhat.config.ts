@@ -1,3 +1,5 @@
+import localtunnel from 'localtunnel'
+import os from 'os'
 import { task } from 'hardhat/config'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-waffle'
@@ -13,8 +15,10 @@ task('accounts', 'Prints the list of accounts', async (taskArgs: any, hre: { eth
   }
 })
 
-// Get shared test seed
-const mnemonic = process.env.LEDGER_SEED
+// Use Ledger seed for consistency from localnet to testnet
+const defaultSeed = 'test test test test test test test test test test test junk'
+const mnemonic = process.env.LEDGER_SEED || defaultSeed
+console.log('Your mnemonic is', mnemonic)
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
@@ -30,9 +34,26 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: mnemonic ? { mnemonic } : {}
+      chainId: 1337,
+      accounts: { mnemonic, accountsBalance: '32000000000000000000' }
     }
   }
 }
+
+// Start a local tunnel for using RPC with https
+const localSubdomain = `cn-hh-${os.userInfo().username.toLowerCase()}`
+const localUrl = `https://${localSubdomain}.loca.lt`
+console.log('Your local tunnel is', localUrl)
+localtunnel({ port: 8545, subdomain: localSubdomain }).then((tunnel: localtunnel.Tunnel) => {
+  if (localUrl === tunnel.url) {
+    console.log('Your local tunnel is now available at', localUrl)
+  } else {
+    console.log('Your desired local tunnel url is not available')
+  }
+  process.on('SIGINT', () => {
+    tunnel.close()
+    process.exit(0)
+  })
+})
 
 export default config
