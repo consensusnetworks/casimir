@@ -3,10 +3,15 @@
     <h1>
       Connect your Nano and open the Bitcoin app. Click button to start...
     </h1>
-    <button @click="connectLedger">Click to connect</button>
+    <button @click="connectLedgerBtc">Click to Connect BTC Account</button>
     <h3>
       Your address:
-      <span>{{ address }}</span>
+      <span>{{ btcAddress }}</span>
+    </h3>
+    <button @click="connectLedgerEth">Click to Connect ETH Account</button>
+    <h3>
+      Your address:
+      <span>{{ ethAddress }}</span>
     </h3>
     <button @click="createNewTransaction">Create Transaction</button>
   </div>
@@ -19,12 +24,14 @@ import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
 import { getWalletPublicKey } from '@ledgerhq/hw-app-btc/lib/getWalletPublicKey'
 import { createTransaction } from '@ledgerhq/hw-app-btc/lib/createTransaction'
 import { listen } from '@ledgerhq/logs'
+import Eth from '@ledgerhq/hw-app-eth'
 // import Btc from '@ledgerhq/hw-app-btc'
 // import TransportWebHID from "@ledgerhq/hw-transport-webhid";
 
-const address = ref('Not yet connected')
+const btcAddress = ref('Not yet connected')
+const ethAddress = ref('Not yet connected')
 
-async function connectLedger() {
+async function connectLedgerBtc() {
   try {
     listen((log) => console.log(log))
     const transport = await TransportWebUSB.create()
@@ -35,7 +42,7 @@ async function connectLedger() {
       format: 'legacy',
     }
     const { bitcoinAddress } = await getWalletPublicKey(transport, options)
-    address.value = bitcoinAddress
+    btcAddress.value = bitcoinAddress
 
     // TODO: Figure out why this is failing (this was how docs suggested to do it)
     // When the Ledger device connected it is trying to display the bitcoin address
@@ -43,6 +50,27 @@ async function connectLedger() {
     // const { bitcoinAddress } = await btc.getWalletPublicKey("44'/0'/0'/0/0")
     // console.log('bitcoinAddress', bitcoinAddress)
     // address.value = bitcoinAddress
+  } catch (e) {
+    console.log('error: ', e)
+  }
+}
+
+async function connectLedgerEth() {
+  try {
+    listen((log) => console.log(log))
+    const transport = await TransportWebUSB.create()
+    const eth = new Eth(transport)
+
+    const path = "44'/60'/0'/0/0"
+    const boolDisplay = false
+    const boolChaincode = true
+
+    const { address, chainCode, publicKey } = await eth.getAddress(
+      path,
+      boolDisplay,
+      boolChaincode
+    )
+    ethAddress.value = address
   } catch (e) {
     console.log('error: ', e)
   }
