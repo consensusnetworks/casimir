@@ -1,8 +1,7 @@
 import { crawler } from '../src/index'
 import { Chain } from '../src/providers/Base'
-import {queryAthena} from '@casimir/helpers'
 
-jest.setTimeout(20000)
+jest.setTimeout(1000000)
 
 test('init crawler for iotex', async () => {
   const iotex = await crawler({
@@ -11,55 +10,45 @@ test('init crawler for iotex', async () => {
   })
   expect(iotex.service).not.toBe(null)
 })
-//
-// test('start crawler for iotex', async () => {
-//   const iotex = await crawler({
-//     chain: Chain.Iotex,
-//     verbose: true
-//   })
-//
-//   await iotex.start()
-//   // expect(iotex.service).not.toBe(null)
-// })
 
 test('init crawler for ethereum', async () => {
   const eth = await crawler({
     chain: Chain.Ethereum,
     verbose: true
   })
-
   expect(eth.service).not.toBe(null)
 })
 
 
-test('init crawler for ethereum', async () => {
-  const queryResult = await queryAthena('SELECT * FROM "casimir_etl_database_dev"."casimir_etl_event_table_dev" where chain = \'iotex\' limit 10')
-  expect(queryResult.length).toBe(10)
+test('get last processed event', async () => {
+  const supercrawler = await crawler({
+    chain: Chain.Ethereum,
+    verbose: true
+  })
+
+  const lastBlock = await supercrawler.getLastProcessedEvent()
+
+  if (!lastBlock) {
+    throw new Error('last block not found')
+  }
+  expect(lastBlock.chain).toBe('ethereum')
+  expect(lastBlock.height).not.toBe(null)
 })
 
+// test('start crawler for ethereum', async () => {
+//   const eth = await crawler({
+//     chain: Chain.Ethereum,
+//     verbose: true
+//   })
+//   await eth.start()
+//   expect(eth.service).not.toBe(null)
+// })
 
-
-
-// test('get last block', async () => {
-//   const supercrawler = await crawler({
+// test('start crawler for iotex', async () => {
+//   const iotex = await crawler({
 //     chain: Chain.Iotex,
 //     verbose: true
 //   })
-//
-//   expect(supercrawler.service).not.toBe(null)
-//   const lastBlock = await supercrawler.retrieveLastBlock()
-//   expect(typeof lastBlock).toBe('number')
+//   await iotex.start()
+//   expect(iotex.service).not.toBe(null)
 // })
-
-// test('stream', async () => {
-//   const supercrawler = await crawler({
-//     chain: Chain.Iotex,
-//     verbose: true
-//   })
-//
-//   expect(supercrawler).not.toBe(null)
-//   // supercrawler.on('block', (block) => {
-//   //   console.log(block)
-//   // })
-// })
-//

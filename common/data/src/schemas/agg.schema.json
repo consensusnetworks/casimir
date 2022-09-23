@@ -14,7 +14,7 @@
         },
         "first_staked_at": {
             "type": "string",
-            "description": "The first date (MM-DD-YYYY) that a wallet staked"
+            "description": "First staked at datestring"
         },
         "total_staked_amount": {
             "type": "string",

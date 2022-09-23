@@ -19,7 +19,6 @@ export function pascalCase(str: string): string {
   })
 }
 
-// these are defined to reuse the clients
 let athena: AthenaClient | null = null
 let s3: S3Client | null = null
 
@@ -86,7 +85,7 @@ export async function newS3Client (opt?: S3ClientConfig): Promise<S3Client> {
  * @param input.data - Data to be uploaded
  *
  */
-export async function uploadToS3( input: { bucket: string, key: string,data: string }): Promise<void> {
+export async function uploadToS3( input: { bucket: string, key: string, data: string }): Promise<void> {
   if (!s3) {
     s3 = await newS3Client()
   }
@@ -94,7 +93,9 @@ export async function uploadToS3( input: { bucket: string, key: string,data: str
   const upload = new PutObjectCommand({
     Bucket: input.bucket,
     Key: input.key,
+    Body: input.data
   })
+
   const { $metadata } = await s3.send(upload)
   if ($metadata.httpStatusCode !== 200) throw new Error('Error uploading to s3')
 }
@@ -178,7 +179,7 @@ async function pollAthenaQueryOutput(queryId: string): Promise<void> {
  * @param query - SQL query to run (make sure the correct permissions are set)
  * @return string - Query result
  */
-export async function queryAthena(query: string): Promise<EventTableColumn[]> {
+export async function queryAthena(query: string): Promise<EventTableColumn[] | null> {
 
   if (!athena) {
     athena = await newAthenaClient()
@@ -212,7 +213,7 @@ export async function queryAthena(query: string): Promise<EventTableColumn[]> {
   const rows = raw.split('\n').filter(r => r !== '')
 
   if (rows.length <= 1) {
-    throw new Error('InvalidQueryResult: query result is empty')
+    return null
   }
 
   const header = rows.splice(0, 1)[0].split(',').map((h: string) => h.trim().replace(/"/g, ''))
