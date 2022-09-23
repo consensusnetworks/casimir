@@ -27,7 +27,8 @@ const toAddress = ref<string>('0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203')
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const { getIoPayAccounts, sendIoPayTransaction } = useIoPay()
+  const { getIoPayAccounts, sendIoPayTransaction, signIoTexMessage } =
+    useIoPay()
   const { bip32Path, getLedgerEthSigner } = useLedger()
   const ethereum: any = window.ethereum
   const availableProviders = ref<BrowserProviders>(
@@ -134,7 +135,8 @@ export default function useWallet() {
         console.log('hashedMessage :>> ', hashedMessage)
         console.log('signature: ', signature)
       } else if (selectedProvider.value === 'IoPay') {
-        console.log('signMessage not yet supported for IoPay')
+        const hashedMessage = ethers.utils.id(message)
+        await signIoTexMessage(hashedMessage)
       } else {
         console.log('signMessage not yet supported for this wallet provider')
       }
