@@ -13,7 +13,8 @@
       Your address:
       <span>{{ ethAddress }}</span>
     </h3>
-    <button @click="createNewTransaction">Create Transaction</button>
+    <button @click="createBtcTransaction">Create BTC Transaction</button>
+    <button @click="createEthTransaction">Create ETH Transaction</button>
   </div>
 </template>
 
@@ -76,7 +77,7 @@ async function connectLedgerEth() {
   }
 }
 
-async function createNewTransaction() {
+async function createBtcTransaction() {
   const transport = await TransportWebUSB.create()
   /** Example arguments for createTransaction
    * inputs: [ [tx1, 1] ],
@@ -98,6 +99,23 @@ async function createNewTransaction() {
   //   expiryHeight?: Buffer;
   //   useTrustedInputForSegwit?: boolean;
   //   }
+}
+
+async function createEthTransaction() {
+  const transport = await TransportWebUSB.create()
+  const eth = new Eth(transport)
+  const path = "44'/60'/0'/0/0"
+  const to = '0x0000000000000000000000000000000000000000'
+  const value = '0x00'
+  const data = '0x00'
+  const chainId = 1
+  /* Parameters of signTransaction 
+    path: string,
+    rawTxHex: string,
+    resolution?: LedgerEthTransactionResolution | null
+  */
+  const response = await eth.signTransaction(path, to, value, data, chainId) // TODO: Replace with appropriate parameters
+  console.log('response', response)
 }
 </script>
 
