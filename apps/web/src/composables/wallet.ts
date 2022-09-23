@@ -117,6 +117,15 @@ export default function useWallet() {
     }
   }
 
+  async function signMessage() {
+    try {
+      if (ethersProviderList.includes(selectedProvider.value)) {
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   return {
     selectedProvider,
     selectedAccount,
@@ -125,6 +134,7 @@ export default function useWallet() {
     connectWallet,
     disconnectWallet,
     sendTransaction,
+    signMessage,
   }
 }
 
