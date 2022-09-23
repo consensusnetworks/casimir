@@ -117,9 +117,26 @@ export default function useWallet() {
     }
   }
 
-  async function signMessage() {
+  async function signMessage(message: string) {
     try {
       if (ethersProviderList.includes(selectedProvider.value)) {
+        const browserProvider =
+          availableProviders.value[
+            selectedProvider.value as keyof BrowserProviders
+          ]
+        const web3Provider: ethers.providers.Web3Provider =
+          new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+        const signer = web3Provider.getSigner()
+        const hashedMessage = ethers.utils.id(message)
+        const signature = await signer.signMessage(hashedMessage)
+        // TODO: Mock sending hash and signature to backend for verification
+        console.log('message :>> ', message)
+        console.log('hashedMessage :>> ', hashedMessage)
+        console.log('signature: ', signature)
+      } else if (selectedProvider.value === 'IoPay') {
+        console.log('signMessage not yet supported for IoPay')
+      } else {
+        console.log('signMessage not yet supported for this wallet provider')
       }
     } catch (error) {
       console.error(error)

@@ -59,7 +59,7 @@
           type="text"
           placeholder="Write a message to sign"
         />
-        <button @click="signMessage">Sign Message</button>
+        <button @click="signMessage(message)">Sign Message</button>
         <p>{{ signedMessage }}</p>
       </div>
       <form @submit.prevent="sendTransaction(selectedProvider)">
