@@ -6,11 +6,17 @@ import type {
   BigNumber,
   BytesLike,
   CallOverrides,
+  ContractTransaction,
+  PayableOverrides,
   PopulatedTransaction,
   Signer,
   utils,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
+import type {
+  FunctionFragment,
+  Result,
+  EventFragment,
+} from "@ethersproject/abi";
 import type { Listener, Provider } from "@ethersproject/providers";
 import type {
   TypedEventFilter,
@@ -23,11 +29,17 @@ import type {
 export interface PoolManagerInterface extends utils.Interface {
   functions: {
     "depositContract()": FunctionFragment;
-    "depositContractAddress()": FunctionFragment;
+    "depositThreshold()": FunctionFragment;
+    "stake()": FunctionFragment;
+    "userBalances(address)": FunctionFragment;
   };
 
   getFunction(
-    nameOrSignatureOrTopic: "depositContract" | "depositContractAddress"
+    nameOrSignatureOrTopic:
+      | "depositContract"
+      | "depositThreshold"
+      | "stake"
+      | "userBalances"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -35,8 +47,13 @@ export interface PoolManagerInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "depositContractAddress",
+    functionFragment: "depositThreshold",
     values?: undefined
+  ): string;
+  encodeFunctionData(functionFragment: "stake", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "userBalances",
+    values: [PromiseOrValue<string>]
   ): string;
 
   decodeFunctionResult(
@@ -44,12 +61,29 @@ export interface PoolManagerInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "depositContractAddress",
+    functionFragment: "depositThreshold",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "stake", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "userBalances",
     data: BytesLike
   ): Result;
 
-  events: {};
+  events: {
+    "Stake(address,uint256)": EventFragment;
+  };
+
+  getEvent(nameOrSignatureOrTopic: "Stake"): EventFragment;
 }
+
+export interface StakeEventObject {
+  userAddress: string;
+  stakedAmount: BigNumber;
+}
+export type StakeEvent = TypedEvent<[string, BigNumber], StakeEventObject>;
+
+export type StakeEventFilter = TypedEventFilter<StakeEvent>;
 
 export interface PoolManager extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -80,31 +114,78 @@ export interface PoolManager extends BaseContract {
   functions: {
     depositContract(overrides?: CallOverrides): Promise<[string]>;
 
-    depositContractAddress(overrides?: CallOverrides): Promise<[string]>;
+    depositThreshold(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    stake(
+      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    userBalances(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
   };
 
   depositContract(overrides?: CallOverrides): Promise<string>;
 
-  depositContractAddress(overrides?: CallOverrides): Promise<string>;
+  depositThreshold(overrides?: CallOverrides): Promise<BigNumber>;
+
+  stake(
+    overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  userBalances(
+    arg0: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
 
   callStatic: {
     depositContract(overrides?: CallOverrides): Promise<string>;
 
-    depositContractAddress(overrides?: CallOverrides): Promise<string>;
+    depositThreshold(overrides?: CallOverrides): Promise<BigNumber>;
+
+    stake(overrides?: CallOverrides): Promise<void>;
+
+    userBalances(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
-  filters: {};
+  filters: {
+    "Stake(address,uint256)"(
+      userAddress?: null,
+      stakedAmount?: null
+    ): StakeEventFilter;
+    Stake(userAddress?: null, stakedAmount?: null): StakeEventFilter;
+  };
 
   estimateGas: {
     depositContract(overrides?: CallOverrides): Promise<BigNumber>;
 
-    depositContractAddress(overrides?: CallOverrides): Promise<BigNumber>;
+    depositThreshold(overrides?: CallOverrides): Promise<BigNumber>;
+
+    stake(
+      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    userBalances(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     depositContract(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    depositContractAddress(
+    depositThreshold(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    stake(
+      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    userBalances(
+      arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

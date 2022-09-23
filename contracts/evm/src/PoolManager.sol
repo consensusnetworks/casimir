@@ -6,12 +6,23 @@ import "./interfaces/IDepositContract.sol";
 
 contract PoolManager {
 
-    address public depositContractAddress = 0x00000000219ab540356cBB839Cbe05303d7705Fa;
-    IDepositContract public depositContract = IDepositContract(depositContractAddress);
+    IDepositContract public depositContract;
 
-    constructor() {
-        console.log("Deposit contract address:", address(depositContract));
+    constructor(address depositContractAddress) {
+        depositContract = IDepositContract(depositContractAddress);
     }
 
-    
+    event Stake(address userAddress, uint256 stakedAmount);
+
+    uint256 public constant depositThreshold = 32 ether;
+
+    mapping (address => uint256) public userBalances;
+
+    function stake() public payable {
+        emit Stake(msg.sender, msg.value);
+        userBalances[msg.sender] += msg.value;
+
+
+    }
+
 }
