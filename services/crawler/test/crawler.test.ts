@@ -6,18 +6,18 @@ test('init crawler for iotex', async () => {
     chain: Chain.Iotex,
     verbose: true
   })
-  // await iotex.start()
+  await iotex.start()
   expect(iotex.service).not.toBe(null)
 })
 
-// jest.setTimeout(1000000)
+jest.setTimeout(1000000)
 
 test('init crawler for ethereum', async () => {
   const eth = await crawler({
     chain: Chain.Ethereum,
     verbose: true
   })
-  // await eth.start()
+  await eth.start()
   expect(eth.service).not.toBe(null)
 })
 
