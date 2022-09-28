@@ -3,8 +3,6 @@ import { AthenaClient, AthenaClientConfig } from '@aws-sdk/client-athena'
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
 import { StartQueryExecutionCommand, GetQueryExecutionCommand }  from '@aws-sdk/client-athena'
 import { EventTableColumn } from '@casimir/data'
-import {Chain} from '@casimir/crawler/src/providers/Base'
-import {IotexNetworkType} from '@casimir/crawler/src/providers/Iotex'
 
 /**
  * Converts any string to PascalCase.
@@ -135,7 +133,7 @@ export async function getFromS3(bucket: string, key: string): Promise<string> {
 }
 
 let retry = 0
-let backoff = 300
+let backoff = 500
 
 /**
  * Poll for Athena query's result
@@ -168,7 +166,14 @@ async function pollAthenaQueryOutput(queryId: string): Promise<void> {
     }, backoff)
   }
 
-  if (QueryExecution.Status.State === 'FAILED') throw new Error('QueryFailed: query failed')
+  if (QueryExecution.Status.State === 'FAILED') {
+    const reason = QueryExecution.Status.StateChangeReason
+    if (reason && reason.includes('HIVE_BAD_DATA')) {
+      throw new Error('FailedQuery: Check the table for bad data')
+    } else {
+      throw new Error('QueryFailed: query failed')
+    }
+  }
   if (QueryExecution.Status.State === 'SUCCEEDED')
   return
 }

@@ -63,19 +63,21 @@ export class IotexService {
     return type as IotexActionType
   }
 
-  async getEvents(height: number): Promise<EventTableColumn[]> {
+  async getEvents(height: number): Promise<{ hash: string, events: EventTableColumn[]}> {
     const events: EventTableColumn[] = []
 
     const block = await this.provider.iotx.getBlockMetas({byIndex: {start: height, count: 1}})
+
+    const blockMeta = block.blkMetas[0]
 
     events.push({
       chain: this.chain,
       network: this.network,
       provider: Provider.Casimir,
       type: 'block',
-      created_at: block.blkMetas[0].timestamp.toString(),
-      address: block.blkMetas[0].producerAddress,
-      height: block.blkMetas[0].height,
+      created_at: new Date(block.blkMetas[0].timestamp.seconds * 1000).toISOString(),
+      address: blockMeta.producerAddress,
+      height: blockMeta.height,
       to_address: '',
       candidate: '',
       duration: 0,
@@ -84,37 +86,38 @@ export class IotexService {
       auto_stake: false,
     })
 
-    const numOfAction = block.blkMetas[0].numActions
+    const numOfActions = block.blkMetas[0].numActions
 
-    console.log(block.blkMetas.length)
+    if (numOfActions > 0) {
+      const actions = await this.getBlockActions(height, numOfActions)
 
-    if (numOfAction > 0) {
-      const actions = await this.getBlockActions(height, numOfAction)
-
-      for (const action of actions) {
+      const blockActions = actions.map((action) => {
         const actionCore = action.action.core
+        if (actionCore === undefined) return
 
-        if (actionCore === undefined) continue
-
-        const actionEvent: Partial<EventTableColumn> = {}
         const actionType = this.deduceActionType(action)
+        if (actionType === null) return
 
-        // console.log('numOfAction: ', numOfAction)
-        // console.log('type: ', actionType)
-        // console.log('-----')
-
-        if (actionType === null) continue
-        actionEvent.type = actionType
-
-        // if (actionType === IotexActionType.grantReward) {}
-        // if (actionType === IotexActionType.stakeUnstake) {}
-        // if (actionType === IotexActionType.stakeWithdraw) {}
+        const actionEvent: Partial<EventTableColumn> = {
+          chain: this.chain,
+          network: this.network,
+          provider: Provider.Casimir,
+          type: actionType,
+          created_at: new Date(action.timestamp.seconds * 1000).toISOString(),
+          address: blockMeta.producerAddress,
+          height: blockMeta.height,
+          to_address: '',
+          candidate: '',
+          duration: 0,
+          candidate_list: [],
+          amount: '0',
+          auto_stake: false,
+        }
 
         if (actionType === IotexActionType.transfer && actionCore.transfer) {
           actionEvent.amount = actionCore.transfer.amount
           actionEvent.to_address = actionCore.transfer.recipient
           events.push(actionEvent as EventTableColumn)
-          return events
         }
 
         if (actionType === IotexActionType.stakeCreate && actionCore.stakeCreate) {
@@ -123,19 +126,16 @@ export class IotexService {
           actionEvent.auto_stake = actionCore.stakeCreate.autoStake
           actionEvent.duration = actionCore.stakeCreate.stakedDuration
           events.push(actionEvent as EventTableColumn)
-          return events
         }
 
         if (actionType === IotexActionType.stakeAddDeposit && actionCore.stakeAddDeposit) {
           actionEvent.amount = actionCore.stakeAddDeposit.amount
           events.push(actionEvent as EventTableColumn)
-          return events
         }
 
         if (actionType === IotexActionType.execution && actionCore.execution) {
           actionEvent.amount = actionCore.execution.amount
           events.push(actionEvent as EventTableColumn)
-          return events
         }
 
         if (actionType === IotexActionType.putPollResult && actionCore.putPollResult) {
@@ -147,20 +147,17 @@ export class IotexService {
             actionEvent.height = typeof actionCore.putPollResult.height === 'string' ? parseInt(actionCore.putPollResult.height) : actionCore.putPollResult.height
           }
           events.push(actionEvent as EventTableColumn)
-          return events
         }
 
         if (actionType === IotexActionType.StakeChangeCandidate && actionCore.stakeChangeCandidate) {
           actionEvent.candidate = actionCore.stakeChangeCandidate.candidateName
           events.push(actionEvent as EventTableColumn)
-          return events
         }
 
         if (actionType === IotexActionType.stakeRestake && actionCore.stakeRestake) {
           actionEvent.duration = actionCore.stakeRestake.stakedDuration
           actionEvent.auto_stake = actionCore.stakeRestake.autoStake
           events.push(actionEvent as EventTableColumn)
-          return events
         }
 
         if (actionType === IotexActionType.candidateRegister && actionCore.candidateRegister) {
@@ -169,28 +166,33 @@ export class IotexService {
           actionEvent.auto_stake = actionCore.candidateRegister.autoStake
           actionEvent.candidate = actionCore.candidateRegister.candidate.name
           events.push(actionEvent as EventTableColumn)
-          return events
         }
 
         if (actionType === IotexActionType.candidateUpdate && actionCore.candidateUpdate) {
           actionEvent.candidate = actionCore.candidateUpdate.name
           events.push(actionEvent as EventTableColumn)
-          return events
         }
 
         if (actionType === IotexActionType.claimFromRewardingFund && actionCore.claimFromRewardingFund) {
           actionEvent.amount = actionCore.claimFromRewardingFund.amount
-          return events
         }
 
         if (actionType === IotexActionType.depositToRewardingFund && actionCore.depositToRewardingFund) {
           actionEvent.amount = actionCore.depositToRewardingFund.amount
           events.push(actionEvent as EventTableColumn)
-          return events
         }
-      }
+
+        // if (actionType === IotexActionType.grantReward) {}
+        // if (actionType === IotexActionType.stakeUnstake) {}
+        // if (actionType === IotexActionType.stakeWithdraw) {}
+        return actionEvent
+      })
+      events.push(...blockActions as EventTableColumn[])
     }
-    return events
+    return {
+      hash: blockMeta.hash,
+      events
+    }
   }
 
   async getBlocks(start: number, count: number): Promise<IGetBlockMetasResponse> {
@@ -211,11 +213,6 @@ export class IotexService {
     return blocks
   }
 
-  async getTransaction(tx: string): Promise<any> {
-    const receipt = await this.provider.iotx.getReceiptByAction({ actionHash: tx })
-    return receipt
-  }
-
   async getBlockActions (index: number, count: number): Promise<IActionInfo[]> {
     const actions = await this.provider.iotx.getActions({
       byIndex: {
@@ -224,13 +221,6 @@ export class IotexService {
       }
     })
     return actions.actionInfo
-  }
-
-  async getCurrentHeight(): Promise<number> {
-    const { chainMeta } = await this.provider.iotx.getChainMeta({
-        includePendingActions: false
-    })
-    return parseInt(chainMeta.height)
   }
 
   async getCurrentBlock(): Promise<IGetBlockMetasResponse> {

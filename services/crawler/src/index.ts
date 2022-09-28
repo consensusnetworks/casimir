@@ -1,5 +1,5 @@
 import { EventTableColumn } from '@casimir/data'
-import {IotexNetworkType, IotexService, IotexActionType, newIotexService} from './providers/Iotex'
+import {IotexNetworkType, IotexService, newIotexService} from './providers/Iotex'
 import { EthereumService, newEthereumService } from './providers/Ethereum'
 import { queryAthena, uploadToS3 } from '@casimir/helpers'
 
@@ -53,43 +53,58 @@ class Crawler {
     async start(): Promise<void> {
         if (this.service instanceof EthereumService) {
             const lastEvent = await this.getLastProcessedEvent()
-            const current = await this.service.getCurrentBlock()
 
             const last = lastEvent !== null ? lastEvent.height : 0
-            const start = parseInt(last.toString()+ 1)
+            const start = parseInt(last.toString()) + 1
+
+            if (this.config.verbose) {
+                console.log(`crawling ${this.config.chain} from block ${start}`)
+            }
+
+            const current = await this.service.getCurrentBlock()
 
             for (let i = start as number; i < current.number; i++) {
-                const { events, blockHash } = await this.service.getEvents(30021005 + i)
+                const { events, blockHash } = await this.service.getEvents(i)
                 const ndjson = events.map((e: EventTableColumn) => JSON.stringify(e)).join('\n')
-                // await uploadToS3({
-                //     bucket: defaultEventBucket,
-                //     key: `${blockHash}-event.json`,
-                //     data: ndjson
-                // }).finally(() => {
-                //     console.log(`block: ${i}, num of tx: ${events.length}`)
-                // })
+                await uploadToS3({
+                    bucket: defaultEventBucket,
+                    key: `${blockHash}-event.json`,
+                    data: ndjson
+                }).finally(() => {
+                    if (this.config.verbose) {
+                        console.log(`uploaded ${events.length} event at height ${i}`)
+                    }
+                })
             }
             return
         }
 
         if (this.service instanceof IotexService) {
             const lastEvent = await this.getLastProcessedEvent()
-            const current = await this.service.getCurrentHeight()
 
-            const start = lastEvent !== null ? lastEvent.height + 1 : 0
-            console.log(`starting from block: ${start}`)
+            const currentBlock = await this.service.getCurrentBlock()
+            const currentHeight = currentBlock.blkMetas[0].height
 
-            for (let i = start; i < current; i++) {
-                const events = await this.service.getEvents(10000004 + i)
+            const last = lastEvent !== null ? lastEvent.height : 0
+            const start = parseInt(last.toString()) + 1
 
-                console.log(events.length)
-                // await uploadToS3({
-                //     bucket: defaultEventBucket,
-                //     key: `${block.hash}-event.json`,
-                //     data: ndjson
-                // }).finally(() => {
-                //     console.log('uploaded events batch to s3')
-                // })
+            if (this.config.verbose) {
+                console.log(`crawling ${this.config.chain} from block ${start}`)
+            }
+
+            for (let i = start; i < currentHeight; i++) {
+                const { hash, events } = await this.service.getEvents(i)
+                const ndjson = events.map((e: EventTableColumn) => JSON.stringify(e)).join('\n')
+
+                await uploadToS3({
+                    bucket: defaultEventBucket,
+                    key: `${hash}-event.json`,
+                    data: ndjson
+                }).finally(() => {
+                    if (this.config.verbose) {
+                        console.log(`uploaded ${events.length} event at height ${i}`)
+                    }
+                })
             }
             return
         }
@@ -106,12 +121,3 @@ export async function crawler (config: CrawlerConfig): Promise<Crawler> {
   await chainCrawler.setup()
   return chainCrawler
 }
-
-async function ee() {
-    const iotex = await crawler({
-        chain: Chain.Iotex,
-        verbose: true,
-    })
-    await iotex.start()
-}
-ee()
