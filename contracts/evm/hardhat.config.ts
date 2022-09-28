@@ -18,7 +18,6 @@ task('accounts', 'Prints the list of accounts', async (taskArgs: any, hre: { eth
 // Use Ledger seed for consistency from localnet to testnet
 const defaultSeed = 'test test test test test test test test test test test junk'
 const mnemonic = process.env.LEDGER_SEED || defaultSeed
-console.log('Your mnemonic is', mnemonic)
 
 // Get fork RPC url if provided
 const forkUrl = process.env.FORK_URL
@@ -44,8 +43,10 @@ const config: HardhatUserConfig = {
   }
 }
 
-// Start a local tunnel for using RPC over https
-if (process.env.LOCAL_TUNNEL) {
+if (process.env.LOCAL_DEV) {
+  console.log('Your mnemonic is', mnemonic)
+
+  // Start a local tunnel for using RPC over https
   const localSubdomain = `cn-hh-${os.userInfo().username.toLowerCase()}`
   const localUrl = `https://${localSubdomain}.loca.lt`
   console.log('Your local tunnel is', localUrl)

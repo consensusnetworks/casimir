@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run a local ethereum node with Hardhat
+# Run a local Ethereum node with Hardhat
 #
 # Example:
 #
@@ -31,9 +31,12 @@ do
     esac
 done
 
+# Set variable to create local tunnel and display seed
+export LOCAL_DEV=true
+
 # Secret ID is just the name or ARN
 ledger_seed_secret_id=consensus-networks-ledger-seed
-echo "🤫 Getting $ledger_seed_secret_id for $profile"
+echo "Getting $ledger_seed_secret_id for $profile"
 
 # Get the secret from AWS
 ledger_seed=$(aws secretsmanager get-secret-value \
@@ -50,7 +53,7 @@ if [ -z "$fork" ]; then
 else
     # Secret ID is just the name or ARN
     alchemy_secret_id=consensus-networks-alchemy-$fork
-    echo "🤫 Getting $alchemy_secret_id for $profile"
+    echo "Getting $alchemy_secret_id for $profile"
 
     # Get the secret from AWS
     alchemy_key=$(aws secretsmanager get-secret-value \
@@ -59,8 +62,10 @@ else
     --output text \
     --profile $profile)
 
+    export FORK_URL="https://eth-$fork.alchemyapi.io/v2/$alchemy_key"
+
     echo "⛓ Running $fork fork localnode"
-    npm run dev:localnode --workspace @casimir/evm -- --fork https://eth-$fork.alchemyapi.io/v2/$alchemy_key
+    npm run dev:localnode --workspace @casimir/evm
 fi
 
 

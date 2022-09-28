@@ -13,51 +13,33 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
-      name: "DepositContract",
+      name: "SSVFactory",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.DepositContract__factory>;
+    ): Promise<Contracts.SSVFactory__factory>;
     getContractFactory(
-      name: "ERC165",
+      name: "SSVManager",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC165__factory>;
+    ): Promise<Contracts.SSVManager__factory>;
     getContractFactory(
-      name: "IDepositContract",
+      name: "SSVPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IDepositContract__factory>;
-    getContractFactory(
-      name: "PoolManager",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolManager__factory>;
-    getContractFactory(
-      name: "Sample",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Sample__factory>;
+    ): Promise<Contracts.SSVPool__factory>;
 
     getContractAt(
-      name: "DepositContract",
+      name: "SSVFactory",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.DepositContract>;
+    ): Promise<Contracts.SSVFactory>;
     getContractAt(
-      name: "ERC165",
+      name: "SSVManager",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.ERC165>;
+    ): Promise<Contracts.SSVManager>;
     getContractAt(
-      name: "IDepositContract",
+      name: "SSVPool",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.IDepositContract>;
-    getContractAt(
-      name: "PoolManager",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PoolManager>;
-    getContractAt(
-      name: "Sample",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Sample>;
+    ): Promise<Contracts.SSVPool>;
 
     // default types
     getContractFactory(

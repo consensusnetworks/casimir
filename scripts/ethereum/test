@@ -1,0 +1,66 @@
+#!/bin/bash
+# Test Ethereum contracts with Hardhat
+#
+# Example:
+#
+#    scripts/ethereum/test -f <fork-name>
+#
+# Further information:
+# See https://hardhat.org/hardhat-network/docs/overview
+#
+
+# Get variables from root .env
+export $(xargs < .env)
+
+# Set default profile
+profile="consensus-networks-dev"
+
+if [ ${PROFILE+x} ]; then
+    echo "PROFILE is set to '$PROFILE'"
+    profile=$PROFILE
+else
+    export PROFILE="$profile"
+    echo "PROFILE is not set, using default profile '$PROFILE'"
+fi
+
+# Get args
+while getopts f: flag
+do
+    case "${flag}" in
+        f) fork=${OPTARG};;
+    esac
+done
+
+# Secret ID is just the name or ARN
+ledger_seed_secret_id=consensus-networks-ledger-seed
+echo "Getting $ledger_seed_secret_id for $profile"
+
+# Get the secret from AWS
+ledger_seed=$(aws secretsmanager get-secret-value \
+--secret-id $ledger_seed_secret_id \
+--query SecretString \
+--output text \
+--profile $profile)
+
+export LEDGER_SEED="$ledger_seed"
+
+if [ -z "$fork" ]; then
+    echo "⛓ Testing contracts with default local network"
+    npm run test:contracts --workspace @casimir/evm
+else
+    # Secret ID is just the name or ARN
+    alchemy_secret_id=consensus-networks-alchemy-$fork
+    echo "Getting $alchemy_secret_id for $profile"
+
+    # Get the secret from AWS
+    alchemy_key=$(aws secretsmanager get-secret-value \
+    --secret-id $alchemy_secret_id \
+    --query SecretString \
+    --output text \
+    --profile $profile)
+
+    export FORK_URL="https://eth-$fork.alchemyapi.io/v2/$alchemy_key"
+
+    echo "⛓ Testing contracts with $fork fork"
+    npm run test:contracts --workspace @casimir/evm
+fi
