@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@types/node": "^17.0.38",
-    "esbuild": "^0.14.42",
+    "esbuild": "^0.15.9",
     "esno": "^0.16.3"
   }
 }
