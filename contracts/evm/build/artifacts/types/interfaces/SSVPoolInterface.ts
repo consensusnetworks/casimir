@@ -20,9 +20,9 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "./common";
+} from "../common";
 
-export interface SSVPoolInterface extends utils.Interface {
+export interface SSVPoolInterfaceInterface extends utils.Interface {
   functions: {
     "deposit(address)": FunctionFragment;
     "getBalance()": FunctionFragment;
@@ -56,12 +56,12 @@ export interface SSVPoolInterface extends utils.Interface {
   events: {};
 }
 
-export interface SSVPool extends BaseContract {
+export interface SSVPoolInterface extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: SSVPoolInterface;
+  interface: SSVPoolInterfaceInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,

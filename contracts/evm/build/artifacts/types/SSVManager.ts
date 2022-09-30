@@ -4,7 +4,6 @@
 import type {
   BaseContract,
   BigNumber,
-  BigNumberish,
   BytesLike,
   CallOverrides,
   ContractTransaction,
@@ -30,49 +29,86 @@ import type {
 export interface SSVManagerInterface extends utils.Interface {
   functions: {
     "deposit()": FunctionFragment;
-    "openStakingPools(uint256)": FunctionFragment;
-    "userStakes(address,uint256)": FunctionFragment;
+    "getOpenPools()": FunctionFragment;
+    "getPoolBalance(address)": FunctionFragment;
+    "getPoolUserBalance(address,address)": FunctionFragment;
+    "getPoolsForUser(address)": FunctionFragment;
+    "getStakedPools()": FunctionFragment;
   };
 
   getFunction(
-    nameOrSignatureOrTopic: "deposit" | "openStakingPools" | "userStakes"
+    nameOrSignatureOrTopic:
+      | "deposit"
+      | "getOpenPools"
+      | "getPoolBalance"
+      | "getPoolUserBalance"
+      | "getPoolsForUser"
+      | "getStakedPools"
   ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "deposit", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "openStakingPools",
-    values: [PromiseOrValue<BigNumberish>]
+    functionFragment: "getOpenPools",
+    values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "userStakes",
-    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
+    functionFragment: "getPoolBalance",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getPoolUserBalance",
+    values: [PromiseOrValue<string>, PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getPoolsForUser",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getStakedPools",
+    values?: undefined
   ): string;
 
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "openStakingPools",
+    functionFragment: "getOpenPools",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "userStakes", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getPoolBalance",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getPoolUserBalance",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getPoolsForUser",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getStakedPools",
+    data: BytesLike
+  ): Result;
 
   events: {
-    "Deposit(address,uint256,uint256)": EventFragment;
+    "PoolDeposit(address,address,uint256,uint256)": EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "PoolDeposit"): EventFragment;
 }
 
-export interface DepositEventObject {
+export interface PoolDepositEventObject {
   userAddress: string;
+  poolAddress: string;
   depositAmount: BigNumber;
   depositTime: BigNumber;
 }
-export type DepositEvent = TypedEvent<
-  [string, BigNumber, BigNumber],
-  DepositEventObject
+export type PoolDepositEvent = TypedEvent<
+  [string, string, BigNumber, BigNumber],
+  PoolDepositEventObject
 >;
 
-export type DepositEventFilter = TypedEventFilter<DepositEvent>;
+export type PoolDepositEventFilter = TypedEventFilter<PoolDepositEvent>;
 
 export interface SSVManager extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -105,71 +141,88 @@ export interface SSVManager extends BaseContract {
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    openStakingPools(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<
-      [string, BigNumber] & {
-        contractAddress: string;
-        currentAmount: BigNumber;
-      }
-    >;
+    getOpenPools(overrides?: CallOverrides): Promise<[string[]]>;
 
-    userStakes(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
+    getPoolBalance(
+      poolAddress: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[string]>;
+    ): Promise<[BigNumber]>;
+
+    getPoolUserBalance(
+      userAddress: PromiseOrValue<string>,
+      poolAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    getPoolsForUser(
+      userAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[string[]]>;
+
+    getStakedPools(overrides?: CallOverrides): Promise<[string[]]>;
   };
 
   deposit(
     overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  openStakingPools(
-    arg0: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<
-    [string, BigNumber] & { contractAddress: string; currentAmount: BigNumber }
-  >;
+  getOpenPools(overrides?: CallOverrides): Promise<string[]>;
 
-  userStakes(
-    arg0: PromiseOrValue<string>,
-    arg1: PromiseOrValue<BigNumberish>,
+  getPoolBalance(
+    poolAddress: PromiseOrValue<string>,
     overrides?: CallOverrides
-  ): Promise<string>;
+  ): Promise<BigNumber>;
+
+  getPoolUserBalance(
+    userAddress: PromiseOrValue<string>,
+    poolAddress: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  getPoolsForUser(
+    userAddress: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<string[]>;
+
+  getStakedPools(overrides?: CallOverrides): Promise<string[]>;
 
   callStatic: {
     deposit(overrides?: CallOverrides): Promise<void>;
 
-    openStakingPools(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<
-      [string, BigNumber] & {
-        contractAddress: string;
-        currentAmount: BigNumber;
-      }
-    >;
+    getOpenPools(overrides?: CallOverrides): Promise<string[]>;
 
-    userStakes(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
+    getPoolBalance(
+      poolAddress: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<string>;
+    ): Promise<BigNumber>;
+
+    getPoolUserBalance(
+      userAddress: PromiseOrValue<string>,
+      poolAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getPoolsForUser(
+      userAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<string[]>;
+
+    getStakedPools(overrides?: CallOverrides): Promise<string[]>;
   };
 
   filters: {
-    "Deposit(address,uint256,uint256)"(
+    "PoolDeposit(address,address,uint256,uint256)"(
       userAddress?: null,
+      poolAddress?: null,
       depositAmount?: null,
       depositTime?: null
-    ): DepositEventFilter;
-    Deposit(
+    ): PoolDepositEventFilter;
+    PoolDeposit(
       userAddress?: null,
+      poolAddress?: null,
       depositAmount?: null,
       depositTime?: null
-    ): DepositEventFilter;
+    ): PoolDepositEventFilter;
   };
 
   estimateGas: {
@@ -177,16 +230,25 @@ export interface SSVManager extends BaseContract {
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    openStakingPools(
-      arg0: PromiseOrValue<BigNumberish>,
+    getOpenPools(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getPoolBalance(
+      poolAddress: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    userStakes(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
+    getPoolUserBalance(
+      userAddress: PromiseOrValue<string>,
+      poolAddress: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    getPoolsForUser(
+      userAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getStakedPools(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -194,15 +256,24 @@ export interface SSVManager extends BaseContract {
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    openStakingPools(
-      arg0: PromiseOrValue<BigNumberish>,
+    getOpenPools(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getPoolBalance(
+      poolAddress: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    userStakes(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
+    getPoolUserBalance(
+      userAddress: PromiseOrValue<string>,
+      poolAddress: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    getPoolsForUser(
+      userAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getStakedPools(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

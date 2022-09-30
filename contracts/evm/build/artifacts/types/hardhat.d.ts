@@ -13,9 +13,9 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
-      name: "SSVFactory",
+      name: "SSVPoolInterface",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SSVFactory__factory>;
+    ): Promise<Contracts.SSVPoolInterface__factory>;
     getContractFactory(
       name: "SSVManager",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -26,10 +26,10 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.SSVPool__factory>;
 
     getContractAt(
-      name: "SSVFactory",
+      name: "SSVPoolInterface",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.SSVFactory>;
+    ): Promise<Contracts.SSVPoolInterface>;
     getContractAt(
       name: "SSVManager",
       address: string,

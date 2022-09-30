@@ -4,9 +4,17 @@ import { expect } from 'chai'
 import { SSVManager } from '@casimir/evm/build/artifacts/types'
 const { ethers } = hre
 
+// Todo handle range of amounts and test for multiple pools
+// Currently test only works with even count of 16 ETH
+// Also clean up function naming
+
+// Global testing variables
+const amount = 16 // Amount to deposit per user
+const count = 2 // Count of users
+
 describe('Test SSVManager contract', function () {
 
-  async function deployContractFixture() {
+  async function deployFixture() {
     const [ owner ] = await ethers.getSigners()
     const factory = await ethers.getContractFactory('SSVManager')
     const contract = await factory.deploy() as SSVManager
@@ -14,39 +22,36 @@ describe('Test SSVManager contract', function () {
     return { contract, factory, owner }
   }
 
-  async function stakeUsersFixture() {
-    const { contract } = await loadFixture(deployContractFixture)
-    const amount = 16 // Amount to stake
-    const count = 2 // Count of users
+  async function depositsFixture() {
+    const { contract } = await loadFixture(deployFixture)
     const value = ethers.utils.parseEther(`${amount}`)
     let [ , ...users ] = await ethers.getSigners()
     users = users.slice(0, count)
     for (const user of users) {
-      const stake = await contract.connect(user).stake({ value: value })
-      await stake.wait()
+      const deposit = await contract.connect(user).deposit({ value: value })
+      await deposit.wait()
     }
-    return { amount, contract, count, users }
+    return { contract, users }
   }
 
-  describe('Check balance handling', async function () {
+  describe(`Check balance handling for ${count} individual deposits of ${amount} ETH`, async function () {
 
-    it('Should start with a pool balance of 0', async function () {
-      const { contract } = await loadFixture(deployContractFixture)
-      expect(await ethers.provider.getBalance(contract.address)).to.equal('0')
-    })
-
-    it('Should increase user balances accordingly on multiple stake events', async function () {
-      const { amount, contract, users } = await loadFixture(stakeUsersFixture)
-      const value = ethers.utils.parseEther(`${amount}`)
+    it(`Should increase user balances to ${amount} ETH`, async function () {
+      const { contract, users } = await loadFixture(depositsFixture)
+      const userBalance = ethers.utils.parseEther(`${amount}`)
       for (const user of users) {
-        expect(await contract.userBalances(user.address)).to.equal(value)
+        const pools = await contract.getPoolsForUser(user.address)
+        expect(await contract.getPoolUserBalance(user.address, pools[0])).to.equal(userBalance)
       }
     })
 
-    it('Should increase pool balance accordingly on multiple stake events', async function () {
-      const { amount, contract, count } = await loadFixture(stakeUsersFixture)
-      const total = ethers.utils.parseEther(`${amount * count}`)
-      expect(await ethers.provider.getBalance(contract.address)).to.equal(total)
+    it(`Should increase pool balance to ${amount * count} ETH`, async function () {
+      const { contract, users } = await loadFixture(depositsFixture)
+      const poolBalance = ethers.utils.parseEther(`${amount * count}`)
+      for (const user of users) {
+        const pools = await contract.getPoolsForUser(user.address)
+        expect(await ethers.provider.getBalance(pools[0])).to.equal(poolBalance)
+      }
     })
 
   })
