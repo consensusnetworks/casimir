@@ -28,7 +28,7 @@ const toAddress = ref<string>('0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203')
 
 export default function useWallet() {
   const { getIoPayAccounts, sendIoPayTransaction } = useIoPay()
-  const { bip32Path, getLedgerEthSigner } = useLedger()
+  const { bip32Path, getLedgerEthSigner, sendLedgerTransaction } = useLedger()
   const ethereum: any = window.ethereum
   const availableProviders = ref<BrowserProviders>(
     getBrowserProviders(ethereum)
@@ -63,7 +63,6 @@ export default function useWallet() {
       } else if (provider === 'Ledger') {
         const ledgerEth = await getLedgerEthSigner()
         const { address } = await ledgerEth.getAddress(bip32Path)
-        console.log('address :>> ', address)
         setSelectedAccount(address)
       } else {
         throw new Error('No provider selected')
@@ -103,53 +102,33 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'IoPay') {
         await sendIoPayTransaction(toAddress.value, amount.value)
       } else if (selectedProvider.value === 'Ledger') {
-        // TODO: Offload this to a Ledger composable
-        // TODO: Replace according to selected testnet
+        const chainId = 5 // TODO: Replace according to selected testnet
+
+        // TODO: Figure out how to set gasLimit and gasPrice for transaction
         const infuraProvider = new ethers.providers.JsonRpcProvider(
-          'https://optimism-goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7'
+          'https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7'
         )
-        const chainId = 5
-        const gasPrice = ethers.utils.parseUnits('1.0', 'gwei').toString()
-        const recipient = '0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203'
-        const gasLimit = 1000000
+        const gasLimit = await infuraProvider.estimateGas({
+          to: toAddress.value,
+          value: ethers.utils.parseEther(amount.value),
+        })
+        const gasPrice = await infuraProvider.getGasPrice()
+
         // TODO: Add this once we have a way to get the nonce from the ledger
         // let nonce =  await provider.getTransactionCount(selectedAccount.value, "latest");
-        const _eth = await getLedgerEthSigner()
-
+        console.log('current address: ', selectedAccount.value)
         const transaction = {
-          to: recipient,
-          gasPrice: '0x' + parseInt(gasPrice).toString(16),
-          gasLimit: ethers.utils.hexlify(gasLimit),
+          to: toAddress.value,
+          gasPrice: gasPrice,
+          gasLimit: gasLimit,
+          // gasLimit: ethers.utils.hexlify(gasLimit),
           // nonce: nonce,
           chainId: chainId,
           data: '0x00',
           value: ethers.utils.parseUnits(amount.value, 'ether')._hex,
         }
-        const unsignedTransaction = ethers.utils
-          .serializeTransaction(transaction)
-          .substring(2)
-
-        // TODO: Add resolution as third argument in signature
-        // import ledgerService from '@ledgerhq/hw-app-eth/lib/services/ledger'
-        // const resolution = await ledgerService.resolveTransaction(transaction)
-        // console.log('resolution :>> ', resolution)
-        const signature = await _eth.signTransaction(
-          bip32Path,
-          unsignedTransaction
-          // resolution
-        )
-        signature.r = '0x' + signature.r
-        signature.s = '0x' + signature.s
-        signature.v = parseInt(signature.v)
-        signature.from = selectedAccount.value
-        const signedTransaction = ethers.utils.serializeTransaction(
-          transaction,
-          signature
-        )
-        const txHash = await infuraProvider.sendTransaction(signedTransaction)
-        console.log('txHash :>> ', txHash)
-
-        // TODO: Remove after testing with speculos
+        await sendLedgerTransaction(transaction)
+        // TODO: Remove after testing with speculos or on Goerli testnet
         // npm run dev:ethereum in another process
         // Create - { to: ... }
         // Serialize - ethers.utils.serializeTransaction
@@ -159,7 +138,7 @@ export default function useWallet() {
         throw new Error('Provider selected not yet supported')
       }
     } catch (error) {
-      console.error(error)
+      console.error('sendTransaction error: ', error)
     }
   }
 
