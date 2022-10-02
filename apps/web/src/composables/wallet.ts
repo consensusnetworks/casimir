@@ -29,7 +29,7 @@ const toAddress = ref<string>('0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203')
 export default function useWallet() {
   const { getIoPayAccounts, sendIoPayTransaction, signIoTexMessage } =
     useIoPay()
-  const { bip32Path, getLedgerEthSigner } = useLedger()
+  const { bip32Path, getLedgerEthSigner, signMessageWithLedger } = useLedger()
   const ethereum: any = window.ethereum
   const availableProviders = ref<BrowserProviders>(
     getBrowserProviders(ethereum)
@@ -138,10 +138,8 @@ export default function useWallet() {
         const hashedMessage = ethers.utils.id(message)
         await signIoTexMessage(hashedMessage)
       } else if (selectedProvider.value === 'Ledger') {
-        // TODO: Implement this (10/1/2022)
-        // Get signer
-        // Sign message
-        // Send to backend for verification
+        const signedHash = await signMessageWithLedger(message)
+        // TODO: Send to backend for verification
       } else {
         console.log('signMessage not yet supported for this wallet provider')
       }
