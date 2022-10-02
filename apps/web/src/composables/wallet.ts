@@ -137,6 +137,11 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'IoPay') {
         const hashedMessage = ethers.utils.id(message)
         await signIoTexMessage(hashedMessage)
+      } else if (selectedProvider.value === 'Ledger') {
+        // TODO: Implement this (10/1/2022)
+        // Get signer
+        // Sign message
+        // Send to backend for verification
       } else {
         console.log('signMessage not yet supported for this wallet provider')
       }
