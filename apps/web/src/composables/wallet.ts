@@ -21,14 +21,14 @@ const {
   sendWalletConnectTransaction,
 } = useWalletConnect()
 
-const amount = ref<string>('0.01')
+const amount = ref<string>('0.001')
 const toAddress = ref<string>('0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
   const { getIoPayAccounts, sendIoPayTransaction } = useIoPay()
-  const { bip32Path, getLedgerEthSigner } = useLedger()
+  const { bip32Path, getLedgerEthSigner, sendLedgerTransaction } = useLedger()
   const ethereum: any = window.ethereum
   const availableProviders = ref<BrowserProviders>(
     getBrowserProviders(ethereum)
@@ -63,7 +63,6 @@ export default function useWallet() {
       } else if (provider === 'Ledger') {
         const ledgerEth = await getLedgerEthSigner()
         const { address } = await ledgerEth.getAddress(bip32Path)
-        console.log(address)
         setSelectedAccount(address)
       } else {
         throw new Error('No provider selected')
@@ -103,8 +102,34 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'IoPay') {
         await sendIoPayTransaction(toAddress.value, amount.value)
       } else if (selectedProvider.value === 'Ledger') {
+        const chainId = 5 // TODO: Replace according to selected testnet
+
+        // TODO: Figure out how to set gasLimit and gasPrice for transaction
+        const infuraProvider = new ethers.providers.JsonRpcProvider(
+          'https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7'
+        )
+        const gasLimit = await infuraProvider.estimateGas({
+          to: toAddress.value,
+          value: ethers.utils.parseEther(amount.value),
+        })
+        const gasPrice = await infuraProvider.getGasPrice()
+
+        // TODO: Add this once we have a way to get the nonce from the ledger
+        // let nonce =  await provider.getTransactionCount(selectedAccount.value, "latest");
+        console.log('current address: ', selectedAccount.value)
+        const transaction = {
+          to: toAddress.value,
+          gasPrice: gasPrice,
+          gasLimit: gasLimit,
+          // gasLimit: ethers.utils.hexlify(gasLimit),
+          // nonce: nonce,
+          chainId: chainId,
+          data: '0x00',
+          value: ethers.utils.parseUnits(amount.value, 'ether')._hex,
+        }
+        await sendLedgerTransaction(transaction)
+        // TODO: Remove after testing with speculos or on Goerli testnet
         // npm run dev:ethereum in another process
-        // const ledgerEth = await getLedgerEthSigner()
         // Create - { to: ... }
         // Serialize - ethers.utils.serializeTransaction
         // Sign - ledgerEth.signTransaction
@@ -113,7 +138,7 @@ export default function useWallet() {
         throw new Error('Provider selected not yet supported')
       }
     } catch (error) {
-      console.error(error)
+      console.error('sendTransaction error: ', error)
     }
   }
 
