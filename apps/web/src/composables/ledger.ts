@@ -21,10 +21,15 @@ export default function useLedger() {
     }
   }
 
-  async function sendLedgerTransaction(transaction: any) {
-    // TODO: Replace according to selected testnet
-    const infuraProvider = new ethers.providers.JsonRpcProvider(
-      'https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7'
+  // look at ethers.utils.UnsignedTransaction to make sure that doesn't suffice for you
+  // @shanejonas - Is there a ethers.utils.UnsignedTransaction method? https://docs.ethers.io/v5/api/utils/transactions/#transactions--functions
+  // a type, see line below
+  // @cccccali can I get term access. stepping away for aminute but can go audio in a bit
+  async function sendLedgerTransaction(
+    transaction: ethers.utils.UnsignedTransaction
+  ) {
+    const provider = new ethers.providers.JsonRpcProvider(
+      import.meta.env.ETHEREUM_RPC || 'http://127.0.0.1:8545'
     )
     const _eth = await getLedgerEthSigner()
     const unsignedTransaction = ethers.utils
@@ -42,20 +47,22 @@ export default function useLedger() {
     )
     signature.r = '0x' + signature.r
     signature.s = '0x' + signature.s
+
+    // TODO: Fix types here
     signature.v = parseInt(signature.v)
-    signature.from = transaction.value
+    signature.from = transaction.value // @chris there's just no way
     const signedTransaction = ethers.utils.serializeTransaction(
       transaction,
       signature
     )
-    const txHash = await infuraProvider.sendTransaction(signedTransaction)
+    const txHash = await provider.sendTransaction(signedTransaction)
     console.log('txHash :>> ', txHash)
   }
 
   async function signMessageWithLedger(message: string) {
     const _eth = await getLedgerEthSigner()
     const signature = await _eth.signPersonalMessage(
-      "44'/60'/0'/0/0",
+      bip32Path,
       Buffer.from(message).toString('hex')
     )
     const signedHash =

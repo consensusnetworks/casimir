@@ -10,15 +10,12 @@
   },
   "dependencies": {
     "@heroicons/vue": "^1.0.6",
-    "@ledgerhq/hw-app-btc": "^8.0.2",
     "@ledgerhq/hw-app-eth": "^6.29.4",
     "@ledgerhq/hw-transport-webhid": "^6.27.2",
     "@ledgerhq/hw-transport-webusb": "^6.27.4",
-    "@ledgerhq/logs": "^6.10.0",
     "@walletconnect/client": "^1.8.0",
     "@walletconnect/qrcode-modal": "^1.8.0",
     "buffer": "^6.0.3",
-    "core-js": "^3.25.2",
     "ethers": "^5.6.9",
     "iotex-antenna": "^0.31.3",
     "vue": "^3.2.25",
@@ -36,8 +33,5 @@
     "vite": "^2.9.9",
     "vite-plugin-pages": "^0.23.0",
     "vue-tsc": "^0.34.7"
-  },
-  "alias": {
-    "@ledgerhq/devices": "@ledgerhq/devices/lib-es"
   }
 }

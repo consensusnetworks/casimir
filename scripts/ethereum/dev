@@ -33,7 +33,7 @@ done
 
 # Secret ID is just the name or ARN
 ledger_seed_secret_id=consensus-networks-ledger-seed
-echo "🤫 Getting $ledger_seed_secret_id for $profile"
+echo "Getting $ledger_seed_secret_id for $profile"
 
 # Get the secret from AWS
 ledger_seed=$(aws secretsmanager get-secret-value \
@@ -50,7 +50,7 @@ if [ -z "$fork" ]; then
 else
     # Secret ID is just the name or ARN
     alchemy_secret_id=consensus-networks-alchemy-$fork
-    echo "🤫 Getting $alchemy_secret_id for $profile"
+    echo "Getting $alchemy_secret_id for $profile"
 
     # Get the secret from AWS
     alchemy_key=$(aws secretsmanager get-secret-value \

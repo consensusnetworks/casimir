@@ -27,7 +27,7 @@ const toAddress = ref<string>('0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203')
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const { getIoPayAccounts, sendIoPayTransaction, signIoTexMessage } =
+  const { getIoPayAccounts, sendIoPayTransaction, signIoPayMessage } =
     useIoPay()
   const {
     bip32Path,
@@ -166,7 +166,7 @@ export default function useWallet() {
         console.log('signature: ', signature)
       } else if (selectedProvider.value === 'IoPay') {
         const hashedMessage = ethers.utils.id(message)
-        await signIoTexMessage(hashedMessage)
+        await signIoPayMessage(hashedMessage)
       } else if (selectedProvider.value === 'Ledger') {
         const signedHash = await signMessageWithLedger(message)
         // TODO: Send to backend for verification

@@ -28,7 +28,7 @@ export default function useIoPay() {
     }
   }
 
-  const signIoTexMessage = async (message: string) => {
+  const signIoPayMessage = async (message: string) => {
     return await signer.signMessage(message)
   }
 
@@ -53,7 +53,7 @@ export default function useIoPay() {
   return {
     getIoPayAccounts,
     sendIoPayTransaction,
-    signIoTexMessage,
+    signIoPayMessage,
     // stakeIoPay,
   }
 }
