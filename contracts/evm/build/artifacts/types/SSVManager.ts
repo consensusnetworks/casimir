@@ -29,35 +29,31 @@ import type {
 export interface SSVManagerInterface extends utils.Interface {
   functions: {
     "deposit()": FunctionFragment;
+    "getBalanceForPool(address)": FunctionFragment;
     "getOpenPools()": FunctionFragment;
-    "getPoolBalance(address)": FunctionFragment;
-    "getPoolUserBalance(address,address)": FunctionFragment;
     "getPoolsForUser(address)": FunctionFragment;
     "getStakedPools()": FunctionFragment;
+    "getUserBalanceForPool(address,address)": FunctionFragment;
   };
 
   getFunction(
     nameOrSignatureOrTopic:
       | "deposit"
+      | "getBalanceForPool"
       | "getOpenPools"
-      | "getPoolBalance"
-      | "getPoolUserBalance"
       | "getPoolsForUser"
       | "getStakedPools"
+      | "getUserBalanceForPool"
   ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "deposit", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "getOpenPools",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getPoolBalance",
+    functionFragment: "getBalanceForPool",
     values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
-    functionFragment: "getPoolUserBalance",
-    values: [PromiseOrValue<string>, PromiseOrValue<string>]
+    functionFragment: "getOpenPools",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getPoolsForUser",
@@ -66,19 +62,19 @@ export interface SSVManagerInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "getStakedPools",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getUserBalanceForPool",
+    values: [PromiseOrValue<string>, PromiseOrValue<string>]
   ): string;
 
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "getBalanceForPool",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getOpenPools",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getPoolBalance",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getPoolUserBalance",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -87,6 +83,10 @@ export interface SSVManagerInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getStakedPools",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getUserBalanceForPool",
     data: BytesLike
   ): Result;
 
@@ -141,18 +141,12 @@ export interface SSVManager extends BaseContract {
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    getBalanceForPool(
+      poolAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
     getOpenPools(overrides?: CallOverrides): Promise<[string[]]>;
-
-    getPoolBalance(
-      poolAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    getPoolUserBalance(
-      userAddress: PromiseOrValue<string>,
-      poolAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
 
     getPoolsForUser(
       userAddress: PromiseOrValue<string>,
@@ -160,24 +154,24 @@ export interface SSVManager extends BaseContract {
     ): Promise<[string[]]>;
 
     getStakedPools(overrides?: CallOverrides): Promise<[string[]]>;
+
+    getUserBalanceForPool(
+      userAddress: PromiseOrValue<string>,
+      poolAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
   };
 
   deposit(
     overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  getBalanceForPool(
+    poolAddress: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   getOpenPools(overrides?: CallOverrides): Promise<string[]>;
-
-  getPoolBalance(
-    poolAddress: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  getPoolUserBalance(
-    userAddress: PromiseOrValue<string>,
-    poolAddress: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
 
   getPoolsForUser(
     userAddress: PromiseOrValue<string>,
@@ -186,21 +180,21 @@ export interface SSVManager extends BaseContract {
 
   getStakedPools(overrides?: CallOverrides): Promise<string[]>;
 
+  getUserBalanceForPool(
+    userAddress: PromiseOrValue<string>,
+    poolAddress: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   callStatic: {
     deposit(overrides?: CallOverrides): Promise<void>;
 
+    getBalanceForPool(
+      poolAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getOpenPools(overrides?: CallOverrides): Promise<string[]>;
-
-    getPoolBalance(
-      poolAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getPoolUserBalance(
-      userAddress: PromiseOrValue<string>,
-      poolAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     getPoolsForUser(
       userAddress: PromiseOrValue<string>,
@@ -208,6 +202,12 @@ export interface SSVManager extends BaseContract {
     ): Promise<string[]>;
 
     getStakedPools(overrides?: CallOverrides): Promise<string[]>;
+
+    getUserBalanceForPool(
+      userAddress: PromiseOrValue<string>,
+      poolAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   filters: {
@@ -230,18 +230,12 @@ export interface SSVManager extends BaseContract {
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    getBalanceForPool(
+      poolAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getOpenPools(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getPoolBalance(
-      poolAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getPoolUserBalance(
-      userAddress: PromiseOrValue<string>,
-      poolAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     getPoolsForUser(
       userAddress: PromiseOrValue<string>,
@@ -249,6 +243,12 @@ export interface SSVManager extends BaseContract {
     ): Promise<BigNumber>;
 
     getStakedPools(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getUserBalanceForPool(
+      userAddress: PromiseOrValue<string>,
+      poolAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -256,18 +256,12 @@ export interface SSVManager extends BaseContract {
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    getBalanceForPool(
+      poolAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     getOpenPools(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    getPoolBalance(
-      poolAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getPoolUserBalance(
-      userAddress: PromiseOrValue<string>,
-      poolAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     getPoolsForUser(
       userAddress: PromiseOrValue<string>,
@@ -275,5 +269,11 @@ export interface SSVManager extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     getStakedPools(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getUserBalanceForPool(
+      userAddress: PromiseOrValue<string>,
+      poolAddress: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
   };
 }

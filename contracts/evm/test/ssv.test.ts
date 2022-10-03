@@ -4,17 +4,24 @@ import { expect } from 'chai'
 import { SSVManager } from '@casimir/evm/build/artifacts/types'
 const { ethers } = hre
 
-// Todo handle range of amounts and test for multiple pools
-// Currently test only works with even count of 16 ETH
-// Also clean up function naming
-
-// Global testing variables
-const amount = 16 // Amount to deposit per user
-const count = 2 // Count of users
+const deposits = [
+  {
+    amount: 8,
+    userIndex: 1
+  },
+  {
+    amount: 16,
+    userIndex: 0
+  },
+  {
+    amount: 8,
+    userIndex: 1
+  }
+]
 
 describe('Test SSVManager contract', function () {
 
-  async function deployFixture() {
+  async function deploymentFixture() {
     const [ owner ] = await ethers.getSigners()
     const factory = await ethers.getContractFactory('SSVManager')
     const contract = await factory.deploy() as SSVManager
@@ -22,37 +29,49 @@ describe('Test SSVManager contract', function () {
     return { contract, factory, owner }
   }
 
+  // Todo get rid of deposit fixture loop and just use 2 users in scenarios
   async function depositsFixture() {
-    const { contract } = await loadFixture(deployFixture)
-    const value = ethers.utils.parseEther(`${amount}`)
-    let [ , ...users ] = await ethers.getSigners()
-    users = users.slice(0, count)
-    for (const user of users) {
+    const { contract } = await loadFixture(deploymentFixture)
+    const [ , ...users ] = await ethers.getSigners()
+    for (const { amount, userIndex } of deposits) {
+      const value = ethers.utils.parseEther(`${amount}`)
+      const user = users[userIndex]
       const deposit = await contract.connect(user).deposit({ value: value })
-      await deposit.wait()
+      await deposit.wait() // const receipt = await deposit.wait()
+      // console.log('User at', user.address, 'paid', ethers.utils.formatEther(receipt.gasUsed.mul(receipt.effectiveGasPrice)), 'ETH in gas for deposit')
     }
-    return { contract, users }
+    return { contract }
   }
 
-  describe(`Check balance handling for ${count} individual deposits of ${amount} ETH`, async function () {
+  describe(`Check balance handling for ${deposits.length} deposits`, async function () {
 
-    it(`Should increase user balances to ${amount} ETH`, async function () {
-      const { contract, users } = await loadFixture(depositsFixture)
-      const userBalance = ethers.utils.parseEther(`${amount}`)
-      for (const user of users) {
+    it('Should increase active user balances accordingly', async function () {
+      const { contract } = await loadFixture(depositsFixture)
+      const [ , ...users ] = await ethers.getSigners()
+      const userBalances = deposits.reduce((balances, { amount, userIndex }) => {
+        balances[userIndex] = isNaN(balances[userIndex]) ? amount : balances[userIndex] += amount
+        return balances
+      }, [] as Array<number>)
+      for (const [index, user] of users.splice(0, userBalances.length).entries()) {
         const pools = await contract.getPoolsForUser(user.address)
-        expect(await contract.getPoolUserBalance(user.address, pools[0])).to.equal(userBalance)
+        // Todo check user expected pool balance distribution
+        // Might be hard to do with ordering
+        expect(await contract.getUserBalanceForPool(user.address, pools[0])).to.equal(ethers.utils.parseEther(`${userBalances[index]}`))
       }
     })
 
-    it(`Should increase pool balance to ${amount * count} ETH`, async function () {
-      const { contract, users } = await loadFixture(depositsFixture)
-      const poolBalance = ethers.utils.parseEther(`${amount * count}`)
-      for (const user of users) {
-        const pools = await contract.getPoolsForUser(user.address)
-        expect(await ethers.provider.getBalance(pools[0])).to.equal(poolBalance)
-      }
-    })
+    // it('Should increase pool balance accordingly', async function () {
+    //   const { contract } = await loadFixture(depositsFixture)
+
+      // Todo get total deposited amount from deposits
+      // Check total expected pool count and pool balance distribution
+
+      // const poolBalance = ethers.utils.parseEther(`${amount * count}`)
+      // for (const user of users) {
+      //   const pools = await contract.getPoolsForUser(user.address)
+      //   expect(await ethers.provider.getBalance(pools[0])).to.equal(poolBalance)
+      // }
+    // })
 
   })
   

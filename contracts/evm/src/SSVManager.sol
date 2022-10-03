@@ -116,8 +116,8 @@ contract SSVManager {
     }
 
     /**
-     * @notice Get all the open pools
-     * @return An array of all the open pools
+     * @notice Get the pools for a given user
+     * @return An array of pools for a given user
      */ 
     function getPoolsForUser(address userAddress) public view returns (address[] memory) {
         return users[userAddress].poolAddresses;
@@ -127,7 +127,7 @@ contract SSVManager {
      * @notice Get the given user's balance for the given pool
      * @return The given user's balance for the given pool
      */ 
-    function getPoolUserBalance(address userAddress, address poolAddress) public view returns (uint256) {
+    function getUserBalanceForPool(address userAddress, address poolAddress) public view returns (uint256) {
         SSVPoolInterface poolContract = SSVPoolInterface(poolAddress);
         return poolContract.getUserBalance(userAddress);
     }
@@ -136,7 +136,7 @@ contract SSVManager {
      * @notice Get the given pool's balance
      * @return The given pool's balance
      */ 
-    function getPoolBalance(address poolAddress) public view returns (uint256) {
+    function getBalanceForPool(address poolAddress) public view returns (uint256) {
         SSVPoolInterface poolContract = SSVPoolInterface(poolAddress);
         return poolContract.getBalance();
     }
