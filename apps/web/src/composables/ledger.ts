@@ -52,9 +52,21 @@ export default function useLedger() {
     console.log('txHash :>> ', txHash)
   }
 
+  async function signMessageWithLedger(message: string) {
+    const _eth = await getLedgerEthSigner()
+    const signature = await _eth.signPersonalMessage(
+      "44'/60'/0'/0/0",
+      Buffer.from(message).toString('hex')
+    )
+    const signedHash =
+      '0x' + signature.r + signature.s + signature.v.toString(16)
+    return signedHash
+  }
+
   return {
     bip32Path,
     getLedgerEthSigner,
+    signMessageWithLedger,
     sendLedgerTransaction,
   }
 }

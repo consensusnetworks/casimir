@@ -19,13 +19,17 @@ export default function useIoPay() {
         from: antenna.iotx.accounts[0].address,
         value: toRau(amount, 'Iotx'),
         gasLimit: '100000',
-        gasPrice: toRau('1', 'Qev')
+        gasPrice: toRau('1', 'Qev'),
       })
       console.log('transResp :>> ', transResp)
     } catch (err) {
       // TODO: handle submit error and guide user
       console.log(err)
     }
+  }
+
+  const signIoTexMessage = async (message: string) => {
+    return await signer.signMessage(message)
   }
 
   //   const stakeIoPay = async () => {
@@ -49,6 +53,7 @@ export default function useIoPay() {
   return {
     getIoPayAccounts,
     sendIoPayTransaction,
+    signIoTexMessage,
     // stakeIoPay,
   }
 }

@@ -27,8 +27,14 @@ const toAddress = ref<string>('0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203')
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const { getIoPayAccounts, sendIoPayTransaction } = useIoPay()
-  const { bip32Path, getLedgerEthSigner, sendLedgerTransaction } = useLedger()
+  const { getIoPayAccounts, sendIoPayTransaction, signIoTexMessage } =
+    useIoPay()
+  const {
+    bip32Path,
+    getLedgerEthSigner,
+    signMessageWithLedger,
+    sendLedgerTransaction,
+  } = useLedger()
   const ethereum: any = window.ethereum
   const availableProviders = ref<BrowserProviders>(
     getBrowserProviders(ethereum)
@@ -142,6 +148,36 @@ export default function useWallet() {
     }
   }
 
+  async function signMessage(message: string) {
+    try {
+      if (ethersProviderList.includes(selectedProvider.value)) {
+        const browserProvider =
+          availableProviders.value[
+            selectedProvider.value as keyof BrowserProviders
+          ]
+        const web3Provider: ethers.providers.Web3Provider =
+          new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+        const signer = web3Provider.getSigner()
+        const hashedMessage = ethers.utils.id(message)
+        const signature = await signer.signMessage(hashedMessage)
+        // TODO: Mock sending hash and signature to backend for verification
+        console.log('message :>> ', message)
+        console.log('hashedMessage :>> ', hashedMessage)
+        console.log('signature: ', signature)
+      } else if (selectedProvider.value === 'IoPay') {
+        const hashedMessage = ethers.utils.id(message)
+        await signIoTexMessage(hashedMessage)
+      } else if (selectedProvider.value === 'Ledger') {
+        const signedHash = await signMessageWithLedger(message)
+        // TODO: Send to backend for verification
+      } else {
+        console.log('signMessage not yet supported for this wallet provider')
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   return {
     selectedProvider,
     selectedAccount,
@@ -150,6 +186,7 @@ export default function useWallet() {
     connectWallet,
     disconnectWallet,
     sendTransaction,
+    signMessage,
   }
 }
 
