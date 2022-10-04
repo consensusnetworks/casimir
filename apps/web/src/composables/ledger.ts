@@ -1,10 +1,13 @@
 import SpeculosHttpTransport from '@casimir/hw-transport-speculos'
 import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
-import Eth from '@ledgerhq/hw-app-eth'
+import Eth, { ledgerService } from '@ledgerhq/hw-app-eth'
 import { ethers } from 'ethers'
+import { TransactionInit } from '@/interfaces/TransactionInit'
+import { Deferrable } from '@ethersproject/properties'
+import { TransactionRequest } from '@ethersproject/abstract-provider'
 
 export default function useLedger() {
-  const bip32Path = "44'/60'/0'/0/0"
+  const bip32Path = '44\'/60\'/0\'/0/0'
 
   async function getLedgerEthSigner() {
     const transport = await _getLedgerTransport()
@@ -21,42 +24,50 @@ export default function useLedger() {
     }
   }
 
-  // look at ethers.utils.UnsignedTransaction to make sure that doesn't suffice for you
-  // @shanejonas - Is there a ethers.utils.UnsignedTransaction method? https://docs.ethers.io/v5/api/utils/transactions/#transactions--functions
-  // a type, see line below
-  // @cccccali can I get term access. stepping away for aminute but can go audio in a bit
-  async function sendLedgerTransaction(
-    transaction: ethers.utils.UnsignedTransaction
-  ) {
-    const provider = new ethers.providers.JsonRpcProvider(
-      import.meta.env.ETHEREUM_RPC || 'http://127.0.0.1:8545'
-    )
-    const _eth = await getLedgerEthSigner()
-    const unsignedTransaction = ethers.utils
-      .serializeTransaction(transaction)
-      .substring(2)
+  async function sendLedgerTransaction({ from, to, value }: TransactionInit) {
+    const rpcUrl = import.meta.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545/'
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+    const { chainId } = await provider.getNetwork()
+    const gasPriceHex = (await provider.getGasPrice())._hex
+    const gasPrice = '0x' + (parseInt(gasPriceHex, 16) * 1.15).toString(16)
+    const nonce = await provider.getTransactionCount(from, 'latest')
+    const unsignedTransaction: ethers.utils.UnsignedTransaction = {
+      to,
+      gasPrice,
+      nonce,
+      chainId,
+      data: '0x00',
+      value: ethers.utils.parseUnits(value)
+    }
 
-    // TODO: Add resolution as third argument in signature
-    // import ledgerService from '@ledgerhq/hw-app-eth/lib/services/ledger'
-    // const resolution = await ledgerService.resolveTransaction(transaction)
-    // console.log('resolution :>> ', resolution)
-    const signature = await _eth.signTransaction(
+    // Todo check before click (user can +/- gas limit accordingly)
+    const gasEstimate = await provider.estimateGas(unsignedTransaction as Deferrable<TransactionRequest>)
+    const gasLimit = Math.ceil(parseInt(gasEstimate.toString()) * 1.3)
+    unsignedTransaction.gasLimit = ethers.utils.hexlify(gasLimit)
+    const balance = await provider.getBalance(from)
+    const required = ethers.BigNumber.from(gasPrice).mul(gasLimit).add(ethers.utils.parseEther(value))
+    console.log('Balance', ethers.utils.formatEther(balance))
+    console.log('Required', ethers.utils.formatEther(required))
+
+    const ledger = await getLedgerEthSigner()
+    const rawUnsignedTransaction = ethers.utils.serializeTransaction(unsignedTransaction).substring(2)
+    const resolution = await ledgerService.resolveTransaction(rawUnsignedTransaction, {}, {})
+    const { v, r, s } = await ledger.signTransaction(
       bip32Path,
-      unsignedTransaction
-      // resolution
+      rawUnsignedTransaction,
+      resolution
     )
-    signature.r = '0x' + signature.r
-    signature.s = '0x' + signature.s
-
-    // TODO: Fix types here
-    signature.v = parseInt(signature.v)
-    signature.from = transaction.value // @chris there's just no way
+    const signature = {
+      v: parseInt(v),
+      r: '0x' + r,
+      s: '0x' + s,
+      from
+    }
     const signedTransaction = ethers.utils.serializeTransaction(
-      transaction,
+      unsignedTransaction,
       signature
     )
-    const txHash = await provider.sendTransaction(signedTransaction)
-    console.log('txHash :>> ', txHash)
+    return await provider.sendTransaction(signedTransaction)
   }
 
   async function signMessageWithLedger(message: string) {

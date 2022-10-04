@@ -22,7 +22,7 @@ const {
 } = useWalletConnect()
 
 const amount = ref<string>('0.001')
-const toAddress = ref<string>('0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203')
+const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
@@ -92,6 +92,7 @@ export default function useWallet() {
       if (provider === 'WalletConnect') {
         await sendWalletConnectTransaction(amount.value, toAddress.value)
       } else if (ethersProviderList.includes(provider)) {
+        // Move this into ethers composable mimicking ledger composable
         const browserProvider =
           availableProviders.value[provider as keyof BrowserProviders]
         const web3Provider: ethers.providers.Web3Provider =
@@ -102,44 +103,18 @@ export default function useWallet() {
           to: toAddress.value,
           value: etherAmount,
         }
-        signer.sendTransaction(tx).then((txObj) => {
-          console.log('successful txHash: ', txObj.hash)
-        })
+        const { hash } = await signer.sendTransaction(tx)
+        console.log('Transaction sent', hash)
       } else if (selectedProvider.value === 'IoPay') {
         await sendIoPayTransaction(toAddress.value, amount.value)
       } else if (selectedProvider.value === 'Ledger') {
-        const chainId = 5 // TODO: Replace according to selected testnet
-
-        // TODO: Figure out how to set gasLimit and gasPrice for transaction
-        const infuraProvider = new ethers.providers.JsonRpcProvider(
-          'https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7'
-        )
-        const gasLimit = await infuraProvider.estimateGas({
+        const transactionInit = {
+          from: selectedAccount.value,
           to: toAddress.value,
-          value: ethers.utils.parseEther(amount.value),
-        })
-        const gasPrice = await infuraProvider.getGasPrice()
-
-        // TODO: Add this once we have a way to get the nonce from the ledger
-        // let nonce =  await provider.getTransactionCount(selectedAccount.value, "latest");
-        console.log('current address: ', selectedAccount.value)
-        const transaction = {
-          to: toAddress.value,
-          gasPrice: gasPrice,
-          gasLimit: gasLimit,
-          // gasLimit: ethers.utils.hexlify(gasLimit),
-          // nonce: nonce,
-          chainId: chainId,
-          data: '0x00',
-          value: ethers.utils.parseUnits(amount.value, 'ether')._hex,
+          value: amount.value
         }
-        await sendLedgerTransaction(transaction)
-        // TODO: Remove after testing with speculos or on Goerli testnet
-        // npm run dev:ethereum in another process
-        // Create - { to: ... }
-        // Serialize - ethers.utils.serializeTransaction
-        // Sign - ledgerEth.signTransaction
-        // Send - (new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545")).sendTransaction
+        const { hash } = await sendLedgerTransaction(transactionInit)
+        console.log('Transaction sent', hash)
       } else {
         throw new Error('Provider selected not yet supported')
       }

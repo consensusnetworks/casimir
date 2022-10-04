@@ -11,17 +11,37 @@
 
 # Configure and expose variables
 source scripts/aws/configure
+
+# Set the stage
 export PUBLIC_STAGE=${STAGE}
 
+# Secret ID is just the name or ARN
+seed_secret_id=consensus-networks-bip39-seed
+
+# Get the secret from AWS
+seed=$(aws secretsmanager get-secret-value \
+--secret-id $seed_secret_id \
+--query SecretString \
+--output text \
+--profile $profile)
+
+# Set the shared bip39 seed
+export BIP39_SEED="$seed"
+
 # Get args
-while getopts :a:m:s: flag
+while getopts :a:f:m:n:s:t: flag
 do
     case "${flag}" in
         a) app=${OPTARG};;
+        f) fork=${OPTARG};;
         m) mock=${OPTARG};;
+        n) network=${OPTARG};;
         s) speculos=${OPTARG};;
+        t) tunnel=${OPTARG};;
     esac
 done
+
+commands=()
 
 if [ "$app" == "landing" ]; then
     services="users"
@@ -36,11 +56,17 @@ else
 
     for chain in "${chain_list[@]}"
     do
-        commands+=("npm run dev:$chain")
+        # Pass fork or network to chain-specific script
+        commands+=("npm run dev:$chain --fork=$fork --network=$network")
     done
+
+    # Tunnel local (default) chain networks if specified
+    if [ -z "$network" ] && [ -n "$tunnel" ]; then
+        export LOCAL_TUNNEL="$tunnel"
+    fi
 fi
 
-commands=("npm run dev --workspace @casimir/$app")
+commands+=("npm run dev --workspace @casimir/$app")
 
 if [ -n "$mock" ]; then
     # Loop over comma-separated string of services

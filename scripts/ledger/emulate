@@ -56,7 +56,6 @@ cd $resource_path/speculos
 
 # Secret ID is just the name or ARN
 ledger_seed_secret_id=consensus-networks-ledger-seed
-echo "🤫 Getting $ledger_seed_secret_id for $profile"
 
 # Get the secret from AWS
 ledger_seed=$(aws secretsmanager get-secret-value \
