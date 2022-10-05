@@ -4,6 +4,8 @@ import { defaultProvider } from '@aws-sdk/credential-provider-node'
 import { StartQueryExecutionCommand, GetQueryExecutionCommand }  from '@aws-sdk/client-athena'
 import { EventTableColumn } from '@casimir/data'
 
+const defaultQueryOutputBucket = 'casimir-etl-output-bucket-dev'
+
 /**
  * Converts any string to PascalCase.
  *
@@ -194,7 +196,7 @@ export async function queryAthena(query: string): Promise<EventTableColumn[] | n
     QueryString: query,
     WorkGroup: 'primary',
     ResultConfiguration: {
-      OutputLocation: 's3://cms-lds-agg/cms_hcf_aggregates/'
+      OutputLocation: `s3://${defaultQueryOutputBucket}/`
     }
   })
 
@@ -213,7 +215,7 @@ export async function queryAthena(query: string): Promise<EventTableColumn[] | n
   // wait for athena to finish writing to s3
   await new Promise(resolve => setTimeout(resolve, 2000))
 
-  const raw = await getFromS3('cms-lds-agg', `cms_hcf_aggregates/${QueryExecutionId}.csv`)
+  const raw = await getFromS3(defaultQueryOutputBucket, `${QueryExecutionId}.csv`)
 
   const rows = raw.split('\n').filter(r => r !== '')
 
