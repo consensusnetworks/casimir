@@ -1,4 +1,4 @@
-<img width="50px" alt="Casimir logo" src="common/data/notebooks/diagrams/resources/casimir.png">
+<img width="50px" alt="Casimir logo" src="common/images/casimir.png">
 
 # Casimir
 
@@ -205,18 +205,6 @@ npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/
 npm install -D some-dev-dependency --workspace @casimir/workspace-name
 ```
 
-## 📝 Content
-
-Get started contributing to Casimir's content.
-
-### Writing
-
-Writing content is stored in the [content/writing](content/writing/) directory. See the [Writing Contribution Guide](content/writing/README.md) for detailed usage instructions.
-
-### Emails
-
-AWS Pinpont email templates and shared components are stored in the [content/email](content/email/) directory. See the [Email Contribution Guide](content/email/README.md) for detailed usage instructions.
-
 ## 📊 Data
 
 Data schemas, data operations/workflows, and analytics and ML notebooks are stored in the [common/data/] directory (also namespaced as the @casimir/data npm workspace). See the [Data Contribution Guide](common/data/README.md) for detailed usage instructions.
@@ -234,9 +222,7 @@ Code is organized into work directories (apps, services, infrastructure – and 
 ├── infrastructure/ (deployment resources)
 |   └── cdk/ (aws stacks)
 ├── common/ (shared code)
-|   └── lib/ (general utilities)
-├── content/ (static code and text)
-|   └── email/ (pinpoint templates)
+|   └── helpers/ (general utilities)
 ├── scripts/ (devops and build scripts)
 |   └── local/ (mock and serve tasks)
 ├── services/ (backend services)
