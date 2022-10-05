@@ -1,12 +1,12 @@
 {
-    "name": "@casimir/evm",
+    "name": "@casimir/ethereum",
     "scripts": {
         "deploy:sample": "npx hardhat run deploy/sample.ts",
         "test:contracts": "npx hardhat test",
         "task:accounts": "npx hardhat accounts",
         "task:compile": "npx hardhat compile",
         "task:clean": "npx hardhat clean",
-        "dev:localnode": "npx hardhat node"
+        "dev:node": "npx hardhat node"
     },
     "devDependencies": {
         "@nomiclabs/hardhat-ethers": "^2.0.6",
