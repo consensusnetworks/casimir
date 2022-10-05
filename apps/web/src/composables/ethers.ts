@@ -30,10 +30,6 @@ export default function useEthers() {
     providerString: ProviderString,
     { to, value }: { to: string; value: string }
   ) {
-    const ethereum: any = window.ethereum
-    const availableProviders = ref<BrowserProviders>(
-      getBrowserProviders(ethereum)
-    )
     const browserProvider =
       availableProviders.value[providerString as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider =
@@ -48,7 +44,20 @@ export default function useEthers() {
     return hash
   }
 
-  return { ethersProviderList, requestEthersAccount, getBrowserProviders, sendEthersTransaction }
+  async function signEthersMessage(provider: ProviderString, message: string) {
+    const browserProvider =
+      availableProviders.value[
+        provider as keyof BrowserProviders
+      ]
+    const web3Provider: ethers.providers.Web3Provider =
+      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const signer = web3Provider.getSigner()
+    const hashedMessage = ethers.utils.id(message)
+    const signature = await signer.signMessage(hashedMessage)
+    return signature
+  }
+
+  return { ethersProviderList, requestEthersAccount, getBrowserProviders, sendEthersTransaction, signEthersMessage }
 }
 
 function getBrowserProviders(ethereum: any) {
