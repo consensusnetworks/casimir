@@ -1,65 +1,198 @@
+
 import Antenna from 'iotex-antenna'
 import {
   ClientReadableStream,
   IActionInfo,
   IGetBlockMetasResponse,
-  IBlockMeta,
-  IGetChainMetaResponse,
-  IGetReceiptByActionResponse,
-  IGetServerMetaResponse,
   IStreamBlocksResponse,
 } from 'iotex-antenna/lib/rpc-method/types'
-import { from } from '@iotexproject/iotex-address-ts'
 import { Opts } from 'iotex-antenna/lib/antenna'
 import { EventTableColumn } from '@casimir/data'
-import {Chain} from '../index'
-
-const IOTEX_CORE = 'http://localhost:14014'
-
-export type IotexOptions = Opts & {
-  provider: string,
-  chainId: 1 | 2
-}
+import {Chain, Provider} from '../index'
 
 export enum IotexNetworkType {
   Mainnet = 'mainnet',
-  Testnet = 'testnet'
+  Testnet = 'testnet',
 }
 
-enum IotexActionType {
+export enum IotexActionType {
+  grantReward = 'grantReward',
+  claimFromRewardingFund = 'claimFromRewardingFund',
+  depositToRewardingFund = 'depositToRewardingFund',
+  candidateRegister = 'candidateRegister',
+  candidateUpdate = 'candidateUpdate',
+  stakeCreate = 'stakeCreate',
+  stakeRestake = 'stakeRestake',
+  stakeAddDeposit = 'stakeAddDeposit',
   transfer = 'transfer',
-  grantReward = 'grant_reward',
-  createStake = 'create_stake',
-  stakeAddDeposit = 'stake_add_deposit',
+  stakeUnstake = 'stakeUnstake',
+  stakeWithdraw = 'stakeWithdraw',
+
+  // non governance actions
   execution = 'execution',
-  putPollResult = 'put_poll_result',
-  stakeWithdraw = 'stake_withdraw',
-  StakeChangeCandidate = 'stake_change_candidate',
-  stakeRestake = 'stake_restake',
+  putPollResult = 'putPollResult',
+  StakeChangeCandidate = 'stakeChangeCandidate',
+}
+
+export type IotexOptions = Opts & {
+  url: string
+  network: IotexNetworkType
 }
 
 export class IotexService {
-  provider: string
+  chain: Chain
+  network: IotexNetworkType
+  provider: Antenna
   chainId: number
-  client: Antenna
   constructor (opt: IotexOptions) {
-    this.provider = opt.provider || IOTEX_CORE
-    this.chainId = opt.chainId
-    this.client = new Antenna(opt.provider, opt.chainId, {
+    this.chain = Chain.Iotex
+    this.network = opt.network || IotexNetworkType.Mainnet
+    this.chainId = IotexNetworkType.Mainnet ? 4689 : 4690
+    this.provider = new Antenna(opt.url, this.chainId, {
       signer: opt.signer,
       timeout: opt.timeout,
       apiToken: opt.apiToken
     })
   }
 
-  async getChainMetadata (): Promise<IGetChainMetaResponse> {
-    const meta = await this.client.iotx.getChainMeta({})
-    return meta
+  deduceActionType (action: IActionInfo): IotexActionType | null {
+    const core = action.action.core
+    if (core === undefined) return null
+
+    const type = Object.keys(core).filter(k => k !== undefined)[Object.keys(core).length - 2]
+    return type as IotexActionType
   }
 
-  async getServerMetadata (): Promise<IGetServerMetaResponse> {
-    const meta = await this.client.iotx.getServerMeta({})
-    return meta
+  async getEvents(height: number): Promise<{ hash: string, events: EventTableColumn[]}> {
+    const events: EventTableColumn[] = []
+
+    const block = await this.provider.iotx.getBlockMetas({byIndex: {start: height, count: 1}})
+
+    const blockMeta = block.blkMetas[0]
+
+    events.push({
+      chain: this.chain,
+      network: this.network,
+      provider: Provider.Casimir,
+      type: 'block',
+      created_at: new Date(block.blkMetas[0].timestamp.seconds * 1000).toISOString().replace('T', ' ').replace('Z', ''),
+      address: blockMeta.producerAddress,
+      height: blockMeta.height,
+      to_address: '',
+      candidate: '',
+      duration: 0,
+      candidate_list: [],
+      amount: '0',
+      auto_stake: false,
+    })
+
+    const numOfActions = block.blkMetas[0].numActions
+
+    if (numOfActions > 0) {
+      const actions = await this.getBlockActions(height, numOfActions)
+
+      const blockActions = actions.map((action) => {
+        const actionCore = action.action.core
+        if (actionCore === undefined) return
+
+        const actionType = this.deduceActionType(action)
+        if (actionType === null) return
+
+        const actionEvent: Partial<EventTableColumn> = {
+          chain: this.chain,
+          network: this.network,
+          provider: Provider.Casimir,
+          type: actionType,
+          created_at: new Date(action.timestamp.seconds * 1000).toISOString(),
+          address: blockMeta.producerAddress,
+          height: blockMeta.height,
+          to_address: '',
+          candidate: '',
+          duration: 0,
+          candidate_list: [],
+          amount: '0',
+          auto_stake: false,
+        }
+
+        if (actionType === IotexActionType.transfer && actionCore.transfer) {
+          actionEvent.amount = actionCore.transfer.amount
+          actionEvent.to_address = actionCore.transfer.recipient
+          events.push(actionEvent as EventTableColumn)
+        }
+
+        if (actionType === IotexActionType.stakeCreate && actionCore.stakeCreate) {
+          actionEvent.amount = actionCore.stakeCreate.stakedAmount
+          actionEvent.candidate = actionCore.stakeCreate.candidateName
+          actionEvent.auto_stake = actionCore.stakeCreate.autoStake
+          actionEvent.duration = actionCore.stakeCreate.stakedDuration
+          events.push(actionEvent as EventTableColumn)
+        }
+
+        if (actionType === IotexActionType.stakeAddDeposit && actionCore.stakeAddDeposit) {
+          actionEvent.amount = actionCore.stakeAddDeposit.amount
+          events.push(actionEvent as EventTableColumn)
+        }
+
+        if (actionType === IotexActionType.execution && actionCore.execution) {
+          actionEvent.amount = actionCore.execution.amount
+          events.push(actionEvent as EventTableColumn)
+        }
+
+        if (actionType === IotexActionType.putPollResult && actionCore.putPollResult) {
+          if (actionCore.putPollResult.candidates) {
+            actionEvent.candidate_list = actionCore.putPollResult.candidates.candidates.map(c => c.address)
+          }
+
+          if (actionCore.putPollResult.height) {
+            actionEvent.height = typeof actionCore.putPollResult.height === 'string' ? parseInt(actionCore.putPollResult.height) : actionCore.putPollResult.height
+          }
+          events.push(actionEvent as EventTableColumn)
+        }
+
+        if (actionType === IotexActionType.StakeChangeCandidate && actionCore.stakeChangeCandidate) {
+          actionEvent.candidate = actionCore.stakeChangeCandidate.candidateName
+          events.push(actionEvent as EventTableColumn)
+        }
+
+        if (actionType === IotexActionType.stakeRestake && actionCore.stakeRestake) {
+          actionEvent.duration = actionCore.stakeRestake.stakedDuration
+          actionEvent.auto_stake = actionCore.stakeRestake.autoStake
+          events.push(actionEvent as EventTableColumn)
+        }
+
+        if (actionType === IotexActionType.candidateRegister && actionCore.candidateRegister) {
+          actionEvent.amount = actionCore.candidateRegister.stakedAmount
+          actionEvent.duration = actionCore.candidateRegister.stakedDuration
+          actionEvent.auto_stake = actionCore.candidateRegister.autoStake
+          actionEvent.candidate = actionCore.candidateRegister.candidate.name
+          events.push(actionEvent as EventTableColumn)
+        }
+
+        if (actionType === IotexActionType.candidateUpdate && actionCore.candidateUpdate) {
+          actionEvent.candidate = actionCore.candidateUpdate.name
+          events.push(actionEvent as EventTableColumn)
+        }
+
+        if (actionType === IotexActionType.claimFromRewardingFund && actionCore.claimFromRewardingFund) {
+          actionEvent.amount = actionCore.claimFromRewardingFund.amount
+        }
+
+        if (actionType === IotexActionType.depositToRewardingFund && actionCore.depositToRewardingFund) {
+          actionEvent.amount = actionCore.depositToRewardingFund.amount
+          events.push(actionEvent as EventTableColumn)
+        }
+
+        // if (actionType === IotexActionType.grantReward) {}
+        // if (actionType === IotexActionType.stakeUnstake) {}
+        // if (actionType === IotexActionType.stakeWithdraw) {}
+        return actionEvent
+      })
+      events.push(...blockActions as EventTableColumn[])
+    }
+    return {
+      hash: blockMeta.hash,
+      events
+    }
   }
 
   async getBlocks(start: number, count: number): Promise<IGetBlockMetasResponse> {
@@ -75,62 +208,13 @@ export class IotexService {
       count = 100
     }
 
-    return await this.client.iotx.getBlockMetas({ byIndex: { start: start, count: count } })
-  }
+    const blocks = await this.provider.iotx.getBlockMetas({ byIndex: { start: start, count: count } })
 
-  async getBlockMeta (blockHash: string): Promise<IGetBlockMetasResponse> {
-    const metas = await this.client.iotx.getBlockMetas({
-      byHash: {
-        blkHash: blockHash
-      }
-    })
-    return metas
-  }
-
-  convertEthToIotx (eth: string): string {
-    const add = from(eth)
-    return add.string()
-  }
-
-  convertIotxToEth (iotx: string): string {
-    const add = from(iotx)
-    return add.stringEth()
-  }
-
-  async getAccountActions (address: string, count: number): Promise<any> {
-    const account = await this.client.iotx.getAccount({
-      address
-    })
-
-    if (account.accountMeta === undefined) {
-      return []
-    }
-
-    const actions = await this.client.iotx.getActions({
-      byAddr: {
-        address: account.accountMeta.address,
-        start: 1,
-        count: count || 100
-      }
-    })
-
-    return actions
-  }
-
-  async readableBlockStream (): Promise<ClientReadableStream<IStreamBlocksResponse>> {
-    const stream = await this.client.iotx.streamBlocks({
-      start: 1
-    })
-    return stream
-  }
-
-  async getTxReceipt (actionHash: string): Promise<IGetReceiptByActionResponse> {
-    const tx = await this.client.iotx.getReceiptByAction({ actionHash })
-    return tx
+    return blocks
   }
 
   async getBlockActions (index: number, count: number): Promise<IActionInfo[]> {
-    const actions = await this.client.iotx.getActions({
+    const actions = await this.provider.iotx.getActions({
       byIndex: {
         start: index,
         count: count
@@ -139,87 +223,30 @@ export class IotexService {
     return actions.actionInfo
   }
 
+  async getCurrentBlock(): Promise<IGetBlockMetasResponse> {
+    const { chainMeta } = await this.provider.iotx.getChainMeta({
+        includePendingActions: false
+    })
 
-  convertToGlueSchema(obj: { type: string, block: IBlockMeta, action: IActionInfo}): EventTableColumn {
-    const core = obj.action.action.core
+    const block = await this.provider.iotx.getBlockMetas({ byIndex: { start: parseInt(chainMeta.height), count: 1 } })
+    return block
+  }
 
-    if (core === undefined) throw new Error('core is undefined')
+  async readableBlockStream (): Promise<ClientReadableStream<IStreamBlocksResponse>> {
+    const stream = await this.provider.iotx.streamBlocks({
+      start: 1
+    })
+    return stream
+  }
 
-    const event: EventTableColumn = {
-      chain: Chain.Iotex,
-      network: this.chainId === 1 ? IotexNetworkType.Mainnet : IotexNetworkType.Testnet,
-      provider: 'casimir',
-      created_at: new Date(obj.block.timestamp.seconds * 1000).toISOString().split('T')[0],
-      type: '',
-      address: obj.block.producerAddress,
-      height: obj.block.height,
-      to_address: '',
-      candidate: '',
-      candidate_list: [],
-      amount: 0,
-      duration:  0,
-      auto_stake: false,
-      // payload: {}
-    }
-    switch (obj.type) {
-      case 'grantReward':
-        event.type = IotexActionType.grantReward
-        return event
-      case 'transfer':
-        event.type = IotexActionType.transfer
-
-        if (core.transfer?.amount !== undefined) {
-          event.amount = parseInt(core.transfer?.amount)
-        }
-        return event
-      case 'stakeCreate':
-        if (core.stakeCreate?.autoStake !== undefined) {
-          event.auto_stake = core.stakeCreate.autoStake
-        }
-      event.type = IotexActionType.createStake
-      return event
-      case 'stakeAddDeposit':
-        event.type = IotexActionType.stakeAddDeposit
-        if (core.stakeAddDeposit?.amount !== undefined) {
-          event.amount = parseInt(core.stakeAddDeposit?.amount)
-        }
-        return event
-      case 'execution':
-        event.type = IotexActionType.execution
-        if (core.execution?.amount !== undefined) {
-          event.amount = parseInt(core.execution?.amount)
-        }
-        return event
-        case 'putPollResult':  
-        event.type =  IotexActionType.putPollResult
-        if (core.putPollResult?.candidates !== undefined) {
-          event.candidate_list = core.putPollResult?.candidates.candidates.map(c => c.address)
-        }
-          return event
-      case 'stakeWithdraw':
-        event.type = IotexActionType.grantReward
-        return event
-      case 'stakeChangeCandidate':
-        event.type = IotexActionType.StakeChangeCandidate
-        return event
-      case 'stakeRestake':
-        event.type = IotexActionType.grantReward
-        if (core.stakeRestake?.autoStake !== undefined) {
-          event.auto_stake = core.stakeRestake.autoStake
-        }
-        if (core.stakeRestake?.stakedDuration !== undefined) {
-          event.duration = core.stakeRestake.stakedDuration
-        }
-        return event
-      default:
-        throw new Error(`Action type ${obj.type} not supported`)
-    }
+  on(event: string, callback: (data: IStreamBlocksResponse) => void): void {
+    this.provider.iotx.streamBlocks({
+        start: 1
+    }).on('data', (data: IStreamBlocksResponse) => {
+      callback(data)
+    })
   }
 }
-
-export async function newIotexService (opt?: IotexOptions): Promise<IotexService> {
-  return new IotexService({
-    provider: opt?.provider ?? 'https://api.iotex.one:443',
-    chainId: opt?.chainId ?? 1
-  })
+export function newIotexService (opt: IotexOptions): IotexService {
+  return new IotexService(opt)
 }

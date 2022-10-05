@@ -19,9 +19,9 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
 
     let type: glue.Type = glue.Schema[typeKey]
 
-    if (name.endsWith('at')) type = glue.Schema.DATE
+    if (name.endsWith('at')) type = glue.Schema.TIMESTAMP
 
-    if (name === 'candidate_list') type = glue.Schema.array(glue.Schema.STRING)
+    if (name.endsWith('_list')) type = glue.Schema.array(glue.Schema.STRING)
 
     if (name.endsWith('amount')) type = glue.Schema.BIG_INT
 
@@ -41,7 +41,7 @@ export type EventTableColumn = {
   to_address: string
   candidate: string
   candidate_list: string[]
-  amount: number
+  amount: string
   duration: number
   auto_stake: boolean
   // payload: Record<string, unknown>

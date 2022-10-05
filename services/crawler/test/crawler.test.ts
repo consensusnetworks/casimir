@@ -1,27 +1,37 @@
-import { crawler, Chain } from '../src/index'
+import { crawler } from '../src/index'
+import { Chain } from '../src/index'
 
-jest.setTimeout(20000)
-
-test('get last block', async () => {
-  const supercrawler = await crawler({
+test('init crawler for iotex', async () => {
+  const iotex = await crawler({
     chain: Chain.Iotex,
     verbose: true
   })
-
-  expect(supercrawler.service).not.toBe(null)
-  const lastBlock = await supercrawler.retrieveLastBlock()
-  expect(typeof lastBlock).toBe('number')
+  await iotex.start()
+  expect(iotex.service).not.toBe(null)
 })
 
-// test('stream', async () => {
+jest.setTimeout(1000000)
+
+// test('init crawler for ethereum', async () => {
+//   const eth = await crawler({
+//     chain: Chain.Ethereum,
+//     verbose: true
+//   })
+//   await eth.start()
+//   expect(eth.service).not.toBe(null)
+// })
+
+// test('query athena thru service', async () => {
 //   const supercrawler = await crawler({
-//     chain: Chain.Iotex,
+//     chain: Chain.Ethereum,
 //     verbose: true
 //   })
 //
-//   expect(supercrawler).not.toBe(null)
-//   // supercrawler.on('block', (block) => {
-//   //   console.log(block)
-//   // })
-// })
+//   const lastBlock = await supercrawler.getLastProcessedEvent()
 //
+//   if (!lastBlock) {
+//     throw new Error('last block not found')
+//   }
+//   expect(lastBlock.chain).toBe('ethereum')
+//   expect(lastBlock.height).not.toBe(null)
+// })

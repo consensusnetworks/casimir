@@ -22,35 +22,43 @@
         },
         "height": {
             "type": "integer",
-            "description": "The block height of the event"
+            "description": "The height of the event"
+        },
+        "block": {
+            "type": "string",
+            "description": "The block hash"
+        },
+        "transaction": {
+            "type": "string",
+            "description": "The transaction hash"
         },
         "created_at": {
             "type": "string",
-            "description": "The date (MM-DD-YYYY) of the event"
+            "description": "The date and time of the event in ISO 8601 format e.g. 2015-03-04T22:44:30.652Z"
         },
         "address": {
             "type": "string",
-            "description": "The address that initiated the event"
+            "description": "The address which initiated the event"
         },
         "to_address": {
             "type": "string",
-            "description": "The address which received the action event"
+            "description": "The recipient's address"
         },
-        "candidate": {
+        "validator": {
             "type": "string",
-            "description": "The name of the candidate associated the event"
+            "description": "The validator's address"
         },
-        "candidate_list": {
+        "validator_list": {
             "type": "array",
-            "description": "The list of candidates in a stake action"
+            "description": "The list of validators in stake action"
         },
         "amount": {
             "type": "string",
-            "description": "The amount of the currency in the event"
+            "description": "The amount of currency associated with the event"
         },
         "duration":{
             "type": "string",
-            "description": "The duration of the action"
+            "description": "The duration of the event"
         },
         "auto_stake": {
             "type": "boolean",
