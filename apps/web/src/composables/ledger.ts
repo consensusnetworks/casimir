@@ -27,10 +27,10 @@ export default function useLedger() {
   async function sendLedgerTransaction({ from, to, value }: TransactionInit) {
     const rpcUrl = import.meta.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545/'
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
-    const { chainId } = await provider.getNetwork()
-    const gasPriceHex = (await provider.getGasPrice())._hex
-    const gasPrice = '0x' + (parseInt(gasPriceHex, 16) * 1.15).toString(16)
-    const nonce = await provider.getTransactionCount(from, 'latest')
+    const { chainId } = await provider.getNetwork() // Why this?
+    const gasPriceHex = (await provider.getGasPrice())._hex // What is offering us this?
+    const gasPrice = '0x' + (parseInt(gasPriceHex, 16) * 1.15).toString(16) // Why this?
+    const nonce = await provider.getTransactionCount(from, 'latest') // Why do we have the option not to provide this?
     const unsignedTransaction: ethers.utils.UnsignedTransaction = {
       to,
       gasPrice,
@@ -38,20 +38,30 @@ export default function useLedger() {
       chainId,
       data: '0x00',
       value: ethers.utils.parseUnits(value)
-    }
+    } // What did I have before??
 
-    // Todo check before click (user can +/- gas limit accordingly)
-    const gasEstimate = await provider.estimateGas(unsignedTransaction as Deferrable<TransactionRequest>)
+    // Todo check before click (user can +/- gas limit accordingly) // Are you saying to provide another front-end input field for gas limit?
+    const gasEstimate = await provider.estimateGas(
+      unsignedTransaction as Deferrable<TransactionRequest>
+    ) // Why is this a thing (having a gasEstimate and gasLimit)?
     const gasLimit = Math.ceil(parseInt(gasEstimate.toString()) * 1.3)
     unsignedTransaction.gasLimit = ethers.utils.hexlify(gasLimit)
     const balance = await provider.getBalance(from)
-    const required = ethers.BigNumber.from(gasPrice).mul(gasLimit).add(ethers.utils.parseEther(value))
+    const required = ethers.BigNumber.from(gasPrice)
+      .mul(gasLimit)
+      .add(ethers.utils.parseEther(value))
     console.log('Balance', ethers.utils.formatEther(balance))
     console.log('Required', ethers.utils.formatEther(required))
 
     const ledger = await getLedgerEthSigner()
-    const rawUnsignedTransaction = ethers.utils.serializeTransaction(unsignedTransaction).substring(2)
-    const resolution = await ledgerService.resolveTransaction(rawUnsignedTransaction, {}, {})
+    const rawUnsignedTransaction = ethers.utils
+      .serializeTransaction(unsignedTransaction)
+      .substring(2)
+    const resolution = await ledgerService.resolveTransaction(
+      rawUnsignedTransaction,
+      {},
+      {}
+    )
     const { v, r, s } = await ledger.signTransaction(
       bip32Path,
       rawUnsignedTransaction,
@@ -61,7 +71,7 @@ export default function useLedger() {
       v: parseInt(v),
       r: '0x' + r,
       s: '0x' + s,
-      from
+      from,
     }
     const signedTransaction = ethers.utils.serializeTransaction(
       unsignedTransaction,

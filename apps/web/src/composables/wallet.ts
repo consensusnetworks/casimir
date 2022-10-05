@@ -4,17 +4,10 @@ import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
 import useEthers from '@/composables/ethers'
 import useWalletConnect from '@/composables/walletConnect'
-import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
 import { ProviderString } from '@/types/ProviderString'
 
-const defaultProviders = {
-  MetaMask: undefined,
-  CoinbaseWallet: undefined,
-}
-const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
-
-const { requestEthersAccount } = useEthers()
+const { ethersProviderList, requestEthersAccount } = useEthers()
 const {
   enableWalletConnect,
   disableWalletConnect,
@@ -35,10 +28,6 @@ export default function useWallet() {
     signMessageWithLedger,
     sendLedgerTransaction,
   } = useLedger()
-  const ethereum: any = window.ethereum
-  const availableProviders = ref<BrowserProviders>(
-    getBrowserProviders(ethereum)
-  )
   const selectedProvider = ref<ProviderString>('')
   const selectedAccount = ref<string>('')
   const setSelectedProvider = (provider: ProviderString) => {
@@ -55,10 +44,8 @@ export default function useWallet() {
       if (provider === 'WalletConnect') {
         enableWalletConnect()
       } else if (ethersProviderList.includes(provider)) {
-        const browserExtensionProvider =
-          availableProviders.value[provider as keyof BrowserProviders]
         const accounts = await requestEthersAccount(
-          browserExtensionProvider as EthersProvider
+          provider as ProviderString
         )
         const address = accounts[0]
         setSelectedAccount(address)
@@ -136,9 +123,6 @@ export default function useWallet() {
         const hashedMessage = ethers.utils.id(message)
         const signature = await signer.signMessage(hashedMessage)
         // TODO: Mock sending hash and signature to backend for verification
-        console.log('message :>> ', message)
-        console.log('hashedMessage :>> ', hashedMessage)
-        console.log('signature: ', signature)
       } else if (selectedProvider.value === 'IoPay') {
         const hashedMessage = ethers.utils.id(message)
         await signIoPayMessage(hashedMessage)
@@ -162,20 +146,5 @@ export default function useWallet() {
     disconnectWallet,
     sendTransaction,
     signMessage,
-  }
-}
-
-function getBrowserProviders(ethereum: any) {
-  if (!ethereum) return defaultProviders
-  else if (!ethereum.providerMap) {
-    return {
-      MetaMask: ethereum.isMetaMask ? ethereum : undefined,
-      CoinbaseWallet: ethereum.isCoinbaseWallet ? ethereum : undefined,
-    }
-  } else {
-    return {
-      MetaMask: ethereum.providerMap.get('MetaMask'),
-      CoinbaseWallet: ethereum.providerMap.get('CoinbaseWallet'),
-    }
   }
 }
