@@ -95,21 +95,21 @@ You can get up and running without configuration. You can also mock local backen
 
 ### Hardhat
 
-EVM contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/evm/hardhat.config.ts](contracts/evm/hardhat.config.ts) file.
+Ethereum contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file.
 
-1. Compile the contracts in [contracts/evm](contracts/evm).
+1. Compile the contracts in [contracts/ethereum](contracts/ethereum).
     
     ```zsh
     npm run task:compile
     ```
 
-2. Deploy a contract, specifically [contracts/evm/src/Sample.sol](contracts/evm/src/Sample.sol) with [contracts/evm/deploy/sample.ts](contracts/evm/deploy/sample.ts).
+2. Deploy a contract, specifically [contracts/ethereum/src/Sample.sol](contracts/ethereum/src/Sample.sol) with [contracts/ethereum/deploy/sample.ts](contracts/ethereum/deploy/sample.ts).
 
     ```zsh
     npm run deploy:sample
     ```
 
-3. Test the Sample with the tests in [contracts/evm/test/sample.ts](contracts/evm/test/sample.ts).
+3. Test the Sample with the tests in [contracts/ethereum/test/sample.ts](contracts/ethereum/test/sample.ts).
 
     ```zsh
     npm run test:contracts
@@ -127,7 +127,7 @@ EVM contract development is serviced through [Hardhat](https://hardhat.io/). The
     // Todo add Casimir Typescript usage
     ```
 
-7. Clean [contracts/evm/build/artifacts](contracts/evm/build/artifacts) and [contracts/evm/build/cache](contracts/evm/build/cache)).    
+7. Clean [contracts/ethereum/build/artifacts](contracts/ethereum/build/artifacts) and [contracts/ethereum/build/cache](contracts/ethereum/build/cache)).    
 
     ```zsh
     npm run task:clean
