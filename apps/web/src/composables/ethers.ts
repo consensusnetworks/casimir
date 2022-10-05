@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { ethers } from 'ethers'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
 import { ProviderString } from '@/types/ProviderString'
@@ -26,10 +27,25 @@ export default function useEthers() {
   }
 
   async function sendEthersTransaction(
-    provider: EthersProvider,
-    transaction: TransactionInit
+    providerString: ProviderString,
+    { to, value }: { to: string; value: string }
   ) {
-    return await provider.sendTransaction(transaction)
+    const ethereum: any = window.ethereum
+    const availableProviders = ref<BrowserProviders>(
+      getBrowserProviders(ethereum)
+    )
+    const browserProvider =
+      availableProviders.value[providerString as keyof BrowserProviders]
+    const web3Provider: ethers.providers.Web3Provider =
+      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const signer = web3Provider.getSigner()
+    const etherAmount = ethers.utils.parseEther(value)
+    const tx = {
+      to,
+      value: etherAmount,
+    }
+    const { hash } = await signer.sendTransaction(tx)
+    return hash
   }
 
   return { ethersProviderList, requestEthersAccount, getBrowserProviders, sendEthersTransaction }

@@ -7,7 +7,7 @@ import useWalletConnect from '@/composables/walletConnect'
 import { EthersProvider } from '@/interfaces/EthersProvider'
 import { ProviderString } from '@/types/ProviderString'
 
-const { ethersProviderList, requestEthersAccount } = useEthers()
+const { ethersProviderList, requestEthersAccount, sendEthersTransaction } = useEthers()
 const {
   enableWalletConnect,
   disableWalletConnect,
@@ -16,6 +16,10 @@ const {
 
 const amount = ref<string>('0.001')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
+const tx = ref({
+  to: toAddress.value,
+  value: amount.value,
+})
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
@@ -79,19 +83,10 @@ export default function useWallet() {
       if (provider === 'WalletConnect') {
         await sendWalletConnectTransaction(amount.value, toAddress.value)
       } else if (ethersProviderList.includes(provider)) {
-        // Move this into ethers composable mimicking ledger composable
-        const browserProvider =
-          availableProviders.value[provider as keyof BrowserProviders]
-        const web3Provider: ethers.providers.Web3Provider =
-          new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-        const signer = web3Provider.getSigner()
-        const etherAmount = ethers.utils.parseEther(amount.value)
-        const tx = {
-          to: toAddress.value,
-          value: etherAmount,
-        }
-        const { hash } = await signer.sendTransaction(tx)
-        console.log('Transaction sent', hash)
+        await sendEthersTransaction(
+          provider as ProviderString,
+          tx.value
+        )
       } else if (selectedProvider.value === 'IoPay') {
         await sendIoPayTransaction(toAddress.value, amount.value)
       } else if (selectedProvider.value === 'Ledger') {
