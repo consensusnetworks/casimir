@@ -34,7 +34,7 @@ export enum IotexActionType {
   StakeChangeCandidate = 'stakeChangeCandidate',
 }
 
-export type IotexOptions = Opts & {
+export type IotexServiceOptions = Opts & {
   url: string
   network: IotexNetworkType
 }
@@ -44,7 +44,7 @@ export class IotexService {
   network: IotexNetworkType
   provider: Antenna
   chainId: number
-  constructor (opt: IotexOptions) {
+  constructor (opt: IotexServiceOptions) {
     this.chain = Chain.Iotex
     this.network = opt.network || IotexNetworkType.Mainnet
     this.chainId = IotexNetworkType.Mainnet ? 4689 : 4690
@@ -61,6 +61,58 @@ export class IotexService {
 
     const type = Object.keys(core).filter(k => k !== undefined)[Object.keys(core).length - 2]
     return type as IotexActionType
+  }
+
+  async getBlocks(start: number, count: number): Promise<IGetBlockMetasResponse> {
+    if (start < 0 || count < 0) {
+      throw new Error('start and count must be greater than 0')
+    }
+
+    if (start === 0) {
+      start = 1
+    }
+
+    if (count === 0) {
+      count = 100
+    }
+
+    const blocks = await this.provider.iotx.getBlockMetas({ byIndex: { start: start, count: count } })
+
+    return blocks
+  }
+
+  async getBlockActions (index: number, count: number): Promise<IActionInfo[]> {
+    const actions = await this.provider.iotx.getActions({
+      byIndex: {
+        start: index,
+        count: count
+      }
+    })
+    return actions.actionInfo
+  }
+
+  async getCurrentBlock(): Promise<IGetBlockMetasResponse> {
+    const { chainMeta } = await this.provider.iotx.getChainMeta({
+      includePendingActions: false
+    })
+
+    const block = await this.provider.iotx.getBlockMetas({ byIndex: { start: parseInt(chainMeta.height), count: 1 } })
+    return block
+  }
+
+  async readableBlockStream (): Promise<ClientReadableStream<IStreamBlocksResponse>> {
+    const stream = await this.provider.iotx.streamBlocks({
+      start: 1
+    })
+    return stream
+  }
+
+  on(event: string, callback: (data: IStreamBlocksResponse) => void): void {
+    this.provider.iotx.streamBlocks({
+      start: 1
+    }).on('data', (data: IStreamBlocksResponse) => {
+      callback(data)
+    })
   }
 
   async getEvents(height: number): Promise<{ hash: string, events: EventTableColumn[]}> {
@@ -194,59 +246,7 @@ export class IotexService {
       events
     }
   }
-
-  async getBlocks(start: number, count: number): Promise<IGetBlockMetasResponse> {
-    if (start < 0 || count < 0) {
-      throw new Error('start and count must be greater than 0')
-    }
-
-    if (start === 0) {
-      start = 1
-    }
-
-    if (count === 0) {
-      count = 100
-    }
-
-    const blocks = await this.provider.iotx.getBlockMetas({ byIndex: { start: start, count: count } })
-
-    return blocks
-  }
-
-  async getBlockActions (index: number, count: number): Promise<IActionInfo[]> {
-    const actions = await this.provider.iotx.getActions({
-      byIndex: {
-        start: index,
-        count: count
-      }
-    })
-    return actions.actionInfo
-  }
-
-  async getCurrentBlock(): Promise<IGetBlockMetasResponse> {
-    const { chainMeta } = await this.provider.iotx.getChainMeta({
-        includePendingActions: false
-    })
-
-    const block = await this.provider.iotx.getBlockMetas({ byIndex: { start: parseInt(chainMeta.height), count: 1 } })
-    return block
-  }
-
-  async readableBlockStream (): Promise<ClientReadableStream<IStreamBlocksResponse>> {
-    const stream = await this.provider.iotx.streamBlocks({
-      start: 1
-    })
-    return stream
-  }
-
-  on(event: string, callback: (data: IStreamBlocksResponse) => void): void {
-    this.provider.iotx.streamBlocks({
-        start: 1
-    }).on('data', (data: IStreamBlocksResponse) => {
-      callback(data)
-    })
-  }
 }
-export function newIotexService (opt: IotexOptions): IotexService {
+export function newIotexService (opt: IotexServiceOptions): IotexService {
   return new IotexService(opt)
 }

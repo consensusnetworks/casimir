@@ -1,21 +1,24 @@
 import { EventTableColumn } from '@casimir/data'
-import {IotexNetworkType, IotexService, newIotexService} from './providers/Iotex'
-import { EthereumService, newEthereumService } from './providers/Ethereum'
+import {IotexNetworkType, IotexService, IotexServiceOptions, newIotexService} from './providers/Iotex'
+import {EthereumService, EthereumServiceOptions, newEthereumService} from './providers/Ethereum'
 import { queryAthena, uploadToS3 } from '@casimir/helpers'
 
 export enum Chain {
-    Iotex = 'iotex',
-    Ethereum = 'ethereum'
+    Ethereum = 'ethereum',
+    Iotex = 'iotex'
 }
 
 export enum Provider {
     Casimir = 'casimir',
 }
 
-export const defaultEventBucket = 'casimir-etl-event-bucket-dev'
+export const eventOutputBucket = 'casimir-etl-event-bucket-dev'
+
+export type ServiceConfig<T extends Chain> = T extends Chain.Iotex ? IotexServiceOptions : T extends Chain.Ethereum ? EthereumServiceOptions : never
 
 export interface CrawlerConfig {
     chain: Chain
+    serviceOptions: ServiceConfig<Chain>
     output?: `s3://${string}`
     verbose?: boolean
 }
@@ -23,14 +26,16 @@ export interface CrawlerConfig {
 class Crawler {
     config: CrawlerConfig
     service: EthereumService | IotexService | null
+    serviceConfig: ServiceConfig<Chain>
     constructor(config: CrawlerConfig) {
         this.config = config
         this.service = null
+        this.serviceConfig = config.serviceOptions
     }
 
     async setup(): Promise<void> {
         if (this.config.chain === Chain.Ethereum) {
-            this.service = await newEthereumService({ url: 'http://localhost:8545'})
+            this.service = await newEthereumService({ url: this.serviceConfig.url || process.env.PUBLIC_ETHEREUM_RPC_URL || 'http://localhost:8545' })
             return
         }
 
@@ -53,7 +58,6 @@ class Crawler {
     async start(): Promise<void> {
         if (this.service instanceof EthereumService) {
             const lastEvent = await this.getLastProcessedEvent()
-
             const last = lastEvent !== null ? lastEvent.height : 0
             const start = parseInt(last.toString()) + 1
 
@@ -63,19 +67,22 @@ class Crawler {
 
             const current = await this.service.getCurrentBlock()
 
-            for (let i = start as number; i < current.number; i++) {
+            for (let i = start; i < 2195; i++) {
                 const { events, blockHash } = await this.service.getEvents(i)
-                const ndjson = events.map((e: EventTableColumn) => JSON.stringify(e)).join('\n')
-                await uploadToS3({
-                    bucket: defaultEventBucket,
-                    key: `${blockHash}-event.json`,
-                    data: ndjson
-                }).finally(() => {
-                    if (this.config.verbose) {
-                        console.log(`uploaded ${events.length} event at height ${i}`)
-                    }
-                })
+                // const { events, blockHash } = await this.service.getEvents(15676563)
             }
+            // const { events, blockHash } = await this.service.getEvents(15676563)
+                // const ndjson = events.map((e: EventTableColumn) => JSON.stringify(e)).join('\n')
+                // await uploadToS3({
+                //     bucket: defaultEventBucket,
+                //     key: `${blockHash}-event.json`,
+                //     data: ndjson
+                // }).finally(() => {
+                //     if (this.config.verbose) {
+                //         console.log(`uploaded ${events.length} event at height ${i}`)
+                //     }
+                // })
+            // }
             return
         }
 
@@ -97,7 +104,7 @@ class Crawler {
                 const ndjson = events.map((e: EventTableColumn) => JSON.stringify(e)).join('\n')
 
                 await uploadToS3({
-                    bucket: defaultEventBucket,
+                    bucket: eventOutputBucket,
                     key: `${hash}-event.json`,
                     data: ndjson
                 }).finally(() => {
@@ -113,9 +120,10 @@ class Crawler {
 
 export async function crawler (config: CrawlerConfig): Promise<Crawler> {
   const chainCrawler = new Crawler({
-    chain: config.chain,
-    output: config?.output ?? `s3://${defaultEventBucket}`,
-    verbose: config?.verbose ?? false
+      chain: config.chain,
+      serviceOptions: config.serviceOptions,
+      output: config?.output ?? `s3://${eventOutputBucket}`,
+      verbose: config?.verbose ?? false
   })
 
   await chainCrawler.setup()

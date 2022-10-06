@@ -3,7 +3,7 @@
 #
 # Example:
 #
-#    scripts/ethereum/dev -f <fork-name>
+#    scripts/ethereum/dev -f <fork-name> -n <network-name>
 #
 # Further information:
 # See https://hardhat.org/hardhat-network/docs/overview
@@ -24,43 +24,45 @@ else
 fi
 
 # Get args
-while getopts f: flag
+while getopts :f:n: flag
 do
     case "${flag}" in
         f) fork=${OPTARG};;
+        n) network=${OPTARG};;
     esac
 done
 
-# Secret ID is just the name or ARN
-ledger_seed_secret_id=consensus-networks-ledger-seed
-echo "🤫 Getting $ledger_seed_secret_id for $profile"
-
-# Get the secret from AWS
-ledger_seed=$(aws secretsmanager get-secret-value \
---secret-id $ledger_seed_secret_id \
---query SecretString \
---output text \
---profile $profile)
-
-export LEDGER_SEED="$ledger_seed"
-
-if [ -z "$fork" ]; then
-    echo "⛓ Running default localnode"
-    npm run dev:localnode --workspace @casimir/evm
-else
-    # Secret ID is just the name or ARN
-    alchemy_secret_id=consensus-networks-alchemy-$fork
-    echo "🤫 Getting $alchemy_secret_id for $profile"
-
-    # Get the secret from AWS
-    alchemy_key=$(aws secretsmanager get-secret-value \
-    --secret-id $alchemy_secret_id \
+# Expose RPC URL directly if network is set to mainnet or testnet
+if [ -n "$network" ]; then
+    # Get the RPC API key from AWS
+    rpc_secret_id=consensus-networks-ethereum-$network
+    rpc_key=$(aws secretsmanager get-secret-value \
+    --secret-id $rpc_secret_id \
     --query SecretString \
     --output text \
     --profile $profile)
 
-    echo "⛓ Running $fork fork localnode"
-    npm run dev:localnode --workspace @casimir/evm -- --fork https://eth-$fork.alchemyapi.io/v2/$alchemy_key
+    export PUBLIC_ETHEREUM_RPC="https://eth-$network.g.alchemy.com/v2/$rpc_key"
+    # export PUBLIC_SSV_ADDRESS="" # Todo get address (deterministic from deployer + tx count)
+else
+    if [ -n "$fork" ]; then
+        # Get the RPC API key from AWS
+        rpc_secret_id=consensus-networks-ethereum-$fork
+        rpc_key=$(aws secretsmanager get-secret-value \
+        --secret-id $rpc_secret_id \
+        --query SecretString \
+        --output text \
+        --profile $profile)
+
+        echo "⛓ Setting up ethereum chain with $fork fork"
+        npm run dev:node --workspace @casimir/evm -- --fork "https://eth-$fork.g.alchemy.com/v2/$rpc_key"
+    else
+        echo "⛓ Setting up ethereum chain without fork"
+        npm run dev:node --workspace @casimir/evm
+    fi
+
+    # npm run deploy:ssv --workspace @casimir/evm
+    # export PUBLIC_SSV_ADDRESS="" # Todo get address (deterministic from deployer + tx count)
 fi
 
 

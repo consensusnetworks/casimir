@@ -35,19 +35,16 @@ export type EventTableColumn = {
   network: string
   provider: string
   type: string
+  height: number
+  block: string
+  transaction: string
   created_at: string
   address: string
-  height: number
   to_address: string
-  candidate: string
-  candidate_list: string[]
+  validator: string
+  validator_list: string[]
   amount: string
   duration: number
   auto_stake: boolean
-  // payload: Record<string, unknown>
 }
-
-// export type EventTableColumn = {
-//   [key in keyof typeof eventSchema.properties]: // what goes here?
-
 export { eventSchema, aggSchema }
