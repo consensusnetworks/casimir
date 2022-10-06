@@ -31,44 +31,38 @@
       <button class="ledger-btn" @click="connectWallet('Ledger')">
         Connect Ledger
       </button>
+      <div class="phantom-div">
+        <button class="phantom-btn" @click="connectWallet('Phantom')">
+          {{ phantomButtonText }}
+        </button>
+        <p>
+          Connected phantom Account:
+          <span> {{ phantomAccountsResult }} </span>
+        </p>
+      </div>
       <div>
-        <button
-          class="wallet-connect-btn"
-          @click="connectWallet('WalletConnect')"
-        >
+        <button class="wallet-connect-btn" @click="connectWallet('WalletConnect')">
           WalletConnect
-        </button>
-        <button
-          class="wallet-connect-btn"
-          @click="sendTransaction('WalletConnect')"
-        >
-          Send WalletConnect Transaction
-        </button>
-        <button
-          class="wallet-connect-btn"
-          @click="disconnectWallet('WalletConnect')"
-        >
-          Disable WalletConnect
         </button>
       </div>
     </div>
     <div class="form-container">
       <div class="sign-message-container">
-        <input
-          v-model="message"
-          type="text"
-          placeholder="Write a message to sign"
-        />
-        <button @click="signMessage(message)">Sign Message</button>
+        <input v-model="message" type="text" placeholder="Write a message to sign">
+        <button @click="signMessage(message)">
+          Sign Message
+        </button>
         <p>{{ signedMessage }}</p>
       </div>
       <form @submit.prevent="sendTransaction(selectedProvider)">
         <label for="address">Address</label>
-        <input v-model="toAddress" type="text" placeholder="To Address" />
-        <br />
+        <input v-model="toAddress" type="text" placeholder="To Address">
+        <br>
         <label for="amount">Amount</label>
-        <input v-model="amount" type="text" placeholder="Amount Ether" />
-        <button type="submit">Send Transaction</button>
+        <input v-model="amount" type="text" placeholder="Amount Ether">
+        <button type="submit">
+          Send Transaction
+        </button>
       </form>
     </div>
   </div>
@@ -87,6 +81,8 @@ const coinbaseButtonText = ref<string>('Connect Coinbase')
 const coinbaseAccountsResult = ref<string>('Address Not Active')
 const ioPayButtonText = ref<string>('Connect ioPay')
 const ioPayAccountsResult = ref<string>('Address Not Active')
+const phantomButtonText = ref<string>('Connect Phantom')
+const phantomAccountsResult = ref<string>('Address Not Active')
 
 const {
   selectedProvider,
@@ -94,7 +90,6 @@ const {
   toAddress,
   amount,
   connectWallet,
-  disconnectWallet,
   sendTransaction,
   signMessage,
 } = useWallet()
@@ -107,6 +102,8 @@ watchEffect(() => {
     ioPayButtonText.value = 'Connect ioPay'
     coinbaseAccountsResult.value = 'Not Active'
     ioPayAccountsResult.value = 'Not Active'
+    phantomButtonText.value = 'Connect Phantom'
+    phantomAccountsResult.value = 'Not Active'
   } else if (selectedProvider.value === 'CoinbaseWallet') {
     metamaskButtonText.value = 'Connect Metamask'
     coinbaseButtonText.value = 'Coinbase Connected'
@@ -114,6 +111,8 @@ watchEffect(() => {
     metamaskAccountsResult.value = 'Not Active'
     coinbaseAccountsResult.value = selectedAccount.value
     ioPayAccountsResult.value = 'Not Active'
+    phantomButtonText.value = 'Connect Phantom'
+    phantomAccountsResult.value = 'Not Active'
   } else if (selectedProvider.value === 'IoPay') {
     metamaskButtonText.value = 'Connect MetaMask'
     coinbaseButtonText.value = 'Connect Coinbase'
@@ -121,6 +120,17 @@ watchEffect(() => {
     metamaskAccountsResult.value = 'Not Active'
     coinbaseAccountsResult.value = 'Not Active'
     ioPayAccountsResult.value = selectedAccount.value || 'Not Active'
+    phantomButtonText.value = 'Connect Phantom'
+    phantomAccountsResult.value = 'Not Active'
+  } else if (selectedProvider.value === 'Phantom') {
+    metamaskButtonText.value = 'Connect MetaMask'
+    coinbaseButtonText.value = 'Connect Coinbase'
+    ioPayButtonText.value = 'Connect ioPay'
+    phantomButtonText.value = 'Connected'
+    metamaskAccountsResult.value = 'Not Active'
+    coinbaseAccountsResult.value = 'Not Active'
+    ioPayAccountsResult.value = 'Not Active'
+    phantomAccountsResult.value = selectedAccount.value || 'Not Active'
   }
 })
 </script>
@@ -166,6 +176,10 @@ button {
 
 .ledger-btn {
   background-color: rgb(0, 0, 0);
+}
+
+.phantom-btn {
+  background-color: purple;
 }
 
 .connect-wallet-container {
