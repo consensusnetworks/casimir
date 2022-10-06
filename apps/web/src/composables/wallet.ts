@@ -39,6 +39,9 @@ export default function useWallet() {
 
   async function connectWallet(provider: ProviderString) {
     try {
+      if (selectedProvider.value === 'WalletConnect' && provider !== 'WalletConnect') {
+        await disableWalletConnect()
+      }
       setSelectedProvider(provider)
       selectedAccount.value = 'Not Active'
       if (provider === 'WalletConnect') {
@@ -62,15 +65,6 @@ export default function useWallet() {
       }
     } catch (error) {
       console.error(error)
-    }
-  }
-
-  // TODO: Fold this into the logic of switching to/from other wallet provider depending on front-end implementation
-  async function disconnectWallet(provider: ProviderString) {
-    selectedAccount.value = ''
-    selectedProvider.value = ''
-    if (provider === 'WalletConnect') {
-      await disableWalletConnect()
     }
   }
 
@@ -125,7 +119,6 @@ export default function useWallet() {
     toAddress,
     amount,
     connectWallet,
-    disconnectWallet,
     sendTransaction,
     signMessage,
   }

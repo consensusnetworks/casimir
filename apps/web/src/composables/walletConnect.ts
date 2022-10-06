@@ -58,7 +58,7 @@ export default function useWalletConnect() {
       gas: gasLimit,
       gasPrice: gasPrice,
       value: amountInWei,
-      // nonce: 'nonce', // TODO: Determine when this is needed.
+      // nonce: 'nonce', // TODO: Use ethers to get nonce for current address
     }
     try {
       const result = await connector.value?.sendTransaction(tx)
