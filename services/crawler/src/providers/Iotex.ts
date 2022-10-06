@@ -7,7 +7,7 @@ import {
   IStreamBlocksResponse,
 } from 'iotex-antenna/lib/rpc-method/types'
 import { Opts } from 'iotex-antenna/lib/antenna'
-import { EventTableColumn } from '@casimir/data'
+import { EventTableSchema } from '@casimir/data'
 import {Chain, Provider} from '../index'
 
 export enum IotexNetworkType {
@@ -115,14 +115,16 @@ export class IotexService {
     })
   }
 
-  async getEvents(height: number): Promise<{ hash: string, events: EventTableColumn[]}> {
-    const events: EventTableColumn[] = []
+  async getEvents(height: number): Promise<{ hash: string, events: EventTableSchema[]}> {
+    const events: EventTableSchema[] = []
 
     const block = await this.provider.iotx.getBlockMetas({byIndex: {start: height, count: 1}})
 
     const blockMeta = block.blkMetas[0]
 
     events.push({
+      block: blockMeta.hash,
+      transaction: "",
       chain: this.chain,
       network: this.network,
       provider: Provider.Casimir,
@@ -131,11 +133,11 @@ export class IotexService {
       address: blockMeta.producerAddress,
       height: blockMeta.height,
       to_address: '',
-      candidate: '',
+      validator: '',
       duration: 0,
-      candidate_list: [],
+      validator_list: [],
       amount: '0',
-      auto_stake: false,
+      auto_stake: false
     })
 
     const numOfActions = block.blkMetas[0].numActions
@@ -150,7 +152,7 @@ export class IotexService {
         const actionType = this.deduceActionType(action)
         if (actionType === null) return
 
-        const actionEvent: Partial<EventTableColumn> = {
+        const actionEvent: Partial<EventTableSchema> = {
           chain: this.chain,
           network: this.network,
           provider: Provider.Casimir,
@@ -159,9 +161,9 @@ export class IotexService {
           address: blockMeta.producerAddress,
           height: blockMeta.height,
           to_address: '',
-          candidate: '',
+          validator: '',
           duration: 0,
-          candidate_list: [],
+          validator_list: [],
           amount: '0',
           auto_stake: false,
         }
@@ -169,60 +171,60 @@ export class IotexService {
         if (actionType === IotexActionType.transfer && actionCore.transfer) {
           actionEvent.amount = actionCore.transfer.amount
           actionEvent.to_address = actionCore.transfer.recipient
-          events.push(actionEvent as EventTableColumn)
+          events.push(actionEvent as EventTableSchema)
         }
 
         if (actionType === IotexActionType.stakeCreate && actionCore.stakeCreate) {
           actionEvent.amount = actionCore.stakeCreate.stakedAmount
-          actionEvent.candidate = actionCore.stakeCreate.candidateName
+          actionEvent.validator = actionCore.stakeCreate.candidateName
           actionEvent.auto_stake = actionCore.stakeCreate.autoStake
           actionEvent.duration = actionCore.stakeCreate.stakedDuration
-          events.push(actionEvent as EventTableColumn)
+          events.push(actionEvent as EventTableSchema)
         }
 
         if (actionType === IotexActionType.stakeAddDeposit && actionCore.stakeAddDeposit) {
           actionEvent.amount = actionCore.stakeAddDeposit.amount
-          events.push(actionEvent as EventTableColumn)
+          events.push(actionEvent as EventTableSchema)
         }
 
         if (actionType === IotexActionType.execution && actionCore.execution) {
           actionEvent.amount = actionCore.execution.amount
-          events.push(actionEvent as EventTableColumn)
+          events.push(actionEvent as EventTableSchema)
         }
 
         if (actionType === IotexActionType.putPollResult && actionCore.putPollResult) {
           if (actionCore.putPollResult.candidates) {
-            actionEvent.candidate_list = actionCore.putPollResult.candidates.candidates.map(c => c.address)
+            actionEvent.validator_list = actionCore.putPollResult.candidates.candidates.map(c => c.address)
           }
 
           if (actionCore.putPollResult.height) {
             actionEvent.height = typeof actionCore.putPollResult.height === 'string' ? parseInt(actionCore.putPollResult.height) : actionCore.putPollResult.height
           }
-          events.push(actionEvent as EventTableColumn)
+          events.push(actionEvent as EventTableSchema)
         }
 
         if (actionType === IotexActionType.StakeChangeCandidate && actionCore.stakeChangeCandidate) {
-          actionEvent.candidate = actionCore.stakeChangeCandidate.candidateName
-          events.push(actionEvent as EventTableColumn)
+          actionEvent.validator = actionCore.stakeChangeCandidate.candidateName
+          events.push(actionEvent as EventTableSchema)
         }
 
         if (actionType === IotexActionType.stakeRestake && actionCore.stakeRestake) {
           actionEvent.duration = actionCore.stakeRestake.stakedDuration
           actionEvent.auto_stake = actionCore.stakeRestake.autoStake
-          events.push(actionEvent as EventTableColumn)
+          events.push(actionEvent as EventTableSchema)
         }
 
         if (actionType === IotexActionType.candidateRegister && actionCore.candidateRegister) {
           actionEvent.amount = actionCore.candidateRegister.stakedAmount
           actionEvent.duration = actionCore.candidateRegister.stakedDuration
           actionEvent.auto_stake = actionCore.candidateRegister.autoStake
-          actionEvent.candidate = actionCore.candidateRegister.candidate.name
-          events.push(actionEvent as EventTableColumn)
+          actionEvent.validator = actionCore.candidateRegister.candidate.name
+          events.push(actionEvent as EventTableSchema)
         }
 
         if (actionType === IotexActionType.candidateUpdate && actionCore.candidateUpdate) {
-          actionEvent.candidate = actionCore.candidateUpdate.name
-          events.push(actionEvent as EventTableColumn)
+          actionEvent.validator = actionCore.candidateUpdate.name
+          events.push(actionEvent as EventTableSchema)
         }
 
         if (actionType === IotexActionType.claimFromRewardingFund && actionCore.claimFromRewardingFund) {
@@ -231,7 +233,7 @@ export class IotexService {
 
         if (actionType === IotexActionType.depositToRewardingFund && actionCore.depositToRewardingFund) {
           actionEvent.amount = actionCore.depositToRewardingFund.amount
-          events.push(actionEvent as EventTableColumn)
+          events.push(actionEvent as EventTableSchema)
         }
 
         // if (actionType === IotexActionType.grantReward) {}
@@ -239,7 +241,7 @@ export class IotexService {
         // if (actionType === IotexActionType.stakeWithdraw) {}
         return actionEvent
       })
-      events.push(...blockActions as EventTableColumn[])
+      events.push(...blockActions as EventTableSchema[])
     }
     return {
       hash: blockMeta.hash,

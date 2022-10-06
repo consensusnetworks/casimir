@@ -1,7 +1,8 @@
-import { EventTableColumn } from '@casimir/data'
+import { EventTableSchema } from '@casimir/data'
 import {IotexNetworkType, IotexService, IotexServiceOptions, newIotexService} from './providers/Iotex'
 import {EthereumService, EthereumServiceOptions, newEthereumService} from './providers/Ethereum'
 import { queryAthena, uploadToS3 } from '@casimir/helpers'
+import fs from 'fs'
 
 export enum Chain {
     Ethereum = 'ethereum',
@@ -14,11 +15,9 @@ export enum Provider {
 
 export const eventOutputBucket = 'casimir-etl-event-bucket-dev'
 
-export type ServiceConfig<T extends Chain> = T extends Chain.Iotex ? IotexServiceOptions : T extends Chain.Ethereum ? EthereumServiceOptions : never
-
 export interface CrawlerConfig {
     chain: Chain
-    serviceOptions: ServiceConfig<Chain>
+    options?: IotexServiceOptions | EthereumServiceOptions
     output?: `s3://${string}`
     verbose?: boolean
 }
@@ -26,16 +25,14 @@ export interface CrawlerConfig {
 class Crawler {
     config: CrawlerConfig
     service: EthereumService | IotexService | null
-    serviceConfig: ServiceConfig<Chain>
     constructor(config: CrawlerConfig) {
         this.config = config
         this.service = null
-        this.serviceConfig = config.serviceOptions
     }
 
     async setup(): Promise<void> {
         if (this.config.chain === Chain.Ethereum) {
-            this.service = await newEthereumService({ url: this.serviceConfig.url || process.env.PUBLIC_ETHEREUM_RPC_URL || 'http://localhost:8545' })
+            this.service = await newEthereumService({ url: this.config?.options?.url || process.env.PUBLIC_ETHEREUM_RPC_URL || 'http://localhost:8545' })
             return
         }
 
@@ -46,7 +43,7 @@ class Crawler {
         throw new Error('InvalidChain: chain is not supported')
     }
 
-    async getLastProcessedEvent(): Promise<EventTableColumn | null> {
+    async getLastProcessedEvent(): Promise<EventTableSchema | null> {
         const event = await queryAthena(`SELECT * FROM "casimir_etl_database_dev"."casimir_etl_event_table_dev" where chain = '${this.config.chain}' ORDER BY height DESC limit 1`)
 
         if (event !== null && event.length === 1) {
@@ -67,22 +64,19 @@ class Crawler {
 
             const current = await this.service.getCurrentBlock()
 
-            for (let i = start; i < 2195; i++) {
-                const { events, blockHash } = await this.service.getEvents(i)
-                // const { events, blockHash } = await this.service.getEvents(15676563)
+            for (let i = start; i < current.number; i++) {
+                const {events, blockHash} = await this.service.getEvents(15000000 + i)
+                const ndjson = events.map((e: EventTableSchema) => JSON.stringify(e)).join('\n')
+                await uploadToS3({
+                    bucket: eventOutputBucket,
+                    key: `${blockHash}-event.json`,
+                    data: ndjson
+                }).finally(() => {
+                    if (this.config.verbose) {
+                        console.log(`uploaded events for block ${blockHash}`)
+                    }
+                })
             }
-            // const { events, blockHash } = await this.service.getEvents(15676563)
-                // const ndjson = events.map((e: EventTableColumn) => JSON.stringify(e)).join('\n')
-                // await uploadToS3({
-                //     bucket: defaultEventBucket,
-                //     key: `${blockHash}-event.json`,
-                //     data: ndjson
-                // }).finally(() => {
-                //     if (this.config.verbose) {
-                //         console.log(`uploaded ${events.length} event at height ${i}`)
-                //     }
-                // })
-            // }
             return
         }
 
@@ -101,7 +95,7 @@ class Crawler {
 
             for (let i = start; i < currentHeight; i++) {
                 const { hash, events } = await this.service.getEvents(i)
-                const ndjson = events.map((e: EventTableColumn) => JSON.stringify(e)).join('\n')
+                const ndjson = events.map((e: EventTableSchema) => JSON.stringify(e)).join('\n')
 
                 await uploadToS3({
                     bucket: eventOutputBucket,
@@ -109,7 +103,7 @@ class Crawler {
                     data: ndjson
                 }).finally(() => {
                     if (this.config.verbose) {
-                        console.log(`uploaded ${events.length} event at height ${i}`)
+                        console.log(`uploaded events for block ${hash}`)
                     }
                 })
             }
@@ -121,7 +115,7 @@ class Crawler {
 export async function crawler (config: CrawlerConfig): Promise<Crawler> {
   const chainCrawler = new Crawler({
       chain: config.chain,
-      serviceOptions: config.serviceOptions,
+      options: config.options,
       output: config?.output ?? `s3://${eventOutputBucket}`,
       verbose: config?.verbose ?? false
   })

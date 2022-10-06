@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { EventTableColumn } from '@casimir/data'
+import { EventTableSchema } from '@casimir/data'
 import { Chain, Provider } from '../index'
 
 const BeaconDepositContract = {
@@ -41,8 +41,8 @@ export class EthereumService {
 		return input
 	}
 
-	async getEvents(height: number): Promise<{ blockHash: string, events: EventTableColumn[] }> {
-		const events: EventTableColumn[] = []
+	async getEvents(height: number): Promise<{ blockHash: string, events: EventTableSchema[] }> {
+		const events: EventTableSchema[] = []
 
 		const block = await this.provider.getBlockWithTransactions(height)
 
@@ -51,15 +51,17 @@ export class EthereumService {
 			network: this.network,
 			provider: Provider.Casimir,
 			type: 'block',
+			block: block.hash,
+			transaction: "",
 			created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 			address: block.miner,
 			height: block.number,
-			to_address: '',
-			candidate: '',
+			to_address: "",
+			validator: '',
 			duration: 0,
-			candidate_list: [],
+			validator_list: [],
 			amount: '0',
-			auto_stake: false,
+			auto_stake: false
 		})
 
 		if (block.transactions.length === 0) {
@@ -67,19 +69,52 @@ export class EthereumService {
 		}
 
 		for await (const tx of block.transactions) {
+			events.push({
+				chain: this.chain,
+				network: this.network,
+				provider: Provider.Casimir,
+				type: 'transaction',
+				block: block.hash,
+				transaction: tx.hash,
+				created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
+				address: tx.from,
+				to_address: tx.to || '',
+				height: block.number,
+				validator: '',
+				validator_list: [],
+				duration: 0,
+				amount: tx.value.toString(),
+				auto_stake: false
+			})
+
 			const receipts = await this.provider.getTransactionReceipt(tx.hash)
 
 			if (receipts.logs.length === 0) {
 				continue
 			}
 
-			// check if its a regualr transfer
-
 			for (const log of receipts.logs) {
 				if (log.address in BeaconDepositContract) {
-					// const contractInterface = new ethers.utils.Interface(BeaconDepositContract[log.address as keyof typeof BeaconDepositContract].abi)
 					const parsedLog = this.parseLog(log)
 					console.log(parsedLog)
+					const logEvent: EventTableSchema = {
+						chain: this.chain,
+						network: this.network,
+						provider: Provider.Casimir,
+						type: 'deposit',
+						block: block.hash,
+						transaction: tx.hash,
+						created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
+						address: log.address,
+						height: block.number,
+						to_address: '',
+						validator: '',
+						duration: 0,
+						validator_list: [],
+						amount: parsedLog.amount.toString(),
+						auto_stake: false
+					}
+					events.push(logEvent)
 				}
 			}
 		}
@@ -103,16 +138,6 @@ export class EthereumService {
 			cb(block)
 		})
     }
-
-	async ping(rpcUrl: string): Promise<boolean> {
-		const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
-		try {
-			const block = await provider.getBlockNumber()
-			return true
-		} catch (e) {
-			return false
-		}
-	}
 }
 
 export function newEthereumService (opt: EthereumServiceOptions): EthereumService {

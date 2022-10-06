@@ -1,6 +1,20 @@
 import { crawler } from '../src/index'
 import { Chain } from '../src/index'
 
+jest.setTimeout(1000000)
+
+test('init crawler for ethereum', async () => {
+  const eth = await crawler({
+    chain: Chain.Ethereum,
+    options: {
+      url: 'https://eth-mainnet.alchemyapi.io/v2/5zDQdGo96cD5RJSDuUcS9HktqFOBJH05',
+    },
+    verbose: true
+  })
+  await eth.start()
+  expect(eth.service).not.toBe(null)
+})
+
 // test('init crawler for iotex', async () => {
 //   const iotex = await crawler({
 //     chain: Chain.Iotex,
@@ -10,24 +24,10 @@ import { Chain } from '../src/index'
 //   expect(iotex.service).not.toBe(null)
 // })
 
-jest.setTimeout(1000000)
-
-test('init crawler for ethereum', async () => {
-  const eth = await crawler({
-    chain: Chain.Ethereum,
-    serviceOptions: {
-      url: 'https://eth-mainnet.alchemyapi.io/v2/5zDQdGo96cD5RJSDuUcS9HktqFOBJH05'
-    },
-    verbose: true
-  })
-  await eth.start()
-  expect(eth.service).not.toBe(null)
-})
-
 // test('query athena thru service', async () => {
 //   const supercrawler = await crawler({
 //     chain: Chain.Ethereum,
-//     verbose: true
+//     verbose: true,
 //   })
 //
 //   const lastBlock = await supercrawler.getLastProcessedEvent()

@@ -19,7 +19,7 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
 
     let type: glue.Type = glue.Schema[typeKey]
 
-    if (name.endsWith('at')) type = glue.Schema.TIMESTAMP
+    if (name.endsWith('_at')) type = glue.Schema.TIMESTAMP
 
     if (name.endsWith('_list')) type = glue.Schema.array(glue.Schema.STRING)
 
@@ -30,7 +30,7 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
   })
 }
 
-export type EventTableColumn = {
+export type EventTableSchema = {
   chain: string
   network: string
   provider: string
