@@ -1,10 +1,11 @@
-import { ref } from 'vue'
+import { Ref, ref } from 'vue'
 import { ethers } from 'ethers'
 import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
 import useEthers from '@/composables/ethers'
 import useWalletConnect from '@/composables/walletConnect'
 import { ProviderString } from '@/types/ProviderString'
+import { TransactionInit } from '@/interfaces/TransactionInit'
 
 const { ethersProviderList, requestEthersAccount, sendEthersTransaction, signEthersMessage } = useEthers()
 const {
@@ -15,10 +16,6 @@ const {
 
 const amount = ref<string>('0.001')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
-const tx = ref({
-  to: toAddress.value,
-  value: amount.value,
-})
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
@@ -78,24 +75,24 @@ export default function useWallet() {
   }
 
   async function sendTransaction(provider: string) {
+    const tx: Ref<TransactionInit> = ref({
+      from: selectedAccount.value,
+      to: toAddress.value,
+      value: amount.value,
+    })
+
     try {
       if (provider === 'WalletConnect') {
-        await sendWalletConnectTransaction(amount.value, toAddress.value)
+        await sendWalletConnectTransaction(tx.value)
       } else if (ethersProviderList.includes(provider)) {
         await sendEthersTransaction(
           provider as ProviderString,
           tx.value
         )
       } else if (selectedProvider.value === 'IoPay') {
-        await sendIoPayTransaction(toAddress.value, amount.value)
+        await sendIoPayTransaction(tx.value)
       } else if (selectedProvider.value === 'Ledger') {
-        const transactionInit = {
-          from: selectedAccount.value,
-          to: toAddress.value,
-          value: amount.value
-        }
-        const { hash } = await sendLedgerTransaction(transactionInit)
-        console.log('Transaction sent', hash)
+        await sendLedgerTransaction(tx.value)
       } else {
         throw new Error('Provider selected not yet supported')
       }

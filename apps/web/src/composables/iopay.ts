@@ -1,6 +1,7 @@
 import Antenna from 'iotex-antenna'
 import { WsSignerPlugin } from 'iotex-antenna/lib/plugin/ws'
 import { toRau } from 'iotex-antenna/lib/account/utils'
+import { TransactionInit } from '@/interfaces/TransactionInit'
 
 export default function useIoPay() {
   const signer = new WsSignerPlugin()
@@ -12,12 +13,12 @@ export default function useIoPay() {
     return await signer.getAccounts()
   }
 
-  const sendIoPayTransaction = async (toAddress: string, amount: string) => {
+  const sendIoPayTransaction = async ({to, value}: TransactionInit) => {
     try {
       const transResp = await antenna?.iotx.sendTransfer({
-        to: `${toAddress}`,
+        to: `${to}`,
         from: antenna.iotx.accounts[0].address,
-        value: toRau(amount, 'Iotx'),
+        value: toRau(value, 'Iotx'),
         gasLimit: '100000',
         gasPrice: toRau('1', 'Qev'),
       })
