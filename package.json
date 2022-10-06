@@ -19,12 +19,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:ethereum": "scripts/ethereum/test -f \"$npm_config_fork\"",
     "test:push": "scripts/actions/test -w push",
-    "release": "release-it",
-    "deploy:sample": "npm run deploy:sample --workspace @casimir/evm",
-    "test:contracts": "npm run test:contracts --workspace @casimir/evm",
-    "task:accounts": "npm run task:accounts --workspace @casimir/evm",
-    "task:compile": "npm run task:compile --workspace @casimir/evm",
-    "task:clean": "npm run task:clean --workspace @casimir/evm"
+    "release": "release-it"
   },
   "repository": {
     "type": "git",

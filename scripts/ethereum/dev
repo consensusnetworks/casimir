@@ -49,7 +49,7 @@ export LEDGER_SEED="$ledger_seed"
 
 if [ -z "$fork" ]; then
     echo "⛓ Running default localnode"
-    npm run dev:localnode --workspace @casimir/evm
+    npm run dev:localnode --workspace @casimir/ethereum
 else
     # Secret ID is just the name or ARN
     alchemy_secret_id=consensus-networks-alchemy-$fork
@@ -65,7 +65,7 @@ else
     export FORK_URL="https://eth-$fork.alchemyapi.io/v2/$alchemy_key"
 
     echo "⛓ Running $fork fork localnode"
-    npm run dev:localnode --workspace @casimir/evm
+    npm run dev:localnode --workspace @casimir/ethereum
 fi
 
 

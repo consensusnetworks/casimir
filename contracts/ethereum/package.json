@@ -1,12 +1,11 @@
 {
-    "name": "@casimir/evm",
+    "name": "@casimir/ethereum",
     "scripts": {
-        "deploy": "npx hardhat run deploy/index.ts",
+        "deploy:ssv": "npx hardhat run deploy/ssv.deploy.ts",
         "test:contracts": "npx hardhat test",
-        "task:accounts": "npx hardhat accounts",
         "task:compile": "npx hardhat compile",
         "task:clean": "npx hardhat clean",
-        "dev:localnode": "npx hardhat node"
+        "dev:node": "npx hardhat node"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
