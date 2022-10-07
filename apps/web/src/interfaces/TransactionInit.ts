@@ -8,6 +8,6 @@ export interface TransactionInit extends ethers.providers.TransactionRequest {
     to: string;
     /** The value of the transaction */
     value: string;
-    /** The optional provider of the transaction */
-    providerString?: ProviderString;
+    /** The provider string of the transaction */
+    providerString: ProviderString;
 }
