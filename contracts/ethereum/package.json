@@ -5,7 +5,8 @@
         "test:contracts": "npx hardhat test",
         "task:compile": "npx hardhat compile",
         "task:clean": "npx hardhat clean",
-        "dev:node": "npx hardhat node"
+        "dev:node": "npx hardhat node",
+        "postinstall": "npm run task:compile"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
