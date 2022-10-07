@@ -80,7 +80,7 @@ export default function useLedger() {
     return await provider.sendTransaction(signedTransaction)
   }
 
-  async function signMessageWithLedger(message: string) {
+  async function signLedgerMessage(message: string) {
     const _eth = await getLedgerEthSigner()
     const signature = await _eth.signPersonalMessage(
       bip32Path,
@@ -94,7 +94,7 @@ export default function useLedger() {
   return {
     bip32Path,
     getLedgerEthSigner,
-    signMessageWithLedger,
+    signLedgerMessage,
     sendLedgerTransaction,
   }
 }

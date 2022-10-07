@@ -25,7 +25,7 @@ export default function useWallet() {
   const {
     bip32Path,
     getLedgerEthSigner,
-    signMessageWithLedger,
+    signLedgerMessage,
     sendLedgerTransaction,
   } = useLedger()
   const selectedProvider = ref<ProviderString>('')
@@ -102,7 +102,7 @@ export default function useWallet() {
         const hashedMessage = ethers.utils.id(message)
         await signIoPayMessage(hashedMessage)
       } else if (selectedProvider.value === 'Ledger') {
-        await signMessageWithLedger(message)
+        await signLedgerMessage(message)
       } else {
         console.log('signMessage not yet supported for this wallet provider')
       }
