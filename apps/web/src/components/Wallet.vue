@@ -53,6 +53,15 @@
       </div>
     </div>
     <div class="form-container">
+      <div class="sign-message-container">
+        <input
+          v-model="message"
+          type="text"
+          placeholder="Write a message to sign"
+        />
+        <button @click="signMessage(message)">Sign Message</button>
+        <p>{{ signedMessage }}</p>
+      </div>
       <form @submit.prevent="sendTransaction(selectedProvider)">
         <label for="address">Address</label>
         <input v-model="toAddress" type="text" placeholder="To Address" />
@@ -69,6 +78,9 @@
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
 
+const message = ref('')
+const signedMessage = ref('')
+
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
 const coinbaseButtonText = ref<string>('Connect Coinbase')
@@ -84,6 +96,7 @@ const {
   connectWallet,
   disconnectWallet,
   sendTransaction,
+  signMessage,
 } = useWallet()
 
 watchEffect(() => {

@@ -19,6 +19,19 @@ ethereum_testnet=https://eth-testnet.g.alchemy.com/v2
 # Set the stage
 export PUBLIC_STAGE=${STAGE}
 
+# Secret ID is just the name or ARN
+seed_secret_id=consensus-networks-bip39-seed
+
+# Get the secret from AWS
+seed=$(aws secretsmanager get-secret-value \
+--secret-id $seed_secret_id \
+--query SecretString \
+--output text \
+--profile $profile)
+
+# Set the shared bip39 seed
+export BIP39_SEED="$seed"
+
 # Get args
 while getopts :a:f:m:n:s:t: flag
 do

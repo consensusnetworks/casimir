@@ -3,7 +3,6 @@
     "scripts": {
         "deploy:sample": "npx hardhat run deploy/sample.ts",
         "test:contracts": "npx hardhat test",
-        "task:accounts": "npx hardhat accounts",
         "task:compile": "npx hardhat compile",
         "task:clean": "npx hardhat clean",
         "dev:node": "npx hardhat node"

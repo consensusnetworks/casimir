@@ -2,19 +2,20 @@ import WalletConnect from '@walletconnect/client'
 import QRCodeModal from '@walletconnect/qrcode-modal'
 import { ref, Ref } from 'vue'
 import { ethers } from 'ethers'
+import { TransactionInit } from '@/interfaces/TransactionInit'
 
 export default function useWalletConnect() {
-  const connector: Ref<WalletConnect | undefined> = ref()
+  let connector: WalletConnect | undefined
   const walletConnectAddress: Ref<string> = ref('')
   function enableWalletConnect() {
-    connector.value = new WalletConnect({
+    connector = new WalletConnect({
       bridge: 'https://bridge.walletconnect.org', // Required
       qrcodeModal: QRCodeModal,
     })
-    if (!connector.value.connected) {
-      connector.value.createSession()
+    if (!connector.connected) {
+      connector.createSession()
     }
-    connector.value.on('connect', (error: any, payload: any) => {
+    connector.on('connect', (error: any, payload: any) => {
       if (error) {
         throw error
       }
@@ -22,21 +23,21 @@ export default function useWalletConnect() {
       const { accounts, chainId } = payload.params[0]
       walletConnectAddress.value = accounts[0]
     })
-    connector.value.on('session_update', (error: any, payload: any) => {
+    connector.on('session_update', (error: any, payload: any) => {
       if (error) {
         throw error
       }
       // Get updated accounts and chainId
       const { accounts, chainId } = payload.params[0]
     })
-    connector.value.on('disconnect', (error: any) => {
+    connector.on('disconnect', (error: any) => {
       if (error) {
         console.log(`disconnect error :>> ${error}`)
         // throw error
       }
       // Delete connector
       try {
-        connector.value?.killSession()
+        connector?.killSession()
       } catch (error) {
         console.log(`disconnect error in listener :>> ${error}`)
       }
@@ -45,34 +46,26 @@ export default function useWalletConnect() {
   }
 
   async function sendWalletConnectTransaction(
-    amount: string,
-    toAddress: string
-  ) {
-    const amountInWei = ethers.utils.parseEther(amount).toString()
-
+    { to, value }: TransactionInit
+  ): Promise<string> {
+    const amountInWei = ethers.utils.parseEther(value).toString()
     // TODO: Better understand and handle gasPrice and gasLimit
     const gasLimit = ethers.utils.hexlify(21000).toString()
     const gasPrice = ethers.utils.hexlify(1000000000).toString()
     const tx = {
       from: walletConnectAddress.value,
-      to: toAddress,
+      to,
       gas: gasLimit,
       gasPrice: gasPrice,
       value: amountInWei,
-      // data: 'data', // TODO: Determine when this is needed.
-      // nonce: 'nonce', // TODO: Determine when this is needed.
+      // nonce: 'nonce', // TODO: Use ethers to get nonce for current address
     }
-    try {
-      const result = await connector.value?.sendTransaction(tx)
-      console.log('result :>> ', result)
-    } catch (err) {
-      console.log('error in sendWalletConnectTransaction :>> ', err)
-    }
+    return await connector?.sendTransaction(tx)
   }
 
   async function disableWalletConnect() {
     try {
-      await connector.value?.killSession()
+      await connector?.killSession()
     } catch (err) {
       console.log('error in disableWalletConnect :>> ', err)
     }
