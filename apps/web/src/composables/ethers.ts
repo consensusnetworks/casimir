@@ -3,6 +3,7 @@ import { ethers } from 'ethers'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
 import { ProviderString } from '@/types/ProviderString'
+import { TransactionInit } from '@/interfaces/TransactionInit'
 
 const defaultProviders = {
   MetaMask: undefined,
@@ -10,15 +11,13 @@ const defaultProviders = {
 }
 
 const ethereum: any = window.ethereum
-const availableProviders = ref<BrowserProviders>(
-  getBrowserProviders(ethereum)
-)
+const availableProviders = ref<BrowserProviders>(getBrowserProviders(ethereum))
 
 export default function useEthers() {
   const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
   async function requestEthersAccount(provider: ProviderString) {
     const browserExtensionProvider =
-          availableProviders.value[provider as keyof BrowserProviders]
+      availableProviders.value[provider as keyof BrowserProviders]
     if (browserExtensionProvider?.request) {
       return await browserExtensionProvider.request({
         method: 'eth_requestAccounts',
@@ -27,8 +26,7 @@ export default function useEthers() {
   }
 
   async function sendEthersTransaction(
-    providerString: ProviderString,
-    { to, value }: { to: string; value: string }
+    { to, value, providerString }: TransactionInit
   ) {
     const browserProvider =
       availableProviders.value[providerString as keyof BrowserProviders]
@@ -47,7 +45,7 @@ export default function useEthers() {
   async function signEthersMessage(provider: ProviderString, message: string) {
     const browserProvider =
       availableProviders.value[
-        provider as keyof BrowserProviders
+      provider as keyof BrowserProviders
       ]
     const web3Provider: ethers.providers.Web3Provider =
       new ethers.providers.Web3Provider(browserProvider as EthersProvider)

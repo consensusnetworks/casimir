@@ -1,4 +1,4 @@
-import { Ref, ref } from 'vue'
+import { ref } from 'vue'
 import { ethers } from 'ethers'
 import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
@@ -68,21 +68,19 @@ export default function useWallet() {
     }
   }
 
-  async function sendTransaction(provider: string) {
+  async function sendTransaction(providerString: ProviderString) {
     const tx: TransactionInit = {
       from: selectedAccount.value,
       to: toAddress.value,
       value: amount.value,
+      providerString
     }
 
     try {
-      if (provider === 'WalletConnect') {
+      if (providerString === 'WalletConnect') {
         await sendWalletConnectTransaction(tx)
-      } else if (ethersProviderList.includes(provider)) {
-        await sendEthersTransaction(
-          provider as ProviderString,
-          tx
-        )
+      } else if (ethersProviderList.includes(providerString)) {
+        await sendEthersTransaction(tx)
       } else if (selectedProvider.value === 'IoPay') {
         await sendIoPayTransaction(tx)
       } else if (selectedProvider.value === 'Ledger') {

@@ -1,4 +1,6 @@
 import ethers from 'ethers'
+import { ProviderString } from '@/types/ProviderString'
+
 export interface TransactionInit extends ethers.providers.TransactionRequest {
     /** The transaction sender's address */
     from: string;
@@ -6,4 +8,6 @@ export interface TransactionInit extends ethers.providers.TransactionRequest {
     to: string;
     /** The value of the transaction */
     value: string;
+    /** The optional provider of the transaction */
+    providerString?: ProviderString;
 }

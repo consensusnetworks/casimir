@@ -43,7 +43,7 @@ export default function useLedger() {
     // Todo check before click (user can +/- gas limit accordingly)
     const gasEstimate = await provider.estimateGas(
       unsignedTransaction as Deferrable<TransactionRequest>
-    ) 
+    )
     const gasLimit = Math.ceil(parseInt(gasEstimate.toString()) * 1.3)
     unsignedTransaction.gasLimit = ethers.utils.hexlify(gasLimit)
     const balance = await provider.getBalance(from)
