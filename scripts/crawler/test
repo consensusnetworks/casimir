@@ -36,6 +36,16 @@ do
     esac
 done
 
+# Default to mainnet if fork is set vaguely
+if [ "$fork" = true ]; then
+    fork=mainnet
+fi
+
+# Default to mainnet if network is set vaguely
+if [ "$network" = true ]; then
+    network=mainnet
+fi
+
 commands=("npm run test --workspace @casimir/crawler")
 
 chains="ethereum"

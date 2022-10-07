@@ -24,48 +24,46 @@ else
 fi
 
 # Get args
-while getopts f: flag
+while getopts :f: flag
 do
     case "${flag}" in
         f) fork=${OPTARG};;
     esac
 done
 
-# Set variable to create local tunnel and display seed
-export LOCAL_DEV=true
+# Default to mainnet if fork is set vaguely
+if [ "$fork" = true ]; then
+    fork=mainnet
+fi
 
-# Secret ID is just the name or ARN
-ledger_seed_secret_id=consensus-networks-ledger-seed
-echo "Getting $ledger_seed_secret_id for $profile"
-
-# Get the secret from AWS
-ledger_seed=$(aws secretsmanager get-secret-value \
---secret-id $ledger_seed_secret_id \
+# Get the bip39 seed from AWS
+seed_secret_id=consensus-networks-bip39-seed
+seed=$(aws secretsmanager get-secret-value \
+--secret-id $seed_secret_id \
 --query SecretString \
 --output text \
 --profile $profile)
 
-export LEDGER_SEED="$ledger_seed"
+# Set the shared bip39 seed
+export BIP39_SEED="$seed"
+echo "Your mnemonic is $BIP39_SEED"
 
-if [ -z "$fork" ]; then
-    echo "⛓ Running default localnode"
-    npm run dev:localnode --workspace @casimir/ethereum
-else
-    # Secret ID is just the name or ARN
-    alchemy_secret_id=consensus-networks-alchemy-$fork
-    echo "Getting $alchemy_secret_id for $profile"
-
-    # Get the secret from AWS
-    alchemy_key=$(aws secretsmanager get-secret-value \
-    --secret-id $alchemy_secret_id \
+if [ -n "$fork" ]; then
+    # Get the RPC API key from AWS
+    rpc_secret_id=consensus-networks-ethereum-$fork
+    rpc_key=$(aws secretsmanager get-secret-value \
+    --secret-id $rpc_secret_id \
     --query SecretString \
     --output text \
     --profile $profile)
 
-    export FORK_URL="https://eth-$fork.alchemyapi.io/v2/$alchemy_key"
-
-    echo "⛓ Running $fork fork localnode"
-    npm run dev:localnode --workspace @casimir/ethereum
+    echo "⛓ Setting up ethereum chain with $fork fork"
+    export ETHEREUM_FORK_RPC="https://eth-$fork.g.alchemy.com/v2/$rpc_key"
+else
+    echo "⛓ Setting up ethereum chain without fork"
 fi
+
+npm run dev:node --workspace @casimir/ethereum &
+npm run deploy:ssv --workspace @casimir/ethereum -- --network localhost
 
 

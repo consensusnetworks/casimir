@@ -28,7 +28,7 @@ contract SSVManager {
     /**
      * @notice Deposit to the pool manager
      */
-    function deposit() public payable {
+    function deposit() external payable {
 
         /// Distribute ETH to open pools
         uint256 availableDepositAmount = msg.value;
@@ -103,7 +103,7 @@ contract SSVManager {
      * @notice Get all open pools
      * @return An array of all open pools
      */ 
-    function getOpenPools() public view returns (address[] memory) {
+    function getOpenPools() external view returns (address[] memory) {
         return openPools;
     }
 
@@ -111,7 +111,7 @@ contract SSVManager {
      * @notice Get all the staked pools
      * @return An array of all the staked pools
      */ 
-    function getStakedPools() public view returns (address[] memory) {
+    function getStakedPools() external view returns (address[] memory) {
         return stakedPools;
     }
 
@@ -119,7 +119,7 @@ contract SSVManager {
      * @notice Get the pools for a given user
      * @return An array of pools for a given user
      */ 
-    function getPoolsForUser(address userAddress) public view returns (address[] memory) {
+    function getPoolsForUser(address userAddress) external view returns (address[] memory) {
         return users[userAddress].poolAddresses;
     }
 
@@ -127,7 +127,7 @@ contract SSVManager {
      * @notice Get the given user's balance for the given pool
      * @return The given user's balance for the given pool
      */ 
-    function getUserBalanceForPool(address userAddress, address poolAddress) public view returns (uint256) {
+    function getUserBalanceForPool(address userAddress, address poolAddress) external view returns (uint256) {
         SSVPoolInterface poolContract = SSVPoolInterface(poolAddress);
         return poolContract.getUserBalance(userAddress);
     }
@@ -136,7 +136,7 @@ contract SSVManager {
      * @notice Get the given pool's balance
      * @return The given pool's balance
      */ 
-    function getBalanceForPool(address poolAddress) public view returns (uint256) {
+    function getBalanceForPool(address poolAddress) external view returns (uint256) {
         SSVPoolInterface poolContract = SSVPoolInterface(poolAddress);
         return poolContract.getBalance();
     }

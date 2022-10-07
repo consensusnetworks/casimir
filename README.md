@@ -95,7 +95,7 @@ You can get up and running without configuration. You can also mock local backen
 
 ### Hardhat
 
-EVM contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file.
+Ethereum contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file.
 
 1. Compile the contracts in [contracts/ethereum](contracts/ethereum).
     
