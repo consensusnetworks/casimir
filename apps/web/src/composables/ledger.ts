@@ -5,6 +5,7 @@ import { ethers } from 'ethers'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { Deferrable } from '@ethersproject/properties'
 import { TransactionRequest } from '@ethersproject/abstract-provider'
+import { MessageInit } from '@/interfaces/MessageInit'
 
 export default function useLedger() {
   const bip32Path = '44\'/60\'/0\'/0/0'
@@ -80,11 +81,12 @@ export default function useLedger() {
     return await provider.sendTransaction(signedTransaction)
   }
 
-  async function signLedgerMessage(message: string) {
+  async function signLedgerMessage(messageInit: MessageInit): Promise<string> {
+    const { hashedMessage } = messageInit
     const _eth = await getLedgerEthSigner()
     const signature = await _eth.signPersonalMessage(
       bip32Path,
-      Buffer.from(message).toString('hex')
+      Buffer.from(hashedMessage).toString('hex')
     )
     const signedHash =
       '0x' + signature.r + signature.s + signature.v.toString(16)

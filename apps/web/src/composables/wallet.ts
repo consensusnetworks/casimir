@@ -6,6 +6,7 @@ import useEthers from '@/composables/ethers'
 import useWalletConnect from '@/composables/walletConnect'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
+import { MessageInit } from '@/interfaces/MessageInit'
 
 const { ethersProviderList, requestEthersAccount, sendEthersTransaction, signEthersMessage } = useEthers()
 const {
@@ -47,9 +48,7 @@ export default function useWallet() {
       if (provider === 'WalletConnect') {
         enableWalletConnect()
       } else if (ethersProviderList.includes(provider)) {
-        const accounts = await requestEthersAccount(
-          provider as ProviderString
-        )
+        const accounts = await requestEthersAccount(provider as ProviderString)
         const address = accounts[0]
         setSelectedAccount(address)
       } else if (provider === 'IoPay') {
@@ -94,15 +93,19 @@ export default function useWallet() {
   }
 
   async function signMessage(message: string) {
+    const hashedMessage = ethers.utils.id(message)
+    const messageInit: MessageInit = {
+      hashedMessage,
+      providerString: selectedProvider.value,
+    }
     // TODO: Mock sending hash and signature to backend for verification
     try {
       if (ethersProviderList.includes(selectedProvider.value)) {
-        await signEthersMessage(selectedProvider.value, message)
+        await signEthersMessage(messageInit)
       } else if (selectedProvider.value === 'IoPay') {
-        const hashedMessage = ethers.utils.id(message)
-        await signIoPayMessage(hashedMessage)
+        await signIoPayMessage(messageInit)
       } else if (selectedProvider.value === 'Ledger') {
-        await signLedgerMessage(message)
+        await signLedgerMessage(messageInit)
       } else {
         console.log('signMessage not yet supported for this wallet provider')
       }
@@ -121,3 +124,5 @@ export default function useWallet() {
     signMessage,
   }
 }
+
+

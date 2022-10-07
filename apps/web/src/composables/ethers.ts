@@ -4,6 +4,7 @@ import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
+import { MessageInit } from '@/interfaces/MessageInit'
 
 const defaultProviders = {
   MetaMask: undefined,
@@ -42,15 +43,15 @@ export default function useEthers() {
     return hash
   }
 
-  async function signEthersMessage(provider: ProviderString, message: string) {
+  async function signEthersMessage(messageInit: MessageInit): Promise<string> {
+    const { providerString, hashedMessage } = messageInit
     const browserProvider =
       availableProviders.value[
-      provider as keyof BrowserProviders
+      providerString as keyof BrowserProviders
       ]
     const web3Provider: ethers.providers.Web3Provider =
       new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const signer = web3Provider.getSigner()
-    const hashedMessage = ethers.utils.id(message)
     const signature = await signer.signMessage(hashedMessage)
     return signature
   }
