@@ -7,6 +7,7 @@ import {
 } from '@solana/web3.js'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { ProviderString } from '@/types/ProviderString'
+import { TransactionInit } from '@/interfaces/TransactionInit'
 
 const defaultProviders = {
     Phantom: undefined,
@@ -26,7 +27,29 @@ export default function useSolana() {
         return address
     }
 
-    return { solanaProviderList, requestSolanaAddress }
+    async function sendSolanaTransaction(provider: ProviderString, { from, to, value }: TransactionInit) {
+        const network = 'https://api.devnet.solana.com'
+        const connection = new Connection(network)
+        const { blockhash } = await connection.getLatestBlockhash('finalized')
+        const toAddress = new PublicKey(to)
+        const fromAddress = new PublicKey(from)
+        const lamports = Number(value) * 1000000000
+        const transaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: fromAddress,
+            toPubkey: toAddress,
+            lamports,
+          })
+        )
+        transaction.feePayer = fromAddress
+        transaction.recentBlockhash = blockhash
+        const { signature } = await availableProviders.value[provider as keyof BrowserProviders]
+            .signAndSendTransaction(transaction)
+        const signatureStatus = await connection.getSignatureStatus(signature)
+        return signatureStatus
+    }
+
+    return { solanaProviderList, requestSolanaAddress, sendSolanaTransaction }
 }
 
 function getBrowserProviders() {
