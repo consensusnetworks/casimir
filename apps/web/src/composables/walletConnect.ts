@@ -47,7 +47,7 @@ export default function useWalletConnect() {
 
   async function sendWalletConnectTransaction(
     { to, value }: TransactionInit
-  ) {
+  ): Promise<string> {
     const amountInWei = ethers.utils.parseEther(value).toString()
     // TODO: Better understand and handle gasPrice and gasLimit
     const gasLimit = ethers.utils.hexlify(21000).toString()
@@ -60,12 +60,7 @@ export default function useWalletConnect() {
       value: amountInWei,
       // nonce: 'nonce', // TODO: Use ethers to get nonce for current address
     }
-    try {
-      const result = await connector?.sendTransaction(tx)
-      console.log('result :>> ', result)
-    } catch (err) {
-      console.log('error in sendWalletConnectTransaction :>> ', err)
-    }
+    return await connector?.sendTransaction(tx)
   }
 
   async function disableWalletConnect() {
