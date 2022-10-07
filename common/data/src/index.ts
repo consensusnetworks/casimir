@@ -21,7 +21,7 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
 
     if (name.endsWith('at')) type = glue.Schema.TIMESTAMP
 
-    if (name === 'candidate_list') type = glue.Schema.array(glue.Schema.STRING)
+    if (name.endsWith('_list')) type = glue.Schema.array(glue.Schema.STRING)
 
     if (name.endsWith('amount')) type = glue.Schema.BIG_INT
 

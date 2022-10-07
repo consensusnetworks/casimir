@@ -29,7 +29,7 @@ export class EthereumService {
 			network: this.network,
 			provider: Provider.Casimir,
 			type: 'block',
-			created_at: new Date(block.timestamp * 1000).toISOString(),
+			created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 			address: block.miner,
 			height: block.number,
 			to_address: '',

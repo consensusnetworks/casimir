@@ -75,7 +75,7 @@ export class IotexService {
       network: this.network,
       provider: Provider.Casimir,
       type: 'block',
-      created_at: new Date(block.blkMetas[0].timestamp.seconds * 1000).toISOString(),
+      created_at: new Date(block.blkMetas[0].timestamp.seconds * 1000).toISOString().replace('T', ' ').replace('Z', ''),
       address: blockMeta.producerAddress,
       height: blockMeta.height,
       to_address: '',

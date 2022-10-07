@@ -8,10 +8,7 @@ import {
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
-
-const defaultProviders = {
-  Phantom: undefined,
-}
+import { MessageInit } from '@/interfaces/MessageInit'
 
 export default function useSolana() {
   const solanaProviderList = ['Phantom']
@@ -27,7 +24,7 @@ export default function useSolana() {
     return address
   }
 
-  async function sendSolanaTransaction(provider: ProviderString, { from, to, value }: TransactionInit) {
+  async function sendSolanaTransaction({ from, to, value, providerString }: TransactionInit) {
     const network = 'https://api.devnet.solana.com'
     const connection = new Connection(network)
     const { blockhash } = await connection.getLatestBlockhash('finalized')
@@ -43,15 +40,16 @@ export default function useSolana() {
     )
     transaction.feePayer = fromAddress
     transaction.recentBlockhash = blockhash
-    const { signature } = await availableProviders.value[provider as keyof BrowserProviders]
+    const { signature } = await availableProviders.value[providerString as keyof BrowserProviders]
       .signAndSendTransaction(transaction)
     const signatureStatus = await connection.getSignatureStatus(signature)
     return signatureStatus
   }
 
-  async function signSolanaMessage(provider: ProviderString, message: string) {
-    const { signature } = await availableProviders.value[provider as keyof BrowserProviders]
-      .signMessage(message)
+  async function signSolanaMessage(messageInit: MessageInit): Promise<string> {
+    const { providerString, hashedMessage } = messageInit
+    const { signature } = await availableProviders.value[providerString as keyof BrowserProviders]
+      .signMessage(hashedMessage)
     return signature
   }
 

@@ -5,6 +5,7 @@ import { ethers } from 'ethers'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { Deferrable } from '@ethersproject/properties'
 import { TransactionRequest } from '@ethersproject/abstract-provider'
+import { MessageInit } from '@/interfaces/MessageInit'
 
 export default function useLedger() {
   const bip32Path = '44\'/60\'/0\'/0/0'
@@ -43,7 +44,7 @@ export default function useLedger() {
     // Todo check before click (user can +/- gas limit accordingly)
     const gasEstimate = await provider.estimateGas(
       unsignedTransaction as Deferrable<TransactionRequest>
-    ) 
+    )
     const gasLimit = Math.ceil(parseInt(gasEstimate.toString()) * 1.3)
     unsignedTransaction.gasLimit = ethers.utils.hexlify(gasLimit)
     const balance = await provider.getBalance(from)
@@ -80,11 +81,12 @@ export default function useLedger() {
     return await provider.sendTransaction(signedTransaction)
   }
 
-  async function signMessageWithLedger(message: string) {
+  async function signLedgerMessage(messageInit: MessageInit): Promise<string> {
+    const { hashedMessage } = messageInit
     const _eth = await getLedgerEthSigner()
     const signature = await _eth.signPersonalMessage(
       bip32Path,
-      Buffer.from(message).toString('hex')
+      Buffer.from(hashedMessage).toString('hex')
     )
     const signedHash =
       '0x' + signature.r + signature.s + signature.v.toString(16)
@@ -94,7 +96,7 @@ export default function useLedger() {
   return {
     bip32Path,
     getLedgerEthSigner,
-    signMessageWithLedger,
+    signLedgerMessage,
     sendLedgerTransaction,
   }
 }

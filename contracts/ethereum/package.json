@@ -1,5 +1,5 @@
 {
-    "name": "@casimir/evm",
+    "name": "@casimir/ethereum",
     "scripts": {
         "deploy:sample": "npx hardhat run deploy/sample.ts",
         "test:contracts": "npx hardhat test",

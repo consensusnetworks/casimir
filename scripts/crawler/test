@@ -1,0 +1,82 @@
+#!/bin/bash
+# Test Casimir crawler with various network options
+#
+# Example:
+#
+#    scripts/crawler/test -f <fork-name> -n <network-name>
+#
+# Further information:
+# See https://hardhat.org/hardhat-network/docs/overview
+#
+
+# Set RPC URL bases
+ethereum_mainnet=https://eth-mainnet.g.alchemy.com/v2 
+ethereum_testnet=https://eth-testnet.g.alchemy.com/v2
+
+# Get variables from root .env
+export $(xargs < .env)
+
+# Set default profile
+profile="consensus-networks-dev"
+
+if [ ${PROFILE+x} ]; then
+    echo "PROFILE is set to '$PROFILE'"
+    profile=$PROFILE
+else
+    export PROFILE="$profile"
+    echo "PROFILE is not set, using default profile '$PROFILE'"
+fi
+
+# Get args
+while getopts :f:n: flag
+do
+    case "${flag}" in
+        f) fork=${OPTARG};;
+        n) network=${OPTARG};;
+    esac
+done
+
+# Default to mainnet if fork is set vaguely
+if [ "$fork" = true ]; then
+    fork=mainnet
+fi
+
+# Default to mainnet if network is set vaguely
+if [ "$network" = true ]; then
+    network=mainnet
+fi
+
+commands=("npm run test --workspace @casimir/crawler")
+
+chains="ethereum"
+
+# Loop over comma-separated string of chains
+IFS=',' read -r -a chain_list <<< "$chains"
+
+for chain in "${chain_list[@]}"
+do
+    # Expose RPC URL directly if network is set to mainnet or testnet
+    if [ -n "$network" ]; then
+        # Get the RPC API key from AWS
+        rpc_secret_id=consensus-networks-$chain-$network
+        rpc_key=$(aws secretsmanager get-secret-value \
+        --secret-id $rpc_secret_id \
+        --query SecretString \
+        --output text \
+        --profile $profile)
+
+        CHAIN=$(echo $chain | tr '[:lower:]' '[:upper:]')
+        rpc_base=${chain}_${network}
+        export "PUBLIC_${CHAIN}_RPC"="${!rpc_base}/$rpc_key"
+    else
+        # Pass fork or network to chain-specific script
+        commands+=("npm run dev:$chain --fork=$fork")
+    fi
+done
+
+for command in "${commands[@]}"
+do
+    $command &
+done
+
+wait && pkill -P $$

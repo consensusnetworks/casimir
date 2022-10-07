@@ -2,6 +2,7 @@ import Antenna from 'iotex-antenna'
 import { WsSignerPlugin } from 'iotex-antenna/lib/plugin/ws'
 import { toRau } from 'iotex-antenna/lib/account/utils'
 import { TransactionInit } from '@/interfaces/TransactionInit'
+import { MessageInit } from '@/interfaces/MessageInit'
 
 export default function useIoPay() {
   const signer = new WsSignerPlugin()
@@ -13,7 +14,7 @@ export default function useIoPay() {
     return await signer.getAccounts()
   }
 
-  const sendIoPayTransaction = async ({to, value}: TransactionInit) => {
+  const sendIoPayTransaction = async ({ to, value }: TransactionInit) => {
     try {
       const transResp = await antenna?.iotx.sendTransfer({
         to: `${to}`,
@@ -22,15 +23,16 @@ export default function useIoPay() {
         gasLimit: '100000',
         gasPrice: toRau('1', 'Qev'),
       })
-      console.log('transResp :>> ', transResp)
+      return transResp
     } catch (err) {
       // TODO: handle submit error and guide user
       console.log(err)
     }
   }
 
-  const signIoPayMessage = async (message: string) => {
-    return await signer.signMessage(message)
+  const signIoPayMessage = async (messageInit: MessageInit): Promise<Buffer> => {
+    const { hashedMessage } = messageInit
+    return await signer.signMessage(hashedMessage)
   }
 
   //   const stakeIoPay = async () => {

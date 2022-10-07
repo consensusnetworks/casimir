@@ -11,7 +11,6 @@
   "dependencies": {
     "@heroicons/vue": "^1.0.6",
     "@ledgerhq/hw-app-eth": "^6.29.4",
-    "@ledgerhq/hw-transport-webhid": "^6.27.2",
     "@ledgerhq/hw-transport-webusb": "^6.27.4",
     "@solana/web3.js": "^1.63.1",
     "@walletconnect/client": "^1.8.0",

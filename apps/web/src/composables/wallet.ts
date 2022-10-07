@@ -1,4 +1,4 @@
-import { Ref, ref } from 'vue'
+import { ref } from 'vue'
 import { ethers } from 'ethers'
 import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
@@ -7,6 +7,7 @@ import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
+import { MessageInit } from '@/interfaces/MessageInit'
 
 const { ethersProviderList, requestEthersAccount, sendEthersTransaction, signEthersMessage } = useEthers()
 const { enableWalletConnect, disableWalletConnect, sendWalletConnectTransaction } = useWalletConnect()
@@ -24,7 +25,7 @@ export default function useWallet() {
   const {
     bip32Path,
     getLedgerEthSigner,
-    signMessageWithLedger,
+    signLedgerMessage,
     sendLedgerTransaction,
   } = useLedger()
   const selectedProvider = ref<ProviderString>('')
@@ -68,24 +69,25 @@ export default function useWallet() {
     }
   }
 
-  async function sendTransaction(provider: string) {
-    const tx: Ref<TransactionInit> = ref({
+  async function sendTransaction() {
+    const txInit: TransactionInit = {
       from: selectedAccount.value,
       to: toAddress.value,
       value: amount.value,
-    })
+      providerString: selectedProvider.value
+    }
 
     try {
-      if (provider === 'WalletConnect') {
-        await sendWalletConnectTransaction(tx.value)
-      } else if (ethersProviderList.includes(provider)) {
-        await sendEthersTransaction(provider as ProviderString, tx.value)
-      } else if (solanaProviderList.includes(provider)) {
-        await sendSolanaTransaction(provider as ProviderString, tx.value)
+      if (txInit.providerString === 'WalletConnect') {
+        await sendWalletConnectTransaction(txInit)
+      } else if (ethersProviderList.includes(txInit.providerString)) {
+        await sendEthersTransaction(txInit)
+      } else if (solanaProviderList.includes(txInit.providerString)) {
+        await sendSolanaTransaction(txInit)
       } else if (selectedProvider.value === 'IoPay') {
-        await sendIoPayTransaction(tx.value)
+        await sendIoPayTransaction(txInit)
       } else if (selectedProvider.value === 'Ledger') {
-        await sendLedgerTransaction(tx.value)
+        await sendLedgerTransaction(txInit)
       } else {
         throw new Error('Provider selected not yet supported')
       }
@@ -95,17 +97,20 @@ export default function useWallet() {
   }
 
   async function signMessage(message: string) {
+    const messageInit: MessageInit = {
+      hashedMessage: ethers.utils.id(message),
+      providerString: selectedProvider.value,
+    }
     // TODO: Mock sending hash and signature to backend for verification
     try {
-      if (ethersProviderList.includes(selectedProvider.value)) {
-        await signEthersMessage(selectedProvider.value, message)
-      } else if (solanaProviderList.includes(selectedProvider.value)) {
-        await signSolanaMessage(selectedProvider.value, message)
-      } else if (selectedProvider.value === 'IoPay') {
-        const hashedMessage = ethers.utils.id(message)
-        await signIoPayMessage(hashedMessage)
-      } else if (selectedProvider.value === 'Ledger') {
-        await signMessageWithLedger(message)
+      if (ethersProviderList.includes(messageInit.providerString)) {
+        await signEthersMessage(messageInit)
+      } else if (solanaProviderList.includes(messageInit.providerString)) {
+        await signSolanaMessage(messageInit)
+      } else if (messageInit.providerString === 'IoPay') {
+        await signIoPayMessage(messageInit)
+      } else if (messageInit.providerString === 'Ledger') {
+        await signLedgerMessage(messageInit)
       } else {
         console.log('signMessage not yet supported for this wallet provider')
       }
@@ -124,3 +129,5 @@ export default function useWallet() {
     signMessage,
   }
 }
+
+

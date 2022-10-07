@@ -22,5 +22,6 @@ declare type APIGatewayResponse = {
 declare global {
   interface Window {
     ethereum: any;
+    phantom: any;
   }
 }

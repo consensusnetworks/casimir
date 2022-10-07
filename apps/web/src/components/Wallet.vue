@@ -11,7 +11,10 @@
         </p>
       </div>
       <div class="coinbase-div">
-        <button class="coinbase-btn" @click="connectWallet('CoinbaseWallet')">
+        <button
+          class="coinbase-btn"
+          @click="connectWallet('CoinbaseWallet')"
+        >
           {{ coinbaseButtonText }}
         </button>
         <p>
@@ -20,7 +23,10 @@
         </p>
       </div>
       <div class="ioPay-div">
-        <button class="iopay-btn" @click="connectWallet('IoPay')">
+        <button
+          class="iopay-btn"
+          @click="connectWallet('IoPay')"
+        >
           {{ ioPayButtonText }}
         </button>
         <p>
@@ -29,7 +35,10 @@
         </p>
       </div>
       <div class="phantom-div">
-        <button class="phantom-btn" @click="connectWallet('Phantom')">
+        <button
+          class="phantom-btn"
+          @click="connectWallet('Phantom')"
+        >
           {{ phantomButtonText }}
         </button>
         <p>
@@ -37,29 +46,47 @@
           <span> {{ phantomAccountsResult }} </span>
         </p>
       </div>
-      <button class="ledger-btn" @click="connectWallet('Ledger')">
+      <button
+        class="ledger-btn"
+        @click="connectWallet('Ledger')"
+      >
         Connect Ledger
       </button>
       <div>
-        <button class="wallet-connect-btn" @click="connectWallet('WalletConnect')">
+        <button
+          class="wallet-connect-btn"
+          @click="connectWallet('WalletConnect')"
+        >
           WalletConnect
         </button>
       </div>
     </div>
     <div class="form-container">
       <div class="sign-message-container">
-        <input v-model="message" type="text" placeholder="Write a message to sign">
+        <input
+          v-model="message"
+          type="text"
+          placeholder="Write a message to sign"
+        >
         <button @click="signMessage(message)">
           Sign Message
         </button>
         <p>{{ signedMessage }}</p>
       </div>
-      <form @submit.prevent="sendTransaction(selectedProvider)">
+      <form @submit.prevent="sendTransaction()">
         <label for="address">Address</label>
-        <input v-model="toAddress" type="text" placeholder="To Address">
+        <input
+          v-model="toAddress"
+          type="text"
+          placeholder="To Address"
+        >
         <br>
         <label for="amount">Amount</label>
-        <input v-model="amount" type="text" placeholder="Amount Ether">
+        <input
+          v-model="amount"
+          type="text"
+          placeholder="Amount Ether"
+        >
         <button type="submit">
           Send Transaction
         </button>
