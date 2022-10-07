@@ -1,11 +1,11 @@
 {
     "name": "@casimir/ethereum",
     "scripts": {
+        "dev:node": "npx hardhat node",
         "deploy:ssv": "npx hardhat run deploy/ssv.deploy.ts",
         "test:contracts": "npx hardhat test",
-        "task:compile": "npx hardhat compile",
         "task:clean": "npx hardhat clean",
-        "dev:node": "npx hardhat node",
+        "task:compile": "npm run task:clean && npx hardhat compile",
         "postinstall": "npm run task:compile"
     },
     "devDependencies": {
