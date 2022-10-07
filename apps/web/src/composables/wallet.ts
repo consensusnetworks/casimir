@@ -50,9 +50,7 @@ export default function useWallet() {
       if (provider === 'WalletConnect') {
         enableWalletConnect()
       } else if (ethersProviderList.includes(provider)) {
-        const accounts = await requestEthersAccount(
-          provider as ProviderString
-        )
+        const accounts = await requestEthersAccount(provider as ProviderString)
         const address = accounts[0]
         setSelectedAccount(address)
       } else if (solanaProviderList.includes(provider)) {
