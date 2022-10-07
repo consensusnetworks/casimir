@@ -69,24 +69,24 @@ export default function useWallet() {
   }
 
   async function sendTransaction(provider: string) {
-    const tx: Ref<TransactionInit> = ref({
+    const tx: TransactionInit = {
       from: selectedAccount.value,
       to: toAddress.value,
       value: amount.value,
-    })
+    }
 
     try {
       if (provider === 'WalletConnect') {
-        await sendWalletConnectTransaction(tx.value)
+        await sendWalletConnectTransaction(tx)
       } else if (ethersProviderList.includes(provider)) {
         await sendEthersTransaction(
           provider as ProviderString,
-          tx.value
+          tx
         )
       } else if (selectedProvider.value === 'IoPay') {
-        await sendIoPayTransaction(tx.value)
+        await sendIoPayTransaction(tx)
       } else if (selectedProvider.value === 'Ledger') {
-        await sendLedgerTransaction(tx.value)
+        await sendLedgerTransaction(tx)
       } else {
         throw new Error('Provider selected not yet supported')
       }
