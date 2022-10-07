@@ -5,14 +5,8 @@ import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
 import { HardhatUserConfig } from 'hardhat/config'
 
-// Use Ledger seed for consistency from localnet to testnet
-const defaultSeed =
-  'test test test test test test test test test test test junk'
-const mnemonic = process.env.BIP39_SEED || defaultSeed
-console.log('Your mnemonic is', mnemonic)
-
-// Get fork RPC url if provided
-const forkUrl = process.env.FORK_URL
+const forkUrl = process.env.ETHEREUM_FORK_RPC
+const mnemonic = process.env.BIP39_SEED
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
@@ -28,7 +22,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: { mnemonic, accountsBalance: '48000000000000000000', count: 2 },
+      accounts: mnemonic ? { mnemonic, accountsBalance: '48000000000000000000', count: 3 } : undefined,
       chainId: 1337,
       forking: forkUrl ? { url: forkUrl } : undefined
     }
