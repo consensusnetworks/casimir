@@ -28,9 +28,6 @@
           <span> {{ ioPayAccountsResult }} </span>
         </p>
       </div>
-      <button class="ledger-btn" @click="connectWallet('Ledger')">
-        Connect Ledger
-      </button>
       <div class="phantom-div">
         <button class="phantom-btn" @click="connectWallet('Phantom')">
           {{ phantomButtonText }}
@@ -40,6 +37,9 @@
           <span> {{ phantomAccountsResult }} </span>
         </p>
       </div>
+      <button class="ledger-btn" @click="connectWallet('Ledger')">
+        Connect Ledger
+      </button>
       <div>
         <button class="wallet-connect-btn" @click="connectWallet('WalletConnect')">
           WalletConnect
