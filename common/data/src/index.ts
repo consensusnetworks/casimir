@@ -31,20 +31,36 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
 }
 
 export type EventTableSchema = {
+  /** The name of the chain (e.g. iotex, ethereum) */
   chain: string
+  /** The name of the network (e.g. mainnet, testnet) */
   network: string
+  /** The node provider (e.g. casimir, infura, alchemy), */
   provider: string
+  /** The type of event (e.g. block, transaction, deposit) */
   type: string
+  /** The block height */
   height: number
+  /** The block hash */
   block: string
+  /** The transaction hash */
   transaction: string
+  /** The date timestamp of the event in ISO 8601 format (e.g. 2015-03-04T22:44:30.652Z) */
   created_at: string
+  /** The address which initiated the event, a miner in case of block and a caller in case of other events */
   address: string
+  /** The recipient's address */
   to_address: string
+  /** The validator's address */
   validator: string
+  /** The list of validators' addresses */
   validator_list: string[]
+  /** The amount value associated with the transaction */
   amount: string
+  /** The duration of the event */
   duration: number
+  /** Is auto staking enabled */
   auto_stake: boolean
 }
+
 export { eventSchema, aggSchema }

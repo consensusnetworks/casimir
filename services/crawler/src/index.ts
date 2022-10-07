@@ -66,16 +66,16 @@ class Crawler {
 
             for (let i = start; i < current.number; i++) {
                 const {events, blockHash} = await this.service.getEvents(15000000 + i)
-                const ndjson = events.map((e: EventTableSchema) => JSON.stringify(e)).join('\n')
-                await uploadToS3({
-                    bucket: eventOutputBucket,
-                    key: `${blockHash}-event.json`,
-                    data: ndjson
-                }).finally(() => {
-                    if (this.config.verbose) {
-                        console.log(`uploaded events for block ${blockHash}`)
-                    }
-                })
+                const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
+                // await uploadToS3({
+                //     bucket: eventOutputBucket,
+                //     key: `${blockHash}-event.json`,
+                //     data: ndjson
+                // }).finally(() => {
+                //     if (this.config.verbose) {
+                //         console.log(`uploaded events for block ${blockHash}`)
+                //     }
+                // })
             }
             return
         }

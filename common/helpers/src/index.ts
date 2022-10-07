@@ -2,7 +2,7 @@ import { S3Client, S3ClientConfig, PutObjectCommand, GetObjectCommand } from '@a
 import { AthenaClient, AthenaClientConfig } from '@aws-sdk/client-athena'
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
 import { StartQueryExecutionCommand, GetQueryExecutionCommand }  from '@aws-sdk/client-athena'
-import { EventTableColumn } from '@casimir/data'
+import { EventTableSchema } from '@casimir/data'
 
 const defaultQueryOutputBucket = 'casimir-etl-output-bucket-dev'
 
@@ -186,7 +186,7 @@ async function pollAthenaQueryOutput(queryId: string): Promise<void> {
  * @param query - SQL query to run (make sure the correct permissions are set)
  * @return string - Query result
  */
-export async function queryAthena(query: string): Promise<EventTableColumn[] | null> {
+export async function queryAthena(query: string): Promise<EventTableSchema[] | null> {
 
   if (!athena) {
     athena = await newAthenaClient()
@@ -225,7 +225,7 @@ export async function queryAthena(query: string): Promise<EventTableColumn[] | n
 
   const header = rows.splice(0, 1)[0].split(',').map((h: string) => h.trim().replace(/"/g, ''))
 
-  const events: EventTableColumn[] = []
+  const events: EventTableSchema[] = []
 
   rows.forEach((curr, i) => {
     const row = curr.split(',')

@@ -41,35 +41,30 @@ export class EthereumService {
 		return input
 	}
 
-	async getEvents(height: number): Promise<{ blockHash: string, events: EventTableSchema[] }> {
-		const events: EventTableSchema[] = []
+	async getEvents(height: number): Promise<{ blockHash: string, events: Partial<EventTableSchema>[] }> {
+		const events: Partial<EventTableSchema>[] = []
 
 		const block = await this.provider.getBlockWithTransactions(height)
 
-		events.push({
+		const blockEvent = {
 			chain: this.chain,
 			network: this.network,
 			provider: Provider.Casimir,
 			type: 'block',
 			block: block.hash,
-			transaction: "",
 			created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 			address: block.miner,
 			height: block.number,
-			to_address: "",
-			validator: '',
-			duration: 0,
-			validator_list: [],
-			amount: '0',
-			auto_stake: false
-		})
+		}
+
+		events.push(blockEvent)
 
 		if (block.transactions.length === 0) {
 			return { blockHash: block.hash, events }
 		}
 
 		for await (const tx of block.transactions) {
-			events.push({
+			const txEvent = {
 				chain: this.chain,
 				network: this.network,
 				provider: Provider.Casimir,
@@ -78,14 +73,12 @@ export class EthereumService {
 				transaction: tx.hash,
 				created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 				address: tx.from,
-				to_address: tx.to || '',
+				to_address: tx.to,
 				height: block.number,
-				validator: '',
-				validator_list: [],
-				duration: 0,
 				amount: tx.value.toString(),
-				auto_stake: false
-			})
+			}
+
+			events.push(txEvent)
 
 			const receipts = await this.provider.getTransactionReceipt(tx.hash)
 
@@ -93,11 +86,11 @@ export class EthereumService {
 				continue
 			}
 
-			for (const log of receipts.logs) {
+			for await (const log of receipts.logs) {
 				if (log.address in BeaconDepositContract) {
 					const parsedLog = this.parseLog(log)
-					console.log(parsedLog)
-					const logEvent: EventTableSchema = {
+
+					const logEvent = {
 						chain: this.chain,
 						network: this.network,
 						provider: Provider.Casimir,
@@ -107,13 +100,10 @@ export class EthereumService {
 						created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 						address: log.address,
 						height: block.number,
-						to_address: '',
-						validator: '',
-						duration: 0,
-						validator_list: [],
+						to_address: tx.to || '',
 						amount: parsedLog.amount.toString(),
-						auto_stake: false
 					}
+
 					events.push(logEvent)
 				}
 			}
