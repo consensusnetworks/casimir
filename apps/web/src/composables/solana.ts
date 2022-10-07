@@ -49,7 +49,13 @@ export default function useSolana() {
         return signatureStatus
     }
 
-    return { solanaProviderList, requestSolanaAddress, sendSolanaTransaction }
+    async function signSolanaMessage(provider: ProviderString, message: string) {
+        const { signature } = await availableProviders.value[provider as keyof BrowserProviders]
+            .signMessage(message)
+        return signature
+    }
+
+    return { solanaProviderList, requestSolanaAddress, sendSolanaTransaction, signSolanaMessage }
 }
 
 function getBrowserProviders() {

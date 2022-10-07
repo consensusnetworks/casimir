@@ -9,12 +9,8 @@ import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 
 const { ethersProviderList, requestEthersAccount, sendEthersTransaction, signEthersMessage } = useEthers()
-const {
-  enableWalletConnect,
-  disableWalletConnect,
-  sendWalletConnectTransaction,
-} = useWalletConnect()
-const { solanaProviderList, requestSolanaAddress, sendSolanaTransaction } = useSolana()
+const { enableWalletConnect, disableWalletConnect, sendWalletConnectTransaction } = useWalletConnect()
+const { solanaProviderList, requestSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
 
 const amount = ref<string>('0.001')
 const toAddress = ref<string>('7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F')
@@ -103,6 +99,8 @@ export default function useWallet() {
     try {
       if (ethersProviderList.includes(selectedProvider.value)) {
         await signEthersMessage(selectedProvider.value, message)
+      } else if (solanaProviderList.includes(selectedProvider.value)) {
+        await signSolanaMessage(selectedProvider.value, message)
       } else if (selectedProvider.value === 'IoPay') {
         const hashedMessage = ethers.utils.id(message)
         await signIoPayMessage(hashedMessage)
