@@ -54,19 +54,23 @@ class Crawler {
 
     async start(): Promise<void> {
         if (this.service instanceof EthereumService) {
-            const lastEvent = await this.getLastProcessedEvent()
-            const last = lastEvent !== null ? lastEvent.height : 0
-            const start = parseInt(last.toString()) + 1
+            // const lastEvent = await this.getLastProcessedEvent()
+            // const last = lastEvent !== null ? lastEvent.height : 0
+            // const start = parseInt(last.toString()) + 1
+            //
+            // if (this.config.verbose) {
+            //     console.log(`crawling ${this.config.chain} from block ${start}`)
+            // }
+            //
+            // const current = await this.service.getCurrentBlock()
 
-            if (this.config.verbose) {
-                console.log(`crawling ${this.config.chain} from block ${start}`)
-            }
+            const { events, blockHash } = await this.service.getEvents(15697244)
+            const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
+            fs.writeFileSync('./test-events.json', ndjson)
 
-            const current = await this.service.getCurrentBlock()
-
-            for (let i = start; i < current.number; i++) {
-                const {events, blockHash} = await this.service.getEvents(15000000 + i)
-                const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
+            // for (let i = start; i < current.number; i++) {
+                // const { events, blockHash } = await this.service.getEvents(15697244   + i)
+                // const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
                 // await uploadToS3({
                 //     bucket: eventOutputBucket,
                 //     key: `${blockHash}-event.json`,
@@ -76,7 +80,7 @@ class Crawler {
                 //         console.log(`uploaded events for block ${blockHash}`)
                 //     }
                 // })
-            }
+            // }
             return
         }
 

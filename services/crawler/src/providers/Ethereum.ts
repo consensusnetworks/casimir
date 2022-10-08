@@ -2,8 +2,9 @@ import { ethers } from 'ethers'
 import { EventTableSchema } from '@casimir/data'
 import { Chain, Provider } from '../index'
 
-const BeaconDepositContract = {
-	'0x00000000219ab540356cBB839Cbe05303d7705Fa': {
+const ContractsOfInterest = {
+	BeaconDepositContract: {
+		hash: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
 		abi: ['event DepositEvent (bytes pubkey, bytes withdrawal_credentials, bytes amount, bytes signature, bytes index)']
 	}
 }
@@ -27,7 +28,7 @@ export class EthereumService {
 	}
 
 	parseLog(log: ethers.providers.Log): Record<any, string> {
-		const abi = BeaconDepositContract[log.address as keyof typeof BeaconDepositContract].abi
+		const abi = ContractsOfInterest[log.address as keyof typeof ContractsOfInterest].abi
 		const contractInterface = new ethers.utils.Interface(abi)
 		const parsedLog = contractInterface.parseLog(log)
 		const args = parsedLog.args.slice(-1 * parsedLog.eventFragment.inputs.length)
@@ -55,7 +56,13 @@ export class EthereumService {
 			created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 			address: block.miner,
 			height: block.number,
+			gasFee: block.gasUsed.toString(),
+			gasLimit: block.gasLimit.toString(),
+			gasUsed: block.gasUsed.toNumber(),
+
 		}
+
+		console.log("blockEvent", blockEvent)
 
 		events.push(blockEvent)
 
@@ -87,23 +94,24 @@ export class EthereumService {
 			}
 
 			for await (const log of receipts.logs) {
-				if (log.address in BeaconDepositContract) {
+				if (log.address in ContractsOfInterest) {
 					const parsedLog = this.parseLog(log)
+					const value = Buffer.from(parsedLog.amount.slice(2), 'hex').readBigUInt64BE(0).toString()
 
+					console.log('Parsed Log', parsedLog)
 					const logEvent = {
 						chain: this.chain,
 						network: this.network,
 						provider: Provider.Casimir,
 						type: 'deposit',
 						block: block.hash,
-						transaction: tx.hash,
+						transaction: log.transactionHash,
 						created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 						address: log.address,
 						height: block.number,
 						to_address: tx.to || '',
-						amount: parsedLog.amount.toString(),
+						amount: value,
 					}
-
 					events.push(logEvent)
 				}
 			}

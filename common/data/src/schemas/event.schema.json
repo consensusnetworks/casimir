@@ -44,6 +44,26 @@
             "type": "string",
             "description": "The recipient's address"
         },
+        "amount": {
+            "type": "string",
+            "description": "The amount of currency associated with the event"
+        },
+        "gas_used": {
+            "type": "string",
+            "description": "The total amount of gas used"
+        },
+        "gas_limit": {
+            "type": "string",
+            "description": "The gas limit provided by transactions in the block"
+        },
+        "base_fee": {
+            "type": "string",
+            "description": "Post-London upgrade this represents the minimum gasUsed multiplier required for a transaction to be included in a block"
+        },
+        "burnt_fee": {
+            "type": "string",
+            "description": "Post-London Upgrade, this represents the part of the tx fee that is burnt"
+        },
         "validator": {
             "type": "string",
             "description": "The validator's address"
@@ -51,10 +71,6 @@
         "validator_list": {
             "type": "array",
             "description": "The list of validators in stake action"
-        },
-        "amount": {
-            "type": "string",
-            "description": "The amount of currency associated with the event"
         },
         "duration":{
             "type": "string",

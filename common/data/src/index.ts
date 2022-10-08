@@ -31,11 +31,11 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
 }
 
 export type EventTableSchema = {
-  /** The name of the chain (e.g. iotex, ethereum) */
+  /** Name of the chain (e.g. iotex, ethereum) */
   chain: string
-  /** The name of the network (e.g. mainnet, testnet) */
+  /** Name of the network (e.g. mainnet, testnet) */
   network: string
-  /** The node provider (e.g. casimir, infura, alchemy), */
+  /** "Name of the provider (e.g. casimir, infura, alchemy) */
   provider: string
   /** The type of event (e.g. block, transaction, deposit) */
   type: string
@@ -51,12 +51,20 @@ export type EventTableSchema = {
   address: string
   /** The recipient's address */
   to_address: string
+  /** The amount value associated with the transaction */
+  amount: string
+  /** The total amount of gas used  */
+  gasUsed: number
+  /** The gas limit provided by transactions in the block */
+  gasLimit: string
+  /** Post-London upgrade this represents the minimum gasUsed multiplier required for a transaction to be included in a block */
+  baseFee: string
+  /** Post-London Upgrade, this represents the part of the tx fee that is burnt */
+  burntFee: string
   /** The validator's address */
   validator: string
   /** The list of validators' addresses */
   validator_list: string[]
-  /** The amount value associated with the transaction */
-  amount: string
   /** The duration of the event */
   duration: number
   /** Is auto staking enabled */
