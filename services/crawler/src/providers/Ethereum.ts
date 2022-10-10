@@ -56,14 +56,15 @@ export class EthereumService {
 			created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 			address: block.miner,
 			height: block.number,
-			gasFee: block.gasUsed.toString(),
-			gasLimit: block.gasLimit.toString(),
 			gasUsed: block.gasUsed.toNumber(),
-
+			gasLimit: block.gasLimit.toNumber(),
+			// @ts-ignore
+			baseFee: block.baseFeePerGas.toNumber(),
+			// @ts-ignore
+			burntFee: parseFloat(ethers.utils.formatEther(ethers.BigNumber.from(block.gasUsed).mul(block.baseFeePerGas))),
 		}
 
-		console.log("blockEvent", blockEvent)
-
+		console.log('Block Event', blockEvent)
 		events.push(blockEvent)
 
 		if (block.transactions.length === 0) {
@@ -82,10 +83,10 @@ export class EthereumService {
 				address: tx.from,
 				to_address: tx.to,
 				height: block.number,
-				amount: tx.value.toString(),
+				amount: ethers.utils.formatEther(tx.value.toString())
 			}
 
-			events.push(txEvent)
+			console.log('Tx Event', txEvent)
 
 			const receipts = await this.provider.getTransactionReceipt(tx.hash)
 
@@ -96,10 +97,9 @@ export class EthereumService {
 			for await (const log of receipts.logs) {
 				if (log.address in ContractsOfInterest) {
 					const parsedLog = this.parseLog(log)
-					const value = Buffer.from(parsedLog.amount.slice(2), 'hex').readBigUInt64BE(0).toString()
+					// const value = Buffer.from(parsedLog.amount.slice(2), 'hex').readBigUInt64BE(0).toString()
 
-					console.log('Parsed Log', parsedLog)
-					const logEvent = {
+					const deposit = {
 						chain: this.chain,
 						network: this.network,
 						provider: Provider.Casimir,
@@ -110,10 +110,28 @@ export class EthereumService {
 						address: log.address,
 						height: block.number,
 						to_address: tx.to || '',
-						amount: value,
+						// amount: value,
 					}
-					events.push(logEvent)
+
+					console.log('Deposit', deposit)
+					events.push(deposit)
+					continue
 				}
+
+				const logEvent = {
+					chain: this.chain,
+					network: this.network,
+					provider: Provider.Casimir,
+					type: 'log',
+					block: block.hash,
+					transaction: log.transactionHash,
+					created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
+					address: log.address,
+					height: block.number,
+					to_address: tx.to || '',
+					amount: tx.value.toString(),
+				}
+				events.push(logEvent)
 			}
 		}
 		return {

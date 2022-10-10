@@ -115,14 +115,14 @@ export class IotexService {
     })
   }
 
-  async getEvents(height: number): Promise<{ hash: string, events: EventTableSchema[]}> {
-    const events: EventTableSchema[] = []
+  async getEvents(height: number): Promise<{ hash: string, events: Partial<EventTableSchema>[]}> {
+    const events: Partial<EventTableSchema>[] = []
 
     const block = await this.provider.iotx.getBlockMetas({byIndex: {start: height, count: 1}})
 
     const blockMeta = block.blkMetas[0]
 
-    events.push({
+    const blockEvent = {
       block: blockMeta.hash,
       transaction: "",
       chain: this.chain,
@@ -136,9 +136,11 @@ export class IotexService {
       validator: '',
       duration: 0,
       validator_list: [],
-      amount: '0',
+      amount: 0,
       auto_stake: false
-    })
+    }
+
+
 
     const numOfActions = block.blkMetas[0].numActions
 
@@ -169,7 +171,7 @@ export class IotexService {
         }
 
         if (actionType === IotexActionType.transfer && actionCore.transfer) {
-          actionEvent.amount = actionCore.transfer.amount
+          actionEvent.amount = parseInt(actionCore.transfer.amount).toString()
           actionEvent.to_address = actionCore.transfer.recipient
           events.push(actionEvent as EventTableSchema)
         }

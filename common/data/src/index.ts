@@ -56,11 +56,11 @@ export type EventTableSchema = {
   /** The total amount of gas used  */
   gasUsed: number
   /** The gas limit provided by transactions in the block */
-  gasLimit: string
+  gasLimit: number
   /** Post-London upgrade this represents the minimum gasUsed multiplier required for a transaction to be included in a block */
-  baseFee: string
+  baseFee: number
   /** Post-London Upgrade, this represents the part of the tx fee that is burnt */
-  burntFee: string
+  burntFee: number
   /** The validator's address */
   validator: string
   /** The list of validators' addresses */

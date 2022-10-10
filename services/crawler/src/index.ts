@@ -66,8 +66,6 @@ class Crawler {
 
             const { events, blockHash } = await this.service.getEvents(15697244)
             const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
-            fs.writeFileSync('./test-events.json', ndjson)
-
             // for (let i = start; i < current.number; i++) {
                 // const { events, blockHash } = await this.service.getEvents(15697244   + i)
                 // const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
@@ -99,7 +97,7 @@ class Crawler {
 
             for (let i = start; i < currentHeight; i++) {
                 const { hash, events } = await this.service.getEvents(i)
-                const ndjson = events.map((e: EventTableSchema) => JSON.stringify(e)).join('\n')
+                const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
 
                 await uploadToS3({
                     bucket: eventOutputBucket,
