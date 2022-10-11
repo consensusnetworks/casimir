@@ -10,8 +10,10 @@ export default function useIoPay() {
     signer,
   })
 
-  const getIoPayAccounts = async () => {
-    return await signer.getAccounts()
+  const getIoPayAddress = async () => {
+    const accounts = await signer.getAccounts()
+    const { address } = accounts[0]
+    return address
   }
 
   const sendIoPayTransaction = async ({ to, value }: TransactionInit) => {
@@ -54,7 +56,7 @@ export default function useIoPay() {
   //   }
 
   return {
-    getIoPayAccounts,
+    getIoPayAddress,
     sendIoPayTransaction,
     signIoPayMessage,
     // stakeIoPay,

@@ -20,7 +20,7 @@ const toAddress = ref<string>('7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F')
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const { getIoPayAccounts, sendIoPayTransaction, signIoPayMessage } =
+  const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } =
     useIoPay()
   const {
     bip32Path,
@@ -53,8 +53,7 @@ export default function useWallet() {
         const address = await getSolanaAddress(provider)
         setSelectedAccount(address)
       } else if (provider === 'IoPay') {
-        const accounts = await getIoPayAccounts()
-        const { address } = accounts[0]
+        const address = await getIoPayAddress()
         setSelectedAccount(address)
       } else if (provider === 'Ledger') {
         const ledgerEth = await getLedgerEthSigner()
