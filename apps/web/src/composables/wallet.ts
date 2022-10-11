@@ -25,6 +25,7 @@ export default function useWallet() {
   const {
     bip32Path,
     getLedgerEthSigner,
+    getLedgerAddress,
     signLedgerMessage,
     sendLedgerTransaction,
   } = useLedger()
@@ -56,8 +57,7 @@ export default function useWallet() {
         const address = await getIoPayAddress()
         setSelectedAccount(address)
       } else if (provider === 'Ledger') {
-        const ledgerEth = await getLedgerEthSigner()
-        const { address } = await ledgerEth.getAddress(bip32Path)
+        const address = await getLedgerAddress()
         setSelectedAccount(address)
       } else {
         throw new Error('No provider selected')

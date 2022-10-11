@@ -25,6 +25,12 @@ export default function useLedger() {
     }
   }
 
+  async function getLedgerAddress() {
+    const ledgerEth = await getLedgerEthSigner()
+    const { address } = await ledgerEth.getAddress(bip32Path)
+    return address
+  }
+
   async function sendLedgerTransaction({ from, to, value }: TransactionInit) {
     const rpcUrl = import.meta.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545/'
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
@@ -95,6 +101,7 @@ export default function useLedger() {
 
   return {
     bip32Path,
+    getLedgerAddress,
     getLedgerEthSigner,
     signLedgerMessage,
     sendLedgerTransaction,
