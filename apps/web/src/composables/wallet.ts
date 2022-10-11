@@ -9,7 +9,7 @@ import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 
-const { ethersProviderList, requestEthersAccount, sendEthersTransaction, signEthersMessage } = useEthers()
+const { ethersProviderList, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
 const { enableWalletConnect, disableWalletConnect, sendWalletConnectTransaction } = useWalletConnect()
 const { solanaProviderList, requestSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
 
@@ -47,8 +47,7 @@ export default function useWallet() {
       if (provider === 'WalletConnect') {
         enableWalletConnect()
       } else if (ethersProviderList.includes(provider)) {
-        const accounts = await requestEthersAccount(provider as ProviderString)
-        const address = accounts[0]
+        const address = await getEthersAddress(provider)
         setSelectedAccount(address)
       } else if (solanaProviderList.includes(provider)) {
         const address = await requestSolanaAddress(provider as ProviderString)
