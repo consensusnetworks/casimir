@@ -51,9 +51,6 @@ jobs:
       - name: Deploy cdk infrastructure
         run: npm run deploy
 
-      - name: Build and deploy email templates
-        run: npm run deploy:templates
-
       - name: Select success emoji
         if: ${{ success() }}
         run: echo 'EMOJI=:rocket:' >> $GITHUB_ENV

@@ -1,4 +1,4 @@
-<img width="50px" alt="Casimir logo" src="common/data/notebooks/diagrams/resources/casimir.png">
+<img width="50px" alt="Casimir logo" src="common/images/casimir.png">
 
 # Casimir
 
@@ -95,21 +95,21 @@ You can get up and running without configuration. You can also mock local backen
 
 ### Hardhat
 
-EVM contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/evm/hardhat.config.ts](contracts/evm/hardhat.config.ts) file.
+Ethereum contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file.
 
-1. Compile the contracts in [contracts/evm](contracts/evm).
+1. Compile the contracts in [contracts/ethereum](contracts/ethereum).
     
     ```zsh
     npm run task:compile
     ```
 
-2. Deploy a contract, specifically [contracts/evm/src/Sample.sol](contracts/evm/src/Sample.sol) with [contracts/evm/deploy/sample.ts](contracts/evm/deploy/sample.ts).
+2. Deploy a contract, specifically [contracts/ethereum/src/Sample.sol](contracts/ethereum/src/Sample.sol) with [contracts/ethereum/deploy/sample.ts](contracts/ethereum/deploy/sample.ts).
 
     ```zsh
     npm run deploy:sample
     ```
 
-3. Test the Sample with the tests in [contracts/evm/test/sample.ts](contracts/evm/test/sample.ts).
+3. Test the Sample with the tests in [contracts/ethereum/test/sample.ts](contracts/ethereum/test/sample.ts).
 
     ```zsh
     npm run test:contracts
@@ -127,7 +127,7 @@ EVM contract development is serviced through [Hardhat](https://hardhat.io/). The
     // Todo add Casimir Typescript usage
     ```
 
-7. Clean [contracts/evm/build/artifacts](contracts/evm/build/artifacts) and [contracts/evm/build/cache](contracts/evm/build/cache)).    
+7. Clean [contracts/ethereum/build/artifacts](contracts/ethereum/build/artifacts) and [contracts/ethereum/build/cache](contracts/ethereum/build/cache)).    
 
     ```zsh
     npm run task:clean
@@ -205,18 +205,6 @@ npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/
 npm install -D some-dev-dependency --workspace @casimir/workspace-name
 ```
 
-## 📝 Content
-
-Get started contributing to Casimir's content.
-
-### Writing
-
-Writing content is stored in the [content/writing](content/writing/) directory. See the [Writing Contribution Guide](content/writing/README.md) for detailed usage instructions.
-
-### Emails
-
-AWS Pinpont email templates and shared components are stored in the [content/email](content/email/) directory. See the [Email Contribution Guide](content/email/README.md) for detailed usage instructions.
-
 ## 📊 Data
 
 Data schemas, data operations/workflows, and analytics and ML notebooks are stored in the [common/data/] directory (also namespaced as the @casimir/data npm workspace). See the [Data Contribution Guide](common/data/README.md) for detailed usage instructions.
@@ -234,9 +222,7 @@ Code is organized into work directories (apps, services, infrastructure – and 
 ├── infrastructure/ (deployment resources)
 |   └── cdk/ (aws stacks)
 ├── common/ (shared code)
-|   └── lib/ (general utilities)
-├── content/ (static code and text)
-|   └── email/ (pinpoint templates)
+|   └── helpers/ (general utilities)
 ├── scripts/ (devops and build scripts)
 |   └── local/ (mock and serve tasks)
 ├── services/ (backend services)
