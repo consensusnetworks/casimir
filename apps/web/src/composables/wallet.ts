@@ -11,7 +11,7 @@ import { MessageInit } from '@/interfaces/MessageInit'
 
 const { ethersProviderList, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
 const { enableWalletConnect, disableWalletConnect, sendWalletConnectTransaction } = useWalletConnect()
-const { solanaProviderList, requestSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
+const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
 
 const amount = ref<string>('0.001')
 const toAddress = ref<string>('7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F')
@@ -50,7 +50,7 @@ export default function useWallet() {
         const address = await getEthersAddress(provider)
         setSelectedAccount(address)
       } else if (solanaProviderList.includes(provider)) {
-        const address = await requestSolanaAddress(provider as ProviderString)
+        const address = await getSolanaAddress(provider)
         setSelectedAccount(address)
       } else if (provider === 'IoPay') {
         const accounts = await getIoPayAccounts()
