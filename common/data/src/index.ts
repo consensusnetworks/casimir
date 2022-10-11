@@ -14,7 +14,7 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
   return Object.keys(jsonSchema.properties).map((name: string) => {
     const property = jsonSchema.properties[name]
 
-    // 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIGINT' | 'TIMESTAMP' | 'JSON' | 'DATE' 
+    // 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIG_INT' | 'TIMESTAMP' | 'JSON' | 'DATE'
     const typeKey = property.type.toUpperCase() as keyof glue.Schema
 
     let type: glue.Type = glue.Schema[typeKey]
