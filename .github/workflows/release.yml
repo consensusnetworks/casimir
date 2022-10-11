@@ -49,9 +49,6 @@ jobs:
       - name: Deploy cdk infrastructure
         run: npm run deploy
 
-      - name: Build and deploy email templates
-        run: npm run deploy:templates
-
       - name: Sync released version files to develop
         if: ${{ github.actor != 'nektos/act' }}
         run: |
