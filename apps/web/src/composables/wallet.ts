@@ -9,9 +9,6 @@ import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 
-const { ethersProviderList, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
-const { enableWalletConnect, disableWalletConnect, sendWalletConnectTransaction } = useWalletConnect()
-const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
 
 const amount = ref<string>('0.001')
 const toAddress = ref<string>('7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F')
@@ -20,15 +17,11 @@ const toAddress = ref<string>('7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F')
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } =
-    useIoPay()
-  const {
-    bip32Path,
-    getLedgerEthSigner,
-    getLedgerAddress,
-    signLedgerMessage,
-    sendLedgerTransaction,
-  } = useLedger()
+  const { ethersProviderList, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
+  const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
+  const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
+  const { getLedgerAddress, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { enableWalletConnect,  sendWalletConnectTransaction, disableWalletConnect } = useWalletConnect()
   const selectedProvider = ref<ProviderString>('')
   const selectedAccount = ref<string>('')
   const setSelectedProvider = (provider: ProviderString) => {
