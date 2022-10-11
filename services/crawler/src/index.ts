@@ -2,7 +2,7 @@ import { EventTableSchema } from '@casimir/data'
 import {IotexNetworkType, IotexService, IotexServiceOptions, newIotexService} from './providers/Iotex'
 import {EthereumService, EthereumServiceOptions, newEthereumService} from './providers/Ethereum'
 import { queryAthena, uploadToS3 } from '@casimir/helpers'
-import fs from 'fs'
+import * as fs from "fs";
 
 export enum Chain {
     Ethereum = 'ethereum',
@@ -32,7 +32,11 @@ class Crawler {
 
     async setup(): Promise<void> {
         if (this.config.chain === Chain.Ethereum) {
-            this.service = await newEthereumService({ url: this.config?.options?.url || process.env.PUBLIC_ETHEREUM_RPC_URL || 'http://localhost:8545' })
+            try {
+                this.service = await newEthereumService({ url: this.config?.options?.url || process.env.PUBLIC_ETHEREUM_RPC_URL || 'http://localhost:8545' })
+            } catch (err) {
+                throw new Error(`failed to setup ethereum service: ${err}`)
+            }
             return
         }
 
@@ -54,21 +58,19 @@ class Crawler {
 
     async start(): Promise<void> {
         if (this.service instanceof EthereumService) {
-            // const lastEvent = await this.getLastProcessedEvent()
-            // const last = lastEvent !== null ? lastEvent.height : 0
-            // const start = parseInt(last.toString()) + 1
-            //
-            // if (this.config.verbose) {
-            //     console.log(`crawling ${this.config.chain} from block ${start}`)
-            // }
-            //
-            // const current = await this.service.getCurrentBlock()
+            const lastEvent = await this.getLastProcessedEvent()
+            const last = lastEvent !== null ? lastEvent.height : 0
+            const start = parseInt(last.toString()) + 1
 
-            const { events, blockHash } = await this.service.getEvents(15697244)
-            const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
-            // for (let i = start; i < current.number; i++) {
-                // const { events, blockHash } = await this.service.getEvents(15697244   + i)
-                // const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
+            if (this.config.verbose) {
+                console.log(`crawling ${this.config.chain} from block ${start}`)
+            }
+
+            const current = await this.service.getCurrentBlock()
+
+            for (let i = start; i < current.number; i++) {
+                const { events, blockHash } = await this.service.getEvents(i)
+                const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
                 // await uploadToS3({
                 //     bucket: eventOutputBucket,
                 //     key: `${blockHash}-event.json`,
@@ -78,7 +80,7 @@ class Crawler {
                 //         console.log(`uploaded events for block ${blockHash}`)
                 //     }
                 // })
-            // }
+            }
             return
         }
 

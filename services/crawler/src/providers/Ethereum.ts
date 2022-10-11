@@ -36,7 +36,6 @@ export class EthereumService {
 		const input: Record<string, string> = {}
 
 		parsedLog.eventFragment.inputs.forEach((key, index) => {
-			console.log('Key', key.name)
 			input[key.name] = args[index]
 		})
 		return input
@@ -52,19 +51,16 @@ export class EthereumService {
 			network: this.network,
 			provider: Provider.Casimir,
 			type: 'block',
+			height: block.number,
 			block: block.hash,
 			created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 			address: block.miner,
-			height: block.number,
 			gasUsed: block.gasUsed.toNumber(),
 			gasLimit: block.gasLimit.toNumber(),
-			// @ts-ignore
-			baseFee: block.baseFeePerGas.toNumber(),
-			// @ts-ignore
-			burntFee: parseFloat(ethers.utils.formatEther(ethers.BigNumber.from(block.gasUsed).mul(block.baseFeePerGas))),
+			baseFee: block.baseFeePerGas?.toNumber(),
+			// burntFee: parseFloat(ethers.utils.formatEther(ethers.BigNumber.from(block.gasUsed).mul(block.baseFeePerGas as ethers.BigNumber))),
 		}
 
-		console.log('Block Event', blockEvent)
 		events.push(blockEvent)
 
 		if (block.transactions.length === 0) {
@@ -83,10 +79,14 @@ export class EthereumService {
 				address: tx.from,
 				to_address: tx.to,
 				height: block.number,
-				amount: ethers.utils.formatEther(tx.value.toString())
+				amount: ethers.utils.formatEther(tx.value.toString()),
+				gasUsed: block.gasUsed.toNumber(),
+				gasLimit: block.gasLimit.toNumber(),
+				baseFee: block.baseFeePerGas?.toNumber(),
+				// burntFee: parseFloat(ethers.utils.formatEther(ethers.BigNumber.from(block.gasUsed).mul(block.baseFeePerGas as ethers.BigNumber))),
 			}
 
-			console.log('Tx Event', txEvent)
+			events.push(txEvent)
 
 			const receipts = await this.provider.getTransactionReceipt(tx.hash)
 
@@ -94,11 +94,9 @@ export class EthereumService {
 				continue
 			}
 
-			for await (const log of receipts.logs) {
+			for (const log of receipts.logs) {
 				if (log.address in ContractsOfInterest) {
 					const parsedLog = this.parseLog(log)
-					// const value = Buffer.from(parsedLog.amount.slice(2), 'hex').readBigUInt64BE(0).toString()
-
 					const deposit = {
 						chain: this.chain,
 						network: this.network,
@@ -110,28 +108,15 @@ export class EthereumService {
 						address: log.address,
 						height: block.number,
 						to_address: tx.to || '',
-						// amount: value,
+						amount: parsedLog.amount,
+						gasUsed: block.gasUsed.toNumber(),
+						gasLimit: block.gasLimit.toNumber(),
+						baseFee: block.baseFeePerGas?.toNumber(),
+						// burntFee: parseFloat(ethers.utils.formatEther(ethers.BigNumber.from(block.gasUsed).mul(block.baseFeePerGas as ethers.BigNumber))),
 					}
-
-					console.log('Deposit', deposit)
 					events.push(deposit)
 					continue
 				}
-
-				const logEvent = {
-					chain: this.chain,
-					network: this.network,
-					provider: Provider.Casimir,
-					type: 'log',
-					block: block.hash,
-					transaction: log.transactionHash,
-					created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
-					address: log.address,
-					height: block.number,
-					to_address: tx.to || '',
-					amount: tx.value.toString(),
-				}
-				events.push(logEvent)
 			}
 		}
 		return {
