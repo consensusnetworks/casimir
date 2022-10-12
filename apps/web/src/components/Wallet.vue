@@ -46,12 +46,18 @@
           <span> {{ phantomAccountsResult }} </span>
         </p>
       </div>
-      <button
-        class="ledger-btn"
-        @click="connectWallet('Ledger')"
-      >
-        Connect Ledger
-      </button>
+      <div class="ledger-div">
+        <button
+          class="ledger-btn"
+          @click="connectWallet('Ledger')"
+        >
+          {{ ledgerButtonText }}
+        </button>
+        <p>
+          Connected Ledger Account:
+          <span> {{ ledgerAccountsResult }} </span>
+        </p>
+      </div>
       <div>
         <button
           class="wallet-connect-btn"
@@ -110,6 +116,8 @@ const ioPayButtonText = ref<string>('Connect ioPay')
 const ioPayAccountsResult = ref<string>('Address Not Active')
 const phantomButtonText = ref<string>('Connect Phantom')
 const phantomAccountsResult = ref<string>('Address Not Active')
+const ledgerButtonText = ref<string>('Connect Ledger')
+const ledgerAccountsResult = ref<string>('Address Not Active')
 
 const {
   selectedProvider,
@@ -131,6 +139,8 @@ watchEffect(() => {
     ioPayAccountsResult.value = 'Not Active'
     phantomButtonText.value = 'Connect Phantom'
     phantomAccountsResult.value = 'Not Active'
+    ledgerButtonText.value = 'Connect Ledger'
+    ledgerAccountsResult.value = 'Not Active'
   } else if (selectedProvider.value === 'CoinbaseWallet') {
     metamaskButtonText.value = 'Connect Metamask'
     coinbaseButtonText.value = 'Coinbase Connected'
@@ -140,6 +150,8 @@ watchEffect(() => {
     ioPayAccountsResult.value = 'Not Active'
     phantomButtonText.value = 'Connect Phantom'
     phantomAccountsResult.value = 'Not Active'
+    ledgerButtonText.value = 'Connect Ledger'
+    ledgerAccountsResult.value = 'Not Active'
   } else if (selectedProvider.value === 'IoPay') {
     metamaskButtonText.value = 'Connect MetaMask'
     coinbaseButtonText.value = 'Connect Coinbase'
@@ -149,6 +161,8 @@ watchEffect(() => {
     ioPayAccountsResult.value = selectedAccount.value || 'Not Active'
     phantomButtonText.value = 'Connect Phantom'
     phantomAccountsResult.value = 'Not Active'
+    ledgerButtonText.value = 'Connect Ledger'
+    ledgerAccountsResult.value = 'Not Active'
   } else if (selectedProvider.value === 'Phantom') {
     metamaskButtonText.value = 'Connect MetaMask'
     coinbaseButtonText.value = 'Connect Coinbase'
@@ -158,6 +172,19 @@ watchEffect(() => {
     coinbaseAccountsResult.value = 'Not Active'
     ioPayAccountsResult.value = 'Not Active'
     phantomAccountsResult.value = selectedAccount.value || 'Not Active'
+    ledgerButtonText.value = 'Connect Ledger'
+    ledgerAccountsResult.value = 'Not Active'
+  } else if (selectedProvider.value === 'Ledger') {
+    metamaskButtonText.value = 'Connect MetaMask'
+    coinbaseButtonText.value = 'Connect Coinbase'
+    ioPayButtonText.value = 'Connect ioPay'
+    phantomButtonText.value = 'Connected'
+    metamaskAccountsResult.value = 'Not Active'
+    coinbaseAccountsResult.value = 'Not Active'
+    ioPayAccountsResult.value = 'Not Active'
+    phantomAccountsResult.value = 'Not Active'
+    ledgerButtonText.value = 'Connected!'
+    ledgerAccountsResult.value = selectedAccount.value
   }
 })
 </script>

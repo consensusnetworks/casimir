@@ -16,13 +16,20 @@ const availableProviders = ref<BrowserProviders>(getBrowserProviders(ethereum))
 
 export default function useEthers() {
   const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
-  async function requestEthersAccount(provider: ProviderString) {
-    const browserExtensionProvider =
-      availableProviders.value[provider as keyof BrowserProviders]
-    if (browserExtensionProvider?.request) {
-      return await browserExtensionProvider.request({
+
+  // TODO: Type the parameter
+  async function requestEthersAccount(provider: EthersProvider) {
+    if (provider?.request) {
+      return await provider.request({
         method: 'eth_requestAccounts',
       })
+    }
+  }
+
+  async function getEthersAddress (providerString: ProviderString) {
+    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    if (provider) {
+      return (await requestEthersAccount(provider as EthersProvider))[0]
     }
   }
 
@@ -56,7 +63,7 @@ export default function useEthers() {
     return signature
   }
 
-  return { ethersProviderList, requestEthersAccount, getBrowserProviders, sendEthersTransaction, signEthersMessage }
+  return { ethersProviderList, getEthersAddress, sendEthersTransaction, signEthersMessage }
 }
 
 function getBrowserProviders(ethereum: any) {

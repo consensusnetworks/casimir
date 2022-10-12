@@ -9,9 +9,6 @@ import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 
-const { ethersProviderList, requestEthersAccount, sendEthersTransaction, signEthersMessage } = useEthers()
-const { enableWalletConnect, disableWalletConnect, sendWalletConnectTransaction } = useWalletConnect()
-const { solanaProviderList, requestSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
 
 const amount = ref<string>('0.001')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
@@ -20,14 +17,11 @@ const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const { getIoPayAccounts, sendIoPayTransaction, signIoPayMessage } =
-    useIoPay()
-  const {
-    bip32Path,
-    getLedgerEthSigner,
-    signLedgerMessage,
-    sendLedgerTransaction,
-  } = useLedger()
+  const { ethersProviderList, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
+  const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
+  const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
+  const { getLedgerAddress, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { enableWalletConnect,  sendWalletConnectTransaction, disableWalletConnect } = useWalletConnect()
   const selectedProvider = ref<ProviderString>('')
   const selectedAccount = ref<string>('')
   const setSelectedProvider = (provider: ProviderString) => {
@@ -47,20 +41,16 @@ export default function useWallet() {
       if (provider === 'WalletConnect') {
         enableWalletConnect()
       } else if (ethersProviderList.includes(provider)) {
-        const accounts = await requestEthersAccount(provider as ProviderString)
-        const address = accounts[0]
+        const address = await getEthersAddress(provider)
         setSelectedAccount(address)
       } else if (solanaProviderList.includes(provider)) {
-        const address = await requestSolanaAddress(provider as ProviderString)
+        const address = await getSolanaAddress(provider)
         setSelectedAccount(address)
       } else if (provider === 'IoPay') {
-        const accounts = await getIoPayAccounts()
-        const { address } = accounts[0]
+        const address = await getIoPayAddress()
         setSelectedAccount(address)
       } else if (provider === 'Ledger') {
-        const ledger = await getLedgerEthSigner()
-        const { address } = await ledger.getAddress(bip32Path)
-        await ledger.transport.close()
+        const address = await getLedgerAddress()
         setSelectedAccount(address)
       } else {
         throw new Error('No provider selected')
