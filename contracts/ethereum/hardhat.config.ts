@@ -24,7 +24,11 @@ const config: HardhatUserConfig = {
     hardhat: {
       accounts: mnemonic ? { mnemonic, accountsBalance: '48000000000000000000', count: 3 } : undefined,
       chainId: 1337,
-      forking: forkUrl ? { url: forkUrl } : undefined
+      forking: forkUrl ? { url: forkUrl } : undefined,
+      mining: {
+        auto: false,
+        interval: 1000
+      }
     }
   }
 }
