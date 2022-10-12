@@ -18,7 +18,7 @@ export default function useEthers() {
   const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
 
   // TODO: Type the parameter
-  async function requestEthersAccount(provider: any) {
+  async function requestEthersAccount(provider: EthersProvider) {
     if (provider?.request) {
       return await provider.request({
         method: 'eth_requestAccounts',
@@ -29,7 +29,7 @@ export default function useEthers() {
   async function getEthersAddress (providerString: ProviderString) {
     const provider = availableProviders.value[providerString as keyof BrowserProviders]
     if (provider) {
-      return (await requestEthersAccount(provider as ProviderString))[0]
+      return (await requestEthersAccount(provider as EthersProvider))[0]
     }
   }
 
