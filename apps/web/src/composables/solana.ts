@@ -24,6 +24,11 @@ export default function useSolana() {
     return address
   }
 
+  async function getSolanaAddress(provider: ProviderString) {
+    const address = await requestSolanaAddress(provider as ProviderString)
+    return address
+  }
+
   async function sendSolanaTransaction({ from, to, value, providerString }: TransactionInit) {
     const network = 'https://api.devnet.solana.com'
     const connection = new Connection(network)
@@ -53,7 +58,7 @@ export default function useSolana() {
     return signature
   }
 
-  return { solanaProviderList, requestSolanaAddress, sendSolanaTransaction, signSolanaMessage }
+  return { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage }
 }
 
 function getBrowserProviders() {

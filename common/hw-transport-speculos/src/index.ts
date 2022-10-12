@@ -32,12 +32,9 @@ export default class SpeculosHttpTransport extends Transport {
       baseURL = baseURL || 'http://127.0.0.1:5001'
       const transport = new SpeculosHttpTransport(baseURL)
       const eventSource = new EventSource(`${baseURL}/events?stream=true`)
-      eventSource.addEventListener('data', (event) => {
-        console.log(event.data)
-      })
-      eventSource.addEventListener('close', (event) => {
-        console.log(event.data)
-      })
+      // eventSource.addEventListener('open', (event: Event) => console.warn('Ledger', event.type), false)
+      // eventSource.addEventListener('error', (event: Event) => console.warn('Ledger', event.type, eventSource.readyState), false)
+      // eventSource.addEventListener('message', (message: MessageEvent) => console.warn('Ledger', message.type, message.data), false)
       transport.eventStream = eventSource
       return transport
     } catch (error) {
