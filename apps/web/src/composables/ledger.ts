@@ -29,28 +29,23 @@ export default function useLedger() {
     const rpcUrl = import.meta.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545/'
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
     const { chainId } = await provider.getNetwork()
-    const gasPriceHex = (await provider.getGasPrice())._hex
-    const gasPrice = '0x' + (parseInt(gasPriceHex, 16) * 1.15).toString(16)
-    const nonce = await provider.getTransactionCount(from, 'latest')
+    const gasPrice = await provider.getGasPrice()
+    const nonce = await provider.getTransactionCount(from)
     const unsignedTransaction: ethers.utils.UnsignedTransaction = {
       to,
       gasPrice,
       nonce,
       chainId,
-      data: '0x00',
       value: ethers.utils.parseUnits(value)
     }
-
-    // Todo check before click (user can +/- gas limit accordingly)
-    const gasEstimate = await provider.estimateGas(
+    const gasLimit = await provider.estimateGas(
       unsignedTransaction as Deferrable<TransactionRequest>
     )
-    const gasLimit = Math.ceil(parseInt(gasEstimate.toString()) * 1.3)
-    unsignedTransaction.gasLimit = ethers.utils.hexlify(gasLimit)
+    unsignedTransaction.gasLimit = gasLimit
+      
+    // Todo check before click (user can +/- gas limit accordingly)
     const balance = await provider.getBalance(from)
-    const required = ethers.BigNumber.from(gasPrice)
-      .mul(gasLimit)
-      .add(ethers.utils.parseEther(value))
+    const required = gasPrice.mul(gasLimit).add(ethers.utils.parseEther(value))
     console.log('Balance', ethers.utils.formatEther(balance))
     console.log('Required', ethers.utils.formatEther(required))
 
@@ -72,12 +67,13 @@ export default function useLedger() {
       v: parseInt(v),
       r: '0x' + r,
       s: '0x' + s,
-      from,
+      from
     }
     const signedTransaction = ethers.utils.serializeTransaction(
       unsignedTransaction,
       signature
     )
+    await ledger.transport.close()
     return await provider.sendTransaction(signedTransaction)
   }
 
