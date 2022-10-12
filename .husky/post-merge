@@ -1,0 +1,4 @@
+#!/usr/bin/sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD --exit-code -- package-lock.json > /dev/null 2>&1 || echo "📦 package-lock.json changed. Running npm install..." && npm install

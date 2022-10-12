@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run a local ethereum node with Hardhat
+# Run a local Ethereum node with Hardhat
 #
 # Example:
 #
@@ -64,6 +64,7 @@ else
     echo "⛓ Setting up ethereum chain without fork"
 fi
 
-npm run dev:node --workspace @casimir/ethereum
+npm run dev:node --workspace @casimir/ethereum &
+npm run deploy:ssv --workspace @casimir/ethereum -- --network localhost
 
 
