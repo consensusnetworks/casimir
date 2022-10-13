@@ -5,6 +5,8 @@ import { EthersProvider } from '@/interfaces/EthersProvider'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
+import { TransactionRequest } from '@ethersproject/abstract-provider'
+import { Deferrable } from '@ethersproject/properties'
 
 const defaultProviders = {
   MetaMask: undefined,
@@ -63,7 +65,17 @@ export default function useEthers() {
     return signature
   }
 
-  return { ethersProviderList, getEthersAddress, sendEthersTransaction, signEthersMessage }
+  async function getGasPriceAndLimit(
+    rpcUrl: string,
+    unsignedTransaction: Deferrable<TransactionRequest>
+  ) {
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+    const gasPrice = await provider.getGasPrice()
+    const gasLimit = await provider.estimateGas(unsignedTransaction as Deferrable<TransactionRequest>)
+    return { gasPrice, gasLimit }
+  }
+
+  return { ethersProviderList, getEthersAddress, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit }
 }
 
 function getBrowserProviders(ethereum: any) {
