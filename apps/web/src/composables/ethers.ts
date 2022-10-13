@@ -17,7 +17,6 @@ const availableProviders = ref<BrowserProviders>(getBrowserProviders(ethereum))
 export default function useEthers() {
   const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
 
-  // TODO: Type the parameter
   async function requestEthersAccount(provider: EthersProvider) {
     if (provider?.request) {
       return await provider.request({
