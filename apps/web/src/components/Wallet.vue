@@ -1,5 +1,14 @@
 <template>
   <div>
+    <div>
+      <input
+        v-model="contractAddress"
+        placeholder="Contract Address"
+      >
+      <button @click="deposit">
+        Steak
+      </button>
+    </div>
     <div class="connect-wallet-container">
       <div class="metamask-div">
         <button @click="connectWallet('MetaMask')">
@@ -124,9 +133,11 @@ const {
   selectedAccount,
   toAddress,
   amount,
+  contractAddress,
   connectWallet,
   sendTransaction,
   signMessage,
+  deposit
 } = useWallet()
 
 watchEffect(() => {

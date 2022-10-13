@@ -25,6 +25,14 @@ export default function useEthers() {
     }
   }
 
+  function getEthersSigner (providerString: ProviderString) {
+    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    if (provider) {
+      const signer = new ethers.providers.Web3Provider(provider as EthersProvider).getSigner()
+      return signer
+    }
+  }
+
   async function getEthersAddress (providerString: ProviderString) {
     const provider = availableProviders.value[providerString as keyof BrowserProviders]
     if (provider) {
@@ -62,7 +70,7 @@ export default function useEthers() {
     return signature
   }
 
-  return { ethersProviderList, getEthersAddress, sendEthersTransaction, signEthersMessage }
+  return { ethersProviderList, getEthersSigner, getEthersAddress, sendEthersTransaction, signEthersMessage }
 }
 
 function getBrowserProviders(ethereum: any) {

@@ -5,19 +5,20 @@ import useLedger from '@/composables/ledger'
 import useEthers from '@/composables/ethers'
 import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
+import useSSV from '@/composables/ssv'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 
-
 const amount = ref<string>('0.001')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
+const contractAddress = ref<string>('')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const { ethersProviderList, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
+  const { ethersProviderList, getEthersSigner, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getLedgerAddress, sendLedgerTransaction, signLedgerMessage } = useLedger()
@@ -110,14 +111,29 @@ export default function useWallet() {
     }
   }
 
+  const deposit = async () => {
+    const { ssv } = useSSV()
+    if (selectedProvider.value === 'MetaMask' || selectedProvider.value === 'CoinbaseWallet') {
+      const signer = getEthersSigner(selectedProvider.value)
+      const value = ethers.utils.parseEther(amount.value)
+      const { hash } = await ssv.connect(signer).deposit({ value })
+      console.log('hash :>> ', hash)
+    } else {
+      alert('Please connect to MetaMask or Coinbase Wallet in order to stake ETH')
+    }
+    return
+  }
+
   return {
     selectedProvider,
     selectedAccount,
     toAddress,
     amount,
+    contractAddress,
     connectWallet,
     sendTransaction,
     signMessage,
+    deposit
   }
 }
 
