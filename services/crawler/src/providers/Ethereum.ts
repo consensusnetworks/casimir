@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
 import { EventTableSchema } from '@casimir/data'
-import { Chain, Provider } from '../index'
+import {Chain, crawler, Provider} from '../index'
+import { PassThrough } from 'stream'
 
 const ContractsOfInterest = {
 	BeaconDepositContract: {
@@ -46,7 +47,7 @@ export class EthereumService {
 
 		const block = await this.provider.getBlockWithTransactions(height)
 
-		const blockEvent = {
+		const blockEvent: Record<string, any> = {
 			chain: this.chain,
 			network: this.network,
 			provider: Provider.Casimir,
@@ -57,8 +58,14 @@ export class EthereumService {
 			address: block.miner,
 			gasUsed: block.gasUsed.toNumber(),
 			gasLimit: block.gasLimit.toNumber(),
-			baseFee: block.baseFeePerGas?.toNumber(),
-			// burntFee: parseFloat(ethers.utils.formatEther(ethers.BigNumber.from(block.gasUsed).mul(block.baseFeePerGas as ethers.BigNumber))),
+		}
+
+		const baseFee = block.baseFeePerGas ? block.baseFeePerGas.toNumber() : 0
+		const burntFee = block.gasUsed.toNumber() * baseFee
+
+		if (baseFee !== 0) {
+			blockEvent.baseFee = baseFee
+			blockEvent.burntFee = burntFee
 		}
 
 		events.push(blockEvent)
@@ -68,22 +75,28 @@ export class EthereumService {
 		}
 
 		for await (const tx of block.transactions) {
-			const txEvent = {
+			const txEvent: Record<string, any> = {
 				chain: this.chain,
 				network: this.network,
 				provider: Provider.Casimir,
 				type: 'transaction',
 				block: block.hash,
 				transaction: tx.hash,
-				created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 				address: tx.from,
 				to_address: tx.to,
 				height: block.number,
 				amount: ethers.utils.formatEther(tx.value.toString()),
 				gasUsed: block.gasUsed.toNumber(),
 				gasLimit: block.gasLimit.toNumber(),
-				baseFee: block.baseFeePerGas?.toNumber(),
-				// burntFee: parseFloat(ethers.utils.formatEther(ethers.BigNumber.from(block.gasUsed).mul(block.baseFeePerGas as ethers.BigNumber))),
+			}
+
+			if (baseFee !== 0) {
+				txEvent.baseFee = baseFee
+				txEvent.burntFee = burntFee
+			}
+
+			if (tx.timestamp) {
+				txEvent.created_at = new Date(tx.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', '')
 			}
 
 			events.push(txEvent)
@@ -97,7 +110,8 @@ export class EthereumService {
 			for (const log of receipts.logs) {
 				if (log.address in ContractsOfInterest) {
 					const parsedLog = this.parseLog(log)
-					const deposit = {
+
+					const deposit: Record<string, any> = {
 						chain: this.chain,
 						network: this.network,
 						provider: Provider.Casimir,
@@ -111,11 +125,13 @@ export class EthereumService {
 						amount: parsedLog.amount,
 						gasUsed: block.gasUsed.toNumber(),
 						gasLimit: block.gasLimit.toNumber(),
-						baseFee: block.baseFeePerGas?.toNumber(),
-						// burntFee: parseFloat(ethers.utils.formatEther(ethers.BigNumber.from(block.gasUsed).mul(block.baseFeePerGas as ethers.BigNumber))),
+					}
+
+					if (baseFee !== 0) {
+						deposit.baseFee = baseFee
+						deposit.burntFee = burntFee
 					}
 					events.push(deposit)
-					continue
 				}
 			}
 		}
@@ -129,16 +145,20 @@ export class EthereumService {
 		return await this.provider.getBlock(height)
 	}
 
-    async getBlockWithTx(num: number): Promise<any> {
-		return await this.provider.getBlockWithTransactions(num)
-    }
+	async stream(): Promise<PassThrough> {
+		const readable = new PassThrough({ objectMode: true })
 
-	on(event:string, cb: (block: ethers.providers.Block) => void): void {
-		this.provider.on('block', async (blockNumber: number) => {
-			const block = await this.getBlockWithTx(blockNumber)
-			cb(block)
+		this.provider.on('block', function(blockNumber) {
+			readable.write(blockNumber)
 		})
-    }
+
+		readable.on('data', async (blockNumber: number) => {
+			const {blockHash, events} = await this.getEvents(blockNumber)
+			readable.emit('block', { blockHash, events })
+		})
+
+		return readable
+	}
 }
 
 export function newEthereumService (opt: EthereumServiceOptions): EthereumService {

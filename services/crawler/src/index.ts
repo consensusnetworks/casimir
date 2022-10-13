@@ -2,7 +2,6 @@ import { EventTableSchema } from '@casimir/data'
 import {IotexNetworkType, IotexService, IotexServiceOptions, newIotexService} from './providers/Iotex'
 import {EthereumService, EthereumServiceOptions, newEthereumService} from './providers/Ethereum'
 import { queryAthena, uploadToS3 } from '@casimir/helpers'
-import * as fs from "fs";
 
 export enum Chain {
     Ethereum = 'ethereum',
@@ -20,6 +19,7 @@ export interface CrawlerConfig {
     options?: IotexServiceOptions | EthereumServiceOptions
     output?: `s3://${string}`
     verbose?: boolean
+    stream?: boolean
 }
 
 class Crawler {
@@ -33,7 +33,8 @@ class Crawler {
     async setup(): Promise<void> {
         if (this.config.chain === Chain.Ethereum) {
             try {
-                this.service = await newEthereumService({ url: this.config?.options?.url || process.env.PUBLIC_ETHEREUM_RPC_URL || 'http://localhost:8545' })
+                console.log('PUBLIC_ETHEREUM_RPC', process.env.PUBLIC_ETHEREUM_RPC)
+                this.service = await newEthereumService({ url: this.config?.options?.url || process.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545' })
             } catch (err) {
                 throw new Error(`failed to setup ethereum service: ${err}`)
             }
@@ -58,6 +59,11 @@ class Crawler {
 
     async start(): Promise<void> {
         if (this.service instanceof EthereumService) {
+            if (this.config.stream) {
+                const source = await this.service.stream()
+                return
+            }
+
             const lastEvent = await this.getLastProcessedEvent()
             const last = lastEvent !== null ? lastEvent.height : 0
             const start = parseInt(last.toString()) + 1
@@ -69,17 +75,19 @@ class Crawler {
             const current = await this.service.getCurrentBlock()
 
             for (let i = start; i < current.number; i++) {
-                const { events, blockHash } = await this.service.getEvents(i)
+                const { events, blockHash } = await this.service.getEvents(1500000 + i)
                 const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
-                await uploadToS3({
-                    bucket: eventOutputBucket,
-                    key: `${blockHash}-event.json`,
-                    data: ndjson
-                }).finally(() => {
-                    if (this.config.verbose) {
-                        console.log(`uploaded events for block ${blockHash}`)
-                    }
-                })
+                console.log(events)
+
+                // await uploadToS3({
+                //     bucket: eventOutputBucket,
+                //     key: `${blockHash}-event.json`,
+                //     data: ndjson
+                // }).finally(() => {
+                //     if (this.config.verbose) {
+                //         console.log(`uploaded events for block ${blockHash}`)
+                //     }
+                // })
             }
             return
         }
@@ -121,9 +129,13 @@ export async function crawler (config: CrawlerConfig): Promise<Crawler> {
       chain: config.chain,
       options: config.options,
       output: config?.output ?? `s3://${eventOutputBucket}`,
-      verbose: config?.verbose ?? false
+      verbose: config?.verbose ?? false,
+      stream: config?.stream ?? false
   })
 
   await chainCrawler.setup()
   return chainCrawler
 }
+
+
+

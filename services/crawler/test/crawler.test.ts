@@ -6,7 +6,11 @@ jest.setTimeout(1000000)
 test('init crawler for ethereum', async () => {
   const eth = await crawler({
     chain: Chain.Ethereum,
-    verbose: true
+    options: {
+      url: 'https://eth-mainnet.g.alchemy.com/v2/RxFGV7vLIDJ--_DWPRWIyiyukklef6pf'
+    },
+    verbose: true,
+    stream: true
   })
   await eth.start()
   expect(eth.service).not.toBe(null)
