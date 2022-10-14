@@ -1,6 +1,18 @@
 <template>
   <div>
-    <div>
+    <div class="staking-container">
+      <button @click="getUsersPools">
+        What do I have staked where?
+      </button>
+      <ul>
+        <li 
+          v-for="(pool, index) in pools"
+          :key="index"
+        >
+          <p>Pool: {{ pool.address }}</p>
+          <p>Balance: {{ pool.balance }}</p>
+        </li>
+      </ul>
       <input
         v-model="contractAddress"
         placeholder="Contract Address"
@@ -137,6 +149,8 @@ const {
   connectWallet,
   sendTransaction,
   signMessage,
+  pools,
+  getUsersPools,
   deposit
 } = useWallet()
 

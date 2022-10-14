@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { provide, ref } from 'vue'
 import { ethers } from 'ethers'
 import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
@@ -18,7 +18,8 @@ const contractAddress = ref<string>('')
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const { ethersProviderList, getEthersSigner, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
+  const pools = ref([])
+  const { ethersProviderList, getEthersProvider, getEthersSigner, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getLedgerAddress, sendLedgerTransaction, signLedgerMessage } = useLedger()
@@ -111,7 +112,24 @@ export default function useWallet() {
     }
   }
 
-  const deposit = async () => {
+  async function getUsersPools() {
+    const { ssv } = useSSV()
+    if (selectedProvider.value === 'MetaMask' || selectedProvider.value === 'CoinbaseWallet') {
+      // const provider = getEthersProvider(selectedProvider.value)
+      const signer = getEthersSigner(selectedProvider.value)
+      console.log('signer :>> ', signer)
+      const userAddress = selectedAccount.value
+      // Get pools for a user
+      const usersPools = await ssv.connect(signer).getPoolsForUser(userAddress)
+      console.log('usersPools :>> ', usersPools)
+      pools.value = usersPools
+      // Get user balance in each pool
+      const balances = pools.value.map(async ( pool: any ) => await ssv.connect(provider).getUserBalanceForPool(userAddress, pool))
+      console.log('balances :>> ', balances)
+    }
+  }
+
+  async function deposit() {
     const { ssv } = useSSV()
     if (selectedProvider.value === 'MetaMask' || selectedProvider.value === 'CoinbaseWallet') {
       const signer = getEthersSigner(selectedProvider.value)
@@ -130,9 +148,11 @@ export default function useWallet() {
     toAddress,
     amount,
     contractAddress,
+    pools,
     connectWallet,
     sendTransaction,
     signMessage,
+    getUsersPools,
     deposit
   }
 }

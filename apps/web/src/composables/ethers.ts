@@ -25,6 +25,10 @@ export default function useEthers() {
     }
   }
 
+  function getEthersProvider(providerString: ProviderString) {
+    return availableProviders.value[providerString as keyof BrowserProviders]
+  }
+
   function getEthersSigner (providerString: ProviderString) {
     const provider = availableProviders.value[providerString as keyof BrowserProviders]
     if (provider) {
@@ -70,7 +74,7 @@ export default function useEthers() {
     return signature
   }
 
-  return { ethersProviderList, getEthersSigner, getEthersAddress, sendEthersTransaction, signEthersMessage }
+  return { ethersProviderList, getEthersProvider, getEthersSigner, getEthersAddress, sendEthersTransaction, signEthersMessage }
 }
 
 function getBrowserProviders(ethereum: any) {
