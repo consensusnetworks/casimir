@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "postinstall": "npm run build"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@heroicons/vue": "^1.0.6",

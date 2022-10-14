@@ -10,7 +10,7 @@ export default function useEthers() {
      * @returns {boolean} - The response from the login request
      */
     function verifyMessage(loginCredentials: LoginCredentials): boolean {
-        console.log(loginCredentials)
+        console.log('Login credentials', loginCredentials)
         // @ccali11 create address recovery verification here
         return false
     }

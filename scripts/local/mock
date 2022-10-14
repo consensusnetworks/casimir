@@ -38,15 +38,15 @@ fi
 Project=$(perl -ne 'print ucfirst' <<< $PROJECT)
 Stage=$(perl -ne 'print ucfirst' <<< $STAGE)
 
-echo "🎨 Mocking CDK app"
+
+# Prepare CDK app
+npm run build --workspace @casimir/landing
+npm run cdk:bootstrap --workspace @casimir/cdk
+npm run cdk:synth --workspace @casimir/cdk
+
 cd $directory
 
 servicesdir="../../services"
-
-# Mock CDK app
-npm install
-npm run cdk:bootstrap --workspace @casimir/cdk
-npm run cdk:synth --workspace @casimir/cdk
 
 # Loop over comma-separated string of services
 IFS=',' read -r -a service_list <<< "$services"
@@ -65,14 +65,16 @@ do
     echo "🎨 Mocking $service service on port $port"
     Service=$(perl -ne 'print ucfirst' <<< $service)
 
-    npm run build:watch --workspace @casimir/$service &
+    echo "BUILDING SERVICE $service"
+
+    npm run watch --workspace @casimir/$service &
 
     sam local start-api \
     --warm-containers "LAZY" \
     --port $port \
     --template ./cdk.out/${Project}${Service}Stack${Stage}.template.json \
     --log-file "$servicesdir/$service/mock-logs.txt" \
-    --profile $PROFILE &
+    --profile $PROFILE
 done
 
 wait && pkill -P $$

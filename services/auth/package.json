@@ -4,7 +4,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "node build.js",
-    "build:watch": "npm run build -- --watch",
+    "watch": "npm run build -- --watch",
     "test": "mocha --require hardhat/register --recursive --exit --extension ts --timeout 15000"
   },
   "dependencies": {
