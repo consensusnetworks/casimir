@@ -6,6 +6,7 @@ import { TransactionInit } from '@/interfaces/TransactionInit'
 import { Deferrable } from '@ethersproject/properties'
 import { TransactionRequest } from '@ethersproject/abstract-provider'
 import { MessageInit } from '@/interfaces/MessageInit'
+import useEthers from './ethers'
 
 export default function useLedger() {
   const bip32Path = '44\'/60\'/0\'/0/0'
@@ -36,18 +37,16 @@ export default function useLedger() {
     const rpcUrl = import.meta.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545/'
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
     const { chainId } = await provider.getNetwork()
-    const gasPrice = await provider.getGasPrice()
     const nonce = await provider.getTransactionCount(from)
     const unsignedTransaction: ethers.utils.UnsignedTransaction = {
       to,
-      gasPrice,
       nonce,
       chainId,
       value: ethers.utils.parseUnits(value)
     }
-    const gasLimit = await provider.estimateGas(
-      unsignedTransaction as Deferrable<TransactionRequest>
-    )
+    const { getGasPriceAndLimit } = useEthers()
+    const { gasPrice, gasLimit } = await getGasPriceAndLimit(rpcUrl, unsignedTransaction as Deferrable<TransactionRequest>)
+    unsignedTransaction.gasPrice = gasPrice
     unsignedTransaction.gasLimit = gasLimit
       
     // Todo check before click (user can +/- gas limit accordingly)
