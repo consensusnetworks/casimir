@@ -1,8 +1,7 @@
-import hre from 'hardhat'
+import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { SSVManager } from '@casimir/ethereum/build/artifacts/types'
-const { ethers } = hre
 
 /** Fixture to deploy SSV manager contract */
 async function deploymentFixture() {
@@ -43,7 +42,7 @@ async function thirdUserDepositFixture() {
   return { contract, firstUser, owner, secondUser, thirdUser }
 }
 
-describe('SSV Manager', async function () {
+describe('SSV manager', async function () {
 
   it('First user\'s deposit of 16 ETH should open the first pool', async function () {
     const { contract } = await loadFixture(firstUserDepositFixture)

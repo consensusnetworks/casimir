@@ -7,7 +7,7 @@ import * as route53targets from 'aws-cdk-lib/aws-route53-targets'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import * as certmgr from 'aws-cdk-lib/aws-certificatemanager'
 
-export interface UsersStackProps extends StackProps {
+export interface AuthStackProps extends StackProps {
     project: string;
     stage: string;
     domain: string;
@@ -16,29 +16,29 @@ export interface UsersStackProps extends StackProps {
 }
 
 /**
- * Class representing the users stack.
+ * Class representing the auth stack.
  *
- * Shortest name:  {@link UsersStack}
- * Full name:      {@link (UsersStack:class)}
+ * Shortest name:  {@link AuthStack}
+ * Full name:      {@link (AuthStack:class)}
  */
-export class UsersStack extends Stack {
+export class AuthStack extends Stack {
 
-    public readonly service: string = 'Users'
-    public readonly assetPath: string = '../../services/users/dist'
+    public readonly service: string = 'Auth'
+    public readonly assetPath: string = '../../services/auth/dist'
 
     /**
-     * UsersStack class constructor.
+     * AuthStack class constructor.
      * 
-     * Shortest name:  {@link (UsersStack:constructor)}
-     * Full name:      {@link (UsersStack:constructor)}
+     * Shortest name:  {@link (AuthStack:constructor)}
+     * Full name:      {@link (AuthStack:constructor)}
      */
-    constructor(scope: Construct, id: string, props: UsersStackProps) {
+    constructor(scope: Construct, id: string, props: AuthStackProps) {
 
         /**
-         * UsersStack class constructor super method.
+         * AuthStack class constructor super method.
          * 
-         * Shortest name:  {@link (UsersStack:constructor:super)}
-         * Full name:      {@link (UsersStack:constructor:super)}
+         * Shortest name:  {@link (AuthStack:constructor:super)}
+         * Full name:      {@link (AuthStack:constructor:super)}
          */
         super(scope, id, props)
 
@@ -50,7 +50,7 @@ export class UsersStack extends Stack {
         const certificate = new certmgr.DnsValidatedCertificate(this, `${project}${this.service}Cert${stage}`, {
             domainName: serviceDomain,
             subjectAlternativeNames: [
-                [dnsRecords.users, serviceDomain].join('.')
+                [dnsRecords.auth, serviceDomain].join('.')
             ],
             hostedZone,
             region: 'us-east-2'
@@ -67,24 +67,13 @@ export class UsersStack extends Stack {
             timeout: Duration.seconds(25)
         })
 
-        const pinpointPolicy = new iam.PolicyStatement({
-            actions: ['mobiletargeting:*', 'mobileanalytics:*'],
-            resources: ['*'],
-        })
-
-        lambdaHandler.role?.attachInlinePolicy(
-            new iam.Policy(this, `${project}${this.service}PinpointPolicy${stage}`, {
-                statements: [pinpointPolicy]
-            })
-        )
-
         // Todo update to use new api gateway version when stable
         // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-apigateway-readme.html#apigateway-v2
         const apiGateway = new apigateway.LambdaRestApi(this, `${project}${this.service}ApiGateway${stage}`, {
             restApiName: `${project}${this.service}Gateway${stage}`,
             handler: lambdaHandler,
             domainName: {
-                domainName: [dnsRecords.users, serviceDomain].join('.'),
+                domainName: [dnsRecords.auth, serviceDomain].join('.'),
                 certificate
             },
             defaultCorsPreflightOptions: {
@@ -95,7 +84,7 @@ export class UsersStack extends Stack {
         })
 
         new route53.ARecord(this, `${project}${this.service}DnsARecordApi${stage}`, {
-            recordName: [dnsRecords.users, serviceDomain].join('.'),
+            recordName: [dnsRecords.auth, serviceDomain].join('.'),
             zone: hostedZone as route53.IHostedZone,
             target: route53.RecordTarget.fromAlias(new route53targets.ApiGateway(apiGateway)),
             ttl: Duration.minutes(1),

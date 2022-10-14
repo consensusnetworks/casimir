@@ -3,7 +3,7 @@
 #
 # Example:
 #
-#    scripts/local/mock -d ./path/to/cdk-directory -s <string-of-services (i.e. -s users,analytics)
+#    scripts/local/mock -d ./path/to/cdk-directory -s <string-of-services (i.e. -s auth,analytics)
 #
 # Further information:
 # See https://docs.aws.amazon.com/cdk/api/v2/
@@ -30,7 +30,7 @@ if [ -z "$(ls -A $directory)" ]; then
 fi
 
 if [ -z "$services" ]; then
-    echo "⚠️ Services to mock are not set – please specify as -s string-of-services (i.e. -s users,analytics)"
+    echo "⚠️ Services to mock are not set – please specify as -s string-of-services (i.e. -s auth,analytics)"
     exit 1
 fi
 
