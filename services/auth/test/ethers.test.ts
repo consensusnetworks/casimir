@@ -13,7 +13,7 @@ describe('Verify message', async function () {
 
     it('Login credentials succeed if user signs the message', async function () {
         const [ signer ] = await ethers.getSigners()
-        // @ccali sign an arbitrary message like in wallet code and replace message values below to pass
+        // @ccali11 sign an arbitrary message like in wallet code and replace message values below to pass
         const response = verifyMessage({ address: signer.address, message: '', signedMessage: '' })
         expect(response).equal(true)
     })
