@@ -5,6 +5,7 @@ import { EthersProvider } from '@/interfaces/EthersProvider'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
+import useAuth from '@/composables/auth'
 
 const defaultProviders = {
   MetaMask: undefined,
@@ -60,6 +61,12 @@ export default function useEthers() {
       new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const signer = web3Provider.getSigner()
     const signature = await signer.signMessage(hashedMessage)
+
+    // Delete
+    const { login } = useAuth()
+    const response = await login({ address: signer._address, message: hashedMessage, signedMessage: signature })
+    console.log('Response', await response.json()) // Currently the response is always false
+
     return signature
   }
 

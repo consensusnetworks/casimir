@@ -65,8 +65,6 @@ do
     echo "🎨 Mocking $service service on port $port"
     Service=$(perl -ne 'print ucfirst' <<< $service)
 
-    echo "BUILDING SERVICE $service"
-
     npm run watch --workspace @casimir/$service &
 
     sam local start-api \
