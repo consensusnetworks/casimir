@@ -1,4 +1,4 @@
-// import ethers from 'ethers'
+import { ethers } from 'ethers'
 import { LoginCredentials } from '@casimir/types'
 
 export default function useEthers() {
@@ -10,9 +10,13 @@ export default function useEthers() {
      * @returns {boolean} - The response from the login request
      */
     function verifyMessage(loginCredentials: LoginCredentials): boolean {
-        console.log('Login credentials', loginCredentials)
-        // @ccali11 create address recovery verification here
-        return false
+        const { address, message, signedMessage } = loginCredentials
+        if (!address.length || !message.length || !signedMessage.length) {
+            return false
+        } else {
+            const recoveredAddress = ethers.utils.verifyMessage(message, signedMessage)
+            return recoveredAddress === address
+        }
     }
 
     return { verifyMessage }

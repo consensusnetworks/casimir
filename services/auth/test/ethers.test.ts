@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat'
+import { ethers } from 'hardhat' // @shanejearly is this right? getting an error: Module '"hardhat"' has no exported member 'ethers'
 import { expect } from 'chai'
 import useEthers from '../src/providers/ethers'
 
@@ -13,8 +13,9 @@ describe('Verify message', async function () {
 
     it('Login credentials succeed if user signs the message', async function () {
         const [ signer ] = await ethers.getSigners()
-        // @ccali11 sign an arbitrary message like in wallet code and replace message values below to pass
-        const response = verifyMessage({ address: signer.address, message: '', signedMessage: '' })
+        const message = 'unsigned message'
+        const signedMessage = await signer.signMessage(message)
+        const response = verifyMessage({ address: signer.address, message, signedMessage })
         expect(response).equal(true)
     })
 
