@@ -43,7 +43,7 @@ export class DnsStack extends Stack {
     const dnsRecords = {
         wildcard: '*',
         landing: 'www',
-        users: 'users'
+        auth: 'auth'
     }
 
     const hostedZone = route53.HostedZone.fromLookup(this, `${project}${this.service}HostedZone${stage}`, {

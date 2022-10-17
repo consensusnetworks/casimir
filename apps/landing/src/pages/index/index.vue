@@ -3,9 +3,7 @@ import { ArrowRightIcon } from '@heroicons/vue/solid'
 import { ref, Ref } from 'vue'
 import Puddles from '@/components/Puddles.vue'
 import useSlideshow from '@/composables/slideshow'
-import useUsers from '@/composables/users'
 const { slideshowProgress, currentSlide } = useSlideshow()
-const { signupUser } = useUsers()
 const successMessage: Ref = ref<HTMLDivElement>()
 const invalidMessage: Ref = ref<HTMLDivElement>()
 
@@ -27,8 +25,7 @@ async function onSubmit() {
     const newEmail = email.value
     email.value = ''
     successMessage.value.style.display = 'block'
-    const res = await signupUser(newEmail)
-    console.log('Signup result', await res.json())
+    console.log('Email signup API removed. You sent', newEmail)
   } catch (err) {
     console.log('Signup error', err)
   }

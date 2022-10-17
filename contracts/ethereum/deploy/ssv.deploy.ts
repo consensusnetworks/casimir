@@ -1,6 +1,5 @@
-import hre from 'hardhat'
+import { ethers } from 'hardhat'
 import { SSVManager } from '@casimir/ethereum/build/artifacts/types'
-const { ethers } = hre
 
 async function main() {
   const factory = await ethers.getContractFactory('SSVManager')
