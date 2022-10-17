@@ -67,7 +67,7 @@ export default function useEthers() {
     // Todo move this sample code
     const { login } = useAuth()
     const response = await login({ address: signer._address, message: hashedMessage, signedMessage: signature })
-    console.log('Response', await response.json()) // Currently the response is always false
+    console.log('Response', await response.json())
 
     return signature
   }

@@ -19,4 +19,12 @@ describe('Verify message', async function () {
         expect(response).equal(true)
     })
 
+    it('Login credentials fail if user does not sign message', async function () {
+        const [ signer ] = await ethers.getSigners()
+        const message = 'unsigned message'
+        const signedMessage = 'signed message'
+        const response = verifyMessage({ address: signer.address, message, signedMessage })
+        expect(response).equal(false)
+    })
+
 })

@@ -11,11 +11,16 @@ export default function useEthers() {
      */
     function verifyMessage(loginCredentials: LoginCredentials): boolean {
         const { address, message, signedMessage } = loginCredentials
-        if (!address.length || !message.length || !signedMessage.length) {
+        try {
+            if (!address.length || !message.length || !signedMessage.length) {
+                return false
+            } else {
+                const recoveredAddress = ethers.utils.verifyMessage(message, signedMessage)
+                return recoveredAddress === address
+            }
+        } catch (error) {
+            console.log('error :>> ', error)
             return false
-        } else {
-            const recoveredAddress = ethers.utils.verifyMessage(message, signedMessage)
-            return recoveredAddress === address
         }
     }
 
