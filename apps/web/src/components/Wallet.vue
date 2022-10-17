@@ -6,16 +6,17 @@
       </button>
       <ul>
         <li 
-          v-for="(pool, index) in pools"
+          v-for="(pool, index) in usersPools"
           :key="index"
         >
-          <p>Pool: {{ pool.address }}</p>
-          <p>Balance: {{ pool.balance }}</p>
+          <p>Pool Address: {{ pool.pool }}</p>
+          <p>User Balance: {{ pool.userBalanceForPool }} ETH</p>
+          <p>Total Pool Balance: {{ pool.balanceForPool }} ETH</p>
         </li>
       </ul>
       <input
-        v-model="contractAddress"
-        placeholder="Contract Address"
+        v-model="amountToStake"
+        placeholder="Amount to Stake"
       >
       <button @click="deposit">
         Steak
@@ -123,11 +124,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
+import { Pool } from '@/types/Pool'
 
 const message = ref('')
 const signedMessage = ref('')
+const usersPools = ref<Pool[]>([])
 
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
@@ -145,14 +148,21 @@ const {
   selectedAccount,
   toAddress,
   amount,
-  contractAddress,
+  amountToStake,
+  pools,
   connectWallet,
   sendTransaction,
   signMessage,
-  pools,
   getUsersPools,
   deposit
 } = useWallet()
+
+watch(pools, async () => {
+  for (let i = 0; i < pools.value.length; i++) {
+    const pool = await pools.value[i]
+    usersPools.value.push(pool)
+  }
+})
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {

@@ -25,8 +25,10 @@ export default function useEthers() {
     }
   }
 
-  function getEthersProvider(providerString: ProviderString) {
-    return availableProviders.value[providerString as keyof BrowserProviders]
+  function getEthersProvider() {
+    const rpcUrl = import.meta.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545/'
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+    return provider
   }
 
   function getEthersSigner (providerString: ProviderString) {

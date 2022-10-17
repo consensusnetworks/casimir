@@ -1,4 +1,4 @@
-import { provide, ref } from 'vue'
+import { ref } from 'vue'
 import { ethers } from 'ethers'
 import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
@@ -9,16 +9,17 @@ import useSSV from '@/composables/ssv'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
+import { Pool } from '@/types/Pool'
 
 const amount = ref<string>('0.001')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
-const contractAddress = ref<string>('')
+const amountToStake = ref<string>('')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const pools = ref([])
+  const pools = ref<Pool[]>([])
   const { ethersProviderList, getEthersProvider, getEthersSigner, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
@@ -115,17 +116,21 @@ export default function useWallet() {
   async function getUsersPools() {
     const { ssv } = useSSV()
     if (selectedProvider.value === 'MetaMask' || selectedProvider.value === 'CoinbaseWallet') {
-      // const provider = getEthersProvider(selectedProvider.value)
-      const signer = getEthersSigner(selectedProvider.value)
-      console.log('signer :>> ', signer)
+      const provider = getEthersProvider()
       const userAddress = selectedAccount.value
-      // Get pools for a user
-      const usersPools = await ssv.connect(signer).getPoolsForUser(userAddress)
-      console.log('usersPools :>> ', usersPools)
-      pools.value = usersPools
-      // Get user balance in each pool
-      const balances = pools.value.map(async ( pool: any ) => await ssv.connect(provider).getUserBalanceForPool(userAddress, pool))
-      console.log('balances :>> ', balances)
+
+      const usersPools = await ssv.connect(provider).getPoolsForUser(userAddress)
+      pools.value = usersPools.map(async ( pool: any ) => {
+        let balanceForPool = await ssv.connect(provider).getUserBalanceForPool(userAddress, pool)
+        balanceForPool = ethers.utils.formatEther(balanceForPool)
+        let userBalanceForPool = await ssv.connect(provider).getUserBalanceForPool(userAddress, pool)
+        userBalanceForPool = ethers.utils.formatEther(userBalanceForPool)
+        return {
+          pool,
+          balanceForPool,
+          userBalanceForPool
+        }
+      })
     }
   }
 
@@ -133,9 +138,8 @@ export default function useWallet() {
     const { ssv } = useSSV()
     if (selectedProvider.value === 'MetaMask' || selectedProvider.value === 'CoinbaseWallet') {
       const signer = getEthersSigner(selectedProvider.value)
-      const value = ethers.utils.parseEther(amount.value)
-      const { hash } = await ssv.connect(signer).deposit({ value })
-      console.log('hash :>> ', hash)
+      const value = ethers.utils.parseEther(amountToStake.value)
+      await ssv.connect(signer).deposit({ value })
     } else {
       alert('Please connect to MetaMask or Coinbase Wallet in order to stake ETH')
     }
@@ -147,7 +151,7 @@ export default function useWallet() {
     selectedAccount,
     toAddress,
     amount,
-    contractAddress,
+    amountToStake,
     pools,
     connectWallet,
     sendTransaction,
@@ -156,5 +160,3 @@ export default function useWallet() {
     deposit
   }
 }
-
-
