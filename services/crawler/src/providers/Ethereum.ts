@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { EventTableSchema } from '@casimir/data'
-import {Chain, crawler, Provider} from '../index'
+import { Chain, Provider } from '../index'
 import { PassThrough } from 'stream'
 
 const ContractsOfInterest = {
@@ -140,6 +140,7 @@ export class EthereumService {
 			events,
 		}
 	}
+
 	async getCurrentBlock(): Promise<ethers.providers.Block> {
 		const height = await this.provider.getBlockNumber()
 		return await this.provider.getBlock(height)
@@ -148,13 +149,14 @@ export class EthereumService {
 	async stream(): Promise<PassThrough> {
 		const readable = new PassThrough({ objectMode: true })
 
-		this.provider.on('block', function(blockNumber) {
+		this.provider.on('block', (blockNumber) => {
 			readable.write(blockNumber)
 		})
 
 		readable.on('data', async (blockNumber: number) => {
-			const {blockHash, events} = await this.getEvents(blockNumber)
-			readable.emit('block', { blockHash, events })
+			const block = await this.provider.getBlock(blockNumber)
+			// const { blockHash, events } = await this.getEvents(blockNumber)
+			readable.emit('block', block)
 		})
 
 		return readable

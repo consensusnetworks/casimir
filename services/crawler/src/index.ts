@@ -1,7 +1,9 @@
 import { EventTableSchema } from '@casimir/data'
-import {IotexNetworkType, IotexService, IotexServiceOptions, newIotexService} from './providers/Iotex'
-import {EthereumService, EthereumServiceOptions, newEthereumService} from './providers/Ethereum'
+import { IotexNetworkType, IotexService, IotexServiceOptions, newIotexService } from './providers/Iotex'
+import { EthereumService, EthereumServiceOptions, newEthereumService } from './providers/Ethereum'
 import { queryAthena, uploadToS3 } from '@casimir/helpers'
+import { fork, ChildProcess } from 'child_process'
+import { IPCMessage } from './executor'
 
 export enum Chain {
     Ethereum = 'ethereum',
@@ -25,27 +27,61 @@ export interface CrawlerConfig {
 class Crawler {
     config: CrawlerConfig
     service: EthereumService | IotexService | null
+    executor: ChildProcess | null = null
+    controller: AbortController
     constructor(config: CrawlerConfig) {
         this.config = config
         this.service = null
+        this.executor = null
+        this.controller = new AbortController()
+    }
+
+    async interceptIPCMessage(msg: IPCMessage): Promise<void> {
+        switch (msg.type) {
+            case 'pong':
+                await this.start()
+                break
+            case 'events':
+                break
+            default:
+                break
+        }
     }
 
     async setup(): Promise<void> {
-        if (this.config.chain === Chain.Ethereum) {
-            try {
-                console.log('PUBLIC_ETHEREUM_RPC', process.env.PUBLIC_ETHEREUM_RPC)
-                this.service = await newEthereumService({ url: this.config?.options?.url || process.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545' })
-            } catch (err) {
-                throw new Error(`failed to setup ethereum service: ${err}`)
-            }
-            return
-        }
+        if (this.config.chain === 'ethereum') {
+            const subprocess = fork(process.cwd() + '/src/executor.ts', [], {
+                execArgv: ['-r', 'ts-node/register'],
+                signal: this.controller.signal,
+            })
 
-        if (this.config.chain === Chain.Iotex) {
-            this.service = await newIotexService({ url: 'https://api.iotex.one:443', network: IotexNetworkType.Mainnet })
+            this.executor = subprocess
+
+            this.executor.on('message', async (message: IPCMessage) => {
+                await this.interceptIPCMessage(message)
+            })
+
+            // subprocess.on('exit', (code, signal) => {
+            //     console.log('executor exited with code: ', code, signal)
+            // })
+
+            this.pingExecutor()
             return
         }
         throw new Error('InvalidChain: chain is not supported')
+    }
+
+    pingExecutor(): void {
+        if (this.executor === null) {
+            throw new Error('ExecutorNotReady: executor is not ready')
+        }
+
+        this.executor.send({
+            type: 'ping',
+            payload: {
+                ...this.config
+            }
+        })
     }
 
     async getLastProcessedEvent(): Promise<EventTableSchema | null> {
@@ -58,39 +94,14 @@ class Crawler {
     }
 
     async start(): Promise<void> {
-        if (this.service instanceof EthereumService) {
-            if (this.config.stream) {
-                const source = await this.service.stream()
-                return
-            }
-
-            const lastEvent = await this.getLastProcessedEvent()
-            const last = lastEvent !== null ? lastEvent.height : 0
-            const start = parseInt(last.toString()) + 1
-
-            if (this.config.verbose) {
-                console.log(`crawling ${this.config.chain} from block ${start}`)
-            }
-
-            const current = await this.service.getCurrentBlock()
-
-            for (let i = start; i < current.number; i++) {
-                const { events, blockHash } = await this.service.getEvents(1500000 + i)
-                const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
-                console.log(events)
-
-                // await uploadToS3({
-                //     bucket: eventOutputBucket,
-                //     key: `${blockHash}-event.json`,
-                //     data: ndjson
-                // }).finally(() => {
-                //     if (this.config.verbose) {
-                //         console.log(`uploaded events for block ${blockHash}`)
-                //     }
-                // })
-            }
+		if (this.config.chain === Chain.Ethereum) {
+			if (this.executor !== null) {
+				this.executor.send({
+					type: 'start'
+				})
+			}
             return
-        }
+		}
 
         if (this.service instanceof IotexService) {
             const lastEvent = await this.getLastProcessedEvent()
@@ -125,7 +136,7 @@ class Crawler {
 }
 
 export async function crawler (config: CrawlerConfig): Promise<Crawler> {
-  const chainCrawler = new Crawler({
+  const crawler = new Crawler({
       chain: config.chain,
       options: config.options,
       output: config?.output ?? `s3://${eventOutputBucket}`,
@@ -133,9 +144,6 @@ export async function crawler (config: CrawlerConfig): Promise<Crawler> {
       stream: config?.stream ?? false
   })
 
-  await chainCrawler.setup()
-  return chainCrawler
+  await crawler.setup()
+  return crawler
 }
-
-
-

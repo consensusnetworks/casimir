@@ -10,10 +10,10 @@ test('init crawler for ethereum', async () => {
       url: 'https://eth-mainnet.g.alchemy.com/v2/RxFGV7vLIDJ--_DWPRWIyiyukklef6pf'
     },
     verbose: true,
-    stream: true
+    stream: false
   })
-  await eth.start()
-  expect(eth.service).not.toBe(null)
+  // await eth.start()
+  expect(eth).not.toBe(null)
 })
 
 // test('init crawler for iotex', async () => {
