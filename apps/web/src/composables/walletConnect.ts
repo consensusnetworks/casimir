@@ -1,15 +1,19 @@
-import WalletConnect from '@walletconnect/client'
-import QRCodeModal from '@walletconnect/qrcode-modal'
 import { ref, Ref } from 'vue'
 import { ethers } from 'ethers'
+import EthersWalletConnectSigner from '@casimir/ethers-wallet-connect-signer'
+import WalletConnect from '@walletconnect/client'
+import QRCodeModal from '@walletconnect/qrcode-modal'
 import { TransactionInit } from '@/interfaces/TransactionInit'
+import useEnvironment from '@/composables/environment'
+import { MessageInit } from '@/interfaces/MessageInit'
 
 export default function useWalletConnect() {
+  const { walletConnectURL } = useEnvironment()
   let connector: WalletConnect | undefined
   const walletConnectAddress: Ref<string> = ref('')
   function enableWalletConnect() {
     connector = new WalletConnect({
-      bridge: 'https://bridge.walletconnect.org', // Required
+      bridge: walletConnectURL, // Required
       qrcodeModal: QRCodeModal,
     })
     if (!connector.connected) {
@@ -45,10 +49,21 @@ export default function useWalletConnect() {
     return
   }
 
+  function getEthersWalletConnectSigner() {
+    const options = {
+      baseURL: walletConnectURL
+    }
+    return new EthersWalletConnectSigner(options)
+  }
+
+  async function signWalletConnectMessage(messageInit: MessageInit) {
+    const signer = getEthersWalletConnectSigner()
+    return await signer.signMessage(messageInit.message)
+  }
+
   async function sendWalletConnectTransaction(
     { to, value }: TransactionInit
   ): Promise<string> {
-    const amountInWei = ethers.utils.parseEther(value).toString()
     // TODO: Better understand and handle gasPrice and gasLimit
     const gasLimit = ethers.utils.hexlify(21000).toString()
     const gasPrice = ethers.utils.hexlify(1000000000).toString()
@@ -57,7 +72,7 @@ export default function useWalletConnect() {
       to,
       gas: gasLimit,
       gasPrice: gasPrice,
-      value: amountInWei,
+      value: ethers.utils.parseEther(value).toString(),
       // nonce: 'nonce', // TODO: Use ethers to get nonce for current address
     }
     return await connector?.sendTransaction(tx)
@@ -72,6 +87,8 @@ export default function useWalletConnect() {
   }
 
   return {
+    getEthersWalletConnectSigner,
+    signWalletConnectMessage,
     enableWalletConnect,
     sendWalletConnectTransaction,
     disableWalletConnect,

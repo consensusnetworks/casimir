@@ -3,7 +3,7 @@ import 'source-map-support/register'
 import * as cdk from 'aws-cdk-lib'
 import { pascalCase } from '@casimir/helpers'
 import { LandingStack } from '../lib/landing/landing-stack'
-import { UsersStack } from '../lib/users/users-stack'
+import { AuthStack } from '../lib/auth/auth-stack'
 import { DnsStack } from '../lib/dns/dns-stack'
 import { EtlStack } from '../lib/etl/etl-stack'
 
@@ -19,6 +19,6 @@ if (!process.env.PROJECT || !process.env.STAGE) {
     const dnsStack = new DnsStack(app, `${project}DnsStack${stage}`, { env: defaultEnv, project, stage })
     const { domain, dnsRecords, hostedZone } = dnsStack
     new EtlStack(app, `${project}EtlStack${stage}`, { env: defaultEnv, project, stage })
-    new UsersStack(app, `${project}UsersStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
+    new AuthStack(app, `${project}AuthStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
     new LandingStack(app, `${project}LandingStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
 }

@@ -100,37 +100,31 @@ Ethereum contract development is serviced through [Hardhat](https://hardhat.io/)
 1. Compile the contracts in [contracts/ethereum](contracts/ethereum).
     
     ```zsh
-    npm run task:compile
+    npm run task:compile --workspace @casimir/ethereum
     ```
 
-2. Deploy a contract, specifically [contracts/ethereum/src/Sample.sol](contracts/ethereum/src/Sample.sol) with [contracts/ethereum/deploy/sample.ts](contracts/ethereum/deploy/sample.ts).
+2. Deploy a contract, specifically [contracts/ethereum/src/SSVManager.sol](contracts/ethereum/src/Sample.sol) with [contracts/ethereum/deploy/ssv.deploy.ts](contracts/ethereum/deploy/ssv.deploy.ts).
 
     ```zsh
-    npm run deploy:sample
+    npm run deploy:ssv --workspace @casimir/ethereum
     ```
 
 3. Test the Sample with the tests in [contracts/ethereum/test/sample.ts](contracts/ethereum/test/sample.ts).
 
     ```zsh
-    npm run test:contracts
+    npm run test --workspace @casimir/ethereum
     ```
 
-4. Print all local accounts.
-
-    ```zsh
-    npm run task:accounts
-    ```
-
-6. Use a contract in a Casimir app.
+4. Use a contract in the Casimir web app.
 
     ```typescript
     // Todo add Casimir Typescript usage
     ```
 
-7. Clean [contracts/ethereum/build/artifacts](contracts/ethereum/build/artifacts) and [contracts/ethereum/build/cache](contracts/ethereum/build/cache)).    
+5. Clean [contracts/ethereum/build/artifacts](contracts/ethereum/build/artifacts) and [contracts/ethereum/build/cache](contracts/ethereum/build/cache)).    
 
     ```zsh
-    npm run task:clean
+    npm run task:clean --workspace @casimir/ethereum
     ```
 
     > 🚩 Note, this is required if you change the Hardhat configuration.
@@ -226,7 +220,7 @@ Code is organized into work directories (apps, services, infrastructure – and 
 ├── scripts/ (devops and build scripts)
 |   └── local/ (mock and serve tasks)
 ├── services/ (backend services)
-|   └── users/ (users lambda api)
+|   └── auth/ (auth lambda api)
 └── package.json (project-wide npm dependencies and scripts)
 ```
 

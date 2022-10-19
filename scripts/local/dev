@@ -58,12 +58,14 @@ fi
 commands=()
 
 if [ "$app" == "landing" ]; then
-    services="users"
+    # Default settings for landing page development
+    chains=""
+    services=""
 else 
-    # Default app
+    # Default settings for web app development
     app="web"
     chains="ethereum"
-    services=""
+    services="auth"
 
     # Loop over comma-separated string of chains
     IFS=',' read -r -a chain_list <<< "$chains"

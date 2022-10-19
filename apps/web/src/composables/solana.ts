@@ -3,12 +3,13 @@ import {
   Connection,
   Transaction,
   SystemProgram,
-  PublicKey,
+  PublicKey
 } from '@solana/web3.js'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
+import { ethers } from 'ethers'
 
 export default function useSolana() {
   const solanaProviderList = ['Phantom']
@@ -52,9 +53,11 @@ export default function useSolana() {
   }
 
   async function signSolanaMessage(messageInit: MessageInit): Promise<string> {
-    const { providerString, hashedMessage } = messageInit
-    const { signature } = await availableProviders.value[providerString as keyof BrowserProviders]
-      .signMessage(hashedMessage)
+    const signer = await availableProviders.value[messageInit.providerString as keyof BrowserProviders]
+    const message = ethers.utils.toUtf8Bytes(messageInit.message.toString())
+    const messageHex = ethers.utils.hexlify(message).substring(2)
+    
+    const { signature } = signer.signMessage(messageHex)
     return signature
   }
 

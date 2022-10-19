@@ -45,8 +45,8 @@ jobs:
         env:
           PUBLIC_STAGE: ${{ env.STAGE }}
 
-      - name: Build users service
-        run: npm run build --workspace @casimir/users
+      - name: Build auth service
+        run: npm run build --workspace @casimir/auth
 
       - name: Deploy cdk infrastructure
         run: npm run deploy

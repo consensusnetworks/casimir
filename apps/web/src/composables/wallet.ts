@@ -29,13 +29,14 @@ export default function useWallet() {
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
-  const { enableWalletConnect,  sendWalletConnectTransaction, disableWalletConnect } = useWalletConnect()
+  const { enableWalletConnect, getEthersWalletConnectSigner, sendWalletConnectTransaction, disableWalletConnect, signWalletConnectMessage } = useWalletConnect()
 
   // Todo should we move these ethers objects to the ethers composable?
   const ethersSignerCreator = {
     'MetaMask': getEthersBrowserSigner,
     'CoinbaseWallet': getEthersBrowserSigner,
-    'Ledger': getEthersLedgerSigner
+    'Ledger': getEthersLedgerSigner,
+    'WalletConnect': getEthersWalletConnectSigner
   }
   const ethersSignerList = Object.keys(ethersSignerCreator)
 
@@ -104,12 +105,14 @@ export default function useWallet() {
 
   async function signMessage(message: string) {
     const messageInit: MessageInit = {
-      hashedMessage: ethers.utils.id(message),
+      message,
       providerString: selectedProvider.value,
     }
     // TODO: Mock sending hash and signature to backend for verification
     try {
-      if (ethersProviderList.includes(messageInit.providerString)) {
+      if (messageInit.providerString === 'WalletConnect') {
+        await signWalletConnectMessage(messageInit)
+      } else if (ethersProviderList.includes(messageInit.providerString)) {
         await signEthersMessage(messageInit)
       } else if (solanaProviderList.includes(messageInit.providerString)) {
         await signSolanaMessage(messageInit)

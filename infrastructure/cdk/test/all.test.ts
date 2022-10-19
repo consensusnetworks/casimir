@@ -2,7 +2,7 @@ import * as cdk from 'aws-cdk-lib'
 import { Template } from 'aws-cdk-lib/assertions'
 import { DnsStack } from '../lib/dns/dns-stack'
 import { EtlStack } from '../lib/etl/etl-stack'
-import { UsersStack } from '../lib/users/users-stack'
+import { AuthStack } from '../lib/auth/auth-stack'
 import { LandingStack } from '../lib/landing/landing-stack'
 
 test('All stacks created', () => {
@@ -16,7 +16,7 @@ test('All stacks created', () => {
   const { domain, dnsRecords, hostedZone } = dnsStack
   const etlStack = new EtlStack(app, `${project}EtlStack${stage}`, { env: defaultEnv, project, stage })
   const landingStack = new LandingStack(app, `${project}LandingStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
-  const usersStack = new UsersStack(app, `${project}UsersStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
+  const authStack = new AuthStack(app, `${project}AuthStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
 
   const etlTemplate = Template.fromStack(etlStack)
   console.log(etlTemplate)
@@ -32,9 +32,9 @@ test('All stacks created', () => {
     expect(output).toBeDefined()
   })
 
-  const usersTemplate = Template.fromStack(usersStack)
-  console.log(usersTemplate)
-  Object.keys(usersTemplate.findOutputs('*')).forEach(output => {
+  const authTemplate = Template.fromStack(authStack)
+  console.log(authTemplate)
+  Object.keys(authTemplate.findOutputs('*')).forEach(output => {
     console.log(output)
     expect(output).toBeDefined()
   })

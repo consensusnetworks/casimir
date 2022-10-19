@@ -1,14 +1,15 @@
 import EthersLedgerSigner from '@casimir/ethers-ledger-signer'
 import { ethers } from 'ethers'
 import { TransactionInit } from '@/interfaces/TransactionInit'
-import { TransactionRequest } from '@ethersproject/abstract-provider'
 import { MessageInit } from '@/interfaces/MessageInit'
 import useEnvironment from '@/composables/environment'
+import useEthers from '@/composables/ethers'
 
 const ledgerPath = '44\'/60\'/0\'/0/0'
 
 export default function useLedger() {
   const { ethereumURL, ledgerType, speculosURL } = useEnvironment()
+  const { getGasPriceAndLimit } = useEthers()
 
   function getEthersLedgerSigner() {
     const options = {
@@ -29,18 +30,15 @@ export default function useLedger() {
     const signer = getEthersLedgerSigner()
     const provider = signer.provider as ethers.providers.Provider
     const { chainId } = await provider.getNetwork()
-    const gasPrice = await provider.getGasPrice()
     const nonce = await provider.getTransactionCount(from)
     const unsignedTransaction = {
       to,
-      gasPrice,
       nonce,
       chainId,
       value: ethers.utils.parseUnits(value)
-    } as ethers.utils.UnsignedTransaction
-    const gasLimit = await provider.estimateGas(
-      unsignedTransaction as ethers.utils.Deferrable<TransactionRequest>
-    )
+    } as ethers.UnsignedTransaction
+    const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumURL, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    unsignedTransaction.gasPrice = gasPrice
     unsignedTransaction.gasLimit = gasLimit
 
     // Todo check before click (user can +/- gas limit accordingly)
@@ -49,13 +47,13 @@ export default function useLedger() {
     console.log('Balance', ethers.utils.formatEther(balance))
     console.log('Required', ethers.utils.formatEther(required))
 
-    return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<TransactionRequest>)
+    return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
   }
 
   async function signLedgerMessage(messageInit: MessageInit): Promise<string> {
-    const { hashedMessage } = messageInit
+    const { message } = messageInit
     const signer = getEthersLedgerSigner()
-    return await signer.signMessage(hashedMessage)
+    return await signer.signMessage(message)
   }
 
   return {
