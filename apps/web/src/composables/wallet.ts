@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
+import useEnvironment from '@/composables/environment'
 import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
 import useEthers from '@/composables/ethers'
@@ -9,24 +10,35 @@ import useSSV from '@/composables/ssv'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
-import { Pool } from '@/types/Pool'
+import { Pool } from '@/interfaces/Pool'
 
 const amount = ref<string>('0.001')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 const amountToStake = ref<string>('')
+const pools = ref<Pool[]>([])
+const selectedProvider = ref<ProviderString>('')
+const selectedAccount = ref<string>('')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
-  const pools = ref<Pool[]>([])
-  const { ethersProviderList, getEthersProvider, getEthersSigner, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
+  const { ethereumURL } = useEnvironment()
+  const { ssv } = useSSV()
+  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
-  const { getLedgerAddress, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { getLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { enableWalletConnect,  sendWalletConnectTransaction, disableWalletConnect } = useWalletConnect()
-  const selectedProvider = ref<ProviderString>('')
-  const selectedAccount = ref<string>('')
+
+  // Todo should we move these ethers objects to the ethers composable?
+  const ethersSignerCreator = {
+    'MetaMask': getEthersBrowserSigner,
+    'CoinbaseWallet': getEthersBrowserSigner,
+    'Ledger': getEthersLedgerSigner
+  }
+  const ethersSignerList = Object.keys(ethersSignerCreator)
+
   const setSelectedProvider = (provider: ProviderString) => {
     selectedProvider.value = provider
   }
@@ -113,35 +125,32 @@ export default function useWallet() {
     }
   }
 
-  async function getUsersPools() {
-    const { ssv } = useSSV()
-    if (selectedProvider.value === 'MetaMask' || selectedProvider.value === 'CoinbaseWallet') {
-      const provider = getEthersProvider()
+  // Todo @ccali11 should we move these ssv objects to the ssv composable?
+  async function getPoolsForUser() {
+    if (ethersSignerList.includes(selectedProvider.value)) {
+      const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
       const userAddress = selectedAccount.value
-
       const usersPools = await ssv.connect(provider).getPoolsForUser(userAddress)
-      pools.value = usersPools.map(async ( pool: any ) => {
-        let balanceForPool = await ssv.connect(provider).getUserBalanceForPool(userAddress, pool)
-        balanceForPool = ethers.utils.formatEther(balanceForPool)
-        let userBalanceForPool = await ssv.connect(provider).getUserBalanceForPool(userAddress, pool)
-        userBalanceForPool = ethers.utils.formatEther(userBalanceForPool)
+      pools.value = await Promise.all(usersPools.map(async (poolAddress: string) => {
+        const balance = ethers.utils.formatEther(await ssv.connect(provider).getBalanceForPool(poolAddress))
+        const userBalance = ethers.utils.formatEther(await ssv.connect(provider).getUserBalanceForPool(userAddress, poolAddress))
         return {
-          pool,
-          balanceForPool,
-          userBalanceForPool
+          address: poolAddress,
+          balance,
+          userBalance
         }
-      })
+      }))
     }
   }
-
   async function deposit() {
-    const { ssv } = useSSV()
-    if (selectedProvider.value === 'MetaMask' || selectedProvider.value === 'CoinbaseWallet') {
-      const signer = getEthersSigner(selectedProvider.value)
+    if (Object.keys(ethersSignerCreator).includes(selectedProvider.value)) {
+      const signerKey = selectedProvider.value as keyof typeof ethersSignerCreator
+      const signer = ethersSignerCreator[signerKey](selectedProvider.value)
       const value = ethers.utils.parseEther(amountToStake.value)
-      await ssv.connect(signer).deposit({ value })
+      await ssv.connect(signer as ethers.Signer).deposit({ value })
     } else {
-      alert('Please connect to MetaMask or Coinbase Wallet in order to stake ETH')
+      // Todo @ccali11 this should happen sooner - ideally we'll this disable method if missing ssv provider
+      console.log('Please connect to one of the following providers:', ethersProviderList)
     }
     return
   }
@@ -156,7 +165,7 @@ export default function useWallet() {
     connectWallet,
     sendTransaction,
     signMessage,
-    getUsersPools,
+    getPoolsForUser,
     deposit
   }
 }

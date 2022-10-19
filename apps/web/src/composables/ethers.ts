@@ -5,6 +5,7 @@ import { EthersProvider } from '@/interfaces/EthersProvider'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
+import useEnvironment from '@/composables/environment'
 
 const defaultProviders = {
   MetaMask: undefined,
@@ -15,6 +16,7 @@ const ethereum: any = window.ethereum
 const availableProviders = ref<BrowserProviders>(getBrowserProviders(ethereum))
 
 export default function useEthers() {
+  const { ethereumURL } = useEnvironment()
   const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
 
   async function requestEthersAccount(provider: EthersProvider) {
@@ -25,17 +27,10 @@ export default function useEthers() {
     }
   }
 
-  function getEthersProvider() {
-    const rpcUrl = import.meta.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545/'
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
-    return provider
-  }
-
-  function getEthersSigner (providerString: ProviderString) {
+  function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
     const provider = availableProviders.value[providerString as keyof BrowserProviders]
     if (provider) {
-      const signer = new ethers.providers.Web3Provider(provider as EthersProvider).getSigner()
-      return signer
+      return new ethers.providers.Web3Provider(provider as EthersProvider).getSigner()
     }
   }
 
@@ -76,7 +71,7 @@ export default function useEthers() {
     return signature
   }
 
-  return { ethersProviderList, getEthersProvider, getEthersSigner, getEthersAddress, sendEthersTransaction, signEthersMessage }
+  return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage }
 }
 
 function getBrowserProviders(ethereum: any) {

@@ -1,17 +1,17 @@
 <template>
   <div>
     <div class="staking-container">
-      <button @click="getUsersPools">
+      <button @click="getPoolsForUser">
         What do I have staked where?
       </button>
       <ul>
         <li 
-          v-for="(pool, index) in usersPools"
+          v-for="(pool, index) in pools"
           :key="index"
         >
-          <p>Pool Address: {{ pool.pool }}</p>
-          <p>User Balance: {{ pool.userBalanceForPool }} ETH</p>
-          <p>Total Pool Balance: {{ pool.balanceForPool }} ETH</p>
+          <p>Pool Address: {{ pool.address }}</p>
+          <p>User Balance: {{ pool.userBalance }} ETH</p>
+          <p>Total Pool Balance: {{ pool.balance }} ETH</p>
         </li>
       </ul>
       <input
@@ -124,13 +124,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, watchEffect } from 'vue'
+import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
-import { Pool } from '@/types/Pool'
 
 const message = ref('')
 const signedMessage = ref('')
-const usersPools = ref<Pool[]>([])
 
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
@@ -153,16 +151,9 @@ const {
   connectWallet,
   sendTransaction,
   signMessage,
-  getUsersPools,
+  getPoolsForUser,
   deposit
 } = useWallet()
-
-watch(pools, async () => {
-  for (let i = 0; i < pools.value.length; i++) {
-    const pool = await pools.value[i]
-    usersPools.value.push(pool)
-  }
-})
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {
