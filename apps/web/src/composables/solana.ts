@@ -52,13 +52,11 @@ export default function useSolana() {
     return signatureStatus
   }
 
-  async function signSolanaMessage(messageInit: MessageInit): Promise<string> {
-    const signer = await availableProviders.value[messageInit.providerString as keyof BrowserProviders]
-    const message = ethers.utils.toUtf8Bytes(messageInit.message.toString())
-    const messageHex = ethers.utils.hexlify(message).substring(2)
-    
-    const { signature } = signer.signMessage(messageHex)
-    return signature
+  async function signSolanaMessage(messageInit: MessageInit): Promise<string> {    
+    const provider = await availableProviders.value[messageInit.providerString as keyof BrowserProviders]
+    const encodedMessage = new TextEncoder().encode(messageInit.message)
+    const signedMessage = await provider.signMessage(encodedMessage, 'utf8')
+    return signedMessage
   }
 
   return { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage }
