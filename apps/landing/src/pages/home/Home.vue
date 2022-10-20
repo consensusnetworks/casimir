@@ -30,7 +30,7 @@ import NavBar from '../../components/nav/NavBar.vue'
 </script>
 
 <template>
-  <div class="grid grid-cols-3 csm:grid-cols-2 gap-gutter h-full">
+  <div class="grid grid-cols-3 csm:grid-cols-2 h-full">
     <div class="bg-black col-span-2">
       <NavBar />
       <div class="px-margins mt-[100px]">
@@ -66,8 +66,12 @@ import NavBar from '../../components/nav/NavBar.vue'
         </a>
       </div>
     </div>
-    <div class="csm:sr-only ">
-      images
+    <div class="csm:sr-only w-full">
+      <img
+        src="./components/landing-img.svg"
+        alt="Landing Page Image"
+        class="h-full"
+      >
     </div>
   </div>
 </template>
