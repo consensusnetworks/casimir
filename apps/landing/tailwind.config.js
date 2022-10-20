@@ -46,7 +46,28 @@ module.exports = {
                 'decline': '#FF8080',
                 'borders': '#E4E4E7',
             },
-        }
+            spacing: {
+                'gutter': '16px',
+            }
+        },
+        fontFamily: {
+            'regular': 'OpenSauceOneRegular',
+            'medium': 'OpenSauceOneMedium',
+            'semibold': 'OpenSauceOneSemibold',
+            'bold': 'OpenSauceOneBold',
+            'extrabold': 'OpenSauceOneExtrabold',
+            'black': 'OpenSauceOneBlack',
+            'light': 'OpenSauceOneLight',
+        },
+        screens: {
+            'xsm': {'min': '0px', 'max': '359px'},
+            'sm': {'min': '360px', 'max': '719px'},
+            'md': {'min': '720px', 'max': '1023px'},
+            'lg': {'min': '1024px'},
+
+            // Combine smalls
+            'csm': {'min': '0px', 'max': '719px'},
+        },
     },
     plugins: []
 }

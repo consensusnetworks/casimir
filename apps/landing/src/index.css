@@ -2,25 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 
-    FONT FAMILIES:
-    OpenSauceOneLight
-    OpenSauceOneRegular
-    OpenSauceOneMedium
-    OpenSauceOneSemibold
-    OpenSauceOneBold
-    OpenSauceOneExtrabold
-    OpenSauceOneBlack
-
-    OpenSauceOneLightItalic
-    OpenSauceOneItalic
-    OpenSauceOneMediumItalic
-    OpenSauceOneSemiboldItalic
-    OpenSauceOneBoldItalic
-    OpenSauceOneExtraboldItalic
-    OpenSauceOneBlackItalic
-*/
-
 :root {
     font-family: 'OpenSauceOneRegular';
     font-synthesis: none;
@@ -32,6 +13,8 @@
   
   #app {
     max-width: 1280px;
+    min-width: 360px;
+    overflow: auto;
     margin: 0 auto;
     height: 100vh;
     background: #fff;
@@ -87,6 +70,32 @@
 
 @layer components {
     /* Component Classes */
+    .social-button {
+        @apply 
+        bg-white
+        px-[8px] py-[6px]
+        font-bold my-gutter cursor-pointer;
+        overflow: hidden;
+        white-space:nowrap;
+        display:inline-block;
+        width: 40px;
+        font-weight: 400;
+        font-size: 24px;
+        line-height: 30px;
+        letter-spacing: -0.02em;
+        -webkit-transition: width 1s ease-in-out;
+        -moz-transition: width 1s ease-in-out;
+        -o-transition: width 1s ease-in-out;
+        transition: width 1s ease-in-out;
+    }
+    .social-button:hover {
+        box-shadow: 0px 0px 50px 10px rgba(204, 206, 210, 0.366);
+        -webkit-transition: width 1s ease-in-out;
+        -moz-transition: width 1s ease-in-out;
+        -o-transition: width 1s ease-in-out;
+        transition: width 1s ease-in-out;
+        @apply lg:w-[70%] csm:w-[35%] md:w-[50%];
+    }
 }
 
 @layer utilities {

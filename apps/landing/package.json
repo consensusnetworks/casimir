@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@heroicons/vue": "^1.0.6",
+    "iconoir": "^5.3.2",
     "vue": "^3.2.25",
     "vue-router": "^4.0.15"
   },

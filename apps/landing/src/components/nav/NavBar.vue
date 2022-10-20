@@ -10,7 +10,8 @@
       >
     </RouterLink>
     
-    <RouterLink 
+    <!-- Will comment these back in once we get the pages ready -->
+    <!-- <RouterLink 
       to="/why-casimir"
       class="my-auto"
     >
@@ -32,7 +33,7 @@
       >
         Community
       </h6>
-    </RouterLink>
+    </RouterLink> -->
   </div>
 </template>
   
