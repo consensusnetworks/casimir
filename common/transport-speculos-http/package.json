@@ -1,6 +1,6 @@
 {
-  "name": "@casimir/hw-transport-speculos",
-  "version": "0.0.1",
+  "name": "@casimir/transport-speculos-http",
+  "private":"true",
   "main": "src/index.ts",
   "dependencies": {
     "@ledgerhq/hw-transport": "^6.27.2"

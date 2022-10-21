@@ -1,6 +1,6 @@
 import { ProviderString } from '@/types/ProviderString'
 
 export interface MessageInit {
-    hashedMessage: string;
+    message: string;
     providerString: ProviderString;
 }
