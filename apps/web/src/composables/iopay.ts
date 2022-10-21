@@ -33,8 +33,8 @@ export default function useIoPay() {
   }
 
   const signIoPayMessage = async (messageInit: MessageInit): Promise<Buffer> => {
-    const { hashedMessage } = messageInit
-    return await signer.signMessage(hashedMessage)
+    const { message } = messageInit
+    return await signer.signMessage(message)
   }
 
   //   const stakeIoPay = async () => {

@@ -3,7 +3,7 @@
 #
 # Example:
 #
-#    scripts/ethereum/dev -f <fork-name> -n <network-name>
+#    scripts/ethereum/dev -f <fork-name>
 #
 # Further information:
 # See https://hardhat.org/hardhat-network/docs/overview
@@ -28,7 +28,6 @@ while getopts :f: flag
 do
     case "${flag}" in
         f) fork=${OPTARG};;
-        n) network=${OPTARG};;
     esac
 done
 
@@ -66,5 +65,7 @@ fi
 
 npm run dev:node --workspace @casimir/ethereum &
 npm run deploy:ssv --workspace @casimir/ethereum -- --network localhost
+
+wait && pkill -P $$
 
 
