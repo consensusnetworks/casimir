@@ -64,7 +64,7 @@ else
 fi
 
 npm run dev:node --workspace @casimir/ethereum &
-(export LOCAL_TUNNEL=false && npm run deploy:ssv --workspace @casimir/ethereum -- --network localhost)
+npm run deploy:ssv --workspace @casimir/ethereum -- --network localhost
 
 wait && pkill -P $$
 

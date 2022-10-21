@@ -33,7 +33,7 @@ const config: HardhatUserConfig = {
   }
 }
 
-if (process.env.LOCAL_TUNNEL) {
+if (process.env.LOCAL_TUNNEL && process.env.HARDHAT_NETWORK !== 'localhost') {
   // Start a local tunnel for using RPC over https
   const localSubdomain = `cn-hardhat-${os.userInfo().username.toLowerCase()}`
   const localUrl = `https://${localSubdomain}.loca.lt`
