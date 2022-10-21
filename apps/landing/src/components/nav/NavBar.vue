@@ -4,7 +4,7 @@
       to="/"
     >
       <img
-        src="casimir.svg"
+        src="/casimir.svg"
         alt="Casimir Logo"
         class="nav-imgs"
       >
