@@ -29,7 +29,7 @@ export default function useWallet() {
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
-  const { enableWalletConnect, getEthersWalletConnectSigner, sendWalletConnectTransaction, disableWalletConnect, signWalletConnectMessage } = useWalletConnect()
+  const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
 
   // Todo should we move these ethers objects to the ethers composable?
   const ethersSignerCreator = {
@@ -49,13 +49,11 @@ export default function useWallet() {
 
   async function connectWallet(provider: ProviderString) {
     try {
-      if (selectedProvider.value === 'WalletConnect' && provider !== 'WalletConnect') {
-        await disableWalletConnect()
-      }
       setSelectedProvider(provider)
       selectedAccount.value = 'Not Active'
       if (provider === 'WalletConnect') {
-        enableWalletConnect()
+        const address = await getWalletConnectAddress()
+        setSelectedAccount(address)
       } else if (ethersProviderList.includes(provider)) {
         const address = await getEthersAddress(provider)
         setSelectedAccount(address)
@@ -131,9 +129,11 @@ export default function useWallet() {
   // Todo @ccali11 should we move these ssv objects to the ssv composable?
   async function getPoolsForUser() {
     if (ethersSignerList.includes(selectedProvider.value)) {
+      console.log('Getting pools')
       const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
       const userAddress = selectedAccount.value
       const usersPools = await ssv.connect(provider).getPoolsForUser(userAddress)
+      console.log('Pools', usersPools)
       pools.value = await Promise.all(usersPools.map(async (poolAddress: string) => {
         const balance = ethers.utils.formatEther(await ssv.connect(provider).getBalanceForPool(poolAddress))
         const userBalance = ethers.utils.formatEther(await ssv.connect(provider).getUserBalanceForPool(userAddress, poolAddress))
@@ -148,7 +148,8 @@ export default function useWallet() {
   async function deposit() {
     if (Object.keys(ethersSignerCreator).includes(selectedProvider.value)) {
       const signerKey = selectedProvider.value as keyof typeof ethersSignerCreator
-      const signer = ethersSignerCreator[signerKey](selectedProvider.value)
+      let signer = ethersSignerCreator[signerKey](selectedProvider.value)
+      if (isWalletConnectSigner(signer)) signer = await signer
       const value = ethers.utils.parseEther(amountToStake.value)
       await ssv.connect(signer as ethers.Signer).deposit({ value })
     } else {

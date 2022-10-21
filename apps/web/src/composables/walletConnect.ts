@@ -1,97 +1,72 @@
-import { ref, Ref } from 'vue'
 import { ethers } from 'ethers'
-import EthersWalletConnectSigner from '@casimir/ethers-wallet-connect-signer'
-import WalletConnect from '@walletconnect/client'
-import QRCodeModal from '@walletconnect/qrcode-modal'
+import WalletConnectProvider from '@walletconnect/web3-provider'
 import { TransactionInit } from '@/interfaces/TransactionInit'
-import useEnvironment from '@/composables/environment'
 import { MessageInit } from '@/interfaces/MessageInit'
+import useEnvironment from '@/composables/environment'
+import useEthers from '@/composables/ethers'
+
+/** WalletConnect signer promise needs to be resolved */
+const isWalletConnectSigner = (signer: ethers.Signer | Promise<ethers.Signer> | undefined) => typeof (signer as Promise<ethers.Signer>).then === 'function'
 
 export default function useWalletConnect() {
-  const { walletConnectURL } = useEnvironment()
-  let connector: WalletConnect | undefined
-  const walletConnectAddress: Ref<string> = ref('')
-  function enableWalletConnect() {
-    connector = new WalletConnect({
-      bridge: walletConnectURL, // Required
-      qrcodeModal: QRCodeModal,
-    })
-    if (!connector.connected) {
-      connector.createSession()
+  const { ethereumURL, walletConnectURL } = useEnvironment()
+  const { getGasPriceAndLimit } = useEthers()
+
+  async function getEthersWalletConnectSigner(): Promise<ethers.Signer> {
+    const options = {
+      rpc: {
+        1337: ethereumURL
+      },
+      bridge: walletConnectURL
     }
-    connector.on('connect', (error: any, payload: any) => {
-      if (error) {
-        throw error
-      }
-      // Get provided accounts and chainId
-      const { accounts, chainId } = payload.params[0]
-      walletConnectAddress.value = accounts[0]
-    })
-    connector.on('session_update', (error: any, payload: any) => {
-      if (error) {
-        throw error
-      }
-      // Get updated accounts and chainId
-      const { accounts, chainId } = payload.params[0]
-    })
-    connector.on('disconnect', (error: any) => {
-      if (error) {
-        console.log(`disconnect error :>> ${error}`)
-        // throw error
-      }
-      // Delete connector
-      try {
-        connector?.killSession()
-      } catch (error) {
-        console.log(`disconnect error in listener :>> ${error}`)
-      }
-    })
-    return
+    const walletConnectProvider = new WalletConnectProvider(options)
+    await walletConnectProvider.enable()
+    const provider = new ethers.providers.Web3Provider(walletConnectProvider)
+    return provider.getSigner()
   }
 
-  function getEthersWalletConnectSigner() {
-    const options = {
-      baseURL: walletConnectURL
-    }
-    return new EthersWalletConnectSigner(options)
+  async function getWalletConnectAddress() {
+    const signer = await getEthersWalletConnectSigner()
+    return await signer.getAddress()
   }
 
   async function signWalletConnectMessage(messageInit: MessageInit) {
-    const signer = getEthersWalletConnectSigner()
+    const signer = await getEthersWalletConnectSigner()
     return await signer.signMessage(messageInit.message)
   }
 
   async function sendWalletConnectTransaction(
-    { to, value }: TransactionInit
-  ): Promise<string> {
-    // TODO: Better understand and handle gasPrice and gasLimit
-    const gasLimit = ethers.utils.hexlify(21000).toString()
-    const gasPrice = ethers.utils.hexlify(1000000000).toString()
-    const tx = {
-      from: walletConnectAddress.value,
+    { from, to, value }: TransactionInit
+  ): Promise<ethers.providers.TransactionResponse> {
+    const signer = await getEthersWalletConnectSigner()
+    const provider = signer.provider as ethers.providers.Provider
+    const { chainId } = await provider.getNetwork()
+    const nonce = await provider.getTransactionCount(from)
+    const unsignedTransaction = {
+      from,
       to,
-      gas: gasLimit,
-      gasPrice: gasPrice,
-      value: ethers.utils.parseEther(value).toString(),
-      // nonce: 'nonce', // TODO: Use ethers to get nonce for current address
-    }
-    return await connector?.sendTransaction(tx)
-  }
+      nonce,
+      chainId,
+      value: ethers.utils.parseUnits(value)
+    } as ethers.UnsignedTransaction
+    const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumURL, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    unsignedTransaction.gasPrice = gasPrice
+    unsignedTransaction.gasLimit = gasLimit
 
-  async function disableWalletConnect() {
-    try {
-      await connector?.killSession()
-    } catch (err) {
-      console.log('error in disableWalletConnect :>> ', err)
-    }
+    // Todo check before click (user can +/- gas limit accordingly)
+    const balance = await provider.getBalance(from)
+    const required = gasPrice.mul(gasLimit).add(ethers.utils.parseEther(value))
+    console.log('Balance', ethers.utils.formatEther(balance))
+    console.log('Required', ethers.utils.formatEther(required))
+
+    return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
   }
 
   return {
+    isWalletConnectSigner,
     getEthersWalletConnectSigner,
+    getWalletConnectAddress,
     signWalletConnectMessage,
-    enableWalletConnect,
-    sendWalletConnectTransaction,
-    disableWalletConnect,
-    walletConnectAddress,
+    sendWalletConnectTransaction
   }
 }

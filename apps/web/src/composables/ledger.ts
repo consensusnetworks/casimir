@@ -33,6 +33,7 @@ export default function useLedger() {
     const nonce = await provider.getTransactionCount(from)
     const unsignedTransaction = {
       to,
+      data: '0x00',
       nonce,
       chainId,
       value: ethers.utils.parseUnits(value)

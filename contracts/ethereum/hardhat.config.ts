@@ -37,13 +37,12 @@ if (process.env.LOCAL_TUNNEL) {
   // Start a local tunnel for using RPC over https
   const localSubdomain = `cn-hardhat-${os.userInfo().username.toLowerCase()}`
   const localUrl = `https://${localSubdomain}.loca.lt`
-  console.log('Your local tunnel is', localUrl)
   localtunnel({ port: 8545, subdomain: localSubdomain }).then(
     (tunnel: localtunnel.Tunnel) => {
       if (localUrl === tunnel.url) {
         console.log('Your local tunnel is now available at', localUrl)
       } else {
-        console.log('Your desired local tunnel url is not available')
+        console.log('Your default local tunnel url is not available, instead use', tunnel.url)
       }
       process.on('SIGINT', () => {
         tunnel.close()
