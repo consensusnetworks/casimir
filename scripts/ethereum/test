@@ -67,4 +67,4 @@ else
     echo "⛓ Testing ethereum contracts without fork"
 fi
 
-npm run test:contracts --workspace @casimir/ethereum
+npm run test --workspace @casimir/ethereum
