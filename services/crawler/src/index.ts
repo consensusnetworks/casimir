@@ -120,7 +120,6 @@ class Crawler {
                 this.service.provider.on('error' , (err: Error) => {
                    throw new Error(err.message)
                 })
-                return
         }
         throw new Error('Unsupported chain')
     }
@@ -133,14 +132,18 @@ class Crawler {
                 const { block, events } = await this.service.getEvents(i)
                 const ndjson = events.map((e) => JSON.stringify(e)).join('\n')
                 
-                await uploadToS3({
-                    bucket: eventOutputBucket,
-                    key: `${block}-events.json`,
-                    data: ndjson
-                }).finally(() => {
-                    this.verbose(`uploaded ${block}-events.json`)
-                })
+                if (process.env.UPLOAD) {
+                    await uploadToS3({
+                        bucket: eventOutputBucket,
+                        key: `${block}-events.json`,
+                        data: ndjson
+                    }).finally(() => {
+                        this.verbose(`uploaded ${block}-events.json`)
+                    })
+                }
+                console.log(ndjson)
             }
+            return
         }
 
         if (this.service instanceof IotexService) {
@@ -191,32 +194,12 @@ export async function crawler (config: CrawlerConfig): Promise<Crawler> {
 }
 
 async function run() {
-    const cc: CrawlerConfig = {
+    const eth = await crawler({
+        chain: Chain.Ethereum,
         network: Network.Mainnet,
         provider: Provider.Alchemy,
-        chain: Chain.Ethereum,
-        // serviceOptions: config.serviceOptions,
-         output:`s3://${eventOutputBucket}`
-    }
-
-    const args = process.argv.slice(2)
-
-    if (args.length === 0) {
-        // set defaults
-        console.log('noop')
-    }
-
-    console.log(args)
-
-    // const eth = await crawler({
-    //     chain: Chain.Ethereum,
-    //     network: Network.Mainnet,
-    //     provider: Provider.Alchemy,
-    //     serviceOptions: {
-    //         url: 'https://eth-mainnet.g.alchemy.com/v2/RxFGV7vLIDJ--_DWPRWIyiyukklef6pf'
-    //     },
-    //     verbose: true,
-    // })
-    // eth.start()
+        verbose: true,
+    })
+    eth.start()
 }
 run()

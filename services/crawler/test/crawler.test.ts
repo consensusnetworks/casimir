@@ -23,21 +23,16 @@ test('parse beacon desposit log', async () => {
       signature: '0x85b8268d08a7360940ce84d5a0d0e65f516e39574a4cab47e116b1fe457ccb3c438e901e1b91cae2224db5bae78079890a90fde9e9308dae9c4f894a3fec8e5a26c154de29c60c8c5ad99df62b4ca89b40423814004a50eec90f502d06fc4345',
       index: '0xe9f7060000000000'
     }
-	const service = new EthereumService({ url: 'https://eth-mainnet.g.alchemy.com/v2/RxFGV7vLIDJ--_DWPRWIyiyukklef6pf' })
+	const service = new EthereumService()
     const got = service.parseLog(log as ethers.providers.Log)
     expect(got).toEqual(expected)
 })
-
-jest.setTimeout(1000000)
 
 test('setup eth', async () => {
 	const eth = await crawler({
 		chain: Chain.Ethereum,
 		network: Network.Mainnet,
 		provider: Provider.Alchemy,
-		serviceOptions: {
-			url: 'https://eth-mainnet.g.alchemy.com/v2/RxFGV7vLIDJ--_DWPRWIyiyukklef6pf'
-		},
 		verbose: true,
 	})
 	expect(eth.head).not.toBe(0)

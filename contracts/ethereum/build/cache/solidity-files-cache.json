@@ -1,0 +1,113 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/shane/Developer/CN/casimir/contracts/ethereum/src/SSVManager.sol": {
+      "lastModificationDate": 1666280400531,
+      "contentHash": "05239a7d77b60e5b7f2f35e0e8308b0c",
+      "sourceName": "src/SSVManager.sol",
+      "solcConfig": {
+        "version": "0.8.17",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./SSVPool.sol",
+        "./interfaces/SSVPoolInterface.sol"
+      ],
+      "versionPragmas": [
+        "0.8.17"
+      ],
+      "artifacts": [
+        "SSVManager"
+      ]
+    },
+    "/Users/shane/Developer/CN/casimir/contracts/ethereum/src/SSVPool.sol": {
+      "lastModificationDate": 1666317948607,
+      "contentHash": "c877b0988b4c0b7d08e9334adb7cb1d0",
+      "sourceName": "src/SSVPool.sol",
+      "solcConfig": {
+        "version": "0.8.17",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.17"
+      ],
+      "artifacts": [
+        "SSVPool"
+      ]
+    },
+    "/Users/shane/Developer/CN/casimir/contracts/ethereum/src/interfaces/SSVPoolInterface.sol": {
+      "lastModificationDate": 1665605759182,
+      "contentHash": "089db782ab136b2137712822d97bfa70",
+      "sourceName": "src/interfaces/SSVPoolInterface.sol",
+      "solcConfig": {
+        "version": "0.8.17",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.17"
+      ],
+      "artifacts": [
+        "SSVPoolInterface"
+      ]
+    }
+  }
+}
