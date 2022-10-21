@@ -1,122 +1,150 @@
 import { EventTableSchema } from '@casimir/data'
 import { IotexNetworkType, IotexService, IotexServiceOptions, newIotexService } from './providers/Iotex'
-import { EthereumService, EthereumServiceOptions, newEthereumService } from './providers/Ethereum'
+import { EthereumService, EthereumServiceOptions } from './providers/Ethereum'
 import { queryAthena, uploadToS3 } from '@casimir/helpers'
-import { fork, ChildProcess } from 'child_process'
-import { IPCMessage } from './executor'
 
 export enum Chain {
     Ethereum = 'ethereum',
     Iotex = 'iotex'
 }
 
+export enum Event {
+    Block = 'block',
+    Transaction = 'transaction',
+    Deposit = 'deposit',
+}
+
 export enum Provider {
-    Casimir = 'casimir',
+    Alchemy = 'alchemy',
+}
+
+export enum Network {
+    Mainnet = 'mainnet',
+    Testnet = 'testnet',
 }
 
 export const eventOutputBucket = 'casimir-etl-event-bucket-dev'
 
 export interface CrawlerConfig {
     chain: Chain
-    options?: IotexServiceOptions | EthereumServiceOptions
+    network: Network
+    provider: Provider
+    serviceOptions?: IotexServiceOptions | EthereumServiceOptions
     output?: `s3://${string}`
     verbose?: boolean
     stream?: boolean
 }
 
 class Crawler {
-    config: CrawlerConfig
+    options: CrawlerConfig
     service: EthereumService | IotexService | null
-    executor: ChildProcess | null = null
-    controller: AbortController
-    constructor(config: CrawlerConfig) {
-        this.config = config
+    _start: number
+    last: number
+    head: number
+    constructor(opt: CrawlerConfig) {
+        this.options = opt
         this.service = null
-        this.executor = null
-        this.controller = new AbortController()
+        this.last = 0
+        this.head = 0
+        this._start = 0
     }
 
-    async interceptIPCMessage(msg: IPCMessage): Promise<void> {
-        switch (msg.type) {
-            case 'pong':
-                await this.start()
-                break
-            case 'events':
-                break
-            default:
-                break
+    verbose(msg: string): void {
+        if (this.options.verbose) {
+            console.log(msg)
         }
     }
 
     async setup(): Promise<void> {
-        if (this.config.chain === 'ethereum') {
-            const subprocess = fork(process.cwd() + '/src/executor.ts', [], {
-                execArgv: ['-r', 'ts-node/register'],
-                signal: this.controller.signal,
-            })
+        this.verbose(`chain: ${this.options.chain}`)
+        this.verbose(`network: ${this.options.network}`)
+        this.verbose(`provider: ${this.options.provider}`)
+        
+        if (this.options.chain === Chain.Ethereum) {
+            const service = new EthereumService({ url: this.options.serviceOptions?.url || process.env.PUBLIC_ETHEREUM_RPC_URL || 'http://localhost:8545' })
+            this.service = service
 
-            this.executor = subprocess
+            const lastEvent = await this.getLastProcessedEvent()
 
-            this.executor.on('message', async (message: IPCMessage) => {
-                await this.interceptIPCMessage(message)
-            })
+            const last = lastEvent ? parseInt(lastEvent.height.toString()) : 0
 
-            // subprocess.on('exit', (code, signal) => {
-            //     console.log('executor exited with code: ', code, signal)
-            // })
+            const current = await this.service.getCurrentBlock()
 
-            this.pingExecutor()
+            this._start = last === 0 ? 0 : this.last + 1
+            this.last = last
+            this.head = current.number
             return
         }
-        throw new Error('InvalidChain: chain is not supported')
-    }
 
-    pingExecutor(): void {
-        if (this.executor === null) {
-            throw new Error('ExecutorNotReady: executor is not ready')
-        }
+        if (this.options.chain === Chain.Iotex) {
+            this.service = await newIotexService({ url: this.options.serviceOptions?.url || 'https://api.iotex.one:443', network: IotexNetworkType.Mainnet })
 
-        this.executor.send({
-            type: 'ping',
-            payload: {
-                ...this.config
-            }
-        })
-    }
-
-    async getLastProcessedEvent(): Promise<EventTableSchema | null> {
-        const event = await queryAthena(`SELECT * FROM "casimir_etl_database_dev"."casimir_etl_event_table_dev" where chain = '${this.config.chain}' ORDER BY height DESC limit 1`)
-
-        if (event !== null && event.length === 1) {
-            return event[0]
-        }
-        return null
-    }
-
-    async start(): Promise<void> {
-		if (this.config.chain === Chain.Ethereum) {
-			if (this.executor !== null) {
-				this.executor.send({
-					type: 'start'
-				})
-			}
-            return
-		}
-
-        if (this.service instanceof IotexService) {
             const lastEvent = await this.getLastProcessedEvent()
 
             const currentBlock = await this.service.getCurrentBlock()
             const currentHeight = currentBlock.blkMetas[0].height
 
             const last = lastEvent !== null ? lastEvent.height : 0
-            const start = parseInt(last.toString()) + 1
 
-            if (this.config.verbose) {
-                console.log(`crawling ${this.config.chain} from block ${start}`)
+            this._start = last === 0 ? 0 : this.last + 1
+            this.head = currentHeight
+            this.last = last
+            return
+        }
+
+        throw new Error('Unsupported chain')
+    }
+    async stream(): Promise<void> {
+        if (this.service instanceof EthereumService) {
+            this.verbose('streaming etheruem blocks')
+
+            this.service.provider.on('block', async (b: number) => {
+                if (this.service instanceof EthereumService) {
+                    const block = await this.service.getBlock(b)
+                    const event = this.service.toEvent(block)
+                    
+                    this.verbose(`block: ${b}`)
+                    
+                    const ndjson = JSON.stringify(event)
+                    
+                    // await uploadToS3({
+                    //     bucket: eventOutputBucket,
+                    //     key: `${block.hash}-events.json`,
+                    //     data: ndjson
+                    // }).finally(() => {
+                    //     this.verbose(`uploaded ${block.hash} - height: ${block.number}`)
+                    // })
+                    }
+                })
+
+                this.service.provider.on('error' , (err: Error) => {
+                   throw new Error(err.message)
+                })
+                return
+        }
+        throw new Error('Unsupported chain')
+    }
+
+    async start(): Promise<void> {
+        this.verbose(`crawling blocjchain from ${this.start} - ${this.head}`)
+
+        if (this.service instanceof EthereumService) {
+            for (let i = this._start; i <= this.head; i++) {
+                const { block, events } = await this.service.getEvents(i)
+                const ndjson = events.map((e) => JSON.stringify(e)).join('\n')
+                
+                await uploadToS3({
+                    bucket: eventOutputBucket,
+                    key: `${block}-events.json`,
+                    data: ndjson
+                }).finally(() => {
+                    this.verbose(`uploaded ${block}-events.json`)
+                })
             }
+        }
 
-            for (let i = start; i < currentHeight; i++) {
+        if (this.service instanceof IotexService) {
+            for (let i = this._start; i < this.head; i++) {
                 const { hash, events } = await this.service.getEvents(i)
                 const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
 
@@ -125,25 +153,70 @@ class Crawler {
                     key: `${hash}-event.json`,
                     data: ndjson
                 }).finally(() => {
-                    if (this.config.verbose) {
+                    if (this.options.verbose) {
                         console.log(`uploaded events for block ${hash}`)
                     }
                 })
             }
             return
         }
+        throw new Error('Unsupported chain')
+    }
+    async getLastProcessedEvent(): Promise<EventTableSchema | null> {
+        if (this.options.chain === undefined) {
+            throw new Error('chain is undefined')
+        }
+
+        const event = await queryAthena(`SELECT * FROM "casimir_etl_database_dev"."casimir_etl_event_table_dev" where chain = '${this.options.chain}' ORDER BY height DESC limit 1`)
+
+        if (event === null) return null
+
+        this.verbose(`last processed event: ${JSON.stringify(event, null, 2)}`)
+        return event[0]
     }
 }
 
 export async function crawler (config: CrawlerConfig): Promise<Crawler> {
   const crawler = new Crawler({
       chain: config.chain,
-      options: config.options,
+      network: config.network,
+      provider: config.provider,
+      serviceOptions: config.serviceOptions,
       output: config?.output ?? `s3://${eventOutputBucket}`,
       verbose: config?.verbose ?? false,
       stream: config?.stream ?? false
   })
-
   await crawler.setup()
   return crawler
 }
+
+async function run() {
+    const cc: CrawlerConfig = {
+        network: Network.Mainnet,
+        provider: Provider.Alchemy,
+        chain: Chain.Ethereum,
+        // serviceOptions: config.serviceOptions,
+         output:`s3://${eventOutputBucket}`
+    }
+
+    const args = process.argv.slice(2)
+
+    if (args.length === 0) {
+        // set defaults
+        console.log('noop')
+    }
+
+    console.log(args)
+
+    // const eth = await crawler({
+    //     chain: Chain.Ethereum,
+    //     network: Network.Mainnet,
+    //     provider: Provider.Alchemy,
+    //     serviceOptions: {
+    //         url: 'https://eth-mainnet.g.alchemy.com/v2/RxFGV7vLIDJ--_DWPRWIyiyukklef6pf'
+    //     },
+    //     verbose: true,
+    // })
+    // eth.start()
+}
+run()

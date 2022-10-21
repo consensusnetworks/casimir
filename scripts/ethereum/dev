@@ -1,9 +1,9 @@
 #!/bin/bash
-# Run a local ethereum node with Hardhat
+# Run a local Ethereum node with Hardhat
 #
 # Example:
 #
-#    scripts/ethereum/dev -f <fork-name>
+#    scripts/ethereum/dev -f <fork-name> -n <network-name>
 #
 # Further information:
 # See https://hardhat.org/hardhat-network/docs/overview
@@ -28,6 +28,7 @@ while getopts :f: flag
 do
     case "${flag}" in
         f) fork=${OPTARG};;
+        n) network=${OPTARG};;
     esac
 done
 
@@ -63,6 +64,6 @@ else
     echo "⛓ Setting up ethereum chain without fork"
 fi
 
-npm run dev:node --workspace @casimir/ethereum
-
+npm run dev:node --workspace @casimir/ethereum &
+npm run deploy:ssv --workspace @casimir/ethereum -- --network localhost
 

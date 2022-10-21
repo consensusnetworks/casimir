@@ -187,7 +187,6 @@ async function pollAthenaQueryOutput(queryId: string): Promise<void> {
  * @return string - Query result
  */
 export async function queryAthena(query: string): Promise<EventTableSchema[] | null> {
-
   if (!athena) {
     athena = await newAthenaClient()
   }

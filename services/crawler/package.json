@@ -7,6 +7,7 @@
         "require": "./dist/crawler.cjs"
     },
     "scripts": {
+        "dev": "ts-node ./src/index.ts",
         "test": "jest",
         "build": "rm -rf ./dist && esbuild src/*.ts src/**/** --platform=node --target=node16 --format=cjs --outdir=dist"
     },
@@ -16,7 +17,6 @@
         "@aws-sdk/client-s3": "^3.120.0",
         "@aws-sdk/lib-storage": "^3.121.0",
         "@iotexproject/iotex-address-ts": "^1.0.4",
-        "arg": "^5.0.2",
         "iotex-antenna": "^0.31.3"
     },
     "devDependencies": {

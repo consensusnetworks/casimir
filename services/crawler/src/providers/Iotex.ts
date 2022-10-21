@@ -8,7 +8,7 @@ import {
 } from 'iotex-antenna/lib/rpc-method/types'
 import { Opts } from 'iotex-antenna/lib/antenna'
 import { EventTableSchema } from '@casimir/data'
-import {Chain, Provider} from '../index'
+import { Chain, Event, Provider, Network } from '../index'
 
 export enum IotexNetworkType {
   Mainnet = 'mainnet',
@@ -102,7 +102,7 @@ export class IotexService {
 
   async readableBlockStream (): Promise<ClientReadableStream<IStreamBlocksResponse>> {
     const stream = await this.provider.iotx.streamBlocks({
-      start: 1
+      start: 1,
     })
     return stream
   }
@@ -124,11 +124,11 @@ export class IotexService {
 
     const blockEvent = {
       block: blockMeta.hash,
-      transaction: "",
+      // transaction: "",
       chain: this.chain,
       network: this.network,
-      provider: Provider.Casimir,
-      type: 'block',
+      provider: Provider.Alchemy,
+      type: Event.Block,
       created_at: new Date(block.blkMetas[0].timestamp.seconds * 1000).toISOString().replace('T', ' ').replace('Z', ''),
       address: blockMeta.producerAddress,
       height: blockMeta.height,
@@ -157,9 +157,9 @@ export class IotexService {
         const actionEvent: Partial<EventTableSchema> = {
           chain: this.chain,
           network: this.network,
-          provider: Provider.Casimir,
+          provider: Provider.Alchemy,
           type: actionType,
-          created_at: new Date(action.timestamp.seconds * 1000).toISOString(),
+          created_at: new Date(action.timestamp.seconds * 1000).toISOString().replace('T', ' ').replace('Z', ''),
           address: blockMeta.producerAddress,
           height: blockMeta.height,
           to_address: '',
