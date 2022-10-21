@@ -10,7 +10,7 @@
     "services/*"
   ],
   "scripts": {
-    "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules",
+    "clean": "rm -rf package-lock.json && npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules && npm i",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "dev": "scripts/local/dev -f \"$npm_config_fork\" -m \"$npm_config_mock\" -n \"$npm_config_network\" -s \"$npm_config_speculos\" -t \"$npm_config_tunnel\"",
     "dev:ethereum": "scripts/ethereum/dev -f \"$npm_config_fork\"",
