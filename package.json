@@ -13,7 +13,7 @@
     "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "dev": "scripts/local/dev -f \"$npm_config_fork\" -m \"$npm_config_mock\" -n \"$npm_config_network\" -s \"$npm_config_speculos\" -t \"$npm_config_tunnel\"",
-    "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\"",
+    "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
     "dev:ethereum": "scripts/ethereum/dev -f \"$npm_config_fork\"",
     "dev:landing": "scripts/local/dev -a \"landing\" -m \"$npm_config_mock\"",
     "lint": "eslint --ext .vue,.ts ./ --fix",

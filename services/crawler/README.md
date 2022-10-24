@@ -9,7 +9,7 @@ Identify, structure and stream [@casimir/data events](common/data/src/schemas/ev
 Run the crawler with default chains and mainnet networks.
 
 ```zsh
-npm run dev:crawler # --upload=false disables s3 upload
+npm run dev:crawler # --upload=disabled disables s3 upload
 ```
 
 **Available flags:**
@@ -21,9 +21,9 @@ These flags modify the CHAINS, FORK, NETWORK, UPLOAD AND PUBLIC_${CHAIN}_RPC env
 | --chains | Comma-separated list of chains | ethereum |
 | --fork | Network state to fork | mainnet |
 | --network | Network to query | mainnet |
-| --upload | Whether to upload to s3 | true |
+| --upload | Enable/disable upload to s3 | enabled |
 
-> Use an equals sign to set flags to variables, like `--upload=false`.
+> Use an equals sign to set flags to variables, like `--upload=disabled`.
 
 ## Testing
 

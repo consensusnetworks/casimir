@@ -27,7 +27,7 @@ async function stream(msg: IpcMessage): Promise<void> {
 			const block = await service.getBlock(b)
 			const event = service.toEvent(block)
 			const ndjson = JSON.stringify(event)
-			if (process.env.UPLOAD) {
+			if (process.env.UPLOAD === 'enabled') {
 				await uploadToS3({
 					bucket: eventOutputBucket,
 					key: `${block}-events.json`,

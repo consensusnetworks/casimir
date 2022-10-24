@@ -151,7 +151,7 @@ class Crawler {
             for (let i = this._start; i <= this.current; i++) {
                 const { block, events } = await this.service.getEvents(i)
                 const ndjson = events.map((e) => JSON.stringify(e)).join('\n')
-                if (process.env.UPLOAD) {
+                if (process.env.UPLOAD === 'enabled') {
                     await uploadToS3({
                         bucket: eventOutputBucket,
                         key: `${block}-events.json`,
@@ -171,7 +171,7 @@ class Crawler {
                 const { hash, events } = await this.service.getEvents(i)
                 const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
 
-                if (process.env.UPLOAD) {
+                if (process.env.UPLOAD === 'enabled') {
                     await uploadToS3({
                         bucket: eventOutputBucket,
                         key: `${hash}-events.json`,

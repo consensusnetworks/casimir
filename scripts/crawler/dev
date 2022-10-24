@@ -3,7 +3,7 @@
 #
 # Example:
 #
-#    scripts/crawler/dev -c chains -f fork-name -n network-name (network overrides fork)
+#    scripts/crawler/dev -c chains -f fork-name -n network-name -upload whether-to-upload (network overrides fork)
 #
 # Further information:
 # See https://docs.aws.amazon.com/cdk/api/v2/
@@ -47,8 +47,9 @@ fi
 
 # Default to true if upload is not set
 if [ -z "$upload" ]; then
-    upload="true"
+    upload="enabled"
 fi
+
 
 export CHAINS=$chains
 export FORK=$fork
