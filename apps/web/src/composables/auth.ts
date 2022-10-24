@@ -38,7 +38,6 @@ export default function useAuth() {
         const accounts = JSON.parse(localStorage.getItem('accounts')) || {}
         
         if (!accounts[provider] && address) {
-            console.log('provider does not exist yet')
             accounts[provider] = [address]
         } else if (address) {
             if (!accounts[provider].includes(address)) {
@@ -46,9 +45,8 @@ export default function useAuth() {
             }
         }
 
-        console.log('accounts post :>> ', accounts)
         localStorage.setItem('accounts', JSON.stringify(accounts))
-        console.log('localStorage :>> ', localStorage)
+        console.log('accounts in localStorage :>> ', localStorage.accounts)
     }
 
     function removeAccount(address: string) {
