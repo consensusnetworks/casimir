@@ -1,5 +1,13 @@
 <template>
   <div>
+    <div>
+      <button
+        class="btn-save-account"
+        @click="saveAccount(selectedProvider, selectedAccount)"
+      >
+        Save Account
+      </button>
+    </div>
     <div class="staking-container">
       <button @click="getPoolsForUser">
         What do I have staked where?
@@ -130,6 +138,9 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
+import useAuth from '@/composables/auth'
+
+const { saveAccount } = useAuth()
 
 const message = ref('')
 const signedMessage = ref('')
@@ -245,6 +256,10 @@ watchEffect(() => {
 </script>
 
 <style scoped>
+.btn-save-account {
+  background-color: plum;
+}
+
 .form-group {
   margin-bottom: 1rem;
   display: flex;

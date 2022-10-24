@@ -33,7 +33,31 @@ export default function useAuth() {
         }
     }
 
+    function saveAccount(provider: string, address: string) {
+        const localStorage = window.localStorage
+        const accounts = JSON.parse(localStorage.getItem('accounts')) || {}
+        
+        if (!accounts[provider] && address) {
+            console.log('provider does not exist yet')
+            accounts[provider] = [address]
+        } else if (address) {
+            if (!accounts[provider].includes(address)) {
+                accounts[provider].push(address)
+            }
+        }
+
+        console.log('accounts post :>> ', accounts)
+        localStorage.setItem('accounts', JSON.stringify(accounts))
+        console.log('localStorage :>> ', localStorage)
+    }
+
+    function removeAccount(address: string) {
+        window.localStorage.removeItem('address')
+    }
+
     return {
-        login
+        login,
+        saveAccount,
+        removeAccount
     }
 }
