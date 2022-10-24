@@ -251,6 +251,3 @@ export class IotexService {
     }
   }
 }
-export function newIotexService (opt: IotexServiceOptions): IotexService {
-  return new IotexService(opt)
-}

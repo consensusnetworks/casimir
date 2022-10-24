@@ -1,15 +1,10 @@
 {
     "name": "@casimir/crawler",
-    "version": "1.0.0",
-    "main": "./dist/crawler.cjs",
-    "type": "commonjs",
-    "exports": {
-        "require": "./dist/crawler.cjs"
-    },
+    "main": "src/",
     "scripts": {
         "dev": "ts-node ./src/index.ts",
         "test": "jest",
-        "build": "rm -rf ./dist && esbuild src/*.ts src/**/** --platform=node --target=node16 --format=cjs --outdir=dist"
+        "build": "esbuild src/*.ts src/**/** --platform=node --target=esnext --format=cjs --outdir=dist"
     },
     "author": "hawyar",
     "dependencies": {

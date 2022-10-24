@@ -1,7 +1,8 @@
 import { EventTableSchema } from '@casimir/data'
-import { IotexNetworkType, IotexService, IotexServiceOptions, newIotexService } from './providers/Iotex'
+import { IotexNetworkType, IotexService, IotexServiceOptions } from './providers/Iotex'
 import { EthereumService, EthereumServiceOptions } from './providers/Ethereum'
 import { queryAthena, uploadToS3 } from '@casimir/helpers'
+import { fork, ChildProcess } from 'child_process'
 
 export enum Chain {
     Ethereum = 'ethereum',
@@ -23,6 +24,13 @@ export enum Network {
     Testnet = 'testnet',
 }
 
+export type IpcMessage = {
+    action: 'start' | 'stop' | 'error'
+    options: CrawlerConfig
+    service: EthereumService | IotexService | null
+    last: number
+}
+
 export const eventOutputBucket = 'casimir-etl-event-bucket-dev'
 
 export interface CrawlerConfig {
@@ -41,12 +49,16 @@ class Crawler {
     _start: number
     last: number
     head: number
+    _pid: number
+    child: ChildProcess | null
     constructor(opt: CrawlerConfig) {
         this.options = opt
         this.service = null
         this.last = 0
         this.head = 0
         this._start = 0
+        this._pid = 0
+        this.child = null
     }
 
     verbose(msg: string): void {
@@ -54,14 +66,30 @@ class Crawler {
             console.log(msg)
         }
     }
-
+    
     async setup(): Promise<void> {
         this.verbose(`chain: ${this.options.chain}`)
         this.verbose(`network: ${this.options.network}`)
         this.verbose(`provider: ${this.options.provider}`)
+
+
+        if (this.options.stream) {
+            const child = fork('./src/stream.ts')
+
+            this.child = child
+
+            if (child.pid) {
+                this._pid = child.pid
+            }
+            child.on('message', this.processIPC)
+
+            child.on('exit', (code: number) => {
+                console.log(`child process exited with code ${code}`)
+            })
+        }
         
         if (this.options.chain === Chain.Ethereum) {
-            const service = new EthereumService({ url: this.options.serviceOptions?.url || process.env.PUBLIC_ETHEREUM_RPC_URL || 'http://localhost:8545' })
+            const service = new EthereumService({ url: this.options.serviceOptions?.url || process.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545' })
             this.service = service
 
             const lastEvent = await this.getLastProcessedEvent()
@@ -77,7 +105,7 @@ class Crawler {
         }
 
         if (this.options.chain === Chain.Iotex) {
-            this.service = await newIotexService({ url: this.options.serviceOptions?.url || 'https://api.iotex.one:443', network: IotexNetworkType.Mainnet })
+            this.service = new IotexService({ url: this.options.serviceOptions?.url || 'https://api.iotex.one:443', network: IotexNetworkType.Mainnet })
 
             const lastEvent = await this.getLastProcessedEvent()
 
@@ -94,44 +122,33 @@ class Crawler {
 
         throw new Error('Unsupported chain')
     }
-    async stream(): Promise<void> {
-        if (this.service instanceof EthereumService) {
-            this.verbose('streaming etheruem blocks')
 
-            this.service.provider.on('block', async (b: number) => {
-                if (this.service instanceof EthereumService) {
-                    const block = await this.service.getBlock(b)
-                    const event = this.service.toEvent(block)
-                    
-                    this.verbose(`block: ${b}`)
-                    
-                    const ndjson = JSON.stringify(event)
-                    
-                    // await uploadToS3({
-                    //     bucket: eventOutputBucket,
-                    //     key: `${block.hash}-events.json`,
-                    //     data: ndjson
-                    // }).finally(() => {
-                    //     this.verbose(`uploaded ${block.hash} - height: ${block.number}`)
-                    // })
-                    }
-                })
-
-                this.service.provider.on('error' , (err: Error) => {
-                   throw new Error(err.message)
-                })
+    async processIPC(msg: IpcMessage): Promise<void> {
+        if (msg.action === 'stop') {
+            if (this._pid !== 0) {
+                console.log(this._pid)
+                process.kill(this._pid)
+            }
         }
-        throw new Error('Unsupported chain')
     }
 
     async start(): Promise<void> {
-        this.verbose(`crawling blocjchain from ${this.start} - ${this.head}`)
+        if (this.options.stream) {
+            if (this.child && this.child.send) {
+                this.child.send({
+                    action: 'start',
+                    options: this.options,
+                    service: this.service,
+                    last: this.last,
+                })
+            }
+        }
 
+        this.verbose(`crawling from ${this._start} - ${this.head}`)
         if (this.service instanceof EthereumService) {
             for (let i = this._start; i <= this.head; i++) {
                 const { block, events } = await this.service.getEvents(i)
                 const ndjson = events.map((e) => JSON.stringify(e)).join('\n')
-                
                 if (process.env.UPLOAD) {
                     await uploadToS3({
                         bucket: eventOutputBucket,
@@ -140,8 +157,9 @@ class Crawler {
                     }).finally(() => {
                         this.verbose(`uploaded ${block}-events.json`)
                     })
+                    return
                 }
-                console.log(ndjson)
+                this.verbose(ndjson)
             }
             return
         }
@@ -151,15 +169,19 @@ class Crawler {
                 const { hash, events } = await this.service.getEvents(i)
                 const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
 
-                await uploadToS3({
-                    bucket: eventOutputBucket,
-                    key: `${hash}-event.json`,
-                    data: ndjson
-                }).finally(() => {
-                    if (this.options.verbose) {
-                        console.log(`uploaded events for block ${hash}`)
-                    }
-                })
+                if (process.env.UPLOAD) {
+                    await uploadToS3({
+                        bucket: eventOutputBucket,
+                        key: `${hash}-events.json`,
+                        data: ndjson
+                    }).finally(() => {
+                        if (this.options.verbose) {
+                            console.log(`uploaded events for block ${hash}`)
+                        }
+                    })
+                }
+                this.verbose(ndjson)
+
             }
             return
         }
@@ -174,7 +196,7 @@ class Crawler {
 
         if (event === null) return null
 
-        this.verbose(`last processed event: ${JSON.stringify(event, null, 2)}`)
+        this.verbose(`last processed block: ${JSON.stringify(parseInt(event[0].height.toString()), null, 2)}`)
         return event[0]
     }
 }
@@ -193,13 +215,30 @@ export async function crawler (config: CrawlerConfig): Promise<Crawler> {
   return crawler
 }
 
-async function run() {
-    const eth = await crawler({
-        chain: Chain.Ethereum,
-        network: Network.Mainnet,
-        provider: Provider.Alchemy,
-        verbose: true,
+if (process.argv[0].endsWith('ts-node')) {
+    runDev().catch((err) => {
+        console.error(err)
+        process.exit(1)
     })
-    eth.start()
 }
-run()
+
+async function runDev() {
+    let chain = Chain.Ethereum
+
+    if (process.env.CHAINS) {
+        // take the first chain for now
+        chain = process.env.CHAINS.split(',')[0] as Chain
+    }
+
+    const config: CrawlerConfig = {
+        chain,
+        network: Network.Mainnet || process.env.NETWORK,
+        provider: Provider.Alchemy,
+        output: `s3://${eventOutputBucket}`,
+        verbose: true,
+        stream: true
+    }
+
+    const cc = await crawler(config)
+    await cc.start()
+}

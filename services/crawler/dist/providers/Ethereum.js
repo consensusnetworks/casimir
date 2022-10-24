@@ -30,6 +30,10 @@ const ContractsOfInterest = {
   }
 };
 class EthereumService {
+  chain;
+  network;
+  provider;
+  contractsOfInterest;
   constructor(opt) {
     this.chain = import__.Chain.Ethereum;
     this.network = opt.network || "mainnet";
@@ -69,7 +73,7 @@ class EthereumService {
     return event;
   }
   async getEvents(height) {
-    const collection = [];
+    const events = [];
     const block = await this.provider.getBlockWithTransactions(height);
     const blockEvent = {
       chain: this.chain,
@@ -88,9 +92,12 @@ class EthereumService {
       const burntFee = import_ethers.ethers.BigNumber.from(block.gasUsed).mul(import_ethers.ethers.BigNumber.from(block.baseFeePerGas));
       blockEvent.burntFee = burntFee.toString();
     }
-    collection.push(blockEvent);
+    events.push(blockEvent);
     if (block.transactions.length === 0) {
-      return { block: block.hash, events: collection };
+      return {
+        block: block.hash,
+        events
+      };
     }
     for await (const tx of block.transactions) {
       const txEvent = {
@@ -112,7 +119,7 @@ class EthereumService {
       if (tx.gasLimit) {
         txEvent.gasLimit = tx.gasLimit.toString();
       }
-      collection.push(txEvent);
+      events.push(txEvent);
       const receipts = await this.provider.getTransactionReceipt(tx.hash);
       if (receipts.logs.length === 0) {
         continue;
@@ -127,7 +134,6 @@ class EthereumService {
             type: import__.Event.Deposit,
             block: block.hash,
             transaction: log.transactionHash,
-            created_at: new Date(block.timestamp * 1e3).toISOString().replace("T", " ").replace("Z", ""),
             address: log.address,
             height: block.number,
             amount: parsedLog.amount,
@@ -136,22 +142,18 @@ class EthereumService {
           if (tx.to) {
             deposit.to_address = tx.to;
           }
-          collection.push(deposit);
+          events.push(deposit);
         }
       }
     }
     return {
       block: block.hash,
-      events: collection
+      events
     };
   }
   async getCurrentBlock() {
     const height = await this.provider.getBlockNumber();
     return await this.provider.getBlock(height);
-  }
-  async getLogs(tx) {
-    const logs = await this.provider.getTransactionReceipt(tx);
-    return logs;
   }
 }
 // Annotate the CommonJS export names for ESM import in node:

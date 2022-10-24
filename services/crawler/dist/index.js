@@ -29,6 +29,7 @@ module.exports = __toCommonJS(src_exports);
 var import_Iotex = require("./providers/Iotex");
 var import_Ethereum = require("./providers/Ethereum");
 var import_helpers = require("@casimir/helpers");
+var import_child_process = require("child_process");
 var Chain = /* @__PURE__ */ ((Chain2) => {
   Chain2["Ethereum"] = "ethereum";
   Chain2["Iotex"] = "iotex";
@@ -51,12 +52,19 @@ var Network = /* @__PURE__ */ ((Network2) => {
 })(Network || {});
 const eventOutputBucket = "casimir-etl-event-bucket-dev";
 class Crawler {
+  options;
+  service;
+  _start;
+  last;
+  head;
+  signal;
   constructor(opt) {
     this.options = opt;
     this.service = null;
     this.last = 0;
     this.head = 0;
     this._start = 0;
+    this.signal = new AbortController();
   }
   verbose(msg) {
     if (this.options.verbose) {
@@ -64,12 +72,11 @@ class Crawler {
     }
   }
   async setup() {
-    var _a, _b;
     this.verbose(`chain: ${this.options.chain}`);
     this.verbose(`network: ${this.options.network}`);
     this.verbose(`provider: ${this.options.provider}`);
     if (this.options.chain === "ethereum" /* Ethereum */) {
-      const service = new import_Ethereum.EthereumService({ url: ((_a = this.options.serviceOptions) == null ? void 0 : _a.url) || process.env.PUBLIC_ETHEREUM_RPC_URL || "http://localhost:8545" });
+      const service = new import_Ethereum.EthereumService({ url: this.options.serviceOptions?.url || process.env.PUBLIC_ETHEREUM_RPC || "http://localhost:8545" });
       this.service = service;
       const lastEvent = await this.getLastProcessedEvent();
       const last = lastEvent ? parseInt(lastEvent.height.toString()) : 0;
@@ -80,7 +87,7 @@ class Crawler {
       return;
     }
     if (this.options.chain === "iotex" /* Iotex */) {
-      this.service = await (0, import_Iotex.newIotexService)({ url: ((_b = this.options.serviceOptions) == null ? void 0 : _b.url) || "https://api.iotex.one:443", network: import_Iotex.IotexNetworkType.Mainnet });
+      this.service = new import_Iotex.IotexService({ url: this.options.serviceOptions?.url || "https://api.iotex.one:443", network: import_Iotex.IotexNetworkType.Mainnet });
       const lastEvent = await this.getLastProcessedEvent();
       const currentBlock = await this.service.getCurrentBlock();
       const currentHeight = currentBlock.blkMetas[0].height;
@@ -101,13 +108,9 @@ class Crawler {
           const event = this.service.toEvent(block);
           this.verbose(`block: ${b}`);
           const ndjson = JSON.stringify(event);
-          await (0, import_helpers.uploadToS3)({
-            bucket: eventOutputBucket,
-            key: `${block.hash}-events.json`,
-            data: ndjson
-          }).finally(() => {
-            this.verbose(`uploaded ${block.hash} - height: ${block.number}`);
-          });
+          if (process.env.UPLOAD) {
+          }
+          this.verbose(ndjson);
         }
       });
       this.service.provider.on("error", (err) => {
@@ -117,34 +120,52 @@ class Crawler {
     }
     throw new Error("Unsupported chain");
   }
+  async processIPC(msg) {
+    const error = msg?.payload?.error;
+    if (error) {
+      console.log(error);
+    }
+    if (msg.action === "stop") {
+      console.log("stopping");
+      this.signal.abort();
+    }
+  }
   async start() {
-    this.verbose(`crawling blocjchain from ${this.start} - ${this.head}`);
+    if (this.options.stream) {
+      const signal = new AbortController();
+      const child = (0, import_child_process.fork)("./src/stream.ts", [], { signal: signal.signal });
+      child.on("message", this.processIPC);
+      child.on("exit", (code) => {
+        console.log(`child process exited with code ${code}`);
+      });
+      const cmd = {
+        action: "start",
+        options: this.options,
+        service: this.service,
+        payload: {
+          start: this._start,
+          last: this.last,
+          head: this.head
+        }
+      };
+      child.send(cmd);
+    }
+    this.verbose(`crawling from ${this._start} - ${this.head}`);
     if (this.service instanceof import_Ethereum.EthereumService) {
       for (let i = this._start; i <= this.head; i++) {
         const { block, events } = await this.service.getEvents(i);
         const ndjson = events.map((e) => JSON.stringify(e)).join("\n");
-        await (0, import_helpers.uploadToS3)({
-          bucket: eventOutputBucket,
-          key: `${block}-events.json`,
-          data: ndjson
-        }).finally(() => {
-          this.verbose(`uploaded ${block}-events.json`);
-        });
+        this.verbose(ndjson);
       }
+      return;
     }
     if (this.service instanceof import_Iotex.IotexService) {
       for (let i = this._start; i < this.head; i++) {
         const { hash, events } = await this.service.getEvents(i);
         const ndjson = events.map((e) => JSON.stringify(e)).join("\n");
-        await (0, import_helpers.uploadToS3)({
-          bucket: eventOutputBucket,
-          key: `${hash}-event.json`,
-          data: ndjson
-        }).finally(() => {
-          if (this.options.verbose) {
-            console.log(`uploaded events for block ${hash}`);
-          }
-        });
+        if (process.env.UPLOAD) {
+        }
+        this.verbose(ndjson);
       }
       return;
     }
@@ -157,7 +178,7 @@ class Crawler {
     const event = await (0, import_helpers.queryAthena)(`SELECT * FROM "casimir_etl_database_dev"."casimir_etl_event_table_dev" where chain = '${this.options.chain}' ORDER BY height DESC limit 1`);
     if (event === null)
       return null;
-    this.verbose(`last processed event: ${JSON.stringify(event, null, 2)}`);
+    this.verbose(`last processed block: ${JSON.stringify(parseInt(event[0].height.toString()), null, 2)}`);
     return event[0];
   }
 }
@@ -167,12 +188,30 @@ async function crawler(config) {
     network: config.network,
     provider: config.provider,
     serviceOptions: config.serviceOptions,
-    output: (config == null ? void 0 : config.output) ?? `s3://${eventOutputBucket}`,
-    verbose: (config == null ? void 0 : config.verbose) ?? false,
-    stream: (config == null ? void 0 : config.stream) ?? false
+    output: config?.output ?? `s3://${eventOutputBucket}`,
+    verbose: config?.verbose ?? false,
+    stream: config?.stream ?? false
   });
   await crawler2.setup();
   return crawler2;
+}
+if (process.argv[0].endsWith("ts-node")) {
+  runInDev().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+async function runInDev() {
+  const config = {
+    chain: "ethereum" /* Ethereum */,
+    network: "mainnet" /* Mainnet */,
+    provider: "alchemy" /* Alchemy */,
+    output: `s3://${eventOutputBucket}`,
+    verbose: true,
+    stream: true
+  };
+  const cc = await crawler(config);
+  await cc.start();
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

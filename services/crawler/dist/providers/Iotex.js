@@ -26,8 +26,7 @@ var Iotex_exports = {};
 __export(Iotex_exports, {
   IotexActionType: () => IotexActionType,
   IotexNetworkType: () => IotexNetworkType,
-  IotexService: () => IotexService,
-  newIotexService: () => newIotexService
+  IotexService: () => IotexService
 });
 module.exports = __toCommonJS(Iotex_exports);
 var import_iotex_antenna = __toESM(require("iotex-antenna"));
@@ -55,6 +54,10 @@ var IotexActionType = /* @__PURE__ */ ((IotexActionType2) => {
   return IotexActionType2;
 })(IotexActionType || {});
 class IotexService {
+  chain;
+  network;
+  provider;
+  chainId;
   constructor(opt) {
     this.chain = import__.Chain.Iotex;
     this.network = opt.network || "mainnet" /* Mainnet */;
@@ -225,13 +228,9 @@ class IotexService {
     };
   }
 }
-function newIotexService(opt) {
-  return new IotexService(opt);
-}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   IotexActionType,
   IotexNetworkType,
-  IotexService,
-  newIotexService
+  IotexService
 });

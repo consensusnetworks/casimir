@@ -69,11 +69,18 @@ export class EthereumService {
 			// validator: "",
 			// validator_list: [],
 		}
+
+		if (b.baseFeePerGas) {
+			event.baseFee = ethers.BigNumber.from(b.baseFeePerGas).toString()
+			const burntFee = ethers.BigNumber.from(b.gasUsed).mul(ethers.BigNumber.from(b.baseFeePerGas))
+			event.burntFee = burntFee.toString()
+		}
+
 		return event
 	}
 
 	async getEvents(height: number): Promise<{ block: string, events: Partial<EventTableSchema>[] }> {
-		const collection: Partial<EventTableSchema>[] = []
+		const events: Partial<EventTableSchema>[] = []
 
 		const block = await this.provider.getBlockWithTransactions(height)
 
@@ -104,10 +111,13 @@ export class EthereumService {
 			blockEvent.burntFee = burntFee.toString()
 		}
 
-		collection.push(blockEvent)
+		events.push(blockEvent)
 
 		if (block.transactions.length === 0) {
-			return { block: block.hash, events: collection }
+			return {
+				block: block.hash,
+				events: events
+			}
 		}
 
 		for await (const tx of block.transactions) {
@@ -128,7 +138,6 @@ export class EthereumService {
 				// baseFee: "",
 				// burntFee: "",
 				// duration: 0,
-				// gasLimit: "",
 				// to_address: "",
 				// validator: "",
 				// validator_list: [],
@@ -142,7 +151,7 @@ export class EthereumService {
 				txEvent.gasLimit = tx.gasLimit.toString()
 			}
 
-			collection.push(txEvent)
+			events.push(txEvent)
 
 			const receipts = await this.provider.getTransactionReceipt(tx.hash)
 
@@ -160,7 +169,7 @@ export class EthereumService {
 						type: Event.Deposit,
 						block: block.hash,
 						transaction: log.transactionHash,
-						created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
+						// created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 						address: log.address,
 						height: block.number,
 						amount: parsedLog.amount,
@@ -179,13 +188,13 @@ export class EthereumService {
 					if (tx.to) {
 						deposit.to_address = tx.to
 					}
-					collection.push(deposit)
+					events.push(deposit)
 				}
 			}
 		}
 		return {
 			block: block.hash,
-			events: collection,
+			events: events,
 		}
 	}
 
@@ -193,10 +202,5 @@ export class EthereumService {
 	async getCurrentBlock(): Promise<ethers.providers.Block> {
 		const height = await this.provider.getBlockNumber()
 		return await this.provider.getBlock(height)
-	}
-
-	async getLogs(tx: string): Promise<ethers.providers.TransactionReceipt> {
-		const logs = await this.provider.getTransactionReceipt(tx)
-		return logs
 	}
 }
