@@ -48,6 +48,8 @@ module.exports = {
             },
             spacing: {
                 'gutter': '16px',
+                'navbar': '300px',
+                'routerview': `calc(100vh - 300px)`,
             }
         },
         fontFamily: {

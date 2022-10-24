@@ -1,6 +1,5 @@
 <script lang="ts" setup>
   import { ref } from 'vue'
-import NavBar from '../../components/nav/NavBar.vue'
 
   const socialMedia =  ref([
     {
@@ -32,7 +31,7 @@ import NavBar from '../../components/nav/NavBar.vue'
 <template>
   <div class="grid grid-cols-3 csm:grid-cols-2 h-full">
     <div class="bg-black col-span-2">
-      <NavBar />
+      <!-- <NavBar /> -->
       <div class="px-margins mt-[100px]">
         <h2 class="font-regular text-grey_5">
           Simple self custody for all of your digital assets
