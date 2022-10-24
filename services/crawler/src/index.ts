@@ -29,6 +29,7 @@ export type IpcMessage = {
     options: CrawlerConfig
     service: EthereumService | IotexService | null
     last: number
+    current: number
 }
 
 export const eventOutputBucket = 'casimir-etl-event-bucket-dev'
@@ -48,14 +49,14 @@ class Crawler {
     service: EthereumService | IotexService | null
     _start: number
     last: number
-    head: number
+    current: number
     _pid: number
     child: ChildProcess | null
     constructor(opt: CrawlerConfig) {
         this.options = opt
         this.service = null
         this.last = 0
-        this.head = 0
+        this.current = 0
         this._start = 0
         this._pid = 0
         this.child = null
@@ -100,7 +101,7 @@ class Crawler {
 
             this._start = last === 0 ? 0 : this.last + 1
             this.last = last
-            this.head = current.number
+            this.current = current.number
             return
         }
 
@@ -115,7 +116,7 @@ class Crawler {
             const last = lastEvent !== null ? lastEvent.height : 0
 
             this._start = last === 0 ? 0 : this.last + 1
-            this.head = currentHeight
+            this.current = currentHeight
             this.last = last
             return
         }
@@ -140,13 +141,14 @@ class Crawler {
                     options: this.options,
                     service: this.service,
                     last: this.last,
+                    current: this.current,
                 })
             }
         }
 
-        this.verbose(`crawling from ${this._start} - ${this.head}`)
+        this.verbose(`crawling from ${this._start} - ${this.current}`)
         if (this.service instanceof EthereumService) {
-            for (let i = this._start; i <= this.head; i++) {
+            for (let i = this._start; i <= this.current; i++) {
                 const { block, events } = await this.service.getEvents(i)
                 const ndjson = events.map((e) => JSON.stringify(e)).join('\n')
                 if (process.env.UPLOAD) {
@@ -165,7 +167,7 @@ class Crawler {
         }
 
         if (this.service instanceof IotexService) {
-            for (let i = this._start; i < this.head; i++) {
+            for (let i = this._start; i < this.current; i++) {
                 const { hash, events } = await this.service.getEvents(i)
                 const ndjson = events.map((e: Partial<EventTableSchema>) => JSON.stringify(e)).join('\n')
 

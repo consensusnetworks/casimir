@@ -19,7 +19,8 @@ async function stream(msg: IpcMessage): Promise<void> {
 		const service = new EthereumService({ url: msg.options.serviceOptions?.url ||  process.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545' })
 
 		service.provider.on('block', async (b: number) => {
-			if (b <= msg.last) {
+
+			if (b >= msg.last || b <= msg.current) {
 				return
 			}
 
@@ -33,7 +34,7 @@ async function stream(msg: IpcMessage): Promise<void> {
 					data: ndjson
 				}).finally(() => {
 					if (msg.options.verbose) {
-						console.log(`uploaded ${block}-events.json`)
+						console.log(`uploaded ${block.hash}-events.json from stream`)
 					}
 				})
 				return
