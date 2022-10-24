@@ -35,7 +35,7 @@ export default function useAuth() {
 
     function saveAccount(provider: string, address: string) {
         const localStorage = window.localStorage
-        const accounts = JSON.parse(localStorage.getItem('accounts')) || {}
+        const accounts = JSON.parse(localStorage.getItem('accounts') as string) || {}
         
         if (!accounts[provider] && address) {
             accounts[provider] = [address]
