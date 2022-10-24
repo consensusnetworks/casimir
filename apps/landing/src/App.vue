@@ -1,12 +1,8 @@
 <script lang="ts" setup>
-import { RouterView } from 'vue-router'
-import DefaultLayout from '@/layouts/default-layout.vue'
 </script>
-
 <template>
-  <Suspense>
-    <component :is="DefaultLayout">
-      <RouterView />
-    </component>
-  </Suspense>
+  <div class="h-screen">
+    <!-- No Layout needed until next pages -->
+    <RouterView />
+  </div>
 </template>
