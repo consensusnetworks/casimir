@@ -69,6 +69,14 @@ module.exports = {
 
             // Combine smalls
             'csm': {'min': '0px', 'max': '719px'},
+
+            // Combine smalls & medium
+            'csm-md': {'min': '0px', 'max': '1023px'},
+
+            // nav-bar text-container
+            'nav-mid': {'min': '720px', 'max': '1100px'},
+            'nav-sm': {'min': '500px', 'max': '719px'},
+            'nav-xsm': {'min': '0px', 'max': '499px'}
         },
     },
     plugins: []
