@@ -1,6 +1,5 @@
 <script lang="ts" setup>
   import { ref } from 'vue'
-import NavBar from '../../components/nav/NavBar.vue'
 
   const socialMedia =  ref([
     {
@@ -30,18 +29,14 @@ import NavBar from '../../components/nav/NavBar.vue'
 </script>
 
 <template>
-  <div class="grid grid-cols-3 csm:grid-cols-2 h-full">
-    <div class="bg-black col-span-2">
-      <NavBar />
-      <div class="px-margins mt-[100px]">
-        <h2 class="font-regular text-grey_5">
-          Simple self custody for all of your digital assets
-        </h2>
-        <h5 class="text-grey_2 mt-[40px]">
-          Non-custodial staking and asset managment platform
+  <div class="grid grid-cols-6">
+    <div class="bg-black col-span-4 csm-md:col-span-6 h-routerview">
+      <div class="px-margins mt-[20px]">
+        <h5 class="text-grey_2">
+          Non-custodial staking and asset management platform
         </h5>
       </div>
-      <div class="px-margins mt-[45%]">
+      <div class="px-margins mt-[200px]">
         <a
           v-for="(item, i) in socialMedia"
           :key="i"
@@ -66,12 +61,14 @@ import NavBar from '../../components/nav/NavBar.vue'
         </a>
       </div>
     </div>
-    <div class="csm:sr-only w-full">
-      <img
-        src="./components/landing-img.svg"
-        alt="Landing Page Image"
-        class="h-full"
-      >
+    <div class="col-span-2 csm-md:sr-only bg-black">
+      <div class="absolute w-[34vw] h-screen top-0 right-0 bg-white">
+        <img
+          src="./components/landing-img.svg"
+          alt="Landing Page Image"
+          class="w-[100%] h-[100%]"
+        >
+      </div>
     </div>
   </div>
 </template>
