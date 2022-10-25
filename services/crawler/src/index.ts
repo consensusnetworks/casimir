@@ -30,6 +30,7 @@ export type IpcMessage = {
     service: EthereumService | IotexService | null
     last: number
     current: number
+    _start: number
 }
 
 export const eventOutputBucket = 'casimir-etl-event-bucket-dev'
@@ -73,7 +74,6 @@ class Crawler {
         this.verbose(`network: ${this.options.network}`)
         this.verbose(`provider: ${this.options.provider}`)
 
-
         if (this.options.stream) {
             const child = fork('./src/stream.ts')
 
@@ -99,7 +99,7 @@ class Crawler {
 
             const current = await this.service.getCurrentBlock()
 
-            this._start = last === 0 ? 0 : this.last + 1
+            this._start = last + 1
             this.last = last
             this.current = current.number
             return
@@ -115,7 +115,7 @@ class Crawler {
 
             const last = lastEvent !== null ? lastEvent.height : 0
 
-            this._start = last === 0 ? 0 : this.last + 1
+            this._start = last + 1
             this.current = currentHeight
             this.last = last
             return
@@ -142,6 +142,7 @@ class Crawler {
                     service: this.service,
                     last: this.last,
                     current: this.current,
+                    start: this._start
                 })
             }
         }
@@ -157,9 +158,8 @@ class Crawler {
                         key: `${block}-events.json`,
                         data: ndjson
                     }).finally(() => {
-                        this.verbose(`uploaded ${block}-events.json`)
+                        this.verbose(`uploaded ${events[0].height}-events.json`)
                     })
-                    return
                 }
                 this.verbose(ndjson)
             }
@@ -178,7 +178,7 @@ class Crawler {
                         data: ndjson
                     }).finally(() => {
                         if (this.options.verbose) {
-                            console.log(`uploaded events for block ${hash}`)
+                            this.verbose(`uploaded ${events[0].height}-events.json`)
                         }
                     })
                 }

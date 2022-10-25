@@ -2,9 +2,9 @@ import {eventOutputBucket, IpcMessage} from './index'
 import {EthereumService} from './providers/Ethereum'
 import {uploadToS3} from '@casimir/helpers'
 
-process.on('message', processIPC)
+process.on('message', processIpc)
 
-async function processIPC(msg: IpcMessage): Promise<void> {
+async function processIpc(msg: IpcMessage): Promise<void> {
 	switch (msg.action) {
 		case 'start':
 			await stream(msg)
@@ -19,14 +19,16 @@ async function stream(msg: IpcMessage): Promise<void> {
 		const service = new EthereumService({ url: msg.options.serviceOptions?.url ||  process.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545' })
 
 		service.provider.on('block', async (b: number) => {
-
-			if (b >= msg.last || b <= msg.current) {
+			if (b <= msg._start) {
 				return
 			}
 
 			const block = await service.getBlock(b)
 			const event = service.toEvent(block)
 			const ndjson = JSON.stringify(event)
+
+			console.log(`--- STREAM --- \n ${ndjson} \n STREAM ---`)
+
 			if (process.env.UPLOAD === 'enabled') {
 				await uploadToS3({
 					bucket: eventOutputBucket,
@@ -34,13 +36,14 @@ async function stream(msg: IpcMessage): Promise<void> {
 					data: ndjson
 				}).finally(() => {
 					if (msg.options.verbose) {
-						console.log(`uploaded ${block.hash}-events.json from stream`)
+						console.log(`uploaded ${block.number}-events.json from stream`)
 					}
 				})
+				console.log(ndjson)
 				return
 			}
+
 			if (msg.options.verbose) {
-				console.log(process.env)
 				console.log(`--- FROM STREAM --- \n ${ndjson} \n FROM STREAM ---`)
 			}
 		})
