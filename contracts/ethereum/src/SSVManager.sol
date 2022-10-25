@@ -16,6 +16,8 @@ contract SSVManager {
     }
     /** All users who have deposited to pools */
     mapping (address => UserAccount) private users;
+    /** Current deposit fee */
+    uint256 private depositFee;
     /** Pools accepting deposits */
     address[] private openPools;
     /** Pools completed and staked */
@@ -97,6 +99,14 @@ contract SSVManager {
      */
     function deployPool(bytes32 _salt) private returns (address) {
         return address(new SSVPool{salt: _salt}());
+    }
+
+    /**
+     * @notice Get the current deposit fee
+     */
+    function getDepositFee() external view returns (uint256) {
+        // Todo fetch from SSV-specific calculation
+        return depositFee;
     }
 
     /**

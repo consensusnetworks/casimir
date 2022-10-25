@@ -3,6 +3,7 @@
     "scripts": {
         "dev:node": "npx hardhat node",
         "deploy:ssv": "npx hardhat run deploy/ssv.deploy.ts",
+        "docgen": "npx hardhat docgen",
         "test": "mocha --require hardhat/register --recursive --exit --extension ts --timeout 15000",
         "task:clean": "npx hardhat clean",
         "task:compile": "npm run task:clean && npx hardhat compile",
@@ -24,5 +25,8 @@
         "mocha": "^10.0.0",
         "ts-node": "^10.8.2",
         "typechain": "^8.1.0"
+    },
+    "dependencies": {
+        "solidity-docgen": "^0.6.0-beta.29"
     }
 }
