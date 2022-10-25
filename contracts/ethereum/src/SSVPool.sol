@@ -17,6 +17,9 @@ contract SSVPool {
      */
     function deposit(address userAddress) external payable {
         userBalances[userAddress] += msg.value;
+        if (address(this).balance == 32000000000000000000) {
+            
+        }
     }
 
     /**

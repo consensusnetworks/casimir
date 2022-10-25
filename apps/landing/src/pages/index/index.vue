@@ -1,9 +1,6 @@
 <script lang="ts" setup>
 import { ArrowRightIcon } from '@heroicons/vue/solid'
 import { ref, Ref } from 'vue'
-import Puddles from '@/components/Puddles.vue'
-import useSlideshow from '@/composables/slideshow'
-const { slideshowProgress, currentSlide } = useSlideshow()
 const successMessage: Ref = ref<HTMLDivElement>()
 const invalidMessage: Ref = ref<HTMLDivElement>()
 
@@ -156,7 +153,6 @@ function checkForBot(): boolean {
       class="border w-full p-[50px] bg-[#c4c4c4]/[.5] mt-[100px] min-w-[395px]"
     >
       <div
-        v-if="currentSlide === 0"
         class="flex flex-wrap slideshow"
       >
         <div class="min-w-[375px] w-1/2 pl-[50px] pt-[50px] slideshow">
@@ -173,51 +169,6 @@ function checkForBot(): boolean {
             one dashboard.
           </h1>
         </div>
-      </div>
-      <div
-        v-if="currentSlide === 1"
-        class="flex flex-wrap slideshow"
-      >
-        <div class="min-w-[375px] w-1/2 pl-[50px] pt-[50px]">
-          <img
-            src="/earn.png"
-            class="p-[5%] h-[90%] object-cover"
-            alt=""
-          >
-        </div>
-        <div class="min-w-[375px] w-1/2 pt-[50px] pr-[50px]">
-          <h1 class="text-[42px] text-left ">
-            <span class="text-[#F36F38] font-extrabold">Earn</span> by staking
-            your assets to high performing validators. Participate in liquidity
-            pools. Help keep staking decentralized with a strong set of
-            independent validators.
-          </h1>
-        </div>
-      </div>
-      <div
-        v-if="currentSlide === 2"
-        class="flex flex-wrap slideshow"
-      >
-        <div class="min-w-[375px] w-1/2 pl-[50px] pt-[50px]">
-          <img
-            src="/earn3.png"
-            class="p-[5%] h-[90%] object-cover"
-            alt=""
-          >
-        </div>
-        <div class="min-w-[375px] w-1/2 pt-[50px] pr-[50px]">
-          <h1 class="text-[42px] text-left ">
-            <span class="text-[#F36F38] font-extrabold">Learn</span> about the
-            latest airdops, mints, and protocol news. Stay safe with built-in
-            security features like smart contract scanning.
-          </h1>
-        </div>
-      </div>
-      <div class="w-full h-1 border border-red ">
-        <div
-          class="bg-[#F36F38]/[.5] h-full"
-          :style="{ width: slideshowProgress + '%' }"
-        />
       </div>
     </div>
 

@@ -10,12 +10,14 @@
     "services/*"
   ],
   "scripts": {
-    "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules",
+    "clean": "rm -rf package-lock.json && npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules && npm i",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "dev": "scripts/local/dev -f \"$npm_config_fork\" -m \"$npm_config_mock\" -n \"$npm_config_network\" -s \"$npm_config_speculos\" -t \"$npm_config_tunnel\"",
     "dev:ethereum": "scripts/ethereum/dev -f \"$npm_config_fork\"",
-    "dev:landing": "scripts/local/dev -a \"landing\" -m \"$npm_config_mock\"",
+    "dev:landing": "npm run dev --workspace @casimir/landing",
+    "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
+    "prepare": "husky install",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:ethereum": "scripts/ethereum/test -f \"$npm_config_fork\"",
     "test:crawler": "scripts/crawler/test -f \"$npm_config_fork\" -n \"$npm_config_network\"",
@@ -44,6 +46,7 @@
     "express": "^4.18.1",
     "html-to-text": "^8.2.0",
     "http-proxy-middleware": "^2.0.6",
+    "husky": "^8.0.1",
     "lint-staged": "^13.0.0",
     "release-it": "^10.0.3"
   },
