@@ -1,3 +1,4 @@
+import { ProviderString } from '@/types/ProviderString'
 import { LoginCredentials } from '@casimir/types'
 
 export default function useAuth() {
@@ -33,7 +34,7 @@ export default function useAuth() {
         }
     }
 
-    function saveAccount(provider: string, address: string) {
+    function saveAccount(provider: ProviderString, address: string) {
         const localStorage = window.localStorage
         const accounts = JSON.parse(localStorage.getItem('accounts') as string) || {}
         
@@ -49,8 +50,16 @@ export default function useAuth() {
         console.log('accounts in localStorage :>> ', localStorage.accounts)
     }
 
-    function removeAccount(address: string) {
-        window.localStorage.removeItem('address')
+    function removeAccount(provider: ProviderString, address: string) {
+        const localStorage = window.localStorage
+        const accounts = JSON.parse(localStorage.getItem('accounts') as string) || {}
+        
+        if (accounts[provider] && address) {
+            accounts[provider] = accounts[provider].filter((account: string) => account !== address)
+        }
+
+        localStorage.setItem('accounts', JSON.stringify(accounts))
+        console.log('accounts in localStorage :>> ', localStorage.accounts)
     }
 
     return {

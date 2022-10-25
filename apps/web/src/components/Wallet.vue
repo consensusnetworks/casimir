@@ -2,10 +2,16 @@
   <div>
     <div>
       <button
-        class="btn-save-account"
+        class="btn-save-remove-account"
         @click="saveAccount(selectedProvider, selectedAccount)"
       >
         Save Account
+      </button>
+      <button
+        class="btn-save-remove-account"
+        @click="removeAccount(selectedProvider, selectedAccount)"
+      >
+        Remove Account
       </button>
     </div>
     <div class="staking-container">
@@ -140,7 +146,7 @@ import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
 import useAuth from '@/composables/auth'
 
-const { saveAccount } = useAuth()
+const { saveAccount, removeAccount } = useAuth()
 
 const message = ref('')
 const signedMessage = ref('')
@@ -256,7 +262,7 @@ watchEffect(() => {
 </script>
 
 <style scoped>
-.btn-save-account {
+.btn-save-remove-account {
   background-color: plum;
 }
 
