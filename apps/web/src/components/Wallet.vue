@@ -3,7 +3,7 @@
     <div>
       <button
         class="btn-save-remove-account"
-        @click="saveAccount(selectedProvider, selectedAccount)"
+        @click="addAccount(selectedProvider, selectedAccount)"
       >
         Save Account
       </button>
@@ -146,7 +146,7 @@ import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
 import useAuth from '@/composables/auth'
 
-const { saveAccount, removeAccount } = useAuth()
+const { addAccount, removeAccount } = useAuth()
 
 const message = ref('')
 const signedMessage = ref('')
