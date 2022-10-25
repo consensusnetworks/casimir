@@ -33,7 +33,7 @@
     <div class="bg-black col-span-4 csm-md:col-span-6 h-routerview">
       <div class="px-margins mt-[20px]">
         <h5 class="text-grey_2">
-          Non-custodial staking and asset managment platform
+          Non-custodial staking and asset management platform
         </h5>
       </div>
       <div class="px-margins mt-[200px]">

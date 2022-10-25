@@ -42,7 +42,7 @@
       >
         <h2 class="font-regular text-grey_5 home-nav-dynamic-text">
           <!-- sm:text-[36px] truncate -->
-          Simple self custody for all of your digital assets
+          Simple self-custody for all of your digital assets
         </h2>
       </div>
       <div 
@@ -53,7 +53,7 @@
           Why We Are building Casimir
         </h3>
         <h5 class="text-blue_1 font-light nav-xsm:text-[16px] nav-xsm:leading-[20px]">
-          Written by: Nathan Miller
+          Written By Nathan Miller
         </h5>
       </div>
       <div
