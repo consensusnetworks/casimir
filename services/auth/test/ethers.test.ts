@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat' // @shanejearly is this right? getting an error: Module '"hardhat"' has no exported member 'ethers'
+import { ethers } from 'hardhat'
 import { expect } from 'chai'
 import useEthers from '../src/providers/ethers'
 
