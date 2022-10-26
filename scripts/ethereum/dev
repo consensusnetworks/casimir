@@ -36,6 +36,9 @@ if [ "$fork" = true ]; then
     fork=mainnet
 fi
 
+# Fetch submodules for protocol contracts and packages
+git submodule update --init --recursive
+
 # Get the bip39 seed from AWS
 seed_secret_id=consensus-networks-bip39-seed
 seed=$(aws secretsmanager get-secret-value \

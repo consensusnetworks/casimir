@@ -10,3 +10,6 @@
 [submodule "scripts/ledger/resources/speculos"]
 	path = scripts/ledger/resources/speculos
 	url = https://github.com/LedgerHQ/speculos.git
+[submodule "contracts/ethereum/deploy/resources/ssv-network"]
+	path = contracts/ethereum/deploy/resources/ssv-network
+	url = https://github.com/bloxapp/ssv-network.git
