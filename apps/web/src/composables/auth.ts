@@ -35,6 +35,7 @@ export default function useAuth() {
     }
 
     function addAccount(provider: ProviderString, address: string) {
+        address = address.toLowerCase()
         const localStorage = window.localStorage
         const accounts = JSON.parse(localStorage.getItem('accounts') as string) || {}
 
@@ -59,6 +60,7 @@ export default function useAuth() {
     }
 
     function removeAccount(provider: ProviderString, address: string) {
+        address = address.toLowerCase()
         const localStorage = window.localStorage
         const accounts = JSON.parse(localStorage.getItem('accounts') as string) || {}
         
