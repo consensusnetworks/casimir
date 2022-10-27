@@ -16,3 +16,6 @@
 [submodule "scripts/ssv/resources/ssv"]
 	path = scripts/ssv/resources/ssv
 	url = https://github.com/bloxapp/ssv.git
+[submodule "contracts/ethereum/deploy/resources/ssv-contracts"]
+	path = contracts/ethereum/deploy/resources/ssv-contracts
+	url = https://github.com/bloxapp/ssv-contracts.git

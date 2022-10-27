@@ -1,0 +1,49 @@
+#!/bin/bash
+# Run a local network of SSV nodes
+#
+# Example:
+#
+#    scripts/ssv/dev -n number-of-nodes (i.e. -n 4 runs 4 SSV nodes)
+#
+# Further information:
+# See https://github.com/bloxapp/ssv
+#
+
+# Get args
+while getopts :n: flag
+do
+    case "${flag}" in
+        n) nodes=${OPTARG};;
+    esac
+done
+
+if [ -z "$nodes" ]; then
+    nodes=4
+    echo "Number of nodes is not set, using default number $nodes"
+fi
+
+# Deploy SSV Network Contracts
+registry_address=$(npm run deploy:ssv-registry --workspace @casimir/ethereum -- --network localhost | tail -1 | cut -d: -f2 | cut -c2-)
+token_address=$(npm run deploy:ssv-token --workspace @casimir/ethereum -- --network localhost | tail -1 | cut -d: -f2 | cut -c2-)
+export SSVREGISTRY_ADDRESS=$registry_address
+export SSVTOKEN_ADDRESS=$token_address
+
+export MINIMUM_BLOCKS_BEFORE_LIQUIDATION=100
+export OPERATOR_MAX_FEE_INCREASE=3
+export SET_OPERATOR_FEE_PERIOD=259200 # 3 days
+export APPROVE_OPERATOR_FEE_PERIOD=345600 # 4 days
+export VALIDATORS_PER_OPERATOR_LIMIT=2000
+export REGISTERED_OPERATORS_PER_ACCOUNT_LIMIT=10
+export DECLARE_OPERATOR_FEE_PERIOD=0
+export EXECUTE_OPERATOR_FEE_PERIOD=86400
+
+network_address=$(npm run deploy:ssv-network --workspace @casimir/ethereum -- --network localhost | tail -1 | cut -d: -f2 | cut -c2-)
+export SSVNETWORK_ADDRESS=$network_address
+
+# Deploy Casimir SSV Contracts
+npm run deploy:ssv --workspace @casimir/ethereum -- --network localhost
+
+# # Run SSV Operators
+# echo "Running $nodes SSV operator nodes"
+
+# wait && pkill -P $$

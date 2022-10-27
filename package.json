@@ -15,6 +15,7 @@
     "dev": "scripts/local/dev -f \"$npm_config_fork\" -m \"$npm_config_mock\" -n \"$npm_config_network\" -s \"$npm_config_speculos\" -t \"$npm_config_tunnel\"",
     "dev:ethereum": "scripts/ethereum/dev -f \"$npm_config_fork\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
+    "dev:ssv": "scripts/ssv/dev -n \"$npm_config_nodes\"",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "prepare": "husky install",
