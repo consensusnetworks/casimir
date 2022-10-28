@@ -10,7 +10,7 @@ async function processIpc(msg: IpcMessage): Promise<void> {
 			await stream(msg)
 			break
 		default:
-			console.log('default')
+			break
 	}
 }
 
@@ -19,15 +19,12 @@ async function stream(msg: IpcMessage): Promise<void> {
 		const service = new EthereumService({ url: msg.options.serviceOptions?.url ||  process.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545' })
 
 		service.provider.on('block', async (b: number) => {
-			if (b <= msg._start) {
-				return
-			}
-
 			const block = await service.getBlock(b)
 			const event = service.toEvent(block)
-			const ndjson = JSON.stringify(event)
 
-			console.log(`--- STREAM --- \n ${ndjson} \n STREAM ---`)
+			event.streamed = true
+
+			const ndjson = JSON.stringify(event)
 
 			if (process.env.UPLOAD === 'enabled') {
 				await uploadToS3({
@@ -36,15 +33,14 @@ async function stream(msg: IpcMessage): Promise<void> {
 					data: ndjson
 				}).finally(() => {
 					if (msg.options.verbose) {
-						console.log(`uploaded ${block.number}-events.json from stream`)
+						console.log(`uploaded block: ${block.number}`)
 					}
 				})
-				console.log(ndjson)
 				return
 			}
 
 			if (msg.options.verbose) {
-				console.log(`--- FROM STREAM --- \n ${ndjson} \n FROM STREAM ---`)
+				console.log(`--- STREAM --- \n ${ndjson} \n STREAM ---`)
 			}
 		})
 	}

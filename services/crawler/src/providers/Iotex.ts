@@ -36,17 +36,17 @@ export enum IotexActionType {
 
 export type IotexServiceOptions = Opts & {
   url: string
-  network: IotexNetworkType
+  network: Network
 }
 
 export class IotexService {
   chain: Chain
-  network: IotexNetworkType
+  network: Network
   provider: Antenna
   chainId: number
   constructor (opt: IotexServiceOptions) {
     this.chain = Chain.Iotex
-    this.network = opt.network || IotexNetworkType.Mainnet
+    this.network = opt.network || Network.Mainnet
     this.chainId = IotexNetworkType.Mainnet ? 4689 : 4690
     this.provider = new Antenna(opt.url, this.chainId, {
       signer: opt.signer,
@@ -124,7 +124,7 @@ export class IotexService {
 
     const blockEvent = {
       block: blockMeta.hash,
-      // transaction: "",
+      // transaction: blockMeta.
       chain: this.chain,
       network: this.network,
       provider: Provider.Alchemy,
@@ -139,8 +139,6 @@ export class IotexService {
       amount: 0,
       auto_stake: false
     }
-
-
 
     const numOfActions = block.blkMetas[0].numActions
 
@@ -168,6 +166,7 @@ export class IotexService {
           validator_list: [],
           amount: '0',
           auto_stake: false,
+          streamed: false
         }
 
         if (actionType === IotexActionType.transfer && actionCore.transfer) {

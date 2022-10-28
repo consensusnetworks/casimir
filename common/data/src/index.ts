@@ -77,6 +77,8 @@ export type EventTableSchema = {
   duration: number
   /** Is auto staking enabled */
   auto_stake: boolean
+  /** Was the event streamed or crawled from historical data */
+  streamed: boolean
 }
 
 export { eventSchema, aggSchema }

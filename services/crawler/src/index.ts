@@ -106,7 +106,7 @@ class Crawler {
         }
 
         if (this.options.chain === Chain.Iotex) {
-            this.service = new IotexService({ url: this.options.serviceOptions?.url || 'https://api.iotex.one:443', network: IotexNetworkType.Mainnet })
+            this.service = new IotexService({ url: this.options.serviceOptions?.url || 'https://api.iotex.one:443', network: Network.Mainnet })
 
             const lastEvent = await this.getLastProcessedEvent()
 
@@ -115,8 +115,8 @@ class Crawler {
 
             const last = lastEvent !== null ? lastEvent.height : 0
 
-            this._start = last + 1
             this.current = currentHeight
+            this._start = last + 1
             this.last = last
             return
         }
