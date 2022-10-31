@@ -124,7 +124,7 @@ export class IotexService {
 
     const blockEvent = {
       block: blockMeta.hash,
-      transaction: "",
+      transaction: '',
       chain: this.chain,
       network: this.network,
       provider: Provider.Casimir,

@@ -11,4 +11,4 @@ aws.env
 
 
 # Prevents committing node data
-scripts/resources/nimbus/data
+scripts/ssv/resources/nimbus/data

@@ -2,7 +2,7 @@ import { EventTableSchema } from '@casimir/data'
 import {IotexNetworkType, IotexService, IotexServiceOptions, newIotexService} from './providers/Iotex'
 import {EthereumService, EthereumServiceOptions, newEthereumService} from './providers/Ethereum'
 import { queryAthena, uploadToS3 } from '@casimir/helpers'
-import * as fs from "fs";
+import * as fs from 'fs'
 
 export enum Chain {
     Ethereum = 'ethereum',
