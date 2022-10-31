@@ -12,7 +12,7 @@
           >
         </RouterLink>
         <!-- Will add these links once the pages get added as well -->
-        <!-- <RouterLink 
+        <RouterLink 
           to="/why-casimir"
           class="my-auto"
         >
@@ -22,7 +22,7 @@
           >
             Why Casimir?
           </h6>
-        </RouterLink> -->
+        </RouterLink>
 
         <!-- <RouterLink
           to="community"
