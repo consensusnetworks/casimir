@@ -66,3 +66,6 @@ fi
 npm run dev:node --workspace @casimir/ethereum &
 npm run deploy:ssv --workspace @casimir/ethereum -- --network localhost
 
+wait && pkill -P $$
+
+
