@@ -79,10 +79,6 @@
         "auto_stake": {
             "type": "boolean",
             "description": "Is auto staking enabled"
-        },
-        "streamed": {
-            "type": "boolean",
-            "description": "Was the event streamed or crawled from historical data"
         }
     }
 }

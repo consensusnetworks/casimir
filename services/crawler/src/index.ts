@@ -49,6 +49,7 @@ class Crawler {
     options: CrawlerConfig
     service: EthereumService | IotexService | null
     _start: number
+    _end: number
     last: number
     current: number
     _pid: number
@@ -56,9 +57,10 @@ class Crawler {
     constructor(opt: CrawlerConfig) {
         this.options = opt
         this.service = null
+        this._start = 0
+        this._end = 0
         this.last = 0
         this.current = 0
-        this._start = 0
         this._pid = 0
         this.child = null
     }
@@ -102,6 +104,7 @@ class Crawler {
             this._start = last + 1
             this.last = last
             this.current = current.number
+            this._end = this.current
             return
         }
 
@@ -115,13 +118,14 @@ class Crawler {
 
             const last = lastEvent !== null ? lastEvent.height : 0
 
-            this.current = currentHeight
             this._start = last + 1
-            this.last = last
+            this.last = last            
+            this.current = currentHeight
+            this._end = this.current
             return
         }
 
-        throw new Error('Unsupported chain')
+        throw new Error(`UnsupportedChain: the provided ${this.options.chain} is not supported`)
     }
 
     async processIPC(msg: IpcMessage): Promise<void> {
