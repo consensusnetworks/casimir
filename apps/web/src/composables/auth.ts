@@ -1,7 +1,9 @@
 import { ProviderString } from '@/types/ProviderString'
 import { LoginCredentials } from '@casimir/types'
+import { reactive } from 'vue'
 
 export default function useAuth() {
+    const usersAccounts = reactive<any>({})
 
     /**
      * Logs a user in with an address, message and signed message
@@ -39,14 +41,12 @@ export default function useAuth() {
         const localStorage = window.localStorage
         const accounts = JSON.parse(localStorage.getItem('accounts') as string) || {}
 
-        // Check if the address already exists on a different added provider (remove if so)
         for (const existingProvider in accounts) {
             if (accounts[existingProvider].includes(address) && existingProvider !== provider) {
                 accounts[existingProvider] = accounts[existingProvider].filter((existingAddress: string) => existingAddress !== address)
             }
         }
 
-        // Add the new provider with address OR add the address to the existing added provider
         if (!accounts[provider] && address) {
             accounts[provider] = [address]
         } else if (address) {
@@ -55,8 +55,11 @@ export default function useAuth() {
             }
         }
 
+        for (const provider in accounts) {
+            usersAccounts[provider] = accounts[provider]
+        }
+
         localStorage.setItem('accounts', JSON.stringify(accounts))
-        console.log('accounts in localStorage :>> ', localStorage.accounts)
     }
 
     function removeAccount(provider: ProviderString, address: string) {
@@ -68,13 +71,16 @@ export default function useAuth() {
             accounts[provider] = accounts[provider].filter((account: string) => account !== address)
         }
 
+        for (const provider in accounts) {
+            usersAccounts[provider] = accounts[provider]
+        }
         localStorage.setItem('accounts', JSON.stringify(accounts))
-        console.log('accounts in localStorage :>> ', localStorage.accounts)
     }
 
     return {
         login,
         addAccount,
-        removeAccount
+        removeAccount,
+        usersAccounts
     }
 }

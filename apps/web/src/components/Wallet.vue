@@ -14,6 +14,17 @@
         Remove Account
       </button>
     </div>
+    <div>
+      <ul>
+        <li
+          v-for="(value, key) in usersAccounts"
+          :key="key"
+        >
+          <div>Provider: {{ key }}</div>
+          <div>Addresses: {{ value }}</div>
+        </li>
+      </ul>
+    </div>
     <div class="staking-container">
       <button @click="getPoolsForUser">
         What do I have staked where?
@@ -146,8 +157,6 @@ import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
 import useAuth from '@/composables/auth'
 
-const { addAccount, removeAccount } = useAuth()
-
 const message = ref('')
 const signedMessage = ref('')
 
@@ -164,6 +173,7 @@ const ledgerAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
+const { addAccount, removeAccount, usersAccounts } = useAuth()
 const {
   selectedProvider,
   selectedAccount,
