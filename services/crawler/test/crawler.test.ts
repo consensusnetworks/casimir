@@ -28,25 +28,26 @@ test('parse beacon desposit log', async () => {
     expect(got).toEqual(expected)
 })
 
-test('setup eth', async () => {
-	const eth = await crawler({
-		chain: Chain.Ethereum,
-		network: Network.Mainnet,
-		provider: Provider.Alchemy,
-		verbose: true,
-	})
-	expect(eth.head).not.toBe(0)
-})
+// test('setup eth', async () => {
+// 	const eth = await crawler({
+// 		chain: Chain.Ethereum,
+// 		network: Network.Mainnet,
+// 		provider: Provider.Alchemy,
+// 		verbose: true,
+// 	})
+// 	expect(eth._start).not.toBe(0)
+// })
 
-test('setup iotex', async () => {
-	const iotex = await crawler({
-		chain: Chain.Iotex,
-		network: Network.Mainnet,
-		provider: Provider.Alchemy,
-		verbose: true,
-	})
-	expect(iotex.head).not.toBe(0)
-})
+
+// test('setup iotex', async () => {
+// 	const iotex = await crawler({
+// 		chain: Chain.Iotex,
+// 		network: Network.Mainnet,
+// 		provider: Provider.Alchemy,
+// 		verbose: true,
+// 	})
+// 	expect(iotex.head).not.toBe(0)
+// })
 
 const b = {
 	'hash': '0x2988845f915927cadf32b8c487e803810450abf8e28adc83a8c1ca183b6e0384',
