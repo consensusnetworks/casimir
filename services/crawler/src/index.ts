@@ -25,7 +25,7 @@ export enum Network {
 }
 
 export type IpcMessage = {
-    action: 'subscribe' | 'stop' | 'error' | 'pull_blocks' | 'push_blocks'
+    action: 'subscribe' | 'stop' | 'error' | 'pull_blocks' | 'push_blocks' | 'stream'
     options: CrawlerConfig
     service: EthereumService | IotexService | null
     last: number
@@ -145,6 +145,7 @@ class Crawler {
                         this.verbose(`uploaded ${block}-events.json`)
                     })
                 }
+                return
             }
         }
     }
@@ -164,7 +165,7 @@ class Crawler {
                     await this.processStreamBlocks(msg.blocks).finally(() => {
                         if (this.child) {
                             this.child.send({
-                                action: 'subscribe',
+                                action: 'stream',
                                 options: this.options,
                                 service: this.service,
                                 last: this.last,
@@ -195,7 +196,7 @@ class Crawler {
         this.verbose(`start: ${this._start} end: ${this.current}`)
 
         if (this.service instanceof EthereumService) {
-            for (let i = this._start; i <= 10; i++) {
+            for (let i = this._start; i <= this.current; i++) {
                 const { block, events } = await this.service.getEvents(i)
                 const ndjson = events.map((e) => JSON.stringify(e)).join('\n')
                 if (process.env.UPLOAD === 'enabled') {
@@ -204,16 +205,17 @@ class Crawler {
                         key: `${block}-events.json`,
                         data: ndjson
                     }).finally(() => {
-                        this.verbose(`uploaded block: ${block} - events: ${events.length}`)
+                        this.verbose(`uploaded events for block ${events[0].height}`)
                     })
+                } else {
+                    this.verbose(`block: ${events[0].height} - events: ${events.length}`)
                 }
-                this.verbose(`block: ${events[0].height} - events: ${events.length}`)
             }
 
             if (this.options.stream) {
                 if (this.child && this.child.send) {
                     const pull: Partial<IpcMessage> = { action: 'pull_blocks', options: this.options }
-                    this.verbose('pulling streamed block from child process')
+                    this.verbose('requesting blocks from child process stream')
                     this.child.send(pull)
                 }
             }
