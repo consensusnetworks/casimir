@@ -45,6 +45,8 @@ do
     esac
 done
 
+commands=()
+
 # Default to mainnet if fork is set vaguely
 if [ "$fork" = true ]; then
     fork=mainnet
@@ -54,8 +56,6 @@ fi
 if [ "$network" = true ]; then
     network=mainnet
 fi
-
-commands=()
 
 if [ "$app" == "landing" ]; then
     # Default settings for landing page development

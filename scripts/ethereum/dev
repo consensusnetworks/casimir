@@ -67,7 +67,7 @@ else
 fi
 
 npm run dev:node --workspace @casimir/ethereum &
-npm run dev:ssv
+npm run dev:ssv # > /dev/null 2>&1
 
 wait && pkill -P $$
 

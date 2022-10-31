@@ -4,6 +4,7 @@ import '@typechain/hardhat'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
 import { HardhatUserConfig } from 'hardhat/config'
+import '@sebasgoldberg/hardhat-wsprovider'
 import 'solidity-docgen'
 
 const forkUrl = process.env.ETHEREUM_FORK_RPC
