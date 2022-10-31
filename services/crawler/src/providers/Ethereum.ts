@@ -60,7 +60,6 @@ export class EthereumService {
 			address: b.miner,
 			gasUsed: b.gasUsed.toString(),
 			gasLimit: b.gasLimit.toString(),
-			streamed: false,
 
 			// amount: "",
 			// auto_stake: false,
@@ -96,7 +95,6 @@ export class EthereumService {
 			address: block.miner,
 			gasUsed: block.gasUsed.toString(),
 			gasLimit: block.gasLimit.toString(),
-			streamed: false,
 
 			// amount: "",
 			// auto_stake: false,
@@ -135,7 +133,6 @@ export class EthereumService {
 				created_at: new Date(block.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
 				amount: ethers.utils.formatEther(tx.value.toString()),
 				gasUsed: block.gasUsed.toString(),
-				streamed: false,
 
 				// auto_stake: false,
 				// baseFee: "",
@@ -177,7 +174,6 @@ export class EthereumService {
 						height: block.number,
 						amount: parsedLog.amount,
 						gasLimit: block.gasLimit.toString(),
-						streamed: false,
 
 						// auto_stake: false,
 						// baseFee: "",

@@ -166,7 +166,6 @@ export class IotexService {
           validator_list: [],
           amount: '0',
           auto_stake: false,
-          streamed: false
         }
 
         if (actionType === IotexActionType.transfer && actionCore.transfer) {

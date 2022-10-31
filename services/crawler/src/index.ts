@@ -25,12 +25,13 @@ export enum Network {
 }
 
 export type IpcMessage = {
-    action: 'start' | 'stop' | 'error'
+    action: 'subscribe' | 'stop' | 'error' | 'pull_blocks' | 'push_blocks'
     options: CrawlerConfig
     service: EthereumService | IotexService | null
     last: number
     current: number
     _start: number
+    blocks?: Array<number>
 }
 
 export const eventOutputBucket = 'casimir-etl-event-bucket-dev'
@@ -49,7 +50,6 @@ class Crawler {
     options: CrawlerConfig
     service: EthereumService | IotexService | null
     _start: number
-    _end: number
     last: number
     current: number
     _pid: number
@@ -58,7 +58,6 @@ class Crawler {
         this.options = opt
         this.service = null
         this._start = 0
-        this._end = 0
         this.last = 0
         this.current = 0
         this._pid = 0
@@ -76,6 +75,8 @@ class Crawler {
         this.verbose(`network: ${this.options.network}`)
         this.verbose(`provider: ${this.options.provider}`)
 
+        this.verbose(`parent process pid: ${process.pid}`)
+
         if (this.options.stream) {
             const child = fork('./src/stream.ts')
 
@@ -83,8 +84,10 @@ class Crawler {
 
             if (child.pid) {
                 this._pid = child.pid
+                this.verbose(`child process pid: ${child.pid}`)
             }
-            child.on('message', this.processIPC)
+
+            child.on('message', this.processIPC.bind(this))
 
             child.on('exit', (code: number) => {
                 console.log(`child process exited with code ${code}`)
@@ -101,10 +104,10 @@ class Crawler {
 
             const current = await this.service.getCurrentBlock()
 
-            this._start = last + 1
             this.last = last
             this.current = current.number
-            this._end = this.current
+
+            this._start = last == 0 ? 0 : last + 1
             return
         }
 
@@ -121,27 +124,65 @@ class Crawler {
             this._start = last + 1
             this.last = last            
             this.current = currentHeight
-            this._end = this.current
             return
         }
 
         throw new Error(`UnsupportedChain: the provided ${this.options.chain} is not supported`)
     }
 
-    async processIPC(msg: IpcMessage): Promise<void> {
-        if (msg.action === 'stop') {
-            if (this._pid !== 0) {
-                console.log(this._pid)
-                process.kill(this._pid)
+    async processStreamBlocks(blocks: Array<number>): Promise<void> {
+        if (this.service instanceof EthereumService) {
+            this.verbose('processing streamed blocks')
+            for (const b of blocks) {
+                const block = await this.service.getBlock(b)
+                const event = await this.service.toEvent(block)
+                if (process.env.UPLOAD === 'enabled') {
+                    await uploadToS3({
+                        bucket: eventOutputBucket,
+                        key: `${block}-events.json`,
+                        data: JSON.stringify(event)
+                    }).finally(() => {
+                        this.verbose(`uploaded ${block}-events.json`)
+                    })
+                }
             }
+        }
+    }
+
+    async processIPC(msg: IpcMessage): Promise<void> {
+        switch (msg.action) {
+            case 'stop':
+                if (this._pid !== 0) {
+                    console.log(this._pid)
+                    process.kill(this._pid)
+                }
+                return
+
+            case 'push_blocks':
+                if (msg.blocks && msg.blocks.length > 0) {
+                    this.verbose(`received ${msg.blocks.length} blocks from child process stream`)
+                    await this.processStreamBlocks(msg.blocks).finally(() => {
+                        if (this.child) {
+                            this.child.send({
+                                action: 'subscribe',
+                                options: this.options,
+                                service: this.service,
+                                last: this.last,
+                                current: this.current,
+                                start: this._start
+                            })
+                        }
+                    })
+                }
         }
     }
 
     async start(): Promise<void> {
         if (this.options.stream) {
             if (this.child && this.child.send) {
+                this.verbose(`subscribing to ${this.options.chain} block stream`)
                 this.child.send({
-                    action: 'start',
+                    action: 'subscribe',
                     options: this.options,
                     service: this.service,
                     last: this.last,
@@ -151,9 +192,10 @@ class Crawler {
             }
         }
 
-        this.verbose(`crawling from ${this._start} - ${this.current}`)
+        this.verbose(`start: ${this._start} end: ${this.current}`)
+
         if (this.service instanceof EthereumService) {
-            for (let i = this._start; i <= this.current; i++) {
+            for (let i = this._start; i <= 10; i++) {
                 const { block, events } = await this.service.getEvents(i)
                 const ndjson = events.map((e) => JSON.stringify(e)).join('\n')
                 if (process.env.UPLOAD === 'enabled') {
@@ -162,10 +204,18 @@ class Crawler {
                         key: `${block}-events.json`,
                         data: ndjson
                     }).finally(() => {
-                        this.verbose(`uploaded ${events[0].height}-events.json`)
+                        this.verbose(`uploaded block: ${block} - events: ${events.length}`)
                     })
                 }
-                this.verbose(ndjson)
+                this.verbose(`block: ${events[0].height} - events: ${events.length}`)
+            }
+
+            if (this.options.stream) {
+                if (this.child && this.child.send) {
+                    const pull: Partial<IpcMessage> = { action: 'pull_blocks', options: this.options }
+                    this.verbose('pulling streamed block from child process')
+                    this.child.send(pull)
+                }
             }
             return
         }
@@ -187,7 +237,6 @@ class Crawler {
                     })
                 }
                 this.verbose(ndjson)
-
             }
             return
         }
