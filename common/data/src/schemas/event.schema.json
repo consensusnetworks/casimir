@@ -49,19 +49,19 @@
             "description": "The amount of currency associated with the event"
         },
         "gas_used": {
-            "type": "big_int",
+            "type": "string",
             "description": "The total amount of gas used"
         },
         "gas_limit": {
-            "type": "big_int",
+            "type": "string",
             "description": "The gas limit provided by transactions in the block"
         },
         "base_fee": {
-            "type": "big_int",
+            "type": "string",
             "description": "Post-London upgrade this represents the minimum gasUsed multiplier required for a transaction to be included in a block"
         },
         "burnt_fee": {
-            "type": "float",
+            "type": "string",
             "description": "Post-London Upgrade, this represents the part of the tx fee that is burnt"
         },
         "validator": {
