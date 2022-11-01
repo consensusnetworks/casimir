@@ -1,5 +1,36 @@
 <template>
   <div>
+    <div>
+      <button
+        class="btn-save-remove-account"
+        @click="addAccount(selectedProvider, selectedAccount)"
+      >
+        Save Account
+      </button>
+      <button
+        class="btn-save-remove-account"
+        @click="removeAccount(selectedProvider, selectedAccount)"
+      >
+        Remove Account
+      </button>
+    </div>
+    <div>
+      <ul>
+        <li
+          v-for="(value, key) in usersAccounts"
+          :key="key"
+        >
+          <ul v-if="key === 'accounts'">
+            <li 
+              v-for="(value, key) in value"
+              :key="key"
+            >
+              <div>{{ key }}: {{ value }}</div>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
     <div class="staking-container">
       <button @click="getPoolsForUser">
         What do I have staked where?
@@ -142,6 +173,7 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
+import useUsers from '@/composables/users'
 
 const message = ref('')
 const signedMessage = ref('')
@@ -161,6 +193,7 @@ const trezorAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
+const { addAccount, removeAccount, usersAccounts } = useUsers()
 const {
   selectedProvider,
   selectedAccount,
@@ -274,6 +307,10 @@ watchEffect(() => {
 </script>
 
 <style scoped>
+.btn-save-remove-account {
+  background-color: plum;
+}
+
 .form-group {
   margin-bottom: 1rem;
   display: flex;
