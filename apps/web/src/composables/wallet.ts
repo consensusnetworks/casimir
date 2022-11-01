@@ -66,6 +66,9 @@ export default function useWallet() {
       } else if (provider === 'Ledger') {
         const address = await getLedgerAddress()
         setSelectedAccount(address)
+      } else if (provider === 'Trezor') {
+        console.log('got to Trezor')
+        
       } else {
         throw new Error('No provider selected')
       }
