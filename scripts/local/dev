@@ -33,15 +33,15 @@ seed=$(aws secretsmanager get-secret-value \
 export BIP39_SEED="$seed"
 
 # Get args
-while getopts :a:f:m:n:s:t: flag
+while getopts :a:f:l:m:n:t: flag
 do
     case "${flag}" in
         a) app=${OPTARG};;
+        e) expose=${OPTARG};;
         f) fork=${OPTARG};;
+        l) ledger=${OPTARG};;
         m) mock=${OPTARG};;
         n) network=${OPTARG};;
-        s) speculos=${OPTARG};;
-        t) tunnel=${OPTARG};;
     esac
 done
 
@@ -96,8 +96,8 @@ else
         export PUBLIC_SSV_ADDRESS="0x967ada0ed736fc6916dabe7f0193bab811c74f50"
         
         # Tunnel local (default) chain networks if specified
-        if [ -n "$tunnel" ]; then
-            export LOCAL_TUNNEL="$tunnel"
+        if [ -n "$expose" ]; then
+            export LOCAL_TUNNEL="$expose"
         fi
     fi
 fi
@@ -122,7 +122,7 @@ if [ -n "$mock" ]; then
 
 fi
 
-if [ -n "$speculos" ]; then
+if [ -n "$ledger" ]; then
 
     # Close existing process if necessary
     if [ -n $(lsof -ti tcp:5001) ]; then
@@ -130,14 +130,14 @@ if [ -n "$speculos" ]; then
     fi
 
     export PUBLIC_SPECULOS_PORT="5001"
-    export PUBLIC_SPECULOS_APP="ethereum"
+    export PUBLIC_LEDGER_APP="ethereum"
 
-    speculos_command="scripts/ledger/emulate"
-    if [ "$speculos" != "true" ]; then
-        speculos_command+="-a $speculos"
-        export PUBLIC_SPECULOS_APP="$speculos"
+    ledger_command="scripts/ledger/emulate"
+    if [ "$ledger" != "true" ]; then
+        ledger_command+="-a $ledger"
+        export PUBLIC_LEDGER_APP="$ledger"
     fi
-    commands+=("$speculos_command")
+    commands+=("$ledger_command")
     commands+=("npx esno scripts/ledger/proxy.ts")
 
 fi

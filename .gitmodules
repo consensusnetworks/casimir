@@ -10,3 +10,6 @@
 [submodule "scripts/ledger/resources/speculos"]
 	path = scripts/ledger/resources/speculos
 	url = https://github.com/LedgerHQ/speculos.git
+[submodule "scripts/trezor/resources/trezor-firmware"]
+	path = scripts/trezor/resources/trezor-firmware
+	url = https://github.com/trezor/trezor-firmware.git

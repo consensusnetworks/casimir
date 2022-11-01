@@ -1,0 +1,41 @@
+# Get variables from root .env
+export $(xargs < .env)
+
+# Set default profile
+profile="consensus-networks-dev"
+
+if [ ${PROFILE+x} ]; then
+    echo "PROFILE is set to '$PROFILE'"
+    profile=$PROFILE
+else
+    export PROFILE="$profile"
+    echo "PROFILE is not set, using default profile '$PROFILE'"
+fi
+
+# Fetch submodules for trezor apps
+git submodule update --init --recursive
+
+# Get the bip39 seed from AWS
+seed_secret_id=consensus-networks-bip39-seed
+seed=$(aws secretsmanager get-secret-value \
+--secret-id $seed_secret_id \
+--query SecretString \
+--output text \
+--profile $profile)
+
+# Set the shared bip39 seed
+export BIP39_SEED="$seed"
+
+resource_path=scripts/trezor/resources
+cd $resource_path/trezor-firmware
+
+dockerfile=../custom/trezor.Dockerfile
+
+# Stop current trezor and proxy
+echo "🧹 Cleaning up trezor environment"
+docker ps -q --filter ancestor="trezor:latest" | xargs -r docker stop
+
+# Build and run trezor app
+echo "📺 Emulating $app app on trezor"
+docker build . --tag trezor -f $dockerfile
+docker run --rm trezor
