@@ -20,8 +20,14 @@
           v-for="(value, key) in usersAccounts"
           :key="key"
         >
-          <div>Provider: {{ key }}</div>
-          <div>Addresses: {{ value }}</div>
+          <ul v-if="key === 'accounts'">
+            <li 
+              v-for="(value, key) in value"
+              :key="key"
+            >
+              <div>{{ key }}: {{ value }}</div>
+            </li>
+          </ul>
         </li>
       </ul>
     </div>
@@ -155,7 +161,7 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
-import useAuth from '@/composables/auth'
+import useUsers from '@/composables/users'
 
 const message = ref('')
 const signedMessage = ref('')
@@ -173,7 +179,7 @@ const ledgerAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
-const { addAccount, removeAccount, usersAccounts } = useAuth()
+const { addAccount, removeAccount, usersAccounts } = useUsers()
 const {
   selectedProvider,
   selectedAccount,
