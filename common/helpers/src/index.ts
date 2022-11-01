@@ -3,6 +3,7 @@ import { AthenaClient, AthenaClientConfig } from '@aws-sdk/client-athena'
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
 import { StartQueryExecutionCommand, GetQueryExecutionCommand }  from '@aws-sdk/client-athena'
 import { EventTableSchema } from '@casimir/data'
+import https from 'node:https'
 
 const defaultQueryOutputBucket = 'casimir-etl-output-bucket-dev'
 
@@ -103,9 +104,8 @@ export async function uploadToS3( input: { bucket: string, key: string, data: st
 /**
  * Get data from S3
  *
- * @param input.bucket - Bucket destination
- * @param input.key - Key destination
- * @param input.data - Data to be uploaded
+ * @param bucket - Bucket destination
+ * @param key - Key destination
  * @return data - Data from S3
  *
  */
@@ -140,10 +140,7 @@ let backoff = 500
 /**
  * Poll for Athena query's result
  *
- * @param input.bucket - Bucket destination
- * @param input.key - Key destination
- * @param input.data - Data to be uploaded
- *
+ * @param queryId - Athena query id
  */
 async function pollAthenaQueryOutput(queryId: string): Promise<void> {
   if (!athena) {
@@ -226,7 +223,7 @@ export async function queryAthena(query: string): Promise<EventTableSchema[] | n
 
   const events: EventTableSchema[] = []
 
-  rows.forEach((curr, i) => {
+  rows.forEach((curr) => {
     const row = curr.split(',')
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -242,4 +239,68 @@ export async function queryAthena(query: string): Promise<EventTableSchema[] | n
     }
   })
   return events
+}
+
+
+/**
+ * HTTP get reuest utility
+ *
+ * @param options
+ * @param unit - The unit
+ */
+async function request(options: https.RequestOptions): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let data = ''
+
+      res.on('data', (d) => {
+        data += d
+      })
+
+      res.on('end', () => {
+        resolve(JSON.parse(data))
+      })
+    })
+
+    req.on('error', (error) => {
+      reject(error)
+    })
+
+    req.end()
+  })
+}
+
+/**
+ * Get coin price at specified date from CoinGecko API
+ *
+ * @param date - Date to get price at
+ * @param coin - The coin to get the price for
+ * @param unit - The unit
+ */
+export async function getCoinPrice(date: Date, coin: 'ethereum' | 'bitcoin', unit: string): Promise<{value: string, unit: string}> {
+  // date format: dd-mm-yyyy
+  const formatted = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`
+
+  const opt = {
+    hostname: 'api.coingecko.com',
+    port: 443,
+    path: `/api/v3/coins/${coin}/history?date=${formatted}&localization=false`,
+    method: 'GET'
+  }
+
+  const response = await request(opt)
+
+  console.log(response)
+
+  if (response.id !== coin) {
+    throw new Error('coin not found')
+  }
+
+  const val = response.market_data.current_price[unit]
+
+  if (val !== undefined) {
+    return {value: response.market_data.current_price[unit].toString(), unit}
+  }
+
+  throw new Error('Failed request')
 }

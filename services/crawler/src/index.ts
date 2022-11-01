@@ -1,7 +1,7 @@
 import { EventTableSchema } from '@casimir/data'
 import { IotexNetworkType, IotexService, IotexServiceOptions } from './providers/Iotex'
 import { EthereumService, EthereumServiceOptions } from './providers/Ethereum'
-import { queryAthena, uploadToS3 } from '@casimir/helpers'
+import { getCoinPrice, queryAthena, uploadToS3 } from '@casimir/helpers'
 import { fork, ChildProcess } from 'child_process'
 
 export enum Chain {
@@ -75,8 +75,6 @@ class Crawler {
         this.verbose(`network: ${this.options.network}`)
         this.verbose(`provider: ${this.options.provider}`)
 
-        this.verbose(`parent process pid: ${process.pid}`)
-
         if (this.options.stream) {
             const child = fork('./src/stream.ts')
 
@@ -84,7 +82,6 @@ class Crawler {
 
             if (child.pid) {
                 this._pid = child.pid
-                this.verbose(`child process pid: ${child.pid}`)
             }
 
             child.on('message', this.processIPC.bind(this))
@@ -106,7 +103,6 @@ class Crawler {
 
             this.last = last
             this.current = current.number
-
             this._start = last == 0 ? 0 : last + 1
             return
         }
@@ -121,9 +117,9 @@ class Crawler {
 
             const last = lastEvent !== null ? lastEvent.height : 0
 
-            this._start = last + 1
             this.last = last            
             this.current = currentHeight
+            this._start = last == 0 ? 0 : last + 1
             return
         }
 
@@ -196,7 +192,7 @@ class Crawler {
         this.verbose(`start: ${this._start} end: ${this.current}`)
 
         if (this.service instanceof EthereumService) {
-            for (let i = this._start; i <= this.current; i++) {
+            for (let i = this._start; i <= 30; i++) {
                 const { block, events } = await this.service.getEvents(i)
                 const ndjson = events.map((e) => JSON.stringify(e)).join('\n')
                 if (process.env.UPLOAD === 'enabled') {

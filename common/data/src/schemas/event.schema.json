@@ -79,6 +79,10 @@
         "auto_stake": {
             "type": "boolean",
             "description": "Is auto staking enabled"
+        },
+        "price": {
+            "type": "string",
+            "description": "The price of the coin"
         }
     }
 }

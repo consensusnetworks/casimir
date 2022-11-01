@@ -77,6 +77,8 @@ export type EventTableSchema = {
   duration: number
   /** Is auto staking enabled */
   auto_stake: boolean
+  /** The price of the coin  */
+  price: string
 }
 
 export { eventSchema, aggSchema }

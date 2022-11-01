@@ -1,14 +1,8 @@
-<<<<<<< HEAD
-import {eventOutputBucket, IpcMessage} from './index'
-import { EthereumService } from './providers/Ethereum'
-import { uploadToS3 } from '@casimir/helpers'
-=======
 import { eventOutputBucket, IpcMessage } from './index'
 import { EthereumService } from './providers/Ethereum'
 import { uploadToS3 } from '@casimir/helpers'
 import https from 'node:https'
 import util from 'node:util'
->>>>>>> 92f1b9e (ROI prototype)
 
 const buff: Array<number> = []
 
@@ -63,7 +57,7 @@ async function stream(event: 'stream' | 'subscribe', msg: IpcMessage): Promise<v
 					})
 				}
 				if (msg.options.verbose) {
-					console.log(`from stream: ${block.number}`)
+					console.log('block: ', b)
 				}
 			})
 		}
@@ -80,23 +74,5 @@ async function stream(event: 'stream' | 'subscribe', msg: IpcMessage): Promise<v
 		}
 	}
 }
-<<<<<<< HEAD
+
 process.on('message', processIpc)
-=======
-
-
-async function getEthPrice(date: Date): Promise<{value: number}> {
-	
-	// const response = await request(url)
-	// return {
-	// 	value: 0
-	// }
-	// const request = https.request()
-
-	return new Promise((resolve, reject) => {
-	const url = `https://api.coingecko.com/api/v3/coins/ethereum/history?date=${date.toISOString().split('T')[0]}`
-		
-
-	})
-}
->>>>>>> 92f1b9e (ROI prototype)

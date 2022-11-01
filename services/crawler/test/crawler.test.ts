@@ -27,7 +27,6 @@ test('parse beacon desposit log', async () => {
     const got = service.parseLog(log as ethers.providers.Log)
     expect(got).toEqual(expected)
 })
-
 // test('setup eth', async () => {
 // 	const eth = await crawler({
 // 		chain: Chain.Ethereum,
