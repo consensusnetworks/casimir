@@ -58,12 +58,14 @@ fi
 commands=()
 
 if [ "$app" == "landing" ]; then
-    services="users"
+    # Default settings for landing page development
+    chains=""
+    services=""
 else 
-    # Default app
+    # Default settings for web app development
     app="web"
     chains="ethereum"
-    services=""
+    services="auth"
 
     # Loop over comma-separated string of chains
     IFS=',' read -r -a chain_list <<< "$chains"
@@ -91,7 +93,7 @@ else
 
     # Set project-wide contracts for local (default) chain
     if [ -z "$network" ]; then
-        export PUBLIC_SSV_ADDRESS="0x967Ada0ed736FC6916dABe7f0193BAb811C74f50"
+        export PUBLIC_SSV_ADDRESS="0x967ada0ed736fc6916dabe7f0193bab811c74f50"
         
         # Tunnel local (default) chain networks if specified
         if [ -n "$tunnel" ]; then

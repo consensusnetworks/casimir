@@ -1,2 +1,3 @@
+scripts/**/resources
 cdk.out
 *.js
