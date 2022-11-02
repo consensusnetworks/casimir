@@ -1,8 +1,6 @@
 import { ethers } from 'ethers'
 
-export interface EthersLedgerSignerOptions {
+export interface EthersTrezorSignerOptions {
     provider?: ethers.providers.Provider
-    type?: string
     path?: string
-    baseURL?: string
 }
