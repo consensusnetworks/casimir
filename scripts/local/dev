@@ -132,9 +132,9 @@ if [ -n "$ledger" ]; then
     export PUBLIC_SPECULOS_PORT="5001"
     export PUBLIC_LEDGER_APP="ethereum"
 
-    ledger_command="scripts/ledger/emulate"
+    ledger_command="npm run dev:ledger"
     if [ "$ledger" != "true" ]; then
-        ledger_command+="-a $ledger"
+        ledger_command+=" --app=$ledger"
         export PUBLIC_LEDGER_APP="$ledger"
     fi
     commands+=("$ledger_command")
