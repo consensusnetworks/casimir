@@ -16,6 +16,8 @@
     "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
     "dev:ethereum": "scripts/ethereum/dev -f \"$npm_config_fork\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
+    "dev:ledger": "scripts/ledger/emulate -a \"$npm_config_app\"",
+    "dev:trezor": "scripts/trezor/emulate",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "prepare": "husky install",
