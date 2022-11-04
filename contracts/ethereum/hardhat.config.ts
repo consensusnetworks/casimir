@@ -29,7 +29,7 @@ const config: HardhatUserConfig = {
       forking: forkUrl ? { url: forkUrl } : undefined,
       mining: {
         auto: false,
-        interval: 1000
+        interval: 12000
       }
     }
   }
