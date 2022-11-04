@@ -1,0 +1,4 @@
+#!/bin/bash
+
+docker pull chainsafe/lodestar
+docker run chainsafe/lodestar dev --network "dev" --genesisValidators 8 --reset
