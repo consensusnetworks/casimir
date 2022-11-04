@@ -42,6 +42,7 @@ do
         l) ledger=${OPTARG};;
         m) mock=${OPTARG};;
         n) network=${OPTARG};;
+        t) trezor=${OPTARG};;
     esac
 done
 
@@ -140,6 +141,10 @@ if [ -n "$ledger" ]; then
     commands+=("$ledger_command")
     commands+=("npx esno scripts/ledger/proxy.ts")
 
+fi
+
+if [ -n "$trezor" ]; then
+    commands+=("npm run dev:trezor")
 fi
 
 for command in "${commands[@]}"
