@@ -49,6 +49,7 @@ module.exports = {
             spacing: {
                 'gutter': '16px',
                 'navbar': '300px',
+                'margins': '48px',
                 'routerview': `calc(100vh - 300px)`,
             }
         },
