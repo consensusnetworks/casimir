@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <div class="grid grid-cols-6 gap-gutter p-margins ">
+  <div class="grid grid-cols-6 gap-gutter p-margins px-[220px] ">
     <div class="col-span-6 ">
       <h4 class="text-[#d9d9d9] font-bold my-[35px]">
         Why we're building Casimir
@@ -282,9 +282,25 @@
         be spread across all validators as equally as possible, not continually 
         concentrated in a few of the already heavily staked validators.
       </h6>
-      <h6 class="text-justify leading-7 my-[20px] tracking-wide">
+      <span
+        class="text-body mt-[20px] leading-7 tracking-wide"
+        :style="{
+          'font-family': 'OpenSauceOneMedium'
+        }"
+      >
+        
         So why are the Nakamoto coefficients so low? Let’s talk about the User Experience
-      </h6>
+      </span>
+      <!-- add scalling image based on click or hover -->
+      <div class="grid place-content-center">
+        <img
+          src="./components/current-web3-user-flow.png"
+          alt="metamask-tweet"
+          class="h-auto w-[400px] text-center"
+        >
+      </div>
+      
+      
       <h5 class="text-[#d9d9d9] font-semibold my-[35px]">
         User Experience
       </h5>
@@ -306,27 +322,62 @@
         to manage and monitor all of your stuff and there aren’t any good 
         solutions today that help you compile everything.
       </h6>
-      <h6 class="text-justify leading-7 my-[20px] tracking-wide">
-        What's more, current Web3 non-custodial products, like MetaMask, 
-        fall far short of protecting users from scams or interacting with 
-        bad smart contracts. Because cryptocurrencies are so difficult to 
-        interact with and understand, even seasoned pros get manipulated and hacked.
-      </h6>
-      <h6 class="text-justify leading-7 my-[20px] tracking-wide">
-        Let’s look at how this poor user experience even affects the 
-        Consensus mechanisms of PoS protocols. One of the easiest 
-        ways to stake in the 
-        <!-- Add tooltip later -->
-        <a
-          href="https://wallet.keplr.app/#/cosmoshub/stake"
-          target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
-        Cosmos Ecosystem is using Keplr, a mobile/web wallet that 
-        allows you to stake to any of the Tendermint based protocols. 
-        However, users trying to stake with Keplr aren’t given 
-        much to work with. 
-      </h6>
+      <div class="grid grid-cols-2 csm:grid-cols-1 gap-margins">
+        <h6 class="text-justify leading-7 my-[20px] tracking-wide col-span-1">
+          What's more, current Web3 non-custodial products, like MetaMask, 
+          fall far short of protecting users from scams or interacting with 
+          bad smart contracts. Because cryptocurrencies are so difficult to 
+          interact with and understand, even seasoned pros get manipulated and hacked.
+        </h6>
+        <div class="col-span-1 my-[20px] flex flex-col justify-center">
+          <!-- add scalling image based on click or hover -->
+          <img
+            src="./components/metamask-tweet.png"
+            alt="metamask-tweet"
+          >
+          <span
+            class="text-caption mt-[20px]"
+            :style="{
+              'font-family': 'OpenSauceOneSemibold'
+            }"
+          >
+            Metamask's respond...
+          </span>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 csm:grid-cols-1 gap-margins">
+        <div class="col-span-1 my-[20px] flex flex-col justify-center">
+          <!-- add scalling image based on click or hover -->
+          <img
+            src="./components/cosmos-staking.png"
+            alt="cosmos staking page"
+          >
+          <span
+            class="text-caption mt-[10px]"
+            :style="{
+              'font-family': 'OpenSauceOneSemibold'
+            }"
+          >
+            Cosmos's staking page.
+          </span>
+        </div>
+        <h6 class="text-justify leading-7 my-[20px] tracking-wide col-span-1">
+          Let’s look at how this poor user experience even affects the 
+          Consensus mechanisms of PoS protocols. One of the easiest 
+          ways to stake in the 
+          <!-- Add tooltip later -->
+          <a
+            href="https://wallet.keplr.app/#/cosmoshub/stake"
+            target="_blank"
+            class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
+          ><i class="iconoir-link inline-block" /></a>
+          Cosmos Ecosystem is using Keplr, a mobile/web wallet that 
+          allows you to stake to any of the Tendermint based protocols. 
+          However, users trying to stake with Keplr aren’t given 
+          much to work with. 
+        </h6>
+      </div>
       <h6 class="text-justify leading-7 my-[20px] tracking-wide">
         A new Staker has no way of deciding who to stake to. 
         There are no easy ways of determining whether a listed 
@@ -384,15 +435,27 @@
       <h5 class="text-[#d9d9d9] font-semibold my-[35px]">
         Improving the User Experience through Decentralization
       </h5>
-      <h6 class="text-justify leading-7 my-[20px] tracking-wide">
-        We’re starting bottom up. Unlike current UIs, designed with 
-        traditional Web2 architectures, we’re starting at the Consensus 
-        and Infrastructure layers of Web3. These layers of decentralized 
-        node infrastructure providers hold fully indexed blockchain 
-        databases, provide APIs for querying, worldwide decentralized 
-        nodes for consistent uptime, and process transactions as they 
-        are added to the blockchain. 
-      </h6>
+      <div class="grid grid-cols-2 csm:grid-cols-1 gap-margins">
+        <div class="my-[20px] col-span-1">
+          <!-- add scalling image based on click or hover -->
+          <img
+            src="./components/casimir-user-flow.png"
+            alt="cosmos staking page"
+          >
+        </div>
+        <div class="my-[20px] col-span-1">
+          <h6 class="text-justify leading-7  tracking-wide">
+            We’re starting bottom up. Unlike current UIs, designed with 
+            traditional Web2 architectures, we’re starting at the Consensus 
+            and Infrastructure layers of Web3. These layers of decentralized 
+            node infrastructure providers hold fully indexed blockchain 
+            databases, provide APIs for querying, worldwide decentralized 
+            nodes for consistent uptime, and process transactions as they 
+            are added to the blockchain. 
+          </h6>
+        </div>
+      </div>
+      
       <h6 class="text-justify leading-7 my-[20px] tracking-wide">
         This won’t be a new protocol blockchain. A lot of the 
         interoperability efforts so far have just created yet another 
