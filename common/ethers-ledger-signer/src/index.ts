@@ -71,8 +71,8 @@ export default class EthersLedgerSigner extends ethers.Signer {
     }
 
     async getAddress(): Promise<string> {
-        const account = await this._retry((eth) => eth.getAddress(this.path))
-        return ethers.utils.getAddress(account.address)
+        const { address } = await this._retry((eth) => eth.getAddress(this.path))
+        return ethers.utils.getAddress(address)
     }
 
     async signMessage(message: ethers.utils.Bytes | string): Promise<string> {
@@ -81,10 +81,10 @@ export default class EthersLedgerSigner extends ethers.Signer {
         }
         const messageHex = ethers.utils.hexlify(message).substring(2)
 
-        const sig = await this._retry((eth) => eth.signPersonalMessage(this.path, messageHex))
-        sig.r = '0x' + sig.r
-        sig.s = '0x' + sig.s
-        return ethers.utils.joinSignature(sig)
+        const signature = await this._retry((eth) => eth.signPersonalMessage(this.path, messageHex))
+        signature.r = '0x' + signature.r
+        signature.s = '0x' + signature.s
+        return ethers.utils.joinSignature(signature)
     }
 
     async signTransaction(transaction: ethers.providers.TransactionRequest): Promise<string> {
@@ -100,14 +100,14 @@ export default class EthersLedgerSigner extends ethers.Signer {
         }
 
         const unsignedTx = ethers.utils.serializeTransaction(baseTx).substring(2)
-        const sig = await this._retry((eth) => eth.signTransaction(this.path, unsignedTx))
+        const signature = await this._retry((eth) => eth.signTransaction(this.path, unsignedTx))
 
         console.log('Signed tx', tx)
 
         return ethers.utils.serializeTransaction(baseTx, {
-            v: ethers.BigNumber.from('0x' + sig.v).toNumber(),
-            r: ('0x' + sig.r),
-            s: ('0x' + sig.s),
+            v: ethers.BigNumber.from('0x' + signature.v).toNumber(),
+            r: ('0x' + signature.r),
+            s: ('0x' + signature.s),
         })
     }
 
