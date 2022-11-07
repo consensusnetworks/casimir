@@ -1,6 +1,7 @@
 import EthersTrezorSigner from '@casimir/ethers-trezor-signer'
 import useEnvironment from '@/composables/environment'
 import { ethers } from 'ethers'
+import { MessageInit } from '@/interfaces/MessageInit'
 
 const trezorPath = 'm/44\'/60\'/0\'/0/0'
 
@@ -20,5 +21,11 @@ export default function useTrezor() {
         return await signer.getAddress()    
     }
 
-    return { getEthersTrezorSigner, getTrezorAddress }
+    async function signTrezorMessage(messageInit: MessageInit): Promise<string> {
+        const { message } = messageInit
+        const signer = getEthersTrezorSigner()
+        return await signer.signMessage(message)
+      }
+
+    return { getEthersTrezorSigner, getTrezorAddress, signTrezorMessage }
 }

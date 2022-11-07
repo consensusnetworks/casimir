@@ -30,7 +30,7 @@ export default function useWallet() {
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
-  const { getTrezorAddress } = useTrezor()
+  const { getTrezorAddress, getEthersTrezorSigner, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
 
   // Todo should we move these ethers objects to the ethers composable?
@@ -38,6 +38,7 @@ export default function useWallet() {
     'MetaMask': getEthersBrowserSigner,
     'CoinbaseWallet': getEthersBrowserSigner,
     'Ledger': getEthersLedgerSigner,
+    'Trezor': getEthersTrezorSigner,
     'WalletConnect': getEthersWalletConnectSigner
   }
   const ethersSignerList = Object.keys(ethersSignerCreator)
@@ -111,7 +112,6 @@ export default function useWallet() {
       message,
       providerString: selectedProvider.value,
     }
-    // TODO: Mock sending hash and signature to backend for verification
     try {
       if (messageInit.providerString === 'WalletConnect') {
         await signWalletConnectMessage(messageInit)
@@ -123,6 +123,8 @@ export default function useWallet() {
         await signIoPayMessage(messageInit)
       } else if (messageInit.providerString === 'Ledger') {
         await signLedgerMessage(messageInit)
+      } else if (messageInit.providerString === 'Trezor') {
+        await signTrezorMessage(messageInit)
       } else {
         console.log('signMessage not yet supported for this wallet provider')
       }
