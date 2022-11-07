@@ -17,14 +17,14 @@ const config: HardhatUserConfig = {
     tests: './test',
     sources: './src',
     artifacts: './build/artifacts',
-    cache: './build/cache',
+    cache: './build/cache'
   },
   typechain: {
     outDir: './build/artifacts/types',
   },
   networks: {
     hardhat: {
-      accounts: mnemonic ? { mnemonic, accountsBalance: '48000000000000000000', count: 3 } : undefined,
+      accounts: mnemonic ? { mnemonic, accountsBalance: '48000000000000000000', count: 4 } : undefined,
       chainId: 1337,
       forking: forkUrl ? { url: forkUrl } : undefined,
       mining: {

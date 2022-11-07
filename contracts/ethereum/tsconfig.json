@@ -7,7 +7,7 @@
         "outDir": "dist"
     },
     "include": [
-        "./deploy/*.ts",
+        "scripts/*.ts",
         "./test/*.ts"
 , "src/index.ts"    ],
     "typeRoots": [
