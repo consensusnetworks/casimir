@@ -1,6 +1,5 @@
-import { $, argv, chalk, echo } from 'zx'
-import { fromIni } from '@aws-sdk/credential-providers'
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager'
+import { $, argv, echo } from 'zx'
+import { getSecret } from '@casimir/aws'
 
 /**
  * Run local Ethereum nodes and deploy Ethereum contracts
@@ -15,19 +14,8 @@ void async function () {
     // Fetch remote submodule code
     $`git submodule update --init --recursive`
 
-    // Set AWS profile
-    const profile = process.env.PROFILE || 'consensus-networks-dev'
-    const aws = new SecretsManagerClient({ credentials: fromIni({ profile }) })
-    echo(chalk.blue(`PROFILE is set to ${profile}`))
-
-    // Set shared wallet seed
-    const { SecretString: seed } = await aws.send(
-        new GetSecretValueCommand(
-            { 
-                SecretId: 'consensus-networks-bip39-seed'
-            }
-        )
-    )
+    // Get shared resources
+    const seed = await getSecret('consensus-networks-bip39-seed')
     process.env.BIP39_SEED = seed
     echo(`Your mnemonic is ${seed}`)
 
@@ -38,19 +26,13 @@ void async function () {
     }
     const fork = argv.fork === 'true' ? 'mainnet' : argv.fork
     if (fork) {
-        const { SecretString: key } = await aws.send(
-            new GetSecretValueCommand(
-                { 
-                    SecretId: `consensus-networks-ethereum-${fork}`
-                }
-            )
-        )
+        const key = await getSecret(`consensus-networks-ethereum-${fork}`)
         const rpc = `https://eth-${networks[fork]}.g.alchemy.com/v2/${key}`
         process.env.ETHEREUM_FORK_RPC = rpc
         echo(`Using ${fork} fork at ${rpc}`)
     }
 
-    $`npm run dev:execution-layer --workspace @casimir/ethereum`
+    // $`npm run dev:execution-layer --workspace @casimir/ethereum`
     $`npm run dev:consensus-layer --workspace @casimir/ethereum`
-    $`npm run dev:ssv`
+    // $`npm run dev:ssv`
 }()

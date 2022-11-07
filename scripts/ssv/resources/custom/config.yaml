@@ -6,12 +6,13 @@ db:
 
 eth2:
 ### replace with your beacon node address
-  BeaconNodeAddr: http://localhost:9000
+  BeaconNodeAddr: http://127.0.0.1:9596
   Network: prater
 
 eth1:
 ### replace with your eth1 node WebSocket address
-  ETH1Addr: ws://localhost:8545
+  ETH1Addr: ws://127.0.0.1:8545
+  # RegistryContractAddr: example.address
 
 p2p:
 ### replace with your ip and ports

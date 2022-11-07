@@ -42,12 +42,11 @@ resource_path="scripts/ssv/resources"
 # network_address=$(npm run deploy:ssv-network --workspace @casimir/ethereum -- --network localhost | tail -1 | cut -d: -f2 | cut -c2-)
 # export SSVNETWORK_ADDRESS=$network_address
 
-# Deploy Casimir SSV contracts
-npm run deploy:ssv --workspace @casimir/ethereum -- --network localhost
-
-echo "Running $nodes SSV operator nodes"
+# # Deploy Casimir SSV contracts
+# npm run deploy:ssv --workspace @casimir/ethereum -- --network localhost
 
 # Run consensus layer
+echo "Running consensus node"
 scripts/lodestar/dev &
 
 cd $resource_path/ssv
@@ -57,7 +56,8 @@ cd $resource_path/ssv
 NODES="ssv-node-1 ssv-node-2 ssv-node-3 ssv-node-4"
 
 # Start operators
-docker-compose up -f ../custom/docker-compose.yaml --build $NODES
+echo "Running $nodes SSV operator nodes"
+docker-compose up --build $NODES
 
 # Clean up
 docker-compose down

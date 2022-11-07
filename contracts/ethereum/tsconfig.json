@@ -8,8 +8,9 @@
     },
     "include": [
         "scripts/*.ts",
-        "./test/*.ts"
-, "src/index.ts"    ],
+        "./test/*.ts",       
+        "src/index.ts"    
+    ],
     "typeRoots": [
         "node_modules/@types"
     ],

@@ -36,25 +36,25 @@ services:
     <<: *default-base
     container_name: ssv-node-1
     environment:
-      CONFIG_PATH: ../custom/config.yaml
+      CONFIG_PATH: ./config/config.yaml
 
   ssv-node-2:
     <<: *default-base
     container_name: ssv-node-2
     environment:
-      CONFIG_PATH: ../custom/config.yaml
+      CONFIG_PATH: ./config/config.yaml
 
   ssv-node-3:
     <<: *default-base
     container_name: ssv-node-3
     environment:
-      CONFIG_PATH: ../custom/config.yaml
+      CONFIG_PATH: ./config/config.yaml
 
   ssv-node-4:
     <<: *default-base
     container_name: ssv-node-4
     environment:
-      CONFIG_PATH: ../custom/config.yaml
+      CONFIG_PATH: ./config/config.yaml
 
   exporter-node:
     <<: *default-base
@@ -74,7 +74,7 @@ services:
       RUN_CMD: start-node
       BUILD_PATH: /bin/tmp/ssv
       DEBUG_PORT: 40005
-      CONFIG_PATH: ../custom/config.yaml
+      CONFIG_PATH: ./config/config.yaml
     networks:
       - blox-docker
 
@@ -87,7 +87,7 @@ services:
       RUN_CMD: start-node
       BUILD_PATH: /bin/tmp/ssv
       DEBUG_PORT: 40006
-      CONFIG_PATH: ../custom/config.yaml
+      CONFIG_PATH: ./config/config.yaml
 
   ssv-node-3-dev:
     << : *default-dev
@@ -98,7 +98,7 @@ services:
       RUN_CMD: start-node
       BUILD_PATH: /bin/tmp/ssv
       DEBUG_PORT: 40007
-      CONFIG_PATH: ../custom/config.yaml
+      CONFIG_PATH: ./config/config.yaml
 
   ssv-node-4-dev:
     << : *default-dev
@@ -109,7 +109,7 @@ services:
       RUN_CMD: start-node
       BUILD_PATH: /bin/tmp/ssv
       DEBUG_PORT: 40008
-      CONFIG_PATH: ../custom/config.yaml
+      CONFIG_PATH: ./config/config.yaml
 
   exporter-node-dev:
     << : *default-dev
