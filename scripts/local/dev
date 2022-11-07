@@ -9,7 +9,7 @@
 # See https://docs.aws.amazon.com/cdk/api/v2/
 #
 
-# Configure and expose variables
+# Configure and external variables
 source scripts/aws/configure
 
 # Set RPC URL bases
@@ -37,14 +37,22 @@ while getopts :a:f:l:m:n:t: flag
 do
     case "${flag}" in
         a) app=${OPTARG};;
-        e) expose=${OPTARG};;
         f) fork=${OPTARG};;
         l) ledger=${OPTARG};;
         m) mock=${OPTARG};;
         n) network=${OPTARG};;
         t) trezor=${OPTARG};;
+        x) external=${OPTARG};;
     esac
 done
+
+echo "APP set to $app"
+echo "EXPOSE set to $external"
+echo "FORK set to $fork"
+echo "LEDGER set to $ledger"
+echo "MOCK set to $mock"
+echo "NETWORK set to $network"
+echo "TREZOR set to $trezor"
 
 # Default to mainnet if fork is set vaguely
 if [ "$fork" = true ]; then
@@ -97,8 +105,8 @@ else
         export PUBLIC_SSV_ADDRESS="0x967ada0ed736fc6916dabe7f0193bab811c74f50"
         
         # Tunnel local (default) chain networks if specified
-        if [ -n "$expose" ]; then
-            export LOCAL_TUNNEL="$expose"
+        if [ -n "$external" ]; then
+            export LOCAL_TUNNEL="$external"
         fi
     fi
 fi
