@@ -30,7 +30,7 @@ export default function useWallet() {
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
-  const { getTrezorAddress, getEthersTrezorSigner, signTrezorMessage } = useTrezor()
+  const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
 
   // Todo should we move these ethers objects to the ethers composable?
@@ -99,6 +99,8 @@ export default function useWallet() {
         await sendIoPayTransaction(txInit)
       } else if (selectedProvider.value === 'Ledger') {
         await sendLedgerTransaction(txInit)
+      } else if (selectedProvider.value === 'Trezor') {
+        await sendTrezorTransaction(txInit)
       } else {
         throw new Error('Provider selected not yet supported')
       }
