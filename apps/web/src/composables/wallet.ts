@@ -3,6 +3,7 @@ import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
+import useTrezor from '@/composables/trezor'
 import useEthers from '@/composables/ethers'
 import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
@@ -29,6 +30,7 @@ export default function useWallet() {
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { getTrezorAddress } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
 
   // Todo should we move these ethers objects to the ethers composable?
@@ -67,8 +69,8 @@ export default function useWallet() {
         const address = await getLedgerAddress()
         setSelectedAccount(address)
       } else if (provider === 'Trezor') {
-        console.log('got to Trezor')
-        
+        const address = await getTrezorAddress()
+        setSelectedAccount(address)
       } else {
         throw new Error('No provider selected')
       }
