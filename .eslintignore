@@ -1,4 +1,4 @@
-contracts/**/deploy/resources
+contracts/**/scripts/resources
 scripts/**/resources
 cdk.out
 *.js
