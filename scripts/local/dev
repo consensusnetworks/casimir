@@ -33,7 +33,7 @@ seed=$(aws secretsmanager get-secret-value \
 export BIP39_SEED="$seed"
 
 # Get args
-while getopts :a:f:l:m:n:t: flag
+while getopts :a:f:l:m:n:t:x: flag
 do
     case "${flag}" in
         a) app=${OPTARG};;
@@ -45,14 +45,6 @@ do
         x) external=${OPTARG};;
     esac
 done
-
-echo "APP set to $app"
-echo "EXPOSE set to $external"
-echo "FORK set to $fork"
-echo "LEDGER set to $ledger"
-echo "MOCK set to $mock"
-echo "NETWORK set to $network"
-echo "TREZOR set to $trezor"
 
 # Default to mainnet if fork is set vaguely
 if [ "$fork" = true ]; then

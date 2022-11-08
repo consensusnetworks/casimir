@@ -1,9 +1,9 @@
 import { ethers } from 'ethers'
-import Eth from '@ledgerhq/hw-app-eth'
+import Eth, { ledgerService } from '@ledgerhq/hw-app-eth'
 import useTransports from './providers/transports'
 import { EthersLedgerSignerOptions } from './interfaces/EthersLedgerSignerOptions'
 
-const defaultPath = '44\'/60\'/0\'/0/0'
+const defaultPath = 'm/44\'/60\'/0\'/0/0'
 const defaultType = 'usb'
 const { createUSBTransport, createSpeculosTransport } = useTransports()
 const transportCreators = {
@@ -76,7 +76,7 @@ export default class EthersLedgerSigner extends ethers.Signer {
     }
 
     async signMessage(message: ethers.utils.Bytes | string): Promise<string> {
-        if (typeof(message) === 'string') {
+        if (typeof (message) === 'string') {
             message = ethers.utils.toUtf8Bytes(message)
         }
         const messageHex = ethers.utils.hexlify(message).substring(2)
@@ -90,25 +90,33 @@ export default class EthersLedgerSigner extends ethers.Signer {
     async signTransaction(transaction: ethers.providers.TransactionRequest): Promise<string> {
         const tx = await ethers.utils.resolveProperties(transaction)
         const baseTx: ethers.utils.UnsignedTransaction = {
-            chainId: tx.chainId || undefined,
-            data: tx.data || undefined,
-            gasLimit: tx.gasLimit || undefined,
-            gasPrice: tx.gasPrice || undefined,
-            nonce: tx.nonce ? ethers.BigNumber.from(tx.nonce).toNumber() : undefined,
-            to: tx.to || undefined,
-            value: tx.value || undefined,
+            chainId: (tx.chainId || undefined),
+            data: (tx.data || undefined),
+            gasLimit: (tx.gasLimit || undefined),
+            gasPrice: (tx.gasPrice || undefined),
+            nonce: (tx.nonce ? ethers.BigNumber.from(tx.nonce).toNumber(): undefined),
+            to: (tx.to || undefined),
+            value: (tx.value || undefined),
+            type: (tx.type || undefined)
         }
 
         const unsignedTx = ethers.utils.serializeTransaction(baseTx).substring(2)
-        const signature = await this._retry((eth) => eth.signTransaction(this.path, unsignedTx))
-
-        console.log('Signed tx', tx)
+        const resolution = await ledgerService.resolveTransaction(unsignedTx, {}, {})
+        const signature = await this._retry((eth) => eth.signTransaction(this.path, unsignedTx, resolution))
 
         return ethers.utils.serializeTransaction(baseTx, {
             v: ethers.BigNumber.from('0x' + signature.v).toNumber(),
             r: ('0x' + signature.r),
             s: ('0x' + signature.s),
         })
+    }
+
+    // Populates all fields in a transaction, signs it and sends it to the network
+    async sendTransaction(transaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>): Promise<ethers.providers.TransactionResponse> {
+        this._checkProvider('sendTransaction')
+        const tx = await this.populateTransaction(transaction)
+        const signedTx = await this.signTransaction(tx)
+        return await (this.provider as ethers.providers.JsonRpcProvider).sendTransaction(signedTx)
     }
 
     connect(provider: ethers.providers.Provider): ethers.Signer {
