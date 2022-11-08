@@ -87,8 +87,14 @@ You can get up and running without configuration. You can also mock local backen
     ```zsh
     npm run dev --trezor
     ```
+
+5. Expose any servers running on local ports using local tunnel.
+
+    ```zsh
+    npm run dev --external
+    ```
     
-5. The commands and flags above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
+6. The commands and flags above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
 
     ```zsh
     # @casimir/web
@@ -148,13 +154,13 @@ Run local cryptonodes for fast and flexible development.
 2. Run a local Ethereum node with archived data from mainnet.
 
     ```zsh
-    npm run dev:ethereum --fork mainnet
+    npm run dev:ethereum --fork=mainnet
     ```
 
 3. Run a local Ethereum node with archived data from Goerli testnet.
 
     ```zsh
-    npm run dev:ethereum --fork testnet
+    npm run dev:ethereum --fork=testnet
     ```
 
 > 🚩 Note, while the fork starts with the same state as the specified network, it lives as a local development network.

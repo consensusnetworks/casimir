@@ -5,7 +5,7 @@ import { MessageInit } from '@/interfaces/MessageInit'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 
-const ledgerPath = '44\'/60\'/0\'/0/0'
+const ledgerPath = 'm/44\'/60\'/0\'/0/0'
 
 export default function useLedger() {
   const { ethereumURL, ledgerType, speculosURL } = useEnvironment()
@@ -29,20 +29,14 @@ export default function useLedger() {
   async function sendLedgerTransaction({ from, to, value }: TransactionInit) {
     const signer = getEthersLedgerSigner()
     const provider = signer.provider as ethers.providers.Provider
-    const { chainId } = await provider.getNetwork()
-    const nonce = await provider.getTransactionCount(from)
     const unsignedTransaction = {
       to,
-      data: '0x00',
-      nonce,
-      chainId,
-      value: ethers.utils.parseUnits(value)
+      value: ethers.utils.parseUnits(value),
+      type: 0
     } as ethers.UnsignedTransaction
-    const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumURL, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
-    unsignedTransaction.gasPrice = gasPrice
-    unsignedTransaction.gasLimit = gasLimit
-
+    
     // Todo check before click (user can +/- gas limit accordingly)
+    const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumURL, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
     const balance = await provider.getBalance(from)
     const required = gasPrice.mul(gasLimit).add(ethers.utils.parseEther(value))
     console.log('Balance', ethers.utils.formatEther(balance))
