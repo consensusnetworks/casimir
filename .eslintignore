@@ -1,3 +1,6 @@
+scripts/**/resources
 cdk.out
 *.js
-scripts/**/resources
+
+# Temporarily ignore
+services/crawler

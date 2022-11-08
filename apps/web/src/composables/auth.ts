@@ -1,7 +1,6 @@
 import { LoginCredentials } from '@casimir/types'
 
 export default function useAuth() {
-
     /**
      * Logs a user in with an address, message and signed message
      * 
@@ -34,6 +33,7 @@ export default function useAuth() {
     }
 
     return {
-        login
+        login,
+        usersAccounts
     }
 }

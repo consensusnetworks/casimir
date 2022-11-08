@@ -151,7 +151,7 @@ export default function useWallet() {
       let signer = ethersSignerCreator[signerKey](selectedProvider.value)
       if (isWalletConnectSigner(signer)) signer = await signer
       const value = ethers.utils.parseEther(amountToStake.value)
-      await ssv.connect(signer as ethers.Signer).deposit({ value })
+      await ssv.connect(signer as ethers.Signer).deposit({ value, type: 0 })
     } else {
       // Todo @ccali11 this should happen sooner - ideally we'll this disable method if missing ssv provider
       console.log('Please connect to one of the following providers:', ethersProviderList)
