@@ -51,10 +51,9 @@ export default function useEthers() {
     const etherAmount = ethers.utils.parseEther(value)
     const tx = {
       to,
-      value: etherAmount,
+      value: etherAmount
     }
-    const { hash } = await signer.sendTransaction(tx)
-    return hash
+    return await signer.sendTransaction(tx)
   }
 
   async function signEthersMessage(messageInit: MessageInit): Promise<string> {
