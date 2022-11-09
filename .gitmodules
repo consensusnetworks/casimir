@@ -13,9 +13,6 @@
 [submodule "scripts/ssv/resources/ssv"]
 	path = scripts/ssv/resources/ssv
 	url = https://github.com/bloxapp/ssv.git
-[submodule "contracts/ethereum/scripts/resources/lighthouse"]
-	path = contracts/ethereum/scripts/resources/lighthouse
-	url = https://github.com/sigp/lighthouse.git
 [submodule "contracts/ethereum/scripts/resources/ssv-network"]
 	path = contracts/ethereum/scripts/resources/ssv-network
 	url = https://github.com/bloxapp/ssv-network.git
