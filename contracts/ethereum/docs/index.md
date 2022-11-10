@@ -221,7 +221,7 @@ Get a given user's pool balance
 | ---- | ---- | ----------- |
 | [0] | uint256 | The user's pool balance |
 
-## SSVPoolInterface
+## ISSVPool
 
 ### deposit
 

@@ -1,6 +1,5 @@
 {
   "name": "casimir",
-  "type": "module",
   "version": "0.0.1",
   "description": "Decentralized staking and asset management",
   "workspaces": [
@@ -14,12 +13,11 @@
     "clean": "rm -rf package-lock.json && npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules && npm i",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "dev": "scripts/local/dev -f \"$npm_config_fork\" -m \"$npm_config_mock\" -n \"$npm_config_network\" -s \"$npm_config_speculos\" -t \"$npm_config_tunnel\"",
-    "dev:ethereum": "npx esno -r dotenv/config -r common/aws scripts/ethereum/dev.ts --fork=\"$npm_config_fork\"",
+    "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --fork=\"$npm_config_fork\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
     "dev:ssv": "scripts/ssv/dev -n \"$npm_config_nodes\"",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
-    "postinstall": "npm run build --workspaces",
     "prepare": "husky install",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:ethereum": "npx esno -r dotenv/config scripts/ethereum/test.ts --fork=\"$npm_config_fork\"",

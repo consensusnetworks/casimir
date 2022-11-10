@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.17;
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma solidity 0.8.16;
 
 import './SSVPool.sol';
-import './interfaces/SSVPoolInterface.sol';
+import './interfaces/ISSVPool.sol';
 
 /**
  * @title Manager contract that accepts and distributes deposits 
@@ -56,7 +56,7 @@ contract SSVManager {
             }
 
             /// Get the pool contract
-            SSVPoolInterface poolContract = SSVPoolInterface(poolAddress);
+            ISSVPool poolContract = ISSVPool(poolAddress);
 
             /// Get contract amount for next open pool
             uint256 poolAmount = poolContract.getBalance();
@@ -138,7 +138,7 @@ contract SSVManager {
      * @return The given user's balance for the given pool
      */ 
     function getUserBalanceForPool(address userAddress, address poolAddress) external view returns (uint256) {
-        SSVPoolInterface poolContract = SSVPoolInterface(poolAddress);
+        ISSVPool poolContract = ISSVPool(poolAddress);
         return poolContract.getUserBalance(userAddress);
     }
 
@@ -147,7 +147,7 @@ contract SSVManager {
      * @return The given pool's balance
      */ 
     function getBalanceForPool(address poolAddress) external view returns (uint256) {
-        SSVPoolInterface poolContract = SSVPoolInterface(poolAddress);
+        ISSVPool poolContract = ISSVPool(poolAddress);
         return poolContract.getBalance();
     }
 

@@ -5,6 +5,7 @@ import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
 import { HardhatUserConfig } from 'hardhat/config'
 import '@sebasgoldberg/hardhat-wsprovider'
+import 'hardhat-dependency-compiler'
 import 'solidity-docgen'
 
 const forkUrl = process.env.ETHEREUM_FORK_RPC
@@ -12,7 +13,28 @@ const mnemonic = process.env.BIP39_SEED
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
-  solidity: '0.8.17',
+  solidity: {
+    compilers: [
+      {
+        version: '0.8.4',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 10000
+          }
+        }
+      },
+      { 
+        version: '0.8.16',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 10000
+          }
+        }
+      }
+    ]
+  },
   paths: {
     tests: './test',
     sources: './src',
@@ -32,6 +54,9 @@ const config: HardhatUserConfig = {
         interval: 12000
       }
     }
+  },
+  dependencyCompiler: {
+    paths: ['./scripts/resources/ssv-contracts', './scripts/resources/ssv-network']
   }
 }
 
