@@ -1,9 +1,9 @@
 import * as cdk from 'aws-cdk-lib'
 import { Template } from 'aws-cdk-lib/assertions'
-import { DnsStack } from '../lib/dns/dns-stack'
-import { EtlStack } from '../lib/etl/etl-stack'
-import { AuthStack } from '../lib/auth/auth-stack'
-import { LandingStack } from '../lib/landing/landing-stack'
+import { DnsStack } from '../lib/dns'
+import { EtlStack } from '../lib/etl'
+import { AuthStack } from '../lib/auth'
+import { LandingStack } from '../lib/landing'
 
 test('All stacks created', () => {
 
