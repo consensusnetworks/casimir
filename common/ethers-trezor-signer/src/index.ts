@@ -42,28 +42,45 @@ export default class EthersTrezorSigner extends ethers.Signer {
 
     async signTransaction(transaction: ethers.providers.TransactionRequest): Promise<string> {
         const tx = await ethers.utils.resolveProperties(transaction)
+
+        tx.value = ethers.BigNumber.from(tx.value).toHexString()
+        tx.gasLimit = ethers.BigNumber.from(tx.gasLimit).toHexString()
+        tx.gasPrice = ethers.BigNumber.from(tx.gasPrice).toHexString()
+        tx.nonce = ethers.BigNumber.from(tx.nonce).toHexString()
+
         const unsignedTx: EthereumTransaction = {
-            chainId: tx.chainId as number,
+            to: tx.to as string,
+            value: tx.value as string,
             data: tx.data as string | undefined,
+            chainId: tx.chainId as number,
+            nonce: tx.nonce as string,
             gasLimit: tx.gasLimit as string,
             gasPrice: tx.gasPrice as string,
-            nonce: tx.nonce as string,
-            to: tx.to as string,
-            value: tx.value as string
         }
-        const { payload } = await this._eth.ethereumSignTransaction({ path: this.path, transaction: unsignedTx })
-        const signature = payload as EthereumSignedTx
 
+        const ethereumSignedTransaction = await this._eth.ethereumSignTransaction({ path: this.path, transaction: unsignedTx })
+        const { payload } = ethereumSignedTransaction
+        
+        const signature = payload as EthereumSignedTx 
         const baseTx: ethers.utils.UnsignedTransaction = {
             ...unsignedTx,
-            nonce: ethers.BigNumber.from(tx.nonce).toNumber()
+            nonce: ethers.BigNumber.from(tx.nonce).toNumber(),
         }
 
-        return ethers.utils.serializeTransaction(baseTx, {
-            v: ethers.BigNumber.from('0x' + signature.v).toNumber(),
-            r: ('0x' + signature.r),
-            s: ('0x' + signature.s),
+        const signedTransaction = ethers.utils.serializeTransaction(baseTx, {
+            v: ethers.BigNumber.from(signature.v).toNumber(),
+            r: signature.r,
+            s: signature.s,
         })
+        return signedTransaction
+    }
+
+    async sendTransaction(transaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>): Promise<ethers.providers.TransactionResponse> {
+        this._checkProvider('sendTransaction')
+        const tx = await this.populateTransaction(transaction)
+        const signedTx = await this.signTransaction(tx)
+        console.log('signedTx :>> ', signedTx)
+        return await (this.provider as ethers.providers.JsonRpcProvider).sendTransaction(signedTx)
     }
 
     connect(provider: ethers.providers.Provider): ethers.Signer {

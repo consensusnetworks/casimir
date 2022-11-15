@@ -34,7 +34,8 @@ export default function useTrezor() {
           data: '0x00',
           nonce,
           chainId,
-          value: ethers.utils.parseUnits(value)
+          value: ethers.utils.parseUnits(value),
+          type: 0
         } as ethers.UnsignedTransaction
         const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumURL, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
         unsignedTransaction.gasPrice = gasPrice

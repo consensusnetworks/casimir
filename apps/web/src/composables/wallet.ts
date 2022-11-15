@@ -13,7 +13,7 @@ import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import { Pool } from '@/interfaces/Pool'
 
-const amount = ref<string>('0.001')
+const amount = ref<string>('0.1')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 const amountToStake = ref<string>('')
 const pools = ref<Pool[]>([])
