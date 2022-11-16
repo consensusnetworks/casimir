@@ -11,12 +11,13 @@
         It’s always a good idea to revisit your priorities and values especially
         in this time of uncertainty in blockchain, cryptocurrency, Web3, and 
         technology at large. 
-        <!-- Add tooltip later -->
         <a
           href="https://blog.consensusnetworks.com/nist/"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        ><i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">https://blog.consensusnetworks.com/nist/</span>
+        </a>
         We’ve written before about what the value 
         proposition of blockchain is and why we’re building technology as close
         to the consensus layer as possible. Fundamentally, the consensus mechanism 
@@ -37,21 +38,27 @@
           </h5>
           <h6 class="text-justify leading-7 my-[20px] tracking-wide">
             In February 2022, the DeFi platform  
-            <!-- Add tooltip later -->
             <a
               href="https://www.theverge.com/2022/2/3/22916111/wormhole-hack-github-error-325-million-theft-ethereum-solana"
               target="_blank"
-              class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-            ><i class="iconoir-link inline-block" /></a>
+              class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+            >
+              <i class="iconoir-link inline-block" />
+              <span class="tooltiptext text-body">
+                https://www.theverge.com/2022/2/3/22916111/wormhole-hack-github-error-325-million-theft-ethereum-solana
+              </span>
+            </a>
             Wormhole was exploited for $325 million. 
             Wormhole was a popular VC backed blockchain bridge designed to allow users to 
             access tokens across chains using a single access point. More recently the 
-            <!-- Add tooltip later -->
             <a
               href="https://decrypt.co/111433/binance-smart-chain-hack"
               target="_blank"
-              class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-            ><i class="iconoir-link inline-block" /></a>
+              class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+            >
+              <i class="iconoir-link inline-block" />
+              <span class="tooltiptext text-body">https://decrypt.co/111433/binance-smart-chain-hack</span>
+            </a>
             Binance Smart Chain was exploited for $100M+. While bridges are a potentially 
             convenient solution to the mass of protocols in existence, a single smart 
             contract or hot wallet with $100M+ of deposited tokens is proving to be too 
@@ -69,12 +76,16 @@
             the collapse of Terra. There are a range of reasons why Terra collapsed but 
             simply, algorithmic stable coins backed by digital assets have fundamental 
             challenges due to the volatile nature of digital assets. 
-            <!-- Add tooltip later -->
             <a
               href="https://newsletter.stakingrewards.com/p/terra-staking-rewards-special-comment"
               target="_blank"
-              class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-            ><i class="iconoir-link inline-block" /></a>
+              class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+            >
+              <i class="iconoir-link inline-block" />
+              <span class="tooltiptext text-body">
+                https://newsletter.stakingrewards.com/p/terra-staking-rewards-special-comment
+              </span>
+            </a>
             This early breakdown from Staking Rewards names a comyination of an 
             overreliance on the yield platform Anchor comyined with significant 
             off-chain usage on exchanges being a driving factor in the collapse of Terra. 
@@ -86,12 +97,16 @@
             the community to reduce risks. A more recent postmortem in June 2022 
             showed that the liquidity issues and subsequent depegging of the UST 
             stable coin were 
-            <!-- Add tooltip later -->
             <a
               href="http://www.coindeskkorea.com/news/articleView.html?idxno=79890"
               target="_blank"
-              class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-            ><i class="iconoir-link inline-block" /></a>
+              class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+            >
+              <i class="iconoir-link inline-block" />
+              <span class="tooltiptext text-body">
+                http://www.coindeskkorea.com/news/articleView.html?idxno=79890
+              </span>
+            </a>
             caused by Terraform Labs themselves.
           </h6>
         </div>
@@ -102,64 +117,92 @@
       </h5>
       <h6 class="text-justify leading-7 my-[20px] tracking-wide">
         Next to fall, and 
-        <!-- Add tooltip later -->
         <a
           href="https://www.wsj.com/articles/celsius-network-taps-more-advisers-to-prepare-for-potential-bankruptcy-11656088078"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://www.wsj.com/articles/celsius-network-taps-more-advisers-to-prepare-for-potential-bankruptcy-11656088078              
+          </span>
+        </a>
         still unwinding, is the “Centralized Decentralized Finance” (CeDeFi) company 
         Celsius. Companies like Celsius and BlockFi have driven huge growth in crypto 
         by offering high interest rate yields on your deposited tokens. They act as a 
         bank but don’t do a good job of indicating the potential risk their 
         depositors face nor do they follow the same regulations as traditional banks. 
-        <!-- Add tooltip later -->
         <a
           href="https://twitter.com/JackNiewold/status/1536402475418263554"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://twitter.com/JackNiewold/status/1536402475418263554          
+          </span>
+        </a>
         Celsius was exposed to Terra and potentially lost $500M there alone. More 
         recent are revelations that 
-        <!-- Add tooltip later -->
         <a
           href="https://www.forbes.com/sites/ninabamyysheva/2022/10/06/celsius-executives-cashed-out-shortly-before-bankruptcy/"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://www.forbes.com/sites/ninabamyysheva/2022/10/06/celsius-executives-cashed-out-shortly-before-bankruptcy/
+          </span>
+        </a>
         Celsius executives cashed out just prior to the collapse and bankruptcy filing.
       </h6>
       <h6 class="text-justify leading-7 my-[20px] tracking-wide">
         Last of the 
-        <!-- Add tooltip later -->
         <a
           href="https://fortune.com/2022/05/12/crypto-crash-contagion-systemic-risk-financial-crisis-lehman-brothers/"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://fortune.com/2022/05/12/crypto-crash-contagion-systemic-risk-financial-crisis-lehman-brothers/
+          </span>
+        </a>
         “contagion” was the 
-        <!-- Add tooltip later -->
         <a
           href="https://www.wsj.com/articles/crypto-broker-voyager-digital-says-three-arrows-capital-hasnt-repaid-666-million-in-loans-11655915660"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://www.wsj.com/articles/crypto-broker-voyager-digital-says-three-arrows-capital-hasnt-repaid-666-million-in-loans-11655915660
+          </span>
+        </a>
         collapse of Three Arrows Capital. Ongoing investigations are looking at whether 
-        <!-- Add tooltip later -->
         <a
           href="https://www.bloomyerg.com/news/articles/2022-06-22/voyager-discloses-660-million-exposure-to-troubled-crypto-fund"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://www.bloomyerg.com/news/articles/2022-06-22/voyager-discloses-660-million-exposure-to-troubled-crypto-fund
+          </span>
+        </a>
         3AC took large margin longs on crypto through fraudulent activity and then  were 
         subsequently liquidated over the past month of pullbacks. Overall, it sounds 
         pretty bad for 3AC management and 
-        <!-- Add tooltip later -->
         <a
           href="https://twitter.com/MattWalshInBos/status/1540076849111465986"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://twitter.com/MattWalshInBos/status/1540076849111465986
+          </span>
+        </a>
         they might be going to jail.
       </h6>
       <h6 class="text-justify leading-7 my-[20px] tracking-wide">
@@ -186,28 +229,40 @@
         Ethereum Merge
       </h5>
       <h6 class="text-justify leading-7 my-[20px] tracking-wide">
-        <!-- Add tooltip later -->
         <a
           href="https://beaconcha.in/pools"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://beaconcha.in/pools
+          </span>
+        </a>
         Ethereum 2.0 staking is currently heavily concentrated among major 
         cryptocurrency exchanges and the 
-        <!-- Add tooltip later -->
         <a
           href="https://lido.fi/"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://lido.fi/
+          </span>
+        </a>
         Lido Pool. So far, just two centralized staking providers, 
         Coinbase and Lido, have mined almost 50% of 
-        <!-- Add tooltip later -->
         <a
           href="https://www.rated.network/?network=mainnet&view=entity"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://www.rated.network/?network=mainnet&view=entity
+          </span>
+        </a>
         Ethereum blocks post merge. Control of cryptocurrencies by 
         “banks” (Coinbase, Kraken, BlockFi, FTX, etc)  presents a 
         threat to the uncensorable features of the Ethereum blockchain. 
@@ -233,12 +288,16 @@
         is decentralized. Everything in blockchain/web3 is called decentralized, 
         whether or not it actually is. The unfortunate reality is that 
         blockchains are decentralized in name only. 
-        <!-- Add tooltip later -->
         <a
           href="https://assets-global.website-files.com/5fd11235b3950c2c1a3b6df4/62af6c641a672b3329b9a480_Unintended_Centralities_in_Distributed_Ledgers.pdf"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://assets-global.website-files.com/5fd11235b3950c2c1a3b6df4/62af6c641a672b3329b9a480_Unintended_Centralities_in_Distributed_Ledgers.pdf
+          </span>
+        </a>
         A recent study by Trail of Bits for DARPA concludes blockchains 
         are fairly centralized. They report that the pooled mining for 
         Bitcoin gives a Nakamoto coefficient of 4 to Bitcoin and Proof 
@@ -247,20 +306,28 @@
         of pools and protocol control for Bitcoin, but the Nakamoto Coefficient 
         for Proof of Stake is worth analyzing. Chris Remus of Chainflow has 
         written extensively on Staking Decentralization and currently maintains a 
-        <!-- Add tooltip later -->
         <a
           href="https://nakaflow.io/"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://nakaflow.io/
+          </span>
+        </a>
         live Nakamoto Coefficient tracker that predates the Trail of Bits report. 
         The Nakamoto coefficient is a measure of decentralization and, 
-        <!-- Add tooltip later -->
         <a
           href="https://news.earn.com/quantifying-decentralization-e39db233c28e"
           target="_blank"
-          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-        ><i class="iconoir-link inline-block" /></a>
+          class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+        >
+          <i class="iconoir-link inline-block" />
+          <span class="tooltiptext text-body">
+            https://news.earn.com/quantifying-decentralization-e39db233c28e
+          </span>
+        </a>
         by definition, the numyer of nodes needed to control the Consensus mechanism 
         of the protocol. The lower the numyer, the less decentralized. At the time 
         of this writing, some major protocols have very low Nakamoto Coefficients, 
@@ -347,7 +414,7 @@
       </div>
       
       <div class="grid grid-cols-2 csm:grid-cols-1 gap-margins">
-        <div class="col-span-1 my-[20px] flex flex-col justify-center">
+        <div class="col-span-1  my-[20px] flex flex-col justify-center">
           <!-- add scalling image based on click or hover -->
           <img
             src="./components/cosmos-staking.png"
@@ -366,12 +433,16 @@
           Let’s look at how this poor user experience even affects the 
           Consensus mechanisms of PoS protocols. One of the easiest 
           ways to stake in the 
-          <!-- Add tooltip later -->
           <a
             href="https://wallet.keplr.app/#/cosmoshub/stake"
             target="_blank"
-            class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1"
-          ><i class="iconoir-link inline-block" /></a>
+            class="px-[10px] pt-[2px]  text-primary hover:bg-blue_1 tooltip"
+          >
+            <i class="iconoir-link inline-block" />
+            <span class="tooltiptext text-body">
+              https://wallet.keplr.app/#/cosmoshub/stake
+            </span>
+          </a>
           Cosmos Ecosystem is using Keplr, a mobile/web wallet that 
           allows you to stake to any of the Tendermint based protocols. 
           However, users trying to stake with Keplr aren’t given 
