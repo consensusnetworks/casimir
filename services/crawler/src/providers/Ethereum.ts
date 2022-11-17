@@ -1,7 +1,6 @@
 import { ethers } from 'ethers'
 import { EventTableSchema } from '@casimir/data'
 import { Chain, Event, Provider } from '../index'
-import { getCoinPrice } from '@casimir/helpers'
 
 const ContractsOfInterest = {
 	BeaconDepositContract: {
@@ -47,43 +46,6 @@ export class EthereumService {
 	async getBlock(s: number): Promise<ethers.providers.Block> {
 		const block = await this.provider.getBlock(s)
 		return block
-	}
-
-	async toEvent(b: ethers.providers.Block): Promise<Partial<EventTableSchema>> {
-		const event: Partial<EventTableSchema> = {
-			chain: this.chain,
-			network: this.network,
-			provider: Provider.Alchemy,
-			type: Event.Block,
-			height: b.number,
-			block: b.hash,
-			created_at: new Date(b.timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ''),
-			address: b.miner,
-			gasUsed: b.gasUsed.toString(),
-			gasLimit: b.gasLimit.toString(),
-
-			// amount: "",
-			// auto_stake: false,
-			// duration: 0,
-			// to_address: "",
-			// transaction: "",
-			// validator: "",
-			// validator_list: [],
-		}
-
-		if (b.baseFeePerGas) {
-			event.baseFee = ethers.BigNumber.from(b.baseFeePerGas).toString()
-			const burntFee = ethers.BigNumber.from(b.gasUsed).mul(ethers.BigNumber.from(b.baseFeePerGas))
-			event.burntFee = burntFee.toString()
-		}
-
-		const { value } = await getCoinPrice(new Date(b.timestamp * 1000), 'ethereum', 'usd')
-
-		event.price = value
-
-		console.log(event)
-
-		return event
 	}
 
 	async getEvents(height: number): Promise<{ block: string, events: Partial<EventTableSchema>[] }> {

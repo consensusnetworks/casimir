@@ -118,7 +118,7 @@ export class IotexService {
   async getEvents(height: number): Promise<{ hash: string, events: Partial<EventTableSchema>[]}> {
     const events: Partial<EventTableSchema>[] = []
 
-    const block = await this.provider.iotx.getBlockMetas({byIndex: {start: height, count: 1}})
+    const block = await this.provider.iotx.getBlockMetas({ byIndex: { start: height, count: 1 }})
 
     const blockMeta = block.blkMetas[0]
 
@@ -131,96 +131,103 @@ export class IotexService {
       type: Event.Block,
       created_at: new Date(block.blkMetas[0].timestamp.seconds * 1000).toISOString().replace('T', ' ').replace('Z', ''),
       address: blockMeta.producerAddress,
-      height: blockMeta.height,
-      to_address: '',
-      validator: '',
-      duration: 0,
-      validator_list: [],
-      amount: 0,
-      auto_stake: false
+      height: parseInt(blockMeta.height.toString()),
+      // to_address: '',
+      // validator: '',
+      // duration: 0,
+      // validator_list: [],
+      // amount: 0,
+      // auto_stake: false
     }
 
-    const numOfActions = block.blkMetas[0].numActions
+    const numOfActions = parseInt(block.blkMetas[0].numActions.toString())
 
-    if (numOfActions > 0) {
-      const actions = await this.getBlockActions(height, numOfActions)
+    if (numOfActions === 0) {
+      return {
+        hash: blockMeta.hash,
+        events: [blockEvent]
+      }
+    }
 
-      const blockActions = actions.map((action) => {
-        const actionCore = action.action.core
-        if (actionCore === undefined) return
+    const actions = await this.getBlockActions(height, numOfActions)
 
-        const actionType = this.deduceActionType(action)
-        if (actionType === null) return
+    const blockActions = actions.map((action) => {
+      const actionCore = action.action.core
+      if (actionCore === undefined) return
 
-        const actionEvent: Partial<EventTableSchema> = {
-          chain: this.chain,
-          network: this.network,
-          provider: Provider.Alchemy,
-          type: actionType,
-          created_at: new Date(action.timestamp.seconds * 1000).toISOString().replace('T', ' ').replace('Z', ''),
-          address: blockMeta.producerAddress,
-          height: blockMeta.height,
-          to_address: '',
-          validator: '',
-          duration: 0,
-          validator_list: [],
-          amount: '0',
-          auto_stake: false,
+      const actionType = this.deduceActionType(action)
+
+      if (actionType === null) return
+
+      const actionEvent: Partial<EventTableSchema> = {
+        chain: this.chain,
+        network: this.network,
+        provider: Provider.Alchemy,
+        type: actionType,
+        created_at: new Date(action.timestamp.seconds * 1000).toISOString().replace('T', ' ').replace('Z', ''),
+        address: blockMeta.producerAddress,
+        height: blockMeta.height,
+        to_address: '',
+        validator: '',
+        duration: 0,
+        validator_list: [],
+        amount: '0',
+        auto_stake: false,
+      }
+
+      if (actionType === IotexActionType.transfer && actionCore.transfer) {
+        actionEvent.amount = parseInt(actionCore.transfer.amount).toString()
+        actionEvent.to_address = actionCore.transfer.recipient
+        events.push(actionEvent as EventTableSchema)
+      }
+
+      if (actionType === IotexActionType.stakeCreate && actionCore.stakeCreate) {
+        actionEvent.amount = actionCore.stakeCreate.stakedAmount
+        actionEvent.validator = actionCore.stakeCreate.candidateName
+        actionEvent.auto_stake = actionCore.stakeCreate.autoStake
+        actionEvent.duration = actionCore.stakeCreate.stakedDuration
+        events.push(actionEvent as EventTableSchema)
+      }
+
+      if (actionType === IotexActionType.stakeAddDeposit && actionCore.stakeAddDeposit) {
+        actionEvent.amount = actionCore.stakeAddDeposit.amount
+        events.push(actionEvent as EventTableSchema)
+      }
+
+      if (actionType === IotexActionType.execution && actionCore.execution) {
+        actionEvent.amount = actionCore.execution.amount
+        events.push(actionEvent as EventTableSchema)
+      }
+
+      if (actionType === IotexActionType.putPollResult && actionCore.putPollResult) {
+        if (actionCore.putPollResult.candidates) {
+          actionEvent.validator_list = actionCore.putPollResult.candidates.candidates.map(c => c.address)
         }
 
-        if (actionType === IotexActionType.transfer && actionCore.transfer) {
-          actionEvent.amount = parseInt(actionCore.transfer.amount).toString()
-          actionEvent.to_address = actionCore.transfer.recipient
-          events.push(actionEvent as EventTableSchema)
+        if (actionCore.putPollResult.height) {
+          actionEvent.height = typeof actionCore.putPollResult.height === 'string' ? parseInt(actionCore.putPollResult.height) : actionCore.putPollResult.height
+        }
+        events.push(actionEvent as EventTableSchema)
+      }
+
+      if (actionType === IotexActionType.StakeChangeCandidate && actionCore.stakeChangeCandidate) {
+        actionEvent.validator = actionCore.stakeChangeCandidate.candidateName
+        events.push(actionEvent as EventTableSchema)
+      }
+
+      if (actionType === IotexActionType.stakeRestake && actionCore.stakeRestake) {
+        actionEvent.duration = actionCore.stakeRestake.stakedDuration
+        actionEvent.auto_stake = actionCore.stakeRestake.autoStake
+        events.push(actionEvent as EventTableSchema)
         }
 
-        if (actionType === IotexActionType.stakeCreate && actionCore.stakeCreate) {
-          actionEvent.amount = actionCore.stakeCreate.stakedAmount
-          actionEvent.validator = actionCore.stakeCreate.candidateName
-          actionEvent.auto_stake = actionCore.stakeCreate.autoStake
-          actionEvent.duration = actionCore.stakeCreate.stakedDuration
-          events.push(actionEvent as EventTableSchema)
-        }
-
-        if (actionType === IotexActionType.stakeAddDeposit && actionCore.stakeAddDeposit) {
-          actionEvent.amount = actionCore.stakeAddDeposit.amount
-          events.push(actionEvent as EventTableSchema)
-        }
-
-        if (actionType === IotexActionType.execution && actionCore.execution) {
-          actionEvent.amount = actionCore.execution.amount
-          events.push(actionEvent as EventTableSchema)
-        }
-
-        if (actionType === IotexActionType.putPollResult && actionCore.putPollResult) {
-          if (actionCore.putPollResult.candidates) {
-            actionEvent.validator_list = actionCore.putPollResult.candidates.candidates.map(c => c.address)
-          }
-
-          if (actionCore.putPollResult.height) {
-            actionEvent.height = typeof actionCore.putPollResult.height === 'string' ? parseInt(actionCore.putPollResult.height) : actionCore.putPollResult.height
-          }
-          events.push(actionEvent as EventTableSchema)
-        }
-
-        if (actionType === IotexActionType.StakeChangeCandidate && actionCore.stakeChangeCandidate) {
-          actionEvent.validator = actionCore.stakeChangeCandidate.candidateName
-          events.push(actionEvent as EventTableSchema)
-        }
-
-        if (actionType === IotexActionType.stakeRestake && actionCore.stakeRestake) {
-          actionEvent.duration = actionCore.stakeRestake.stakedDuration
-          actionEvent.auto_stake = actionCore.stakeRestake.autoStake
-          events.push(actionEvent as EventTableSchema)
-        }
-
-        if (actionType === IotexActionType.candidateRegister && actionCore.candidateRegister) {
-          actionEvent.amount = actionCore.candidateRegister.stakedAmount
-          actionEvent.duration = actionCore.candidateRegister.stakedDuration
-          actionEvent.auto_stake = actionCore.candidateRegister.autoStake
-          actionEvent.validator = actionCore.candidateRegister.candidate.name
-          events.push(actionEvent as EventTableSchema)
-        }
+      if (actionType === IotexActionType.candidateRegister && actionCore.candidateRegister) {
+        actionEvent.amount = actionCore.candidateRegister.stakedAmount
+        actionEvent.duration = actionCore.candidateRegister.stakedDuration
+        actionEvent.auto_stake = actionCore.candidateRegister.autoStake
+        actionEvent.validator = actionCore.candidateRegister.candidate.name
+        events.push(actionEvent as EventTableSchema)
+      }
 
         if (actionType === IotexActionType.candidateUpdate && actionCore.candidateUpdate) {
           actionEvent.validator = actionCore.candidateUpdate.name
@@ -241,8 +248,9 @@ export class IotexService {
         // if (actionType === IotexActionType.stakeWithdraw) {}
         return actionEvent
       })
-      events.push(...blockActions as EventTableSchema[])
-    }
+
+    events.push(...blockActions as EventTableSchema[])
+
     return {
       hash: blockMeta.hash,
       events

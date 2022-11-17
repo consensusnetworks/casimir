@@ -80,9 +80,9 @@
             "type": "boolean",
             "description": "Is auto staking enabled"
         },
-        "price": {
-            "type": "string",
-            "description": "The price of the coin"
+        "exchange_rate": {
+            "type": "double",
+            "description": "The exchange rate of the coin in USD"
         }
     }
 }
