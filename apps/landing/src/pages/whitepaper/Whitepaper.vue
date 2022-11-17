@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+  import ImgModal from './components/ImgModal.vue'
 </script>
 
 <template>
@@ -358,16 +359,16 @@
         
         So why are the Nakamoto coefficients so low? Let’s talk about the User Experience
       </span>
-      <!-- add scalling image based on click or hover -->
       <div class="grid place-content-center">
-        <img
-          src="./components/current-web3-user-flow.png"
-          alt="metamask-tweet"
-          class="h-auto w-[400px] text-center"
-        >
+        <div class="h-auto w-[400px] text-center">
+          <ImgModal 
+            src="current-web3-user-flow.png"
+            alt="Current Web 3 User Experience"
+            text="Current Web 3 User Experience"
+            width="45%"
+          />
+        </div>
       </div>
-      
-      
       <h5 class="text-[#d9d9d9] font-semibold my-[35px]">
         User Experience
       </h5>
@@ -397,11 +398,12 @@
           interact with and understand, even seasoned pros get manipulated and hacked.
         </h6>
         <div class="col-span-1 my-[20px] flex flex-col justify-center">
-          <!-- add scalling image based on click or hover -->
-          <img
-            src="./components/metamask-tweet.png"
-            alt="metamask-tweet"
-          >
+          <ImgModal 
+            src="metamask-tweet.png"
+            alt="Metamask-Tweet"
+            text="Metamask's Responds with a Tweet"
+            width="65%"
+          />
           <span
             class="text-caption mt-[20px]"
             :style="{
@@ -415,11 +417,12 @@
       
       <div class="grid grid-cols-2 csm:grid-cols-1 gap-margins">
         <div class="col-span-1  my-[20px] flex flex-col justify-center">
-          <!-- add scalling image based on click or hover -->
-          <img
-            src="./components/cosmos-staking.png"
-            alt="cosmos staking page"
-          >
+          <ImgModal 
+            src="cosmos-staking.png"
+            alt="Cosmos Staking Page"
+            text="Cosmos Staking Page"
+            width="75%"
+          />
           <span
             class="text-caption mt-[10px]"
             :style="{
@@ -508,11 +511,12 @@
       </h5>
       <div class="grid grid-cols-2 csm:grid-cols-1 gap-margins">
         <div class="my-[20px] col-span-1">
-          <!-- add scalling image based on click or hover -->
-          <img
-            src="./components/casimir-user-flow.png"
-            alt="cosmos staking page"
-          >
+          <ImgModal 
+            src="casimir-user-flow.png"
+            alt="Casimir's User Flow"
+            text="Our user flow"
+            width="45%"
+          />
         </div>
         <div class="my-[20px] col-span-1">
           <h6 class="text-justify leading-7  tracking-wide">

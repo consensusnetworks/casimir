@@ -70,6 +70,23 @@
 
 @layer components {
     /* Component Classes */
+    .modal {
+        position: fixed;
+        z-index: 1; 
+        left: 0;
+        top: 0;
+        width: 100vw; 
+        height: 100vh; 
+        background-color: rgba(0,0,0,0.4);
+        align-items: center;
+        vertical-align: middle;
+    }
+    .modal-content {
+        background-color: #fff;
+        margin: 5% auto;
+        width: min-content;
+        z-index: 2; 
+    }
     .tooltip {
         position: relative;
         display: inline-block;
@@ -82,6 +99,7 @@
         padding: 6px 12px;
         position: absolute;
         z-index: 1;
+        /* location of tooltip */
         top: calc(100% + 5px);
         right: 0%;
         margin-left: -60px;
@@ -89,6 +107,7 @@
     .tooltip:hover .tooltiptext {
         visibility: visible;
     }
+    /* tooltip arrow */
     /* .tooltip .tooltiptext::after { */
         /* content: " "; */
         /* position: absolute; */
@@ -129,7 +148,17 @@
 
 @layer utilities {
     /* Utilities Styling */
-
+    .zoom-anim {
+        animation: zoom-in 0.5s ease;
+    }
+    @keyframes zoom-in {
+        0% {
+            transform: scale(0);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
     .text-body {
         /* h7 */
         font-family: 'OpenSauceOneRegular';
