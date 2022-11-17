@@ -5,33 +5,38 @@ import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
 import { HardhatUserConfig } from 'hardhat/config'
 import '@sebasgoldberg/hardhat-wsprovider'
-import 'hardhat-dependency-compiler'
 import 'solidity-docgen'
 
 const forkUrl = process.env.ETHEREUM_FORK_RPC
 const mnemonic = process.env.BIP39_SEED
+
+const hid = {
+  mnemonic,
+  count: 5
+}
+
+const compilerSettings = {
+  optimizer: {
+    enabled: true,
+    runs: 10000
+  }
+}
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
+        version: '0.6.11',
+        settings: { ...compilerSettings }
+      },
+      {
         version: '0.8.4',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 10000
-          }
-        }
+        settings: { ...compilerSettings }
       },
       { 
         version: '0.8.16',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 10000
-          }
-        }
+        settings: { ...compilerSettings }
       }
     ]
   },
@@ -46,17 +51,18 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: mnemonic ? { mnemonic, accountsBalance: '48000000000000000000', count: 4 } : undefined,
+      accounts: mnemonic ? { ...hid, accountsBalance: '48000000000000000000' } : undefined,
       chainId: 1337,
       forking: forkUrl ? { url: forkUrl } : undefined,
       mining: {
         auto: false,
         interval: 12000
       }
+    },
+    geth: {
+      url: 'http://localhost:51121',
+      accounts: mnemonic ? { ...hid } : undefined
     }
-  },
-  dependencyCompiler: {
-    paths: ['./scripts/resources/ssv-contracts', './scripts/resources/ssv-network']
   }
 }
 

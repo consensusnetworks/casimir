@@ -1,6 +1,3 @@
-# Todo!!!
-# Todo move all contract deploy variables and such to contracts/ethereum/scripts/ssv.deploy.ts
-
 #!/bin/bash
 # Run a local network of SSV nodes
 #
@@ -29,15 +26,13 @@ resource_path="scripts/ssv/resources"
 
 # Deploy Casimir SSV contracts
 # npm run task:compile --workspace @casimir/ethereum
-npm run deploy:ssv --workspace @casimir/ethereum -- --network localhost
+# npm run deploy:ssv --workspace @casimir/ethereum -- --network geth
 
-# cd $resource_path/ssv
-# make build
-# ./bin/ssvnode generate-operator-keys
-# NODES="ssv-node-1 ssv-node-2 ssv-node-3 ssv-node-4"
+cd $resource_path/ssv
+NODES="ssv-node-1 ssv-node-2 ssv-node-3 ssv-node-4"
 
-# # Start operators
-# echo "Running $nodes SSV operator nodes"
-# docker-compose up --build $NODES
+# Start operators
+echo "Running $nodes SSV operator nodes"
+docker-compose up --build $NODES
 
-# wait && docker-compose rm -fsv && pkill -P $$
+wait && docker-compose rm -fsv && pkill -P $$

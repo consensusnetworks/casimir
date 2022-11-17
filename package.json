@@ -10,10 +10,10 @@
     "services/*"
   ],
   "scripts": {
-    "clean": "rm -rf package-lock.json && npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules && npm i",
+    "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules package-lock.json && npm i",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "dev": "scripts/local/dev -f \"$npm_config_fork\" -m \"$npm_config_mock\" -n \"$npm_config_network\" -s \"$npm_config_speculos\" -t \"$npm_config_tunnel\"",
-    "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --fork=\"$npm_config_fork\"",
+    "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --fork=\"$npm_config_fork\" --simulation=\"$npm_config_simulation\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
     "dev:ssv": "scripts/ssv/dev -n \"$npm_config_nodes\"",
     "docgen": "npm run docgen --workspace @casimir/ethereum",

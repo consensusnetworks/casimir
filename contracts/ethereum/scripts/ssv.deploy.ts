@@ -1,6 +1,6 @@
 import { deployContract } from '@casimir/hardhat-helpers'
 
-async function main() {
+void async function () {
   
   process.env.MINIMUM_BLOCKS_BEFORE_LIQUIDATION = '100'
   process.env.OPERATOR_MAX_FEE_INCREASE = '3'
@@ -15,15 +15,10 @@ async function main() {
 
   for (const name of ssvContractNames) {
     console.log(`Deploying ${name} contract...`)
-    const { address } = await deployContract(name)
+    const { address, deployTransaction } = await deployContract(name)
+    const { hash } = deployTransaction
     process.env[`${name.toUpperCase()}_ADDRESS`] = address
-    console.log(`${name} contract deployed to ${address}`)
+    console.log(`${name} contract deployed to ${address} (see hash ${hash})`)
   }
-}
-
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error)
-    process.exit(1)
-  })
+  process.exit(0)
+}()

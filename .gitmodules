@@ -10,12 +10,16 @@
 [submodule "scripts/ledger/resources/speculos"]
 	path = scripts/ledger/resources/speculos
 	url = https://github.com/LedgerHQ/speculos.git
-[submodule "scripts/ssv/resources/ssv"]
-	path = scripts/ssv/resources/ssv
-	url = https://github.com/bloxapp/ssv.git
 [submodule "contracts/ethereum/scripts/resources/ssv-network"]
 	path = contracts/ethereum/scripts/resources/ssv-network
 	url = https://github.com/bloxapp/ssv-network.git
 [submodule "contracts/ethereum/scripts/resources/ssv-contracts"]
 	path = contracts/ethereum/scripts/resources/ssv-contracts
 	url = https://github.com/bloxapp/ssv-contracts.git
+[submodule "contracts/ethereum/scripts/resources/consensus-specs"]
+	path = contracts/ethereum/scripts/resources/consensus-specs
+	url = https://github.com/ethereum/consensus-specs.git
+[submodule "scripts/ssv/resources/ssv"]
+	path = scripts/ssv/resources/ssv
+	url = https://github.com/consensusnetworks/ssv.git
+	branch = latest
