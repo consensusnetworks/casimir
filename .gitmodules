@@ -19,8 +19,3 @@
 [submodule "contracts/ethereum/scripts/resources/consensus-specs"]
 	path = contracts/ethereum/scripts/resources/consensus-specs
 	url = https://github.com/ethereum/consensus-specs.git
-[submodule "scripts/ssv/resources/ssv"]
-	path = scripts/ssv/resources/ssv
-	url = https://github.com/consensusnetworks/ssv.git
-	branch = latest
-	update = merge
