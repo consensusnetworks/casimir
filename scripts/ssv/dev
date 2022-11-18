@@ -33,6 +33,6 @@ NODES="ssv-node-1 ssv-node-2 ssv-node-3 ssv-node-4"
 
 # Start operators
 echo "Running $nodes SSV operator nodes"
-docker-compose -f vendor/docker-compose.yml up --build $NODES
+docker-compose up --build $NODES
 
 wait && docker-compose rm -fsv && pkill -P $$
