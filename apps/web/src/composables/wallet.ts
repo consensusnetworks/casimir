@@ -15,7 +15,7 @@ import { Pool } from '@/interfaces/Pool'
 
 const amount = ref<string>('0.1')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
-const amountToStake = ref<string>('')
+const amountToStake = ref<string>('0.1')
 const pools = ref<Pool[]>([])
 const selectedProvider = ref<ProviderString>('')
 const selectedAccount = ref<string>('')

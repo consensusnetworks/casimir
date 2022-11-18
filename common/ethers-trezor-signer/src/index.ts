@@ -41,21 +41,20 @@ export default class EthersTrezorSigner extends ethers.Signer {
     }
 
     async signTransaction(transaction: ethers.providers.TransactionRequest): Promise<string> {
-        const tx = await ethers.utils.resolveProperties(transaction)
-
-        tx.value = ethers.BigNumber.from(tx.value).toHexString()
-        tx.gasLimit = ethers.BigNumber.from(tx.gasLimit).toHexString()
-        tx.gasPrice = ethers.BigNumber.from(tx.gasPrice).toHexString()
-        tx.nonce = ethers.BigNumber.from(tx.nonce).toHexString()
+        transaction.value = ethers.BigNumber.from(transaction.value).toHexString()
+        transaction.gasLimit = ethers.BigNumber.from(transaction.gasLimit).toHexString()
+        transaction.gasPrice = ethers.BigNumber.from(transaction.gasPrice).toHexString()
+        transaction.nonce = ethers.BigNumber.from(transaction.nonce).toHexString()
 
         const unsignedTx: EthereumTransaction = {
-            to: tx.to as string,
-            value: tx.value as string,
-            data: tx.data as string | undefined,
-            chainId: tx.chainId as number,
-            nonce: tx.nonce as string,
-            gasLimit: tx.gasLimit as string,
-            gasPrice: tx.gasPrice as string,
+            to: transaction.to as string,
+            value: transaction.value as string,
+            data: transaction.data as string | undefined,
+            chainId: transaction.chainId as number,
+            nonce: transaction.nonce as string,
+            gasLimit: transaction.gasLimit as string,
+            gasPrice: transaction.gasPrice as string,
+            type: transaction.type as number
         }
 
         const ethereumSignedTransaction = await this._eth.ethereumSignTransaction({ path: this.path, transaction: unsignedTx })
@@ -64,7 +63,7 @@ export default class EthersTrezorSigner extends ethers.Signer {
         const signature = payload as EthereumSignedTx 
         const baseTx: ethers.utils.UnsignedTransaction = {
             ...unsignedTx,
-            nonce: ethers.BigNumber.from(tx.nonce).toNumber(),
+            nonce: ethers.BigNumber.from(transaction.nonce).toNumber(),
         }
 
         const signedTransaction = ethers.utils.serializeTransaction(baseTx, {
@@ -77,9 +76,13 @@ export default class EthersTrezorSigner extends ethers.Signer {
 
     async sendTransaction(transaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>): Promise<ethers.providers.TransactionResponse> {
         this._checkProvider('sendTransaction')
-        const tx = await this.populateTransaction(transaction)
-        const signedTx = await this.signTransaction(tx)
-        console.log('signedTx :>> ', signedTx)
+        
+        transaction.gasLimit = await this?.provider?.estimateGas(transaction)
+        transaction.gasPrice = await this?.provider?.getGasPrice()
+        transaction.nonce = await this?.provider?.getTransactionCount(await this.getAddress())
+        transaction.chainId = 1337
+
+        const signedTx = await this.signTransaction(transaction as ethers.providers.TransactionRequest)
         return await (this.provider as ethers.providers.JsonRpcProvider).sendTransaction(signedTx)
     }
 
