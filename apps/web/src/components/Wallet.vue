@@ -111,6 +111,18 @@
           <span> {{ ledgerAccountsResult }} </span>
         </p>
       </div>
+      <div class="trezor-div">
+        <button
+          class="trezor-btn"
+          @click="connectWallet('Trezor')"
+        >
+          {{ trezorButtonText }}
+        </button>
+        <p>
+          Connected Trezor Account:
+          <span> {{ trezorAccountsResult }} </span>
+        </p>
+      </div>
       <div>
         <button
           class="wallet-connect-btn"
@@ -176,6 +188,8 @@ const phantomButtonText = ref<string>('Connect Phantom')
 const phantomAccountsResult = ref<string>('Address Not Active')
 const ledgerButtonText = ref<string>('Connect Ledger')
 const ledgerAccountsResult = ref<string>('Address Not Active')
+const trezorButtonText = ref<string>('Connect Trezor')
+const trezorAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
@@ -273,6 +287,21 @@ watchEffect(() => {
     ledgerAccountsResult.value = 'Not Active'
     walletConnectButtonText.value = 'Connected!'
     walletConnectAccountsResult.value = selectedAccount.value
+  } else if (selectedProvider.value === 'Trezor') {
+    metamaskButtonText.value = 'Connect MetaMask'
+    metamaskAccountsResult.value = 'Not Active'
+    coinbaseButtonText.value = 'Connect Coinbase'
+    coinbaseAccountsResult.value = 'Not Active'
+    ioPayButtonText.value = 'Connect ioPay'
+    ioPayAccountsResult.value = 'Not Active'
+    phantomButtonText.value = 'Connected'
+    phantomAccountsResult.value = 'Not Active'
+    ledgerButtonText.value = 'Connect Ledger'
+    ledgerAccountsResult.value = 'Not Active'
+    walletConnectButtonText.value = 'Connect WalletConnect'
+    walletConnectAccountsResult.value = 'Not Active'
+    trezorButtonText.value = 'Connected!'
+    trezorAccountsResult.value = selectedAccount.value
   }
 })
 </script>
@@ -322,6 +351,10 @@ button {
 
 .ledger-btn {
   background-color: rgb(0, 0, 0);
+}
+
+.trezor-btn {
+  background-color: rgb(34, 99, 55);
 }
 
 .phantom-btn {
