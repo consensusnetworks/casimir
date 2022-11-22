@@ -1,3 +1,82 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+font-family: 'OpenSauceOneRegular';
+font-synthesis: none;
+text-rendering: optimizeLegibility;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+-webkit-text-size-adjust: 100%;
+}
+  
+#app {
+max-width: 1280px;
+min-width: 360px;
+overflow: auto;
+margin: 0 auto;
+height: 100vh;
+background: #fff;
+}
+
+
+@layer base {}
+@layer components {
+
+}
+@layer utilities {
+    .side-nav-container {
+        @apply 
+        w-sidebar-closed 
+        hover:w-sidebar-open 
+        slowExpand 
+        bg-black 
+        py-marginsY 
+        table ;
+    }
+    .nav-imgs {
+        @apply h-[32px] mb-[30px];
+    }
+    .side-nav-tabs {
+        @apply 
+        overflow-hidden
+        py-[12px] 
+        pl-gutter
+        flex
+        mb-gutter 
+        cursor-pointer;
+    }
+    .side-nav-tabs:hover {
+        @apply bg-blue_7;
+    }
+    .side-nav-tabs i{
+        @apply  
+        inline-block 
+        text-[24px] 
+        table-cell 
+        align-middle
+        ml-[5px] mr-gutter;
+    }
+    .side-nav-tabs-selected {
+        @apply bg-blue_5 text-white;
+    }
+    .slowExpand {
+        transition: 0.3s all ease-in-out;
+    }
+    .slowExpandText {
+        display: inline-block;
+        vertical-align: bottom;
+        overflow: hidden;
+        animation: slowNavBarText 1s ease forwards;
+    }
+    @keyframes slowNavBarText {
+        from {
+          max-width: 0.5rem;
+        }
+        /*  */
+        to {
+          max-width: 300px;
+        }
+    }
+}

@@ -1,7 +1,7 @@
 <script lang="ts" setup></script>
   
 <template>
-  <div>
-    landing zsfdsd
+  <div class="">
+    landing zsfdsd fdsfhd
   </div>
 </template>

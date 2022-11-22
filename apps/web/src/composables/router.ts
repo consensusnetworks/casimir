@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { createWebHistory, createRouter } from 'vue-router'
 
+// @ts-ignore
 import Landing from '@/pages/landing/Landing.vue'
+// @ts-ignore
 import Test from '@/pages/test/Test.vue'
+
 // import NotFound from '@/pages/not-found/NotFound.vue'
 
 
