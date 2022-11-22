@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import router from '@/composables/router'
 import Multiwallet from './components/Multiwallet.vue'
 
-const open = ref(true)
+const open = ref(false)
 
 
 

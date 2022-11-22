@@ -2,7 +2,7 @@
   
 <template>
   <div class="min-h-full grid place-content-center">
-    <div class="text-center text-white bg-black px-[10vw] py-[30px]">
+    <div class="text-center text-white bg-blue_8 px-[10vw] py-[30px]">
       <h6 class="font-bold">
         Assets Page
       </h6>
