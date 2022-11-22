@@ -46,10 +46,12 @@ const account = ref(true)
         <i
           class="iconoir-report-columns"
         />
-        <span
+        <h6
           v-show="open"
           class="slowExpandText"
-        > Dashboard </span>
+        >
+          Dashboard
+        </h6>
       </div>
     </RouterLink>
 
@@ -71,10 +73,12 @@ const account = ref(true)
               :class="!account? 'opacity-50': 'opacity-100'"
             >
           </i> 
-          <span
+          <h6
             v-show="open"
             class="slowExpandText"
-          > Staking </span>
+          >
+            Staking
+          </h6>
         </div>
       </div>
     </RouterLink>
@@ -94,10 +98,12 @@ const account = ref(true)
           <i
             class="iconoir-database-star"
           />
-          <span
+          <h6
             v-show="open"
             class="slowExpandText"
-          > Assets </span>
+          >
+            Assets
+          </h6>
         </div>
       </div>
     </RouterLink>

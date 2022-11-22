@@ -52,6 +52,8 @@ module.exports = {
                 'margins': '48px',
                 'marginsX': '48px',
                 'marginsY': '24px',
+
+                // if change, change anim in index.css
                 'sidebar-open': '300px',
                 'sidebar-closed': '75px'
             }

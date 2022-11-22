@@ -21,7 +21,67 @@ background: #fff;
 }
 
 
-@layer base {}
+@layer base {
+    /* Base Tags */
+    h1{
+        font-family: 'OpenSauceOneBlack';
+        font-weight: 900;
+        font-size: 96px;
+        line-height: 120px;
+        letter-spacing: -0.025em;
+    }
+    h2{
+        font-family: 'OpenSauceOneBold';
+        font-weight: 700;
+        font-size: 60px;
+        line-height: 75px;
+        letter-spacing: -0.015em;
+    }
+    h3{
+        font-family: 'OpenSauceOneMedium';
+        font-weight: 500;
+        font-size: 48px;
+        line-height: 60px;
+        letter-spacing: -0.03em;
+    }
+    h4{
+        font-family: 'OpenSauceOneRegular';
+        font-weight: 400;
+        font-size: 36px;
+        line-height: 45px;
+        letter-spacing: -0.02em;
+    }
+    h5{
+        font-family: 'OpenSauceOneRegular';
+        font-weight: 400;
+        font-size: 24px;
+        line-height: 30px;
+        letter-spacing: -0.02em;
+    }
+    h6{
+        font-family: 'OpenSauceOneRegular';
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 20px;
+        letter-spacing: -0.02em;
+    }
+    .text-body {
+        /* h7 */
+        font-family: 'OpenSauceOneRegular';
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        letter-spacing: -0.02em;
+    }
+    .text-caption {
+        /* h8 */
+        font-family: 'OpenSauceOneRegular';
+        font-weight: 400;
+        font-size: 10px;
+        line-height: 12.5px;
+        letter-spacing: -0.02em;
+    }
+}
 @layer components {
 
 }
@@ -74,7 +134,7 @@ background: #fff;
         from {
           max-width: 0.5rem;
         }
-        /*  */
+        /* Based on side bar width */
         to {
           max-width: 300px;
         }

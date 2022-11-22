@@ -10,7 +10,7 @@ import SideNav from '@/components/navigation/SideNav.vue'
     <SideNav />
     <div
       id="content"
-      class="w-full bg-white px-margins py-marginsY"
+      class="w-full bg-white px-margins py-marginsY overflow-y-auto"
     >
       <slot />
     </div>
