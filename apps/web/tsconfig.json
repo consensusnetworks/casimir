@@ -21,4 +21,5 @@
       "./node_modules/@types"
     ]
   },
-  "include": ["./src/**/*.ts", "./src/**/*.vue", "src/main.ts", "src/composables/router.ts", "src/composables/router.ts", "src/main.ts"]}
+  "include": ["./src/**/*.ts", "./src/**/*.vue"]
+}
