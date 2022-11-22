@@ -109,7 +109,7 @@ const account = ref(true)
       </div>
     </RouterLink>
 
-    <div class="px-gutter mb-gutter">
+    <div class="px-gutter my-gutter">
       <hr>
     </div>
 

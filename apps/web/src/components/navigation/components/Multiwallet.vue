@@ -43,7 +43,7 @@ const connectedWallets = ref([
   <div class="px-gutter">
     <div
       v-if="open"
-      class="text-white flex align-center slowExpandText mb-gutter uppercase ml-[5px]"
+      class="text-white flex flex-col slowExpandText mb-gutter uppercase ml-[5px]"
     >
       <h6> Casimir </h6>
       <h6> Multiwallet </h6>
@@ -127,13 +127,19 @@ const connectedWallets = ref([
     </button>
 
     <!-- This button will be romoved once we get a way to get dynamic accouts in -->
-    <div class="text-center absolute border bg-blue_5 bottom-0">
+    <div class="absolute bottom-0 left-[10px] flex">
       <button
-        class="btn_primary text-body"
+        class="btn_primary text-body mr-[5px]"
         @click="account = !account"
       >
-        <i class="iconoir-mouse-button-left text-white" />
+        toggle accout
       </button>
+      <RouterLink
+        to="/test"
+        class="btn_primary text-caption"
+      >
+        go to test
+      </RouterLink>
     </div>
 
     <!-- To Do: Add settings button with settings page below -->
