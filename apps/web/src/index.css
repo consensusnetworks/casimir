@@ -83,13 +83,20 @@ background: #fff;
     }
 }
 @layer components {
-
+    .btn_primary {
+        @apply  flex  flex-row  items-center 
+        justify-center  px-[6px]  py-[12px] 
+        gap-[10px] bg-primary  text-white
+        hover:bg-blue_7 disabled:bg-blue_2
+        disabled:text-grey_6;
+    }
 }
 @layer utilities {
     .side-nav-container {
         @apply 
         w-sidebar-closed 
         hover:w-sidebar-open 
+        max-w-[300px]
         slowExpand 
         bg-black 
         py-marginsY 

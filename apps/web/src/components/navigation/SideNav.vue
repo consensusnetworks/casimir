@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue'
 import router from '@/composables/router'
+import Multiwallet from './components/Multiwallet.vue'
 
-const open = ref(false)
+const open = ref(true)
 
 
 
@@ -48,7 +49,7 @@ const account = ref(true)
         />
         <h6
           v-show="open"
-          class="slowExpandText"
+          class="slowExpandText mt-[3px]"
         >
           Dashboard
         </h6>
@@ -75,7 +76,7 @@ const account = ref(true)
           </i> 
           <h6
             v-show="open"
-            class="slowExpandText"
+            class="slowExpandText mt-[3px]"
           >
             Staking
           </h6>
@@ -100,7 +101,7 @@ const account = ref(true)
           />
           <h6
             v-show="open"
-            class="slowExpandText"
+            class="slowExpandText mt-[3px]"
           >
             Assets
           </h6>
@@ -108,9 +109,13 @@ const account = ref(true)
       </div>
     </RouterLink>
 
-    <div class="px-gutter">
+    <div class="px-gutter mb-gutter">
       <hr>
     </div>
+
+    <Multiwallet 
+      :open="open"
+    />
   </div>
 </template>
 
