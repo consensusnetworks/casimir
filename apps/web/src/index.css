@@ -1,3 +1,149 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+font-family: 'OpenSauceOneRegular';
+font-synthesis: none;
+text-rendering: optimizeLegibility;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+-webkit-text-size-adjust: 100%;
+}
+  
+#app {
+max-width: 1280px;
+min-width: 360px;
+overflow: auto;
+margin: 0 auto;
+height: 100vh;
+background: #fff;
+}
+
+
+@layer base {
+    /* Base Tags */
+    h1{
+        font-family: 'OpenSauceOneBlack';
+        font-weight: 900;
+        font-size: 96px;
+        line-height: 120px;
+        letter-spacing: -0.025em;
+    }
+    h2{
+        font-family: 'OpenSauceOneBold';
+        font-weight: 700;
+        font-size: 60px;
+        line-height: 75px;
+        letter-spacing: -0.015em;
+    }
+    h3{
+        font-family: 'OpenSauceOneMedium';
+        font-weight: 500;
+        font-size: 48px;
+        line-height: 60px;
+        letter-spacing: -0.03em;
+    }
+    h4{
+        font-family: 'OpenSauceOneRegular';
+        font-weight: 400;
+        font-size: 36px;
+        line-height: 45px;
+        letter-spacing: -0.02em;
+    }
+    h5{
+        font-family: 'OpenSauceOneRegular';
+        font-weight: 400;
+        font-size: 24px;
+        line-height: 30px;
+        letter-spacing: -0.02em;
+    }
+    h6{
+        font-family: 'OpenSauceOneRegular';
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 20px;
+        letter-spacing: -0.02em;
+    }
+    .text-body {
+        /* h7 */
+        font-family: 'OpenSauceOneRegular';
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        letter-spacing: -0.02em;
+    }
+    .text-caption {
+        /* h8 */
+        font-family: 'OpenSauceOneRegular';
+        font-weight: 400;
+        font-size: 10px;
+        line-height: 12.5px;
+        letter-spacing: -0.02em;
+    }
+}
+@layer components {
+    .btn_primary {
+        @apply  flex  flex-row  items-center 
+        justify-center  px-[6px]  py-[12px] 
+        gap-[10px] bg-primary  text-white
+        hover:bg-blue_7 disabled:bg-blue_2
+        disabled:text-grey_6;
+    }
+}
+@layer utilities {
+    .side-nav-container {
+        @apply 
+        w-sidebar-closed 
+        hover:w-sidebar-open 
+        max-w-[300px]
+        slowExpand 
+        bg-black 
+        py-marginsY 
+        table ;
+    }
+    .nav-imgs {
+        @apply h-[32px] mb-[30px];
+    }
+    .side-nav-tabs {
+        @apply 
+        overflow-hidden
+        py-[12px] 
+        pl-gutter
+        flex
+        mb-gutter 
+        cursor-pointer;
+    }
+    .side-nav-tabs:hover {
+        @apply bg-blue_7;
+    }
+    .side-nav-tabs i{
+        @apply  
+        inline-block 
+        text-[24px] 
+        table-cell 
+        align-middle
+        ml-[5px] mr-gutter;
+    }
+    .side-nav-tabs-selected {
+        @apply bg-blue_5 text-white;
+    }
+    .slowExpand {
+        transition: 0.3s all ease-in-out;
+    }
+    .slowExpandText {
+        display: inline-block;
+        vertical-align: bottom;
+        overflow: hidden;
+        animation: slowNavBarText 1s ease forwards;
+    }
+    @keyframes slowNavBarText {
+        from {
+          max-width: 0.5rem;
+        }
+        /* Based on side bar width */
+        to {
+          max-width: 300px;
+        }
+    }
+}
