@@ -87,7 +87,7 @@ const connectedWallets = ref([
           </div>
           <span
             v-show="open"
-            class="text-body text-grey_5 w-[195px]"
+            class="text-body text-grey_5 w-[205px]"
           >
             Drag the <i class="iconoir-keyframe-align-center text-blue_4 text-[12px] mx-[5px] inline-block" />
             icon to change your master wallet (Master wallet is the wallet that you connect
@@ -101,7 +101,7 @@ const connectedWallets = ref([
     >
       <div
         v-if="open"
-        class="px-[5px] w-[195px]"
+        class="px-[5px] w-[210px]"
       >
         <li class=" list-none text-body text-grey_5 font-semibold mb-[10px]">
           Get Started with Casimir's Multiwallet Connect

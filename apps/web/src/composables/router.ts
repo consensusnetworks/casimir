@@ -6,6 +6,8 @@ import Landing from '@/pages/landing/Landing.vue'
 // @ts-ignore
 import Staking from '@/pages/staking/Staking.vue'
 // @ts-ignore
+// import ETHStaking from '@/pages/staking/components/ETHStaking.vue'
+// @ts-ignore
 import Assets from '@/pages/assets/Assets.vue'
 // @ts-ignore
 import Test from '@/pages/test/Test.vue'
@@ -24,7 +26,13 @@ const routes = [
     path: '/Staking', 
     name: Staking, 
     component: Staking,
-    meta: { authorize: [] }
+    meta: { authorize: [] },
+    // children: [
+    //     {
+    //         path: 'ETH-Staking', 
+    //         component: ETHStaking,
+    //     }
+    // ]
 },{ 
     path: '/Assets', 
     name: Assets, 

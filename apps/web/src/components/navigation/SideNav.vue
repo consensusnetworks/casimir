@@ -7,10 +7,10 @@ const open = ref(false)
 
 
 
-const selectedPage = ref(router.currentRoute.value.fullPath)
+const selectedPage = ref(router.currentRoute.value.fullPath.split('/')[1])
 
 watch (router.currentRoute, () => {
-  selectedPage.value = router.currentRoute.value.fullPath
+  selectedPage.value = router.currentRoute.value.fullPath.split('/')[1]
 })
 
 // To Do: connect this to our Auth and see if an account exsists
@@ -20,7 +20,7 @@ const account = ref(true)
   
 <template>
   <div 
-    class="side-nav-container"
+    class="side-nav-container text-white"
     @mouseenter="open = true"
     @mouseleave="open = false"
   >
@@ -42,7 +42,7 @@ const account = ref(true)
     >
       <div
         class="side-nav-tabs"
-        :class="selectedPage === '/'? 'side-nav-tabs-selected' : 'text-white'"
+        :class="selectedPage === ''? 'side-nav-tabs-selected' : 'text-white'"
       >
         <i
           class="iconoir-report-columns"
@@ -61,7 +61,7 @@ const account = ref(true)
     >
       <div
         class="side-nav-tabs"
-        :class="selectedPage === '/Staking'? 'side-nav-tabs-selected' : ''"
+        :class="selectedPage === 'Staking'? 'side-nav-tabs-selected' : ''"
         :style="!account? {
           'cursor' : 'default'
         } : {}"
@@ -69,7 +69,7 @@ const account = ref(true)
         <div :class="!account? 'flex text-grey_5': 'flex text-white'">
           <i>
             <img
-              src="Staking-Icon.svg"
+              src="/Staking-Icon.svg"
               alt="Staking Icon"
               :class="!account? 'opacity-50': 'opacity-100'"
             >
@@ -90,7 +90,7 @@ const account = ref(true)
     >
       <div
         class="side-nav-tabs"
-        :class="selectedPage === '/Assets'? 'side-nav-tabs-selected' : ''"
+        :class="selectedPage === 'Assets'? 'side-nav-tabs-selected' : ''"
         :style="!account? {
           'cursor' : 'default',
         } : {}"
