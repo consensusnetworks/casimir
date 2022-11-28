@@ -26,9 +26,9 @@ router.get('/:address', async (req: express.Request, res: express.Response) => {
 })
 
 router.post('/:address', async (req: express.Request, res: express.Response) => {
+    const { address } = req.params
     const { message } = req.body
-    // Find user in collection and update the message
-    const user = userCollection.find(user => user.address === req.params.address)
+    const user = userCollection.find(user => user.address === address)
     if (user) {
         user.message = message
         res.setHeader('Content-Type', 'application/json')
