@@ -25,4 +25,25 @@ router.get('/:address', async (req: express.Request, res: express.Response) => {
     }
 })
 
+router.post('/:address', async (req: express.Request, res: express.Response) => {
+    const { message } = req.body
+    // Find user in collection and update the message
+    const user = userCollection.find(user => user.address === req.params.address)
+    if (user) {
+        user.message = message
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            message: `Message updated to: ${message}`,
+            error: false
+        })
+    } else {
+        res.status(404)
+        res.json({
+            message: 'User not found',
+            error: true
+        })
+    }
+})
+
 export default router
