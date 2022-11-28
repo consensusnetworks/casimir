@@ -33,7 +33,6 @@ export default function useAuth() {
     }
 
     return {
-        login,
-        usersAccounts
+        login
     }
 }
