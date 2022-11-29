@@ -1,4 +1,7 @@
 import { LoginCredentials } from '@casimir/types'
+import useUsers from '@/composables/users'
+
+const { getMessage } = useUsers()
 
 export default function useAuth() {
     /**
@@ -8,6 +11,9 @@ export default function useAuth() {
      * @returns {Promise<Response>} - The response from the login request
      */
     async function login(loginCredentials: LoginCredentials): Promise<Response> {
+        const { address } = loginCredentials
+        const message = await getMessage(address)
+        loginCredentials.message = message
         const requestOptions = {
             method: 'POST',
             headers: { 

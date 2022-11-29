@@ -58,9 +58,45 @@ export default function useUsers () {
         updateUser({id, accounts})
     }
 
+    // TODO: Duplicate function (see useAuth)
+    function _getAuthBaseUrl(): string {
+        if (import.meta.env.PUBLIC_MOCK) {
+            return `http://localhost:${import.meta.env.PUBLIC_AUTH_PORT}`
+        } else {
+            return `https://auth.${import.meta.env.PUBLIC_STAGE || 'dev'}.casimir.co`
+        }
+    }
+
+    // Shane says keep this here.
+    async function getMessage(address: string) {
+        const authBaseUrl = _getAuthBaseUrl()
+        const response = await fetch(`${authBaseUrl}/auth/${address}`)
+        const json = await response.json()
+        const { message } = json
+        return message
+    }
+
+    async function updateMessage(message: string) {
+        const address = '0xd557a5745d4560b24d36a68b52351fff9c86a212'
+        const authBaseUrl = _getAuthBaseUrl()
+        const requestOptions = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({message})
+        }
+        const response = await fetch(`${authBaseUrl}/auth/${address}`, requestOptions)
+        const json = await response.json()
+        console.log('json :>> ', json)
+        return json
+    }
+
     return {
         usersAccounts,
         addAccount,
-        removeAccount
+        removeAccount,
+        getMessage,
+        updateMessage
     }
 }
