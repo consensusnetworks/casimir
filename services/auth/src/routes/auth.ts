@@ -1,5 +1,6 @@
 import express from 'express'
 import getMessage from '../helpers/getMessage'
+import userCollection from '../collections/users'
 const router = express.Router()
 
 router.get('/:address', async (req: express.Request, res: express.Response) => {
