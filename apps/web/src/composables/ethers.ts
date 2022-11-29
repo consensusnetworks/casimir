@@ -58,19 +58,11 @@ export default function useEthers() {
 
   async function signEthersMessage(messageInit: MessageInit): Promise<string> {
     const { providerString, message } = messageInit
-    const browserProvider =
-      availableProviders.value[
-      providerString as keyof BrowserProviders
-      ]
+    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider =
       new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const signer = web3Provider.getSigner()
     const signature = await signer.signMessage(message)
-
-    // Todo move this sample code
-    const { login } = useAuth()
-    const response = await login({ address: signer._address, message: message.toString(), signedMessage: signature })
-    console.log('Response', await response.json()) // Currently the response is always false
     return signature
   }
 
@@ -84,7 +76,22 @@ export default function useEthers() {
     return { gasPrice, gasLimit }
   }
 
-  return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit }
+  async function loginWithEthers (messageInit: MessageInit, selectedAccount: string) {
+    const { providerString, message } = messageInit
+    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
+    const web3Provider: ethers.providers.Web3Provider =
+      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const signer = web3Provider.getSigner()
+    const signature = await signer.signMessage(message)
+    
+    // Todo move this sample code
+    const { login } = useAuth()
+    const response = await login({ address: selectedAccount, message: message.toString(), signedMessage: signature })
+    console.log('Response', await response.json())
+    return signature
+  }
+
+  return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit, loginWithEthers }
 }
 
 function getBrowserProviders(ethereum: any) {

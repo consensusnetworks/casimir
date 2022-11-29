@@ -66,13 +66,13 @@ export default function useUsers () {
             return `https://auth.${import.meta.env.PUBLIC_STAGE || 'dev'}.casimir.co`
         }
     }
-
-    // Shane says keep this here.
+    
     async function getMessage(address: string) {
         const authBaseUrl = _getAuthBaseUrl()
         const response = await fetch(`${authBaseUrl}/auth/${address}`)
         const json = await response.json()
         const { message } = json
+        console.log('message :>> ', message)
         return message
     }
 
