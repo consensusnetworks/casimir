@@ -1,6 +1,5 @@
 import { $, argv, chalk, echo } from 'zx'
-import { fromIni } from '@aws-sdk/credential-providers'
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager'
+import { getSecret } from '@casimir/aws-helpers'
 
 /**
  * Test Ethereum contracts
@@ -15,39 +14,18 @@ void async function () {
     // Fetch remote submodule code
     $`git submodule update --init --recursive`
 
-    // Set AWS profile
-    const profile = process.env.PROFILE || 'consensus-networks-dev'
-    const aws = new SecretsManagerClient({ credentials: fromIni({ profile }) })
-    echo(chalk.blue(`PROFILE is set to ${profile}`))
-
-    // Set shared wallet seed
-    const { SecretString: seed } = await aws.send(
-        new GetSecretValueCommand(
-            { 
-                SecretId: 'consensus-networks-bip39-seed'
-            }
-        )
-    )
+    const seed = await getSecret('consensus-networks-bip39-seed')
     process.env.BIP39_SEED = seed
-    echo(`Your mnemonic is ${seed}`)
+    echo(chalk.bgBlackBright('Your mnemonic is ') + chalk.bgBlue(seed))
 
-    // Set fork rpc if requested
-    const networks = {
-        mainnet: 'mainnet',
-        testnet: 'goerli'
-    }
-    const fork = argv.fork === 'true' ? 'mainnet' : argv.fork
+    // Set fork rpc if requested, default fork to mainnet if set vaguely
+    const networks = { mainnet: 'mainnet', testnet: 'goerli' }
+    const fork = argv.fork === 'true' ? 'mainnet' : argv.fork === 'false' ? undefined : argv.fork
     if (fork) {
-        const { SecretString: key } = await aws.send(
-            new GetSecretValueCommand(
-                { 
-                    SecretId: `consensus-networks-ethereum-${fork}`
-                }
-            )
-        )
-        const rpc = `https://eth-${networks[fork]}.g.alchemy.com/v2/${key}`
-        process.env.ETHEREUM_FORK_RPC = rpc
-        echo(`Using ${fork} fork at ${rpc}`)
+        const key = await getSecret(`consensus-networks-ethereum-${fork}`)
+        const url = `https://eth-${networks[fork]}.g.alchemy.com/v2/${key}`
+        process.env.ETHEREUM_FORK_URL = url
+        echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(` fork at ${url}`))
     }
 
     $`npm run test --workspace @casimir/ethereum`

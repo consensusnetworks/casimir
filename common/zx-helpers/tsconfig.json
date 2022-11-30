@@ -12,15 +12,10 @@
         "forceConsistentCasingInFileNames": true,
         "isolatedModules": true
     },
+    "exclude": [
+        "node_modules"
+    ],
     "include": [
-        "scripts/*.ts",
-        "./test/*.ts",       
-        "src/index.ts"    
-    ],
-    "typeRoots": [
-        "node_modules/@types"
-    ],
-    "files": [
-        "hardhat.config.ts"
+        "./src/*"
     ]
 }
