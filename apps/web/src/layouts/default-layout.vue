@@ -5,7 +5,7 @@ import SideNav from '@/components/navigation/SideNav.vue'
 <template>
   <div
     id="layout"
-    class="h-screen flex"
+    class="h-screen flex min-h-[600px]"
   >
     <SideNav />
     <div

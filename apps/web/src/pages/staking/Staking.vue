@@ -2,9 +2,10 @@
 // To Do: Grab all staking info 
 // balance, staked, reward info
 
+import router from '@/composables/router'
 import { ref, shallowRef, onBeforeMount, onMounted } from 'vue'
 
-import ETHStaking from './components/ETHStaking.vue'
+import StakingModal from './components/StakingModal.vue'
 
 const selectedComponent = shallowRef(null)
 
@@ -13,15 +14,17 @@ const toggleModal = (component: any) => {
 }
 
 onMounted(() => {
+  if( router.currentRoute.value.fullPath.split('/').length > 1 ) {
+    toggleModal(StakingModal)
+  }
   const modal = document.getElementById('staking_modal')
   window.onclick = function(event) {
     if (event.target === modal) {
       toggleModal(null)
+      router.push('/Staking')
     }
   }
 })
-
-
 
 </script>
 <template>
@@ -32,16 +35,17 @@ onMounted(() => {
     >
       <div
         id="staking_modal"
-        class="modal grid grid-cols-1 place-content-center p-[50px]"
+        class="modal grid grid-cols-1 place-content-center p-[50px] min-h-[650px]"
       >
         <component
           :is="selectedComponent"
           :toggle-modal="toggleModal"
           class="modal-content"
-        />
+        >
+          <RouterView />
+        </component>
       </div>
     </div>
-    
     <div>
       <h5 class="font-bold mb-[30px]">
         Casimir Staking
@@ -94,12 +98,14 @@ onMounted(() => {
           </h6>
         </div>
         <div class="flex flex-col justify-between">
-          <button
-            class="btn_primary"
-            @click="toggleModal(ETHStaking)"
-          >
-            Stake
-          </button>
+          <RouterLink to="Staking/ETH">
+            <button
+              class="btn_primary"
+              @click="toggleModal(StakingModal)"
+            >
+              Stake
+            </button>
+          </RouterLink>
         </div>
       </div>
     </div>

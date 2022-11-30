@@ -83,6 +83,13 @@ background: #fff;
     }
 }
 @layer components {
+    .pill_primary{
+        @apply py-[6px] px-[12px]
+        bg-[#EAF1FF] text-primary 
+        border border-primary border-[0.25px]
+        rounded-[100px] text-body font-bold text-center
+        flex items-center;
+    }
     .btn_primary {
         @apply  flex  flex-row  items-center 
         justify-center  px-[24px]  py-[12px] 

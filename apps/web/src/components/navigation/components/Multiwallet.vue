@@ -17,22 +17,22 @@ const account = ref(false)
 const connectedWallets = ref([
     {
         name: 'Metamask',
-        icon: 'metamask.svg',
+        icon: '/metamask.svg',
         master: true,
     },
     {
         name: 'Coinbase',
-        icon: 'coinbase.svg',
+        icon: '/coinbase.svg',
         master: false,
     },
     {
         name: 'Wallet Connect',
-        icon: 'walletconnect.svg',
+        icon: '/walletconnect.svg',
         master: false,
     },
     {
         name: 'Ledger',
-        icon: 'ledger.svg',
+        icon: '/ledger.svg',
         master: false,
     },
 ])
@@ -67,12 +67,12 @@ const connectedWallets = ref([
           >
             <div class="flex">
               <!-- To Do: Make this icon dragable and once it's placed in a wallet, that wallet becomes master wallet -->
-              <i
+              <!-- <i
                 v-show="item.master && open"
                 class="iconoir-keyframe-align-center text-blue_4 text-[24px] mr-[10px]"
-              />
+              /> -->
               <img
-                class="w-[24px]"
+                class="w-[20px]"
                 :src="item.icon"
                 :alt="item.name + ' Icon'"
               >
@@ -80,19 +80,20 @@ const connectedWallets = ref([
             
             <h6
               v-show="open"
-              class="slowExpandText h-min text-clip ml-gutter mt-[3px] text-body"
+              class="slowExpandText h-min text-clip ml-gutter mt-[3px] text-body font-medium"
             >
               {{ item.name }}
             </h6>
           </div>
-          <span
+          <!-- Will add this back when draggable icon is implemented -->
+          <!-- <span
             v-show="open"
             class="text-body text-grey_5 w-[205px]"
           >
             Drag the <i class="iconoir-keyframe-align-center text-blue_4 text-[12px] mx-[5px] inline-block" />
             icon to change your master wallet (Master wallet is the wallet that you connect
             to view your assets across all wallets)
-          </span>
+          </span> -->
         </div>
       </div>
     </div>
@@ -121,9 +122,26 @@ const connectedWallets = ref([
     </div>
     <button
       v-show="open"
+      v-if="!account"
       class="btn_primary my-[15px] text-body w-full"
+      @click="account = !account"
     >
-      Launch Casimir Multiwallet
+      Launch Demo 
+      <i
+        class="iconoir-play-outline font-bold text-body"
+      />
+    </button>
+
+    <button
+      v-show="open"
+      v-else
+      class="btn_primary my-[15px] text-body w-full"
+      @click="account = !account"
+    >
+      Close Demo 
+      <i
+        class="iconoir-cancel font-bold text-body"
+      />
     </button>
 
     <!-- This button will be romoved once we get a way to get dynamic accouts in -->
