@@ -38,10 +38,10 @@ contract SSVManager {
     /** Event signaling a user deposit to a pool */
     event PoolDeposit(address userAddress, address poolAddress, uint256 depositAmount, uint256 depositTime);
 
-    constructor(address linkTokenAddress, address ssvTokenAddress, address wethTokenAddress) {
-        tokens[Token.LINK] = linkTokenAddress;
-        tokens[Token.SSV] = ssvTokenAddress;
-        tokens[Token.WETH] = wethTokenAddress;
+    constructor(address LINKTokenAddress, address SSVTokenAddress, address WETHTokenAddress) {
+        tokens[Token.LINK] = LINKTokenAddress;
+        tokens[Token.SSV] = SSVTokenAddress;
+        tokens[Token.WETH] = WETHTokenAddress;
     }
 
     /**

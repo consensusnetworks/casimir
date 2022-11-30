@@ -1,7 +1,8 @@
 {
     "name": "@casimir/ethereum",
     "scripts": {
-        "dev:hardhat": "npx hardhat node",
+        "build": "echo 'Warning: @casimir/ethereum build not specified. Disregard this warning and any listed errors above if @casimir/ethereum is not needed for the current project build.' && exit 0",
+        "dev": "npx hardhat node",
         "dev:ssv": "npx hardhat run scripts/ssv.dev.ts",
         "deploy:beacon": "npx hardhat run scripts/beacon.deploy.ts",
         "deploy:ssv": "npx hardhat run scripts/ssv.deploy.ts",

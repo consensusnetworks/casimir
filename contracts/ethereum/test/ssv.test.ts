@@ -7,7 +7,15 @@ import { SSVManager } from '@casimir/ethereum/build/artifacts/types'
 /** Fixture to deploy SSV manager contract */
 async function deploymentFixture() {
   const [ owner ] = await ethers.getSigners()
-  const contract = await deployContract('SSVManager') as SSVManager
+  const name = 'SSVManager'
+  const args = {
+      LINKTokenAddress: process.env.LINK_TOKEN_ADDRESS,
+      SSVTokenAddress: process.env.SSV_TOKEN_ADDRESS,
+      WETHTokenAddress: process.env.WETH_TOKEN_ADDRESS
+  }
+  const options = {}
+  const proxy = false
+  const contract = await deployContract(name, proxy, args, options) as SSVManager
   return { contract, owner }
 }
 

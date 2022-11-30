@@ -1,7 +1,7 @@
 import { EventTableSchema } from '@casimir/data'
 import {IotexNetworkType, IotexService, IotexServiceOptions, newIotexService} from './providers/Iotex'
 import {EthereumService, EthereumServiceOptions, newEthereumService} from './providers/Ethereum'
-import { queryAthena, uploadToS3 } from '@casimir/helpers'
+import { queryAthena, uploadToS3 } from '@casimir/aws-helpers'
 import * as fs from 'fs'
 
 export enum Chain {
@@ -33,7 +33,7 @@ class Crawler {
     async setup(): Promise<void> {
         if (this.config.chain === Chain.Ethereum) {
             try {
-                this.service = await newEthereumService({ url: this.config?.options?.url || process.env.PUBLIC_ETHEREUM_RPC_URL || 'http://localhost:8545' })
+                this.service = await newEthereumService({ url: this.config?.options?.url || process.env.PUBLIC_ETHEREUM_URL || 'http://localhost:8545' })
             } catch (err) {
                 throw new Error(`failed to setup ethereum service: ${err}`)
             }

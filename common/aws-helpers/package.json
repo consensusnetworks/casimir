@@ -3,15 +3,18 @@
     "private": true,
     "main": "src/index.ts",
     "scripts": {
-        "dev": "npx esno src/index.ts",
         "build": "esbuild src/index.ts --bundle --minify --sourcemap --platform=node --target=esnext --outfile=dist/index.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "devDependencies": {
+    "dependencies": {
         "@aws-sdk/client-secrets-manager": "^3.204.0",
         "@aws-sdk/credential-providers": "^3.204.0",
+        "@aws-sdk/client-s3": "^3.204.0",
+        "@aws-sdk/client-athena": "^3.204.0",
+        "@aws-sdk/credential-provider-node": "^3.204.0"
+    },
+    "devDependencies": {
         "@types/node": "^17.0.38",
-        "esbuild": "^0.15.9",
-        "esno": "^0.16.3"
+        "esbuild": "^0.15.9"
     }
 }

@@ -14,19 +14,13 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Install all package dependencies
         run: npm ci
 
-      - name: Build helpers
-        run: npm run build --workspace @casimir/helpers
-
-      - name: Build landing app
-        run: npm run build --workspace @casimir/landing
+      - name: Build all packages
+        run: npm exec --workspaces -- npm run build
         env:
           PUBLIC_STAGE: ${{ env.STAGE }}
-
-      - name: Build auth service
-        run: npm run build --workspace @casimir/auth
 
       - name: Test cdk stacks
         run: npm run test --workspace @casimir/cdk

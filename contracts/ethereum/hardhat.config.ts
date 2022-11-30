@@ -1,16 +1,26 @@
+import { snakeCase } from '@casimir/string-helpers'
 import localtunnel from 'localtunnel'
 import os from 'os'
+import { HardhatUserConfig } from 'hardhat/config'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
-import { HardhatUserConfig } from 'hardhat/config'
 import '@sebasgoldberg/hardhat-wsprovider'
 import 'solidity-docgen'
 import '@openzeppelin/hardhat-upgrades'
 
-const forkUrl = process.env.ETHEREUM_FORK_URL
-const network = forkUrl?.includes('mainnet') ? 'mainnet' : forkUrl?.includes('goerli') ? 'goerli' : 'localhost'
-const env = {
+const intervalMining = process.env.INTERVAL_MINING === 'true'
+const hardhatUrl = process.env.PUBLIC_ETHEREUM_URL as string
+const hardhatNetwork = process.env.HARDHAT_NETWORK as string
+const forkingUrl = process.env.ETHEREUM_FORKING_URL as string
+const forkingNetwork = forkingUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
+
+if (!hardhatUrl && hardhatNetwork && hardhatNetwork !== 'hardhat') {
+  console.log('Set a PUBLIC_ETHEREUM_URL when using the non-default hardhat network.')
+  process.exit(0)
+}
+
+const externalArgs = {
   mainnet: {
     linkTokenAddress: '',
     ssvTokenAddress: '',
@@ -23,8 +33,18 @@ const env = {
   }
 } 
 
-const httpUrl = `http://localhost:${process.env.ETHEREUM_EXECUTION_HTTP_PORT}`
-const mnemonic = process.env.BIP39_SEED
+const network = forkingNetwork || hardhatNetwork
+if (network) {
+  const args = externalArgs[network]
+  for (const key in args) {
+    const variable = snakeCase(key).toUpperCase()
+
+    // Set environment variable, for example, process.env.LINK_TOKEN_ADDRESS = '0x...'
+    process.env[variable] = args[key as keyof typeof args]
+  }
+}
+
+const mnemonic = process.env.BIP39_SEED as string
 
 const hid = {
   mnemonic,
@@ -43,20 +63,14 @@ const miningInterval = {
   interval: 12000
 }
 
-const compilerVersions = ['0.8.16', '0.4.22', '0.6.11', '0.8.4']
-// const externalCompilerVersions = ['0.4.22', '0.6.11', '0.8.4']
-// if () {
-
-// }
-
+const compilerVersions = ['0.8.16']
+const externalCompilerVersions = ['0.4.22', '0.6.11', '0.8.4']
+const compilers = [...compilerVersions, ...externalCompilerVersions].map(version => ({ version, settings: compilerSettings }))
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
   solidity: {
-    compilers: [
-      ...compilerVersions.map(version => ({ version, settings: compilerSettings })),
-
-    ]
+    compilers
   },
   paths: {
     tests: './test',
@@ -71,18 +85,19 @@ const config: HardhatUserConfig = {
     hardhat: {
       accounts: mnemonic ? { ...hid, accountsBalance: '48000000000000000000' } : undefined,
       chainId: 1337,
-      forking: forkUrl ? { url: forkUrl } : undefined,
-      mining: process.env.INTERVAL_MINING ? miningInterval : undefined,
+      forking: forkingUrl ? { url: forkingUrl } : undefined,
+      mining: intervalMining ? miningInterval : undefined,
       allowUnlimitedContractSize: true,
       gas: 'auto',
       gasPrice: 'auto'
     },
-    geth: {
-      url: httpUrl || 'http://localhost:8545',
+    mainnet: {
       accounts: mnemonic ? { ...hid } : undefined,
-      allowUnlimitedContractSize: true,
-      gas: 'auto',
-      gasPrice: 'auto'
+      url: hardhatUrl || ''
+    },
+    goerli: {
+      accounts: mnemonic ? { ...hid } : undefined,
+      url: hardhatUrl || ''
     }
   },
   mocha: {
@@ -90,7 +105,7 @@ const config: HardhatUserConfig = {
   }
 }
 
-if (process.env.LOCAL_TUNNEL && process.env.HARDHAT_NETWORK !== 'localhost') {
+if (process.env.LOCAL_TUNNEL) {
   // Start a local tunnel for using RPC over https
   const localSubdomain = `cn-hardhat-${os.userInfo().username.toLowerCase()}`
   const localUrl = `https://${localSubdomain}.loca.lt`

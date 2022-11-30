@@ -19,14 +19,14 @@ void async function () {
     echo(chalk.bgBlackBright('Your mnemonic is ') + chalk.bgBlue(seed))
 
     // Set fork rpc if requested, default fork to mainnet if set vaguely
-    const networks = { mainnet: 'mainnet', testnet: 'goerli' }
     const fork = argv.fork === 'true' ? 'mainnet' : argv.fork === 'false' ? undefined : argv.fork
     if (fork) {
         const key = await getSecret(`consensus-networks-ethereum-${fork}`)
-        const url = `https://eth-${networks[fork]}.g.alchemy.com/v2/${key}`
-        process.env.ETHEREUM_FORK_URL = url
+        const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
+        process.env.ETHEREUM_FORKING_URL = url
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(` fork at ${url}`))
     }
 
     $`npm run test --workspace @casimir/ethereum`
+
 }()
