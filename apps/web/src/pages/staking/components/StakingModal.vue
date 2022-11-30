@@ -24,9 +24,11 @@ const currentBalance = ref('45 ETH | $123,123.11')
           class="w-[24px] h-[24px]"
         >
         ETH Staking
-        <span class="font-semibold text-primary text-body mt-[10px] sr-only s_sm:not-sr-only">
-          {{ currentBalance }}
-        </span>
+        <div>
+          <span class="font-semibold text-primary text-body sr-only s_sm:not-sr-only">
+            {{ currentBalance }}
+          </span>
+        </div>
       </h5>
       <RouterLink to="/Staking">
         <button
