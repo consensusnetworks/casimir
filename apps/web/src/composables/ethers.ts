@@ -78,7 +78,7 @@ export default function useEthers() {
     return { gasPrice, gasLimit }
   }
 
-  async function loginWithEthers ( providerString: ProviderString ,selectedAccount: string) {
+  async function loginWithEthers ( providerString: ProviderString, selectedAccount: string) {
     const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider =
       new ethers.providers.Web3Provider(browserProvider as EthersProvider)
