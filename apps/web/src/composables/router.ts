@@ -10,6 +10,8 @@ import ETHStaking from '@/pages/staking/components/ETHStaking.vue'
 // @ts-ignore
 import ETHWalletSelect from '@/pages/staking/components/ETHWalletSelect.vue'
 // @ts-ignore
+import ETHConfirmStake from '@/pages/staking/components/ETHConfirmStake.vue'
+// @ts-ignore
 import Assets from '@/pages/assets/Assets.vue'
 // @ts-ignore
 import Test from '@/pages/test/Test.vue'
@@ -37,6 +39,10 @@ const routes = [
         {
             path: 'ETH/Select-Wallet', 
             component: ETHWalletSelect,
+        },
+        {
+            path: 'ETH/Confirm-Stake', 
+            component: ETHConfirmStake,
         }
     ]
 },{ 

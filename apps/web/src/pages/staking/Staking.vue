@@ -14,8 +14,10 @@ const toggleModal = (component: any) => {
 }
 
 onMounted(() => {
-  if( router.currentRoute.value.fullPath.split('/').length > 1 ) {
+  if( router.currentRoute.value.fullPath.split('/').length > 2 ) {
     toggleModal(StakingModal)
+  } else {
+    toggleModal(null)
   }
   const modal = document.getElementById('staking_modal')
   window.onclick = function(event) {
@@ -35,7 +37,7 @@ onMounted(() => {
     >
       <div
         id="staking_modal"
-        class="modal grid grid-cols-1 place-content-center p-[50px] min-h-[650px]"
+        class="modal grid grid-cols-1 place-content-center p-[50px] csm:p-[0px] min-h-[650px]"
       >
         <component
           :is="selectedComponent"
@@ -47,7 +49,7 @@ onMounted(() => {
       </div>
     </div>
     <div>
-      <h5 class="font-bold mb-[30px]">
+      <h5 class="font-bold mb-[30px] whitespace-nowrap">
         Casimir Staking
       </h5>
     </div>
@@ -72,7 +74,7 @@ onMounted(() => {
         
         <div class="flex flex-col justify-between sr-only s_sm:not-sr-only">
           <h6 class="font-medium">
-            Balance
+            Unstaked ETH
           </h6>
           <h6 class="font-medium text-grey_3">
             <!-- random -->
@@ -90,7 +92,7 @@ onMounted(() => {
         </div>
         <div class="flex flex-col justify-between sr-only s_lg:not-sr-only">
           <h6 class="font-medium">
-            Rewards
+            In Rewards
           </h6>
           <h6 class="font-medium text-grey_3">
             <!-- random -->

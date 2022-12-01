@@ -15,7 +15,7 @@ const currentBalance = ref('45 ETH | $123,123.11')
 </script>
   
 <template>
-  <div class="flex flex-col min-w-[290px] w-full min-h-[500px] h-[80vh]">
+  <div class="flex flex-col min-w-[300px] w-full min-h-[500px] h-[80vh]">
     <div class="flex items-center justify-between mb-[20px]">
       <h5 class="font-bold flex items-center gap-[10px]">
         <img
