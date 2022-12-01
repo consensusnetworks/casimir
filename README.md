@@ -160,7 +160,7 @@ Run local cryptonodes for fast and flexible development.
 3. Run a local Ethereum node with archived data from Goerli testnet.
 
     ```zsh
-    npm run dev:ethereum --fork=testnet
+    npm run dev:ethereum --fork=goerli
     ```
 
 > 🚩 Note, while the fork starts with the same state as the specified network, it lives as a local development network.

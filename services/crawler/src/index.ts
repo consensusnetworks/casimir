@@ -1,7 +1,7 @@
 import { EventTableSchema } from '@casimir/data'
 import { IotexNetworkType, IotexService, IotexServiceOptions } from './providers/Iotex'
 import { EthereumService, EthereumServiceOptions } from './providers/Ethereum'
-import { queryAthena, uploadToS3 } from '@casimir/helpers'
+import { queryAthena, uploadToS3 } from '@casimir/aws-helpers'
 import { fork, ChildProcess } from 'child_process'
 
 export enum Chain {

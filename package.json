@@ -10,19 +10,20 @@
     "services/*"
   ],
   "scripts": {
-    "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules && npm i",
+    "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules package-lock.json && npm i",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "dev": "scripts/local/dev -f \"$npm_config_fork\" -l \"$npm_config_ledger\" -m \"$npm_config_mock\" -n \"$npm_config_network\" -t \"$npm_config_trezor\" -x \"$npm_config_external\"",
     "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
-    "dev:ethereum": "scripts/ethereum/dev -f \"$npm_config_fork\"",
+    "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --fork=\"$npm_config_fork\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
     "dev:ledger": "scripts/ledger/emulate -a \"$npm_config_app\"",
     "dev:trezor": "scripts/trezor/emulate",
+    "dev:ssv": "scripts/ssv/dev -n \"$npm_config_nodes\"",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "prepare": "husky install",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:ethereum": "scripts/ethereum/test -f \"$npm_config_fork\"",
+    "test:ethereum": "npx esno -r dotenv/config scripts/ethereum/test.ts --fork=\"$npm_config_fork\"",
     "test:crawler": "scripts/crawler/test -f \"$npm_config_fork\" -n \"$npm_config_network\"",
     "test:push": "scripts/actions/test -w push",
     "release": "release-it"
@@ -39,18 +40,21 @@
   },
   "homepage": "https://github.com/consensusnetworks/casimir#readme",
   "devDependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.204.0",
+    "@aws-sdk/credential-providers": "^3.204.0",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "@typescript-eslint/parser": "^5.30.5",
     "@vue/eslint-config-typescript": "^10.0.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "eslint": "^8.19.0",
     "eslint-plugin-vue": "^8.7.1",
-    "esno": "^0.16.3",
     "express": "^4.18.1",
     "http-proxy-middleware": "^2.0.6",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.0",
-    "release-it": "^10.0.3"
+    "release-it": "^10.0.3",
+    "zx": "^7.1.1"
   },
   "lint-staged": {
     "*.{ts,vue}": "npm run lint"

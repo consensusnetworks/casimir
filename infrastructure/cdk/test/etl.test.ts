@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib'
 import { Template } from 'aws-cdk-lib/assertions'
-import { EtlStack } from '../lib/etl/etl-stack'
-import {eventSchema, aggSchema, schemaToGlueColumns} from '@casimir/data'
+import { EtlStack } from '../lib/etl'
+import { eventSchema, aggSchema, schemaToGlueColumns } from '@casimir/data'
 
 test('ETL stack created', () => {
 

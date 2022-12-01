@@ -46,6 +46,8 @@ do
     esac
 done
 
+commands=()
+
 # Default to mainnet if fork is set vaguely
 if [ "$fork" = true ]; then
     fork=mainnet
@@ -55,8 +57,6 @@ fi
 if [ "$network" = true ]; then
     network=mainnet
 fi
-
-commands=()
 
 if [ "$app" == "landing" ]; then
     # Default settings for landing page development
@@ -85,7 +85,7 @@ else
 
             CHAIN=$(echo $chain | tr '[:lower:]' '[:upper:]')
             rpc_base=${chain}_${network}
-            export "PUBLIC_${CHAIN}_RPC"="${!rpc_base}/$rpc_key"
+            export "PUBLIC_${CHAIN}_URL"="${!rpc_base}/$rpc_key"
         else
             # Pass fork or network to chain-specific script
             commands+=("npm run dev:$chain --fork=$fork")
