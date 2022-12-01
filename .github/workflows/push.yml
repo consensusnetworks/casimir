@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
 
       - name: Set the stage for testing
         if: ${{ github.actor == 'nektos/act' }}

@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
 
       - name: Install all package dependencies
         run: npm ci
