@@ -2,6 +2,14 @@
 
 ## SSVManager
 
+### counter
+
+```solidity
+struct Counters.Counter counter
+```
+
+Pool ID generator
+
 ### swapFee
 
 ```solidity
@@ -37,12 +45,30 @@ struct Fees {
 }
 ```
 
-### UserAccount
+### Balance
 
 ```solidity
-struct UserAccount {
-  mapping(address => bool) poolAddressLookup;
-  address[] poolAddresses;
+struct Balance {
+  uint256 stake;
+  uint256 rewards;
+}
+```
+
+### Pool
+
+```solidity
+struct Pool {
+  struct SSVManager.Balance balance;
+  mapping(address => struct SSVManager.Balance) userBalances;
+}
+```
+
+### User
+
+```solidity
+struct User {
+  mapping(uint256 => bool) poolIdLookup;
+  uint256[] poolIds;
 }
 ```
 
@@ -57,26 +83,34 @@ Token addresses
 ### users
 
 ```solidity
-mapping(address => struct SSVManager.UserAccount) users
+mapping(address => struct SSVManager.User) users
 ```
 
 All users who have deposited to pools
 
-### openPools
+### pools
 
 ```solidity
-address[] openPools
+mapping(uint256 => struct SSVManager.Pool) pools
 ```
 
-Pools accepting deposits
+SSV pools
 
-### stakedPools
+### openPoolIds
 
 ```solidity
-address[] stakedPools
+uint256[] openPoolIds
 ```
 
-Pools completed and staked
+Pool IDs of pools accepting deposits
+
+### stakedPoolIds
+
+```solidity
+uint256[] stakedPoolIds
+```
+
+Pool IDs of pools completed and staked
 
 ### ManagerDeposit
 
@@ -89,7 +123,7 @@ Event signaling a user deposit to the manager
 ### PoolStake
 
 ```solidity
-event PoolStake(address userAddress, address poolAddress, uint256 linkAmount, uint256 ssvAmount, uint256 stakeAmount, uint256 stakeTime)
+event PoolStake(address userAddress, uint256 poolId, uint256 linkAmount, uint256 ssvAmount, uint256 stakeAmount, uint256 stakeTime)
 ```
 
 Event signaling a user stake to a pool
@@ -124,10 +158,10 @@ _Process fees from deposit_
 | [1] | uint256 |  |
 | [2] | uint256 |  |
 
-### depositWETH
+### wrap
 
 ```solidity
-function depositWETH(uint256 amount) private
+function wrap(uint256 amount) private
 ```
 
 _Deposit WETH to use ETH in swaps_
@@ -145,20 +179,6 @@ _Swap one token-in for another token-out_
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint256 | The amount of token-out |
-
-### deployPool
-
-```solidity
-function deployPool(bytes32 _salt) private returns (address)
-```
-
-_Deploy a new pool contract_
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | The address of the newly deployed pool contract |
 
 ### getFees
 
@@ -202,38 +222,38 @@ Get the SSV fee percentage to charge on each deposit
 | ---- | ---- | ----------- |
 | [0] | uint256 | The SSV fee percentage to charge on each deposit |
 
-### getOpenPools
+### getOpenPoolIds
 
 ```solidity
-function getOpenPools() external view returns (address[])
+function getOpenPoolIds() external view returns (uint256[])
 ```
 
-Get all open pools
+Get all open pool IDs
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address[] | An array of all open pools |
+| [0] | uint256[] | An array of all open pool IDs |
 
-### getStakedPools
+### getStakedPoolIds
 
 ```solidity
-function getStakedPools() external view returns (address[])
+function getStakedPoolIds() external view returns (uint256[])
 ```
 
-Get all the staked pools
+Get all the staked pool IDs
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address[] | An array of all the staked pools |
+| [0] | uint256[] | An array of all the staked pool IDs |
 
 ### getPoolsForUser
 
 ```solidity
-function getPoolsForUser(address userAddress) external view returns (address[])
+function getPoolsForUser(address userAddress) external view returns (uint256[])
 ```
 
 Get the pools for a given user
@@ -242,119 +262,35 @@ Get the pools for a given user
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address[] | An array of pools for a given user |
+| [0] | uint256[] | An array of pools for a given user |
 
-### getUserBalanceForPool
+### getPoolUserBalance
 
 ```solidity
-function getUserBalanceForPool(address userAddress, address poolAddress) external view returns (uint256)
+function getPoolUserBalance(address userAddress, uint256 poolId) external view returns (struct SSVManager.Balance)
 ```
 
-Get the given user's balance for the given pool
+Get a pool user balance by pool ID
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The given user's balance for the given pool |
+| [0] | struct SSVManager.Balance | The pool user balance |
 
-### getBalanceForPool
+### getPoolBalance
 
 ```solidity
-function getBalanceForPool(address poolAddress) external view returns (uint256)
+function getPoolBalance(uint256 poolId) external view returns (struct SSVManager.Balance)
 ```
 
-Get the given pool's balance
+Get a pool balance by pool ID
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The given pool's balance |
-
-## SSVPool
-
-### userBalances
-
-```solidity
-mapping(address => uint256) userBalances
-```
-
-All user balances
-
-### constructor
-
-```solidity
-constructor() public
-```
-
-### deposit
-
-```solidity
-function deposit(address userAddress) external payable
-```
-
-Deposit to the pool
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| userAddress | address | The user address of the depositor |
-
-### getBalance
-
-```solidity
-function getBalance() external view returns (uint256)
-```
-
-Get the total pool balance
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | The total pool balance |
-
-### getUserBalance
-
-```solidity
-function getUserBalance(address userAddress) external view returns (uint256)
-```
-
-Get a given user's pool balance
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| userAddress | address | The user address to look up |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | The user's pool balance |
-
-## ISSVPool
-
-### deposit
-
-```solidity
-function deposit(address userAddress) external payable
-```
-
-### getBalance
-
-```solidity
-function getBalance() external view returns (uint256)
-```
-
-### getUserBalance
-
-```solidity
-function getUserBalance(address userAddress) external view returns (uint256)
-```
+| [0] | struct SSVManager.Balance | The pool balance |
 
 ## IWETH9
 

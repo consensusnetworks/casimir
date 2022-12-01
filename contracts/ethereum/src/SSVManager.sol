@@ -13,7 +13,7 @@ contract SSVManager {
     using Counters for Counters.Counter;
 
     /** Pool ID generator */
-    Counters.Counter counter;
+    Counters.Counter _lastPoolId;
     /** Uniswap 0.3% fee tier */
     uint24 swapFee = 3000;
     /** Uniswap ISwapRouter */    
@@ -88,9 +88,9 @@ contract SSVManager {
             if (openPoolIds.length > 0) {
                 poolId = openPoolIds[0];
             } else {
-                /// Generate a new pool
-                counter.increment();
-                poolId = counter.current();
+                /// Generate a new pool ID
+                _lastPoolId.increment();
+                poolId = _lastPoolId.current();
 
                 /// Push new open pool ID
                 openPoolIds.push(poolId);
@@ -115,8 +115,6 @@ contract SSVManager {
                 for (uint i = 0; i < openPoolIds.length - 1; i++) {
                     openPoolIds[i] = openPoolIds[i + 1];
                 }
-
-                console.log('Staking pool', poolId);
 
                 openPoolIds.pop();
                 /// Add completed pool to staked pools
