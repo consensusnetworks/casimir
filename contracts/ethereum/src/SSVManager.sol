@@ -12,51 +12,65 @@ import 'hardhat/console.sol';
 contract SSVManager {    
     using Counters for Counters.Counter;
 
-    /** Pool ID generator */
-    Counters.Counter _lastPoolId;
-    /** Uniswap 0.3% fee tier */
-    uint24 swapFee = 3000;
-    /** Uniswap ISwapRouter */    
-    ISwapRouter public immutable swapRouter;
     /** Token abbreviation */
     enum Token {
         LINK,
         SSV,
         WETH
     }
+
     /** Token fees required for contract protocols */
     struct Fees {
         uint256 LINK;
         uint256 SSV;
     }
+
     /** User balance for storing user stake and reward amounts */
     struct Balance {
         uint256 stake;
         uint256 rewards;
     }
+
     /** SSV pool used for running a validator */
     struct Pool {
         Balance balance;
         mapping (address => Balance) userBalances;
 
     }
+
     /** User account for storing pool addresses */
     struct User {
         mapping (uint256 => bool) poolIdLookup;
         uint256[] poolIds;
     }
+
+    /** Pool ID generator */
+    Counters.Counter _lastPoolId;
+
+    /** Uniswap 0.3% fee tier */
+    uint24 swapFee = 3000;
+
+    /** Uniswap ISwapRouter */    
+    ISwapRouter public immutable swapRouter;
+
     /** Token addresses */
     mapping(Token => address) private tokens;
+
     /** All users who have deposited to pools */
     mapping (address => User) private users;
+
     /** SSV pools */
     mapping(uint256 => Pool) private pools;
+
     /** Pool IDs of pools accepting deposits */
     uint256[] private openPoolIds;
+
     /** Pool IDs of pools completed and staked */
     uint256[] private stakedPoolIds;
+
     /** Event signaling a user deposit to the manager */
     event ManagerDeposit(address userAddress, uint256 depositAmount, uint256 depositTime);
+    
     /** Event signaling a user stake to a pool */
     event PoolStake(address userAddress, uint256 poolId, uint256 linkAmount, uint256 ssvAmount, uint256 stakeAmount, uint256 stakeTime);
 

@@ -2,10 +2,10 @@
 
 ## SSVManager
 
-### counter
+### _lastPoolId
 
 ```solidity
-struct Counters.Counter counter
+struct Counters.Counter _lastPoolId
 ```
 
 Pool ID generator
