@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.16;
 
-import './SSVPool.sol';
-import './interfaces/ISSVPool.sol';
 import './interfaces/IWETH9.sol';
+import "@openzeppelin/contracts/utils/Counters.sol";
 import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 import 'hardhat/console.sol';
 
 /**
  * @title Manager contract that accepts and distributes deposits 
  */
-contract SSVManager {
+contract SSVManager {    
+    using Counters for Counters.Counter;
+
+    /** Pool ID generator */
+    Counters.Counter counter;
     /** Uniswap 0.3% fee tier */
     uint24 swapFee = 3000;
     /** Uniswap ISwapRouter */    
@@ -26,23 +29,36 @@ contract SSVManager {
         uint256 LINK;
         uint256 SSV;
     }
+    /** User balance for storing user stake and reward amounts */
+    struct Balance {
+        uint256 stake;
+        uint256 rewards;
+    }
+    /** SSV pool used for running a validator */
+    struct Pool {
+        Balance balance;
+        mapping (address => Balance) userBalances;
+
+    }
     /** User account for storing pool addresses */
-    struct UserAccount {
-        mapping (address => bool) poolAddressLookup;
-        address[] poolAddresses;
+    struct User {
+        mapping (uint256 => bool) poolIdLookup;
+        uint256[] poolIds;
     }
     /** Token addresses */
     mapping(Token => address) private tokens;
     /** All users who have deposited to pools */
-    mapping (address => UserAccount) private users;
-    /** Pools accepting deposits */
-    address[] private openPools;
-    /** Pools completed and staked */
-    address[] private stakedPools;
+    mapping (address => User) private users;
+    /** SSV pools */
+    mapping(uint256 => Pool) private pools;
+    /** Pool IDs of pools accepting deposits */
+    uint256[] private openPoolIds;
+    /** Pool IDs of pools completed and staked */
+    uint256[] private stakedPoolIds;
     /** Event signaling a user deposit to the manager */
     event ManagerDeposit(address userAddress, uint256 depositAmount, uint256 depositTime);
     /** Event signaling a user stake to a pool */
-    event PoolStake(address userAddress, address poolAddress, uint256 linkAmount, uint256 ssvAmount, uint256 stakeAmount, uint256 stakeTime);
+    event PoolStake(address userAddress, uint256 poolId, uint256 linkAmount, uint256 ssvAmount, uint256 stakeAmount, uint256 stakeTime);
 
     constructor(address swapRouterAddress, address linkTokenAddress, address ssvTokenAddress, address wethTokenAddress) {
         swapRouter = ISwapRouter(swapRouterAddress);
@@ -66,60 +82,58 @@ contract SSVManager {
         (uint256 linkAmount, uint256 ssvAmount, uint256 stakeAmount) = processFees(depositAmount);
 
         while (stakeAmount > 0) {
-            /// Get contract address for next open pool
-            address poolAddress;
-            if (openPools.length > 0) {
-                poolAddress = openPools[0];
+            /// Get next open pool
+            uint256 poolId;
+            Pool storage pool;
+            if (openPoolIds.length > 0) {
+                poolId = openPoolIds[0];
             } else {
-                /// Deploy new contract
-                poolAddress = deployPool(
-                    /// Include unique salt
-                    keccak256(
-                        abi.encodePacked(
-                            user, 
-                            time, 
-                            stakeAmount
-                        )
-                    )
-                );
-                /// Push new open pool
-                openPools.push(poolAddress);
+                /// Generate a new pool
+                counter.increment();
+                poolId = counter.current();
+
+                /// Push new open pool ID
+                openPoolIds.push(poolId);
             }
 
-            /// Get the pool contract
-            ISSVPool poolContract = ISSVPool(poolAddress);
+            /// Get the pool
+            pool = pools[poolId];
 
             /// Get contract amount for next open pool
-            uint256 poolAmount = poolContract.getBalance();
+            uint256 poolStakeAmount = pool.balance.stake;
 
             /// Deposit to pool
-            uint256 poolRequiredAmount = 32000000000000000000 - poolAmount;
-            uint256 newStakeAmount;
+            uint256 poolRequiredAmount = 32000000000000000000 - poolStakeAmount;
+            uint256 userStakeAmount;
             if (poolRequiredAmount > stakeAmount) {
-                newStakeAmount = stakeAmount;
+                userStakeAmount = stakeAmount;
                 stakeAmount = 0;
             } else {
-                newStakeAmount = poolRequiredAmount;
+                userStakeAmount = poolRequiredAmount;
                 stakeAmount -= poolRequiredAmount;
                 /// Remove pool from open pools if completed
-                for (uint i = 0; i < openPools.length - 1; i++) {
-                    openPools[i] = openPools[i + 1];
+                for (uint i = 0; i < openPoolIds.length - 1; i++) {
+                    openPoolIds[i] = openPoolIds[i + 1];
                 }
-                openPools.pop();
+
+                console.log('Staking pool', poolId);
+
+                openPoolIds.pop();
                 /// Add completed pool to staked pools
-                stakedPools.push(poolAddress);
+                stakedPoolIds.push(poolId);
             }
-            // Todo first transfer LINK and SSV to poolContract
-            poolContract.deposit{ value: newStakeAmount }(user);
+            // Todo first transfer LINK and SSV to pool
+            pool.balance.stake += userStakeAmount;
+            pool.userBalances[user].stake += userStakeAmount;
 
             /// Save pool address to user if new stake
-            if (!users[user].poolAddressLookup[poolAddress]) {
-                users[user].poolAddressLookup[poolAddress] = true;
-                users[user].poolAddresses.push(poolAddress);
+            if (!users[user].poolIdLookup[poolId]) {
+                users[user].poolIdLookup[poolId] = true;
+                users[user].poolIds.push(poolId);
             }
             
             /// Emit pool stake event
-            emit PoolStake(user, poolAddress, linkAmount, ssvAmount, stakeAmount, time);
+            emit PoolStake(user, poolId, linkAmount, ssvAmount, stakeAmount, time);
         }
 
 
@@ -136,7 +150,7 @@ contract SSVManager {
         uint256 feeAmount = depositAmount - stakeAmount;
 
         /// Wrap ETH fees in ERC-20 to use in swap
-        depositWETH(feeAmount);
+        wrap(feeAmount);
 
         /// Swap fees and return with { stakeAmount, linkAmount, ssvAmount }
         uint256 linkAmount = swap(tokens[Token.WETH], tokens[Token.LINK], feeAmount * fees.LINK / feesTotal);
@@ -148,7 +162,7 @@ contract SSVManager {
     /**
      * @dev Deposit WETH to use ETH in swaps
      */
-    function depositWETH(uint256 amount) private {
+    function wrap(uint256 amount) private {
         IWETH9 wethToken = IWETH9(tokens[Token.WETH]);
         wethToken.deposit{ value: amount }();
         wethToken.approve(address(swapRouter), amount);
@@ -176,14 +190,6 @@ contract SSVManager {
     }
 
     /**
-     * @dev Deploy a new pool contract
-     * @return The address of the newly deployed pool contract
-     */
-    function deployPool(bytes32 _salt) private returns (address) {
-        return address(new SSVPool{salt: _salt}());
-    }
-
-    /**
      * @notice Get the current token fees as percentages
      * @return The current token fees as percentages
      */
@@ -208,45 +214,43 @@ contract SSVManager {
     }
 
     /**
-     * @notice Get all open pools
-     * @return An array of all open pools
+     * @notice Get all open pool IDs
+     * @return An array of all open pool IDs
      */ 
-    function getOpenPools() external view returns (address[] memory) {
-        return openPools;
+    function getOpenPoolIds() external view returns (uint256[] memory) {
+        return openPoolIds;
     }
 
     /**
-     * @notice Get all the staked pools
-     * @return An array of all the staked pools
+     * @notice Get all the staked pool IDs
+     * @return An array of all the staked pool IDs
      */ 
-    function getStakedPools() external view returns (address[] memory) {
-        return stakedPools;
+    function getStakedPoolIds() external view returns (uint256[] memory) {
+        return stakedPoolIds;
     }
 
     /**
      * @notice Get the pools for a given user
      * @return An array of pools for a given user
      */ 
-    function getPoolsForUser(address userAddress) external view returns (address[] memory) {
-        return users[userAddress].poolAddresses;
+    function getPoolsForUser(address userAddress) external view returns (uint256[] memory) {
+        return users[userAddress].poolIds;
     }
 
     /**
-     * @notice Get the given user's balance for the given pool
-     * @return The given user's balance for the given pool
+     * @notice Get a pool user balance by pool ID
+     * @return The pool user balance
      */ 
-    function getUserBalanceForPool(address userAddress, address poolAddress) external view returns (uint256) {
-        ISSVPool poolContract = ISSVPool(poolAddress);
-        return poolContract.getUserBalance(userAddress);
+    function getPoolUserBalance(address userAddress, uint256 poolId) external view returns (Balance memory) {
+        return pools[poolId].userBalances[userAddress];
     }
 
     /**
-     * @notice Get the given pool's balance
-     * @return The given pool's balance
+     * @notice Get a pool balance by pool ID
+     * @return The pool balance
      */ 
-    function getBalanceForPool(address poolAddress) external view returns (uint256) {
-        ISSVPool poolContract = ISSVPool(poolAddress);
-        return poolContract.getBalance();
+    function getPoolBalance(uint256 poolId) external view returns (Balance memory) {
+        return pools[poolId].balance;
     }
 
 }
