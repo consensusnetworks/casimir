@@ -1,19 +1,8 @@
 <template>
   <div>
     <div>
-      <input v-model="loginString">
-      <button @click="login(loginString)">
+      <button @click="login()">
         Login
-      </button>
-      <button @click="getMessage(selectedAccount)">
-        Get Message
-      </button>
-      <input
-        v-model="message"
-        placeholder="update message"
-      >
-      <button @click="updateMessage(message)">
-        Update Message
       </button>
     </div>
     <div>
@@ -193,7 +182,6 @@ import useUsers from '@/composables/users'
 
 const message = ref('')
 const signedMessage = ref('')
-const loginString = ref('')
 
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
@@ -210,7 +198,7 @@ const trezorAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
-const { addAccount, removeAccount, usersAccounts, getMessage, updateMessage } = useUsers()
+const { addAccount, removeAccount, usersAccounts } = useUsers()
 const {
   selectedProvider,
   selectedAccount,

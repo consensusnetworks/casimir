@@ -76,27 +76,10 @@ export default function useUsers () {
         return message
     }
 
-    async function updateMessage(message: string) {
-        const address = '0xd557a5745d4560b24d36a68b52351fff9c86a212'
-        const authBaseUrl = _getAuthBaseUrl()
-        const requestOptions = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({message})
-        }
-        const response = await fetch(`${authBaseUrl}/auth/${address}`, requestOptions)
-        const json = await response.json()
-        console.log('json :>> ', json)
-        return json
-    }
-
     return {
         usersAccounts,
         addAccount,
         removeAccount,
         getMessage,
-        updateMessage
     }
 }

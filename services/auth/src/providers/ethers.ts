@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
 import { LoginCredentials } from '@casimir/types'
-import getMessage from '../helpers/getMessage'
+import useUsers from './users'
+const { getMessage } = useUsers()
 
 export default function useEthers() {
 
@@ -22,8 +23,6 @@ export default function useEthers() {
                 return false
             } else {
                 const recoveredAddress = ethers.utils.verifyMessage(message, signedMessage)
-                console.log('address in verifyMessage (ethers.ts):>> ', address)
-                console.log('recoveredAddress in verifyMessage (ethers.ts):>> ', recoveredAddress)
                 return address.toLowerCase() === recoveredAddress.toLowerCase()
             }
         } catch (error) {

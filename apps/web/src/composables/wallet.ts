@@ -169,11 +169,13 @@ export default function useWallet() {
     return
   }
 
-  async function login(message: string) {
-    const messageInit: MessageInit = { message, providerString: selectedProvider.value }
+  async function login() {
     try {
       if (ethersProviderList.includes(selectedProvider.value)) {
-        await loginWithEthers(messageInit, selectedAccount.value)
+        const loggedIn = await loginWithEthers(selectedProvider.value, selectedAccount.value)
+        console.log('loggedIn :>> ', loggedIn)
+      } else {
+        console.log('Login not yet supported for this wallet provider')
       }
     } catch (err) {
       console.log(`There was an error logging in: ${err}`)
