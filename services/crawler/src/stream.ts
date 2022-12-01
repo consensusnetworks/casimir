@@ -1,6 +1,6 @@
 import {eventOutputBucket, IpcMessage} from './index'
 import { EthereumService } from './providers/Ethereum'
-import { uploadToS3 } from '@casimir/helpers'
+import { uploadToS3 } from '@casimir/aws-helpers'
 
 const buff: Array<number> = []
 

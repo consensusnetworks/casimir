@@ -12,7 +12,8 @@
   "scripts": {
     "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules package-lock.json && npm i",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
-    "dev": "scripts/local/dev -f \"$npm_config_fork\" -m \"$npm_config_mock\" -n \"$npm_config_network\" -s \"$npm_config_speculos\" -t \"$npm_config_tunnel\"",
+    "dev": "scripts/local/dev -f \"$npm_config_fork\" -l \"$npm_config_ledger\" -m \"$npm_config_mock\" -n \"$npm_config_network\" -t \"$npm_config_trezor\" -x \"$npm_config_external\"",
+    "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
     "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --fork=\"$npm_config_fork\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
     "dev:ledger": "scripts/ledger/emulate -a \"$npm_config_app\"",
