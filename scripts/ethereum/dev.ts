@@ -32,5 +32,6 @@ void async function () {
     process.env.INTERVAL_MINING = 'true'
 
     $`npm run dev --workspace @casimir/ethereum`
+    $`npm run deploy --workspace @casimir/ethereum`
 
 }()

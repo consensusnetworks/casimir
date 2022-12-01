@@ -2,6 +2,8 @@ import { ethers } from 'hardhat'
 import { deployContract } from '@casimir/hardhat-helpers'
 import { SSVNetwork, SSVRegistry, SSVToken } from '../build/artifacts/types'
 
+// Warning: Script is incomplete. Need to add remaining external contract deployments (Beacon, Uniswap, Chainlink)
+
 void async function () {
   const [ owner ] = await ethers.getSigners()
 

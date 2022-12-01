@@ -1,4 +1,3 @@
-import { snakeCase } from '@casimir/string-helpers'
 import localtunnel from 'localtunnel'
 import os from 'os'
 import { HardhatUserConfig } from 'hardhat/config'
@@ -14,41 +13,34 @@ const hardhatUrl = process.env.PUBLIC_ETHEREUM_URL as string
 const hardhatNetwork = process.env.HARDHAT_NETWORK as string
 const forkingUrl = process.env.ETHEREUM_FORKING_URL as string
 const forkingNetwork = forkingUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
+const forkingChainId = { mainnet: 1, goerli: 5 }[forkingNetwork]
 
 if (!hardhatUrl && hardhatNetwork && hardhatNetwork !== 'hardhat') {
   console.log('Set a PUBLIC_ETHEREUM_URL when using the non-default hardhat network.')
   process.exit(0)
 }
 
-const externalArgs = {
+const externalEnv = {
   mainnet: {
-    linkTokenAddress: '',
-    ssvTokenAddress: '',
-    wethTokenAddress: ''
+    SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+    LINK_TOKEN_ADDRESS: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    SSV_TOKEN_ADDRESS: '0x9D65fF81a3c488d585bBfb0Bfe3c7707c7917f54',
+    WETH_TOKEN_ADDRESS: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
   },
   goerli: {
-    linkTokenAddress: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
-    ssvTokenAddress: '0x3a9f01091C446bdE031E39ea8354647AFef091E7',
-    wethTokenAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+    SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+    LINK_TOKEN_ADDRESS: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
+    SSV_TOKEN_ADDRESS: '0x3a9f01091C446bdE031E39ea8354647AFef091E7',
+    WETH_TOKEN_ADDRESS: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
   }
 } 
 
 const network = forkingNetwork || hardhatNetwork
 if (network) {
-  const args = externalArgs[network]
+  const args = externalEnv[network]
   for (const key in args) {
-    const variable = snakeCase(key).toUpperCase()
-
-    // Set environment variable, for example, process.env.LINK_TOKEN_ADDRESS = '0x...'
-    process.env[variable] = args[key as keyof typeof args]
+    process.env[key] = args[key as keyof typeof args]
   }
-}
-
-const mnemonic = process.env.BIP39_SEED as string
-
-const hid = {
-  mnemonic,
-  count: 5
 }
 
 const compilerSettings = {
@@ -57,15 +49,20 @@ const compilerSettings = {
     runs: 1
   }
 }
+const compilerVersions = ['0.8.16']
+const externalCompilerVersions = ['0.4.22', '0.6.11', '0.8.4']
+const compilers = [...compilerVersions, ...externalCompilerVersions].map(version => ({ version, settings: compilerSettings }))
+
+const mnemonic = process.env.BIP39_SEED as string
+const hid = {
+  mnemonic,
+  count: 5
+}
 
 const miningInterval = {
   auto: false,
   interval: 12000
 }
-
-const compilerVersions = ['0.8.16']
-const externalCompilerVersions = ['0.4.22', '0.6.11', '0.8.4']
-const compilers = [...compilerVersions, ...externalCompilerVersions].map(version => ({ version, settings: compilerSettings }))
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
@@ -84,7 +81,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       accounts: mnemonic ? { ...hid, accountsBalance: '48000000000000000000' } : undefined,
-      chainId: 1337,
+      chainId: forkingChainId || 1337,
       forking: forkingUrl ? { url: forkingUrl } : undefined,
       mining: intervalMining ? miningInterval : undefined,
       allowUnlimitedContractSize: true,

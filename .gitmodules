@@ -19,3 +19,6 @@
 [submodule "contracts/ethereum/scripts/resources/consensus-specs"]
 	path = contracts/ethereum/scripts/resources/consensus-specs
 	url = https://github.com/ethereum/consensus-specs.git
+[submodule "scripts/trezor/resources/trezor-user-env"]
+	path = scripts/trezor/resources/trezor-user-env
+	url = https://github.com/trezor/trezor-user-env.git

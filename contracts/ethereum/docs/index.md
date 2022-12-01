@@ -2,6 +2,22 @@
 
 ## SSVManager
 
+### swapFee
+
+```solidity
+uint24 swapFee
+```
+
+Uniswap 0.3% fee tier
+
+### swapRouter
+
+```solidity
+contract ISwapRouter swapRouter
+```
+
+Uniswap ISwapRouter
+
 ### Token
 
 ```solidity
@@ -62,18 +78,26 @@ address[] stakedPools
 
 Pools completed and staked
 
-### PoolDeposit
+### ManagerDeposit
 
 ```solidity
-event PoolDeposit(address userAddress, address poolAddress, uint256 depositAmount, uint256 depositTime)
+event ManagerDeposit(address userAddress, uint256 depositAmount, uint256 depositTime)
 ```
 
-Event signaling a user deposit to a pool
+Event signaling a user deposit to the manager
+
+### PoolStake
+
+```solidity
+event PoolStake(address userAddress, address poolAddress, uint256 linkAmount, uint256 ssvAmount, uint256 stakeAmount, uint256 stakeTime)
+```
+
+Event signaling a user stake to a pool
 
 ### constructor
 
 ```solidity
-constructor(address linkTokenAddress, address ssvTokenAddress, address wethTokenAddress) public
+constructor(address swapRouterAddress, address linkTokenAddress, address ssvTokenAddress, address wethTokenAddress) public
 ```
 
 ### deposit
@@ -96,9 +120,17 @@ _Process fees from deposit_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The remaining deposit amount after fees |
+| [0] | uint256 | The LINK and SSV fee amounts, and remaining stake amount after fees |
 | [1] | uint256 |  |
 | [2] | uint256 |  |
+
+### depositWETH
+
+```solidity
+function depositWETH(uint256 amount) private
+```
+
+_Deposit WETH to use ETH in swaps_
 
 ### swap
 
@@ -106,7 +138,13 @@ _Process fees from deposit_
 function swap(address tokenIn, address tokenOut, uint256 amountIn) private returns (uint256)
 ```
 
-_Swap one token for another_
+_Swap one token-in for another token-out_
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The amount of token-out |
 
 ### deployPool
 
@@ -316,6 +354,20 @@ function getBalance() external view returns (uint256)
 
 ```solidity
 function getUserBalance(address userAddress) external view returns (uint256)
+```
+
+## IWETH9
+
+### deposit
+
+```solidity
+function deposit() external payable
+```
+
+### withdraw
+
+```solidity
+function withdraw(uint256 _amount) external
 ```
 
 ## WETH9

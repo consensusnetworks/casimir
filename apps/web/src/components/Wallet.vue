@@ -1,5 +1,36 @@
 <template>
   <div>
+    <div>
+      <button
+        class="btn-save-remove-account"
+        @click="addAccount(selectedProvider, selectedAccount)"
+      >
+        Save Account
+      </button>
+      <button
+        class="btn-save-remove-account"
+        @click="removeAccount(selectedProvider, selectedAccount)"
+      >
+        Remove Account
+      </button>
+    </div>
+    <div>
+      <ul>
+        <li
+          v-for="(value, key) in usersAccounts"
+          :key="key"
+        >
+          <ul v-if="key === 'accounts'">
+            <li 
+              v-for="(value, key) in value"
+              :key="key"
+            >
+              <div>{{ key }}: {{ value }}</div>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
     <div class="staking-container">
       <button @click="getPoolsForUser">
         What do I have staked where?
@@ -80,6 +111,18 @@
           <span> {{ ledgerAccountsResult }} </span>
         </p>
       </div>
+      <div class="trezor-div">
+        <button
+          class="trezor-btn"
+          @click="connectWallet('Trezor')"
+        >
+          {{ trezorButtonText }}
+        </button>
+        <p>
+          Connected Trezor Account:
+          <span> {{ trezorAccountsResult }} </span>
+        </p>
+      </div>
       <div>
         <button
           class="wallet-connect-btn"
@@ -130,6 +173,7 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
+import useUsers from '@/composables/users'
 
 const message = ref('')
 const signedMessage = ref('')
@@ -144,9 +188,12 @@ const phantomButtonText = ref<string>('Connect Phantom')
 const phantomAccountsResult = ref<string>('Address Not Active')
 const ledgerButtonText = ref<string>('Connect Ledger')
 const ledgerAccountsResult = ref<string>('Address Not Active')
+const trezorButtonText = ref<string>('Connect Trezor')
+const trezorAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
+const { addAccount, removeAccount, usersAccounts } = useUsers()
 const {
   selectedProvider,
   selectedAccount,
@@ -240,11 +287,30 @@ watchEffect(() => {
     ledgerAccountsResult.value = 'Not Active'
     walletConnectButtonText.value = 'Connected!'
     walletConnectAccountsResult.value = selectedAccount.value
+  } else if (selectedProvider.value === 'Trezor') {
+    metamaskButtonText.value = 'Connect MetaMask'
+    metamaskAccountsResult.value = 'Not Active'
+    coinbaseButtonText.value = 'Connect Coinbase'
+    coinbaseAccountsResult.value = 'Not Active'
+    ioPayButtonText.value = 'Connect ioPay'
+    ioPayAccountsResult.value = 'Not Active'
+    phantomButtonText.value = 'Connected'
+    phantomAccountsResult.value = 'Not Active'
+    ledgerButtonText.value = 'Connect Ledger'
+    ledgerAccountsResult.value = 'Not Active'
+    walletConnectButtonText.value = 'Connect WalletConnect'
+    walletConnectAccountsResult.value = 'Not Active'
+    trezorButtonText.value = 'Connected!'
+    trezorAccountsResult.value = selectedAccount.value
   }
 })
 </script>
 
 <style scoped>
+.btn-save-remove-account {
+  background-color: plum;
+}
+
 .form-group {
   margin-bottom: 1rem;
   display: flex;
@@ -285,6 +351,10 @@ button {
 
 .ledger-btn {
   background-color: rgb(0, 0, 0);
+}
+
+.trezor-btn {
+  background-color: rgb(34, 99, 55);
 }
 
 .phantom-btn {

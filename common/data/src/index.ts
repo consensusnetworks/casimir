@@ -25,6 +25,14 @@ export function schemaToGlueColumns(jsonSchema: JsonSchema): glue.Column[] {
 
     if (name.endsWith('amount')) type = glue.Schema.BIG_INT
 
+    if (name === 'gas_used') type = glue.Schema.BIG_INT
+
+    if (name === 'gas_limit') type = glue.Schema.BIG_INT
+
+    if (name === 'base_fee') type = glue.Schema.BIG_INT
+
+    if (name === 'burnt_fee') type = glue.Schema.FLOAT
+
     const comment = property.description
     return { name, type, comment }
   })
@@ -54,13 +62,13 @@ export type EventTableSchema = {
   /** The amount value associated with the transaction */
   amount: string
   /** The total amount of gas used  */
-  gasUsed: number
+  gasUsed: string
   /** The gas limit provided by transactions in the block */
-  gasLimit: number
+  gasLimit: string
   /** Post-London upgrade this represents the minimum gasUsed multiplier required for a transaction to be included in a block */
-  baseFee: number
+  baseFee: string
   /** Post-London Upgrade, this represents the part of the tx fee that is burnt */
-  burntFee: number
+  burntFee: string
   /** The validator's address */
   validator: string
   /** The list of validators' addresses */
