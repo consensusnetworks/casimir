@@ -83,7 +83,7 @@ describe('SSV manager', async function () {
   it('First user\'s 16 ETH stake should increase first user\'s balance in the first pool to 16 ETH', async function () {
     const { contract, firstUser } = await loadFixture(firstUserDepositFixture)
     const [firstPool] = await contract.getOpenPoolIds()
-    const poolUserBalance = await contract.getPoolUserBalance(firstUser.address, firstPool)
+    const poolUserBalance = await contract.getPoolUserBalance(firstPool, firstUser.address)
     const stakeAmount = ethers.utils.formatEther({ ...poolUserBalance }.stake)
     expect(stakeAmount).equal('16.0')
   })
@@ -105,7 +105,7 @@ describe('SSV manager', async function () {
   it('Second user\'s 24 ETH stake should increase second user\'s balance in the first pool to 16 ETH', async function () {
     const { contract, secondUser } = await loadFixture(secondUserDepositFixture)
     const [firstPool] = await contract.getStakedPoolIds()
-    const poolUserBalance = await contract.getPoolUserBalance(secondUser.address, firstPool)
+    const poolUserBalance = await contract.getPoolUserBalance(firstPool, secondUser.address)
     const stakeAmount = ethers.utils.formatEther({ ...poolUserBalance }.stake)
     expect(stakeAmount).equal('16.0')
   })
@@ -127,7 +127,7 @@ describe('SSV manager', async function () {
   it('Second user\'s 24 ETH stake should increase second user\'s balance in the second pool to 8 ETH', async function () {
     const { contract, secondUser } = await loadFixture(secondUserDepositFixture)
     const [secondPool] = await contract.getOpenPoolIds()
-    const poolUserBalance = await contract.getPoolUserBalance(secondUser.address, secondPool)
+    const poolUserBalance = await contract.getPoolUserBalance(secondPool, secondUser.address)
     const stakeAmount = ethers.utils.formatEther({ ...poolUserBalance }.stake)
     expect(stakeAmount).equal('8.0')
   })
@@ -149,7 +149,7 @@ describe('SSV manager', async function () {
   it('Third user\'s 24 ETH stake should increase third user\'s balance in the second pool to 24 ETH', async function () {
     const { contract, thirdUser } = await loadFixture(thirdUserDepositFixture)
     const [, secondPool] = await contract.getStakedPoolIds()
-    const poolUserBalance = await contract.getPoolUserBalance(thirdUser.address, secondPool)
+    const poolUserBalance = await contract.getPoolUserBalance(secondPool, thirdUser.address)
     const stakeAmount = ethers.utils.formatEther({ ...poolUserBalance }.stake)
     expect(stakeAmount).equal('24.0')
   })

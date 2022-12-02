@@ -70,7 +70,7 @@ contract SSVManager {
 
     /** Event signaling a user deposit to the manager */
     event ManagerDeposit(address userAddress, uint256 depositAmount, uint256 depositTime);
-    
+
     /** Event signaling a user stake to a pool */
     event PoolStake(address userAddress, uint256 poolId, uint256 linkAmount, uint256 ssvAmount, uint256 stakeAmount, uint256 stakeTime);
 
@@ -226,40 +226,40 @@ contract SSVManager {
     }
 
     /**
-     * @notice Get all open pool IDs
-     * @return An array of all open pool IDs
+     * @notice Get a list of all open pool IDs
+     * @return A list of all open pool IDs
      */ 
     function getOpenPoolIds() external view returns (uint256[] memory) {
         return openPoolIds;
     }
 
     /**
-     * @notice Get all the staked pool IDs
-     * @return An array of all the staked pool IDs
+     * @notice Get a list of all staked pool IDs
+     * @return A list of all staked pool IDs
      */ 
     function getStakedPoolIds() external view returns (uint256[] memory) {
         return stakedPoolIds;
     }
 
     /**
-     * @notice Get the pools for a given user
-     * @return An array of pools for a given user
+     * @notice Get a list of a user's pool IDs by user address
+     * @return A list of a user's pool IDs
      */ 
-    function getPoolsForUser(address userAddress) external view returns (uint256[] memory) {
+    function getUserPoolIds(address userAddress) external view returns (uint256[] memory) {
         return users[userAddress].poolIds;
     }
 
     /**
-     * @notice Get a pool user balance by pool ID
-     * @return The pool user balance
+     * @notice Get a user's balance in a pool by user address and pool ID
+     * @return A user's balance in a pool
      */ 
-    function getPoolUserBalance(address userAddress, uint256 poolId) external view returns (Balance memory) {
+    function getPoolUserBalance(uint256 poolId, address userAddress) external view returns (Balance memory) {
         return pools[poolId].userBalances[userAddress];
     }
 
     /**
-     * @notice Get a pool balance by pool ID
-     * @return The pool balance
+     * @notice Get a pool's balance by pool ID
+     * @return The pool's balance
      */ 
     function getPoolBalance(uint256 poolId) external view returns (Balance memory) {
         return pools[poolId].balance;

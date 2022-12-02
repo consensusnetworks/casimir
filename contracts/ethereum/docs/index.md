@@ -2,30 +2,6 @@
 
 ## SSVManager
 
-### _lastPoolId
-
-```solidity
-struct Counters.Counter _lastPoolId
-```
-
-Pool ID generator
-
-### swapFee
-
-```solidity
-uint24 swapFee
-```
-
-Uniswap 0.3% fee tier
-
-### swapRouter
-
-```solidity
-contract ISwapRouter swapRouter
-```
-
-Uniswap ISwapRouter
-
 ### Token
 
 ```solidity
@@ -71,6 +47,30 @@ struct User {
   uint256[] poolIds;
 }
 ```
+
+### _lastPoolId
+
+```solidity
+struct Counters.Counter _lastPoolId
+```
+
+Pool ID generator
+
+### swapFee
+
+```solidity
+uint24 swapFee
+```
+
+Uniswap 0.3% fee tier
+
+### swapRouter
+
+```solidity
+contract ISwapRouter swapRouter
+```
+
+Uniswap ISwapRouter
 
 ### tokens
 
