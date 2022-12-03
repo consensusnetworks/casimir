@@ -140,11 +140,11 @@ export default function useWallet() {
     if (ethersSignerList.includes(selectedProvider.value)) {
       const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
       const userAddress = selectedAccount.value
-      const usersPoolsIds = await ssv.connect(provider).getUserPoolIds(userAddress)
-      console.log('Pools IDs', usersPoolsIds)
+      const ssvProvider = ssv.connect(provider)
+      const usersPoolsIds = await ssvProvider.getUserPoolIds(userAddress)
       pools.value = await Promise.all(usersPoolsIds.map(async (poolId: number) => {
-        const { stake: totalStake, rewards: totalRewards } = await ssv.connect(provider).getPoolBalance(poolId)
-        const { stake: userStake, rewards: userRewards } = await ssv.connect(provider).getPoolUserBalance(poolId, userAddress)
+        const { stake: totalStake, rewards: totalRewards } = await ssvProvider.getPoolBalance(poolId)
+        const { stake: userStake, rewards: userRewards } = await ssvProvider.getPoolUserBalance(poolId, userAddress)
         return {
           id: poolId,
           totalStake: ethers.utils.formatEther(totalStake),
@@ -161,7 +161,8 @@ export default function useWallet() {
       let signer = ethersSignerCreator[signerKey](selectedProvider.value)
       if (isWalletConnectSigner(signer)) signer = await signer
       const value = ethers.utils.parseEther(amountToStake.value)
-      await ssv.connect(signer as ethers.Signer).deposit({ value, type: 0 })
+      const ssvSigner = ssv.connect(signer as ethers.Signer)
+      await ssvSigner.deposit({ value, type: 0 })
     } else {
       // Todo @ccali11 this should happen sooner - ideally we'll this disable method if missing ssv provider
       console.log('Please connect to one of the following providers:', ethersProviderList)
