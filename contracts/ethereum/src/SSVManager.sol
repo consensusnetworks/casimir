@@ -76,17 +76,19 @@ contract SSVManager is ChainlinkClient {
     /** Pool IDs of pools completed and staked */
     uint32[] private stakedPoolIds;
 
-    /** Chainlink sample request volume */
-    uint256 public linkRequestVolume;
+    /** Chainlink sample request data */
+    uint256 public data;
 
     /** Chainlink sample request job ID */
-    bytes32 private linkRequestJobId;
+    bytes32 private immutable jobId;
 
     /** Chainlink sample request fee */
-    uint256 private linkRequestFee;
+    uint256 private immutable fee;
+
+    address private oracleAddress;
 
     /** Chainlink sample request */
-    event RequestVolume(bytes32 indexed requestId, uint256 volume);
+    event ValidatorInitFullfilled(uint256 data);
 
     /** Event signaling a user deposit to the manager */
     event ManagerDeposit(
@@ -120,10 +122,10 @@ contract SSVManager is ChainlinkClient {
         tokens[Token.WETH] = wethTokenAddress;
 
         /// Set up Chainlink client
-        setChainlinkToken(linkTokenAddress);
         setChainlinkOracle(linkOracleAddress);
-        linkRequestJobId = "ca98366cc7314957b8c012c72f05aeeb";
-        linkRequestFee = (1 * LINK_DIVISIBILITY) / 10; // 0,1 * 10**18 (Varies by network and job)
+        setChainlinkToken(linkTokenAddress);
+        jobId = '7da2702f37fd48e5b1b9a5715e3509b6';
+        fee = (1 * LINK_DIVISIBILITY) / 10;
     }
 
     /**
@@ -186,8 +188,10 @@ contract SSVManager is ChainlinkClient {
                 openPoolIds.pop();
                 /// Add completed pool to staked pools
                 stakedPoolIds.push(poolId);
+
+                // stake();
             }
-            // Todo first transfer LINK and SSV to pool
+
             pool.balance.stake += addStakeAmount;
             pool.userBalances[userAddress].stake += addStakeAmount;
 
@@ -222,7 +226,7 @@ contract SSVManager is ChainlinkClient {
         uint256 stakeAmount = (depositAmount * 100) / (100 + feesTotal);
         uint256 feeAmount = depositAmount - stakeAmount;
 
-        /// Wrap ETH fees in ERC-20 to use in swap
+        // /// Wrap ETH fees in ERC-20 to use in swap
         wrap(feeAmount);
 
         /// Swap fees and return with { stakeAmount, linkAmount, ssvAmount }
@@ -298,23 +302,29 @@ contract SSVManager is ChainlinkClient {
         return 1;
     }
 
+    // function stake() private {
+    //     this.requestValidatorInit();
+    // }
+
     /**
      *
      */
 
     /**
-     * Create a Chainlink request to retrieve API response, find the target
+     * @notice Creates a Chainlink request to retrieve API response, find the target
      * data, then multiply by 1000000000000000000 (to remove decimal places from data).
+     *
+     * @return requestId - id of the request
      */
-    function requestVolumeData() public returns (bytes32 requestId) {
-        Chainlink.Request memory req = buildChainlinkRequest(
-            linkRequestJobId,
+    function requestValidatorInit() public returns (bytes32 requestId) {
+        Chainlink.Request memory request = buildChainlinkRequest(
+            jobId,
             address(this),
-            this.fulfill.selector
+            this.fulfillValidatorInit.selector
         );
 
         // Set the URL to perform the GET request on
-        req.add(
+        request.add(
             "get",
             "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD"
         );
@@ -330,25 +340,28 @@ contract SSVManager is ChainlinkClient {
         //   }
         //  }
         // request.add("path", "RAW.ETH.USD.VOLUME24HOUR"); // Chainlink nodes prior to 1.0.0 support this format
-        req.add("path", "RAW,ETH,USD,VOLUME24HOUR"); // Chainlink nodes 1.0.0 and later support this format
+        request.add("path", "RAW,ETH,USD,VOLUME24HOUR"); // Chainlink nodes 1.0.0 and later support this format
 
         // Multiply the result by 1000000000000000000 to remove decimals
         int256 timesAmount = 10 ** 18;
-        req.addInt("times", timesAmount);
+        request.addInt("times", timesAmount);
 
         // Sends the request
-        return sendChainlinkRequest(req, linkRequestFee);
+        return sendChainlinkRequest(request, fee);
     }
 
     /**
-     * Receive the response in the form of uint256
+     * @notice Receives the response in the form of uint256
+     *
+     * @param _requestId - id of the request
+     * @param _data - response
      */
-    function fulfill(
-        bytes32 _requestId,
-        uint256 _volume
-    ) public recordChainlinkFulfillment(_requestId) {
-        emit RequestVolume(_requestId, _volume);
-        linkRequestVolume = _volume;
+    function fulfillValidatorInit(bytes32 _requestId, uint256 _data)
+        public
+        recordChainlinkFulfillment(_requestId)
+    {
+        data = _data;
+        emit ValidatorInitFullfilled(data);
     }
 
     /**

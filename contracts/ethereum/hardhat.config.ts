@@ -1,13 +1,12 @@
 import localtunnel from 'localtunnel'
 import os from 'os'
-import { HardhatUserConfig, task } from 'hardhat/config'
+import { HardhatUserConfig } from 'hardhat/config'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
 import '@sebasgoldberg/hardhat-wsprovider'
 import 'solidity-docgen'
 import '@openzeppelin/hardhat-upgrades'
-import { ethers } from 'ethers'
 
 const intervalMining = process.env.INTERVAL_MINING === 'true'
 const hardhatUrl = process.env.PUBLIC_ETHEREUM_URL as string
@@ -15,11 +14,6 @@ const hardhatNetwork = process.env.HARDHAT_NETWORK as string
 const forkingUrl = process.env.ETHEREUM_FORKING_URL as string
 const forkingNetwork = forkingUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
 const forkingChainId = { mainnet: 1, goerli: 5 }[forkingNetwork]
-
-if (!hardhatUrl && hardhatNetwork && hardhatNetwork !== 'hardhat') {
-  console.log('Set a PUBLIC_ETHEREUM_URL when using the non-default hardhat network.')
-  process.exit(0)
-}
 
 const externalEnv = {
   mainnet: {

@@ -1,9 +1,9 @@
 import { deployContract } from '@casimir/hardhat-helpers'
-import { ContractConfig, SSVContractConfigs } from '@casimir/types'
+import { ContractConfig, SSVDeploymentConfig } from '@casimir/types'
 
 void async function () {
     const mockChainlink = process.env.MOCK_CHAINLINK === 'true'
-    let contracts: SSVContractConfigs = {
+    let deploymentConfig: SSVDeploymentConfig = {
         SSVManager: {
             address: '',
             args: {
@@ -18,13 +18,7 @@ void async function () {
         }
     }
 
-    const chainlinkContracts = {
-        LinkToken: {
-            address: '',
-            args: {},
-            options: {},
-            proxy: false
-        },
+    const chainlinkDeploymentConfig = {
         MockOracle: {
             address: '',
             args: {
@@ -36,29 +30,30 @@ void async function () {
     }
 
     if (mockChainlink) {
-        contracts = {
+        deploymentConfig = {
             // Deploy Chainlink contracts first
-            ...chainlinkContracts,
-            ...contracts
+            ...chainlinkDeploymentConfig,
+            ...deploymentConfig
         }
     }
 
-    for (const name in contracts) {
+    for (const name in deploymentConfig) {
         console.log(`Deploying ${name} contract...`)
-        const { args, options, proxy } = contracts[name as keyof typeof contracts] as ContractConfig
-        // Update MockOracle.args.linkTokenAddress with LinkToken.address
-        if (name === 'MockOracle') {
-            args.linkTokenAddress = contracts['LinkToken']?.['address']
-        }
-        const contract = await deployContract(name, proxy, args, options)
+        const { args, options, proxy } = deploymentConfig[name as keyof typeof deploymentConfig] as ContractConfig
 
+        // Update SSVManager args with MockOracle address
+        if (name === 'SSVManager') {
+            args.linkOracleAddress = deploymentConfig.MockOracle?.address
+        }
+
+        const contract = await deployContract(name, proxy, args, options)
         const { address } = contract
 
         // Semi-colon needed
         console.log(`${name} contract deployed to ${address}`);
 
         // Save contract address for next loop
-        (contracts[name as keyof SSVContractConfigs] as ContractConfig)['address'] = address
+        (deploymentConfig[name as keyof SSVDeploymentConfig] as ContractConfig).address = address
     }
 
 }()
