@@ -16,11 +16,9 @@ const forkingUrl = process.env.ETHEREUM_FORKING_URL as string
 const forkingNetwork = forkingUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
 const forkingChainId = { mainnet: 1, goerli: 5 }[forkingNetwork]
 
-if (!hardhatUrl && hardhatNetwork && hardhatNetwork !== 'hardhat' && hardhatNetwork !== 'localhost') {
+if (!hardhatUrl && hardhatNetwork && hardhatNetwork !== 'hardhat') {
   console.log('Set a PUBLIC_ETHEREUM_URL when using the non-default hardhat network.')
   process.exit(0)
-} else {
-  console.log('HARDHAT_NETWORK', hardhatNetwork)
 }
 
 const externalEnv = {
