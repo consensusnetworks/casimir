@@ -51,14 +51,9 @@ async function deploymentFixture() {
   }
 
   for (const name in contracts) {
-    // Update linkTokenAddress with LinkToken.address for MockOracle deployment
-    if (name === 'MockOracle') {
-      (contracts['MockOracle'] as ContractConfig).args.linkTokenAddress = (contracts['LinkToken'] as ContractConfig)['address']
-    }
-
     console.log(`Deploying ${name} contract...`)
     const { args, options, proxy } = contracts[name as keyof typeof contracts] as ContractConfig
-    // Update linkTokenAddress with LinkToken.address for MockOracle deployment
+    // Update MockOracle.args.linkTokenAddress with LinkToken.address
     if (name === 'MockOracle') {
       args.linkTokenAddress = contracts['LinkToken']?.['address']
     }

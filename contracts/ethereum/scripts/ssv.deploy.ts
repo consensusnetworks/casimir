@@ -46,7 +46,7 @@ void async function () {
     for (const name in contracts) {
         console.log(`Deploying ${name} contract...`)
         const { args, options, proxy } = contracts[name as keyof typeof contracts] as ContractConfig
-        // Update linkTokenAddress with LinkToken.address for MockOracle deployment
+        // Update MockOracle.args.linkTokenAddress with LinkToken.address
         if (name === 'MockOracle') {
             args.linkTokenAddress = contracts['LinkToken']?.['address']
         }
