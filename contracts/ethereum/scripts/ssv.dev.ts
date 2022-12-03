@@ -54,8 +54,8 @@ void async function () {
     const { args, options, proxy } = contracts[name as keyof typeof contracts]
     const { address } = await deployContract(name, proxy, args, options)
     console.log(`${name} contract deployed to ${address}`)
-
-    // Save contract address
+      
+    // Save contract address for next loop
     contracts[name as keyof typeof contracts]['address'] = address
   }
 

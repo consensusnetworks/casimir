@@ -136,20 +136,21 @@ export default function useWallet() {
   }
 
   // Todo @ccali11 should we move these ssv objects to the ssv composable?
-  async function getPoolsForUser() {
+  async function getUserPools() {
     if (ethersSignerList.includes(selectedProvider.value)) {
-      console.log('Getting pools')
       const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
       const userAddress = selectedAccount.value
-      const usersPools = await ssv.connect(provider).getPoolsForUser(userAddress)
-      console.log('Pools', usersPools)
-      pools.value = await Promise.all(usersPools.map(async (poolAddress: string) => {
-        const balance = ethers.utils.formatEther(await ssv.connect(provider).getBalanceForPool(poolAddress))
-        const userBalance = ethers.utils.formatEther(await ssv.connect(provider).getUserBalanceForPool(userAddress, poolAddress))
+      const usersPoolsIds = await ssv.connect(provider).getUserPoolIds(userAddress)
+      console.log('Pools IDs', usersPoolsIds)
+      pools.value = await Promise.all(usersPoolsIds.map(async (poolId: number) => {
+        const { stake: totalStake, rewards: totalRewards } = await ssv.connect(provider).getPoolBalance(poolId)
+        const { stake: userStake, rewards: userRewards } = await ssv.connect(provider).getPoolUserBalance(poolId, userAddress)
         return {
-          address: poolAddress,
-          balance,
-          userBalance
+          id: poolId,
+          totalStake: ethers.utils.formatEther(totalStake),
+          totalRewards: ethers.utils.formatEther(totalRewards),
+          userStake: ethers.utils.formatEther(userStake),
+          userRewards: ethers.utils.formatEther(userRewards)
         }
       }))
     }
@@ -178,7 +179,7 @@ export default function useWallet() {
     connectWallet,
     sendTransaction,
     signMessage,
-    getPoolsForUser,
+    getUserPools,
     deposit
   }
 }

@@ -5,7 +5,7 @@ import { getSecret } from '@casimir/aws-helpers'
  * Test Ethereum contracts
  * 
  * Arguments:
- *      --fork: mainnet or testnet (optional, i.e., --fork=mainnet)
+ *      --fork: mainnet, goerli, true, or false (override default goerli)
  * 
  * For more info see:
  *      - https://hardhat.org/hardhat-network/docs/overview
@@ -18,8 +18,8 @@ void async function () {
     process.env.BIP39_SEED = seed
     echo(chalk.bgBlackBright('Your mnemonic is ') + chalk.bgBlue(seed))
 
-    // Set fork rpc if requested, default fork to mainnet if set vaguely
-    const fork = argv.fork === 'true' ? 'mainnet' : argv.fork === 'false' ? undefined : argv.fork
+    // Set fork rpc if requested, default fork to goerli if set vaguely
+    const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
     if (fork) {
         const key = await getSecret(`consensus-networks-ethereum-${fork}`)
         const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
@@ -27,6 +27,9 @@ void async function () {
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(` fork at ${url}`))
     }
 
-    $`npm run test --workspace @casimir/ethereum`
+    // Using hardhat local or fork network
+    process.env.MOCK_CHAINLINK = 'true'
+
+    $`npm run test --workspace @casimir/ethereum -- --network localhost`
 
 }()

@@ -228,13 +228,13 @@ Get the SSV fee percentage to charge on each deposit
 function getOpenPoolIds() external view returns (uint256[])
 ```
 
-Get all open pool IDs
+Get a list of all open pool IDs
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256[] | An array of all open pool IDs |
+| [0] | uint256[] | A list of all open pool IDs |
 
 ### getStakedPoolIds
 
@@ -242,41 +242,41 @@ Get all open pool IDs
 function getStakedPoolIds() external view returns (uint256[])
 ```
 
-Get all the staked pool IDs
+Get a list of all staked pool IDs
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256[] | An array of all the staked pool IDs |
+| [0] | uint256[] | A list of all staked pool IDs |
 
-### getPoolsForUser
+### getUserPoolIds
 
 ```solidity
-function getPoolsForUser(address userAddress) external view returns (uint256[])
+function getUserPoolIds(address userAddress) external view returns (uint256[])
 ```
 
-Get the pools for a given user
+Get a list of a user's pool IDs by user address
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256[] | An array of pools for a given user |
+| [0] | uint256[] | A list of a user's pool IDs |
 
 ### getPoolUserBalance
 
 ```solidity
-function getPoolUserBalance(address userAddress, uint256 poolId) external view returns (struct SSVManager.Balance)
+function getPoolUserBalance(uint256 poolId, address userAddress) external view returns (struct SSVManager.Balance)
 ```
 
-Get a pool user balance by pool ID
+Get a user's balance in a pool by user address and pool ID
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | struct SSVManager.Balance | The pool user balance |
+| [0] | struct SSVManager.Balance | A user's balance in a pool |
 
 ### getPoolBalance
 
@@ -284,13 +284,13 @@ Get a pool user balance by pool ID
 function getPoolBalance(uint256 poolId) external view returns (struct SSVManager.Balance)
 ```
 
-Get a pool balance by pool ID
+Get a pool's balance by pool ID
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | struct SSVManager.Balance | The pool balance |
+| [0] | struct SSVManager.Balance | The pool's balance |
 
 ## IWETH9
 

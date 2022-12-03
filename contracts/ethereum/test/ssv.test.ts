@@ -3,21 +3,80 @@ import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { SSVManager } from '../build/artifacts/types'
+import { ContractConfig, SSVContractConfigs } from '@casimir/types'
 
 /** Fixture to deploy SSV manager contract */
 async function deploymentFixture() {
   const [owner] = await ethers.getSigners()
-  const name = 'SSVManager'
-  const args = {
-    swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
-    linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
-    ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
-    wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
+  const mockChainlink = process.env.MOCK_CHAINLINK === 'true'
+  let ssvManager
+  let contracts: SSVContractConfigs = {
+    SSVManager: {
+      address: '',
+      args: {
+        linkOracleAddress: process.env.LINK_ORACLE_ADDRESS,
+        swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
+        linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
+        ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
+        wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
+      },
+      options: {},
+      proxy: false
+    }
   }
-  const options = {}
-  const proxy = false
-  const contract = await deployContract(name, proxy, args, options) as SSVManager
-  return { contract, owner }
+
+  const chainlinkContracts = {
+    LinkToken: {
+      address: '',
+      args: {},
+      options: {},
+      proxy: false
+    },
+    MockOracle: {
+      address: '',
+      args: {
+        linkTokenAddress: process.env.LINK_TOKEN_ADDRESS
+      },
+      options: {},
+      proxy: false
+    }
+  }
+
+  if (mockChainlink) {
+    contracts = {
+      // Deploy Chainlink contracts first
+      ...chainlinkContracts,
+      ...contracts
+    }
+  }
+
+  for (const name in contracts) {
+    // Update linkTokenAddress with LinkToken.address for MockOracle deployment
+    if (name === 'MockOracle') {
+      (contracts['MockOracle'] as ContractConfig).args.linkTokenAddress = (contracts['LinkToken'] as ContractConfig)['address']
+    }
+
+    console.log(`Deploying ${name} contract...`)
+    const { args, options, proxy } = contracts[name as keyof typeof contracts] as ContractConfig
+    // Update linkTokenAddress with LinkToken.address for MockOracle deployment
+    if (name === 'MockOracle') {
+      args.linkTokenAddress = contracts['LinkToken']?.['address']
+    }
+    const contract = await deployContract(name, proxy, args, options)
+    const { address } = contract
+
+    // Semi-colon needed
+    console.log(`${name} contract deployed to ${address}`);
+
+    // Save contract address for next loop
+    (contracts[name as keyof SSVContractConfigs] as ContractConfig)['address'] = address
+
+    // Save SSV manager for export
+    if (name === 'SSVManager') {
+      ssvManager = contract as SSVManager
+    }
+  }
+  return { contract: ssvManager as SSVManager, owner }
 }
 
 /** Fixture to stake 16 ETH for the first user */
@@ -26,7 +85,7 @@ async function firstUserDepositFixture() {
   const [, firstUser] = await ethers.getSigners()
   const stakeAmount = 16.0
   const fees = { ...await contract.getFees() }
-  const feesTotalPercent = fees.LINK.toNumber() + fees.SSV.toNumber()
+  const feesTotalPercent = fees.LINK + fees.SSV
   const depositAmount = stakeAmount * ((100 + feesTotalPercent) / 100)
   const value = ethers.utils.parseEther(depositAmount.toString())
   const deposit = await contract.connect(firstUser).deposit({ value })
@@ -40,7 +99,7 @@ async function secondUserDepositFixture() {
   const [, , secondUser] = await ethers.getSigners()
   const stakeAmount = 24.0
   const fees = { ...await contract.getFees() }
-  const feesTotalPercent = fees.LINK.toNumber() + fees.SSV.toNumber()
+  const feesTotalPercent = fees.LINK + fees.SSV
   const depositAmount = stakeAmount * ((100 + feesTotalPercent) / 100)
   const value = ethers.utils.parseEther(depositAmount.toString())
   const deposit = await contract.connect(secondUser).deposit({ value })
@@ -54,7 +113,7 @@ async function thirdUserDepositFixture() {
   const [, , , thirdUser] = await ethers.getSigners()
   const stakeAmount = 24.0
   const fees = { ...await contract.getFees() }
-  const feesTotalPercent = fees.LINK.toNumber() + fees.SSV.toNumber()
+  const feesTotalPercent = fees.LINK + fees.SSV
   const depositAmount = stakeAmount * ((100 + feesTotalPercent) / 100)
   const value = ethers.utils.parseEther(depositAmount.toString())
   const deposit = await contract.connect(thirdUser).deposit({ value })
@@ -113,6 +172,7 @@ describe('SSV manager', async function () {
   it('Second user\'s 24 ETH stake should open a second pool', async function () {
     const { contract } = await loadFixture(secondUserDepositFixture)
     const openPools = await contract.getOpenPoolIds()
+    console.log('OPEN POOLS', openPools)
     expect(openPools.length).equal(1)
   })
 

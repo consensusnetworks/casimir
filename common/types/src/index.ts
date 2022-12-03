@@ -1,2 +1,4 @@
+import { ContractConfig } from './interfaces/ContractConfig'
 import { LoginCredentials } from './interfaces/LoginCredentials'
-export type { LoginCredentials }
+import { SSVContractConfigs } from './interfaces/SSVContractConfigs'
+export type { ContractConfig, LoginCredentials, SSVContractConfigs }

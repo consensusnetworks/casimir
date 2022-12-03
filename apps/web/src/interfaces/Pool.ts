@@ -1,5 +1,9 @@
 export interface Pool {
-    address: string
-    balance: string
-    userBalance: string
+    id: number
+    totalStake: string
+    totalRewards: string
+    userStake: string
+    userRewards: string
+    validatorAddress?: string
+    operatorIds?: number[]
 }

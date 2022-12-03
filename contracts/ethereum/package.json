@@ -3,7 +3,6 @@
     "scripts": {
         "build": "echo 'Warning: @casimir/ethereum build not specified. Disregard this warning and any listed errors above if @casimir/ethereum is not needed for the current project build.' && exit 0",
         "dev": "npx hardhat node",
-        "dev:ssv": "npx hardhat run scripts/ssv.dev.ts",
         "deploy": "npx hardhat run scripts/ssv.deploy.ts",
         "docgen": "npx hardhat docgen",
         "test": "mocha --require hardhat/register --recursive --exit --extension ts --timeout 25000",
@@ -12,8 +11,14 @@
         "pretest": "npm run task:compile",
         "postinstall": "npm run task:compile"
     },
+    "dependencies": {
+        "@chainlink/contracts": "^0.5.1",
+        "@uniswap/v3-core": "^1.0.1",
+        "@uniswap/v3-periphery": "^1.4.3"
+    },
     "devDependencies": {
         "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
+        "@nomicfoundation/hardhat-toolbox": "^2.0.0",
         "@nomiclabs/hardhat-ethers": "^2.0.6",
         "@nomiclabs/hardhat-waffle": "^2.0.3",
         "@openzeppelin/contracts": "^4.8.0",
@@ -34,10 +39,5 @@
         "solidity-docgen": "^0.6.0-beta.29",
         "ts-node": "^10.8.2",
         "typechain": "^8.1.0"
-    },
-    "dependencies": {
-        "@chainlink/contracts": "^0.5.1",
-        "@uniswap/v3-core": "^1.0.1",
-        "@uniswap/v3-periphery": "^1.4.3"
     }
 }
