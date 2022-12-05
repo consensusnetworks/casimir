@@ -12,7 +12,7 @@
   "scripts": {
     "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules package-lock.json && npm i",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
-    "dev": "scripts/local/dev -f \"$npm_config_fork\" -l \"$npm_config_ledger\" -m \"$npm_config_mock\" -n \"$npm_config_network\" -t \"$npm_config_trezor\" -x \"$npm_config_external\"",
+    "dev": "npx esno -r dotenv/config scripts/local/dev.ts --app=\"$npm_config_app\" --fork=\"$npm_config_fork\" --ledger=\"$npm_config_ledger\" --mock=\"$npm_config_mock\" --network=\"$npm_config_network\" --trezor=\"$npm_config_trezor\" --external=\"$npm_config_external\"",
     "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
     "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --fork=\"$npm_config_fork\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
@@ -49,6 +49,7 @@
     "dotenv": "^16.0.3",
     "eslint": "^8.19.0",
     "eslint-plugin-vue": "^8.7.1",
+    "esno": "^0.16.3",
     "express": "^4.18.1",
     "http-proxy-middleware": "^2.0.6",
     "husky": "^8.0.1",

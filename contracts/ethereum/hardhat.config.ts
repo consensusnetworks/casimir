@@ -15,19 +15,16 @@ const forkingUrl = process.env.ETHEREUM_FORKING_URL as string
 const forkingNetwork = forkingUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
 const forkingChainId = { mainnet: 1, goerli: 5 }[forkingNetwork]
 
-if (!hardhatUrl && hardhatNetwork && hardhatNetwork !== 'hardhat') {
-  console.log('Set a PUBLIC_ETHEREUM_URL when using the non-default hardhat network.')
-  process.exit(0)
-}
-
 const externalEnv = {
   mainnet: {
+    LINK_ORACLE_ADDRESS: '',
     SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
     LINK_TOKEN_ADDRESS: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
     SSV_TOKEN_ADDRESS: '0x9D65fF81a3c488d585bBfb0Bfe3c7707c7917f54',
     WETH_TOKEN_ADDRESS: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
   },
   goerli: {
+    LINK_ORACLE_ADDRESS: '0xCC79157eb46F5624204f47AB42b3906cAA40eaB7',
     SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
     LINK_TOKEN_ADDRESS: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
     SSV_TOKEN_ADDRESS: '0x3a9f01091C446bdE031E39ea8354647AFef091E7',
@@ -50,7 +47,7 @@ const compilerSettings = {
   }
 }
 const compilerVersions = ['0.8.16']
-const externalCompilerVersions = ['0.4.22', '0.6.11', '0.8.4']
+const externalCompilerVersions = ['0.4.22', '0.4.24', '0.6.6', '0.6.11', '0.8.4']
 const compilers = [...compilerVersions, ...externalCompilerVersions].map(version => ({ version, settings: compilerSettings }))
 
 const mnemonic = process.env.BIP39_SEED as string

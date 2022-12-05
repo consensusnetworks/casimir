@@ -136,20 +136,21 @@ export default function useWallet() {
   }
 
   // Todo @ccali11 should we move these ssv objects to the ssv composable?
-  async function getPoolsForUser() {
+  async function getUserPools() {
     if (ethersSignerList.includes(selectedProvider.value)) {
-      console.log('Getting pools')
       const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
       const userAddress = selectedAccount.value
-      const usersPools = await ssv.connect(provider).getPoolsForUser(userAddress)
-      console.log('Pools', usersPools)
-      pools.value = await Promise.all(usersPools.map(async (poolAddress: string) => {
-        const balance = ethers.utils.formatEther(await ssv.connect(provider).getBalanceForPool(poolAddress))
-        const userBalance = ethers.utils.formatEther(await ssv.connect(provider).getUserBalanceForPool(userAddress, poolAddress))
+      const ssvProvider = ssv.connect(provider)
+      const usersPoolsIds = await ssvProvider.getUserPoolIds(userAddress)
+      pools.value = await Promise.all(usersPoolsIds.map(async (poolId: number) => {
+        const { stake: totalStake, rewards: totalRewards } = await ssvProvider.getPoolBalance(poolId)
+        const { stake: userStake, rewards: userRewards } = await ssvProvider.getPoolUserBalance(poolId, userAddress)
         return {
-          address: poolAddress,
-          balance,
-          userBalance
+          id: poolId,
+          totalStake: ethers.utils.formatEther(totalStake),
+          totalRewards: ethers.utils.formatEther(totalRewards),
+          userStake: ethers.utils.formatEther(userStake),
+          userRewards: ethers.utils.formatEther(userRewards)
         }
       }))
     }
@@ -160,7 +161,8 @@ export default function useWallet() {
       let signer = ethersSignerCreator[signerKey](selectedProvider.value)
       if (isWalletConnectSigner(signer)) signer = await signer
       const value = ethers.utils.parseEther(amountToStake.value)
-      await ssv.connect(signer as ethers.Signer).deposit({ value, type: 0 })
+      const ssvSigner = ssv.connect(signer as ethers.Signer)
+      await ssvSigner.deposit({ value, type: 0 })
     } else {
       // Todo @ccali11 this should happen sooner - ideally we'll this disable method if missing ssv provider
       console.log('Please connect to one of the following providers:', ethersProviderList)
@@ -178,7 +180,7 @@ export default function useWallet() {
     connectWallet,
     sendTransaction,
     signMessage,
-    getPoolsForUser,
+    getUserPools,
     deposit
   }
 }
