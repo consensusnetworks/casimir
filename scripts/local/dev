@@ -94,7 +94,7 @@ else
 
     # Set project-wide contracts for local (default) chain
     if [ -z "$network" ]; then
-        export PUBLIC_SSV_ADDRESS="0xF71Bc1E3C09E96d9805A663969460b0A21623288" # 3rd-deployment from local account
+        export PUBLIC_SSV_ADDRESS="0xF71Bc1E3C09E96d9805A663969460b0A21623288" # 2rd-deployment from local account
         
         # Tunnel local (default) chain networks if specified
         if [ -n "$external" ]; then

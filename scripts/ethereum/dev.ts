@@ -35,9 +35,6 @@ void async function () {
     process.env.MOCK_CHAINLINK = 'true'
 
     $`npm run dev --workspace @casimir/ethereum`
-
-    // Wait for local network to start
-    await new Promise(resolve => setTimeout(resolve, 2000))
     $`npm run deploy --workspace @casimir/ethereum -- --network localhost`
 
 }()
