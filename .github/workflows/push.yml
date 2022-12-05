@@ -20,7 +20,9 @@ jobs:
 
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
 
       - name: Set the stage for testing
         if: ${{ github.actor == 'nektos/act' }}
@@ -33,20 +35,14 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-        
-      - name: Install dependencies
+          
+      - name: Install all package dependencies
         run: npm ci
 
-      - name: Build helpers
-        run: npm run build --workspace @casimir/helpers
-
-      - name: Build landing app
-        run: npm run build --workspace @casimir/landing
+      - name: Build all packages
+        run: npm exec --workspaces -- npm run build
         env:
           PUBLIC_STAGE: ${{ env.STAGE }}
-
-      - name: Build auth service
-        run: npm run build --workspace @casimir/auth
 
       - name: Deploy cdk infrastructure
         run: npm run deploy

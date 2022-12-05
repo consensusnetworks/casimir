@@ -3,6 +3,7 @@ export type ProviderString =
   | keyof BrowserProviders
   | 'IoPay'
   | 'Ledger'
+  | 'Trezor'
   | 'WalletConnect'
   |  'Phantom'
   | ''

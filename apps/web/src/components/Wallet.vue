@@ -1,6 +1,11 @@
 <template>
   <div>
     <div>
+      <button @click="login()">
+        Login
+      </button>
+    </div>
+    <div>
       <button
         class="btn-save-remove-account"
         @click="addAccount(selectedProvider, selectedAccount)"
@@ -17,12 +22,12 @@
     <div>
       <ul>
         <li
-          v-for="(value, key) in usersAccounts"
-          :key="key"
+          v-for="(_value, _key) in usersAccounts"
+          :key="_key"
         >
-          <ul v-if="key === 'accounts'">
-            <li 
-              v-for="(value, key) in value"
+          <ul v-if="_key === 'accounts'">
+            <li
+              v-for="(value, key) in _value"
               :key="key"
             >
               <div>{{ key }}: {{ value }}</div>
@@ -32,17 +37,19 @@
       </ul>
     </div>
     <div class="staking-container">
-      <button @click="getPoolsForUser">
+      <button @click="getUserPools">
         What do I have staked where?
       </button>
       <ul>
-        <li 
+        <li
           v-for="(pool, index) in pools"
           :key="index"
         >
-          <p>Pool Address: {{ pool.address }}</p>
-          <p>User Balance: {{ pool.userBalance }} ETH</p>
-          <p>Total Pool Balance: {{ pool.balance }} ETH</p>
+          <p>Pool ID: #{{ pool.id }}</p>
+          <p>Your Stake: {{ pool.userStake }} ETH</p>
+          <p>Your Rewards: {{ pool.userRewards }} ETH</p>
+          <p>Total Stake: {{ pool.totalStake }} ETH</p>
+          <p>Total Rewards: {{ pool.totalRewards }} ETH</p>
         </li>
       </ul>
       <input
@@ -111,6 +118,18 @@
           <span> {{ ledgerAccountsResult }} </span>
         </p>
       </div>
+      <div class="trezor-div">
+        <button
+          class="trezor-btn"
+          @click="connectWallet('Trezor')"
+        >
+          {{ trezorButtonText }}
+        </button>
+        <p>
+          Connected Trezor Account:
+          <span> {{ trezorAccountsResult }} </span>
+        </p>
+      </div>
       <div>
         <button
           class="wallet-connect-btn"
@@ -176,6 +195,8 @@ const phantomButtonText = ref<string>('Connect Phantom')
 const phantomAccountsResult = ref<string>('Address Not Active')
 const ledgerButtonText = ref<string>('Connect Ledger')
 const ledgerAccountsResult = ref<string>('Address Not Active')
+const trezorButtonText = ref<string>('Connect Trezor')
+const trezorAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
@@ -190,8 +211,9 @@ const {
   connectWallet,
   sendTransaction,
   signMessage,
-  getPoolsForUser,
-  deposit
+  deposit,
+  login,
+  getUserPools
 } = useWallet()
 
 watchEffect(() => {
@@ -273,6 +295,21 @@ watchEffect(() => {
     ledgerAccountsResult.value = 'Not Active'
     walletConnectButtonText.value = 'Connected!'
     walletConnectAccountsResult.value = selectedAccount.value
+  } else if (selectedProvider.value === 'Trezor') {
+    metamaskButtonText.value = 'Connect MetaMask'
+    metamaskAccountsResult.value = 'Not Active'
+    coinbaseButtonText.value = 'Connect Coinbase'
+    coinbaseAccountsResult.value = 'Not Active'
+    ioPayButtonText.value = 'Connect ioPay'
+    ioPayAccountsResult.value = 'Not Active'
+    phantomButtonText.value = 'Connected'
+    phantomAccountsResult.value = 'Not Active'
+    ledgerButtonText.value = 'Connect Ledger'
+    ledgerAccountsResult.value = 'Not Active'
+    walletConnectButtonText.value = 'Connect WalletConnect'
+    walletConnectAccountsResult.value = 'Not Active'
+    trezorButtonText.value = 'Connected!'
+    trezorAccountsResult.value = selectedAccount.value
   }
 })
 </script>
@@ -322,6 +359,10 @@ button {
 
 .ledger-btn {
   background-color: rgb(0, 0, 0);
+}
+
+.trezor-btn {
+  background-color: rgb(34, 99, 55);
 }
 
 .phantom-btn {

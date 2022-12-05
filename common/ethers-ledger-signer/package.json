@@ -3,7 +3,6 @@
     "private": "true",
     "main": "src/index.ts",
     "scripts": {
-        "dev": "npx esno src/index.ts",
         "build": "esbuild src/index.ts --bundle --minify --sourcemap --platform=node --target=esnext --outfile=dist/index.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },

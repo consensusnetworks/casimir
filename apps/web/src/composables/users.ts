@@ -58,9 +58,28 @@ export default function useUsers () {
         updateUser({id, accounts})
     }
 
+    // TODO: Duplicate function (see useAuth)
+    function _getAuthBaseUrl(): string {
+        if (import.meta.env.PUBLIC_MOCK) {
+            return `http://localhost:${import.meta.env.PUBLIC_AUTH_PORT}`
+        } else {
+            return `https://auth.${import.meta.env.PUBLIC_STAGE || 'dev'}.casimir.co`
+        }
+    }
+    
+    async function getMessage(address: string) {
+        const authBaseUrl = _getAuthBaseUrl()
+        const response = await fetch(`${authBaseUrl}/auth/${address}`)
+        const json = await response.json()
+        const { message } = json
+        console.log('message :>> ', message)
+        return message
+    }
+
     return {
         usersAccounts,
         addAccount,
-        removeAccount
+        removeAccount,
+        getMessage,
     }
 }

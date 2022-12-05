@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import 'source-map-support/register'
 import * as cdk from 'aws-cdk-lib'
-import { pascalCase } from '@casimir/helpers'
-import { LandingStack } from '../lib/landing/landing-stack'
-import { AuthStack } from '../lib/auth/auth-stack'
-import { DnsStack } from '../lib/dns/dns-stack'
-import { EtlStack } from '../lib/etl/etl-stack'
+import { pascalCase } from '@casimir/string-helpers'
+import { AuthStack } from '../lib/auth'
+import { DnsStack } from '../lib/dns'
+import { EtlStack } from '../lib/etl'
+import { LandingStack } from '../lib/landing'
 
 const defaultEnv = { account: '257202027633', region: 'us-east-2' }
 

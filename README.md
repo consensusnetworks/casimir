@@ -7,7 +7,7 @@
 [![GitHub milestones](https://consensusnetworks-shields.herokuapp.com/github/milestones/all/consensusnetworks/casimir)](https://github.com/consensusnetworks/casimir/milestones)
 [![Discord](https://consensusnetworks-shields.herokuapp.com/discord/976524855279226880?logo=discord)](https://discord.com/invite/Vy2b3gSZx8)
 
-Decentralized staking and asset management
+> Decentralized staking and asset management
 
 ## About
 
@@ -27,7 +27,7 @@ Get started contributing to Casimir's codebase.
 
 Make sure your development environment has these prerequisites.
 
-1. [Node.js (v16.x)](https://nodejs.org/en/download/) – we use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
+1. [Node.js (v18.x)](https://nodejs.org/en/download/) – we use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
 
 2. [Docker (v4.x)](https://docs.docker.com/engine/install/) - make sure your Docker runs on startup.
 
@@ -74,15 +74,27 @@ You can get up and running without configuration. You can also mock local backen
 
     > 🚩 You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
 
-3. Emulate a Ledger hardware wallet with [Speculos](#speculos). The default application is ethereum, and we also currently have support for the bitcoin and solana applications.
+3. Emulate a Ledger hardware wallet. The default application is ethereum, and we also currently have support for the bitcoin and solana applications.
 
     ```zsh
-    npm run dev --speculos # or specify --speculos=ethereum, --speculos=bitcoin, or --speculos=solana
+    npm run dev --ledger # or specify --ledger=ethereum, --ledger=bitcoin, or --ledger=solana
     ```
 
     > 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
+
+4. Emulate a Trezor hardware wallet. You also need to make sure to add [these prerequisites](https://github.com/trezor/trezor-user-env#prerequisites).
+
+    ```zsh
+    npm run dev --trezor
+    ```
+
+5. Expose any servers running on local ports using local tunnel.
+
+    ```zsh
+    npm run dev --external
+    ```
     
-4. The commands and flags above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
+6. The commands and flags above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
 
     ```zsh
     # @casimir/web
@@ -142,13 +154,13 @@ Run local cryptonodes for fast and flexible development.
 2. Run a local Ethereum node with archived data from mainnet.
 
     ```zsh
-    npm run dev:ethereum --fork mainnet
+    npm run dev:ethereum --fork=mainnet
     ```
 
 3. Run a local Ethereum node with archived data from Goerli testnet.
 
     ```zsh
-    npm run dev:ethereum --fork testnet
+    npm run dev:ethereum --fork=goerli
     ```
 
 > 🚩 Note, while the fork starts with the same state as the specified network, it lives as a local development network.

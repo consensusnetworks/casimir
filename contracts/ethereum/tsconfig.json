@@ -1,15 +1,22 @@
 {
     "compilerOptions": {
         "target": "ESNext",
-        "module": "commonjs",
         "strict": true,
+        "preserveConstEnums": true,
+        "noEmit": true,
+        "sourceMap": false,
+        "module": "CommonJS",
+        "moduleResolution": "Node",
         "esModuleInterop": true,
-        "outDir": "dist"
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true
     },
     "include": [
-        "./deploy/*.ts",
-        "./test/*.ts"
-, "src/index.ts"    ],
+        "scripts/*.ts",
+        "./test/*.ts",       
+        "src/index.ts"    
+    ],
     "typeRoots": [
         "node_modules/@types"
     ],
