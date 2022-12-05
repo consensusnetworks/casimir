@@ -2,7 +2,7 @@ import { $, argv, echo, chalk } from 'zx'
 import { getSecret } from '@casimir/aws-helpers'
 
 /**
- * Run local Ethereum nodes and deploy Ethereum contracts
+ * Run local a local Ethereum node and deploy contracts
  * 
  * Arguments:
  *      --fork: mainnet, goerli, true, or false (override default goerli)
@@ -37,7 +37,7 @@ void async function () {
     $`npm run dev --workspace @casimir/ethereum`
 
     // Wait for local network to start
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 2000))
     $`npm run deploy --workspace @casimir/ethereum -- --network localhost`
 
 }()

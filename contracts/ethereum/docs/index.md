@@ -122,34 +122,40 @@ uint32[] stakedPoolIds
 
 Pool IDs of pools completed and staked
 
-### linkRequestVolume
+### data
 
 ```solidity
-uint256 linkRequestVolume
+uint256 data
 ```
 
-Chainlink sample request volume
+Chainlink sample request data
 
-### linkRequestJobId
+### jobId
 
 ```solidity
-bytes32 linkRequestJobId
+bytes32 jobId
 ```
 
 Chainlink sample request job ID
 
-### linkRequestFee
+### fee
 
 ```solidity
-uint256 linkRequestFee
+uint256 fee
 ```
 
 Chainlink sample request fee
 
-### RequestVolume
+### oracleAddress
 
 ```solidity
-event RequestVolume(bytes32 requestId, uint256 volume)
+address oracleAddress
+```
+
+### ValidatorInitFullfilled
+
+```solidity
+event ValidatorInitFullfilled(uint256 data)
 ```
 
 Chainlink sample request
@@ -262,22 +268,35 @@ Get the SSV fee percentage to charge on each deposit
 | ---- | ---- | ----------- |
 | [0] | uint32 | The SSV fee percentage to charge on each deposit |
 
-### requestVolumeData
+### requestValidatorInit
 
 ```solidity
-function requestVolumeData() public returns (bytes32 requestId)
+function requestValidatorInit() public returns (bytes32 requestId)
 ```
 
-Create a Chainlink request to retrieve API response, find the target
+Creates a Chainlink request to retrieve API response, find the target
 data, then multiply by 1000000000000000000 (to remove decimal places from data).
 
-### fulfill
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | bytes32 | - id of the request |
+
+### fulfillValidatorInit
 
 ```solidity
-function fulfill(bytes32 _requestId, uint256 _volume) public
+function fulfillValidatorInit(bytes32 _requestId, uint256 _data) public
 ```
 
-Receive the response in the form of uint256
+Receives the response in the form of uint256
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _requestId | bytes32 | - id of the request |
+| _data | uint256 | - response |
 
 ### getOpenPoolIds
 

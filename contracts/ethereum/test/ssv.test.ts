@@ -113,19 +113,6 @@ async function thirdUserDepositFixture() {
   return { ssv, firstUser, owner, secondUser, thirdUser }
 }
 
-describe('Mock oracle', async function () {
-  it('Request should fulfill with provided value', async function () {
-    const { ssv, oracle, owner } = await loadFixture(firstUserDepositFixture)
-    const transaction = await ssv.connect(owner).requestValidatorInit()
-    const transactionReceipt = await transaction.wait(1)
-    const requestId = transactionReceipt.events?.[0].topics[1]
-    const callbackValue = 777
-    await oracle.fulfillOracleRequest(requestId as string, ethers.utils.hexZeroPad(ethers.utils.hexlify(callbackValue), 32))
-    const data = await ssv.data()
-    expect(data.toString()).equal(callbackValue.toString())
-  })
-})
-
 describe('SSV manager', async function () {
 
   it('First user\'s 16 ETH stake should open the first pool', async function () {
@@ -224,4 +211,12 @@ describe('SSV manager', async function () {
     expect(openPools.length).equal(0)
   })
 
+})
+
+describe('Mock oracle', async function () {
+  it('Request should fulfill with provided value', async function () {
+    const { ssv } = await loadFixture(thirdUserDepositFixture)
+    const lastStakePoolId = await ssv.lastStakePoolId()
+    expect(lastStakePoolId).equal(1)
+  })
 })

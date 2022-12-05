@@ -91,6 +91,10 @@ contract MockOracle is ChainlinkRequestInterface, LinkTokenReceiver {
             _dataVersion,
             _data
         );
+
+        uint32 data = uint32(1);
+        /// Imediately fulfill request for mocking purposes
+        this.fulfillOracleRequest(requestId, data);
     }
 
     /**
@@ -102,7 +106,7 @@ contract MockOracle is ChainlinkRequestInterface, LinkTokenReceiver {
      * @param _data The data to return to the consuming contract
      * @return Status if the external call was successful
      */
-    function fulfillOracleRequest(bytes32 _requestId, bytes32 _data)
+    function fulfillOracleRequest(bytes32 _requestId, uint32 _data)
         external
         isValidRequest(_requestId)
         returns (bool)

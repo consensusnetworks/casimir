@@ -76,8 +76,8 @@ contract SSVManager is ChainlinkClient {
     /** Pool IDs of pools completed and staked */
     uint32[] private stakedPoolIds;
 
-    /** Chainlink sample request data */
-    uint256 public data;
+    /** Chainlink sample request lastStakePoolId */
+    uint32 public lastStakePoolId;
 
     /** Chainlink sample request job ID */
     bytes32 private immutable jobId;
@@ -88,7 +88,7 @@ contract SSVManager is ChainlinkClient {
     address private oracleAddress;
 
     /** Chainlink sample request */
-    event ValidatorInitFullfilled(uint256 data);
+    event ValidatorInitFullfilled(uint32 lastStakePoolId);
 
     /** Event signaling a user deposit to the manager */
     event ManagerDeposit(
@@ -189,7 +189,7 @@ contract SSVManager is ChainlinkClient {
                 /// Add completed pool to staked pools
                 stakedPoolIds.push(poolId);
 
-                // stake();
+                stake();
             }
 
             pool.balance.stake += addStakeAmount;
@@ -302,9 +302,9 @@ contract SSVManager is ChainlinkClient {
         return 1;
     }
 
-    // function stake() private {
-    //     this.requestValidatorInit();
-    // }
+    function stake() private {
+        this.requestValidatorInit();
+    }
 
     /**
      *
@@ -351,17 +351,17 @@ contract SSVManager is ChainlinkClient {
     }
 
     /**
-     * @notice Receives the response in the form of uint256
+     * @notice Receives the response in the form of uint32
      *
      * @param _requestId - id of the request
      * @param _data - response
      */
-    function fulfillValidatorInit(bytes32 _requestId, uint256 _data)
+    function fulfillValidatorInit(bytes32 _requestId, uint32 _data)
         public
         recordChainlinkFulfillment(_requestId)
     {
-        data = _data;
-        emit ValidatorInitFullfilled(data);
+        lastStakePoolId = _data;
+        emit ValidatorInitFullfilled(lastStakePoolId);
     }
 
     /**
