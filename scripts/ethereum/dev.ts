@@ -19,8 +19,9 @@ void async function () {
     process.env.BIP39_SEED = seed
     echo(chalk.bgBlackBright('Your mnemonic is ') + chalk.bgBlue(seed))
 
-    // Set fork rpc if requested, default fork to goerli if set vaguely
-    const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
+    // Set fork rpc if requested, default fork to goerli if set vaguely or unset
+    const defaultFork = 'goerli'
+    const fork = argv.fork === 'true' ? defaultFork : argv.fork === 'false' ? false : argv.fork ? argv.fork : defaultFork
     if (fork) {
         const key = await getSecret(`consensus-networks-ethereum-${fork}`)
         const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`

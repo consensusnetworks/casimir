@@ -122,13 +122,13 @@ uint32[] stakedPoolIds
 
 Pool IDs of pools completed and staked
 
-### data
+### lastStakePoolId
 
 ```solidity
-uint256 data
+uint32 lastStakePoolId
 ```
 
-Chainlink sample request data
+Chainlink sample request lastStakePoolId
 
 ### jobId
 
@@ -155,7 +155,7 @@ address oracleAddress
 ### ValidatorInitFullfilled
 
 ```solidity
-event ValidatorInitFullfilled(uint256 data)
+event ValidatorInitFullfilled(uint32 lastStakePoolId)
 ```
 
 Chainlink sample request
@@ -268,6 +268,12 @@ Get the SSV fee percentage to charge on each deposit
 | ---- | ---- | ----------- |
 | [0] | uint32 | The SSV fee percentage to charge on each deposit |
 
+### stake
+
+```solidity
+function stake() private
+```
+
 ### requestValidatorInit
 
 ```solidity
@@ -286,17 +292,17 @@ data, then multiply by 1000000000000000000 (to remove decimal places from data).
 ### fulfillValidatorInit
 
 ```solidity
-function fulfillValidatorInit(bytes32 _requestId, uint256 _data) public
+function fulfillValidatorInit(bytes32 _requestId, uint32 _data) public
 ```
 
-Receives the response in the form of uint256
+Receives the response in the form of uint32
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _requestId | bytes32 | - id of the request |
-| _data | uint256 | - response |
+| _data | uint32 | - response |
 
 ### getOpenPoolIds
 
@@ -474,7 +480,7 @@ Emits OracleRequest event for the Chainlink node to detect._
 ### fulfillOracleRequest
 
 ```solidity
-function fulfillOracleRequest(bytes32 _requestId, bytes32 _data) external returns (bool)
+function fulfillOracleRequest(bytes32 _requestId, uint32 _data) external returns (bool)
 ```
 
 Called by the Chainlink node to fulfill requests
@@ -488,7 +494,7 @@ checking in a `require` so that the node can get paid._
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _requestId | bytes32 | The fulfillment request ID that must match the requester's |
-| _data | bytes32 | The data to return to the consuming contract |
+| _data | uint32 | The data to return to the consuming contract |
 
 #### Return Values
 
