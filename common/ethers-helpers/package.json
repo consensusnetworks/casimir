@@ -1,0 +1,16 @@
+{
+    "name": "@casimir/ethers-helpers",
+    "private": true,
+    "main": "src/index.ts",
+    "scripts": {
+        "build": "esbuild src/index.ts --bundle --minify --sourcemap --platform=node --target=esnext --outfile=dist/index.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "ethers": "^5.6.9"
+    },
+    "devDependencies": {
+        "@types/node": "^17.0.38",
+        "esbuild": "^0.15.9"
+    }
+}

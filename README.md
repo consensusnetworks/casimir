@@ -7,7 +7,7 @@
 [![GitHub milestones](https://consensusnetworks-shields.herokuapp.com/github/milestones/all/consensusnetworks/casimir)](https://github.com/consensusnetworks/casimir/milestones)
 [![Discord](https://consensusnetworks-shields.herokuapp.com/discord/976524855279226880?logo=discord)](https://discord.com/invite/Vy2b3gSZx8)
 
-Decentralized staking and asset management
+> Decentralized staking and asset management
 
 ## About
 
@@ -160,7 +160,7 @@ Run local cryptonodes for fast and flexible development.
 3. Run a local Ethereum node with archived data from Goerli testnet.
 
     ```zsh
-    npm run dev:ethereum --fork=testnet
+    npm run dev:ethereum --fork=goerli
     ```
 
 > 🚩 Note, while the fork starts with the same state as the specified network, it lives as a local development network.

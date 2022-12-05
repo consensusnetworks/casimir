@@ -22,12 +22,12 @@
     <div>
       <ul>
         <li
-          v-for="(value, key) in usersAccounts"
-          :key="key"
+          v-for="(_value, _key) in usersAccounts"
+          :key="_key"
         >
-          <ul v-if="key === 'accounts'">
-            <li 
-              v-for="(value, key) in value"
+          <ul v-if="_key === 'accounts'">
+            <li
+              v-for="(value, key) in _value"
               :key="key"
             >
               <div>{{ key }}: {{ value }}</div>
@@ -37,17 +37,19 @@
       </ul>
     </div>
     <div class="staking-container">
-      <button @click="getPoolsForUser">
+      <button @click="getUserPools">
         What do I have staked where?
       </button>
       <ul>
-        <li 
+        <li
           v-for="(pool, index) in pools"
           :key="index"
         >
-          <p>Pool Address: {{ pool.address }}</p>
-          <p>User Balance: {{ pool.userBalance }} ETH</p>
-          <p>Total Pool Balance: {{ pool.balance }} ETH</p>
+          <p>Pool ID: #{{ pool.id }}</p>
+          <p>Your Stake: {{ pool.userStake }} ETH</p>
+          <p>Your Rewards: {{ pool.userRewards }} ETH</p>
+          <p>Total Stake: {{ pool.totalStake }} ETH</p>
+          <p>Total Rewards: {{ pool.totalRewards }} ETH</p>
         </li>
       </ul>
       <input
@@ -209,9 +211,9 @@ const {
   connectWallet,
   sendTransaction,
   signMessage,
-  getPoolsForUser,
   deposit,
-  login
+  login,
+  getUserPools
 } = useWallet()
 
 watchEffect(() => {

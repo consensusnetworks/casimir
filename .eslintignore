@@ -1,6 +1,4 @@
+contracts/**/scripts/resources
 scripts/**/resources
 cdk.out
 *.js
-
-# Temporarily ignore
-services/crawler
