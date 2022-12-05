@@ -26,7 +26,7 @@ const selectedAccount = ref<string>('')
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
   const { ssv } = useSSV()
-  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage } = useEthers()
+  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, loginWithEthers } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
@@ -155,6 +155,7 @@ export default function useWallet() {
       }))
     }
   }
+
   async function deposit() {
     if (Object.keys(ethersSignerCreator).includes(selectedProvider.value)) {
       const signerKey = selectedProvider.value as keyof typeof ethersSignerCreator
@@ -170,6 +171,19 @@ export default function useWallet() {
     return
   }
 
+  async function login() {
+    try {
+      if (ethersProviderList.includes(selectedProvider.value)) {
+        const loggedIn = await loginWithEthers(selectedProvider.value, selectedAccount.value)
+        console.log('loggedIn :>> ', loggedIn)
+      } else {
+        console.log('Login not yet supported for this wallet provider')
+      }
+    } catch (err) {
+      console.log(`There was an error logging in: ${err}`)
+    }
+  }
+
   return {
     selectedProvider,
     selectedAccount,
@@ -180,7 +194,8 @@ export default function useWallet() {
     connectWallet,
     sendTransaction,
     signMessage,
-    getUserPools,
-    deposit
+    deposit,
+    login,
+    getUserPools
   }
 }

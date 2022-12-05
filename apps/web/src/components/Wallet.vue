@@ -1,6 +1,11 @@
 <template>
   <div>
     <div>
+      <button @click="login()">
+        Login
+      </button>
+    </div>
+    <div>
       <button
         class="btn-save-remove-account"
         @click="addAccount(selectedProvider, selectedAccount)"
@@ -206,8 +211,9 @@ const {
   connectWallet,
   sendTransaction,
   signMessage,
-  getUserPools,
-  deposit
+  deposit,
+  login,
+  getUserPools
 } = useWallet()
 
 watchEffect(() => {

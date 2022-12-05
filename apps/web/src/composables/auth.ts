@@ -1,6 +1,16 @@
 import { LoginCredentials } from '@casimir/types'
 
 export default function useAuth() {
+    async function getMessage(address: string) {
+        const requestOptions = {
+            method: 'GET',
+            headers: { 
+                'Content-Type': 'application/json'
+            }
+        }
+        const authBaseUrl = _getAuthBaseUrl()
+        return await fetch(`${authBaseUrl}/auth/${address}`, requestOptions)
+    }
     /**
      * Logs a user in with an address, message and signed message
      * 
@@ -34,6 +44,6 @@ export default function useAuth() {
 
     return {
         login,
-        usersAccounts
+        getMessage
     }
 }
