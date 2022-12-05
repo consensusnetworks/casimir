@@ -11,7 +11,7 @@ const props = defineProps({
 })
 
 // To Do: connect this to our Auth and see if an account exsists
-const account = ref(false)
+const account = ref(true)
 
 // To Do: get list of connected wallets
 const connectedWallets = ref([
@@ -80,7 +80,7 @@ const connectedWallets = ref([
             
             <h6
               v-show="open"
-              class="slowExpandText h-min text-clip ml-gutter mt-[3px] text-body font-medium"
+              class="slowExpandText h-min text-clip ml-gutter mt-[3px] text-body font-medium whitespace-nowrap"
             >
               {{ item.name }}
             </h6>
@@ -120,7 +120,8 @@ const connectedWallets = ref([
         </ul>
       </div>
     </div>
-    <button
+    <!-- Add this back after demo -->
+    <!-- <button
       v-show="open"
       v-if="!account"
       class="btn_primary my-[15px] text-body w-full"
@@ -142,23 +143,7 @@ const connectedWallets = ref([
       <i
         class="iconoir-cancel font-bold text-body"
       />
-    </button>
-
-    <!-- This button will be romoved once we get a way to get dynamic accouts in -->
-    <div class="absolute bottom-0 left-[10px] flex">
-      <button
-        class="btn_primary text-body mr-[5px]"
-        @click="account = !account"
-      >
-        toggle accout
-      </button>
-      <RouterLink
-        to="/test"
-        class="btn_primary text-caption"
-      >
-        go to test
-      </RouterLink>
-    </div>
+    </button> -->
 
     <!-- To Do: Add settings button with settings page below -->
   </div>

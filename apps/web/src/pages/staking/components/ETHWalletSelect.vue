@@ -70,13 +70,11 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
 </script>
   
 <template>
-  <div
-    class="flex flex-col h-full overflow-auto relative"
-  >
-    <h6 class="text-grey_5 font-medium mb-[20px] truncate">
+  <div class="h-full flex flex-col gap-[15px]">
+    <h6 class="text-grey_5 font-medium">
       Select wallet and amount to stake to our Distributed SSV Validators
-      <hr class="bg-grey_2 h-[2px] mt-[10px]">
     </h6>
+    <hr class="bg-grey_2 h-[2px]">
     <!-- Add tooltip of min and max -->
     <div class="slider mb-[20px]">
       <div class="border border-grey px-[16px] py-[8px] flex justify-between gap-[10px] items-center">
@@ -84,10 +82,10 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
           v-model="amountToStake"
           type="text"
           placeholder="0.00"
-          class="p-0 w-[65px] outline-none text-grey_5"
+          class="p-0 w-[65px] xsm:w-full outline-none text-grey_5"
         >
-        <h6 class="text-primary">
-          | ETH to Stake
+        <h6 class="text-primary whitespace-nowrap">
+          | ETH <span class="sr-only s_xsm:not-sr-only">to Stake</span> 
         </h6>
       </div>
       <input
@@ -99,14 +97,13 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
         class="sr-only s_xsm:not-sr-only"
       >
     </div> 
-    <hr>
-    <div class="h-[40vh] overflow-auto">
+    <div class="h-full overflow-auto border-y border-grey">
       <div
         v-for="item in connectedWallets"
         :key="`${item as any}`"
         class="w-full border border-grey my-[10px]"
       >
-        <div class="flex justify-between items-center px-[12px] py-[6px]">
+        <div class="flex justify-between items-center px-[12px] py-[12px]">
           <img
             :src="item.icon"
             :alt="item.name"
@@ -132,15 +129,11 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
           </h6>
         </div>
       </div>
-    </div> 
-    <hr>
-    
-    <div class="absolute bottom-0 w-full flex justify-between items-center gap-[10px] mt-[20px]">
+    </div>
+    <div class="flex justify-between items-center gap-[20px]">
       <RouterLink
         :to="!disableNext? '/Staking/ETH/Confirm-Stake' : '/Staking/ETH/Select-Wallet'"
-        :style="{
-          width: 'calc(100% - 100px)'
-        }"
+        class="w-full"
       >
         <button
           class="w-full btn_primary font-bold text-body py-[8px]"
