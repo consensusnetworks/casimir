@@ -20,13 +20,12 @@ void async function () {
     echo(chalk.bgBlackBright('Your mnemonic is ') + chalk.bgBlue(seed))
 
     // Set fork rpc if requested, default fork to goerli if set vaguely or unset
-    const defaultFork = 'goerli'
-    const fork = argv.fork === 'true' ? defaultFork : argv.fork === 'false' ? false : argv.fork ? argv.fork : defaultFork
+    const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
     if (fork) {
         const key = await getSecret(`consensus-networks-ethereum-${fork}`)
         const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
         process.env.ETHEREUM_FORKING_URL = url
-        echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(` fork at ${url}`))
+        echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(` ethereum fork at ${url}`))
     }
 
     // Enable 12-second interval mining for dev networks
@@ -36,6 +35,9 @@ void async function () {
     process.env.MOCK_CHAINLINK = 'true'
 
     $`npm run dev --workspace @casimir/ethereum`
+
+    // Wait for hardhat to start
+    await new Promise(resolve => setTimeout(resolve, 1000))
     $`npm run deploy --workspace @casimir/ethereum -- --network localhost`
 
 }()
