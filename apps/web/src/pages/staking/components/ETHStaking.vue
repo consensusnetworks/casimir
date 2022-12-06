@@ -5,10 +5,21 @@ import { ref, onMounted } from 'vue'
 
 const ETHStakingStats = ref(
     [
-        'Total Amount Staked: 78.32 ETH | #123,123.11',
-        'Total Rewards: 78.32 ETH | $123,123.11',
-        '4.11% Anual Reward Rate',
-        '11% Avg Fee',
+      {
+        title: 'Staked',
+        value: '78.32 ETH | $123,123.12',
+        tooltip: 'Total ammount currently staked to SSV'
+      },
+      {
+        title: 'Rewards',
+        value: '78.32 ETH | $123,123.12',
+        tooltip: 'Total rewards accumulated with current stakes'
+      },
+      {
+        title: 'APR',
+        value: '4.11%',
+        tooltip: 'Annual Percentage Rate'
+      },
     ]
 )
 
@@ -158,10 +169,15 @@ const CurrentStakedItems = ref(
       >
         <div
           v-for="item in ETHStakingStats"
-          :key="item"
+          :key="`${item as any}`"
           class="pill_primary whitespace-nowrap"
         >
-          {{ item }}
+          <span class="text-grey_5 mr-[5px]">
+            {{ item.title }}: 
+          </span>
+          <span>
+            {{ item.value }}
+          </span>
         </div>
       </div>
     </div>
