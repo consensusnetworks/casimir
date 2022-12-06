@@ -25,7 +25,7 @@ const currentBalance = ref('45 ETH | $123,123.11')
           alt="eth icon"
           class="w-[24px] h-[24px]"
         >
-        ETH 2.0
+        ETH
         <div class="tooltip">
           <span class="font-semibold text-primary text-body sr-only s_sm:not-sr-only">
             {{ currentBalance }}
