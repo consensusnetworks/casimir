@@ -43,21 +43,28 @@ export class Exchange {
   }
 
   async getCurrentPrice(): Promise<any> {
-    const response = await this.request({
+    const now = Math.floor(Date.now() / 1000)
+    const data = await this.request({
       port: null,
       method: 'GET',
-      host: 'alphavantage.co',
-      path: `/query?function=CRYPTO_INTRADAY&symbol=${this.coin}&market=${this.currency}&interval=1min&apikey=`,
+      host: 'min-api.cryptocompare.com',
+      path: `/data/v2/histominute?fsym=${this.coin}&tsym=${this.currency}&toTs=${now}&limit=1`,
       headers: {
         'Content-Length': '0',
       },
     })
 
-    const price = response['Time Series Crypto (1min)']
-    const val = Object.values(price)[0]
+    if (data.Response.toLowerCase() !== 'success') {
+        throw new Error(data.Message)
+    }
 
-    console.log(val)
-    return {}
+    if (data.Data.Data.length === 0) {
+        throw new Error('Empty response from API')
+    }
+
+    const first = data.Data.Data[0] as PriceEntry
+    const mid = (first.high + first.low) / 2
+    return mid
   }
 
   async getPriceAtBlock(time: number): Promise<number> {

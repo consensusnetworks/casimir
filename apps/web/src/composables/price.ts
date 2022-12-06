@@ -14,12 +14,14 @@ type PriceEntry = {
 
   
 export default function usePrice() {
-    const exchange = new Exchange('ETH', 'USD')
-
     async function getExchangeRate(amount: ethers.BigNumber) {
+        if (ethers.utils.formatEther(amount) === '0.0') {
+            return 0
+        }
+
         const eth = ethers.utils.formatEther(amount)
 
-        const price = await exchange.getCurrentPrice()
+        const price = await getCurrentPrice({ coin: 'ETH', currency: 'USD' })
         const rate = price * parseFloat(eth)
         return rate
     }
@@ -28,22 +30,14 @@ export default function usePrice() {
     }
 }
 
-class Exchange {
-  coin: 'ETH' | 'BTC'
-  currency: 'USD'
-  constructor(coin: 'ETH' | 'BTC', currency: 'USD') {
-    this.coin = coin
-    this.currency = currency
-  }
-
-  async getCurrentPrice(): Promise<number> {
+async function getCurrentPrice({ coin, currency }: { coin: 'ETH' | 'BTC'; currency: 'USD' }) {
     const opt = {
         method: 'GET'
     }
 
     const now = Math.floor(Date.now() / 1000)
 
-    const url = `https://min-api.cryptocompare.com/data/v2/histominute?fsym=${this.coin}&tsym=${this.currency}&toTs=${now}&limit=1`
+    const url = `https://min-api.cryptocompare.com/data/v2/histominute?fsym=${coin}&tsym=${currency}&toTs=${now}&limit=1`
 
     try {
         const response = await fetch(url, opt)
@@ -66,5 +60,4 @@ class Exchange {
         console.log(e)
         return 0
     }
-  }
 }
