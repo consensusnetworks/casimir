@@ -20,15 +20,4 @@
     ],
     "css.lint.unknownAtRules": "ignore",
     "jupyter.notebookFileRoot": "${fileDirname}",
-    "terminal.integrated.profiles.osx": {
-        "x86 bash": {
-            "path": "/usr/bin/arch",
-            "args": ["-arch", "x86_64", "/bin/bash"]
-        },
-        "x86 zsh": {
-            "path": "/usr/bin/arch",
-            "args": ["-arch", "x86_64", "/bin/zsh"]
-        }
-    },
-    "terminal.integrated.defaultProfile.osx": "x86 zsh"
 }
