@@ -215,16 +215,15 @@ describe('SSV manager', async function () {
     const { ssv } = await loadFixture(thirdUserDepositFixture)
     const [firstPool] = await ssv.getStakedPoolIds()
     const validatorPublicKey = await ssv.getPoolValidatorPublicKey(firstPool)
-    console.log(validatorPublicKey)
     expect(validatorPublicKey).to.exist
   })
 
-  // it('First pool\'s operator ID count should be 4', async function () {
-  //   const { ssv } = await loadFixture(thirdUserDepositFixture)
-  //   const [firstPool] = await ssv.getStakedPoolIds()
-  //   const operatorIds = await ssv.getPoolOperatorIds(firstPool)
-  //   expect(operatorIds.length).equal(4)
-  // })
+  it('First pool\'s operator ID count should be 4', async function () {
+    const { ssv } = await loadFixture(thirdUserDepositFixture)
+    const [firstPool] = await ssv.getStakedPoolIds()
+    const operatorIds = await ssv.getPoolOperatorIds(firstPool)
+    expect(operatorIds.length).equal(4)
+  })
 
   it('Second pool\'s validator public key should exist', async function () {
     const { ssv } = await loadFixture(thirdUserDepositFixture)
@@ -233,11 +232,11 @@ describe('SSV manager', async function () {
     expect(validatorPublicKey).to.exist
   })
 
-  // it('Second pool\'s operator ID count should be 4', async function () {
-  //   const { ssv } = await loadFixture(thirdUserDepositFixture)
-  //   const [, secondPool] = await ssv.getStakedPoolIds()
-  //   const operatorIds = await ssv.getPoolOperatorIds(secondPool)
-  //   expect(operatorIds.length).equal(4)
-  // })
+  it('Second pool\'s operator ID count should be 4', async function () {
+    const { ssv } = await loadFixture(thirdUserDepositFixture)
+    const [, secondPool] = await ssv.getStakedPoolIds()
+    const operatorIds = await ssv.getPoolOperatorIds(secondPool)
+    expect(operatorIds.length).equal(4)
+  })
 
 })

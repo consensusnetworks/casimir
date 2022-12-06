@@ -90,10 +90,7 @@ contract SSVManager is ChainlinkClient {
     event ValidatorInitFullfilled(
         uint32 poolId,
         uint32[] operatorIds,
-        bytes[] encryptedShares, 
-        bytes[] sharePublicKeys, 
-        bytes validatorPublicKey, 
-        bytes depositDataSignature
+        bytes validatorPublicKey
     );
 
     /** Event signaling a user deposit to the manager */
@@ -352,23 +349,21 @@ contract SSVManager is ChainlinkClient {
     /**
      * @notice Receives the response in the form of uint32
      *
-     * @param _requestId - ID of the Chainlink request
-     * @param _poolId - The pool ID
-     * @param _operatorIds - The operator IDs
-     * @param _encryptedShares - Standard SSV encrypted shares
-     * @param _sharePublicKeys - Each share's BLS pubkey
-     * @param _validatorPublicKey - Resulting public key corresponding to the shared private key
-     * @param _depositDataSignature - Reconstructed signature of DepositMessage according to eth2 spec
+     * @param _requestId - id of the request
+     * @param _data - response
      */
-    function fulfillValidatorInit(bytes32 _requestId, uint32 _poolId, uint32[] calldata _operatorIds, bytes[] calldata _encryptedShares, bytes[] calldata _sharePublicKeys, bytes calldata _validatorPublicKey, bytes calldata _depositDataSignature)
+    function fulfillValidatorInit(bytes32 _requestId, uint32 _data)
         public
         recordChainlinkFulfillment(_requestId)
     {
-        emit ValidatorInitFullfilled(_poolId, _operatorIds, _encryptedShares, _sharePublicKeys, _validatorPublicKey, _depositDataSignature);
-        console.log('FULFILLED VALIDATOR INIT FOR POOL', _poolId);
-        Pool storage pool = pools[_poolId];
-        pool.operatorIds = _operatorIds;
-        pool.validatorPublicKey = _validatorPublicKey;
+        console.log('Received oracle data', _data);
+
+        /// Hardcode override for mock oracle data
+        uint32 poolId = uint32(_lastPoolId.current());
+        Pool storage pool = pools[poolId];
+        pool.operatorIds = [uint32(616), uint32(799), uint32(814), uint32(594)];
+        pool.validatorPublicKey = bytes("0x8420572d646a9b9738d0d411e070f3857c120b1f3d3153bb05b5e28889a77dfc639ac2b94f34cdf84f502740166e4ebe");
+        emit ValidatorInitFullfilled(poolId, pool.operatorIds, pool.validatorPublicKey);
     }
 
     /**
