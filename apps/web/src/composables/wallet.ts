@@ -145,12 +145,16 @@ export default function useWallet() {
       pools.value = await Promise.all(usersPoolsIds.map(async (poolId: number) => {
         const { stake: totalStake, rewards: totalRewards } = await ssvProvider.getPoolBalance(poolId)
         const { stake: userStake, rewards: userRewards } = await ssvProvider.getPoolUserBalance(poolId, userAddress)
+        const validatorPublicKey = await ssvProvider.getPoolValidatorPublicKey(poolId)
+        const operatorIds = await ssvProvider.getPoolOperatorIds(poolId)
         return {
           id: poolId,
           totalStake: ethers.utils.formatEther(totalStake),
           totalRewards: ethers.utils.formatEther(totalRewards),
           userStake: ethers.utils.formatEther(userStake),
-          userRewards: ethers.utils.formatEther(userRewards)
+          userRewards: ethers.utils.formatEther(userRewards),
+          validatorPublicKey,
+          operatorIds
         }
       }))
     }

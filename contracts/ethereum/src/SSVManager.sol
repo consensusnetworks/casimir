@@ -44,6 +44,8 @@ contract SSVManager is ChainlinkClient {
     struct Pool {
         Balance balance;
         mapping(address => Balance) userBalances;
+        bytes validatorPublicKey;
+        uint32[] operatorIds;
     }
 
     /** User account for storing pool addresses */
@@ -56,7 +58,7 @@ contract SSVManager is ChainlinkClient {
     Counters.Counter _lastPoolId;
 
     /** Uniswap 0.3% fee tier */
-    uint24 swapFee = 3000;
+    uint24 private immutable swapFee = 3000;
 
     /** Uniswap ISwapRouter */
     ISwapRouter public immutable swapRouter;
@@ -76,19 +78,23 @@ contract SSVManager is ChainlinkClient {
     /** Pool IDs of pools completed and staked */
     uint32[] private stakedPoolIds;
 
-    /** Chainlink sample request lastStakePoolId */
-    uint32 public lastStakePoolId;
-
-    /** Chainlink sample request job ID */
+    /** Chainlink request job ID */
     bytes32 private immutable jobId;
 
-    /** Chainlink sample request fee */
-    uint256 private immutable fee;
+    /** Chainlink request fee */
+    uint256 private immutable linkFee;
 
     address private oracleAddress;
 
-    /** Chainlink sample request */
-    event ValidatorInitFullfilled(uint32 lastStakePoolId);
+    /** Event signaling a validator init request fulfillment */
+    event ValidatorInitFullfilled(
+        uint32 poolId,
+        uint32[] operatorIds,
+        bytes[] encryptedShares, 
+        bytes[] sharePublicKeys, 
+        bytes validatorPublicKey, 
+        bytes depositDataSignature
+    );
 
     /** Event signaling a user deposit to the manager */
     event ManagerDeposit(
@@ -109,23 +115,31 @@ contract SSVManager is ChainlinkClient {
         uint256 stakeTime
     );
 
+    /**
+     * @notice Constructor
+     * @param _linkOracleAddress - The Chainlink oracle address
+     * @param _swapRouterAddress - The Uniswap router address
+     * @param _linkTokenAddress - The Chainlink token address
+     * @param _ssvTokenAddress - The SSV token address
+     * @param _wethTokenAddress - The WETH contract address
+     */
     constructor(
-        address linkOracleAddress,
-        address swapRouterAddress,
-        address linkTokenAddress,
-        address ssvTokenAddress,
-        address wethTokenAddress
+        address _linkOracleAddress,
+        address _swapRouterAddress,
+        address _linkTokenAddress,
+        address _ssvTokenAddress,
+        address _wethTokenAddress
     ) {
-        swapRouter = ISwapRouter(swapRouterAddress);
-        tokens[Token.LINK] = linkTokenAddress;
-        tokens[Token.SSV] = ssvTokenAddress;
-        tokens[Token.WETH] = wethTokenAddress;
+        swapRouter = ISwapRouter(_swapRouterAddress);
+        tokens[Token.LINK] = _linkTokenAddress;
+        tokens[Token.SSV] = _ssvTokenAddress;
+        tokens[Token.WETH] = _wethTokenAddress;
 
         /// Set up Chainlink client
-        setChainlinkOracle(linkOracleAddress);
-        setChainlinkToken(linkTokenAddress);
+        setChainlinkOracle(_linkOracleAddress);
+        setChainlinkToken(_linkTokenAddress);
         jobId = '7da2702f37fd48e5b1b9a5715e3509b6';
-        fee = (1 * LINK_DIVISIBILITY) / 10;
+        linkFee = (1 * LINK_DIVISIBILITY) / 10;
     }
 
     /**
@@ -181,6 +195,9 @@ contract SSVManager is ChainlinkClient {
                 addStakeAmount = poolRequiredAmount;
                 depositFunds.stakeAmount -= poolRequiredAmount;
 
+                /// Start a new validator to stake pool
+                initValidator(poolId);
+
                 /// Remove pool from open pools when completed
                 for (uint i = 0; i < openPoolIds.length - 1; i++) {
                     openPoolIds[i] = openPoolIds[i + 1];
@@ -188,8 +205,6 @@ contract SSVManager is ChainlinkClient {
                 openPoolIds.pop();
                 /// Add completed pool to staked pools
                 stakedPoolIds.push(poolId);
-
-                stake();
             }
 
             pool.balance.stake += addStakeAmount;
@@ -216,15 +231,16 @@ contract SSVManager is ChainlinkClient {
 
     /**
      * @dev Process fee and stake deposit amounts
+     * @param _depositAmount - The deposit amount
      * @return The fee and stake deposit amounts
      */
     function processDepositFunds(
-        uint256 depositAmount
+        uint256 _depositAmount
     ) private returns (DepositFunds memory) {
         Fees memory fees = getFees();
         uint32 feesTotal = fees.LINK + fees.SSV;
-        uint256 stakeAmount = (depositAmount * 100) / (100 + feesTotal);
-        uint256 feeAmount = depositAmount - stakeAmount;
+        uint256 stakeAmount = (_depositAmount * 100) / (100 + feesTotal);
+        uint256 feeAmount = _depositAmount - stakeAmount;
 
         // /// Wrap ETH fees in ERC-20 to use in swap
         wrap(feeAmount);
@@ -246,30 +262,34 @@ contract SSVManager is ChainlinkClient {
 
     /**
      * @dev Deposit WETH to use ETH in swaps
+     * @param _amount - The amount of ETH to deposit
      */
-    function wrap(uint256 amount) private {
+    function wrap(uint256 _amount) private {
         IWETH9 wethToken = IWETH9(tokens[Token.WETH]);
-        wethToken.deposit{value: amount}();
-        wethToken.approve(address(swapRouter), amount);
+        wethToken.deposit{value: _amount}();
+        wethToken.approve(address(swapRouter), _amount);
     }
 
     /**
      * @dev Swap one token-in for another token-out
+     * @param _tokenIn - The token-in address
+     * @param _tokenOut - The token-out address
+     * @param _amountIn - The amount of token-in to input
      * @return The amount of token-out
      */
     function swap(
-        address tokenIn,
-        address tokenOut,
-        uint256 amountIn
+        address _tokenIn,
+        address _tokenOut,
+        uint256 _amountIn
     ) private returns (uint256) {
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
             .ExactInputSingleParams({
-                tokenIn: tokenIn,
-                tokenOut: tokenOut,
+                tokenIn: _tokenIn,
+                tokenOut: _tokenOut,
                 fee: swapFee,
                 recipient: address(this),
                 deadline: block.timestamp,
-                amountIn: amountIn,
+                amountIn: _amountIn,
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
             });
@@ -302,71 +322,54 @@ contract SSVManager is ChainlinkClient {
         return 1;
     }
 
-    function stake() private {
-        this.requestValidatorInit();
+    /**
+     * @dev Init a validator for a pool
+     */
+    function initValidator(uint32 _poolId) private {
+        this.requestValidatorInit(_poolId);
     }
 
     /**
-     *
+     * @notice Get validator init config with operators and deposit data from a DKG ceremony
+     * @return _requestId - ID of the request
      */
-
-    /**
-     * @notice Creates a Chainlink request to retrieve API response, find the target
-     * data, then multiply by 1000000000000000000 (to remove decimal places from data).
-     *
-     * @return requestId - id of the request
-     */
-    function requestValidatorInit() public returns (bytes32 requestId) {
+    function requestValidatorInit(uint32 _poolId) public returns (bytes32 _requestId) {
         Chainlink.Request memory request = buildChainlinkRequest(
             jobId,
             address(this),
             this.fulfillValidatorInit.selector
         );
 
-        // Set the URL to perform the GET request on
         request.add(
             "get",
-            "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD"
+            "https://ssv.dev.casimir.co/validator-init"
         );
 
-        // Set the path to find the desired data in the API response, where the response format is:
-        // {"RAW":
-        //   {"ETH":
-        //    {"USD":
-        //     {
-        //      "VOLUME24HOUR": xxx.xxx,
-        //     }
-        //    }
-        //   }
-        //  }
-        // request.add("path", "RAW.ETH.USD.VOLUME24HOUR"); // Chainlink nodes prior to 1.0.0 support this format
-        request.add("path", "RAW,ETH,USD,VOLUME24HOUR"); // Chainlink nodes 1.0.0 and later support this format
-
-        // Multiply the result by 1000000000000000000 to remove decimals
-        int256 timesAmount = 10 ** 18;
-        request.addInt("times", timesAmount);
-
         // Sends the request
-        return sendChainlinkRequest(request, fee);
+        return sendChainlinkRequest(request, linkFee);
     }
 
     /**
      * @notice Receives the response in the form of uint32
      *
-     * @param _requestId - id of the request
-     * @param _data - response
+     * @param _requestId - ID of the Chainlink request
+     * @param _poolId - The pool ID
+     * @param _operatorIds - The operator IDs
+     * @param _encryptedShares - Standard SSV encrypted shares
+     * @param _sharePublicKeys - Each share's BLS pubkey
+     * @param _validatorPublicKey - Resulting public key corresponding to the shared private key
+     * @param _depositDataSignature - Reconstructed signature of DepositMessage according to eth2 spec
      */
-    function fulfillValidatorInit(bytes32 _requestId, uint32 _data)
+    function fulfillValidatorInit(bytes32 _requestId, uint32 _poolId, uint32[] calldata _operatorIds, bytes[] calldata _encryptedShares, bytes[] calldata _sharePublicKeys, bytes calldata _validatorPublicKey, bytes calldata _depositDataSignature)
         public
         recordChainlinkFulfillment(_requestId)
     {
-        lastStakePoolId = _data;
-        emit ValidatorInitFullfilled(lastStakePoolId);
+        emit ValidatorInitFullfilled(_poolId, _operatorIds, _encryptedShares, _sharePublicKeys, _validatorPublicKey, _depositDataSignature);
+        console.log('FULFILLED VALIDATOR INIT FOR POOL', _poolId);
+        Pool storage pool = pools[_poolId];
+        pool.operatorIds = _operatorIds;
+        pool.validatorPublicKey = _validatorPublicKey;
     }
-
-    /**
-     *
-     */
 
     /**
      * @notice Get a list of all open pool IDs
@@ -386,32 +389,58 @@ contract SSVManager is ChainlinkClient {
 
     /**
      * @notice Get a list of a user's pool IDs by user address
+     * @param _userAddress - The user address
      * @return A list of a user's pool IDs
      */
     function getUserPoolIds(
-        address userAddress
+        address _userAddress
     ) external view returns (uint32[] memory) {
-        return users[userAddress].poolIds;
+        return users[_userAddress].poolIds;
     }
 
     /**
      * @notice Get a user's balance in a pool by user address and pool ID
+     * @param _poolId - The pool ID
+     * @param _userAddress - The user address
      * @return A user's balance in a pool
      */
     function getPoolUserBalance(
-        uint32 poolId,
-        address userAddress
+        uint32 _poolId,
+        address _userAddress
     ) external view returns (Balance memory) {
-        return pools[poolId].userBalances[userAddress];
+        return pools[_poolId].userBalances[_userAddress];
     }
 
     /**
      * @notice Get a pool's balance by pool ID
+     * @param _poolId - The pool ID
      * @return The pool's balance
      */
     function getPoolBalance(
-        uint32 poolId
+        uint32 _poolId
     ) external view returns (Balance memory) {
-        return pools[poolId].balance;
+        return pools[_poolId].balance;
+    }
+
+    /**
+     * @notice Get a pool's validator public key by pool ID
+     * @param _poolId - The pool ID
+     * @return The pool's validator public key
+     */
+    function getPoolValidatorPublicKey(
+        uint32 _poolId
+    ) external view returns (bytes memory) {
+        return pools[_poolId].validatorPublicKey;
+    }
+
+    /**
+     * @notice Get a pool's operators by pool ID
+     * @param _poolId - The pool ID
+     * @return The pool's operators
+     */
+    function getPoolOperatorIds(
+        uint32 _poolId
+    ) external view returns (uint32[] memory) {
+        return pools[_poolId].operatorIds;
     }
 }

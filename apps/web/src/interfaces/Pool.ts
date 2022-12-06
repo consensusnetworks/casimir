@@ -4,6 +4,10 @@ export interface Pool {
     totalRewards: string
     userStake: string
     userRewards: string
-    validatorAddress?: string
-    operatorIds?: number[]
+    validator?: {
+        publicKey: string
+    }
+    operators?: {
+        id: number
+    }
 }
