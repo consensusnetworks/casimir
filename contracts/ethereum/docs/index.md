@@ -149,7 +149,7 @@ address oracleAddress
 ### ValidatorInitFullfilled
 
 ```solidity
-event ValidatorInitFullfilled(uint32 poolId, uint32[] operatorIds, bytes[] encryptedShares, bytes[] sharePublicKeys, bytes validatorPublicKey, bytes depositDataSignature)
+event ValidatorInitFullfilled(uint32 poolId, uint32[] operatorIds, bytes validatorPublicKey)
 ```
 
 Event signaling a validator init request fulfillment
@@ -319,7 +319,7 @@ Get validator init config with operators and deposit data from a DKG ceremony
 ### fulfillValidatorInit
 
 ```solidity
-function fulfillValidatorInit(bytes32 _requestId, uint32 _poolId, uint32[] _operatorIds, bytes[] _encryptedShares, bytes[] _sharePublicKeys, bytes _validatorPublicKey, bytes _depositDataSignature) public
+function fulfillValidatorInit(bytes32 _requestId, uint32 _data) public
 ```
 
 Receives the response in the form of uint32
@@ -328,13 +328,8 @@ Receives the response in the form of uint32
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _requestId | bytes32 | - ID of the Chainlink request |
-| _poolId | uint32 | - The pool ID |
-| _operatorIds | uint32[] | - The operator IDs |
-| _encryptedShares | bytes[] | - Standard SSV encrypted shares |
-| _sharePublicKeys | bytes[] | - Each share's BLS pubkey |
-| _validatorPublicKey | bytes | - Resulting public key corresponding to the shared private key |
-| _depositDataSignature | bytes | - Reconstructed signature of DepositMessage according to eth2 spec |
+| _requestId | bytes32 | - id of the request |
+| _data | uint32 | - response |
 
 ### getOpenPoolIds
 
@@ -483,12 +478,6 @@ function withdraw(uint256 _amount) external
 
 Chainlink smart contract developers can use this to test their contracts
 
-### _lastPoolId
-
-```solidity
-uint256 _lastPoolId
-```
-
 ### EXPIRY_TIME
 
 ```solidity
@@ -574,10 +563,10 @@ Emits OracleRequest event for the Chainlink node to detect._
 | _dataVersion | uint256 | The specified data version |
 | _data | bytes | The CBOR payload of the request |
 
-### fulfillValidatorInitRequest
+### fulfillOracleRequest
 
 ```solidity
-function fulfillValidatorInitRequest(bytes32 _requestId, uint32 _poolId, uint32[4] _operatorIds, bytes[4] _encryptedShares, bytes[4] _sharePublicKeys, bytes _validatorPublicKey, bytes _depositDataSignature) external returns (bool)
+function fulfillOracleRequest(bytes32 _requestId, uint32 _data) external returns (bool)
 ```
 
 Called by the Chainlink node to fulfill requests
@@ -591,12 +580,7 @@ checking in a `require` so that the node can get paid._
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _requestId | bytes32 | The fulfillment request ID that must match the requester's |
-| _poolId | uint32 | The pool ID |
-| _operatorIds | uint32[4] | - The operator IDs |
-| _encryptedShares | bytes[4] | - Standard SSV encrypted shares |
-| _sharePublicKeys | bytes[4] | - Each share's BLS pubkey |
-| _validatorPublicKey | bytes | - Resulting public key corresponding to the shared private key |
-| _depositDataSignature | bytes | - Reconstructed signature of DepositMessage according to eth2 spec |
+| _data | uint32 | The data to return to the consuming contract |
 
 #### Return Values
 
