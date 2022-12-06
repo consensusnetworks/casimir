@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { watch } from 'fs'
+import { ref, onMounted } from 'vue'
 
 
 const ETHStakingStats = ref(
@@ -151,7 +152,10 @@ const CurrentStakedItems = ref(
   <div class="h-full flex flex-col gap-[15px]">
     <!-- add rotating pills here when in overflow -->
     <div>
-      <div class="flex w-full overflow-auto gap-[20px]">
+      <div
+        id="pills_container"
+        class="flex w-full overflow-auto gap-[20px]"
+      >
         <div
           v-for="item in ETHStakingStats"
           :key="item"
@@ -171,14 +175,24 @@ const CurrentStakedItems = ref(
         <div class="">
           <h6 class="font-bold text-grey_5 flex justify-between w-full">
             <span>{{ pool.totalAmmountStaked }}</span> 
-            <span class="text-grey_3 flex gap-[10px] sr-only s_xsm:not-sr-only">
-              {{ pool.wallet.address }}
+            <div class="tooltip">
+              <span class="text-grey_3 flex gap-[10px] sr-only s_xsm:not-sr-only">
+                <span class="w-[100px] truncate">{{ pool.wallet.address }}</span>
+                <img
+                  :src="pool.wallet.provider"
+                  :alt="pool.wallet.provider"
+                  class="w-[20px] opacity-[0.2]"
+                >
+              </span>
               <img
                 :src="pool.wallet.provider"
                 :alt="pool.wallet.provider"
-                class="w-[20px] opacity-[0.2]"
+                class="w-[20px] opacity-[0.2] s_xsm:sr-only not-sr-only"
               >
-            </span>
+              <span class="tooltiptext text-body font-bold">
+                {{ pool.wallet.name }}: {{ pool.wallet.address }}
+              </span>
+            </div>
           </h6>
           <hr class="h-[2px] bg-grey my-[20px]">
           <h6 class="font-bold text-grey_3">
@@ -191,7 +205,7 @@ const CurrentStakedItems = ref(
           >
             <div class="flex flex-wrap gap-[20px] justify-between items-center mb-[15px]">
               <h6 class="font-medium  text-grey_5">
-                Pool: {{ item.poolAddress }}
+                Pool #{{ item.poolAddress }}
               </h6>
               <h6 class="font-bold text-grey_5">
                 {{ item.ammountStaked }}
@@ -209,11 +223,16 @@ const CurrentStakedItems = ref(
               class="text-grey_5 whitespace-nowrap"
             >
               <h6 class="flex gap-[20px] flex-wrap justify-between items-center mb-[10px] truncate">
-                <span>
-                  Validator: {{ item.validatorAddress }}
+                <span class="min-w-[135px] w-[45%] flex gap-[5px] items-center">
+                  <!-- add address for link from Shane's format -->
+                  Validator: <span class="truncate">{{ item.validatorAddress }}asdfahsdklfj;laksdj;lkajsdl;kfajs;ld</span> 
+                  <a
+                    href=""
+                    target="_blank"
+                  ><i class="iconoir-open-new-window text-primary" /></a>
                 </span>
                 <span>
-                  {{ item.operatorScore }} Avg Operator Score
+                  {{ item.operatorScore }} Validator Effectiveness 
                 </span>
               </h6>
               <h6 class="flex gap-[20px] flex-wrap justify-between items-center truncate">
@@ -221,7 +240,7 @@ const CurrentStakedItems = ref(
                   {{ item.rewardsAccumulated }} in Rewards
                 </span>
                 <span>
-                  {{ item.avgAPR }} Avg APR
+                  {{ item.avgAPR }} Validator APR
                 </span>
               </h6>
             </div>
@@ -255,54 +274,4 @@ const CurrentStakedItems = ref(
       </RouterLink>
     </div>
   </div>
-  <!-- 
-          <div
-            v-else-if="item.status === 'Active'" 
-            class="flex flex-col w-full gap-[10px] justify-center"
-          >
-            <div class="flex justify-between items-center">
-              <h6 class="font-medium  text-grey_5">
-                Pool: {{ item.poolAddress }}
-              </h6>
-              <h6 class="font-bold text-grey_5">
-                {{ item.ammountStaked }}
-              </h6>
-            </div>
-            <div class="flex flex-col gap-[15px] border border-grey_5 p-[10px] text-grey_5">
-              <h6 class="">
-                Validator: {{ item.validatorAddress }}
-              </h6>
-              <h6 class="">
-                {{ item.rewardsAccumulated }} in Rewards
-              </h6>
-              <h6 class="">
-                {{ item.operatorScore }} Avg Operator Score
-              </h6>
-
-              <h6 class="">
-                {{ item.avgAPR }} Avg APR
-              </h6>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="absolute bottom-10 w-full">
-      <RouterLink
-        to="/Staking/ETH/Select-Wallet"
-        class="w-full"
-      >
-        <button
-          class="w-full btn_primary font-bold text-body py-[8px]"
-        >
-          Stake 
-          <img
-            src="/Staking-Icon.svg"
-            alt="Staking Icon"
-            class="w-[16px]"
-          >
-        </button>
-      </RouterLink>
-    </div>
-  </div> -->
 </template>

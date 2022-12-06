@@ -9,12 +9,14 @@ const connectedWallets = ref([
             {
                 name: 'Acount One',
                 address: ';aalskdkfj;alsdk;fj',
-                amount: '32 ETH'
+                amount: '32 ETH',
+                active: true
             },
             {
                 name: 'Acount Two',
                 address: ';alskddkfj;alsdk;fj',
-                amount: '0 ETH'
+                amount: '0 ETH',
+                active: false
             },
         ]
     },
@@ -25,12 +27,14 @@ const connectedWallets = ref([
             {
                 name: 'Acount One',
                 address: ';alskdkfgj;alsdk;fj',
-                amount: '48 ETH'
+                amount: '48 ETH',
+                active: false
             },
             {
                 name: 'Acount Two',
                 address: ';alskdkfj;adlsdk;fj',
-                amount: '20 ETH'
+                amount: '20 ETH',
+                active: true
             },
         ]
     },
@@ -64,6 +68,14 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
     ) {
         disableNext.value = false
     } else { disableNext.value = true}
+
+    if(Number(selectedWalletToStakeFrom.value.amount.split(' ')[0]) < amountToStake.value){
+      selectedWalletToStakeFrom.value = {
+        name: '',
+        address: '',
+        amount: ''
+      }
+    }
 })
 
 
@@ -75,28 +87,33 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
       Select wallet and amount to stake to our Distributed SSV Validators
     </h6>
     <hr class="bg-grey_2 h-[2px]">
-    <!-- Add tooltip of min and max -->
-    <div class="slider mb-[20px]">
-      <div class="border border-grey px-[16px] py-[8px] flex justify-between gap-[10px] items-center">
+    <div class="tooltip">
+      <div class="slider mb-[20px]">
+        <div class="border border-grey px-[16px] py-[8px] flex justify-between gap-[10px] items-center">
+          <input
+            v-model="(amountToStake)"
+            type="text"
+            placeholder="0.00"
+            class="p-0 w-[65px] xsm:w-full outline-none text-grey_5"
+          >
+          <h6 class="text-primary whitespace-nowrap">
+            | ETH <span class="sr-only s_xsm:not-sr-only">to Stake</span> 
+          </h6>
+        </div>
         <input
           v-model="amountToStake"
-          type="text"
-          placeholder="0.00"
-          class="p-0 w-[65px] xsm:w-full outline-none text-grey_5"
+          type="range"
+          min="0.0"
+          step="0.0001"
+          :max="maxAmmountToStake"
+          class="sr-only s_xsm:not-sr-only"
         >
-        <h6 class="text-primary whitespace-nowrap">
-          | ETH <span class="sr-only s_xsm:not-sr-only">to Stake</span> 
-        </h6>
-      </div>
-      <input
-        v-model="amountToStake"
-        type="range"
-        min="0.0"
-        step="0.0001"
-        :max="maxAmmountToStake"
-        class="sr-only s_xsm:not-sr-only"
-      >
-    </div> 
+      </div> 
+      <span class="tooltiptext text-body font-bold">
+        You can stake from your wallets with the max of {{ maxAmmountToStake }} ETH
+      </span>
+    </div>
+    
     <div class="h-full overflow-auto border-y border-grey">
       <div
         v-for="item in connectedWallets"
@@ -116,8 +133,9 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
         <div
           v-for="account in item.accounts"
           :key="`${account as any}`"
-          class="flex justify-between items-center my-[20px] px-[12px] py-[6px] hover:bg-blue_3 cursor-pointer"
+          class="flex justify-between items-center my-[20px] px-[12px] py-[6px] hover:bg-blue_3 cursor-pointer tooltip"
           :class="selectedWalletToStakeFrom.address === account.address? 'bg-blue_3 hover:bg-blue_2' : ''"
+          :style="Number(account.amount.split(' ')[0]) < amountToStake || !account.active? 'background: rgba(251, 190, 132, 0.2); cursor: default; ' : '' "
           @click="selectedWalletToStakeFrom = account"
         >
           <h6 class="text-grey_6 font-semibold">
@@ -127,6 +145,11 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
           <h6 class="text-grey_5 font-light">
             {{ account.amount }}
           </h6>
+          <span class="tooltiptext text-body font-bold">
+            <span v-if="!account.active">Current account not connected via device or extention</span>
+            <span v-else-if="Number(account.amount.split(' ')[0]) < amountToStake">Insufficient Funds</span>
+            <span v-else />
+          </span>
         </div>
       </div>
     </div>

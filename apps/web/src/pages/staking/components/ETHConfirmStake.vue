@@ -6,9 +6,9 @@ import { ref } from 'vue'
 const stakingInfo = ref(
     {
         to: 'Distributed SSV Validatore',
-        ammount: '6 ETH',
-        fees: '0.25 %',
-        expectedRewards: '4.3 %',
+        amount: '6 ETH',
+        fees: '3.25 %',
+        expectedRewards: '4.56%',
         from: {
             name: 'Coinbase',
             icon: '/coinbase.svg',
@@ -49,13 +49,14 @@ const handleConfirm = () => {
           {{ stakingInfo.to }}
         </h6>
       </div>
+      
       <hr class="bg-grey h-[2px] my-[10px]">
       <div class="flex justify-between items-center">
         <h6 class="text-grey_5">
-          Ammount Staking
+          Amount Staking
         </h6>
         <h6 class="font-bold">
-          {{ stakingInfo.ammount }}
+          {{ stakingInfo.amount }}
         </h6>
       </div>
       <hr class="bg-grey h-[2px] my-[10px]">

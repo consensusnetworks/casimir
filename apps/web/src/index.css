@@ -83,6 +83,28 @@ background: #fff;
     }
 }
 @layer components {
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+    .tooltip .tooltiptext {
+        visibility: hidden;
+        background-color: black;
+        color: #fff;
+        text-align: center;
+        padding: 6px 12px;
+        position: absolute;
+        z-index: 1;
+        /* location of tooltip */
+        top: calc(100% + 5px);
+        right: 0%;
+        margin-left: -60px;
+    }
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+        transition-delay: 1.0s;
+        transition-property: visibility;
+    }
     .slider {
         @apply flex items-center justify-between gap-[20px];
     }

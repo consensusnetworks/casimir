@@ -57,14 +57,20 @@ watch(router.currentRoute,  () => {
         </component>
         <div
           v-else
-          class="border bordedr-[#E4E4E7] px-[25px] py-[50px] flex justify-between"
+          class="border border-grey px-[25px] py-[50px] flex justify-between"
         >
           <div class="flex">
-            <img
-              src="/ETH.svg"
-              alt="eth icon"
-              class="w-[50px] h-[50px] mr-[20px]"
-            >
+            <div class="tooltip">
+              <img
+                src="/ETH.svg"
+                alt="eth icon"
+                class="w-[50px] h-[50px] mr-[20px]"
+              >
+              <span class="tooltiptext text-body font-bold">
+                Ethereum Icon
+              </span>
+            </div>
+            
             <div class="flex flex-col justify-between  sr-only s_xsm:not-sr-only">
               <h6 class="font-bold">
                 Ethereum Staking
@@ -74,38 +80,55 @@ watch(router.currentRoute,  () => {
               </h6>
             </div>
           </div>
-        
-          <div class="flex flex-col justify-between sr-only s_sm:not-sr-only">
-            <h6 class="font-medium">
-              Unstaked ETH
-            </h6>
-            <h6 class="font-medium text-grey_3">
-              <!-- random -->
-              46 ETH | $73816.89
-            </h6>
+          <div class="tooltip">
+            <div class="flex flex-col justify-between gap-[15px] sr-only s_sm:not-sr-only">
+              <h6 class="font-medium">
+                Unstaked ETH
+              </h6>
+              <h6 class="font-medium text-grey_3">
+                <!-- random -->
+                46 ETH | $73816.89
+              </h6>
+            </div>
+            <span class="tooltiptext text-body font-bold">
+              Avaliable ETH: Collection of all connected wallets
+            </span>
           </div>
-          <div class="flex flex-col justify-between sr-only s_md:not-sr-only">
-            <h6 class="font-medium">
-              Staked
-            </h6>
-            <h6 class="font-medium text-grey_3">
-              <!-- random -->
-              32 ETH | $51350.88
-            </h6>
+          
+          <div class="tooltip">
+            <div class="flex flex-col justify-between sr-only gap-[15px] s_md:not-sr-only">
+              <h6 class="font-medium">
+                Staked
+              </h6>
+              <h6 class="font-medium text-grey_3">
+                <!-- random -->
+                32 ETH | $51350.88
+              </h6>
+            </div>
+            <span class="tooltiptext text-body font-bold">
+              ETH Staked: Collection of all connected wallets
+            </span>
           </div>
-          <div class="flex flex-col justify-between sr-only s_lg:not-sr-only">
-            <h6 class="font-medium">
-              In Rewards
-            </h6>
-            <h6 class="font-medium text-grey_3">
-              <!-- random -->
-              6 ETH | $9628.29 | 3% AR
-            </h6>
+          
+          <div class="tooltip">
+            <div class="flex flex-col justify-between gap-[15px] sr-only s_lg:not-sr-only">
+              <h6 class="font-medium">
+                In Rewards
+              </h6>
+              <h6 class="font-medium text-grey_3">
+                <!-- random -->
+                6 ETH | $9628.29 | 3% AR
+              </h6>
+            </div>
+            <span class="tooltiptext text-body font-bold">
+              ETH Rewards From Staking: Collection of all connected wallets staked to SSVs
+            </span>
           </div>
+          
           <div class="flex flex-col justify-between">
             <RouterLink to="Staking/ETH">
               <button
-                class="btn_primary"
+                class="btn_primary xsm:px-[6px]"
                 @click="toggleModal(StakingModal)"
               >
                 Stake
