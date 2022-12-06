@@ -1,14 +1,14 @@
 import { ethers } from 'ethers'
 
-
-function formatBytes(hexstring: string) {
-    return ethers.utils.arrayify(hexstring)
+async function getAddress(mnemonic?: string) {
+    const wallet = getWallet(mnemonic)
+    return wallet.address
 }
 
 async function getKeystore(mnemonic?: string) {
     const wallet = getWallet(mnemonic)
-    console.log(wallet.privateKey)
-    return await wallet.encrypt('')
+    const keystoreString = await wallet.encrypt('')
+    return JSON.parse(keystoreString)
 }
 
 function getWallet(mnemonic?: string) {
@@ -18,8 +18,4 @@ function getWallet(mnemonic?: string) {
     return ethers.Wallet.createRandom()
 }
 
-void function main() {
-    console.log(formatBytes('0x13b4682b21fe50088beff43530787d1dac1e50c8e0686ec55849c8c9c9c5c044'))
-}()
-
-export { getKeystore, getWallet }
+export { getAddress, getKeystore, getWallet }

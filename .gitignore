@@ -9,4 +9,4 @@ aws.env
 .idea
 
 # Sensitive
-secrets/*.json
+**/**/secrets/*.json
