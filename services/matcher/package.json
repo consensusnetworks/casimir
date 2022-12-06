@@ -3,7 +3,7 @@
     "private": "true",
     "main": "src/index.ts",
     "scripts": {
-        "build": "echo \"Error: no build specified\" && exit 1",
+        "build": "echo \"Error: no build specified\" && exit 0",
         "buildnext": "node build.js",
         "watch": "npm run build -- --watch",
         "test": "mocha --require hardhat/register --recursive --exit --extension ts --timeout 15000"
