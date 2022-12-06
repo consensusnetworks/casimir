@@ -46,6 +46,8 @@ struct Fees {
 struct Pool {
   struct SSVManager.Balance balance;
   mapping(address => struct SSVManager.Balance) userBalances;
+  bytes validatorPublicKey;
+  uint32[] operatorIds;
 }
 ```
 
@@ -122,29 +124,21 @@ uint32[] stakedPoolIds
 
 Pool IDs of pools completed and staked
 
-### lastStakePoolId
-
-```solidity
-uint32 lastStakePoolId
-```
-
-Chainlink sample request lastStakePoolId
-
 ### jobId
 
 ```solidity
 bytes32 jobId
 ```
 
-Chainlink sample request job ID
+Chainlink request job ID
 
-### fee
+### linkFee
 
 ```solidity
-uint256 fee
+uint256 linkFee
 ```
 
-Chainlink sample request fee
+Chainlink request fee
 
 ### oracleAddress
 
@@ -155,10 +149,10 @@ address oracleAddress
 ### ValidatorInitFullfilled
 
 ```solidity
-event ValidatorInitFullfilled(uint32 lastStakePoolId)
+event ValidatorInitFullfilled(uint32 poolId, uint32[] operatorIds, bytes[] encryptedShares, bytes[] sharePublicKeys, bytes validatorPublicKey, bytes depositDataSignature)
 ```
 
-Chainlink sample request
+Event signaling a validator init request fulfillment
 
 ### ManagerDeposit
 
@@ -179,8 +173,20 @@ Event signaling a user stake to a pool
 ### constructor
 
 ```solidity
-constructor(address linkOracleAddress, address swapRouterAddress, address linkTokenAddress, address ssvTokenAddress, address wethTokenAddress) public
+constructor(address _linkOracleAddress, address _swapRouterAddress, address _linkTokenAddress, address _ssvTokenAddress, address _wethTokenAddress) public
 ```
+
+Constructor
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _linkOracleAddress | address | - The Chainlink oracle address |
+| _swapRouterAddress | address | - The Uniswap router address |
+| _linkTokenAddress | address | - The Chainlink token address |
+| _ssvTokenAddress | address | - The SSV token address |
+| _wethTokenAddress | address | - The WETH contract address |
 
 ### deposit
 
@@ -193,10 +199,16 @@ Deposit to the pool manager
 ### processDepositFunds
 
 ```solidity
-function processDepositFunds(uint256 depositAmount) private returns (struct SSVManager.DepositFunds)
+function processDepositFunds(uint256 _depositAmount) private returns (struct SSVManager.DepositFunds)
 ```
 
 _Process fee and stake deposit amounts_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _depositAmount | uint256 | - The deposit amount |
 
 #### Return Values
 
@@ -207,18 +219,32 @@ _Process fee and stake deposit amounts_
 ### wrap
 
 ```solidity
-function wrap(uint256 amount) private
+function wrap(uint256 _amount) private
 ```
 
 _Deposit WETH to use ETH in swaps_
 
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _amount | uint256 | - The amount of ETH to deposit |
+
 ### swap
 
 ```solidity
-function swap(address tokenIn, address tokenOut, uint256 amountIn) private returns (uint256)
+function swap(address _tokenIn, address _tokenOut, uint256 _amountIn) private returns (uint256)
 ```
 
 _Swap one token-in for another token-out_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _tokenIn | address | - The token-in address |
+| _tokenOut | address | - The token-out address |
+| _amountIn | uint256 | - The amount of token-in to input |
 
 #### Return Values
 
@@ -268,31 +294,32 @@ Get the SSV fee percentage to charge on each deposit
 | ---- | ---- | ----------- |
 | [0] | uint32 | The SSV fee percentage to charge on each deposit |
 
-### stake
+### initValidator
 
 ```solidity
-function stake() private
+function initValidator(uint32 _poolId) private
 ```
+
+_Init a validator for a pool_
 
 ### requestValidatorInit
 
 ```solidity
-function requestValidatorInit() public returns (bytes32 requestId)
+function requestValidatorInit(uint32 _poolId) public returns (bytes32 _requestId)
 ```
 
-Creates a Chainlink request to retrieve API response, find the target
-data, then multiply by 1000000000000000000 (to remove decimal places from data).
+Get validator init config with operators and deposit data from a DKG ceremony
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| requestId | bytes32 | - id of the request |
+| _requestId | bytes32 | - ID of the request |
 
 ### fulfillValidatorInit
 
 ```solidity
-function fulfillValidatorInit(bytes32 _requestId, uint32 _data) public
+function fulfillValidatorInit(bytes32 _requestId, uint32 _poolId, uint32[] _operatorIds, bytes[] _encryptedShares, bytes[] _sharePublicKeys, bytes _validatorPublicKey, bytes _depositDataSignature) public
 ```
 
 Receives the response in the form of uint32
@@ -301,8 +328,13 @@ Receives the response in the form of uint32
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _requestId | bytes32 | - id of the request |
-| _data | uint32 | - response |
+| _requestId | bytes32 | - ID of the Chainlink request |
+| _poolId | uint32 | - The pool ID |
+| _operatorIds | uint32[] | - The operator IDs |
+| _encryptedShares | bytes[] | - Standard SSV encrypted shares |
+| _sharePublicKeys | bytes[] | - Each share's BLS pubkey |
+| _validatorPublicKey | bytes | - Resulting public key corresponding to the shared private key |
+| _depositDataSignature | bytes | - Reconstructed signature of DepositMessage according to eth2 spec |
 
 ### getOpenPoolIds
 
@@ -335,10 +367,16 @@ Get a list of all staked pool IDs
 ### getUserPoolIds
 
 ```solidity
-function getUserPoolIds(address userAddress) external view returns (uint32[])
+function getUserPoolIds(address _userAddress) external view returns (uint32[])
 ```
 
 Get a list of a user's pool IDs by user address
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _userAddress | address | - The user address |
 
 #### Return Values
 
@@ -349,10 +387,17 @@ Get a list of a user's pool IDs by user address
 ### getPoolUserBalance
 
 ```solidity
-function getPoolUserBalance(uint32 poolId, address userAddress) external view returns (struct SSVManager.Balance)
+function getPoolUserBalance(uint32 _poolId, address _userAddress) external view returns (struct SSVManager.Balance)
 ```
 
 Get a user's balance in a pool by user address and pool ID
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _poolId | uint32 | - The pool ID |
+| _userAddress | address | - The user address |
 
 #### Return Values
 
@@ -363,16 +408,62 @@ Get a user's balance in a pool by user address and pool ID
 ### getPoolBalance
 
 ```solidity
-function getPoolBalance(uint32 poolId) external view returns (struct SSVManager.Balance)
+function getPoolBalance(uint32 _poolId) external view returns (struct SSVManager.Balance)
 ```
 
 Get a pool's balance by pool ID
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _poolId | uint32 | - The pool ID |
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | struct SSVManager.Balance | The pool's balance |
+
+### getPoolValidatorPublicKey
+
+```solidity
+function getPoolValidatorPublicKey(uint32 _poolId) external view returns (bytes)
+```
+
+Get a pool's validator public key by pool ID
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _poolId | uint32 | - The pool ID |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes | The pool's validator public key |
+
+### getPoolOperatorIds
+
+```solidity
+function getPoolOperatorIds(uint32 _poolId) external view returns (uint32[])
+```
+
+Get a pool's operators by pool ID
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _poolId | uint32 | - The pool ID |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint32[] | The pool's operators |
 
 ## IWETH9
 
@@ -391,6 +482,12 @@ function withdraw(uint256 _amount) external
 ## MockOracle
 
 Chainlink smart contract developers can use this to test their contracts
+
+### _lastPoolId
+
+```solidity
+uint256 _lastPoolId
+```
 
 ### EXPIRY_TIME
 
@@ -477,10 +574,10 @@ Emits OracleRequest event for the Chainlink node to detect._
 | _dataVersion | uint256 | The specified data version |
 | _data | bytes | The CBOR payload of the request |
 
-### fulfillOracleRequest
+### fulfillValidatorInitRequest
 
 ```solidity
-function fulfillOracleRequest(bytes32 _requestId, uint32 _data) external returns (bool)
+function fulfillValidatorInitRequest(bytes32 _requestId, uint32 _poolId, uint32[4] _operatorIds, bytes[4] _encryptedShares, bytes[4] _sharePublicKeys, bytes _validatorPublicKey, bytes _depositDataSignature) external returns (bool)
 ```
 
 Called by the Chainlink node to fulfill requests
@@ -494,7 +591,12 @@ checking in a `require` so that the node can get paid._
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _requestId | bytes32 | The fulfillment request ID that must match the requester's |
-| _data | uint32 | The data to return to the consuming contract |
+| _poolId | uint32 | The pool ID |
+| _operatorIds | uint32[4] | - The operator IDs |
+| _encryptedShares | bytes[4] | - Standard SSV encrypted shares |
+| _sharePublicKeys | bytes[4] | - Each share's BLS pubkey |
+| _validatorPublicKey | bytes | - Resulting public key corresponding to the shared private key |
+| _depositDataSignature | bytes | - Reconstructed signature of DepositMessage according to eth2 spec |
 
 #### Return Values
 
