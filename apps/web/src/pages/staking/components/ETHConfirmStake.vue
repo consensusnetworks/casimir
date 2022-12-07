@@ -60,7 +60,7 @@ const handleConfirm = async () => {
           Amount Staking
         </h6>
         <h6 class="font-bold">
-          {{ stakingInfo.amount }}
+          {{ stakingInfo.amount }} ETH
         </h6>
       </div>
       <hr class="bg-grey h-[2px] my-[10px]">
@@ -100,7 +100,7 @@ const handleConfirm = async () => {
             <span class="px-[6px] text-grey_2 sr-only s_xsm:not-sr-only">{{ stakingInfo.from.account.address }}</span>
           </h6>
           <h6 class="text-grey_5 font-light">
-            {{ stakingInfo.from.account.balance }}
+            {{ stakingInfo.from.account.balance }} ETH
           </h6>
         </div>
       </div>

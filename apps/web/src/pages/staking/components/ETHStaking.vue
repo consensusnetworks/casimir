@@ -53,7 +53,7 @@ const { user } = useUsers()
         <div class="">
           <h6 class="font-bold text-grey_5 flex justify-between w-full">
             <span class="flex">
-              {{ formatDecimalString(pool.userStake || '0.0') }} |&nbsp;<USDAmount :ether-amount="(pool.userStake || '0.0')" />
+              {{ formatDecimalString(pool.userStake || '0.0') }} ETH |&nbsp;<USDAmount :ether-amount="(pool.userStake || '0.0')" />
             </span> 
             <div class="tooltip">
               <span class="text-grey_3 flex gap-[10px] sr-only s_xsm:not-sr-only">
@@ -86,7 +86,7 @@ const { user } = useUsers()
                 Pool #{{ pool.id }}
               </h6>
               <h6 class="font-bold text-grey_5">
-                {{ pool.userStake }}
+                {{ pool.totalStake }} ETH
               </h6>
             </div>
             <div
@@ -102,7 +102,7 @@ const { user } = useUsers()
             >
               <h6 class="flex gap-[20px] flex-wrap justify-between items-center truncate">
                 <span>
-                  {{ pool.userRewards }} in rewards
+                  <span class="font-bold text-grey_5">{{ pool.userRewards }} ETH</span> in rewards
                 </span>
                 <span>
                   {{ pool.validator.apr }} validator APR
