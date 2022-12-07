@@ -22,7 +22,7 @@
     <div>
       <ul>
         <li
-          v-for="(_value, _key) in usersAccounts"
+          v-for="(_value, _key) in user"
           :key="_key"
         >
           <ul v-if="_key === 'accounts'">
@@ -200,7 +200,7 @@ const trezorAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
-const { addAccount, removeAccount, usersAccounts } = useUsers()
+const { addAccount, removeAccount, user } = useUsers()
 const {
   selectedProvider,
   selectedAccount,
@@ -213,13 +213,8 @@ const {
   signMessage,
   deposit,
   login,
-  getUserPools,
-  subscribeToEvents
+  getUserPools
 } = useWallet()
-
-onMounted(() => {
-  subscribeToEvents()
-})
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {

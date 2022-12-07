@@ -14,15 +14,15 @@ type PriceEntry = {
 
   
 export default function usePrice() {
-    async function getExchangeRate(amount: ethers.BigNumber) {
-        if (ethers.utils.formatEther(amount) === '0.0') {
+    async function getExchangeRate(amount: string) {
+
+        if (amount === '0.0') {
             return 0
         }
 
-        const eth = ethers.utils.formatEther(amount)
-
         const price = await getCurrentPrice({ coin: 'ETH', currency: 'USD' })
-        const rate = price * parseFloat(eth)
+        const rate = price * parseFloat(amount)
+
         return rate
     }
     return {

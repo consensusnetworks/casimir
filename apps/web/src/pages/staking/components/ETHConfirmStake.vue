@@ -5,10 +5,10 @@ import { ref } from 'vue'
 
 const stakingInfo = ref(
     {
-        to: 'Distributed SSV Validatore',
+        to: 'Distributed SSV Validator',
         amount: '6 ETH',
-        fees: '3.25 %',
-        expectedRewards: '4.56%',
+        fees: '2.00%',
+        expectedRewards: '5.56%',
         from: {
             name: 'Coinbase',
             icon: '/coinbase.svg',

@@ -18,7 +18,7 @@ const ETHStakingStats = ref(
       {
         title: 'APR',
         value: '4.11%',
-        tooltip: 'Annual Percentage Rate'
+        tooltip: 'Annual percentage return'
       },
     ]
 )
@@ -231,7 +231,7 @@ const CurrentStakedItems = ref(
               v-if="item.status === 'InWaiting'"
             >
               <h6 class="font-medium w-full text-center text-decline p-[10px] border border-decline my-[15px]">
-                In Waiting: Not Yet Staked
+                Pool is currently open
               </h6>
             </div>
             <div
