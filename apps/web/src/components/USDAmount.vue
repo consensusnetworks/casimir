@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { defineProps, onMounted, ref, toRef, watch } from 'vue'
+import { onMounted, ref, toRef, watch } from 'vue'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
 
@@ -7,6 +7,8 @@ const { formatDecimalString } = useFormat()
 const { getExchangeRate } = usePrice()
 
 const usdAmount = ref(0)
+
+// eslint-disable-next-line no-undef
 const props = defineProps({
     etherAmount: {
         type: String,

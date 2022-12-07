@@ -37,7 +37,7 @@
       </ul>
     </div>
     <div class="staking-container">
-      <button @click="getUserPools">
+      <button @click="getUserPools(selectedAccount)">
         What do I have staked where?
       </button>
       <ul>
