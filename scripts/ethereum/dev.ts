@@ -1,5 +1,6 @@
 import { $, argv, echo, chalk } from 'zx'
 import { getSecret } from '@casimir/aws-helpers'
+import { getWallet } from '@casimir/ethers-helpers'
 
 /**
  * Run local a local Ethereum node and deploy contracts
