@@ -129,6 +129,7 @@ const { user } = useUsers()
                     :href="operator.url"
                     target="_blank"
                   >
+                    <!-- Todo fix hardcoded check on the last operator -->
                     #{{ operator.id }}{{ operator.id === 594 ? '' : ', ' }}
                   </a>
                 </span>
