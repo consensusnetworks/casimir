@@ -1,16 +1,10 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import useFormat from '@/composables/format'
+import useUsers from '@/composables/users'
+import USDAmount from '@/components/USDAmount.vue'
 
-
-// eslint-disable-next-line no-undef
-const props = defineProps({
-    toggleModal: {
-        type: Function,
-        required: true
-    }
-})
-
-const currentBalance = ref('45 ETH | $123,123.11')
+const { formatDecimalString } = useFormat()
+const { user } = useUsers()
 
 </script>
   
@@ -27,8 +21,8 @@ const currentBalance = ref('45 ETH | $123,123.11')
         >
         ETH
         <div class="tooltip">
-          <span class="font-semibold text-primary text-body sr-only s_sm:not-sr-only">
-            {{ currentBalance }}
+          <span class="flex font-semibold text-primary text-body sr-only s_sm:not-sr-only">
+            {{ formatDecimalString(user.balance || '0.0') }} |&nbsp;<USDAmount :ether-amount="(user.balance || '0.0')" />
           </span>
           <span class="tooltiptext text-body font-bold">
             Balance is summed up from all connected wallets

@@ -1,81 +1,69 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import useFormat from '@/composables/format'
+import useUsers from '@/composables/users'
+import useWallet from '@/composables/wallet'
 
-const connectedWallets = ref([
+const { formatDecimalString } = useFormat()
+const { user } = useUsers()
+const { amountToStake } = useWallet()
+
+const connectedWallets = computed(() => {
+  return [
     {
-        name: 'Metamask',
-        icon: '/metamask.svg',
-        accounts: [
-            {
-                name: 'Acount One',
-                address: ';aalskdkfj;alsdk;fj',
-                amount: '32 ETH',
-                active: true
-            },
-            {
-                name: 'Acount Two',
-                address: ';alskddkfj;alsdk;fj',
-                amount: '0 ETH',
-                active: false
-            },
-        ]
-    },
-    {
-        name: 'Coinbase',
-        icon: '/coinbase.svg',
-        accounts: [
-            {
-                name: 'Acount One',
-                address: ';alskdkfgj;alsdk;fj',
-                amount: '48 ETH',
-                active: false
-            },
-            {
-                name: 'Acount Two',
-                address: ';alskdkfj;adlsdk;fj',
-                amount: '20 ETH',
-                active: true
-            },
-        ]
-    },
-])
+      name: 'Metamask',
+      icon: '/metamask.svg',
+      accounts: [
+        {
+          name: 'Primary Account',
+          address: user.value.id,
+          amount: formatDecimalString(user.value.balance || '0.0'),
+          active: true
+        }
+      ]
+    }
+  ]
+})
 
 const maxAmmountToStake = ref(100)
 
-const amountToStake = ref(0.00)
+const amountToStakeNumber = ref(0.00)
+watch(amountToStakeNumber, (newValue) => {
+  amountToStake.value = newValue.toString()
+})
 
 const disableNext = ref(true)
 
 const selectedWalletToStakeFrom = ref(
-    {
-        name: '',
-        address: '',
-        amount: ''
-    }
+  {
+    name: '',
+    address: '',
+    amount: ''
+  }
 )
 
-watch([amountToStake, selectedWalletToStakeFrom], () => {
-    if(!(/^[0-9.,]+$/.test(amountToStake.value + ''))){
-        amountToStake.value = 0.00
-    }
-    if(amountToStake.value > maxAmmountToStake.value){
-        amountToStake.value = maxAmmountToStake.value
-    }
+watch([amountToStakeNumber, selectedWalletToStakeFrom], () => {
+  if (!(/^[0-9.,]+$/.test(amountToStakeNumber.value + ''))) {
+    amountToStakeNumber.value = 0.00
+  }
+  if (amountToStakeNumber.value > maxAmmountToStake.value) {
+    amountToStakeNumber.value = maxAmmountToStake.value
+  }
 
-    if(
-        amountToStake.value > 0 &&
-        selectedWalletToStakeFrom.value.address.length > 0
-    ) {
-        disableNext.value = false
-    } else { disableNext.value = true}
+  if (
+    amountToStakeNumber.value > 0 &&
+    selectedWalletToStakeFrom.value.address.length > 0
+  ) {
+    disableNext.value = false
+  } else { disableNext.value = true }
 
-    if(Number(selectedWalletToStakeFrom.value.amount.split(' ')[0]) < amountToStake.value){
-      selectedWalletToStakeFrom.value = {
-        name: '',
-        address: '',
-        amount: ''
-      }
+  if (Number(selectedWalletToStakeFrom.value.amount.split(' ')[0]) < amountToStakeNumber.value) {
+    selectedWalletToStakeFrom.value = {
+      name: '',
+      address: '',
+      amount: ''
     }
+  }
 })
 
 
@@ -91,29 +79,29 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
       <div class="slider mb-[20px]">
         <div class="border border-grey px-[16px] py-[8px] flex justify-between gap-[10px] items-center">
           <input
-            v-model="(amountToStake)"
+            v-model="(amountToStakeNumber)"
             type="text"
             placeholder="0.00"
             class="p-0 w-[65px] xsm:w-full outline-none text-grey_5"
           >
           <h6 class="text-primary whitespace-nowrap">
-            | ETH <span class="sr-only s_xsm:not-sr-only">to Stake</span> 
+            | ETH <span class="sr-only s_xsm:not-sr-only">to stake</span>
           </h6>
         </div>
         <input
-          v-model="amountToStake"
+          v-model="amountToStakeNumber"
           type="range"
           min="0.0"
-          step="0.0001"
+          step="0.01"
           :max="maxAmmountToStake"
           class="sr-only s_xsm:not-sr-only"
         >
-      </div> 
+      </div>
       <span class="tooltiptext text-body font-bold">
         You can stake from your wallets with the max of {{ maxAmmountToStake }} ETH
       </span>
     </div>
-    
+
     <div class="h-full overflow-auto border-y border-grey">
       <div
         v-for="item in connectedWallets"
@@ -134,20 +122,20 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
           v-for="account in item.accounts"
           :key="`${account as any}`"
           class="flex justify-between items-center my-[20px] px-[12px] py-[6px] hover:bg-blue_3 cursor-pointer tooltip"
-          :class="selectedWalletToStakeFrom.address === account.address? 'bg-blue_3 hover:bg-blue_2' : ''"
-          :style="Number(account.amount.split(' ')[0]) < amountToStake || !account.active? 'background: rgba(251, 190, 132, 0.2); cursor: default; ' : '' "
+          :class="selectedWalletToStakeFrom.address === account.address ? 'bg-blue_3 hover:bg-blue_2' : ''"
+          :style="Number(account.amount.split(' ')[0]) < amountToStakeNumber || !account.active ? 'background: rgba(251, 190, 132, 0.2); cursor: default; ' : ''"
           @click="selectedWalletToStakeFrom = account"
         >
           <h6 class="text-grey_6 font-semibold">
-            {{ account.name }} | 
+            {{ account.name }} |
             <span class="px-[6px] text-grey_2  sr-only s_xsm:not-sr-only">{{ account.address }}</span>
           </h6>
           <h6 class="text-grey_5 font-light">
             {{ account.amount }}
           </h6>
           <span class="tooltiptext text-body font-bold">
-            <span v-if="!account.active">Current account not connected via device or extention</span>
-            <span v-else-if="Number(account.amount.split(' ')[0]) < amountToStake">Insufficient Funds</span>
+            <span v-if="!account.active">Current account not connected via device or extension</span>
+            <span v-else-if="Number(account.amount.split(' ')[0]) < amountToStakeNumber">Insufficient funds</span>
             <span v-else />
           </span>
         </div>
@@ -155,7 +143,7 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
     </div>
     <div class="flex justify-between items-center gap-[20px]">
       <RouterLink
-        :to="!disableNext? '/stake/eth/confirm-stake' : '/Staking/ETH/Select-Wallet'"
+        :to="!disableNext ? '/stake/eth/confirm-stake' : '/Staking/ETH/Select-Wallet'"
         class="w-full"
       >
         <button
@@ -165,7 +153,7 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
           Next
         </button>
       </RouterLink>
-      
+
       <RouterLink
         to="/stake/eth"
         class="w-[100px]"

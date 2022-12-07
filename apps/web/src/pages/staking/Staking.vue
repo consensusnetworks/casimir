@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-// To Do: Grab all staking info 
-// balance, staked, reward info
-
 import router from '@/composables/router'
-import { ref, shallowRef, onBeforeMount, onMounted, watch } from 'vue'
-
+import { shallowRef, onMounted, watch } from 'vue'
 import StakingModal from './components/StakingModal.vue'
+import useFormat from '@/composables/format'
+import useUsers from '@/composables/users'
+import USDAmount from '@/components/USDAmount.vue'
 
+const { formatDecimalString } = useFormat()
+const { user } = useUsers()
 const selectedComponent = shallowRef(null)
-
 const toggleModal = (component: any) => {
   selectedComponent.value = component
 }
@@ -83,15 +83,14 @@ watch(router.currentRoute,  () => {
           <div class="tooltip">
             <div class="flex flex-col justify-between gap-[15px] sr-only s_sm:not-sr-only">
               <h6 class="font-medium">
-                Unstaked ETH
+                Available
               </h6>
-              <h6 class="font-medium text-grey_3">
-                <!-- random -->
-                46 ETH | $73816.89
+              <h6 class="flex font-medium text-grey_3">
+                {{ formatDecimalString(user.balance || '0.0') }} |&nbsp;<USDAmount :ether-amount="(user.balance || '0.0')" />
               </h6>
             </div>
             <span class="tooltiptext text-body font-bold">
-              Avaliable ETH: Collection of all connected wallets
+              ETH avaiable for staking: total of all connected wallets
             </span>
           </div>
           
@@ -100,28 +99,26 @@ watch(router.currentRoute,  () => {
               <h6 class="font-medium">
                 Staked
               </h6>
-              <h6 class="font-medium text-grey_3">
-                <!-- random -->
-                32 ETH | $51350.88
+              <h6 class="flex font-medium text-grey_3">
+                {{ formatDecimalString(user.stake || '0.0') }} |&nbsp;<USDAmount :ether-amount="(user.stake || '0.0')" />
               </h6>
             </div>
             <span class="tooltiptext text-body font-bold">
-              ETH Staked: Collection of all connected wallets
+              ETH currently staked: total of all connected wallets
             </span>
           </div>
           
           <div class="tooltip">
             <div class="flex flex-col justify-between gap-[15px] sr-only s_lg:not-sr-only">
               <h6 class="font-medium">
-                In Rewards
+                Rewards
               </h6>
-              <h6 class="font-medium text-grey_3">
-                <!-- random -->
-                6 ETH | $9628.29 | 3% AR
+              <h6 class="flex font-medium text-grey_3">
+                {{ formatDecimalString(user.rewards || '0.0') }} |&nbsp;<USDAmount :ether-amount="(user.rewards || '0.0')" />
               </h6>
             </div>
             <span class="tooltiptext text-body font-bold">
-              ETH Rewards From Staking: Collection of all connected wallets staked to SSVs
+              ETH rewards from staking: total of all connected wallets
             </span>
           </div>
           

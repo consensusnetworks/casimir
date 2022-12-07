@@ -1,21 +1,27 @@
 <script lang="ts" setup>
 import router from '@/composables/router'
 import { ref } from 'vue'
+import useFormat from '@/composables/format'
+import useUsers from '@/composables/users'
+import useWallet from '@/composables/wallet'
 
+const { formatDecimalString } = useFormat()
+const { user } = useUsers()
+const { amountToStake, deposit } = useWallet()
 
 const stakingInfo = ref(
     {
-        to: 'Distributed SSV Validatore',
-        amount: '6 ETH',
-        fees: '3.25 %',
-        expectedRewards: '4.56%',
+        to: 'Distributed SSV Validator',
+        amount: formatDecimalString(amountToStake.value),
+        fees: '2.00%',
+        expectedRewards: '5.67%',
         from: {
-            name: 'Coinbase',
-            icon: '/coinbase.svg',
+            name: 'MetaMask',
+            icon: '/metamask.svg',
             account: {
-                name: 'Account One',
-                balance: '48 ETH',
-                address: 'asdfasdfasdf'
+                name: 'Primary Account',
+                balance: formatDecimalString(user.value.balance || '0.0'),
+                address: user.value.id
             }
         }
     }
@@ -23,13 +29,11 @@ const stakingInfo = ref(
 
 const loading = ref(false)
 
-const handleConfirm = () => {
-    loading.value = true
-
-    setTimeout(()=> {
-        loading.value = false
-        router.push('/stake/eth')
-    }, 2000)
+const handleConfirm = async () => {
+  loading.value = true
+  await deposit()
+  loading.value = false
+  router.push('/stake/eth')
 }
 
 </script>
@@ -56,7 +60,7 @@ const handleConfirm = () => {
           Amount Staking
         </h6>
         <h6 class="font-bold">
-          {{ stakingInfo.amount }}
+          {{ stakingInfo.amount }} ETH
         </h6>
       </div>
       <hr class="bg-grey h-[2px] my-[10px]">
@@ -96,7 +100,7 @@ const handleConfirm = () => {
             <span class="px-[6px] text-grey_2 sr-only s_xsm:not-sr-only">{{ stakingInfo.from.account.address }}</span>
           </h6>
           <h6 class="text-grey_5 font-light">
-            {{ stakingInfo.from.account.balance }}
+            {{ stakingInfo.from.account.balance }} ETH
           </h6>
         </div>
       </div>

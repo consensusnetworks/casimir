@@ -46,7 +46,7 @@ struct Fees {
 struct Pool {
   struct SSVManager.Balance balance;
   mapping(address => struct SSVManager.Balance) userBalances;
-  bytes validatorPublicKey;
+  string validatorPublicKey;
   uint32[] operatorIds;
 }
 ```
@@ -149,7 +149,7 @@ address oracleAddress
 ### ValidatorInitFullfilled
 
 ```solidity
-event ValidatorInitFullfilled(uint32 poolId, uint32[] operatorIds, bytes validatorPublicKey)
+event ValidatorInitFullfilled(uint32 poolId, uint32[] operatorIds, string validatorPublicKey)
 ```
 
 Event signaling a validator init request fulfillment
@@ -423,7 +423,7 @@ Get a pool's balance by pool ID
 ### getPoolValidatorPublicKey
 
 ```solidity
-function getPoolValidatorPublicKey(uint32 _poolId) external view returns (bytes)
+function getPoolValidatorPublicKey(uint32 _poolId) external view returns (string)
 ```
 
 Get a pool's validator public key by pool ID
@@ -438,7 +438,7 @@ Get a pool's validator public key by pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes | The pool's validator public key |
+| [0] | string | The pool's validator public key |
 
 ### getPoolOperatorIds
 

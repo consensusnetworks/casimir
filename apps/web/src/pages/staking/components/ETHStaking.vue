@@ -1,161 +1,11 @@
 <script lang="ts" setup>
-import { watch } from 'fs'
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import useFormat from '@/composables/format'
+import useUsers from '@/composables/users'
+import USDAmount from '@/components/USDAmount.vue'
 
-
-const ETHStakingStats = ref(
-    [
-      {
-        title: 'Staked',
-        value: '78.32 ETH | $123,123.12',
-        tooltip: 'Total ammount currently staked to SSV'
-      },
-      {
-        title: 'Rewards',
-        value: '78.32 ETH | $123,123.12',
-        tooltip: 'Total rewards accumulated with current stakes'
-      },
-      {
-        title: 'APR',
-        value: '4.11%',
-        tooltip: 'Annual Percentage Rate'
-      },
-    ]
-)
-
-const CurrentStakedItems = ref(
-    [
-        {
-            totalAmmountStaked: '5 ETH | $123.12',
-            timeOfStaking: '11/30/22',
-            wallet: {
-                provider: '/coinbase.svg',
-                address: 'asdfasasdf',
-                name: 'Account One'
-            },
-            // list of pools distributed in
-            pools: [
-                {
-                    poolAddress: '123123',
-                    validatorAddress: '123',
-                    // InWaiting || Active
-                    status: 'Active',
-                    ammountStaked: '5 ETH',
-                    rewardsAccumulated: '10 ETH | $123.12',
-                    operatorScore: '32%',
-                    avgAPR: '2.3%'
-                }
-            ],
-        },
-        {
-            totalAmmountStaked: '5 ETH | $123.12',
-            timeOfStaking: '11/30/22',
-            wallet: {
-                provider: '/coinbase.svg',
-                address: 'asdfasasdf'
-            },
-            // list of pools distributed in
-            pools: [
-                {
-                    poolAddress: '123123',
-                    validatorAddress: '123',
-                    // InWaiting || Active
-                    status: 'Active',
-                    ammountStaked: '2.5 ETH',
-                    rewardsAccumulated: '10 ETH | $123.12',
-                    operatorScore: '32%',
-                    avgAPR: '2.3%'
-                },
-                {
-                    poolAddress: '123123',
-                    validatorAddress: '',
-                    // InWaiting || Active
-                    status: 'InWaiting',
-                    ammountStaked: '2.5 ETH',
-                    wallet: {
-                        provider: '/coinbase.svg',
-                        address: 'asdfasasdf'
-                    },
-                    rewardsAccumulated: '',
-                    operatorScore: '',
-                    avgAPR: ''
-                }
-            ],
-        },
-        {
-            totalAmmountStaked: '5 ETH | $123.12',
-            timeOfStaking: '11/30/22',
-            wallet: {
-                provider: '/coinbase.svg',
-                address: 'asdfasasdf'
-            },
-            // list of pools distributed in
-            pools: [
-                {
-                    poolAddress: '123123',
-                    validatorAddress: '123',
-                    // InWaiting || Active
-                    status: 'Active',
-                    ammountStaked: '1.25 ETH',
-                    rewardsAccumulated: '10 ETH | $123.12',
-                    operatorScore: '32%',
-                    avgAPR: '2.3%'
-                },
-                {
-                    poolAddress: '123123',
-                    validatorAddress: '123',
-                    // InWaiting || Active
-                    status: 'Active',
-                    ammountStaked: '1.25 ETH',
-                    rewardsAccumulated: '10 ETH | $123.12',
-                    operatorScore: '32%',
-                    avgAPR: '2.3%'
-                },
-                {
-                    poolAddress: '123123',
-                    validatorAddress: '123',
-                    // InWaiting || Active
-                    status: 'Active',
-                    ammountStaked: '2.5 ETH',
-                    rewardsAccumulated: '10 ETH | $123.12',
-                    operatorScore: '32%',
-                    avgAPR: '2.3%'
-                }
-            ],
-        },
-        {
-            totalAmmountStaked: '5 ETH | $123.12',
-            timeOfStaking: '11/30/22',
-            wallet: {
-                provider: '/coinbase.svg',
-                address: 'asdfasasdf'
-            },
-            // list of pools distributed in
-            pools: [
-                {
-                    poolAddress: '123123',
-                    validatorAddress: '123',
-                    // InWaiting || Active
-                    status: 'Active',
-                    ammountStaked: '2.5 ETH',
-                    rewardsAccumulated: '10 ETH | $123.12',
-                    operatorScore: '32%',
-                    avgAPR: '2.3%'
-                },
-                {
-                    poolAddress: '123123',
-                    validatorAddress: '',
-                    // InWaiting || Active
-                    status: 'InWaiting',
-                    ammountStaked: '2.5 ETH',
-                    rewardsAccumulated: '',
-                    operatorScore: '',
-                    avgAPR: ''
-                }
-            ],
-        },
-    ]
-)
+const { formatDecimalString } = useFormat()
+const { user } = useUsers()
 
 </script>
   
@@ -167,16 +17,28 @@ const CurrentStakedItems = ref(
         id="pills_container"
         class="flex w-full overflow-auto gap-[20px]"
       >
-        <div
-          v-for="item in ETHStakingStats"
-          :key="`${item as any}`"
-          class="pill_primary whitespace-nowrap"
-        >
+        <div class="pill_primary whitespace-nowrap">
           <span class="text-grey_5 mr-[5px]">
-            {{ item.title }}: 
+            Staked 
           </span>
-          <span>
-            {{ item.value }}
+          <span class="flex">
+            {{ formatDecimalString(user.stake || '0.0') }} |&nbsp;<USDAmount :ether-amount="(user.stake || '0.0')" />
+          </span>
+        </div>
+        <div class="pill_primary whitespace-nowrap">
+          <span class="text-grey_5 mr-[5px]">
+            Rewards 
+          </span>
+          <span class="flex">
+            {{ formatDecimalString(user.rewards || '0.0') }} |&nbsp;<USDAmount :ether-amount="(user.rewards || '0.0')" />
+          </span>
+        </div>
+        <div class="pill_primary whitespace-nowrap">
+          <span class="text-grey_5 mr-[5px]">
+            APR 
+          </span>
+          <span class="flex">
+            5.67%
           </span>
         </div>
       </div>
@@ -184,29 +46,31 @@ const CurrentStakedItems = ref(
     
     <div class="h-full overflow-auto border-y border-grey">
       <div
-        v-for="pool in CurrentStakedItems"
+        v-for="pool in user.pools"
         :key="`${pool as any}`"
         class="border border-grey_2 border-[1px] p-[15px] mb-[55px]"
       >
         <div class="">
           <h6 class="font-bold text-grey_5 flex justify-between w-full">
-            <span>{{ pool.totalAmmountStaked }}</span> 
+            <span class="flex">
+              {{ formatDecimalString(pool.userStake || '0.0') }} ETH |&nbsp;<USDAmount :ether-amount="(pool.userStake || '0.0')" />
+            </span> 
             <div class="tooltip">
               <span class="text-grey_3 flex gap-[10px] sr-only s_xsm:not-sr-only">
-                <span class="w-[100px] truncate">{{ pool.wallet.address }}</span>
+                <span class="w-[100px] truncate">{{ user.id }}</span>
                 <img
-                  :src="pool.wallet.provider"
-                  :alt="pool.wallet.provider"
+                  :src="'/metamask.svg'"
+                  :alt="'MetaMask'"
                   class="w-[20px] opacity-[0.2]"
                 >
               </span>
               <img
-                :src="pool.wallet.provider"
-                :alt="pool.wallet.provider"
+                :src="'/metamask.svg'"
+                :alt="'MetaMask'"
                 class="w-[20px] opacity-[0.2] s_xsm:sr-only not-sr-only"
               >
               <span class="tooltiptext text-body font-bold">
-                {{ pool.wallet.name }}: {{ pool.wallet.address }}
+                MetaMask: {{ user.id }}
               </span>
             </div>
           </h6>
@@ -215,48 +79,59 @@ const CurrentStakedItems = ref(
             Stake Distribution
           </h6>
           <div
-            v-for="item in pool.pools"
-            :key="`${item as any}`"
             class="my-[20px] border border-grey border-dashed border-[2px] p-[15px]"
           >
             <div class="flex flex-wrap gap-[20px] justify-between items-center mb-[15px]">
               <h6 class="font-medium  text-grey_5">
-                Pool #{{ item.poolAddress }}
+                Pool #{{ pool.id }}
               </h6>
               <h6 class="font-bold text-grey_5">
-                {{ item.ammountStaked }}
+                {{ pool.totalStake }} ETH
               </h6>
             </div>
             <div
-              v-if="item.status === 'InWaiting'"
+              v-if="!pool.validator"
             >
               <h6 class="font-medium w-full text-center text-decline p-[10px] border border-decline my-[15px]">
-                In Waiting: Not Yet Staked
+                Pool is currently open
               </h6>
             </div>
             <div
-              v-else-if="item.status === 'Active'"
+              v-else
               class="text-grey_5 whitespace-nowrap"
             >
+              <h6 class="flex gap-[20px] flex-wrap justify-between items-center truncate">
+                <span>
+                  <span class="font-bold text-grey_5">{{ pool.userRewards }} ETH</span> in rewards
+                </span>
+                <span>
+                  {{ pool.validator.apr }} validator APR
+                </span>
+              </h6>
               <h6 class="flex gap-[20px] flex-wrap justify-between items-center mb-[10px] truncate">
                 <span class="min-w-[135px] w-[45%] flex gap-[5px] items-center">
-                  <!-- add address for link from Shane's format -->
-                  Validator: <span class="truncate">{{ item.validatorAddress }}asdfahsdklfj;laksdj;lkajsdl;kfajs;ld</span> 
+                  Validator: <span class="truncate">{{ pool.validator.publicKey }}</span> 
                   <a
-                    href=""
+                    :href="pool.validator.url"
                     target="_blank"
                   ><i class="iconoir-open-new-window text-primary" /></a>
                 </span>
                 <span>
-                  {{ item.operatorScore }} Validator Effectiveness 
+                  {{ pool.validator.effectiveness }} validator effectiveness 
                 </span>
               </h6>
               <h6 class="flex gap-[20px] flex-wrap justify-between items-center truncate">
                 <span>
-                  {{ item.rewardsAccumulated }} in Rewards
-                </span>
-                <span>
-                  {{ item.avgAPR }} Validator APR
+                  Operators:
+                  <a
+                    v-for="operator in pool.operators"
+                    :key="operator.id"
+                    :href="operator.url"
+                    target="_blank"
+                  >
+                    <!-- Todo fix hardcoded check on the last operator -->
+                    #{{ operator.id }}{{ operator.id === 594 ? '' : ', ' }}
+                  </a>
                 </span>
               </h6>
             </div>
