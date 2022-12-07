@@ -27,26 +27,26 @@ const routes = [
     meta: { authorize: [] }
 },
 { 
-    path: '/Staking', 
+    path: '/stake', 
     name: Staking, 
     component: Staking,
     meta: { authorize: [] },
     children: [
         {
-            path: 'ETH', 
+            path: 'eth', 
             component: ETHStaking,
         },
         {
-            path: 'ETH/Select-Wallet', 
+            path: 'eth/select-wallet', 
             component: ETHWalletSelect,
         },
         {
-            path: 'ETH/Confirm-Stake', 
+            path: 'eth/confirm-stake', 
             component: ETHConfirmStake,
         }
     ]
 },{ 
-    path: '/Assets', 
+    path: '/assets', 
     name: Assets, 
     component: Assets,
     meta: { authorize: [] }

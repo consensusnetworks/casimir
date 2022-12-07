@@ -57,11 +57,11 @@ const account = ref(true)
     </RouterLink>
 
     <RouterLink 
-      :to="!account ? '' : '/Staking'"
+      :to="!account ? '' : '/stake'"
     >
       <div
         class="side-nav-tabs"
-        :class="selectedPage === 'Staking'? 'side-nav-tabs-selected' : ''"
+        :class="selectedPage === 'stake'? 'side-nav-tabs-selected' : ''"
         :style="!account? {
           'cursor' : 'default'
         } : {}"
@@ -85,12 +85,12 @@ const account = ref(true)
     </RouterLink>
 
     <RouterLink 
-      :to="!account ? '' : '/Assets'"
+      :to="!account ? '' : '/assets'"
       class="disabled"
     >
       <div
         class="side-nav-tabs"
-        :class="selectedPage === 'Assets'? 'side-nav-tabs-selected' : ''"
+        :class="selectedPage === 'assets'? 'side-nav-tabs-selected' : ''"
         :style="!account? {
           'cursor' : 'default',
         } : {}"

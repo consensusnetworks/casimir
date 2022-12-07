@@ -56,6 +56,7 @@ const connectedWallets = ref([
     </div>
     <div v-if="account">
       <div
+        v-show="open"
         class="flex mb-gutter overflow-hidden py-[12px] pl-[5px]"
       >
         <!-- List of connected Wallet -->
@@ -79,7 +80,6 @@ const connectedWallets = ref([
             </div>
             
             <h6
-              v-show="open"
               class="slowExpandText h-min text-clip ml-gutter mt-[3px] text-body font-medium whitespace-nowrap"
             >
               {{ item.name }}

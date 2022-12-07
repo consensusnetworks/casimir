@@ -28,7 +28,7 @@ const handleConfirm = () => {
 
     setTimeout(()=> {
         loading.value = false
-        router.push('/Staking/ETH')
+        router.push('/stake/eth')
     }, 2000)
 }
 
@@ -111,7 +111,7 @@ const handleConfirm = () => {
       </button>
       
       <RouterLink
-        to="/Staking/ETH/Select-Wallet"
+        to="/stake/eth/select-wallet"
         class="w-[100px]"
       >
         <button class="w-full btn_primary hover:bg-grey_1 border py-[8px] csm:px-[4px] border-primary bg-white text-primary">

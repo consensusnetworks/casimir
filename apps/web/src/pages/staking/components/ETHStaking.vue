@@ -266,7 +266,7 @@ const CurrentStakedItems = ref(
     </div>
     <div class="flex justify-between items-center gap-[20px]">
       <RouterLink
-        to="/Staking/ETH/Select-Wallet"
+        to="/stake/eth/select-wallet"
         class="w-full"
       >
         <button
@@ -281,7 +281,7 @@ const CurrentStakedItems = ref(
         </button>
       </RouterLink>
       <RouterLink
-        to="/Staking"
+        to="/stake"
         class="w-[100px]"
       >
         <button class="w-full btn_primary hover:bg-grey_1 border py-[8px] border-primary bg-white text-primary">

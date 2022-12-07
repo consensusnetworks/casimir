@@ -19,7 +19,7 @@ const currentBalance = ref('45 ETH | $123,123.11')
     class="h-full"
   >
     <div class="flex items-center mb-[20px]">
-      <h5 class="font-bold flex items-center gap-[10px]">
+      <h5 class="flex items-center gap-[10px]">
         <img
           src="/ETH.svg"
           alt="eth icon"

@@ -155,7 +155,7 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
     </div>
     <div class="flex justify-between items-center gap-[20px]">
       <RouterLink
-        :to="!disableNext? '/Staking/ETH/Confirm-Stake' : '/Staking/ETH/Select-Wallet'"
+        :to="!disableNext? '/stake/eth/confirm-stake' : '/Staking/ETH/Select-Wallet'"
         class="w-full"
       >
         <button
@@ -167,7 +167,7 @@ watch([amountToStake, selectedWalletToStakeFrom], () => {
       </RouterLink>
       
       <RouterLink
-        to="/Staking/ETH"
+        to="/stake/eth"
         class="w-[100px]"
       >
         <button class="w-full btn_primary hover:bg-grey_1 border py-[8px] border-primary bg-white text-primary">

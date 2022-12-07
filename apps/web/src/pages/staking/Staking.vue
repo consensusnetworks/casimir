@@ -126,7 +126,7 @@ watch(router.currentRoute,  () => {
           </div>
           
           <div class="flex flex-col justify-between">
-            <RouterLink to="Staking/ETH">
+            <RouterLink to="stake/eth">
               <button
                 class="btn_primary xsm:px-[6px]"
                 @click="toggleModal(StakingModal)"

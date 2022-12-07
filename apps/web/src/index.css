@@ -176,7 +176,7 @@ background: #fff;
         hover:w-sidebar-open 
         max-w-[300px]
         slowExpand 
-        bg-black 
+        bg-blue_10 
         py-marginsY 
         table ;
     }
