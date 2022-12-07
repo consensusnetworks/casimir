@@ -1,21 +1,27 @@
 <script lang="ts" setup>
 import router from '@/composables/router'
 import { ref } from 'vue'
+import useFormat from '@/composables/format'
+import useUsers from '@/composables/users'
+import useWallet from '@/composables/wallet'
 
+const { formatDecimalString } = useFormat()
+const { user } = useUsers()
+const { amountToStake, deposit } = useWallet()
 
 const stakingInfo = ref(
     {
         to: 'Distributed SSV Validator',
-        amount: '6 ETH',
+        amount: formatDecimalString(amountToStake.value),
         fees: '2.00%',
-        expectedRewards: '5.56%',
+        expectedRewards: '5.67%',
         from: {
-            name: 'Coinbase',
-            icon: '/coinbase.svg',
+            name: 'MetaMask',
+            icon: '/metamask.svg',
             account: {
-                name: 'Account One',
-                balance: '48 ETH',
-                address: 'asdfasdfasdf'
+                name: 'Primary Account',
+                balance: formatDecimalString(user.value.balance || '0.0'),
+                address: user.value.id
             }
         }
     }
@@ -23,13 +29,11 @@ const stakingInfo = ref(
 
 const loading = ref(false)
 
-const handleConfirm = () => {
-    loading.value = true
-
-    setTimeout(()=> {
-        loading.value = false
-        router.push('/stake/eth')
-    }, 2000)
+const handleConfirm = async () => {
+  loading.value = true
+  await deposit()
+  loading.value = false
+  router.push('/stake/eth')
 }
 
 </script>

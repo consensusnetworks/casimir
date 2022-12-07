@@ -26,8 +26,6 @@ onMounted(() => {
       router.push('/Staking')
     }
   }
-
-  console.log('User', user)
 })
 
 watch(router.currentRoute,  () => {

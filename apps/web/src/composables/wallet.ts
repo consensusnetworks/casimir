@@ -13,12 +13,12 @@ import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import { Pool } from '@/interfaces/Pool'
 
-const amount = ref<string>('0.1')
+const amount = ref<string>('0.0')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
-const amountToStake = ref<string>('0.1')
+const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
-const selectedProvider = ref<ProviderString>('')
-const selectedAccount = ref<string>('')
+const selectedProvider = ref<ProviderString>('MetaMask')
+const selectedAccount = ref<string>('0xd557a5745d4560B24D36A68b52351ffF9c86A212')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
