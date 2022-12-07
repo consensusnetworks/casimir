@@ -13,9 +13,8 @@ export interface Pool {
     }
     operators?: {
         id: number
-        publicKey?: string
         '24HourPerformance'?: number
         '30DayPerformance'?: number
         url?: string // https://explorer.ssv.network/operators/{id}
-    }
+    }[]
 }

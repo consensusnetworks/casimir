@@ -178,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { ref, watchEffect, onMounted } from 'vue'
 import useWallet from '@/composables/wallet'
 import useUsers from '@/composables/users'
 
@@ -213,8 +213,13 @@ const {
   signMessage,
   deposit,
   login,
-  getUserPools
+  getUserPools,
+  subscribeToEvents
 } = useWallet()
+
+onMounted(() => {
+  subscribeToEvents()
+})
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {

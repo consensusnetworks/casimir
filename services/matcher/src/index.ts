@@ -1,13 +1,17 @@
-import serverless from 'serverless-http'
 import express from 'express'
 import cors from 'cors'
-import { APIGatewayEventRequestContext, APIGatewayProxyEvent } from 'aws-lambda'
+
+const port = process.env.PUBLIC_MATCHER_PORT || 8000
 
 const app = express()
 app.use(express.json())
 app.use(cors())
 
-export const handler = async function (event: APIGatewayProxyEvent, context: APIGatewayEventRequestContext) {
-  const serverlessApp = serverless(app)
-  return await serverlessApp(event, context)
-}
+app.use('/', (req: express.Request, res: express.Response) => {
+    const { poolId } = req.query
+    res.setHeader('Content-Type', 'application/json')
+    res.status(200)
+    res.json({ poolId })
+})
+
+app.listen(port, () => console.log(`Matcher listening on port ${port}`))

@@ -135,6 +135,20 @@ export default function useWallet() {
     }
   }
 
+  function subscribeToEvents() {
+    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+
+    const validatorInitFilter = {
+      address: ssv.address,
+      topics: [
+        ethers.utils.id('ValidatorInitFullfilled(uint32,uint32[],string)')
+      ]
+    }
+    ssv.connect(provider).on(validatorInitFilter, () => {
+      console.log('ValidatorInit')
+    })
+  }
+
   // Todo @ccali11 should we move these ssv objects to the ssv composable?
   async function getUserPools() {
     if (ethersSignerList.includes(selectedProvider.value)) {
@@ -143,19 +157,52 @@ export default function useWallet() {
       const ssvProvider = ssv.connect(provider)
       const usersPoolsIds = await ssvProvider.getUserPoolIds(userAddress)
       pools.value = await Promise.all(usersPoolsIds.map(async (poolId: number) => {
+
         const { stake: totalStake, rewards: totalRewards } = await ssvProvider.getPoolBalance(poolId)
         const { stake: userStake, rewards: userRewards } = await ssvProvider.getPoolUserBalance(poolId, userAddress)
-        const validatorPublicKey = await ssvProvider.getPoolValidatorPublicKey(poolId) // Public key bytes (i.e., 0x..)
-        const operatorIds = await ssvProvider.getPoolOperatorIds(poolId) // Operator ID uint32[] (i.e., [1, 2, 3, 4])
-        return {
+        
+        let pool: Pool = {
           id: poolId,
           totalStake: ethers.utils.formatEther(totalStake),
           totalRewards: ethers.utils.formatEther(totalRewards),
           userStake: ethers.utils.formatEther(userStake),
-          userRewards: ethers.utils.formatEther(userRewards),
-          validatorPublicKey,
-          operatorIds
+          userRewards: ethers.utils.formatEther(userRewards)
         }
+
+        const validatorPublicKey = await ssvProvider.getPoolValidatorPublicKey(poolId) // Public key bytes (i.e., 0x..)
+        if (validatorPublicKey) {
+
+          const response = await fetch(`https://prater.beaconcha.in/api/v1/validator/${validatorPublicKey}`)
+          const { data } = await response.json()
+          const { status } = data
+          const validator = {
+            publicKey: validatorPublicKey,
+            status: status.charAt(0).toUpperCase() + status.slice(1),
+            effectiveness: '100%',
+            apr: '5.5%', // See issue #205 https://github.com/consensusnetworks/casimir/issues/205#issuecomment-1338142532
+            url: `https://prater.beaconcha.in/validator/${validatorPublicKey}`
+          }
+
+          const operatorIds = await ssvProvider.getPoolOperatorIds(poolId) // Operator ID uint32[] (i.e., [1, 2, 3, 4])
+          const operators = await Promise.all(operatorIds.map(async (operatorId: number) => {
+            const response = await fetch(`https://api.ssv.network/api/v1/operators/${operatorId}`)
+            const { performance } = await response.json()
+            return { 
+              id: operatorId, 
+              '24HourPerformance': performance['24h'],
+              '30DayPerformance': performance['30d'],
+              url: `https://explorer.ssv.network/operators/${operatorId}`
+            }
+          }))
+
+          pool = {
+            ...pool,
+            validator,
+            operators
+          }
+        }
+
+        return pool
       }))
     }
   }
@@ -200,6 +247,7 @@ export default function useWallet() {
     signMessage,
     deposit,
     login,
-    getUserPools
+    getUserPools,
+    subscribeToEvents
   }
 }

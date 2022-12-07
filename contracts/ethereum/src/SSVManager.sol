@@ -4,6 +4,7 @@ pragma solidity 0.8.16;
 import "./interfaces/IWETH9.sol";
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "hardhat/console.sol";
 
@@ -44,7 +45,7 @@ contract SSVManager is ChainlinkClient {
     struct Pool {
         Balance balance;
         mapping(address => Balance) userBalances;
-        bytes validatorPublicKey;
+        string validatorPublicKey;
         uint32[] operatorIds;
     }
 
@@ -90,7 +91,7 @@ contract SSVManager is ChainlinkClient {
     event ValidatorInitFullfilled(
         uint32 poolId,
         uint32[] operatorIds,
-        bytes validatorPublicKey
+        string validatorPublicKey
     );
 
     /** Event signaling a user deposit to the manager */
@@ -135,7 +136,7 @@ contract SSVManager is ChainlinkClient {
         /// Set up Chainlink client
         setChainlinkOracle(_linkOracleAddress);
         setChainlinkToken(_linkTokenAddress);
-        jobId = '7da2702f37fd48e5b1b9a5715e3509b6';
+        jobId = '74854cd9ba0a4fb2a12ba8a469afac49';
         linkFee = (1 * LINK_DIVISIBILITY) / 10;
     }
 
@@ -339,7 +340,12 @@ contract SSVManager is ChainlinkClient {
 
         request.add(
             "get",
-            "https://ssv.dev.casimir.co/validator-init"
+            string.concat("http://127.0.0.1:8000?pooId=", Strings.toString(_poolId))
+        );
+
+        request.add(
+            "path", 
+            "poolId"
         );
 
         // Sends the request
@@ -362,7 +368,7 @@ contract SSVManager is ChainlinkClient {
         uint32 poolId = uint32(_lastPoolId.current());
         Pool storage pool = pools[poolId];
         pool.operatorIds = [uint32(616), uint32(799), uint32(814), uint32(594)];
-        pool.validatorPublicKey = bytes("0x8420572d646a9b9738d0d411e070f3857c120b1f3d3153bb05b5e28889a77dfc639ac2b94f34cdf84f502740166e4ebe");
+        pool.validatorPublicKey = "0x8420572d646a9b9738d0d411e070f3857c120b1f3d3153bb05b5e28889a77dfc639ac2b94f34cdf84f502740166e4ebe";
         emit ValidatorInitFullfilled(poolId, pool.operatorIds, pool.validatorPublicKey);
     }
 
@@ -424,7 +430,7 @@ contract SSVManager is ChainlinkClient {
      */
     function getPoolValidatorPublicKey(
         uint32 _poolId
-    ) external view returns (bytes memory) {
+    ) external view returns (string memory) {
         return pools[_poolId].validatorPublicKey;
     }
 

@@ -3,15 +3,12 @@ version: '3.5'
 services:
   node:
     container_name: chainlink-node
-    image: smartcontract/chainlink
-    # Note that the keystore import allows us to submit transactions
-    # immediately because addresses are specified when starting the
-    # parity/geth node to be prefunded with eth.
+    image: smartcontract/chainlink:1.10.0
     entrypoint: /bin/sh -c "chainlink node start -d -p /run/secrets/node_password -a /run/secrets/apicredentials"
     restart: always
     environment:
       - ETH_CHAIN_ID
-      - LOG_LEVEL
+      - LOG_LEVEL=info
       - ROOT
       - ETH_URL
       - MIN_OUTGOING_CONFIRMATIONS
@@ -19,9 +16,6 @@ services:
       - MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
       - DEFAULT_HTTP_TIMEOUT
       - CHAINLINK_DEV
-      - EXPLORER_URL
-      - EXPLORER_ACCESS_KEY
-      - EXPLORER_SECRET
       - SECURE_COOKIES
       - CHAINLINK_TLS_PORT
       - DATABASE_URL=postgresql://postgres:$CHAINLINK_PGPASSWORD@node-db:5432/$CHAINLINK_DB_NAME?sslmode=disable
@@ -34,62 +28,7 @@ services:
       - apicredentials
       - keystore
     depends_on:
-      - explorer
       - node-db
-
-  node-2:
-    container_name: chainlink-node-2
-    image: smartcontract/chainlink
-    entrypoint: /bin/sh -c "chainlink node start -d -p /run/secrets/node_password -a /run/secrets/apicredentials"
-    restart: always
-    environment:
-      - ETH_CHAIN_ID
-      - LOG_LEVEL
-      - ROOT
-      - ETH_URL
-      - MIN_OUTGOING_CONFIRMATIONS
-      - MIN_INCOMING_CONFIRMATIONS
-      - MINIMUM_CONTRACT_PAYMENT_LINK_JUELS
-      - DEFAULT_HTTP_TIMEOUT
-      - CHAINLINK_DEV
-      - SECURE_COOKIES
-      - CHAINLINK_TLS_PORT
-      - DATABASE_URL=postgresql://postgres:$CHAINLINK_PGPASSWORD@node-db-2:5432/$CHAINLINK_DB_NAME?sslmode=disable
-    env_file:
-      - .env
-    ports:
-      - 6699:6688
-    secrets:
-      - node_password
-      - apicredentials
-      - keystore
-    depends_on:
-      - node-db-2
-
-  explorer:
-    container_name: chainlink-explorer
-    image: smartcontract/explorer:${EXPLORER_DOCKER_TAG}
-    entrypoint: yarn workspace @chainlink/explorer dev:compose
-    restart: always
-    ports:
-      - 3001
-    depends_on:
-      - explorer-db
-    environment:
-      - EXPLORER_COOKIE_SECRET
-      - EXPLORER_SERVER_PORT
-      - PGPASSWORD=$EXPLORER_PGPASSWORD
-
-  explorer-db:
-    container_name: chainlink-explorer-db
-    image: postgres:11.6
-    volumes:
-      - explorer-db-data:/var/lib/postgresql/data
-    ports:
-      - 5433:5432
-    environment:
-      POSTGRES_DB: $EXPLORER_DB_NAME
-      POSTGRES_PASSWORD: $EXPLORER_PGPASSWORD
 
   node-db:
     container_name: chainlink-db
@@ -100,28 +39,11 @@ services:
       POSTGRES_DB: $CHAINLINK_DB_NAME
       POSTGRES_PASSWORD: $CHAINLINK_PGPASSWORD
 
-  node-db-2:
-    container_name: chainlink-db-2
-    image: postgres:11.6
-    volumes:
-      - node-db-2-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: $CHAINLINK_DB_NAME
-      POSTGRES_PASSWORD: $CHAINLINK_PGPASSWORD
-
-# TODO
-# - replace clroot with secrets
-# - extract explorer and tools into separate docker-compose files
-
 secrets:
   node_password:
     file: ./secrets/password.txt
   apicredentials:
     file: ./secrets/apicredentials
-  keystore:
-    file: ./secrets/${CHAINLINK_OWNER_ADDRESS}.json
 
 volumes:
-  explorer-db-data:
   node-db-data:
-  node-db-2-data:
