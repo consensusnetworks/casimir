@@ -166,8 +166,8 @@ export default function useWallet() {
         const validator = {
           publicKey: validatorPublicKey,
           status: (status.charAt(0).toUpperCase() + status.slice(1)).replace('_status', ''),
-          effectiveness: '100%',
-          apr: '5.5%', // See issue #205 https://github.com/consensusnetworks/casimir/issues/205#issuecomment-1338142532
+          effectiveness: '0%',
+          apr: '0%', // See issue #205 https://github.com/consensusnetworks/casimir/issues/205#issuecomment-1338142532
           url: `https://prater.beaconcha.in/validator/${validatorPublicKey}`
         }
 
