@@ -83,22 +83,100 @@ background: #fff;
     }
 }
 @layer components {
+    .tooltip {
+        position: relative;
+        display: inline-block;
+    }
+    .tooltip .tooltiptext {
+        visibility: hidden;
+        background-color: black;
+        color: #fff;
+        text-align: center;
+        padding: 6px 12px;
+        position: absolute;
+        z-index: 1;
+        /* location of tooltip */
+        top: calc(100% + 5px);
+        right: 0%;
+        margin-left: -60px;
+    }
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+        transition-delay: 1.0s;
+        transition-property: visibility;
+    }
+    .slider {
+        @apply flex items-center justify-between gap-[20px];
+    }
+    .slider input[type="range"] {
+        width: calc(100% - 250px);
+        height: 2px;
+        background: #d9d9d9;
+        border: none;
+        outline: none;
+    }
+    .slider input[type="range"]::-webkit-slider-thumb {
+        cursor: pointer;
+    }
+    .pill_primary{
+        @apply py-[6px] px-[12px]
+        bg-[#EAF1FF] text-primary 
+        border border-primary border-[0.25px]
+        rounded-[100px] text-body font-bold text-center
+        flex items-center;
+    }
     .btn_primary {
         @apply  flex  flex-row  items-center 
-        justify-center  px-[6px]  py-[12px] 
+        justify-center  px-[24px]  py-[12px] 
         gap-[10px] bg-primary  text-white
         hover:bg-blue_7 disabled:bg-blue_2
         disabled:text-grey_6;
     }
+    .modal {
+        display: block; 
+        position: absolute; 
+        z-index: 1; 
+        left: -50px;
+        top: -25px;
+        width: calc(100% + 98px);
+        height: calc(100vh + 1px);
+        overflow: auto; 
+        background-color: rgb(0,0,0); 
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+    .modal-content {
+        background-color: #fff;
+        padding: 20px 30px;
+        border: 1px solid #888;
+        width: 100vw;
+    }
 }
 @layer utilities {
+    .loading {
+        background: linear-gradient(50deg, 
+        #80ABFF,#4D89FF, #0D5FFF, #0D5FFF,#4D89FF, #80ABFF);
+        animation: movingBackground 2s ease infinite;
+        background-size: 200%;
+      }
+    
+      @keyframes movingBackground {
+        0% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+        0% {
+            background-position: 0% 50%;
+        }
+      }
     .side-nav-container {
         @apply 
         w-sidebar-closed 
         hover:w-sidebar-open 
         max-w-[300px]
         slowExpand 
-        bg-black 
+        bg-blue_10 
         py-marginsY 
         table ;
     }
@@ -129,13 +207,13 @@ background: #fff;
         @apply bg-blue_5 text-white;
     }
     .slowExpand {
-        transition: 0.3s all ease-in-out;
+        transition: 0.5s all ease-in-out;
     }
     .slowExpandText {
         display: inline-block;
         vertical-align: bottom;
         overflow: hidden;
-        animation: slowNavBarText 1s ease forwards;
+        animation: slowNavBarText 1.5s ease forwards;
     }
     @keyframes slowNavBarText {
         from {
