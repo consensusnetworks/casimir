@@ -22,7 +22,7 @@
     <div>
       <ul>
         <li
-          v-for="(_value, _key) in usersAccounts"
+          v-for="(_value, _key) in user"
           :key="_key"
         >
           <ul v-if="_key === 'accounts'">
@@ -178,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { ref, watchEffect, onMounted } from 'vue'
 import useWallet from '@/composables/wallet'
 import useUsers from '@/composables/users'
 
@@ -200,7 +200,7 @@ const trezorAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
-const { addAccount, removeAccount, usersAccounts } = useUsers()
+const { addAccount, removeAccount, user } = useUsers()
 const {
   selectedProvider,
   selectedAccount,

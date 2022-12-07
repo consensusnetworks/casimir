@@ -11,28 +11,28 @@ const props = defineProps({
 })
 
 // To Do: connect this to our Auth and see if an account exsists
-const account = ref(false)
+const account = ref(true)
 
 // To Do: get list of connected wallets
 const connectedWallets = ref([
     {
         name: 'Metamask',
-        icon: 'metamask.svg',
+        icon: '/metamask.svg',
         master: true,
     },
     {
         name: 'Coinbase',
-        icon: 'coinbase.svg',
+        icon: '/coinbase.svg',
         master: false,
     },
     {
         name: 'Wallet Connect',
-        icon: 'walletconnect.svg',
+        icon: '/walletconnect.svg',
         master: false,
     },
     {
         name: 'Ledger',
-        icon: 'ledger.svg',
+        icon: '/ledger.svg',
         master: false,
     },
 ])
@@ -56,6 +56,7 @@ const connectedWallets = ref([
     </div>
     <div v-if="account">
       <div
+        v-show="open"
         class="flex mb-gutter overflow-hidden py-[12px] pl-[5px]"
       >
         <!-- List of connected Wallet -->
@@ -67,32 +68,32 @@ const connectedWallets = ref([
           >
             <div class="flex">
               <!-- To Do: Make this icon dragable and once it's placed in a wallet, that wallet becomes master wallet -->
-              <i
+              <!-- <i
                 v-show="item.master && open"
                 class="iconoir-keyframe-align-center text-blue_4 text-[24px] mr-[10px]"
-              />
+              /> -->
               <img
-                class="w-[24px]"
+                class="w-[20px]"
                 :src="item.icon"
                 :alt="item.name + ' Icon'"
               >
             </div>
             
             <h6
-              v-show="open"
-              class="slowExpandText h-min text-clip ml-gutter mt-[3px] text-body"
+              class="slowExpandText h-min text-clip ml-gutter mt-[3px] text-body font-medium whitespace-nowrap"
             >
               {{ item.name }}
             </h6>
           </div>
-          <span
+          <!-- Will add this back when draggable icon is implemented -->
+          <!-- <span
             v-show="open"
-            class="text-body text-grey_5"
+            class="text-body text-grey_5 w-[205px]"
           >
             Drag the <i class="iconoir-keyframe-align-center text-blue_4 text-[12px] mx-[5px] inline-block" />
             icon to change your master wallet (Master wallet is the wallet that you connect
             to view your assets across all wallets)
-          </span>
+          </span> -->
         </div>
       </div>
     </div>
@@ -101,7 +102,7 @@ const connectedWallets = ref([
     >
       <div
         v-if="open"
-        class="px-[5px] w-[px] overflow-hidden "
+        class="px-[5px] w-[210px]"
       >
         <li class=" list-none text-body text-grey_5 font-semibold mb-[10px]">
           Get Started with Casimir's Multiwallet Connect
@@ -114,33 +115,35 @@ const connectedWallets = ref([
             View and manage your assets across all types of wallets
           </li>
           <li class="my-[5px]">
-            Stake t our supported protocoals with any of your connected wallets
+            Stake to our supported protocoals with any of your connected wallets
           </li>
         </ul>
       </div>
     </div>
-    <button
+    <!-- Add this back after demo -->
+    <!-- <button
       v-show="open"
+      v-if="!account"
       class="btn_primary my-[15px] text-body w-full"
+      @click="account = !account"
     >
-      Launch Casimir Multiwallet
+      Launch Demo 
+      <i
+        class="iconoir-play-outline font-bold text-body"
+      />
     </button>
 
-    <!-- This button will be romoved once we get a way to get dynamic accouts in -->
-    <div class="absolute bottom-0 left-[10px] flex">
-      <button
-        class="btn_primary text-body mr-[5px]"
-        @click="account = !account"
-      >
-        toggle accout
-      </button>
-      <RouterLink
-        to="/test"
-        class="btn_primary text-caption"
-      >
-        go to test
-      </RouterLink>
-    </div>
+    <button
+      v-show="open"
+      v-else
+      class="btn_primary my-[15px] text-body w-full"
+      @click="account = !account"
+    >
+      Close Demo 
+      <i
+        class="iconoir-cancel font-bold text-body"
+      />
+    </button> -->
 
     <!-- To Do: Add settings button with settings page below -->
   </div>

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.6;
 
-import '@chainlink/contracts/src/v0.6/LinkTokenReceiver.sol';
-import '@chainlink/contracts/src/v0.6/interfaces/ChainlinkRequestInterface.sol';
-import '@chainlink/contracts/src/v0.6/interfaces/LinkTokenInterface.sol';
-import '@chainlink/contracts/src/v0.6/vendor/SafeMathChainlink.sol';
+import "@chainlink/contracts/src/v0.6/LinkTokenReceiver.sol";
+import "@chainlink/contracts/src/v0.6/interfaces/ChainlinkRequestInterface.sol";
+import "@chainlink/contracts/src/v0.6/interfaces/LinkTokenInterface.sol";
+import "@chainlink/contracts/src/v0.6/vendor/SafeMathChainlink.sol";
 
 /**
  * @title The Chainlink Mock Oracle contract
@@ -93,6 +93,7 @@ contract MockOracle is ChainlinkRequestInterface, LinkTokenReceiver {
         );
 
         uint32 data = uint32(1);
+        
         /// Imediately fulfill request for mocking purposes
         this.fulfillOracleRequest(requestId, data);
     }
@@ -106,11 +107,10 @@ contract MockOracle is ChainlinkRequestInterface, LinkTokenReceiver {
      * @param _data The data to return to the consuming contract
      * @return Status if the external call was successful
      */
-    function fulfillOracleRequest(bytes32 _requestId, uint32 _data)
-        external
-        isValidRequest(_requestId)
-        returns (bool)
-    {
+    function fulfillOracleRequest(
+        bytes32 _requestId,
+        uint32 _data
+    ) external isValidRequest(_requestId) returns (bool) {
         Request memory req = commitments[_requestId];
         delete commitments[_requestId];
         require(

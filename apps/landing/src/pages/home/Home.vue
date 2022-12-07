@@ -19,7 +19,7 @@
     },
     {
       name: 'google',
-      content: 'Contact us at Info@conensusnetworks.com!',
+      content: 'Contact us at Info@consensusnetworks.com!',
       link: 'mailto:Info@consensusnetworks.com?subject=Me&body=Dear Casimir Dev Team!'
     },
   ])

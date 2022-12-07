@@ -1,9 +1,14 @@
 import { ethers } from 'ethers'
 
+async function getAddress(mnemonic?: string) {
+    const wallet = getWallet(mnemonic)
+    return wallet.address
+}
+
 async function getKeystore(mnemonic?: string) {
     const wallet = getWallet(mnemonic)
-    console.log(wallet.privateKey)
-    return await wallet.encrypt('')
+    const keystoreString = await wallet.encrypt('')
+    return JSON.parse(keystoreString)
 }
 
 function getWallet(mnemonic?: string) {
@@ -13,4 +18,4 @@ function getWallet(mnemonic?: string) {
     return ethers.Wallet.createRandom()
 }
 
-export { getKeystore, getWallet }
+export { getAddress, getKeystore, getWallet }

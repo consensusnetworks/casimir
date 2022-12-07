@@ -1,6 +1,6 @@
 {
     "name": "@casimir/crawler",
-    "main": "src/",
+    "main": "src/index.ts",
     "scripts": {
         "dev": "ts-node ./src/index.ts",
         "test": "jest",

@@ -1,0 +1,28 @@
+{
+    "name": "@casimir/matcher",
+    "private": "true",
+    "main": "src/index.ts",
+    "scripts": {
+        "dev": "ts-node ./src/index.ts",
+        "build": "echo \"Error: no build specified\" && exit 0",
+        "buildnext": "node build.js",
+        "watch": "npm run build -- --watch",
+        "test": "mocha --require hardhat/register --recursive --exit --extension ts --timeout 15000"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^4.18.1"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "8.10.97",
+        "@types/chai": "^4.3.3",
+        "@types/cors": "^2.8.12",
+        "@types/express": "^4.17.13",
+        "@types/mocha": "^10.0.0",
+        "@types/node": "^17.0.38",
+        "chai": "^4.3.6",
+        "esbuild": "^0.15.9",
+        "mocha": "^10.0.0",
+        "ts-node": "^10.9.1"
+    }
+}

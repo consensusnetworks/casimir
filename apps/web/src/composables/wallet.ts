@@ -13,12 +13,12 @@ import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import { Pool } from '@/interfaces/Pool'
 
-const amount = ref<string>('0.1')
+const amount = ref<string>('0.0')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
-const amountToStake = ref<string>('0.1')
+const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
-const selectedProvider = ref<ProviderString>('')
-const selectedAccount = ref<string>('')
+const selectedProvider = ref<ProviderString>('MetaMask')
+const selectedAccount = ref<string>('0xd557a5745d4560B24D36A68b52351ffF9c86A212')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
@@ -135,52 +135,85 @@ export default function useWallet() {
     }
   }
 
-  // Todo @ccali11 should we move these ssv objects to the ssv composable?
-  async function getUserPools() {
-    if (ethersSignerList.includes(selectedProvider.value)) {
-      const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-      const userAddress = selectedAccount.value
-      const ssvProvider = ssv.connect(provider)
-      const usersPoolsIds = await ssvProvider.getUserPoolIds(userAddress)
-      pools.value = await Promise.all(usersPoolsIds.map(async (poolId: number) => {
-        const { stake: totalStake, rewards: totalRewards } = await ssvProvider.getPoolBalance(poolId)
-        const { stake: userStake, rewards: userRewards } = await ssvProvider.getPoolUserBalance(poolId, userAddress)
-        return {
-          id: poolId,
-          totalStake: ethers.utils.formatEther(totalStake),
-          totalRewards: ethers.utils.formatEther(totalRewards),
-          userStake: ethers.utils.formatEther(userStake),
-          userRewards: ethers.utils.formatEther(userRewards)
+  async function getUserBalance(userAddress: string): Promise<ethers.BigNumber> {
+    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    return await provider.getBalance(userAddress)
+  }
+
+  async function getUserPools(userAddress: string): Promise<Pool[]> {
+    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    const ssvProvider = ssv.connect(provider)
+    const usersPoolsIds = await ssvProvider.getUserPoolIds(userAddress)
+    return await Promise.all(usersPoolsIds.map(async (poolId: number) => {
+
+      const { stake: totalStake, rewards: totalRewards } = await ssvProvider.getPoolBalance(poolId)
+      const { stake: userStake, rewards: userRewards } = await ssvProvider.getPoolUserBalance(poolId, userAddress)
+
+      let pool: Pool = {
+        id: poolId,
+        totalStake: ethers.utils.formatEther(totalStake),
+        totalRewards: ethers.utils.formatEther(totalRewards),
+        userStake: ethers.utils.formatEther(userStake),
+        userRewards: ethers.utils.formatEther(userRewards)
+      }
+
+      const validatorPublicKey = await ssvProvider.getPoolValidatorPublicKey(poolId) // Public key bytes (i.e., 0x..)
+      if (validatorPublicKey) {
+
+        const response = await fetch(`https://prater.beaconcha.in/api/v1/validator/${validatorPublicKey}`)
+        const { data } = await response.json()
+        const { status } = data
+        const validator = {
+          publicKey: validatorPublicKey,
+          status: (status.charAt(0).toUpperCase() + status.slice(1)).replace('_status', ''),
+          effectiveness: '0%',
+          apr: '0%', // See issue #205 https://github.com/consensusnetworks/casimir/issues/205#issuecomment-1338142532
+          url: `https://prater.beaconcha.in/validator/${validatorPublicKey}`
         }
-      }))
-    }
+
+        const operatorIds = await ssvProvider.getPoolOperatorIds(poolId) // Operator ID uint32[] (i.e., [1, 2, 3, 4])
+        const operators = await Promise.all(operatorIds.map(async (operatorId: number) => {
+          const response = await fetch(`https://api.ssv.network/api/v1/operators/${operatorId}`)
+          const { performance } = await response.json()
+          return {
+            id: operatorId,
+            '24HourPerformance': performance['24h'],
+            '30DayPerformance': performance['30d'],
+            url: `https://explorer.ssv.network/operators/${operatorId}`
+          }
+        }))
+
+        pool = {
+          ...pool,
+          validator,
+          operators
+        }
+      }
+
+      return pool
+    }))
   }
 
   async function deposit() {
-    if (Object.keys(ethersSignerCreator).includes(selectedProvider.value)) {
-      const signerKey = selectedProvider.value as keyof typeof ethersSignerCreator
-      let signer = ethersSignerCreator[signerKey](selectedProvider.value)
-      if (isWalletConnectSigner(signer)) signer = await signer
-      const value = ethers.utils.parseEther(amountToStake.value)
-      const ssvSigner = ssv.connect(signer as ethers.Signer)
-      await ssvSigner.deposit({ value, type: 0 })
-    } else {
-      // Todo @ccali11 this should happen sooner - ideally we'll this disable method if missing ssv provider
-      console.log('Please connect to one of the following providers:', ethersProviderList)
-    }
-    return
+    const signerKey = selectedProvider.value as keyof typeof ethersSignerCreator
+    let signer = ethersSignerCreator[signerKey](selectedProvider.value)
+    if (isWalletConnectSigner(signer)) signer = await signer
+    const ssvProvider = ssv.connect(signer as ethers.Signer)
+    const fees = await ssvProvider.getFees()
+    const { LINK, SSV } = fees
+    const feesTotalPercent = LINK + SSV
+    const depositAmount = parseFloat(amountToStake.value) * ((100 + feesTotalPercent) / 100)
+    const value = ethers.utils.parseEther(depositAmount.toString())
+    const result = await ssvProvider.deposit({ value, type: 0 })
+    return await result.wait()
   }
 
   async function login() {
-    try {
-      if (ethersProviderList.includes(selectedProvider.value)) {
-        const loggedIn = await loginWithEthers(selectedProvider.value, selectedAccount.value)
-        console.log('loggedIn :>> ', loggedIn)
-      } else {
-        console.log('Login not yet supported for this wallet provider')
-      }
-    } catch (err) {
-      console.log(`There was an error logging in: ${err}`)
+    if (ethersProviderList.includes(selectedProvider.value)) {
+      const loggedIn = await loginWithEthers(selectedProvider.value, selectedAccount.value)
+      console.log('loggedIn :>> ', loggedIn)
+    } else {
+      console.log('Login not yet supported for this wallet provider')
     }
   }
 
@@ -196,6 +229,7 @@ export default function useWallet() {
     signMessage,
     deposit,
     login,
+    getUserBalance,
     getUserPools
   }
 }

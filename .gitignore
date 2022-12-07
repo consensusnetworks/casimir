@@ -8,7 +8,5 @@ aws.env
 *.log
 .idea
 
-
-
-# Prevents committing node data
-scripts/ssv/resources/nimbus/data
+# Sensitive
+**/**/secrets/*.json

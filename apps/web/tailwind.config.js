@@ -15,6 +15,7 @@ module.exports = {
                 'secondary': '#C1D3F8',
                 'white': '#fff',
                 'shade': '#615959',
+                'grey' : '#E4E4E7',
 
                 // Blues
                 'blue_1': '#E5EEFF',
@@ -82,7 +83,13 @@ module.exports = {
             // nav-bar text-container
             'nav-mid': {'min': '720px', 'max': '1100px'},
             'nav-sm': {'min': '500px', 'max': '719px'},
-            'nav-xsm': {'min': '0px', 'max': '499px'}
+            'nav-xsm': {'min': '0px', 'max': '499px'},
+
+            // breakpoints for staking page
+            's_lg' : {'min':'1100px'},
+            's_md' : {'min':'900px'},
+            's_sm' : {'min':'700px'},
+            's_xsm' : {'min':'550px'},
         },
     },
     plugins: []
