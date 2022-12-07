@@ -29,15 +29,18 @@ void async function () {
     }
 
     // Enable 12-second interval mining for dev networks
-    process.env.INTERVAL_MINING = 'true'
+    process.env.INTERVAL_MINING = 'false'
 
     // Using hardhat local or fork network
     process.env.MOCK_CHAINLINK = 'true'
+    process.env.RUN_CHAINLINK = 'false'
 
     $`npm run dev --workspace @casimir/ethereum`
 
     // Wait for hardhat to start
     await new Promise(resolve => setTimeout(resolve, 1000))
     $`npm run deploy --workspace @casimir/ethereum -- --network localhost`
+
+    // $`npm run dev:chainlink --fork=${fork}`
 
 }()

@@ -30,6 +30,6 @@ void async function () {
     // Using hardhat local or fork network
     process.env.MOCK_CHAINLINK = 'true'
 
-    $`npm run test --workspace @casimir/ethereum -- --network localhost`
+    $`npm run test --workspace @casimir/ethereum`
 
 }()

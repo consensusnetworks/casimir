@@ -13,6 +13,7 @@
     "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules package-lock.json && npm i",
     "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
     "dev": "npx esno -r dotenv/config scripts/local/dev.ts --app=\"$npm_config_app\" --fork=\"$npm_config_fork\" --ledger=\"$npm_config_ledger\" --mock=\"$npm_config_mock\" --network=\"$npm_config_network\" --trezor=\"$npm_config_trezor\" --external=\"$npm_config_external\"",
+    "dev:chainlink": "npx esno -r dotenv/config scripts/chainlink/dev.ts --fork=\"$npm_config_fork\"",
     "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
     "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --fork=\"$npm_config_fork\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
