@@ -3,14 +3,14 @@ import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { MockOracle, SSVManager } from '../build/artifacts/types'
-import { ContractConfig, SSVDeploymentConfig } from '@casimir/types'
+import { ContractConfig, DeploymentConfig } from '@casimir/types'
 
 /** Fixture to deploy SSV manager contract */
 async function deploymentFixture() {
   let ssv, oracle
   const [owner] = await ethers.getSigners()
   const mockChainlink = process.env.MOCK_CHAINLINK === 'true'
-  let deploymentConfig: SSVDeploymentConfig = {
+  let deploymentConfig: DeploymentConfig = {
     SSVManager: {
       address: '',
       args: {
@@ -60,7 +60,7 @@ async function deploymentFixture() {
     console.log(`${name} contract deployed to ${address}`);
 
     // Save contract address for next loop
-    (deploymentConfig[name as keyof SSVDeploymentConfig] as ContractConfig).address = address
+    (deploymentConfig[name as keyof DeploymentConfig] as ContractConfig).address = address
     
     // Save mock oracle for export
     if (name === 'MockOracle') oracle = contract

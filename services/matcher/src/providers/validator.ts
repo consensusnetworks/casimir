@@ -1,12 +1,13 @@
-import { Operator } from '../interfaces/Operator'
-import useKeys from '../providers/keys'
+import useKeygen from './keygen'
+import useOperators from './operators'
 
-const { getShares } = useKeys()
+const { fetchDepositData } = useKeygen()
+const { getOperators } = useOperators()
 
 export default function useValidator () {
-    async function getValidator (operators: Operator[]) {
-        const shares = await getShares(operators)
-        return { shares }
+    async function getValidator (withdrawalAddress: string) {
+        const operators = await getOperators()
+        return await fetchDepositData(withdrawalAddress, operators)
     }
 
     return { getValidator }

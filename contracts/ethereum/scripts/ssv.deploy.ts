@@ -1,11 +1,11 @@
 import { ethers } from 'hardhat'
 import { deployContract } from '@casimir/hardhat-helpers'
-import { ContractConfig, SSVDeploymentConfig } from '@casimir/types'
+import { ContractConfig, DeploymentConfig } from '@casimir/types'
 
 void async function () {
     const mockChainlink = process.env.MOCK_CHAINLINK === 'true'
     const runChainlink = process.env.RUN_CHAINLINK === 'true'
-    let config: SSVDeploymentConfig = {
+    let config: DeploymentConfig = {
         SSVManager: {
             address: '',
             args: {
@@ -56,7 +56,7 @@ void async function () {
         console.log(`${name} contract deployed to ${address}`);
 
         // Save contract address for next loop
-        (config[name as keyof SSVDeploymentConfig] as ContractConfig).address = address
+        (config[name as keyof DeploymentConfig] as ContractConfig).address = address
     }
     
     // Set permission on the Oracle to use local node
