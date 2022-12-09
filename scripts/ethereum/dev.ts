@@ -1,6 +1,5 @@
 import { $, argv, echo, chalk } from 'zx'
 import { getSecret } from '@casimir/aws-helpers'
-import { getWallet } from '@casimir/ethers-helpers'
 
 /**
  * Run local a local Ethereum node and deploy contracts
@@ -42,6 +41,7 @@ void async function () {
     await new Promise(resolve => setTimeout(resolve, 1000))
     $`npm run deploy --workspace @casimir/ethereum -- --network localhost`
 
+    // Todo find an RPC provider without log block limit
     // $`npm run dev:chainlink --fork=${fork}`
 
 }()

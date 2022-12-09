@@ -9,6 +9,6 @@
     },
     "dependencies": {
         "@trezor/connect-web": "^9.0.3",
-        "ethers": "^5.7.1"
+        "ethers": "^5.7.2"
     }
 }

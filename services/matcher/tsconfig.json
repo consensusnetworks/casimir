@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es2020",
+    "target": "ESNext",
     "strict": true,
     "preserveConstEnums": true,
     "noEmit": true,
     "sourceMap": false,
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "resolveJsonModule": true
   },
   "exclude": [
     "node_modules",
