@@ -4,16 +4,31 @@ import { ref } from 'vue'
 import useFormat from '@/composables/format'
 import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
+import useSSV from '@/composables/ssv'
 
 const { formatDecimalString } = useFormat()
 const { user } = useUsers()
-const { amountToStake, deposit } = useWallet()
+const { amountToStake, selectedProvider, deposit } = useWallet()
+const { getSSVFeePercent } = useSSV()
+
+async function getFee() {
+  try {
+    const fee = await getSSVFeePercent(selectedProvider.value)
+    if (fee % 1 === 0) {
+        return `${fee}.00%`
+    }
+    return `${fee}%`
+  } catch (err){
+    console.error(err)
+    return 'Error connecting to SSV network. Please try again momentarily.'
+  }
+}
 
 const stakingInfo = ref(
     {
         to: 'Distributed SSV Validator',
         amount: formatDecimalString(amountToStake.value),
-        fees: '2.00%',
+        fees: await getFee(),
         expectedRewards: '5.67%',
         from: {
             name: 'MetaMask',
