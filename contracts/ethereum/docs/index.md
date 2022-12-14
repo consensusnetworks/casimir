@@ -331,6 +331,20 @@ Receives the response in the form of uint32
 | _requestId | bytes32 | - id of the request |
 | _data | uint32 | - response |
 
+### stakePool
+
+```solidity
+function stakePool(uint32 _poolId) private view
+```
+
+Stakes a pool
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _poolId | uint32 | - the stake pool's ID |
+
 ### getOpenPoolIds
 
 ```solidity
