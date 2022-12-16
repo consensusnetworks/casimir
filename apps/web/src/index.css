@@ -181,7 +181,7 @@ background: #fff;
         table ;
     }
     .nav-imgs {
-        @apply h-[32px] mb-[30px];
+        @apply h-[20px] mb-[30px] ml-[5px];
     }
     .side-nav-tabs {
         @apply 

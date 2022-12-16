@@ -20,7 +20,7 @@ const { user } = useUsers()
           class="w-[24px] h-[24px]"
         >
         ETH
-        <div class="tooltip">
+        <div class="tooltip mt-[10px]">
           <span class="flex font-semibold text-primary text-body sr-only s_sm:not-sr-only">
             {{ formatDecimalString(user.balance || '0.0') }} |&nbsp;<USDAmount :ether-amount="(user.balance || '0.0')" />
           </span>
