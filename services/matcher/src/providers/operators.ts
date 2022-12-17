@@ -1,3 +1,4 @@
+import { Operator } from '@casimir/types'
 import { fetch } from 'undici'
 import { FetchOperatorsResponse } from '../interfaces/FetchOperatorsResponse'
 
@@ -6,7 +7,7 @@ export default function useOperators() {
         // Todo move the following query logic to Athena
         const operators = await fetchOperators()
         // const averageFee = operators.reduce()
-        const eligibleOperators = operators.filter(operator => {
+        const eligibleOperators: Operator[] = operators.filter(operator => {
             // Todo set a standard deviation
             // const feeEligible = ...
             const performanceEligible = [

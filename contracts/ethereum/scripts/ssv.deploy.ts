@@ -3,8 +3,7 @@ import { deployContract } from '@casimir/hardhat-helpers'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 
 void async function () {
-    const mockChainlink = process.env.MOCK_CHAINLINK === 'true'
-    const runChainlink = process.env.RUN_CHAINLINK === 'true'
+    const chainlink = process.env.CHAINLINK === 'true'
     let config: DeploymentConfig = {
         SSVManager: {
             address: '',
@@ -31,7 +30,7 @@ void async function () {
         }
     }
 
-    if (mockChainlink && !runChainlink) {
+    if (!chainlink) {
         config = {
             // Deploy Chainlink oracle first
             ...mockChainlinkConfig,
@@ -60,13 +59,21 @@ void async function () {
     }
     
     // Set permission on the Oracle to use local node
-    if (runChainlink) {
+    if (chainlink) {
         const linkOracleOwnerAddress = '0x9d087fC03ae39b088326b67fA3C788236645b717'
         const linkOracleNodeAddress = '0x95827898f79e2Dcda28Ceaa7294ab104746dC41b'
-        const impersonatedSigner = await ethers.getImpersonatedSigner(linkOracleOwnerAddress)
+        // const impersonatedSigner = await ethers.getImpersonatedSigner(linkOracleOwnerAddress)
         const oracle = await ethers.getContractAt('Oracle', linkOracleOwnerAddress)
-        const permission = await oracle.connect(impersonatedSigner).setFulfillmentPermission(linkOracleNodeAddress, true)
+        const permission = await oracle/*.connect(impersonatedSigner)*/.setFulfillmentPermission(linkOracleNodeAddress, true)
         await permission.wait()
         console.log(`Gave ${linkOracleNodeAddress} permission to fulfill requests for ${linkOracleOwnerAddress}`)
+        const [owner] = await ethers.getSigners()
+        const nodeOwnerAddress = '0xA3e11D279D3322ea019B9A678B4BD9F64773d67E'
+        const transfer = await owner.sendTransaction({
+            to: nodeOwnerAddress,
+            value: ethers.utils.parseEther('1.0')
+        })
+        await transfer.wait()
+        console.log(`Sent ${nodeOwnerAddress} 1.0 ETH`)
     }
 }()

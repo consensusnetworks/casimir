@@ -9,7 +9,7 @@ import { ContractConfig, DeploymentConfig } from '@casimir/types'
 async function deploymentFixture() {
   let ssv, oracle
   const [owner] = await ethers.getSigners()
-  const mockChainlink = process.env.MOCK_CHAINLINK === 'true'
+  const chainlink = process.env.CHAINLINK === 'true'
   let deploymentConfig: DeploymentConfig = {
     SSVManager: {
       address: '',
@@ -36,7 +36,7 @@ async function deploymentFixture() {
     }
   }
 
-  if (mockChainlink) {
+  if (!chainlink) {
     deploymentConfig = {
       // Deploy Chainlink contracts first
       ...chainlinkDeploymentConfig,

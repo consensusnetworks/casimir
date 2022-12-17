@@ -4,7 +4,6 @@ import { HardhatUserConfig } from 'hardhat/config'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
-import '@sebasgoldberg/hardhat-wsprovider'
 import 'solidity-docgen'
 import '@openzeppelin/hardhat-upgrades'
 
@@ -85,13 +84,26 @@ const config: HardhatUserConfig = {
       gas: 'auto',
       gasPrice: 'auto'
     },
+    ganache: {
+      accounts: mnemonic ? { ...hid } : undefined,
+      url: 'http://127.0.0.1:8545',
+      allowUnlimitedContractSize: true,
+      gas: 'auto',
+      gasPrice: 'auto'
+    },
     mainnet: {
       accounts: mnemonic ? { ...hid } : undefined,
-      url: hardhatUrl || ''
+      url: hardhatUrl || '',
+      allowUnlimitedContractSize: true,
+      gas: 'auto',
+      gasPrice: 'auto'
     },
     goerli: {
       accounts: mnemonic ? { ...hid } : undefined,
-      url: hardhatUrl || ''
+      url: hardhatUrl || '',
+      allowUnlimitedContractSize: true,
+      gas: 'auto',
+      gasPrice: 'auto'
     }
   },
   mocha: {

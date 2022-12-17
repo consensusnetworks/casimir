@@ -7,7 +7,6 @@ import encryptedKeystore from '../mock/keystore.json'
 
 export default function useKeys() {
     async function getDepositData(withdrawalAddress: string, operators: Operator[]) {
-        console.log('Creating validator deposit data for', withdrawalAddress)
         const { privateKey } = await getKeys()
         const shares = await getShares(privateKey, operators)
         return { operators, shares }
