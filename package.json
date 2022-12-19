@@ -23,6 +23,7 @@
     "dev:ssv": "scripts/ssv/dev -n \"$npm_config_nodes\"",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
+    "postinstall": "git submodule update --init --recursive && npm exec --workspaces npm run build",
     "prepare": "husky install",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:ethereum": "npx esno -r dotenv/config scripts/ethereum/test.ts --fork \"$npm_config_fork\"",

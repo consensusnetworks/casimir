@@ -12,7 +12,7 @@
             type: String,
             required: true
         },
-        text: {
+        height: {
             type: String,
             required: true
         },
@@ -29,27 +29,22 @@
       :src="src"
       :alt="alt"
       class="cursor-pointer"
+      :style="{
+        height: height
+      }"
       @click="showModal = !showModal"
     >
     <div
       v-show="showModal"
-      class="modal"
+      class="modal grid place-content-center"
       @click="showModal = !showModal"
     >
       <div 
-        class="modal-content text-center px-margins py-[25px] flex flex-col justify-center zoom-anim"
+        class="modal-content bg-transparent text-center px-margins py-[25px] flex flex-col justify-center zoom-anim"
         :style="{
           'width': width
         }"
       >
-        <h6
-          :style="{
-            'font-family': 'OpenSauceOneSemibold'
-          }"
-          class="mb-[50px]"
-        >
-          {{ text }}
-        </h6>
         <img
           :src="src"
           :alt="alt"

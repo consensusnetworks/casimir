@@ -108,11 +108,11 @@ watch([amountToStakeNumber, selectedWalletToStakeFrom], () => {
         :key="`${item as any}`"
         class="w-full border border-grey my-[10px]"
       >
-        <div class="flex justify-between items-center px-[12px] py-[12px]">
+        <div class="flex justify-between items-center px-[24px] py-[18px]">
           <img
             :src="item.icon"
             :alt="item.name"
-            class="w-[24px]"
+            class="w-[30px]"
           >
           <h6 class="font-semibold text-blue_3">
             {{ item.name }}
@@ -121,7 +121,7 @@ watch([amountToStakeNumber, selectedWalletToStakeFrom], () => {
         <div
           v-for="account in item.accounts"
           :key="`${account as any}`"
-          class="flex justify-between items-center my-[20px] px-[12px] py-[6px] hover:bg-blue_3 cursor-pointer tooltip"
+          class="flex justify-between items-center my-[20px] px-[24px] py-[12px] hover:bg-blue_3 cursor-pointer tooltip"
           :class="selectedWalletToStakeFrom.address === account.address ? 'bg-blue_3 hover:bg-blue_2' : ''"
           :style="Number(account.amount.split(' ')[0]) < amountToStakeNumber || !account.active ? 'background: rgba(251, 190, 132, 0.2); cursor: default; ' : ''"
           @click="selectedWalletToStakeFrom = account"
@@ -136,7 +136,10 @@ watch([amountToStakeNumber, selectedWalletToStakeFrom], () => {
           <span class="tooltiptext text-body font-bold">
             <span v-if="!account.active">Current account not connected via device or extension</span>
             <span v-else-if="Number(account.amount.split(' ')[0]) < amountToStakeNumber">Insufficient funds</span>
-            <span v-else />
+            <span
+              v-else
+              class="not-sr-only"
+            />
           </span>
         </div>
       </div>

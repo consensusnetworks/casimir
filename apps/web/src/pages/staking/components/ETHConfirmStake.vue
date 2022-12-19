@@ -82,7 +82,7 @@ const handleConfirm = async () => {
         </h6>
       </div>
       <div class="my-[40px] border">
-        <div class="flex justify-between items-center px-[12px] py-[24px]">
+        <div class="flex justify-between items-center px-[24px] py-[18px]">
           <img
             :src="stakingInfo.from.icon"
             :alt="stakingInfo.from.name"
@@ -93,13 +93,13 @@ const handleConfirm = async () => {
           </h6>
         </div>
         <div
-          class="flex justify-between items-center my-[20px] px-[12px] py-[6px]"
+          class="flex justify-between items-center my-[20px] px-[24px] py-[12px] truncate"
         >
-          <h6 class="text-grey_6 font-semibold">
+          <h6 class="text-grey_6 font-semibold whitespace-nowrap truncate">
             {{ stakingInfo.from.account.name }} | 
-            <span class="px-[6px] text-grey_2 sr-only s_xsm:not-sr-only">{{ stakingInfo.from.account.address }}</span>
+            <span class="text-grey_2 sr-only s_md:not-sr-only">{{ stakingInfo.from.account.address }}</span>
           </h6>
-          <h6 class="text-grey_5 font-light">
+          <h6 class="text-grey_5 font-light whitespace-nowrap">
             {{ stakingInfo.from.account.balance }} ETH
           </h6>
         </div>
