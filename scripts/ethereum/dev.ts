@@ -23,15 +23,14 @@ void async function () {
     // Set fork rpc if requested, default fork to goerli if set vaguely or unset
     const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
     if (fork) {
-        // const key = await getSecret(`consensus-networks-ethereum-${fork}`)
-        // const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
-        const url = 'http://73.17.78.116/goerli/rpc'
+        const key = await getSecret(`consensus-networks-ethereum-${fork}`)
+        const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
         process.env.ETHEREUM_FORKING_URL = url
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(` ethereum fork at ${url}`))
     }
 
     // Enable 12-second interval mining for dev networks
-    process.env.INTERVAL_MINING = 'false'
+    process.env.INTERVAL_MINING = 'true'
 
     // Using hardhat local or fork network
     const chainlink = argv.chainlink === 'true'

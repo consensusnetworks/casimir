@@ -13,6 +13,9 @@ const options = {
     defaultBalanceEther: 96,
     chain: {
         chainId: forkingChainId
+    },
+    miner: {
+      blockTime: 12
     }
 }
 const server = ganache.server(options)
