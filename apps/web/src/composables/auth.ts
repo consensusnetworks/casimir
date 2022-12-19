@@ -35,7 +35,7 @@ export default function useAuth() {
      * @returns {string} The base URL for the auth API
      */
     function _getAuthBaseUrl(): string {
-        if (import.meta.env.PUBLIC_MOCK) {
+        if (import.meta.env.PUBLIC_AUTH_PORT) {
             return `http://localhost:${import.meta.env.PUBLIC_AUTH_PORT}`
         } else {
             return `https://auth.${import.meta.env.PUBLIC_STAGE || 'dev'}.casimir.co`
