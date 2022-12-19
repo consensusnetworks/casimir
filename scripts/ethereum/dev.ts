@@ -30,7 +30,7 @@ void async function () {
     }
 
     // Enable 12-second interval mining for dev networks
-    process.env.INTERVAL_MINING = 'true'
+    process.env.MINING_INTERVAL = '12'
 
     // Using hardhat local or fork network
     const chainlink = argv.chainlink === 'true'

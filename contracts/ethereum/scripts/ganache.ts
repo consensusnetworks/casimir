@@ -1,9 +1,16 @@
 import ganache from 'ganache'
 
+// Seed is provided
+const mnemonic = process.env.BIP39_SEED as string
+
+// Mining interval is provided
+const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
+const mining = { blockTime: miningInterval }
+
+// Local network fork rpc is provided
 const forkingUrl = process.env.ETHEREUM_FORKING_URL as string
 const forkingNetwork = forkingUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
 const forkingChainId = { mainnet: 1, goerli: 5 }[forkingNetwork]
-const mnemonic = process.env.BIP39_SEED as string
 
 const options = {
     mnemonic,
@@ -12,11 +19,9 @@ const options = {
     totalAccounts: 5,
     defaultBalanceEther: 96,
     chain: {
-        chainId: forkingChainId
+        chainId: forkingChainId || 1337
     },
-    miner: {
-      blockTime: 12
-    }
+    miner: miningInterval ? mining : undefined
 }
 const server = ganache.server(options)
 const port = 8545
