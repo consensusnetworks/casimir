@@ -1,6 +1,5 @@
 import { $, argv, echo, chalk } from 'zx'
 import { getSecret } from '@casimir/aws-helpers'
-import { getWallet } from '@casimir/ethers-helpers'
 
 /**
  * Run local a local Ethereum node and deploy contracts
@@ -30,7 +29,7 @@ void async function () {
     }
 
     // Enable 12-second interval mining for dev networks
-    process.env.INTERVAL_MINING = 'false'
+    process.env.INTERVAL_MINING = 'true'
 
     // Using hardhat local or fork network
     process.env.MOCK_CHAINLINK = 'true'

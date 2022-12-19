@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build || echo 'Warning: @casimir/web build failed because script + dependency issues are unresolved. Disregard this warning and any listed errors above if @casimir/web is not needed for the current project build.' && exit 0",
+    "build": "vue-tsc --noEmit && vite build || echo '@casimir/web build failed because script + dependency issues are unresolved. Disregard any errors listed above this line.' && exit 0",
     "preview": "vite preview"
   },
   "dependencies": {
