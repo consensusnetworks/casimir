@@ -6,6 +6,8 @@ import { ProviderString } from '@/types/ProviderString'
 import { User } from '@/interfaces/User'
 import { onMounted, ref } from 'vue'
 
+const { _getAuthBaseUrl } = useEnvironment()
+
 const user = ref<User>({
     id: '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
     accounts: {
@@ -95,15 +97,6 @@ export default function useUsers () {
         // TODO: Swap in real user
         const id = 'test_user'
         updateUser({id, accounts})
-    }
-
-    // TODO: Duplicate function (see useAuth)
-    function _getAuthBaseUrl(): string {
-        if (import.meta.env.PUBLIC_AUTH_PORT) {
-            return `http://localhost:${import.meta.env.PUBLIC_AUTH_PORT}`
-        } else {
-            return `https://auth.${import.meta.env.PUBLIC_STAGE || 'dev'}.casimir.co`
-        }
     }
     
     async function getMessage(address: string) {

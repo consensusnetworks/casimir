@@ -1,4 +1,7 @@
 import { LoginCredentials } from '@casimir/types'
+import useEnvironment from '@/composables/environment'
+
+const { _getAuthBaseUrl } = useEnvironment()
 
 export default function useAuth() {
     async function getMessage(address: string) {
@@ -27,19 +30,6 @@ export default function useAuth() {
         }
         const authBaseUrl = _getAuthBaseUrl()
         return await fetch(`${authBaseUrl}/login`, requestOptions)
-    }
-
-    /**
-     * Get the auth base url for the current environment
-     * 
-     * @returns {string} The base URL for the auth API
-     */
-    function _getAuthBaseUrl(): string {
-        if (import.meta.env.PUBLIC_AUTH_PORT) {
-            return `http://localhost:${import.meta.env.PUBLIC_AUTH_PORT}`
-        } else {
-            return `https://auth.${import.meta.env.PUBLIC_STAGE || 'dev'}.casimir.co`
-        }
     }
 
     return {
