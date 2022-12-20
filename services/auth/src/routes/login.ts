@@ -14,7 +14,11 @@ router.use('/', async (req: express.Request, res: express.Response) => {
     if (response) updateMessage(address) // send back token if successful
     res.setHeader('Content-Type', 'application/json')
     res.status(200)
-    res.json(response)
+    res.json({
+        message: response ? 'Login successful' : 'Login failed',
+        error: false,
+        data: address.toLowerCase()
+    })
 })
 
 export default router
