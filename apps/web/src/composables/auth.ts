@@ -1,10 +1,11 @@
 import { LoginCredentials } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
+import { ProviderString } from '@/types/ProviderString'
 
 const { _getAuthBaseUrl } = useEnvironment()
 
 export default function useAuth() {
-    async function getMessage(address: string) {
+    async function getMessage(provider: ProviderString, address: string) {
         const requestOptions = {
             method: 'GET',
             headers: { 
@@ -12,7 +13,7 @@ export default function useAuth() {
             }
         }
         const authBaseUrl = _getAuthBaseUrl()
-        return await fetch(`${authBaseUrl}/auth/${address}`, requestOptions)
+        return await fetch(`${authBaseUrl}/auth/${provider}/${address}`, requestOptions)
     }
     /**
      * Logs a user in with an address, message and signed message

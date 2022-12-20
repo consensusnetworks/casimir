@@ -3,17 +3,17 @@ import userCollection from '../collections/users'
 const router = express.Router()
 
 router.put('/', async (req: express.Request, res: express.Response) => {
-    let { primaryAccount, updatedAccount } = req.body
+    let { primaryAccount, updatedProvider, updatedAccount } = req.body
     primaryAccount = primaryAccount.toLowerCase()
+    updatedProvider = updatedProvider.toLowerCase()
     updatedAccount = updatedAccount.toLowerCase()
-    const user = userCollection.find(user => user.address === primaryAccount)
+    const user = userCollection.find(user => user.id === primaryAccount)
     if (user) {
-        if (!user.secondaryAccounts.includes(primaryAccount)) {
-            user.secondaryAccounts.push(primaryAccount)
-        }
-        user.address = updatedAccount
-        user.secondaryAccounts = user.secondaryAccounts.filter(account => account !== updatedAccount)
+        user.id = updatedAccount
+        user.primaryAccount = updatedAccount
+        user.accounts[updatedProvider] = [updatedAccount]
     }
+    console.log('user :>> ', user)
     res.setHeader('Content-Type', 'application/json')
     res.status(200)
     res.json({

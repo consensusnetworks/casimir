@@ -212,9 +212,10 @@ export default function useWallet() {
     return await result.wait()
   }
 
-  async function login() {
+  async function login() { 
     if (ethersProviderList.includes(selectedProvider.value)) {
       const result = await loginWithEthers(selectedProvider.value, selectedAccount.value)
+      console.log('login result :>> ', result)
       if (!result.error) {
         loggedIn.value = true
         primaryAccount.value = result.data
@@ -232,9 +233,9 @@ export default function useWallet() {
     }
     
     if (ethersProviderList.includes(selectedProvider.value)) {
-      const result = await updatePrimaryAccount(primaryAccount.value, selectedAccount.value)
+      const result = await updatePrimaryAccount(primaryAccount.value, selectedProvider.value, selectedAccount.value)
       const resultJSON = await result.json()
-      primaryAccount.value = resultJSON.data.address
+      primaryAccount.value = resultJSON.data.primaryAccount
     }
   }
 

@@ -1,20 +1,30 @@
 import userCollection from '../collections/users'
+import { ProviderString } from '../types/ProviderString'
 
 export default function useUsers() {
     function getMessage (address: string) {
-        const user = userCollection.find(user => user.address === address)
+        const user = userCollection.find(user => user.id === address)
         if (user) {
             return user.nonce
         }
         return ''
     }
 
-    function updateMessage (address: string) {
-        const user = userCollection.find(user => user.address === address)
+    function updateMessage (provider: ProviderString, address: string) {
+        const user = userCollection.find(user => user.id === address)
+        provider = provider.toLowerCase()
         if (user) {
             user.nonce = generateNonce()
         } else {
-            userCollection.push({ address, nonce: generateNonce() })
+            console.log('got to else')
+            userCollection.push({ 
+                id: address,
+                accounts: {
+                    [provider]: [address]
+                },
+                primaryAccount: address,
+                nonce: generateNonce() 
+            })
         }
     }
     

@@ -13,6 +13,7 @@ const user = ref<User>({
     accounts: {
         MetaMask: ['0xd557a5745d4560B24D36A68b52351ffF9c86A212']
     } as Record<ProviderString, string[]>,
+    primaryAccount: '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
     pools: []
 })
 
@@ -108,13 +109,13 @@ export default function useUsers () {
         return message
     }
 
-    async function updatePrimaryAccount(primaryAccount: string, updatedAccount: string) {
+    async function updatePrimaryAccount(primaryAccount: string, updatedProvider: ProviderString, updatedAccount: string) {
         const requestOptions = {
             method: 'PUT',
             headers: { 
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ primaryAccount, updatedAccount })
+            body: JSON.stringify({ primaryAccount, updatedProvider, updatedAccount })
         }
         const authBaseUrl = _getAuthBaseUrl()
         return await fetch(`${authBaseUrl}/users`, requestOptions)
