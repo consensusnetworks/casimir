@@ -9,7 +9,6 @@ router.get('/:address', async (req: express.Request, res: express.Response) => {
     const { address } = req.params
     updateMessage(address)
     const message = getMessage(address)
-    console.log('should see this message log on front-end :>> ', message)
     if (message) {
         res.setHeader('Content-Type', 'application/json')
         res.status(200)

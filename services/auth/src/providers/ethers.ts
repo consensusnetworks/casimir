@@ -16,7 +16,6 @@ export default function useEthers() {
                 return false
             } else {
                 const recoveredAddress = ethers.utils.verifyMessage(message, signedMessage)
-                console.log('recoveredAddress :>> ', recoveredAddress)
                 return address.toLowerCase() === recoveredAddress.toLowerCase()
             }
         } catch (error) {
