@@ -1,9 +1,8 @@
 import { S3Client, S3ClientConfig, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 import { AthenaClient, AthenaClientConfig } from '@aws-sdk/client-athena'
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
-import { StartQueryExecutionCommand, GetQueryExecutionCommand }  from '@aws-sdk/client-athena'
+import { StartQueryExecutionCommand, GetQueryExecutionCommand, GetQueryResultsCommand }  from '@aws-sdk/client-athena'
 import { EventTableSchema } from '@casimir/data'
-
 const defaultQueryOutputBucket = 'casimir-etl-output-bucket-dev'
 
 /**
@@ -85,7 +84,7 @@ export async function newS3Client (opt?: S3ClientConfig): Promise<S3Client> {
  * @param input.data - Data to be uploaded
  *
  */
-export async function uploadToS3( input: { bucket: string, key: string, data: string }): Promise<void> {
+export async function upload( input: { bucket: string, key: string, data: string }): Promise<void> {
   if (!s3) {
     s3 = await newS3Client()
   }
@@ -133,48 +132,47 @@ export async function getFromS3(bucket: string, key: string): Promise<string> {
   return chunk
 }
 
-let retry = 0
-let backoff = 500
+// let backoff = 1000
 
 /**
  * Poll for Athena query's result
  *
  * @param queryId - Athena query id
  */
-async function pollAthenaQueryOutput(queryId: string): Promise<void> {
-  if (!athena) {
-    athena = await newAthenaClient()
-  }
+// async function pollAthenaQueryOutput(queryId: string): Promise<void> {
+//   if (!athena) {
+//     athena = await newAthenaClient()
+//   }
 
-  const getStateCmd = new GetQueryExecutionCommand({
-    QueryExecutionId: queryId
-  })
+//   const getStateCmd = new GetQueryExecutionCommand({
+//     QueryExecutionId: queryId
+//   })
 
-  const { $metadata, QueryExecution } = await athena.send(getStateCmd)
+//   const { $metadata, QueryExecution } = await athena.send(getStateCmd)
 
-  if ($metadata.httpStatusCode !== 200) throw new Error('FailedQuery: unable to query Athena')
-  if (QueryExecution === undefined)  throw new Error('InvalidQueryExecution: query execution is undefined')
-  if (QueryExecution.Status === undefined) throw new Error('InvalidQueryExecutionStatus: query execution status is undefined')
+//   if ($metadata.httpStatusCode !== 200) throw new Error('FailedQuery: unable to query Athena')
+//   if (QueryExecution === undefined)  throw new Error('InvalidQueryExecution: query execution is undefined')
+//   if (QueryExecution.Status === undefined) throw new Error('InvalidQueryExecutionStatus: query execution status is undefined')
 
-  if (QueryExecution.Status.State === 'QUEUED' || QueryExecution.Status.State === 'RUNNING') {
-    setTimeout(() => {
-      pollAthenaQueryOutput(queryId)
-      retry++
-      backoff = backoff + 500
-    }, backoff)
-  }
+//   if (QueryExecution.Status.State === 'QUEUED' || QueryExecution.Status.State === 'RUNNING') {
+//     setTimeout(() => {
+//       pollAthenaQueryOutput(queryId)
+//       retry++
+//       backoff = backoff * 2
+//     }, backoff)
+//   }
 
-  if (QueryExecution.Status.State === 'FAILED') {
-    const reason = QueryExecution.Status.StateChangeReason
-    if (reason && reason.includes('HIVE_BAD_DATA')) {
-      throw new Error('FailedQuery: Check the table for bad data')
-    } else {
-      throw new Error('QueryFailed: query failed')
-    }
-  }
-  if (QueryExecution.Status.State === 'SUCCEEDED')
-  return
-}
+//   if (QueryExecution.Status.State === 'FAILED') {
+//     const reason = QueryExecution.Status.StateChangeReason
+//     if (reason && reason.includes('HIVE_BAD_DATA')) {
+//       throw new Error('FailedQuery: Check the table for bad data')
+//     } else {
+//       throw new Error('QueryFailed: query failed')
+//     }
+//   }
+//   if (QueryExecution.Status.State === 'SUCCEEDED')
+//   return
+// }
 
 /**
  * Runs a SQL query on Athena table
@@ -205,37 +203,139 @@ export async function queryAthena(query: string): Promise<EventTableSchema[] | n
     throw new Error('InvalidQueryExecutionId: query execution id is undefined')
   }
 
-  await pollAthenaQueryOutput(QueryExecutionId)
+  const poll = async (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const get = new GetQueryExecutionCommand({
+          QueryExecutionId: QueryExecutionId
+        })
+        
+        if (athena) {
+          athena.send(get).then(({ $metadata, QueryExecution }) => {
+            if ($metadata.httpStatusCode !== 200) {
+              return reject('FailedQuery: unable to query Athena')
+            }
 
-  // wait for athena to finish writing to s3
-  await new Promise(resolve => setTimeout(resolve, 2000))
+            if (QueryExecution === undefined) {
+              return reject('InvalidQueryExecution: query execution is undefined')
+            }
 
-  const raw = await getFromS3(defaultQueryOutputBucket, `${QueryExecutionId}.csv`)
+            if (QueryExecution.Status === undefined) {
+              return reject('InvalidQueryExecutionStatus: query execution status is undefined')
+            }
 
-  const rows = raw.split('\n').filter(r => r !== '')
+            if (QueryExecution.Status.State === 'SUCCEEDED') {
+              return resolve()
+            }
 
-  if (rows.length <= 1) {
-    return null
+            if (QueryExecution.Status.State === 'FAILED') {
+              return reject('QueryFailed: query failed')
+            }
+
+            if (QueryExecution.Status.State === 'QUEUED' || QueryExecution.Status.State === 'RUNNING') {
+              return poll()
+            }
+
+            return reject('InvalidQueryExecutionState: query execution state is invalid')
+          })
+        }
+    })
+  })
+}
+
+  await poll()
+
+  const resultCmd = new GetQueryResultsCommand({
+    QueryExecutionId: QueryExecutionId
+  })
+
+  const output = await athena.send(resultCmd)
+
+  if (output.$metadata.httpStatusCode !== 200) {
+    throw new Error('FailedQuery: unable to query Athena')
   }
 
-  const header = rows.splice(0, 1)[0].split(',').map((h: string) => h.trim().replace(/"/g, ''))
+  if (output.ResultSet === undefined) {
+    throw new Error('InvalidQueryResult: query result is undefined')
+  }
 
-  const events: EventTableSchema[] = []
+  if (output.ResultSet.ResultSetMetadata === undefined) {
+    throw new Error('InvalidQueryResultMetadata: query result metadata is undefined')
+  }
 
-  rows.forEach((curr) => {
-    const row = curr.split(',')
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const event: EventTableColumn = {}
-    row.forEach((r, i) => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      event[header[i]] = r.trim().replace(/"/g, '')
-    })
+  if (output.ResultSet.ResultSetMetadata.ColumnInfo === undefined) {
+    throw new Error('InvalidQueryResultMetadataColumns: query result metadata columns is undefined')
+  }
 
-    if (event) {
-      events.push(event)
+  const columns = output.ResultSet.ResultSetMetadata.ColumnInfo.map(c => {
+    return {
+      name: c.Name,
+      type: c.Type
     }
   })
+
+  if (output.ResultSet.Rows === undefined) {
+    throw new Error('InvalidQueryResultRows: query result rows is undefined')
+  }
+
+  output.ResultSet.Rows.shift()
+
+  const rows = output.ResultSet.Rows.map((row, i) => {
+    const record = {}
+
+    if (row.Data === undefined) {
+      throw new Error('InvalidQueryResultRow: query result row is undefined')
+    }
+
+    row.Data.forEach((r, i) => {
+      if (Object.keys(r).length === 0) {
+        return
+      }
+
+      const type = columns[i].type
+
+      if (type === 'date') {
+        record[columns[i].name] = new Date(r.VarCharValue).toISOString()
+      } else {
+        record[columns[i].name] = r.VarCharValue
+      }
+    })
+    return record
+  })
+
+  // if (result.ResultSet === undefined) {
+    // throw new Error('InvalidQueryResult: query result is undefined')
+  // }
+
+
+  // const rows = raw.split('\n').filter(r => r !== '')
+
+  // if (rows.length <= 1) {
+  //   return null
+  // }
+
+  // const header = rows.splice(0, 1)[0].split(',').map((h: string) => h.trim().replace(/"/g, ''))
+
+  // const events: EventTableSchema[] = []
+
+  // rows.forEach((curr) => {
+  //   const row = curr.split(',')
+  //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //   // @ts-ignore
+  //   const event: EventTableColumn = {}
+  //   row.forEach((r, i) => {
+  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //     // @ts-ignore
+  //     event[header[i]] = r.trim().replace(/"/g, '')
+  //   })
+
+  //   if (event) {
+  //     events.push(event)
+  //   }
+  // })
   return events
+}
+
+export function toAthenaTz(ts: number): string {
+	return new Date(ts * 1000).toISOString().replace('T', ' ').replace('Z', '')
 }

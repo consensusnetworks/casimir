@@ -56,7 +56,7 @@ export FORK=$fork
 export NETWORK=$network
 export UPLOAD=$upload
 
-commands=("npm run dev --workspace @casimir/crawler")
+commands=("npm run dev --workspace @casimir/ethereum-transfers")
 
 # Loop over comma-separated string of chains
 IFS=',' read -r -a chain_list <<< "$chains"
@@ -75,7 +75,7 @@ do
 
         CHAIN=$(echo $chain | tr '[:lower:]' '[:upper:]')
         rpc_base=${chain}_${network}
-        export "PUBLIC_${CHAIN}_RPC"="${!rpc_base}/$rpc_key"
+        export "PUBLIC_${CHAIN}_URL"="${!rpc_base}/$rpc_key"
     else
         # Pass fork or network to chain-specific script
         commands+=("npm run dev:$chain --fork=$fork")

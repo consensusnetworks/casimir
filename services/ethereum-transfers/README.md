@@ -14,7 +14,7 @@ npm run dev:crawler # --upload=disabled disables s3 upload
 
 **Available flags:**
 
-These flags modify the CHAINS, FORK, NETWORK, UPLOAD AND PUBLIC_${CHAIN}_RPC environment variables.
+These flags modify the CHAINS, FORK, NETWORK, UPLOAD AND PUBLIC_${CHAIN}_URL environment variables.
 
 | Name | Description | Default |
 | - | - | - |

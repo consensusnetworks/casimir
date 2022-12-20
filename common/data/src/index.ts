@@ -78,7 +78,7 @@ export type EventTableSchema = {
   /** Is auto staking enabled */
   auto_stake: boolean
   /** The exchange rate of the coin in USD */
-  exchange_rate: string
+  address_balance: string
 }
 
 export { eventSchema, aggSchema }
