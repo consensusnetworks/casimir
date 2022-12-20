@@ -2,15 +2,14 @@ import { EthereumKeyStore as Keystore, Encryption, Threshold } from 'ssv-keys'
 import { encode } from 'js-base64'
 import { Operator } from '@casimir/types'
 
-// Todo fetch a generated key (and generate one if needed)
+/** 
+ * Temporarily using keygen below as placeholder for SSV DKG
+ * See WIP @casimir/dkg in services/dkg
+ */
+
 import encryptedKeystore from '../mock/keystore.json'
 
 export default function useKeys() {
-    async function getDepositData(withdrawalAddress: string, operators: Operator[]) {
-        const { privateKey } = await getKeys()
-        const shares = await getShares(privateKey, operators)
-        return { operators, shares }
-    }
 
     async function getKeys() {
         const keystore = new Keystore(JSON.stringify(encryptedKeystore))
@@ -19,7 +18,8 @@ export default function useKeys() {
         return { publicKey, privateKey }
     }
 
-    async function getShares(privateKey: string, operators: Operator[]) {
+    async function getShares(operators: Operator[]) {
+        const { privateKey } = await getKeys()
         const thresholdInstance = new Threshold()
         const threshold = await thresholdInstance.create(privateKey, operators.map(operator => operator.id))
         const shares = new Encryption(operators.map(operator => operator.public_key), threshold.shares).encrypt()
@@ -32,5 +32,5 @@ export default function useKeys() {
         return encodedShares
     }
 
-    return { getDepositData }
+    return { getKeys, getShares }
 }

@@ -1,14 +1,18 @@
-import useKeygen from './keygen'
+import useKeys from './keys'
 import useOperators from './operators'
 
-const { fetchDepositData } = useKeygen()
+const { getShares } = useKeys()
 const { getOperators } = useOperators()
 
 export default function useValidator () {
-    async function getValidator (withdrawalAddress: string) {
+
+    async function getValidatorInit(withdrawalAddress: string) {
+        console.log(withdrawalAddress)
         const operators = await getOperators()
-        return await fetchDepositData(withdrawalAddress, operators)
+        const shares = await getShares(operators)
+        // Todo return Beacon deposit and SSV registry input data for a new validator
+        return { operators, shares }
     }
 
-    return { getValidator }
+    return { getValidatorInit }
 }

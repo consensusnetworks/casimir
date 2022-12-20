@@ -13,7 +13,7 @@ const hid = { mnemonic, count: 5 }
 
 // Mining interval is provided
 const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
-const mining = { auto: false, interval: miningInterval }
+const mining = { auto: false, interval: miningInterval * 1000 } // miningInterval in ms
 
 // Live network rpc is provided 
 const hardhatUrl = process.env.PUBLIC_ETHEREUM_URL as string

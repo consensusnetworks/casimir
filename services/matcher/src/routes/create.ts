@@ -1,12 +1,12 @@
 import express from 'express'
 import useValidator from '../providers/validator'
 
-const { getValidator } = useValidator()
+const { getValidatorInit } = useValidator()
 const router = express.Router()
 
 router.use('/', async (req: express.Request, res: express.Response) => {
     const { poolId, withdrawalAddress } = req.body
-    const { operators, shares } = await getValidator(withdrawalAddress)
+    const { operators, shares } = await getValidatorInit(withdrawalAddress)
 
     // Todo return beacon deposit and SSV registration data
 
