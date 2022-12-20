@@ -88,8 +88,7 @@ export default function useEthers() {
     const signature = await signer.signMessage(message)
     
     const response = await login({ address: selectedAccount, message: message.toString(), signedMessage: signature })
-    console.log('Response', await response.json())
-    return signature
+    return await response.json()
   }
 
   return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit, loginWithEthers }

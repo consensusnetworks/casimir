@@ -16,9 +16,36 @@ const user = ref<User>({
 
 export default function useUsers () {
 
-    const { ethereumURL } = useEnvironment()
-    const { getUserBalance, getUserPools } = useWallet()
-    const { ssv } = useSSV()
+    // Commenting out for now to avoid errors
+    // const { ethereumURL } = useEnvironment()
+    // const { getUserBalance, getUserPools } = useWallet()
+    // const { ssv } = useSSV()
+
+    // Todo filter for events for user addresses
+    // function subscribeToUserEvents() {
+    //     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    
+    //     const validatorInitFilter = {
+    //       address: ssv.address,
+    //       topics: [
+    //         ethers.utils.id('ValidatorInitFullfilled(uint32,uint32[],string)')
+    //       ]
+    //     }
+    //     ssv.connect(provider).on(validatorInitFilter, async () => {
+    //       console.log('ValidatorInit event... updating pools')
+    //       user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
+    //       user.value.pools = await getUserPools(user.value.id)
+    //       user.value.stake = user.value.pools?.reduce((a, c) => a + parseFloat(c.userStake), 0).toString()
+    //       user.value.rewards = user.value.pools?.reduce((a, c) => a + parseFloat(c.userRewards), 0).toString()
+    //     })
+    // }
+
+    // onMounted(async () => {
+    //     // Just get pools for primary account for demo
+    //     user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
+    //     user.value.pools = await getUserPools(user.value.id)
+    //     subscribeToUserEvents()
+    // })
 
     function updateUser ({ id, accounts } : User) {
         localStorage.setItem('accounts', JSON.stringify(accounts))
@@ -72,7 +99,7 @@ export default function useUsers () {
 
     // TODO: Duplicate function (see useAuth)
     function _getAuthBaseUrl(): string {
-        if (import.meta.env.PUBLIC_MOCK) {
+        if (import.meta.env.PUBLIC_AUTH_PORT) {
             return `http://localhost:${import.meta.env.PUBLIC_AUTH_PORT}`
         } else {
             return `https://auth.${import.meta.env.PUBLIC_STAGE || 'dev'}.casimir.co`
@@ -88,36 +115,23 @@ export default function useUsers () {
         return message
     }
 
-    // Todo filter for events for user addresses
-    function subscribeToUserEvents() {
-        const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-    
-        const validatorInitFilter = {
-          address: ssv.address,
-          topics: [
-            ethers.utils.id('ValidatorInitFullfilled(uint32,uint32[],string)')
-          ]
+    async function updatePrimaryAccount(primaryAccount: string, updatedAccount: string) {
+        const requestOptions = {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ primaryAccount, updatedAccount })
         }
-        ssv.connect(provider).on(validatorInitFilter, async () => {
-          console.log('ValidatorInit event... updating pools')
-          user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
-          user.value.pools = await getUserPools(user.value.id)
-          user.value.stake = user.value.pools?.reduce((a, c) => a + parseFloat(c.userStake), 0).toString()
-          user.value.rewards = user.value.pools?.reduce((a, c) => a + parseFloat(c.userRewards), 0).toString()
-        })
+        const authBaseUrl = _getAuthBaseUrl()
+        return await fetch(`${authBaseUrl}/users`, requestOptions)
     }
-
-    onMounted(async () => {
-        // Just get pools for primary account for demo
-        user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
-        user.value.pools = await getUserPools(user.value.id)
-        subscribeToUserEvents()
-    })
 
     return {
         user,
         addAccount,
         removeAccount,
         getMessage,
+        updatePrimaryAccount
     }
 }
