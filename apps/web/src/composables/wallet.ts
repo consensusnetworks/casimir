@@ -28,7 +28,7 @@ const primaryAccount = ref('')
 
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
-  const { ssv } = useSSV()
+  const { ssv, getSSVFeePercent } = useSSV()
   const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, loginWithEthers } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
@@ -203,9 +203,7 @@ export default function useWallet() {
     let signer = ethersSignerCreator[signerKey](selectedProvider.value)
     if (isWalletConnectSigner(signer)) signer = await signer
     const ssvProvider = ssv.connect(signer as ethers.Signer)
-    const fees = await ssvProvider.getFees()
-    const { LINK, SSV } = fees
-    const feesTotalPercent = LINK + SSV
+    const feesTotalPercent = await getSSVFeePercent(selectedProvider.value)
     const depositAmount = parseFloat(amountToStake.value) * ((100 + feesTotalPercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
     const result = await ssvProvider.deposit({ value, type: 0 })

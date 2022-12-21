@@ -80,8 +80,7 @@ export default function useEthers() {
 
   async function loginWithEthers ( providerString: ProviderString, selectedAccount: string) {
     const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
-    const web3Provider: ethers.providers.Web3Provider =
-      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const messageJson = await getMessage(providerString, selectedAccount)
     const { message } = await messageJson.json()
     const signer = web3Provider.getSigner()
