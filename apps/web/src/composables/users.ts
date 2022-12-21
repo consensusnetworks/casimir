@@ -48,7 +48,7 @@ export default function useUsers () {
         subscribeToUserEvents()
     })
 
-    function updateUser ({ id, accounts } : User) {
+    function updateUser ({ accounts } : any) {
         localStorage.setItem('accounts', JSON.stringify(accounts))
     }
 
@@ -74,10 +74,9 @@ export default function useUsers () {
         for (const provider in accounts) {
             user.value.accounts[provider as ProviderString] = accounts[provider]
         }
-        
-        // TODO: Swap in real user
-        const id = 'test_user'
-        updateUser({id, accounts})
+    
+
+        updateUser({ accounts })
     }
 
     function removeAccount(provider: ProviderString, address: string) {
@@ -93,9 +92,7 @@ export default function useUsers () {
             user.value.accounts[provider as ProviderString] = accounts[provider]
         }
 
-        // TODO: Swap in real user
-        const id = 'test_user'
-        updateUser({id, accounts})
+        updateUser({ accounts })
     }
     
     async function getMessage(address: string) {
