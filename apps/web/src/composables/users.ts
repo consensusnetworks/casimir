@@ -6,7 +6,7 @@ import { ProviderString } from '@/types/ProviderString'
 import { User } from '@/interfaces/User'
 import { onMounted, ref } from 'vue'
 
-const { _getAuthBaseUrl } = useEnvironment()
+const { authBaseURL } = useEnvironment()
 
 const user = ref<User>({
     id: '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
@@ -101,8 +101,7 @@ export default function useUsers () {
     }
     
     async function getMessage(address: string) {
-        const authBaseUrl = _getAuthBaseUrl()
-        const response = await fetch(`${authBaseUrl}/auth/${address}`)
+        const response = await fetch(`${authBaseURL}/auth/${address}`)
         const json = await response.json()
         const { message } = json
         console.log('message :>> ', message)
@@ -117,8 +116,7 @@ export default function useUsers () {
             },
             body: JSON.stringify({ primaryAccount, updatedProvider, updatedAccount })
         }
-        const authBaseUrl = _getAuthBaseUrl()
-        return await fetch(`${authBaseUrl}/users`, requestOptions)
+        return await fetch(`${authBaseURL}/users`, requestOptions)
     }
 
     return {
