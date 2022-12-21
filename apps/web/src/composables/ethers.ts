@@ -81,14 +81,12 @@ export default function useEthers() {
   async function loginWithEthers ( providerString: ProviderString, selectedAccount: string) {
     const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    const messageJson = await getMessage(selectedAccount)
+    const messageJson = await getMessage(providerString, selectedAccount)
     const { message } = await messageJson.json()
     const signer = web3Provider.getSigner()
     const signature = await signer.signMessage(message)
-    
-    const response = await login({ address: selectedAccount, message: message.toString(), signedMessage: signature })
-    console.log('Response', await response.json())
-    return signature
+    const response = await login({ address: selectedAccount, message: message.toString(), signedMessage: signature, provider: providerString })
+    return await response.json()
   }
 
   return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit, loginWithEthers }
