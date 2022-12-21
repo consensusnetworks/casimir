@@ -6,7 +6,7 @@ import { ProviderString } from '@/types/ProviderString'
 import { User } from '@/interfaces/User'
 import { onMounted, ref } from 'vue'
 
-const { authBaseURL } = useEnvironment()
+const { authBaseURL, ethereumURL } = useEnvironment()
 
 const user = ref<User>({
     id: '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
@@ -18,37 +18,35 @@ const user = ref<User>({
 })
 
 export default function useUsers () {
-
-    // Commenting out for now to avoid errors
-    // const { ethereumURL } = useEnvironment()
-    // const { getUserBalance, getUserPools } = useWallet()
-    // const { ssv } = useSSV()
+    const { ssv } = useSSV()
 
     // Todo filter for events for user addresses
-    // function subscribeToUserEvents() {
-    //     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    function subscribeToUserEvents() {
+        const { getUserBalance, getUserPools } = useWallet()
+        const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     
-    //     const validatorInitFilter = {
-    //       address: ssv.address,
-    //       topics: [
-    //         ethers.utils.id('ValidatorInitFullfilled(uint32,uint32[],string)')
-    //       ]
-    //     }
-    //     ssv.connect(provider).on(validatorInitFilter, async () => {
-    //       console.log('ValidatorInit event... updating pools')
-    //       user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
-    //       user.value.pools = await getUserPools(user.value.id)
-    //       user.value.stake = user.value.pools?.reduce((a, c) => a + parseFloat(c.userStake), 0).toString()
-    //       user.value.rewards = user.value.pools?.reduce((a, c) => a + parseFloat(c.userRewards), 0).toString()
-    //     })
-    // }
+        const validatorInitFilter = {
+          address: ssv.address,
+          topics: [
+            ethers.utils.id('ValidatorInitFullfilled(uint32,uint32[],string)')
+          ]
+        }
+        ssv.connect(provider).on(validatorInitFilter, async () => {
+          console.log('ValidatorInit event... updating pools')
+          user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
+          user.value.pools = await getUserPools(user.value.id)
+          user.value.stake = user.value.pools?.reduce((a, c) => a + parseFloat(c.userStake), 0).toString()
+          user.value.rewards = user.value.pools?.reduce((a, c) => a + parseFloat(c.userRewards), 0).toString()
+        })
+    }
 
-    // onMounted(async () => {
-    //     // Just get pools for primary account for demo
-    //     user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
-    //     user.value.pools = await getUserPools(user.value.id)
-    //     subscribeToUserEvents()
-    // })
+    onMounted(async () => {
+        const { getUserBalance, getUserPools } = useWallet()
+        // Just get pools for primary account for demo
+        user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
+        user.value.pools = await getUserPools(user.value.id)
+        subscribeToUserEvents()
+    })
 
     function updateUser ({ id, accounts } : User) {
         localStorage.setItem('accounts', JSON.stringify(accounts))

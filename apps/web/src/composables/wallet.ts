@@ -45,7 +45,6 @@ export default function useWallet() {
     'Trezor': getEthersTrezorSigner,
     'WalletConnect': getEthersWalletConnectSigner
   }
-  const ethersSignerList = Object.keys(ethersSignerCreator)
 
   const setSelectedProvider = (provider: ProviderString) => {
     selectedProvider.value = provider
@@ -203,7 +202,7 @@ export default function useWallet() {
     let signer = ethersSignerCreator[signerKey](selectedProvider.value)
     if (isWalletConnectSigner(signer)) signer = await signer
     const ssvProvider = ssv.connect(signer as ethers.Signer)
-    const feesTotalPercent = await getSSVFeePercent(selectedProvider.value)
+    const feesTotalPercent = await getSSVFeePercent(signer as ethers.Signer)
     const depositAmount = parseFloat(amountToStake.value) * ((100 + feesTotalPercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
     const result = await ssvProvider.deposit({ value, type: 0 })
