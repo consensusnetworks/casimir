@@ -140,6 +140,7 @@ export default async ({ chain, network, provider, start, end, url }) => {
             events.push(txEvent)
         }
 
+
         await upload({
             bucket: 'casimir-etl-event-bucket-dev',
             key: `${events[0].height}-events.json`,
@@ -148,7 +149,6 @@ export default async ({ chain, network, provider, start, end, url }) => {
             const end = process.hrtime(start)
             console.log(`block: ${block.number} - tx: ${block.transactions.length} - time: ${end[0]}s ${Math.floor(end[1] / 1000000)}ms`)
         })
-
     }
     process.exit(0)
 }

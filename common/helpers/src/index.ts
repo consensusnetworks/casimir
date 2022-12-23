@@ -3,6 +3,8 @@ import { AthenaClient, AthenaClientConfig } from '@aws-sdk/client-athena'
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
 import { StartQueryExecutionCommand, GetQueryExecutionCommand, GetQueryResultsCommand }  from '@aws-sdk/client-athena'
 import { EventTableSchema } from '@casimir/data'
+
+
 const defaultQueryOutputBucket = 'casimir-etl-output-bucket-dev'
 
 /**
@@ -180,7 +182,7 @@ export async function getFromS3(bucket: string, key: string): Promise<string> {
  * @param query - SQL query to run (make sure the correct permissions are set)
  * @return string - Query result
  */
-export async function queryAthena(query: string): Promise<EventTableSchema[] | null> {
+export async function queryAthena(query: string): Promise<Partial<EventTableSchema>[] | null> {
   if (!athena) {
     athena = await newAthenaClient()
   }
@@ -203,7 +205,9 @@ export async function queryAthena(query: string): Promise<EventTableSchema[] | n
     throw new Error('InvalidQueryExecutionId: query execution id is undefined')
   }
 
-  const poll = async (): Promise<void> => {
+  let backoff = 1000
+
+  const poll = async (): Promise<any> => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const get = new GetQueryExecutionCommand({
@@ -225,7 +229,7 @@ export async function queryAthena(query: string): Promise<EventTableSchema[] | n
             }
 
             if (QueryExecution.Status.State === 'SUCCEEDED') {
-              return resolve()
+              return resolve(get)
             }
 
             if (QueryExecution.Status.State === 'FAILED') {
@@ -233,13 +237,13 @@ export async function queryAthena(query: string): Promise<EventTableSchema[] | n
             }
 
             if (QueryExecution.Status.State === 'QUEUED' || QueryExecution.Status.State === 'RUNNING') {
-              return poll()
+              backoff = backoff * 2
+              return poll().then(resolve).catch(reject)
             }
-
             return reject('InvalidQueryExecutionState: query execution state is invalid')
           })
         }
-    })
+    }, backoff)
   })
 }
 
@@ -251,6 +255,7 @@ export async function queryAthena(query: string): Promise<EventTableSchema[] | n
 
   const output = await athena.send(resultCmd)
 
+
   if (output.$metadata.httpStatusCode !== 200) {
     throw new Error('FailedQuery: unable to query Athena')
   }
@@ -259,81 +264,42 @@ export async function queryAthena(query: string): Promise<EventTableSchema[] | n
     throw new Error('InvalidQueryResult: query result is undefined')
   }
 
-  if (output.ResultSet.ResultSetMetadata === undefined) {
-    throw new Error('InvalidQueryResultMetadata: query result metadata is undefined')
-  }
-
-  if (output.ResultSet.ResultSetMetadata.ColumnInfo === undefined) {
-    throw new Error('InvalidQueryResultMetadataColumns: query result metadata columns is undefined')
-  }
-
-  const columns = output.ResultSet.ResultSetMetadata.ColumnInfo.map(c => {
+  const columns = output.ResultSet.ResultSetMetadata?.ColumnInfo?.map((c) => {
     return {
       name: c.Name,
       type: c.Type
     }
   })
 
+  output.ResultSet.Rows?.shift()
+
   if (output.ResultSet.Rows === undefined) {
-    throw new Error('InvalidQueryResultRows: query result rows is undefined')
+    return null
   }
 
-  output.ResultSet.Rows.shift()
-
-  const rows = output.ResultSet.Rows.map((row, i) => {
-    const record = {}
-
+  const rows = output.ResultSet.Rows.map((row) => {
     if (row.Data === undefined) {
-      throw new Error('InvalidQueryResultRow: query result row is undefined')
+      return null
     }
 
-    row.Data.forEach((r, i) => {
-      if (Object.keys(r).length === 0) {
-        return
-      }
+    const record = {}
 
-      const type = columns[i].type
+    columns?.forEach((column, i) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const value = row.Data[i].VarCharValue
 
-      if (type === 'date') {
-        record[columns[i].name] = new Date(r.VarCharValue).toISOString()
-      } else {
-        record[columns[i].name] = r.VarCharValue
+      if (value === undefined) {
+        return null
       }
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      record[column.name] = value
     })
+
     return record
   })
-
-  // if (result.ResultSet === undefined) {
-    // throw new Error('InvalidQueryResult: query result is undefined')
-  // }
-
-
-  // const rows = raw.split('\n').filter(r => r !== '')
-
-  // if (rows.length <= 1) {
-  //   return null
-  // }
-
-  // const header = rows.splice(0, 1)[0].split(',').map((h: string) => h.trim().replace(/"/g, ''))
-
-  // const events: EventTableSchema[] = []
-
-  // rows.forEach((curr) => {
-  //   const row = curr.split(',')
-  //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //   // @ts-ignore
-  //   const event: EventTableColumn = {}
-  //   row.forEach((r, i) => {
-  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //     // @ts-ignore
-  //     event[header[i]] = r.trim().replace(/"/g, '')
-  //   })
-
-  //   if (event) {
-  //     events.push(event)
-  //   }
-  // })
-  return events
+  return rows as Partial<EventTableSchema>[]
 }
 
 export function toAthenaTz(ts: number): string {
