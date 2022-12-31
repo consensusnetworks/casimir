@@ -12,10 +12,10 @@ text-rendering: optimizeLegibility;
 }
   
 #app {
-max-width: 1280px;
+/* max-width: 1280px;
 min-width: 360px;
 overflow: auto;
-margin: 0 auto;
+margin: 0 auto; */
 height: 100vh;
 background: #fff;
 }
@@ -83,6 +83,43 @@ background: #fff;
     }
 }
 @layer components {
+    .supported_wallet_box {
+        @apply border border-grey flex 
+        justify-between items-center px-15 py-10
+        w-[90%] mx-auto;       
+    } 
+    .supported_wallet_box:hover {
+        @apply border-blue_3;
+        box-shadow: 0px 0px 5px rgba(128, 171, 255, 0.25);
+    }
+    .supported_wallet_box h6 {
+        @apply text-blue_3 font-bold;
+    }
+    .supported_wallet_box img {
+        @apply h-35 w-35;
+    }
+    .staking_nav_item{
+        @apply inline-block relative;
+    }
+    .staking_nav_item .staking_nav_item_bar{
+        @apply invisible absolute
+        bg-primary h-5 w-[150%] left-[-25%];
+        top: calc(100% - 5px);
+    } 
+    .staking_nav_item:hover .staking_nav_item_bar{
+        @apply visible;
+    }
+    .nav_modal_container{
+        @apply inline-block ;
+    }
+    .nav_modal_container .nav_modal {
+        @apply invisible absolute
+        top-70 border-b-2 border-b-grey_2
+        left-[0px] w-[100vw] pt-20 bg-white z-[100];
+    }
+    .nav_modal_container:hover .nav_modal{
+        @apply visible;
+    }
     .tooltip {
         position: relative;
         display: inline-block;
