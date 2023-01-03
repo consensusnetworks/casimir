@@ -110,8 +110,9 @@ const account = ref(true)
                 View your data across all of  your connected wallets
               </h6>
               <div class="flex gap-70 justify-center items-center mt-25">
+                <!-- to="/assets/crypto" -->
                 <router-link 
-                  to="/assets/crypto"
+                  to="/assets"
                   class="flex gap-15 items-center pb-20 staking_nav_item"
                 >
                   <i
@@ -122,8 +123,9 @@ const account = ref(true)
                   </h6>
                   <div class="staking_nav_item_bar" />
                 </router-link>
+                <!-- to="/assets/nfts" -->
                 <router-link 
-                  to="/assets/nfts"
+                  to="/assets"
                   class="flex gap-15 items-center pb-20 staking_nav_item"
                 >
                   <i

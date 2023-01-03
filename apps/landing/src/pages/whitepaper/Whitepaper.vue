@@ -368,13 +368,6 @@
               faulty or malicious smart contracts. 
             </p>  
           </div>
-          <div>
-            <p class="text-justify items-center text-grey_4 leading-7 mt-[20px] flex flex-wrap gap-0 justify-between">
-              <span class="whitespace-nowrap">What Web3 looks like today</span> 
-              <span class="invisible csm:visible">[Above]</span>
-              <span class="visible csm:invisible">[Side]</span> 
-            </p>  
-          </div>
         </div>
       </div>
 
@@ -640,82 +633,6 @@
           </p>
         </div>
       </div>
-
-      <div class="my-margins flex justify-between flex-wrap gap-gutter border border-dashed border-blue_3 border-[2px] p-margins relative">
-        <div class="floating_pill">
-          Who are we building Casimir for?
-        </div>
-        <div class="w-3/8 min-w-min flex items-center">
-          <h5 class="font-black">
-            Cryptocurrency enthusiast
-          </h5>
-        </div>
-        <div class="w-3/8 min-w-min flex items-center">
-          <h5 class="font-black">
-            &
-          </h5>
-        </div>
-        <div class="w-4/8 min-w-min flex gap-gutter flex-wrap items-center">
-          <h5 class="font-black text-left">
-            Disatvantaged people by egregious policies
-          </h5>
-        </div>
-      </div>
-
-      <hr class="mt-margins bg-blue_3 h-[20px]">
-
-      <h5 class="text-[#d9d9d9] font-semibold mb-[35px] mt-margins">
-        Our Vision
-      </h5>
-
-      <p class="text-justify leading-7 mt-[20px] tracking-wide">
-        - We need robust tools for the user experience, to help them maintain 
-        their own custody and avoid scams. We have the capabilities to scan 
-        smart contracts and understand what wallets bad actors use. The 
-        openness of blockchain protocols should provide the information 
-        needed to protect users, however it's not being put to use.
-        <br><br>
-        - Users need easy but secure ways to back up their keys.
-        <br><br>
-        - Users need to be able to access multiple tokens, NFTs, and other 
-        assets without being forced to use a centralized and vulnerable bridge.
-        <br><br>
-        - Users shouldn’t struggle to find easy tools outside of Cryptocurrency 
-        Exchanges, self custody should be the first option, not second.
-        <br><br>
-        - It’s with this in mind that we set out to build Casimir. 
-      </p>
-
-      <h5 class="text-[#d9d9d9] font-semibold mb-[35px] mt-margins">
-        Our Future
-      </h5>
-      <p class="text-justify leading-7 mt-[20px] mb-[60px] tracking-wide">
-        - We need to solve the basic problems and build a strong foundation to 
-        realize the promises of crypto from Real World Asset Tokenization to the Metaverse.
-        <br><br>
-        - We won’t be building a new protocol blockchain. A lot of interoperability 
-        efforts so far have created yet another blockchain, another website, 
-        another token, and another wallet. The future of Web3 is a multichain 
-        experience and although bridges have been a temporary fix to move between 
-        chains, they’ve become too much of a risk and a better solution would be 
-        to create an interface that allows users to seamlessly move between protocols 
-        and wallets without having to 
-        <br><br>
-        - Already, these major players are censoring certain addresses associated with 
-        the Tornado Cash shutdown. While Tornado Cash was associated with North 
-        Korean hackers and the desire of US government to shutdown its operation 
-        seems justified, actual regulatory policy regarding sanction criteria is 
-        forthcoming. What’s more is the indication of major players like Coinbase 
-        intend to operate just as traditional banks, raising the question of what’s 
-        the actual value proposition of cryptocurrencies? Do they become simply a 
-        highly traceable digital cash where governments are able to shutdown users' 
-        ability to transact unitarily without any due process a la CBDCs in China? 
-        <br><br>
-        - We eventually plan to launch a mobile/web wallet that will give users full 
-        control over the assets from tokens to NFTs and beyond for any major token 
-        protocol. This wallet will have intuitive backups and protection for users 
-        while allowing them to easily access the entire Web3 ecosystem.
-      </p>
     </div>
   </div>
 </template>

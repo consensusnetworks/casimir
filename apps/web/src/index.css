@@ -83,6 +83,16 @@ background: #fff;
     }
 }
 @layer components {
+    .connected_wallets_card{
+        @apply border border-grey px-15 py-10
+        w-[95%] mx-auto; 
+    }
+    .connected_wallets_card h6 {
+        @apply text-blue_3 font-bold;
+    }
+    .connected_wallets_card img {
+        @apply h-35 w-35;
+    }
     .supported_wallet_box {
         @apply border border-grey flex 
         justify-between items-center px-15 py-10
@@ -103,8 +113,8 @@ background: #fff;
     }
     .staking_nav_item .staking_nav_item_bar{
         @apply invisible absolute
-        bg-primary h-5 w-[150%] left-[-25%];
-        top: calc(100% - 5px);
+        bg-primary h-3 w-[150%] left-[-25%];
+        top: calc(100% - 3px);
     } 
     .staking_nav_item:hover .staking_nav_item_bar{
         @apply visible;
