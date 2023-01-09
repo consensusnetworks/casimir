@@ -16,11 +16,8 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Install all package dependencies
+      - name: Install and build all package dependencies
         run: npm ci
-
-      - name: Build all packages
-        run: npm exec --workspaces -- npm run build
         env:
           PUBLIC_STAGE: ${{ env.STAGE }}
 

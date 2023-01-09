@@ -36,11 +36,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install all package dependencies
+      - name: Install and build all package dependencies
         run: npm ci
-
-      - name: Build all packages
-        run: npm exec --workspaces -- npm run build
         env:
           PUBLIC_STAGE: ${{ env.STAGE }}
 

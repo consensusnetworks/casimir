@@ -24,11 +24,17 @@ const forks = {
     }
 }
 
+console.log('Profile', process.env.PROFILE)
+
 /** The name of the CDK project */
 const project = process.env.PROJECT || 'casimir'
 
 /** The default development stage of the CDK project */
 const stage = process.env.STAGE || 'dev'
+
+/** Pascal case representations of CDK variables */
+const Project = pascalCase(project as string)
+const Stage = pascalCase(stage as string)
 
 /**
  * Run a Casimir dev server
@@ -78,7 +84,12 @@ void async function () {
         const infrastructure = apps[app as keyof typeof apps].infrastructure
         const services = apps[app as keyof typeof apps].services
 
-        await $`npm run cdk:bootstrap --workspace @casimir/cdk`
+        /** Skip bootstrap if stack exists for current stage (and cdk:bootstrap throws) */
+        try { 
+            await $`npm run cdk:bootstrap --workspace @casimir/cdk`
+        } catch {
+            echo(chalk.bgBlackBright('CDK Toolkit stack for ') + chalk.bgBlue(`${Project}${Stage}`) + chalk.bgBlackBright(' was already bootstrapped. Disregard any CDK errors listed above this line.'))
+        }
         await $`npm run cdk:synth --workspace @casimir/cdk`
 
         let port = 4000
@@ -86,9 +97,6 @@ void async function () {
             process.env[`PUBLIC_${service.toUpperCase()}_PORT`] = `${port}`
 
             $`npm run watch --workspace @casimir/${service}`
-
-            const Project = pascalCase(process.env.PROJECT as string)
-            const Stage = pascalCase(process.env.STAGE as string)
             const Service = pascalCase(service)
 
             try {
@@ -103,8 +111,8 @@ void async function () {
             --warm-containers "LAZY" \
             --port ${port} \
             --template infrastructure/${infrastructure}/cdk.out/${Project}${Service}Stack${Stage}.template.json \
-            --log-file "services/${service}/mock-logs.txt"` // \
-            // --profile ${'consensus-networks-dev'}`
+            --log-file "services/${service}/mock-logs.txt" \
+            --profile ${process.env.PROFILE || 'consensus-networks-dev'}`
 
             ++port
         }

@@ -6,6 +6,15 @@
       </button>
     </div>
     <div>
+      <h5>Are you logged in?</h5>
+      <div>{{ loggedIn ? 'Yes!' : 'No.' }}</div>
+      <h5>Primary Account:</h5>
+      <div>{{ primaryAccount ? primaryAccount : 'Please log in first.' }}</div>
+      <button @click="setPrimaryWalletAccount()">
+        Set Primary Account
+      </button>
+    </div>
+    <div>
       <button
         class="btn-save-remove-account"
         @click="addAccount(selectedProvider, selectedAccount)"
@@ -37,7 +46,7 @@
       </ul>
     </div>
     <div class="staking-container">
-      <button @click="getUserPools">
+      <button @click="getUserPools(selectedAccount)">
         What do I have staked where?
       </button>
       <ul>
@@ -202,13 +211,16 @@ const walletConnectAccountsResult = ref<string>('Address Not Active')
 
 const { addAccount, removeAccount, user } = useUsers()
 const {
+  loggedIn,
   selectedProvider,
   selectedAccount,
+  primaryAccount,
   toAddress,
   amount,
   amountToStake,
   pools,
   connectWallet,
+  setPrimaryWalletAccount,
   sendTransaction,
   signMessage,
   deposit,

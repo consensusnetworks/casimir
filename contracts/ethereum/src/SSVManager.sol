@@ -343,11 +343,6 @@ contract SSVManager is ChainlinkClient {
             string.concat("http://127.0.0.1:8000?pooId=", Strings.toString(_poolId))
         );
 
-        request.add(
-            "path", 
-            "poolId"
-        );
-
         // Sends the request
         return sendChainlinkRequest(request, linkFee);
     }
@@ -362,14 +357,34 @@ contract SSVManager is ChainlinkClient {
         public
         recordChainlinkFulfillment(_requestId)
     {
-        console.log('Received oracle data', _data);
+        console.log('Received pool validator init', _data);
 
-        /// Hardcode override for mock oracle data
+        /// Hardcoded for mock oracle fulfillment
         uint32 poolId = uint32(_lastPoolId.current());
         Pool storage pool = pools[poolId];
         pool.operatorIds = [uint32(616), uint32(799), uint32(814), uint32(594)];
         pool.validatorPublicKey = "0x8420572d646a9b9738d0d411e070f3857c120b1f3d3153bb05b5e28889a77dfc639ac2b94f34cdf84f502740166e4ebe";
         emit ValidatorInitFullfilled(poolId, pool.operatorIds, pool.validatorPublicKey);
+
+        /// Register the pool validator and deposit
+        stakePool(poolId);
+    }
+
+    /**
+     * @notice Stakes a pool
+     *
+     * @param _poolId - the stake pool's ID
+     */
+    function stakePool(uint32 _poolId) private view {
+        Pool storage pool = pools[_poolId];
+        console.log('Staking pool', _poolId, 'to validator', pool.validatorPublicKey);
+        
+        // beaconDepositor.deposit{ value: pool.balance.stake }(
+        //     pool.validatorPublicKey, // bytes
+        //     address(this), // bytes
+        //     signature, // bytes
+        //     depositData // bytes32
+        // );
     }
 
     /**

@@ -16,5 +16,14 @@ export default function useSSV() {
         return new ethers.Contract(address, abi) as SSVManager
     })()
 
-    return { ssv }
+    async function getSSVFeePercent(signer: ethers.Signer) {
+        const ssvProvider = ssv.connect(signer as ethers.Signer)
+        const fees = await ssvProvider.getFees()
+        const { LINK, SSV } = fees
+        const feesTotalPercent = LINK + SSV
+        const feesRounded = Math.round(feesTotalPercent * 100) / 100
+        return feesRounded
+    }
+
+    return { ssv, getSSVFeePercent }
 }

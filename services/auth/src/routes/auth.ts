@@ -5,11 +5,10 @@ const router = express.Router()
 
 const { getMessage, updateMessage } = useUsers()
 
-router.get('/:address', async (req: express.Request, res: express.Response) => {
-    const { address } = req.params
-    updateMessage(address)
+router.get('/:provider/:address', async (req: express.Request, res: express.Response) => {
+    const { provider, address } = req.params
+    updateMessage(provider, address)
     const message = getMessage(address)
-    console.log('should see this message log on front-end :>> ', message)
     if (message) {
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
@@ -20,6 +19,8 @@ router.get('/:address', async (req: express.Request, res: express.Response) => {
     }
 })
 
+
+// TODO: Is this being used at all?
 router.post('/:address', async (req: express.Request, res: express.Response) => {
     const { address } = req.params
     const { message } = req.body

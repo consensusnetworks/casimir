@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-
+import useUsers from '@/composables/users'
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
@@ -10,32 +10,11 @@ const props = defineProps({
     }
 })
 
-// To Do: connect this to our Auth and see if an account exsists
-const account = ref(true)
+const { user } = useUsers()
+console.log(user.value)
 
 // To Do: get list of connected wallets
-const connectedWallets = ref([
-    {
-        name: 'Metamask',
-        icon: '/metamask.svg',
-        master: true,
-    },
-    {
-        name: 'Coinbase',
-        icon: '/coinbase.svg',
-        master: false,
-    },
-    {
-        name: 'Wallet Connect',
-        icon: '/walletconnect.svg',
-        master: false,
-    },
-    {
-        name: 'Ledger',
-        icon: '/ledger.svg',
-        master: false,
-    },
-])
+// const connectedWallets = ref(user.value.accounts)
 
 </script>
   
@@ -43,7 +22,7 @@ const connectedWallets = ref([
   <div class="px-gutter">
     <div
       v-if="open"
-      class="text-white flex flex-col slowExpandText mb-gutter uppercase ml-[5px]"
+      class="text-white flex flex-col slowExpandText mb-gutter ml-[5px]"
     >
       <h6> Casimir </h6>
       <h6> Multiwallet </h6>
@@ -54,25 +33,45 @@ const connectedWallets = ref([
     >
       <i class="iconoir-wallet text-[24px]" />
     </div>
-    <div v-if="account">
+    <div v-if="user">
       <div
         v-show="open"
         class="flex mb-gutter overflow-hidden py-[12px] pl-[5px]"
       >
         <!-- List of connected Wallet -->
-        <div :class="!account? 'flex flex-col text-grey_5': 'flex flex-col text-white cursor-default'">
+        <div :class="!user? 'flex flex-col text-grey_5': 'flex flex-col text-white cursor-default'">
+          <span
+            class="slowExpandText text-clip text-body mb-[10px] font-medium whitespace-nowrap"
+          >
+            Connected Wallets
+          </span>
           <div
+            v-if="user.accounts.MetaMask"
+            class="flex mb-[10px]"
+          >
+            <img
+              class="w-[20px]"
+              src="/metamask.svg"
+              alt="Metamask Icon"
+            >
+            <h6
+              class="slowExpandText h-min text-clip ml-gutter mt-[3px] text-body font-medium whitespace-nowrap"
+            >
+              Metamask
+            </h6>
+          </div>
+          <!-- <div
             v-for="item in connectedWallets"
             :key="item.name"
             class="flex mb-[10px]"
           >
-            <div class="flex">
-              <!-- To Do: Make this icon dragable and once it's placed in a wallet, that wallet becomes master wallet -->
-              <!-- <i
+            <div class="flex"> -->
+          <!-- To Do: Make this icon dragable and once it's placed in a wallet, that wallet becomes master wallet -->
+          <!-- <i
                 v-show="item.master && open"
                 class="iconoir-keyframe-align-center text-blue_4 text-[24px] mr-[10px]"
               /> -->
-              <img
+          <!-- <img
                 class="w-[20px]"
                 :src="item.icon"
                 :alt="item.name + ' Icon'"
@@ -84,7 +83,7 @@ const connectedWallets = ref([
             >
               {{ item.name }}
             </h6>
-          </div>
+          </div> -->
           <!-- Will add this back when draggable icon is implemented -->
           <!-- <span
             v-show="open"

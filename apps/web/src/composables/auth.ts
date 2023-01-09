@@ -1,15 +1,18 @@
 import { LoginCredentials } from '@casimir/types'
+import useEnvironment from '@/composables/environment'
+import { ProviderString } from '@/types/ProviderString'
+
+const { authBaseURL } = useEnvironment()
 
 export default function useAuth() {
-    async function getMessage(address: string) {
+    async function getMessage(provider: ProviderString, address: string) {
         const requestOptions = {
             method: 'GET',
             headers: { 
                 'Content-Type': 'application/json'
             }
         }
-        const authBaseUrl = _getAuthBaseUrl()
-        return await fetch(`${authBaseUrl}/auth/${address}`, requestOptions)
+        return await fetch(`${authBaseURL}/auth/${provider}/${address}`, requestOptions)
     }
     /**
      * Logs a user in with an address, message and signed message
@@ -25,21 +28,7 @@ export default function useAuth() {
             },
             body: JSON.stringify(loginCredentials)
         }
-        const authBaseUrl = _getAuthBaseUrl()
-        return await fetch(`${authBaseUrl}/login`, requestOptions)
-    }
-
-    /**
-     * Get the auth base url for the current environment
-     * 
-     * @returns {string} The base URL for the auth API
-     */
-    function _getAuthBaseUrl(): string {
-        if (import.meta.env.PUBLIC_MOCK) {
-            return `http://localhost:${import.meta.env.PUBLIC_AUTH_PORT}`
-        } else {
-            return `https://auth.${import.meta.env.PUBLIC_STAGE || 'dev'}.casimir.co`
-        }
+        return await fetch(`${authBaseURL}/login`, requestOptions)
     }
 
     return {

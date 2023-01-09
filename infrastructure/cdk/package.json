@@ -8,6 +8,7 @@
         "pretest": "export PROJECT=casimir && export STAGE=test",
         "test": "jest",
         "cdk:bootstrap": "npx cdk bootstrap",
+        "cdk:metadata": "npx cdk metadata",
         "cdk:synth": "npx cdk synth --no-staging"
     },
     "devDependencies": {

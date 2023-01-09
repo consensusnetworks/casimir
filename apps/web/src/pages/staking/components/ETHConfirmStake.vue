@@ -4,16 +4,31 @@ import { ref } from 'vue'
 import useFormat from '@/composables/format'
 import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
+import useSSV from '@/composables/ssv'
 
 const { formatDecimalString } = useFormat()
 const { user } = useUsers()
-const { amountToStake, deposit } = useWallet()
+const { amountToStake, selectedProvider, deposit } = useWallet()
+const { getSSVFeePercent } = useSSV()
+
+async function getFee() {
+  try {
+    const fee = await getSSVFeePercent(selectedProvider.value)
+    if (fee % 1 === 0) {
+        return `${fee}.00%`
+    }
+    return `${fee}%`
+  } catch (err){
+    console.error(err)
+    return 'Error connecting to SSV network. Please try again momentarily.'
+  }
+}
 
 const stakingInfo = ref(
     {
         to: 'Distributed SSV Validator',
         amount: formatDecimalString(amountToStake.value),
-        fees: '2.00%',
+        fees: await getFee(),
         expectedRewards: '5.67%',
         from: {
             name: 'MetaMask',
@@ -82,7 +97,7 @@ const handleConfirm = async () => {
         </h6>
       </div>
       <div class="my-[40px] border">
-        <div class="flex justify-between items-center px-[12px] py-[24px]">
+        <div class="flex justify-between items-center px-[24px] py-[18px]">
           <img
             :src="stakingInfo.from.icon"
             :alt="stakingInfo.from.name"
@@ -93,13 +108,13 @@ const handleConfirm = async () => {
           </h6>
         </div>
         <div
-          class="flex justify-between items-center my-[20px] px-[12px] py-[6px]"
+          class="flex justify-between items-center my-[20px] px-[24px] py-[12px] truncate"
         >
-          <h6 class="text-grey_6 font-semibold">
+          <h6 class="text-grey_6 font-semibold whitespace-nowrap truncate">
             {{ stakingInfo.from.account.name }} | 
-            <span class="px-[6px] text-grey_2 sr-only s_xsm:not-sr-only">{{ stakingInfo.from.account.address }}</span>
+            <span class="text-grey_2 sr-only s_md:not-sr-only">{{ stakingInfo.from.account.address }}</span>
           </h6>
-          <h6 class="text-grey_5 font-light">
+          <h6 class="text-grey_5 font-light whitespace-nowrap">
             {{ stakingInfo.from.account.balance }} ETH
           </h6>
         </div>

@@ -29,7 +29,7 @@ void async function () {
     }
 
     // Enable 12-second interval mining for dev networks
-    process.env.INTERVAL_MINING = 'false'
+    process.env.INTERVAL_MINING = 'true'
 
     // Using hardhat local or fork network
     process.env.MOCK_CHAINLINK = 'true'

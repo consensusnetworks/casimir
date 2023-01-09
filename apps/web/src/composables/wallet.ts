@@ -8,6 +8,7 @@ import useEthers from '@/composables/ethers'
 import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
 import useSSV from '@/composables/ssv'
+import useUsers from '@/composables/users'
 import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
@@ -19,19 +20,22 @@ const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
 const selectedProvider = ref<ProviderString>('MetaMask')
 const selectedAccount = ref<string>('0xd557a5745d4560B24D36A68b52351ffF9c86A212')
+const loggedIn = ref(false)
+const primaryAccount = ref('')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
-  const { ssv } = useSSV()
+  const { ssv, getSSVFeePercent } = useSSV()
   const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, loginWithEthers } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
+  const { updatePrimaryAccount } = useUsers()
 
   // Todo should we move these ethers objects to the ethers composable?
   const ethersSignerCreator = {
@@ -41,7 +45,6 @@ export default function useWallet() {
     'Trezor': getEthersTrezorSigner,
     'WalletConnect': getEthersWalletConnectSigner
   }
-  const ethersSignerList = Object.keys(ethersSignerCreator)
 
   const setSelectedProvider = (provider: ProviderString) => {
     selectedProvider.value = provider
@@ -199,32 +202,51 @@ export default function useWallet() {
     let signer = ethersSignerCreator[signerKey](selectedProvider.value)
     if (isWalletConnectSigner(signer)) signer = await signer
     const ssvProvider = ssv.connect(signer as ethers.Signer)
-    const fees = await ssvProvider.getFees()
-    const { LINK, SSV } = fees
-    const feesTotalPercent = LINK + SSV
+    const feesTotalPercent = await getSSVFeePercent(signer as ethers.Signer)
     const depositAmount = parseFloat(amountToStake.value) * ((100 + feesTotalPercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
     const result = await ssvProvider.deposit({ value, type: 0 })
     return await result.wait()
   }
 
-  async function login() {
+  async function login() { 
     if (ethersProviderList.includes(selectedProvider.value)) {
-      const loggedIn = await loginWithEthers(selectedProvider.value, selectedAccount.value)
-      console.log('loggedIn :>> ', loggedIn)
+      const result = await loginWithEthers(selectedProvider.value, selectedAccount.value)
+      console.log('login result :>> ', result)
+      if (!result.error) {
+        loggedIn.value = true
+        primaryAccount.value = result.data
+      } else {
+        alert('There was an error logging in. Please try again.')
+      }
     } else {
       console.log('Login not yet supported for this wallet provider')
     }
   }
 
+  async function setPrimaryWalletAccount() {
+    if (!loggedIn.value) {
+      alert('Please login first')
+    }
+    
+    if (ethersProviderList.includes(selectedProvider.value)) {
+      const result = await updatePrimaryAccount(primaryAccount.value, selectedProvider.value, selectedAccount.value)
+      const resultJSON = await result.json()
+      primaryAccount.value = resultJSON.data.primaryAccount
+    }
+  }
+
   return {
+    loggedIn,
     selectedProvider,
     selectedAccount,
+    primaryAccount,
     toAddress,
     amount,
     amountToStake,
     pools,
     connectWallet,
+    setPrimaryWalletAccount,
     sendTransaction,
     signMessage,
     deposit,
