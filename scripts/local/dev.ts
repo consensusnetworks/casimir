@@ -5,11 +5,6 @@ import { parseStdout } from '@casimir/zx-helpers'
 
 /** Local apps and configuration */
 const apps = {
-    landing: {
-        chains: [],
-        infrastructure: 'cdk',
-        services: []
-    },
     web: {
         chains: ['ethereum'],
         infrastructure: 'cdk',
@@ -23,8 +18,6 @@ const forks = {
         testnet: 'goerli'
     }
 }
-
-console.log('Profile', process.env.PROFILE)
 
 /** The name of the CDK project */
 const project = process.env.PROJECT || 'casimir'
@@ -80,9 +73,9 @@ void async function () {
     /** Default to no trezor emulator */
     const trezor = argv.trezor === 'true'
 
+    const { chains, infrastructure, services } = apps[app as keyof typeof apps]
+
     if (mock) {
-        const infrastructure = apps[app as keyof typeof apps].infrastructure
-        const services = apps[app as keyof typeof apps].services
 
         /** Skip bootstrap if stack exists for current stage (and cdk:bootstrap throws) */
         try { 
@@ -118,7 +111,6 @@ void async function () {
         }
     }
 
-    const chains = apps[app as keyof typeof apps].chains
     for (const chain of chains) {
         if (network) {
             const key = await getSecret(`consensus-networks-ethereum-${network}`)
