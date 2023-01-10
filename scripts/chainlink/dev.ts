@@ -46,16 +46,4 @@ void async function () {
     }
     $`docker compose -f scripts/chainlink/docker-compose.yml up`
 
-    // const matcherPort = 8000
-    // process.env.PUBLIC_MATCHER_PORT = `${matcherPort}`
-    // try {
-    //     if (parseStdout(await $`lsof -ti:${matcherPort}`)) {
-    //         $`kill -9 $(lsof -ti:${matcherPort})`
-    //     }
-    // } catch {
-    //     console.log(`Port ${matcherPort} is available.`)
-    // }
-
-    // $`npm run dev --workspace @casimir/matcher`
-
 }()
