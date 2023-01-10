@@ -1,12 +1,11 @@
-package dkg
+package keygen
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
-	// "github.com/bloxapp/ssv/cli/bootnode"
-	// "github.com/bloxapp/ssv/cli/operator"
 )
 
 // Logger is the default logger
@@ -14,10 +13,11 @@ var Logger *zap.Logger
 
 // RootCmd represents the root command of SSV CLI
 var RootCmd = &cobra.Command{
-	Use:   "dkg",
-	Short: "Casimir SSV DKG",
-	Long:  `Casimir SSV DKG is a CLI for running distributed key generation with SSV operators.`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	Use:   "keygen",
+	Short: "Casimir Keygen",
+	Long:  `Casimir Keygen is a CLI for managing multi-party key generation.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Running Casimir Keygen")
 	},
 }
 
@@ -31,7 +31,4 @@ func Execute(appName, version string) {
 	}
 }
 
-func init() {
-	// RootCmd.AddCommand(bootnode.StartBootNodeCmd)
-	// RootCmd.AddCommand(operator.StartNodeCmd)
-}
+func init() {}
