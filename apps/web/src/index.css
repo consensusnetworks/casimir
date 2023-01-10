@@ -10,6 +10,29 @@ text-rendering: optimizeLegibility;
 -moz-osx-font-smoothing: grayscale;
 -webkit-text-size-adjust: 100%;
 }
+
+/* scrollbar stuff works for all browsers except firefox... */
+::-webkit-scrollbar {
+width: 5px;
+border-radius: 50%;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+background: #F2F2F2;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+background: #8c8c8c;
+width: 3px;
+border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+background: #555;
+}
   
 #app {
 /* max-width: 1280px;
@@ -83,6 +106,13 @@ background: #fff;
     }
 }
 @layer components {
+    .toggle{
+        @apply w-40 h-20 border border-blue_2 rounded-[25px]
+        flex items-center px-5;
+    }
+    .toggle_center {
+        @apply w-10 h-10 bg-blue_2 rounded-[25px];
+    }
     .connected_wallets_card{
         @apply border border-grey px-15 py-10
         w-[95%] mx-auto; 

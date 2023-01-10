@@ -4,7 +4,7 @@
 
 <template>
   <div class="py-margins">
-    <div class="bg-blue_3 text-grey_1 py-gutter px-margins mb-margins">
+    <div class="bg-blue_4 text-white py-gutter px-margins mb-margins">
       <p class="text-justify leading-6 tracking-wide">
         <span class="font-bold ">Note:</span>
         This started out as an internal document, reconfirming our 
@@ -28,7 +28,7 @@
       </p>
     </div>
     <div class="px-margins">
-      <h4 class="text-grey_2 font-bold my-[35px]">
+      <h4 class="text-grey_3 font-bold my-[35px]">
         Why we're building Casimir
       </h4>
       <p class="text-justify leading-7 my-[20px] tracking-wide">
@@ -59,8 +59,8 @@
       <div class="grid grid-cols-2 csm:grid-cols-1 gap-margins">
         <div class="col-span-1 flex flex-col justify-between">
           <div>
-            <h5 class="text-[#d9d9d9] font-semibold my-[35px]">
-              Bridge Attacks
+            <h5 class="text-grey_4 font-semibold my-[35px]">
+              Bridge attacks
             </h5>
 
             <p class="text-justify leading-7 csm:mb-[20px] tracking-wide">
@@ -111,8 +111,8 @@
             />
           </div>
           <div>
-            <h5 class="text-[#d9d9d9] font-semibold my-[35px]">
-              Decentralized in Name Only
+            <h5 class="text-grey_4 font-semibold my-[35px]">
+              Decentralized in name only
             </h5>
 
             <p class="text-justify leading-7 my-[20px] tracking-wide">
@@ -158,8 +158,8 @@
           </div>
         </div>
         <div class="col-span-1">
-          <h5 class="text-[#d9d9d9] font-semibold my-[35px]">
-            The Rise and Fall of CeDeFi
+          <h5 class="text-grey_4 font-semibold my-[35px]">
+            The rise and fall of CeDeFi
           </h5>
 
           <p class="text-justify leading-7 my-[20px] tracking-wide">
@@ -268,7 +268,7 @@
         </div>
       </div>
 
-      <h5 class="text-[#d9d9d9] font-semibold my-[35px]">
+      <h5 class="text-grey_4 font-semibold my-[35px]">
         Decentralization
       </h5>
       
@@ -355,7 +355,7 @@
         </div>
         <div class="col-span-4 flex flex-col justify-between">
           <div>
-            <h5 class="text-[#d9d9d9] font-semibold mb-[35px]">
+            <h5 class="text-grey_4 font-semibold mb-[35px]">
               User experience
             </h5>
 
@@ -384,7 +384,7 @@
       </p>
       <div class="my-margins flex justify-center border border-dashed border-blue_3 border-[2px] p-margins relative">
         <div class="floating_pill">
-          Metamask's Responds with a tweet...
+          Metamask's responds with a tweet...
         </div>
         <ImgModal 
           src="metamask-tweet.png"
@@ -449,7 +449,7 @@
         to take full advantage of the protocols they use.
       </p>
       <hr class="mt-margins bg-blue_3 h-[20px]">
-      <h5 class="text-[#d9d9d9] font-semibold mb-[35px] mt-margins">
+      <h5 class="text-grey_4 font-semibold mb-[35px] mt-margins">
         How we’re building Casimir
       </h5>
       <div class="grid grid-cols-8 csm:grid-cols-1 gap-margins my-[55px]">
@@ -477,12 +477,12 @@
             width="100%"
           />
           <span class="text-grey_4">
-            Casimir's Design
+            Casimir's design
           </span>
         </div>
       </div>
-      <h5 class="text-[#d9d9d9] font-semibold mb-[35px] mt-margins">
-        Improving the User Experience through Decentralization
+      <h5 class="text-grey_4 font-semibold mb-[35px] mt-margins">
+        Improving the user experience through decentralization
       </h5>
       <p class="text-justify leading-7 mt-[20px] tracking-wide">
         We’re starting bottom up. Unlike current UIs, designed with traditional Web2 architectures, 
@@ -504,7 +504,7 @@
         Transparency.
       </p>
 
-      <h5 class="text-[#d9d9d9] font-semibold mb-[35px] mt-margins">
+      <h5 class="text-grey_4 font-semibold mb-[35px] mt-margins">
         Usability
       </h5>
 
@@ -536,7 +536,7 @@
         </div>
       </div>
 
-      <h5 class="text-[#d9d9d9] font-semibold mb-[35px] mt-margins">
+      <h5 class="text-grey_4 font-semibold mb-[35px] mt-margins">
         Security
       </h5>
       
@@ -569,7 +569,7 @@
         </div>
       </div>
 
-      <h5 class="text-[#d9d9d9] font-semibold mb-[35px] mt-margins">
+      <h5 class="text-grey_4 font-semibold mb-[35px] mt-margins">
         Transparency
       </h5>
       
