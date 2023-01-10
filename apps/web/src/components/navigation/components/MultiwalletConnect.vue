@@ -51,6 +51,8 @@ onMounted(()=>{
   checkForWallets()
 })
 
+const addWalletAddress = ref('')
+
 const copyWalletAddress = (text) => {
   navigator.clipboard.writeText(text)
 }
@@ -66,11 +68,39 @@ const copyWalletAddress = (text) => {
         :class="hasWallets? 'col-span-1':'col-span-2'"
         class="flex flex-col gap-15 h-[500px] overflow-auto"
       >
-        <button class="supported_wallet_box">
+        <!-- TD: make alerts for Metamask and others to remind them to have that account connected when connecting -->
+        <!-- Only show when a user is connected -->
+        <div
+          v-if="hasWallets"
+          class="supported_wallet_box flex gap-15"
+        >
+          <input
+            v-model="addWalletAddress"
+            type="text"
+            placeholder="Add wallet by address"
+            class="outline-none w-full truncate"
+          >
+          <button 
+            class="iconoir-cancel text-[20px] 
+            px-2 py-2 "
+            @click="addWalletAddress = ''"
+          />
+          <div class="w-1 h-full bg-grey_3" />
+          <!-- TD: @Chris add a way for a user to connect wallet by address -->
+          <button 
+            class="iconoir-arrow-right text-[24px] hover:bg-blue_3
+            px-2 py-2 rounded-[25px] hover:text-white "
+          />
+        </div>
+        <button
+          class="supported_wallet_box relative"
+          @click="connectWallet('MetaMask')"
+        >
           <img
             src="/metamask.svg"
             alt=""
           >
+          
           <h6 class="sr-only s_md:not-sr-only">
             Metamask
           </h6>
@@ -79,7 +109,10 @@ const copyWalletAddress = (text) => {
             M
           </h6>
         </button>
-        <button class="supported_wallet_box">
+        <button
+          class="supported_wallet_box"
+          @click="connectWallet('WalletConnect')"
+        >
           <div class="flex items-center gap-15">
             <img
               src="/walletconnect.svg"
@@ -98,7 +131,10 @@ const copyWalletAddress = (text) => {
             WC
           </h6>
         </button>
-        <button class="supported_wallet_box">
+        <button
+          class="supported_wallet_box"
+          @click="connectWallet('CoinbaseWallet')"
+        >
           <img
             src="/coinbase.svg"
             alt=""
@@ -110,7 +146,11 @@ const copyWalletAddress = (text) => {
             C
           </h6>
         </button>
-        <button class="supported_wallet_box">
+        <!-- TD: Add modal to this for selecting which act they want to conenct with -->
+        <button
+          class="supported_wallet_box"
+          @click="connectWallet('Ledger')"
+        >
           <img
             src="/ledger.svg"
             alt=""
@@ -122,7 +162,10 @@ const copyWalletAddress = (text) => {
             L
           </h6>
         </button>
-        <button class="supported_wallet_box">
+        <button
+          class="supported_wallet_box"
+          @click="connectWallet('IoPay')"
+        >
           <img
             src="/iopay.svg"
             alt=""
@@ -134,7 +177,10 @@ const copyWalletAddress = (text) => {
             IP
           </h6>
         </button>
-        <button class="supported_wallet_box">
+        <button
+          class="supported_wallet_box"
+          @click="connectWallet('Phantom')"
+        >
           <img
             src="/phantom.svg"
             alt=""
@@ -146,8 +192,9 @@ const copyWalletAddress = (text) => {
             PH
           </h6>
         </button>
+        <!-- TD: Add keplr once implemented by @chris -->
         <button
-          class="supported_wallet_box opacity-[0.5]"
+          class="supported_wallet_box opacity-50"
           disabled
         >
           <img
@@ -161,7 +208,10 @@ const copyWalletAddress = (text) => {
             K
           </h6>
         </button>
-        <button class="supported_wallet_box">
+        <button
+          class="supported_wallet_box"
+          @click="connectWallet('Trezor')"
+        >
           <img
             src="/trezor.svg"
             alt=""
@@ -193,7 +243,7 @@ const copyWalletAddress = (text) => {
           <span class="text-body text-grey_3">
             Hide Wallets
           </span>
-          <div 
+          <button 
             class="toggle"
             :class="hideInfo? 'border-primary justify-end':''"
             @click="hideInfo = !hideInfo"
@@ -202,8 +252,9 @@ const copyWalletAddress = (text) => {
               class="toggle_center"
               :class="hideInfo? 'bg-primary':''"
             />
-          </div>
+          </button>
         </div>
+        <!-- TD: Add a div for wallets connected by address and not one of our supported wallet providors -->
         <div 
           v-if="user.accounts.MetaMask"
           class="connected_wallets_card"

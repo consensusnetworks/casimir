@@ -57,21 +57,21 @@ watch(router.currentRoute,  () => {
         </component>
         <div
           v-else
-          class="border border-grey px-[25px] py-[50px] flex justify-between"
+          class="border border-grey px-[25px] py-[50px] flex justify-between items-center"
         >
-          <div class="flex">
+          <div class="flex items-center">
             <div class="tooltip">
               <img
                 src="/ETH.svg"
                 alt="eth icon"
                 class="w-[50px] h-[50px] mr-[20px]"
               >
-              <span class="tooltiptext text-body font-bold">
+              <span class="tooltip_text tooltip_bottomright text-body font-bold">
                 Ethereum Icon
               </span>
             </div>
             
-            <div class="flex flex-col justify-between  sr-only s_xsm:not-sr-only">
+            <div class="flex flex-col gap-10 sr-only s_xsm:not-sr-only">
               <h6 class="font-bold">
                 Ethereum Staking
               </h6>
@@ -80,18 +80,20 @@ watch(router.currentRoute,  () => {
               </h6>
             </div>
           </div>
-          <div class="tooltip">
-            <div class="flex flex-col justify-between gap-[15px] sr-only s_sm:not-sr-only">
-              <h6 class="font-medium">
-                Available
-              </h6>
-              <h6 class="flex font-medium text-grey_3">
-                {{ formatDecimalString(user.balance || '0.0') }} |&nbsp;<USDAmount :ether-amount="(user.balance || '0.0')" />
-              </h6>
+          <div>
+            <div class="tooltip">
+              <div class="flex flex-col justify-between gap-[15px] sr-only s_sm:not-sr-only">
+                <h6 class="font-medium">
+                  Available
+                </h6>
+                <h6 class="flex font-medium text-grey_3">
+                  {{ formatDecimalString(user.balance || '0.0') }} |&nbsp;<USDAmount :ether-amount="(user.balance || '0.0')" />
+                </h6>
+              </div>
+              <span class="tooltip_text tooltip_bottomcenter text-body font-bold">
+                ETH avaiable for staking: total of all connected wallets
+              </span>
             </div>
-            <span class="tooltiptext text-body font-bold">
-              ETH avaiable for staking: total of all connected wallets
-            </span>
           </div>
           
           <div class="tooltip">
@@ -103,7 +105,7 @@ watch(router.currentRoute,  () => {
                 {{ formatDecimalString(user.stake || '0.0') }} |&nbsp;<USDAmount :ether-amount="(user.stake || '0.0')" />
               </h6>
             </div>
-            <span class="tooltiptext text-body font-bold">
+            <span class="tooltip_text tooltip_bottomcenter text-body font-bold">
               ETH currently staked: total of all connected wallets
             </span>
           </div>
@@ -117,7 +119,7 @@ watch(router.currentRoute,  () => {
                 {{ formatDecimalString(user.rewards || '0.0') }} |&nbsp;<USDAmount :ether-amount="(user.rewards || '0.0')" />
               </h6>
             </div>
-            <span class="tooltiptext text-body font-bold">
+            <span class="tooltip_text tooltip_bottomcenter text-body font-bold">
               ETH rewards from staking: total of all connected wallets
             </span>
           </div>

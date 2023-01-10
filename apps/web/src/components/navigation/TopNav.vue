@@ -68,7 +68,7 @@ const account = ref(true)
             class="h-70 flex gap-15 items-center"
           >
             <img
-              src="staking-icon-black.svg"
+              src="/staking-icon-black.svg"
               alt="Staking Icon"
               class="h-16"
               :class="!account? 'opacity-50': 'opacity-100'"
