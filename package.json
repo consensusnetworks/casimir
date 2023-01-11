@@ -56,7 +56,7 @@
     "http-proxy-middleware": "^2.0.6",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.0",
-    "release-it": "^10.0.3",
+    "release-it": "^15.6.0",
     "zx": "^7.1.1"
   },
   "lint-staged": {
