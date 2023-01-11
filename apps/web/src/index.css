@@ -10,12 +10,35 @@ text-rendering: optimizeLegibility;
 -moz-osx-font-smoothing: grayscale;
 -webkit-text-size-adjust: 100%;
 }
+
+/* scrollbar stuff works for all browsers except firefox... */
+::-webkit-scrollbar {
+width: 5px;
+border-radius: 50%;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+background: #F2F2F2;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+background: #8c8c8c;
+width: 3px;
+border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+background: #555;
+}
   
 #app {
-max-width: 1280px;
+/* max-width: 1280px;
 min-width: 360px;
 overflow: auto;
-margin: 0 auto;
+margin: 0 auto; */
 height: 100vh;
 background: #fff;
 }
@@ -83,27 +106,193 @@ background: #fff;
     }
 }
 @layer components {
-    .tooltip {
-        position: relative;
-        display: inline-block;
+    .toggle{
+        @apply w-40 h-20 border border-blue_2 rounded-[25px]
+        flex items-center px-5;
     }
-    .tooltip .tooltiptext {
-        visibility: hidden;
-        background-color: black;
-        color: #fff;
-        text-align: center;
-        padding: 6px 12px;
+    .toggle_center {
+        @apply w-10 h-10 bg-blue_2 rounded-[25px];
+    }
+    .connected_wallets_card{
+        @apply border border-grey px-15 py-10
+        w-[95%] mx-auto; 
+    }
+    .connected_wallets_card h6 {
+        @apply text-blue_3 font-bold;
+    }
+    .connected_wallets_card img {
+        @apply h-35 w-35;
+    }
+    .supported_wallet_box {
+        @apply border border-grey flex 
+        justify-between items-center px-15 py-10
+        w-[90%] mx-auto;       
+    } 
+    .supported_wallet_box:hover {
+        @apply border-blue_3;
+        box-shadow: 0px 0px 5px rgba(128, 171, 255, 0.25);
+    }
+    .supported_wallet_box h6 {
+        @apply text-blue_3 font-bold;
+    }
+    .supported_wallet_box img {
+        @apply h-35 w-35;
+    }
+    .staking_nav_item{
+        @apply inline-block relative;
+    }
+    .staking_nav_item .staking_nav_item_bar{
+        @apply invisible absolute
+        bg-primary h-3 w-[150%] left-[-25%];
+        top: calc(100% - 3px);
+    } 
+    .staking_nav_item:hover .staking_nav_item_bar{
+        @apply visible;
+    }
+    .nav_modal_container{
+        @apply inline-block ;
+    }
+    .nav_modal_container .nav_modal {
+        @apply invisible absolute
+        top-70 border-b-2 border-b-grey_2
+        left-[0px] w-[100vw] pt-20 bg-white z-[100];
+    }
+    .nav_modal_container:hover .nav_modal{
+        @apply visible;
+    }
+    /* TD: Fix tooltip locations... for some reason not working... */
+    .tooltip{
+        @apply relative inline-block;
+    }
+    .tooltip .tooltip_text {
+        @apply invisible bg-black text-white
+        text-center px-12 py-8 z-10;
+    }
+    .tooltip:hover .tooltip_text {
+        @apply visible;
+    }
+    .tooltip_topleft{
+        @apply absolute w-max
+        top-[-185%] left-[-90%];
+    }
+    .tooltip_topleft::after {
+        content: " ";
         position: absolute;
-        z-index: 1;
-        /* location of tooltip */
-        top: calc(100% + 5px);
-        right: 0%;
-        margin-left: -60px;
+        top: 100%;
+        right: calc(5px);
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: black transparent transparent transparent;
     }
-    .tooltip:hover .tooltiptext {
-        visibility: visible;
-        transition-delay: 1.0s;
-        transition-property: visibility;
+    .tooltip_topcenter{
+        @apply absolute w-full;
+        top: calc(-100% - 10px);
+    }
+    .tooltip_topcenter::after {
+        content: " ";
+        position: absolute;
+        top: 100%;
+        left: calc(50%);
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: black transparent transparent transparent;
+    }
+    .tooltip_topright{
+        @apply absolute w-max
+        top-[-185%] left-[85%];
+    }
+    .tooltip_topright::after {
+        content: " ";
+        position: absolute;
+        top: 100%;
+        left: calc(10px);
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: black transparent transparent transparent;
+    }
+    .tooltip_middleleft{
+        @apply absolute w-max;
+        top: calc(-25% - 4px);
+        right: calc(100% + 10px);
+    }
+    .tooltip_middleleft::after {
+        content: " ";
+        position: absolute;
+        top: calc(50% - 3px); 
+        left: calc(100% + 5px);
+        rotate: -90deg;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: black transparent transparent transparent;
+    }
+    .tooltip_middleright{
+        @apply absolute w-max;
+        top: calc(25% - 4px);
+        left: calc(100% + 10px);
+    }
+    .tooltip_middleright::after {
+        content: " ";
+        position: absolute;
+        top: calc(45% - 3px); 
+        right: calc(100% );
+        rotate: 90deg;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: black transparent transparent transparent;
+    }
+    .tooltip_bottomleft{
+        @apply absolute w-max;
+        top: calc(100% + 10px);
+        right: calc(100% - 20px);
+    }
+    .tooltip_bottomleft::after {
+        content: " ";
+        position: absolute;
+        bottom: 100%; 
+        right: calc(5px);
+        rotate: 180deg;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: black transparent transparent transparent;
+    }
+    .tooltip_bottomcenter{
+        @apply absolute w-max mx-auto;
+        top: calc(100% + 10px);
+        left: 50%;
+        transform: translate(-50%, 0);
+    }
+    .tooltip_bottomcenter::after {
+        content: " ";
+        position: absolute;
+        bottom: 100%; 
+        left: calc(50%);
+        rotate: 180deg;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: black transparent transparent transparent;
+    }
+    .tooltip_bottomright{
+        @apply absolute w-max;
+        top: calc(100% + 10px);
+        left: calc(100% - 20px);
+    }
+    .tooltip_bottomright::after {
+        content: " ";
+        position: absolute;
+        bottom: 100%; 
+        left: calc(10px);
+        rotate: 180deg;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: black transparent transparent transparent;
     }
     .slider {
         @apply flex items-center justify-between gap-[20px];
