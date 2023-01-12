@@ -28,9 +28,6 @@
       </p>
     </div>
     <div class="px-margins">
-      <h4 class="text-grey_3 font-bold my-[35px]">
-        Why we're building Casimir
-      </h4>
       <p class="text-justify leading-7 my-[20px] tracking-wide">
         It’s always a good idea to revisit your priorities and values 
         especially in this time of uncertainty in blockchain, cryptocurrency, 
