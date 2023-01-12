@@ -50,7 +50,7 @@
         class="w-full h-[120px] overflow-hidden side-anim"
       >
         <h3 class="font-medium text-white mb-[25px] nav-xsm:text-[24px] nav-xsm:leading-[30px] nav-xsm:font-semibold">
-          Why are we building Casimir
+          Why We're Building Casimir
         </h3>
         <h5 class="text-blue_1 font-light nav-xsm:text-[16px] nav-xsm:leading-[20px]">
           Written by Nathan Miller
