@@ -5,11 +5,19 @@ import { MessageInit } from '@/interfaces/MessageInit'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 
+import bitcoinLedgerSigner from '@casimir/bitcoin-ledger-signer'
+
 const ledgerPath = 'm/44\'/60\'/0\'/0/0'
 
 export default function useLedger() {
   const { ethereumURL, ledgerType, speculosURL } = useEnvironment()
   const { getGasPriceAndLimit } = useEthers()
+
+  async function getBitcoinLedgerSigner() {
+      const bitcoinSigner = await bitcoinLedgerSigner()
+      console.log('bitcoinSigner in ledger.ts :>> ', bitcoinSigner)
+      return bitcoinSigner
+  }
 
   function getEthersLedgerSigner() {
     const options = {
@@ -21,9 +29,14 @@ export default function useLedger() {
     return new EthersLedgerSigner(options)
   }
 
-  async function getLedgerAddress() {
-    const signer = getEthersLedgerSigner()
-    return await signer.getAddress()
+  async function getLedgerAddress(blockchain: BlockchainString) {
+    let signer
+    if (blockchain === 'Bitcoin') {
+      console.log('working on this')
+    } else if (blockchain === 'Ethereum') {
+      signer = getEthersLedgerSigner()
+      return await signer.getAddress()
+    }
   }
 
   async function sendLedgerTransaction({ from, to, value }: TransactionInit) {
@@ -55,6 +68,7 @@ export default function useLedger() {
     ledgerPath,
     getLedgerAddress,
     getEthersLedgerSigner,
+    getBitcoinLedgerSigner,
     signLedgerMessage,
     sendLedgerTransaction,
   }
