@@ -61,11 +61,6 @@ export class LandingStack extends Stack {
       accessControl: BucketAccessControl.PRIVATE
     })
 
-    new BucketDeployment(this, `${project}${this.service}BucketDeployment${stage}`, {
-      destinationBucket: bucket,
-      sources: [Source.asset(this.assetPath)]
-    })
-
     const originAccessIdentity = new OriginAccessIdentity(this, `${project}${this.service}OriginAccessIdentity${stage}`)
     bucket.grantRead(originAccessIdentity)
 
@@ -91,6 +86,13 @@ export class LandingStack extends Stack {
       },
       domainNames: [serviceDomain, [dnsRecords.landing, serviceDomain].join('.')],
       certificate
+    })
+
+    new BucketDeployment(this, `${project}${this.service}BucketDeployment${stage}`, {
+      destinationBucket: bucket,
+      sources: [Source.asset(this.assetPath)],
+      distribution,
+      distributionPaths: ['/*']
     })
 
     new route53.ARecord(this, `${project}${this.service}DnsARecord${stage}`, {
