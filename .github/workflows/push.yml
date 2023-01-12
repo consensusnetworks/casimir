@@ -1,8 +1,7 @@
 name: Push
 on:
   push:
-    branches:
-      - develop
+    branches: [develop]
 
 env:
   PROJECT: casimir

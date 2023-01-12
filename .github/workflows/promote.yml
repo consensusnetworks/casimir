@@ -2,8 +2,7 @@ name: Promote
 
 on:
   push:
-    branches:
-      - develop
+    branches: [develop]
 
 jobs:
   promote:

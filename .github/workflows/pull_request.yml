@@ -2,9 +2,7 @@ name: Pull request
 
 on:
   pull_request:
-    branches:
-      - master
-      - develop
+    branches: [master, develop]
 
 jobs:
   test:
