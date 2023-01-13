@@ -54,7 +54,7 @@ jobs:
           git checkout ${GITHUB_REF##*/} -- package.json package-lock.json CHANGELOG.md
           git add -A
           git diff-index --quiet HEAD ||  git commit -am "Sync released version files (skip deploy)"
-          git push origin $TARGET_BRANCH
+          git push --force origin $TARGET_BRANCH
         env:
           TARGET_BRANCH: develop
           
