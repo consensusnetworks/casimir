@@ -136,6 +136,7 @@ void async function () {
     }
 
     if (ledger) {
+        console.log('LEDGER', ledger)
         const port = 5001
         try { 
             if (parseStdout(await $`lsof -ti:${port}`)) {
@@ -147,12 +148,15 @@ void async function () {
 
         process.env.PUBLIC_SPECULOS_PORT = `${port}`
         process.env.PUBLIC_LEDGER_APP = ledger
-
-        $`npm run dev:ledger --app=${ledger}`
+        $`scripts/ledger/emulate -a ${ledger}`
+        /** Wait to push proxy announcement later in terminal run */
+        setTimeout(() => {
+            $`npx esno scripts/ledger/proxy.ts`
+        }, 5000)
     }
 
     if (trezor) {
-        $`npm run dev:trezor`
+        $`scripts/trezor/emulate`
     }
 
     $`npm run dev --workspace @casimir/${app}`
