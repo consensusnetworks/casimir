@@ -2,7 +2,7 @@ import Btc from '@ledgerhq/hw-app-btc'
 import useTransports from './providers/transports'
 import { BitcoinLedgerSignerOptions } from './interfaces/BitcoinLedgerSignerOptions'
 
-const defaultPath = '44\'/0\'/0\'/0/0'
+const defaultPath = '84\'/0\'/0\'/0/0' // Legacy addresses: '44\'/0\'/0\'/0/0', Segwit: '49\'/0\'/0\'/0/0', Native Segwit: '84\'/0\'/0\'/0/0'
 const defaultType = 'usb'
 const { createUSBTransport, createSpeculosTransport } = useTransports()
 const transportCreators = {
@@ -63,7 +63,10 @@ export default class BitcoinLedgerSigner {
     }
 
     async getAddress(): Promise<string> {
-        const { bitcoinAddress: address } = await this._retry((btc) => btc.getWalletPublicKey(this.path))
+        const { bitcoinAddress: address } = await this._retry((btc) => btc.getWalletPublicKey(
+            this.path,
+            { verify: false, format: 'bech32'}
+        ))
         return address
     }
 

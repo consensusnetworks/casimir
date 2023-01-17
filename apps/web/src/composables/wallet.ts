@@ -37,6 +37,10 @@ export default function useWallet() {
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
   const { updatePrimaryAccount } = useUsers()
+  const getLedgerAddress = {
+    'bitcoin': getBitcoinLedgerAddress,
+    'ethereum': getEthersLedgerAddress
+  }
 
   const setSelectedProvider = (provider: ProviderString) => {
     selectedProvider.value = provider
@@ -62,11 +66,7 @@ export default function useWallet() {
         const address = await getIoPayAddress()
         setSelectedAccount(address)
       } else if (provider === 'Ledger') {
-        const getLedgerAddress = {
-          'bitcoin': getBitcoinLedgerAddress,
-          'ethereum': getEthersLedgerAddress
-        }[app as AppString]
-        const address = await getLedgerAddress()
+        const address = await getLedgerAddress[app as AppString]()
         setSelectedAccount(address)
       } else if (provider === 'Trezor') {
         const address = await getTrezorAddress()
