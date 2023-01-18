@@ -1,19 +1,22 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
+import "./interfaces/IPoRAddressList.sol";
 import "./interfaces/IWETH9.sol";
-import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "hardhat/console.sol";
 
 /**
  * @title Manager contract that accepts and distributes deposits
  */
-contract SSVManager is ChainlinkClient {
-    using Chainlink for Chainlink.Request;
+contract SSVManager is IPoRAddressList {
     using Counters for Counters.Counter;
+
+    /**
+     * Structs
+     */
 
     /** Token abbreviations */
     enum Token {
@@ -44,9 +47,9 @@ contract SSVManager is ChainlinkClient {
     /** SSV pool used for running a validator */
     struct Pool {
         Balance balance;
+        uint32[] operatorIds;
         mapping(address => Balance) userBalances;
         string validatorPublicKey;
-        uint32[] operatorIds;
     }
 
     /** User account for storing pool addresses */
@@ -54,6 +57,18 @@ contract SSVManager is ChainlinkClient {
         mapping(uint32 => bool) poolIdLookup;
         uint32[] poolIds;
     }
+
+    /** Validator data */
+    struct Validator {
+        uint32[] operatorIds;
+        string validatorPublicKey;
+        uint32 currentPoolId;
+        bool deposited;
+    }
+
+    /**
+     * Storage
+     */
 
     /** Pool ID generator */
     Counters.Counter _lastPoolId;
@@ -76,19 +91,33 @@ contract SSVManager is ChainlinkClient {
     /** Pool IDs of pools accepting deposits */
     uint32[] private openPoolIds;
 
-    /** Pool IDs of pools completed and staked */
+    /** Pool IDs of pools ready to be staked */
+    uint32[] private readyPoolIds;
+
+    /** Pool IDs of staked pools */
     uint32[] private stakedPoolIds;
 
-    /** Chainlink request job ID */
-    bytes32 private immutable jobId;
-
-    /** Chainlink request fee */
-    uint256 private immutable linkFee;
-
+    /** Chainlink oracle contract address */
     address private oracleAddress;
 
+    /** Chainlink rewards feed aggregator */
+    AggregatorV3Interface internal rewardsFeed;
+
+    /** Validators */
+    mapping(address => Validator) private validators;
+
+    /** Validator addresses */
+    address[] private validatorAddresses;
+
+    /** Open validator addresses */
+    address[] private openValidatorAddresses;
+
+    /**
+     * Events
+     */
+
     /** Event signaling a validator init request fulfillment */
-    event ValidatorInitFullfilled(
+    event ValidatorInitialized(
         uint32 poolId,
         uint32[] operatorIds,
         string validatorPublicKey
@@ -133,17 +162,17 @@ contract SSVManager is ChainlinkClient {
         tokens[Token.SSV] = _ssvTokenAddress;
         tokens[Token.WETH] = _wethTokenAddress;
 
-        /// Set up Chainlink client
-        setChainlinkOracle(_linkOracleAddress);
-        setChainlinkToken(_linkTokenAddress);
-        jobId = '74854cd9ba0a4fb2a12ba8a469afac49';
-        linkFee = (1 * LINK_DIVISIBILITY) / 10;
+        /// Set up Chainlink rewards feed aggregator
+        rewardsFeed = AggregatorV3Interface(_linkOracleAddress);
     }
 
     /**
      * @notice Deposit to the pool manager
      */
     function deposit() external payable {
+
+        // Todo exit if openValidatorAddresses.length is 0
+
         address userAddress = msg.sender;
         uint256 depositAmount = msg.value;
         uint256 time = block.timestamp;
@@ -185,6 +214,7 @@ contract SSVManager is ChainlinkClient {
             /// Deposit to pool
             uint256 poolRequiredAmount = 32000000000000000000 - poolStakeAmount;
             uint256 addStakeAmount;
+
             if (poolRequiredAmount > depositFunds.stakeAmount) {
                 // Deposit remaining stake amount
                 addStakeAmount = depositFunds.stakeAmount;
@@ -193,15 +223,15 @@ contract SSVManager is ChainlinkClient {
                 addStakeAmount = poolRequiredAmount;
                 depositFunds.stakeAmount -= poolRequiredAmount;
 
-                /// Start a new validator to stake pool
-                initValidator(poolId);
-
-                /// Remove pool from open pools when completed
+                /// Remove pool from open pools when ready
                 for (uint i = 0; i < openPoolIds.length - 1; i++) {
                     openPoolIds[i] = openPoolIds[i + 1];
                 }
                 openPoolIds.pop();
-                
+
+                /// Start a new validator to stake pool
+                depositValidator(poolId);
+
                 /// Add completed pool to staked pools
                 stakedPoolIds.push(poolId);
             }
@@ -324,51 +354,25 @@ contract SSVManager is ChainlinkClient {
     /**
      * @dev Init a validator for a pool
      */
-    function initValidator(uint32 _poolId) private {
-        this.requestValidatorInit(_poolId);
-    }
+    function depositValidator(uint32 _poolId) private {
 
-    /**
-     * @notice Get validator init config with operators and deposit data from a DKG ceremony
-     * @return _requestId - ID of the request
-     */
-    function requestValidatorInit(uint32 _poolId) public returns (bytes32 _requestId) {
-        Chainlink.Request memory request = buildChainlinkRequest(
-            jobId,
-            address(this),
-            this.fulfillValidatorInit.selector
-        );
+        // Todo exit if openValidatorAddresses.length is 0
 
-        request.add(
-            "get",
-            string.concat("http://127.0.0.1:8000?pooId=", Strings.toString(_poolId))
-        );
-
-        // Sends the request
-        return sendChainlinkRequest(request, linkFee);
-    }
-
-    /**
-     * @notice Receives the response in the form of uint32
-     *
-     * @param _requestId - id of the request
-     * @param _data - response
-     */
-    function fulfillValidatorInit(bytes32 _requestId, uint32 _data)
-        public
-        recordChainlinkFulfillment(_requestId)
-    {
-        console.log('Received pool validator init', _data);
-
-        /// Hardcoded for mock oracle fulfillment
-        uint32 poolId = uint32(_lastPoolId.current());
-        Pool storage pool = pools[poolId];
-        pool.operatorIds = [uint32(616), uint32(799), uint32(814), uint32(594)];
-        pool.validatorPublicKey = "0x8420572d646a9b9738d0d411e070f3857c120b1f3d3153bb05b5e28889a77dfc639ac2b94f34cdf84f502740166e4ebe";
-        emit ValidatorInitFullfilled(poolId, pool.operatorIds, pool.validatorPublicKey);
+        address validatorAddress = openValidatorAddresses[0];
+        Validator memory validator = validators[validatorAddress];
+        /// Update the pool with validator init data
+        Pool storage pool = pools[_poolId];
+        pool.operatorIds = validator.operatorIds;
+        pool.validatorPublicKey = validator.validatorPublicKey;
 
         /// Register the pool validator and deposit
-        stakePool(poolId);
+        stakePool(_poolId);
+
+        emit ValidatorInitialized(
+            _poolId,
+            pool.operatorIds,
+            pool.validatorPublicKey
+        );
     }
 
     /**
@@ -378,8 +382,13 @@ contract SSVManager is ChainlinkClient {
      */
     function stakePool(uint32 _poolId) private view {
         Pool storage pool = pools[_poolId];
-        console.log('Staking pool', _poolId, 'to validator', pool.validatorPublicKey);
-        
+        console.log(
+            "Staking pool",
+            _poolId,
+            "to validator",
+            pool.validatorPublicKey
+        );
+
         // beaconDepositor.deposit{ value: pool.balance.stake }(
         //     pool.validatorPublicKey, // bytes
         //     address(this), // bytes
@@ -459,5 +468,69 @@ contract SSVManager is ChainlinkClient {
         uint32 _poolId
     ) external view returns (uint32[] memory) {
         return pools[_poolId].operatorIds;
+    }
+
+    /**
+     * @notice Get the latest total rewards (PoR)
+     * @return The latest rewards
+     */
+    function getLatestRewards() public view returns (int) {
+        // prettier-ignore
+        (
+            /*uint80 roundID*/,
+            int rewards,
+            /*uint startedAt*/,
+            /*uint timeStamp*/,
+            /*uint80 answeredInRound*/
+        ) = rewardsFeed.latestRoundData();
+
+        return rewards;
+    }
+
+    function getPoRAddressListLength()
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return validatorAddresses.length;
+    }
+
+    function getPoRAddressList(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view override returns (string[] memory) {
+        if (startIndex > endIndex) {
+            return new string[](0);
+        }
+        endIndex = endIndex > validatorAddresses.length - 1
+            ? validatorAddresses.length - 1
+            : endIndex;
+        string[] memory stringAddresses = new string[](
+            endIndex - startIndex + 1
+        );
+        uint256 currIdx = startIndex;
+        uint256 strAddrIdx = 0;
+        while (currIdx <= endIndex) {
+            stringAddresses[strAddrIdx] = toString(
+                abi.encodePacked(validatorAddresses[currIdx])
+            );
+            strAddrIdx++;
+            currIdx++;
+        }
+        return stringAddresses;
+    }
+
+    function toString(bytes memory data) private pure returns (string memory) {
+        bytes memory alphabet = "0123456789abcdef";
+
+        bytes memory str = new bytes(2 + data.length * 2);
+        str[0] = "0";
+        str[1] = "x";
+        for (uint256 i = 0; i < data.length; i++) {
+            str[2 + i * 2] = alphabet[uint256(uint8(data[i] >> 4))];
+            str[3 + i * 2] = alphabet[uint256(uint8(data[i] & 0x0f))];
+        }
+        return string(str);
     }
 }

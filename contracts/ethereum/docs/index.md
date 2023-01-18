@@ -76,10 +76,10 @@ contract ISwapRouter swapRouter
 
 Uniswap ISwapRouter
 
-### ValidatorInitFullfilled
+### ValidatorInitialized
 
 ```solidity
-event ValidatorInitFullfilled(uint32 poolId, uint32[] operatorIds, string validatorPublicKey)
+event ValidatorInitialized(uint32 poolId, uint32[] operatorIds, string validatorPublicKey)
 ```
 
 Event signaling a validator init request fulfillment
