@@ -37,7 +37,7 @@ async function stream(event: 'stream' | 'subscribe', msg: IpcMessage): Promise<v
 		}
 
 		if (msg.options.chain === 'ethereum') {
-			const service = new EthereumService({url: msg.options.serviceOptions?.url || process.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545'})
+			const service = new EthereumService({url: msg.options.serviceOptions?.url || process.env.PUBLIC_ETHEREUM_URL || 'http://localhost:8545'})
 
 			service.provider.on('block', async (b: number) => {
 				const block = await service.getBlock(b)
@@ -64,7 +64,7 @@ async function stream(event: 'stream' | 'subscribe', msg: IpcMessage): Promise<v
 
 	if (event === 'subscribe') {
 		if (msg.options.chain === 'ethereum') {
-			const service = new EthereumService({url: msg.options.serviceOptions?.url || process.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545'})
+			const service = new EthereumService({url: msg.options.serviceOptions?.url || process.env.PUBLIC_ETHEREUM_URL || 'http://localhost:8545'})
 
 			service.provider.on('block', async (b: number) => {
 				buff.push(b)

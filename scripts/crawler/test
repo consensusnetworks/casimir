@@ -67,15 +67,8 @@ do
 
         CHAIN=$(echo $chain | tr '[:lower:]' '[:upper:]')
         rpc_base=${chain}_${network}
-<<<<<<< HEAD
-<<<<<<< HEAD
+
         export "PUBLIC_${CHAIN}_URL"="${!rpc_base}/$rpc_key"
-=======
-        export PUBLIC_${CHAIN}_RPC="${!rpc_base}/$rpc_key"
->>>>>>> develop
-=======
-        export PUBLIC_${CHAIN}_RPC="${!rpc_base}/$rpc_key"
->>>>>>> develop
     else
         # Pass fork or network to chain-specific script
         commands+=("npm run dev:$chain --fork=$fork")

@@ -1,5 +1,5 @@
 import { $, argv } from 'zx'
-import { parseStdout } from '@casimir/zx-helpers'
+// import { parseStdout } from '@casimir/zx-helpers'
 
 /**
  * Run local a local Chainlink node and fulfill requests
@@ -21,9 +21,19 @@ void async function () {
     process.env.ALLOW_ORIGINS = '*'
     process.env.NODE_NO_NEW_HEADS_THRESHOLD = '0'
 
-    const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
+    const fork = { 
+        mainnet: 'mainnet', 
+        goerli: 'goerli', 
+        true: 'goerli', 
+        false: undefined 
+    }[argv.fork]
+
     if (fork) {
-        const forkingChainId = { mainnet: 1, goerli: 5 }[fork]
+        const forkingChainId = { 
+            mainnet: 1, 
+            goerli: 5 
+        }[fork]
+        
         process.env.ETH_CHAIN_ID = `${forkingChainId}`
     } else {
         process.env.ETH_CHAIN_ID = '1337'
@@ -35,17 +45,5 @@ void async function () {
         console.log('Docker is ready.')
     }
     $`docker compose -f scripts/chainlink/docker-compose.yml up`
-
-    // const matcherPort = 8000
-    // process.env.PUBLIC_MATCHER_PORT = `${matcherPort}`
-    // try {
-    //     if (parseStdout(await $`lsof -ti:${matcherPort}`)) {
-    //         $`kill -9 $(lsof -ti:${matcherPort})`
-    //     }
-    // } catch {
-    //     console.log(`Port ${matcherPort} is available.`)
-    // }
-
-    // $`npm run dev --workspace @casimir/matcher`
 
 }()

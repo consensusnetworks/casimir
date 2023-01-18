@@ -1,4 +1,6 @@
 import { ContractConfig } from './interfaces/ContractConfig'
+import { DeploymentConfig } from './interfaces/DeploymentConfig'
 import { LoginCredentials } from './interfaces/LoginCredentials'
-import { SSVDeploymentConfig } from './interfaces/SSVDeploymentConfig'
-export type { ContractConfig, LoginCredentials, SSVDeploymentConfig }
+import { Operator } from './interfaces/Operator'
+import { Share } from './interfaces/Share'
+export type { ContractConfig, DeploymentConfig, LoginCredentials, Operator, Share }

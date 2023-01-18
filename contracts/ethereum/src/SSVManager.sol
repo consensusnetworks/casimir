@@ -201,6 +201,7 @@ contract SSVManager is ChainlinkClient {
                     openPoolIds[i] = openPoolIds[i + 1];
                 }
                 openPoolIds.pop();
+                
                 /// Add completed pool to staked pools
                 stakedPoolIds.push(poolId);
             }

@@ -4,13 +4,22 @@ import { HardhatUserConfig } from 'hardhat/config'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
-import '@sebasgoldberg/hardhat-wsprovider'
 import 'solidity-docgen'
 import '@openzeppelin/hardhat-upgrades'
 
-const intervalMining = process.env.INTERVAL_MINING === 'true'
+// Seed is provided
+const mnemonic = process.env.BIP39_SEED as string
+const hid = { mnemonic, count: 5 }
+
+// Mining interval is provided
+const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
+const mining = { auto: false, interval: miningInterval * 1000 } // miningInterval in ms
+
+// Live network rpc is provided 
 const hardhatUrl = process.env.PUBLIC_ETHEREUM_URL as string
 const hardhatNetwork = process.env.HARDHAT_NETWORK as string
+
+// Local network fork rpc is provided
 const forkingUrl = process.env.ETHEREUM_FORKING_URL as string
 const forkingNetwork = forkingUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
 const forkingChainId = { mainnet: 1, goerli: 5 }[forkingNetwork]
@@ -50,17 +59,6 @@ const compilerVersions = ['0.8.16']
 const externalCompilerVersions = ['0.4.22', '0.4.24', '0.6.6', '0.6.11', '0.8.4']
 const compilers = [...compilerVersions, ...externalCompilerVersions].map(version => ({ version, settings: compilerSettings }))
 
-const mnemonic = process.env.BIP39_SEED as string
-const hid = {
-  mnemonic,
-  count: 5
-}
-
-const miningInterval = {
-  auto: false,
-  interval: 12000
-}
-
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
   solidity: {
@@ -80,18 +78,31 @@ const config: HardhatUserConfig = {
       accounts: mnemonic ? { ...hid, accountsBalance: '96000000000000000000' } : undefined,
       chainId: forkingChainId || 1337,
       forking: forkingUrl ? { url: forkingUrl } : undefined,
-      mining: intervalMining ? miningInterval : undefined,
+      mining: miningInterval ? mining : undefined,
+      allowUnlimitedContractSize: true,
+      gas: 'auto',
+      gasPrice: 'auto'
+    },
+    ganache: {
+      accounts: mnemonic ? { ...hid } : undefined,
+      url: 'http://127.0.0.1:8545',
       allowUnlimitedContractSize: true,
       gas: 'auto',
       gasPrice: 'auto'
     },
     mainnet: {
       accounts: mnemonic ? { ...hid } : undefined,
-      url: hardhatUrl || ''
+      url: hardhatUrl || '',
+      allowUnlimitedContractSize: true,
+      gas: 'auto',
+      gasPrice: 'auto'
     },
     goerli: {
       accounts: mnemonic ? { ...hid } : undefined,
-      url: hardhatUrl || ''
+      url: hardhatUrl || '',
+      allowUnlimitedContractSize: true,
+      gas: 'auto',
+      gasPrice: 'auto'
     }
   },
   mocha: {

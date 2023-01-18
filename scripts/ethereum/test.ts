@@ -21,14 +21,14 @@ void async function () {
     // Set fork rpc if requested, default fork to goerli if set vaguely
     const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
     if (fork) {
-        const key = await getSecret(`consensus-networks-ethereum-${fork}`)
-        const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
+        // const key = await getSecret(`consensus-networks-ethereum-${fork}`)
+        // const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
+        const url = 'http://73.17.78.116:8545/'
         process.env.ETHEREUM_FORKING_URL = url
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(` fork at ${url}`))
     }
 
-    // Using hardhat local or fork network
-    process.env.MOCK_CHAINLINK = 'true'
+    process.env.CHAINLINK = 'false'
 
     $`npm run test --workspace @casimir/ethereum`
 
