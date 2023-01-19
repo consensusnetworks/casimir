@@ -68,14 +68,6 @@ struct Counters.Counter _lastPoolId
 
 Pool ID generator
 
-### swapFee
-
-```solidity
-uint24 swapFee
-```
-
-Uniswap 0.3% fee tier
-
 ### swapRouter
 
 ```solidity
@@ -83,68 +75,6 @@ contract ISwapRouter swapRouter
 ```
 
 Uniswap ISwapRouter
-
-### tokens
-
-```solidity
-mapping(enum SSVManager.Token => address) tokens
-```
-
-Token addresses
-
-### users
-
-```solidity
-mapping(address => struct SSVManager.User) users
-```
-
-All users who have deposited to pools
-
-### pools
-
-```solidity
-mapping(uint32 => struct SSVManager.Pool) pools
-```
-
-SSV pools
-
-### openPoolIds
-
-```solidity
-uint32[] openPoolIds
-```
-
-Pool IDs of pools accepting deposits
-
-### stakedPoolIds
-
-```solidity
-uint32[] stakedPoolIds
-```
-
-Pool IDs of pools completed and staked
-
-### jobId
-
-```solidity
-bytes32 jobId
-```
-
-Chainlink request job ID
-
-### linkFee
-
-```solidity
-uint256 linkFee
-```
-
-Chainlink request fee
-
-### oracleAddress
-
-```solidity
-address oracleAddress
-```
 
 ### ValidatorInitFullfilled
 
@@ -196,62 +126,6 @@ function deposit() external payable
 
 Deposit to the pool manager
 
-### processDepositFunds
-
-```solidity
-function processDepositFunds(uint256 _depositAmount) private returns (struct SSVManager.DepositFunds)
-```
-
-_Process fee and stake deposit amounts_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _depositAmount | uint256 | - The deposit amount |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct SSVManager.DepositFunds | The fee and stake deposit amounts |
-
-### wrap
-
-```solidity
-function wrap(uint256 _amount) private
-```
-
-_Deposit WETH to use ETH in swaps_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _amount | uint256 | - The amount of ETH to deposit |
-
-### swap
-
-```solidity
-function swap(address _tokenIn, address _tokenOut, uint256 _amountIn) private returns (uint256)
-```
-
-_Swap one token-in for another token-out_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _tokenIn | address | - The token-in address |
-| _tokenOut | address | - The token-out address |
-| _amountIn | uint256 | - The amount of token-in to input |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | The amount of token-out |
-
 ### getFees
 
 ```solidity
@@ -294,14 +168,6 @@ Get the SSV fee percentage to charge on each deposit
 | ---- | ---- | ----------- |
 | [0] | uint32 | The SSV fee percentage to charge on each deposit |
 
-### initValidator
-
-```solidity
-function initValidator(uint32 _poolId) private
-```
-
-_Init a validator for a pool_
-
 ### requestValidatorInit
 
 ```solidity
@@ -330,20 +196,6 @@ Receives the response in the form of uint32
 | ---- | ---- | ----------- |
 | _requestId | bytes32 | - id of the request |
 | _data | uint32 | - response |
-
-### stakePool
-
-```solidity
-function stakePool(uint32 _poolId) private view
-```
-
-Stakes a pool
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _poolId | uint32 | - the stake pool's ID |
 
 ### getOpenPoolIds
 
@@ -498,12 +350,6 @@ Chainlink smart contract developers can use this to test their contracts
 uint256 EXPIRY_TIME
 ```
 
-### MINIMUM_CONSUMER_GAS_LIMIT
-
-```solidity
-uint256 MINIMUM_CONSUMER_GAS_LIMIT
-```
-
 ### Request
 
 ```solidity
@@ -517,12 +363,6 @@ struct Request {
 
 ```solidity
 contract LinkTokenInterface LinkToken
-```
-
-### commitments
-
-```solidity
-mapping(bytes32 => struct MockOracle.Request) commitments
 ```
 
 ### OracleRequest

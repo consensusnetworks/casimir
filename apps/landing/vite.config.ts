@@ -1,14 +1,15 @@
 import vue from '@vitejs/plugin-vue'
-import { UserConfig } from 'vite'
+import { defineConfig } from 'vite'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
 
-const config: UserConfig = {
+export default defineConfig({
+  server: { port: 3000 },
   plugins: [
     vue({ include: [/\.vue$/] })
   ],
   define: {
-    'window.global': 'globalThis',
+    'global': 'globalThis',
   },
   resolve: {
     alias: {
@@ -26,6 +27,4 @@ const config: UserConfig = {
     ]
   },
   envPrefix: 'PUBLIC_'
-}
-
-export default config
+})

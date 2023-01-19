@@ -121,9 +121,15 @@
       <div class="ledger-div">
         <button
           class="ledger-btn"
-          @click="connectWallet('Ledger')"
+          @click="connectWallet('Ledger', 'bitcoin')"
         >
-          {{ ledgerButtonText }}
+          {{ ledgerButtonText }} (Using 'bitcoin' app)
+        </button>
+        <button
+          class="ledger-btn"
+          @click="connectWallet('Ledger', 'ethereum')"
+        >
+          {{ ledgerButtonText }} (Using 'ethereum' app)
         </button>
         <p>
           Connected Ledger Account:

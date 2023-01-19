@@ -13,6 +13,7 @@ import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import { Pool } from '@/interfaces/Pool'
+import { AppString } from '@/interfaces/AppString'
 
 const amount = ref<string>('0.0')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
@@ -32,18 +33,13 @@ export default function useWallet() {
   const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, loginWithEthers } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
-  const { getLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendEthersLedgerTransaction, signEthersLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
   const { updatePrimaryAccount } = useUsers()
-
-  // Todo should we move these ethers objects to the ethers composable?
-  const ethersSignerCreator = {
-    'MetaMask': getEthersBrowserSigner,
-    'CoinbaseWallet': getEthersBrowserSigner,
-    'Ledger': getEthersLedgerSigner,
-    'Trezor': getEthersTrezorSigner,
-    'WalletConnect': getEthersWalletConnectSigner
+  const getLedgerAddress = {
+    'bitcoin': getBitcoinLedgerAddress,
+    'ethereum': getEthersLedgerAddress
   }
 
   const setSelectedProvider = (provider: ProviderString) => {
@@ -53,7 +49,7 @@ export default function useWallet() {
     selectedAccount.value = address
   }
 
-  async function connectWallet(provider: ProviderString) {
+  async function connectWallet(provider: ProviderString, app?: AppString) {
     try {
       setSelectedProvider(provider)
       selectedAccount.value = 'Not Active'
@@ -70,7 +66,7 @@ export default function useWallet() {
         const address = await getIoPayAddress()
         setSelectedAccount(address)
       } else if (provider === 'Ledger') {
-        const address = await getLedgerAddress()
+        const address = await getLedgerAddress[app as AppString]()
         setSelectedAccount(address)
       } else if (provider === 'Trezor') {
         const address = await getTrezorAddress()
@@ -101,7 +97,7 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'IoPay') {
         await sendIoPayTransaction(txInit)
       } else if (selectedProvider.value === 'Ledger') {
-        await sendLedgerTransaction(txInit)
+        await sendEthersLedgerTransaction(txInit)
       } else if (selectedProvider.value === 'Trezor') {
         await sendTrezorTransaction(txInit)
       } else {
@@ -127,7 +123,7 @@ export default function useWallet() {
       } else if (messageInit.providerString === 'IoPay') {
         await signIoPayMessage(messageInit)
       } else if (messageInit.providerString === 'Ledger') {
-        await signLedgerMessage(messageInit)
+        await signEthersLedgerMessage(messageInit)
       } else if (messageInit.providerString === 'Trezor') {
         await signTrezorMessage(messageInit)
       } else {
@@ -197,10 +193,23 @@ export default function useWallet() {
     }))
   }
 
+  /** Todo accept options (specify contract/protocol i.e., ssv) */
   async function deposit() {
-    const signerKey = selectedProvider.value as keyof typeof ethersSignerCreator
-    let signer = ethersSignerCreator[signerKey](selectedProvider.value)
+
+    /** Todo move to ethers.ts: getEthersSigner */
+    const signerCreators = {
+      'Browser': getEthersBrowserSigner,
+      'Ledger': getEthersLedgerSigner,
+      'Trezor': getEthersTrezorSigner,
+      'WalletConnect': getEthersWalletConnectSigner
+    }
+    const signerType = ['MetaMask', 'CoinbaseWallet'].includes(selectedProvider.value) ? 'Browser' : selectedProvider.value
+    const signerCreator = signerCreators[signerType  as keyof typeof signerCreators]
+    let signer = signerCreator(selectedProvider.value)
     if (isWalletConnectSigner(signer)) signer = await signer
+    /***/
+
+    /** Todo move to ssv.ts: depositToSSV */
     const ssvProvider = ssv.connect(signer as ethers.Signer)
     const feesTotalPercent = await getSSVFeePercent(signer as ethers.Signer)
     const depositAmount = parseFloat(amountToStake.value) * ((100 + feesTotalPercent) / 100)

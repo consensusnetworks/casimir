@@ -2,44 +2,19 @@ import vue from '@vitejs/plugin-vue'
 import { UserConfig } from 'vite'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
-import pages from 'vite-plugin-pages'
 import NodeGlobalsPolyfillPlugin from '@esbuild-plugins/node-globals-polyfill'
 import inject from '@rollup/plugin-inject'
+import nodePolyFills from 'rollup-plugin-node-polyfills'
 
-const config: UserConfig = {
-  plugins: [
-    vue({ include: [/\.vue$/] }),
-    pages({
-      dirs: [{ dir: 'src/pages', baseRoute: '' }],
-      extensions: ['vue'],
-    }),
-    inject({
-      Buffer: ['buffer', 'Buffer']
-    }) as Plugin // https://github.com/rollup/plugins/issues/1243
-  ],
-  define: {
-    'global': 'globalThis'
-  },
-  optimizeDeps: {
-    include: ['iotex-antenna'],
-    esbuildOptions: {
-      plugins: [
-        NodeGlobalsPolyfillPlugin({
-          process: true,
-          buffer: true
-        })
-      ],
-    },
-  },
-  build: {
-    commonjsOptions: {
-      include: [/iotex-antenna/, /node_modules/]
-    }
-  },
+export default {
+  server: { port: 3000 },
   resolve: {
-    alias: {
-      '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src'),
-      './runtimeConfig': './runtimeConfig.browser'
+    alias: {  
+      // Polyfill node globals
+      stream: 'rollup-plugin-node-polyfills/polyfills/stream',
+
+      // Alias internal src paths
+      '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src')
     },
     extensions: [
       '.js',
@@ -51,7 +26,31 @@ const config: UserConfig = {
       '.vue',
     ]
   },
+  plugins: [
+    vue({ include: [/\.vue$/] }),
+    inject({
+      Buffer: ['buffer', 'Buffer']
+    }),
+    nodePolyFills()
+  ],
+  define: {
+    'global': 'globalThis'
+  },
+  optimizeDeps: {
+    include: ['iotex-antenna'],
+    esbuildOptions: {
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          buffer: true,
+          process: true
+        })
+      ]
+    },
+  },
+  build: {
+    commonjsOptions: {
+      include: [/iotex-antenna/, /node_modules/]
+    }
+  },
   envPrefix: 'PUBLIC_'
-}
-
-export default config
+} as UserConfig
