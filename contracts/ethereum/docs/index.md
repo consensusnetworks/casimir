@@ -47,7 +47,7 @@ struct Pool {
   struct SSVManager.Balance balance;
   uint32[] operatorIds;
   mapping(address => struct SSVManager.Balance) userBalances;
-  string validatorPublicKey;
+  bytes validatorPublicKey;
 }
 ```
 
@@ -65,11 +65,22 @@ struct User {
 ```solidity
 struct Validator {
   uint32[] operatorIds;
-  string validatorPublicKey;
+  bytes[] encryptedShares;
+  bytes validatorPublicKey;
+  bytes signature;
+  bytes32 depositData;
   uint32 currentPoolId;
-  bool deposited;
+  bool active;
 }
 ```
+
+### beaconDeposit
+
+```solidity
+contract IDepositContract beaconDeposit
+```
+
+Beacon deposit contract
 
 ### _lastPoolId
 
@@ -95,13 +106,21 @@ contract AggregatorV3Interface rewardsFeed
 
 Chainlink rewards feed aggregator
 
-### ValidatorInitialized
+### ValidatorActivated
 
 ```solidity
-event ValidatorInitialized(uint32 poolId, uint32[] operatorIds, string validatorPublicKey)
+event ValidatorActivated(uint32 poolId, uint32[] operatorIds, bytes validatorPublicKey)
 ```
 
-Event signaling a validator init request fulfillment
+Event signaling a validator activation
+
+### ValidatorRegistered
+
+```solidity
+event ValidatorRegistered(uint32 poolId, uint32[] operatorIds, bytes validatorPublicKey)
+```
+
+Event signaling a validator registration
 
 ### ManagerDeposit
 
@@ -122,7 +141,7 @@ Event signaling a user stake to a pool
 ### constructor
 
 ```solidity
-constructor(address _linkOracleAddress, address _swapRouterAddress, address _linkTokenAddress, address _ssvTokenAddress, address _wethTokenAddress) public
+constructor(address _depositAddress, address _linkFeedAddress, address _swapRouterAddress, address _linkTokenAddress, address _ssvTokenAddress, address _wethTokenAddress) public
 ```
 
 Constructor
@@ -131,7 +150,8 @@ Constructor
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _linkOracleAddress | address | - The Chainlink oracle address |
+| _depositAddress | address | – The Beacon deposit address |
+| _linkFeedAddress | address | - The Chainlink data feed address |
 | _swapRouterAddress | address | - The Uniswap router address |
 | _linkTokenAddress | address | - The Chainlink token address |
 | _ssvTokenAddress | address | - The SSV token address |
@@ -279,7 +299,7 @@ Get a pool's balance by pool ID
 ### getPoolValidatorPublicKey
 
 ```solidity
-function getPoolValidatorPublicKey(uint32 _poolId) external view returns (string)
+function getPoolValidatorPublicKey(uint32 _poolId) external view returns (bytes)
 ```
 
 Get a pool's validator public key by pool ID
@@ -294,7 +314,7 @@ Get a pool's validator public key by pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | string | The pool's validator public key |
+| [0] | bytes | The pool's validator public key |
 
 ### getPoolOperatorIds
 
@@ -362,6 +382,61 @@ that would be used when querying the balance of that address._
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | string[] | Array of addresses as strings. |
+
+## IDepositContract
+
+### DepositEvent
+
+```solidity
+event DepositEvent(bytes pubkey, bytes withdrawal_credentials, bytes amount, bytes signature, bytes index)
+```
+
+A processed deposit event.
+
+### deposit
+
+```solidity
+function deposit(bytes pubkey, bytes withdrawal_credentials, bytes signature, bytes32 deposit_data_root) external payable
+```
+
+Submit a Phase 0 DepositData object.
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pubkey | bytes | A BLS12-381 public key. |
+| withdrawal_credentials | bytes | Commitment to a public key for withdrawals. |
+| signature | bytes | A BLS12-381 signature. |
+| deposit_data_root | bytes32 | The SHA-256 hash of the SSZ-encoded DepositData object. Used as a protection against malformed input. |
+
+### get_deposit_root
+
+```solidity
+function get_deposit_root() external view returns (bytes32)
+```
+
+Query the current deposit root hash.
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes32 | The deposit root hash. |
+
+### get_deposit_count
+
+```solidity
+function get_deposit_count() external view returns (bytes)
+```
+
+Query the current deposit count.
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes | The deposit count encoded as a little endian 64-bit number. |
 
 ## IPoRAddressList
 
