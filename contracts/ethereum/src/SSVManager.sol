@@ -54,13 +54,11 @@ contract SSVManager is IPoRAddressList {
     }
     /** Validator data */
     struct Validator {
-        uint32[] operatorIds;
-        bytes[] encryptedShares;
-        bytes validatorPublicKey;
-        bytes signature;
         bytes32 depositData;
-        uint32 currentPoolId;
-        bool active;
+        bytes[] encryptedShares;
+        uint32[] operatorIds;
+        bytes signature;
+        bytes validatorPublicKey;
     }
 
     /***** Storage *****/
@@ -94,18 +92,6 @@ contract SSVManager is IPoRAddressList {
 
     /***** Events *****/
 
-    /** Event signaling a validator activation */
-    event ValidatorActivated(
-        uint32 poolId,
-        uint32[] operatorIds,
-        bytes validatorPublicKey
-    );
-    /** Event signaling a validator registration */
-    event ValidatorRegistered(
-        uint32 poolId,
-        uint32[] operatorIds,
-        bytes validatorPublicKey
-    );
     /** Event signaling a user deposit to the manager */
     event ManagerDeposit(
         address userAddress,
@@ -123,7 +109,18 @@ contract SSVManager is IPoRAddressList {
         uint256 stakeAmount,
         uint256 stakeTime
     );
-
+    /** Event signaling a validator activation */
+    event ValidatorActivated(
+        uint32 poolId,
+        uint32[] operatorIds,
+        bytes validatorPublicKey
+    );
+    /** Event signaling a validator registration */
+    event ValidatorRegistered(
+        uint32[] operatorIds,
+        bytes validatorPublicKey
+    );
+    
     /**
      * @notice Constructor
      * @param _depositAddress – The Beacon deposit address
@@ -214,13 +211,6 @@ contract SSVManager is IPoRAddressList {
 
                 /// Start a new validator to stake pool
                 activateValidator(poolId, validatorAddress);
-
-                /// Remove validator from inactive validators and add to active validators
-                for (uint i = 0; i < inactiveValidatorAddresses.length - 1; i++) {
-                    inactiveValidatorAddresses[i] = inactiveValidatorAddresses[i + 1];
-                }
-                inactiveValidatorAddresses.pop();
-                activeValidatorAddresses.push(validatorAddress);
 
                 /// Remove pool from open pools and add to staked pools
                 for (uint i = 0; i < openPoolIds.length - 1; i++) {
@@ -363,11 +353,16 @@ contract SSVManager is IPoRAddressList {
             validator.depositData // bytes32
         );
 
-        /// Update the pool and validator
+        /// Update the pool
         pool.operatorIds = validator.operatorIds;
         pool.validatorPublicKey = validator.validatorPublicKey;
-        validator.active = true;
-        validator.currentPoolId = _poolId;
+
+        /// Remove validator from inactive validators and add to active validators
+        for (uint i = 0; i < inactiveValidatorAddresses.length - 1; i++) {
+            inactiveValidatorAddresses[i] = inactiveValidatorAddresses[i + 1];
+        }
+        inactiveValidatorAddresses.pop();
+        activeValidatorAddresses.push(_validatorAddress);
 
         emit ValidatorActivated(
             _poolId,
@@ -375,6 +370,35 @@ contract SSVManager is IPoRAddressList {
             pool.validatorPublicKey
         );
     }
+
+    /**
+     * @dev Register a validator to the pool manager
+     */
+    function registerValidator(
+        bytes32 _depositData,
+        bytes[] calldata _encryptedShares, 
+        uint32[] calldata _operatorIds, 
+        bytes calldata _signature, 
+        bytes calldata _validatorPublicKey
+    ) public {
+        address validatorAddress = address(uint160(bytes20(keccak256(_validatorPublicKey))));
+        validators[validatorAddress] = Validator(_depositData, _encryptedShares, _operatorIds, _signature, _validatorPublicKey);
+        inactiveValidatorAddresses.push(validatorAddress);
+
+        emit ValidatorRegistered(
+            _operatorIds,
+            _validatorPublicKey
+        );
+    }
+
+    // /**
+    //  * @dev Unregister a validator from the pool manager
+    //  */
+    // function unRegisterValidator(
+
+    // ) {
+            // Todo mark a validator unregistered (distinguish from inactive)
+    // }
 
     /**
      * @notice Get a list of all open pool IDs
