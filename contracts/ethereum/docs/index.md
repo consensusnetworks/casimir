@@ -45,9 +45,9 @@ struct Fees {
 ```solidity
 struct Pool {
   struct SSVManager.Balance balance;
+  uint32[] operatorIds;
   mapping(address => struct SSVManager.Balance) userBalances;
   string validatorPublicKey;
-  uint32[] operatorIds;
 }
 ```
 
@@ -57,6 +57,17 @@ struct Pool {
 struct User {
   mapping(uint32 => bool) poolIdLookup;
   uint32[] poolIds;
+}
+```
+
+### Validator
+
+```solidity
+struct Validator {
+  uint32[] operatorIds;
+  string validatorPublicKey;
+  uint32 currentPoolId;
+  bool deposited;
 }
 ```
 
@@ -75,6 +86,14 @@ contract ISwapRouter swapRouter
 ```
 
 Uniswap ISwapRouter
+
+### rewardsFeed
+
+```solidity
+contract AggregatorV3Interface rewardsFeed
+```
+
+Chainlink rewards feed aggregator
 
 ### ValidatorInitialized
 
@@ -167,35 +186,6 @@ Get the SSV fee percentage to charge on each deposit
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint32 | The SSV fee percentage to charge on each deposit |
-
-### requestValidatorInit
-
-```solidity
-function requestValidatorInit(uint32 _poolId) public returns (bytes32 _requestId)
-```
-
-Get validator init config with operators and deposit data from a DKG ceremony
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _requestId | bytes32 | - ID of the request |
-
-### fulfillValidatorInit
-
-```solidity
-function fulfillValidatorInit(bytes32 _requestId, uint32 _data) public
-```
-
-Receives the response in the form of uint32
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _requestId | bytes32 | - id of the request |
-| _data | uint32 | - response |
 
 ### getOpenPoolIds
 
@@ -325,6 +315,95 @@ Get a pool's operators by pool ID
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint32[] | The pool's operators |
+
+### getLatestRewards
+
+```solidity
+function getLatestRewards() public view returns (int256)
+```
+
+Get the latest total rewards (PoR)
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int256 | The latest rewards |
+
+### getPoRAddressListLength
+
+```solidity
+function getPoRAddressListLength() external view returns (uint256)
+```
+
+Get total number of addresses in the list.
+
+### getPoRAddressList
+
+```solidity
+function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
+```
+
+Get a batch of human-readable addresses from the address list.
+
+_Due to limitations of gas usage in off-chain calls, we need to support fetching the addresses in batches.
+EVM addresses need to be converted to human-readable strings. The address strings need to be in the same format
+that would be used when querying the balance of that address._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The index of the first address in the batch. |
+| endIndex | uint256 | The index of the last address in the batch. If `endIndex > getPoRAddressListLength()-1`, endIndex need to default to `getPoRAddressListLength()-1`. If `endIndex < startIndex`, the result would be an empty array. |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string[] | Array of addresses as strings. |
+
+## IPoRAddressList
+
+This interface enables Chainlink nodes to get the list addresses to be used in a PoR feed. A single
+contract that implements this interface can only store an address list for a single PoR feed.
+
+_All functions in this interface are expected to be called off-chain, so gas usage is not a big concern.
+This makes it possible to store addresses in optimized data types and convert them to human-readable strings
+in `getPoRAddressList()`._
+
+### getPoRAddressListLength
+
+```solidity
+function getPoRAddressListLength() external view returns (uint256)
+```
+
+Get total number of addresses in the list.
+
+### getPoRAddressList
+
+```solidity
+function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
+```
+
+Get a batch of human-readable addresses from the address list.
+
+_Due to limitations of gas usage in off-chain calls, we need to support fetching the addresses in batches.
+EVM addresses need to be converted to human-readable strings. The address strings need to be in the same format
+that would be used when querying the balance of that address._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The index of the first address in the batch. |
+| endIndex | uint256 | The index of the last address in the batch. If `endIndex > getPoRAddressListLength()-1`, endIndex need to default to `getPoRAddressListLength()-1`. If `endIndex < startIndex`, the result would be an empty array. |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string[] | Array of addresses as strings. |
 
 ## IWETH9
 
