@@ -18,16 +18,10 @@ contract SSVManager is IPoRAddressList {
 
     /***** Structs *****/
 
-    /** Token abbreviations */
-    enum Token {
-        LINK,
-        SSV,
-        WETH
-    }
-    /** Balance for storing stake and reward amounts */
+    /** Rewards and stake balance */
     struct Balance {
-        uint256 stake;
         uint256 rewards;
+        uint256 stake;
     }
     /** Processed fee and stake amounts */
     struct DepositFunds {
@@ -42,10 +36,21 @@ contract SSVManager is IPoRAddressList {
     }
     /** SSV pool used for running a validator */
     struct Pool {
-        Balance balance;
+        uint256 depositAmount;
         uint32[] operatorIds;
-        mapping(address => Balance) userBalances;
+        mapping(address => uint256) userStakes;
         bytes validatorPublicKey;
+    }
+    /** SSV pool details for a user */
+    struct PoolUserDetails {
+        Balance balance;
+        Balance userBalance;
+    }
+    /** Token abbreviations */
+    enum Token {
+        LINK,
+        SSV,
+        WETH
     }
     /** User account for storing pool addresses */
     struct User {
@@ -64,7 +69,7 @@ contract SSVManager is IPoRAddressList {
     /***** Storage *****/
 
     /** Beacon deposit contract */
-    IDepositContract immutable beaconDeposit;
+    IDepositContract private immutable beaconDeposit;
     /** Pool ID generator */
     Counters.Counter _lastPoolId;
     /** Uniswap 0.3% fee tier */
@@ -82,7 +87,7 @@ contract SSVManager is IPoRAddressList {
     /** Pool IDs of staked pools */
     uint32[] private stakedPoolIds;
     /** Chainlink rewards feed aggregator */
-    AggregatorV3Interface internal rewardsFeed;
+    AggregatorV3Interface internal balanceFeed;
     /** Validators (inactive and active) */
     mapping(address => Validator) private validators;
     /** Inactive validator public keys */
@@ -124,36 +129,33 @@ contract SSVManager is IPoRAddressList {
     /**
      * @notice Constructor
      * @param _depositAddress – The Beacon deposit address
-     * @param _linkFeedAddress - The Chainlink data feed address
-     * @param _swapRouterAddress - The Uniswap router address
+     * @param _linkOracleAddress - The Chainlink data feed address
      * @param _linkTokenAddress - The Chainlink token address
      * @param _ssvTokenAddress - The SSV token address
+     * @param _swapRouterAddress - The Uniswap router address
      * @param _wethTokenAddress - The WETH contract address
      */
     constructor(
         address _depositAddress,
-        address _linkFeedAddress,
-        address _swapRouterAddress,
+        address _linkOracleAddress,
         address _linkTokenAddress,
         address _ssvTokenAddress,
+        address _swapRouterAddress,
         address _wethTokenAddress
     ) {
         beaconDeposit = IDepositContract(_depositAddress);
-        swapRouter = ISwapRouter(_swapRouterAddress);
+        balanceFeed = AggregatorV3Interface(_linkOracleAddress);
         tokens[Token.LINK] = _linkTokenAddress;
         tokens[Token.SSV] = _ssvTokenAddress;
+        swapRouter = ISwapRouter(_swapRouterAddress);
         tokens[Token.WETH] = _wethTokenAddress;
-
-        /// Set up Chainlink rewards feed aggregator
-        rewardsFeed = AggregatorV3Interface(_linkFeedAddress);
     }
 
     /**
      * @notice Deposit to the pool manager
      */
     function deposit() external payable {
-        // Todo exit if inactiveValidatorAddresses.length is 0
-        address validatorAddress = inactiveValidatorAddresses[0];
+        require(inactiveValidatorAddresses.length > 0, "no validators ready");
 
         address userAddress = msg.sender;
         uint256 depositAmount = msg.value;
@@ -191,26 +193,25 @@ contract SSVManager is IPoRAddressList {
             pool = pools[poolId];
 
             /// Get contract amount for next open pool
-            uint256 poolStakeAmount = pool.balance.stake;
+            uint256 poolDepositedAmount = pool.depositAmount;
 
             /// Deposit to pool
-            uint256 poolRequiredAmount = 32000000000000000000 - poolStakeAmount;
-            uint256 addStakeAmount;
-
+            uint256 poolRequiredAmount = 32000000000000000000 - poolDepositedAmount;
+            uint256 newDepositAmount;
             if (poolRequiredAmount > depositFunds.stakeAmount) {
 
                 /// Set pool stake amount to total available
-                addStakeAmount = depositFunds.stakeAmount;
+                newDepositAmount = depositFunds.stakeAmount;
                 depositFunds.stakeAmount = 0;
 
             } else {
                 
                 /// Set pool stake amount to total required
-                addStakeAmount = poolRequiredAmount;
+                newDepositAmount = poolRequiredAmount;
                 depositFunds.stakeAmount -= poolRequiredAmount;
 
                 /// Start a new validator to stake pool
-                activateValidator(poolId, validatorAddress);
+                stakePool(poolId);
 
                 /// Remove pool from open pools and add to staked pools
                 for (uint i = 0; i < openPoolIds.length - 1; i++) {
@@ -222,8 +223,8 @@ contract SSVManager is IPoRAddressList {
             }
 
             /// Update pool balances
-            pool.balance.stake += addStakeAmount;
-            pool.userBalances[userAddress].stake += addStakeAmount;
+            pool.depositAmount += newDepositAmount;
+            pool.userStakes[userAddress] += newDepositAmount;
 
             /// Save pool address to user if new stake
             User storage user = users[userAddress];
@@ -338,15 +339,15 @@ contract SSVManager is IPoRAddressList {
     }
 
     /**
-     * @dev Activate a validator for a pool
+     * @dev Stake a pool
      */
-    function activateValidator(uint32 _poolId, address _validatorAddress) private {
-        
-        Validator memory validator = validators[_validatorAddress];
+    function stakePool(uint32 _poolId) private {
+        address validatorAddress = inactiveValidatorAddresses[0];
+        Validator memory validator = validators[validatorAddress];
         Pool storage pool = pools[_poolId];
 
         /// Deposit validator stake
-        beaconDeposit.deposit{ value: pool.balance.stake }(
+        beaconDeposit.deposit{ value: pool.depositAmount }(
             validator.validatorPublicKey, // bytes
             abi.encodePacked(address(this)), // bytes
             validator.signature, // bytes
@@ -362,7 +363,7 @@ contract SSVManager is IPoRAddressList {
             inactiveValidatorAddresses[i] = inactiveValidatorAddresses[i + 1];
         }
         inactiveValidatorAddresses.pop();
-        activeValidatorAddresses.push(_validatorAddress);
+        activeValidatorAddresses.push(validatorAddress);
 
         emit ValidatorActivated(
             _poolId,
@@ -381,7 +382,7 @@ contract SSVManager is IPoRAddressList {
         bytes calldata _signature, 
         bytes calldata _validatorPublicKey
     ) public {
-        address validatorAddress = address(uint160(bytes20(keccak256(_validatorPublicKey))));
+        address validatorAddress = toAddress(_validatorPublicKey);
         validators[validatorAddress] = Validator(_depositData, _encryptedShares, _operatorIds, _signature, _validatorPublicKey);
         inactiveValidatorAddresses.push(validatorAddress);
 
@@ -427,6 +428,13 @@ contract SSVManager is IPoRAddressList {
         return users[_userAddress].poolIds;
     }
 
+    function getPoolUserDetails(uint32 _poolId, address _userAddress) external view returns (PoolUserDetails memory) {
+        PoolUserDetails memory poolUserDetails = PoolUserDetails(
+            getPoolBalance(_poolId), getPoolUserBalance(_poolId, _userAddress)
+        );
+        return poolUserDetails;
+    }
+
     /**
      * @notice Get a user's balance in a pool by user address and pool ID
      * @param _poolId - The pool ID
@@ -436,8 +444,41 @@ contract SSVManager is IPoRAddressList {
     function getPoolUserBalance(
         uint32 _poolId,
         address _userAddress
-    ) external view returns (Balance memory) {
-        return pools[_poolId].userBalances[_userAddress];
+    ) public view returns (Balance memory) {
+        uint256 rewards = getPoolUserRewards(_poolId, _userAddress);
+        uint256 stake = getPoolUserStake(_poolId, _userAddress);
+        return Balance(rewards, stake);
+    }
+
+    /**
+     * @notice Get a user's rewards in a pool by user address and pool ID
+     * @param _poolId - The pool ID
+     * @param _userAddress - The user address
+     * @return A user's rewards in a pool
+     */
+    function getPoolUserRewards(
+        uint32 _poolId,
+        address _userAddress
+    ) public view returns (uint256) {
+        // Todo get user stake share of balance (this is incomplete/incorrect)
+        Pool storage pool = pools[_poolId];
+        // getPoolUserStake(_poolId, _userAddress) * 100 / 32000000000000000000
+        return pool.userStakes[_userAddress];
+    }
+
+    /**
+     * @notice Get a user's stake in a pool by user address and pool ID
+     * @param _poolId - The pool ID
+     * @param _userAddress - The user address
+     * @return A user's stake in a pool
+     */
+    function getPoolUserStake(
+        uint32 _poolId,
+        address _userAddress
+    ) public view returns (uint256) {
+        // Todo get user stake share of balance (this is incomplete/incorrect)
+        // getPoolUserStake(_poolId, _userAddress) * 100 / 32000000000000000000
+        return pools[_poolId].userStakes[_userAddress];
     }
 
     /**
@@ -447,8 +488,27 @@ contract SSVManager is IPoRAddressList {
      */
     function getPoolBalance(
         uint32 _poolId
-    ) external view returns (Balance memory) {
-        return pools[_poolId].balance;
+    ) public view returns (Balance memory) {
+        Pool storage pool = pools[_poolId];
+        uint256 rewards;
+        uint256 stake;
+        uint256 depositAmount = pool.depositAmount;
+
+        if (pool.operatorIds.length == 0) {
+            /// Return deposit amount for open pools
+            stake = depositAmount;
+        } else {
+            /// Return balance feed amount for staked pools
+            address validatorAddress = toAddress(pool.validatorPublicKey);
+            uint256 balance = uint256(getLatestBalance(validatorAddress));
+            rewards = balance - depositAmount;
+            if (balance > depositAmount) {
+                stake = depositAmount;
+            } else {
+                stake = balance;
+            }
+        }
+        return Balance(rewards, stake);
     }
 
     /**
@@ -474,22 +534,31 @@ contract SSVManager is IPoRAddressList {
     }
 
     /**
-     * @notice Get the latest total rewards (PoR)
-     * @return The latest rewards
+     * @notice Get the latest balance for a validator (PoR)
+     * @param _validatorAddress – The validator address
+     * @return The latest balance
      */
-    function getLatestRewards() public view returns (int) {
+    function getLatestBalance(address _validatorAddress) public view returns (int256) {
+        console.log("Getting balance for", _validatorAddress);
+
         // prettier-ignore
         (
             /*uint80 roundID*/,
-            int rewards,
-            /*uint startedAt*/,
-            /*uint timeStamp*/,
+            int256 balance,
+            /*uint256 startedAt*/,
+            /*uint256 timeStamp*/,
             /*uint80 answeredInRound*/
-        ) = rewardsFeed.latestRoundData();
+        ) = balanceFeed.latestRoundData();
 
-        return rewards;
+        return balance;
     }
 
+    /***** IPoRAddressList interface methods *****/
+
+    /**
+     * @notice Get the length of the PoR (active) address list
+     * @return The length of the PoR address list
+     */
     function getPoRAddressListLength()
         external
         view
@@ -499,22 +568,28 @@ contract SSVManager is IPoRAddressList {
         return activeValidatorAddresses.length;
     }
 
+    /**
+     * @notice Get a slice of the PoR address list as strings
+     * @param _startIndex – The list start index
+     * @param _endIndex – The list end index
+     * @return The slice of the PoR address list as strings
+     */
     function getPoRAddressList(
-        uint256 startIndex,
-        uint256 endIndex
+        uint256 _startIndex,
+        uint256 _endIndex
     ) external view override returns (string[] memory) {
-        if (startIndex > endIndex) {
+        if (_startIndex > _endIndex) {
             return new string[](0);
         }
-        endIndex = endIndex > activeValidatorAddresses.length - 1
+        _endIndex = _endIndex > activeValidatorAddresses.length - 1
             ? activeValidatorAddresses.length - 1
-            : endIndex;
+            : _endIndex;
         string[] memory stringAddresses = new string[](
-            endIndex - startIndex + 1
+            _endIndex - _startIndex + 1
         );
-        uint256 currIdx = startIndex;
+        uint256 currIdx = _startIndex;
         uint256 strAddrIdx = 0;
-        while (currIdx <= endIndex) {
+        while (currIdx <= _endIndex) {
             stringAddresses[strAddrIdx] = toString(
                 abi.encodePacked(activeValidatorAddresses[currIdx])
             );
@@ -524,16 +599,32 @@ contract SSVManager is IPoRAddressList {
         return stringAddresses;
     }
 
-    function toString(bytes memory data) private pure returns (string memory) {
+    /***** Utility methods *****/
+
+    /**
+     * @dev Convert bytes data to a string
+     * @param _data - The bytes data
+     * @return The corresponding string
+     */
+    function toString(bytes memory _data) private pure returns (string memory) {
         bytes memory alphabet = "0123456789abcdef";
 
-        bytes memory str = new bytes(2 + data.length * 2);
+        bytes memory str = new bytes(2 + _data.length * 2);
         str[0] = "0";
         str[1] = "x";
-        for (uint256 i = 0; i < data.length; i++) {
-            str[2 + i * 2] = alphabet[uint256(uint8(data[i] >> 4))];
-            str[3 + i * 2] = alphabet[uint256(uint8(data[i] & 0x0f))];
+        for (uint256 i = 0; i < _data.length; i++) {
+            str[2 + i * 2] = alphabet[uint256(uint8(_data[i] >> 4))];
+            str[3 + i * 2] = alphabet[uint256(uint8(_data[i] & 0x0f))];
         }
         return string(str);
+    }
+
+    /**
+     * @dev Convert a public key to an address
+     * @param _publicKey - The public key bytes
+     * @return The corresponding address 
+     */
+    function toAddress(bytes memory _publicKey) private pure returns (address) {
+        return address(uint160(bytes20(keccak256(_publicKey))));
     }
 }

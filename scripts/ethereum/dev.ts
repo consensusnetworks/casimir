@@ -34,7 +34,6 @@ void async function () {
 
     // Using hardhat local or fork network
     const chainlink = argv.chainlink === 'true'
-    process.env.CHAINLINK = `${chainlink}`
 
     if (chainlink) {
         $`npm run dev:ganache --workspace @casimir/ethereum`
@@ -43,6 +42,7 @@ void async function () {
         $`npm run deploy --workspace @casimir/ethereum -- --network ganache`
         $`npm run dev:chainlink --fork=${fork}`
     } else {
+        process.env.MOCK_CHAINLINK = 'true'
         $`npm run dev --workspace @casimir/ethereum`
         // Wait for hardhat to start
         await new Promise(resolve => setTimeout(resolve, 1000))

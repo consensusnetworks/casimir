@@ -9,15 +9,16 @@ import { ContractConfig, DeploymentConfig } from '@casimir/types'
 async function deploymentFixture() {
   let ssv, oracle
   const [owner] = await ethers.getSigners()
-  const chainlink = process.env.CHAINLINK === 'true'
-  let deploymentConfig: DeploymentConfig = {
+  const mockChainlink = process.env.MOCK_CHAINLINK === 'true'
+  let config: DeploymentConfig = {
     SSVManager: {
       address: '',
       args: {
+        depositAddress: process.env.DEPOSIT_ADDRESS,
         linkOracleAddress: process.env.LINK_ORACLE_ADDRESS,
-        swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
         linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
         ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
+        swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
         wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
       },
       options: {},
@@ -25,32 +26,31 @@ async function deploymentFixture() {
     }
   }
 
-  const chainlinkDeploymentConfig = {
-    MockOracle: {
-      address: '',
-      args: {
-        linkTokenAddress: process.env.LINK_TOKEN_ADDRESS
-      },
-      options: {},
-      proxy: false
+  if (mockChainlink) {
+    const mockChainlinkConfig = {
+      MockOracle: {
+        address: '',
+        args: {
+          linkTokenAddress: process.env.LINK_TOKEN_ADDRESS
+        },
+        options: {},
+        proxy: false
+      }
     }
-  }
-
-  if (!chainlink) {
-    deploymentConfig = {
+    config = {
       // Deploy Chainlink contracts first
-      ...chainlinkDeploymentConfig,
-      ...deploymentConfig
+      ...mockChainlinkConfig,
+      ...config
     }
   }
 
-  for (const name in deploymentConfig) {
+  for (const name in config) {
     console.log(`Deploying ${name} contract...`)
-    const { args, options, proxy } = deploymentConfig[name as keyof typeof deploymentConfig] as ContractConfig
+    const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
 
     // Update SSVManager args with MockOracle address
-    if (name === 'SSVManager') {
-      args.linkOracleAddress = deploymentConfig.MockOracle?.address
+    if (name === 'SSVManager' && config.MockOracle) {
+      args.linkOracleAddress = config.MockOracle.address
     }
 
     const contract = await deployContract(name, proxy, args, options)
@@ -60,7 +60,7 @@ async function deploymentFixture() {
     console.log(`${name} contract deployed to ${address}`);
 
     // Save contract address for next loop
-    (deploymentConfig[name as keyof DeploymentConfig] as ContractConfig).address = address
+    (config[name as keyof DeploymentConfig] as ContractConfig).address = address
     
     // Save mock oracle for export
     if (name === 'MockOracle') oracle = contract

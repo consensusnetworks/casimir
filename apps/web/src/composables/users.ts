@@ -48,7 +48,7 @@ export default function useUsers () {
         subscribeToUserEvents()
     })
 
-    function updateUser ({ accounts } : any) {
+    function updateUser({ accounts }: any) {
         localStorage.setItem('accounts', JSON.stringify(accounts))
     }
 

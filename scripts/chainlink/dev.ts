@@ -16,7 +16,7 @@ void async function () {
     process.env.EXPLORER_DOCKER_TAG = 'develop'
     process.env.SKIP_DATABASE_PASSWORD_COMPLEXITY_CHECK = 'true'
     process.env.ETH_URL = 'ws://host.docker.internal:8545'
-    process.env.CHAINLINK_TLS_PORT = '0'
+    process.env.MOCK_CHAINLINK_TLS_PORT = '0'
     process.env.SECURE_COOKIES = 'false'
     process.env.ALLOW_ORIGINS = '*'
     process.env.NODE_NO_NEW_HEADS_THRESHOLD = '0'

@@ -148,16 +148,13 @@ export default function useWallet() {
     const ssvProvider = ssv.connect(provider)
     const usersPoolsIds = await ssvProvider.getUserPoolIds(userAddress)
     return await Promise.all(usersPoolsIds.map(async (poolId: number) => {
-
-      const { stake: totalStake, rewards: totalRewards } = await ssvProvider.getPoolBalance(poolId)
-      const { stake: userStake, rewards: userRewards } = await ssvProvider.getPoolUserBalance(poolId, userAddress)
-
+      const { rewards, stake, userRewards, userStake } = await ssvProvider.getPoolUserDetails(poolId, userAddress)
       let pool: Pool = {
         id: poolId,
-        totalStake: ethers.utils.formatEther(totalStake),
-        totalRewards: ethers.utils.formatEther(totalRewards),
-        userStake: ethers.utils.formatEther(userStake),
-        userRewards: ethers.utils.formatEther(userRewards)
+        rewards: ethers.utils.formatEther(rewards),
+        stake: ethers.utils.formatEther(stake),
+        userRewards: ethers.utils.formatEther(userRewards),
+        userStake: ethers.utils.formatEther(userStake)
       }
 
       const validatorPublicKey = await ssvProvider.getPoolValidatorPublicKey(poolId) // Public key bytes (i.e., 0x..)
@@ -202,7 +199,7 @@ export default function useWallet() {
     let signer = ethersSignerCreator[signerKey](selectedProvider.value)
     if (isWalletConnectSigner(signer)) signer = await signer
     const ssvProvider = ssv.connect(signer as ethers.Signer)
-    const feesTotalPercent = await getSSVFeePercent(signer as ethers.Signer)
+    const feesTotalPercent = await getSSVFeePercent()
     const depositAmount = parseFloat(amountToStake.value) * ((100 + feesTotalPercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
     const result = await ssvProvider.deposit({ value, type: 0 })

@@ -64,13 +64,11 @@ struct User {
 
 ```solidity
 struct Validator {
-  uint32[] operatorIds;
-  bytes[] encryptedShares;
-  bytes validatorPublicKey;
-  bytes signature;
   bytes32 depositData;
-  uint32 currentPoolId;
-  bool active;
+  bytes[] encryptedShares;
+  uint32[] operatorIds;
+  bytes signature;
+  bytes validatorPublicKey;
 }
 ```
 
@@ -106,22 +104,6 @@ contract AggregatorV3Interface rewardsFeed
 
 Chainlink rewards feed aggregator
 
-### ValidatorActivated
-
-```solidity
-event ValidatorActivated(uint32 poolId, uint32[] operatorIds, bytes validatorPublicKey)
-```
-
-Event signaling a validator activation
-
-### ValidatorRegistered
-
-```solidity
-event ValidatorRegistered(uint32 poolId, uint32[] operatorIds, bytes validatorPublicKey)
-```
-
-Event signaling a validator registration
-
 ### ManagerDeposit
 
 ```solidity
@@ -138,10 +120,26 @@ event PoolStake(address userAddress, uint32 poolId, uint256 linkAmount, uint256 
 
 Event signaling a user stake to a pool
 
+### ValidatorActivated
+
+```solidity
+event ValidatorActivated(uint32 poolId, uint32[] operatorIds, bytes validatorPublicKey)
+```
+
+Event signaling a validator activation
+
+### ValidatorRegistered
+
+```solidity
+event ValidatorRegistered(uint32[] operatorIds, bytes validatorPublicKey)
+```
+
+Event signaling a validator registration
+
 ### constructor
 
 ```solidity
-constructor(address _depositAddress, address _linkFeedAddress, address _swapRouterAddress, address _linkTokenAddress, address _ssvTokenAddress, address _wethTokenAddress) public
+constructor(address _depositAddress, address _llinkOracleAddress, address _swapRouterAddress, address _linkTokenAddress, address _ssvTokenAddress, address _wethTokenAddress) public
 ```
 
 Constructor
@@ -151,7 +149,7 @@ Constructor
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _depositAddress | address | – The Beacon deposit address |
-| _linkFeedAddress | address | - The Chainlink data feed address |
+| _llinkOracleAddress | address | - The Chainlink data feed address |
 | _swapRouterAddress | address | - The Uniswap router address |
 | _linkTokenAddress | address | - The Chainlink token address |
 | _ssvTokenAddress | address | - The SSV token address |
@@ -206,6 +204,14 @@ Get the SSV fee percentage to charge on each deposit
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint32 | The SSV fee percentage to charge on each deposit |
+
+### registerValidator
+
+```solidity
+function registerValidator(bytes32 _depositData, bytes[] _encryptedShares, uint32[] _operatorIds, bytes _signature, bytes _validatorPublicKey) public
+```
+
+_Register a validator to the pool manager_
 
 ### getOpenPoolIds
 
