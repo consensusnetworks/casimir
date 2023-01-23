@@ -2,22 +2,12 @@
 
 ## SSVManager
 
-### Token
-
-```solidity
-enum Token {
-  LINK,
-  SSV,
-  WETH
-}
-```
-
 ### Balance
 
 ```solidity
 struct Balance {
-  uint256 stake;
   uint256 rewards;
+  uint256 stake;
 }
 ```
 
@@ -44,10 +34,29 @@ struct Fees {
 
 ```solidity
 struct Pool {
-  struct SSVManager.Balance balance;
+  uint256 depositAmount;
   uint32[] operatorIds;
-  mapping(address => struct SSVManager.Balance) userBalances;
+  mapping(address => uint256) userStakes;
   bytes validatorPublicKey;
+}
+```
+
+### PoolUserDetails
+
+```solidity
+struct PoolUserDetails {
+  struct SSVManager.Balance balance;
+  struct SSVManager.Balance userBalance;
+}
+```
+
+### Token
+
+```solidity
+enum Token {
+  LINK,
+  SSV,
+  WETH
 }
 ```
 
@@ -72,14 +81,6 @@ struct Validator {
 }
 ```
 
-### beaconDeposit
-
-```solidity
-contract IDepositContract beaconDeposit
-```
-
-Beacon deposit contract
-
 ### _lastPoolId
 
 ```solidity
@@ -96,10 +97,10 @@ contract ISwapRouter swapRouter
 
 Uniswap ISwapRouter
 
-### rewardsFeed
+### balanceFeed
 
 ```solidity
-contract AggregatorV3Interface rewardsFeed
+contract AggregatorV3Interface balanceFeed
 ```
 
 Chainlink rewards feed aggregator
@@ -139,7 +140,7 @@ Event signaling a validator registration
 ### constructor
 
 ```solidity
-constructor(address _depositAddress, address _llinkOracleAddress, address _swapRouterAddress, address _linkTokenAddress, address _ssvTokenAddress, address _wethTokenAddress) public
+constructor(address _depositAddress, address _linkOracleAddress, address _linkTokenAddress, address _ssvTokenAddress, address _swapRouterAddress, address _wethTokenAddress) public
 ```
 
 Constructor
@@ -149,10 +150,10 @@ Constructor
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _depositAddress | address | – The Beacon deposit address |
-| _llinkOracleAddress | address | - The Chainlink data feed address |
-| _swapRouterAddress | address | - The Uniswap router address |
+| _linkOracleAddress | address | - The Chainlink data feed address |
 | _linkTokenAddress | address | - The Chainlink token address |
 | _ssvTokenAddress | address | - The SSV token address |
+| _swapRouterAddress | address | - The Uniswap router address |
 | _wethTokenAddress | address | - The WETH contract address |
 
 ### deposit
@@ -261,10 +262,16 @@ Get a list of a user's pool IDs by user address
 | ---- | ---- | ----------- |
 | [0] | uint32[] | A list of a user's pool IDs |
 
+### getPoolUserDetails
+
+```solidity
+function getPoolUserDetails(uint32 _poolId, address _userAddress) external view returns (struct SSVManager.PoolUserDetails)
+```
+
 ### getPoolUserBalance
 
 ```solidity
-function getPoolUserBalance(uint32 _poolId, address _userAddress) external view returns (struct SSVManager.Balance)
+function getPoolUserBalance(uint32 _poolId, address _userAddress) public view returns (struct SSVManager.Balance)
 ```
 
 Get a user's balance in a pool by user address and pool ID
@@ -282,10 +289,52 @@ Get a user's balance in a pool by user address and pool ID
 | ---- | ---- | ----------- |
 | [0] | struct SSVManager.Balance | A user's balance in a pool |
 
+### getPoolUserRewards
+
+```solidity
+function getPoolUserRewards(uint32 _poolId, address _userAddress) public view returns (uint256)
+```
+
+Get a user's rewards in a pool by user address and pool ID
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _poolId | uint32 | - The pool ID |
+| _userAddress | address | - The user address |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | A user's rewards in a pool |
+
+### getPoolUserStake
+
+```solidity
+function getPoolUserStake(uint32 _poolId, address _userAddress) public view returns (uint256)
+```
+
+Get a user's stake in a pool by user address and pool ID
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _poolId | uint32 | - The pool ID |
+| _userAddress | address | - The user address |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | A user's stake in a pool |
+
 ### getPoolBalance
 
 ```solidity
-function getPoolBalance(uint32 _poolId) external view returns (struct SSVManager.Balance)
+function getPoolBalance(uint32 _poolId) public view returns (struct SSVManager.Balance)
 ```
 
 Get a pool's balance by pool ID
@@ -342,19 +391,25 @@ Get a pool's operators by pool ID
 | ---- | ---- | ----------- |
 | [0] | uint32[] | The pool's operators |
 
-### getLatestRewards
+### getLatestBalance
 
 ```solidity
-function getLatestRewards() public view returns (int256)
+function getLatestBalance(address _validatorAddress) public view returns (int256)
 ```
 
-Get the latest total rewards (PoR)
+Get the latest balance for a validator (PoR)
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _validatorAddress | address | – The validator address |
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The latest rewards |
+| [0] | int256 | The latest balance |
 
 ### getPoRAddressListLength
 
@@ -362,32 +417,34 @@ Get the latest total rewards (PoR)
 function getPoRAddressListLength() external view returns (uint256)
 ```
 
-Get total number of addresses in the list.
-
-### getPoRAddressList
-
-```solidity
-function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
-```
-
-Get a batch of human-readable addresses from the address list.
-
-_Due to limitations of gas usage in off-chain calls, we need to support fetching the addresses in batches.
-EVM addresses need to be converted to human-readable strings. The address strings need to be in the same format
-that would be used when querying the balance of that address._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The index of the first address in the batch. |
-| endIndex | uint256 | The index of the last address in the batch. If `endIndex > getPoRAddressListLength()-1`, endIndex need to default to `getPoRAddressListLength()-1`. If `endIndex < startIndex`, the result would be an empty array. |
+Get the length of the PoR (active) address list
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | string[] | Array of addresses as strings. |
+| [0] | uint256 | The length of the PoR address list |
+
+### getPoRAddressList
+
+```solidity
+function getPoRAddressList(uint256 _startIndex, uint256 _endIndex) external view returns (string[])
+```
+
+Get a slice of the PoR address list as strings
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _startIndex | uint256 | – The list start index |
+| _endIndex | uint256 | – The list end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string[] | The slice of the PoR address list as strings |
 
 ## IDepositContract
 

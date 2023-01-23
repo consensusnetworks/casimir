@@ -18,7 +18,7 @@ esbuild.build({
             if (error) console.error('Watch build failed', error)
             else {
                 console.log('Watch build succeeded', buildResult)
-                spawn('npm', ['run', 'cdk:synth', '--workspace', '@casimir/cdk'], { stdio: 'inherit' })
+                spawn('npm', ['run', 'synth', '--workspace', '@casimir/cdk'], { stdio: 'inherit' })
             }
             handleBuildProcessClose(buildResult)
         }

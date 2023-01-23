@@ -7,9 +7,11 @@
         "build": "echo 'Warning: @casimir/cdk build not specified. Disregard this warning and any listed errors above if @casimir/cdk is not needed for the current project build.' && exit 0",
         "pretest": "export PROJECT=casimir && export STAGE=test",
         "test": "jest",
-        "cdk:bootstrap": "npx cdk bootstrap",
-        "cdk:metadata": "npx cdk metadata",
-        "cdk:synth": "npx cdk synth --no-staging"
+        "bootstrap": "npx cdk bootstrap",
+        "metadata": "npx cdk metadata",
+        "synth": "npx cdk synth --no-staging",
+        "deploy": "npx cdk deploy '**' --require-approval never --outputs-file cdk-outputs.json --force",
+        "destroy": "npx cdk destroy '**' --force --require-approval never"
     },
     "devDependencies": {
         "@types/jest": "^27.5.2",

@@ -77,13 +77,13 @@ void async function () {
 
     if (mock) {
 
-        /** Skip bootstrap if stack exists for current stage (and cdk:bootstrap throws) */
+        /** Skip bootstrap if stack exists for current stage (and bootstrap throws) */
         try { 
-            await $`npm run cdk:bootstrap --workspace @casimir/cdk`
+            await $`npm run bootstrap --workspace @casimir/cdk`
         } catch {
             echo(chalk.bgBlackBright('CDK Toolkit stack for ') + chalk.bgBlue(`${Project}${Stage}`) + chalk.bgBlackBright(' was already bootstrapped. Disregard any CDK errors listed above this line.'))
         }
-        await $`npm run cdk:synth --workspace @casimir/cdk`
+        await $`npm run synth --workspace @casimir/cdk`
 
         let port = 4000
         for (const service of services) {

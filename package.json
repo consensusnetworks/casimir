@@ -12,7 +12,7 @@
   "scripts": {
     "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules package-lock.json && npm i",
     "curl": "curl -H 'Content-Type: application/json' -d \"$npm_config_body\" \"$npm_config_url\"",
-    "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
+    "deploy": "npx esno -r dotenv/config scripts/cdk/deploy.ts",
     "dev": "npx esno -r dotenv/config scripts/local/dev.ts --fork \"$npm_config_fork\" --ledger \"$npm_config_ledger\" --mock \"$npm_config_mock\" --network \"$npm_config_network\" --trezor \"$npm_config_trezor\" --external \"$npm_config_external\"",
     "dev:chainlink": "npx esno -r dotenv/config scripts/chainlink/dev.ts --fork \"$npm_config_fork\"",
     "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
@@ -28,7 +28,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:ethereum": "npx esno -r dotenv/config scripts/ethereum/test.ts --fork \"$npm_config_fork\"",
     "test:crawler": "scripts/crawler/test -f \"$npm_config_fork\" -n \"$npm_config_network\"",
-    "test:push": "scripts/actions/test -w push",
+    "test:actions": "npx esno -r dotenv/config scripts/actions/test.ts --workflow \"$npm_config_workflow\"",
     "release": "release-it"
   },
   "repository": {

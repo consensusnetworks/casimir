@@ -5,6 +5,11 @@ import { AthenaClient, AthenaClientConfig, StartQueryExecutionCommand, GetQueryE
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
 import { EventTableSchema } from '@casimir/data'
 
+export async function getCredentials() {
+    const profile = getProfile()
+    return await fromIni({ profile })()
+}
+
 export function getProfile() {
     return process.env.PROFILE || 'consensus-networks-dev'
 }
