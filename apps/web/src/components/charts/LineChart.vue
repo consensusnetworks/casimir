@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import * as d3 from 'd3'
 
 // eslint-disable-next-line no-undef, @typescript-eslint/no-unused-vars
@@ -11,7 +11,7 @@ const props = defineProps({
     updateTooltipInfo: {
         type: Function,
         default: (e) => {
-            // console.log(e)
+            // console.log('hovering over: ', e)
         }
     },
     yAxisValue: {
@@ -22,11 +22,11 @@ const props = defineProps({
         type: String, 
         required: true
     },
-    xAxisFormate: {
+    xAxisFormat: {
         type: Function,
         required: true
     },
-    yAxisFormate: {
+    yAxisFormat: {
         type: Function,
         required: true
     },
@@ -36,9 +36,9 @@ const props = defineProps({
 onMounted(() => {
     let WIDTH = 0
     let HEIGHT =  0
-    const svg_container_el = document.getElementById('line_chart_container')
+    const svg_line_chart_container_el = document.getElementById('line_chart_container')
 
-    let svg
+    let line_chart_svg
     let g
     let x 
     let y
@@ -64,7 +64,6 @@ onMounted(() => {
     
 
     const updateChart = () => {
-
         // Makes sure the axis are correct based on breakpoints
         let xAxisRange = [0,(WIDTH - 30)]
         let yAxisRange = [HEIGHT, 20]
@@ -80,7 +79,6 @@ onMounted(() => {
             yAxisRange = [HEIGHT, 0]
         }
 
-
         x = d3.scaleTime().range(xAxisRange)
         y = d3.scaleLinear().range(yAxisRange)
 
@@ -90,7 +88,7 @@ onMounted(() => {
             xAxisCall = d3.axisBottom()
                 .tickFormat((d, i) => {
                     if(i %2 === 0){
-                       return props.xAxisFormate(d)
+                    return props.xAxisFormat(d)
                     } else {
                         return ''
                     }
@@ -98,22 +96,31 @@ onMounted(() => {
         }else {
             xAxisCall = d3.axisBottom()
                 .tickFormat(d => {
-                    return props.xAxisFormate(d)
+                    return props.xAxisFormat(d)
                 })
         }
         
         yAxisCall = d3.axisLeft()
-
-        xAxis = g.append('g')
-            .attr('class', 'x axis')
-            .attr('transform', `translate(0, ${HEIGHT})`)
-        yAxis = g.append('g')
-            .attr('class', 'y axis')
-
+        if(!xAxis){
+            xAxis = g.append('g')
+                .attr('class', 'x axis')
+                .attr('transform', `translate(0, ${HEIGHT})`)
+        } else {
+            d3.select('#line_chart').select('svg').select('g').select('g')
+                .attr('class', 'x axis')
+                .attr('transform', `translate(0, ${HEIGHT})`)
+        }
+        if(!yAxis){
+            yAxis = g.append('g')
+                .attr('class', 'y axis')
+        } else {
+            d3.select('#line_chart').select('svg').select('g').select('g')
+                .attr('class', 'y axis')
+        }
+        
         
         
         const update = (data) => {
-
             // Updates tooltip based on data on start
             const lastDValue = d3.max(data, d => {
                 return d[props.yAxisValue]
@@ -123,20 +130,21 @@ onMounted(() => {
 
             const yValue = props.yAxisValue
 
-            // 1.005 is just for adding a little bit of spacing for the y domain 
+            // 1.015 is just for adding a little bit of spacing for the y domain 
             x.domain(d3.extent(data, d => d[props.xAxisValue]))
             y.domain([
-                d3.min(data, d => d[yValue]) / 1.005, 
-                d3.max(data, d => d[yValue]) * 1.005
+                d3.min(data, d => d[yValue]) / 1.015, 
+                d3.max(data, d => d[yValue]) * 1.015
             ])
 
             xAxisCall.scale(x)
-            xAxis.transition(d3.transition().duration(500))
-                .call(xAxisCall)
+            xAxis.call(xAxisCall)
 
             yAxisCall.scale(y)
-            yAxis.transition(d3.transition().duration(500))
-                .call(yAxisCall.tickFormat(d => props.yAxisFormate(d)))
+            yAxis.call(yAxisCall.tickFormat(d => props.yAxisFormat(d)))
+
+            // Tooltip
+
             d3.select('.focus').remove()
             d3.select('.overlay').remove()
 
@@ -149,10 +157,10 @@ onMounted(() => {
                 .attr('y1', 0)
                 .attr('y2', HEIGHT)
 
-            // focus.append("line")
-            //     .attr("class", "y-hover-line hover-line")
-            //     .attr("x1", 0)
-            //     .attr("x2", WIDTH)
+            // focus.append('line')
+            //     .attr('class', 'y-hover-line hover-line')
+            //     .attr('x1', 0)
+            //     .attr('x2', WIDTH)
 
             focus.append('circle')
                 .attr('r', 2.5)
@@ -185,24 +193,21 @@ onMounted(() => {
                 const d1 = data[i]
                 const d = x0 - d0[props.xAxisValue] > d1[props.xAxisValue] - x0 ? d1 : d0
                 focus.attr('transform', `translate(${x(d[props.xAxisValue])}, ${y(d[yValue])})`)
-                // focus.select("text").text(d[yValue])
-                // viewingValue.value = d[yValue]
-                // viewingValuePercentage.value = Math.floor(Math.random() * (15 - (-15) + 1) + (-15))
                 props.updateTooltipInfo(d[yValue])
                 focus.select('.x-hover-line').attr('y2', HEIGHT - y(d[yValue]))
                 focus.select('.y-hover-line').attr('x2', -x(d[props.xAxisValue]))
             }
 
-            const line = d3.line()
-            .x(d => x(d[props.xAxisValue]))
-            .y(d => y(d[yValue]))
+            let line = d3.line()
+                .x(d => x(d[props.xAxisValue]))
+                .y(d => y(d[yValue]))
 
-            // let t =  
             g.select('.line')
             .transition(d3.transition().duration(500))
             .attr('d', line(data))
         }
 
+        
         watch(props, () => {
             update(props.data)
         })
@@ -213,19 +218,24 @@ onMounted(() => {
     }
 
     const createViz = () => {
-        d3.select('svg').remove()
 
-        svg = d3.select('#line_chart').append('svg')
-        .attr('viewBox', `0 0 ${WIDTH} ${HEIGHT}`)
+        if(!line_chart_svg){
+            line_chart_svg = d3.select('#line_chart').append('svg')
+                .attr('viewBox', `0 0 ${WIDTH + 10} ${HEIGHT}`)
+        }else {
+            d3.select('#line_chart').select('svg')
+                .attr('viewBox', `0 0 ${WIDTH + 10} ${HEIGHT}`)
+        }
+        
 
         // shows axis labels if chart not <= small breaking point
         // 150 being too small to show any labels
-        let xTransiton = 30
+        let xTransition = 30
         let yTransition = -20
         if(WIDTH <= 150 ){
-            xTransiton = 0
+            xTransition = 0
         } else if (HEIGHT <= height_breaking_point_small) {
-            xTransiton = 0
+            xTransition = 0
         }
 
         if(HEIGHT <= 150 ){
@@ -234,37 +244,49 @@ onMounted(() => {
             yTransition = 0
         }
 
-        g = svg.append('g')
-            .attr('transform', `translate(${
-                xTransiton // hotizontal 
-            }, ${
-                yTransition // vertical
-            })`)
-        
 
-
-        g.append('path')
-            .attr('class', 'line')
-            .attr('width', WIDTH )
-            .attr('height', HEIGHT )
+        if(!g){
+            g = line_chart_svg.append('g')
+                .attr('transform', `translate(${
+                            xTransition // hotizontal 
+                        }, ${
+                            yTransition // vertical
+                        })`)
+            g.append('path')
+                .attr('class', 'line')
+                .attr('width', WIDTH )
+                .attr('height', HEIGHT )
+        } else {
+            d3.select('#line_chart').select('svg').select('g')
+                .attr('transform', `translate(${
+                        xTransition // hotizontal 
+                    }, ${
+                        yTransition // vertical
+                    })`)
+            d3.select('#line_chart').select('svg').select('g').select('path')
+                .attr('class', 'line')
+                    .attr('width', WIDTH )
+                    .attr('height', HEIGHT )
+        }
 
         updateChart()
     }
 
 
-    WIDTH = svg_container_el.offsetWidth
-    HEIGHT = svg_container_el.offsetHeight
+    WIDTH = svg_line_chart_container_el.offsetWidth
+    HEIGHT = svg_line_chart_container_el.offsetHeight
 
     
     // watches for size changes... 
-    function outputsize() {
-        WIDTH = svg_container_el.offsetWidth
-        HEIGHT = svg_container_el.offsetHeight
+    const outputsize = () => {
+        WIDTH = svg_line_chart_container_el.offsetWidth
+        HEIGHT = svg_line_chart_container_el.offsetHeight
         createViz()
     }
     outputsize()
-    new ResizeObserver(outputsize).observe(svg_container_el)   
+    new ResizeObserver(outputsize).observe(svg_line_chart_container_el)   
 
+    // Calls it on mounted without listening first
     createViz()
 })
 

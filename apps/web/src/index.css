@@ -471,3 +471,20 @@ overflow: auto;
     stroke-width: 1px;
     stroke: #80ABFF;
   }
+
+  /*  */
+
+  svg {
+	margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+.arc text {
+  font: 10px sans-serif;
+  text-anchor: middle;
+}
+
+.arc path {
+  stroke: #fff;
+}
