@@ -4,13 +4,13 @@
       Choose Network
       <div class="choose-network">
         <button
-          @click="switchNetwork('MetaMask', '5')"
+          @click="switchNetwork('5')"
         >
           Switch MetaMask to Goerli Network
         </button>
         <button
           class="iopay-btn"
-          @click="switchNetwork('MetaMask', '4690')"
+          @click="switchNetwork('4690')"
         >
           Switch MetaMask to IoTeX Network
         </button>

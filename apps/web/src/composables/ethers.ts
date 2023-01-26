@@ -113,7 +113,7 @@ export default function useEthers() {
         params: [network]
       })
     } catch(err: any){
-      console.log(`Error occurred while adding network ${network.chainName}, err: ${err.message} code: ${err.code}`)
+      console.log(`Error occurred while adding network ${network.chainName}, Message: ${err.message} Code: ${err.code}`)
     }
   }
 
@@ -135,9 +135,9 @@ export default function useEthers() {
             console.log(`Error occurred while switching chain to chainId ${chainId}, err: ${err.message} code: ${err.code}`)
             if (err.code === 4902){
               if (chainId === '5') {
-                addEthersNetwork('MetaMask', goerliNetwork)
-              } else if (chainId === '4690') {
-                addEthersNetwork('MetaMask', iotexNetwork)
+                addEthersNetwork(providerString, goerliNetwork)
+              } else if (chainId === '0x1252') {
+                addEthersNetwork(providerString, iotexNetwork)
             }
           }
         }
@@ -180,7 +180,7 @@ const iotexNetwork = {
       symbol: 'IOTX',
       decimals: 18
   },
-  rpcUrls: ['http://api.testnet.iotex.one:80'],
+  rpcUrls: ['https://api.testnet.iotex.one:80', 'http://api.testnet.iotex.one:80'],
   blockExplorerUrls: ['https://iotexscan.io']
 }
 

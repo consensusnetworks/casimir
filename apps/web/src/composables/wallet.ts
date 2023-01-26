@@ -83,9 +83,13 @@ export default function useWallet() {
     }
   }
 
-  async function switchNetwork(provider: ProviderString, chainId: string) {
-    if (provider === 'MetaMask') {
+  async function switchNetwork(chainId: string) {
+    if (selectedProvider.value === 'MetaMask') {
       switchEthersNetwork('MetaMask', chainId)
+    } else if (selectedProvider.value === 'CoinbaseWallet') {
+      switchEthersNetwork('CoinbaseWallet', chainId)
+    } else {
+      alert('Switching networks is only supported for MetaMask and Coinbase Wallet')
     }
   }
 
