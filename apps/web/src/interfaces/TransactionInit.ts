@@ -10,4 +10,6 @@ export interface TransactionInit extends ethers.providers.TransactionRequest {
     value: string;
     /** The provider string of the transaction */
     providerString: ProviderString;
+    /** The token of the transaction */
+    token?: 'ETH' | 'BTC'
 }

@@ -121,13 +121,13 @@
       <div class="ledger-div">
         <button
           class="ledger-btn"
-          @click="connectWallet('Ledger', 'bitcoin')"
+          @click="connectWallet('Ledger', 'BTC')"
         >
           {{ ledgerButtonText }} (Using 'bitcoin' app)
         </button>
         <button
           class="ledger-btn"
-          @click="connectWallet('Ledger', 'ethereum')"
+          @click="connectWallet('Ledger', 'ETH')"
         >
           {{ ledgerButtonText }} (Using 'ethereum' app)
         </button>
@@ -227,6 +227,7 @@ const {
   selectedProvider,
   selectedAccount,
   primaryAccount,
+  selectedToken,
   toAddress,
   amount,
   amountToStake,

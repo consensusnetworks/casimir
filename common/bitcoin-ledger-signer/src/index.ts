@@ -70,9 +70,15 @@ export default class BitcoinLedgerSigner {
         return address
     }
 
-    // async signMessage(message) {
-
-    // }
+    async signMessage(message: string): Promise<string> {
+        const messageBuffer = Buffer.from(message)
+        const signature = await this._retry((btc) => btc.signMessage(
+            this.path,
+            messageBuffer.toString('hex')
+        ))
+        const signedHash = signature.r + signature.s + signature.v.toString(16)
+        return signedHash
+    }
 
     // async signTransaction(transaction) {
 

@@ -13,7 +13,7 @@ import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import { Pool } from '@/interfaces/Pool'
-import { AppString } from '@/interfaces/AppString'
+import { TokenString } from '@/interfaces/TokenString'
 
 const amount = ref<string>('0.0')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
@@ -21,6 +21,7 @@ const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
 const selectedProvider = ref<ProviderString>('MetaMask')
 const selectedAccount = ref<string>('0xd557a5745d4560B24D36A68b52351ffF9c86A212')
+const selectedToken = ref<TokenString>('ETH')
 const loggedIn = ref(false)
 const primaryAccount = ref('')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
@@ -33,13 +34,13 @@ export default function useWallet() {
   const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, loginWithEthers } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
-  const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendEthersLedgerTransaction, signEthersLedgerMessage } = useLedger()
+  const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
   const { updatePrimaryAccount } = useUsers()
   const getLedgerAddress = {
-    'bitcoin': getBitcoinLedgerAddress,
-    'ethereum': getEthersLedgerAddress
+    'BTC': getBitcoinLedgerAddress,
+    'ETH': getEthersLedgerAddress
   }
 
   const setSelectedProvider = (provider: ProviderString) => {
@@ -49,7 +50,11 @@ export default function useWallet() {
     selectedAccount.value = address
   }
 
-  async function connectWallet(provider: ProviderString, app?: AppString) {
+  const setSelectedToken = (token: TokenString) => {
+    selectedToken.value = token
+  }
+
+  async function connectWallet(provider: ProviderString, token?: TokenString) {
     try {
       setSelectedProvider(provider)
       selectedAccount.value = 'Not Active'
@@ -66,7 +71,8 @@ export default function useWallet() {
         const address = await getIoPayAddress()
         setSelectedAccount(address)
       } else if (provider === 'Ledger') {
-        const address = await getLedgerAddress[app as AppString]()
+        setSelectedToken(token as TokenString)
+        const address = await getLedgerAddress[token as TokenString]()
         setSelectedAccount(address)
       } else if (provider === 'Trezor') {
         const address = await getTrezorAddress()
@@ -97,7 +103,7 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'IoPay') {
         await sendIoPayTransaction(txInit)
       } else if (selectedProvider.value === 'Ledger') {
-        await sendEthersLedgerTransaction(txInit)
+        await sendLedgerTransaction(txInit)
       } else if (selectedProvider.value === 'Trezor') {
         await sendTrezorTransaction(txInit)
       } else {
@@ -112,6 +118,7 @@ export default function useWallet() {
     const messageInit: MessageInit = {
       message,
       providerString: selectedProvider.value,
+      token: selectedToken.value
     }
     try {
       if (messageInit.providerString === 'WalletConnect') {
@@ -123,7 +130,7 @@ export default function useWallet() {
       } else if (messageInit.providerString === 'IoPay') {
         await signIoPayMessage(messageInit)
       } else if (messageInit.providerString === 'Ledger') {
-        await signEthersLedgerMessage(messageInit)
+        await signLedgerMessage(messageInit)
       } else if (messageInit.providerString === 'Trezor') {
         await signTrezorMessage(messageInit)
       } else {
@@ -249,6 +256,7 @@ export default function useWallet() {
     loggedIn,
     selectedProvider,
     selectedAccount,
+    selectedToken,
     primaryAccount,
     toAddress,
     amount,

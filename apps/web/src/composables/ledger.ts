@@ -37,34 +37,47 @@ export default function useLedger() {
     return await signer.getAddress()
   }
 
-  async function sendEthersLedgerTransaction({ from, to, value }: TransactionInit) {
-    const signer = getEthersLedgerSigner()
-    const provider = signer.provider as ethers.providers.Provider
-    const unsignedTransaction = {
-      to,
-      value: ethers.utils.parseUnits(value),
-      type: 0
-    } as ethers.UnsignedTransaction
-    
-    // Todo check before click (user can +/- gas limit accordingly)
-    const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumURL, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
-    const balance = await provider.getBalance(from)
-    const required = gasPrice.mul(gasLimit).add(ethers.utils.parseEther(value))
-    console.log('Balance', ethers.utils.formatEther(balance))
-    console.log('Required', ethers.utils.formatEther(required))
-
-    return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+  async function sendLedgerTransaction({ from, to, value, token }: TransactionInit) {
+    if (token === 'ETH') {
+      const signer = getEthersLedgerSigner()
+      const provider = signer.provider as ethers.providers.Provider
+      const unsignedTransaction = {
+        to,
+        value: ethers.utils.parseUnits(value),
+        type: 0
+      } as ethers.UnsignedTransaction
+      
+      // Todo check before click (user can +/- gas limit accordingly)
+      const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumURL, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+      const balance = await provider.getBalance(from)
+      const required = gasPrice.mul(gasLimit).add(ethers.utils.parseEther(value))
+      console.log('Balance', ethers.utils.formatEther(balance))
+      console.log('Required', ethers.utils.formatEther(required))
+  
+      return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    } else if (token === 'BTC') {
+      const signer = getBitcoinLedgerSigner()
+      return await signer.sendTransaction(to, value)
+    }
   }
 
-  async function signEthersLedgerMessage(messageInit: MessageInit): Promise<string> {
-    const { message } = messageInit
-    const signer = getEthersLedgerSigner()
-    return await signer.signMessage(message)
+  async function signLedgerMessage(messageInit: MessageInit): Promise<string> {
+    if (messageInit.token === 'ETH') {
+      const { message } = messageInit
+      const signer = getEthersLedgerSigner()
+      return await signer.signMessage(message)
+    } else if ( messageInit.token === 'BTC') {
+      const { message } = messageInit
+      const signer = getBitcoinLedgerSigner()
+      return await signer.signMessage(message)
+    } else {
+      return ''
+    }
   }
 
   return {
-    signEthersLedgerMessage,
-    sendEthersLedgerTransaction,
+    signLedgerMessage,
+    sendLedgerTransaction,
     getBitcoinLedgerAddress,
     getEthersLedgerAddress,
     getBitcoinLedgerSigner,
