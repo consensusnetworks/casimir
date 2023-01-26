@@ -1,7 +1,6 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
-import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useEthers from '@/composables/ethers'
@@ -19,7 +18,7 @@ const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
 const selectedProvider = ref<ProviderString>('MetaMask')
-const selectedAccount = ref<string>('0xd557a5745d4560B24D36A68b52351ffF9c86A212')
+const selectedAccount = ref<string>('Not Active')
 const loggedIn = ref(false)
 const primaryAccount = ref('')
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
@@ -29,9 +28,8 @@ const primaryAccount = ref('')
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
   const { ssv, getSSVFeePercent } = useSSV()
-  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, loginWithEthers } = useEthers()
+  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, loginWithEthers, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
-  const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
@@ -68,7 +66,9 @@ export default function useWallet() {
         setSelectedAccount(address)
       } else if (provider === 'IoPay') {
         const address = await getIoPayAddress()
-        setSelectedAccount(address)
+        // const balance = await getBalance('MetaMask')
+        // console.log('balance :>> ', balance)
+        // setSelectedAccount(address)
       } else if (provider === 'Ledger') {
         const address = await getLedgerAddress()
         setSelectedAccount(address)
@@ -80,6 +80,12 @@ export default function useWallet() {
       }
     } catch (error) {
       console.error(error)
+    }
+  }
+
+  async function switchNetwork(provider: ProviderString, chainId: string) {
+    if (provider === 'MetaMask') {
+      switchEthersNetwork('MetaMask', chainId)
     }
   }
 
@@ -252,6 +258,7 @@ export default function useWallet() {
     deposit,
     login,
     getUserBalance,
-    getUserPools
+    getUserPools,
+    switchNetwork
   }
 }

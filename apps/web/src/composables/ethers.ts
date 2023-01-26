@@ -42,6 +42,21 @@ export default function useEthers() {
     }
   }
 
+  async function getBalance (providerString: ProviderString) {
+    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    try {
+      if (provider?.request) {
+        const balance = await provider.request({
+          method: 'eth_getBalance',
+          params: [await getEthersAddress(providerString), 'latest'],
+        })
+        return ethers.utils.formatEther(balance)
+      }
+    } catch (err) {
+      console.log('Error getting balance: ', err)
+    }
+  }
+
   async function sendEthersTransaction(
     { to, value, providerString }: TransactionInit
   ) {
@@ -55,6 +70,7 @@ export default function useEthers() {
       to,
       value: etherAmount
     }
+    console.log('tx :>> ', tx)
     return await signer.sendTransaction(tx)
   }
 
@@ -89,7 +105,56 @@ export default function useEthers() {
     return await response.json()
   }
 
-  return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit, loginWithEthers }
+  async function addEthersNetwork (providerString: ProviderString, network: any) {
+    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    try {
+      await provider.request({
+        method: 'wallet_addEthereumChain',
+        params: [network]
+      })
+    } catch(err: any){
+      console.log(`Error occurred while adding network ${network.chainName}, err: ${err.message} code: ${err.code}`)
+    }
+  }
+
+  async function switchEthersNetwork (providerString: ProviderString, chainId: string) {
+    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const currentChainId = await provider.networkVersion
+    if (chainId === '5') {
+      chainId = '0x5'
+    } else if (chainId === '4690') {
+      chainId = ethers.utils.hexlify(4690)
+    }
+    if (currentChainId.toString() != chainId){
+        try {
+          await provider.request({
+            method:'wallet_switchEthereumChain',
+            params: [{chainId: chainId}]
+          })
+        } catch(err: any){
+            console.log(`Error occurred while switching chain to chainId ${chainId}, err: ${err.message} code: ${err.code}`)
+            if (err.code === 4902){
+              if (chainId === '5') {
+                addEthersNetwork('MetaMask', goerliNetwork)
+              } else if (chainId === '4690') {
+                addEthersNetwork('MetaMask', iotexNetwork)
+            }
+          }
+        }
+    }
+  }
+
+  return { 
+    ethersProviderList,
+    getEthersBrowserSigner,
+    getEthersAddress,
+    getBalance,
+    sendEthersTransaction,
+    signEthersMessage,
+    getGasPriceAndLimit,
+    loginWithEthers,
+    switchEthersNetwork
+  }
 }
 
 function getBrowserProviders(ethereum: any) {
@@ -105,4 +170,28 @@ function getBrowserProviders(ethereum: any) {
       CoinbaseWallet: ethereum.providerMap.get('CoinbaseWallet'),
     }
   }
+}
+
+const iotexNetwork = {
+  chainId: ethers.utils.hexlify(4690),
+  chainName: 'IoTeX',
+  nativeCurrency: {
+      name: 'IoTeX',
+      symbol: 'IOTX',
+      decimals: 18
+  },
+  rpcUrls: ['http://api.testnet.iotex.one:80'],
+  blockExplorerUrls: ['https://iotexscan.io']
+}
+
+const goerliNetwork = {
+  chainId: '0x5',
+  chainName: 'Goerli Testnet',
+  nativeCurrency: {
+      name: 'Goerli',
+      symbol: 'GÖETH',
+      decimals: 18
+  },
+  rpcUrls: ['https://goerli.infura.io/v3/6b9f3a5d3d5e4c8e9b5d1f0c3e5f1e4a'],
+  blockExplorerUrls: ['https://goerli.etherscan.io']
 }
