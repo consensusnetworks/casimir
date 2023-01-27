@@ -71,23 +71,27 @@ export default class BitcoinLedgerSigner {
     }
 
     async signMessage(message: string): Promise<string> {
-        const messageBuffer = Buffer.from(message)
-        const signature = await this._retry((btc) => btc.signMessage(
-            this.path,
-            messageBuffer.toString('hex')
-        ))
-        const signedHash = signature.r + signature.s + signature.v.toString(16)
-        return signedHash
+        try {
+            const messageHex = Buffer.from(message).toString('hex')
+            const result = await this._retry((btc) => btc.signMessage(
+                this.path,
+                messageHex
+            ))
+            const v = result['v'] + 27 + 4
+            const signature = Buffer.from(v.toString(16) + result['r'] + result['s'], 'hex').toString('base64')
+            console.log('Signature : ' + signature)
+            return signature
+        } catch (err) {
+            console.log(err)
+            throw err
+        }
     }
 
-    // async signTransaction(transaction) {
+    async signTransaction(path: string, transaction: any) {
+    }
 
-    // }
-
-    // Populates all fields in a transaction, signs it and sends it to the network
-    // async sendTransaction(transaction) {
-
-    // }
+    async sendTransaction(tx: any) {
+    }
 
     // connect() {
 
