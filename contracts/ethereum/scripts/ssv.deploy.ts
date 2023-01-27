@@ -22,7 +22,7 @@ void async function () {
 
     if (mockChainlink) {
         const mockChainlinkConfig = {
-            MockOracle: {
+            MockFeed: {
                 address: '',
                 args: {
                     linkTokenAddress: process.env.LINK_TOKEN_ADDRESS
@@ -32,20 +32,19 @@ void async function () {
             }
         }
         config = {
-            // Deploy Chainlink oracle first
+            // Deploy Chainlink contracts first
             ...mockChainlinkConfig,
             ...config
         }
     }
 
-
     for (const name in config) {
         console.log(`Deploying ${name} contract...`)
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
 
-        // Update SSVManager args with Oracle or MockOracle address
-        if (name === 'SSVManager' && config.MockOracle) {
-            args.linkOracleAddress = config.MockOracle.address
+        // Update SSVManager args with Oracle or MockFeed address
+        if (name === 'SSVManager' && config.MockFeed) {
+            args.linkOracleAddress = config.MockFeed.address
         }
 
         const contract = await deployContract(name, proxy, args, options)
@@ -57,7 +56,7 @@ void async function () {
         // Save contract address for next loop
         (config[name as keyof DeploymentConfig] as ContractConfig).address = address
     }
-    
+
     // Set permission on the Oracle to use local node
     if (!mockChainlink) {
         const linkOracleOwnerAddress = '0x9d087fC03ae39b088326b67fA3C788236645b717'

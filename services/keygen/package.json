@@ -4,28 +4,24 @@
     "main": "src/index.ts",
     "scripts": {
         "dev": "tsnd ./src/index.ts",
-        "build": "echo \"Error: no build specified\" && exit 0",
-        "buildnext": "node build.js",
-        "watch": "npm run build -- --watch",
-        "test": "mocha --recursive --exit --extension ts --timeout 15000"
+        "build": "node build.js",
+        "test": "jest --config jest.config.js"
     },
     "dependencies": {
         "cors": "^2.8.5",
-        "express": "^4.18.1",
+        "ethers": "^5.7.2",
         "js-base64": "^3.7.3",
+        "minimist": "^1.2.7",
         "ssv-keys": "github:bloxapp/ssv-keys",
         "undici": "^5.14.0"
     },
     "devDependencies": {
-        "@types/chai": "^4.3.3",
         "@types/cors": "^2.8.12",
-        "@types/express": "^4.17.13",
-        "@types/mocha": "^10.0.0",
+        "@types/jest": "^29.4.0",
         "@types/node": "^17.0.38",
-        "chai": "^4.3.6",
         "esbuild": "^0.15.9",
-        "mocha": "^10.0.0",
-        "ts-node-dev": "^2.0.0",
-        "zx": "^7.1.1"
+        "jest": "^29.4.0",
+        "ts-jest": "^29.0.5",
+        "ts-node-dev": "^2.0.0"
     }
 }
