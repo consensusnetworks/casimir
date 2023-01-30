@@ -15,7 +15,7 @@ import TopNav from '@/components/navigation/TopNav.vue'
         >
           <div
             class="max-w-[1280px] min-w-[360px] h-full 
-          w-full overflow-auto px-25 py-margins "
+          w-full overflow-auto px-25 py-margins"
           >
             <slot />
           </div>
