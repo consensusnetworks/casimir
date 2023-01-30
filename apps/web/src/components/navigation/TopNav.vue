@@ -158,8 +158,15 @@ const account = ref(true)
               class="iconoir-wallet"
             />
           </div>
-          <div class="nav_modal flex justify-center">
-            <div class="max-w-[1280px] min-w-[380px] w-full text-center">
+          <div 
+            class="nav_modal flex justify-center"
+            style="
+            height: calc(100vh - 200px);
+            max-height: 500px;
+            min-height: 200px;
+            "
+          >
+            <div class="max-w-[1280px] min-w-[380px] w-full h-full text-center">
               <MultiwalletConnect />
             </div>
           </div>

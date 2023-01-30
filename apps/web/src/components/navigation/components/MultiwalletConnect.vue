@@ -53,20 +53,20 @@ onMounted(()=>{
 
 const addWalletAddress = ref('')
 
-const copyWalletAddress = (text) => {
+const copyWalletAddress = (text: string) => {
   navigator.clipboard.writeText(text)
 }
 </script>
   
 <template>
-  <div class="">
+  <div class="flex flex-col gap-25 pb-25 h-full">
     <h6 class="text-grey_5 font-medium">
       Connect your wallets to view and access all of your assets in one location
     </h6>
-    <div class="pb-20 mt-25 grid grid-cols-3">
+    <div class="h-full grid grid-cols-3">
       <div 
         :class="hasWallets? 'col-span-1':'col-span-2'"
-        class="flex flex-col gap-15 h-[500px] overflow-auto"
+        class="flex flex-col gap-15 pb-15 h-[90%] overflow-auto"
       >
         <!-- TD: make alerts for Metamask and others to remind them to have that account connected when connecting -->
         <!-- Only show when a user is connected -->
@@ -237,7 +237,7 @@ const copyWalletAddress = (text) => {
       <div
         v-else
         :class="hasWallets? 'col-span-2':'col-span-1'"
-        class="border-l border-l-grey_2 overflow-auto h-[500px]"
+        class="border-l border-l-grey_2  h-[90%] overflow-auto"
       >
         <div class="flex w-full justify-end items-center gap-15 mb-15 px-[2.5%]">
           <span class="text-body text-grey_3">
