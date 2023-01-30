@@ -15,8 +15,6 @@ import ETHConfirmStake from '@/pages/staking/components/ETHConfirmStake.vue'
 import Assets from '@/pages/assets/Assets.vue'
 // @ts-ignore
 import Test from '@/pages/test/Test.vue'
-// @ts-ignore
-import ChartTest from '@/pages/chart-test/ChartTest.vue'
 
 // import NotFound from '@/pages/not-found/NotFound.vue'
 
@@ -57,12 +55,6 @@ const routes = [
     path: '/test', 
     name: Test, 
     component: Test,
-    meta: { authorize: [] }
-},
-{ 
-    path: '/chart', 
-    name: ChartTest, 
-    component: ChartTest,
     meta: { authorize: [] }
 },
 // { 
