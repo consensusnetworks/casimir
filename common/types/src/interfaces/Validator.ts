@@ -1,4 +1,4 @@
-export interface IValidator {
+export interface Validator {
     depositDataRoot: string
     operatorIds: number[]
     operatorPublicKeys: string[]

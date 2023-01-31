@@ -73,37 +73,22 @@ struct User {
 
 ```solidity
 struct Validator {
-  bytes32 depositData;
-  bytes[] encryptedShares;
+  bytes32 depositDataRoot;
   uint32[] operatorIds;
+  bytes[] operatorPublicKeys;
+  bytes[] sharesEncrypted;
+  bytes[] sharesPublicKeys;
   bytes signature;
-  bytes validatorPublicKey;
 }
 ```
 
-### _lastPoolId
+### lastPoolId
 
 ```solidity
-struct Counters.Counter _lastPoolId
+struct Counters.Counter lastPoolId
 ```
 
 Pool ID generator
-
-### swapRouter
-
-```solidity
-contract ISwapRouter swapRouter
-```
-
-Uniswap ISwapRouter
-
-### balanceFeed
-
-```solidity
-contract AggregatorV3Interface balanceFeed
-```
-
-Chainlink rewards feed aggregator
 
 ### ManagerDeposit
 
@@ -129,10 +114,10 @@ event ValidatorActivated(uint32 poolId, uint32[] operatorIds, bytes validatorPub
 
 Event signaling a validator activation
 
-### ValidatorRegistered
+### ValidatorAdded
 
 ```solidity
-event ValidatorRegistered(uint32[] operatorIds, bytes validatorPublicKey)
+event ValidatorAdded(uint32[] operatorIds, bytes validatorPublicKey)
 ```
 
 Event signaling a validator registration
@@ -140,7 +125,7 @@ Event signaling a validator registration
 ### constructor
 
 ```solidity
-constructor(address _depositAddress, address _linkOracleAddress, address _linkTokenAddress, address _ssvTokenAddress, address _swapRouterAddress, address _wethTokenAddress) public
+constructor(address _beaconDepositAddress, address _linkFeedAddress, address _linkTokenAddress, address _ssvNetworkAddress, address _ssvTokenAddress, address _swapRouterAddress, address _wethTokenAddress) public
 ```
 
 Constructor
@@ -149,12 +134,13 @@ Constructor
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _depositAddress | address | – The Beacon deposit address |
-| _linkOracleAddress | address | - The Chainlink data feed address |
-| _linkTokenAddress | address | - The Chainlink token address |
-| _ssvTokenAddress | address | - The SSV token address |
-| _swapRouterAddress | address | - The Uniswap router address |
-| _wethTokenAddress | address | - The WETH contract address |
+| _beaconDepositAddress | address | The Beacon deposit address |
+| _linkFeedAddress | address | The Chainlink data feed address |
+| _linkTokenAddress | address | The Chainlink token address |
+| _ssvNetworkAddress | address | The SSV network address |
+| _ssvTokenAddress | address | The SSV token address |
+| _swapRouterAddress | address | The Uniswap router address |
+| _wethTokenAddress | address | The WETH contract address |
 
 ### deposit
 
@@ -206,13 +192,41 @@ Get the SSV fee percentage to charge on each deposit
 | ---- | ---- | ----------- |
 | [0] | uint32 | The SSV fee percentage to charge on each deposit |
 
-### registerValidator
+### addValidator
 
 ```solidity
-function registerValidator(bytes32 _depositData, bytes[] _encryptedShares, uint32[] _operatorIds, bytes _signature, bytes _validatorPublicKey) public
+function addValidator(bytes32 _depositDataRoot, uint32[] _operatorIds, bytes[] _operatorPublicKeys, bytes[] _sharesEncrypted, bytes[] _sharesPublicKeys, bytes _signature, bytes _validatorPublicKey) public
 ```
 
-_Register a validator to the pool manager_
+_Add a validator to the pool manager_
+
+### getActiveValidatorPublicKeys
+
+```solidity
+function getActiveValidatorPublicKeys() external view returns (bytes[])
+```
+
+Get active validator public keys
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes[] | A list of active validator public keys |
+
+### getInactiveValidatorPublicKeys
+
+```solidity
+function getInactiveValidatorPublicKeys() external view returns (bytes[])
+```
+
+Get inactive validator public keys
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes[] | A list of inactive validator public keys |
 
 ### getOpenPoolIds
 
@@ -254,7 +268,7 @@ Get a list of a user's pool IDs by user address
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _userAddress | address | - The user address |
+| _userAddress | address | The user address |
 
 #### Return Values
 
@@ -280,8 +294,8 @@ Get a user's balance in a pool by user address and pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | - The pool ID |
-| _userAddress | address | - The user address |
+| _poolId | uint32 | The pool ID |
+| _userAddress | address | The user address |
 
 #### Return Values
 
@@ -301,8 +315,8 @@ Get a user's rewards in a pool by user address and pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | - The pool ID |
-| _userAddress | address | - The user address |
+| _poolId | uint32 | The pool ID |
+| _userAddress | address | The user address |
 
 #### Return Values
 
@@ -322,8 +336,8 @@ Get a user's stake in a pool by user address and pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | - The pool ID |
-| _userAddress | address | - The user address |
+| _poolId | uint32 | The pool ID |
+| _userAddress | address | The user address |
 
 #### Return Values
 
@@ -343,7 +357,7 @@ Get a pool's balance by pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | - The pool ID |
+| _poolId | uint32 | The pool ID |
 
 #### Return Values
 
@@ -363,7 +377,7 @@ Get a pool's validator public key by pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | - The pool ID |
+| _poolId | uint32 | The pool ID |
 
 #### Return Values
 
@@ -383,7 +397,7 @@ Get a pool's operators by pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | - The pool ID |
+| _poolId | uint32 | The pool ID |
 
 #### Return Values
 
@@ -394,7 +408,7 @@ Get a pool's operators by pool ID
 ### getLatestBalance
 
 ```solidity
-function getLatestBalance(address _validatorAddress) public view returns (int256)
+function getLatestBalance(bytes _validatorPublicKey) public view returns (int256)
 ```
 
 Get the latest balance for a validator (PoR)
@@ -403,7 +417,7 @@ Get the latest balance for a validator (PoR)
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _validatorAddress | address | – The validator address |
+| _validatorPublicKey | bytes | The validator address |
 
 #### Return Values
 
@@ -437,8 +451,8 @@ Get a slice of the PoR address list as strings
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _startIndex | uint256 | – The list start index |
-| _endIndex | uint256 | – The list end index |
+| _startIndex | uint256 | The list start index |
+| _endIndex | uint256 | The list end index |
 
 #### Return Values
 
@@ -557,7 +571,7 @@ function deposit() external payable
 function withdraw(uint256 _amount) external
 ```
 
-## MockOracle
+## MockFeed
 
 Chainlink smart contract developers can use this to test their contracts
 

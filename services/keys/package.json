@@ -1,5 +1,5 @@
 {
-    "name": "@casimir/keygen",
+    "name": "@casimir/keys",
     "private": "true",
     "main": "src/index.ts",
     "scripts": {

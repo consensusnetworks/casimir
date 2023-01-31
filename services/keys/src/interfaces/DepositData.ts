@@ -1,4 +1,4 @@
-export interface IDepositData {
+export interface DepositData {
     pubkey: string
     withdrawal_credentials: string
     amount: string

@@ -38,14 +38,16 @@ void async function () {
     if (chainlink) {
         $`npm run dev:ganache --workspace @casimir/ethereum`
         // Wait for ganache to start
-        await new Promise(resolve => setTimeout(resolve, 5000))
+        const ganacheWaitTime = 5000
+        await new Promise(resolve => setTimeout(resolve, ganacheWaitTime))
         $`npm run deploy --workspace @casimir/ethereum -- --network ganache`
         $`npm run dev:chainlink --fork=${fork}`
     } else {
         process.env.MOCK_CHAINLINK = 'true'
         $`npm run dev --workspace @casimir/ethereum`
         // Wait for hardhat to start
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        const hardhatWaitTime = 2500
+        await new Promise(resolve => setTimeout(resolve, hardhatWaitTime))
         $`npm run deploy --workspace @casimir/ethereum -- --network localhost`
     }
 

@@ -1,4 +1,4 @@
-export interface IOperator {
+export interface Operator {
     id: number
     id_str: string
     declared_fee: number
