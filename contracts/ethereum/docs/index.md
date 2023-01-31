@@ -125,7 +125,7 @@ Event signaling a validator registration
 ### constructor
 
 ```solidity
-constructor(address _beaconDepositAddress, address _linkFeedAddress, address _linkTokenAddress, address _ssvNetworkAddress, address _ssvTokenAddress, address _swapRouterAddress, address _wethTokenAddress) public
+constructor(address beaconDepositAddress, address linkFeedAddress, address linkTokenAddress, address ssvNetworkAddress, address ssvTokenAddress, address swapRouterAddress, address wethTokenAddress) public
 ```
 
 Constructor
@@ -134,13 +134,13 @@ Constructor
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _beaconDepositAddress | address | The Beacon deposit address |
-| _linkFeedAddress | address | The Chainlink data feed address |
-| _linkTokenAddress | address | The Chainlink token address |
-| _ssvNetworkAddress | address | The SSV network address |
-| _ssvTokenAddress | address | The SSV token address |
-| _swapRouterAddress | address | The Uniswap router address |
-| _wethTokenAddress | address | The WETH contract address |
+| beaconDepositAddress | address | The Beacon deposit address |
+| linkFeedAddress | address | The Chainlink data feed address |
+| linkTokenAddress | address | The Chainlink token address |
+| ssvNetworkAddress | address | The SSV network address |
+| ssvTokenAddress | address | The SSV token address |
+| swapRouterAddress | address | The Uniswap router address |
+| wethTokenAddress | address | The WETH contract address |
 
 ### deposit
 
@@ -195,7 +195,7 @@ Get the SSV fee percentage to charge on each deposit
 ### addValidator
 
 ```solidity
-function addValidator(bytes32 _depositDataRoot, uint32[] _operatorIds, bytes[] _operatorPublicKeys, bytes[] _sharesEncrypted, bytes[] _sharesPublicKeys, bytes _signature, bytes _validatorPublicKey) public
+function addValidator(bytes32 depositDataRoot, uint32[] operatorIds, bytes[] operatorPublicKeys, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes validatorPublicKey) public
 ```
 
 _Add a validator to the pool manager_
@@ -259,7 +259,7 @@ Get a list of all staked pool IDs
 ### getUserPoolIds
 
 ```solidity
-function getUserPoolIds(address _userAddress) external view returns (uint32[])
+function getUserPoolIds(address userAddress) external view returns (uint32[])
 ```
 
 Get a list of a user's pool IDs by user address
@@ -268,7 +268,7 @@ Get a list of a user's pool IDs by user address
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _userAddress | address | The user address |
+| userAddress | address | The user address |
 
 #### Return Values
 
@@ -279,13 +279,13 @@ Get a list of a user's pool IDs by user address
 ### getPoolUserDetails
 
 ```solidity
-function getPoolUserDetails(uint32 _poolId, address _userAddress) external view returns (struct SSVManager.PoolUserDetails)
+function getPoolUserDetails(uint32 poolId, address userAddress) external view returns (struct SSVManager.PoolUserDetails)
 ```
 
 ### getPoolUserBalance
 
 ```solidity
-function getPoolUserBalance(uint32 _poolId, address _userAddress) public view returns (struct SSVManager.Balance)
+function getPoolUserBalance(uint32 poolId, address userAddress) public view returns (struct SSVManager.Balance)
 ```
 
 Get a user's balance in a pool by user address and pool ID
@@ -294,8 +294,8 @@ Get a user's balance in a pool by user address and pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | The pool ID |
-| _userAddress | address | The user address |
+| poolId | uint32 | The pool ID |
+| userAddress | address | The user address |
 
 #### Return Values
 
@@ -306,7 +306,7 @@ Get a user's balance in a pool by user address and pool ID
 ### getPoolUserRewards
 
 ```solidity
-function getPoolUserRewards(uint32 _poolId, address _userAddress) public view returns (uint256)
+function getPoolUserRewards(uint32 poolId, address userAddress) public view returns (uint256)
 ```
 
 Get a user's rewards in a pool by user address and pool ID
@@ -315,8 +315,8 @@ Get a user's rewards in a pool by user address and pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | The pool ID |
-| _userAddress | address | The user address |
+| poolId | uint32 | The pool ID |
+| userAddress | address | The user address |
 
 #### Return Values
 
@@ -327,7 +327,7 @@ Get a user's rewards in a pool by user address and pool ID
 ### getPoolUserStake
 
 ```solidity
-function getPoolUserStake(uint32 _poolId, address _userAddress) public view returns (uint256)
+function getPoolUserStake(uint32 poolId, address userAddress) public view returns (uint256)
 ```
 
 Get a user's stake in a pool by user address and pool ID
@@ -336,8 +336,8 @@ Get a user's stake in a pool by user address and pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | The pool ID |
-| _userAddress | address | The user address |
+| poolId | uint32 | The pool ID |
+| userAddress | address | The user address |
 
 #### Return Values
 
@@ -348,7 +348,7 @@ Get a user's stake in a pool by user address and pool ID
 ### getPoolBalance
 
 ```solidity
-function getPoolBalance(uint32 _poolId) public view returns (struct SSVManager.Balance)
+function getPoolBalance(uint32 poolId) public view returns (struct SSVManager.Balance)
 ```
 
 Get a pool's balance by pool ID
@@ -357,7 +357,7 @@ Get a pool's balance by pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | The pool ID |
+| poolId | uint32 | The pool ID |
 
 #### Return Values
 
@@ -368,7 +368,7 @@ Get a pool's balance by pool ID
 ### getPoolValidatorPublicKey
 
 ```solidity
-function getPoolValidatorPublicKey(uint32 _poolId) external view returns (bytes)
+function getPoolValidatorPublicKey(uint32 poolId) external view returns (bytes)
 ```
 
 Get a pool's validator public key by pool ID
@@ -377,7 +377,7 @@ Get a pool's validator public key by pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | The pool ID |
+| poolId | uint32 | The pool ID |
 
 #### Return Values
 
@@ -388,7 +388,7 @@ Get a pool's validator public key by pool ID
 ### getPoolOperatorIds
 
 ```solidity
-function getPoolOperatorIds(uint32 _poolId) external view returns (uint32[])
+function getPoolOperatorIds(uint32 poolId) external view returns (uint32[])
 ```
 
 Get a pool's operators by pool ID
@@ -397,7 +397,7 @@ Get a pool's operators by pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _poolId | uint32 | The pool ID |
+| poolId | uint32 | The pool ID |
 
 #### Return Values
 
@@ -408,7 +408,7 @@ Get a pool's operators by pool ID
 ### getLatestBalance
 
 ```solidity
-function getLatestBalance(bytes _validatorPublicKey) public view returns (int256)
+function getLatestBalance(bytes validatorPublicKey) public view returns (int256)
 ```
 
 Get the latest balance for a validator (PoR)
@@ -417,7 +417,7 @@ Get the latest balance for a validator (PoR)
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _validatorPublicKey | bytes | The validator address |
+| validatorPublicKey | bytes | The validator address |
 
 #### Return Values
 
@@ -442,7 +442,7 @@ Get the length of the PoR (active) address list
 ### getPoRAddressList
 
 ```solidity
-function getPoRAddressList(uint256 _startIndex, uint256 _endIndex) external view returns (string[])
+function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
 ```
 
 Get a slice of the PoR address list as strings
@@ -451,8 +451,8 @@ Get a slice of the PoR address list as strings
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _startIndex | uint256 | The list start index |
-| _endIndex | uint256 | The list end index |
+| startIndex | uint256 | The list start index |
+| endIndex | uint256 | The list end index |
 
 #### Return Values
 
@@ -557,6 +557,23 @@ that would be used when querying the balance of that address._
 | ---- | ---- | ----------- |
 | [0] | string[] | Array of addresses as strings. |
 
+## ISSVToken
+
+### mint
+
+```solidity
+function mint(address to, uint256 amount) external
+```
+
+Mint tokens
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| to | address | The target address |
+| amount | uint256 | The amount of token to mint |
+
 ## IWETH9
 
 ### deposit
@@ -565,11 +582,15 @@ that would be used when querying the balance of that address._
 function deposit() external payable
 ```
 
+Deposit ether to get wrapped ether
+
 ### withdraw
 
 ```solidity
-function withdraw(uint256 _amount) external
+function withdraw(uint256) external
 ```
+
+Withdraw wrapped ether to get ether
 
 ## MockFeed
 
@@ -732,102 +753,4 @@ _Reverts if the callback address is the LINK token_
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _to | address | The callback address |
-
-## WETH9
-
-### name
-
-```solidity
-string name
-```
-
-### symbol
-
-```solidity
-string symbol
-```
-
-### decimals
-
-```solidity
-uint8 decimals
-```
-
-### Approval
-
-```solidity
-event Approval(address src, address guy, uint256 wad)
-```
-
-### Transfer
-
-```solidity
-event Transfer(address src, address dst, uint256 wad)
-```
-
-### Deposit
-
-```solidity
-event Deposit(address dst, uint256 wad)
-```
-
-### Withdrawal
-
-```solidity
-event Withdrawal(address src, uint256 wad)
-```
-
-### balanceOf
-
-```solidity
-mapping(address => uint256) balanceOf
-```
-
-### allowance
-
-```solidity
-mapping(address => mapping(address => uint256)) allowance
-```
-
-### 
-
-```solidity
-undefined() external payable
-```
-
-### 
-
-```solidity
-undefined() public payable
-```
-
-### 
-
-```solidity
-undefined(uint256 wad) public
-```
-
-### 
-
-```solidity
-undefined() public view returns (uint256)
-```
-
-### 
-
-```solidity
-undefined(address guy, uint256 wad) public returns (bool)
-```
-
-### 
-
-```solidity
-undefined(address dst, uint256 wad) public returns (bool)
-```
-
-### 
-
-```solidity
-undefined(address src, address dst, uint256 wad) public returns (bool)
-```
 
