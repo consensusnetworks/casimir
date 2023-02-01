@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import MultiwalletConnect from './components/MultiwalletConnect.vue'
 import StakingProtocols from './components/StakingProtocols.vue'
+import useUsers from '@/composables/users'
+
+const { user } = useUsers()
 
 // To Do: connect this to our Auth and see if an account exsists
 const account = ref(true)
@@ -18,7 +21,7 @@ const account = ref(true)
     >
       <div>
         <RouterLink 
-          to="/"
+          :to="user.id? '/user-dashboard:' + user.id :'/front-page'"
         >
           <img
             src="/casimir.svg"
@@ -38,7 +41,7 @@ const account = ref(true)
           hover:border-b hover:border-b-primary mt-1"
         >
           <router-link 
-            to="/"
+            :to="user.id? '/user-dashboard:' + user.id :'/front-page'"
             class="h-70 flex gap-15 items-center"
           >
             <i

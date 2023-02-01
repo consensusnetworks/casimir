@@ -17,7 +17,10 @@ import Assets from '@/pages/assets/Assets.vue'
 import Test from '@/pages/test/Test.vue'
 // @ts-ignore
 import ChartTest from '@/pages/chart-test/ChartTest.vue'
-
+// @ts-ignore
+import FrontPage from '@/pages/landing/components/FrontPage.vue'
+// @ts-ignore
+import UserDashboard from '@/pages/landing/components/UserDashboard.vue'
 // import NotFound from '@/pages/not-found/NotFound.vue'
 
 
@@ -26,7 +29,17 @@ const routes = [
     path: '/', 
     name: Landing, 
     component: Landing,
-    meta: { authorize: [] }
+    meta: { authorize: [] },
+    children: [
+        {
+            path: 'front-page', 
+            component: FrontPage,
+        },
+        {
+            path: 'user-dashboard:id', 
+            component: UserDashboard,
+        },
+    ]
 },
 { 
     path: '/stake', 

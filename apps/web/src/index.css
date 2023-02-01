@@ -317,9 +317,16 @@ overflow: auto;
     }
     .btn_primary {
         @apply  flex  flex-row  items-center 
-        justify-center  px-[24px]  py-[12px] 
+        justify-center px-[24px]  py-[12px] 
         gap-[10px] bg-primary  text-white
         hover:bg-blue_7 disabled:bg-blue_2
+        disabled:text-grey_6;
+    }
+    .btn_text {
+        @apply  flex  flex-row  items-center 
+        justify-center
+        gap-[10px] text-primary 
+        hover:text-blue_7
         disabled:text-grey_6;
     }
     .modal {
@@ -342,6 +349,9 @@ overflow: auto;
     }
 }
 @layer utilities {
+    .expanding_bar{
+        transition: 0.1s all ease;
+    }
     .loading {
         background: linear-gradient(50deg, 
         #80ABFF,#4D89FF, #0D5FFF, #0D5FFF,#4D89FF, #80ABFF);

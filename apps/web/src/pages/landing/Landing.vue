@@ -1,17 +1,29 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { onMounted, watch } from 'vue'
+
+import useUsers from '@/composables/users'
+import router from '@/composables/router'
+
+const { user } = useUsers()
+
+onMounted(() => {
+  if(user.value.id){
+    router.push('/user-dashboard:' + user.value.id)
+  }else{
+    router.push('/front-page')
+  }
+  watch(user,()=>{
+    if(user.value.id){
+      router.push('/user-dashboard:' + user.value.id)
+    }else{
+      router.push('/front-page')
+    }
+  })
+})
+</script>
   
 <template>
-  <div class="min-h-full grid place-content-center">
-    <div class="text-center text-white bg-black px-[10vw] py-[30px]">
-      <h6 class="font-bold">
-        Landing Page
-      </h6>
-      <h2 class="my-[20px]">
-        Coming Soon!
-      </h2>
-      <h6 class="font-semibold mb-[10px]">
-        Thank You For Being Patient!
-      </h6>
-    </div>
+  <div class="h-full w-full">
+    <router-view />
   </div>
 </template>

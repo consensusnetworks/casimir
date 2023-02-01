@@ -1,6 +1,26 @@
 <script lang="ts" setup>
 import TopNav from '@/components/navigation/TopNav.vue'
+import useUsers from '@/composables/users'
+import { onMounted, ref } from 'vue'
 
+const { user } = useUsers()
+
+const showNoUserWarning = ref(false)
+const loadingWidthMeasurement = ref(0)
+onMounted(() => {
+  if(!user.value.id){
+    console.log('reched')
+    showNoUserWarning.value = true
+    const loadingInterval = setInterval(()=>{
+      if(loadingWidthMeasurement.value >= 100){
+        showNoUserWarning.value = false
+        clearInterval(loadingInterval)
+      }
+      loadingWidthMeasurement.value = loadingWidthMeasurement.value + 0.25
+    }, 10)
+  }
+  
+})
 </script>
 
 <template>
@@ -10,6 +30,26 @@ import TopNav from '@/components/navigation/TopNav.vue'
         <div class="">
           <TopNav />
         </div>
+
+        <div
+          v-if="showNoUserWarning"
+          class="flex flex-col items-center justify-center w-full bg-blue_3"
+        >
+          <div
+            class=" 
+            max-w-[1280px] min-w-[360px] text-white 
+            py-15
+            "
+          >
+            You currently do not have any wallets connected, 
+            Visit our Multi-Wallet to connect your primary wallet. 
+          </div>
+          <div
+            class="bg-primary h-2 transition"
+            :style="`width: ${loadingWidthMeasurement}%;`"
+          />
+        </div>
+
         <div
           class="h-full w-full flex justify-center items-center"
         >
