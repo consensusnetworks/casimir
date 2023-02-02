@@ -57,7 +57,7 @@ export default function useLedger() {
       return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
     } else if (token === 'BTC') {
       const signer = getBitcoinLedgerSigner()
-      return await signer.sendTransaction(to, value)
+      return await signer.sendTransaction({from, to, value})
     }
   }
 

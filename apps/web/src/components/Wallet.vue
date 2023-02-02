@@ -1,8 +1,5 @@
 <template>
   <div>
-    <button @click="getBitcoinLedgerSigner">
-      getBitcoinLedgerSigner
-    </button>
     <div>
       <button @click="login()">
         Login

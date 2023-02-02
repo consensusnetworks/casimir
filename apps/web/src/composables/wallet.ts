@@ -15,18 +15,20 @@ import { MessageInit } from '@/interfaces/MessageInit'
 import { Pool } from '@/interfaces/Pool'
 import { TokenString } from '@/interfaces/TokenString'
 
-const amount = ref<string>('0.0')
-const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
+const amount = ref<string>('0.000001')
+const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
-const selectedProvider = ref<ProviderString>('MetaMask')
-const selectedAccount = ref<string>('0xd557a5745d4560B24D36A68b52351ffF9c86A212')
-const selectedToken = ref<TokenString>('ETH')
+const selectedProvider = ref<ProviderString>('')
+const selectedAccount = ref<string>('')
+const selectedToken = ref<TokenString>('')
 const loggedIn = ref(false)
 const primaryAccount = ref('')
-// Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
+
+// Test ethereum send to address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
+// Test bitcoin send to address : 2N3Petr4LMH9tRneZCYME9mu33gR5hExvds
 
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
@@ -40,7 +42,8 @@ export default function useWallet() {
   const { updatePrimaryAccount } = useUsers()
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
-    'ETH': getEthersLedgerAddress
+    'ETH': getEthersLedgerAddress,
+    '': () => { throw new Error('No token selected') }
   }
 
   const setSelectedProvider = (provider: ProviderString) => {
@@ -90,7 +93,8 @@ export default function useWallet() {
       from: selectedAccount.value,
       to: toAddress.value,
       value: amount.value,
-      providerString: selectedProvider.value
+      providerString: selectedProvider.value,
+      token: selectedToken.value || undefined
     }
 
     try {
@@ -118,7 +122,7 @@ export default function useWallet() {
     const messageInit: MessageInit = {
       message,
       providerString: selectedProvider.value,
-      token: selectedToken.value
+      token: selectedToken.value || undefined
     }
     try {
       if (messageInit.providerString === 'WalletConnect') {
