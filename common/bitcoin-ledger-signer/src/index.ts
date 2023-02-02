@@ -1,8 +1,10 @@
 import Btc from '@ledgerhq/hw-app-btc'
 import useTransports from './providers/transports'
 import { BitcoinLedgerSignerOptions } from './interfaces/BitcoinLedgerSignerOptions'
+import { TransactionInit } from './interfaces/TransactionInit'
 
-const defaultPath = '84\'/0\'/0\'/0/0' // Legacy addresses: '44\'/0\'/0\'/0/0', Segwit: '49\'/0\'/0\'/0/0', Native Segwit: '84\'/0\'/0\'/0/0'
+// const defaultPath = '84\'/0\'/0\'/0/0' // Legacy addresses: '44\'/0\'/0\'/0/0', Segwit: '49\'/0\'/0\'/0/0', Native Segwit: '84\'/0\'/0\'/0/0'
+const defaultPath = '84\'/1\'/0\'/0/0' // TestNetPath
 const defaultType = 'usb'
 const { createUSBTransport, createSpeculosTransport } = useTransports()
 const transportCreators = {
@@ -28,7 +30,9 @@ export default class BitcoinLedgerSigner {
         const transportCreator = transportCreators[transportCreatorType]
         if (!transportCreator) console.log('Unknown or unsupported type', this.type)
         this._btc = transportCreator(this.baseURL).then(transport => {
-            return new Btc({ transport })
+            // TODO: Add conditional for testnet
+            return new Btc({ transport, currency: 'bitcoin_testnet' })
+            return new Btc({ transport, currency: 'bitcoin' })
         })
     }
 
@@ -63,6 +67,7 @@ export default class BitcoinLedgerSigner {
     }
 
     async getAddress(): Promise<string> {
+        // Pass testnet args to getWalletPublicKey
         const { bitcoinAddress: address } = await this._retry((btc) => btc.getWalletPublicKey(
             this.path,
             { verify: false, format: 'bech32'}
@@ -90,7 +95,30 @@ export default class BitcoinLedgerSigner {
     async signTransaction(path: string, transaction: any) {
     }
 
-    async sendTransaction(tx: any) {
+    async sendTransaction({from, to, value}: TransactionInit): Promise<string> {
+        try {
+        // Build the transaction object using splitTransaction to then pass into getTrustedInput
+        // Create a transaction hex string
+        const transactionHex = 'f85f49b51366f7150d2adea6544bc256743707a38e2bdfbf839349ba1ff2875c'
+        const isSegwitSupported = false
+        const tx = await this._retry(async (btc) => btc.splitTransaction(
+            transactionHex,
+            isSegwitSupported
+        ))
+        return new Promise(resolve => resolve(''))
+        // const output_index = 1
+        // const inputs = [[tx, output_index]]
+        // Get trusted input (returns a string) using getTrustedInput
+        // const trustedInput = await this._retry((btc) => btc.getTrustedInput(
+        //     0,
+
+        // ))
+        
+        // Build the CreateTransactionArg and pass it to createPaymentTransaction
+        } catch (err) {
+            console.log('Error in bitcoin-ledger-signer sendTransaction: ', err)
+            throw err
+        }
     }
 
     // connect() {
