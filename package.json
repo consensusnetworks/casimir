@@ -78,5 +78,8 @@
     "hooks": {
       "after:bump": "npx auto-changelog -p"
     }
+  },
+  "dependencies": {
+    "d3": "^7.8.1"
   }
 }
