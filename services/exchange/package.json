@@ -1,0 +1,11 @@
+{
+  "name": "@casimir/exchnage",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "node dist/index.js",
+    "test": "jest",
+    "build": "esbuild src/*.ts --platform=node --target=esnext --format=cjs --outdir=dist --bundle"
+  },
+  "keywords": [],
+  "author": "hawyar"
+}

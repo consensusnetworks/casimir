@@ -94,8 +94,10 @@ class IotexTransfers {
 
         if (event === null) return null
 
-        this.log(`last processed block: ${JSON.stringify(parseInt(event[0].height.toString()), null, 2)}`)
-        return event[0]
+        return null
+
+        // this.log(`last processed block: ${JSON.stringify(parseInt(event[0].height.toString()), null, 2)}`)
+        // return event[0]
     }
 }
 

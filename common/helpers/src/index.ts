@@ -98,6 +98,7 @@ export async function upload( input: { bucket: string, key: string, data: string
   })
 
   const { $metadata } = await s3.send(upload)
+
   if ($metadata.httpStatusCode !== 200) throw new Error('Error uploading to s3')
 }
 

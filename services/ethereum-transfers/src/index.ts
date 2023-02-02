@@ -1,7 +1,7 @@
 import path from 'path'
 import process from 'process'
 import { EventTableSchema } from '@casimir/data'
-import { queryAthena } from '@casimir/helpers'
+import { queryAthena, upload } from '@casimir/helpers'
 import Piscina from 'piscina'
 import ethers from 'ethers'
 
@@ -25,12 +25,15 @@ class EthereumTransfers {
     network: Network
     provider: Provider
     pool: Piscina
-
     start: number
     end: number
     current: number
+    head: number
     last: number
     verbose: boolean
+    status: 'idle' | 'running' | 'stopped'
+    startedAt: string
+    endedAt: string | null
     constructor(opt: EthereumTransfersOptions) {
         this.chain = 'ethereum'
         this.provider = opt.provider
@@ -38,11 +41,15 @@ class EthereumTransfers {
         this.start = 0
         this.end = 0
         this.current = 0
+        this.head = 0
         this.last = 0
         this.verbose = opt.verbose || false
         this.pool = new Piscina({
             filename: path.resolve(__dirname, 'worker.mjs')
         })
+        this.status = 'idle'
+        this.startedAt = new Date().toISOString()
+        this.endedAt = null
     }
 
     private log(msg: any): void {
@@ -60,7 +67,8 @@ class EthereumTransfers {
          return null
      }
 
-    async curretEvent(): Promise<number | null> {
+    async chainHead(): Promise<number | null> {
+        console.log(ethers)
         const service = new ethers.providers.JsonRpcProvider({
             url: process.env.PUBLIC_ETHEREUM_URL || 'http://localhost:8545',
         })
@@ -69,41 +77,89 @@ class EthereumTransfers {
         return block
     }
 
-    async run(): Promise<void> {
+    async takeSnapshot() {
+        const tt = this.startedAt.split('T')[1].split('.')[0].replace(/:/g, '-')
+        const key = this.startedAt.split('T')[0].replace(/-/g, '/') + '/' + tt + '.json'
 
-        const current = await this.curretEvent()
-        const last = await this.lastEvent()
-
-        if (last === null || current === null) {
-            throw new Error('last or current block is null')
-        } else {
-            this.start = last + 1
-            this.current = current
+        const meta = {
+            start: this.start,
+            end: this.end,
+            head: this.head,
+            current: this.current,
+            provider: this.provider,
+            network: this.network,
+            chain: this.chain,
+            started_at: this.startedAt.replace('T', ' ').replace('Z', ''),
+            ended_at: this.endedAt,
         }
-
-        console.log(`starting from ${this.start} to ${this.end}`)
-        const begin = process.hrtime()
-
-        const jobs = Array<Promise<void>>()
-
-        for (let i = 0; i < this.end; i += 1000) {
-            const start = i === 0 ? this.start : this.start + 1
-            const end = i + 1000
-            jobs.push(this.pool.run({
-                start,
-                end,
-                chain: this.chain,
-                network: this.network,
-                provider: this.provider,
-            }))
-        }
-
-        await Promise.all(jobs).finally(() => {
-            const end = process.hrtime(begin)
-            this.log(`finished crawling from ${this.start} to ${this.current} in ${end[0]}s ${end[1] / 1000000}ms`)
+        
+        await upload({
+            bucket: 'casimir-crawler-log-dev',
+            key,
+            data: JSON.stringify(meta),
         }).catch((err) => {
-            console.error(err)
+            console.log(err)
         })
+        return meta
+    }
+
+
+    async run(): Promise<void> {
+        this.status = 'running'
+
+        this.start = 0
+        this.end = 15_000_000
+
+        const head = await this.chainHead()
+
+        if (head === null) {
+            throw new Error('Unable to get chain head')
+        }
+
+        this.head = head
+
+        console.log(this)
+
+        // const snap = await this.takeSnapshot()
+
+    //     const last = await this.lastEvent()
+
+    //     if (last === null) {
+    //         throw new Error('last block is null')
+    //     } else {
+    //         this.start = parseInt(last.toString()) + 1
+    //     }
+
+    //     console.log(`starting from ${this.start} to ${this.end}`)
+    //     const begin = process.hrtime()
+
+    //     const jobs = Array<Promise<void>>()
+
+    //     const interval = 1000
+
+    //     let iter = 0
+        
+    //     for (let i = this.start; i < this.end; i += interval) {
+    //         const start = iter === 0 ? i : i + 1
+    //         const end = i + interval
+
+    //         jobs.push(this.pool.run({
+    //             start,
+    //             end,
+    //             chain: this.chain,
+    //             network: this.network,
+    //             provider: this.provider,
+    //             url: process.env.PUBLIC_ETHEREUM_URL || 'http://localhost:8545',
+    //         }))
+    //         iter++
+    //     }
+
+    //     await Promise.all(jobs).finally(() => {
+    //         const end = process.hrtime(begin)
+    //         this.log(`finished crawling from ${this.start} to ${this.current} in ${end[0]}s ${end[1] / 1000000}ms`)
+    //     }).catch((err) => {
+    //         console.error(err)
+    //     })
     }
 }
 
