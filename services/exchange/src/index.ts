@@ -197,9 +197,15 @@ export class Exchange {
 }
 
 async function run() {
-	const e = new Exchange()
-	await e.syncHistoricalPrice('minute')
-	await e.syncHistoricalPrice('hour')
+	const exchange = new Exchange()
+	await Promise.all([
+		exchange.syncHistoricalPrice('minute'),
+		exchange.syncHistoricalPrice('hour')
+	]).finally(() => {
+		console.log('done')
+	}).catch((e) => {
+		console.error(e)
+	})
 }
 
 run()
