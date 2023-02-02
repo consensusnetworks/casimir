@@ -17,7 +17,8 @@
     "iotex-antenna": "^0.31.6",
     "util": "^0.12.5",
     "vue": "^3.2.25",
-    "vue-router": "^4.0.15"
+    "vue-router": "^4.0.15",
+    "web3": "^1.8.1"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.1.1",

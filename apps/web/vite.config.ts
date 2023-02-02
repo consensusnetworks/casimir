@@ -21,7 +21,7 @@ const config: UserConfig = {
     'global': 'globalThis'
   },
   optimizeDeps: {
-    include: ['iotex-antenna'],
+    // include: ['iotex-antenna'],
     esbuildOptions: {
       plugins: [
         NodeGlobalsPolyfillPlugin({
@@ -33,7 +33,7 @@ const config: UserConfig = {
   },
   build: {
     commonjsOptions: {
-      include: [/iotex-antenna/, /node_modules/]
+      include: [/* /iotex-antenna/, */ /node_modules/]
     }
   },
   resolve: {
