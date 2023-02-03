@@ -177,7 +177,7 @@ func main() {
 			},
 			&cli.StringFlag{
 				Name:  "output",
-				Value: "",
+				Value: os.Getenv("EVENT_OUTPUT"),
 				Usage: "output location (s3://bucket/path)",
 			},
 		},
@@ -324,8 +324,8 @@ func (c *Crawler) Crawl(wg *sync.WaitGroup, r []int64) {
 					if err != nil {
 						panic(err)
 					}
-
 					event.Address = sender.Hash().String()
+					event.ToAddress = tx.To().String()
 					events = append(events, event)
 				}
 			}
@@ -362,7 +362,6 @@ func NewBlockEvent(block *types.Block) (Event, error) {
 		Height:    block.Number().Int64(),
 		Hash:      block.Hash().String(),
 		CreatedAt: tt,
-		Address:   block.Coinbase().String(),
 		GasUsed:   fmt.Sprint(block.GasUsed()),
 		GasLimit:  fmt.Sprint(block.GasLimit()),
 	}
