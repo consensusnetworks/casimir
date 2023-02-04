@@ -1,9 +1,9 @@
 export interface Validator {
     depositDataRoot: string
+    publicKey: string
     operatorIds: number[]
-    operatorPublicKeys: string[]
     sharesEncrypted: string[]
     sharesPublicKeys: string[]
     signature: string
-    validatorPublicKey: string
+    withdrawalCredentials: string
 }

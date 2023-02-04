@@ -20,10 +20,6 @@ void async function () {
     process.env.BIP39_SEED = seed
     echo(chalk.bgBlackBright('Your mnemonic seed is ') + chalk.bgBlue(seed))
 
-    // Share Replit sandbox environment
-    const sandboxURL = 'https://soliditybox.consensusnetworks.repl.co'
-    echo(chalk.bgBlackBright('Your code sandbox URL is ') + chalk.bgBlue(sandboxURL))
-
     // Set fork rpc if requested, default fork to goerli if set vaguely or unset
     const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
     if (fork) {

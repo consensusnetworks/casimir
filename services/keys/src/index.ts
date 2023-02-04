@@ -1,21 +1,18 @@
-import minimist from 'minimist'
 import path from 'path'
 import url from 'url'
+import CLI from './providers/CLI'
 import SSV from './providers/SSV'
 
 export { SSV }
 
 /** 
- * Run CLI when called directly 
+ * Check if module is run directly 
  */
-void async function runCLI () {
+(function isCLI() {
     const nodePath = path.resolve(process.argv[1])
-    const modulePath = path.resolve(url.pathToFileURL(__filename).toString())
+    const modulePath = path.resolve(url.pathToFileURL(__filename).toString()).split(':')[1]
     if (nodePath === modulePath) {
-        const argv = minimist(process.argv.slice(2))
-        const { operatorIds, validatorCount } = argv
-        const ssv = new SSV()
-        const validators = await ssv.createValidators({ operatorIds, validatorCount })
-        console.log(validators)
+        const cli = new CLI()
+        cli.run()
     }
-}()
+})()

@@ -24,7 +24,7 @@ void async function () {
         const key = await getSecret(`consensus-networks-ethereum-${fork}`)
         const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
         process.env.ETHEREUM_FORKING_URL = url
-        echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(` fork at ${url}`))
+        echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' fork at ') + chalk.bgBlue(url))
     }
 
     process.env.MOCK_CHAINLINK = 'true'
