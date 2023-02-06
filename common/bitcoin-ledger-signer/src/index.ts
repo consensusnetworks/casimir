@@ -3,8 +3,8 @@ import useTransports from './providers/transports'
 import { BitcoinLedgerSignerOptions } from './interfaces/BitcoinLedgerSignerOptions'
 import { TransactionInit } from './interfaces/TransactionInit'
 
-// const defaultPath = '84\'/0\'/0\'/0/0' // Legacy addresses: '44\'/0\'/0\'/0/0', Segwit: '49\'/0\'/0\'/0/0', Native Segwit: '84\'/0\'/0\'/0/0'
-const defaultPath = '84\'/1\'/0\'/0/0' // TestNetPath
+const defaultPath = '84\'/0\'/0\'/0/0' // Legacy addresses: '44\'/0\'/0\'/0/0', Segwit: '49\'/0\'/0\'/0/0', Native Segwit: '84\'/0\'/0\'/0/0'
+// const defaultPath = '84\'/1\'/0\'/0/0' // TestNetPath
 const defaultType = 'usb'
 const { createUSBTransport, createSpeculosTransport } = useTransports()
 const transportCreators = {
@@ -19,7 +19,6 @@ export default class BitcoinLedgerSigner {
     _btc?: Promise<Btc>
 
     constructor(options: BitcoinLedgerSignerOptions) {
-
         if (!options.type) options.type = defaultType
         if (!options.path) options.path = defaultPath
         this.type = options.type
@@ -67,7 +66,6 @@ export default class BitcoinLedgerSigner {
     }
 
     async getAddress(): Promise<string> {
-        // Pass testnet args to getWalletPublicKey
         const { bitcoinAddress: address } = await this._retry((btc) => btc.getWalletPublicKey(
             this.path,
             { verify: false, format: 'bech32'}
@@ -120,8 +118,4 @@ export default class BitcoinLedgerSigner {
             throw err
         }
     }
-
-    // connect() {
-
-    // }
 }
