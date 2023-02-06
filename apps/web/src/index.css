@@ -107,6 +107,59 @@ overflow: auto;
     }
 }
 @layer components {
+    .carousel_container{
+        width: 100%;
+        height: 100%;
+        margin: 0 auto;
+        overflow: hidden;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+    }
+    .carousel_slider {
+        height: 100%;
+        display: flex;
+        overflow-x: scroll;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+    }
+    .carousel_slider::-webkit-scrollbar {
+        display: none;
+    }
+    .carousel_slider_item{
+        scroll-snap-align: start;
+        background-color: #E4E4E7;
+        flex-shrink: 0;
+        height: 100%;
+        justify-content: center;
+        position: relative;
+        transform: scale(1);
+        transform-origin: center center;
+        transition: transform .5s;
+        width: 100%;
+    }
+
+    .carousel__nav {
+        padding: 1.25rem .5rem;
+    }
+      
+    .carousel_slider_nav {
+        background-color: #ddd;
+        border-radius: 50%;
+        height: 1.5rem;
+        width: 1.5rem;
+    }
+    .carousel_slider_nav a{
+        text-decoration: none;
+    }
+    
+    .carousel_slider_nav:hover,
+    .carousel_slider_nav:active {
+        background-color: #000;
+    }
+
+
     .multi_wallet_container{
         display: grid;
         grid-template-columns: 1fr 2fr;
@@ -333,7 +386,7 @@ overflow: auto;
     }
     .btn_text {
         @apply  flex  flex-row  items-center 
-        justify-center
+        justify-center text-caption
         gap-[10px] text-primary 
         hover:text-blue_7
         disabled:text-grey_6;
@@ -358,10 +411,15 @@ overflow: auto;
     }
 }
 @layer utilities {
-    .width_transition{
-        transition: 2s width;
-        /* transition-property: grid-template-columns;
-        transition-duration: 5s; */
+    .two_thirds_one_third_grid_to_full{
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: 1fr;
+        transition: grid-template-columns 10.5s;
+        gap: 15px;
+    }
+    .reverse_two_thirds_one_third_grid_to_full{
+        grid-template-columns: 1fr;
     }
     .loading {
         background: linear-gradient(50deg, 
@@ -509,3 +567,5 @@ overflow: auto;
 .arc path {
   stroke: #fff;
 }
+  
+  

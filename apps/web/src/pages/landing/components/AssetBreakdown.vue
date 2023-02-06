@@ -25,8 +25,6 @@ const calculateTokens = () => {
           value: Number(account.balance)
         })
       }
-      console.log(tokens.value)
-      // console.log(account.currency)
     })
  }
 }
@@ -43,17 +41,20 @@ const formatToMoney = (x: any) =>{
 
 const formatToPercentage = d3.format('.2f')
 
-
+const formatSi = d3.format('.2s')
 const collectTotalBalance = (assetType: string, item: any) => {
   if(assetType === 'wallet'){
     let totalBalance = 0
     item.forEach((item: any)  => {
       totalBalance += Number(item.balance_usd)
     })
-    return formatToMoney(totalBalance)
+    
+    const s = formatSi(totalBalance)
+    return s
   }
   if(assetType === 'token'){
-    return tokens.value.find(i => i.name === item.name)?.value
+    const s = formatSi(Number(tokens.value.find(i => i.name === item.name)?.value))
+    return s
   }
 }
 
@@ -128,7 +129,11 @@ const returnAggergatedValue = (item: any, name: string) => {
 </script>
   
 <template>
-  <div class="flex flex-col w-1/3 gap-25 h-full border-l pl-20">
+  <div
+    class="flex flex-col min-w-[375px] w-full h-full gap-25 border-l-[0px] dash_s_sm:border-l 
+    dash_s_sm:pl-20 border-t dash_s_sm:border-t-[0px] mt-50 dash_s_sm:mt-0
+    pt-25 dash_s_sm:pt-0"
+  >
     <div class="flex items-center mt-5">
       <span class="text-body text-grey_5 font-bold">
         Asset Breakdown
@@ -154,7 +159,9 @@ const returnAggergatedValue = (item: any, name: string) => {
                 :alt="i + 'Icon'"
                 class="h-15 w-15"
               >
-              <span class="text-caption font-medium text-grey_5">{{ i }}</span>
+              <span 
+                class="text-caption font-medium text-grey_5"
+              >{{ i }}</span>
             </div>
                 
             <span 
@@ -184,7 +191,9 @@ const returnAggergatedValue = (item: any, name: string) => {
                 alt="Bitcoin Logo"
                 class="h-15 w-15"
               >
-              <span class="text-caption font-medium text-grey_5">{{ item.name }}</span>
+              <span 
+                class="text-caption font-medium text-grey_5"
+              >{{ item.name }}</span>
             </div>
                 
             <span class="text-caption font-medium text-grey_3">

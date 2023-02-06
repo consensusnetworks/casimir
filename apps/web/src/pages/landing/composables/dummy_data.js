@@ -9,7 +9,7 @@ export const dummy_user_account = {
             { 
                 address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212', 
                 balance: '1252500',
-                balance_usd: '163123.60',
+                balance_usd: '10163123.60',
                 currency: 'ETH', 
                 roi: 0.25 
             },
