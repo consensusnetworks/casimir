@@ -534,8 +534,6 @@ contract SSVManager is IPoRAddressList {
         uint32 poolId,
         address userAddress
     ) public view returns (uint256) {
-        // Todo get user stake share of balance (this is incomplete/incorrect)
-        // getPoolUserStake(poolId, userAddress) * 100 / 32*1e18
         return pools[poolId].userStakes[userAddress];
     }
 

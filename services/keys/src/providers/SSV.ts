@@ -26,22 +26,30 @@ export default class SSV {
         const groupSize = 4
         let operatorIndex = 0
         for (let index = 0; index < validatorCount; index++) {
-            const nextOperatorIndex = operatorIndex + groupSize
-
+            
+            /** Get deposit data and keys for validator */
+            const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData(index)
             const keystore: string = JSON.stringify(await import(`../../mock/keystore-${index}.json`))
             const keystorePassword = 'Testingtest1234'
             const privateKey = await this.keys.getPrivateKeyFromKeystoreData(keystore, keystorePassword)
+            
+            /** Use next operator index for group slicing */
+            const nextOperatorIndex = operatorIndex + groupSize
 
-            const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData(index)
+            /** Create threshold for group of operators */
             const group = operators.slice(operatorIndex, nextOperatorIndex)
-            const groupPublicKeys = group.map((o: Operator) => o.public_key)
             const groupIds = group.map((o: Operator) => o.id)
+            const groupPublicKeys = group.map((o: Operator) => o.public_key)
             const { shares }: ISharesKeyPairs = await this.keys.createThreshold(privateKey, groupIds)
             const encryptedShares = await this.keys.encryptShares(groupPublicKeys, shares, SSVKeys.SHARES_FORMAT_ABI)
 
+            /** Update operator starting index for next group */
+            operatorIndex = nextOperatorIndex
+
+            /** Create validator */
             const validator: Validator = {
                 depositDataRoot,
-                operatorIds: groupIds,
+                operatorIds: shares.map(s => s.id),
                 publicKey,
                 sharesEncrypted: encryptedShares.map(s => s.privateKey),
                 sharesPublicKeys: encryptedShares.map(s => s.publicKey),
@@ -49,9 +57,6 @@ export default class SSV {
                 withdrawalCredentials
             }
             validators.push(validator)
-
-            // Update operator starting index for next group
-            operatorIndex = nextOperatorIndex
         }
         return validators
     }

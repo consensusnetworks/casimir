@@ -75,10 +75,10 @@ struct User {
 struct Validator {
   bytes32 depositDataRoot;
   uint32[] operatorIds;
-  bytes[] operatorPublicKeys;
   bytes[] sharesEncrypted;
   bytes[] sharesPublicKeys;
   bytes signature;
+  bytes withdrawalCredentials;
 }
 ```
 
@@ -109,7 +109,7 @@ Event signaling a user stake to a pool
 ### ValidatorActivated
 
 ```solidity
-event ValidatorActivated(uint32 poolId, uint32[] operatorIds, bytes validatorPublicKey)
+event ValidatorActivated(uint32 poolId, uint32[] operatorIds, bytes publicKey)
 ```
 
 Event signaling a validator activation
@@ -117,7 +117,7 @@ Event signaling a validator activation
 ### ValidatorAdded
 
 ```solidity
-event ValidatorAdded(uint32[] operatorIds, bytes validatorPublicKey)
+event ValidatorAdded(uint32[] operatorIds, bytes publicKey)
 ```
 
 Event signaling a validator registration
@@ -195,7 +195,7 @@ Get the SSV fee percentage to charge on each deposit
 ### addValidator
 
 ```solidity
-function addValidator(bytes32 depositDataRoot, uint32[] operatorIds, bytes[] operatorPublicKeys, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes validatorPublicKey) public
+function addValidator(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) public
 ```
 
 _Add a validator to the pool manager_
@@ -408,7 +408,7 @@ Get a pool's operators by pool ID
 ### getLatestBalance
 
 ```solidity
-function getLatestBalance(bytes validatorPublicKey) public view returns (int256)
+function getLatestBalance(uint32 poolId, bytes validatorPublicKey) public view returns (int256)
 ```
 
 Get the latest balance for a validator (PoR)
@@ -417,6 +417,7 @@ Get the latest balance for a validator (PoR)
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| poolId | uint32 |  |
 | validatorPublicKey | bytes | The validator address |
 
 #### Return Values
