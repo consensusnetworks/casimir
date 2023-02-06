@@ -107,6 +107,15 @@ overflow: auto;
     }
 }
 @layer components {
+    .multi_wallet_container{
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        transition: grid-template-columns 0.5s
+    }
+    .reverse_multi_wallet_container{
+        grid-template-columns: 2fr 1fr;
+    }
+    
     .toggle{
         @apply w-40 h-20 border border-blue_2 rounded-[25px]
         flex items-center px-5;
@@ -116,7 +125,7 @@ overflow: auto;
     }
     .connected_wallets_card{
         @apply border border-grey px-15 py-10
-        w-[95%] mx-auto; 
+        w-[95%] mx-auto mb-15; 
     }
     .connected_wallets_card h6 {
         @apply text-blue_3 font-bold;
@@ -349,8 +358,10 @@ overflow: auto;
     }
 }
 @layer utilities {
-    .expanding_bar{
-        transition: 0.1s all ease;
+    .width_transition{
+        transition: 2s width;
+        /* transition-property: grid-template-columns;
+        transition-duration: 5s; */
     }
     .loading {
         background: linear-gradient(50deg, 
@@ -479,7 +490,7 @@ overflow: auto;
   .line {
     fill: none;
     stroke-width: 1px;
-    stroke: #80ABFF;
+    /* stroke: #80ABFF; */
   }
 
   /*  */

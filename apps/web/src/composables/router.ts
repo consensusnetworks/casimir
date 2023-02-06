@@ -18,9 +18,9 @@ import Test from '@/pages/test/Test.vue'
 // @ts-ignore
 import ChartTest from '@/pages/chart-test/ChartTest.vue'
 // @ts-ignore
-import FrontPage from '@/pages/landing/components/FrontPage.vue'
+import FrontPage from '@/pages/landing/views/FrontPage.vue'
 // @ts-ignore
-import UserDashboard from '@/pages/landing/components/UserDashboard.vue'
+import UserDashboard from '@/pages/landing/views/UserDashboard.vue'
 // import NotFound from '@/pages/not-found/NotFound.vue'
 
 

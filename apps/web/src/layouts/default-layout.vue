@@ -8,15 +8,15 @@ const { user } = useUsers()
 const showNoUserWarning = ref(false)
 const loadingWidthMeasurement = ref(0)
 onMounted(() => {
-  if(!user.value.id){
-    console.log('reched')
+  // console.log('hello world', user.value.id)
+  if(user.value.id.length === 0){
     showNoUserWarning.value = true
     const loadingInterval = setInterval(()=>{
-      if(loadingWidthMeasurement.value >= 100){
+      if(loadingWidthMeasurement.value >= 100 || user.value.id.length > 0){
         showNoUserWarning.value = false
         clearInterval(loadingInterval)
       }
-      loadingWidthMeasurement.value = loadingWidthMeasurement.value + 0.25
+      loadingWidthMeasurement.value = loadingWidthMeasurement.value + 0.1
     }, 10)
   }
   
@@ -24,10 +24,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <div class="sr-only noscreen:not-sr-only">
-      <div class="h-[100vh] flex flex-col ">
-        <div class="">
+  <div class="h-[100vh]">
+    <div class="h-[100%]">
+      <div class="h-full flex flex-col items-center">
+        <div class="min-w-[360px] w-full">
           <TopNav />
         </div>
 
@@ -49,16 +49,11 @@ onMounted(() => {
             :style="`width: ${loadingWidthMeasurement}%;`"
           />
         </div>
-
         <div
-          class="h-full w-full flex justify-center items-center"
+          class="max-w-[1280px] min-w-[360px] h-full 
+            w-full px-25 py-margins"
         >
-          <div
-            class="max-w-[1280px] min-w-[360px] h-full 
-          w-full overflow-auto px-25 py-margins "
-          >
-            <slot />
-          </div>
+          <slot />
         </div>
       </div>
     </div>

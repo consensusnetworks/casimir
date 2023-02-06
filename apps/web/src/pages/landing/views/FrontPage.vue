@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import * as d3 from 'd3'
 import LineChart from '@/components/charts/LineChart.vue'
-import { eth_staked_data } from './dummy_data.js'
+import { eth_staked_data } from '../composables/dummy_data.js'
 import { ref } from 'vue'
 
 const xAxisFormat = (d: string) => {
@@ -90,7 +90,7 @@ const selectedTimeFrame = ref('Hour')
           ETH Staked
         </span>
       </div>
-      <div class="w-[100%] h-full">
+      <div class="w-[100%] h-full min-h-[200px]">
         <LineChart 
           :data="eth_staked_data"
           :y-axis-value="'price'"
@@ -98,6 +98,7 @@ const selectedTimeFrame = ref('Hour')
           :x-axis-format="xAxisFormat"
           :y-axis-format="yAxisFormat"
           :update-tooltip-info="updateTooltipInfo"
+          :chart-id="'ETH_Staked_chart'"
         />
       </div>
     </div>
@@ -106,10 +107,7 @@ const selectedTimeFrame = ref('Hour')
         Time ( {{ selectedTimeFrame }} )
       </span>
     </div>
-    <div class="bg-blue_2 py-15 px-10 text-center">
-      <h6 class="font-medium text-primary mb-10">
-        Inorder to stake with us, you must connect your primary wallet
-      </h6>
+    <div class="bg-blue_1 py-15 px-10 text-center">
       <div>
         <span class="font-medium text-grey_5  text-body">
           Future protocals that you will be able to stake with us:
@@ -117,7 +115,7 @@ const selectedTimeFrame = ref('Hour')
         <div class="flex flex-wrap mt-10 gap-35 items-center justify-center w-full">
           <div class="flex items-center gap-5 text-caption font-bold text-grey_5">
             <img
-              src="/iopay.svg"
+              src="/IOTX.svg"
               alt="IoPay Logo"
               class="w-25 h-25"
             > IoTeX
