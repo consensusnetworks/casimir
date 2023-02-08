@@ -28,23 +28,6 @@
         Remove Account
       </button>
     </div>
-    <div>
-      <ul>
-        <li
-          v-for="(_value, _key) in user"
-          :key="_key"
-        >
-          <ul v-if="_key === 'accounts'">
-            <li
-              v-for="(value, key) in _value"
-              :key="key"
-            >
-              <div>{{ key }}: {{ value }}</div>
-            </li>
-          </ul>
-        </li>
-      </ul>
-    </div>
     <div class="staking-container">
       <button @click="getUserPools(selectedAccount)">
         What do I have staked where?

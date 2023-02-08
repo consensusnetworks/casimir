@@ -1,7 +1,4 @@
-import { ProviderString } from '@/types/ProviderString'
-import { Pool } from './Pool'
-
-export interface User {
+export default interface User {
     address: string
     accounts: Array<{
         address: string
@@ -14,7 +11,4 @@ export interface User {
         roi: number
         walletProvider: string
     }>
-    stake?: string
-    rewards?: string
-    pools?: Pool[]
 }

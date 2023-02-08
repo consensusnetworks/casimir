@@ -1,5 +1,5 @@
 import express from 'express'
-import userCollection from '../collections/users'
+import { userCollection } from '../collections/users'
 const router = express.Router()
 
 router.put('/', async (req: express.Request, res: express.Response) => {

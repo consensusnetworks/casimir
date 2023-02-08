@@ -39,7 +39,7 @@ export default function useWallet() {
   const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
-  const { updatePrimaryAccount } = useUsers()
+  const { user, updatePrimaryAccount } = useUsers()
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
     'ETH': getEthersLedgerAddress,
@@ -232,10 +232,10 @@ export default function useWallet() {
   async function login() { 
     if (ethersProviderList.includes(selectedProvider.value)) {
       const result = await loginWithEthers(selectedProvider.value, selectedAccount.value)
-      console.log('login result :>> ', result)
       if (!result.error) {
         loggedIn.value = true
-        primaryAccount.value = result.data
+        user.value = result.data
+        primaryAccount.value = result.data.address
       } else {
         alert('There was an error logging in. Please try again.')
       }

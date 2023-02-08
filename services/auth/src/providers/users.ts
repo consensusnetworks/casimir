@@ -1,4 +1,4 @@
-import userCollection from '../collections/users'
+import { userCollection } from '../collections/users'
 import { ProviderString } from '../types/ProviderString'
 
 export default function useUsers() {
