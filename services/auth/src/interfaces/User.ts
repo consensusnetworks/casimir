@@ -1,14 +1,8 @@
-export default interface User {
+import { Account } from './Account'
+
+export interface User {
+    /** Unique ID (and essential for auth verification) */
     address: string
-    accounts: Array<{
-        address: string
-        currency: string
-        balance: string
-        balanceSnapshots: Array<{   
-            date: string
-            balance: string
-        }>
-        roi: number
-        walletProvider: string
-    }>
+    /** Wallet portfolio accounts */
+    accounts: Account[]
 }

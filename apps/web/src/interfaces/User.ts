@@ -1,20 +1,8 @@
-import { ProviderString } from '@/types/ProviderString'
-import { Pool } from './Pool'
+import { Account } from './Account'
 
 export interface User {
+    /** Unique ID (and essential for auth verification) */
     address: string
-    accounts: Array<{
-        address: string
-        currency: string
-        balance: string
-        balanceSnapshots: Array<{   
-            date: string
-            balance: string
-        }>
-        roi: number
-        walletProvider: string
-    }>
-    stake?: string
-    rewards?: string
-    pools?: Pool[]
+    /** Wallet portfolio accounts */
+    accounts: Account[]
 }

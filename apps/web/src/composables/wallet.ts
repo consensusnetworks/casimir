@@ -235,6 +235,7 @@ export default function useWallet() {
       if (!result.error) {
         loggedIn.value = true
         user.value = result.data
+        console.log('user.value :>> ', user.value)
         primaryAccount.value = result.data.address
       } else {
         alert('There was an error logging in. Please try again.')
