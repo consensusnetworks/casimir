@@ -230,12 +230,13 @@ export default function useWallet() {
   }
 
   async function login() { 
+    console.log('user.value before login :>> ', user.value)
     if (ethersProviderList.includes(selectedProvider.value)) {
       const result = await loginWithEthers(selectedProvider.value, selectedAccount.value)
       if (!result.error) {
         loggedIn.value = true
         user.value = result.data
-        console.log('user.value :>> ', user.value)
+        console.log('user.value after login :>> ', user.value)
         primaryAccount.value = result.data.address
       } else {
         alert('There was an error logging in. Please try again.')

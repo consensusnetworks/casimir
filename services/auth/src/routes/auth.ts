@@ -9,6 +9,7 @@ router.get('/:provider/:address', async (req: express.Request, res: express.Resp
     const { provider, address } = req.params
     updateMessage(provider, address)
     const message = getMessage(address)
+    console.log('message :>> ', message)
     if (message) {
         res.setHeader('Content-Type', 'application/json')
         res.status(200)

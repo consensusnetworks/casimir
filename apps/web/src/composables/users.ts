@@ -5,62 +5,12 @@ import useWallet from '@/composables/wallet'
 import { ProviderString } from '@/types/ProviderString'
 import { User } from '@/interfaces/User'
 import { onMounted, ref } from 'vue'
+import { Currency } from '@/types/Currency'
+import { Account } from '@/interfaces/Account'
 
 const { authBaseURL, ethereumURL } = useEnvironment()
 
-const user = ref<User>({
-    address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
-    accounts: [
-        {
-            address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
-            currency: 'ETH',
-            balance: '1000000000000000000',
-            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-            roi: 0.25,
-            walletProvider: 'MetaMask'
-        },
-        {
-            address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942',
-            currency: 'ETH',
-            balance: '1000000000000000000',
-            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-            roi: 0.25,
-            walletProvider: 'CoinbaseWallet'
-        },
-        {
-            address: '0x8222Ef172A2117D1C4739E35234E097630D94376',
-            currency: 'ETH',
-            balance: '1000000000000000000',
-            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-            roi: 0.25,
-            walletProvider: 'Ledger'
-        },
-        {
-            address: 'bc1qpttwf0df8jkx54dl04anwgmyt27lj6vj885lyr',
-            currency: 'BTC',
-            balance: '100000000',
-            balanceSnapshots: [{ date: '2023-02-06', balance: '100000000' }, { date: '2023-02-05', balance: '100000000' }],
-            roi: 0.25,
-            walletProvider: 'Ledger'
-        },
-        {
-            address: '0x8222Ef172A2117D1C4739E35234E097630D94377', // Fake address
-            currency: 'ETH',
-            balance: '1000000000000000000',
-            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-            roi: 0.25,
-            walletProvider: 'Trezor'
-        },
-        {
-            address: '0x8222Ef172A2117D1C4739E35234E097630D94378', // Fake address
-            currency: 'ETH',
-            balance: '1000000000000000000',
-            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-            roi: 0.25,
-            walletProvider: 'WalletConnect'
-        },
-    ]
-})
+const user = ref<User | null>(null)
 
 export default function useUsers () {
     const { ssv } = useSSV()
@@ -93,35 +43,45 @@ export default function useUsers () {
         subscribeToUserEvents()
     })
 
-    function updateUser ({ accounts } : any) {
-        localStorage.setItem('accounts', JSON.stringify(accounts))
-    }
 
-    function addAccount(provider: ProviderString, address: string) {
+    async function addAccount(provider: ProviderString, address: string, token: Currency) {
         address = address.toLowerCase()
-        const localStorage = window.localStorage
-        const accounts = JSON.parse(localStorage.getItem('accounts') as string) || {}
-
-        for (const existingProvider in accounts) {
-            if (accounts[existingProvider].includes(address) && existingProvider !== provider) {
-                accounts[existingProvider] = accounts[existingProvider].filter((existingAddress: string) => existingAddress !== address)
+        const account = user.value.accounts.find((account: Account) => {
+            const accountAddress = account.address.toLowerCase()
+            const accountProvider = account.walletProvider
+            const accountToken = account.currency
+            const addressIsEqual = accountAddress === address
+            const providerIsEqual = accountProvider === provider
+            const tokenIsEqual = accountToken === token
+            const isEqual = addressIsEqual && providerIsEqual && tokenIsEqual
+            return isEqual
+        }) as Account
+        if (account) {
+            alert(`Account already exists on user: ${account}`)
+        } else {
+            user.value.accounts.push({
+                address,
+                currency: token,
+                balance: '0', // TODO: Decide how we want to handle this
+                balanceSnapshots: [],
+                roi: 0,
+                walletProvider: provider
+            })
+            const requestOptions = {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    primaryAddress: user.value.address,
+                    user: user.value
+                })
             }
-        }
-
-        if (!accounts[provider] && address) {
-            accounts[provider] = [address]
-        } else if (address) {
-            if (!accounts[provider].includes(address)) {
-                accounts[provider].push(address)
-            }
-        }
-
-        for (const provider in accounts) {
-            user.value.accounts[provider as ProviderString] = accounts[provider]
+            const response = await fetch(`${authBaseURL}/users/add-account`, requestOptions)
+            console.log('response :>> ', await response.json())
+            return response
         }
     
-
-        updateUser({ accounts })
     }
 
     function removeAccount(provider: ProviderString, address: string) {
@@ -156,7 +116,7 @@ export default function useUsers () {
             },
             body: JSON.stringify({ primaryAccount, updatedProvider, updatedAccount })
         }
-        return await fetch(`${authBaseURL}/users`, requestOptions)
+        return await fetch(`${authBaseURL}/users/update-primary-account`, requestOptions)
     }
 
     return {

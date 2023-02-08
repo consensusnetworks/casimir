@@ -51,7 +51,8 @@ const user: User = {
             roi: 0.25,
             walletProvider: 'WalletConnect'
         },
-    ]
+    ],
+    nonce: '1234567890',
 }
 
-export const userCollection : Array<any> = [user]
+export const userCollection : Array<User> = [user]

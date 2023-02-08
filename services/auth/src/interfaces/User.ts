@@ -5,4 +5,6 @@ export interface User {
     address: string
     /** Wallet portfolio accounts */
     accounts: Account[]
+    /** A message that is returned to front-end for signing and login */
+    nonce: string
 }

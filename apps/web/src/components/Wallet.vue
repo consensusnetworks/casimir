@@ -17,9 +17,9 @@
     <div>
       <button
         class="btn-save-remove-account"
-        @click="addAccount(selectedProvider, selectedAccount)"
+        @click="addAccount(selectedProvider, selectedAccount, 'BTC')"
       >
-        Save Account
+        Add Account
       </button>
       <button
         class="btn-save-remove-account"

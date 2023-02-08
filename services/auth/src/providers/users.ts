@@ -3,7 +3,7 @@ import { ProviderString } from '../types/ProviderString'
 
 export default function useUsers() {
     function getMessage (address: string) {
-        const user = userCollection.find(user => user.id === address)
+        const user = userCollection.find(user => user.address === address)
         if (user) {
             return user.nonce
         }
@@ -11,7 +11,7 @@ export default function useUsers() {
     }
 
     function updateMessage (provider: ProviderString, address: string) {
-        const user = userCollection.find(user => user.id === address)
+        const user = userCollection.find(user => user.address === address)
         provider = provider.toLowerCase()
         if (user) {
             user.nonce = generateNonce()
