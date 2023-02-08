@@ -1,6 +1,9 @@
 <template>
   <div>
     <div>
+      <button @click="signUp()">
+        Sign Up!
+      </button>
       <button @click="login()">
         Login
       </button>
@@ -201,7 +204,7 @@ const trezorAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
-const { addAccount, removeAccount, user } = useUsers()
+const { addAccount, removeAccount } = useUsers()
 const {
   loggedIn,
   selectedProvider,
@@ -218,7 +221,8 @@ const {
   signMessage,
   deposit,
   login,
-  getUserPools
+  getUserPools,
+  signUp
 } = useWallet()
 
 watchEffect(() => {

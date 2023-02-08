@@ -6,8 +6,9 @@ import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import useAuth from '@/composables/auth'
+import { Currency } from '@/types/Currency'
 
-const { getMessage, login } = useAuth()
+const { getMessage, signUpAuth, login } = useAuth()
 
 const defaultProviders = {
   MetaMask: undefined,
@@ -78,6 +79,26 @@ export default function useEthers() {
     return { gasPrice, gasLimit }
   }
 
+  async function signUpWithEthers(providerString: ProviderString, selectedAccount: string, token: Currency) {
+    // TODO: Remove commented code if we don't need it. 
+    // const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
+    // const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    // const messageJson = await getMessage(providerString, selectedAccount)
+    // const { message } = await messageJson.json()
+    // const signer = web3Provider.getSigner()
+    // const signature = await signer.signMessage(message)
+    // TODO: Add other fields included in the User interface
+    // TODO: Make token dynamic
+    const response = await signUpAuth({ 
+      address: selectedAccount, 
+      // message: message.toString(), 
+      // signedMessage: signature, 
+      provider: providerString, 
+      token: 'ETH'
+    })
+    return await response.json()
+  }
+
   async function loginWithEthers ( providerString: ProviderString, selectedAccount: string) {
     const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
@@ -89,7 +110,7 @@ export default function useEthers() {
     return await response.json()
   }
 
-  return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit, loginWithEthers }
+  return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit, signUpWithEthers, loginWithEthers }
 }
 
 function getBrowserProviders(ethereum: any) {

@@ -46,7 +46,7 @@ export default function useUsers () {
 
     async function addAccount(provider: ProviderString, address: string, token: Currency) {
         address = address.toLowerCase()
-        const account = user.value.accounts.find((account: Account) => {
+        const account = user.value?.accounts.find((account: Account) => {
             const accountAddress = account.address.toLowerCase()
             const accountProvider = account.walletProvider
             const accountToken = account.currency
@@ -59,7 +59,7 @@ export default function useUsers () {
         if (account) {
             alert(`Account already exists on user: ${account}`)
         } else {
-            user.value.accounts.push({
+            user.value?.accounts.push({
                 address,
                 currency: token,
                 balance: '0', // TODO: Decide how we want to handle this
@@ -73,7 +73,7 @@ export default function useUsers () {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    primaryAddress: user.value.address,
+                    primaryAddress: user.value?.address,
                     user: user.value
                 })
             }

@@ -1,1 +1,1 @@
-export type TokenString = 'ETH' | 'BTC' | ''
+export type Currency = 'ETH' | 'BTC' | ''

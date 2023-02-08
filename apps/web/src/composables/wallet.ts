@@ -13,7 +13,7 @@ import { ProviderString } from '@/types/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import { Pool } from '@/interfaces/Pool'
-import { TokenString } from '@/interfaces/TokenString'
+import { Currency } from '@/types/Currency'
 
 const amount = ref<string>('0.000001')
 const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
@@ -21,7 +21,7 @@ const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
 const selectedProvider = ref<ProviderString>('')
 const selectedAccount = ref<string>('')
-const selectedToken = ref<TokenString>('')
+const selectedToken = ref<Currency>('')
 const loggedIn = ref(false)
 const primaryAccount = ref('')
 
@@ -33,7 +33,7 @@ const primaryAccount = ref('')
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
   const { ssv, getSSVFeePercent } = useSSV()
-  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, loginWithEthers } = useEthers()
+  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, signUpWithEthers, loginWithEthers } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
@@ -49,15 +49,16 @@ export default function useWallet() {
   const setSelectedProvider = (provider: ProviderString) => {
     selectedProvider.value = provider
   }
+
   const setSelectedAccount = (address: string) => {
     selectedAccount.value = address
   }
 
-  const setSelectedToken = (token: TokenString) => {
+  const setSelectedToken = (token: Currency) => {
     selectedToken.value = token
   }
 
-  async function connectWallet(provider: ProviderString, token?: TokenString) {
+  async function connectWallet(provider: ProviderString, token?: Currency) {
     try {
       setSelectedProvider(provider)
       selectedAccount.value = 'Not Active'
@@ -74,8 +75,8 @@ export default function useWallet() {
         const address = await getIoPayAddress()
         setSelectedAccount(address)
       } else if (provider === 'Ledger') {
-        setSelectedToken(token as TokenString)
-        const address = await getLedgerAddress[token as TokenString]()
+        setSelectedToken(token as Currency)
+        const address = await getLedgerAddress[token as Currency]()
         setSelectedAccount(address)
       } else if (provider === 'Trezor') {
         const address = await getTrezorAddress()
@@ -230,19 +231,32 @@ export default function useWallet() {
   }
 
   async function login() { 
-    console.log('user.value before login :>> ', user.value)
     if (ethersProviderList.includes(selectedProvider.value)) {
       const result = await loginWithEthers(selectedProvider.value, selectedAccount.value)
       if (!result.error) {
         loggedIn.value = true
         user.value = result.data
-        console.log('user.value after login :>> ', user.value)
         primaryAccount.value = result.data.address
       } else {
         alert('There was an error logging in. Please try again.')
       }
     } else {
       console.log('Login not yet supported for this wallet provider')
+    }
+  }
+
+  async function signUp() {
+    if (ethersProviderList.includes(selectedProvider.value)) {
+      const result = await signUpWithEthers(selectedProvider.value, selectedAccount.value, selectedToken.value)
+      if (!result.error) {
+        loggedIn.value = true
+        user.value = result.data
+        primaryAccount.value = result.data
+      } else {
+        alert('There was an error signing up. Please try again.')
+      }
+    } else {
+      console.log('Sign up not yet supported for this wallet provider')
     }
   }
 
@@ -273,6 +287,7 @@ export default function useWallet() {
     sendTransaction,
     signMessage,
     deposit,
+    signUp,
     login,
     getUserBalance,
     getUserPools

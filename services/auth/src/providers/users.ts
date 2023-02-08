@@ -28,10 +28,10 @@ export default function useUsers() {
         }
     }
     
-    return { getMessage, updateMessage }
-}
-
-function generateNonce() {
-    return (Math.floor(Math.random()
-        * (Number.MAX_SAFE_INTEGER - 1)) + 1).toString()
+    function generateNonce() {
+        return (Math.floor(Math.random()
+            * (Number.MAX_SAFE_INTEGER - 1)) + 1).toString()
+    }
+    
+    return { getMessage, updateMessage, generateNonce }
 }

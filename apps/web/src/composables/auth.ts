@@ -1,4 +1,5 @@
-import { LoginCredentials } from '@casimir/types'
+import { SignupCredentials } from '../interfaces/SignupCredentials'
+import { LoginCredentials } from '../interfaces/LoginCredentials'
 import useEnvironment from '@/composables/environment'
 import { ProviderString } from '@/types/ProviderString'
 
@@ -14,6 +15,19 @@ export default function useAuth() {
         }
         return await fetch(`${authBaseURL}/auth/${provider}/${address}`, requestOptions)
     }
+
+    async function signUpAuth(signupCredentials: SignupCredentials) {
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(signupCredentials)
+        }
+        const response = await fetch(`${authBaseURL}/signup`, requestOptions)
+        return response
+    }
+
     /**
      * Logs a user in with an address, message and signed message
      * 
@@ -32,6 +46,7 @@ export default function useAuth() {
     }
 
     return {
+        signUpAuth,
         login,
         getMessage
     }
