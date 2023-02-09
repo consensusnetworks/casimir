@@ -1,5 +1,6 @@
 import ethers from 'ethers'
 import { ProviderString } from '@/types/ProviderString'
+import { Currency } from './TokenString'
 
 export interface TransactionInit extends ethers.providers.TransactionRequest {
     /** The transaction sender's address */
@@ -11,5 +12,5 @@ export interface TransactionInit extends ethers.providers.TransactionRequest {
     /** The provider string of the transaction */
     providerString: ProviderString;
     /** The token of the transaction */
-    token?: 'ETH' | 'BTC'
+    token?: Currency
 }

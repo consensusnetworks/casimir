@@ -92,9 +92,9 @@ export default function useEthers() {
     const response = await signUpAuth({ 
       address: selectedAccount, 
       // message: message.toString(), 
-      // signedMessage: signature, 
+      // signedMessage: signature,
       provider: providerString, 
-      token: 'ETH'
+      token
     })
     return await response.json()
   }

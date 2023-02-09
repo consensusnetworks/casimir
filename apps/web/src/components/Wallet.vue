@@ -20,13 +20,13 @@
     <div>
       <button
         class="btn-save-remove-account"
-        @click="addAccount(selectedProvider, selectedAccount, 'BTC')"
+        @click="addAccount(selectedProvider, selectedAccount, selectedToken)"
       >
         Add Account
       </button>
       <button
         class="btn-save-remove-account"
-        @click="removeAccount(selectedProvider, selectedAccount)"
+        @click="removeAccount(selectedProvider, selectedAccount, selectedToken)"
       >
         Remove Account
       </button>
@@ -127,7 +127,7 @@
           {{ trezorButtonText }}
         </button>
         <p>
-          Connected Trezor Account:
+          Connected Trezor ETH Account:
           <span> {{ trezorAccountsResult }} </span>
         </p>
       </div>
@@ -179,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, onMounted } from 'vue'
+import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
 import useUsers from '@/composables/users'
 import useLedger from '@/composables/ledger'

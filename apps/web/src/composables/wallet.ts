@@ -43,7 +43,24 @@ export default function useWallet() {
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
     'ETH': getEthersLedgerAddress,
-    '': () => { throw new Error('No token selected') }
+    'IOTX': () => {
+      return new Promise((resolve, reject) => {
+        console.log('IOTX is not yet supported on Ledger')
+        resolve('IOTX is not yet supported on Ledger')
+      }) as Promise<string>
+    },
+    'SOL': () => {
+      return new Promise((resolve, reject) => {
+        console.log('SOL is not yet supported on Ledger')
+        resolve('SOL is not yet supported on Ledger')
+      }) as Promise<string>
+    },
+    '': () => {
+      return new Promise((resolve, reject) => {
+        console.log('No token selected')
+        resolve('No token selected')
+      }) as Promise<string>
+    }
   }
 
   const setSelectedProvider = (provider: ProviderString) => {
@@ -68,6 +85,7 @@ export default function useWallet() {
       } else if (ethersProviderList.includes(provider)) {
         const address = await getEthersAddress(provider)
         setSelectedAccount(address)
+        // TODO: LOGIN / GET ASSOCIATED ACCOUNTS / SIGNUP here?
       } else if (solanaProviderList.includes(provider)) {
         const address = await getSolanaAddress(provider)
         setSelectedAccount(address)
@@ -76,7 +94,7 @@ export default function useWallet() {
         setSelectedAccount(address)
       } else if (provider === 'Ledger') {
         setSelectedToken(token as Currency)
-        const address = await getLedgerAddress[token as Currency]()
+        const address: string = await getLedgerAddress[token as Currency]()
         setSelectedAccount(address)
       } else if (provider === 'Trezor') {
         const address = await getTrezorAddress()
@@ -95,7 +113,7 @@ export default function useWallet() {
       to: toAddress.value,
       value: amount.value,
       providerString: selectedProvider.value,
-      token: selectedToken.value || undefined
+      token: selectedToken.value || ''
     }
 
     try {
@@ -123,7 +141,7 @@ export default function useWallet() {
     const messageInit: MessageInit = {
       message,
       providerString: selectedProvider.value,
-      token: selectedToken.value || undefined
+      token: selectedToken.value || ''
     }
     try {
       if (messageInit.providerString === 'WalletConnect') {
@@ -237,6 +255,7 @@ export default function useWallet() {
         loggedIn.value = true
         user.value = result.data
         primaryAccount.value = result.data.address
+        console.log('user.value :>> ', user.value)
       } else {
         alert('There was an error logging in. Please try again.')
       }
@@ -249,6 +268,7 @@ export default function useWallet() {
     if (ethersProviderList.includes(selectedProvider.value)) {
       const result = await signUpWithEthers(selectedProvider.value, selectedAccount.value, selectedToken.value)
       if (!result.error) {
+        console.log('result :>> ', result)
         loggedIn.value = true
         user.value = result.data
         primaryAccount.value = result.data

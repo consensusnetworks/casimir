@@ -43,7 +43,6 @@ export default function useUsers () {
         subscribeToUserEvents()
     })
 
-
     async function addAccount(provider: ProviderString, address: string, token: Currency) {
         address = address.toLowerCase()
         const account = user.value?.accounts.find((account: Account) => {
@@ -68,7 +67,7 @@ export default function useUsers () {
                 walletProvider: provider
             })
             const requestOptions = {
-                method: 'PUT',
+                method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json'
                 },
@@ -77,27 +76,32 @@ export default function useUsers () {
                     user: user.value
                 })
             }
-            const response = await fetch(`${authBaseURL}/users/add-account`, requestOptions)
-            console.log('response :>> ', await response.json())
+            const response = await fetch(`${authBaseURL}/users/add-sub-account`, requestOptions)
+            const json = await response.json()
+            console.log('json :>> ', json)
             return response
         }
     
     }
 
-    function removeAccount(provider: ProviderString, address: string) {
+    async function removeAccount(provider: ProviderString, address: string, token: Currency) {
         address = address.toLowerCase()
-        const localStorage = window.localStorage
-        const accounts = JSON.parse(localStorage.getItem('accounts') as string) || {}
-        
-        if (accounts[provider] && address) {
-            accounts[provider] = accounts[provider].filter((account: string) => account !== address)
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                primaryAddress: user.value?.address,
+                provider,
+                address,
+                token
+            })
         }
-
-        for (const provider in accounts) {
-            user.value.accounts[provider as ProviderString] = accounts[provider]
-        }
-
-        updateUser({ accounts })
+        const response = await fetch(`${authBaseURL}/users/remove-sub-account`, requestOptions)
+        const json = await response.json()
+        console.log('json :>> ', json)
+        return response
     }
     
     async function getMessage(address: string) {

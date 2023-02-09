@@ -5,11 +5,11 @@ import { userCollection } from '../collections/users'
 const router = express.Router()
 
 router.use('/', async (req: express.Request, res: express.Response) => {
-    console.log('got to signup route')
     try {
         const { body } = req
         const { address, provider, token } = body as SignupCredentials
         const user = userCollection.find(user => user.address === address.toLowerCase())
+        console.log('user :>> ', user)
         const newUser = {
             address: address.toLowerCase(),
             accounts: [
@@ -33,7 +33,7 @@ router.use('/', async (req: express.Request, res: express.Response) => {
         res.json({
             message: user ? 'Account already exists at that address' : 'Sign Up Successful',
             error: false,
-            data: newUser, // TODO: This is only for testing purposes. Replace with user.
+            data: user ? user : newUser
         })
     } catch (err) {
         console.log('err :>> ', err)
