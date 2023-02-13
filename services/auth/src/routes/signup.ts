@@ -1,5 +1,5 @@
 import express from 'express'
-import { SignupCredentials } from '../interfaces/SignupCredentials'
+import { SignupCredentials } from '@casimir/types/src/interfaces/SignupCredentials'
 import { userCollection } from '../collections/users'
 
 const router = express.Router()

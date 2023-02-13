@@ -2,11 +2,11 @@ import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useSSV from '@/composables/ssv'
 import useWallet from '@/composables/wallet'
-import { ProviderString } from '@/types/ProviderString'
-import { User } from '@/interfaces/User'
 import { onMounted, ref } from 'vue'
-import { Currency } from '@/types/Currency'
-import { Account } from '@/interfaces/Account'
+import { User } from '@casimir/types'
+import { Account } from '@casimir/types'
+import { Currency } from '@casimir/types'
+import { ProviderString } from '@casimir/types'
 
 const { authBaseURL, ethereumURL } = useEnvironment()
 

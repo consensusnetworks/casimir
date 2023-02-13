@@ -6,10 +6,9 @@ import {
   PublicKey
 } from '@solana/web3.js'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
-import { ProviderString } from '@/types/ProviderString'
+import { ProviderString } from '@casimir/types'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
-import { ethers } from 'ethers'
 
 export default function useSolana() {
   const solanaProviderList = ['Phantom']

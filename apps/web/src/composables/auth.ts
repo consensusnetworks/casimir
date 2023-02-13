@@ -1,7 +1,7 @@
-import { SignupCredentials } from '../interfaces/SignupCredentials'
+import { SignupCredentials } from '@casimir/types/src/interfaces/SignupCredentials'
 import { LoginCredentials } from '../interfaces/LoginCredentials'
 import useEnvironment from '@/composables/environment'
-import { ProviderString } from '@/types/ProviderString'
+import { ProviderString } from '@casimir/types'
 
 const { authBaseURL } = useEnvironment()
 

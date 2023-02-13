@@ -9,11 +9,11 @@ import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
 import useSSV from '@/composables/ssv'
 import useUsers from '@/composables/users'
-import { ProviderString } from '@/types/ProviderString'
+import { ProviderString } from '@casimir/types/src/interfaces/ProviderString'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
-import { Pool } from '@/interfaces/Pool'
-import { Currency } from '@/types/Currency'
+import { Pool } from '@casimir/types/src/interfaces/Pool'
+import { Currency } from '@casimir/types'
 
 const amount = ref<string>('0.000001')
 const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')

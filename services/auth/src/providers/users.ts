@@ -1,5 +1,5 @@
 import { userCollection } from '../collections/users'
-import { ProviderString } from '../types/ProviderString'
+import { ProviderString } from '@casimir/types'
 
 export default function useUsers() {
     function getMessage (address: string) {

@@ -2,11 +2,11 @@ import { ref } from 'vue'
 import { ethers } from 'ethers'
 import { BrowserProviders } from '@/interfaces/BrowserProviders'
 import { EthersProvider } from '@/interfaces/EthersProvider'
-import { ProviderString } from '@/types/ProviderString'
+import { ProviderString } from '@casimir/types'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import useAuth from '@/composables/auth'
-import { Currency } from '@/types/Currency'
+import { Currency } from '@casimir/types'
 
 const { getMessage, signUpAuth, login } = useAuth()
 
