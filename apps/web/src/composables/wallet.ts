@@ -21,7 +21,7 @@ const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
 const selectedProvider = ref<ProviderString>('')
 const selectedAccount = ref<string>('')
-const selectedToken = ref<Currency>('')
+const selectedCurrency = ref<Currency>('')
 const loggedIn = ref(false)
 const primaryAccount = ref('')
 
@@ -72,7 +72,7 @@ export default function useWallet() {
   }
 
   const setSelectedToken = (token: Currency) => {
-    selectedToken.value = token
+    selectedCurrency.value = token
   }
 
   async function connectWallet(provider: ProviderString, token?: Currency) {
@@ -113,7 +113,7 @@ export default function useWallet() {
       to: toAddress.value,
       value: amount.value,
       providerString: selectedProvider.value,
-      token: selectedToken.value || ''
+      token: selectedCurrency.value || ''
     }
 
     try {
@@ -141,7 +141,7 @@ export default function useWallet() {
     const messageInit: MessageInit = {
       message,
       providerString: selectedProvider.value,
-      token: selectedToken.value || ''
+      token: selectedCurrency.value || ''
     }
     try {
       if (messageInit.providerString === 'WalletConnect') {
@@ -266,7 +266,7 @@ export default function useWallet() {
 
   async function signUp() {
     if (ethersProviderList.includes(selectedProvider.value)) {
-      const result = await signUpWithEthers(selectedProvider.value, selectedAccount.value, selectedToken.value)
+      const result = await signUpWithEthers(selectedProvider.value, selectedAccount.value, selectedCurrency.value)
       if (!result.error) {
         console.log('result :>> ', result)
         loggedIn.value = true
@@ -296,7 +296,7 @@ export default function useWallet() {
     loggedIn,
     selectedProvider,
     selectedAccount,
-    selectedToken,
+    selectedCurrency,
     primaryAccount,
     toAddress,
     amount,

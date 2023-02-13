@@ -20,13 +20,13 @@
     <div>
       <button
         class="btn-save-remove-account"
-        @click="addAccount(selectedProvider, selectedAccount, selectedToken)"
+        @click="addAccount(selectedProvider, selectedAccount, selectedCurrency)"
       >
         Add Account
       </button>
       <button
         class="btn-save-remove-account"
-        @click="removeAccount(selectedProvider, selectedAccount, selectedToken)"
+        @click="removeAccount(selectedProvider, selectedAccount, selectedCurrency)"
       >
         Remove Account
       </button>
@@ -210,7 +210,7 @@ const {
   selectedProvider,
   selectedAccount,
   primaryAccount,
-  selectedToken,
+  selectedCurrency,
   toAddress,
   amount,
   amountToStake,
