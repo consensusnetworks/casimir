@@ -4,13 +4,13 @@ import { abi } from '@casimir/ethereum/build/artifacts/src/SSVManager.sol/SSVMan
 import useEnvironment from './environment'
 
 /** SSV Manager contract */
-let ssv: SSVManager
+let ssvManager: SSVManager
 
 export default function useSSV() {
     const { ethereumURL } = useEnvironment()
 
-    if (!ssv) {
-        ssv = (() => {
+    if (!ssvManager) {
+        ssvManager = (() => {
             const address = import.meta.env.PUBLIC_SSV_ADDRESS
             if (!address) console.log(
                 `
@@ -25,13 +25,13 @@ export default function useSSV() {
 
     async function getSSVFeePercent() {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-        const ssvProvider = ssv.connect(provider)
-        const fees = await ssvProvider.getFees()
+        ssvManager.connect(provider)
+        const fees = await ssvManager.getFees()
         const { LINK, SSV } = fees
         const feesTotalPercent = LINK + SSV
         const feesRounded = Math.round(feesTotalPercent * 100) / 100
         return feesRounded
     }
 
-    return { ssv, getSSVFeePercent }
+    return { ssvManager, getSSVFeePercent }
 }
