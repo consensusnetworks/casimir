@@ -37,24 +37,6 @@ export default function useIoPay() {
     return await signer.signMessage(message)
   }
 
-  //   const stakeIoPay = async () => {
-  //     // TODO: Replace with appropriate abi, etc.
-  //     const transResp = await antenna?.iotx.executeContract(
-  //       {
-  //         contractAddress: 'io1jmq0epcswzu7vyquxlr9j9jvplwpvtc4d50ze9',
-  //         amount: '0',
-  //         abi: '[{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}]',
-  //         method: 'set',
-  //         gasLimit: '100000',
-  //         gasPrice: toRau('1', 'Qev'),
-  //         from: antenna.iotx.accounts[0].address,
-  //       },
-  //       666
-  //     )
-  //     // TODO: add setTimeout to simulate what sleep promise did for us?
-  //     console.log(`transResp => ${transResp}`)
-  //   }
-
   return {
     getIoPayAddress,
     sendIoPayTransaction,
