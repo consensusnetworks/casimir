@@ -11,6 +11,7 @@ void async function () {
     /** Get AWS secrets */
     await loadCredentials()
     process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')
+    process.env.NODES_IP = await getSecret('casimir-nodes-ip')
 
     /** Prepare the CDK app */
     await $`npm run bootstrap --workspace @casimir/cdk`

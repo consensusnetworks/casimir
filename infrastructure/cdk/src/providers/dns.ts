@@ -37,9 +37,10 @@ export default class DnsStack extends Stack {
     const domain = 'casimir.co'
     
     const dnsRecords = {
-        wildcard: '*',
+        auth: 'auth',
         landing: 'www',
-        auth: 'auth'
+        nodes: 'nodes',
+        wildcard: '*'
     }
 
     const hostedZone = route53.HostedZone.fromLookup(this, `${project}${this.service}HostedZone${stage}`, {

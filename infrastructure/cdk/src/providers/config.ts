@@ -14,6 +14,8 @@ export default class Config {
         /** AWS region */
         region: string
     }
+    /** Casimir nodes primary IP address */
+    nodesIp: string
 
     constructor() {
         this.requiredEnvVars.forEach(v => {
@@ -28,5 +30,6 @@ export default class Config {
             account: process.env.AWS_ACCOUNT as string,
             region: process.env.AWS_REGION as string
         }
+        this.nodesIp = process.env.NODES_IP as string
     }
 }

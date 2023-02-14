@@ -12,6 +12,7 @@ void async function () {
     process.env.STAGE = process.env.STAGE || 'test'
     process.env.AWS_REGION = process.env.AWS_REGION || 'us-east-1'
     process.env.AWS_ACCOUNT = process.env.AWS_ACCOUNT || '000000000000'
+    process.env.NODES_IP = process.env.NODES_IP || '123.456.789.012'
 
     /** Test the CDK app */
     echo('🚀 Testing CDK app')
