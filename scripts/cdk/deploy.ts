@@ -8,12 +8,12 @@ import { $, echo } from 'zx'
  */
 void async function () {
     /** Prepare the CDK app */
-    await $`npm run bootstrap --workspace @core/cdk`
-    await $`npm run synth --workspace @core/cdk`
+    await $`npm run bootstrap --workspace @casimir/cdk`
+    await $`npm run synth --workspace @casimir/cdk`
 
     /** Deploy the CDK app to AWS */
     echo('🚀 Deploying CDK app')
-    $`npm run deploy --workspace @core/cdk`
+    $`npm run deploy --workspace @casimir/cdk`
 }()
 
 
