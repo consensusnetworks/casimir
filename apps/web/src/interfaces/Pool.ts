@@ -1,9 +1,9 @@
 export interface Pool {
     id: number
-    totalStake: string
-    totalRewards: string
-    userStake: string
+    rewards: string
+    stake: string
     userRewards: string
+    userStake: string
     validator?: {
         publicKey: string
         status?: string

@@ -27,7 +27,7 @@ const primaryAccount = ref('')
 
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
-  const { ssv, getSSVFeePercent } = useSSV()
+  const { ssvManager, getSSVFeePercent } = useSSV()
   const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, loginWithEthers, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
@@ -155,22 +155,19 @@ export default function useWallet() {
 
   async function getUserPools(userAddress: string): Promise<Pool[]> {
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-    const ssvProvider = ssv.connect(provider)
-    const usersPoolsIds = await ssvProvider.getUserPoolIds(userAddress)
+    ssvManager.connect(provider)
+    const usersPoolsIds = await ssvManager.getUserPoolIds(userAddress)
     return await Promise.all(usersPoolsIds.map(async (poolId: number) => {
-
-      const { stake: totalStake, rewards: totalRewards } = await ssvProvider.getPoolBalance(poolId)
-      const { stake: userStake, rewards: userRewards } = await ssvProvider.getPoolUserBalance(poolId, userAddress)
-
+      const { balance, userBalance } = await ssvManager.getPoolUserDetails(poolId, userAddress)
       let pool: Pool = {
         id: poolId,
-        totalStake: ethers.utils.formatEther(totalStake),
-        totalRewards: ethers.utils.formatEther(totalRewards),
-        userStake: ethers.utils.formatEther(userStake),
-        userRewards: ethers.utils.formatEther(userRewards)
+        rewards: ethers.utils.formatEther(balance.rewards),
+        stake: ethers.utils.formatEther(balance.stake),
+        userRewards: ethers.utils.formatEther(userBalance.rewards),
+        userStake: ethers.utils.formatEther(userBalance.stake)
       }
 
-      const validatorPublicKey = await ssvProvider.getPoolValidatorPublicKey(poolId) // Public key bytes (i.e., 0x..)
+      const validatorPublicKey = await ssvManager.getPoolValidatorPublicKey(poolId) // Public key bytes (i.e., 0x..)
       if (validatorPublicKey) {
 
         const response = await fetch(`https://prater.beaconcha.in/api/v1/validator/${validatorPublicKey}`)
@@ -184,7 +181,7 @@ export default function useWallet() {
           url: `https://prater.beaconcha.in/validator/${validatorPublicKey}`
         }
 
-        const operatorIds = await ssvProvider.getPoolOperatorIds(poolId) // Operator ID uint32[] (i.e., [1, 2, 3, 4])
+        const operatorIds = await ssvManager.getPoolOperatorIds(poolId) // Operator ID uint32[] (i.e., [1, 2, 3, 4])
         const operators = await Promise.all(operatorIds.map(async (operatorId: number) => {
           const response = await fetch(`https://api.ssv.network/api/v1/operators/${operatorId}`)
           const { performance } = await response.json()
@@ -211,11 +208,11 @@ export default function useWallet() {
     const signerKey = selectedProvider.value as keyof typeof ethersSignerCreator
     let signer = ethersSignerCreator[signerKey](selectedProvider.value)
     if (isWalletConnectSigner(signer)) signer = await signer
-    const ssvProvider = ssv.connect(signer as ethers.Signer)
-    const feesTotalPercent = await getSSVFeePercent(signer as ethers.Signer)
+    ssvManager.connect(signer as ethers.Signer)
+    const feesTotalPercent = await getSSVFeePercent()
     const depositAmount = parseFloat(amountToStake.value) * ((100 + feesTotalPercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
-    const result = await ssvProvider.deposit({ value, type: 0 })
+    const result = await ssvManager.deposit({ value, type: 0 })
     return await result.wait()
   }
 

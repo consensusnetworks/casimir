@@ -1,7 +1,7 @@
 import { ContractConfig } from './ContractConfig'
 
-export interface SSVDeploymentConfig {
+export interface DeploymentConfig {
     SSVManager: ContractConfig
     Oracle?: ContractConfig,
-    MockOracle?: ContractConfig
+    MockFeed?: ContractConfig
 }
