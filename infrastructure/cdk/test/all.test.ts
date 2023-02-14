@@ -5,15 +5,17 @@ import EtlStack from '../src/providers/etl'
 import AuthStack from '../src/providers/auth'
 import LandingStack from '../src/providers/landing'
 import Config from '../src/providers/config'
+import NodesStack from '../src/providers/nodes'
 
 test('All stacks created', () => {
-  const { project, stage, env } = new Config()
+  const { project, stage, env, nodesIp } = new Config()
   const app = new cdk.App()
   const dnsStack = new DnsStack(app, `${project}DnsStack${stage}`, { env, project, stage })
   const { domain, dnsRecords, hostedZone } = dnsStack
   const etlStack = new EtlStack(app, `${project}EtlStack${stage}`, { env, project, stage })
   const landingStack = new LandingStack(app, `${project}LandingStack${stage}`, { env, project, stage, domain, dnsRecords, hostedZone })
   const authStack = new AuthStack(app, `${project}AuthStack${stage}`, { env, project, stage, domain, dnsRecords, hostedZone })
+  const nodesStack = new NodesStack(app, `${project}NodesStack${stage}`, { env, project, stage, domain, dnsRecords, hostedZone, nodesIp })
 
   const etlTemplate = Template.fromStack(etlStack)
   Object.keys(etlTemplate.findOutputs('*')).forEach(output => {
@@ -27,6 +29,11 @@ test('All stacks created', () => {
 
   const authTemplate = Template.fromStack(authStack)
   Object.keys(authTemplate.findOutputs('*')).forEach(output => {
+    expect(output).toBeDefined()
+  })
+
+  const nodesTemplate = Template.fromStack(nodesStack)
+  Object.keys(nodesTemplate.findOutputs('*')).forEach(output => {
     expect(output).toBeDefined()
   })
 })
