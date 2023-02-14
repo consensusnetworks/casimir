@@ -5,7 +5,7 @@ import { getSecret } from '@casimir/aws-helpers'
  * Run local a local Ethereum node and deploy contracts
  * 
  * Arguments:
- *      --chainlink: whether to run local chainlink (override default false)
+ *      --execution: hardhat or gananche (override default hardhat)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
  * 
  * For more info see:
@@ -32,18 +32,14 @@ void async function () {
     // Enable 12-second interval mining for dev networks
     process.env.MINING_INTERVAL = '12'
 
-    // Using hardhat local or fork network
-    const chainlink = argv.chainlink === 'true'
-
-    if (chainlink) {
+    const execution = argv.execution === 'ganache' ? 'ganache' : 'hardhat'
+    if (execution === 'ganache') {
         $`npm run dev:ganache --workspace @casimir/ethereum`
         // Wait for ganache to start
         const ganacheWaitTime = 5000
         await new Promise(resolve => setTimeout(resolve, ganacheWaitTime))
         $`npm run deploy --workspace @casimir/ethereum -- --network ganache`
-        $`npm run dev:chainlink --fork=${fork}`
     } else {
-        process.env.MOCK_CHAINLINK = 'true'
         $`npm run dev --workspace @casimir/ethereum`
         // Wait for hardhat to start
         const hardhatWaitTime = 2500

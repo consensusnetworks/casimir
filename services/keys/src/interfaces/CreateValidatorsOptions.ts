@@ -1,4 +1,4 @@
 export interface CreateValidatorsOptions {
-    operatorIds: number[]
-    validatorCount: number
+    operatorIds?: number[]
+    validatorCount?: number
 }

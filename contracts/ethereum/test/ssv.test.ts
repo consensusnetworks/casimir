@@ -2,16 +2,15 @@ import { deployContract } from '@casimir/hardhat-helpers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { MockFeed, SSVManager } from '../build/artifacts/types'
+import { SSVManager } from '../build/artifacts/types'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 import { SSV } from '@casimir/keys'
 
 /** Fixture to deploy SSV manager contract */
 async function deploymentFixture() {
-  let ssvManager, mockFeed
+  let ssvManager
   const [owner] = await ethers.getSigners()
-  const mockChainlink = process.env.MOCK_CHAINLINK === 'true'
-  let config: DeploymentConfig = {
+  const config: DeploymentConfig = {
     SSVManager: {
       address: '',
       args: {
@@ -28,32 +27,9 @@ async function deploymentFixture() {
     }
   }
 
-  if (mockChainlink) {
-    const mockChainlinkConfig = {
-      MockFeed: {
-        address: '',
-        args: {
-          linkTokenAddress: process.env.LINK_TOKEN_ADDRESS
-        },
-        options: {},
-        proxy: false
-      }
-    }
-    config = {
-      // Deploy Chainlink contracts first
-      ...mockChainlinkConfig,
-      ...config
-    }
-  }
-
   for (const name in config) {
     console.log(`Deploying ${name} contract...`)
     const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
-
-    // Update SSVManager args with MockFeed address
-    if (name === 'SSVManager' && config.MockFeed) {
-      args.linkFeedAddress = config.MockFeed.address
-    }
 
     const contract = await deployContract(name, proxy, args, options)
     const { address } = contract
@@ -63,24 +39,21 @@ async function deploymentFixture() {
 
     // Save contract address for next loop
     (config[name as keyof DeploymentConfig] as ContractConfig).address = address
-    
-    // Save mock feed for export
-    if (name === 'MockFeed') mockFeed = contract
 
     // Save SSV manager for export
     if (name === 'SSVManager') ssvManager = contract
   }
 
-  return { ssvManager: ssvManager as SSVManager, mockFeed: mockFeed as MockFeed, owner }
+  return { ssvManager: ssvManager as SSVManager, owner }
 }
 
 /** Fixture to add validators */
 async function addValidatorsFixture() {
-  const { ssvManager, mockFeed, owner } = await loadFixture(deploymentFixture)
-  const operatorIds = Array.from({ length: 8 }, (_, i) => i + 175)
+  const { ssvManager, owner } = await loadFixture(deploymentFixture)
+  // const operatorIds = Array.from({ length: 8 }, (_, i) => i + 175)
   const validatorCount = 2
   const ssv = new SSV()
-  const validators = await ssv.createValidators({ operatorIds, validatorCount })
+  const validators = await ssv.createValidators({ /*operatorIds, */validatorCount })
   for (const validator of validators) {
     const { 
       depositDataRoot,
@@ -91,7 +64,6 @@ async function addValidatorsFixture() {
       signature,
       withdrawalCredentials
     } = validator
-
     const registration = await ssvManager.addValidator(
       depositDataRoot, 
       publicKey,
@@ -103,12 +75,12 @@ async function addValidatorsFixture() {
     )
     await registration.wait()
   }
-  return { mockFeed, owner, ssv, ssvManager, validators }
+  return { owner, ssv, ssvManager, validators }
 }
 
 /** Fixture to stake 16 ETH for the first user */
 async function firstUserDepositFixture() {
-  const { mockFeed, owner, ssvManager } = await loadFixture(addValidatorsFixture)
+  const { owner, ssvManager } = await loadFixture(addValidatorsFixture)
   const [, firstUser] = await ethers.getSigners()
   const stakeAmount = 16.0
   const fees = { ...await ssvManager.getFees() }
@@ -117,12 +89,12 @@ async function firstUserDepositFixture() {
   const value = ethers.utils.parseEther(depositAmount.toString())
   const deposit = await ssvManager.connect(firstUser).deposit({ value })
   await deposit.wait()
-  return { ssvManager, mockFeed, firstUser, owner }
+  return { ssvManager, firstUser, owner }
 }
 
 /** Fixture to stake 24 ETH for the second user */
 async function secondUserDepositFixture() {
-  const { ssvManager, mockFeed, firstUser, owner } = await loadFixture(firstUserDepositFixture)
+  const { ssvManager, firstUser, owner } = await loadFixture(firstUserDepositFixture)
   const [, , secondUser] = await ethers.getSigners()
   const stakeAmount = 24.0
   const fees = { ...await ssvManager.getFees() }
@@ -131,7 +103,7 @@ async function secondUserDepositFixture() {
   const value = ethers.utils.parseEther(depositAmount.toString())
   const deposit = await ssvManager.connect(secondUser).deposit({ value })
   await deposit.wait()
-  return { ssvManager, mockFeed, firstUser, owner, secondUser }
+  return { ssvManager, firstUser, owner, secondUser }
 }
 
 /** Fixture to stake 24 ETH for the third user */

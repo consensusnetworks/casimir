@@ -1,6 +1,3 @@
-import fs from 'fs'
-import path from 'path'
-import { ethers } from 'ethers'
 import { fetch } from 'undici'
 import { ISharesKeyPairs, SSVKeys } from 'ssv-keys'
 import { Operator, Validator } from '@casimir/types'
@@ -13,12 +10,14 @@ export default class SSV {
 
     /** 
      * Create validator deposit data and SSV operator key shares 
+     * @param {CreateValidatorsOptions} options - Options for creating validators
+     * @returns {Promise<Validator[]>} Array of validators
      */
-    async createValidators(options: CreateValidatorsOptions) {
+    async createValidators(options?: CreateValidatorsOptions): Promise<Validator[]> {
 
         /** Use select {operatorIds} to create {validatorCount} validators */
-        const operatorIds = options.operatorIds
-        const validatorCount = options.validatorCount || 1
+        const operatorIds = options?.operatorIds
+        const validatorCount = options?.validatorCount || 1
 
         const validators: Validator[] = []
         const operators = await this.getOperators(operatorIds)
@@ -49,8 +48,8 @@ export default class SSV {
             /** Create validator */
             const validator: Validator = {
                 depositDataRoot,
-                operatorIds: shares.map(s => s.id),
                 publicKey,
+                operatorIds: groupIds, 
                 sharesEncrypted: encryptedShares.map(s => s.privateKey),
                 sharesPublicKeys: encryptedShares.map(s => s.publicKey),
                 signature,
@@ -63,7 +62,7 @@ export default class SSV {
 
     /**
      * Get deposit data for a validator
-     * @param index
+     * @param {number} index - Validator index
      * @returns {Promise<DepositData>} Returns a promise of the validator deposit data
      */
     async getDepositData(index: number): Promise<DepositData> {
@@ -76,13 +75,12 @@ export default class SSV {
         }   
     }
 
-
     /**
-     * 
-     * @param operatorIds 
+     * Get operators from SSV API or local data
+     * @param {number[]} operatorIds - Optional operator IDs
      * @returns {Promise<Operator[]>} Returns a promise of the operator list given optional IDs
      */
-    async getOperators(operatorIds: number[]): Promise<Operator[]> {
+    async getOperators(operatorIds?: number[]): Promise<Operator[]> {
         if (operatorIds) {
             const operators: Operator[] = []
             for (const id of operatorIds) {
@@ -92,10 +90,8 @@ export default class SSV {
             }
             return operators
         }
-        const packagePath = path.join(__dirname + '/../..')
-        const operatorsPath = path.join(packagePath + '/mock/operators.json')
-        const operators = fs.readFileSync(operatorsPath)
-        return JSON.parse(operators.toString())
+        const { operators } = await import('../../mock/operators.json')
+        return operators
     }
 
 }

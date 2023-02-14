@@ -27,8 +27,6 @@ void async function () {
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' fork at ') + chalk.bgBlue(url))
     }
 
-    process.env.MOCK_CHAINLINK = 'true'
-
     $`npm run test --workspace @casimir/ethereum`
 
 }()
