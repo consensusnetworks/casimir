@@ -1,19 +1,11 @@
-import { Duration, Stack, StackProps } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
+import { Duration, Stack } from 'aws-cdk-lib'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
-import * as iam from 'aws-cdk-lib/aws-iam'
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import * as certmgr from 'aws-cdk-lib/aws-certificatemanager'
-
-export interface AuthStackProps extends StackProps {
-    project: string;
-    stage: string;
-    domain: string;
-    dnsRecords: Record<string, string>;
-    hostedZone: route53.HostedZone;
-}
+import { AuthStackProps } from '../interfaces/AuthStackProps'
 
 /**
  * Class representing the auth stack.
@@ -21,7 +13,7 @@ export interface AuthStackProps extends StackProps {
  * Shortest name:  {@link AuthStack}
  * Full name:      {@link (AuthStack:class)}
  */
-export class AuthStack extends Stack {
+export default class AuthStack extends Stack {
 
     public readonly service: string = 'Auth'
     public readonly assetPath: string = '../../services/auth/dist'
@@ -47,13 +39,12 @@ export class AuthStack extends Stack {
         // Use casimir.co for prod and dev.casimir.co for dev
         const serviceDomain = stage === 'Prod' ? domain : [stage.toLowerCase(), domain].join('.')
     
-        const certificate = new certmgr.DnsValidatedCertificate(this, `${project}${this.service}Cert${stage}`, {
+        const certificate = new certmgr.Certificate(this, `${project}${this.service}Cert${stage}`, {
             domainName: serviceDomain,
             subjectAlternativeNames: [
                 [dnsRecords.auth, serviceDomain].join('.')
             ],
-            hostedZone,
-            region: 'us-east-2'
+            validation: certmgr.CertificateValidation.fromDns(hostedZone)
         })
 
         const lambdaHandler = new lambda.Function(this, `${project}${this.service}Api${stage}`, {

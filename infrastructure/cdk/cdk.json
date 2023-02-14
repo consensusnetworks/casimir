@@ -1,5 +1,5 @@
 {
-  "app": "npx esno bin/index.ts",
+  "app": "npx esno src/index.ts",
   "watch": {
     "include": [
       "**"

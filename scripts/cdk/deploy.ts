@@ -1,3 +1,4 @@
+import { getSecret, loadCredentials } from '@casimir/aws-helpers'
 import { $, echo } from 'zx'
 
 /**
@@ -7,6 +8,10 @@ import { $, echo } from 'zx'
  * See https://docs.aws.amazon.com/cdk/api/v2
  */
 void async function () {
+    /** Get AWS secrets */
+    await loadCredentials()
+    process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')
+
     /** Prepare the CDK app */
     await $`npm run bootstrap --workspace @casimir/cdk`
     await $`npm run synth --workspace @casimir/cdk`

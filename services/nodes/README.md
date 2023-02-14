@@ -1,15 +1,15 @@
-# Casimir Ethereum
+# Casimir Nodes
 
-Ethereum nodes and RPC/WS APIs
+Nodes and RPC/WS APIs
 
 ## Execution Clients
 
 Until we add rate limiting, RPC/WS API access should be restricted to @consensusnetworks and any trusted parties issued API password secrets. See [API Configuration](#api-configuration) to set up an API URL and restrict access with a password.
 
-| Client | Network | Mode | Setup |
-| - | - | - | - |
-| Erigon | mainnet | archive | [thorax/erigon compose](https://hub.docker.com/r/thorax/erigon#run-all-components-by-docker-compose) | `casomir-mainnet-rpc` | `casimir-mainnet-ws` |
-| Geth | goerli | full | [eth-docker compose](https://github.com/eth-educators/eth-docker) | `casimir-goerli-rpc` | `casimir-goerli-ws` |
+| Currency | Network | Protocols | Client | Mode | Config |
+| - | - | - | - | - | - |
+| ETH | mainnet | rpc, ws | Erigon | archive | [ledgerwatch/erigon compose](https://github.com/ledgerwatch/erigon/blob/devel/docker-compose.yml) |
+| ETH | goerli | rpc, ws | Geth | full | [eth-educators/eth-docker compose](https://github.com/eth-educators/eth-docker) |
 
 ## API Configuration
 
@@ -34,4 +34,4 @@ docker-compose up -d nginx
 
 ## API Usage
 
-Now Casimir developers can access the Ethereum clients via descriptive URLs like <http://{username}:{password}@{public_ip}/mainnet/rpc>. We will inject these into our development workflows using secrets, but for now, you can share the username, password, and public IP with developers over Keybase.
+Now Casimir developers can access node clients via descriptive URLs like <http://{username}:{password}@nodes.casimir.co/eth/mainnet/rpc>. We have injected these into Casimir development workflows using secrets.

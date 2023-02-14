@@ -1,12 +1,11 @@
 {
     "name": "@casimir/cdk",
     "bin": {
-        "index": "bin/index.ts"
+        "index": "src/index.ts"
     },
     "scripts": {
         "build": "echo 'Warning: @casimir/cdk build not specified. Disregard this warning and any listed errors above if @casimir/cdk is not needed for the current project build.' && exit 0",
-        "pretest": "export PROJECT=casimir && export STAGE=test",
-        "test": "jest --config jest.config.js",
+        "test": "jest",
         "bootstrap": "npx cdk bootstrap",
         "metadata": "npx cdk metadata",
         "synth": "npx cdk synth --no-staging",

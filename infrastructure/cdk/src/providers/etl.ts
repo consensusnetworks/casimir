@@ -1,19 +1,15 @@
-import { Stack, StackProps } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
+import { Stack } from 'aws-cdk-lib'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as glue from '@aws-cdk/aws-glue-alpha'
 import { schemaToGlueColumns, eventSchema, aggSchema } from '@casimir/data'
+import { EtlStackProps } from '../interfaces/EtlStackProps'
 
 // Get Glue Columns from JSON Schema for each table
 const eventColumns = schemaToGlueColumns(eventSchema)
 const aggColumns = schemaToGlueColumns(aggSchema)
 
-export interface EtlStackProps extends StackProps {
-    project: string;
-    stage: string;
-}
-
-export class EtlStack extends Stack {
+export default class EtlStack extends Stack {
 
     public readonly service: string = 'Etl'
 

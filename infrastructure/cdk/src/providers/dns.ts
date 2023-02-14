@@ -1,11 +1,7 @@
-import { Stack, StackProps } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
+import { Stack } from 'aws-cdk-lib'
 import * as route53 from 'aws-cdk-lib/aws-route53'
-
-export interface DnsStackProps extends StackProps {
-  project: string;
-  stage: string;
-}
+import { DnsStackProps } from '../interfaces/DnsStackProps'
 
 /**
  * Class representing the dns stack.
@@ -13,7 +9,7 @@ export interface DnsStackProps extends StackProps {
  * Shortest name:  {@link DnsStack}
  * Full name:      {@link (DnsStack:class)}
  */
-export class DnsStack extends Stack {
+export default class DnsStack extends Stack {
 
   public readonly service: string = 'Dns'
   public readonly domain: string

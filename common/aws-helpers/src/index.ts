@@ -5,28 +5,35 @@ import { AthenaClient, AthenaClientConfig, StartQueryExecutionCommand, GetQueryE
 import { defaultProvider } from '@aws-sdk/credential-provider-node'
 import { EventTableSchema } from '@casimir/data'
 
-export async function getCredentials() {
-    const profile = getProfile()
-    return await fromIni({ profile })()
-}
-
-export function getProfile() {
-    return process.env.PROFILE || 'consensus-networks-dev'
-}
-
 export async function getSecret(id: string) {
-    const profile = getProfile()
-    const aws = new SecretsManagerClient({ credentials: fromIni({ profile }) })
-
+    const aws = new SecretsManagerClient({})
     const { SecretString } = await aws.send(
         new GetSecretValueCommand(
-            {
+            { 
                 SecretId: id
             }
         )
     )
-
     return SecretString
+}
+
+/**
+ * Ensures AWS credentials are available and returns them.
+ * Checks for AWS credentials in the environment variables.
+ * If not found, loads credentials from `AWS_PROFILE` or the default profile.
+ * 
+ * @returns AWS credentials
+ */
+export async function loadCredentials() {
+    const defaultProfile = 'consensus-networks-dev'
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+        process.env.AWS_PROFILE = process.env.AWS_PROFILE || defaultProfile
+        return await fromIni()()
+    }
+    return {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
 }
 
 const defaultQueryOutputBucket = 'casimir-etl-output-bucket-dev'

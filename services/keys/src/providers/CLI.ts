@@ -1,5 +1,5 @@
 import minimist from 'minimist'
-import SSV from './SSV'
+import SSV from './ssv'
 
 export default class CLI {
     async run() {
