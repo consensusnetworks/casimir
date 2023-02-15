@@ -48,14 +48,14 @@ router.post('/add-sub-account', async (req: express.Request, res: express.Respon
 
 router.post('/remove-sub-account', async (req: express.Request, res: express.Response) => {
     try {
-        const { provider, address, token } = req.body
+        const { provider, address, currency } = req.body
         let { primaryAddress } = req.body
         primaryAddress = primaryAddress.toLowerCase()
         const existingUser = userCollection.find(user => user.address === primaryAddress)
         let accountedRemoved = false
         if (existingUser) {
-            existingUser.accounts = existingUser.accounts.filter(account => {
-                const notAddress = account.walletProvider !== provider || account.address !== address || account.currency !== token
+            existingUser.accounts = existingUser.accounts?.filter(account => {
+                const notAddress = account.walletProvider !== provider || account.address !== address || account.currency !== currency
                 if (!notAddress) {
                     accountedRemoved = true
                 } else {

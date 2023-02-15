@@ -24,7 +24,7 @@
       </button>
       <button
         class="btn-save-remove-account"
-        @click="removeAccount(selectedProvider, selectedAccount, selectedCurrency)"
+        @click="removeConnectedAccount(selectedProvider, selectedAccount, selectedCurrency)"
       >
         Remove Account
       </button>
@@ -199,7 +199,7 @@ const trezorAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
-const { addAccount, removeAccount } = useUsers()
+const { addAccount } = useUsers()
 const {
   loggedIn,
   selectedProvider,
@@ -218,6 +218,7 @@ const {
   getUserPools,
   getUserBalance,
   getCurrentBalance,
+  removeConnectedAccount
 } = useWallet()
 
 watchEffect(() => {

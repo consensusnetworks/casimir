@@ -85,7 +85,7 @@ export default function useUsers () {
     }
 
     // TODO: Refactor this next. 2/14
-    async function removeAccount(provider: ProviderString, address: string, token: Currency) {
+    async function removeAccount(provider: ProviderString, address: string, currency: Currency) {
         address = address.toLowerCase()
         const requestOptions = {
             method: 'POST',
@@ -96,13 +96,10 @@ export default function useUsers () {
                 primaryAddress: user.value?.address,
                 provider,
                 address,
-                token
+                currency
             })
         }
-        const response = await fetch(`${authBaseURL}/users/remove-sub-account`, requestOptions)
-        const json = await response.json()
-        console.log('json :>> ', json)
-        return response
+        return await fetch(`${authBaseURL}/users/remove-sub-account`, requestOptions)
     }
     
     async function getMessage(address: string) {

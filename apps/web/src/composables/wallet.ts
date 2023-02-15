@@ -9,7 +9,7 @@ import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
 import useSSV from '@/composables/ssv'
 import useUsers from '@/composables/users'
-import { ProviderString } from '@casimir/types'
+import { Account, ProviderString } from '@casimir/types'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import { Pool } from '@casimir/types/src/interfaces/Pool'
@@ -39,7 +39,7 @@ export default function useWallet() {
   const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
-  const { user, addAccount, updatePrimaryAddress } = useUsers()
+  const { user, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
     'ETH': getEthersLedgerAddress,
@@ -71,7 +71,7 @@ export default function useWallet() {
     selectedAccount.value = address
   }
 
-  const setCurrency = (currency: Currency) => {
+  const setSelectedCurrency = (currency: Currency) => {
     selectedCurrency.value = currency
   }
 
@@ -85,7 +85,7 @@ export default function useWallet() {
         if (!response.error) {
           setSelectedProvider(provider)
           setSelectedAccount(connectedAddress)
-          setCurrency(connectedCurrency)
+          setSelectedCurrency(connectedCurrency)
           loggedIn.value = true
           user.value = response.data
           primaryAddress.value = response.data.address
@@ -100,7 +100,7 @@ export default function useWallet() {
         if (!response?.error) {
           setSelectedProvider(provider)
           setSelectedAccount(connectedAddress)
-          setCurrency(connectedCurrency)
+          setSelectedCurrency(connectedCurrency)
           loggedIn.value = true
           user.value = response.data
           primaryAddress.value = response.data.address
@@ -124,7 +124,7 @@ export default function useWallet() {
       } else if (provider === 'IoPay') {
         address = await getIoPayAddress()
       } else if (provider === 'Ledger') {
-        setCurrency(currency as Currency)
+        setSelectedCurrency(currency as Currency)
         address = await getLedgerAddress[currency as Currency]()
       } else if (provider === 'Trezor') {
         address = await getTrezorAddress()
@@ -331,6 +331,27 @@ export default function useWallet() {
     }
   }
 
+  async function removeConnectedAccount() {
+    if (!loggedIn.value) {
+      alert('Please login first')
+    }
+    if (selectedAccount.value === primaryAddress.value) {
+      return alert('Cannot remove primary account')
+    } else if (ethersProviderList.includes(selectedProvider.value)) {
+      const result = await removeAccount(selectedProvider.value, selectedAccount.value, selectedCurrency.value)
+      const json = await result.json()
+      if (!json.error) {
+        setSelectedAccount(json.data.address)
+        json.data.accounts.forEach((account: Account) => {
+          if (account.address === selectedAccount.value) {
+            setSelectedProvider(account.walletProvider as ProviderString)
+            setSelectedCurrency(account.currency as Currency)
+          }
+        })
+      }
+    }
+  }
+
   return {
     loggedIn,
     selectedProvider,
@@ -349,6 +370,7 @@ export default function useWallet() {
     getUserBalance,
     getUserPools,
     getCurrentBalance,
-    detectCurrency
+    detectCurrency,
+    removeConnectedAccount
   }
 }
