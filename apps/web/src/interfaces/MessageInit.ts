@@ -4,5 +4,5 @@ import { Currency } from '@casimir/types'
 export interface MessageInit {
     message: string;
     providerString: ProviderString;
-    token?: Currency
+    currency?: Currency
 }

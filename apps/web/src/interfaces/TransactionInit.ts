@@ -12,5 +12,5 @@ export interface TransactionInit extends ethers.providers.TransactionRequest {
     /** The provider string of the transaction */
     providerString: ProviderString;
     /** The token of the transaction */
-    token?: Currency
+    currency?: Currency
 }
