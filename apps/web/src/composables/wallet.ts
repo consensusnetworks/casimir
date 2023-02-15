@@ -369,8 +369,8 @@ export default function useWallet() {
     getCurrentBalance,
     sendTransaction,
     signMessage,
-    deposit,
     getUserBalance,
     getUserPools,
+    deposit,
   }
 }
