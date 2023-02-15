@@ -15,15 +15,15 @@ import { MessageInit } from '@/interfaces/MessageInit'
 import { Pool } from '@casimir/types/src/interfaces/Pool'
 import { Currency } from '@casimir/types'
 
-const amount = ref<string>('0.000001')
-const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
-const amountToStake = ref<string>('0.0')
-const pools = ref<Pool[]>([])
+const loggedIn = ref(false)
 const selectedProvider = ref<ProviderString>('')
 const selectedAddress = ref<string>('')
 const selectedCurrency = ref<Currency>('')
-const loggedIn = ref(false)
 const primaryAddress = ref('')
+const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
+const amount = ref<string>('0.000001')
+const amountToStake = ref<string>('0.0')
+const pools = ref<Pool[]>([])
 
 // Test ethereum send to address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
@@ -188,6 +188,15 @@ export default function useWallet() {
     }
   }
 
+  async function detectCurrency(provider: ProviderString) {
+    // TODO: Implement this for other providers
+    if (ethersProviderList.includes(provider)){
+      return await getEthersBrowserProviderSelectedCurrency(provider) as Currency
+    } else {
+      alert('Currency selection not yet supported for this wallet provider')
+    }
+  }
+
   async function getCurrentBalance() {
     // TODO: Implement this for other providers
     if (ethersProviderList.includes(selectedProvider.value)){
@@ -262,15 +271,6 @@ export default function useWallet() {
     const result = await provider.getBalance(userAddress)
     console.log('result :>> ', result)
     return result
-  }
-
-  async function detectCurrency(provider: ProviderString) {
-    // TODO: Implement this for other providers
-    if (ethersProviderList.includes(provider)){
-      return await getEthersBrowserProviderSelectedCurrency(provider) as Currency
-    } else {
-      alert('Currency selection not yet supported for this wallet provider')
-    }
   }
 
   async function getUserPools(userAddress: string): Promise<Pool[]> {
