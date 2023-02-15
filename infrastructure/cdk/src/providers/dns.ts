@@ -9,7 +9,7 @@ import { DnsStackProps } from '../interfaces/DnsStackProps'
  * Shortest name:  {@link DnsStack}
  * Full name:      {@link (DnsStack:class)}
  */
-export default class DnsStack extends Stack {
+export class DnsStack extends Stack {
 
   public readonly service: string = 'Dns'
   public readonly domain: string

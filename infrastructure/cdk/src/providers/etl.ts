@@ -9,7 +9,7 @@ import { EtlStackProps } from '../interfaces/EtlStackProps'
 const eventColumns = schemaToGlueColumns(eventSchema)
 const aggColumns = schemaToGlueColumns(aggSchema)
 
-export default class EtlStack extends Stack {
+export class EtlStack extends Stack {
 
     public readonly service: string = 'Etl'
 

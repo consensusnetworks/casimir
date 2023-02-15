@@ -13,7 +13,7 @@ import { AuthStackProps } from '../interfaces/AuthStackProps'
  * Shortest name:  {@link AuthStack}
  * Full name:      {@link (AuthStack:class)}
  */
-export default class AuthStack extends Stack {
+export class AuthStack extends Stack {
 
     public readonly service: string = 'Auth'
     public readonly assetPath: string = '../../services/auth/dist'

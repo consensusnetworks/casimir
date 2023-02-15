@@ -4,7 +4,7 @@ import { Operator, Validator } from '@casimir/types'
 import { CreateValidatorsOptions } from '../interfaces/CreateValidatorsOptions'
 import { DepositData } from '../interfaces/DepositData'
 
-export default class SSV {
+export class SSV {
 
     keys: SSVKeys = new SSVKeys(SSVKeys.VERSION.V3)
 

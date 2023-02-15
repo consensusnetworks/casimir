@@ -15,7 +15,7 @@ import { LandingStackProps } from '../interfaces/LandingStackProps'
  * Shortest name:  {@link LandingStack}
  * Full name:      {@link (LandingStack:class)}
  */
-export default class LandingStack extends Stack {
+export class LandingStack extends Stack {
 
   public readonly service: string = 'Landing'
   public readonly assetPath: string = '../../apps/landing/dist'

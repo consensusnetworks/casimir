@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import 'source-map-support/register'
 import * as cdk from 'aws-cdk-lib'
-import AuthStack from './providers/auth'
-import DnsStack from './providers/dns'
-import EtlStack from './providers/etl'
-import LandingStack from './providers/landing'
-import Config from './providers/config'
-import NodesStack from './providers/nodes'
+import { Config } from './providers/config'
+import { AuthStack } from './providers/auth'
+import { DnsStack } from './providers/dns'
+import { EtlStack } from './providers/etl'
+import { LandingStack } from './providers/landing'
+import { NodesStack } from './providers/nodes'
 
 const { project, stage, env, nodesIp } = new Config()
 const app = new cdk.App()

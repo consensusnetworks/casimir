@@ -1,6 +1,6 @@
 import { pascalCase } from '@casimir/string-helpers'
 
-export default class Config {
+export class Config {
     /** List of required environment variables */
     requiredEnvVars = ['PROJECT', 'STAGE', 'AWS_ACCOUNT', 'AWS_REGION']
     /** Project name */

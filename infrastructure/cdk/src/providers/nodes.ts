@@ -9,7 +9,7 @@ import { NodesStackProps } from '../interfaces/NodesStackProps'
  * Shortest name:  {@link NodesStack}
  * Full name:      {@link (NodesStack:class)}
  */
-export default class NodesStack extends Stack {
+export class NodesStack extends Stack {
 
     public readonly service: string = 'Nodes'
     public readonly assetPath: string = '../../services/nodes/dist'

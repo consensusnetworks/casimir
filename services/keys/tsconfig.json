@@ -22,7 +22,6 @@
     "strictPropertyInitialization": false,
     "types": ["node", "jest"],
     "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": false
+    "resolveJsonModule": true
   }
 }

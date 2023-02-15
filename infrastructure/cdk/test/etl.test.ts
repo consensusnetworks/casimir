@@ -1,8 +1,8 @@
 import * as cdk from 'aws-cdk-lib'
 import { Template } from 'aws-cdk-lib/assertions'
-import EtlStack from '../src/providers/etl'
+import { Config } from '../src/providers/config'
+import { EtlStack } from '../src/providers/etl'
 import { eventSchema, aggSchema, schemaToGlueColumns } from '@casimir/data'
-import Config from '../src/providers/config'
 
 test('ETL stack created', () => {
   const { project, stage, env } = new Config()

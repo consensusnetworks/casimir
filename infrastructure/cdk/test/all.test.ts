@@ -1,11 +1,11 @@
 import * as cdk from 'aws-cdk-lib'
 import { Template } from 'aws-cdk-lib/assertions'
-import DnsStack from '../src/providers/dns'
-import EtlStack from '../src/providers/etl'
-import AuthStack from '../src/providers/auth'
-import LandingStack from '../src/providers/landing'
-import Config from '../src/providers/config'
-import NodesStack from '../src/providers/nodes'
+import { Config } from '../src/providers/config'
+import { AuthStack } from '../src/providers/auth'
+import { DnsStack } from '../src/providers/dns'
+import { EtlStack } from '../src/providers/etl'
+import { LandingStack } from '../src/providers/landing'
+import { NodesStack } from '../src/providers/nodes'
 
 test('All stacks created', () => {
   const { project, stage, env, nodesIp } = new Config()
