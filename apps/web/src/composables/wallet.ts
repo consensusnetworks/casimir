@@ -20,7 +20,7 @@ const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
 const selectedProvider = ref<ProviderString>('')
-const selectedAccount = ref<string>('')
+const selectedAddress = ref<string>('')
 const selectedCurrency = ref<Currency>('')
 const loggedIn = ref(false)
 const primaryAddress = ref('')
@@ -68,7 +68,7 @@ export default function useWallet() {
   }
 
   const setSelectedAccount = (address: string) => {
-    selectedAccount.value = address
+    selectedAddress.value = address
   }
 
   const setSelectedCurrency = (currency: Currency) => {
@@ -78,7 +78,7 @@ export default function useWallet() {
   async function connectWallet(provider: ProviderString, currency?: Currency) {
     try {
       // Login (retrieve accounts) / sign up OR add account
-      if (!selectedAccount.value) {
+      if (!selectedAddress.value) {
         const connectedAddress = await getConnectedAddress(provider, currency)
         const connectedCurrency = await detectCurrency(provider) as Currency
         const response = await signupOrLogin(provider, connectedAddress, connectedCurrency)
@@ -151,9 +151,57 @@ export default function useWallet() {
     }
   }
 
+  async function setPrimaryWalletAccount() {
+    if (!loggedIn.value) {
+      alert('Please login first')
+    }
+    
+    // TODO: Implement this for other providers
+    if (ethersProviderList.includes(selectedProvider.value)) {
+      const result = await updatePrimaryAddress(primaryAddress.value, selectedProvider.value, selectedAddress.value)
+      const resultJSON = await result.json()
+      console.log('resultJSON :>> ', resultJSON)
+      if (!resultJSON.error) {
+        primaryAddress.value = resultJSON.data.address
+      }
+    }
+  }
+
+  async function removeConnectedAccount() {
+    if (!loggedIn.value) {
+      alert('Please login first')
+    }
+    if (selectedAddress.value === primaryAddress.value) {
+      return alert('Cannot remove primary account')
+    } else if (ethersProviderList.includes(selectedProvider.value)) {
+      const result = await removeAccount(selectedProvider.value, selectedAddress.value, selectedCurrency.value)
+      const json = await result.json()
+      if (!json.error) {
+        setSelectedAccount(json.data.address)
+        json.data.accounts.forEach((account: Account) => {
+          if (account.address === selectedAddress.value) {
+            setSelectedProvider(account.walletProvider as ProviderString)
+            setSelectedCurrency(account.currency as Currency)
+          }
+        })
+      }
+    }
+  }
+
+  async function getCurrentBalance() {
+    // TODO: Implement this for other providers
+    if (ethersProviderList.includes(selectedProvider.value)){
+      const walletBalance = await getEthersBalance(selectedProvider.value, selectedAddress.value)
+      console.log('walletBalance in wei in wallet.ts :>> ', walletBalance)
+    return walletBalance
+    } else {
+      alert('Please select account')
+    }
+  }
+
   async function sendTransaction() {
     const txInit: TransactionInit = {
-      from: selectedAccount.value,
+      from: selectedAddress.value,
       to: toAddress.value,
       value: amount.value,
       providerString: selectedProvider.value,
@@ -214,17 +262,6 @@ export default function useWallet() {
     const result = await provider.getBalance(userAddress)
     console.log('result :>> ', result)
     return result
-  }
-
-  async function getCurrentBalance() {
-    // TODO: Implement this for other providers
-    if (ethersProviderList.includes(selectedProvider.value)){
-      const walletBalance = await getEthersBalance(selectedProvider.value, selectedAccount.value)
-      console.log('walletBalance in wei in wallet.ts :>> ', walletBalance)
-    return walletBalance
-    } else {
-      alert('Please select account')
-    }
   }
 
   async function detectCurrency(provider: ProviderString) {
@@ -315,47 +352,10 @@ export default function useWallet() {
     return await result.wait()
   }
 
-  async function setPrimaryWalletAccount() {
-    if (!loggedIn.value) {
-      alert('Please login first')
-    }
-    
-    // TODO: Implement this for other providers
-    if (ethersProviderList.includes(selectedProvider.value)) {
-      const result = await updatePrimaryAddress(primaryAddress.value, selectedProvider.value, selectedAccount.value)
-      const resultJSON = await result.json()
-      console.log('resultJSON :>> ', resultJSON)
-      if (!resultJSON.error) {
-        primaryAddress.value = resultJSON.data.address
-      }
-    }
-  }
-
-  async function removeConnectedAccount() {
-    if (!loggedIn.value) {
-      alert('Please login first')
-    }
-    if (selectedAccount.value === primaryAddress.value) {
-      return alert('Cannot remove primary account')
-    } else if (ethersProviderList.includes(selectedProvider.value)) {
-      const result = await removeAccount(selectedProvider.value, selectedAccount.value, selectedCurrency.value)
-      const json = await result.json()
-      if (!json.error) {
-        setSelectedAccount(json.data.address)
-        json.data.accounts.forEach((account: Account) => {
-          if (account.address === selectedAccount.value) {
-            setSelectedProvider(account.walletProvider as ProviderString)
-            setSelectedCurrency(account.currency as Currency)
-          }
-        })
-      }
-    }
-  }
-
   return {
     loggedIn,
     selectedProvider,
-    selectedAccount,
+    selectedAddress,
     selectedCurrency,
     primaryAddress,
     toAddress,
@@ -364,13 +364,13 @@ export default function useWallet() {
     pools,
     connectWallet,
     setPrimaryWalletAccount,
+    removeConnectedAccount,
+    detectCurrency,
+    getCurrentBalance,
     sendTransaction,
     signMessage,
     deposit,
     getUserBalance,
     getUserPools,
-    getCurrentBalance,
-    detectCurrency,
-    removeConnectedAccount
   }
 }
