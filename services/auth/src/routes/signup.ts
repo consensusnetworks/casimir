@@ -4,6 +4,7 @@ import { userCollection } from '../collections/users'
 
 const router = express.Router()
 
+// TODO: Remove if we're not using.
 router.use('/', async (req: express.Request, res: express.Response) => {
     try {
         const { body } = req

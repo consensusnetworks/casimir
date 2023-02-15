@@ -3,13 +3,13 @@ import { userCollection } from '../collections/users'
 const router = express.Router()
 
 router.put('/update-primary-account', async (req: express.Request, res: express.Response) => {
-    let { primaryAccount, updatedProvider, updatedAccount } = req.body
-    primaryAccount = primaryAccount.toLowerCase()
+    let { primaryAddress, updatedProvider, updatedAddress } = req.body
+    primaryAddress = primaryAddress.toLowerCase()
     updatedProvider = updatedProvider.toLowerCase()
-    updatedAccount = updatedAccount.toLowerCase()
-    const user = userCollection.find(user => user.address === primaryAccount)
+    updatedAddress = updatedAddress.toLowerCase()
+    const user = userCollection.find(user => user.address === primaryAddress)
     if (user) {
-        user.address = updatedAccount
+        user.address = updatedAddress
     }
     res.setHeader('Content-Type', 'application/json')
     res.status(200)

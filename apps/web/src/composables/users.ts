@@ -57,6 +57,7 @@ export default function useUsers () {
         }) as Account
         if (account) {
             alert(`Account already exists on user: ${account}`)
+            return { error: false, message: `Account already exists on user: ${account}`, data: user.value }
         } else {
             const accountToAdd = {
                 address,
@@ -83,6 +84,7 @@ export default function useUsers () {
     
     }
 
+    // TODO: Refactor this next. 2/14
     async function removeAccount(provider: ProviderString, address: string, token: Currency) {
         address = address.toLowerCase()
         const requestOptions = {
@@ -110,13 +112,13 @@ export default function useUsers () {
         return message
     }
 
-    async function updatePrimaryAccount(primaryAccount: string, updatedProvider: ProviderString, updatedAccount: string) {
+    async function updatePrimaryAddress(primaryAddress: string, updatedProvider: ProviderString, updatedAddress: string) {
         const requestOptions = {
             method: 'PUT',
             headers: { 
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ primaryAccount, updatedProvider, updatedAccount })
+            body: JSON.stringify({ primaryAddress, updatedProvider, updatedAddress })
         }
         return await fetch(`${authBaseURL}/users/update-primary-account`, requestOptions)
     }
@@ -126,6 +128,6 @@ export default function useUsers () {
         addAccount,
         removeAccount,
         getMessage,
-        updatePrimaryAccount
+        updatePrimaryAddress
     }
 }

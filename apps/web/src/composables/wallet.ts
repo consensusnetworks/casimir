@@ -23,7 +23,7 @@ const selectedProvider = ref<ProviderString>('')
 const selectedAccount = ref<string>('')
 const selectedCurrency = ref<Currency>('')
 const loggedIn = ref(false)
-const primaryAccount = ref('')
+const primaryAddress = ref('')
 
 // Test ethereum send to address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
@@ -39,7 +39,7 @@ export default function useWallet() {
   const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
-  const { user, addAccount, updatePrimaryAccount } = useUsers()
+  const { user, addAccount, updatePrimaryAddress } = useUsers()
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
     'ETH': getEthersLedgerAddress,
@@ -88,7 +88,7 @@ export default function useWallet() {
           setCurrency(connectedCurrency)
           loggedIn.value = true
           user.value = response.data
-          primaryAccount.value = response.data
+          primaryAddress.value = response.data.address
           return response
         }
       } else {
@@ -103,7 +103,7 @@ export default function useWallet() {
           setCurrency(connectedCurrency)
           loggedIn.value = true
           user.value = response.data
-          primaryAccount.value = response.data.address
+          primaryAddress.value = response.data.address
         }
       }
     } catch (error) {
@@ -315,27 +315,6 @@ export default function useWallet() {
     return await result.wait()
   }
 
-  // TODO: Remove this?
-  async function login() {
-    let loginResult
-    if (ethersProviderList.includes(selectedProvider.value)) {
-      loginResult = await loginWithEthers(selectedProvider.value, selectedAccount.value)
-    } else {
-      console.log('Login not yet supported for this wallet provider')
-    }
-
-    if (!loginResult.error) {
-      loggedIn.value = true
-      user.value = loginResult.data
-      primaryAccount.value = loginResult.data.address
-      console.log('user.value :>> ', user.value)
-      return loginResult
-    } else {
-      alert('There was an error logging in. Please try again.')
-    }
-  }
-
-  // TODO: Update this.
   async function setPrimaryWalletAccount() {
     if (!loggedIn.value) {
       alert('Please login first')
@@ -343,9 +322,12 @@ export default function useWallet() {
     
     // TODO: Implement this for other providers
     if (ethersProviderList.includes(selectedProvider.value)) {
-      const result = await updatePrimaryAccount(primaryAccount.value, selectedProvider.value, selectedAccount.value)
+      const result = await updatePrimaryAddress(primaryAddress.value, selectedProvider.value, selectedAccount.value)
       const resultJSON = await result.json()
-      primaryAccount.value = resultJSON.data.primaryAccount
+      console.log('resultJSON :>> ', resultJSON)
+      if (!resultJSON.error) {
+        primaryAddress.value = resultJSON.data.address
+      }
     }
   }
 
@@ -354,7 +336,7 @@ export default function useWallet() {
     selectedProvider,
     selectedAccount,
     selectedCurrency,
-    primaryAccount,
+    primaryAddress,
     toAddress,
     amount,
     amountToStake,
@@ -364,7 +346,6 @@ export default function useWallet() {
     sendTransaction,
     signMessage,
     deposit,
-    login,
     getUserBalance,
     getUserPools,
     getCurrentBalance,

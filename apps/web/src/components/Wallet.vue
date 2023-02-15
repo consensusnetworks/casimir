@@ -10,7 +10,7 @@
       <h5>Are you logged in?</h5>
       <div>{{ loggedIn ? 'Yes!' : 'No.' }}</div>
       <h5>Primary Account:</h5>
-      <div>{{ primaryAccount ? primaryAccount : 'Please log in first.' }}</div>
+      <div>{{ primaryAddress ? primaryAddress : 'Please log in first.' }}</div>
       <button @click="setPrimaryWalletAccount()">
         Set Primary Account
       </button>
@@ -180,9 +180,6 @@
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
 import useUsers from '@/composables/users'
-import useLedger from '@/composables/ledger'
-
-const { getBitcoinLedgerSigner } = useLedger()
 
 const message = ref('')
 const signedMessage = ref('')
@@ -207,7 +204,7 @@ const {
   loggedIn,
   selectedProvider,
   selectedAccount,
-  primaryAccount,
+  primaryAddress,
   selectedCurrency,
   toAddress,
   amount,

@@ -118,17 +118,6 @@ export default function useEthers() {
     return json
   }
 
-  async function loginWithEthers (providerString: ProviderString, selectedAccount: string) {
-    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
-    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    const messageJson = await getMessage(providerString, selectedAccount)
-    const { message } = await messageJson.json()
-    const signer = web3Provider.getSigner()
-    const signature = await signer.signMessage(message)
-    const response = await login({ address: selectedAccount, message: message.toString(), signedMessage: signature, provider: providerString })
-    return await response.json()
-  }
-
   async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
     // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
     const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
@@ -138,7 +127,7 @@ export default function useEthers() {
     return currency
   }
 
-  return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit, signupLoginWithEthers, loginWithEthers, getEthersBrowserProviderSelectedCurrency }
+  return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit, signupLoginWithEthers, getEthersBrowserProviderSelectedCurrency }
 }
 
 function getBrowserProviders(ethereum: any) {

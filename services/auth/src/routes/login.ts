@@ -8,6 +8,7 @@ const { verifyMessage } = useEthers()
 const { updateMessage } = useUsers()
 const router = express.Router()
 
+// TODO: Remove if we're not using.
 router.use('/', async (req: express.Request, res: express.Response) => {
     const { body } = req
     const { address, message, signedMessage, provider } = body as LoginCredentials
