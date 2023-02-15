@@ -22,19 +22,19 @@ router.put('/update-primary-account', async (req: express.Request, res: express.
 
 router.post('/add-sub-account', async (req: express.Request, res: express.Response) => {
     try {
-        const { user } = req.body
-        let { primaryAddress } = req.body
-        primaryAddress = primaryAddress.toLowerCase()
-        const existingUser = userCollection.find(user => user.address === primaryAddress)
+        const { account } = req.body
+        let { address } = req.body
+        address = address.toLowerCase()
+        const existingUser = userCollection.find(user => user.address === address)
         if (existingUser) {
-            existingUser.accounts = user.accounts
+            existingUser.accounts?.push(account)
         }
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
             message: 'Account added',
             error: false,
-            data: user
+            data: existingUser
         })
     } catch (err) {
         console.log('err :>> ', err)

@@ -92,9 +92,20 @@ export default function useWallet() {
           return response
         }
       } else {
-        // TODO: Try add account method
+        // Add account if already logged in / signed up
+        const connectedAddress = await getConnectedAddress(provider, currency)
+        const connectedCurrency = await detectCurrency(provider) as Currency
+        const response = await addAccount(provider, connectedAddress, connectedCurrency)
+        console.log('add account response in connectWallet in wallet.ts:>> ', response)
+        if (!response?.error) {
+          setSelectedProvider(provider)
+          setSelectedAccount(connectedAddress)
+          setCurrency(connectedCurrency)
+          loggedIn.value = true
+          user.value = response.data
+          primaryAccount.value = response.data.address
+        }
       }
-      // TODO: Then set selected provider, address, and currency
     } catch (error) {
       console.error(error)
     }
@@ -324,6 +335,7 @@ export default function useWallet() {
     }
   }
 
+  // TODO: Update this.
   async function setPrimaryWalletAccount() {
     if (!loggedIn.value) {
       alert('Please login first')

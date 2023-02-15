@@ -43,44 +43,42 @@ export default function useUsers () {
         subscribeToUserEvents()
     })
 
-    // TODO: Couple this with connectWallet method in wallet.ts for when user is already logged in
-    async function addAccount(provider: ProviderString, address: string, token: Currency) {
+    async function addAccount(provider: ProviderString, address: string, currency: Currency) {
         address = address.toLowerCase()
-        const account = user.value?.accounts.find((account: Account) => {
+        const account = user.value?.accounts?.find((account: Account) => {
             const accountAddress = account.address.toLowerCase()
             const accountProvider = account.walletProvider
-            const accountToken = account.currency
+            const accountCurrency = account.currency
             const addressIsEqual = accountAddress === address
             const providerIsEqual = accountProvider === provider
-            const tokenIsEqual = accountToken === token
-            const isEqual = addressIsEqual && providerIsEqual && tokenIsEqual
+            const currencyIsEqual = accountCurrency === currency
+            const isEqual = addressIsEqual && providerIsEqual && currencyIsEqual
             return isEqual
         }) as Account
         if (account) {
             alert(`Account already exists on user: ${account}`)
         } else {
-            user.value?.accounts.push({
+            const accountToAdd = {
                 address,
-                currency: token,
+                currency,
                 balance: '0', // TODO: Decide how we want to handle this
                 balanceSnapshots: [],
                 roi: 0,
                 walletProvider: provider
-            })
+            }
             const requestOptions = {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    primaryAddress: user.value?.address,
-                    user: user.value
+                    address: user.value?.address,
+                    account: accountToAdd
                 })
             }
             const response = await fetch(`${authBaseURL}/users/add-sub-account`, requestOptions)
             const json = await response.json()
-            console.log('json :>> ', json)
-            return response
+            return json
         }
     
     }
