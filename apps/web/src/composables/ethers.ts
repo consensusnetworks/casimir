@@ -8,7 +8,7 @@ import { MessageInit } from '@/interfaces/MessageInit'
 import useAuth from '@/composables/auth'
 import { Currency } from '@casimir/types'
 
-const { getMessage, signUpAuth, login } = useAuth()
+const { getMessage, signupOrLoginAuth, signUpAuth, login } = useAuth()
 
 const defaultProviders = {
   MetaMask: undefined,
@@ -26,6 +26,25 @@ export default function useEthers() {
       return await provider.request({
         method: 'eth_requestAccounts',
       })
+    }
+  }
+
+  // TODO: Identify the difference beteween the two functions below (requestEthersBalance and getEthersBalance)
+  async function requestEthersBalance(provider: EthersProvider, address: string) {
+    if (provider?.request) {
+      return await provider.request({
+        method: 'eth_getBalance',
+        params: [address, 'latest'],
+      })
+    }
+  }
+
+  async function getEthersBalance(providerString: ProviderString, address: string, ) {
+    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    if (provider) {
+      const balance = await requestEthersBalance(provider as EthersProvider, address)
+      console.log('balance :>> ', balance)
+      return ethers.utils.formatEther(balance)
     }
   }
 
@@ -79,27 +98,27 @@ export default function useEthers() {
     return { gasPrice, gasLimit }
   }
 
-  async function signUpWithEthers(providerString: ProviderString, selectedAccount: string, token: Currency) {
-    // TODO: Remove commented code if we don't need it. 
-    // const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
-    // const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    // const messageJson = await getMessage(providerString, selectedAccount)
-    // const { message } = await messageJson.json()
-    // const signer = web3Provider.getSigner()
-    // const signature = await signer.signMessage(message)
-    // TODO: Add other fields included in the User interface
-    // TODO: Make token dynamic
-    const response = await signUpAuth({ 
-      address: selectedAccount, 
-      // message: message.toString(), 
-      // signedMessage: signature,
-      provider: providerString, 
-      token
+  async function signupLoginWithEthers(provider: ProviderString, address: string, currency: Currency) {
+    const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
+    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const messageJson = await getMessage(provider, address)
+    const { message } = await messageJson.json()
+    const signer = web3Provider.getSigner()
+    const signature = await signer.signMessage(message)
+    const response = await signupOrLoginAuth({ 
+      provider, 
+      address, 
+      message: message.toString(), 
+      signedMessage: signature,
+      currency
     })
-    return await response.json()
+    console.log('response in signupLoginWithEthers in ethers.ts :>> ', response)
+    const json = await response.json()
+    console.log('json in signupLoginWithEthers in ethers.ts :>> ', json)
+    return json
   }
 
-  async function loginWithEthers ( providerString: ProviderString, selectedAccount: string) {
+  async function loginWithEthers (providerString: ProviderString, selectedAccount: string) {
     const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const messageJson = await getMessage(providerString, selectedAccount)
@@ -110,7 +129,16 @@ export default function useEthers() {
     return await response.json()
   }
 
-  return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit, signUpWithEthers, loginWithEthers }
+  async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
+    // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
+    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
+    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const network = await web3Provider.getNetwork()
+    const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
+    return currency
+  }
+
+  return { ethersProviderList, getEthersBrowserSigner, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, getGasPriceAndLimit, signupLoginWithEthers, loginWithEthers, getEthersBrowserProviderSelectedCurrency }
 }
 
 function getBrowserProviders(ethereum: any) {
@@ -126,4 +154,51 @@ function getBrowserProviders(ethereum: any) {
       CoinbaseWallet: ethereum.providerMap.get('CoinbaseWallet'),
     }
   }
+}
+
+const currenciesByChainId = {
+  '1': {
+    name: 'Mainnet ETH',
+    currency: 'ETH',
+  },
+  '3': {
+    name: 'Ropsten ETH',
+    currency: 'ETH',
+  },
+  '4': {
+    name: 'Rinkeby ETH',
+    currency: 'ETH',
+  },
+  '5': {
+    name: 'Goerli ETH',
+    currency: 'ETH',
+  },
+  '42': {
+    name: 'Kovan ETH',
+    currency: 'ETH',
+  },
+  '56': {
+    name: 'Binance Smart Chain',
+    currency: 'BNB',
+  },
+  '97': {
+    name: 'Binance Smart Chain Testnet',
+    currency: 'BNB',
+  },
+  '137': {
+    name: 'Polygon',
+    currency: 'MATIC',
+  },
+  '80001': {
+    name: 'Polygon Testnet',
+    currency: 'MATIC',
+  },
+  '4690': {
+    name: 'IoTeX',
+    currency: 'IOTX',
+  },
+  '4691': {
+    name: 'IoTeX Testnet',
+    currency: 'IOTX',
+  },
 }

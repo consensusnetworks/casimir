@@ -1,5 +1,6 @@
 import { userCollection } from '../collections/users'
 import { ProviderString } from '@casimir/types'
+import { User } from '@casimir/types'
 
 export default function useUsers() {
     function getMessage (address: string) {
@@ -12,19 +13,17 @@ export default function useUsers() {
 
     function updateMessage (provider: ProviderString, address: string) {
         const user = userCollection.find(user => user.address === address)
+        console.log('user in updateMessage in users.ts :>> ', user)
         provider = provider.toLowerCase()
         if (user) {
             user.nonce = generateNonce()
         } else {
-            console.log('got to else')
-            userCollection.push({ 
-                id: address,
-                accounts: {
-                    [provider]: [address]
-                },
-                primaryAccount: address,
-                nonce: generateNonce() 
-            })
+            console.log('Create new user here?')
+            const user: User = {
+                address,
+                nonce: generateNonce(),
+            }
+            userCollection.push(user)
         }
     }
     

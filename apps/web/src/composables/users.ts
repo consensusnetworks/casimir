@@ -43,6 +43,7 @@ export default function useUsers () {
         subscribeToUserEvents()
     })
 
+    // TODO: Couple this with connectWallet method in wallet.ts for when user is already logged in
     async function addAccount(provider: ProviderString, address: string, token: Currency) {
         address = address.toLowerCase()
         const account = user.value?.accounts.find((account: Account) => {
@@ -108,7 +109,6 @@ export default function useUsers () {
         const response = await fetch(`${authBaseURL}/auth/${address}`)
         const json = await response.json()
         const { message } = json
-        console.log('message :>> ', message)
         return message
     }
 

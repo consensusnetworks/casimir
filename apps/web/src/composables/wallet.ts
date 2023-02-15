@@ -9,7 +9,7 @@ import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
 import useSSV from '@/composables/ssv'
 import useUsers from '@/composables/users'
-import { ProviderString } from '@casimir/types/src/interfaces/ProviderString'
+import { ProviderString } from '@casimir/types'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import { Pool } from '@casimir/types/src/interfaces/Pool'
@@ -33,13 +33,13 @@ const primaryAccount = ref('')
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
   const { ssv, getSSVFeePercent } = useSSV()
-  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, sendEthersTransaction, signEthersMessage, signUpWithEthers, loginWithEthers } = useEthers()
+  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, signupLoginWithEthers, loginWithEthers, getEthersBrowserProviderSelectedCurrency } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
-  const { user, updatePrimaryAccount } = useUsers()
+  const { user, addAccount, updatePrimaryAccount } = useUsers()
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
     'ETH': getEthersLedgerAddress,
@@ -57,8 +57,8 @@ export default function useWallet() {
     },
     '': () => {
       return new Promise((resolve, reject) => {
-        console.log('No token selected')
-        resolve('No token selected')
+        console.log('No currency selected')
+        resolve('No currency selected')
       }) as Promise<string>
     }
   }
@@ -71,39 +71,72 @@ export default function useWallet() {
     selectedAccount.value = address
   }
 
-  const setSelectedToken = (token: Currency) => {
-    selectedCurrency.value = token
+  const setCurrency = (currency: Currency) => {
+    selectedCurrency.value = currency
   }
 
-  async function connectWallet(provider: ProviderString, token?: Currency) {
+  async function connectWallet(provider: ProviderString, currency?: Currency) {
     try {
+      // Login (retrieve accounts) / sign up OR add account
+      if (!selectedAccount.value) {
+        const connectedAddress = await getConnectedAddress(provider, currency)
+        const connectedCurrency = await detectCurrency(provider) as Currency
+        const response = await signupOrLogin(provider, connectedAddress, connectedCurrency)
+        if (!response.error) {
+          setSelectedProvider(provider)
+          setSelectedAccount(connectedAddress)
+          setCurrency(connectedCurrency)
+          loggedIn.value = true
+          user.value = response.data
+          primaryAccount.value = response.data
+          return response
+        }
+      } else {
+        // TODO: Try add account method
+      }
+      // TODO: Then set selected provider, address, and currency
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async function getConnectedAddress(provider: ProviderString, currency?: Currency) {
+    try {
+      let address
       setSelectedProvider(provider)
-      selectedAccount.value = 'Not Active'
       if (provider === 'WalletConnect') {
-        const address = await getWalletConnectAddress()
-        setSelectedAccount(address)
+        address = await getWalletConnectAddress()
       } else if (ethersProviderList.includes(provider)) {
-        const address = await getEthersAddress(provider)
-        setSelectedAccount(address)
-        // TODO: LOGIN / GET ASSOCIATED ACCOUNTS / SIGNUP here?
+        address = await getEthersAddress(provider)
       } else if (solanaProviderList.includes(provider)) {
-        const address = await getSolanaAddress(provider)
-        setSelectedAccount(address)
+        address = await getSolanaAddress(provider)
       } else if (provider === 'IoPay') {
-        const address = await getIoPayAddress()
-        setSelectedAccount(address)
+        address = await getIoPayAddress()
       } else if (provider === 'Ledger') {
-        setSelectedToken(token as Currency)
-        const address: string = await getLedgerAddress[token as Currency]()
-        setSelectedAccount(address)
+        setCurrency(currency as Currency)
+        address = await getLedgerAddress[currency as Currency]()
       } else if (provider === 'Trezor') {
-        const address = await getTrezorAddress()
-        setSelectedAccount(address)
+        address = await getTrezorAddress()
       } else {
         throw new Error('No provider selected')
       }
+      return address
     } catch (error) {
       console.error(error)
+    }
+  }
+
+  async function signupOrLogin(provider: ProviderString, address: string, currency: Currency) {
+    if (ethersProviderList.includes(provider)) {
+      const result = await signupLoginWithEthers(provider, address, currency)
+      if (result.error) {
+        console.log('result in signupOrLogin in wallet.ts :>> ', result)
+        alert('There was an error signing up. Please try again.')
+      } 
+      return result
+    } else {
+      // TODO: Implement this for other providers
+      console.log('Sign up not yet supported for this wallet provider')
     }
   }
 
@@ -113,7 +146,7 @@ export default function useWallet() {
       to: toAddress.value,
       value: amount.value,
       providerString: selectedProvider.value,
-      token: selectedCurrency.value || ''
+      currency: selectedCurrency.value || ''
     }
 
     try {
@@ -141,7 +174,7 @@ export default function useWallet() {
     const messageInit: MessageInit = {
       message,
       providerString: selectedProvider.value,
-      token: selectedCurrency.value || ''
+      currency: selectedCurrency.value || ''
     }
     try {
       if (messageInit.providerString === 'WalletConnect') {
@@ -164,9 +197,32 @@ export default function useWallet() {
     }
   }
 
+  // This is the old method; currently used in users.ts so may want to still keep it
   async function getUserBalance(userAddress: string): Promise<ethers.BigNumber> {
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-    return await provider.getBalance(userAddress)
+    const result = await provider.getBalance(userAddress)
+    console.log('result :>> ', result)
+    return result
+  }
+
+  async function getCurrentBalance() {
+    // TODO: Implement this for other providers
+    if (ethersProviderList.includes(selectedProvider.value)){
+      const walletBalance = await getEthersBalance(selectedProvider.value, selectedAccount.value)
+      console.log('walletBalance in wei in wallet.ts :>> ', walletBalance)
+    return walletBalance
+    } else {
+      alert('Please select account')
+    }
+  }
+
+  async function detectCurrency(provider: ProviderString) {
+    // TODO: Implement this for other providers
+    if (ethersProviderList.includes(provider)){
+      return await getEthersBrowserProviderSelectedCurrency(provider) as Currency
+    } else {
+      alert('Currency selection not yet supported for this wallet provider')
+    }
   }
 
   async function getUserPools(userAddress: string): Promise<Pool[]> {
@@ -248,35 +304,23 @@ export default function useWallet() {
     return await result.wait()
   }
 
-  async function login() { 
+  // TODO: Remove this?
+  async function login() {
+    let loginResult
     if (ethersProviderList.includes(selectedProvider.value)) {
-      const result = await loginWithEthers(selectedProvider.value, selectedAccount.value)
-      if (!result.error) {
-        loggedIn.value = true
-        user.value = result.data
-        primaryAccount.value = result.data.address
-        console.log('user.value :>> ', user.value)
-      } else {
-        alert('There was an error logging in. Please try again.')
-      }
+      loginResult = await loginWithEthers(selectedProvider.value, selectedAccount.value)
     } else {
       console.log('Login not yet supported for this wallet provider')
     }
-  }
 
-  async function signUp() {
-    if (ethersProviderList.includes(selectedProvider.value)) {
-      const result = await signUpWithEthers(selectedProvider.value, selectedAccount.value, selectedCurrency.value)
-      if (!result.error) {
-        console.log('result :>> ', result)
-        loggedIn.value = true
-        user.value = result.data
-        primaryAccount.value = result.data
-      } else {
-        alert('There was an error signing up. Please try again.')
-      }
+    if (!loginResult.error) {
+      loggedIn.value = true
+      user.value = loginResult.data
+      primaryAccount.value = loginResult.data.address
+      console.log('user.value :>> ', user.value)
+      return loginResult
     } else {
-      console.log('Sign up not yet supported for this wallet provider')
+      alert('There was an error logging in. Please try again.')
     }
   }
 
@@ -285,6 +329,7 @@ export default function useWallet() {
       alert('Please login first')
     }
     
+    // TODO: Implement this for other providers
     if (ethersProviderList.includes(selectedProvider.value)) {
       const result = await updatePrimaryAccount(primaryAccount.value, selectedProvider.value, selectedAccount.value)
       const resultJSON = await result.json()
@@ -307,9 +352,10 @@ export default function useWallet() {
     sendTransaction,
     signMessage,
     deposit,
-    signUp,
     login,
     getUserBalance,
-    getUserPools
+    getUserPools,
+    getCurrentBalance,
+    detectCurrency
   }
 }

@@ -1,5 +1,5 @@
-import { SignupCredentials } from '@casimir/types/src/interfaces/SignupCredentials'
-import { LoginCredentials } from '../interfaces/LoginCredentials'
+import { SignupLoginCredentials } from '@casimir/types/src/interfaces/SignupLoginCredentials'
+import { LoginCredentials } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import { ProviderString } from '@casimir/types'
 
@@ -16,7 +16,18 @@ export default function useAuth() {
         return await fetch(`${authBaseURL}/auth/${provider}/${address}`, requestOptions)
     }
 
-    async function signUpAuth(signupCredentials: SignupCredentials) {
+    async function signupOrLoginAuth(signupCredentials: SignupLoginCredentials) {
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(signupCredentials)
+        }
+        return await fetch(`${authBaseURL}/signupLogin`, requestOptions)
+    }
+    
+    async function signUpAuth(signupCredentials: SignupLoginCredentials) {
         const requestOptions = {
             method: 'POST',
             headers: { 
@@ -47,6 +58,7 @@ export default function useAuth() {
 
     return {
         signUpAuth,
+        signupOrLoginAuth,
         login,
         getMessage
     }

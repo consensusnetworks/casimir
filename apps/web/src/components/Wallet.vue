@@ -1,13 +1,11 @@
 <template>
   <div>
-    <div>
-      <button @click="signUp()">
-        Sign Up!
-      </button>
-      <button @click="login()">
-        Login
-      </button>
-    </div>
+    <button @click="getCurrentBalance()">
+      Get Balance New
+    </button>
+    <button @click="getUserBalance(selectedAccount)">
+      Get Balance Old
+    </button>
     <div>
       <h5>Are you logged in?</h5>
       <div>{{ loggedIn ? 'Yes!' : 'No.' }}</div>
@@ -220,9 +218,9 @@ const {
   sendTransaction,
   signMessage,
   deposit,
-  login,
   getUserPools,
-  signUp
+  getUserBalance,
+  getCurrentBalance,
 } = useWallet()
 
 watchEffect(() => {

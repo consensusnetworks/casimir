@@ -1,5 +1,5 @@
 import express from 'express'
-import { SignupCredentials } from '@casimir/types/src/interfaces/SignupCredentials'
+import { SignupLoginCredentials } from '@casimir/types/src/interfaces/SignupLoginCredentials'
 import { userCollection } from '../collections/users'
 
 const router = express.Router()
@@ -7,15 +7,15 @@ const router = express.Router()
 router.use('/', async (req: express.Request, res: express.Response) => {
     try {
         const { body } = req
-        const { address, provider, token } = body as SignupCredentials
+        const { address, provider, currency } = body as SignupLoginCredentials
         const user = userCollection.find(user => user.address === address.toLowerCase())
         console.log('user :>> ', user)
         const newUser = {
             address: address.toLowerCase(),
             accounts: [
                 {
-                    address: address,
-                    currency: token,
+                    address,
+                    currency,
                     balance: '1000000000000000000',
                     balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
                     roi: 0,
