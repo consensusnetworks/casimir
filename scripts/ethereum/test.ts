@@ -11,9 +11,6 @@ import { getSecret } from '@casimir/aws-helpers'
  *      - https://hardhat.org/hardhat-network/docs/overview
  */
 void async function () {
-    // Fetch remote submodule code
-    $`git submodule update --init --recursive`
-
     const seed = await getSecret('consensus-networks-bip39-seed')
     process.env.BIP39_SEED = seed
     echo(chalk.bgBlackBright('Your mnemonic is ') + chalk.bgBlue(seed))

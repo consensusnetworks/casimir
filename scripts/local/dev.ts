@@ -1,6 +1,5 @@
 import { $, argv, chalk, echo } from 'zx'
 import { getSecret } from '@casimir/aws-helpers'
-import { pascalCase } from '@casimir/string-helpers'
 import { parseStdout } from '@casimir/zx-helpers'
 
 /** Local apps and configuration */
@@ -25,10 +24,6 @@ const project = process.env.PROJECT || 'casimir'
 /** The default development stage of the CDK project */
 const stage = process.env.STAGE || 'dev'
 
-/** Pascal case representations of CDK variables */
-const Project = pascalCase(project as string)
-const Stage = pascalCase(stage as string)
-
 /**
  * Run a Casimir dev server
  * 
@@ -42,8 +37,6 @@ const Stage = pascalCase(stage as string)
  *      --external: externalize all rpc urls (optional, i.e., --external=true)
  */
 void async function () {
-    /** Fetch remote submodule code */
-    $`git submodule update --init --recursive`
 
     /** Set project-wide variables */
     process.env.PROJECT = project

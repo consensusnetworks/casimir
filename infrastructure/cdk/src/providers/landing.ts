@@ -38,7 +38,7 @@ export class LandingStack extends Stack {
 
     const { project, stage, domain, dnsRecords, hostedZone } = props
 
-    // Use casimir.co for prod and dev.casimir.co for dev
+    /** Use casimir.co for prod and dev.casimir.co for dev */
     const serviceDomain = stage === 'Prod' ? domain : [stage.toLowerCase(), domain].join('.')
     
     const certificate = new certmgr.Certificate(this, `${project}${this.service}Cert${stage}`, {

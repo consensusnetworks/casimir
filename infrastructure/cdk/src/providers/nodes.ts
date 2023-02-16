@@ -32,7 +32,7 @@ export class NodesStack extends Stack {
 
         const { project, stage, domain, dnsRecords, hostedZone, nodesIp } = props
 
-        // Use casimir.co for prod and dev.casimir.co for dev
+        /** Use casimir.co for prod and dev.casimir.co for dev */
         const serviceDomain = stage === 'Prod' ? domain : [stage.toLowerCase(), domain].join('.')
 
         new route53.ARecord(this, `${project}${this.service}DnsARecordApi${stage}`, {

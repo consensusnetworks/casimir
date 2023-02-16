@@ -1,5 +1,6 @@
 import { Construct } from 'constructs'
 import { Duration, Stack } from 'aws-cdk-lib'
+import * as cognito from 'aws-cdk-lib/aws-cognito'
 import * as ec2 from 'aws-cdk-lib/aws-ec2'
 import * as ecs from 'aws-cdk-lib/aws-ecs'
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns'
@@ -37,8 +38,16 @@ export class AuthStack extends Stack {
 
         const { project, stage, domain, dnsRecords, hostedZone } = props
 
-        // Use casimir.co for prod and dev.casimir.co for dev
+        /** Use casimir.co for prod and dev.casimir.co for dev */
         const serviceDomain = stage === 'Prod' ? domain : [stage.toLowerCase(), domain].join('.')
+
+        /** Create a Cognito pool and use CUSTOM_AUTH provider */
+        const pool = new cognito.UserPool(this, `${project}${this.service}Pool${stage}`)
+        pool.addClient(`${project}${this.service}PoolCustomClient${stage}`, {
+          authFlows: {
+            custom: true
+          }
+        })
 
         /** Create an EC2 VPC and an ECS cluster */
         const vpc = new ec2.Vpc(this, `${project}${this.service}Vpc${stage}`)
