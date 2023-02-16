@@ -53,11 +53,11 @@ export default class TransportSpeculosHTTP extends Transport {
     await fetch(`${this.baseURL}/button/${but}`, { method: 'POST', body: JSON.stringify(action) })
   }
 
-  async exchange(apdu: Buffer): Promise<any> {
+  async exchange(apdu: Buffer): Promise<Buffer> {
     const hex = apdu.toString('hex')
     const response = await fetch(`${this.baseURL}/apdu`, { method: 'POST', body: JSON.stringify({ data: hex }) })
-    // response is {"data": "hex value of response"}
-    const data = (await response.json()).data
+    const json = await response.json()
+    const { data } = json
     return Buffer.from(data, 'hex')
   }
 

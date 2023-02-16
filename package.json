@@ -17,8 +17,6 @@
     "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
     "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --execution \"$npm_config_execution\" --fork \"$npm_config_fork\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
-    "dev:ledger": "scripts/ledger/emulate -a \"$npm_config_app\"",
-    "dev:trezor": "scripts/trezor/emulate",
     "dev:ssv": "scripts/ssv/dev -n \"$npm_config_nodes\"",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",

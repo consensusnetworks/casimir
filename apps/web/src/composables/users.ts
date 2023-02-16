@@ -2,20 +2,15 @@ import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useSSV from '@/composables/ssv'
 import useWallet from '@/composables/wallet'
-import { ProviderString } from '@/types/ProviderString'
-import { User } from '@/interfaces/User'
 import { onMounted, ref } from 'vue'
+import { User } from '@casimir/types'
+import { Account } from '@casimir/types'
+import { Currency } from '@casimir/types'
+import { ProviderString } from '@casimir/types'
 
 const { authBaseURL, ethereumURL } = useEnvironment()
 
-const user = ref<User>({
-    id: '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
-    accounts: {
-        MetaMask: ['0xd557a5745d4560B24D36A68b52351ffF9c86A212']
-    } as Record<ProviderString, string[]>,
-    primaryAccount: '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
-    pools: []
-})
+const user = ref<User | null>(null)
 
 export default function useUsers () {
     const { ssvManager } = useSSV()
@@ -48,70 +43,81 @@ export default function useUsers () {
         subscribeToUserEvents()
     })
 
-    function updateUser({ accounts }: any) {
-        localStorage.setItem('accounts', JSON.stringify(accounts))
-    }
-
-    function addAccount(provider: ProviderString, address: string) {
+    async function addAccount(provider: ProviderString, address: string, currency: Currency) {
         address = address.toLowerCase()
-        const localStorage = window.localStorage
-        const accounts = JSON.parse(localStorage.getItem('accounts') as string) || {}
-
-        for (const existingProvider in accounts) {
-            if (accounts[existingProvider].includes(address) && existingProvider !== provider) {
-                accounts[existingProvider] = accounts[existingProvider].filter((existingAddress: string) => existingAddress !== address)
+        const account = user.value?.accounts?.find((account: Account) => {
+            const accountAddress = account.address.toLowerCase()
+            const accountProvider = account.walletProvider
+            const accountCurrency = account.currency
+            const addressIsEqual = accountAddress === address
+            const providerIsEqual = accountProvider === provider
+            const currencyIsEqual = accountCurrency === currency
+            const isEqual = addressIsEqual && providerIsEqual && currencyIsEqual
+            return isEqual
+        }) as Account
+        if (account) {
+            alert(`Account already exists on user: ${account}`)
+            return { error: false, message: `Account already exists on user: ${account}`, data: user.value }
+        } else {
+            const accountToAdd = {
+                address,
+                currency,
+                balance: '0', // TODO: Decide how we want to handle this
+                balanceSnapshots: [],
+                roi: 0,
+                walletProvider: provider
             }
-        }
-
-        if (!accounts[provider] && address) {
-            accounts[provider] = [address]
-        } else if (address) {
-            if (!accounts[provider].includes(address)) {
-                accounts[provider].push(address)
+            const requestOptions = {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    address: user.value?.address,
+                    account: accountToAdd
+                })
             }
-        }
-
-        for (const provider in accounts) {
-            user.value.accounts[provider as ProviderString] = accounts[provider]
+            const response = await fetch(`${authBaseURL}/users/add-sub-account`, requestOptions)
+            const json = await response.json()
+            return json
         }
     
-
-        updateUser({ accounts })
     }
 
-    function removeAccount(provider: ProviderString, address: string) {
+    // TODO: Refactor this next. 2/14
+    async function removeAccount(provider: ProviderString, address: string, currency: Currency) {
         address = address.toLowerCase()
-        const localStorage = window.localStorage
-        const accounts = JSON.parse(localStorage.getItem('accounts') as string) || {}
-        
-        if (accounts[provider] && address) {
-            accounts[provider] = accounts[provider].filter((account: string) => account !== address)
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                primaryAddress: user.value?.address,
+                provider,
+                address,
+                currency
+            })
         }
-
-        for (const provider in accounts) {
-            user.value.accounts[provider as ProviderString] = accounts[provider]
-        }
-
-        updateUser({ accounts })
+        return await fetch(`${authBaseURL}/users/remove-sub-account`, requestOptions)
     }
     
     async function getMessage(address: string) {
         const response = await fetch(`${authBaseURL}/auth/${address}`)
         const json = await response.json()
         const { message } = json
-        console.log('message :>> ', message)
         return message
     }
 
-    async function updatePrimaryAccount(primaryAccount: string, updatedProvider: ProviderString, updatedAccount: string) {
+    async function updatePrimaryAddress(primaryAddress: string, updatedProvider: ProviderString, updatedAddress: string) {
         const requestOptions = {
             method: 'PUT',
             headers: { 
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ primaryAccount, updatedProvider, updatedAccount })
+            body: JSON.stringify({ primaryAddress, updatedProvider, updatedAddress })
         }
-        return await fetch(`${authBaseURL}/users`, requestOptions)
+        return await fetch(`${authBaseURL}/users/update-primary-account`, requestOptions)
     }
 
     return {
@@ -119,6 +125,6 @@ export default function useUsers () {
         addAccount,
         removeAccount,
         getMessage,
-        updatePrimaryAccount
+        updatePrimaryAddress
     }
 }

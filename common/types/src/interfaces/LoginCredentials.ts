@@ -1,4 +1,4 @@
-import { ProviderString } from '@/types/ProviderString'
+import { ProviderString } from '@casimir/types'
 
 export interface LoginCredentials {
     address: string;

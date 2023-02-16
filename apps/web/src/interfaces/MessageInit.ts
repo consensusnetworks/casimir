@@ -1,6 +1,8 @@
-import { ProviderString } from '@/types/ProviderString'
+import { ProviderString } from '@casimir/types'
+import { Currency } from '@casimir/types'
 
 export interface MessageInit {
     message: string;
     providerString: ProviderString;
+    currency?: Currency
 }
