@@ -7,6 +7,7 @@ template.out
 aws.env
 *.log
 .idea
+cdk-outputs.json
 
 # Sensitive
 **/**/secrets/*.json

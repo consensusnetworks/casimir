@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
 import useFormat from '@/composables/format'
 import useUsers from '@/composables/users'
 import USDAmount from '@/components/USDAmount.vue'
@@ -94,7 +93,7 @@ const { user } = useUsers()
               Pool #{{ pool.id }}
             </h6>
             <h6 class="font-medium text-grey_5">
-              {{ pool.totalStake }} / 32 ETH
+              {{ pool.userStake }} / {{ pool.stake }} ETH
             </h6>
           </div>
           <hr class="h-[2px] bg-grey my-[20px]">

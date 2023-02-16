@@ -5,7 +5,7 @@ import * as route53targets from 'aws-cdk-lib/aws-route53-targets'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import { Bucket, BucketAccessControl } from 'aws-cdk-lib/aws-s3'
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment'
-import { Distribution, OriginAccessIdentity } from 'aws-cdk-lib/aws-cloudfront'
+import { Distribution, OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront'
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins'
 
 export interface LandingStackProps extends StackProps {
@@ -61,11 +61,6 @@ export class LandingStack extends Stack {
       accessControl: BucketAccessControl.PRIVATE
     })
 
-    new BucketDeployment(this, `${project}${this.service}BucketDeployment${stage}`, {
-      destinationBucket: bucket,
-      sources: [Source.asset(this.assetPath)]
-    })
-
     const originAccessIdentity = new OriginAccessIdentity(this, `${project}${this.service}OriginAccessIdentity${stage}`)
     bucket.grantRead(originAccessIdentity)
 
@@ -86,10 +81,18 @@ export class LandingStack extends Stack {
         }
       ],
       defaultBehavior: {
-        origin: new S3Origin(bucket, { originAccessIdentity }),
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        origin: new S3Origin(bucket, { originAccessIdentity })
       },
       domainNames: [serviceDomain, [dnsRecords.landing, serviceDomain].join('.')],
       certificate
+    })
+
+    new BucketDeployment(this, `${project}${this.service}BucketDeployment${stage}`, {
+      destinationBucket: bucket,
+      sources: [Source.asset(this.assetPath)],
+      distribution,
+      distributionPaths: ['/*']
     })
 
     new route53.ARecord(this, `${project}${this.service}DnsARecord${stage}`, {

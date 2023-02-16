@@ -8,12 +8,12 @@ import useSSV from '@/composables/ssv'
 
 const { formatDecimalString } = useFormat()
 const { user } = useUsers()
-const { amountToStake, selectedProvider, deposit } = useWallet()
+const { amountToStake, deposit } = useWallet()
 const { getSSVFeePercent } = useSSV()
 
 async function getFee() {
   try {
-    const fee = await getSSVFeePercent(selectedProvider.value)
+    const fee = await getSSVFeePercent()
     if (fee % 1 === 0) {
         return `${fee}.00%`
     }

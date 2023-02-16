@@ -13,7 +13,7 @@ const { authBaseURL, ethereumURL } = useEnvironment()
 const user = ref<User | null>(null)
 
 export default function useUsers () {
-    const { ssv } = useSSV()
+    const { ssvManager } = useSSV()
 
     // Todo filter for events for user addresses
     function subscribeToUserEvents() {
@@ -21,12 +21,12 @@ export default function useUsers () {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     
         const validatorInitFilter = {
-          address: ssv.address,
+          address: ssvManager.address,
           topics: [
-            ethers.utils.id('ValidatorInitFullfilled(uint32,uint32[],string)')
+            ethers.utils.id('ValidatorActivated(uint32,uint32[],string)')
           ]
         }
-        ssv.connect(provider).on(validatorInitFilter, async () => {
+        ssvManager.connect(provider).on(validatorInitFilter, async () => {
           console.log('ValidatorInit event... updating pools')
           user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
           user.value.pools = await getUserPools(user.value.id)

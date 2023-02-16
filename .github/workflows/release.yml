@@ -44,19 +44,20 @@ jobs:
       - name: Deploy cdk infrastructure
         run: npm run deploy
 
-      - name: Sync released version files to develop
+      - name: Sync new version with develop
         if: ${{ github.actor != 'nektos/act' }}
         run: |
           git config --global user.name 'robosupport'
           git config --global user.email 'support@consensusnetworks.com'
-          git fetch
+          git fetch --no-recurse-submodules
           git checkout $TARGET_BRANCH
           git checkout ${GITHUB_REF##*/} -- package.json package-lock.json CHANGELOG.md
           git add -A
           git diff-index --quiet HEAD ||  git commit -am "Sync released version files (skip deploy)"
-          git push origin $TARGET_BRANCH
+          git push --force origin $TARGET_BRANCH
         env:
           TARGET_BRANCH: develop
+          
 
       - name: Select success emoji
         if: ${{ success() }}

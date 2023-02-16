@@ -95,7 +95,7 @@ class Crawler {
         }
         
         if (this.options.chain === Chain.Ethereum) {
-            const service = new EthereumService({ url: this.options.serviceOptions?.url || process.env.PUBLIC_ETHEREUM_RPC || 'http://localhost:8545' })
+            const service = new EthereumService({ url: this.options.serviceOptions?.url || process.env.PUBLIC_ETHEREUM_URL || 'http://localhost:8545' })
             this.service = service
 
             const lastEvent = await this.getLastProcessedEvent()

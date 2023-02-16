@@ -6,8 +6,38 @@ import NodeGlobalsPolyfillPlugin from '@esbuild-plugins/node-globals-polyfill'
 import inject from '@rollup/plugin-inject'
 import nodePolyFills from 'rollup-plugin-node-polyfills'
 
-export default {
+const config: UserConfig = {
   server: { port: 3000 },
+  plugins: [
+    vue({ include: [/\.vue$/] }),
+    pages({
+      dirs: [{ dir: 'src/pages', baseRoute: '' }],
+      extensions: ['vue'],
+    }),
+    nodePolyFills(),
+    inject({
+      Buffer: ['buffer', 'Buffer']
+    }) as Plugin // https://github.com/rollup/plugins/issues/1243
+  ],
+  define: {
+    'global': 'globalThis'
+  },
+  optimizeDeps: {
+    // include: ['iotex-antenna'],
+    esbuildOptions: {
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          process: true,
+          buffer: true
+        })
+      ],
+    },
+  },
+  build: {
+    commonjsOptions: {
+      include: [/* /iotex-antenna/, */ /node_modules/]
+    }
+  },
   resolve: {
     alias: {  
       // Polyfill node globals
@@ -26,31 +56,7 @@ export default {
       '.vue',
     ]
   },
-  plugins: [
-    vue({ include: [/\.vue$/] }),
-    inject({
-      Buffer: ['buffer', 'Buffer']
-    }),
-    nodePolyFills()
-  ],
-  define: {
-    'global': 'globalThis'
-  },
-  optimizeDeps: {
-    include: ['iotex-antenna'],
-    esbuildOptions: {
-      plugins: [
-        NodeGlobalsPolyfillPlugin({
-          buffer: true,
-          process: true
-        })
-      ]
-    },
-  },
-  build: {
-    commonjsOptions: {
-      include: [/iotex-antenna/, /node_modules/]
-    }
-  },
   envPrefix: 'PUBLIC_'
 } as UserConfig
+
+export default config

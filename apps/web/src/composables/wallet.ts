@@ -1,7 +1,6 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
-import useIoPay from '@/composables/iopay'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useEthers from '@/composables/ethers'
@@ -25,6 +24,7 @@ const amount = ref<string>('0.000001')
 const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
 
+// Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test ethereum send to address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
@@ -32,10 +32,10 @@ const pools = ref<Pool[]>([])
 
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
-  const { ssv, getSSVFeePercent } = useSSV()
-  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, signupLoginWithEthers, loginWithEthers, getEthersBrowserProviderSelectedCurrency } = useEthers()
+  const { ssvManager, getSSVFeePercent } = useSSV()
+  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, signupLoginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
-  const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
+  // const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
@@ -122,7 +122,7 @@ export default function useWallet() {
       } else if (solanaProviderList.includes(provider)) {
         address = await getSolanaAddress(provider)
       } else if (provider === 'IoPay') {
-        address = await getIoPayAddress()
+        // address = await getIoPayAddress()
       } else if (provider === 'Ledger') {
         setSelectedCurrency(currency as Currency)
         address = await getLedgerAddress[currency as Currency]()
@@ -207,6 +207,16 @@ export default function useWallet() {
       alert('Please select account')
     }
   }
+  
+  async function switchNetwork(chainId: string) {
+    if (selectedProvider.value === 'MetaMask') {
+      switchEthersNetwork('MetaMask', chainId)
+    } else if (selectedProvider.value === 'CoinbaseWallet') {
+      switchEthersNetwork('CoinbaseWallet', chainId)
+    } else {
+      alert('Switching networks is only supported for MetaMask and Coinbase Wallet')
+    }
+  }
 
   async function sendTransaction() {
     const txInit: TransactionInit = {
@@ -225,7 +235,7 @@ export default function useWallet() {
       } else if (solanaProviderList.includes(txInit.providerString)) {
         await sendSolanaTransaction(txInit)
       } else if (selectedProvider.value === 'IoPay') {
-        await sendIoPayTransaction(txInit)
+        // await sendIoPayTransaction(txInit)
       } else if (selectedProvider.value === 'Ledger') {
         await sendLedgerTransaction(txInit)
       } else if (selectedProvider.value === 'Trezor') {
@@ -252,7 +262,7 @@ export default function useWallet() {
       } else if (solanaProviderList.includes(messageInit.providerString)) {
         await signSolanaMessage(messageInit)
       } else if (messageInit.providerString === 'IoPay') {
-        await signIoPayMessage(messageInit)
+        // await signIoPayMessage(messageInit)
       } else if (messageInit.providerString === 'Ledger') {
         await signLedgerMessage(messageInit)
       } else if (messageInit.providerString === 'Trezor') {
@@ -275,22 +285,19 @@ export default function useWallet() {
 
   async function getUserPools(userAddress: string): Promise<Pool[]> {
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-    const ssvProvider = ssv.connect(provider)
-    const usersPoolsIds = await ssvProvider.getUserPoolIds(userAddress)
+    ssvManager.connect(provider)
+    const usersPoolsIds = await ssvManager.getUserPoolIds(userAddress)
     return await Promise.all(usersPoolsIds.map(async (poolId: number) => {
-
-      const { stake: totalStake, rewards: totalRewards } = await ssvProvider.getPoolBalance(poolId)
-      const { stake: userStake, rewards: userRewards } = await ssvProvider.getPoolUserBalance(poolId, userAddress)
-
+      const { balance, userBalance } = await ssvManager.getPoolUserDetails(poolId, userAddress)
       let pool: Pool = {
         id: poolId,
-        totalStake: ethers.utils.formatEther(totalStake),
-        totalRewards: ethers.utils.formatEther(totalRewards),
-        userStake: ethers.utils.formatEther(userStake),
-        userRewards: ethers.utils.formatEther(userRewards)
+        rewards: ethers.utils.formatEther(balance.rewards),
+        stake: ethers.utils.formatEther(balance.stake),
+        userRewards: ethers.utils.formatEther(userBalance.rewards),
+        userStake: ethers.utils.formatEther(userBalance.stake)
       }
 
-      const validatorPublicKey = await ssvProvider.getPoolValidatorPublicKey(poolId) // Public key bytes (i.e., 0x..)
+      const validatorPublicKey = await ssvManager.getPoolValidatorPublicKey(poolId) // Public key bytes (i.e., 0x..)
       if (validatorPublicKey) {
 
         const response = await fetch(`https://prater.beaconcha.in/api/v1/validator/${validatorPublicKey}`)
@@ -304,7 +311,7 @@ export default function useWallet() {
           url: `https://prater.beaconcha.in/validator/${validatorPublicKey}`
         }
 
-        const operatorIds = await ssvProvider.getPoolOperatorIds(poolId) // Operator ID uint32[] (i.e., [1, 2, 3, 4])
+        const operatorIds = await ssvManager.getPoolOperatorIds(poolId) // Operator ID uint32[] (i.e., [1, 2, 3, 4])
         const operators = await Promise.all(operatorIds.map(async (operatorId: number) => {
           const response = await fetch(`https://api.ssv.network/api/v1/operators/${operatorId}`)
           const { performance } = await response.json()
@@ -341,14 +348,11 @@ export default function useWallet() {
     const signerCreator = signerCreators[signerType  as keyof typeof signerCreators]
     let signer = signerCreator(selectedProvider.value)
     if (isWalletConnectSigner(signer)) signer = await signer
-    /***/
-
-    /** Todo move to ssv.ts: depositToSSV */
-    const ssvProvider = ssv.connect(signer as ethers.Signer)
-    const feesTotalPercent = await getSSVFeePercent(signer as ethers.Signer)
+    ssvManager.connect(signer as ethers.Signer)
+    const feesTotalPercent = await getSSVFeePercent()
     const depositAmount = parseFloat(amountToStake.value) * ((100 + feesTotalPercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
-    const result = await ssvProvider.deposit({ value, type: 0 })
+    const result = await ssvManager.deposit({ value, type: 0 })
     return await result.wait()
   }
 
@@ -372,5 +376,6 @@ export default function useWallet() {
     getUserBalance,
     getUserPools,
     deposit,
+    switchNetwork
   }
 }

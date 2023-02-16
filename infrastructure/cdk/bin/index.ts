@@ -18,7 +18,12 @@ if (!process.env.PROJECT || !process.env.STAGE) {
     const app = new cdk.App()
     const dnsStack = new DnsStack(app, `${project}DnsStack${stage}`, { env: defaultEnv, project, stage })
     const { domain, dnsRecords, hostedZone } = dnsStack
-    new EtlStack(app, `${project}EtlStack${stage}`, { env: defaultEnv, project, stage })
-    new AuthStack(app, `${project}AuthStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
+    
+    if (process.env.STAGE !== 'prod') {
+        /** Deploy pre-production resources */
+        new EtlStack(app, `${project}EtlStack${stage}`, { env: defaultEnv, project, stage })
+        new AuthStack(app, `${project}AuthStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
+    }
+    /** Deploy production-ready resources */
     new LandingStack(app, `${project}LandingStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
 }

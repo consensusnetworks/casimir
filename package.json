@@ -1,6 +1,6 @@
 {
   "name": "casimir",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Decentralized staking and asset management",
   "workspaces": [
     "apps/*",
@@ -11,11 +11,11 @@
   ],
   "scripts": {
     "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules package-lock.json && npm i",
-    "deploy": "scripts/cdk/deploy -d infrastructure/cdk",
-    "dev": "npx esno -r dotenv/config scripts/local/dev.ts --app=\"$npm_config_app\" --fork=\"$npm_config_fork\" --ledger=\"$npm_config_ledger\" --mock=\"$npm_config_mock\" --network=\"$npm_config_network\" --trezor=\"$npm_config_trezor\" --external=\"$npm_config_external\"",
-    "dev:chainlink": "npx esno -r dotenv/config scripts/chainlink/dev.ts --fork=\"$npm_config_fork\"",
+    "curl": "curl -H 'Content-Type: application/json' -d \"$npm_config_body\" \"$npm_config_url\"",
+    "deploy": "npx esno -r dotenv/config scripts/cdk/deploy.ts",
+    "dev": "npx esno -r dotenv/config scripts/local/dev.ts --fork \"$npm_config_fork\" --ledger \"$npm_config_ledger\" --mock \"$npm_config_mock\" --network \"$npm_config_network\" --trezor \"$npm_config_trezor\" --external \"$npm_config_external\"",
     "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
-    "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --fork=\"$npm_config_fork\"",
+    "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --execution \"$npm_config_execution\" --fork \"$npm_config_fork\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
     "dev:ssv": "scripts/ssv/dev -n \"$npm_config_nodes\"",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
@@ -23,9 +23,9 @@
     "postinstall": "git submodule update --init --recursive && npm exec --workspaces npm run build",
     "prepare": "husky install",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:ethereum": "npx esno -r dotenv/config scripts/ethereum/test.ts --fork=\"$npm_config_fork\"",
+    "test:ethereum": "npx esno -r dotenv/config scripts/ethereum/test.ts --fork \"$npm_config_fork\"",
     "test:crawler": "scripts/crawler/test -f \"$npm_config_fork\" -n \"$npm_config_network\"",
-    "test:push": "scripts/actions/test -w push",
+    "test:actions": "npx esno -r dotenv/config scripts/actions/test.ts --workflow \"$npm_config_workflow\"",
     "release": "release-it"
   },
   "repository": {
@@ -54,7 +54,7 @@
     "http-proxy-middleware": "^2.0.6",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.0",
-    "release-it": "^10.0.3",
+    "release-it": "^15.6.0",
     "zx": "^7.1.1"
   },
   "lint-staged": {
