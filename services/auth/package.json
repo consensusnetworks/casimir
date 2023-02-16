@@ -4,14 +4,13 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "node build.js",
-    "watch": "npm run build -- --watch",
+    "dev": "tsnd --respawn --transpile-only src/index.ts",
     "test": "mocha --require hardhat/register --recursive --exit --extension ts --timeout 15000"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "ethers": "^5.7.2",
-    "express": "^4.18.1",
-    "serverless-http": "^3.0.1"
+    "express": "^4.18.1"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",

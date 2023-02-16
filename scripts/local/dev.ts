@@ -73,24 +73,14 @@ void async function () {
     /** Default to no trezor emulator */
     const trezor = argv.trezor === 'true'
 
-    const { chains, infrastructure, services } = apps[app as keyof typeof apps]
+    const { chains, services } = apps[app as keyof typeof apps]
 
     if (mock) {
-
-        /** Skip bootstrap if stack exists for current stage (and bootstrap throws) */
-        try { 
-            await $`npm run bootstrap --workspace @casimir/cdk`
-        } catch {
-            echo(chalk.bgBlackBright('CDK Toolkit stack for ') + chalk.bgBlue(`${Project}${Stage}`) + chalk.bgBlackBright(' was already bootstrapped. Disregard any CDK errors listed above this line.'))
-        }
-        await $`npm run synth --workspace @casimir/cdk`
-
         let port = 4000
         for (const service of services) {
             process.env[`PUBLIC_${service.toUpperCase()}_PORT`] = `${port}`
 
-            $`npm run watch --workspace @casimir/${service}`
-            const Service = pascalCase(service)
+            $`npm run dev --workspace @casimir/${service}`
 
             try {
                 if (parseStdout(await $`lsof -ti:${port}`)) {
@@ -99,13 +89,6 @@ void async function () {
             } catch {
                 console.log(`Port ${port} is available.`)
             }
-
-            $`sam local start-api \
-            --warm-containers "LAZY" \
-            --port ${port} \
-            --template infrastructure/${infrastructure}/cdk.out/${Project}${Service}Stack${Stage}.template.json \
-            --log-file "services/${service}/mock-logs.txt" \
-            --profile ${process.env.PROFILE || 'consensus-networks-dev'}`
 
             ++port
         }
