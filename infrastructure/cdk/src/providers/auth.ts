@@ -17,7 +17,7 @@ import { AuthStackProps } from '../interfaces/AuthStackProps'
 export class AuthStack extends Stack {
 
     public readonly service: string = 'Auth'
-    public readonly assetPath: string = '../../services/auth/dist'
+    public readonly assetPath: string = '../../services/auth'
 
     /**
      * AuthStack class constructor.
@@ -60,7 +60,7 @@ export class AuthStack extends Stack {
             domainName: [dnsRecords.auth, serviceDomain].join('.'), // e.g. auth.casimir.co or auth.dev.casimir.co
             domainZone: hostedZone,
             taskImageOptions: {
-                containerPort: 8080,
+                containerPort: 4000,
                 image: ecs.ContainerImage.fromAsset(this.assetPath)
             }
         })
