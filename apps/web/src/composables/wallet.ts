@@ -23,7 +23,6 @@ const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 const amount = ref<string>('0.000001')
 const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
-
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test ethereum send to address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
