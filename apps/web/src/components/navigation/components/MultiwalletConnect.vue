@@ -1,24 +1,13 @@
 
 <script lang="ts" setup>
-import { ref, watch,onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 
 import useWallet from '@/composables/wallet'
 import useUsers from '@/composables/users'
 
-const { addAccount, removeAccount, user, createDemoUser } = useUsers()
+const { user, createDemoUser } = useUsers()
 const {
-  selectedProvider,
-  selectedAccount,
-  toAddress,
-  amount,
-  amountToStake,
-  pools,
   connectWallet,
-  sendTransaction,
-  signMessage,
-  deposit,
-  login,
-  getUserPools
 } = useWallet()
 
 const hideInfo = ref(false)
@@ -26,21 +15,7 @@ const hideInfo = ref(false)
 const hasWallets = ref(false)
 
 const checkForWallets = () =>{
-  if(!user.value.accounts){
-    hasWallets.value = false
-    return
-  }
-  if(
-    user.value.accounts.CoinbaseWallet ||
-    user.value.accounts.IoPay ||
-    user.value.accounts.Ledger ||
-    user.value.accounts.MetaMask ||
-    user.value.accounts.Phantom ||
-    user.value.accounts.Trezor ||
-    user.value.accounts.WalletConnect 
-  ){
-    hasWallets.value = true
-  }
+  if(!user.value) { hasWallets.value = false } else {hasWallets.value = true}
 }
 
 watch(user, () => {
@@ -59,17 +34,14 @@ const copyWalletAddress = (text: string) => {
 </script>
   
 <template>
-  <div class="h-full">
-    <h6 class="text-grey_5 font-medium h-50">
-      Connect your wallets to view and access all of your assets in one location
-    </h6>
+  <div class="h-full w-full">
     <div
-      class="multi_wallet_container"
+      class="multi_wallet_container gap-15"
       style="height: calc(100% - 50px)"
       :class="hasWallets? '':'reverse_multi_wallet_container'"
     >
       <div class="w-full h-full overflow-auto">
-        <div class="flex flex-col gap-15 pb-20">
+        <div class="flex flex-col gap-15 pb-20 pr-20">
           <!-- TD: make alerts for Metamask and others to remind them to have that account connected when connecting -->
           <!-- Only show when a user is connected -->
           <div
@@ -239,7 +211,7 @@ const copyWalletAddress = (text: string) => {
             </span>
             <button 
               class="toggle"
-              :class="hideInfo? 'border-primary justify-end':''"
+              :class="hideInfo? 'border border-primary justify-end':''"
               @click="hideInfo = !hideInfo"
             >
               <div
@@ -249,12 +221,12 @@ const copyWalletAddress = (text: string) => {
             </button>
             <button
               class="btn_primary font-bold px-10 py-6 whitespace-nowrap"
-              @click="user = {}"
+              @click="createDemoUser(false)"
             >
               Disconnect User
             </button>
           </div>
-          <div
+          <!-- <div
             v-for="(item, i) in user.accounts"
             :key="i"
             class="connected_wallets_card"
@@ -274,7 +246,6 @@ const copyWalletAddress = (text: string) => {
                 :key="account"
                 class="flex gap-15 justify-between items-center mb-15"
               >
-                <!-- Replace with account name when implemented, make editable -->
                 <span class="font-medium text-grey_6 sr-only s_md:not-sr-only">
                   {{ i }} {{ index + 1 }}
                 </span>
@@ -293,18 +264,18 @@ const copyWalletAddress = (text: string) => {
                 </span>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
         <div
           v-else
-          class="w-full h-full flex flex-col items-center justify-center gap-15"
+          class="w-full border h-full flex flex-col items-center justify-center gap-15"
         >
           <h6 class="text-grey_2 font-medium">
             No Wallets Connected
           </h6>
           <button
             class="btn_primary font-bold px-10 py-6"
-            @click="createDemoUser()"
+            @click="createDemoUser(true)"
           >
             Demo <i class="iconoir-play" />
           </button>

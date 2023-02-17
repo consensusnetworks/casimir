@@ -1,26 +1,24 @@
 <script lang="ts" setup>
 import TopNav from '@/components/navigation/TopNav.vue'
-import useUsers from '@/composables/users'
-import { onMounted, ref } from 'vue'
+// import useUsers from '@/composables/users'
+// import { onMounted, ref } from 'vue'
 
-const { user } = useUsers()
+// const { user } = useUsers()
 
-const showNoUserWarning = ref(false)
-const loadingWidthMeasurement = ref(0)
-onMounted(() => {
-  // console.log('hello world', user.value.id)
-  if(user.value.id.length === 0){
-    showNoUserWarning.value = true
-    const loadingInterval = setInterval(()=>{
-      if(loadingWidthMeasurement.value >= 100 || user.value.id.length > 0){
-        showNoUserWarning.value = false
-        clearInterval(loadingInterval)
-      }
-      loadingWidthMeasurement.value = loadingWidthMeasurement.value + 0.1
-    }, 10)
-  }
-  
-})
+// const showNoUserWarning = ref(false)
+// const loadingWidthMeasurement = ref(0)
+// onMounted(() => {
+  // if(user.value.id.length === 0){
+  //   showNoUserWarning.value = true
+  //   const loadingInterval = setInterval(()=>{
+  //     if(loadingWidthMeasurement.value >= 100 || user.value.id.length > 0){
+  //       showNoUserWarning.value = false
+  //       clearInterval(loadingInterval)
+  //     }
+  //     loadingWidthMeasurement.value = loadingWidthMeasurement.value + 0.1
+  //   }, 10)
+  // }
+// })
 </script>
 
 <template>
@@ -31,14 +29,14 @@ onMounted(() => {
           <TopNav />
         </div>
 
-        <div
+        <!-- <div
           v-if="showNoUserWarning"
           class="flex flex-col items-center justify-center w-full bg-blue_3"
         >
           <div
             class=" 
             max-w-[1280px] min-w-[360px] text-white 
-            py-15
+            py-15 px-25 text-center align-middle
             "
           >
             You currently do not have any wallets connected, 
@@ -48,12 +46,14 @@ onMounted(() => {
             class="bg-primary h-2 transition"
             :style="`width: ${loadingWidthMeasurement}%;`"
           />
-        </div>
-        <div
-          class="max-w-[1280px] min-w-[360px] h-full 
+        </div> -->
+        <div class="w-full overflow-auto flex justify-center">
+          <div
+            class="max-w-[1280px] min-w-[360px] h-full 
             w-full px-25 py-margins"
-        >
-          <slot />
+          >
+            <slot />
+          </div>
         </div>
       </div>
     </div>

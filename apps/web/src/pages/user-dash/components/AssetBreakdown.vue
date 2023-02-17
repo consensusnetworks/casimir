@@ -4,32 +4,35 @@ import useUsers from '@/composables/users'
 import * as d3 from 'd3'
 
 const { user } = useUsers()
+const userConnectedProviders = ref([] as string [])
 const selectedAsset = ref(null as string | null)
 
 // name, value
-const tokens = ref([] as [{name: string, value: number}] )
+const tokens = ref([] as {name: string, value: number}[] )
 
 const calculateTokens = () => {
- for (const item in user.value.accounts) {
+  const tokenCollection = [] as {name: string, value: number}[]
+  user.value?.accounts.forEach(account => {
+    const index = tokenCollection.findIndex(item => item.name === account.currency)
+    if(index < 0) tokenCollection.push({value: Number(account.balance), name: account.currency})
+    else tokenCollection[index].value = tokenCollection[index].value + Number(account.balance)
+  })
 
-  // console.log( item, user.value.accounts[item])
-    const accounts = user.value.accounts[item]
-    
-    accounts.forEach((account: any) => {
-      const index = tokens.value.findIndex(item => item.name === account.currency)
-      if(index != -1){
-        tokens.value[index].value += Number(account.balance)
-      } else {
-        tokens.value.push({
-          name: account.currency,
-          value: Number(account.balance)
-        })
-      }
-    })
- }
+  tokens.value = tokenCollection
+}
+
+const calculateUserConnectedProviders = () => {
+  const proiderCollection = [] as string[]
+  user.value?.accounts.forEach(account => {
+    const index = proiderCollection.findIndex(item => item === account.walletProvider)
+    if(index < 0) proiderCollection.push(account.walletProvider)
+  })
+
+  userConnectedProviders.value = proiderCollection
 }
 
 onMounted(() => {
+  calculateUserConnectedProviders()
   calculateTokens()
 })
 
@@ -105,15 +108,17 @@ const findAssettype = (name: string) =>{
   }
 }
 
+// TD: use get balance to calculate money based on balance
 const returnAggergatedValue = (item: any, name: string) => {
   const assetType = findAssettype(name)
   const returnValue = '- - -'
   if(assetType === 'wallet'){
-    if(selectedAsset.value === null || selectedAsset.value === name){
-      return collectTotalBalance('wallet', item)
-    }else if(findAssettype(selectedAsset.value) === 'token'){
-      return calculatePercentage('wallet', name)
-    }
+    return '00$'
+    // if(selectedAsset.value === null || selectedAsset.value === name){
+    //   return collectTotalBalance('wallet', item)
+    // }else if(findAssettype(selectedAsset.value) === 'token'){
+    //   return calculatePercentage('wallet', name)
+    // }
   } else if(
     assetType === 'token'
   ){
@@ -146,28 +151,28 @@ const returnAggergatedValue = (item: any, name: string) => {
         </div>
         <div class="h-[200px] w-full flex flex-col gap-10 overflow-auto">
           <button
-            v-for="(item, i) in user.accounts"
+            v-for="(item, i) in userConnectedProviders"
             :key="i"
             class="px-5 py-3 flex items-center flex-wrap justify-between gap-10
            hover:bg-blue_1"
-            :class="selectedAsset === i? 'bg-blue_1' : ''"
-            @click="selectedAsset === i? selectedAsset = null: selectedAsset = i"
+            :class="selectedAsset === item? 'bg-blue_1' : ''"
+            @click="selectedAsset === item? selectedAsset = null: selectedAsset = item"
           >
             <div class="flex items-center gap-5">
               <img
-                :src="'/'+ i.toLowerCase() + '.svg'"
+                :src="'/'+ item.toLowerCase() + '.svg'"
                 :alt="i + 'Icon'"
                 class="h-15 w-15"
               >
               <span 
                 class="text-caption font-medium text-grey_5"
-              >{{ i }}</span>
+              >{{ item }}</span>
             </div>
                 
             <span 
               class="text-caption font-medium text-grey_3"
             >
-              {{ returnAggergatedValue(item, i) }}
+              {{ returnAggergatedValue(null, item) }}
             </span>
           </button>
         </div>

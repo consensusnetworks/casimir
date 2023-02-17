@@ -2,7 +2,6 @@
 import PositiveChart from '@/components/PositiveChart.vue'
 import NegativeChart from '@/components/NegativeChart.vue'
 
-// TD: add live updates after finding a reliable API for token price updates
 </script>
   
 <template>

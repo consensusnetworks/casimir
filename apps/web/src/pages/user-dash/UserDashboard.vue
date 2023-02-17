@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import * as d3 from 'd3'
 import { ref } from 'vue'
-import { eth_staked_data } from '../composables/dummy_data.js'
+import { eth_staked_data } from './composables/dummy_data.js'
 import LineChart from '@/components/charts/LineChart.vue'
-import AssetBreakdown from '../components/AssetBreakdown.vue'
-import TokenUpdates from '../components/TokenUpdates.vue'
-import StakingBreakdown from '../components/StakingBreakdown.vue'
+import AssetBreakdown from './components/AssetBreakdown.vue'
+import TokenUpdates from './components/TokenUpdates.vue'
+import StakingBreakdown from './components/StakingBreakdown.vue'
+import MultiwalletConnect from '@/components/navigation/components/MultiwalletConnect.vue'
 
 const xAxisFormat = (d: string) => {
   const label = new Date(d).toDateString().split(' ')
@@ -34,13 +35,18 @@ const selectedTimeFrame = ref('Hour')
 </script>
   
 <template>
-  <div class="flex flex-col gap-15 h-max w-full pb-10">
+  <div
+    class="flex flex-col gap-15 h-max w-full pb-10"
+  >
     <div class="">
       <h5 class="font-bold whitespace-nowrap">
         Your Assets
       </h5>
     </div>
-    <div class="reverse_two_thirds_one_third_grid_to_full dash_s_sm:two_thirds_one_third_grid_to_full">
+    <div 
+      class="reverse_two_thirds_one_third_grid_to_full 
+      dash_s_sm:two_thirds_one_third_grid_to_full gap-15"
+    >
       <div class="h-[300px] mb-25">
         <div class="flex items-center justify-between flex-wrap gap-25">
           <div class="flex gap-10 items-center flex-wrap ">
@@ -108,39 +114,27 @@ const selectedTimeFrame = ref('Hour')
       class="
       reverse_two_thirds_one_third_grid_to_full 
       dash_s_sm:two_thirds_one_third_grid_to_full
-      border-t pt-25
+      border-t pt-25 gap-15
       "
     >
-      <div class="h-[300px] grid grid-cols-2 gap-15 mb-25">
+      <div class="h-[300px] grid grid-cols-2 gap-20 mb-25">
         <TokenUpdates class="col-span-1" />
         <StakingBreakdown />
       </div>
-      <div class="h-[300px] mb-25"> 
-        transactions
-      </div>
-    </div>
-    <!-- <div class="flex flex-wrap h-full justify-between gap-15 ">
-      <div class="w-full h-full flex gap-15 justify-between">
-        
-        <div class="flex flex-col gap-10 min-w-[255px] w-[25%] overflow-auto">
-          <h6 class="font-medium text-grey_8 mb-10">
-            Your Staking Progress
+      <div class="h-max dash_s_sm:h-[300px] mb-25 dash_s_sm:pl-20 mt-50 dash_s_sm:mt-0"> 
+        <div class="min-w-[375px] w-full h-full flex flex-col">
+          <h6 class="font-medium text-grey_8 mb-10 sticky">
+            Recent Transactions
           </h6>
-          alsjdlajsd
-        </div>
-        <div class="flex flex-col gap-15 min-w-[500px] w-[50%] h-full">
-          <div class=" h-full">
-            <h6 class="font-medium text-grey_8 mb-10">
-              Recent Transactions
-            </h6>
+          <div class=" h-full w-full overflow-auto">
             <div
-              v-for="i in 4"
+              v-for="i in 6"
               :key="i"
-              class="py-10 border-b border-b-grey_3"
+              class="py-10 px-10 border-b border-b-grey_3 mb-15 mt-10"
             >
               <div class="flex justify-between items-center">
                 <span class="text-body font-medium text-grey_6">
-                  Description Name [Wallet Provider]
+                  Description Name
                 </span>
                 <span class="text-body font-medium text-grey_3">
                   01/01/2023 | 00:00 AM
@@ -157,7 +151,8 @@ const selectedTimeFrame = ref('Hour')
             </div>
           </div>
         </div>
-      </div> 
-    </div> -->
+      </div>
+    </div>
   </div>
 </template>
+

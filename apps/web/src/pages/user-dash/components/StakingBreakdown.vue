@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { at, gt } from 'lodash'
 import { ref, onMounted } from 'vue'
 import router from '@/composables/router'
 
@@ -31,34 +30,10 @@ const dummy_staked_data = ref([
         ]
     },
     {
-        tokenStaked: 'BTC',
-        description: 'Bitcoin Staking',
-        totalStaked: '25',
-        totalAccumulatedRewards: '28',
-        walletsStakedFrom: [
-            {
-                provider: 'Ledger',
-                address: '0x345678987654567890876567890987657890876789',
-                ammountStaked: '12.5',
-                accumulatedRewards: '14',
-                stakedTo: 'Binance'
-                // Possible other pool information
-            },
-            {
-                provider: 'CoinbaseWallet',
-                address: '0x345678987654567890876567890987657890876789',
-                ammountStaked: '12.5',
-                accumulatedRewards: '14',
-                stakedTo: 'Binance'
-                // Possible other pool information
-            },
-        ]
-    },
-    {
         tokenStaked: 'IOTX',
         description: 'IoTeX Staking',
         totalStaked: '12.5',
-        totalAccumulatedRewards: '2514',
+        totalAccumulatedRewards: '14',
         walletsStakedFrom: [
             {
                 provider: 'MetaMask',
@@ -75,24 +50,25 @@ const dummy_staked_data = ref([
 onMounted(() =>{
     
     // TD: fix bug: the component gets mounted in /fron-page view...
-    if(
-        dummy_staked_data.value.length > 0 
-        && 
-        router.currentRoute.value.fullPath != '/front-page'
-    ){
-        let index = 0
-        let aTag
-        setInterval(() => {
-            selectedItem.value = 'carousel_slider_item_'+index
-            aTag = document.getElementById('id_'+selectedItem.value)
+    // TD: Fix issue: when staking item is transitioned to the entire page is shifted to it 
+    // if(
+    //     dummy_staked_data.value.length > 0 
+    //     && 
+    //     router.currentRoute.value.fullPath != '/connect-wallet'
+    // ){
+    //     let index = 0
+    //     let aTag
+    //     setInterval(() => {
+    //         selectedItem.value = '!carousel_slider_item_'+index
+    //         aTag = document.getElementById('id_'+selectedItem.value)
 
-            if(aTag) aTag.click()
+    //         if(aTag) aTag.click()
 
-            let nexIndex = (index + 1) === dummy_staked_data.value.length? 0 : (index + 1)
+    //         let nexIndex = (index + 1) === dummy_staked_data.value.length? 0 : (index + 1)
             
-            index = nexIndex
-        }, 3000)
-    }
+    //         index = nexIndex
+    //     }, 3000)
+    // }
 })
 </script>
   
@@ -109,7 +85,7 @@ onMounted(() =>{
       <div class="carousel_slider">
         <div
           v-for="(item, i) in dummy_staked_data"
-          :id="'carousel_slider_item_'+i"
+          :id="'!carousel_slider_item_'+i"
           :key="i"
           class="carousel_slider_item py-15 px-10"
         >
@@ -169,15 +145,15 @@ onMounted(() =>{
       <div class="flex justify-end gap-5 mt-15 items-center">
         <a 
           v-for="(item, i) in dummy_staked_data"
-          :id="'id_carousel_slider_item_'+i"
+          :id="'id_!carousel_slider_item_'+i"
           :key="i"
           style="text-decoration: none;"
 
-          :href="'#carousel_slider_item_'+i"
+          :href="'#!carousel_slider_item_'+i"
           class="h-15 w-15 rounded-[50px] cursor-pointer
           hover:bg-primary"
-          :class="selectedItem === '#carousel_slider_item_'+i? 'bg-primary': 'bg-blue_3'"
-          @click="selectedItem = '#carousel_slider_item_'+i"
+          :class="selectedItem === '#!carousel_slider_item_'+i? 'bg-primary': 'bg-blue_3'"
+          @click="selectedItem = '#!carousel_slider_item_'+i"
         />
       </div>
     </section>
