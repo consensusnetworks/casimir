@@ -15,7 +15,7 @@ export class UsersStack extends cdk.Stack {
     /** Stack name */
     public readonly name = 'users'
     /** Path to stack build assets or Dockerfile */
-    public readonly assetPath = '../../services/auth'
+    public readonly assetPath = '../../services/users'
     // TODO change auth service to users
 
     constructor(scope: Construct, id: string, props: UsersStackProps) {
