@@ -10,10 +10,6 @@ const config: UserConfig = {
   server: { port: 3000 },
   plugins: [
     vue({ include: [/\.vue$/] }),
-    pages({
-      dirs: [{ dir: 'src/pages', baseRoute: '' }],
-      extensions: ['vue'],
-    }),
     nodePolyFills(),
     inject({
       Buffer: ['buffer', 'Buffer']
