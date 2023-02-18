@@ -1,5 +1,11 @@
 <template>
   <div>
+    <button @click="getCurrentBalance()">
+      Get Balance New
+    </button>
+    <button @click="getUserBalance(selectedAddress)">
+      Get Balance Old
+    </button>
     <div class="network-div">
       Choose Network
       <div class="choose-network">
@@ -17,15 +23,10 @@
       </div>
     </div>
     <div>
-      <button @click="login()">
-        Login
-      </button>
-    </div>
-    <div>
       <h5>Are you logged in?</h5>
       <div>{{ loggedIn ? 'Yes!' : 'No.' }}</div>
       <h5>Primary Account:</h5>
-      <div>{{ primaryAccount ? primaryAccount : 'Please log in first.' }}</div>
+      <div>{{ primaryAddress ? primaryAddress : 'Please log in first.' }}</div>
       <button @click="setPrimaryWalletAccount()">
         Set Primary Account
       </button>
@@ -33,36 +34,13 @@
     <div>
       <button
         class="btn-save-remove-account"
-        @click="addAccount(selectedProvider, selectedAccount)"
-      >
-        Save Account
-      </button>
-      <button
-        class="btn-save-remove-account"
-        @click="removeAccount(selectedProvider, selectedAccount)"
+        @click="removeConnectedAccount()"
       >
         Remove Account
       </button>
     </div>
-    <div>
-      <ul>
-        <li
-          v-for="(_value, _key) in user"
-          :key="_key"
-        >
-          <ul v-if="_key === 'accounts'">
-            <li
-              v-for="(value, key) in _value"
-              :key="key"
-            >
-              <div>{{ key }}: {{ value }}</div>
-            </li>
-          </ul>
-        </li>
-      </ul>
-    </div>
     <div class="staking-container">
-      <button @click="getUserPools(selectedAccount)">
+      <button @click="getUserPools(selectedAddress)">
         What do I have staked where?
       </button>
       <ul>
@@ -122,9 +100,15 @@
       <div class="ledger-div">
         <button
           class="ledger-btn"
-          @click="connectWallet('Ledger')"
+          @click="connectWallet('Ledger', 'BTC')"
         >
-          {{ ledgerButtonText }}
+          {{ ledgerButtonText }} (Using 'bitcoin' app)
+        </button>
+        <button
+          class="ledger-btn"
+          @click="connectWallet('Ledger', 'ETH')"
+        >
+          {{ ledgerButtonText }} (Using 'ethereum' app)
         </button>
         <p>
           Connected Ledger Account:
@@ -139,7 +123,7 @@
           {{ trezorButtonText }}
         </button>
         <p>
-          Connected Trezor Account:
+          Connected Trezor ETH Account:
           <span> {{ trezorAccountsResult }} </span>
         </p>
       </div>
@@ -191,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, onMounted } from 'vue'
+import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
 import useUsers from '@/composables/users'
 
@@ -211,12 +195,12 @@ const trezorAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
-const { addAccount, removeAccount, user } = useUsers()
 const {
   loggedIn,
   selectedProvider,
-  selectedAccount,
-  primaryAccount,
+  selectedAddress,
+  primaryAddress,
+  selectedCurrency,
   toAddress,
   amount,
   amountToStake,
@@ -226,15 +210,17 @@ const {
   sendTransaction,
   signMessage,
   deposit,
-  login,
   getUserPools,
+  getUserBalance,
+  getCurrentBalance,
+  removeConnectedAccount,
   switchNetwork
 } = useWallet()
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {
     metamaskButtonText.value = 'MetaMask Connected'
-    metamaskAccountsResult.value = selectedAccount.value
+    metamaskAccountsResult.value = selectedAddress.value
     coinbaseButtonText.value = 'Connect Coinbase'
     coinbaseAccountsResult.value = 'Not Active'
     phantomButtonText.value = 'Connect Phantom'
@@ -247,7 +233,7 @@ watchEffect(() => {
     metamaskButtonText.value = 'Connect Metamask'
     coinbaseButtonText.value = 'Coinbase Connected'
     metamaskAccountsResult.value = 'Not Active'
-    coinbaseAccountsResult.value = selectedAccount.value
+    coinbaseAccountsResult.value = selectedAddress.value
     phantomButtonText.value = 'Connect Phantom'
     phantomAccountsResult.value = 'Not Active'
     ledgerButtonText.value = 'Connect Ledger'
@@ -271,7 +257,7 @@ watchEffect(() => {
     phantomButtonText.value = 'Connected'
     metamaskAccountsResult.value = 'Not Active'
     coinbaseAccountsResult.value = 'Not Active'
-    phantomAccountsResult.value = selectedAccount.value || 'Not Active'
+    phantomAccountsResult.value = selectedAddress.value || 'Not Active'
     ledgerButtonText.value = 'Connect Ledger'
     ledgerAccountsResult.value = 'Not Active'
     walletConnectButtonText.value = 'Connect WalletConnect'
@@ -284,7 +270,7 @@ watchEffect(() => {
     coinbaseAccountsResult.value = 'Not Active'
     phantomAccountsResult.value = 'Not Active'
     ledgerButtonText.value = 'Connected!'
-    ledgerAccountsResult.value = selectedAccount.value
+    ledgerAccountsResult.value = selectedAddress.value
     walletConnectButtonText.value = 'Connect WalletConnect'
     walletConnectAccountsResult.value = 'Not Active'
   } else if (selectedProvider.value === 'WalletConnect') {
@@ -297,7 +283,7 @@ watchEffect(() => {
     ledgerButtonText.value = 'Connect Ledger'
     ledgerAccountsResult.value = 'Not Active'
     walletConnectButtonText.value = 'Connected!'
-    walletConnectAccountsResult.value = selectedAccount.value
+    walletConnectAccountsResult.value = selectedAddress.value
   } else if (selectedProvider.value === 'Trezor') {
     metamaskButtonText.value = 'Connect MetaMask'
     metamaskAccountsResult.value = 'Not Active'
@@ -310,7 +296,7 @@ watchEffect(() => {
     walletConnectButtonText.value = 'Connect WalletConnect'
     walletConnectAccountsResult.value = 'Not Active'
     trezorButtonText.value = 'Connected!'
-    trezorAccountsResult.value = selectedAccount.value
+    trezorAccountsResult.value = selectedAddress.value
   }
 })
 </script>

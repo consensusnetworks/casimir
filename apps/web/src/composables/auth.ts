@@ -1,6 +1,7 @@
+import { SignupLoginCredentials } from '@casimir/types/src/interfaces/SignupLoginCredentials'
 import { LoginCredentials } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
-import { ProviderString } from '@/types/ProviderString'
+import { ProviderString } from '@casimir/types'
 
 const { usersBaseURL } = useEnvironment()
 
@@ -14,6 +15,30 @@ export default function useAuth() {
         }
         return await fetch(`${usersBaseURL}/auth/${provider}/${address}`, requestOptions)
     }
+
+    async function signupOrLoginAuth(signupCredentials: SignupLoginCredentials) {
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(signupCredentials)
+        }
+        return await fetch(`${authBaseURL}/signupLogin`, requestOptions)
+    }
+    
+    async function signUpAuth(signupCredentials: SignupLoginCredentials) {
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(signupCredentials)
+        }
+        const response = await fetch(`${authBaseURL}/signup`, requestOptions)
+        return response
+    }
+
     /**
      * Logs a user in with an address, message and signed message
      * 
@@ -32,6 +57,8 @@ export default function useAuth() {
     }
 
     return {
+        signUpAuth,
+        signupOrLoginAuth,
         login,
         getMessage
     }
