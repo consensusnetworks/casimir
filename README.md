@@ -33,8 +33,6 @@ Make sure your development environment has these prerequisites.
 
 3. [AWS CLI (v2.x)](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
 
-4. [SAM CLI (v1.x)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) - tool for mocking backend services locally.
-
 > 🚩 You also need to make sure to have at least one SSH authentication key on your GitHub account (for the git cloning of submodules in various scripts). See [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
 ### Scripts and Dependencies
@@ -58,119 +56,103 @@ npm install
 
 You can get up and running without configuration. You can also mock local backend changes and customize your environment.
 
-1. For frontend changes – run the development server and use the `dev` stage backend services.
+For frontend changes – run the development server and use the `dev` stage backend services.
 
-    ```zsh
-    npm run dev
-    ```
+```zsh
+npm run dev
+```
 
-    > 🚩 This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set PROFILE="some-other-name" in a [.env](.env) if you want to override).
+> 🚩 This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set AWS_PROFILE="some-other-name" in a [.env](.env) if you want to override).
 
-2. For fullstack changes – run the development server and mock the local backend services.
+For fullstack changes – run the development server and mock the local backend services.
 
-    ```zsh
-    npm run dev --mock
-    ```
+```zsh
+npm run dev --mock
+```
 
-    > 🚩 You will need the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html) for local mocking.
+Emulate a Ledger hardware wallet. The default application is ethereum, and we also currently have support for the bitcoin and solana applications.
 
-3. Emulate a Ledger hardware wallet. The default application is ethereum, and we also currently have support for the bitcoin and solana applications.
+```zsh
+npm run dev --ledger # or specify --ledger=ethereum, --ledger=bitcoin, or --ledger=solana
+```
 
-    ```zsh
-    npm run dev --ledger # or specify --ledger=ethereum, --ledger=bitcoin, or --ledger=solana
-    ```
+> 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
 
-    > 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
+Emulate a Trezor hardware wallet. You also need to make sure to add [these prerequisites](https://github.com/trezor/trezor-user-env#prerequisites).
 
-4. Emulate a Trezor hardware wallet. You also need to make sure to add [these prerequisites](https://github.com/trezor/trezor-user-env#prerequisites).
+```zsh
+npm run dev --trezor
+```
 
-    ```zsh
-    npm run dev --trezor
-    ```
+Expose any servers running on local ports using local tunnel.
 
-5. Expose any servers running on local ports using local tunnel.
+```zsh
+npm run dev --external
+```
 
-    ```zsh
-    npm run dev --external
-    ```
-    
-6. The commands and flags above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
+The commands above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
 
-    ```zsh
-    # @casimir/web
-    npm run dev # or
-    npm run dev:web
+```zsh
+# @casimir/web
+npm run dev # or
+npm run dev:web
 
-    # @casimir/landing
-    npm run dev:landing
-    ```
+# @casimir/landing
+npm run dev:landing
+```
 
-### Hardhat
+### Contracts
 
-Ethereum contract development is serviced through [Hardhat](https://hardhat.io/). The Hardhat development environment is configured in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file.
+Ethereum contracts are configured with a Hardhat development environment in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file.
 
-1. Compile the contracts in [contracts/ethereum](contracts/ethereum).
-    
-    ```zsh
-    npm run task:compile --workspace @casimir/ethereum
-    ```
+Run all contract tests.
 
-2. Deploy a contract, specifically [contracts/ethereum/src/SSVManager.sol](contracts/ethereum/src/Sample.sol) with [contracts/ethereum/deploy/ssv.deploy.ts](contracts/ethereum/deploy/ssv.deploy.ts).
+```zsh
+npm run test:ethereum
+```
 
-    ```zsh
-    npm run deploy:ssv --workspace @casimir/ethereum
-    ```
+Compile the contracts in [contracts/ethereum](contracts/ethereum).
 
-3. Test the Sample with the tests in [contracts/ethereum/test/sample.ts](contracts/ethereum/test/sample.ts).
+```zsh
+npm run task:compile --workspace @casimir/ethereum
+```
 
-    ```zsh
-    npm run test --workspace @casimir/ethereum
-    ```
+Deploy a contract, specifically [contracts/ethereum/src/SSVManager.sol](contracts/ethereum/src/SSVManager.sol) with [contracts/ethereum/scripts/ssv.deploy.ts](contracts/ethereum/deploy/ssv.deploy.ts).
 
-4. Use a contract in the Casimir web app.
-
-    ```typescript
-    // Todo add Casimir Typescript usage
-    ```
-
-5. Clean [contracts/ethereum/build/artifacts](contracts/ethereum/build/artifacts) and [contracts/ethereum/build/cache](contracts/ethereum/build/cache)).    
-
-    ```zsh
-    npm run task:clean --workspace @casimir/ethereum
-    ```
-
-    > 🚩 Note, this is required if you change the Hardhat configuration.
+```zsh
+npm run deploy:ssv --workspace @casimir/ethereum
+```
 
 ### Local Nodes
 
 Run local cryptonodes for fast and flexible development.
 
-1. Run a local Ethereum node without archived data.
+Run a local Ethereum node without archived data.
 
-    ```zsh
-    npm run dev:ethereum
-    ```
+```zsh
+npm run dev:ethereum
+```
 
-2. Run a local Ethereum node with archived data from mainnet.
+Run a local Ethereum node with archived data from mainnet.
 
-    ```zsh
-    npm run dev:ethereum --fork=mainnet
-    ```
+```zsh
+npm run dev:ethereum --fork=mainnet
+```
 
-3. Run a local Ethereum node with archived data from Goerli testnet.
+Run a local Ethereum node with archived data from Goerli testnet.
 
-    ```zsh
-    npm run dev:ethereum --fork=goerli
-    ```
+```zsh
+npm run dev:ethereum --fork=goerli
+```
 
-> 🚩 Note, while the fork starts with the same state as the specified network, it lives as a local development network.
+> 🚩 Note, while the fork starts with the same state as the specified network, it lives as a local development network independent of the live network.
 
 ### Environment
 
 Optionally customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for any supported variables.
 
 ```zsh
-PROFILE="some-other-aws-name"
+AWS_PROFILE="some-other-aws-name"
 STAGE="sandbox"
 ```
 
@@ -178,7 +160,7 @@ STAGE="sandbox"
 
 | Name | Description | Default |
 | --- | --- | --- |
-| `PROFILE` | AWS profile name | `"consensus-networks-dev"` |
+| `AWS_PROFILE` | AWS profile name | `"consensus-networks-dev"` |
 | `STAGE` | Environment stage name | `"dev"` |
 
 ### Scripts and dependencies
@@ -232,7 +214,7 @@ Code is organized into work directories (apps, services, infrastructure – and 
 ├── scripts/ (devops and build scripts)
 |   └── local/ (mock and serve tasks)
 ├── services/ (backend services)
-|   └── auth/ (auth lambda api)
+|   └── users/ (users express api)
 └── package.json (project-wide npm dependencies and scripts)
 ```
 
@@ -253,4 +235,3 @@ Feel free to use any editor, but here's a configuration that works with this cod
 This respository is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
-
