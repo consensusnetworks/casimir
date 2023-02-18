@@ -1,8 +1,6 @@
-#!/usr/bin/env node
-import 'source-map-support/register'
 import * as cdk from 'aws-cdk-lib'
 import { Config } from './providers/config'
-import { AuthStack } from './providers/auth'
+import { UsersStack } from './providers/users'
 import { DnsStack } from './providers/dns'
 import { EtlStack } from './providers/etl'
 import { LandingStack } from './providers/landing'
@@ -10,17 +8,16 @@ import { NodesStack } from './providers/nodes'
 
 const { project, stage, env, nodesIp } = new Config()
 const app = new cdk.App()
-const dnsStack = new DnsStack(app, `${project}DnsStack${stage}`, { env, project, stage })
-const { domain, dnsRecords, hostedZone } = dnsStack
+const { domain, subdomains, hostedZone } = new DnsStack(app, `${project}DnsStack${stage}`, { env, project, stage })
 
-/** Deploy development-only resources */
+/** Create development-only resources */
 if (process.env.STAGE !== 'prod') {
     new EtlStack(app, `${project}EtlStack${stage}`, { env, project, stage })
-    new AuthStack(app, `${project}AuthStack${stage}`, { env, project, stage, domain, dnsRecords, hostedZone })
+    new UsersStack(app, `${project}UsersStack${stage}`, { env, project, stage, domain, subdomains, hostedZone })
 }
-/** Deploy production-only resources */
+/** Create production-only resources */
 if (process.env.STAGE === 'prod') {
-    new NodesStack(app, `${project}NodesStack${stage}`, { env, project, stage, domain, dnsRecords, hostedZone, nodesIp })
+    new NodesStack(app, `${project}NodesStack${stage}`, { env, project, stage, domain, subdomains, hostedZone, nodesIp })
 }
-/** Deploy remaining resources */
-new LandingStack(app, `${project}LandingStack${stage}`, { env, project, stage, domain, dnsRecords, hostedZone })
+/** Create remaining resources */
+new LandingStack(app, `${project}LandingStack${stage}`, { env, project, stage, domain, subdomains, hostedZone })

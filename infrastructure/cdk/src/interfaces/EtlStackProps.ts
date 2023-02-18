@@ -1,6 +1,6 @@
-import { StackProps } from 'aws-cdk-lib'
+import * as cdk from 'aws-cdk-lib'
 
-export interface EtlStackProps extends StackProps {
-    project: string;
-    stage: string;
+export interface EtlStackProps extends cdk.StackProps {
+    project: string
+    stage: string
 }

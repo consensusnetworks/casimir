@@ -1,6 +1,6 @@
-import { StackProps } from 'aws-cdk-lib'
+import * as cdk from 'aws-cdk-lib'
 
-export interface DnsStackProps extends StackProps {
-    project: string;
-    stage: string;
+export interface DnsStackProps extends cdk.StackProps {
+    project: string
+    stage: string
 }
