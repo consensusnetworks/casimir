@@ -6,18 +6,17 @@ import { EtlStack } from './providers/etl'
 import { LandingStack } from './providers/landing'
 import { NodesStack } from './providers/nodes'
 
+/** Create CDK app and stacks */
 const { project, stage, env, nodesIp } = new Config()
 const app = new cdk.App()
 const { domain, subdomains, hostedZone } = new DnsStack(app, `${project}DnsStack${stage}`, { env, project, stage })
-
-/** Create development-only resources */
 if (process.env.STAGE !== 'prod') {
+    /** Create development-only stacks */
     new EtlStack(app, `${project}EtlStack${stage}`, { env, project, stage })
     new UsersStack(app, `${project}UsersStack${stage}`, { env, project, stage, domain, subdomains, hostedZone })
-}
-/** Create production-only resources */
-if (process.env.STAGE === 'prod') {
+} else {
+    /** Create production-only stacks */
     new NodesStack(app, `${project}NodesStack${stage}`, { env, project, stage, domain, subdomains, hostedZone, nodesIp })
 }
-/** Create remaining resources */
+/** Create remaining stacks */
 new LandingStack(app, `${project}LandingStack${stage}`, { env, project, stage, domain, subdomains, hostedZone })
