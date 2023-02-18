@@ -7,7 +7,7 @@ const apps = {
     web: {
         chains: ['ethereum'],
         infrastructure: 'cdk',
-        services: ['auth']
+        services: ['users']
     }
 }
 
