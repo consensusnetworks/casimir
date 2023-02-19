@@ -37,9 +37,6 @@ export class UsersStack extends cdk.Stack {
             memoryLimitMiB: 512
         })
 
-
-        service
-
         /** Create a DNS A record for the users load balancer */
         new route53.ARecord(this, `${project}${this.name}ARecord${stage}`, {
             recordName: `${subdomains.users}.${rootDomain}`,
