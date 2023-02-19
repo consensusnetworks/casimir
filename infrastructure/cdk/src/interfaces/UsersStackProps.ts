@@ -1,11 +1,7 @@
-import * as cdk from 'aws-cdk-lib'
-import * as route53 from 'aws-cdk-lib/aws-route53'
-import { Subdomains } from './Subdomains'
+import * as ecs from 'aws-cdk-lib/aws-ecs'
+import { HostedStackProps } from './HostedStackProps'
 
-export interface UsersStackProps extends cdk.StackProps {
-    project: string
-    stage: string
-    domain: string
-    subdomains: Subdomains
-    hostedZone: route53.HostedZone
+export interface UsersStackProps extends HostedStackProps {
+    /** Stage-specific ECS cluster */
+    cluster: ecs.Cluster
 }

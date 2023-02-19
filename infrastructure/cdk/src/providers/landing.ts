@@ -1,6 +1,5 @@
 import { Construct } from 'constructs'
 import * as cdk from 'aws-cdk-lib'
-import * as certmgr from 'aws-cdk-lib/aws-certificatemanager'
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import * as s3 from 'aws-cdk-lib/aws-s3'
@@ -22,19 +21,7 @@ export class LandingStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: LandingStackProps) {
     super(scope, id, props)
 
-    const { project, stage, domain, subdomains, hostedZone } = props
-
-    /** Set the stage root domain */
-    const stageDomain = stage === 'Prod' ? domain : [stage.toLowerCase(), domain].join('.')
-    
-    /** Create a certificate for the landing page */
-    const certificate = new certmgr.Certificate(this, `${project}${this.name}Cert${stage}`, {
-      domainName: stageDomain,
-      subjectAlternativeNames: [
-        [subdomains.landing, stageDomain].join('.')
-      ],
-      validation: certmgr.CertificateValidation.fromDns(hostedZone)
-    })
+    const { project, stage, rootDomain, subdomains, hostedZone, certificate } = props
 
     /** Create a bucket for the landing page */
     const bucket = new s3.Bucket(this, `${project}${this.name}Bucket${stage}`, {
@@ -66,7 +53,7 @@ export class LandingStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         origin: new cloudfrontOrigins.S3Origin(bucket, { originAccessIdentity })
       },
-      domainNames: [stageDomain, [subdomains.landing, stageDomain].join('.')],
+      domainNames: [rootDomain, `${subdomains.landing}.${rootDomain}`],
       certificate
     })
 
@@ -80,7 +67,7 @@ export class LandingStack extends cdk.Stack {
 
     /** Create an A record for the landing page root */
     new route53.ARecord(this, `${project}${this.name}DnsARecord${stage}`, {
-      recordName: stageDomain,
+      recordName: rootDomain,
       zone: hostedZone as route53.IHostedZone,
       target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
       ttl: cdk.Duration.minutes(1),
@@ -88,7 +75,7 @@ export class LandingStack extends cdk.Stack {
 
     /** Create an A record for the landing page www subdomain */
     new route53.ARecord(this, `${project}${this.name}DnsARecordWww${stage}`, {
-      recordName: [subdomains.landing, stageDomain].join('.'),
+      recordName: `${subdomains.landing}.${rootDomain}`,
       zone: hostedZone as route53.IHostedZone,
       target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
       ttl: cdk.Duration.minutes(1),

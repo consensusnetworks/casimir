@@ -14,14 +14,11 @@ export class NodesStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: NodesStackProps) {
         super(scope, id, props)
 
-        const { project, stage, domain, subdomains, hostedZone, nodesIp } = props
-
-        /** Set the stage root domain */
-        const stageDomain = stage === 'Prod' ? domain : [stage.toLowerCase(), domain].join('.')
+        const { project, stage, rootDomain, subdomains, hostedZone, nodesIp } = props
 
         /** Create an A record for the nodes web server IP */
         new route53.ARecord(this, `${project}${this.name}DnsARecordApi${stage}`, {
-            recordName: [subdomains.nodes, stageDomain].join('.'),
+            recordName: `${subdomains.nodes}.${rootDomain}`,
             zone: hostedZone as route53.IHostedZone,
             target: route53.RecordTarget.fromIpAddresses(nodesIp),
             ttl: cdk.Duration.minutes(1),
