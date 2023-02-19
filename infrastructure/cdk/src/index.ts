@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib'
 import { Config } from './providers/config'
 import { UsersStack } from './providers/users'
-import { DnsStack } from './providers/dns'
+import { NetworkStack } from './providers/network'
 import { EtlStack } from './providers/etl'
 import { LandingStack } from './providers/landing'
 import { NodesStack } from './providers/nodes'
@@ -9,7 +9,7 @@ import { NodesStack } from './providers/nodes'
 /** Create CDK app and stacks */
 const { project, stage, env, nodesIp, rootDomain, subdomains } = new Config()
 const app = new cdk.App()
-const { hostedZone, certificate, cluster } = new DnsStack(app, `${project}DnsStack${stage}`, { env, project, stage, rootDomain, subdomains })
+const { hostedZone, certificate, cluster } = new NetworkStack(app, `${project}NetworkStack${stage}`, { env, project, stage, rootDomain, subdomains })
 if (process.env.STAGE !== 'prod') {
     /** Create development-only stacks */
     new EtlStack(app, `${project}EtlStack${stage}`, { env, project, stage })

@@ -17,7 +17,7 @@ export class NodesStack extends cdk.Stack {
         const { project, stage, rootDomain, subdomains, hostedZone, nodesIp } = props
 
         /** Create an A record for the nodes web server IP */
-        new route53.ARecord(this, `${project}${this.name}DnsARecordApi${stage}`, {
+        new route53.ARecord(this, `${project}${this.name}ARecordApi${stage}`, {
             recordName: `${subdomains.nodes}.${rootDomain}`,
             zone: hostedZone as route53.IHostedZone,
             target: route53.RecordTarget.fromIpAddresses(nodesIp),

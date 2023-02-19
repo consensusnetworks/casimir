@@ -66,7 +66,7 @@ export class LandingStack extends cdk.Stack {
     })
 
     /** Create an A record for the landing page root */
-    new route53.ARecord(this, `${project}${this.name}DnsARecord${stage}`, {
+    new route53.ARecord(this, `${project}${this.name}ARecord${stage}`, {
       recordName: rootDomain,
       zone: hostedZone as route53.IHostedZone,
       target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
@@ -74,7 +74,7 @@ export class LandingStack extends cdk.Stack {
     })
 
     /** Create an A record for the landing page www subdomain */
-    new route53.ARecord(this, `${project}${this.name}DnsARecordWww${stage}`, {
+    new route53.ARecord(this, `${project}${this.name}ARecordWww${stage}`, {
       recordName: `${subdomains.landing}.${rootDomain}`,
       zone: hostedZone as route53.IHostedZone,
       target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),

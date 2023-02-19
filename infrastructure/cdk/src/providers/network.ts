@@ -4,15 +4,15 @@ import * as certmgr from 'aws-cdk-lib/aws-certificatemanager'
 import * as ec2 from 'aws-cdk-lib/aws-ec2'
 import * as ecs from 'aws-cdk-lib/aws-ecs'
 import * as route53 from 'aws-cdk-lib/aws-route53'
-import { DnsStackProps } from '../interfaces/DnsStackProps'
+import { NetworkStackProps } from '../interfaces/NetworkStackProps'
 import { pascalCase } from '@casimir/string-helpers'
 
 /**
- * Route53 DNS stack
+ * Route53 network stack
  */
-export class DnsStack extends cdk.Stack {
+export class NetworkStack extends cdk.Stack {
   /** Stack name */
-  public readonly name = pascalCase('dns')
+  public readonly name = pascalCase('network')
   /** Project-wide route53 hosted zone */
   public readonly hostedZone: route53.HostedZone
   /** Stage-specific certificate */
@@ -23,7 +23,7 @@ export class DnsStack extends cdk.Stack {
   public readonly cluster: ecs.Cluster
 
 
-  constructor(scope: Construct, id: string, props: DnsStackProps) {
+  constructor(scope: Construct, id: string, props: NetworkStackProps) {
     super(scope, id, props)
 
     const { project, stage, rootDomain, subdomains } = props
@@ -48,6 +48,11 @@ export class DnsStack extends cdk.Stack {
       validation: certmgr.CertificateValidation.fromDns(this.hostedZone)
     })
     this.vpc = new ec2.Vpc(this, `${project}${this.name}Vpc${stage}`)
-    this.cluster = new ecs.Cluster(this, `${project}${this.name}Cluster${stage}`, { vpc: this.vpc })
+    this.cluster = new ecs.Cluster(this, `${project}${this.name}Cluster${stage}`, {
+      capacity: {
+        instanceType: new ec2.InstanceType('t3.micro')
+      },
+      vpc: this.vpc
+    })
   }
 }
