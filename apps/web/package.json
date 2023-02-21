@@ -13,10 +13,11 @@
     "@walletconnect/web3-provider": "^1.8.0",
     "borsh": "^0.7.0",
     "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
     "d3": "^7.8.1",
     "ethers": "^5.7.2",
-    "iotex-antenna": "^0.31.6",
     "util": "^0.12.5",
+    "vite-plugin-pages": "^0.28.0",
     "vue": "^3.2.25",
     "vue-router": "^4.0.15",
     "web3": "^1.8.1"
