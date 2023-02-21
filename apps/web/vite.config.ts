@@ -42,7 +42,7 @@ const config: UserConfig = {
     alias: {  
       // Polyfill node globals
       stream: 'rollup-plugin-node-polyfills/polyfills/stream',
-      crypto: 'crypto-browserify',
+
       // Alias internal src paths
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src')
     },
