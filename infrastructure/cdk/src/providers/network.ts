@@ -27,8 +27,8 @@ export class NetworkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: NetworkStackProps) {
     super(scope, id, props)
 
-    const { rootDomain, subdomains } = props
     const config = new Config()
+    const { rootDomain, subdomains } = config
 
     /** Remove stage-specific subdomain */
     const absoluteRootDomain = (() => {

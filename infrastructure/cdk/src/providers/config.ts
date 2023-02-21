@@ -1,25 +1,20 @@
 import { pascalCase } from '@casimir/string-helpers'
-import { StackProps } from '../interfaces/StackProps'
+import { ProjectConfig } from '../interfaces/ProjectConfig'
 
 /**
  * CDK app config
  */
-export class Config implements StackProps {
+export class Config implements ProjectConfig {
     /** List of required environment variables */
-    readonly requiredEnvVars = ['PROJECT', 'STAGE', 'AWS_ACCOUNT', 'AWS_REGION']
-    readonly project
-    readonly stage
-    readonly env
-    readonly rootDomain
-    readonly subdomains
-    readonly nodesIp
+    public readonly requiredEnvVars = ['PROJECT', 'STAGE', 'AWS_ACCOUNT', 'AWS_REGION']
+    public readonly project
+    public readonly stage
+    public readonly env
+    public readonly rootDomain
+    public readonly subdomains
+    public readonly nodesIp
     constructor() {
-        this.requiredEnvVars.forEach(v => {
-            if (!process.env[v]) {
-                console.log('No value provided for', v)
-                process.exit(1)
-            }
-        })
+        this.checkEnvVars()
         this.project = pascalCase(process.env.PROJECT as string)
         this.stage = pascalCase(process.env.STAGE as string)
         this.env = {
@@ -37,12 +32,26 @@ export class Config implements StackProps {
     }
 
     /**
+     * Check for required environment variables
+     * @throws {Error} If any required environment variables are missing
+     */
+    checkEnvVars(): void {
+        this.requiredEnvVars.forEach(v => {
+            if (!process.env[v]) {
+                console.log('No value provided for', v)
+                process.exit(1)
+            }
+        })
+    }
+
+    /**
      * Get stack name with project prefix and stage suffix
      * @param stackName Stack name
      * @returns Full stack name
      * @example
      * ```typescript
      * const stackName = config.getFullStackName('etl')
+     * console.log(stackName) // EtlDev
      * ```
      */
     getFullStackName(stackName: string): string {
@@ -57,6 +66,7 @@ export class Config implements StackProps {
      * @example
      * ```typescript
      * const resourceName = config.getFullStackResourceName('etl', 'event-bucket')
+     * console.log(resourceName) // EtlEventBucketDev
      * ```
      */
     getFullStackResourceName(stackName: string, resourceName: string): string {

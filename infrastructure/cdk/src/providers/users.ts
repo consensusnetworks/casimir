@@ -19,8 +19,9 @@ export class UsersStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: UsersStackProps) {
         super(scope, id, props)
 
-        const { project, stage, certificate, cluster, hostedZone, rootDomain, subdomains } = props
         const config = new Config()
+        const { project, stage, rootDomain, subdomains } = config
+        const { certificate, cluster, hostedZone } = props
 
         /** Create a load-balanced service for the users express API */
         const service = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, config.getFullStackResourceName(this.name, 'fargate'), {

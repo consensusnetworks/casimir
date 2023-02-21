@@ -8,16 +8,16 @@ import { NodesStack } from './providers/nodes'
 
 /** Create CDK app and stacks */
 const config = new Config()
-const { env, project, stage, rootDomain, subdomains, nodesIp } = config
+const { env } = config
 const app = new cdk.App()
-const { hostedZone, certificate, cluster } = new NetworkStack(app, config.getFullStackName('network'), { env, project, stage, rootDomain, subdomains })
+const { hostedZone, certificate, cluster } = new NetworkStack(app, config.getFullStackName('network'), { env })
 if (process.env.STAGE !== 'prod') {
     /** Create development-only stacks */
-    new EtlStack(app, config.getFullStackName('etl'), { env, project, stage })
-    new UsersStack(app, config.getFullStackName('users'), { env, project, stage, rootDomain, subdomains, hostedZone, certificate, cluster })
+    new EtlStack(app, config.getFullStackName('etl'), { env })
+    new UsersStack(app, config.getFullStackName('users'), { env, hostedZone, certificate, cluster })
 } else {
     /** Create production-only stacks */
-    new NodesStack(app, config.getFullStackName('nodes'), { env, project, stage, rootDomain, subdomains, hostedZone, certificate, nodesIp })
+    new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone, certificate })
 }
 /** Create remaining stacks */
-new LandingStack(app, config.getFullStackName('landing'), { env, project, stage, rootDomain, subdomains, hostedZone })
+new LandingStack(app, config.getFullStackName('landing'), { env, hostedZone })

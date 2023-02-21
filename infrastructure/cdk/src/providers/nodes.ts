@@ -15,8 +15,9 @@ export class NodesStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: NodesStackProps) {
         super(scope, id, props)
 
-        const { rootDomain, subdomains, hostedZone, nodesIp } = props
         const config = new Config()
+        const { rootDomain, subdomains, nodesIp } = config
+        const { hostedZone } = props
 
         /** Create an A record for the nodes web server IP */
         new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record-api'), {

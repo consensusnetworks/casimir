@@ -22,8 +22,10 @@ export class LandingStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: LandingStackProps) {
     super(scope, id, props)
 
-    const { rootDomain, subdomains, hostedZone, certificate } = props
     const config = new Config()
+    const { rootDomain, subdomains } = config
+    const { hostedZone, certificate } = props
+
 
     /** Create a bucket for the landing page */
     const bucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'bucket'), {
