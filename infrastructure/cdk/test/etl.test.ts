@@ -5,9 +5,10 @@ import { EtlStack } from '../src/providers/etl'
 import { eventSchema, aggSchema, schemaToGlueColumns } from '@casimir/data'
 
 test('ETL stack created', () => {
-  const { project, stage, env } = new Config()
+  const config = new Config()
+  const { env, project, stage } = config
   const app = new cdk.App()
-  const etlStack = new EtlStack(app, `${project}EtlStack${stage}`, { env, project, stage })
+  const etlStack = new EtlStack(app, config.getFullStackName('etl'), { env, project, stage })
 
   const etlTemplate = assertions.Template.fromStack(etlStack)
 

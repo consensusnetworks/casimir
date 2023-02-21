@@ -3,8 +3,9 @@ import * as cdk from 'aws-cdk-lib'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as glue from '@aws-cdk/aws-glue-alpha'
 import { schemaToGlueColumns, eventSchema, aggSchema } from '@casimir/data'
+import { kebabCase, pascalCase, snakeCase } from '@casimir/string-helpers'
+import { Config } from '../providers/config'
 import { EtlStackProps } from '../interfaces/StackProps'
-import { pascalCase } from '@casimir/string-helpers'
 
 /**
  * Chain analytics ETL stack
@@ -16,41 +17,39 @@ export class EtlStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: EtlStackProps) {
         super(scope, id, props)
 
-        const { project, stage } = props
+        const config = new Config()
 
         /** Get Glue Columns from JSON Schema for each table */
         const eventColumns = schemaToGlueColumns(eventSchema)
         const aggColumns = schemaToGlueColumns(aggSchema)
 
         /** Create Glue DB */
-        const database = new glue.Database(this, `${project}${this.name}Database${stage}`, {
-            databaseName: `${project}_${this.name}_Database_${stage}`.toLowerCase()
+        const database = new glue.Database(this, config.getFullStackResourceName(this.name, 'database'), {
+            databaseName: snakeCase(config.getFullStackResourceName(this.name, 'database'))
         })
 
         /** Create S3 buckets */
-        const eventBucket = new s3.Bucket(this, `${project}${this.name}EventBucket${stage}`, {
-            bucketName: `${project}-${this.name}-event-bucket-${stage}`.toLowerCase(),
+        const eventBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'event-bucket'), {
+            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'event-bucket')),
         })
-        const aggBucket = new s3.Bucket(this, `${project}${this.name}AggBucket${stage}`, {
-            bucketName: `${project}-${this.name}-agg-bucket-${stage}`.toLowerCase(),
+        const aggBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'agg-bucket'), {
+            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'agg-bucket')),
         })
-        new s3.Bucket(this, `${project}${this.name}OutputBucket${stage}`, {
-            bucketName: `${project}-${this.name}-output-bucket-${stage}`.toLowerCase(),
+        new s3.Bucket(this, config.getFullStackResourceName(this.name, 'output-bucket'), {
+            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'output-bucket'))
         })
 
         /** Create Glue tables */
-        const eventTableName = `${project}_${this.name}_Event_Table_${stage}`
-        new glue.Table(this, `${project}${this.name}EventTable${stage}`, {
+        new glue.Table(this, config.getFullStackResourceName(this.name, 'event-table'), {
             database: database,
-            tableName: eventTableName.toLowerCase(),
+            tableName: snakeCase(config.getFullStackResourceName(this.name, 'event-table')),
             bucket: eventBucket,
             columns: eventColumns,
             dataFormat: glue.DataFormat.JSON,
         })
-        const aggTableName = `${project}_${this.name}_Agg_Table_${stage}`
-        new glue.Table(this, `${project}${this.name}AggTable${stage}`, {
+        new glue.Table(this, config.getFullStackResourceName(this.name, 'agg-table'), {
             database: database,
-            tableName: aggTableName.toLowerCase(),
+            tableName: snakeCase(config.getFullStackResourceName(this.name, 'agg-table')),
             bucket: aggBucket,
             columns: aggColumns,
             dataFormat: glue.DataFormat.JSON,

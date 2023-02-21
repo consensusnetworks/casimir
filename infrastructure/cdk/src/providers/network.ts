@@ -6,6 +6,7 @@ import * as ecs from 'aws-cdk-lib/aws-ecs'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import { NetworkStackProps } from '../interfaces/StackProps'
 import { pascalCase } from '@casimir/string-helpers'
+import { Config } from './config'
 
 /**
  * Route53 network stack
@@ -26,7 +27,8 @@ export class NetworkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: NetworkStackProps) {
     super(scope, id, props)
 
-    const { project, stage, rootDomain, subdomains } = props
+    const { rootDomain, subdomains } = props
+    const config = new Config()
 
     /** Remove stage-specific subdomain */
     const absoluteRootDomain = (() => {
@@ -37,18 +39,18 @@ export class NetworkStack extends cdk.Stack {
     })()
     
     /** Get the hosted zone for the project domain */
-    this.hostedZone = route53.HostedZone.fromLookup(this, `${project}${this.name}HostedZone${stage}`, {
+    this.hostedZone = route53.HostedZone.fromLookup(this, config.getFullStackResourceName(this.name, 'hosted-zone'), {
       domainName: absoluteRootDomain
     }) as route53.HostedZone
 
     /** Create a shared certificate, VPC, and cluster for the stage for the stage */
-    this.certificate = new certmgr.Certificate(this, `${project}${this.name}Cert${stage}`, {
+    this.certificate = new certmgr.Certificate(this, config.getFullStackResourceName(this.name, 'cert'), {
       domainName: rootDomain,
       subjectAlternativeNames: Object.values(subdomains).map((subdomain: string) => `${subdomain}.${rootDomain}`),
       validation: certmgr.CertificateValidation.fromDns(this.hostedZone)
     })
-    this.vpc = new ec2.Vpc(this, `${project}${this.name}Vpc${stage}`)
-    this.cluster = new ecs.Cluster(this, `${project}${this.name}Cluster${stage}`, {
+    this.vpc = new ec2.Vpc(this, config.getFullStackResourceName(this.name, 'vpc'))
+    this.cluster = new ecs.Cluster(this, config.getFullStackResourceName(this.name, 'cluster'), {
       capacity: {
         instanceType: new ec2.InstanceType('t3.micro')
       },

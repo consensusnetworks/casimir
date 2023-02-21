@@ -8,6 +8,7 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
 import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins'
 import { LandingStackProps } from '../interfaces/StackProps'
 import { pascalCase } from '@casimir/string-helpers'
+import { Config } from './config'
 
 /**
  * Landing page stack
@@ -21,19 +22,20 @@ export class LandingStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: LandingStackProps) {
     super(scope, id, props)
 
-    const { project, stage, rootDomain, subdomains, hostedZone, certificate } = props
+    const { rootDomain, subdomains, hostedZone, certificate } = props
+    const config = new Config()
 
     /** Create a bucket for the landing page */
-    const bucket = new s3.Bucket(this, `${project}${this.name}Bucket${stage}`, {
+    const bucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'bucket'), {
       accessControl: s3.BucketAccessControl.PRIVATE
     })
 
     /** Set bucket to allow cloudfront origin */
-    const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, `${project}${this.name}OriginAccessIdentity${stage}`)
+    const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, config.getFullStackResourceName(this.name, 'origin-access-identity'))
     bucket.grantRead(originAccessIdentity)
 
     /** Create a cloudfront distribution for the landing page */
-    const distribution = new cloudfront.Distribution(this, `${project}${this.name}Distribution${stage}`, {
+    const distribution = new cloudfront.Distribution(this, config.getFullStackResourceName(this.name, 'distribution'), {
       defaultRootObject: 'index.html',
       errorResponses: [
         {
@@ -58,7 +60,7 @@ export class LandingStack extends cdk.Stack {
     })
 
     /** Deploy the landing page to the bucket */
-    new s3Deployment.BucketDeployment(this, `${project}${this.name}BucketDeployment${stage}`, {
+    new s3Deployment.BucketDeployment(this, config.getFullStackResourceName(this.name, 'bucket-deployment'), {
       destinationBucket: bucket,
       sources: [s3Deployment.Source.asset(this.assetPath)],
       distribution,
@@ -66,7 +68,7 @@ export class LandingStack extends cdk.Stack {
     })
 
     /** Create an A record for the landing page root */
-    new route53.ARecord(this, `${project}${this.name}ARecord${stage}`, {
+    new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record'), {
       recordName: rootDomain,
       zone: hostedZone as route53.IHostedZone,
       target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
@@ -74,7 +76,7 @@ export class LandingStack extends cdk.Stack {
     })
 
     /** Create an A record for the landing page www subdomain */
-    new route53.ARecord(this, `${project}${this.name}ARecordWww${stage}`, {
+    new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record-www'), {
       recordName: `${subdomains.landing}.${rootDomain}`,
       zone: hostedZone as route53.IHostedZone,
       target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),

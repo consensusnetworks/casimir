@@ -8,13 +8,14 @@ import { LandingStack } from '../src/providers/landing'
 import { NodesStack } from '../src/providers/nodes'
 
 test('All stacks created', () => {
-  const { project, stage, env, rootDomain, subdomains, nodesIp } = new Config()
+  const config = new Config()
+  const { env, project, stage, rootDomain, subdomains, nodesIp } = config
   const app = new cdk.App()
-  const { hostedZone, certificate, cluster } = new NetworkStack(app, `${project}NetworkStack${stage}`, { env, project, stage, rootDomain, subdomains })
-  const etlStack = new EtlStack(app, `${project}EtlStack${stage}`, { env, project, stage })
-  const usersStack = new UsersStack(app, `${project}UsersStack${stage}`, { env, project, stage, rootDomain, subdomains, hostedZone, certificate, cluster })
-  const nodesStack = new NodesStack(app, `${project}NodesStack${stage}`, { env, project, stage, rootDomain, subdomains, hostedZone, certificate, nodesIp })
-  const landingStack =new LandingStack(app, `${project}LandingStack${stage}`, { env, project, stage, rootDomain, subdomains, hostedZone })
+  const { hostedZone, certificate, cluster } = new NetworkStack(app, config.getFullStackName('network'), { env, project, stage, rootDomain, subdomains })
+  const etlStack = new EtlStack(app, config.getFullStackName('etl'), { env, project, stage })
+  const usersStack = new UsersStack(app, config.getFullStackName('users'), { env, project, stage, rootDomain, subdomains, hostedZone, certificate, cluster })
+  const nodesStack = new NodesStack(app, config.getFullStackName('nodes'), { env, project, stage, rootDomain, subdomains, hostedZone, certificate, nodesIp })
+  const landingStack = new LandingStack(app, config.getFullStackName('landing'), { env, project, stage, rootDomain, subdomains, hostedZone })
 
   const etlTemplate = assertions.Template.fromStack(etlStack)
   Object.keys(etlTemplate.findOutputs('*')).forEach(output => {

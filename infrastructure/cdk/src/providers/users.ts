@@ -5,6 +5,7 @@ import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns'
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import { UsersStackProps } from '../interfaces/StackProps'
+import { Config } from './config'
 
 /**
  * Users API stack
@@ -19,9 +20,10 @@ export class UsersStack extends cdk.Stack {
         super(scope, id, props)
 
         const { project, stage, certificate, cluster, hostedZone, rootDomain, subdomains } = props
+        const config = new Config()
 
         /** Create a load-balanced service for the users express API */
-        const service = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, `${project}${this.name}Fargate${stage}`, {
+        const service = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, config.getFullStackResourceName(this.name, 'fargate'), {
             certificate,
             cluster,
             domainName: `${subdomains.users}.${rootDomain}`, // e.g. users.casimir.co or users.dev.casimir.co
@@ -38,7 +40,7 @@ export class UsersStack extends cdk.Stack {
         })
 
         /** Create a DNS A record for the users load balancer */
-        new route53.ARecord(this, `${project}${this.name}ARecord${stage}`, {
+        new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record'), {
             recordName: `${subdomains.users}.${rootDomain}`,
             zone: hostedZone as route53.IHostedZone,
             target: route53.RecordTarget.fromAlias(new route53targets.LoadBalancerTarget(service.loadBalancer)),

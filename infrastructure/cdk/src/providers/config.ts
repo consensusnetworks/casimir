@@ -35,4 +35,32 @@ export class Config implements StackProps {
         }
         this.nodesIp = process.env.NODES_IP as string
     }
+
+    /**
+     * Get stack name with project prefix and stage suffix
+     * @param stackName Stack name
+     * @returns Full stack name
+     * @example
+     * ```typescript
+     * const stackName = config.getFullStackName('etl')
+     * ```
+     */
+    getFullStackName(stackName: string): string {
+        return this.project + pascalCase(stackName) + this.stage
+    }
+
+    /**
+     * Get stack resource name with project prefix and stage suffix
+     * @param stackName Stack name
+     * @param resourceName Resource name
+     * @returns Resource name
+     * @example
+     * ```typescript
+     * const resourceName = config.getFullStackResourceName('etl', 'event-bucket')
+     * ```
+     */
+    getFullStackResourceName(stackName: string, resourceName: string): string {
+        return this.project + pascalCase(stackName) + pascalCase(resourceName) + this.stage
+    }
+
 }
