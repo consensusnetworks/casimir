@@ -8,8 +8,11 @@ import { Account } from '@casimir/types'
 import { Currency } from '@casimir/types'
 import { ProviderString } from '@casimir/types'
 
-const { authBaseURL, ethereumURL } = useEnvironment()
+// Demo const for user
+import { dummy_user_account } from '@/pages/user-dash/composables/dummy_data.js'
 
+const { authBaseURL, ethereumURL } = useEnvironment()
+// 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const user = ref<User | null>(null)
 
 export default function useUsers () {
@@ -120,11 +123,20 @@ export default function useUsers () {
         return await fetch(`${authBaseURL}/users/update-primary-account`, requestOptions)
     }
 
+    const createDemoUser = (toggle: boolean) => {
+        if(toggle) {
+            user.value = dummy_user_account
+        }
+        else {user.value = null}
+        console.log('new user', user.value)
+    }
+
     return {
         user,
         addAccount,
         removeAccount,
         getMessage,
+        createDemoUser,
         updatePrimaryAddress
     }
 }

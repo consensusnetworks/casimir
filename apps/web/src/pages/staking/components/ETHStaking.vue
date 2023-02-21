@@ -64,7 +64,7 @@ const { user } = useUsers()
             </span> 
             <div class="tooltip">
               <span class="text-grey_3 flex gap-[10px] sr-only s_xsm:not-sr-only">
-                <span class="w-[100px] truncate">{{ user.id }}</span>
+                <span class="w-[100px] truncate">{{ user.address.length > 0 }}</span>
                 <img
                   :src="'/metamask.svg'"
                   :alt="'MetaMask'"
@@ -77,7 +77,7 @@ const { user } = useUsers()
                 class="w-[20px] opacity-[0.2] s_xsm:sr-only not-sr-only"
               >
               <span class="tooltiptext text-body font-bold">
-                MetaMask: {{ user.id }}
+                MetaMask: {{ user.address.length > 0 }}
               </span>
             </div>
           </h6> -->

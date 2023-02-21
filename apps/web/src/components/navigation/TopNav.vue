@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import MultiwalletConnect from './components/MultiwalletConnect.vue'
 import StakingProtocols from './components/StakingProtocols.vue'
+import useUsers from '@/composables/users'
+
+const { user } = useUsers()
 
 // To Do: connect this to our Auth and see if an account exsists
 const account = ref(true)
@@ -18,7 +21,7 @@ const account = ref(true)
     >
       <div>
         <RouterLink 
-          to="/"
+          :to="user? '/user-dashboard:' + user.address:'/'"
         >
           <img
             src="/casimir.svg"
@@ -35,11 +38,36 @@ const account = ref(true)
         <div
           class="flex gap-15 items-center nav_modal_container 
           px-50 lg:px-40 md:px-30 sm:px-20 h-full
-          hover:border-b hover:border-b-primary mt-1"
+          hover:border-b hover:border-b-primary  mt-1"
+          :class="!account? 'text-grey_5 cursor-default': ''"
         >
           <router-link 
             to="/"
             class="h-70 flex gap-15 items-center"
+          >
+            <i class="iconoir-wallet" />
+            <h6 class="sr-only s_md:not-sr-only">
+              Multi-Wallet
+            </h6>
+          </router-link>
+          
+          <div class="nav_modal flex justify-center">
+            <div class="max-w-[1280px] min-w-[380px] w-full text-center">
+              <h6 class="text-grey_5 font-medium mb-25">
+                Connect wallets and view a breakdown of the wallets you have connected 
+              </h6>
+            </div>
+          </div>
+        </div>
+        <div
+          class="flex gap-15 items-center nav_modal_container 
+          px-50 lg:px-40 md:px-30 sm:px-20 h-full
+          hover:border-b hover:border-b-primary mt-1"
+        >
+          <router-link 
+            :to="user? '/user-dashboard:' + user.address :''"
+            class="h-70 flex gap-15 items-center"
+            :class="user? '' : 'opacity-[0.25] cursor-default'"
           >
             <i
               class="iconoir-report-columns"
@@ -49,7 +77,10 @@ const account = ref(true)
             </h6>
           </router-link>
           
-          <div class="nav_modal flex justify-center">
+          <div
+            v-show="user"
+            class="nav_modal flex justify-center"
+          >
             <div class="max-w-[1280px] min-w-[380px] pb-20 w-full text-center">
               <h6 class="text-grey_5 font-medium">
                 View your data across all of  your connected wallets
@@ -64,8 +95,9 @@ const account = ref(true)
           :class="!account? 'text-grey_5 cursor-default': ''"
         >
           <router-link 
-            to="/stake"
+            :to="user? '/stake':''"
             class="h-70 flex gap-15 items-center"
+            :class="user? '' : 'opacity-[0.25] cursor-default'"
           >
             <img
               src="/staking-icon-black.svg"
@@ -78,7 +110,10 @@ const account = ref(true)
             </h6>
           </router-link>
           
-          <div class="nav_modal flex justify-center">
+          <div 
+            v-show="user"
+            class="nav_modal flex justify-center"
+          >
             <div class="max-w-[1280px] min-w-[380px] w-full text-center">
               <h6 class="text-grey_5 font-medium mb-25">
                 Stake to any of our supported protocols 
@@ -87,7 +122,8 @@ const account = ref(true)
             </div>
           </div>
         </div>
-        <div
+        <!-- For future Versions -->
+        <!-- <div
           class="flex gap-15 items-center nav_modal_container 
           px-50 lg:px-40 md:px-30 sm:px-20 h-full
           hover:border-b hover:border-b-primary  mt-1"
@@ -110,7 +146,7 @@ const account = ref(true)
                 View your data across all of  your connected wallets
               </h6>
               <div class="flex gap-70 justify-center items-center mt-25">
-                <!-- to="/assets/crypto" -->
+                
                 <router-link 
                   to="/assets"
                   class="flex gap-15 items-center pb-20 staking_nav_item"
@@ -123,7 +159,7 @@ const account = ref(true)
                   </h6>
                   <div class="staking_nav_item_bar" />
                 </router-link>
-                <!-- to="/assets/nfts" -->
+                
                 <router-link 
                   to="/assets"
                   class="flex gap-15 items-center pb-20 staking_nav_item"
@@ -139,9 +175,10 @@ const account = ref(true)
               </div>
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
-      <div class="h-70 flex gap-50 items-center">
+      <div />
+      <!-- <div class="h-70 flex gap-50 items-center">
         <div
           class="flex gap-15 items-center nav_modal_container 
           px-50 lg:px-40 md:px-30 sm:px-20
@@ -158,13 +195,23 @@ const account = ref(true)
               class="iconoir-wallet"
             />
           </div>
-          <div class="nav_modal flex justify-center">
-            <div class="max-w-[1280px] min-w-[380px] w-full text-center">
+          <div 
+            class="nav_modal flex justify-center"
+            style="
+            height: calc(100vh - 200px);
+            max-height: 500px;
+            min-height: 200px;
+            "
+          >
+            <div class="max-w-[1280px] min-w-[380px] w-full h-full text-center pb-25">
+              <h6 class="text-grey_5 font-medium h-50">
+                Connect your wallets to view and access all of your assets in one location
+              </h6>
               <MultiwalletConnect />
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
