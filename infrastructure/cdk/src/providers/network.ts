@@ -4,7 +4,7 @@ import * as certmgr from 'aws-cdk-lib/aws-certificatemanager'
 import * as ec2 from 'aws-cdk-lib/aws-ec2'
 import * as ecs from 'aws-cdk-lib/aws-ecs'
 import * as route53 from 'aws-cdk-lib/aws-route53'
-import { NetworkStackProps } from '../interfaces/NetworkStackProps'
+import { NetworkStackProps } from '../interfaces/StackProps'
 import { pascalCase } from '@casimir/string-helpers'
 
 /**

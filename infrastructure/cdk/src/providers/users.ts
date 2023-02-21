@@ -4,7 +4,7 @@ import * as ecs from 'aws-cdk-lib/aws-ecs'
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns'
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets'
 import * as route53 from 'aws-cdk-lib/aws-route53'
-import { UsersStackProps } from '../interfaces/UsersStackProps'
+import { UsersStackProps } from '../interfaces/StackProps'
 
 /**
  * Users API stack
