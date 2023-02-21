@@ -2,7 +2,6 @@ import vue from '@vitejs/plugin-vue'
 import { UserConfig } from 'vite'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
-import pages from 'vite-plugin-pages'
 import NodeGlobalsPolyfillPlugin from '@esbuild-plugins/node-globals-polyfill'
 import inject from '@rollup/plugin-inject'
 import nodePolyFills from 'rollup-plugin-node-polyfills'
@@ -11,10 +10,6 @@ const config: UserConfig = {
   server: { port: 3000 },
   plugins: [
     vue({ include: [/\.vue$/] }),
-    pages({
-      dirs: [{ dir: 'src/pages', baseRoute: '' }],
-      extensions: ['vue'],
-    }),
     nodePolyFills(),
     inject({
       Buffer: ['buffer', 'Buffer']
@@ -42,6 +37,7 @@ const config: UserConfig = {
     alias: {  
       // Polyfill node globals
       stream: 'rollup-plugin-node-polyfills/polyfills/stream',
+      crypto: 'crypto-browserify',
 
       // Alias internal src paths
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src')
