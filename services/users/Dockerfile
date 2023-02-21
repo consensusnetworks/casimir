@@ -1,5 +1,5 @@
-# Use Node 16 as the base image
-FROM node:16
+# Use Node 18 as the base image
+FROM node:18
 
 # Set the working directory to /app
 WORKDIR /app
@@ -16,8 +16,8 @@ COPY . .
 # Build the TypeScript project
 RUN npm run build
 
-# Expose port 8080
-EXPOSE 8080
+# Expose port 4000
+EXPOSE 4000
 
 # Run the app when the container launches
 CMD ["node", "dist/index.js"]
