@@ -10,8 +10,7 @@
     "dependencies": {
         "@aws-sdk/client-athena": "^3.163.0",
         "@aws-sdk/client-s3": "^3.120.0",
-        "@aws-sdk/lib-storage": "^3.121.0",
-        "@iotexproject/iotex-address-ts": "^1.0.4"
+        "@aws-sdk/lib-storage": "^3.121.0"
     },
     "devDependencies": {
         "@types/jest": "^28.1.6",
