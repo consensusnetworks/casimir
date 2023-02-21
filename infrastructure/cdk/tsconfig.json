@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
-    "module": "commonjs",
+    "target": "ESNext",
+    "module": "CommonJS",
     "lib": [
-      "es2018"
+      "ESNext"
     ],
     "declaration": true,
     "strict": true,
@@ -20,12 +20,11 @@
     "inlineSources": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
-    "types": ["node", "jest", "mocha"],
+    "types": ["node", "jest"],
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
   "exclude": [
-    "node_modules",
     "cdk.out"
   ]
 }

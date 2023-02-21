@@ -1,12 +1,13 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import '@openzeppelin/contracts/interfaces/IERC20.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
-/**
- * @title WETH (wrapped ETH ERC-20) interface
- */
+/// @title Interface for WETH9
 interface IWETH9 is IERC20 {
+    /// @notice Deposit ether to get wrapped ether
     function deposit() external payable;
-    function withdraw(uint256 _amount) external;
+
+    /// @notice Withdraw wrapped ether to get ether
+    function withdraw(uint256) external;
 }

@@ -4,30 +4,43 @@ import { HardhatUserConfig } from 'hardhat/config'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
-import '@sebasgoldberg/hardhat-wsprovider'
 import 'solidity-docgen'
 import '@openzeppelin/hardhat-upgrades'
 
-const intervalMining = process.env.INTERVAL_MINING === 'true'
+// Seed is provided
+const mnemonic = process.env.BIP39_SEED as string
+const hid = { mnemonic, count: 5 }
+
+// Mining interval is provided
+const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
+const mining = { auto: false, interval: miningInterval * 1000 } // miningInterval in ms
+
+// Live network rpc is provided 
 const hardhatUrl = process.env.PUBLIC_ETHEREUM_URL as string
 const hardhatNetwork = process.env.HARDHAT_NETWORK as string
+
+// Local network fork rpc is provided
 const forkingUrl = process.env.ETHEREUM_FORKING_URL as string
 const forkingNetwork = forkingUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
 const forkingChainId = { mainnet: 1, goerli: 5 }[forkingNetwork]
 
 const externalEnv = {
   mainnet: {
-    LINK_ORACLE_ADDRESS: '',
-    SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+    BEACON_DEPOSIT_ADDRESS: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
+    LINK_FEED_ADDRESS: '',
     LINK_TOKEN_ADDRESS: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    SSV_NETWORK_ADDRESS: '',
     SSV_TOKEN_ADDRESS: '0x9D65fF81a3c488d585bBfb0Bfe3c7707c7917f54',
+    SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
     WETH_TOKEN_ADDRESS: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
   },
   goerli: {
-    LINK_ORACLE_ADDRESS: '0xCC79157eb46F5624204f47AB42b3906cAA40eaB7',
-    SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+    BEACON_DEPOSIT_ADDRESS: '0x07b39F4fDE4A38bACe212b546dAc87C58DfE3fDC',
+    LINK_FEED_ADDRESS: '0x3de1bE9407645533CD0CbeCf88dFE5297E7125e6',
     LINK_TOKEN_ADDRESS: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
+    SSV_NETWORK_ADDRESS: '0xb9e155e65B5c4D66df28Da8E9a0957f06F11Bc04',
     SSV_TOKEN_ADDRESS: '0x3a9f01091C446bdE031E39ea8354647AFef091E7',
+    SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
     WETH_TOKEN_ADDRESS: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
   }
 } 
@@ -50,17 +63,6 @@ const compilerVersions = ['0.8.16']
 const externalCompilerVersions = ['0.4.22', '0.4.24', '0.6.6', '0.6.11', '0.8.4']
 const compilers = [...compilerVersions, ...externalCompilerVersions].map(version => ({ version, settings: compilerSettings }))
 
-const mnemonic = process.env.BIP39_SEED as string
-const hid = {
-  mnemonic,
-  count: 5
-}
-
-const miningInterval = {
-  auto: false,
-  interval: 12000
-}
-
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
   solidity: {
@@ -80,18 +82,31 @@ const config: HardhatUserConfig = {
       accounts: mnemonic ? { ...hid, accountsBalance: '96000000000000000000' } : undefined,
       chainId: forkingChainId || 1337,
       forking: forkingUrl ? { url: forkingUrl } : undefined,
-      mining: intervalMining ? miningInterval : undefined,
+      mining: miningInterval ? mining : undefined,
+      allowUnlimitedContractSize: true,
+      gas: 'auto',
+      gasPrice: 'auto'
+    },
+    ganache: {
+      accounts: mnemonic ? { ...hid } : undefined,
+      url: 'http://127.0.0.1:8545',
       allowUnlimitedContractSize: true,
       gas: 'auto',
       gasPrice: 'auto'
     },
     mainnet: {
       accounts: mnemonic ? { ...hid } : undefined,
-      url: hardhatUrl || ''
+      url: hardhatUrl || '',
+      allowUnlimitedContractSize: true,
+      gas: 'auto',
+      gasPrice: 'auto'
     },
     goerli: {
       accounts: mnemonic ? { ...hid } : undefined,
-      url: hardhatUrl || ''
+      url: hardhatUrl || '',
+      allowUnlimitedContractSize: true,
+      gas: 'auto',
+      gasPrice: 'auto'
     }
   },
   mocha: {

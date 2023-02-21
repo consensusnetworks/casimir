@@ -5,11 +5,6 @@ import { parseStdout } from '@casimir/zx-helpers'
 
 /** Local apps and configuration */
 const apps = {
-    landing: {
-        chains: [],
-        infrastructure: 'cdk',
-        services: []
-    },
     web: {
         chains: ['ethereum'],
         infrastructure: 'cdk',
@@ -23,8 +18,6 @@ const forks = {
         testnet: 'goerli'
     }
 }
-
-console.log('Profile', process.env.PROFILE)
 
 /** The name of the CDK project */
 const project = process.env.PROJECT || 'casimir'
@@ -80,17 +73,17 @@ void async function () {
     /** Default to no trezor emulator */
     const trezor = argv.trezor === 'true'
 
-    if (mock) {
-        const infrastructure = apps[app as keyof typeof apps].infrastructure
-        const services = apps[app as keyof typeof apps].services
+    const { chains, infrastructure, services } = apps[app as keyof typeof apps]
 
-        /** Skip bootstrap if stack exists for current stage (and cdk:bootstrap throws) */
+    if (mock) {
+
+        /** Skip bootstrap if stack exists for current stage (and bootstrap throws) */
         try { 
-            await $`npm run cdk:bootstrap --workspace @casimir/cdk`
+            await $`npm run bootstrap --workspace @casimir/cdk`
         } catch {
             echo(chalk.bgBlackBright('CDK Toolkit stack for ') + chalk.bgBlue(`${Project}${Stage}`) + chalk.bgBlackBright(' was already bootstrapped. Disregard any CDK errors listed above this line.'))
         }
-        await $`npm run cdk:synth --workspace @casimir/cdk`
+        await $`npm run synth --workspace @casimir/cdk`
 
         let port = 4000
         for (const service of services) {
@@ -118,7 +111,6 @@ void async function () {
         }
     }
 
-    const chains = apps[app as keyof typeof apps].chains
     for (const chain of chains) {
         if (network) {
             const key = await getSecret(`consensus-networks-ethereum-${network}`)
@@ -136,6 +128,7 @@ void async function () {
     }
 
     if (ledger) {
+        console.log('LEDGER', ledger)
         const port = 5001
         try { 
             if (parseStdout(await $`lsof -ti:${port}`)) {
@@ -147,12 +140,15 @@ void async function () {
 
         process.env.PUBLIC_SPECULOS_PORT = `${port}`
         process.env.PUBLIC_LEDGER_APP = ledger
-
-        $`npm run dev:ledger --app=${ledger}`
+        $`scripts/ledger/emulate -a ${ledger}`
+        /** Wait to push proxy announcement later in terminal run */
+        setTimeout(() => {
+            $`npx esno scripts/ledger/proxy.ts`
+        }, 5000)
     }
 
     if (trezor) {
-        $`npm run dev:trezor`
+        $`scripts/trezor/emulate`
     }
 
     $`npm run dev --workspace @casimir/${app}`

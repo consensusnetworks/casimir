@@ -1,6 +1,6 @@
 import express from 'express'
 import useUsers from '../providers/users'
-import userCollection from '../collections/users'
+import { userCollection } from '../collections/users'
 const router = express.Router()
 
 const { getMessage, updateMessage } = useUsers()
