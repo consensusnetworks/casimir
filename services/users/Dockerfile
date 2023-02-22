@@ -1,5 +1,5 @@
 # Use Node 18 as the base image
-FROM node:18
+FROM --platform=linux/amd64 node:18
 
 # Set the working directory to /app
 WORKDIR /app

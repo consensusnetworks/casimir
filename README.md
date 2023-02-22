@@ -35,10 +35,6 @@ Make sure your development environment has these prerequisites.
 
 > 🚩 You also need to make sure to have at least one SSH authentication key on your GitHub account (for the git cloning of submodules in various scripts). See [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
-### Scripts and Dependencies
-
-We are using [npm workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) to simplify monorepo development workflows while keeping project-wide resources accessible.
-
 ### Setup
 
 Clone the repository, checkout a new branch from develop, and install all workspace dependencies.
@@ -52,7 +48,7 @@ npm install
 
 > 🚩 'All workspace dependencies' includes `package.json` dependencies listed in the project root and any workspace subdirectories. See [Scripts and dependencies](#-scripts-and-dependencies).
 
-### Apps
+### Serve
 
 You can get up and running without configuration. You can also mock local backend changes and customize your environment.
 
@@ -173,7 +169,7 @@ Install all monorepo dependencies.
 npm install
 ```
 
-Clean all monorepo dependencies (remove all `node_modules` before a fresh install).
+Clean all monorepo dependencies (remove all `node_modules` and `package-lock.json` before a fresh install).
 
 ```zsh
 npm run clean

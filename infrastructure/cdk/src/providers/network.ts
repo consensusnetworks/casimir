@@ -43,18 +43,15 @@ export class NetworkStack extends cdk.Stack {
       domainName: absoluteRootDomain
     }) as route53.HostedZone
 
-    /** Create a shared certificate, VPC, and cluster for the stage for the stage */
+    /** Create a stage-specific Ec2 VPC and ECS cluster */
+    this.vpc = new ec2.Vpc(this, config.getFullStackResourceName(this.name, 'vpc'))
+    this.cluster = new ecs.Cluster(this, config.getFullStackResourceName(this.name, 'cluster'), { vpc: this.vpc })
+
+    /** Create a stage-specific SSL certificate */
     this.certificate = new certmgr.Certificate(this, config.getFullStackResourceName(this.name, 'cert'), {
       domainName: rootDomain,
-      subjectAlternativeNames: Object.values(subdomains).map((subdomain: string) => `${subdomain}.${rootDomain}`),
+      subjectAlternativeNames: [`${subdomains.wildcard}.${rootDomain}`],
       validation: certmgr.CertificateValidation.fromDns(this.hostedZone)
-    })
-    this.vpc = new ec2.Vpc(this, config.getFullStackResourceName(this.name, 'vpc'))
-    this.cluster = new ecs.Cluster(this, config.getFullStackResourceName(this.name, 'cluster'), {
-      capacity: {
-        instanceType: new ec2.InstanceType('t3.micro')
-      },
-      vpc: this.vpc
     })
   }
 }

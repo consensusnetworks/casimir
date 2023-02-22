@@ -24,7 +24,7 @@ export class UsersStack extends cdk.Stack {
         const { certificate, cluster, hostedZone } = props
 
         /** Create a load-balanced service for the users express API */
-        const service = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, config.getFullStackResourceName(this.name, 'fargate'), {
+        const service = new ecsPatterns.ApplicationLoadBalancedFargateService(this, config.getFullStackResourceName(this.name, 'fargate'), {
             certificate,
             cluster,
             domainName: `${subdomains.users}.${rootDomain}`, // e.g. users.casimir.co or users.dev.casimir.co
@@ -36,17 +36,15 @@ export class UsersStack extends cdk.Stack {
                     PROJECT: project,
                     STAGE: stage
                 }
-            },
-            memoryLimitMiB: 512
+            }
         })
 
-        /** Create a DNS A record for the users load balancer */
+        /** Create an A record for the landing page www subdomain */
         new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record'), {
             recordName: `${subdomains.users}.${rootDomain}`,
             zone: hostedZone as route53.IHostedZone,
             target: route53.RecordTarget.fromAlias(new route53targets.LoadBalancerTarget(service.loadBalancer)),
             ttl: cdk.Duration.minutes(1)
         })
-
     }
 }

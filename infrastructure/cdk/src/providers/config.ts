@@ -5,14 +5,16 @@ import { ProjectConfig } from '../interfaces/ProjectConfig'
  * CDK app config
  */
 export class Config implements ProjectConfig {
-    /** List of required environment variables */
-    public readonly requiredEnvVars = ['PROJECT', 'STAGE', 'AWS_ACCOUNT', 'AWS_REGION']
     public readonly project
     public readonly stage
     public readonly env
     public readonly rootDomain
     public readonly subdomains
     public readonly nodesIp
+
+    /** List of required environment variables */
+    public readonly requiredEnvVars = ['PROJECT', 'STAGE', 'AWS_ACCOUNT', 'AWS_REGION']
+
     constructor() {
         this.checkEnvVars()
         this.project = pascalCase(process.env.PROJECT as string)
@@ -32,8 +34,8 @@ export class Config implements ProjectConfig {
     }
 
     /**
-     * Check for required environment variables
-     * @throws {Error} If any required environment variables are missing
+     * Check for required environment variables and exit if any are missing
+     * @returns void
      */
     checkEnvVars(): void {
         this.requiredEnvVars.forEach(v => {
