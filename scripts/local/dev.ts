@@ -2,28 +2,6 @@ import { $, argv, chalk, echo } from 'zx'
 import { getSecret } from '@casimir/aws-helpers'
 import { parseStdout } from '@casimir/zx-helpers'
 
-/** Local apps and configuration */
-const apps = {
-    web: {
-        chains: ['ethereum'],
-        infrastructure: 'cdk',
-        services: ['users']
-    }
-}
-
-const forks = {
-    ethereum: {
-        mainnet: 'mainnet',
-        testnet: 'goerli'
-    }
-}
-
-/** The name of the CDK project */
-const project = process.env.PROJECT || 'casimir'
-
-/** The default development stage of the CDK project */
-const stage = process.env.STAGE || 'dev'
-
 /**
  * Run a Casimir dev server
  * 
@@ -38,9 +16,27 @@ const stage = process.env.STAGE || 'dev'
  */
 void async function () {
 
+    /** Local apps and configuration */
+    const apps = {
+        web: {
+            chains: ['ethereum'],
+            infrastructure: 'cdk',
+            services: ['users']
+        }
+    }
+
+    /** Chain forks */
+    const forks = {
+        ethereum: {
+            mainnet: 'mainnet',
+            testnet: 'goerli'
+        }
+    }
+
     /** Set project-wide variables */
-    process.env.PROJECT = project
-    process.env.STAGE = stage
+    process.env.PROJECT = process.env.PROJECT || 'casimir'
+    process.env.STAGE = process.env.STAGE || 'dev'
+    process.env.PUBLIC_STAGE = process.env.STAGE // Pass stage to client apps
 
     /** Todo get network/fork nonce based on selection and predict address */
     process.env.PUBLIC_SSV_ADDRESS = '0x07E05700CB4E946BA50244e27f01805354cD8eF0' // '0xaaf5751d370d2fD5F1D5642C2f88bbFa67a29301'

@@ -14,7 +14,9 @@ export default function useEnvironment() {
         if (import.meta.env.PUBLIC_AUTH_PORT) {
             return `http://localhost:${import.meta.env.PUBLIC_AUTH_PORT}`
         } else {
-            return `https://users.${import.meta.env.PUBLIC_STAGE || 'dev'}.casimir.co`
+            const stage = import.meta.env.PUBLIC_STAGE
+            const subdomain = stage === 'prod' ? '' : `${stage}.`
+            return `https://users.${subdomain}casimir.co`
         }
     }
     return {
