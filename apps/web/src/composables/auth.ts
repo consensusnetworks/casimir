@@ -24,7 +24,7 @@ export default function useAuth() {
             },
             body: JSON.stringify(signupCredentials)
         }
-        return await fetch(`${authBaseURL}/signupLogin`, requestOptions)
+        return await fetch(`${usersBaseURL}/signupLogin`, requestOptions)
     }
     
     async function signUpAuth(signupCredentials: SignupLoginCredentials) {
@@ -35,7 +35,7 @@ export default function useAuth() {
             },
             body: JSON.stringify(signupCredentials)
         }
-        const response = await fetch(`${authBaseURL}/signup`, requestOptions)
+        const response = await fetch(`${usersBaseURL}/signup`, requestOptions)
         return response
     }
 

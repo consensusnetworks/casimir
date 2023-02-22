@@ -17,7 +17,10 @@ import Assets from '@/pages/assets/Assets.vue'
 import Test from '@/pages/test/Test.vue'
 // @ts-ignore
 import ChartTest from '@/pages/chart-test/ChartTest.vue'
-
+// @ts-ignore
+import FrontPage from '@/pages/landing/views/FrontPage.vue'
+// @ts-ignore
+import UserDashboard from '@/pages/user-dash/UserDashboard.vue'
 // import NotFound from '@/pages/not-found/NotFound.vue'
 
 
@@ -26,7 +29,13 @@ const routes = [
     path: '/', 
     name: Landing, 
     component: Landing,
-    meta: { authorize: [] }
+    meta: { authorize: [] },
+},
+{ 
+    path: '/user-dashboard:id', 
+    name: UserDashboard, 
+    component: UserDashboard,
+    meta: { authorize: [] },
 },
 { 
     path: '/stake', 
@@ -47,12 +56,13 @@ const routes = [
             component: ETHConfirmStake,
         }
     ]
-},{ 
-    path: '/assets', 
-    name: Assets, 
-    component: Assets,
-    meta: { authorize: [] }
 },
+// { 
+//     path: '/assets', 
+//     name: Assets, 
+//     component: Assets,
+//     meta: { authorize: [] }
+// },
 { 
     path: '/test', 
     name: Test, 

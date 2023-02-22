@@ -8,12 +8,20 @@ const props = defineProps({
         type: Array,
         required: true
     },
+    chartId: {
+        type: String,
+        required: true
+    },
     updateTooltipInfo: {
         type: Function,
         default: (e) => {
             // console.log('hovering over: ', e)
         }
     },
+    lineColor: {
+        type: String,
+        default: '#80ABFF'
+    }, 
     yAxisValue: {
         type: String, 
         required: true
@@ -36,7 +44,7 @@ const props = defineProps({
 onMounted(() => {
     let WIDTH = 0
     let HEIGHT =  0
-    const svg_line_chart_container_el = document.getElementById('line_chart_container')
+    const svg_line_chart_container_el = document.getElementById('line_chart_container' + props.chartId)
 
     let line_chart_svg
     let g
@@ -106,7 +114,7 @@ onMounted(() => {
                 .attr('class', 'x axis')
                 .attr('transform', `translate(0, ${HEIGHT})`)
         } else {
-            d3.select('#line_chart').select('svg').select('g').select('g')
+            d3.select('#'+props.chartId).select('svg').select('g').select('g')
                 .attr('class', 'x axis')
                 .attr('transform', `translate(0, ${HEIGHT})`)
         }
@@ -114,7 +122,7 @@ onMounted(() => {
             yAxis = g.append('g')
                 .attr('class', 'y axis')
         } else {
-            d3.select('#line_chart').select('svg').select('g').select('g')
+            d3.select('#'+props.chartId).select('svg').select('g').select('g')
                 .attr('class', 'y axis')
         }
         
@@ -205,6 +213,7 @@ onMounted(() => {
             g.select('.line')
             .transition(d3.transition().duration(500))
             .attr('d', line(data))
+            .attr('stroke', props.lineColor)
         }
 
         
@@ -220,10 +229,10 @@ onMounted(() => {
     const createViz = () => {
 
         if(!line_chart_svg){
-            line_chart_svg = d3.select('#line_chart').append('svg')
+            line_chart_svg = d3.select('#'+props.chartId).append('svg')
                 .attr('viewBox', `0 0 ${WIDTH + 10} ${HEIGHT}`)
         }else {
-            d3.select('#line_chart').select('svg')
+            d3.select('#'+props.chartId).select('svg')
                 .attr('viewBox', `0 0 ${WIDTH + 10} ${HEIGHT}`)
         }
         
@@ -232,13 +241,17 @@ onMounted(() => {
         // 150 being too small to show any labels
         let xTransition = 30
         let yTransition = -20
-        if(WIDTH <= 150 ){
+        if(WIDTH <= 50 ){
+            xTransition = -2
+        }else if(WIDTH <= 150 ){
             xTransition = 0
         } else if (HEIGHT <= height_breaking_point_small) {
             xTransition = 0
         }
 
-        if(HEIGHT <= 150 ){
+        if(HEIGHT <= 50 ){
+            yTransition = 4
+        }else if(HEIGHT <= 150 ){
             yTransition = 0
         } else if (WIDTH <= width_breaking_point_small) {
             yTransition = 0
@@ -257,13 +270,13 @@ onMounted(() => {
                 .attr('width', WIDTH )
                 .attr('height', HEIGHT )
         } else {
-            d3.select('#line_chart').select('svg').select('g')
+            d3.select('#'+props.chartId).select('svg').select('g')
                 .attr('transform', `translate(${
                         xTransition // hotizontal 
                     }, ${
                         yTransition // vertical
                     })`)
-            d3.select('#line_chart').select('svg').select('g').select('path')
+            d3.select('#'+props.chartId).select('svg').select('g').select('path')
                 .attr('class', 'line')
                     .attr('width', WIDTH )
                     .attr('height', HEIGHT )
@@ -294,11 +307,11 @@ onMounted(() => {
 
 <template>
   <div
-    id="line_chart_container"
+    :id="'line_chart_container' + props.chartId"
     class="w-full h-full text-center align-middle"
   >
     <div
-      id="line_chart"
+      :id="props.chartId"
       class="block m-auto h-full w-full"
     />
   </div>

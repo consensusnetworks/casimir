@@ -5,7 +5,9 @@
   
 <template>
   <Suspense>
-    <component :is="DefaultLayout">
+    <component
+      :is="DefaultLayout"
+    >
       <RouterView />
     </component>
   </Suspense>

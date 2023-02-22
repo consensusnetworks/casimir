@@ -19,7 +19,6 @@ const config: UserConfig = {
     'global': 'globalThis'
   },
   optimizeDeps: {
-    // include: ['iotex-antenna'],
     esbuildOptions: {
       plugins: [
         NodeGlobalsPolyfillPlugin({
@@ -31,13 +30,14 @@ const config: UserConfig = {
   },
   build: {
     commonjsOptions: {
-      include: [/* /iotex-antenna/, */ /node_modules/]
+      include: [/node_modules/]
     }
   },
   resolve: {
     alias: {  
       // Polyfill node globals
       stream: 'rollup-plugin-node-polyfills/polyfills/stream',
+      crypto: 'crypto-browserify',
 
       // Alias internal src paths
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src')

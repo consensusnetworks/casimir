@@ -1,9 +1,14 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+
+import useUsers from '@/composables/users'
+const { user } = useUsers()
+
+</script>
   
 <template>
   <div class="flex justify-center items-center">
     <router-link 
-      to="/stake/eth"
+      :to="user? '/stake/eth':''"
       class="flex gap-15 items-center pb-20 staking_nav_item"
     >
       <img
