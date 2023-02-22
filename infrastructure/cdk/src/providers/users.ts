@@ -27,8 +27,6 @@ export class UsersStack extends cdk.Stack {
         const service = new ecsPatterns.ApplicationLoadBalancedFargateService(this, config.getFullStackResourceName(this.name, 'fargate'), {
             certificate,
             cluster,
-            domainName: `${subdomains.users}.${rootDomain}`, // e.g. users.casimir.co or users.dev.casimir.co
-            domainZone: hostedZone,
             taskImageOptions: {
                 containerPort: 4000,
                 image: ecs.ContainerImage.fromAsset(this.assetPath),
