@@ -19,7 +19,6 @@
  *
  * @param string - The input string
  * @returns A snake_case string from the input string
- *
  */
 export function snakeCase(string: string): string {
   return string.replace(/\W+/g, ' ')
@@ -27,3 +26,16 @@ export function snakeCase(string: string): string {
     .map(word => word.toLowerCase())
     .join('_')
 }
+
+/**
+ * Converts any string to kebab-case.
+ * 
+ * @param string - The input string
+ * @returns A kebab-case string from the input string
+ */
+export function kebabCase(string: string): string {
+  return string.replace(/\W+/g, ' ')
+    .split(/ |\B(?=[A-Z])/)
+    .map(word => word.toLowerCase())
+    .join('-')
+  }

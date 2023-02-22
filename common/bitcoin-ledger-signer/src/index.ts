@@ -90,8 +90,8 @@ export default class BitcoinLedgerSigner {
         }
     }
 
-    async signTransaction(path: string, transaction: any) {
-    }
+    // async signTransaction(path: string, transaction: any) {
+    // }
 
     async sendTransaction({from, to, value}: TransactionInit): Promise<string> {
         try {

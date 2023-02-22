@@ -19,5 +19,5 @@ jobs:
         env:
           PUBLIC_STAGE: ${{ env.STAGE }}
 
-      - name: Test cdk stacks
-        run: npm run test --workspace @casimir/cdk
+      - name: Test cdk deployment
+        run: npm run test:cdk

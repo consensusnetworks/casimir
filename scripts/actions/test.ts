@@ -1,5 +1,5 @@
 import { $, argv, echo } from 'zx'
-import { getCredentials } from '@casimir/aws-helpers'
+import { loadCredentials } from '@casimir/aws-helpers'
 
 /**
  * Test the GitHub Actions workflows in `.github/workflows`
@@ -18,7 +18,7 @@ void async function () {
     const workflow = workflows.includes(argv.workflow) ? argv.workflow : 'push'
 
     /** Get AWS credentials for deployment */
-    const { accessKeyId, secretAccessKey } = await getCredentials()
+    const { accessKeyId, secretAccessKey } = await loadCredentials()
 
     /** Get Slack webhook URL for notifications */
     const slackWebhookURL = process.env.SLACK_WEBHOOK_URL

@@ -1,41 +1,39 @@
 import * as cdk from 'aws-cdk-lib'
-import { Template } from 'aws-cdk-lib/assertions'
-import { DnsStack } from '../lib/dns'
-import { EtlStack } from '../lib/etl'
-import { AuthStack } from '../lib/auth'
-import { LandingStack } from '../lib/landing'
+import * as assertions from 'aws-cdk-lib/assertions'
+import { Config } from '../src/providers/config'
+import { UsersStack } from '../src/providers/users'
+import { NetworkStack } from '../src/providers/network'
+import { EtlStack } from '../src/providers/etl'
+import { LandingStack } from '../src/providers/landing'
+import { NodesStack } from '../src/providers/nodes'
 
 test('All stacks created', () => {
-
-  const defaultEnv = { account: '257202027633', region: 'us-east-2' }
-  const project = 'Casimir'
-  const stage = 'Test'
-
+  const config = new Config()
+  const { env } = config
   const app = new cdk.App()
-  const dnsStack = new DnsStack(app, `${project}DnsStack${stage}`, { env: defaultEnv, project, stage })
-  const { domain, dnsRecords, hostedZone } = dnsStack
-  const etlStack = new EtlStack(app, `${project}EtlStack${stage}`, { env: defaultEnv, project, stage })
-  const landingStack = new LandingStack(app, `${project}LandingStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
-  const authStack = new AuthStack(app, `${project}AuthStack${stage}`, { env: defaultEnv, project, stage, domain, dnsRecords, hostedZone })
+  const { hostedZone, certificate, cluster } = new NetworkStack(app, config.getFullStackName('network'), { env })
+  const etlStack = new EtlStack(app, config.getFullStackName('etl'), { env })
+  const usersStack = new UsersStack(app, config.getFullStackName('users'), { env, hostedZone, certificate, cluster })
+  const nodesStack = new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone, certificate })
+  const landingStack = new LandingStack(app, config.getFullStackName('landing'), { env, hostedZone })
 
-  const etlTemplate = Template.fromStack(etlStack)
-  console.log(etlTemplate)
+  const etlTemplate = assertions.Template.fromStack(etlStack)
   Object.keys(etlTemplate.findOutputs('*')).forEach(output => {
-    console.log(output)
+    expect(output).toBeDefined()
+  })
+  
+  const usersTemplate = assertions.Template.fromStack(usersStack)
+  Object.keys(usersTemplate.findOutputs('*')).forEach(output => {
+    expect(output).toBeDefined()
+  })
+  
+  const nodesTemplate = assertions.Template.fromStack(nodesStack)
+  Object.keys(nodesTemplate.findOutputs('*')).forEach(output => {
     expect(output).toBeDefined()
   })
 
-  const landingTemplate = Template.fromStack(landingStack)
-  console.log(landingTemplate)
+  const landingTemplate = assertions.Template.fromStack(landingStack)
   Object.keys(landingTemplate.findOutputs('*')).forEach(output => {
-    console.log(output)
-    expect(output).toBeDefined()
-  })
-
-  const authTemplate = Template.fromStack(authStack)
-  console.log(authTemplate)
-  Object.keys(authTemplate.findOutputs('*')).forEach(output => {
-    console.log(output)
     expect(output).toBeDefined()
   })
 })

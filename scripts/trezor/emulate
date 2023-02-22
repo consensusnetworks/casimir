@@ -12,9 +12,6 @@ else
     echo "PROFILE is not set, using default profile '$PROFILE'"
 fi
 
-# Fetch submodules for trezor apps
-git submodule update --init --recursive
-
 # Todo programmatically launch emulator with seed
 # # Get the bip39 seed from AWS
 # seed_secret_id=consensus-networks-bip39-seed

@@ -12,9 +12,6 @@ import { getSecret } from '@casimir/aws-helpers'
  *      - https://hardhat.org/hardhat-network/docs/overview
  */
 void async function () {
-    // Fetch remote submodule code
-    $`git submodule update --init --recursive`
-
     // Get shared seed
     const seed = await getSecret('consensus-networks-bip39-seed')
     process.env.BIP39_SEED = seed

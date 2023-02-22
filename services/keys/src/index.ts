@@ -1,7 +1,7 @@
 import path from 'path'
 import url from 'url'
-import CLI from './providers/CLI'
-import SSV from './providers/SSV'
+import { CLI } from './providers/cli'
+import { SSV } from './providers/ssv'
 
 export { SSV }
 

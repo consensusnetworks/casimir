@@ -8,10 +8,8 @@ import { Account } from '@casimir/types'
 import { Currency } from '@casimir/types'
 import { ProviderString } from '@casimir/types'
 
-// Demo const for user
+const { usersBaseURL, ethereumURL } = useEnvironment()
 import { dummy_user_account } from '@/pages/user-dash/composables/dummy_data.js'
-
-const { authBaseURL, ethereumURL } = useEnvironment()
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const user = ref<User | null>(null)
 
@@ -80,7 +78,7 @@ export default function useUsers () {
                     account: accountToAdd
                 })
             }
-            const response = await fetch(`${authBaseURL}/users/add-sub-account`, requestOptions)
+            const response = await fetch(`${usersBaseURL}/users/add-sub-account`, requestOptions)
             const json = await response.json()
             return json
         }
@@ -102,11 +100,11 @@ export default function useUsers () {
                 currency
             })
         }
-        return await fetch(`${authBaseURL}/users/remove-sub-account`, requestOptions)
+        return await fetch(`${usersBaseURL}/users/remove-sub-account`, requestOptions)
     }
     
     async function getMessage(address: string) {
-        const response = await fetch(`${authBaseURL}/auth/${address}`)
+        const response = await fetch(`${usersBaseURL}/auth/${address}`)
         const json = await response.json()
         const { message } = json
         return message
@@ -120,7 +118,7 @@ export default function useUsers () {
             },
             body: JSON.stringify({ primaryAddress, updatedProvider, updatedAddress })
         }
-        return await fetch(`${authBaseURL}/users/update-primary-account`, requestOptions)
+        return await fetch(`${usersBaseURL}/users/update-primary-account`, requestOptions)
     }
 
     const createDemoUser = (toggle: boolean) => {

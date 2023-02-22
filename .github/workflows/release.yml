@@ -42,7 +42,7 @@ jobs:
           PUBLIC_STAGE: ${{ env.STAGE }}
 
       - name: Deploy cdk infrastructure
-        run: npm run deploy
+        run: npm run deploy:cdk
 
       - name: Sync new version with develop
         if: ${{ github.actor != 'nektos/act' }}

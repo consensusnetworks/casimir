@@ -10,7 +10,7 @@
         "task:clean": "npx hardhat clean",
         "task:compile": "npm run task:clean && npx hardhat compile --show-stack-traces",
         "pretest": "npm run task:compile",
-        "postinstall": "npm run task:compile"
+        "prepare": "npm run task:compile"
     },
     "dependencies": {
         "@chainlink/contracts": "^0.5.1",
