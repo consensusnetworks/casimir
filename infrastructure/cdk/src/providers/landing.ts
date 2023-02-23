@@ -39,10 +39,12 @@ export class LandingStack extends cdk.Stack {
     /** Create a requisite us-east-1 certificate for distribution if needed */
     const distributionCertificate = (() => {
       if (certificate?.env.region === 'us-east-1') return certificate
-      return new certmgr.Certificate(this, config.getFullStackResourceName(this.name, 'cert'), {
+      /** Replace deprecated method when cross-region support is out of beta */
+      return new certmgr.DnsValidatedCertificate(this, config.getFullStackResourceName(this.name, 'cert'), {
         domainName: rootDomain,
         subjectAlternativeNames: [`${subdomains.landing}.${rootDomain}`],
-        validation: certmgr.CertificateValidation.fromDns(hostedZone as route53.IHostedZone)
+        hostedZone,
+        region: 'us-east-1'
       })
     })()
 
