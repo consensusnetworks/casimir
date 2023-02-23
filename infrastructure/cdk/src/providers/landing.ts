@@ -37,6 +37,7 @@ export class LandingStack extends cdk.Stack {
 
     /** Create a cloudfront distribution for the landing page */
     const distribution = new cloudfront.Distribution(this, config.getFullStackResourceName(this.name, 'distribution'), {
+      certificate,
       defaultRootObject: 'index.html',
       errorResponses: [
         {
@@ -56,8 +57,7 @@ export class LandingStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         origin: new cloudfrontOrigins.S3Origin(bucket, { originAccessIdentity })
       },
-      domainNames: [rootDomain, `${subdomains.landing}.${rootDomain}`],
-      certificate
+      domainNames: [rootDomain, `${subdomains.landing}.${rootDomain}`]
     })
 
     /** Deploy the landing page to the bucket */

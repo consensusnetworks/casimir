@@ -6,16 +6,19 @@ import { NetworkStack } from '../src/providers/network'
 import { EtlStack } from '../src/providers/etl'
 import { LandingStack } from '../src/providers/landing'
 import { NodesStack } from '../src/providers/nodes'
+import { DnsStack } from '../src/providers/dns'
 
 test('All stacks created', () => {
   const config = new Config()
   const { env } = config
   const app = new cdk.App()
-  const { hostedZone, certificate, cluster } = new NetworkStack(app, config.getFullStackName('network'), { env })
+
+  const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName('dns'), { env: { ...env, region: 'us-east-1' } })
+  const { cluster } = new NetworkStack(app, config.getFullStackName('network'), { env })
   const etlStack = new EtlStack(app, config.getFullStackName('etl'), { env })
-  const usersStack = new UsersStack(app, config.getFullStackName('users'), { env, hostedZone, certificate, cluster })
-  const nodesStack = new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone, certificate })
-  const landingStack = new LandingStack(app, config.getFullStackName('landing'), { env, hostedZone })
+  const usersStack = new UsersStack(app, config.getFullStackName('users'), { env, hostedZone, cluster, certificate, crossRegionReferences: true })
+  const nodesStack = new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone })
+  const landingStack = new LandingStack(app, config.getFullStackName('landing'), { env, hostedZone, certificate, crossRegionReferences: true })
 
   const etlTemplate = assertions.Template.fromStack(etlStack)
   Object.keys(etlTemplate.findOutputs('*')).forEach(output => {
