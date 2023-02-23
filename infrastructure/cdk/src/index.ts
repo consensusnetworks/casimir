@@ -11,7 +11,7 @@ import { DnsStack } from './providers/dns'
 const config = new Config()
 const { env } = config
 const app = new cdk.App()
-const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName('dns'), { env: { ...env, region: 'us-east-1' } })
+const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName('dns'), { env: { ...env, region: 'us-east-1' }, crossRegionReferences: true })
 const { cluster } = new NetworkStack(app, config.getFullStackName('network'), { env })
 if (process.env.STAGE !== 'prod') {
     /** Create development-only stacks */

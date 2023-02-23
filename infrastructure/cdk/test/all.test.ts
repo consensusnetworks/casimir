@@ -13,7 +13,7 @@ test('All stacks created', () => {
   const { env } = config
   const app = new cdk.App()
 
-  const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName('dns'), { env: { ...env, region: 'us-east-1' } })
+  const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName('dns'), { env: { ...env, region: 'us-east-1' }, crossRegionReferences: true })
   const { cluster } = new NetworkStack(app, config.getFullStackName('network'), { env })
   const etlStack = new EtlStack(app, config.getFullStackName('etl'), { env })
   const usersStack = new UsersStack(app, config.getFullStackName('users'), { env, hostedZone, cluster, certificate, crossRegionReferences: true })
