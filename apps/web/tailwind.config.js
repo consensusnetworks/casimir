@@ -117,6 +117,10 @@ module.exports = {
             's_md' : {'min':'900px'},
             's_sm' : {'min':'700px'},
             's_xsm' : {'min':'550px'},
+
+            // dashboard breakpoints
+            'dash_s_sm' : {'min':'750px'},
+            'dash_mid': {'min': '700px', 'max': '750px'},
         },
     },
     plugins: []

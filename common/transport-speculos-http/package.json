@@ -7,6 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@ledgerhq/hw-transport": "^6.27.2"
+    "@ledgerhq/hw-transport": "^6.27.10"
   }
 }

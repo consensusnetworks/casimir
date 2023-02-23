@@ -41,7 +41,7 @@ jobs:
           PUBLIC_STAGE: ${{ env.STAGE }}
 
       - name: Deploy cdk infrastructure
-        run: npm run deploy
+        run: npm run deploy:cdk
 
       - name: Select success emoji
         if: ${{ success() }}

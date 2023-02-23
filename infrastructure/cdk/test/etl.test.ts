@@ -1,18 +1,16 @@
 import * as cdk from 'aws-cdk-lib'
-import { Template } from 'aws-cdk-lib/assertions'
-import { EtlStack } from '../lib/etl'
+import * as assertions from 'aws-cdk-lib/assertions'
+import { Config } from '../src/providers/config'
+import { EtlStack } from '../src/providers/etl'
 import { eventSchema, aggSchema, schemaToGlueColumns } from '@casimir/data'
 
 test('ETL stack created', () => {
-
-  const defaultEnv = { account: '257202027633', region: 'us-east-2' }
-  const project = 'Casimir'
-  const stage = 'Test'
-
+  const config = new Config()
+  const { env } = config
   const app = new cdk.App()
-  const etlStack = new EtlStack(app, `${project}EtlStack${stage}`, { env: defaultEnv, project, stage })
+  const etlStack = new EtlStack(app, config.getFullStackName('etl'), { env })
 
-  const etlTemplate = Template.fromStack(etlStack)
+  const etlTemplate = assertions.Template.fromStack(etlStack)
 
   const resource = etlTemplate.findResources('AWS::Glue::Table')
 

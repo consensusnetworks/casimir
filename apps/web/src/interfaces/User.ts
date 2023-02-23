@@ -9,4 +9,5 @@ export interface User {
     stake?: string
     rewards?: string
     pools?: Pool[]
+    address: string
 }

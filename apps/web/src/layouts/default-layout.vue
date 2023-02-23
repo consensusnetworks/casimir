@@ -1,21 +1,56 @@
 <script lang="ts" setup>
 import TopNav from '@/components/navigation/TopNav.vue'
+// import useUsers from '@/composables/users'
+// import { onMounted, ref } from 'vue'
 
+// const { user } = useUsers()
+
+// const showNoUserWarning = ref(false)
+// const loadingWidthMeasurement = ref(0)
+// onMounted(() => {
+  // if(user.value.id.length === 0){
+  //   showNoUserWarning.value = true
+  //   const loadingInterval = setInterval(()=>{
+  //     if(loadingWidthMeasurement.value >= 100 || user.value.id.length > 0){
+  //       showNoUserWarning.value = false
+  //       clearInterval(loadingInterval)
+  //     }
+  //     loadingWidthMeasurement.value = loadingWidthMeasurement.value + 0.1
+  //   }, 10)
+  // }
+// })
 </script>
 
 <template>
-  <div>
-    <div class="sr-only noscreen:not-sr-only">
-      <div class="h-[100vh] flex flex-col ">
-        <div class="">
+  <div class="h-[100vh]">
+    <div class="h-[100%]">
+      <div class="h-full flex flex-col items-center">
+        <div class="min-w-[360px] w-full">
           <TopNav />
         </div>
-        <div
-          class="h-full w-full flex justify-center items-center"
+
+        <!-- <div
+          v-if="showNoUserWarning"
+          class="flex flex-col items-center justify-center w-full bg-blue_3"
         >
           <div
+            class=" 
+            max-w-[1280px] min-w-[360px] text-white 
+            py-15 px-25 text-center align-middle
+            "
+          >
+            You currently do not have any wallets connected, 
+            Visit our Multi-Wallet to connect your primary wallet. 
+          </div>
+          <div
+            class="bg-primary h-2 transition"
+            :style="`width: ${loadingWidthMeasurement}%;`"
+          />
+        </div> -->
+        <div class="w-full overflow-auto flex justify-center">
+          <div
             class="max-w-[1280px] min-w-[360px] h-full 
-          w-full overflow-auto px-25 py-margins"
+            w-full px-25 py-margins"
           >
             <slot />
           </div>
