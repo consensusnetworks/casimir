@@ -20,4 +20,4 @@ if (process.env.STAGE !== 'prod') {
     new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone, certificate })
 }
 /** Create remaining stacks */
-new LandingStack(app, config.getFullStackName('landing'), { env, hostedZone })
+new LandingStack(app, config.getFullStackName('landing'), { env, hostedZone, certificate })
