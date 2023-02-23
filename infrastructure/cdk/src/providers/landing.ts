@@ -1,5 +1,6 @@
 import { Construct } from 'constructs'
 import * as cdk from 'aws-cdk-lib'
+import * as certmgr from 'aws-cdk-lib/aws-certificatemanager'
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import * as s3 from 'aws-cdk-lib/aws-s3'
@@ -35,9 +36,19 @@ export class LandingStack extends cdk.Stack {
     const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, config.getFullStackResourceName(this.name, 'origin-access-identity'))
     bucket.grantRead(originAccessIdentity)
 
+    /** Create a requisite us-east-1 certificate for distribution if needed */
+    const distributionCertificate = (() => {
+      if (certificate?.env.region === 'us-east-1') return certificate
+      return new certmgr.Certificate(this, config.getFullStackResourceName(this.name, 'cert'), {
+        domainName: rootDomain,
+        subjectAlternativeNames: [`${subdomains.landing}.${rootDomain}`],
+        validation: certmgr.CertificateValidation.fromDns(hostedZone as route53.IHostedZone)
+      })
+    })()
+
     /** Create a cloudfront distribution for the landing page */
     const distribution = new cloudfront.Distribution(this, config.getFullStackResourceName(this.name, 'distribution'), {
-      certificate,
+      certificate: distributionCertificate,
       defaultRootObject: 'index.html',
       errorResponses: [
         {
