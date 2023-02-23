@@ -69,12 +69,6 @@ const routes = [
     component: Test,
     meta: { authorize: [] }
 },
-{ 
-    path: '/chart', 
-    name: ChartTest, 
-    component: ChartTest,
-    meta: { authorize: [] }
-},
 // { 
 //     path: '/:catchAll(.*)', 
 //     name: NotFound, 
