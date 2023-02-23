@@ -17,7 +17,7 @@ if (process.env.STAGE !== 'prod') {
     new UsersStack(app, config.getFullStackName('users'), { env, hostedZone, certificate, cluster })
 } else {
     /** Create production-only stacks */
-    new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone, certificate })
+    new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone })
 }
 /** Create remaining stacks */
 new LandingStack(app, config.getFullStackName('landing'), { env, hostedZone, certificate })

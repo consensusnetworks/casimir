@@ -28,7 +28,7 @@ export class NetworkStack extends cdk.Stack {
     super(scope, id, props)
 
     const config = new Config()
-    const { rootDomain, subdomains } = config
+    const { rootDomain, subdomains, env } = config
 
     /** Remove stage-specific subdomain */
     const absoluteRootDomain = (() => {
@@ -48,10 +48,11 @@ export class NetworkStack extends cdk.Stack {
     this.cluster = new ecs.Cluster(this, config.getFullStackResourceName(this.name, 'cluster'), { vpc: this.vpc })
 
     /** Create a stage-specific SSL certificate */
-    this.certificate = new certmgr.Certificate(this, config.getFullStackResourceName(this.name, 'cert'), {
+    this.certificate = new certmgr.DnsValidatedCertificate(this, config.getFullStackResourceName(this.name, 'cert'), {
       domainName: rootDomain,
       subjectAlternativeNames: [`${subdomains.wildcard}.${rootDomain}`],
-      validation: certmgr.CertificateValidation.fromDns(this.hostedZone)
+      hostedZone: this.hostedZone,
+      region: env.region
     })
   }
 }
