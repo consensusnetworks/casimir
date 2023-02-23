@@ -26,7 +26,6 @@ export class LandingStack extends cdk.Stack {
     const { rootDomain, subdomains } = config
     const { hostedZone, certificate } = props
 
-
     /** Create a bucket for the landing page */
     const bucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'bucket'), {
       accessControl: s3.BucketAccessControl.PRIVATE
