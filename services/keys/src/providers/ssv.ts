@@ -26,7 +26,7 @@ export class SSV {
         let operatorIndex = 0
         for (let index = 0; index < validatorCount; index++) {
             
-            /** Get deposit data and keys for validator */
+            /** Get deposit data and keys for validator using standard keygen */
             const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData(index)
             const keystore: string = JSON.stringify(await import(`../../mock/keystore-${index}.json`))
             const keystorePassword = 'Testingtest1234'
@@ -56,6 +56,42 @@ export class SSV {
                 withdrawalCredentials
             }
             validators.push(validator)
+
+            /** Get deposit data and keys for validator using DKG */
+
+            // curl --location --request POST 'http://0.0.0.0:8000/keygen' \
+            // --header 'Content-Type: application/json' \
+            // --data-raw '{
+            //     "operators": {
+            //         "1": "http://host.docker.internal:8081",
+            //         "2": "http://host.docker.internal:8082",
+            //         "3": "http://host.docker.internal:8083",
+            //         "4": "http://host.docker.internal:8084"
+            //     },
+            //     "threshold": 3,
+            //     "withdrawal_credentials": "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f",
+            //     "fork_version": "prater"
+            // }'
+            const startGeneration = await fetch('http://0.0.0.0:8000/keygen', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    operators: group.reduce((acc: Record<string, string>, o: Operator) => {
+                        acc[o.id] = o.url
+                        return acc
+                    }, {}),
+                    threshold: group.length - 1,
+                    withdrawal_credentials: withdrawalCredentials,
+                    fork_version: 'prater'
+                })
+            })
+            
+            const request = await startGeneration.json()
+            console.log('request', request)
+            // // curl --location --request GET 'http://0.0.0.0:8000/data/59c971e3477e19b48fc467bb6e300d8eab34cf32ae7eba35'
+            // const keydata = await fetch(`http://0.0.0.0:8000/data/${request_id}`)
         }
         return validators
     }

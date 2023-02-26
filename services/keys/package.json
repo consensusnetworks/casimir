@@ -3,8 +3,10 @@
     "private": "true",
     "main": "src/index.ts",
     "scripts": {
-        "dev": "tsnd ./src/index.ts",
         "build": "node build.js",
+        "dev": "tsnd ./src/index.ts",
+        "postdev": "docker compose -f scripts/resources/dkg/docker-compose.yaml down",
+        "predev": "docker compose -f scripts/resources/dkg/docker-compose.yaml up",
         "test": "jest --config jest.config.js"
     },
     "dependencies": {
