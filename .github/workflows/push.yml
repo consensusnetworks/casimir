@@ -39,6 +39,7 @@ jobs:
         run: npm run deploy:cdk
 
       - name: Slack the team
+        if: ${{ success() || failure() }}
         uses: slackapi/slack-github-action@v1.23.0
         with:
           payload: |

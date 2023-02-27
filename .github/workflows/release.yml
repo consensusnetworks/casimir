@@ -53,6 +53,7 @@ jobs:
           TARGET_BRANCH: develop
           
       - name: Slack the team
+        if: ${{ success() || failure() }}
         uses: slackapi/slack-github-action@v1.23.0
         with:
           payload: |
