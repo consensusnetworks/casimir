@@ -11,8 +11,8 @@ export default function useEnvironment() {
      * @returns {string} The base URL for the users API
      */
     function getUsersBaseURL(): string {
-        if (import.meta.env.PUBLIC_AUTH_PORT) {
-            return `http://localhost:${import.meta.env.PUBLIC_AUTH_PORT}`
+        if (import.meta.env.PUBLIC_USERS_PORT) {
+            return `http://localhost:${import.meta.env.PUBLIC_USERS_PORT}`
         } else {
             const stage = import.meta.env.PUBLIC_STAGE
             const subdomain = stage === 'prod' ? '' : `${stage}.`
