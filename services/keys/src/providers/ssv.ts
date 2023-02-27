@@ -1,8 +1,8 @@
-import { fetch } from 'undici'
-import { ISharesKeyPairs, SSVKeys } from 'ssv-keys'
-import { Operator, Validator } from '@casimir/types'
+import { SSVKeys } from 'ssv-keys'
+import { Validator } from '@casimir/types'
 import { CreateValidatorsOptions } from '../interfaces/CreateValidatorsOptions'
 import { DepositData } from '../interfaces/DepositData'
+import operators from '../data/operators.json'
 
 export class SSV {
 
@@ -16,118 +16,100 @@ export class SSV {
     async createValidators(options?: CreateValidatorsOptions): Promise<Validator[]> {
 
         /** Use select {operatorIds} to create {validatorCount} validators */
-        const operatorIds = options?.operatorIds
+        const operatorIds = options?.operatorIds || [1, 2, 3, 4, 5, 6, 7, 8]
         const validatorCount = options?.validatorCount || 1
+        const withdrawalAddress = options?.withdrawalAddress || '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
 
         const validators: Validator[] = []
-        const operators = await this.getOperators(operatorIds)
-
         const groupSize = 4
         let operatorIndex = 0
         for (let index = 0; index < validatorCount; index++) {
-            
-            /** Get deposit data and keys for validator using standard keygen */
-            const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData(index)
-            const keystore: string = JSON.stringify(await import(`../../mock/keystore-${index}.json`))
-            const keystorePassword = 'Testingtest1234'
-            const privateKey = await this.keys.getPrivateKeyFromKeystoreData(keystore, keystorePassword)
-            
+
             /** Use next operator index for group slicing */
             const nextOperatorIndex = operatorIndex + groupSize
 
-            /** Create threshold for group of operators */
-            const group = operators.slice(operatorIndex, nextOperatorIndex)
-            const groupIds = group.map((o: Operator) => o.id)
-            const groupPublicKeys = group.map((o: Operator) => o.public_key)
-            const { shares }: ISharesKeyPairs = await this.keys.createThreshold(privateKey, groupIds)
-            const encryptedShares = await this.keys.encryptShares(groupPublicKeys, shares, SSVKeys.SHARES_FORMAT_ABI)
-
-            /** Update operator starting index for next group */
-            operatorIndex = nextOperatorIndex
-
-            /** Create validator */
-            const validator: Validator = {
-                depositDataRoot,
-                publicKey,
-                operatorIds: groupIds, 
-                sharesEncrypted: encryptedShares.map(s => s.privateKey),
-                sharesPublicKeys: encryptedShares.map(s => s.publicKey),
-                signature,
-                withdrawalCredentials
-            }
-            validators.push(validator)
-
-            /** Get deposit data and keys for validator using DKG */
-
-            // curl --location --request POST 'http://0.0.0.0:8000/keygen' \
-            // --header 'Content-Type: application/json' \
-            // --data-raw '{
-            //     "operators": {
-            //         "1": "http://host.docker.internal:8081",
-            //         "2": "http://host.docker.internal:8082",
-            //         "3": "http://host.docker.internal:8083",
-            //         "4": "http://host.docker.internal:8084"
-            //     },
-            //     "threshold": 3,
-            //     "withdrawal_credentials": "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f",
-            //     "fork_version": "prater"
-            // }'
-            const startGeneration = await fetch('http://0.0.0.0:8000/keygen', {
+            /** Start a keygen for the current group of operators */
+            const groupIds = operatorIds.slice(operatorIndex, nextOperatorIndex)
+            const group = this.getOperatorGroup(groupIds)
+            
+            const keyGen = await fetch('http://0.0.0.0:8000/keygen', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    operators: group.reduce((acc: Record<string, string>, o: Operator) => {
-                        acc[o.id] = o.url
-                        return acc
-                    }, {}),
-                    threshold: group.length - 1,
-                    withdrawal_credentials: withdrawalCredentials,
+                    operators: group,
+                    threshold: groupIds.length - 1,
+                    withdrawal_credentials: `01${'0'.repeat(22)}${withdrawalAddress.split('0x')[1]}`,
                     fork_version: 'prater'
                 })
             })
-            
-            const request = await startGeneration.json()
-            console.log('request', request)
-            // // curl --location --request GET 'http://0.0.0.0:8000/data/59c971e3477e19b48fc467bb6e300d8eab34cf32ae7eba35'
-            // const keydata = await fetch(`http://0.0.0.0:8000/data/${request_id}`)
+
+            const { request_id: requestId } = await keyGen.json()
+
+            const keyData = await this.retry(`http://0.0.0.0:8000/data/${requestId}`)
+            const { output } = await keyData.json()
+            console.log(output)
+
+            const depositData = await this.retry(`http://0.0.0.0:8000/deposit_data/${requestId}`)
+            console.log(await depositData.json())
+
+            /** Update operator starting index for next group */
+            operatorIndex = nextOperatorIndex
+
+            // /** Create validator */
+            // const validator: Validator = {
+            //     depositDataRoot,
+            //     publicKey,
+            //     operatorIds: groupIds, 
+            //     sharesEncrypted: encryptedShares.map(s => s.privateKey),
+            //     sharesPublicKeys: encryptedShares.map(s => s.publicKey),
+            //     signature,
+            //     withdrawalCredentials
+            // }
+            // validators.push(validator)
+
         }
         return validators
     }
 
     /**
-     * Get deposit data for a validator
-     * @param {number} index - Validator index
-     * @returns {Promise<DepositData>} Returns a promise of the validator deposit data
+     * Get operator group from operator IDs
+     * @param {number[]} operatorIds - Array of operator IDs
+     * @returns {<Record<string, string>} Operator group
+     * @example
+     * getOperatorGroup([1, 2, 3, 4])
+     * // => {
+     * //     "1": "http://host.docker.internal:8081",
+     * //     "2": "http://host.docker.internal:8082",
+     * //     "3": "http://host.docker.internal:8083",
+     * //     "4": "http://host.docker.internal:8084"
+     * // }
      */
-    async getDepositData(index: number): Promise<DepositData> {
-        const { deposit_data_root, pubkey, signature, withdrawal_credentials } = await import(`../../mock/deposit_data-${index}.json`) 
-        return {
-            depositDataRoot: `0x${deposit_data_root}`,
-            publicKey: `0x${pubkey}`,
-            signature: `0x${signature}`,
-            withdrawalCredentials: `0x${withdrawal_credentials}`
-        }   
+    getOperatorGroup(operatorIds: number[]): Record<string, string> {
+        return operatorIds.reduce((group: Record<string, string>, id: number) => {
+            const key = id.toString() as keyof typeof operators
+            group[key] = operators[key]
+            return group
+        }, {})
     }
 
     /**
-     * Get operators from SSV API or local data
-     * @param {number[]} operatorIds - Optional operator IDs
-     * @returns {Promise<Operator[]>} Returns a promise of the operator list given optional IDs
+     * Retry fetch request
+     * @param {string} url - URL to fetch
+     * @param {number} retriesLeft - Number of retries left
+     * @returns {Promise<Response>} Response
      */
-    async getOperators(operatorIds?: number[]): Promise<Operator[]> {
-        if (operatorIds) {
-            const operators: Operator[] = []
-            for (const id of operatorIds) {
-                const response = await fetch(`https://api.ssv.network/api/v1/operators/${id}`)
-                const operator = await response.json() as Operator
-                operators.push(operator)
+    async retry(url: string, retriesLeft = 5): Promise<Response> {
+        const response = await fetch(url)
+        if (response.status !== 200) {
+            if (retriesLeft === 0) {
+                throw new Error('API request failed after maximum retries')
             }
-            return operators
+            console.log(`Retrying ${url}...`)
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            return await this.retry(url, retriesLeft - 1)
         }
-        const { operators } = await import('../../mock/operators.json')
-        return operators
+        return response
     }
-
 }

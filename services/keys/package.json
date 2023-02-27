@@ -6,7 +6,7 @@
         "build": "node build.js",
         "dev": "tsnd ./src/index.ts",
         "postdev": "docker compose -f scripts/resources/dkg/docker-compose.yaml down",
-        "predev": "docker compose -f scripts/resources/dkg/docker-compose.yaml up",
+        "predev": "docker compose -f scripts/resources/dkg/docker-compose.yaml up -d",
         "test": "jest --config jest.config.js"
     },
     "dependencies": {
@@ -14,8 +14,7 @@
         "ethers": "^5.7.2",
         "js-base64": "^3.7.3",
         "minimist": "^1.2.7",
-        "ssv-keys": "github:bloxapp/ssv-keys",
-        "undici": "^5.14.0"
+        "ssv-keys": "github:bloxapp/ssv-keys"
     },
     "devDependencies": {
         "@types/cors": "^2.8.12",
