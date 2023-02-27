@@ -12,7 +12,6 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    if: ${{ github.actor != 'nektos/act' }}
 
     steps:
       - name: Check out the repo
@@ -23,11 +22,6 @@ jobs:
       - name: Get the tag name
         run: |
           echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
-      - name: Set the tag name for testing
-        if: ${{ github.actor == 'nektos/act' }}
-        run: |
-          echo "TAG=v0.0.0-test" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -58,74 +52,18 @@ jobs:
         env:
           TARGET_BRANCH: develop
           
-
-      - name: Select success emoji
-        if: ${{ success() }}
-        run: echo 'EMOJI=:rocket:' >> $GITHUB_ENV
-
-      - name: Select failure emoji
-        if: ${{ failure() }}
-        run: echo 'EMOJI=:see_no_evil:' >> $GITHUB_ENV
-
-      - name: Notify slack
-        if: ${{ success() || failure() }}
-        uses: slackapi/slack-github-action@v1.18.0
+      - name: Slack the team
+        uses: slackapi/slack-github-action@v1.23.0
         with:
           payload: |
             {
               "blocks": [
                 {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": ":trumpet: Production Release → :ocean: Casimir"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Release* · <https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG }}|${{ env.TAG }}>"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Environment* · <https://${{ env.AWS_REGION }}.console.aws.amazon.com/cloudformation/home?region=${{ env.AWS_REGION }}#/stacks|${{ env.STAGE }}>"
-                    }
-                  ]
-                },
-                {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Deployment completed with _${{ job.status }}_ ${{ env.EMOJI }}"
+                    "text": "<https://casimir.co | *:ocean: Casimir (Prod)*> deployment finished with <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }} | _${{ job.status }}_>"
                   }
-                },
-                {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "View",
-                        "emoji": true
-                      },
-                      "style": "primary",
-                      "value": "view",
-                      "url": "https://casimir.co"
-                    },
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "Inspect Logs",
-                        "emoji": true
-                      },
-                      "value": "inspect_logs",
-                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                    }
-                  ]
                 }
               ]
             }
