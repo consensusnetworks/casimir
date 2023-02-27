@@ -22,7 +22,8 @@ export class UsersStack extends cdk.Stack {
         const { certificate, cluster, hostedZone } = props
 
         /** Create a load-balanced service for the users express API */
-        new ecsPatterns.ApplicationLoadBalancedFargateService(this, config.getFullStackResourceName(this.name, 'fargate'), {
+        const usersService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, config.getFullStackResourceName(this.name, 'fargate'), {
+            assignPublicIp: true,
             certificate,
             cluster,
             domainName: `${subdomains.users}.${rootDomain}`, // e.g. users.casimir.co or users.dev.casimir.co
@@ -35,6 +36,11 @@ export class UsersStack extends cdk.Stack {
                     STAGE: stage
                 }
             }
+        })
+        
+        /** Override the default health check path */
+        usersService.targetGroup.configureHealthCheck({
+            path: '/health'
         })
     }
 }
