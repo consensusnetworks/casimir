@@ -23,8 +23,11 @@ export class NetworkStack extends cdk.Stack {
     const config = new Config()
 
     /** Create a stage-specific Ec2 VPC and ECS cluster */
-    this.vpc = new ec2.Vpc(this, config.getFullStackResourceName(this.name, 'vpc'))
-    this.cluster = new ecs.Cluster(this, config.getFullStackResourceName(this.name, 'cluster'), { vpc: this.vpc })
-
+    this.vpc = new ec2.Vpc(this, config.getFullStackResourceName(this.name, 'vpc'), {
+      natGateways: 0
+    })
+    this.cluster = new ecs.Cluster(this, config.getFullStackResourceName(this.name, 'cluster'), { 
+      vpc: this.vpc
+    })
   }
 }
