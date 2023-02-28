@@ -13,7 +13,13 @@ import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import { Pool } from '@casimir/types/src/interfaces/Pool'
 import { Currency } from '@casimir/types'
+import * as Session from 'supertokens-web-js/recipe/session'
 
+// Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
+// Test ethereum send to address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
+// Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
+// Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
+// Test bitcoin send to address : 2N3Petr4LMH9tRneZCYME9mu33gR5hExvds
 const loggedIn = ref(false)
 const selectedProvider = ref<ProviderString>('')
 const selectedAddress = ref<string>('')
@@ -23,22 +29,17 @@ const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 const amount = ref<string>('0.000001')
 const amountToStake = ref<string>('0.0')
 const pools = ref<Pool[]>([])
-// Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
-// Test ethereum send to address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
-// Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
-// Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
-// Test bitcoin send to address : 2N3Petr4LMH9tRneZCYME9mu33gR5hExvds
+const session = ref<boolean>(false)
 
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
   const { ssvManager, getSSVFeePercent } = useSSV()
   const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, signupLoginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
-  // const { getIoPayAddress, sendIoPayTransaction, signIoPayMessage } = useIoPay()
   const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
-  const { user, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
+  const { getUserFromAPI, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
     'ETH': getEthersLedgerAddress,
@@ -66,7 +67,7 @@ export default function useWallet() {
     selectedProvider.value = provider
   }
 
-  const setSelectedAccount = (address: string) => {
+  const setSelectedAddress = (address: string) => {
     selectedAddress.value = address
   }
 
@@ -74,34 +75,49 @@ export default function useWallet() {
     selectedCurrency.value = currency
   }
 
+  // TODO: Get user from API
+  async function getUserAccount() {
+    session.value = await Session.doesSessionExist()
+    if (session.value) {
+      const userAddress = await Session.getUserId() // TODO: Can probably delete this.
+      await getUserFromAPI()
+    }
+  }
+
   async function connectWallet(provider: ProviderString, currency?: Currency) {
     try {
-      // Login (retrieve accounts) / sign up OR add account
+      // Login (retrieve accounts) / sign up
       if (!selectedAddress.value) {
         const connectedAddress = await getConnectedAddress(provider, currency)
         const connectedCurrency = await detectCurrency(provider) as Currency
         const response = await signupOrLogin(provider, connectedAddress, connectedCurrency)
-        if (!response.error) {
+        if (!response?.error) {
+          await getUserAccount()
           setSelectedProvider(provider)
-          setSelectedAccount(connectedAddress)
+          setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
           loggedIn.value = true
-          user.value = response.data
           primaryAddress.value = response.data.address
-          return response
         }
+        // TODO: Verify these are setting properly.
+        console.log('selectedProvider.value :>> ', selectedProvider.value)
+        console.log('selectedAddress.value :>> ', selectedAddress.value)
+        console.log('selectedCurrency.value :>> ', selectedCurrency.value)
+        console.log('loggedIn.value :>> ', loggedIn.value)
+        console.log('primaryAddress.value :>> ', primaryAddress.value)
       } else {
+        // TODO: Pick up here (although make sure following block is only running if user is loggedIn & signedUp).
         // Add account if already logged in / signed up
+        alert('already logged in!')
         const connectedAddress = await getConnectedAddress(provider, currency)
         const connectedCurrency = await detectCurrency(provider) as Currency
         const response = await addAccount(provider, connectedAddress, connectedCurrency)
         console.log('add account response in connectWallet in wallet.ts:>> ', response)
         if (!response?.error) {
           setSelectedProvider(provider)
-          setSelectedAccount(connectedAddress)
+          setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
           loggedIn.value = true
-          user.value = response.data
           primaryAddress.value = response.data.address
         }
       }
@@ -109,7 +125,6 @@ export default function useWallet() {
       console.error(error)
     }
   }
-
   async function getConnectedAddress(provider: ProviderString, currency?: Currency) {
     try {
       let address
@@ -176,7 +191,7 @@ export default function useWallet() {
       const result = await removeAccount(selectedProvider.value, selectedAddress.value, selectedCurrency.value)
       const json = await result.json()
       if (!json.error) {
-        setSelectedAccount(json.data.address)
+        setSelectedAddress(json.data.address)
         json.data.accounts.forEach((account: Account) => {
           if (account.address === selectedAddress.value) {
             setSelectedProvider(account.walletProvider as ProviderString)

@@ -1,6 +1,29 @@
 import express from 'express'
 import { userCollection } from '../collections/users'
+import { verifySession } from 'supertokens-node/recipe/session/framework/express'
+import { SessionRequest } from 'supertokens-node/framework/express'
 const router = express.Router()
+
+router.get('/', verifySession(), (req: SessionRequest, res: express.Response) => {
+    const address = req.session?.getUserId()
+    const user = userCollection.find(user => user.address === address?.toLowerCase())
+    console.log('user :>> ', user)
+    res.setHeader('Content-Type', 'application/json')
+    res.status(200)
+    if (user) {
+        res.json({
+            message: 'User found',
+            error: false,
+            data: user
+        })
+    } else {
+        res.json({
+            message: 'User not found',
+            error: true,
+            data: null
+        })
+    }
+})
 
 router.put('/update-primary-account', async (req: express.Request, res: express.Response) => {
     let { primaryAddress, updatedProvider, updatedAddress } = req.body

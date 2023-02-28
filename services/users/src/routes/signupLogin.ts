@@ -4,6 +4,7 @@ import { Account } from '@casimir/types'
 import { SignupLoginCredentials } from '@casimir/types/src/interfaces/SignupLoginCredentials'
 import useUsers from '../providers/users'
 import { userCollection } from '../collections/users'
+import Session from 'supertokens-node/recipe/session'
 
 const { verifyMessage } = useEthers()
 const { updateMessage } = useUsers()
@@ -15,7 +16,7 @@ router.use('/', async (req: express.Request, res: express.Response) => {
     const { provider, address, currency, message, signedMessage } = body as SignupLoginCredentials
     const user = userCollection.find(user => user.address === address.toLowerCase())
     if (user && !user?.accounts) {  // signup
-        console.log('got into this block in signupLogin.ts')
+        console.log('-----------------got into this block in signupLogin.ts-----------------')
         const accounts: Array<Account> = [
             {
                 address: address,
@@ -27,23 +28,32 @@ router.use('/', async (req: express.Request, res: express.Response) => {
             },
         ]
         user.accounts = accounts
-        console.log('user :>> ', user)
+        // user.accounts.length ? await Session.createNewSession(req, res, address) : null
+        /* a new session has been created.
+        * - an access & refresh token has been attached to the response's cookie
+        * - a new row has been inserted into the database for this new session
+        */
+
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
             message: user.accounts.length ? 'Sign Up Successful' : 'Problem creating new user',
             error: false,
-            data: user ? user : null
         })
     } else { // login
         const response = verifyMessage({ address, message, signedMessage, provider })
         updateMessage(provider, address) // send back token if successful
+        
+        response ? await Session.createNewSession(req, res, address) : null
+        /* a new session has been created.
+        * - an access & refresh token has been attached to the response's cookie
+        * - a new row has been inserted into the database for this new session
+        */
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
             message: response ? 'Login successful' : 'Login failed',
             error: false,
-            data: user,
         })
     }
 })

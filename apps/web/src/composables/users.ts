@@ -16,6 +16,19 @@ const user = ref<User | null>(null)
 export default function useUsers () {
     const { ssvManager } = useSSV()
 
+    async function getUserFromAPI() {
+        const requestOptions = {
+            method: 'GET',
+            headers: { 
+                'Content-Type': 'application/json'
+            }
+        }
+        const response = await fetch(`${usersBaseURL}/users`, requestOptions)
+        const { data } = await response.json()
+        user.value = data
+        return data
+    }
+
     // Todo filter for events for user addresses
     function subscribeToUserEvents() {
         const { getUserBalance, getUserPools } = useWallet()
@@ -36,13 +49,13 @@ export default function useUsers () {
         })
     }
 
-    onMounted(async () => {
-        const { getUserBalance, getUserPools } = useWallet()
-        // Just get pools for primary account for demo
-        user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
-        user.value.pools = await getUserPools(user.value.id)
-        subscribeToUserEvents()
-    })
+    // onMounted(async () => {
+    //     const { getUserBalance, getUserPools } = useWallet()
+    //     // Just get pools for primary account for demo
+    //     user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
+    //     user.value.pools = await getUserPools(user.value.id)
+    //     subscribeToUserEvents()
+    // })
 
     async function addAccount(provider: ProviderString, address: string, currency: Currency) {
         address = address.toLowerCase()
@@ -131,6 +144,7 @@ export default function useUsers () {
 
     return {
         user,
+        getUserFromAPI,
         addAccount,
         removeAccount,
         getMessage,
