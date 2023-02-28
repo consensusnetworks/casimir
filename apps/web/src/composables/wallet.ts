@@ -75,7 +75,6 @@ export default function useWallet() {
     selectedCurrency.value = currency
   }
 
-  // TODO: Get user from API
   async function getUserAccount() {
     session.value = await Session.doesSessionExist()
     if (session.value) {
