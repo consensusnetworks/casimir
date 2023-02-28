@@ -12,9 +12,7 @@
     "dependencies": {
         "cors": "^2.8.5",
         "ethers": "^5.7.2",
-        "js-base64": "^3.7.3",
-        "minimist": "^1.2.7",
-        "ssv-keys": "github:bloxapp/ssv-keys"
+        "minimist": "^1.2.7"
     },
     "devDependencies": {
         "@types/cors": "^2.8.12",
