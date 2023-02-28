@@ -1,13 +1,13 @@
 import express from 'express'
 import cors from 'cors'
+import supertokens from 'supertokens-node'
+import { middleware, errorHandler } from 'supertokens-node/framework/express'
+import { SuperTokensBackendConfig } from './sessions.config'
 import login from './routes/login'
 import auth from './routes/auth'
 import users from './routes/users'
 import health from './routes/health'
 import signupLogin from './routes/signupLogin'
-import supertokens from 'supertokens-node'
-import { middleware, errorHandler } from 'supertokens-node/framework/express'
-import { SuperTokensBackendConfig } from './sessions.config'
 
 supertokens.init(SuperTokensBackendConfig)
 

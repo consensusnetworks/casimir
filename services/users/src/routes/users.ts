@@ -5,6 +5,7 @@ import { SessionRequest } from 'supertokens-node/framework/express'
 const router = express.Router()
 
 router.get('/', verifySession(), (req: SessionRequest, res: express.Response) => {
+    // const address = req.session!.getUserId()
     const address = req.session?.getUserId()
     const user = userCollection.find(user => user.address === address?.toLowerCase())
     console.log('user :>> ', user)

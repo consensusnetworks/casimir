@@ -39,7 +39,7 @@ export default function useWallet() {
   const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
-  const { getUserFromAPI, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
+  const { user, getUserFromAPI, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
     'ETH': getEthersLedgerAddress,
@@ -78,7 +78,6 @@ export default function useWallet() {
   async function getUserAccount() {
     session.value = await Session.doesSessionExist()
     if (session.value) {
-      const userAddress = await Session.getUserId() // TODO: Can probably delete this.
       await getUserFromAPI()
     }
   }
@@ -96,14 +95,8 @@ export default function useWallet() {
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
           loggedIn.value = true
-          primaryAddress.value = response.data.address
+          primaryAddress.value = user.value?.address as string
         }
-        // TODO: Verify these are setting properly.
-        console.log('selectedProvider.value :>> ', selectedProvider.value)
-        console.log('selectedAddress.value :>> ', selectedAddress.value)
-        console.log('selectedCurrency.value :>> ', selectedCurrency.value)
-        console.log('loggedIn.value :>> ', loggedIn.value)
-        console.log('primaryAddress.value :>> ', primaryAddress.value)
       } else {
         // TODO: Pick up here (although make sure following block is only running if user is loggedIn & signedUp).
         // Add account if already logged in / signed up
