@@ -1,10 +1,13 @@
 import { SSV } from '../src/index'
 
-test('Create validators provides 2 SSV validators for 8 operators grouped by 4', async function () {    
-    // const operatorIds = Array.from({ length: 8 }, (_, i) => i + 175)
+test('Create 2 SSV validators from 8 eligible operators', async function () {    
+    const operatorIds = Array.from({ length: 8 }, (_, i) => i + 1)
     const validatorCount = 2
     const ssv = new SSV()
-    const validators = await ssv.createValidators({ /*operatorIds, */validatorCount })
+
+    // Todo add mock keygen service
+    const validators = await ssv.createValidators({ operatorIds, validatorCount })
+
     console.log(validators)
     expect(validators.length).toBe(validatorCount)
 })

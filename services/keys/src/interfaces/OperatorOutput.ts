@@ -1,4 +1,4 @@
-export interface OperatorShare {
+export interface OperatorOutput {
     encryptedShare: string
     publicKey: string
 }

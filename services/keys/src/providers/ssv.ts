@@ -1,33 +1,55 @@
+import { SSVOptions } from '../interfaces/SSVOptions'
+import { ValidatorOptions } from '../interfaces/ValidatorOptions'
 import { Validator } from '@casimir/types'
-import { CreateValidatorsOptions } from '../interfaces/CreateValidatorsOptions'
-import { KeyGenInput } from '../interfaces/KeyGenInput'
-import { OperatorShare } from '../interfaces/OperatorShare'
+import { KeygenInput } from '../interfaces/KeygenInput'
+import { OperatorOutput } from '../interfaces/OperatorOutput'
 import { DepositData } from '../interfaces/DepositData'
 import operatorStore from '../data/operator_store.json'
 
 export class SSV {
     /** Key generation service URL */
-    keyGenUrl: string
+    keygenServiceUrl: string
 
-    constructor() {
-        this.keyGenUrl = process.env.KEY_GEN_URL || 'http://0.0.0.0:8000'
+    /**
+     * SSV constructor
+     * @param {SSVOptions} options - SSV options
+     * @example
+     * const ssv = new SSV({ keygenUrl: 'http://0.0.0.0:8000' })
+     * const validators = await ssv.createValidators({
+     *   operatorIds: [1, 2, 3, 4, 5, 6, 7, 8],
+     *   validatorCount: 2,
+     *   withdrawalAddress: '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
+     * })
+     */
+    constructor(options?: SSVOptions) {
+        this.keygenServiceUrl = options?.keygenUrl || process.env.KEYGEN_URL || 'http://0.0.0.0:8000'
     }
 
     /** 
      * Create validator deposit data and SSV operator key shares 
-     * @param {CreateValidatorsOptions} options - Options for creating validators
+     * @param {ValidatorOptions} options - Options for creating validators
      * @returns {Promise<Validator[]>} Array of validators
+     * @example
+     * const validators = await createValidators({
+     *   operatorIds: [1, 2, 3, 4, 5, 6, 7, 8],
+     *   validatorCount: 2,
+     *   withdrawalAddress: '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
+     * })
      */
-    async createValidators(options?: CreateValidatorsOptions): Promise<Validator[]> {
+    async createValidators(options: ValidatorOptions): Promise<Validator[]> {
 
-        /** Use select {operatorIds} to create {validatorCount} validators */
-        const operatorIds = options?.operatorIds || [1, 2, 3, 4, 5, 6, 7, 8]
-        const validatorCount = options?.validatorCount || 1
-        const withdrawalAddress = options?.withdrawalAddress || '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
+        /** Wait for keygen service to be ready */
+        await this.waitForKeygenService()
+
+        const operatorIds = options?.operatorIds || process.env.OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [1, 2, 3, 4/*, 5, 6, 7, 8*/]
+        const validatorCount = options?.validatorCount || parseInt(process.env.VALIDATOR_COUNT || '1')
+        const withdrawalAddress = options?.withdrawalAddress || process.env.MOCK_ADDRESS || '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
 
         const validators: Validator[] = []
         const groupSize = 4
         let operatorIndex = 0
+
+        /** Use select {operatorIds} to create {validatorCount} validators */
         for (let index = 0; index < validatorCount; index++) {
 
             /** Use next operator index for group slicing */
@@ -36,21 +58,22 @@ export class SSV {
             const group = this.getOperatorGroup(groupIds)
 
             /** Start a keygen for the current group of operators */
-            const keyGenId = await this.startKeyGen({ operators: group, withdrawalAddress })
+            const keygenId = await this.startKeygen({ operators: group, withdrawalAddress })
+            console.log(`Keygen ID: ${keygenId}`)
 
             /** Get operator key shares */
-            const keyGenShares = await this.getKeyGenShares(keyGenId)
+            const keygenShares = await this.getKeygenShares(keygenId)
 
             /** Get validator deposit data */
-            const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getKeyGenDepositData(keyGenId)
+            const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getKeygenDepositData(keygenId)
 
             /** Create validator */
             const validator: Validator = {
                 depositDataRoot,
                 publicKey,
                 operatorIds: groupIds, 
-                sharesEncrypted: keyGenShares.map(share => share.encryptedShare),
-                sharesPublicKeys: keyGenShares.map(share => share.publicKey),
+                sharesEncrypted: keygenShares.map(share => share.encryptedShare),
+                sharesPublicKeys: keygenShares.map(share => share.publicKey),
                 signature,
                 withdrawalCredentials
             }
@@ -67,7 +90,8 @@ export class SSV {
      * @param {number[]} operatorIds - Array of operator IDs
      * @returns {<Record<string, string>} Operator group
      * @example
-     * getOperatorGroup([1, 2, 3, 4])
+     * const group = getOperatorGroup([1, 2, 3, 4])
+     * console.log(group) 
      * // => {
      * //     "1": "http://host.docker.internal:8081",
      * //     "2": "http://host.docker.internal:8082",
@@ -85,17 +109,27 @@ export class SSV {
 
     /**
      * Start a new key generation
-     * @param {KeyGenInput} input - Key generation input
+     * @param {KeygenInput} input - Key generation input
      * @returns {Promise<string>} Key generation ID
+     * @example
+     * const id = await startKeygen({
+     *    operators: {
+     *       "1": "http://host.docker.internal:8081",
+     *       "2": "http://host.docker.internal:8082",
+     *       "3": "http://host.docker.internal:8083",
+     *       "4": "http://host.docker.internal:8084"
+     *    },
+     *    withdrawalAddress: '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
+     * })
+     * console.log(id) 
+     * // => "b7e8b0e0-5c1a-4b1e-9b1e-8c1c1c1c1c1c"
      */
-    async startKeyGen(input: KeyGenInput): Promise<string> {
+    async startKeygen(input: KeygenInput): Promise<string> {
         const { operators, withdrawalAddress } = input
         const withdrawalCredentials = `01${'0'.repeat(22)}${withdrawalAddress.split('0x')[1]}`
-        const startKeyGen = await fetch(`${this.keyGenUrl}/keygen`, {
+        const startKeygen = await this.retry(`${this.keygenServiceUrl}/keygen`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 operators,
                 threshold: Object.keys(operators).length - 1,
@@ -103,37 +137,56 @@ export class SSV {
                 fork_version: 'prater'
             })
         })
-        const { request_id: keyGenId } = await startKeyGen.json()
-        return keyGenId
+        const { request_id: keygenId } = await startKeygen.json()
+        return keygenId
     }
 
     /**
      * Get key generation operator shares and public keys
-     * @param {string} keyGenId - Key generation ID
-     * @returns {Promise<OperatorShare[]>} Array of operator shares and public keys
+     * @param {string} keygenId - Key generation ID
+     * @returns {Promise<OperatorOutput[]>} Array of operator shares and public keys
+     * @example
+     * const shares = await getKeygenShares('b7e8b0e0-5c1a-4b1e-9b1e-8c1c1c1c1c1c')
+     * console.log(shares)
+     * // => [
+     * //     {
+     * //         encryptedShare: "0x000000...",
+     * //         publicKey: "0x000000..."
+     * //     },
+     * //     ...
+     * // ]
      */
-    async getKeyGenShares(keyGenId: string): Promise<OperatorShare[]> {
-        const getKeyData = await this.retry(`${this.keyGenUrl}/data/${keyGenId}`)
+    async getKeygenShares(keygenId: string): Promise<OperatorOutput[]> {
+        const getKeyData = await this.retry(`${this.keygenServiceUrl}/data/${keygenId}`)
         const { output: keyData } = await getKeyData.json()
-        const keyGenShares = []
+        const keygenShares = []
         for (const id in keyData) {
             const { Data: shareData } = keyData[id]
             const { EncryptedShare: encryptedShare, SharePubKey: sharePublicKey } = shareData
-            keyGenShares.push({
+            keygenShares.push({
                 encryptedShare: `0x${encryptedShare}`,
                 publicKey: `0x${sharePublicKey}`
             })
         }
-        return keyGenShares
+        return keygenShares
     }
 
     /**
      * Get key generation deposit data
-     * @param {string} keyGenId - Key generation ID
+     * @param {string} keygenId - Key generation ID
      * @returns {Promise<DepositData>} Deposit data
+     * @example
+     * const depositData = await getKeygenDepositData('b7e8b0e0-5c1a-4b1e-9b1e-8c1c1c1c1c1c')
+     * console.log(depositData)
+     * // => {
+     * //     depositDataRoot: "0x000000...",
+     * //     publicKey: "0x000000...",
+     * //     signature: "0x000000...",
+     * //     withdrawalCredentials: "0x000000..."
+     * // }
      */
-    async getKeyGenDepositData(keyGenId: string): Promise<DepositData> {
-        const getDepositData = await this.retry(`${this.keyGenUrl}/deposit_data/${keyGenId}`)
+    async getKeygenDepositData(keygenId: string): Promise<DepositData> {
+        const getDepositData = await this.retry(`${this.keygenServiceUrl}/deposit_data/${keygenId}`)
         const [ depositData ] = await getDepositData.json()
         const {
             deposit_data_root: depositDataRoot, 
@@ -150,21 +203,42 @@ export class SSV {
     }
 
     /**
-     * Retry fetch request
-     * @param {string} url - URL to fetch
+     * Retry a fetch request
+     * @param {RequestInfo} info - URL string or request object
+     * @param {RequestInit} init - Request init options
      * @param {number} retriesLeft - Number of retries left (default: 5)
      * @returns {Promise<Response>} Response
+     * @example
+     * const response = await retry('https://example.com')
      */
-    async retry(url: string, retriesLeft = 5): Promise<Response> {
-        const response = await fetch(url)
+    async retry(info: RequestInfo, init?: RequestInit, retriesLeft = 10): Promise<Response> {
+        const response = await fetch(info, init)
         if (response.status !== 200) {
             if (retriesLeft === 0) {
                 throw new Error('API request failed after maximum retries')
             }
-            console.log(`Retrying ${url}...`)
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            return await this.retry(url, retriesLeft - 1)
+            console.log('Retrying fetch...')
+            await new Promise(resolve => setTimeout(resolve, 5000))
+            return await this.retry(info, init, retriesLeft - 1)
         }
         return response
+    }
+
+    /**
+     * Wait for key generation service to be ready
+     * @param {string} keygenServiceUrl - Key generation service URL
+     * @returns {Promise<boolean>}
+     */
+    async waitForKeygenService(): Promise<void> {
+        let ready = false
+        while (!ready) {
+            try {
+                await fetch(`${this.keygenServiceUrl}/health`)
+                ready = true
+            } catch (error) {
+                console.log('Waiting for key generation service...')
+                await new Promise(resolve => setTimeout(resolve, 1000))
+            }
+        }
     }
 }
