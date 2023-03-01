@@ -68,6 +68,12 @@ export class DKG {
         for (const id in keyData) {
             const { Data: shareData } = keyData[id]
             const { EncryptedShare: encryptedShare, SharePubKey: sharePublicKey } = shareData
+            
+            // What format is this data?
+            // 0x18dafffa73c4ab42db13cd672467ea7cd0efea152c67f63417f2262f12e77304ee07cd545e22bb8a45d3676b2e2d1f6291236950ce6dd415e4e89f861ac2e51feea95cdd92e9b3f255d46623d354630e31906229ac80fea040b1d66f616086327127fd93c9949bd5d0bbe8dd2ca06cacd17e6f0a6a6b74c29f1512f27e71c643ad2a5ce261bb0f553d03a3df7853209eb047c1a4d8a056ca666d38a3cf5a453f61fae1547eb09920ae4a3b530bc74055eb050a0569e9bee8644afdc45a298c5fe700d18747d19c69bde6a2a9896440bfff4fdaae2f9345f8893a57a1b0576476ae97d76934a0030c81845db56860ee1705fce67d945398495b7d534f40fa6879
+            // Do we need to convert it to a string or format before sending it to the registry?
+            // Also update SSV to v3 contracts
+
             shares.push({
                 encryptedShare: `0x${encryptedShare}`,
                 publicKey: `0x${sharePublicKey}`
