@@ -4,7 +4,7 @@ Casimir key generation service and CLI
 
 ## Usage
 
-Create a new validator for Casimir with operator key shares and deposit data.
+Create a new SSV validator with operator key shares and deposit data.
 
 ### Install
 
@@ -35,7 +35,7 @@ const validators: Validator[] = await ssv.createValidator(options)
 Use the CLI to output to a file or stdout.
 
 ```zsh
-npx casimir-keys create-validator
+npx @casimir/keys create-validator
 ```
 
 Options:
