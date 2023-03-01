@@ -1,4 +1,4 @@
 export interface SSVOptions {
-    /** Key generation service URL */
-    keygenUrl: string
+    /** Key generation API service URL */
+    dkgServiceUrl: string
 }
