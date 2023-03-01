@@ -50,11 +50,12 @@ async function deploymentFixture() {
 /** Fixture to add validators */
 async function addValidatorsFixture() {
   const { ssvManager, owner } = await loadFixture(deploymentFixture)
-  // const operatorIds = Array.from({ length: 8 }, (_, i) => i + 175)
-  const validatorCount = 2
-  const ssv = new SSV()
-  const validators = await ssv.createValidators({ /*operatorIds, */validatorCount })
-  for (const validator of validators) {
+  const dkgServiceUrl = 'http://0.0.0.0:8000'
+  const groups = [[1, 2, 3, 4], [1, 2, 3, 4]]
+  const ssv = new SSV({ dkgServiceUrl })
+  const validators = []
+  for (const group of groups) {  
+    const validator = await ssv.createValidator({ operatorIds: group })
     const { 
       depositDataRoot,
       publicKey,
@@ -74,6 +75,12 @@ async function addValidatorsFixture() {
       withdrawalCredentials
     )
     await registration.wait()
+    validators.push(validator)
+
+    /** Wait for next ceremony */
+    if (group !== groups[groups.length - 1]) {
+      await new Promise(resolve => setTimeout(resolve, 5000))
+    }
   }
   return { owner, ssv, ssvManager, validators }
 }

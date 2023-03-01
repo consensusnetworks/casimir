@@ -6,7 +6,7 @@
         "dev:ganache": "npx esno scripts/ganache.ts",
         "deploy": "npx hardhat run scripts/ssv.deploy.ts",
         "docgen": "npx hardhat docgen",
-        "test": "mocha --require hardhat/register --recursive --exit --extension ts --timeout 25000",
+        "test": "mocha --require hardhat/register --recursive --exit --extension ts --timeout 50000",
         "task:clean": "npx hardhat clean",
         "task:compile": "npm run task:clean && npx hardhat compile --show-stack-traces",
         "pretest": "npm run task:compile",
