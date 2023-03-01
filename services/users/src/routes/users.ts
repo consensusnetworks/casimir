@@ -24,6 +24,7 @@ router.get('/', verifySession(), (req: SessionRequest, res: express.Response) =>
     }
 })
 
+// TODO: Think through handling changing primary address with SuperTokens Sessions.
 router.put('/update-primary-account', async (req: express.Request, res: express.Response) => {
     let { primaryAddress, updatedProvider, updatedAddress } = req.body
     primaryAddress = primaryAddress.toLowerCase()
@@ -79,7 +80,7 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
     }
 })
 
-router.post('/remove-sub-account', async (req: express.Request, res: express.Response) => {
+router.post('/remove-sub-account', verifySession(), async (req: express.Request, res: express.Response) => {
     try {
         const { provider, address, currency } = req.body
         let { primaryAddress } = req.body
