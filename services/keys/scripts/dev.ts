@@ -1,6 +1,7 @@
 import { $ } from 'zx'
 
 void async function () {
+    await $`npx esno -r dotenv/config src/index.ts help`
     const dkgServiceUrl = 'http://0.0.0.0:8000'
     const groups = [[1, 2, 3, 4], [1, 2, 3, 4]]
     for (const group of groups) {  

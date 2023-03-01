@@ -18,26 +18,26 @@ export class CLI {
 
     commands = {
         createValidator: async (args: CommandArgs) => {
-            console.log('@casimir/keys CLI')
-            console.log('Running keys create-validator')
-            console.log('\tArgs:', args)
-
             const { dkgServiceUrl, operatorIds, withdrawalAddress } = args
+            console.log('@casimir/keys')
+            console.log('Command:\n')
+            console.log('\tkeys create-validator')
+            console.log(`\t  --dkgServiceUrl ${dkgServiceUrl}`)
+            console.log(`\t  --operatorIds ${operatorIds}`)
+            console.log(`\t  --withdrawalAddress ${withdrawalAddress}\n`)
             const ssv = new SSV({ dkgServiceUrl })
             const validator = await ssv.createValidator({ operatorIds, withdrawalAddress })
             return { status: 200, validator }
         },
         help: () => {
-            console.log('@casimir/keys CLI')
+            console.log('@casimir/keys')
             console.log('Usage: keys <command> [options]')
-            console.log('Commands:')
+            console.log('Commands:\n')
             console.log('\tcreate-validator')
-            console.log('\t\t--dkgServiceUrl')
-            console.log('\t\t--operatorIds')
-            console.log('\t\t--withdrawalAddress')
-
-            console.log('\thelp')
-
+            console.log('\t  --dkgServiceUrl')
+            console.log('\t  --operatorIds')
+            console.log('\t  --withdrawalAddress\n')
+            console.log('\thelp\n')
             return { status: 200 }
         }
     }
