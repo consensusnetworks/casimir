@@ -7,7 +7,6 @@ const router = express.Router()
 router.get('/', verifySession(), (req: SessionRequest, res: express.Response) => {
     const address = req.session?.getUserId()
     const user = userCollection.find(user => user.address === address?.toLowerCase())
-    console.log('user :>> ', user)
     res.setHeader('Content-Type', 'application/json')
     res.status(200)
     if (user) {
@@ -45,11 +44,11 @@ router.put('/update-primary-account', async (req: express.Request, res: express.
 
 router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
-        console.log('attempting to add sub account')
         const { account } = req.body
         const { address } = req.body
-        const userSessionAddress = req.session?.getUserId()
-        if (userSessionAddress !== address) {
+        const userSessionsAddress = req.session?.getUserId()
+        const validatedAddress = validateAddress(userSessionsAddress, address)
+        if (!validatedAddress) {
             res.setHeader('Content-Type', 'application/json')
             res.status(200)
             res.json({
@@ -63,7 +62,6 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
         if (existingUser) {
             existingUser.accounts?.push(account)
         }
-        console.log('existingUser :>> ', existingUser)
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
@@ -124,5 +122,9 @@ router.post('/remove-sub-account', async (req: express.Request, res: express.Res
         })
     }
 })
+
+function validateAddress(userSessionsAddress:string | undefined, address:string) {
+    return userSessionsAddress === address
+}
 
 export default router

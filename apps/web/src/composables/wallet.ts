@@ -108,7 +108,7 @@ export default function useWallet() {
           primaryAddress.value = response.data.address
         }
       }
-      console.log('user.value :>> ', user.value)
+      console.log('user.value on connect wallet :>> ', user.value)
     } catch (error) {
       console.error(error)
     }
@@ -151,6 +151,17 @@ export default function useWallet() {
       // TODO: Implement this for other providers
       console.log('Sign up not yet supported for this wallet provider')
     }
+  }
+
+  async function logout() {
+    await Session.signOut()
+    loggedIn.value = false
+    setSelectedAddress('')
+    setSelectedProvider('')
+    setSelectedCurrency('')
+    primaryAddress.value = ''
+    user.value = null
+    console.log('user.value on logout :>> ', user.value)
   }
 
   async function setPrimaryWalletAccount() {
@@ -369,6 +380,7 @@ export default function useWallet() {
     amountToStake,
     pools,
     connectWallet,
+    logout,
     setPrimaryWalletAccount,
     removeConnectedAccount,
     detectCurrency,

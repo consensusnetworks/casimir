@@ -1,14 +1,16 @@
 <template>
   <div>
-    <button @click="getCurrentBalance()">
-      Get Balance New
-    </button>
-    <button @click="getUserBalance(selectedAddress)">
-      Get Balance Old
-    </button>
-    <div class="network-div">
+    <div class="flex">
+      <button @click="getCurrentBalance()">
+        Get Balance New
+      </button>
+      <button @click="getUserBalance(selectedAddress)">
+        Get Balance Old
+      </button>
+    </div>
+    <div class="network-div w-100 mx-8">
       Choose Network
-      <div class="choose-network">
+      <div class="choose-network flex">
         <button
           @click="switchNetwork('5')"
         >
@@ -29,6 +31,9 @@
       <div>{{ primaryAddress ? primaryAddress : 'Please log in first.' }}</div>
       <button @click="setPrimaryWalletAccount()">
         Set Primary Account
+      </button>
+      <button @click="logout">
+        logout
       </button>
     </div>
     <div>
@@ -177,7 +182,6 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
-import useUsers from '@/composables/users'
 
 const message = ref('')
 const signedMessage = ref('')
@@ -200,12 +204,12 @@ const {
   selectedProvider,
   selectedAddress,
   primaryAddress,
-  selectedCurrency,
   toAddress,
   amount,
   amountToStake,
   pools,
   connectWallet,
+  logout,
   setPrimaryWalletAccount,
   sendTransaction,
   signMessage,

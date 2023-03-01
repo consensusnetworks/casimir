@@ -90,10 +90,8 @@ export default function useUsers () {
                     account: accountToAdd
                 })
             }
-            // TODO: Add verify session to this route.
             const response = await fetch(`${usersBaseURL}/users/add-sub-account`, requestOptions)
             const json = await response.json()
-            console.log('json returned from add-sub-account :>> ', json)
             const { data } = json
             user.value = data
             return json
