@@ -1,9 +1,10 @@
 import { deployContract } from '@casimir/hardhat-helpers'
+import { SSV } from '@casimir/keys'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 
 void async function () {
-    const mockChainlink = process.env.MOCK_CHAINLINK === 'true'
-    let config: DeploymentConfig = {
+    let ssvManager
+    const config: DeploymentConfig = {
         SSVManager: {
             address: '',
             args: {
@@ -17,24 +18,6 @@ void async function () {
             },
             options: {},
             proxy: false
-        }
-    }
-
-    if (mockChainlink) {
-        const mockChainlinkConfig = {
-            MockFeed: {
-                address: '',
-                args: {
-                    linkTokenAddress: process.env.LINK_TOKEN_ADDRESS
-                },
-                options: {},
-                proxy: false
-            }
-        }
-        config = {
-            // Deploy Chainlink contracts first
-            ...mockChainlinkConfig,
-            ...config
         }
     }
 
@@ -55,5 +38,43 @@ void async function () {
 
         // Save contract address for next loop
         (config[name as keyof DeploymentConfig] as ContractConfig).address = address
+
+        // Save SSV manager for export
+        if (name === 'SSVManager') ssvManager = contract
+    }
+
+    if (process.env.HARDHAT_NETWORK) {
+        const dkgServiceUrl = 'http://0.0.0.0:8000'
+        const groups = [[1, 2, 3, 4], [1, 2, 3, 4]]
+        const ssv = new SSV({ dkgServiceUrl })
+        const validators = []
+        for (const group of groups) {
+            const validator = await ssv.createValidator({ operatorIds: group })
+            const {
+                depositDataRoot,
+                publicKey,
+                operatorIds,
+                sharesEncrypted,
+                sharesPublicKeys,
+                signature,
+                withdrawalCredentials
+            } = validator
+            const registration = await ssvManager?.addValidator(
+                depositDataRoot,
+                publicKey,
+                operatorIds,
+                sharesEncrypted,
+                sharesPublicKeys,
+                signature,
+                withdrawalCredentials
+            )
+            await registration.wait()
+            validators.push(validator)
+
+            /** Wait for next ceremony */
+            if (group !== groups[groups.length - 1]) {
+                await new Promise(resolve => setTimeout(resolve, 5000))
+            }
+        }
     }
 }()
