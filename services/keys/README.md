@@ -1,15 +1,15 @@
 # @casimir/keys
 
-Key share generation service and CLI
+Casimir key generation service and CLI
 
 ## Usage
 
-Create a new validator with operator key shares and deposit data.
+Create a new validator for Casimir with operator key shares and deposit data.
 
 ### Install
 
 ```zsh
-npm install @casimir/keys
+npm install @casimir/keys @casimir/types # Or with -D, -g, etc.
 ```
 
 ### Package
@@ -30,7 +30,7 @@ const validators: Validator[] = await ssv.createValidator({
 ### CLI
 
 ```zsh
-npx @casimir/keys create-validator
+npx casimir-keys create-validator
 ```
 
 Options:
