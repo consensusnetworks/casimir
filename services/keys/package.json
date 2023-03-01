@@ -8,6 +8,7 @@
         "dev": "npx esno -r dotenv/config scripts/dev.ts",
         "down": "docker compose -f docker-compose.yaml down",
         "postcompose": "npm run down",
+        "prepare": "npx esno -r dotenv/config scripts/prepare.ts",
         "up": "docker compose -f docker-compose.yaml up -d --build",
         "test": "jest --config jest.config.js"
     },

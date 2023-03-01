@@ -1,7 +1,10 @@
+import fs from 'fs'
 import path from 'path'
 import url from 'url'
 import { CLI } from './providers/cli'
 import { SSV } from './providers/ssv'
+import { Validator } from '@casimir/types'
+import { validatorStore } from '@casimir/data'
 
 export { SSV }
 
@@ -13,6 +16,12 @@ export { SSV }
     const modulePath = path.resolve(url.pathToFileURL(__filename).toString()).split(':')[1]
     if (nodePath === modulePath) {
         const cli = new CLI()
-        await cli.run()
+        const response = await cli.run()
+        const { validator } = response
+        
+        if (validator) {
+            (validatorStore as Record<number, Validator>)[Date.now()] = validator
+            fs.writeFileSync(path.resolve(__dirname, '../data/validator_store.json'), JSON.stringify(validatorStore, null, 2))
+        }
     }
 })()

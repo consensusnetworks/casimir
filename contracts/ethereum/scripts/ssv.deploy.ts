@@ -1,6 +1,6 @@
 import { deployContract } from '@casimir/hardhat-helpers'
-import { SSV } from '@casimir/keys'
-import { ContractConfig, DeploymentConfig } from '@casimir/types'
+import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
+import { validatorStore } from '@casimir/data'
 
 void async function () {
     let ssvManager
@@ -44,12 +44,9 @@ void async function () {
     }
 
     if (process.env.HARDHAT_NETWORK) {
-        const dkgServiceUrl = 'http://0.0.0.0:8000'
-        const groups = [[1, 2, 3, 4], [1, 2, 3, 4]]
-        const ssv = new SSV({ dkgServiceUrl })
-        const validators = []
-        for (const group of groups) {
-            const validator = await ssv.createValidator({ operatorIds: group })
+        console.log('HARDHAT_NETWORK', process.env.HARDHAT_NETWORK)
+        const validators = Object.keys(validatorStore).map((key) => validatorStore[key]) as Validator[]
+        for (const validator of validators) {
             const {
                 depositDataRoot,
                 publicKey,
@@ -69,12 +66,6 @@ void async function () {
                 withdrawalCredentials
             )
             await registration.wait()
-            validators.push(validator)
-
-            /** Wait for next ceremony */
-            if (group !== groups[groups.length - 1]) {
-                await new Promise(resolve => setTimeout(resolve, 5000))
-            }
         }
     }
 }()

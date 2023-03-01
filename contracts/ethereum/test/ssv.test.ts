@@ -3,8 +3,8 @@ import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { SSVManager } from '../build/artifacts/types'
-import { ContractConfig, DeploymentConfig } from '@casimir/types'
-import { SSV } from '@casimir/keys'
+import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
+import { validatorStore } from '@casimir/data'
 
 /** Fixture to deploy SSV manager contract */
 async function deploymentFixture() {
@@ -50,39 +50,8 @@ async function deploymentFixture() {
 /** Fixture to add validators */
 async function addValidatorsFixture() {
   const { ssvManager, owner } = await loadFixture(deploymentFixture)
-  const dkgServiceUrl = 'http://0.0.0.0:8000'
-  const groups = [[1, 2, 3, 4], [1, 2, 3, 4]]
-  const ssv = new SSV({ dkgServiceUrl })
-  const validators = []
-  for (const group of groups) {  
-    const validator = await ssv.createValidator({ operatorIds: group })
-    const { 
-      depositDataRoot,
-      publicKey,
-      operatorIds, 
-      sharesEncrypted, 
-      sharesPublicKeys, 
-      signature,
-      withdrawalCredentials
-    } = validator
-    const registration = await ssvManager.addValidator(
-      depositDataRoot, 
-      publicKey,
-      operatorIds, 
-      sharesEncrypted, 
-      sharesPublicKeys, 
-      signature,
-      withdrawalCredentials
-    )
-    await registration.wait()
-    validators.push(validator)
-
-    /** Wait for next ceremony */
-    if (group !== groups[groups.length - 1]) {
-      await new Promise(resolve => setTimeout(resolve, 5000))
-    }
-  }
-  return { owner, ssv, ssvManager, validators }
+  const validators = Object.keys(validatorStore).map((key) => validatorStore[key]) as Validator[]
+  return { owner, ssvManager, validators }
 }
 
 /** Fixture to stake 16 ETH for the first user */

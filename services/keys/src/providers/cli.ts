@@ -1,11 +1,9 @@
-import fs from 'fs'
 import minimist from 'minimist'
-import path from 'path'
 import { CommandArgs } from '../interfaces/CommandArgs'
 import { camelCase } from '@casimir/string-helpers'
 import { SSV } from './ssv'
-import validatorStore from '../data/validator_store.json'
-import { Validator } from '@casimir/types'
+import { CLIOutput } from '../interfaces/CLIOutput'
+
 
 export class CLI {
     async run() {
@@ -15,23 +13,32 @@ export class CLI {
             throw new Error('No valid command provided')
         }
 
-        return this.commands[command](args)
+        return await this.commands[command](args) as CLIOutput
     }
 
     commands = {
         createValidator: async (args: CommandArgs) => {
+            console.log('@casimir/keys CLI')
+            console.log('Running keys create-validator')
+            console.log('\tArgs:', args)
+
             const { dkgServiceUrl, operatorIds, withdrawalAddress } = args
             const ssv = new SSV({ dkgServiceUrl })
             const validator = await ssv.createValidator({ operatorIds, withdrawalAddress })
-            if (validatorStore) {
-                (validatorStore as Record<number, Validator>)[Date.now()] = validator
-                fs.writeFileSync(path.resolve(__dirname, '../data/validator_store.json'), JSON.stringify(validatorStore, null, 2))
-            }
-            return validator
+            return { status: 200, validator }
         },
         help: () => {
+            console.log('@casimir/keys CLI')
+            console.log('Usage: keys <command> [options]')
             console.log('Commands:')
-            console.log('create-validator')
+            console.log('\tcreate-validator')
+            console.log('\t\t--dkgServiceUrl')
+            console.log('\t\t--operatorIds')
+            console.log('\t\t--withdrawalAddress')
+
+            console.log('\thelp')
+
+            return { status: 200 }
         }
     }
 

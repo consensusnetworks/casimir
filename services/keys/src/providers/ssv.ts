@@ -3,7 +3,7 @@ import { ValidatorOptions } from '../interfaces/ValidatorOptions'
 import { Validator } from '@casimir/types'
 import { DKG } from './dkg'
 import { Share } from '../interfaces/Share'
-import operatorStore from '../data/operator_store.json'
+import { operatorStore } from '@casimir/data'
 
 export class SSV {
     /** Distributed key generation API service */
