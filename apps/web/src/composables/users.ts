@@ -70,7 +70,6 @@ export default function useUsers () {
             return isEqual
         }) as Account
         if (account) {
-            alert(`Account already exists on user: ${account}`)
             return { error: false, message: `Account already exists on user: ${account}`, data: user.value }
         } else {
             const accountToAdd = {
@@ -91,8 +90,12 @@ export default function useUsers () {
                     account: accountToAdd
                 })
             }
+            // TODO: Add verify session to this route.
             const response = await fetch(`${usersBaseURL}/users/add-sub-account`, requestOptions)
             const json = await response.json()
+            console.log('json returned from add-sub-account :>> ', json)
+            const { data } = json
+            user.value = data
             return json
         }
     

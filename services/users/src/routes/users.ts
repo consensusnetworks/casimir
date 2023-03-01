@@ -5,7 +5,6 @@ import { SessionRequest } from 'supertokens-node/framework/express'
 const router = express.Router()
 
 router.get('/', verifySession(), (req: SessionRequest, res: express.Response) => {
-    // const address = req.session!.getUserId()
     const address = req.session?.getUserId()
     const user = userCollection.find(user => user.address === address?.toLowerCase())
     console.log('user :>> ', user)
@@ -44,15 +43,27 @@ router.put('/update-primary-account', async (req: express.Request, res: express.
     })
 })
 
-router.post('/add-sub-account', async (req: express.Request, res: express.Response) => {
+router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
+        console.log('attempting to add sub account')
         const { account } = req.body
-        let { address } = req.body
-        address = address.toLowerCase()
+        const { address } = req.body
+        const userSessionAddress = req.session?.getUserId()
+        if (userSessionAddress !== address) {
+            res.setHeader('Content-Type', 'application/json')
+            res.status(200)
+            res.json({
+                message: 'Address does not match session',
+                error: true,
+                data: null
+            })
+            return
+        }
         const existingUser = userCollection.find(user => user.address === address)
         if (existingUser) {
             existingUser.accounts?.push(account)
         }
+        console.log('existingUser :>> ', existingUser)
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({

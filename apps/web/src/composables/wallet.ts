@@ -83,9 +83,8 @@ export default function useWallet() {
   }
 
   async function connectWallet(provider: ProviderString, currency?: Currency) {
-    try {
-      // Login (retrieve accounts) / sign up
-      if (!selectedAddress.value) {
+    try { // Sign Up or Login
+      if (!loggedIn.value) {
         const connectedAddress = await getConnectedAddress(provider, currency)
         const connectedCurrency = await detectCurrency(provider) as Currency
         const response = await signupOrLogin(provider, connectedAddress, connectedCurrency)
@@ -97,22 +96,19 @@ export default function useWallet() {
           loggedIn.value = true
           primaryAddress.value = user.value?.address as string
         }
-      } else {
-        // TODO: Pick up here (although make sure following block is only running if user is loggedIn & signedUp).
-        // Add account if already logged in / signed up
-        alert('already logged in!')
-        const connectedAddress = await getConnectedAddress(provider, currency)
+      } else { // Add account
+        console.log('already logged in!')
+        const connectedAddress = await getConnectedAddress(provider, currency) // TODO: Remove currency from here? Maybe not.
         const connectedCurrency = await detectCurrency(provider) as Currency
         const response = await addAccount(provider, connectedAddress, connectedCurrency)
-        console.log('add account response in connectWallet in wallet.ts:>> ', response)
         if (!response?.error) {
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
-          loggedIn.value = true
           primaryAddress.value = response.data.address
         }
       }
+      console.log('user.value :>> ', user.value)
     } catch (error) {
       console.error(error)
     }
