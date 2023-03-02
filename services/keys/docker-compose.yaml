@@ -1,8 +1,0 @@
-version: "3.7"
-services:
-  keys: 
-    build:
-      context: ./
-      dockerfile: ./Dockerfile
-    environment:
-      - "KEYGEN_URL=http://host.docker.internal:8000"

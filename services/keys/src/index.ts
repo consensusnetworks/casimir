@@ -4,9 +4,10 @@ import url from 'url'
 import { CLI } from './providers/cli'
 import { SSV } from './providers/ssv'
 import { Validator } from '@casimir/types'
-import { ValidatorOptions } from './interfaces/ValidatorOptions'
+import { CreateValidatorOptions } from './interfaces/CreateValidatorOptions'
+import { ReshareValidatorOptions } from './interfaces/ReshareValidatorOptions'
 
-export { SSV, Validator, ValidatorOptions }
+export { SSV, Validator, CreateValidatorOptions, ReshareValidatorOptions }
 
 /** 
  * Check if module is run directly 

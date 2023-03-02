@@ -3,6 +3,10 @@ export interface CommandArgs {
     dkgServiceUrl: string
     /** Operator registry IDs */
     operatorIds: number[]
+    /** Validator public key */
+    validatorPublicKey: string
     /** Validator withdrawal address */
     withdrawalAddress: string
+    /** Old operator registry IDs */
+    oldOperatorIds: number[]
 }

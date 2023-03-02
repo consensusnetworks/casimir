@@ -1,9 +1,10 @@
-import { SSVOptions } from '../interfaces/SSVOptions'
-import { ValidatorOptions } from '../interfaces/ValidatorOptions'
 import { Validator } from '@casimir/types'
-import { DKG } from './dkg'
-import { Share } from '../interfaces/Share'
 import { operatorStore } from '@casimir/data'
+import { DKG } from './dkg'
+import { SSVOptions } from '../interfaces/SSVOptions'
+import { Share } from '../interfaces/Share'
+import { CreateValidatorOptions } from '../interfaces/CreateValidatorOptions'
+import { ReshareValidatorOptions } from '../interfaces/ReshareValidatorOptions'
 
 export class SSV {
     /** Distributed key generation API service */
@@ -25,7 +26,7 @@ export class SSV {
 
     /** 
      * Create validator with operator key shares and deposit data
-     * @param {ValidatorOptions} options - Options for creating validator
+     * @param {CreateValidatorOptions} options - Options for creating a validator
      * @returns {Promise<Validator>} Validator with operator key shares and deposit data
      * @example
      * const validator = await createValidator({
@@ -33,21 +34,68 @@ export class SSV {
      *   withdrawalAddress: '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
      * })
      */
-    async createValidator(options: ValidatorOptions): Promise<Validator> {
+    async createValidator(options: CreateValidatorOptions): Promise<Validator> {
 
         const operatorIds = options?.operatorIds || process.env.OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [1, 2, 3, 4, 5, 6, 7, 8]
         const withdrawalAddress = options?.withdrawalAddress || process.env.WITHDRAWAL_ADDRESS || '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
         const operators = this.getOperatorGroup(operatorIds)
 
         /** Start a key generation ceremony with the given operators */
-        const dkgId = await this.dkgService.startKeyGeneration({ operators, withdrawalAddress })
-        console.log(`Started ceremony with ID ${dkgId}`)
+        const ceremonyId = await this.dkgService.startKeyGeneration({ operators, withdrawalAddress })
+        console.log(`Started ceremony with ID ${ceremonyId}`)
 
         /** Get operator key shares */
-        const dkgShares = await this.dkgService.getShares(dkgId)
+        const dkgShares = await this.dkgService.getShares(ceremonyId)
 
         /** Get validator deposit data */
-        const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.dkgService.getDepositData(dkgId)
+        const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.dkgService.getDepositData(ceremonyId)
+
+        /** Create validator */
+        const validator: Validator = {
+            depositDataRoot,
+            publicKey,
+            operatorIds, 
+            sharesEncrypted: dkgShares.map((share: Share) => share.encryptedShare),
+            sharesPublicKeys: dkgShares.map((share: Share) => share.publicKey),
+            signature,
+            withdrawalCredentials
+        }
+
+        return validator
+    }
+
+    /** 
+     * Reshare validator for new operator key shares and deposit data
+     * @param {ReshareValidatorOptions} options - Options for resharing a validator
+     * @returns {Promise<Validator>} Validator with operator key shares and deposit data
+     * @example
+     * const validator = await reshareValidator({
+     *   operatorIds: [1, 2, 3, 4],
+     *   validatorPublicKey: '0x8eb0f05adc697cdcbdf8848f7f1e8c2277f4fc7b0efc97ceb87ce75286e4328db7259fc0c1b39ced0c594855a30d415c',
+     *   oldOperators: {
+     *     "2": "http://host.docker.internal:8082",
+     *     "3": "http://host.docker.internal:8083",
+     *     "4": "http://host.docker.internal:8084"
+     *   }
+     * })
+     */
+    async reshareValidator(options: ReshareValidatorOptions): Promise<Validator> {
+
+        const operatorIds = options?.operatorIds || process.env.OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [2, 3, 4, 5]
+        const validatorPublicKey = options?.validatorPublicKey || process.env.VALIDATOR_PUBLIC_KEY || '0x8eb0f05adc697cdcbdf8848f7f1e8c2277f4fc7b0efc97ceb87ce75286e4328db7259fc0c1b39ced0c594855a30d415c'
+        const oldOperatorIds = options?.oldOperatorIds || process.env.OLD_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [2, 3, 4]
+        const operators = this.getOperatorGroup(operatorIds)
+        const oldOperators = this.getOperatorGroup(oldOperatorIds)
+
+        /** Start a key generation ceremony with the given operators */
+        const ceremonyId = await this.dkgService.startReshare({ operators, validatorPublicKey, oldOperators })
+        console.log(`Started ceremony with ID ${ceremonyId}`)
+
+        /** Get operator key shares */
+        const dkgShares = await this.dkgService.getShares(ceremonyId)
+
+        /** Get validator deposit data */
+        const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.dkgService.getDepositData(ceremonyId)
 
         /** Create validator */
         const validator: Validator = {

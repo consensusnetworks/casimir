@@ -1,6 +1,7 @@
 import { deployContract } from '@casimir/hardhat-helpers'
 import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
 import { validatorStore } from '@casimir/data'
+import { SSVManager } from '../build/artifacts/types'
 
 void async function () {
     let ssvManager
@@ -40,11 +41,11 @@ void async function () {
         (config[name as keyof DeploymentConfig] as ContractConfig).address = address
 
         // Save SSV manager for export
-        if (name === 'SSVManager') ssvManager = contract
+        if (name === 'SSVManager') ssvManager = contract as SSVManager
     }
 
     if (process.env.HARDHAT_NETWORK === 'localhost') {
-        const validators = Object.keys(validatorStore).map((key) => validatorStore[key]) as Validator[]
+        const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
         for (const validator of validators) {
             const {
                 depositDataRoot,
@@ -64,7 +65,7 @@ void async function () {
                 signature,
                 withdrawalCredentials
             )
-            await registration.wait()
+            await registration?.wait()
         }
     }
 }()

@@ -1,5 +1,5 @@
 export interface KeyGenerationInput {
-    /** Operator registry IDs */
+    /** Operator map with DKG endpoints */
     operators: Record<string, string>;
     /** Withdrawal address */
     withdrawalAddress: string;

@@ -50,7 +50,28 @@ async function deploymentFixture() {
 /** Fixture to add validators */
 async function addValidatorsFixture() {
   const { ssvManager, owner } = await loadFixture(deploymentFixture)
-  const validators = Object.keys(validatorStore).map((key) => validatorStore[key]) as Validator[]
+  const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
+  for (const validator of validators) {
+      const {
+          depositDataRoot,
+          publicKey,
+          operatorIds,
+          sharesEncrypted,
+          sharesPublicKeys,
+          signature,
+          withdrawalCredentials
+      } = validator
+      const registration = await ssvManager.addValidator(
+          depositDataRoot,
+          publicKey,
+          operatorIds,
+          sharesEncrypted,
+          sharesPublicKeys,
+          signature,
+          withdrawalCredentials
+      )
+      await registration.wait()
+  }
   return { owner, ssvManager, validators }
 }
 

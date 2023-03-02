@@ -18,12 +18,12 @@ Use the package in your Node.js or browser project.
 
 ```ts
 import { Validator } from '@casimir/types'
-import { SSV, ValidatorOptions } from '@casimir/keys'
+import { SSV, CreateValidatorOptions } from '@casimir/keys'
 
 ...
 
 const ssv = new SSV({ dkgServiceUrl: 'http://0.0.0.0:8000' })
-const options: ValidatorOptions = {
+const options: CreateValidatorOptions = {
     operatorIds: [1, 2, 3, 4],
     withdrawalAddress: '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
 }
