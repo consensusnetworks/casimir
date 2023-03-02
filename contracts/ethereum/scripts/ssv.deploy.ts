@@ -43,8 +43,7 @@ void async function () {
         if (name === 'SSVManager') ssvManager = contract
     }
 
-    if (process.env.HARDHAT_NETWORK) {
-        console.log('HARDHAT_NETWORK', process.env.HARDHAT_NETWORK)
+    if (process.env.HARDHAT_NETWORK === 'localhost') {
         const validators = Object.keys(validatorStore).map((key) => validatorStore[key]) as Validator[]
         for (const validator of validators) {
             const {

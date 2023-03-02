@@ -35,12 +35,6 @@ export class SSV {
      */
     async createValidator(options: ValidatorOptions): Promise<Validator> {
 
-        /** Start the local DKG service in development mode */
-        if (this.dkgService.serviceUrl.includes('0.0.0.0')) {
-            console.log('Starting local DKG service...')
-            await this.dkgService.start()
-        }
-
         const operatorIds = options?.operatorIds || process.env.OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [1, 2, 3, 4, 5, 6, 7, 8]
         const withdrawalAddress = options?.withdrawalAddress || process.env.WITHDRAWAL_ADDRESS || '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
         const operators = this.getOperatorGroup(operatorIds)
@@ -64,12 +58,6 @@ export class SSV {
             sharesPublicKeys: dkgShares.map((share: Share) => share.publicKey),
             signature,
             withdrawalCredentials
-        }
-
-        /** Stop up the local DKG service in development mode */
-        if (this.dkgService.serviceUrl.includes('0.0.0.0')) {
-            console.log('Stopping local DKG service...')
-            await this.dkgService.stop()
         }
 
         return validator

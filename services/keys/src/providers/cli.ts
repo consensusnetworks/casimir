@@ -25,8 +25,23 @@ export class CLI {
             console.log(`\t  --dkgServiceUrl ${dkgServiceUrl}`)
             console.log(`\t  --operatorIds ${operatorIds}`)
             console.log(`\t  --withdrawalAddress ${withdrawalAddress}\n`)
+
             const ssv = new SSV({ dkgServiceUrl })
+            
+            /** Start the local DKG service in development mode */
+            if (ssv.dkgService.serviceUrl.includes('0.0.0.0')) {
+                console.log('Starting local DKG service...')
+                await ssv.dkgService.start()
+            }
+
             const validator = await ssv.createValidator({ operatorIds, withdrawalAddress })
+
+            /** Stop up the local DKG service in development mode */
+            if (ssv.dkgService.serviceUrl.includes('0.0.0.0')) {
+                console.log('Stopping local DKG service...')
+                await ssv.dkgService.stop()
+            }
+
             return { status: 200, validator }
         },
         help: () => {
@@ -38,6 +53,7 @@ export class CLI {
             console.log('\t  --operatorIds')
             console.log('\t  --withdrawalAddress\n')
             console.log('\thelp\n')
+            
             return { status: 200 }
         }
     }
