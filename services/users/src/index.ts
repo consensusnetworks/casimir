@@ -7,7 +7,6 @@ import login from './routes/login'
 import auth from './routes/auth'
 import user from './routes/user'
 import health from './routes/health'
-import signupLogin from './routes/signupLogin'
 
 supertokens.init(SuperTokensBackendConfig)
 
