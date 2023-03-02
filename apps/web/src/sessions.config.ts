@@ -5,7 +5,7 @@ const { usersBaseURL } = useEnvironment()
 
 export const SuperTokensWebJSConfig = {
   appInfo: {
-      apiDomain: 'http://localhost:4000', // Replace with usersBaseURL
+      apiDomain: usersBaseURL,
       appName: 'Casimir',
       // apiBasePath: '/',
   },

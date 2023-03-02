@@ -39,7 +39,7 @@ export default function useWallet() {
   const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
-  const { user, getUserFromAPI, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
+  const { user, getUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
     'ETH': getEthersLedgerAddress,
@@ -78,7 +78,7 @@ export default function useWallet() {
   async function getUserAccount() {
     session.value = await Session.doesSessionExist()
     if (session.value) {
-      await getUserFromAPI()
+      await getUser()
     }
   }
 
@@ -105,7 +105,7 @@ export default function useWallet() {
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
-          primaryAddress.value = response.data.address
+          primaryAddress.value = response.data?.address as string
         }
       }
       console.log('user.value on connect wallet :>> ', user.value)

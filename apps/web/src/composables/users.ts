@@ -16,14 +16,14 @@ const user = ref<User | null>(null)
 export default function useUsers () {
     const { ssvManager } = useSSV()
 
-    async function getUserFromAPI() {
+    async function getUser() {
         const requestOptions = {
             method: 'GET',
             headers: { 
                 'Content-Type': 'application/json'
             }
         }
-        const response = await fetch(`${usersBaseURL}/users`, requestOptions)
+        const response = await fetch(`${usersBaseURL}/user`, requestOptions)
         const { data } = await response.json()
         user.value = data
         return data
@@ -57,7 +57,7 @@ export default function useUsers () {
     //     subscribeToUserEvents()
     // })
 
-    async function addAccount(provider: ProviderString, address: string, currency: Currency) {
+    async function addAccount(provider: ProviderString, address: string, currency: Currency): Promise<{ error: boolean, message: string, data: User | null }> {
         address = address.toLowerCase()
         const account = user.value?.accounts?.find((account: Account) => {
             const accountAddress = account.address.toLowerCase()
@@ -90,13 +90,11 @@ export default function useUsers () {
                     account: accountToAdd
                 })
             }
-            const response = await fetch(`${usersBaseURL}/users/add-sub-account`, requestOptions)
-            const json = await response.json()
-            const { data } = json
-            user.value = data
-            return json
+            const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
+            const { data: userAccount } = await response.json()
+            user.value = userAccount
+            return { error: false, message: `Account added to user: ${userAccount}`, data: userAccount }
         }
-    
     }
 
     // TODO: Refactor this next. 2/14
@@ -114,7 +112,7 @@ export default function useUsers () {
                 currency
             })
         }
-        return await fetch(`${usersBaseURL}/users/remove-sub-account`, requestOptions)
+        return await fetch(`${usersBaseURL}/user/remove-sub-account`, requestOptions)
     }
     
     async function getMessage(address: string) {
@@ -145,7 +143,7 @@ export default function useUsers () {
 
     return {
         user,
-        getUserFromAPI,
+        getUser,
         addAccount,
         removeAccount,
         getMessage,

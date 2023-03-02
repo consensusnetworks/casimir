@@ -5,7 +5,7 @@ import { middleware, errorHandler } from 'supertokens-node/framework/express'
 import { SuperTokensBackendConfig } from './sessions.config'
 import login from './routes/login'
 import auth from './routes/auth'
-import users from './routes/users'
+import user from './routes/user'
 import health from './routes/health'
 import signupLogin from './routes/signupLogin'
 
@@ -32,7 +32,7 @@ app.use(middleware())
 app.use('/auth', auth)
 app.use('/signupLogin', signupLogin)
 app.use('/login', login)
-app.use('/users', users)
+app.use('/user', user)
 app.use('/health', health)
 
 /** Returns 401 to the client in the case of session related errors */

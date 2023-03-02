@@ -9,19 +9,14 @@ router.get('/', verifySession(), (req: SessionRequest, res: express.Response) =>
     const user = userCollection.find(user => user.address === address?.toLowerCase())
     res.setHeader('Content-Type', 'application/json')
     res.status(200)
-    if (user) {
-        res.json({
-            message: 'User found',
-            error: false,
-            data: user
-        })
-    } else {
-        res.json({
-            message: 'User not found',
-            error: true,
-            data: null
-        })
-    }
+    const message = user ? 'User found' : 'User not found'
+    const error = user ? false : true
+    const data = user ? user : null
+    res.json({
+        message,
+        error,
+        data
+    })
 })
 
 // TODO: Think through handling changing primary address with SuperTokens Sessions.
@@ -49,7 +44,7 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
         const { address } = req.body
         const userSessionsAddress = req.session?.getUserId()
         const validatedAddress = validateAddress(userSessionsAddress, address)
-        if (!validatedAddress) {
+        if (!validatedAddress) {    
             res.setHeader('Content-Type', 'application/json')
             res.status(200)
             res.json({
@@ -60,9 +55,7 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
             return
         }
         const existingUser = userCollection.find(user => user.address === address)
-        if (existingUser) {
-            existingUser.accounts?.push(account)
-        }
+        if (existingUser) existingUser.accounts?.push(account)
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
