@@ -119,14 +119,6 @@ Deploy a contract, specifically [contracts/ethereum/src/SSVManager.sol](contract
 npm run deploy:ssv --workspace @casimir/ethereum
 ```
 
-### Keys
-
-Generate new validator keys with [@casimir/keys](services/keys/).
-
-```zsh
-npm run compose --workspace @casimir/keys
-```
-
 ### Local Nodes
 
 Run local cryptonodes for fast and flexible development.
