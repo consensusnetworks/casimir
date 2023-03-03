@@ -44,8 +44,8 @@ void async function () {
     /** Default to the web app */
     const app = argv.app || 'web'
 
-    /** Default to no mock */
-    const mock = argv.mock === 'true'
+    /** Default to local mock */
+    const mock = argv.mock !== 'false'
 
     /** Default to no network or testnet if set vaguely */
     const network = argv.network === 'true' ? 'testnet' : argv.network === 'false' ? false : argv.network
