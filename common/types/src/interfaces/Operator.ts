@@ -27,4 +27,5 @@ export interface Operator {
     is_deleted: boolean
     status: string // Todo check for enum (i.e., 'Active'...)
     validators_count: number
+    url: string // Todo check if this is usable in DKG
 }
