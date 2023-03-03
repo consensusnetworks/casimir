@@ -13,7 +13,6 @@ export default function useUsers() {
 
     function updateMessage (provider: ProviderString, address: string) {
         const user = userCollection.find(user => user.address === address)
-        console.log('user in updateMessage in users.ts :>> ', user)
         provider = provider.toLowerCase()
         if (user) {
             user.nonce = generateNonce()

@@ -1,97 +1,135 @@
-import { fetch } from 'undici'
-import { ISharesKeyPairs, SSVKeys } from 'ssv-keys'
-import { Operator, Validator } from '@casimir/types'
-import { CreateValidatorsOptions } from '../interfaces/CreateValidatorsOptions'
-import { DepositData } from '../interfaces/DepositData'
+import { Validator } from '@casimir/types'
+import { operatorStore } from '@casimir/data'
+import { DKG } from './dkg'
+import { SSVOptions } from '../interfaces/SSVOptions'
+import { Share } from '../interfaces/Share'
+import { CreateValidatorOptions } from '../interfaces/CreateValidatorOptions'
+import { ReshareValidatorOptions } from '../interfaces/ReshareValidatorOptions'
 
 export class SSV {
+    /** Distributed key generation API service */
+    dkgService: DKG
 
-    keys: SSVKeys = new SSVKeys(SSVKeys.VERSION.V3)
+    /**
+     * SSV constructor
+     * @param {SSVOptions} options - SSV options
+     * @example
+     * const ssv = new SSV({ dkgServiceUrl: 'http://0.0.0.0:8000' })
+     * const validators = await ssv.createValidator({
+     *   operatorIds: [1, 2, 3, 4],
+     *   withdrawalAddress: '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
+     * })
+     */
+    constructor(options: SSVOptions) {
+        this.dkgService = new DKG({ serviceUrl: options.dkgServiceUrl })
+    }
 
     /** 
-     * Create validator deposit data and SSV operator key shares 
-     * @param {CreateValidatorsOptions} options - Options for creating validators
-     * @returns {Promise<Validator[]>} Array of validators
+     * Create validator with operator key shares and deposit data
+     * @param {CreateValidatorOptions} options - Options for creating a validator
+     * @returns {Promise<Validator>} Validator with operator key shares and deposit data
+     * @example
+     * const validator = await createValidator({
+     *   operatorIds: [1, 2, 3, 4],
+     *   withdrawalAddress: '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
+     * })
      */
-    async createValidators(options?: CreateValidatorsOptions): Promise<Validator[]> {
+    async createValidator(options: CreateValidatorOptions): Promise<Validator> {
 
-        /** Use select {operatorIds} to create {validatorCount} validators */
-        const operatorIds = options?.operatorIds
-        const validatorCount = options?.validatorCount || 1
+        const operatorIds = options?.operatorIds || process.env.OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [1, 2, 3, 4, 5, 6, 7, 8]
+        const withdrawalAddress = options?.withdrawalAddress || process.env.WITHDRAWAL_ADDRESS || '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
+        const operators = this.getOperatorGroup(operatorIds)
 
-        const validators: Validator[] = []
-        const operators = await this.getOperators(operatorIds)
+        /** Start a key generation ceremony with the given operators */
+        const ceremonyId = await this.dkgService.startKeyGeneration({ operators, withdrawalAddress })
+        console.log(`Started ceremony with ID ${ceremonyId}`)
 
-        const groupSize = 4
-        let operatorIndex = 0
-        for (let index = 0; index < validatorCount; index++) {
-            
-            /** Get deposit data and keys for validator */
-            const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData(index)
-            const keystore: string = JSON.stringify(await import(`../../mock/keystore-${index}.json`))
-            const keystorePassword = 'Testingtest1234'
-            const privateKey = await this.keys.getPrivateKeyFromKeystoreData(keystore, keystorePassword)
-            
-            /** Use next operator index for group slicing */
-            const nextOperatorIndex = operatorIndex + groupSize
+        /** Get operator key shares */
+        const dkgShares = await this.dkgService.getShares(ceremonyId)
 
-            /** Create threshold for group of operators */
-            const group = operators.slice(operatorIndex, nextOperatorIndex)
-            const groupIds = group.map((o: Operator) => o.id)
-            const groupPublicKeys = group.map((o: Operator) => o.public_key)
-            const { shares }: ISharesKeyPairs = await this.keys.createThreshold(privateKey, groupIds)
-            const encryptedShares = await this.keys.encryptShares(groupPublicKeys, shares, SSVKeys.SHARES_FORMAT_ABI)
+        /** Get validator deposit data */
+        const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.dkgService.getDepositData(ceremonyId)
 
-            /** Update operator starting index for next group */
-            operatorIndex = nextOperatorIndex
-
-            /** Create validator */
-            const validator: Validator = {
-                depositDataRoot,
-                publicKey,
-                operatorIds: groupIds, 
-                sharesEncrypted: encryptedShares.map(s => s.privateKey),
-                sharesPublicKeys: encryptedShares.map(s => s.publicKey),
-                signature,
-                withdrawalCredentials
-            }
-            validators.push(validator)
+        /** Create validator */
+        const validator: Validator = {
+            depositDataRoot,
+            publicKey,
+            operatorIds, 
+            sharesEncrypted: dkgShares.map((share: Share) => share.encryptedShare),
+            sharesPublicKeys: dkgShares.map((share: Share) => share.publicKey),
+            signature,
+            withdrawalCredentials
         }
-        return validators
+
+        return validator
+    }
+
+    /** 
+     * Reshare validator for new operator key shares and deposit data
+     * @param {ReshareValidatorOptions} options - Options for resharing a validator
+     * @returns {Promise<Validator>} Validator with operator key shares and deposit data
+     * @example
+     * const validator = await reshareValidator({
+     *   operatorIds: [1, 2, 3, 4],
+     *   validatorPublicKey: '0x8eb0f05adc697cdcbdf8848f7f1e8c2277f4fc7b0efc97ceb87ce75286e4328db7259fc0c1b39ced0c594855a30d415c',
+     *   oldOperators: {
+     *     "2": "http://host.docker.internal:8082",
+     *     "3": "http://host.docker.internal:8083",
+     *     "4": "http://host.docker.internal:8084"
+     *   }
+     * })
+     */
+    async reshareValidator(options: ReshareValidatorOptions): Promise<Validator> {
+
+        const operatorIds = options?.operatorIds || process.env.OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [2, 3, 4, 5]
+        const validatorPublicKey = options?.validatorPublicKey || process.env.VALIDATOR_PUBLIC_KEY || '0x8eb0f05adc697cdcbdf8848f7f1e8c2277f4fc7b0efc97ceb87ce75286e4328db7259fc0c1b39ced0c594855a30d415c'
+        const oldOperatorIds = options?.oldOperatorIds || process.env.OLD_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [2, 3, 4]
+        const operators = this.getOperatorGroup(operatorIds)
+        const oldOperators = this.getOperatorGroup(oldOperatorIds)
+
+        /** Start a key generation ceremony with the given operators */
+        const ceremonyId = await this.dkgService.startReshare({ operators, validatorPublicKey, oldOperators })
+        console.log(`Started ceremony with ID ${ceremonyId}`)
+
+        /** Get operator key shares */
+        const dkgShares = await this.dkgService.getShares(ceremonyId)
+
+        /** Get validator deposit data */
+        const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.dkgService.getDepositData(ceremonyId)
+
+        /** Create validator */
+        const validator: Validator = {
+            depositDataRoot,
+            publicKey,
+            operatorIds, 
+            sharesEncrypted: dkgShares.map((share: Share) => share.encryptedShare),
+            sharesPublicKeys: dkgShares.map((share: Share) => share.publicKey),
+            signature,
+            withdrawalCredentials
+        }
+
+        return validator
     }
 
     /**
-     * Get deposit data for a validator
-     * @param {number} index - Validator index
-     * @returns {Promise<DepositData>} Returns a promise of the validator deposit data
+     * Get operator group from operator IDs
+     * @param {number[]} operatorIds - Array of operator IDs
+     * @returns {<Record<string, string>} Operator group
+     * @example
+     * const group = getOperatorGroup([1, 2, 3, 4])
+     * console.log(group) 
+     * // => {
+     * //     "1": "http://host.docker.internal:8081",
+     * //     "2": "http://host.docker.internal:8082",
+     * //     "3": "http://host.docker.internal:8083",
+     * //     "4": "http://host.docker.internal:8084"
+     * // }
      */
-    async getDepositData(index: number): Promise<DepositData> {
-        const { deposit_data_root, pubkey, signature, withdrawal_credentials } = await import(`../../mock/deposit_data-${index}.json`) 
-        return {
-            depositDataRoot: `0x${deposit_data_root}`,
-            publicKey: `0x${pubkey}`,
-            signature: `0x${signature}`,
-            withdrawalCredentials: `0x${withdrawal_credentials}`
-        }   
+    getOperatorGroup(operatorIds: number[]): Record<string, string> {
+        return operatorIds.reduce((group: Record<string, string>, id: number) => {
+            const key = id.toString() as keyof typeof operatorStore
+            group[key] = operatorStore[key]
+            return group
+        }, {})
     }
-
-    /**
-     * Get operators from SSV API or local data
-     * @param {number[]} operatorIds - Optional operator IDs
-     * @returns {Promise<Operator[]>} Returns a promise of the operator list given optional IDs
-     */
-    async getOperators(operatorIds?: number[]): Promise<Operator[]> {
-        if (operatorIds) {
-            const operators: Operator[] = []
-            for (const id of operatorIds) {
-                const response = await fetch(`https://api.ssv.network/api/v1/operators/${id}`)
-                const operator = await response.json() as Operator
-                operators.push(operator)
-            }
-            return operators
-        }
-        const { operators } = await import('../../mock/operators.json')
-        return operators
-    }
-
 }

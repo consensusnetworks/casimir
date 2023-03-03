@@ -3,8 +3,8 @@ import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { SSVManager } from '../build/artifacts/types'
-import { ContractConfig, DeploymentConfig } from '@casimir/types'
-import { SSV } from '@casimir/keys'
+import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
+import { validatorStore } from '@casimir/data'
 
 /** Fixture to deploy SSV manager contract */
 async function deploymentFixture() {
@@ -50,32 +50,29 @@ async function deploymentFixture() {
 /** Fixture to add validators */
 async function addValidatorsFixture() {
   const { ssvManager, owner } = await loadFixture(deploymentFixture)
-  // const operatorIds = Array.from({ length: 8 }, (_, i) => i + 175)
-  const validatorCount = 2
-  const ssv = new SSV()
-  const validators = await ssv.createValidators({ /*operatorIds, */validatorCount })
+  const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
   for (const validator of validators) {
-    const { 
-      depositDataRoot,
-      publicKey,
-      operatorIds, 
-      sharesEncrypted, 
-      sharesPublicKeys, 
-      signature,
-      withdrawalCredentials
-    } = validator
-    const registration = await ssvManager.addValidator(
-      depositDataRoot, 
-      publicKey,
-      operatorIds, 
-      sharesEncrypted, 
-      sharesPublicKeys, 
-      signature,
-      withdrawalCredentials
-    )
-    await registration.wait()
+      const {
+          depositDataRoot,
+          publicKey,
+          operatorIds,
+          sharesEncrypted,
+          sharesPublicKeys,
+          signature,
+          withdrawalCredentials
+      } = validator
+      const registration = await ssvManager.addValidator(
+          depositDataRoot,
+          publicKey,
+          operatorIds,
+          sharesEncrypted,
+          sharesPublicKeys,
+          signature,
+          withdrawalCredentials
+      )
+      await registration.wait()
   }
-  return { owner, ssv, ssvManager, validators }
+  return { owner, ssvManager, validators }
 }
 
 /** Fixture to stake 16 ETH for the first user */

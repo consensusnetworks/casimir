@@ -23,11 +23,6 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Set the stage for testing
-        if: ${{ github.actor == 'nektos/act' }}
-        run: |
-          echo "STAGE=dev" >> $GITHUB_ENV
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -43,73 +38,19 @@ jobs:
       - name: Deploy cdk infrastructure
         run: npm run deploy:cdk
 
-      - name: Select success emoji
-        if: ${{ success() }}
-        run: echo 'EMOJI=:rocket:' >> $GITHUB_ENV
-
-      - name: Select failure emoji
-        if: ${{ failure() }}
-        run: echo 'EMOJI=:see_no_evil:' >> $GITHUB_ENV
-
-      - name: Notify slack
+      - name: Slack the team
         if: ${{ success() || failure() }}
-        uses: slackapi/slack-github-action@v1.18.0
+        uses: slackapi/slack-github-action@v1.23.0
         with:
           payload: |
             {
               "blocks": [
                 {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": ":construction: Development Deployment → :ocean: Casimir"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Branch* · <https://github.com/${{ github.repository }}/tree/develop|develop>"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Environment* · <https://${{ env.AWS_REGION }}.console.aws.amazon.com/cloudformation/home?region=${{ env.AWS_REGION }}#/stacks|${{ env.STAGE }}>"
-                    }
-                  ]
-                },
-                {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Deployment completed with _${{ job.status }}_ ${{ env.EMOJI }}"
+                    "text": "<https://dev.casimir.co | *:ocean: Casimir (Dev)*> deployment finished with <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }} | _${{ job.status }}_>"
                   }
-                },
-                {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "Preview",
-                        "emoji": true
-                      },
-                      "style": "primary",
-                      "value": "preview",
-                      "url": "http://${{ env.STAGE }}.casimir.co"
-                    },
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "Inspect Logs",
-                        "emoji": true
-                      },
-                      "value": "inspect_logs",
-                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                    }
-                  ]
                 }
               ]
             }

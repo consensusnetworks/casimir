@@ -2,6 +2,8 @@ import * as glue from '@aws-cdk/aws-glue-alpha'
 import { JsonSchema } from './interfaces/JsonSchema'
 import eventSchema from './schemas/event.schema.json'
 import aggSchema from './schemas/agg.schema.json'
+import operatorStore from './mock/operator.store.json'
+import validatorStore from './mock/validator.store.json'
 
 /**
  * Converts a JSON Schema table object to an array of Glue columns.
@@ -79,4 +81,4 @@ export type EventTableSchema = {
   auto_stake: boolean
 }
 
-export { eventSchema, aggSchema }
+export { eventSchema, aggSchema, operatorStore, validatorStore }

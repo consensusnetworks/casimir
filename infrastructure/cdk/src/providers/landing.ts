@@ -1,5 +1,6 @@
 import { Construct } from 'constructs'
 import * as cdk from 'aws-cdk-lib'
+import * as certmgr from 'aws-cdk-lib/aws-certificatemanager'
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import * as s3 from 'aws-cdk-lib/aws-s3'
@@ -35,8 +36,21 @@ export class LandingStack extends cdk.Stack {
     const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, config.getFullStackResourceName(this.name, 'origin-access-identity'))
     bucket.grantRead(originAccessIdentity)
 
+    /** Create a requisite us-east-1 certificate for distribution if needed */
+    const distributionCertificate = (() => {
+      if (certificate?.env.region === 'us-east-1') return certificate
+      /** Replace deprecated method when cross-region support is out of beta */
+      return new certmgr.DnsValidatedCertificate(this, config.getFullStackResourceName(this.name, 'cert'), {
+        domainName: rootDomain,
+        subjectAlternativeNames: [`${subdomains.landing}.${rootDomain}`],
+        hostedZone,
+        region: 'us-east-1'
+      })
+    })()
+
     /** Create a cloudfront distribution for the landing page */
     const distribution = new cloudfront.Distribution(this, config.getFullStackResourceName(this.name, 'distribution'), {
+      certificate: distributionCertificate,
       defaultRootObject: 'index.html',
       errorResponses: [
         {
@@ -56,8 +70,7 @@ export class LandingStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         origin: new cloudfrontOrigins.S3Origin(bucket, { originAccessIdentity })
       },
-      domainNames: [rootDomain, `${subdomains.landing}.${rootDomain}`],
-      certificate
+      domainNames: [rootDomain, `${subdomains.landing}.${rootDomain}`]
     })
 
     /** Deploy the landing page to the bucket */

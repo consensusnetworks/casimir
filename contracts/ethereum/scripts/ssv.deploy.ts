@@ -1,9 +1,11 @@
 import { deployContract } from '@casimir/hardhat-helpers'
-import { ContractConfig, DeploymentConfig } from '@casimir/types'
+import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
+import { validatorStore } from '@casimir/data'
+import { SSVManager } from '../build/artifacts/types'
 
 void async function () {
-    const mockChainlink = process.env.MOCK_CHAINLINK === 'true'
-    let config: DeploymentConfig = {
+    let ssvManager
+    const config: DeploymentConfig = {
         SSVManager: {
             address: '',
             args: {
@@ -17,24 +19,6 @@ void async function () {
             },
             options: {},
             proxy: false
-        }
-    }
-
-    if (mockChainlink) {
-        const mockChainlinkConfig = {
-            MockFeed: {
-                address: '',
-                args: {
-                    linkTokenAddress: process.env.LINK_TOKEN_ADDRESS
-                },
-                options: {},
-                proxy: false
-            }
-        }
-        config = {
-            // Deploy Chainlink contracts first
-            ...mockChainlinkConfig,
-            ...config
         }
     }
 
@@ -55,5 +39,33 @@ void async function () {
 
         // Save contract address for next loop
         (config[name as keyof DeploymentConfig] as ContractConfig).address = address
+
+        // Save SSV manager for export
+        if (name === 'SSVManager') ssvManager = contract as SSVManager
+    }
+
+    if (process.env.HARDHAT_NETWORK === 'localhost') {
+        const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
+        for (const validator of validators) {
+            const {
+                depositDataRoot,
+                publicKey,
+                operatorIds,
+                sharesEncrypted,
+                sharesPublicKeys,
+                signature,
+                withdrawalCredentials
+            } = validator
+            const registration = await ssvManager?.addValidator(
+                depositDataRoot,
+                publicKey,
+                operatorIds,
+                sharesEncrypted,
+                sharesPublicKeys,
+                signature,
+                withdrawalCredentials
+            )
+            await registration?.wait()
+        }
     }
 }()
