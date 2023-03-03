@@ -1,4 +1,3 @@
-import { SignupLoginCredentials } from '@casimir/types/src/interfaces/SignupLoginCredentials'
 import { LoginCredentials } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import { ProviderString } from '@casimir/types'
@@ -13,39 +12,17 @@ export default function useAuth() {
                 'Content-Type': 'application/json'
             }
         }
-        return await fetch(`${usersBaseURL}/auth/${provider}/${address}`, requestOptions)
-    }
-
-    async function signupOrLoginAuth(signupCredentials: SignupLoginCredentials) {
-        const requestOptions = {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(signupCredentials)
-        }
-        return await fetch(`${usersBaseURL}/auth/signupLogin`, requestOptions)
-    }
-    
-    async function signUpAuth(signupCredentials: SignupLoginCredentials) {
-        const requestOptions = {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(signupCredentials)
-        }
-        const response = await fetch(`${usersBaseURL}/signup`, requestOptions)
-        return response
+        return await fetch(`${usersBaseURL}/auth/message/${provider}/${address}`, requestOptions)
     }
 
     /**
-     * Logs a user in with an address, message and signed message
+     * Signs user up if they don't exist, otherwise
+     * logs the user in with an address, message, and signed message
      * 
-     * @param {LoginCredentials} loginCredentials - The user's address, message and signed message 
+     * @param {LoginCredentials} loginCredentials - The user's address, provider, currency, message, and signed message 
      * @returns {Promise<Response>} - The response from the login request
      */
-    async function login(loginCredentials: LoginCredentials): Promise<Response> {
+    async function login(loginCredentials: LoginCredentials) {
         const requestOptions = {
             method: 'POST',
             headers: { 
@@ -53,12 +30,10 @@ export default function useAuth() {
             },
             body: JSON.stringify(loginCredentials)
         }
-        return await fetch(`${usersBaseURL}/login`, requestOptions)
+        return await fetch(`${usersBaseURL}/auth/login`, requestOptions)
     }
 
     return {
-        signUpAuth,
-        signupOrLoginAuth,
         login,
         getMessage
     }

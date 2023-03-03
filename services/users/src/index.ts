@@ -29,7 +29,6 @@ app.use(
 app.use(middleware())
 
 app.use('/auth', auth)
-app.use('/signupLogin', signupLogin)
 app.use('/login', login)
 app.use('/user', user)
 app.use('/health', health)
