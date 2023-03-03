@@ -16,6 +16,19 @@ const user = ref<User | null>(null)
 export default function useUsers () {
     const { ssvManager } = useSSV()
 
+    async function getUser() {
+        const requestOptions = {
+            method: 'GET',
+            headers: { 
+                'Content-Type': 'application/json'
+            }
+        }
+        const response = await fetch(`${usersBaseURL}/user`, requestOptions)
+        const { data } = await response.json()
+        user.value = data
+        return data
+    }
+
     // Todo filter for events for user addresses
     function subscribeToUserEvents() {
         const { getUserBalance, getUserPools } = useWallet()
@@ -36,15 +49,15 @@ export default function useUsers () {
         })
     }
 
-    onMounted(async () => {
-        const { getUserBalance, getUserPools } = useWallet()
-        // Just get pools for primary account for demo
-        user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
-        user.value.pools = await getUserPools(user.value.id)
-        subscribeToUserEvents()
-    })
+    // onMounted(async () => {
+    //     const { getUserBalance, getUserPools } = useWallet()
+    //     // Just get pools for primary account for demo
+    //     user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
+    //     user.value.pools = await getUserPools(user.value.id)
+    //     subscribeToUserEvents()
+    // })
 
-    async function addAccount(provider: ProviderString, address: string, currency: Currency) {
+    async function addAccount(provider: ProviderString, address: string, currency: Currency): Promise<{ error: boolean, message: string, data: User | null }> {
         address = address.toLowerCase()
         const account = user.value?.accounts?.find((account: Account) => {
             const accountAddress = account.address.toLowerCase()
@@ -57,7 +70,6 @@ export default function useUsers () {
             return isEqual
         }) as Account
         if (account) {
-            alert(`Account already exists on user: ${account}`)
             return { error: false, message: `Account already exists on user: ${account}`, data: user.value }
         } else {
             const accountToAdd = {
@@ -78,11 +90,11 @@ export default function useUsers () {
                     account: accountToAdd
                 })
             }
-            const response = await fetch(`${usersBaseURL}/users/add-sub-account`, requestOptions)
-            const json = await response.json()
-            return json
+            const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
+            const { data: userAccount } = await response.json()
+            user.value = userAccount
+            return { error: false, message: `Account added to user: ${userAccount}`, data: userAccount }
         }
-    
     }
 
     // TODO: Refactor this next. 2/14
@@ -100,7 +112,7 @@ export default function useUsers () {
                 currency
             })
         }
-        return await fetch(`${usersBaseURL}/users/remove-sub-account`, requestOptions)
+        return await fetch(`${usersBaseURL}/user/remove-sub-account`, requestOptions)
     }
     
     async function getMessage(address: string) {
@@ -131,6 +143,7 @@ export default function useUsers () {
 
     return {
         user,
+        getUser,
         addAccount,
         removeAccount,
         getMessage,

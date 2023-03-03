@@ -128,10 +128,7 @@ export default function useEthers() {
       signedMessage: signature,
       currency
     })
-    console.log('response in signupLoginWithEthers in ethers.ts :>> ', response)
-    const json = await response.json()
-    console.log('json in signupLoginWithEthers in ethers.ts :>> ', json)
-    return json
+    return await response.json()
   }
 
   async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {

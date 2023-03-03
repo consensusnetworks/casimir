@@ -1,7 +1,25 @@
 import express from 'express'
 import { userCollection } from '../collections/users'
+import { verifySession } from 'supertokens-node/recipe/session/framework/express'
+import { SessionRequest } from 'supertokens-node/framework/express'
 const router = express.Router()
 
+router.get('/', verifySession(), (req: SessionRequest, res: express.Response) => {
+    const address = req.session?.getUserId()
+    const user = userCollection.find(user => user.address === address?.toLowerCase())
+    res.setHeader('Content-Type', 'application/json')
+    res.status(200)
+    const message = user ? 'User found' : 'User not found'
+    const error = user ? false : true
+    const data = user ? user : null
+    res.json({
+        message,
+        error,
+        data
+    })
+})
+
+// TODO: Think through handling changing primary address with SuperTokens Sessions.
 router.put('/update-primary-account', async (req: express.Request, res: express.Response) => {
     let { primaryAddress, updatedProvider, updatedAddress } = req.body
     primaryAddress = primaryAddress.toLowerCase()
@@ -20,15 +38,24 @@ router.put('/update-primary-account', async (req: express.Request, res: express.
     })
 })
 
-router.post('/add-sub-account', async (req: express.Request, res: express.Response) => {
+router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
         const { account } = req.body
-        let { address } = req.body
-        address = address.toLowerCase()
-        const existingUser = userCollection.find(user => user.address === address)
-        if (existingUser) {
-            existingUser.accounts?.push(account)
+        const { address } = req.body
+        const userSessionsAddress = req.session?.getUserId()
+        const validatedAddress = validateAddress(userSessionsAddress, address)
+        if (!validatedAddress) {    
+            res.setHeader('Content-Type', 'application/json')
+            res.status(200)
+            res.json({
+                message: 'Address does not match session',
+                error: true,
+                data: null
+            })
+            return
         }
+        const existingUser = userCollection.find(user => user.address === address)
+        if (existingUser) existingUser.accounts?.push(account)
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
@@ -46,7 +73,7 @@ router.post('/add-sub-account', async (req: express.Request, res: express.Respon
     }
 })
 
-router.post('/remove-sub-account', async (req: express.Request, res: express.Response) => {
+router.post('/remove-sub-account', verifySession(), async (req: express.Request, res: express.Response) => {
     try {
         const { provider, address, currency } = req.body
         let { primaryAddress } = req.body
@@ -89,5 +116,9 @@ router.post('/remove-sub-account', async (req: express.Request, res: express.Res
         })
     }
 })
+
+function validateAddress(userSessionsAddress:string | undefined, address:string) {
+    return userSessionsAddress === address
+}
 
 export default router

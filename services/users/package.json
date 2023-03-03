@@ -10,7 +10,8 @@
   "dependencies": {
     "cors": "^2.8.5",
     "ethers": "^5.7.2",
-    "express": "^4.18.1"
+    "express": "^4.18.1",
+    "supertokens-node": "^13.1.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
