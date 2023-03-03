@@ -7,6 +7,7 @@ import { Account } from './interfaces/Account'
 import { BalanceSnapshot } from './interfaces/BalanceSnapshot'
 import { Currency } from './interfaces/Currency'
 import { ProviderString } from './interfaces/ProviderString'
+import { LoginCredentials } from './interfaces/LoginCredentials'
 export type {
     ContractConfig, 
     DeploymentConfig,
@@ -16,5 +17,6 @@ export type {
     Currency,
     ProviderString,
     Operator, 
-    Validator
+    Validator,
+    LoginCredentials
 }

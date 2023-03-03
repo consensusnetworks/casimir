@@ -4,7 +4,7 @@ import { userCollection } from '../collections/users'
 import Session from 'supertokens-node/recipe/session'
 import useEthers from '../providers/ethers'
 import { Account } from '@casimir/types'
-import { LoginCredentials } from '@casimir/types/src/interfaces/LoginCredentials'
+import { LoginCredentials } from '@casimir/types'
 
 const { verifyMessage } = useEthers()
 const { getMessage, updateMessage } = useUsers()
