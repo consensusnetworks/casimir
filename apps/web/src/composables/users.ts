@@ -11,7 +11,7 @@ import { ProviderString } from '@casimir/types'
 const { usersBaseURL, ethereumURL } = useEnvironment()
 import { dummy_user_account } from '@/pages/user-dash/composables/dummy_data.js'
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
-const user = ref<User | null>(null)
+const user = ref<User>()
 
 export default function useUsers () {
     const { ssvManager } = useSSV()
@@ -24,9 +24,12 @@ export default function useUsers () {
             }
         }
         const response = await fetch(`${usersBaseURL}/user`, requestOptions)
-        const { data } = await response.json()
-        user.value = data
-        return data
+        const { user } = await response.json()
+        return user
+    }
+
+    function setUser(newUser?: User) {
+        user.value = newUser
     }
 
     // Todo filter for events for user addresses
@@ -144,6 +147,7 @@ export default function useUsers () {
     return {
         user,
         getUser,
+        setUser,
         addAccount,
         removeAccount,
         getMessage,

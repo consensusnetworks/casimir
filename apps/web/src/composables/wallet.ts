@@ -34,12 +34,12 @@ const session = ref<boolean>(false)
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
   const { ssvManager, getSSVFeePercent } = useSSV()
-  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, signupLoginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
+  const { ethersProviderList, getEthersBrowserSigner, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getBitcoinLedgerAddress, getEthersLedgerAddress, getEthersLedgerSigner, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, getEthersTrezorSigner, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { isWalletConnectSigner, getWalletConnectAddress, getEthersWalletConnectSigner, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
-  const { user, getUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
+  const { user, getUser, setUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
     'ETH': getEthersLedgerAddress,
@@ -78,7 +78,8 @@ export default function useWallet() {
   async function getUserAccount() {
     session.value = await Session.doesSessionExist()
     if (session.value) {
-      await getUser()
+      const user = await getUser()
+      setUser(user)
     }
   }
 
@@ -87,7 +88,7 @@ export default function useWallet() {
       if (!loggedIn.value) {
         const connectedAddress = await getConnectedAddress(provider, currency)
         const connectedCurrency = await detectCurrency(provider) as Currency
-        const response = await signupOrLogin(provider, connectedAddress, connectedCurrency)
+        const response = await loginWithWallet(provider, connectedAddress, connectedCurrency)
         if (!response?.error) {
           await getUserAccount()
           setSelectedProvider(provider)
@@ -139,11 +140,11 @@ export default function useWallet() {
     }
   }
 
-  async function signupOrLogin(provider: ProviderString, address: string, currency: Currency) {
+  async function loginWithWallet(provider: ProviderString, address: string, currency: Currency) {
     if (ethersProviderList.includes(provider)) {
-      const result = await signupLoginWithEthers(provider, address, currency)
+      const result = await loginWithEthers(provider, address, currency)
       if (result.error) {
-        console.log('result in signupOrLogin in wallet.ts :>> ', result)
+        console.log('result in loginWithWallet in wallet.ts :>> ', result)
         alert('There was an error signing up. Please try again.')
       } 
       return result
@@ -159,8 +160,8 @@ export default function useWallet() {
     setSelectedAddress('')
     setSelectedProvider('')
     setSelectedCurrency('')
+    setUser()
     primaryAddress.value = ''
-    user.value = null
     console.log('user.value on logout :>> ', user.value)
   }
 

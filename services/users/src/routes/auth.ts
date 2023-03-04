@@ -4,14 +4,14 @@ import { userCollection } from '../collections/users'
 import Session from 'supertokens-node/recipe/session'
 import useEthers from '../providers/ethers'
 import { Account } from '@casimir/types'
-import { SignupLoginCredentials } from '@casimir/types/src/interfaces/SignupLoginCredentials'
+import { LoginCredentials } from '@casimir/types'
 
 const { verifyMessage } = useEthers()
 const { getMessage, updateMessage } = useUsers()
 const router = express.Router()
 
 
-router.get('/:provider/:address', async (req: express.Request, res: express.Response) => {
+router.get('/message/:provider/:address', (req: express.Request, res: express.Response) => {
     const { provider, address } = req.params
     updateMessage(provider, address)
     const message = getMessage(address)
@@ -25,9 +25,9 @@ router.get('/:provider/:address', async (req: express.Request, res: express.Resp
     }
 })
 
-router.use('/signupLogin', async (req: express.Request, res: express.Response) => {
+router.use('/login', async (req: express.Request, res: express.Response) => {
     const { body } = req
-    const { provider, address, currency, message, signedMessage } = body as SignupLoginCredentials
+    const { provider, address, currency, message, signedMessage } = body as LoginCredentials
     const user = userCollection.find(user => user.address === address.toLowerCase())
     if (user && !user?.accounts) {  // signup
         const accounts: Array<Account> = [
@@ -59,28 +59,6 @@ router.use('/signupLogin', async (req: express.Request, res: express.Response) =
         res.json({
             message: response ? 'Login successful' : 'Login failed',
             error: false,
-        })
-    }
-})
-
-// TODO: Is this being used at all?
-router.post('/:address', async (req: express.Request, res: express.Response) => {
-    const { address } = req.params
-    const { message } = req.body
-    const user = userCollection.find(user => user.address === address)
-    if (user) {
-        user.nonce = message
-        res.setHeader('Content-Type', 'application/json')
-        res.status(200)
-        res.json({
-            message: `Message updated to: ${message}`,
-            error: false
-        })
-    } else {
-        res.status(404)
-        res.json({
-            message: 'User not found',
-            error: true
         })
     }
 })
