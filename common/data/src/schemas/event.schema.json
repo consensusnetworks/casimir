@@ -1,28 +1,28 @@
 {
-	"$id": "https://casimir.co/event.schema.json",
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"title": "Event",
-	"type": "object",
+    "$id": "https://casimir.co/event.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Event",
+    "type": "object",
     "properties": {
         "chain": {
             "type": "string",
-            "description": "Name of the chain (e.g. iotex, ethereum)"
+            "description": "The chain which the event belongs to (e.g. iotex, ethereum)"
         },
         "network": {
             "type": "string",
-            "description": "Name of the network (e.g. mainnet, testnet)"
+            "description": "The network which the event was received on (e.g. mainnet, testnet)"
         },
         "provider": {
             "type": "string",
-            "description": "Name of the provider (e.g. casimir, infura, alchemy)"
+            "description": "The provider used to source the event (e.g. infura, consensus)"
         },
         "type": {
             "type": "string",
-            "description": "Type of the event"
+            "description": "The type of event (e.g. block, transaction)"
         },
         "height": {
             "type": "integer",
-            "description": "The height of the event"
+            "description": "The height of the block the event belongs to"
         },
         "block": {
             "type": "string",
@@ -32,53 +32,33 @@
             "type": "string",
             "description": "The transaction hash"
         },
-        "created_at": {
+        "received_at": {
             "type": "string",
-            "description": "The date and time of the event in ISO 8601 format e.g. 2015-03-04T22:44:30.652Z"
+            "description": "The timestamp of the event recieved by the blockchain (format: Modified ISO 8601 e.g. 2015-03-04 22:44:30.652)"
         },
-        "address": {
+        "sender": {
             "type": "string",
-            "description": "The address which initiated the event"
+            "description": "The sender's address"
         },
-        "to_address": {
+        "recipient": {
             "type": "string",
             "description": "The recipient's address"
         },
+        "sender_balance": {
+            "type": "string",
+            "description": "The sender's balance at the time of the event"
+        },
+        "recipient_balance": {
+            "type": "string",
+            "description": "The recipient's balance at the time of the event"
+        },
         "amount": {
             "type": "string",
-            "description": "The amount of currency associated with the event"
+            "description": "The amount transferred in the event"
         },
-        "gas_used": {
+        "price": {
             "type": "string",
-            "description": "The total amount of gas used"
-        },
-        "gas_limit": {
-            "type": "string",
-            "description": "The gas limit provided by transactions in the block"
-        },
-        "base_fee": {
-            "type": "string",
-            "description": "Post-London upgrade this represents the minimum gasUsed multiplier required for a transaction to be included in a block"
-        },
-        "burnt_fee": {
-            "type": "string",
-            "description": "Post-London Upgrade, this represents the part of the tx fee that is burnt"
-        },
-        "validator": {
-            "type": "string",
-            "description": "The validator's address"
-        },
-        "validator_list": {
-            "type": "array",
-            "description": "The list of validators in stake action"
-        },
-        "duration":{
-            "type": "string",
-            "description": "The duration of the event"
-        },
-        "auto_stake": {
-            "type": "boolean",
-            "description": "Is auto staking enabled"
+            "description": "The exchange price of the coin at the time of the event"
         }
     }
 }
