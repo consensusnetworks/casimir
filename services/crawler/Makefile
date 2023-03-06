@@ -1,6 +1,6 @@
-,PHONY: build
+,PHONY: build clean dep test
 
-name=candle
+name=processor
 bin = ./build/$(name)
 os = $(shell go env GOOS)
 arch = $(shell go env GOARCH)
@@ -16,6 +16,3 @@ clean:
 	rm -rf ./build
 	rm -rf ./logs
 	go clean
-
-dep:
-	go mod tidy

@@ -493,26 +493,6 @@ func (e *EthereumCrawler) SaveToS3(key *string, data *[]byte) error {
 	return nil
 }
 
-func (e *EthereumCrawler) SaveToLocal(key *string, data *[]byte) error {
-	if len(*data) == 0 {
-		return fmt.Errorf("data cannot be empty")
-	}
-
-	err := os.MkdirAll("./data", 0755)
-
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(*key, *data, 0644)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (e *EthereumCrawler) ListS3Files() ([]string, error) {
 	bucket := os.Getenv("EVENT_BUCKET")
 

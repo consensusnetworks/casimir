@@ -20,7 +20,7 @@ type BaseConfig struct {
 
 func Run(args []string) error {
 	app := &cli.App{
-		Name:    "candle",
+		Name:    "crawler",
 		Usage:   "lights the path",
 		Version: "1.0.0",
 		Commands: []*cli.Command{
@@ -47,7 +47,7 @@ func Run(args []string) error {
 						Network: Mainnet,
 						Url:     os.Getenv("ALCHEMY_WS_URL"),
 						Verbose: c.Bool("verbose"),
-						Bucket:  "candle",
+						Bucket:  "",
 					}
 
 					streamer, err := NewEthereumStreamer(*base)
@@ -101,7 +101,7 @@ func Run(args []string) error {
 						Verbose: c.Bool("verbose"),
 						Start:   c.Int64("start"),
 						End:     c.Int64("end"),
-						Bucket:  "candle",
+						Bucket:  "",
 					}
 
 					err := base.Validate()
@@ -135,19 +135,6 @@ func Run(args []string) error {
 
 	return nil
 }
-
-// func NewBaseConfig() (*BaseConfig, error) {
-// 	config := BaseConfig{
-// 		Chain:   ChainType(c.Chain),
-// 		Network: NetworkType(c.Network),
-// 		Url:     c.Url,
-// 		Verbose: c.Verbose,
-// 		Start:   c.Start,
-// 		End:     c.End,
-// 		Bucket:  "candle",
-// 	}
-// 	return &config, nil
-// }
 
 func (bs *BaseConfig) Validate() error {
 	if bs.Chain == "" {
