@@ -11,3 +11,5 @@ cdk-outputs.json
 
 # Sensitive
 **/**/secrets/*.json
+
+services/crawler/.env
