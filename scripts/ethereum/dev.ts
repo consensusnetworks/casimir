@@ -1,5 +1,5 @@
 import { $, argv, echo, chalk } from 'zx'
-import { getSecret } from '@casimir/aws-helpers'
+import { loadCredentials, getSecret } from '@casimir/aws-helpers'
 
 /**
  * Run local a local Ethereum node and deploy contracts
@@ -12,6 +12,9 @@ import { getSecret } from '@casimir/aws-helpers'
  *      - https://hardhat.org/hardhat-network/docs/overview
  */
 void async function () {
+    /** Load AWS credentials for configuration */
+    await loadCredentials()
+
     // Get shared seed
     const seed = await getSecret('consensus-networks-bip39-seed')
     process.env.BIP39_SEED = seed

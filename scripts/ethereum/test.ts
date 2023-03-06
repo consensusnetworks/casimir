@@ -1,5 +1,5 @@
 import { $, argv, chalk, echo } from 'zx'
-import { getSecret } from '@casimir/aws-helpers'
+import { loadCredentials, getSecret } from '@casimir/aws-helpers'
 
 /**
  * Test Ethereum contracts
@@ -11,6 +11,9 @@ import { getSecret } from '@casimir/aws-helpers'
  *      - https://hardhat.org/hardhat-network/docs/overview
  */
 void async function () {
+    /** Load AWS credentials for configuration */
+    await loadCredentials()
+    
     const seed = await getSecret('consensus-networks-bip39-seed')
     process.env.BIP39_SEED = seed
     echo(chalk.bgBlackBright('Your mnemonic is ') + chalk.bgBlue(seed))
