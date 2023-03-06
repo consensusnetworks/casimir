@@ -39,7 +39,7 @@ void async function () {
     process.env.PUBLIC_STAGE = process.env.STAGE // Pass stage to client apps
 
     /** Todo get network/fork nonce based on selection and predict address */
-    process.env.PUBLIC_SSV_ADDRESS = '0x07E05700CB4E946BA50244e27f01805354cD8eF0' // '0xaaf5751d370d2fD5F1D5642C2f88bbFa67a29301'
+    process.env.PUBLIC_SSV_MANAGER = '0xaaf5751d370d2fD5F1D5642C2f88bbFa67a29301'
 
     /** Default to the web app */
     const app = argv.app || 'web'

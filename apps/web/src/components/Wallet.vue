@@ -11,9 +11,7 @@
     <div class="network-div w-100 mx-8">
       Choose Network
       <div class="choose-network flex">
-        <button
-          @click="switchNetwork('5')"
-        >
+        <button @click="switchNetwork('5')">
           Switch MetaMask to Goerli Network
         </button>
         <button
@@ -56,15 +54,15 @@
           <p>Pool ID: #{{ pool.id }}</p>
           <p>Your Stake: {{ pool.userStake }} ETH</p>
           <p>Your Rewards: {{ pool.userRewards }} ETH</p>
-          <p>Total Stake: {{ pool.totalStake }} ETH</p>
-          <p>Total Rewards: {{ pool.totalRewards }} ETH</p>
+          <p>Total Stake: {{ pool.stake }} ETH</p>
+          <p>Total Rewards: {{ pool.rewards }} ETH</p>
         </li>
       </ul>
       <input
         v-model="amountToStake"
         placeholder="Amount to Stake"
       >
-      <button @click="deposit">
+      <button @click="deposit({ amount: amountToStake, walletProvider: selectedProvider })">
         Steak
       </button>
     </div>
@@ -182,6 +180,7 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
+import useSSV from '@/composables/ssv'
 
 const message = ref('')
 const signedMessage = ref('')
@@ -213,13 +212,13 @@ const {
   setPrimaryWalletAccount,
   sendTransaction,
   signMessage,
-  deposit,
-  getUserPools,
   getUserBalance,
   getCurrentBalance,
   removeConnectedAccount,
   switchNetwork
 } = useWallet()
+
+const { deposit, getUserPools } = useSSV()
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {
@@ -432,6 +431,6 @@ input {
   /* center in middle of screen */
   margin-left: auto;
   margin-right: auto;
-  
+
 }
 </style>
