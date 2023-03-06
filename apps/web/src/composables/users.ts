@@ -12,9 +12,9 @@ const { usersBaseURL, ethereumURL } = useEnvironment()
 import { dummy_user_account } from '@/pages/user-dash/composables/dummy_data.js'
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const user = ref<User>()
+const { ssvManager } = useSSV()
 
 export default function useUsers () {
-    const { ssvManager } = useSSV()
 
     async function getUser() {
         const requestOptions = {

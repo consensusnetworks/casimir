@@ -2,6 +2,7 @@ import { ethers } from 'ethers'
 import { SSVManager } from '@casimir/ethereum/build/artifacts/types'
 import { abi } from '@casimir/ethereum/build/artifacts/src/SSVManager.sol/SSVManager.json'
 import useEnvironment from './environment'
+import useUsers from './users'
 import useEthers from './ethers'
 import useLedger from './ledger'
 import useTrezor from './trezor'
@@ -21,7 +22,7 @@ export default function useSSV() {
 
     if (!ssvManager) {
         ssvManager = (() => {
-            const address = import.meta.env.PUBLIC_SSV_MANAGER
+            const address = import.meta.env.PUBLIC_SSV_MANAGERf
             if (!address) console.log(
                 `
                 The PUBLIC_SSV_MANAGER environment variable is empty.\n
@@ -56,8 +57,8 @@ export default function useSSV() {
 
     async function getDepositFees() {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-        ssvManager.connect(provider)
-        const fees = await ssvManager.getFees()
+        const ssvManagerProvider = ssvManager.connect(provider)
+        const fees = await ssvManagerProvider.getFees()
         const { LINK, SSV } = fees
         const feesTotalPercent = LINK + SSV
         const feesRounded = Math.round(feesTotalPercent * 100) / 100
@@ -92,10 +93,9 @@ export default function useSSV() {
                     apr: '0%', // See issue #205 https://github.com/consensusnetworks/casimir/issues/205#issuecomment-1338142532
                     url: `https://prater.beaconcha.in/validator/${validatorPublicKey}`
                 }
-
                 const operatorIds = await ssvManagerProvider.getPoolOperatorIds(poolId) // Operator ID uint32[] (i.e., [1, 2, 3, 4])
                 const operators = await Promise.all(operatorIds.map(async (operatorId: number) => {
-                    const response = await fetch(`https://api.ssv.network/api/v1/operators/${operatorId}`)
+                    const response = await fetch(`https://api.ssv.network/api/v3/operators/${operatorId}`)
                     const { performance } = await response.json()
                     return {
                         id: operatorId,
@@ -111,7 +111,10 @@ export default function useSSV() {
                     operators
                 }
             }
-
+            
+            const { user } = useUsers()
+            user.value?.pools.push(pool)
+            
             return pool
         }))
     }

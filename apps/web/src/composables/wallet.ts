@@ -10,7 +10,6 @@ import useUsers from '@/composables/users'
 import { Account, ProviderString } from '@casimir/types'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
-import { Pool } from '@casimir/types/src/interfaces/Pool'
 import { Currency } from '@casimir/types'
 import * as Session from 'supertokens-web-js/recipe/session'
 
@@ -27,7 +26,6 @@ const primaryAddress = ref('')
 const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 const amount = ref<string>('0.000001')
 const amountToStake = ref<string>('0.0')
-const pools = ref<Pool[]>([])
 const session = ref<boolean>(false)
 
 export default function useWallet() {
@@ -86,15 +84,15 @@ export default function useWallet() {
       if (!loggedIn.value) {
         const connectedAddress = await getConnectedAddress(provider, currency)
         const connectedCurrency = await detectCurrency(provider) as Currency
-        // const response = await loginWithWallet(provider, connectedAddress, connectedCurrency)
-        // if (!response?.error) {
+        const response = await loginWithWallet(provider, connectedAddress, connectedCurrency)
+        if (!response?.error) { 
           await getUserAccount()
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
           loggedIn.value = true
           primaryAddress.value = user.value?.address as string
-        // }
+        }
       } else { // Add account
         console.log('already logged in!')
         const connectedAddress = await getConnectedAddress(provider, currency) // TODO: Remove currency from here? Maybe not.
@@ -304,7 +302,6 @@ export default function useWallet() {
     toAddress,
     amount,
     amountToStake,
-    pools,
     connectWallet,
     logout,
     setPrimaryWalletAccount,

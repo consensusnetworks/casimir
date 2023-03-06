@@ -48,7 +48,7 @@
       </button>
       <ul>
         <li
-          v-for="(pool, index) in pools"
+          v-for="(pool, index) in user?.pools"
           :key="index"
         >
           <p>Pool ID: #{{ pool.id }}</p>
@@ -181,9 +181,11 @@
 import { ref, watchEffect } from 'vue'
 import useWallet from '@/composables/wallet'
 import useSSV from '@/composables/ssv'
+import useUsers from '@/composables/users'
 
 const message = ref('')
 const signedMessage = ref('')
+const { user } = useUsers()
 
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
@@ -206,7 +208,6 @@ const {
   toAddress,
   amount,
   amountToStake,
-  pools,
   connectWallet,
   logout,
   setPrimaryWalletAccount,
