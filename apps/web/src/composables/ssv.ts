@@ -51,7 +51,7 @@ export default function useSSV() {
         const feesTotalPercent = LINK + SSV
         const depositAmount = parseFloat(amount) * ((100 + feesTotalPercent) / 100)
         const value = ethers.utils.parseEther(depositAmount.toString())
-        const result = await ssvManagerSigner.deposit({ value })
+        const result = await ssvManagerSigner.deposit({ value, type: 0 })
         return await result.wait()
     }
 

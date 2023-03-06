@@ -96,7 +96,7 @@ export default function useWallet() {
       } else { // Add account
         console.log('already logged in!')
         const connectedAddress = await getConnectedAddress(provider, currency) // TODO: Remove currency from here? Maybe not.
-        const connectedCurrency = await detectCurrency(provider) as Currency
+        const connectedCurrency = await detectCurrency(provider, currency) as Currency
         const response = await addAccount(provider, connectedAddress, connectedCurrency)
         if (!response?.error) {
           setSelectedProvider(provider)
@@ -169,10 +169,9 @@ export default function useWallet() {
     // TODO: Implement this for other providers
     if (ethersProviderList.includes(selectedProvider.value)) {
       const result = await updatePrimaryAddress(primaryAddress.value, selectedProvider.value, selectedAddress.value)
-      const resultJSON = await result.json()
-      console.log('resultJSON :>> ', resultJSON)
-      if (!resultJSON.error) {
-        primaryAddress.value = resultJSON.data.address
+      const { data } = await result.json()
+      if (data) {
+        primaryAddress.value = data.address
       }
     }
   }
@@ -198,10 +197,12 @@ export default function useWallet() {
     }
   }
 
-  async function detectCurrency(provider: ProviderString) {
+  async function detectCurrency(provider: ProviderString, currency?: Currency) {
     // TODO: Implement this for other providers
     if (ethersProviderList.includes(provider)){
       return await getEthersBrowserProviderSelectedCurrency(provider) as Currency
+    } else if (provider === 'Ledger') {
+      return currency as Currency
     } else {
       alert('Currency selection not yet supported for this wallet provider')
     }
