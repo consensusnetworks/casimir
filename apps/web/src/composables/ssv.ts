@@ -22,7 +22,7 @@ export default function useSSV() {
 
     if (!ssvManager) {
         ssvManager = (() => {
-            const address = import.meta.env.PUBLIC_SSV_MANAGERf
+            const address = import.meta.env.PUBLIC_SSV_MANAGER
             if (!address) console.log(
                 `
                 The PUBLIC_SSV_MANAGER environment variable is empty.\n
