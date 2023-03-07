@@ -20,8 +20,8 @@ void async function () {
     const apps = {
         web: {
             chains: ['ethereum'],
-            infrastructure: 'cdk',
-            services: ['users']
+            services: ['users'],
+            tables: ['users', 'accounts']
         }
     }
 
@@ -65,9 +65,21 @@ void async function () {
     /** Default to no trezor emulator */
     const trezor = argv.trezor === 'true'
 
-    const { chains, services } = apps[app as keyof typeof apps]
+    const { chains, services, tables } = apps[app as keyof typeof apps]
 
     if (mock) {
+
+        const password = 'password'
+        process.env.POSTGRES_PASSWORD = password
+        await $`docker pull postgres`
+        $`docker run --rm --name postgres -e POSTGRES_PASSWORD=${password} -p 5432:5432 -d postgres`
+
+        /** Mock tables */
+        for (const table of tables) {
+            await $`psql -h localhost -U postgres -f scripts/db/${table}.sql`
+        }
+
+        /** Mock services */
         let port = 4000
         for (const service of services) {
             process.env[`PUBLIC_${service.toUpperCase()}_PORT`] = `${port}`
@@ -76,7 +88,7 @@ void async function () {
 
             try {
                 if (parseStdout(await $`lsof -ti:${port}`)) {
-                    $`kill -9 $(lsof -ti:${port})`
+                    await $`kill -9 $(lsof -ti:${port})`
                 }
             } catch {
                 console.log(`Port ${port} is available.`)
@@ -103,7 +115,6 @@ void async function () {
     }
 
     if (ledger) {
-        console.log('LEDGER', ledger)
         const port = 5001
         try { 
             if (parseStdout(await $`lsof -ti:${port}`)) {
