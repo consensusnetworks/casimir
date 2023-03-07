@@ -5,7 +5,7 @@ import { ref, watch, onMounted } from 'vue'
 import useWallet from '@/composables/wallet'
 import useUsers from '@/composables/users'
 
-const { user, createDemoUser } = useUsers()
+const { user } = useUsers()
 const {
   connectWallet,
 } = useWallet()
@@ -221,9 +221,8 @@ const copyWalletAddress = (text: string) => {
             </button>
             <button
               class="btn_primary font-bold px-10 py-6 whitespace-nowrap"
-              @click="createDemoUser(false)"
             >
-              Disconnect User
+              Disconnect Acount
             </button>
           </div>
           <!-- <div
@@ -273,12 +272,6 @@ const copyWalletAddress = (text: string) => {
           <h6 class="text-grey_2 font-medium">
             No Wallets Connected
           </h6>
-          <button
-            class="btn_primary font-bold px-10 py-6"
-            @click="createDemoUser(true)"
-          >
-            Demo <i class="iconoir-play" />
-          </button>
         </div>
       </div>
     </div>

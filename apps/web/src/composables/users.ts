@@ -136,14 +136,6 @@ export default function useUsers () {
         return await fetch(`${usersBaseURL}/users/update-primary-account`, requestOptions)
     }
 
-    const createDemoUser = (toggle: boolean) => {
-        if(toggle) {
-            user.value = dummy_user_account
-        }
-        else {user.value = null}
-        console.log('new user', user.value)
-    }
-
     return {
         user,
         getUser,
@@ -151,7 +143,6 @@ export default function useUsers () {
         addAccount,
         removeAccount,
         getMessage,
-        createDemoUser,
         updatePrimaryAddress
     }
 }

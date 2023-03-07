@@ -9,6 +9,7 @@ text-rendering: optimizeLegibility;
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 -webkit-text-size-adjust: 100%;
+overflow: hidden;
 }
 
 /* scrollbar stuff works for all browsers except firefox... */
@@ -34,14 +35,7 @@ border-radius: 5px;
 background: #555;
 }
   
-#app {
-/* max-width: 1280px;
-min-width: 360px;
-overflow: auto;
-margin: 0 auto; */
-height: 100vh;
-background: #fff;
-}
+#app {}
 
 
 @layer base {
@@ -187,9 +181,9 @@ background: #fff;
         @apply h-35 w-35;
     }
     .supported_wallet_box {
-        @apply border border-grey flex 
+        @apply border border-grey flex cursor-pointer
         justify-between items-center px-15 py-10
-        w-[100%] mx-auto;       
+        w-[100%];       
     } 
     .supported_wallet_box:hover {
         @apply border-blue_3;
