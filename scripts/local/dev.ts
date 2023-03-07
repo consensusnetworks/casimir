@@ -1,5 +1,5 @@
 import { $, argv, chalk, echo } from 'zx'
-import { getSecret } from '@casimir/aws-helpers'
+import { loadCredentials, getSecret } from '@casimir/aws-helpers'
 import { parseStdout } from '@casimir/zx-helpers'
 
 /**
@@ -32,6 +32,9 @@ void async function () {
             testnet: 'goerli'
         }
     }
+
+    /** Load AWS credentials for configuration */
+    await loadCredentials()
 
     /** Set project-wide variables */
     process.env.PROJECT = process.env.PROJECT || 'casimir'
