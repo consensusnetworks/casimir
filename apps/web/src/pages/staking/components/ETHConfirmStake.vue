@@ -8,16 +8,16 @@ import useSSV from '@/composables/ssv'
 
 const { formatDecimalString } = useFormat()
 const { user } = useUsers()
-const { amountToStake, deposit } = useWallet()
-const { getSSVFeePercent } = useSSV()
+const { amountToStake, selectedProvider } = useWallet()
+const { getDepositFees, deposit } = useSSV()
 
-async function getFee() {
+async function getFees() {
   try {
-    const fee = await getSSVFeePercent()
-    if (fee % 1 === 0) {
-        return `${fee}.00%`
+    const fees = await getDepositFees()
+    if (fees % 1 === 0) {
+        return `${fees}.00%`
     }
-    return `${fee}%`
+    return `${fees}%`
   } catch (err){
     console.error(err)
     return 'Error connecting to SSV network. Please try again momentarily.'
@@ -28,15 +28,15 @@ const stakingInfo = ref(
     {
         to: 'Distributed SSV Validator',
         amount: formatDecimalString(amountToStake.value),
-        fees: await getFee(),
+        fees: await getFees(),
         expectedRewards: '5.67%',
         from: {
             name: 'MetaMask',
             icon: '/metamask.svg',
             account: {
                 name: 'Primary Account',
-                balance: formatDecimalString(user.value.balance || '0.0'),
-                address: user.value.id
+                balance: formatDecimalString((user.value?.accounts?.find(account => account.address === user.value?.address))?.balance as string),
+                address: user.value?.address
             }
         }
     }
@@ -46,7 +46,7 @@ const loading = ref(false)
 
 const handleConfirm = async () => {
   loading.value = true
-  await deposit()
+  await deposit({ amount: amountToStake.value, walletProvider: selectedProvider.value })
   loading.value = false
   router.push('/stake/eth')
 }

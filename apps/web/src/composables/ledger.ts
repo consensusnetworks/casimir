@@ -37,8 +37,8 @@ export default function useLedger() {
     return await signer.getAddress()
   }
 
-  async function sendLedgerTransaction({ from, to, value, token }: TransactionInit) {
-    if (token === 'ETH') {
+  async function sendLedgerTransaction({ from, to, value, currency }: TransactionInit) {
+    if (currency === 'ETH') {
       const signer = getEthersLedgerSigner()
       const provider = signer.provider as ethers.providers.Provider
       const unsignedTransaction = {
@@ -55,17 +55,17 @@ export default function useLedger() {
       console.log('Required', ethers.utils.formatEther(required))
   
       return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
-    } else if (token === 'BTC') {
+    } else if (currency === 'BTC') {
       alert('Send transaction not yet implemented for BTC')
     }
   }
 
   async function signLedgerMessage(messageInit: MessageInit): Promise<string> {
-    if (messageInit.token === 'ETH') {
+    if (messageInit.currency === 'ETH') {
       const { message } = messageInit
       const signer = getEthersLedgerSigner()
       return await signer.signMessage(message)
-    } else if ( messageInit.token === 'BTC') {
+    } else if ( messageInit.currency === 'BTC') {
       const { message } = messageInit
       const signer = getBitcoinLedgerSigner()
       return await signer.signMessage(message)

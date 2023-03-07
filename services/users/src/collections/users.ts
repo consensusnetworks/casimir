@@ -53,6 +53,7 @@ const user: User = {
         },
     ],
     nonce: '1234567890',
+    pools: []
 }
 
 export const userCollection : Array<User> = [user]
