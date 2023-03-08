@@ -2,7 +2,7 @@ import { Construct } from 'constructs'
 import * as cdk from 'aws-cdk-lib'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as glue from '@aws-cdk/aws-glue-alpha'
-import { schemaToGlueColumns, eventSchema, aggSchema } from '@casimir/data'
+import { Schema, eventSchema, aggSchema } from '@casimir/data'
 import { kebabCase, pascalCase, snakeCase } from '@casimir/string-helpers'
 import { Config } from '../providers/config'
 import { EtlStackProps } from '../interfaces/StackProps'
@@ -20,8 +20,8 @@ export class EtlStack extends cdk.Stack {
         const config = new Config()
 
         /** Get Glue Columns from JSON Schema for each table */
-        const eventColumns = schemaToGlueColumns(eventSchema)
-        const aggColumns = schemaToGlueColumns(aggSchema)
+        const eventColumns = new Schema(eventSchema).toGlueColumns()
+        const aggColumns = new Schema(aggSchema).toGlueColumns()
 
         /** Create Glue DB */
         const database = new glue.Database(this, config.getFullStackResourceName(this.name, 'database'), {

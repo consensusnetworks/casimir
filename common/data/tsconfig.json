@@ -1,17 +1,17 @@
 {
-    "compilerOptions": {
-      "target": "ESNext",
-      "strict": true,
-      "preserveConstEnums": true,
-      "noEmit": true,
-      "sourceMap": false,
-      "module": "CommonJS",
-      "moduleResolution": "node",
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "forceConsistentCasingInFileNames": true,
-      "isolatedModules": true,
-      "resolveJsonModule": true,
-    },
-    "include": ["./src/*"]
-  }
+  "compilerOptions": {
+    "target": "ESNext",
+    "strict": true,
+    "preserveConstEnums": true,
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "./src/*"
+  ]
+}

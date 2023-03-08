@@ -3,13 +3,17 @@
     "private": true,
     "main": "src/index.ts",
     "scripts": {
+        "build": "echo '@casimir/data build not specified. Disregard this warning and any listed errors above if @casimir/types is not needed for the current project build.' && exit 0",
         "configure:python": "poetry install && poetry run ipython kernel install --user --name=casimir-data",
-        "build": "esbuild src/index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "generate": "npx esno -r dotenv/config scripts/generate.ts",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "watch": "npx esno -r dotenv/config scripts/watch.ts"
     },
     "devDependencies": {
         "@types/node": "^17.0.38",
-        "esbuild": "^0.15.9"
+        "dotenv": "^16.0.3",
+        "esno": "^0.16.3",
+        "zx": "^7.1.1"
     },
     "dependencies": {
         "@aws-cdk/aws-glue-alpha": "^2.33.0-alpha.0"
