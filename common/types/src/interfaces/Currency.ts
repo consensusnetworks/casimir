@@ -1,1 +1,1 @@
-export type Currency = 'ETH' | 'BTC' | 'IOTX' | 'SOL' | ''
+export type Currency = 'ETH' | 'BTC' | 'IOTX' | 'SOL' | 'USD' | ''
