@@ -1,3 +1,4 @@
+
 import { Currency } from '@casimir/types'
 
 export default function useExternal () {
@@ -15,7 +16,24 @@ export default function useExternal () {
         return data[to]
     }
 
+    function convertToWholeUnits (currency: Currency, amount: number) {
+        switch (currency) {
+            case 'BTC':
+                return amount / 100000000
+                break
+
+            case 'ETH':
+                return amount / 1000000000000000000
+                break
+        
+            default:
+                break
+        }
+    }
+
+
     return { 
-        getConversionRate
+        getConversionRate,
+        convertToWholeUnits
     }
 }

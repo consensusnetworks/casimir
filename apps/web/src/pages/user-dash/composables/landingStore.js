@@ -3,6 +3,12 @@ import * as d3 from 'd3'
 
 import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
+import useExternal from '@/composables/external'
+
+const {
+    getConversionRate,
+    convertToWholeUnits
+} = useExternal()
 
 const initialized = ref(false)
 
@@ -15,6 +21,7 @@ const formatSi = d3.format('.2s')
 const tooltipValue = ref('---')
 
 const netWorthTimeFrame = ref('Year')
+
 // netWorthData Schema
 // {
 //     'date' : 'String'
@@ -38,18 +45,31 @@ const netWorthTimeFrame = ref('Year')
 //      }
 // }
 const netWorthData = ref([])
+
+const convertToUSD = async (currency, date, amount) => {
+    const conversion = await getConversionRate(currency, 'USD', date)
+    const rate = convertToWholeUnits(currency, amount)
+    console.log(rate)
+    return conversion * rate
+}
 // TD: use this composable to track user interactions to dynamically update other components
 export default function useLandingStore () {
+    
 
-    const calculateNetWorthData = () => {
+//  a.value =await getConversionRate('ETH', 'USD', '2023-02-06').then((a:any) => {return a})
+
+    const calculateNetWorthData = async () => {
         const netWorthDataRaw = []
-        user.value.accounts.forEach(account => {
-            account.balanceSnapshots.forEach(snapshot =>{
+        for (let i = 0; i <  user.value.accounts.length; i++) {
+            let account =  user.value.accounts[i]
+            for (let j = 0; j < account.balanceSnapshots.length; j++) {
+                let snapshot = account.balanceSnapshots[j]
                 const dateSplit = snapshot.date.split('-')
                 const parsedDate = parseTime(dateSplit[2] +'/'+dateSplit[1] +'/'+dateSplit[0])
                 const dateIndex = netWorthDataRaw.findIndex(item => 
                     item.date.toDateString() === parsedDate.toDateString()
                 )
+                const amount = await convertToUSD(account.currency, snapshot.date, snapshot.balance)
                 // console.log(dateIndex, parsedDate)
                 if(dateIndex < 0){ // Date does not exist, add new date to raw array
                     
@@ -57,34 +77,37 @@ export default function useLandingStore () {
                         // TD: @Howie make snapshot date as an aws date?
                         date: parsedDate,
                         // TD: Make this get balance in usd for the current currency 
-                        totalInUSD: 1,
+                        totalInUSD: amount,
                         breakdown: {
                             walletProviders: {
                                 // TD: Make this get balance in usd for the current currency 
-                                [account.walletProvider] : 1
+                                [account.walletProvider] : amount,
                             },
                             currencies: {
                                 // TD: Make this get balance in usd for the current currency 
-                                [account.currency] : 1
+                                [account.currency] : amount,
+
                             }
                         }
                     }
                     netWorthDataRaw.unshift(netWorthDataItem)
-                } else { // Date already exists, add values and sum up balance in usd
+                } else { 
+                    // Date already exists, add values and sum up balance in usd
                     // TD: Make these get balance in usd for the current currency and add it to total
-                    netWorthDataRaw[dateIndex].totalInUSD += 1
+                    netWorthDataRaw[dateIndex].totalInUSD += amount,
 
                     netWorthDataRaw[dateIndex].breakdown.walletProviders[account.walletProvider]? 
-                    netWorthDataRaw[dateIndex].breakdown.walletProviders[account.walletProvider] += 1 :
-                    netWorthDataRaw[dateIndex].breakdown.walletProviders[account.walletProvider] = 1
+                    netWorthDataRaw[dateIndex].breakdown.walletProviders[account.walletProvider] += amount :
+                    netWorthDataRaw[dateIndex].breakdown.walletProviders[account.walletProvider] = amount
 
                     netWorthDataRaw[dateIndex].breakdown.currencies[account.currency]?
-                    netWorthDataRaw[dateIndex].breakdown.currencies[account.currency] += 1 :
-                    netWorthDataRaw[dateIndex].breakdown.currencies[account.currency] = 1
+                    netWorthDataRaw[dateIndex].breakdown.currencies[account.currency] += amount :
+                    netWorthDataRaw[dateIndex].breakdown.currencies[account.currency] = amount
                 }
-            })
-        })
+            }
+        }
         // TD: Make sorting method?
+        console.log(netWorthDataRaw)
         netWorthData.value = netWorthDataRaw
     }
 

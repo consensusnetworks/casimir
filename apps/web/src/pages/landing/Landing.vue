@@ -4,6 +4,7 @@ import MultiwalletConnect from '@/components/navigation/components/MultiwalletCo
 import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
 
+
 const { user, removeAccount } = useUsers()
 const { connectWallet, logout, loadingUserWallets } = useWallet()
 
@@ -18,8 +19,7 @@ const checkForWallets = () =>{
 watch(user, () => {
   checkForWallets()
 })
-
-onMounted(()=>{
+onMounted(async ()=>{
   checkForWallets()
 })
 
@@ -39,7 +39,7 @@ const showAddress = (address: string, hideText: boolean) => {
   <div class="">
     <div class="text-left">
       <h6 class="font-medium text-blue_3 mb-10">
-        Sign in with your primary wallet. 
+        Sign in with your primary wallet.
       </h6>
       <h6 class="font-semibold text-body text-grey_5 mb-15">
         New user? Connecting any wallet will set the wallet as your primary wallet. 

@@ -18,6 +18,8 @@ const {
   updateTooltipValue
 } = useLandingStore()
 
+
+
 </script>
   
 <template>
@@ -26,7 +28,7 @@ const {
   >
     <div class="">
       <h5 class="font-bold whitespace-nowrap">
-        Your Assets
+        Your Assets 
       </h5>
     </div>
     <div 
