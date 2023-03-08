@@ -11,6 +11,10 @@
         "balance": {
             "type": "number",
             "description": "The balance of the account"
+        },
+        "snapshots": {
+            "type": "array",
+            "description": "The snapshots of the account"
         }
     }
 }

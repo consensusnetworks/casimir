@@ -6,11 +6,12 @@ export type GlueType = glue.Type
 export type PgType = 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIG_INT' | 'TIMESTAMP' | 'JSON' | 'DATE'
 
 export class Schema {
+    /** Input JSON Schema object */
     private jsonSchema: JsonSchema
 
     /**
      * Schema constructor
-     * @param jsonSchema {JsonSchema} - Input JSON Schema table object
+     * @param jsonSchema {JsonSchema} - Input JSON Schema object
      * 
      * @example
      * ```typescript
