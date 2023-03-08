@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import router from '@/composables/router'
 
 // TD: connect this to actual staking rewards for the user
-const selectedIndex = ref(-1)
+const selectedIndex = ref(0)
 const dummy_staked_data = ref([
     {
         tokenStaked: 'ETH',
@@ -47,37 +47,26 @@ const dummy_staked_data = ref([
     }
 ])
 const toggleCard = ref(true)
-onMounted(() =>{
 
-  selectedIndex.value = 0
-  toggleCard.value = true
-  setTimeout(()=>{toggleCard.value = false}, 2000)
-  setTimeout(() => {
-    selectedIndex.value = 1
+// eslint-disable-next-line no-undef
+let interval: string|number|NodeJS.Timer
+
+const runInterval = () => {
+  interval = setInterval(() => {
     toggleCard.value = true
-    // setTimeout(()=>{toggleCard.value = false}, 2000)
+    setTimeout(()=>{
+      toggleCard.value = false
+    }, 2000)
+    selectedIndex.value = dummy_staked_data.value[selectedIndex.value + 1]? selectedIndex.value + 1 : 0
   }, 3000)
-    
-    // TD: fix bug: the component gets mounted in /fron-page view...
-    // TD: Fix issue: when staking item is transitioned to the entire page is shifted to it 
-    // if(
-    //     dummy_staked_data.value.length > 0 
-    //     && 
-    //     router.currentRoute.value.fullPath != '/connect-wallet'
-    // ){
-    //     let index = 0
-    //     let aTag
-    //     setInterval(() => {
-    //         selectedIndex.value = '!carousel_slider_item_'+index
-    //         aTag = document.getElementById('id_'+selectedIndex.value)
+}
 
-    //         if(aTag) aTag.click()
+onMounted(() =>{
+  runInterval()
+})
 
-    //         let nexIndex = (index + 1) === dummy_staked_data.value.length? 0 : (index + 1)
-            
-    //         index = nexIndex
-    //     }, 3000)
-    // }
+onUnmounted(() => {
+  clearInterval(interval)
 })
 
 
@@ -122,7 +111,7 @@ onMounted(() =>{
               <h4 class="font-bold text-blue_3">
                 {{ item.totalAccumulatedRewards }}
               </h4>
-              <span class="text-body text-grey_5 font-bold">{{ item.tokenStaked }} Claimable </span>
+              <span class="text-body text-grey_5 font-bold">Claimable {{ item.tokenStaked }}</span>
             </div>
           </div>
         </div>
@@ -151,8 +140,8 @@ onMounted(() =>{
 }
 .card_enter{
   /* right: -100%; */
-  animation: enter 0.5s linear;
-  -webkit-animation: linear;
+  animation: enter 0.5s linear ease;
+  -webkit-animation: linear ease;
   animation-name: enter;
   -webkit-animation-name: enter;
   animation-duration: 0.5s;
@@ -169,12 +158,12 @@ onMounted(() =>{
 
 .card_leave{
   /* right: -100%; */
-  animation: leave 0.5s linear;
-  -webkit-animation: linear;
+  animation: leave 0.5s linear ease;
+  -webkit-animation: linear ease;
   animation-name: leave;
   -webkit-animation-name: leave;
-  animation-duration: 0.5s;
-  -webkit-animation-duration: 0.5s;
+  animation-duration: 0.3s;
+  -webkit-animation-duration: 0.3s;
 }
 @keyframes leave {
   0% {
