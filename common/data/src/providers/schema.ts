@@ -1,6 +1,11 @@
 import * as glue from '@aws-cdk/aws-glue-alpha'
 import { JsonSchema } from '../interfaces/JsonSchema'
 
+
+export type JsonType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null'
+export type GlueType = glue.Type
+export type PgType = 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIG_INT' | 'TIMESTAMP' | 'JSON' | 'DATE'
+
 export class Schema {
     private jsonSchema: JsonSchema
 
@@ -10,7 +15,8 @@ export class Schema {
      * 
      * @example
      * ```typescript
-     * const schema = new Schema(jsonSchema)
+     * import { eventSchema } from '@casimir/data'
+     * const schema = new Schema(eventSchema)
      * ```
      */
     constructor(jsonSchema: JsonSchema) {
@@ -18,24 +24,23 @@ export class Schema {
     }
 
     /**
-     * Converts the JsonSchema table object to an array of Glue columns.
-     * @param jsonSchema {JsonSchema} - Input JSON Schema table object
+     * Get an array of Glue columns from the JsonSchema object
      * @returns {glue.Column[]} Array of Glue columns
      * 
      * @example
      * ```typescript
      * const schema = new Schema(jsonSchema)
-     * const columns = schema.toGlueColumns()
+     * const columns = schema.getGlueColumns()
      * ```
      */
-    toGlueColumns(): glue.Column[] {
+    getGlueColumns(): glue.Column[] {
         return Object.keys(this.jsonSchema.properties).map((name: string) => {
             const property = this.jsonSchema.properties[name]
 
             // 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIG_INT' | 'TIMESTAMP' | 'JSON' | 'DATE'
             const typeKey = property.type.toUpperCase() as keyof glue.Schema
 
-            let type: glue.Type = glue.Schema[typeKey]
+            let type: GlueType = glue.Schema[typeKey]
 
             if (name.endsWith('_at')) type = glue.Schema.TIMESTAMP
             if (name.endsWith('_balance')) type = glue.Schema.BIG_INT
@@ -45,5 +50,43 @@ export class Schema {
             const comment = property.description
             return { name, type, comment }
         })
+    }
+
+    /**
+     * Get a PG table from the JsonSchema object.
+     * @returns {string} PG table
+     * 
+     * @example
+     * ```typescript
+     * const schema = new Schema(jsonSchema)
+     * const table = schema.getPgTable()
+     * ```
+     */
+    getPgTable(): string {
+        const columns = Object.keys(this.jsonSchema.properties).map((name: string) => {
+            const property = this.jsonSchema.properties[name]
+
+            let type = {
+                string: 'STRING',
+                number: 'DOUBLE',
+                integer: 'INTEGER',
+                boolean: 'BOOLEAN',
+                object: 'JSON',
+                array: 'JSON',
+                null: 'STRING'
+            }[property.type as JsonType] as PgType
+
+            if (name.endsWith('_at')) type = 'TIMESTAMP'
+            if (name.endsWith('_balance')) type = 'BIG_INT'
+
+            let column = `${name} ${type}`
+
+            const comment = property.description
+            if (comment.includes('PK')) column += ' PRIMARY KEY'
+            
+            return column
+        })
+
+        return `CREATE TABLE [IF NOT EXISTS] ${this.jsonSchema.title} (\n\t${columns.join(',\n\t')}\n);`
     }
 }

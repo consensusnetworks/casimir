@@ -69,15 +69,8 @@ void async function () {
 
     if (mock) {
 
-        const password = 'password'
-        process.env.POSTGRES_PASSWORD = password
-        await $`docker pull postgres`
-        $`docker run --rm --name postgres -e POSTGRES_PASSWORD=${password} -p 5432:5432 -d postgres`
-
-        /** Mock tables */
-        for (const table of tables) {
-            await $`psql -h localhost -U postgres -f scripts/db/${table}.sql`
-        }
+        process.env.DB_PASSWORD = 'password'
+        $`npm run dev:db --tables=${tables.join(',')}`
 
         /** Mock services */
         let port = 4000

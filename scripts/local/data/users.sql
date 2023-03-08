@@ -1,0 +1,3 @@
+CREATE TABLE [IF NOT EXISTS] User (
+	address STRING PRIMARY KEY
+);

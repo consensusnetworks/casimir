@@ -19,8 +19,8 @@ test('ETL stack created', () => {
 
 
   /** Get Glue Columns from JSON Schema for each table */
-  const eventGlueSchema = new Schema(eventSchema).toGlueColumns()
-  const aggGlueSchema = new Schema(aggSchema).toGlueColumns()
+  const eventGlueSchema = new Schema(eventSchema).getGlueColumns()
+  const aggGlueSchema = new Schema(aggSchema).getGlueColumns()
 
   for (const column of eventColumns) {
     const { Name: name, Type: type } = column

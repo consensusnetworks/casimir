@@ -20,8 +20,8 @@ export class EtlStack extends cdk.Stack {
         const config = new Config()
 
         /** Get Glue Columns from JSON Schema for each table */
-        const eventColumns = new Schema(eventSchema).toGlueColumns()
-        const aggColumns = new Schema(aggSchema).toGlueColumns()
+        const eventColumns = new Schema(eventSchema).getGlueColumns()
+        const aggColumns = new Schema(aggSchema).getGlueColumns()
 
         /** Create Glue DB */
         const database = new glue.Database(this, config.getFullStackResourceName(this.name, 'database'), {
