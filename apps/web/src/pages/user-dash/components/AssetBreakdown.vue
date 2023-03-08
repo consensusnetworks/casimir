@@ -139,7 +139,7 @@ const returnAggergatedValue = (item: any, name: string) => {
     dash_s_sm:pl-20 border-t dash_s_sm:border-t-[0px] mt-50 dash_s_sm:mt-0
     pt-25 dash_s_sm:pt-0"
   >
-    <div class="flex items-center mt-5">
+    <div class="flex items-center">
       <span class="text-body text-grey_5 font-bold">
         Asset Breakdown
       </span>

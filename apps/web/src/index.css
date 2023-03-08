@@ -181,7 +181,7 @@ background: #555;
         @apply h-35 w-35;
     }
     .supported_wallet_box {
-        @apply border border-grey flex cursor-pointer
+        @apply border border-grey flex
         justify-between items-center px-15 py-10
         w-[100%];       
     } 

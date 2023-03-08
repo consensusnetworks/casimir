@@ -42,6 +42,11 @@ const props = defineProps({
 })
 
 onMounted(() => {
+    // const getTransition = () => {
+    //     return d3.transition()
+    //             .duration(500)
+    // }
+
     let WIDTH = 0
     let HEIGHT =  0
     const svg_line_chart_container_el = document.getElementById('line_chart_container' + props.chartId)
@@ -87,10 +92,11 @@ onMounted(() => {
             yAxisRange = [HEIGHT, 0]
         }
 
+
         x = d3.scaleTime().range(xAxisRange)
         y = d3.scaleLinear().range(yAxisRange)
 
-
+        // xAxisCall = d3.axisBottom()
         // dynamic x axis labeling based on width
         if(WIDTH <= width_breaking_point_medium){
             xAxisCall = d3.axisBottom()
@@ -139,7 +145,9 @@ onMounted(() => {
             const yValue = props.yAxisValue
 
             // 1.015 is just for adding a little bit of spacing for the y domain 
-            x.domain(d3.extent(data, d => d[props.xAxisValue]))
+            x.domain(d3.extent(data, d => {
+                return d[props.xAxisValue]
+            }))
             y.domain([
                 d3.min(data, d => d[yValue]) / 1.015, 
                 d3.max(data, d => d[yValue]) * 1.015
@@ -211,7 +219,7 @@ onMounted(() => {
                 .y(d => y(d[yValue]))
 
             g.select('.line')
-            .transition(d3.transition().duration(500))
+            // .transition(getTransition())
             .attr('d', line(data))
             .attr('stroke', props.lineColor)
         }

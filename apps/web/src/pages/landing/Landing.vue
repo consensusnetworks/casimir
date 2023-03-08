@@ -5,7 +5,7 @@ import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
 
 const { user, removeAccount } = useUsers()
-const { connectWallet } = useWallet()
+const { connectWallet, logout, loadingUserWallets } = useWallet()
 
 const hideInfo = ref(false)
 
@@ -102,11 +102,11 @@ const showAddress = (address: string, hideText: boolean) => {
             alt=""
           >
         
-          <h6 class="sr-only s_md:not-sr-only">
+          <h6 class="sr-only s_sm:not-sr-only">
             Metamask
           </h6>
 
-          <h6 class="s_md:sr-only not-sr-only">
+          <h6 class="s_sm:sr-only not-sr-only">
             M
           </h6>
         </button>
@@ -120,15 +120,15 @@ const showAddress = (address: string, hideText: boolean) => {
               alt=""
             > 
             <span 
-              class="text-body font-bold text-grey_3 sr-only s_md:not-sr-only"
+              class="text-body font-bold text-grey_3 sr-only s_lg:not-sr-only"
             >
               Ethereum only
             </span>
           </div>
-          <h6 class="sr-only s_md:not-sr-only">
+          <h6 class="sr-only s_sm:not-sr-only">
             Wallet Connect
           </h6>
-          <h6 class="s_md:sr-only not-sr-only">
+          <h6 class="s_sm:sr-only not-sr-only">
             WC
           </h6>
         </button>
@@ -140,26 +140,27 @@ const showAddress = (address: string, hideText: boolean) => {
             src="/coinbase.svg"
             alt=""
           >
-          <h6 class="sr-only s_md:not-sr-only">
+          <h6 class="sr-only s_sm:not-sr-only">
             Coinbase
           </h6>
-          <h6 class="s_md:sr-only not-sr-only">
+          <h6 class="s_sm:sr-only not-sr-only">
             C
           </h6>
         </button>
         <!-- TD: Add modal to this for selecting which act they want to conenct with -->
         <button
-          class="supported_wallet_box mb-15"
+          class="supported_wallet_box mb-15 opacity-50"
+          disabled
           @click="connectWallet('Ledger')"
         >
           <img
             src="/ledger.svg"
             alt=""
           >
-          <h6 class="sr-only s_md:not-sr-only">
+          <h6 class="sr-only s_sm:not-sr-only">
             Ledger
           </h6>
-          <h6 class="s_md:sr-only not-sr-only">
+          <h6 class="s_sm:sr-only not-sr-only">
             L
           </h6>
         </button>
@@ -171,10 +172,10 @@ const showAddress = (address: string, hideText: boolean) => {
             src="/IOTX.svg"
             alt=""
           >
-          <h6 class="sr-only s_md:not-sr-only">
+          <h6 class="sr-only s_sm:not-sr-only">
             IoPay
           </h6>
-          <h6 class="s_md:sr-only not-sr-only">
+          <h6 class="s_sm:sr-only not-sr-only">
             IP
           </h6>
         </button>
@@ -186,10 +187,10 @@ const showAddress = (address: string, hideText: boolean) => {
             src="/phantom.svg"
             alt=""
           >
-          <h6 class="sr-only s_md:not-sr-only">
+          <h6 class="sr-only s_sm:not-sr-only">
             Phantom
           </h6>
-          <h6 class="s_md:sr-only not-sr-only">
+          <h6 class="s_sm:sr-only not-sr-only">
             PH
           </h6>
         </button>
@@ -202,10 +203,10 @@ const showAddress = (address: string, hideText: boolean) => {
             src="/keplr.svg"
             alt=""
           >
-          <h6 class="sr-only s_md:not-sr-only">
+          <h6 class="sr-only s_sm:not-sr-only">
             Keplr
           </h6>
-          <h6 class="s_md:sr-only not-sr-only">
+          <h6 class="s_sm:sr-only not-sr-only">
             K
           </h6>
         </button>
@@ -217,11 +218,11 @@ const showAddress = (address: string, hideText: boolean) => {
             src="/trezor.svg"
             alt=""
           >
-          <h6 class="sr-only s_md:not-sr-only">
+          <h6 class="sr-only s_sm:not-sr-only">
             Trezor
           </h6>
 
-          <h6 class="s_md:sr-only not-sr-only">
+          <h6 class="s_sm:sr-only not-sr-only">
             T
           </h6>
         </button>
@@ -229,6 +230,7 @@ const showAddress = (address: string, hideText: boolean) => {
       <div
         v-if="hasWallets"
         class="w-full flex flex-col items-center gap-15 "
+        :class="loadingUserWallets? 'loading_grey' : ''"
       >
         <div class="w-[95%] flex justify-end items-center gap-25">
           <span class="text-body text-grey_3">
@@ -244,9 +246,9 @@ const showAddress = (address: string, hideText: boolean) => {
               :class="hideInfo? 'bg-primary':''"
             />
           </button>
-          <!-- TD: @Chris: add log out / disconnect account feature -->
           <button
             class="btn_primary font-bold px-10 py-6 whitespace-nowrap"
+            @click="logout"
           >
             Disconnect Account
           </button>
@@ -257,10 +259,25 @@ const showAddress = (address: string, hideText: boolean) => {
           class="connected_wallets_card"
         >
           <div class="flex justify-between items-center mb-15">
-            <img
-              :src="'/'+ item.walletProvider.toLowerCase() + '.svg'"
-              :alt="i + 'Icon'"
-            >
+            <div class="relative ">
+              <img
+                :src="'/'+ item.walletProvider.toLowerCase() + '.svg'"
+                :alt="i + 'Icon'"
+              >
+              <i 
+                v-show="user?.address === item.address"
+                class="iconoir-star bg-red absolute text-[12px] top-[-0px] left-[-10px] text-primary"
+              />
+              <i 
+                v-show="user?.address === item.address"
+                class="iconoir-star bg-red absolute text-[12px] top-[-8px] left-[12px] text-primary"
+              />
+              <i 
+                v-show="user?.address === item.address"
+                class="iconoir-star bg-red absolute text-[12px] top-[-0px] right-[-10px] text-primary"
+              />
+            </div>
+            
             <h6 class="flex items-center gap-15">
               {{ item.walletProvider }}
               <button 
@@ -277,15 +294,14 @@ const showAddress = (address: string, hideText: boolean) => {
             <div
               class="flex gap-15 justify-between items-center mb-15"
             >
-              <span class="font-medium text-grey_6 sr-only s_md:not-sr-only whitespace-nowrap">
-                {{ item.walletProvider.toLowerCase() + ' '+ i }}
+              <span class="font-medium text-grey_6 sr-only s_md:not-sr-only">
+                <span class=" whitespace-nowrap">{{ item.walletProvider.toLowerCase() + ' '+ i }}</span>
               </span>
               <span
-                class="flex gap-5 items-center text-grey_3"
+                class="flex gap-5 justify-end items-center text-grey_3 w-full"
               >
                 <span
                   class="max-w-[400px] truncate px-5" 
-                  :class="hideInfo? 'loading_grey' : ''"
                 >
                   {{ showAddress(item.address, hideInfo ) }}
                 </span>
@@ -302,6 +318,7 @@ const showAddress = (address: string, hideText: boolean) => {
       <div
         v-else
         class="w-full border h-full flex flex-col items-center justify-center gap-15"
+        :class="loadingUserWallets? 'loading_grey' : ''"
       >
         <h6 class="text-grey_2 font-medium text-center">
           No Wallets Connected
