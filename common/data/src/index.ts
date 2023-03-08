@@ -4,7 +4,7 @@ import eventSchema from './schemas/event.schema.json'
 import aggSchema from './schemas/agg.schema.json'
 import operatorStore from './mock/operator.store.json'
 import validatorStore from './mock/validator.store.json'
-import { Schema } from './providers/schema'
+import { JsonType, GlueType, PgType, Schema } from './providers/schema'
 
 export type EventTableSchema = {
   // The chain which the event belongs to (e.g. iotex, ethereum)
@@ -37,4 +37,14 @@ export type EventTableSchema = {
   price: number;
 }
 
-export { accountSchema, userSchema, eventSchema, aggSchema, operatorStore, validatorStore, Schema }
+export {
+  accountSchema,
+  userSchema,
+  eventSchema,
+  aggSchema,
+  operatorStore,
+  validatorStore,
+  Schema
+}
+
+export type { JsonType, GlueType, PgType }

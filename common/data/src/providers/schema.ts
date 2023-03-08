@@ -1,7 +1,6 @@
 import * as glue from '@aws-cdk/aws-glue-alpha'
 import { JsonSchema } from '../interfaces/JsonSchema'
 
-
 export type JsonType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null'
 export type GlueType = glue.Type
 export type PgType = 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIG_INT' | 'TIMESTAMP' | 'JSON' | 'DATE'
