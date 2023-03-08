@@ -1,4 +1,4 @@
-import { $, argv, echo, fs } from 'zx'
+import { argv, fs } from 'zx'
 import { Schema, accountSchema, userSchema } from '@casimir/data'
 
 /** Casimir table schemas */
@@ -31,8 +31,7 @@ void async function () {
         const tableSchema = tableSchemas[table]
         const schema = new Schema(tableSchema)
         const pgTable = schema.getPgTable()
-        echo(pgTable)
-
+        console.log(pgTable)
         if (output) {
             /** Write to sql file in ./data */
             if (!fs.existsSync('./scripts/local/data')) fs.mkdirSync('./scripts/local/data')
