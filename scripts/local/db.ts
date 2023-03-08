@@ -15,6 +15,9 @@ const tableSchemas = {
  */
 void async function () {
 
+    /** Default to no output */
+    const output = argv.output === 'true'
+
     /** Default to all Casimir tables */
     const tables = argv.tables ? argv.tables.split(',') : ['accounts', 'users']
 
@@ -30,8 +33,10 @@ void async function () {
         const pgTable = schema.getPgTable()
         echo(pgTable)
 
-        /** Write to sql file */
-        if (!fs.existsSync('./scripts/local/data')) fs.mkdirSync('./scripts/local/data')
-        fs.writeFileSync(`./scripts/local/data/${table}.sql`, pgTable)
+        if (output) {
+            /** Write to sql file in ./data */
+            if (!fs.existsSync('./scripts/local/data')) fs.mkdirSync('./scripts/local/data')
+            fs.writeFileSync(`./scripts/local/data/${table}.sql`, pgTable)
+        }
     }
 }()

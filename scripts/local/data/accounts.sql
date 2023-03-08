@@ -1,4 +1,0 @@
-CREATE TABLE [IF NOT EXISTS] Account (
-	address STRING PRIMARY KEY,
-	balance DOUBLE
-);
