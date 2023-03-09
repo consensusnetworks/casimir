@@ -138,14 +138,39 @@ export default function useLandingStore () {
             const index = proiderCollection.findIndex(item => item.provider === account.walletProvider)
             const balance = await convertToUSD(account.currency, date.toDateString(), account.balance)
             if(index < 0){
-                proiderCollection.push({
-                    provider: account.walletProvider,
-                    balance: Number(f(balance))
-                })
+                if(selectedAsset.value.currency === null && selectedAsset.value.provider === null){
+                    proiderCollection.push({
+                        provider: account.walletProvider,
+                        balance: Number(f(balance))
+                    })
+                }else if (selectedAsset.value.currency != null && selectedAsset.value.provider === null){
+                    proiderCollection.push({
+                        provider: account.walletProvider,
+                        balance: account.currency === selectedAsset.value.currency? Number(f(balance)) : 0.00
+                    })
+                }else if (selectedAsset.value.currency === null && selectedAsset.value.provider != null){
+                    proiderCollection.push ({
+                        provider: account.walletProvider,
+                        balance: account.walletProvider === selectedAsset.value.provider? Number(f(balance)) : '---'
+                    })
+                }
+                
             } else {
-                proiderCollection[index] = {
-                    provider: account.walletProvider,
-                    balance: f(proiderCollection[index].balance + balance)
+                if(selectedAsset.value.currency === null && selectedAsset.value.provider === null){
+                    proiderCollection[index] = {
+                        provider: account.walletProvider,
+                        balance: f(proiderCollection[index].balance + balance)
+                    }
+                }else if (selectedAsset.value.currency != null && selectedAsset.value.provider === null){
+                    proiderCollection[index] = {
+                        provider: account.walletProvider,
+                        balance: account.currency === selectedAsset.value.currency? Number(f(proiderCollection[index].balance + balance)) : proiderCollection[index].balance
+                    }
+                }else if (selectedAsset.value.currency === null && selectedAsset.value.provider != null){
+                    proiderCollection[index] = {
+                        provider: account.walletProvider,
+                        balance: account.walletProvider === selectedAsset.value.provider? Number(f(proiderCollection[index].balance + balance)) : proiderCollection[index].balance
+                    }
                 }
             }
         }
@@ -156,7 +181,6 @@ export default function useLandingStore () {
         const proiderCollection = []
         const date = new Date()
         const f = d3.format(".2f");
-        console.log(user.value.accounts)
         for (let i = 0; i < user.value.accounts.length; i++) {
             const account = user.value.accounts[i]
             
