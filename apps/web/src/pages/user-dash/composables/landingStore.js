@@ -1,4 +1,4 @@
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import * as d3 from 'd3'
 
 import useUsers from '@/composables/users'
@@ -21,6 +21,13 @@ const formatSi = d3.format('.2s')
 const tooltipValue = ref('---')
 
 const netWorthTimeFrame = ref('Year')
+
+const userConnectedProviders = ref([])
+const userConnectedCurrencies = ref([])
+const selectedAsset = ref({
+    provider: null,
+    currency: null
+})
 
 // netWorthData Schema
 // {
@@ -46,13 +53,14 @@ const netWorthTimeFrame = ref('Year')
 // }
 const netWorthData = ref([])
 
-const convertToUSD = async (currency, date, amount) => {
-    const conversion = await getConversionRate(currency, 'USD', date)
-    const rate = convertToWholeUnits(currency, amount)
-    return conversion * rate
-}
+
 // TD: use this composable to track user interactions to dynamically update other components
 export default function useLandingStore () {
+    const convertToUSD = async (currency, date, amount) => {
+        const conversion = await getConversionRate(currency, 'USD', date)
+        const rate = convertToWholeUnits(currency, amount)
+        return conversion * rate
+    }
 
     const calculateNetWorthData = async () => {
         const netWorthDataRaw = []
@@ -115,15 +123,101 @@ export default function useLandingStore () {
         }
         return s
     }
-
-
     const updateTooltipValue = (e) => {
         tooltipValue.value = '$' + e
     }
+
+    const calculateUserConnectedProviders = async () => {
+        const proiderCollection = []
+        const date = new Date()
+        const f = d3.format(".2f");
+
+        for (let i = 0; i < user.value.accounts.length; i++) {
+            const account = user.value.accounts[i]
+            
+            const index = proiderCollection.findIndex(item => item.provider === account.walletProvider)
+            const balance = await convertToUSD(account.currency, date.toDateString(), account.balance)
+            if(index < 0){
+                proiderCollection.push({
+                    provider: account.walletProvider,
+                    balance: Number(f(balance))
+                })
+            } else {
+                proiderCollection[index] = {
+                    provider: account.walletProvider,
+                    balance: f(proiderCollection[index].balance + balance)
+                }
+            }
+        }
+        userConnectedProviders.value = proiderCollection
+    }
+
+    const aggergateThroughUserCurrencies = async () => {
+        const proiderCollection = []
+        const date = new Date()
+        const f = d3.format(".2f");
+        console.log(user.value.accounts)
+        for (let i = 0; i < user.value.accounts.length; i++) {
+            const account = user.value.accounts[i]
+            
+            const index = proiderCollection.findIndex(item => item.currency === account.currency)
+            const balance = await convertToUSD(account.currency, date.toDateString(), account.balance)
+            if(index < 0){
+                if(selectedAsset.value.currency === null && selectedAsset.value.provider === null){
+                    proiderCollection.push({
+                        currency: account.currency,
+                        balance: Number(f(balance)),
+                        ammount: Number(f(convertToWholeUnits(account.currency, account.balance)))
+                    })
+                }else if (selectedAsset.value.currency != null && selectedAsset.value.provider === null){
+                    proiderCollection.push({
+                        currency: account.currency,
+                        balance: account.currency === selectedAsset.value.currency? Number(f(balance)) : '---',
+                        ammount: account.currency === selectedAsset.value.currency? Number(f(convertToWholeUnits(account.currency, account.balance))) : ''
+                    })
+                }else if (selectedAsset.value.currency === null && selectedAsset.value.provider != null){
+                    proiderCollection.push ({
+                        currency: account.currency,
+                        balance: account.walletProvider === selectedAsset.value.provider? Number(f(balance)) : 0.00,
+                        ammount: account.walletProvider === selectedAsset.value.provider?  Number(f(convertToWholeUnits(account.currency, account.balance))) : 0
+                    })
+                }
+                
+            } else {
+                if(selectedAsset.value.currency === null && selectedAsset.value.provider === null){
+                    proiderCollection[index] = {
+                        currency: account.currency,
+                        balance: Number(f(proiderCollection[index].balance + balance)),
+                        ammount: Number(f(proiderCollection[index].ammount + convertToWholeUnits(account.currency, account.balance)))
+                    }
+                }else if (selectedAsset.value.currency != null && selectedAsset.value.provider === null){
+                    proiderCollection[index] = {
+                        currency: account.currency,
+                        balance: account.currency === selectedAsset.value.currency? Number(f(proiderCollection[index].balance + balance)) : proiderCollection[index].balance ,
+                        ammount: account.currency === selectedAsset.value.currency?  Number(f(proiderCollection[index].ammount + convertToWholeUnits(account.currency, account.balance))) : proiderCollection[index].ammount
+                    }
+                }else if (selectedAsset.value.currency === null && selectedAsset.value.provider != null){
+                    proiderCollection[index] = {
+                        currency: account.currency,
+                        balance: account.walletProvider === selectedAsset.value.provider? Number(f(proiderCollection[index].balance + balance)) : proiderCollection[index].balance ,
+                        ammount: account.walletProvider === selectedAsset.value.provider?  Number(f(proiderCollection[index].ammount + convertToWholeUnits(account.currency, account.balance))) : proiderCollection[index].ammount
+                    }
+                }
+            }
+        }
+        userConnectedCurrencies.value = proiderCollection
+    }
+
+    watch(selectedAsset, ()=> {
+        calculateUserConnectedProviders()
+        aggergateThroughUserCurrencies()
+    })
     
     onMounted(()=> {
         if(!initialized.value){
             calculateNetWorthData()
+            calculateUserConnectedProviders()
+            aggergateThroughUserCurrencies()
             initialized.value = true
         }
     })
@@ -132,6 +226,9 @@ export default function useLandingStore () {
         netWorthTimeFrame,
         netWorthData,
         tooltipValue,
+        userConnectedProviders,
+        userConnectedCurrencies,
+        selectedAsset,
         xAxisFormat,
         yAxisFormat,
         updateTooltipValue,
