@@ -1,5 +1,4 @@
 import * as https from 'node:https'
-import { uploadToS3 } from '@casimir/aws-helpers'
 
 type PriceEntry = {
   time: number;
@@ -144,19 +143,6 @@ export class Exchange {
         batch.push(...data.Data)
         last = data.TimeFrom
       }
-
-      if (process.env.UPLOAD === 'enabled') {
-        await uploadToS3({
-          bucket: 'casimir-price-dev',
-          key: `${this.coin.toLowerCase()}_${this.currency.toLowerCase()}_hourly.ndjson`,
-          data: batch
-            .flat()
-            .map((e: PriceEntry) => JSON.stringify(e))
-            .join('\n'),
-        }).finally(() => {
-          console.log('saved to s3')
-        })
-      }
       return batch
     }
     if (interval === 'hour') {
@@ -207,19 +193,6 @@ export class Exchange {
 
         batch.push(...hourlyData.Data)
         hlast = hourlyData.TimeFrom
-      }
-
-      if (process.env.UPLOAD === 'enabled') {
-        await uploadToS3({
-          bucket: 'casimir-price-dev',
-          key: `${this.coin.toLowerCase()}_${this.currency.toLowerCase()}_hourly.ndjson`,
-          data: batch
-            .flat()
-            .map((e: PriceEntry) => JSON.stringify(e))
-            .join('\n'),
-        }).finally(() => {
-          console.log('saved to s3')
-        })
       }
       return batch
     }

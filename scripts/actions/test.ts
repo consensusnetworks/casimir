@@ -1,5 +1,5 @@
 import { $, argv, echo } from 'zx'
-import { loadCredentials } from '@casimir/aws-helpers'
+import { loadCredentials } from '@casimir/helpers'
 
 /**
  * Test the GitHub Actions workflows in `.github/workflows`

@@ -1,5 +1,5 @@
 import { $, argv, chalk, echo } from 'zx'
-import { loadCredentials, getSecret } from '@casimir/aws-helpers'
+import { loadCredentials, getSecret } from '@casimir/helpers'
 
 /**
  * Test Ethereum contracts

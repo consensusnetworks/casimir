@@ -3,7 +3,7 @@ import * as cdk from 'aws-cdk-lib'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as glue from '@aws-cdk/aws-glue-alpha'
 import { Schema, eventSchema, aggSchema } from '@casimir/data'
-import { kebabCase, pascalCase, snakeCase } from '@casimir/string-helpers'
+import { kebabCase, pascalCase, snakeCase } from '@casimir/helpers'
 import { Config } from '../providers/config'
 import { EtlStackProps } from '../interfaces/StackProps'
 

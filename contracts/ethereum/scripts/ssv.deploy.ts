@@ -1,4 +1,4 @@
-import { deployContract } from '@casimir/hardhat-helpers'
+import { deployContract } from '@casimir/hardhat'
 import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
 import { validatorStore } from '@casimir/data'
 import { SSVManager } from '../build/artifacts/types'

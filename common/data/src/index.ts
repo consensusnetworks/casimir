@@ -1,44 +1,16 @@
 import accountSchema from './schemas/account.schema.json'
+import nonceSchema from './schemas/nonce.schema.json'
 import userSchema from './schemas/user.schema.json'
 import eventSchema from './schemas/event.schema.json'
 import aggSchema from './schemas/agg.schema.json'
 import operatorStore from './mock/operator.store.json'
 import validatorStore from './mock/validator.store.json'
+import { JsonSchema } from './interfaces/JsonSchema'
 import { JsonType, GlueType, PgType, Schema } from './providers/schema'
-
-export type EventTableSchema = {
-  // The chain which the event belongs to (e.g. iotex, ethereum)
-  chain: 'etheruem' | 'iotex';
-  // The network which the event was received on (e.g. mainnet, testnet)
-  network: 'mainnet' | 'testnet' | 'goerli';
-  // The provider used to source the event (e.g. infura, consensus)
-  provider: 'alchemy' | 'consensus';
-  // The type of event (e.g. block, transaction)
-  type: 'block' | 'transaction';
-  // The height of the block the event belongs to
-  height: number;
-  // The block hash
-  block: string;
-  // The transaction hash
-  transaction: string;
-  // The timestamp of the event recieved by the blockchain (format: Modified ISO 8601 e.g. 2015-03-04 22:44:30.652)"
-  receivedAt: string;
-  // The sender's address
-  sender: string;
-  // The recipient's address
-  recipient: string;
-  // The sender's balance at the time of the event
-  senderBalance: string;
-  // The recipient's balance at the time of the event
-  recipientBalance: string;
-  // The amount transferred in the event
-  amount: string;
-  // The exchange price of the coin at the time of the event
-  price: number;
-}
 
 export {
   accountSchema,
+  nonceSchema,
   userSchema,
   eventSchema,
   aggSchema,
@@ -47,4 +19,4 @@ export {
   Schema
 }
 
-export type { JsonType, GlueType, PgType }
+export type { JsonSchema, JsonType, GlueType, PgType }

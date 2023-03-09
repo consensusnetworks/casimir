@@ -2,7 +2,7 @@ import { Construct } from 'constructs'
 import * as cdk from 'aws-cdk-lib'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import { NodesStackProps } from '../interfaces/StackProps'
-import { pascalCase } from '@casimir/string-helpers'
+import { pascalCase } from '@casimir/helpers'
 import { Config } from './config'
 
 /**

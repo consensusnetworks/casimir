@@ -8,7 +8,7 @@ import useLedger from './ledger'
 import useTrezor from './trezor'
 import useWalletConnect from './walletConnect'
 import { ProviderString } from '@casimir/types'
-import { Pool } from '@casimir/types/src/interfaces/Pool'
+import { Pool } from '@casimir/types'
 
 /** SSV Manager contract */
 let ssvManager: SSVManager

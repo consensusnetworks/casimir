@@ -6,7 +6,10 @@
     "properties": {
         "address": {
             "type": "string",
-            "description": "The address of the user (PK)"
+            "description": "The user address (PK)"
         }
-    }
+    },
+    "required": [
+        "address"
+    ]
 }

@@ -3,7 +3,7 @@ import { JsonSchema } from '../interfaces/JsonSchema'
 
 export type JsonType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null'
 export type GlueType = glue.Type
-export type PgType = 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIG_INT' | 'TIMESTAMP' | 'JSON' | 'DATE'
+export type PgType = 'string' | 'integer' | 'boolean' | 'double' | 'decimal' | 'bigint' | 'timestamp' | 'json' | 'date'
 
 export class Schema {
     /** Input JSON Schema object */
@@ -65,28 +65,30 @@ export class Schema {
     getPgTable(): string {
         const columns = Object.keys(this.jsonSchema.properties).map((name: string) => {
             const property = this.jsonSchema.properties[name]
-
             let type = {
-                string: 'STRING',
-                number: 'DOUBLE',
-                integer: 'INTEGER',
-                boolean: 'BOOLEAN',
-                object: 'JSON',
-                array: 'JSON',
-                null: 'STRING'
+                string: 'varchar',
+                number: 'double',
+                integer: 'integer',
+                boolean: 'boolean',
+                object: 'json',
+                array: 'json',
+                null: 'varchar'
             }[property.type as JsonType] as PgType
 
-            if (name.endsWith('_at')) type = 'TIMESTAMP'
-            if (name.endsWith('_balance')) type = 'BIG_INT'
+            if (name.endsWith('_at')) type = 'timestamp'
+            if (name.includes('balance')) type = 'bigint'
 
             let column = `${name} ${type}`
 
             const comment = property.description
-            if (comment.includes('PK')) column += ' PRIMARY KEY'
+            if (comment.includes('PK')) column += ' primary key'
             
             return column
         })
 
-        return `CREATE TABLE [IF NOT EXISTS] ${this.jsonSchema.title} (\n\t${columns.join(',\n\t')}\n);`
+        /** Make table name plural of schema objects (todo: check edge-cases) */
+        const tableName = this.jsonSchema.title.toLowerCase() + 's'
+
+        return `create table ${tableName} (\n\t${columns.join(',\n\t')}\n);`
     }
 }

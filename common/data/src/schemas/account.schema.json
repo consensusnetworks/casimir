@@ -6,15 +6,32 @@
     "properties": {
         "address": {
             "type": "string",
-            "description": "The address of the account (PK)"
+            "description": "The account address (PK)"
         },
         "balance": {
             "type": "number",
-            "description": "The balance of the account"
+            "description": "The account balance"
+        },
+        "owner_address": {
+            "type": "string",
+            "description": "The account owner address"
         },
         "snapshots": {
             "type": "array",
-            "description": "The snapshots of the account"
+            "description": "The account snapshots"
+        },
+        "transactions": {
+            "type": "array",
+            "description": "The account transactions"
+        },
+        "wallet": {
+            "type": "string",
+            "description": "The account wallet provider"
         }
-    }
+    },
+    "required": [
+        "address",
+        "owner_address",
+        "wallet"
+    ]
 }

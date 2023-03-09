@@ -1,9 +1,9 @@
 {
-    "name": "@casimir/hardhat-helpers",
+    "name": "@casimir/hardhat",
     "private": true,
     "main": "src/index.ts",
     "scripts": {
-        "build": "echo '@casimir/hardhat-helpers build not specified. Disregard this warning and any listed errors above if @casimir/hardhat-helpers is not needed for the current project build.' && exit 0",
+        "build": "echo '@casimir/hardhat build not specified. Disregard this warning and any listed errors above if @casimir/hardhat is not needed for the current project build.' && exit 0",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "devDependencies": {

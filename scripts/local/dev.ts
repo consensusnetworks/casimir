@@ -1,6 +1,5 @@
 import { $, argv, chalk, echo } from 'zx'
-import { loadCredentials, getSecret } from '@casimir/aws-helpers'
-import { parseStdout } from '@casimir/zx-helpers'
+import { loadCredentials, getSecret, spawnPromise } from '@casimir/helpers'
 
 /**
  * Run a Casimir dev server
@@ -8,6 +7,7 @@ import { parseStdout } from '@casimir/zx-helpers'
  * Arguments:
  *      --app: app name (optional, i.e., --app=web)
  *      --fork: fork name (optional, i.e., --fork=goerli)
+ *      --headless: run headless (optional, i.e., --headless=true)
  *      --ledger: emulate ledger for chain (optional, i.e., --ledger=ethereum)
  *      --mock: mock services (optional, i.e., --mock=true)
  *      --network: network name (optional, i.e., --network=goerli)
@@ -21,7 +21,7 @@ void async function () {
         web: {
             chains: ['ethereum'],
             services: ['users'],
-            tables: ['users', 'accounts']
+            tables: ['accounts', 'nonces', 'users']
         }
     }
 
@@ -47,6 +47,9 @@ void async function () {
     /** Default to the web app */
     const app = argv.app || 'web'
 
+    /** Default to headfull */
+    const headless = argv.headless === 'true'
+
     /** Default to local mock */
     const mock = argv.mock !== 'false'
 
@@ -67,10 +70,9 @@ void async function () {
 
     const { chains, services, tables } = apps[app as keyof typeof apps]
 
-    if (mock) {
-
-        process.env.DB_PASSWORD = 'password'
-        $`npm run dev:db --tables=${tables.join(',')}`
+    if (headless || mock) {
+        /** Mock pg database */
+        $`npm run watch --seed --tables=${tables.join(',')} --workspace @casimir/data`
 
         /** Mock services */
         let port = 4000
@@ -80,8 +82,8 @@ void async function () {
             $`npm run dev --workspace @casimir/${service}`
 
             try {
-                if (parseStdout(await $`lsof -ti:${port}`)) {
-                    await $`kill -9 $(lsof -ti:${port})`
+                if (await spawnPromise(`lsof -ti:${port}`)) {
+                    await spawnPromise(`kill -9 $(lsof -ti:${port})`)
                 }
             } catch {
                 console.log(`Port ${port} is available.`)
@@ -110,8 +112,8 @@ void async function () {
     if (ledger) {
         const port = 5001
         try { 
-            if (parseStdout(await $`lsof -ti:${port}`)) {
-                $`kill -9 $(lsof -ti:${port})`
+            if (await spawnPromise(`lsof -ti:${port}`)) {
+                await spawnPromise(`kill -9 $(lsof -ti:${port})`)
             }
         } catch { 
             console.log(`Port ${port} is available.`) 
