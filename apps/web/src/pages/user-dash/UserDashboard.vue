@@ -112,7 +112,7 @@ const {
       </div>
       <div class="h-max dash_s_sm:h-[300px] mb-25 dash_s_sm:pl-20 mt-50 dash_s_sm:mt-0"> 
         <div class="min-w-[375px] w-full h-full flex flex-col">
-          <h6 class="font-medium text-grey_8 mb-10 sticky">
+          <h6 class="font-bold text-grey_5 text-body mb-10 sticky">
             Recent Transactions
           </h6>
           <div class=" h-full w-full overflow-auto">

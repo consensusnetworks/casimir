@@ -49,14 +49,10 @@ const netWorthData = ref([])
 const convertToUSD = async (currency, date, amount) => {
     const conversion = await getConversionRate(currency, 'USD', date)
     const rate = convertToWholeUnits(currency, amount)
-    console.log(rate)
     return conversion * rate
 }
 // TD: use this composable to track user interactions to dynamically update other components
 export default function useLandingStore () {
-    
-
-//  a.value =await getConversionRate('ETH', 'USD', '2023-02-06').then((a:any) => {return a})
 
     const calculateNetWorthData = async () => {
         const netWorthDataRaw = []
@@ -70,21 +66,17 @@ export default function useLandingStore () {
                     item.date.toDateString() === parsedDate.toDateString()
                 )
                 const amount = await convertToUSD(account.currency, snapshot.date, snapshot.balance)
-                // console.log(dateIndex, parsedDate)
                 if(dateIndex < 0){ // Date does not exist, add new date to raw array
                     
                     const netWorthDataItem = {
                         // TD: @Howie make snapshot date as an aws date?
                         date: parsedDate,
-                        // TD: Make this get balance in usd for the current currency 
                         totalInUSD: amount,
                         breakdown: {
                             walletProviders: {
-                                // TD: Make this get balance in usd for the current currency 
                                 [account.walletProvider] : amount,
                             },
                             currencies: {
-                                // TD: Make this get balance in usd for the current currency 
                                 [account.currency] : amount,
 
                             }
@@ -93,7 +85,6 @@ export default function useLandingStore () {
                     netWorthDataRaw.unshift(netWorthDataItem)
                 } else { 
                     // Date already exists, add values and sum up balance in usd
-                    // TD: Make these get balance in usd for the current currency and add it to total
                     netWorthDataRaw[dateIndex].totalInUSD += amount,
 
                     netWorthDataRaw[dateIndex].breakdown.walletProviders[account.walletProvider]? 
@@ -107,7 +98,6 @@ export default function useLandingStore () {
             }
         }
         // TD: Make sorting method?
-        console.log(netWorthDataRaw)
         netWorthData.value = netWorthDataRaw
     }
 

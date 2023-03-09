@@ -74,7 +74,7 @@ onUnmounted(() => {
   
 <template>
   <div class="flex flex-col gap-10 overflow-hidden w-full">
-    <h6 class="font-medium text-grey_8 mb-10">
+    <h6 class="font-bold text-body text-grey_5 mb-10">
       Staking Breakdown
     </h6>
     <div class="h-full flex w-full">
