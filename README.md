@@ -60,6 +60,20 @@ npm run dev
 
 > 🚩 This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set AWS_PROFILE="some-other-name" in a [.env](.env) if you want to override).
 
+**All options:**
+
+| Flag | Description | Default | Example |
+| --- | --- | --- | --- |
+| `--app` | Which app to run | web | --app=landing |
+| `--clean` | Whether to clean the local database | true | --clean=false |
+| `--fork` | Which live Ethereum network to fork locally | goerli | --fork=mainnet |
+| `--ledger` | Which ledger application to emulate | ethereum | --ledger=bitcoin |
+| `--mock` | Whether to mock services | true | --mock=false |
+| `--network` | Which live Ethereum network to use | goerli | --network=mainnet |
+| `--trezor` | Whether to emulate a Trezor hardware wallet | false | --trezor=true |
+
+**Example commands:**
+
 For fullstack changes – run the development server and mock the local backend services.
 
 ```zsh
@@ -78,12 +92,6 @@ Emulate a Trezor hardware wallet. You also need to make sure to add [these prere
 
 ```zsh
 npm run dev --trezor
-```
-
-Expose any servers running on local ports using local tunnel.
-
-```zsh
-npm run dev --external
 ```
 
 The commands above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.

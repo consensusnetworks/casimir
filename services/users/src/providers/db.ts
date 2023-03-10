@@ -19,6 +19,7 @@ export default function useDB() {
      */
     async function addAccount(account: Account) {
         const createdAt = new Date().toISOString()
+        console.log('createdAt', createdAt)
         const text = 'INSERT INTO accounts (address, owner_address, created_at) VALUES ($1, $2, $3) RETURNING *;'
         const params = [account.address, account.ownerAddress, createdAt]
         const rows = await postgres.query(text, params)
@@ -32,6 +33,7 @@ export default function useDB() {
      */
     async function addUser(user: User) {
         const createdAt = new Date().toISOString()
+        console.log('createdAt', createdAt)
         const text = 'INSERT INTO users (address, created_at) VALUES ($1, $2) RETURNING *;'
         const params = [user.address, createdAt]
         const rows = await postgres.query(text, params)

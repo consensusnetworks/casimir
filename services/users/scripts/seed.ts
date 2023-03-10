@@ -21,16 +21,19 @@ void async function () {
     /** Read store file */
     const storeFile = fs.readFileSync(`${store}/${resource}.store.json`, 'utf8')
     const resources = JSON.parse(storeFile)
+    const plural = resource + 's'
+
+    console.log(`Seeding ${resources.length} ${plural} to API...`)
 
     /** Seed resources with users API */
     const port = process.env.PUBLIC_USERS_PORT || 4000
-    const seed = await fetch(`http://localhost:${port}/seed/${resource}s`, {
+    const seed = await fetch(`http://localhost:${port}/seed/${plural}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(resources)
+        body: JSON.stringify({ [plural]: resources })
     })
     const seededResources = await seed.json()
-    console.log(`Seeded ${seededResources.length} ${resource}s to API`)
+    console.log(`Seeded ${seededResources.length} ${plural} to API`)
 }()

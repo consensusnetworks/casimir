@@ -4,7 +4,7 @@ Casimir schemas, databases, and notebooks for data modeling, exploration, and an
 
 ## Schemas
 
-Find the core JSON schemas in [src/schemas](src/schemas). These are the source of truth for data modeling in Casimir. When we deploy our Glue and Postgres tables, we use the schemas to generate columns from each JSON object's properties. See the reference table below for the database, table, file, and description of each schema.
+Find the core JSON schemas in [src/schemas](src/schemas). These are the source of truth for data modeling in Casimir. When we deploy our [Glue](https://docs.aws.amazon.com/glue/latest/dg/define-database.html) and [Postgres](https://www.postgresql.org/docs/) tables, we use the schemas to generate columns from each JSON object's properties. See the reference table below for the database, table, file, and description of each schema.
 
 | Database | Table | Schema | Description |
 | --- | --- | --- | --- |
@@ -14,6 +14,21 @@ Find the core JSON schemas in [src/schemas](src/schemas). These are the source o
 | Postgres | `users` | [user.schema.json](src/schemas/user.schema.json) | User profile |
 
 ## Databases
+
+You can run a local Postgres instance for development and testing. This is a convenient way to iterate on schemas and test queries before deploying to production. (Schema reloading is still a work in progress - hopefully bootstrapping Postgres in Docker can be done faster.)
+
+```zsh
+npm run dev:postgres --workspace @casimir/data
+```
+
+**All options:**
+
+| Flag | Description | Default | Example |
+| --- | --- | --- | --- |
+| `--clean` | Delete existing pgdata before deploy | true | --clean=false |
+| `--tables` | Tables to deploy | accounts,users | --tables=accounts,users |
+
+**Example commands:**
 
 Run a local Postgres instance with the *current schemas*.
 
@@ -26,6 +41,8 @@ Run a local Postgres instance and *watch the schemas for changes*.
 ```zsh
 npm run watch:postgres --workspace @casimir/data
 ```
+
+### PSQL
 
 Query the local Postgres instance.
 
