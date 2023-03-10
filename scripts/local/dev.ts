@@ -6,12 +6,12 @@ import { loadCredentials, getSecret, spawnPromise } from '@casimir/helpers'
  * 
  * Arguments:
  *      --app: app name (optional, i.e., --app=web)
+ *      --clean: delete existing pgdata before deploy (optional, i.e., --clean)
  *      --fork: fork name (optional, i.e., --fork=goerli)
  *      --ledger: emulate ledger for chain (optional, i.e., --ledger=ethereum)
  *      --mock: mock services (optional, i.e., --mock=true)
  *      --network: network name (optional, i.e., --network=goerli)
  *      --trezor: emulate trezor (optional, i.e., --trezor=true)
- *      --external: externalize all rpc urls (optional, i.e., --external=true)
  */
 void async function () {
 
@@ -46,17 +46,17 @@ void async function () {
     /** Default to the web app */
     const app = argv.app || 'web'
 
+    /** Default to clean mock db */
+    const clean = argv.clean !== 'false' || argv.clean !== false
+
     /** Default to local mock */
-    const mock = argv.mock !== 'false'
+    const mock = argv.mock !== 'false' || argv.mock !== false
 
     /** Default to no network or testnet if set vaguely */
     const network = argv.network === 'true' ? 'testnet' : argv.network === 'false' ? false : argv.network
 
     /** Default to no fork or testnet if set vaguely */
     const fork = argv.fork === 'true' ? 'testnet' : argv.fork === 'false' ? false : argv.fork
-
-    /** Default to no external rpc */
-    const external = argv.external === 'true'
 
     /** Default to no ledger emulator or ethereum if set vaguely */
     const ledger = argv.ledger === 'true' ? 'ethereum' : argv.ledger === 'false' ? false : argv.ledger
@@ -68,7 +68,7 @@ void async function () {
 
     if (mock) {
         /** Mock postgres database */
-        $`npm run watch:postgres --clean --tables=${tables.join(',')} --workspace @casimir/data`
+        $`npm run watch:postgres --clean ${clean} --tables=${tables.join(',')} --workspace @casimir/data`
         // $`npm run dev:postgres --clean --tables=${tables.join(',')} --workspace @casimir/data`
 
         /** Mock services */
@@ -97,10 +97,6 @@ void async function () {
             process.env.ETHEREUM_RPC_URL = url
             echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(network) + chalk.bgBlackBright(` ${chain} network at ${url}`))
         } else {
-            if (external) {
-                process.env.LOCAL_TUNNEL = 'true'
-            }
-
             const chainFork = forks[chain][fork]
             $`npm run dev:${chain} --fork=${chainFork}`
         }

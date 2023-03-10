@@ -13,7 +13,7 @@
     "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules package-lock.json && npm i",
     "curl": "curl -H 'Content-Type: application/json' -d \"$npm_config_body\" \"$npm_config_url\"",
     "deploy:cdk": "npx esno -r dotenv/config scripts/cdk/deploy.ts",
-    "dev": "npx esno -r dotenv/config scripts/local/dev.ts --fork \"$npm_config_fork\" --ledger \"$npm_config_ledger\" --mock \"$npm_config_mock\" --network \"$npm_config_network\" --trezor \"$npm_config_trezor\" --external \"$npm_config_external\"",
+    "dev": "npx esno -r dotenv/config scripts/local/dev.ts --clean \"$npm_config_clean\" --fork \"$npm_config_fork\" --ledger \"$npm_config_ledger\" --mock \"$npm_config_mock\" --network \"$npm_config_network\" --trezor \"$npm_config_trezor\"",
     "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
     "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --execution \"$npm_config_execution\" --fork \"$npm_config_fork\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
