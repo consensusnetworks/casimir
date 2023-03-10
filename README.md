@@ -191,7 +191,7 @@ npm install -D some-dev-dependency --workspace @casimir/workspace-name
 
 ## 📊 Data
 
-Data schemas, data operations/workflows, and analytics and ML notebooks are stored in the [common/data/] directory (also namespaced as the @casimir/data npm workspace). See the [Data Contribution Guide](common/data/README.md) for detailed usage instructions.
+Data schemas, data operations/workflows, and analytics and ML notebooks are stored in the [common/data] directory (also namespaced as the @casimir/data npm workspace). See the [@casimir/data README](common/data/README.md) for detailed usage instructions.
 
 ## Layout
 
