@@ -7,6 +7,7 @@ import login from './routes/login'
 import auth from './routes/auth'
 import user from './routes/user'
 import health from './routes/health'
+import seed from './routes/seed'
 
 supertokens.init(SuperTokensBackendConfig)
 
@@ -32,6 +33,7 @@ app.use('/auth', auth)
 app.use('/login', login)
 app.use('/user', user)
 app.use('/health', health)
+app.use('/seed', seed)
 
 /** Returns 401 to the client in the case of session related errors */
 app.use(errorHandler())

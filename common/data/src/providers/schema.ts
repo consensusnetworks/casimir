@@ -6,13 +6,11 @@ export type GlueType = glue.Type
 export type PgType = 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIGINT' | 'TIMESTAMP' | 'JSON' | 'DATE'
 
 export class Schema {
-    /** Input JSON Schema object */
+    /** Input JSON schema object */
     private jsonSchema: JsonSchema
 
     /**
-     * Schema constructor
-     * @param jsonSchema {JsonSchema} - Input JSON Schema object
-     * 
+     * @param jsonSchema {JsonSchema} - Input JSON schema object
      * @example
      * ```typescript
      * import { eventSchema } from '@casimir/data'
@@ -24,7 +22,7 @@ export class Schema {
     }
 
     /**
-     * Get an array of Glue columns from the JsonSchema object
+     * Get an array of Glue columns from the JSON schema object.
      * @returns {glue.Column[]} Array of Glue columns
      * 
      * @example
@@ -53,7 +51,7 @@ export class Schema {
     }
 
     /**
-     * Get a PG table from the JsonSchema object.
+     * Get a PG table from the JSON schema object.
      * @returns {string} PG table
      * 
      * @example
@@ -90,5 +88,12 @@ export class Schema {
         const tableName = this.jsonSchema.title.toLowerCase() + 's'
 
         return `CREATE TABLE ${tableName} (\n\t${columns.join(',\n\t')}\n);`
+    }
+
+    /**
+     * Get the title of the JSON schema object.
+     */
+    getTitle(): string {
+        return this.jsonSchema.title
     }
 }

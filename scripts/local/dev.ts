@@ -7,7 +7,6 @@ import { loadCredentials, getSecret, spawnPromise } from '@casimir/helpers'
  * Arguments:
  *      --app: app name (optional, i.e., --app=web)
  *      --fork: fork name (optional, i.e., --fork=goerli)
- *      --headless: run headless (optional, i.e., --headless=true)
  *      --ledger: emulate ledger for chain (optional, i.e., --ledger=ethereum)
  *      --mock: mock services (optional, i.e., --mock=true)
  *      --network: network name (optional, i.e., --network=goerli)
@@ -47,9 +46,6 @@ void async function () {
     /** Default to the web app */
     const app = argv.app || 'web'
 
-    /** Default to headfull */
-    const headless = argv.headless === 'true'
-
     /** Default to local mock */
     const mock = argv.mock !== 'false'
 
@@ -70,9 +66,10 @@ void async function () {
 
     const { chains, services, tables } = apps[app as keyof typeof apps]
 
-    if (headless || mock) {
+    if (mock) {
         /** Mock postgres database */
-        $`npm run watch:postgres --tables=${tables.join(',')} --workspace @casimir/data`
+        $`npm run watch:postgres --clean --tables=${tables.join(',')} --workspace @casimir/data`
+        // $`npm run dev:postgres --clean --tables=${tables.join(',')} --workspace @casimir/data`
 
         /** Mock services */
         let port = 4000

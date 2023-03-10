@@ -1,3 +1,4 @@
+import util from 'util'
 import { spawn } from 'child_process'
 import { fromIni } from '@aws-sdk/credential-providers'
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager'
@@ -39,8 +40,7 @@ export async function loadCredentials() {
 }
 
 /**
- * Convert any string to camelCase
- * 
+ * Convert any string to camelCase.
  * @param string - The input string
  * @returns A camelCase string from the input string
  */
@@ -70,8 +70,7 @@ export function pascalCase(string: string): string {
 }
 
 /**
- * Convert any string to snake_case
- *
+ * Convert any string to snake_case.
  * @param string - The input string
  * @returns A snake_case string from the input string
  */
@@ -83,8 +82,7 @@ export function snakeCase(string: string): string {
 }
 
 /**
- * Convert any string to kebab-case
- * 
+ * Convert any string to kebab-case.
  * @param string - The input string
  * @returns A kebab-case string from the input string
  */
@@ -96,13 +94,13 @@ export function kebabCase(string: string): string {
 }
 
 /**
- * Spawn a full command with a child process and return a promise
+ * Spawn a full command with a child process and return a promise.
  * @param fullCommand - The full command to run
  * @returns A promise that resolves when the command exits
  */
 export async function spawnPromise(fullCommand: string) {
     const [command, ...args] = fullCommand.split(' ')
-    const child = spawn(command, args)
+    const child = spawn(command, args, { stdio: 'inherit' })
     return new Promise((resolve, reject) => {
         child.on('error', reject)
         child.on('exit', resolve)
@@ -110,7 +108,7 @@ export async function spawnPromise(fullCommand: string) {
 }
 
 /** 
- * Get a wallet address (optionially from a mnemonic)
+ * Get a wallet address (optionially from a mnemonic).
  * @param mnemonic - The wallet mnemonic (optional)
  * @returns The wallet address
  */
@@ -120,7 +118,7 @@ export async function getWalletAddress(mnemonic?: string) {
 }
 
 /** 
- * Get a wallet keystore (optionially from a mnemonic)
+ * Get a wallet keystore (optionially from a mnemonic).
  * @param mnemonic - The wallet mnemonic (optional)
  * @returns The wallet keystore
  */
@@ -131,7 +129,7 @@ export async function getWalletKeystore(mnemonic?: string) {
 }
 
 /** 
- * Get a wallet (optionially from a mnemonic)
+ * Get a wallet (optionially from a mnemonic).
  * @param mnemonic - The wallet mnemonic (optional)
  * @returns The wallet
  */

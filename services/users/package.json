@@ -4,7 +4,8 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "node build.js",
-    "dev": "tsnd --respawn --transpile-only src/index.ts",
+    "dev": "tsnd --respawn --transpile-only ./src/index.ts",
+    "seed": "ts-node --transpile-only scripts/seed.ts --resource \"$npm_config_resource\" --store \"$npm_config_store\"",
     "test": "echo \"Warning: no test specified\" && exit 0"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "@types/pg": "^8.6.6",
     "chai": "^4.3.6",
     "esbuild": "^0.15.9",
+    "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0"
   }
 }
