@@ -3,7 +3,7 @@ import { JsonSchema } from '../interfaces/JsonSchema'
 
 export type JsonType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null'
 export type GlueType = glue.Type
-export type PgType = 'string' | 'integer' | 'boolean' | 'double' | 'decimal' | 'bigint' | 'timestamp' | 'json' | 'date'
+export type PgType = 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIGINT' | 'TIMESTAMP' | 'JSON' | 'DATE'
 
 export class Schema {
     /** Input JSON Schema object */
@@ -66,22 +66,22 @@ export class Schema {
         const columns = Object.keys(this.jsonSchema.properties).map((name: string) => {
             const property = this.jsonSchema.properties[name]
             let type = {
-                string: 'varchar',
-                number: 'double',
-                integer: 'integer',
-                boolean: 'boolean',
-                object: 'json',
-                array: 'json',
-                null: 'varchar'
+                string: 'VARCHAR',
+                number: 'DOUBLE',
+                integer: 'INTEGER',
+                boolean: 'BOOLEAN',
+                object: 'JSON',
+                array: 'JSON',
+                null: 'VARCHAR'
             }[property.type as JsonType] as PgType
 
-            if (name.endsWith('_at')) type = 'timestamp'
-            if (name.includes('balance')) type = 'bigint'
+            if (name.endsWith('_at')) type = 'TIMESTAMP'
+            if (name.includes('balance')) type = 'BIGINT'
 
             let column = `${name} ${type}`
 
             const comment = property.description
-            if (comment.includes('PK')) column += ' primary key'
+            if (comment.includes('PK')) column += ' PRIMARY KEY'
             
             return column
         })
@@ -89,6 +89,6 @@ export class Schema {
         /** Make table name plural of schema objects (todo: check edge-cases) */
         const tableName = this.jsonSchema.title.toLowerCase() + 's'
 
-        return `create table ${tableName} (\n\t${columns.join(',\n\t')}\n);`
+        return `CREATE TABLE ${tableName} (\n\t${columns.join(',\n\t')}\n);`
     }
 }

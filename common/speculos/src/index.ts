@@ -8,7 +8,7 @@ import Transport from '@ledgerhq/hw-transport'
  * const transport = await TransportSpeculosHTTP.create()
  * const res = await transport.send(0xE0, 0x01, 0, 0)
  */
-export default class TransportSpeculosHTTP extends Transport {
+export class TransportSpeculosHTTP extends Transport {
   baseURL: string
   eventStream!: EventSource
 
@@ -22,7 +22,7 @@ export default class TransportSpeculosHTTP extends Transport {
   static list = (): Promise<never[]> => Promise.resolve([])
   static listen = () => ({
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    unsubscribe: () => {},
+    unsubscribe: () => { },
   })
 
   static open = async (

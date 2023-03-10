@@ -8,7 +8,8 @@
     },
     "dependencies": {
         "@aws-sdk/client-secrets-manager": "^3.204.0",
-        "@aws-sdk/credential-providers": "^3.204.0"
+        "@aws-sdk/credential-providers": "^3.204.0",
+        "ethers": "^5.7.2"
     },
     "devDependencies": {
         "@types/node": "^17.0.38",

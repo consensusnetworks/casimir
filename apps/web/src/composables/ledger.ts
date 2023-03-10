@@ -1,5 +1,4 @@
-import EthersLedgerSigner from '@casimir/ethers-ledger-signer'
-import BitcoinLedgerSigner from '@casimir/bitcoin-ledger-signer'
+import { BitcoinLedgerSigner, EthersLedgerSigner } from '@casimir/wallets'
 import { ethers } from 'ethers'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'

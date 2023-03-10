@@ -1,0 +1,241 @@
+import { ethers } from 'ethers'
+import Btc from '@ledgerhq/hw-app-btc'
+import Eth, { ledgerService } from '@ledgerhq/hw-app-eth'
+import Transport from '@ledgerhq/hw-transport'
+import { TransportSpeculosHTTP } from '@casimir/speculos'
+import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
+import { TransactionInit } from '../interfaces/TransactionInit'
+
+const transports = {
+    'usb': async function createUSBTransport(): Promise<Transport> {
+        return await TransportWebUSB.create()
+    },
+    'speculos': async function createSpeculosTransport(baseURL?: string): Promise<Transport> {
+        return await TransportSpeculosHTTP.open(baseURL)
+    }
+}
+
+export interface LedgerSignerOptions {
+    provider?: ethers.providers.Provider
+    type?: string
+    path?: string
+    baseURL?: string
+}
+
+export class BitcoinLedgerSigner {
+    readonly type: string = 'usb'
+    readonly path: string = '84\'/0\'/0\'/0/0'
+    readonly baseURL?: string
+    btc?: Promise<Btc>
+
+    constructor(options: LedgerSignerOptions) {
+        if (options.type) this.type = options.type
+        if (options.path) this.path = options.path
+        this.baseURL = options.baseURL
+
+        const transportCreatorType = this.type as keyof typeof transports
+        const transportCreator = transports[transportCreatorType]
+        if (!transportCreator) console.log('Unknown or unsupported type', this.type)
+        this.btc = transportCreator(this.baseURL).then(transport => {
+            // TODO: Add conditional for testnet
+            return new Btc({ transport, currency: 'bitcoin_testnet' })
+            // return new Btc({ transport, currency: 'bitcoin' })
+        })
+    }
+
+    retry<T = unknown>(callback: (btc: Btc) => Promise<T>, timeout?: number): Promise<T> {
+        // The async-promise-executor is ok since retry handles necessary errors 
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
+            const ledgerConnectionError = 'Please make sure Ledger is ready and retry'
+            if (timeout && timeout > 0) {
+                setTimeout(() => reject(new Error(ledgerConnectionError)), timeout)
+            }
+
+            const btc = await this.btc as Btc
+
+            // Wait up to 5 seconds
+            for (let i = 0; i < 50; i++) {
+                try {
+                    const result = await callback(btc)
+                    return resolve(result)
+                } catch (error) {
+                    if ((error as { id: string }).id !== 'TransportLocked') {
+                        return reject(error)
+                    }
+                }
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 100)
+                })
+            }
+
+            return reject(new Error(ledgerConnectionError))
+        })
+    }
+
+    async getAddress(): Promise<string> {
+        const { bitcoinAddress: address } = await this.retry((btc) => btc.getWalletPublicKey(
+            this.path,
+            { verify: false, format: 'bech32' }
+        ))
+        return address
+    }
+
+    async signMessage(message: string): Promise<string> {
+        try {
+            const messageHex = Buffer.from(message).toString('hex')
+            const result = await this.retry((btc) => btc.signMessage(
+                this.path,
+                messageHex
+            ))
+            const v = result['v'] + 27 + 4
+            const signature = Buffer.from(v.toString(16) + result['r'] + result['s'], 'hex').toString('base64')
+            console.log('Signature : ' + signature)
+            return signature
+        } catch (err) {
+            console.log(err)
+            throw err
+        }
+    }
+
+    // async signTransaction(path: string, transaction: any) {
+    // }
+
+    async sendTransaction({ from, to, value }: TransactionInit): Promise<string> {
+        // Build the transaction object using splitTransaction to then pass into getTrustedInput
+        // Create a transaction hex string
+        const transactionHex = 'f85f49b51366f7150d2adea6544bc256743707a38e2bdfbf839349ba1ff2875c'
+        const isSegwitSupported = false
+        const tx = await this.retry(async (btc) => btc.splitTransaction(
+            transactionHex,
+            isSegwitSupported
+        ))
+        return new Promise(resolve => resolve(''))
+        // const output_index = 1
+        // const inputs = [[tx, output_index]]
+        // Get trusted input (returns a string) using getTrustedInput
+        // const trustedInput = await this.retry((btc) => btc.getTrustedInput(
+        //     0,
+
+        // ))
+
+        // Build the CreateTransactionArg and pass it to createPaymentTransaction
+    }
+}
+
+export class EthersLedgerSigner extends ethers.Signer {
+    readonly type: string = 'usb'
+    readonly path: string = 'm/44\'/60\'/0\'/0/0'
+    readonly baseURL?: string
+    readonly eth?: Promise<Eth>
+
+    constructor(options: LedgerSignerOptions) {
+        super()
+
+        if (options.type) this.type
+        if (options.path) this.path = options.path        
+        this.baseURL = options.baseURL
+
+        // Override readonly provider for ethers.Signer
+        if (options.provider) {
+            ethers.utils.defineReadOnly(this, 'provider', options.provider)
+        }
+
+        // Set readonly eth to Promise<Eth>
+        const transportCreatorType = this.type as keyof typeof transports
+        const transportCreator = transports[transportCreatorType]
+        if (!transportCreator) console.log('Unknown or unsupported type', this.type)
+        ethers.utils.defineReadOnly(this, 'eth', transportCreator(this.baseURL).then(transport => {
+            return new Eth(transport)
+        }))
+    }
+
+    retry<T = unknown>(callback: (eth: Eth) => Promise<T>, timeout?: number): Promise<T> {
+        // The async-promise-executor is ok since retry handles necessary errors 
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
+            const ledgerConnectionError = 'Please make sure Ledger is ready and retry'
+            if (timeout && timeout > 0) {
+                setTimeout(() => reject(new Error(ledgerConnectionError)), timeout)
+            }
+
+            const eth = await this.eth as Eth
+
+            // Wait up to 5 seconds
+            for (let i = 0; i < 50; i++) {
+                try {
+                    const result = await callback(eth)
+                    return resolve(result)
+                } catch (error) {
+                    if ((error as { id: string }).id !== 'TransportLocked') {
+                        return reject(error)
+                    }
+                }
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 100)
+                })
+            }
+
+            return reject(new Error(ledgerConnectionError))
+        })
+    }
+
+    async getAddress(): Promise<string> {
+        const { address } = await this.retry((eth) => eth.getAddress(this.path))
+        return ethers.utils.getAddress(address)
+    }
+
+    async signMessage(message: ethers.utils.Bytes | string): Promise<string> {
+        if (typeof (message) === 'string') {
+            message = ethers.utils.toUtf8Bytes(message)
+        }
+        const messageHex = ethers.utils.hexlify(message).substring(2)
+
+        const signature = await this.retry((eth) => eth.signPersonalMessage(this.path, messageHex))
+        signature.r = '0x' + signature.r
+        signature.s = '0x' + signature.s
+        return ethers.utils.joinSignature(signature)
+    }
+
+    async signTransaction(transaction: ethers.providers.TransactionRequest): Promise<string> {
+        const tx = await ethers.utils.resolveProperties(transaction)
+        const baseTx: ethers.utils.UnsignedTransaction = {
+            chainId: (tx.chainId || undefined),
+            data: (tx.data || undefined),
+            gasLimit: (tx.gasLimit || undefined),
+            gasPrice: (tx.gasPrice || undefined),
+            nonce: (tx.nonce ? ethers.BigNumber.from(tx.nonce).toNumber() : undefined),
+            to: (tx.to || undefined),
+            value: (tx.value || undefined),
+            type: (tx.type || undefined)
+        }
+
+        const unsignedTx = ethers.utils.serializeTransaction(baseTx).substring(2)
+        const resolution = await ledgerService.resolveTransaction(unsignedTx, {}, {})
+        const signature = await this.retry((eth) => eth.signTransaction(this.path, unsignedTx, resolution))
+
+        return ethers.utils.serializeTransaction(baseTx, {
+            v: ethers.BigNumber.from('0x' + signature.v).toNumber(),
+            r: ('0x' + signature.r),
+            s: ('0x' + signature.s),
+        })
+    }
+
+    // Populates all fields in a transaction, signs it and sends it to the network
+    async sendTransaction(transaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>): Promise<ethers.providers.TransactionResponse> {
+        this._checkProvider('sendTransaction')
+        const tx = await this.populateTransaction(transaction)
+        const signedTx = await this.signTransaction(tx)
+        return await (this.provider as ethers.providers.JsonRpcProvider).sendTransaction(signedTx)
+    }
+
+    connect(provider: ethers.providers.Provider): ethers.Signer {
+        const options = {
+            provider,
+            type: this.type,
+            path: this.path,
+            baseURL: this.baseURL
+        }
+        return new EthersLedgerSigner(options)
+    }
+}

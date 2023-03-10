@@ -5,8 +5,9 @@ import eventSchema from './schemas/event.schema.json'
 import aggSchema from './schemas/agg.schema.json'
 import operatorStore from './mock/operator.store.json'
 import validatorStore from './mock/validator.store.json'
-import { JsonSchema } from './interfaces/JsonSchema'
+import { Postgres } from './providers/postgres'
 import { JsonType, GlueType, PgType, Schema } from './providers/schema'
+import { JsonSchema } from './interfaces/JsonSchema'
 
 export {
   accountSchema,
@@ -16,6 +17,7 @@ export {
   aggSchema,
   operatorStore,
   validatorStore,
+  Postgres,
   Schema
 }
 

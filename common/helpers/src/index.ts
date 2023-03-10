@@ -1,6 +1,7 @@
 import { spawn } from 'child_process'
 import { fromIni } from '@aws-sdk/credential-providers'
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager'
+import { ethers } from 'ethers'
 
 /**
  * Gets a secret from AWS Secrets Manager.
@@ -106,4 +107,37 @@ export async function spawnPromise(fullCommand: string) {
         child.on('error', reject)
         child.on('exit', resolve)
     })
+}
+
+/** 
+ * Get a wallet address (optionially from a mnemonic)
+ * @param mnemonic - The wallet mnemonic (optional)
+ * @returns The wallet address
+ */
+export async function getWalletAddress(mnemonic?: string) {
+    const wallet = getWallet(mnemonic)
+    return wallet.address
+}
+
+/** 
+ * Get a wallet keystore (optionially from a mnemonic)
+ * @param mnemonic - The wallet mnemonic (optional)
+ * @returns The wallet keystore
+ */
+export async function getWalletKeystore(mnemonic?: string) {
+    const wallet = getWallet(mnemonic)
+    const keystoreString = await wallet.encrypt('')
+    return JSON.parse(keystoreString)
+}
+
+/** 
+ * Get a wallet (optionially from a mnemonic)
+ * @param mnemonic - The wallet mnemonic (optional)
+ * @returns The wallet
+ */
+export function getWallet(mnemonic?: string) {
+    if (mnemonic) {
+        return ethers.Wallet.fromMnemonic(mnemonic)
+    }
+    return ethers.Wallet.createRandom()
 }

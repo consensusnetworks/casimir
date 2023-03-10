@@ -1,38 +1,41 @@
-import { Pool } from 'pg'
+import { Pool, PoolConfig } from 'pg'
 import { pascalCase } from '@casimir/helpers'
 
+/**
+ * Postgres database provider with pool client auto-connect-and-release
+ */
 export class Postgres {
     /** Postgres connection pool */
     private pool: Pool
 
-    constructor() {
-        this.pool = new Pool({ // These will become environment variables
-            host: '0.0.0.0',
-            port: 5432,
-            database: 'postgres',
-            user: 'postgres',
-            password: 'postgres'
-        })
+    /**
+     * Create a new Postgres database provider
+     * @param {PoolConfig} config - Postgres connection pool config
+     * @example
+     * ```ts
+     * const postgres = new Postgres()
+     * ```
+     */
+    constructor(config?: PoolConfig) {
+        this.pool = new Pool(config)
         process.on('exit', () => this.close())
     }
 
     /**
-     * Query the database (with pool client auto-connect-and-release)
+     * Query the database
      * @param text SQL query
      * @param params Query parameters
      * @returns Query result
      * 
      * @example
      * ```ts
-     * const pg = new Postgres()
-     * const res = await pg.query('SELECT $1::text as message', ['Hello world!'])
-     * console.log(res.rows[0].message) // Hello world!
+     * const { rows } = await postgres.query('SELECT * FROM messages WHERE text = $1', ['Hello world!'])
+     * if (rows.length) console.log(rows[0].text) // Hello world!
      * ```
      */
-    async query(text: string, params: any[] = []) { // Todo - use strict @casimir/types for params
+    async query(text: string, params: any[] = []) { // Todo - use union of stricter @casimir/types for params
         const client = await this.pool.connect()
         const res = await client.query(text, params)
-        console.log('Result:', res)
         const { rows } = res
 
         /** Convert snake_case to PascalCase */

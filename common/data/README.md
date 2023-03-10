@@ -2,15 +2,54 @@
 
 JSON Schemas and Jupyter Notebooks for Casimir data modeling, exploration, and analytics
 
-## JSON Schemas
+## Database Schemas
 
-Find the `event` table schema in [src/schemas/event.schema.json](src/schemas/event.schema.json) and the `agg` table schema in [src/schemas/agg.schema.json](src/schemas/agg.schema.json).
+Find the core JSON object schemas in [src/schemas/](src/schemas/). These are the source of truth for data modeling in Casimir. When we deploy our Glue and Postgres tables, we use the schemas to generate columns from the object properties. See the reference tables below (one for Glue, and one for Postgres) for descriptions and links to the current schemas.
 
-### Making Changes
+> 🚩 To make a schema change, create a branch from `develop`, edit the JSON, and then make a PR to `develop`.
 
-The JSON Schemas in [src/schemas](src/schemas/) are the source of truth for the data model. When we deploy our Glue tables, we use the JSON Schemas to generate the Glue columns. To make a schema change, create a branch from `develop`, edit the JSON, and then make a PR to `develop`.
+### Glue
 
-> 🚩 Schema versioning is coming soon.
+| Table | Schema | Description |
+| --- | --- | --- |
+| `events` | [event.schema.json](src/schemas/event.schema.json) | on or off-chain event |
+| `aggs` | [agg.schema.json](src/schemas/agg.schema.json) | aggregate of events |
+
+### Postgres
+
+| Table | Schema | Description |
+| --- | --- | --- |
+| `accounts` | [account.schema.json](src/schemas/account.schema.json) | wallet account |
+| `users` | [user.schema.json](src/schemas/user.schema.json) | user profile |
+
+Run a local Postgres instance with the schemas above.
+
+```zsh
+npm run dev:postgres --workspace @casimir/data
+```
+
+Run and watch a local Postgres instance.
+
+```zsh
+npm run watch:postgres --workspace @casimir/data
+```
+
+Query the local Postgres instance.
+
+```sql
+"Add a user"
+
+INSERT INTO users (address) VALUES ('0xd557a5745d4560B24D36A68b52351ffF9c86A212');
+
+"Add an account (with the same address as the user)"
+
+INSERT INTO accounts (address, owner_address) VALUES ('0xd557a5745d4560B24D36A68b52351ffF9c86A212', '0xd557a5745d4560B24D36A68b52351ffF9c86A212');
+
+"Query the user"
+
+SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN accounts a ON u.address = a.owner_address WHERE u.address = '0xd557a5745d4560B24D36A68b52351ffF9c86A212' GROUP BY u.address;
+
+```
 
 ## Notebooks
 

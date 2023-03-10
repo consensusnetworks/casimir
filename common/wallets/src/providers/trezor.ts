@@ -1,21 +1,28 @@
 import { ethers } from 'ethers'
-import { EthersTrezorSignerOptions } from './interfaces/EthersTrezorSignerOptions'
-import { MessageSignature } from './interfaces/MessageSignature'
 import TrezorConnect, { Address, EthereumTransaction, EthereumSignedTx } from '@trezor/connect-web'
 
+export interface TrezorMessageSignature {
+    address: string
+    signature: string
+}
+
+export interface TrezorSignerOptions {
+    provider?: ethers.providers.Provider
+    path?: string
+}
+
 TrezorConnect.manifest({ email: 'support@consensusnetworks.com', appUrl: 'casimir.co' })
-const defaultPath = 'm/44\'/60\'/0\'/0/0'
 
-export default class EthersTrezorSigner extends ethers.Signer {
-    readonly path: string
-    readonly _eth = TrezorConnect
+export class EthersTrezorSigner extends ethers.Signer {
+    readonly path: string = 'm/44\'/60\'/0\'/0/0'
+    readonly eth = TrezorConnect
 
-    constructor(options: EthersTrezorSignerOptions) {
+    constructor(options: TrezorSignerOptions) {
         super()
 
-        if (!options.path) options.path = defaultPath
-        this.path = options.path
-
+        /** Override readonly wallet path */
+        if (options.path) this.path = options.path
+        
         // Override readonly provider for ethers.Signer
         if (options.provider) {
             ethers.utils.defineReadOnly(this, 'provider', options.provider)
@@ -24,7 +31,7 @@ export default class EthersTrezorSigner extends ethers.Signer {
     }
 
     async getAddress(): Promise<string> {
-        const { payload } = await this._eth.ethereumGetAddress({ path: this.path })
+        const { payload } = await this.eth.ethereumGetAddress({ path: this.path })
         const { address } = payload as Address
         return ethers.utils.getAddress(address)
     }
@@ -35,8 +42,8 @@ export default class EthersTrezorSigner extends ethers.Signer {
         }
         const messageHex = ethers.utils.hexlify(message).substring(2)
 
-        const { payload } = await this._eth.ethereumSignMessage({ path: this.path, message: messageHex, hex: true})
-        const { signature } = payload as MessageSignature
+        const { payload } = await this.eth.ethereumSignMessage({ path: this.path, message: messageHex, hex: true})
+        const { signature } = payload as TrezorMessageSignature
         return signature
     }
 
@@ -54,10 +61,13 @@ export default class EthersTrezorSigner extends ethers.Signer {
             nonce: transaction.nonce as string,
             gasLimit: transaction.gasLimit as string,
             gasPrice: transaction.gasPrice as string,
+            // Todo fix type
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             type: transaction.type as number
         }
 
-        const ethereumSignedTransaction = await this._eth.ethereumSignTransaction({ path: this.path, transaction: unsignedTx })
+        const ethereumSignedTransaction = await this.eth.ethereumSignTransaction({ path: this.path, transaction: unsignedTx })
         const { payload } = ethereumSignedTransaction
         
         const signature = payload as EthereumSignedTx 

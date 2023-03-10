@@ -2,10 +2,10 @@ import express from 'express'
 import { userCollection } from '../collections/users'
 import { verifySession } from 'supertokens-node/recipe/session/framework/express'
 import { SessionRequest } from 'supertokens-node/framework/express'
-import useUsers from '../providers/users'
+import useDB from '../providers/db'
 
 const router = express.Router()
-const { getUser } = useUsers()
+const { getUser } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     const address = req.session?.getUserId() as string

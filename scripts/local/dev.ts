@@ -71,8 +71,8 @@ void async function () {
     const { chains, services, tables } = apps[app as keyof typeof apps]
 
     if (headless || mock) {
-        /** Mock pg database */
-        $`npm run watch --seed --tables=${tables.join(',')} --workspace @casimir/data`
+        /** Mock postgres database */
+        $`npm run watch:postgres --tables=${tables.join(',')} --workspace @casimir/data`
 
         /** Mock services */
         let port = 4000

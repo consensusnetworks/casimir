@@ -1,5 +1,5 @@
 {
-  "name": "@casimir/transport-speculos-http",
+  "name": "@casimir/speculos",
   "private":"true",
   "main": "src/index.ts",
   "scripts": {

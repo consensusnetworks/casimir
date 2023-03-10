@@ -11,11 +11,10 @@ const tableSchemas = {
 }
 
 /**
- * Run a local PG database with the given tables
+ * Run a local postgres database with the given tables
  * 
  * Arguments:
  *     --clean: delete existing pgdata before deploy (optional, i.e., --clear)
- *     --seed: seed database with test data (optional, i.e., --seed)
  *     --tables: tables to deploy (optional, i.e., --tables=accounts,users)
  */
 void async function () {
@@ -47,10 +46,4 @@ void async function () {
     
     /** Start local database */
     await spawnPromise('docker compose -f ./scripts/docker-compose.yaml up -d')
-
-    /** Default to no seed data */
-    const seed = argv.seed === true || argv.seed === 'true'
-    if (seed) {
-        await spawnPromise('npm run seed --workspace @casimir/data')
-    }
 }()
