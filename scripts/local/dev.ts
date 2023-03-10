@@ -2,7 +2,7 @@ import { $, argv, chalk, echo } from 'zx'
 import { loadCredentials, getSecret, spawnPromise } from '@casimir/helpers'
 
 /**
- * Run a Casimir dev server
+ * Run a Casimir dev server.
  * 
  * Arguments:
  *      --app: app name (optional, i.e., --app=web)

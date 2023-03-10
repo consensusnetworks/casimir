@@ -3,8 +3,8 @@ import fs from 'fs'
 import { spawnPromise } from '@casimir/helpers'
 import { JsonSchema, Schema, accountSchema, nonceSchema, userSchema } from '@casimir/data'
 
-/** Directory path from package caller */
-const resourceDir = './scripts'
+/** Resource path from package caller */
+const resources = './scripts'
 
 /** All table schemas */
 const tableSchemas = {
@@ -14,7 +14,7 @@ const tableSchemas = {
 }
 
 /**
- * Run a local postgres database with the given tables
+ * Run a local postgres database with the given tables.
  * 
  * Arguments:
  *     --clean: delete existing pgdata before deploy (optional, i.e., --clean)
@@ -32,9 +32,7 @@ void async function () {
     const tables = argv.tables ? argv.tables.split(',') : ['accounts', 'nonces', 'users']
 
     if (clean) {
-        console.log('Cleaning existing PG services and data...')
-        await spawnPromise(`docker compose -f ${resourceDir}/docker-compose.yaml down -v`)
-        await spawnPromise('npm run clean --workspace @casimir/data')
+        await spawnPromise('npm run clean:postgres --workspace @casimir/data')
     }
 
     for (const table of tables) {
@@ -44,12 +42,12 @@ void async function () {
         console.log(`${schema.getTitle()} JSON schema parsed to SQL:`)
         console.log(pgTable)
 
-        /** Write to sql file in ${resourceDir}/sql */
-        const sqlDir = `${resourceDir}/.out/sql`
+        /** Write to sql file in ${resources}/sql */
+        const sqlDir = `${resources}/.out/sql`
         if (!fs.existsSync(sqlDir)) fs.mkdirSync(sqlDir, { recursive: true })
         fs.writeFileSync(`${sqlDir}/${table}.sql`, pgTable)
     }
     
     /** Start local database */
-    await spawnPromise(`docker compose -f ${resourceDir}/docker-compose.yaml up -d`)
+    await spawnPromise(`docker compose -f ${resources}/docker-compose.yaml up -d`)
 }()

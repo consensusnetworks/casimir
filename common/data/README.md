@@ -42,6 +42,12 @@ Run a local Postgres instance and *watch the schemas for changes*.
 npm run watch:postgres --workspace @casimir/data
 ```
 
+Clean local Docker Postgres environment, sql, and pgdata.
+
+```zsh
+npm run clean:postgres --workspace @casimir/data
+```
+
 ### PSQL
 
 Query the local Postgres instance.
