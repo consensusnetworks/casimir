@@ -6,7 +6,7 @@ import aggSchema from './schemas/agg.schema.json'
 import operatorStore from './mock/operator.store.json'
 import validatorStore from './mock/validator.store.json'
 import { Postgres } from './providers/postgres'
-import { JsonType, GlueType, PgType, Schema } from './providers/schema'
+import { JsonType, GlueType, PostgresType, Schema } from './providers/schema'
 import { JsonSchema } from './interfaces/JsonSchema'
 
 export {
@@ -21,4 +21,4 @@ export {
   Schema
 }
 
-export type { JsonSchema, JsonType, GlueType, PgType }
+export type { JsonSchema, JsonType, GlueType, PostgresType }
