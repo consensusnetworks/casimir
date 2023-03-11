@@ -3,7 +3,7 @@ import { JsonSchema } from '../interfaces/JsonSchema'
 
 export type JsonType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null'
 export type GlueType = glue.Type
-export type PgType = 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIGINT' | 'TIMESTAMP' | 'JSON' | 'DATE'
+export type PostgresType = 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIGINT' | 'TIMESTAMP' | 'JSON' | 'DATE'
 
 export class Schema {
     /** Input JSON schema object */
@@ -57,10 +57,10 @@ export class Schema {
      * @example
      * ```typescript
      * const schema = new Schema(jsonSchema)
-     * const table = schema.getPgTable()
+     * const table = schema.getPostgresTable()
      * ```
      */
-    getPgTable(): string {
+    getPostgresTable(): string {
         const columns = Object.keys(this.jsonSchema.properties).map((name: string) => {
             const property = this.jsonSchema.properties[name]
             let type = {
@@ -71,7 +71,7 @@ export class Schema {
                 object: 'JSON',
                 array: 'JSON',
                 null: 'VARCHAR'
-            }[property.type as JsonType] as PgType
+            }[property.type as JsonType] as PostgresType
 
             if (name.endsWith('_at')) type = 'TIMESTAMP'
             if (name.includes('balance')) type = 'BIGINT'

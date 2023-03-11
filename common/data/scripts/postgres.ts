@@ -38,14 +38,14 @@ void async function () {
     for (const table of tables) {
         const tableSchema = tableSchemas[table] as JsonSchema
         const schema = new Schema(tableSchema)
-        const pgTable = schema.getPgTable()
+        const postgresTable = schema.getPostgresTable()
         console.log(`${schema.getTitle()} JSON schema parsed to SQL:`)
-        console.log(pgTable)
+        console.log(postgresTable)
 
         /** Write to sql file in ${resources}/sql */
         const sqlDir = `${resources}/.out/sql`
         if (!fs.existsSync(sqlDir)) fs.mkdirSync(sqlDir, { recursive: true })
-        fs.writeFileSync(`${sqlDir}/${table}.sql`, pgTable)
+        fs.writeFileSync(`${sqlDir}/${table}.sql`, postgresTable)
     }
     
     /** Start local database */
