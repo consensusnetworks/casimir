@@ -1,8 +1,8 @@
 {
-	"$id": "https://casimir.co/account.schema.json",
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"title": "Account",
-	"type": "object",
+    "$id": "https://casimir.co/account.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Account",
+    "type": "object",
     "properties": {
         "address": {
             "type": "string",
@@ -22,7 +22,20 @@
         },
         "snapshots": {
             "type": "array",
-            "description": "The account snapshots"
+            "description": "The account snapshots",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "description": "The ISO 8601 snapshot date"
+                    },
+                    "balance": {
+                        "type": "number",
+                        "description": "The account balance snapshot"
+                    }
+                }
+            }
         },
         "transactions": {
             "type": "array",
