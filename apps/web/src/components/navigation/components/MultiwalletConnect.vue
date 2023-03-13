@@ -222,7 +222,7 @@ const copyWalletAddress = (text: string) => {
             <button
               class="btn_primary font-bold px-10 py-6 whitespace-nowrap"
             >
-              Disconnect Acount
+              Disconnect Account
             </button>
           </div>
           <!-- <div
