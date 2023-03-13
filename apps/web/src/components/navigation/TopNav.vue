@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import MultiwalletConnect from './components/MultiwalletConnect.vue'
 import StakingProtocols from './components/StakingProtocols.vue'
 import useUsers from '@/composables/users'
@@ -7,12 +7,16 @@ import useUsers from '@/composables/users'
 const { user } = useUsers()
 
 // To Do: connect this to our Auth and see if an account exsists
-const account = ref(true)
+const account = ref(user.value? user.value.address? true: false : false)
+
+watch(user, ()=> {
+  account.value = user.value? user.value.address? true: false : false
+})
 </script>
 
 <template>
   <div 
-    class="w-full border-b border-b-grey_2 h-70 flex
+    class="w-full bg-white border-b border-b-grey_2 h-70 flex
     justify-center items-center"
   >
     <div 

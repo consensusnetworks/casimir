@@ -18,6 +18,9 @@ import * as Session from 'supertokens-web-js/recipe/session'
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 // Test bitcoin send to address : 2N3Petr4LMH9tRneZCYME9mu33gR5hExvds
+
+const loadingUserWallets = ref(false)
+
 const loggedIn = ref(false)
 const selectedProvider = ref<ProviderString>('')
 const selectedAddress = ref<string>('')
@@ -56,6 +59,12 @@ export default function useWallet() {
         console.log('No currency selected')
         resolve('No currency selected')
       }) as Promise<string>
+    },
+    'USD': () => {
+      return new Promise((resolve, reject) => {
+        console.log('USD is not yet supported on Ledger')
+        resolve('USD is not yet supported on Ledger')
+      }) as Promise<string>
     }
   }
 
@@ -80,12 +89,15 @@ export default function useWallet() {
   }
 
   async function connectWallet(provider: ProviderString, currency?: Currency) {
+    let response 
     try { // Sign Up or Login
       if (!loggedIn.value) {
+        loadingUserWallets.value = true
         const connectedAddress = await getConnectedAddress(provider, currency)
         const connectedCurrency = await detectCurrency(provider) as Currency
-        const response = await loginWithWallet(provider, connectedAddress, connectedCurrency)
-        if (!response?.error) { 
+        response = await loginWithWallet(provider, connectedAddress, connectedCurrency)
+        loadingUserWallets.value = false
+        if (!response?.error) {
           await getUserAccount()
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
@@ -97,7 +109,7 @@ export default function useWallet() {
         console.log('already logged in!')
         const connectedAddress = await getConnectedAddress(provider, currency) // TODO: Remove currency from here? Maybe not.
         const connectedCurrency = await detectCurrency(provider, currency) as Currency
-        const response = await addAccount(provider, connectedAddress, connectedCurrency)
+        response = await addAccount(provider, connectedAddress, connectedCurrency)
         if (!response?.error) {
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
@@ -109,6 +121,8 @@ export default function useWallet() {
     } catch (error) {
       console.error(error)
     }
+    console.log(response)
+    return response
   }
   async function getConnectedAddress(provider: ProviderString, currency?: Currency) {
     try {
@@ -151,6 +165,7 @@ export default function useWallet() {
   }
 
   async function logout() {
+    loadingUserWallets.value = true
     await Session.signOut()
     loggedIn.value = false
     setSelectedAddress('')
@@ -159,6 +174,7 @@ export default function useWallet() {
     setUser()
     primaryAddress.value = ''
     console.log('user.value on logout :>> ', user.value)
+    loadingUserWallets.value = false
   }
 
   async function setPrimaryWalletAccount() {
@@ -303,6 +319,7 @@ export default function useWallet() {
     toAddress,
     amount,
     amountToStake,
+    loadingUserWallets,
     connectWallet,
     logout,
     setPrimaryWalletAccount,

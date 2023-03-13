@@ -136,6 +136,7 @@ export default function useEthers() {
     const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const network = await web3Provider.getNetwork()
+    console.log('network.chainId :>> ', network.chainId)
     const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
     return currency
   }
@@ -241,6 +242,10 @@ const currenciesByChainId = {
   '137': {
     name: 'Polygon',
     currency: 'MATIC',
+  },
+  '31337': {
+    name: 'Localhost Network',
+    currency: 'ETH',
   },
   '80001': {
     name: 'Polygon Testnet',
