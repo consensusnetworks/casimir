@@ -11,6 +11,10 @@
         "created_at": {
             "type": "string",
             "description": "The account creation date in ISO 8601 format"
+        },
+        "updated_at": {
+            "type": "string",
+            "description": "The account last update date in ISO 8601 format"
         }
     },
     "required": [

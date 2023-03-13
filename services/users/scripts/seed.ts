@@ -30,7 +30,7 @@ void async function () {
     const plural = resource + 's'
 
     if (resources?.length) {
-        console.log(`Seeding ${resources.length} ${plural} to API...`)
+        console.log(`Seeding ${resources.length} ${plural} with users API...`)
     
         /** Seed Account or User resources with users API */
         const port = process.env.PUBLIC_USERS_PORT || 4000
@@ -43,6 +43,7 @@ void async function () {
         })
         const seededResources = await seed.json()
         console.log(`Seeded ${seededResources.length} ${plural} to API`)
+        console.log(seededResources)
     } else {
         console.log(`No ${plural} to seed`)
     }

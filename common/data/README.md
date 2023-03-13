@@ -18,7 +18,7 @@ Find the core JSON schemas in [src/schemas](src/schemas). These are the source o
 You can run a local Postgres instance for development and testing. This is a convenient way to iterate on schemas and test queries before deploying to production. (Schema reloading is still a work in progress - hopefully bootstrapping Postgres in Docker can be done faster.)
 
 ```zsh
-npm run dev:postgres --workspace @casimir/data
+npm run dev --workspace @casimir/data
 ```
 
 **All options:**
@@ -33,19 +33,19 @@ npm run dev:postgres --workspace @casimir/data
 Run a local Postgres instance with the *current schemas*.
 
 ```zsh
-npm run dev:postgres --workspace @casimir/data
+npm run dev --workspace @casimir/data
 ```
 
 Run a local Postgres instance and *watch the schemas for changes*.
 
 ```zsh
-npm run watch:postgres --workspace @casimir/data
+npm run watch --workspace @casimir/data
 ```
 
 Clean local Docker Postgres environment, sql, and pgdata.
 
 ```zsh
-npm run clean:postgres --workspace @casimir/data
+npm run clean --workspace @casimir/data
 ```
 
 ### PSQL

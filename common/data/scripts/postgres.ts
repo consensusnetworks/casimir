@@ -17,7 +17,7 @@ const tableSchemas = {
  * Run a local postgres database with the given tables.
  * 
  * Arguments:
- *     --clean: delete existing pgdata before deploy (optional, i.e., --clean)
+ *     --clean: delete existing services and data before deploy (optional, i.e., --clean)
  *     --tables: tables to deploy (optional, i.e., --tables=accounts,users)
  */
 void async function () {
@@ -25,14 +25,14 @@ void async function () {
     /** Parse command line arguments */
     const argv = minimist(process.argv.slice(2))
 
-    /** Default to keep data */
-    const clean = argv.clean === true || argv.clean === 'true'
+    /** Default to clean services and data */
+    const clean = argv.clean !== false || argv.clean !== 'false'
 
     /** Default to all tables */
     const tables = argv.tables ? argv.tables.split(',') : ['accounts', 'nonces', 'users']
 
     if (clean) {
-        await run('npm run clean:postgres --docker=false --workspace @casimir/data')
+        await run('npm run clean --workspace @casimir/data')
     }
 
     /** Write to sql file in ${resources}/sql */

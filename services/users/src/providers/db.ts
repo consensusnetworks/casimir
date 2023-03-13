@@ -33,14 +33,22 @@ export default function useDB() {
      */
     async function addUser(user: User) {
         const createdAt = new Date().toISOString()
-        let text = 'INSERT INTO users (address, created_at) VALUES ($1, $2) RETURNING *;'
+
+        const text = 'INSERT INTO users (address, created_at) VALUES ($1, $2) RETURNING *;'
         const params = [user.address, createdAt]
-        user.accounts?.forEach((account, index) => {
-            text += `\nINSERT INTO accounts (owner_address, created_at) VALUES ($1, ${params.length + index + 1}, $2) RETURNING *;`
-            params.push(account.address)
-        })
         const rows = await postgres.query(text, params)
-        return formatUser(rows)
+
+        const addedUser = rows[0]
+        addedUser.accounts = []
+
+        for (const account of user.accounts || []) {
+            const text = 'INSERT INTO accounts (address, owner_address, created_at) VALUES ($1, $2, $3) RETURNING *;'
+            const params = [account.address, user.address, createdAt]
+            const rows = await postgres.query(text, params)
+            const addedAccount = rows[0]
+            addedUser.accounts.push(addedAccount)
+        }
+        return formatResult(addedUser) as User
     }
 
     /**
@@ -52,23 +60,23 @@ export default function useDB() {
         const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN accounts a ON u.address = a.owner_address WHERE u.address = $1 GROUP BY u.address'
         const params = [address]
         const rows = await postgres.query(text, params)
-        return formatUser(rows)
+        const user = rows[0]
+        return formatResult(user) as User
     }
 
     /**
-     * Format a user from a query result row.
-     * @param rows - The query result row
-     * @returns The formatted user
+     * Format data from a database result (snake_case to PascalCase).
+     * @param rows - The result date
+     * @returns The formatted data
      */
-    function formatUser(row: any) {
+    function formatResult(row: any) {
         if (row) {
-            const user = row
-            for (const key in user) {
+            for (const key in row) {
                 /** Convert snake_case to PascalCase */
-                if (key.includes('_')) user[pascalCase(key)] = user[key]
-                delete user[key]
+                if (key.includes('_')) row[pascalCase(key)] = row[key]
+                delete row[key]
             }
-            return user as User
+            return row
         }
     }
 

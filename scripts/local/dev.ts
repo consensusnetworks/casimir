@@ -45,7 +45,7 @@ void async function () {
     /** Default to the web app */
     const app = argv.app || 'web'
 
-    /** Default to clean mock db */
+    /** Default to clean services and data */
     const clean = argv.clean !== 'false' || argv.clean !== false
 
     /** Default to no hardware wallet emulators or ethereum if set vaguely */
@@ -64,8 +64,8 @@ void async function () {
 
     if (mock) {
         /** Mock postgres database */
-        $`npm run watch:postgres --clean=${clean} --tables=${tables.join(',')} --workspace @casimir/data`
-        // $`npm run dev:postgres --clean=${clean} --tables=${tables.join(',')} --workspace @casimir/data`
+        $`npm run watch --clean=${clean} --tables=${tables.join(',')} --workspace @casimir/data`
+        // $`npm run dev --clean=${clean} --tables=${tables.join(',')} --workspace @casimir/data`
 
         /** Mock services */
         let port = 4000
