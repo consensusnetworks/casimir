@@ -1,4 +1,5 @@
 import { Account } from '@casimir/types'
+import { Pool } from '../interfaces/Pool'
 
 export interface User {
     /** Unique ID (and essential for auth verification) */
@@ -7,4 +8,6 @@ export interface User {
     accounts?: Account[]
     /** A message that is returned to front-end for signing and login */
     nonce: string
+    /** User's pools */
+    pools: Pool[]
 }
