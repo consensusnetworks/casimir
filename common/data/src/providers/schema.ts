@@ -51,8 +51,8 @@ export class Schema {
     }
 
     /**
-     * Get a PG table from the JSON schema object.
-     * @returns {string} PG table
+     * Get a Postgres table from the JSON schema object.
+     * @returns {string} Postgres table
      * 
      * @example
      * ```typescript
@@ -85,7 +85,7 @@ export class Schema {
         })
 
         /** Make table name plural of schema objects (todo: check edge-cases) */
-        const tableName = this.jsonSchema.title.toLowerCase() + 's'
+        const tableName = this.getTitle().toLowerCase() + 's'
 
         return `CREATE TABLE ${tableName} (\n\t${columns.join(',\n\t')}\n);`
     }

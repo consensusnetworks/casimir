@@ -66,11 +66,11 @@ npm run dev
 | --- | --- | --- | --- |
 | `--app` | Which app to run | web | --app=landing |
 | `--clean` | Whether to clean the local database | true | --clean=false |
+| `--emulate` | Whether to use local wallet emulators | false | --emulate=ethereum |
 | `--fork` | Which live Ethereum network to fork locally | goerli | --fork=mainnet |
-| `--ledger` | Which ledger application to emulate | ethereum | --ledger=bitcoin |
 | `--mock` | Whether to mock services | true | --mock=false |
 | `--network` | Which live Ethereum network to use | goerli | --network=mainnet |
-| `--trezor` | Whether to emulate a Trezor hardware wallet | false | --trezor=true |
+| `--seed` | Whether to seed the local database | false | --seed=true |
 
 **Example commands:**
 

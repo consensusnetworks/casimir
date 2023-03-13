@@ -7,11 +7,11 @@ import { loadCredentials, getSecret, spawnPromise } from '@casimir/helpers'
  * Arguments:
  *      --app: app name (optional, i.e., --app=web)
  *      --clean: delete existing pgdata before deploy (optional, i.e., --clean)
+ *      --emulate: emulate hardware wallet services (optional, i.e., --emulate=ethereum)
  *      --fork: fork name (optional, i.e., --fork=goerli)
- *      --ledger: emulate ledger for chain (optional, i.e., --ledger=ethereum)
  *      --mock: mock services (optional, i.e., --mock=true)
  *      --network: network name (optional, i.e., --network=goerli)
- *      --trezor: emulate trezor (optional, i.e., --trezor=true)
+ *      --seed: seed database (optional, i.e., --seed=true)
  */
 void async function () {
 
@@ -49,26 +49,26 @@ void async function () {
     /** Default to clean mock db */
     const clean = argv.clean !== 'false' || argv.clean !== false
 
+    /** Default to no hardware wallet emulators or ethereum if set vaguely */
+    const emulate = (argv.emulate === 'true' || argv.emulate === true) ? 'ethereum' : argv.emulators === 'false' ? false : argv.emulate
+
+    /** Default to no fork or testnet if set vaguely */
+    const fork = argv.fork === 'true' ? 'testnet' : argv.fork === 'false' ? false : argv.fork
+
     /** Default to local mock */
     const mock = argv.mock !== 'false' || argv.mock !== false
 
     /** Default to no network or testnet if set vaguely */
     const network = argv.network === 'true' ? 'testnet' : argv.network === 'false' ? false : argv.network
 
-    /** Default to no fork or testnet if set vaguely */
-    const fork = argv.fork === 'true' ? 'testnet' : argv.fork === 'false' ? false : argv.fork
-
-    /** Default to no ledger emulator or ethereum if set vaguely */
-    const ledger = argv.ledger === 'true' ? 'ethereum' : argv.ledger === 'false' ? false : argv.ledger
-
-    /** Default to no trezor emulator */
-    const trezor = argv.trezor === 'true'
+    /** Default to no db seed or seed user resources if set vaguely */
+    const seed = argv.seed === 'true' || argv.seed === true ? 'user' : argv.seed === 'false' ? false : argv.seed
 
     const { chains, services, tables } = apps[app as keyof typeof apps]
 
     if (mock) {
         /** Mock postgres database */
-        $`npm run watch:postgres --clean ${clean} --tables=${tables.join(',')} --workspace @casimir/data`
+        $`npm run watch:postgres --clean ${clean} --seed ${seed} --tables=${tables.join(',')} --workspace @casimir/data`
         // $`npm run dev:postgres --clean --tables=${tables.join(',')} --workspace @casimir/data`
 
         /** Mock services */
@@ -102,7 +102,9 @@ void async function () {
         }
     }
 
-    if (ledger) {
+    if (emulate) {
+
+        /** Emulate Ledger */
         const port = 5001
         try { 
             if (await spawnPromise(`lsof -ti:${port}`)) {
@@ -113,18 +115,18 @@ void async function () {
         }
 
         process.env.PUBLIC_SPECULOS_PORT = `${port}`
-        process.env.PUBLIC_LEDGER_APP = ledger
-        $`scripts/ledger/emulate -a ${ledger}`
+        process.env.PUBLIC_LEDGER_APP = emulate
+        $`scripts/ledger/emulate -a ${emulate}`
         /** Wait to push proxy announcement later in terminal run */
         setTimeout(() => {
             $`npx esno scripts/ledger/proxy.ts`
         }, 5000)
-    }
 
-    if (trezor) {
+        /** Emulate Trezor */
         $`scripts/trezor/emulate`
     }
 
+    /** Run app */
     $`npm run dev --workspace @casimir/${app}`
 
 }()
