@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node build.js",
     "dev": "tsnd --respawn --transpile-only ./src/index.ts",
-    "seed": "ts-node --transpile-only scripts/seed.ts --resource \"$npm_config_resource\" --store \"$npm_config_store\"",
+    "seed": "ts-node --transpile-only scripts/seed.ts --resource \"$npm_config_resource\"",
     "test": "echo \"Warning: no test specified\" && exit 0"
   },
   "dependencies": {

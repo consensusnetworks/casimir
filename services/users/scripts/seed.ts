@@ -1,5 +1,7 @@
 import minimist from 'minimist'
 import { userStore, accountStore } from '@casimir/data'
+import { retry } from '@casimir/helpers'
+import { Account, User } from '@casimir/types'
 
 /**
  * Seed the mock {'user' || 'account'}.store.json file to the users API /seed/{'user' || 'account'}s route.
@@ -14,13 +16,13 @@ void async function () {
     /** Default resource to user */
     const resource = argv.resource || 'user'
 
-    /** Array of Account or User resources */
+    /** Array of specified mock resources */
     const resources = ((resource: string) => {
         if (resource === 'account') return accountStore
-        else if (resource === 'user') userStore.map((user) => {
+        else if (resource === 'user') return userStore.map((user: User) => {
             return {
                 ...user,
-                accounts: accountStore.filter((account) => account.ownerAddress === user.address)
+                accounts: accountStore.filter((account: Account) => account.ownerAddress === user.address)
             }
         })
     })(resource)
@@ -32,7 +34,7 @@ void async function () {
     
         /** Seed Account or User resources with users API */
         const port = process.env.PUBLIC_USERS_PORT || 4000
-        const seed = await fetch(`http://localhost:${port}/seed/${plural}`, {
+        const seed = await retry(`http://localhost:${port}/seed/${plural}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

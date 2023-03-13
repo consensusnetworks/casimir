@@ -1,5 +1,5 @@
 import { $, argv, chalk, echo } from 'zx'
-import { loadCredentials, getSecret, spawnPromise } from '@casimir/helpers'
+import { loadCredentials, getSecret, run } from '@casimir/helpers'
 
 /**
  * Run a Casimir dev server.
@@ -11,7 +11,6 @@ import { loadCredentials, getSecret, spawnPromise } from '@casimir/helpers'
  *      --fork: fork name (optional, i.e., --fork=goerli)
  *      --mock: mock services (optional, i.e., --mock=true)
  *      --network: network name (optional, i.e., --network=goerli)
- *      --seed: seed database with resources (optional, i.e., --seed=user)
  */
 void async function () {
 
@@ -53,7 +52,7 @@ void async function () {
     const emulate = (argv.emulate === 'true' || argv.emulate === true) ? 'ethereum' : argv.emulators === 'false' ? false : argv.emulate
 
     /** Default to no fork or testnet if set vaguely */
-    const fork = argv.fork === 'true' ? 'testnet' : argv.fork === 'false' ? false : argv.fork
+    const fork = argv.fork === 'true' || argv.fork === true ? 'testnet' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'testnet'
 
     /** Default to local mock */
     const mock = argv.mock !== 'false' || argv.mock !== false
@@ -61,15 +60,12 @@ void async function () {
     /** Default to no network or testnet if set vaguely */
     const network = argv.network === 'true' ? 'testnet' : argv.network === 'false' ? false : argv.network
 
-    /** Default to no db seed or seed user resources if set vaguely */
-    const seed = argv.seed === 'true' || argv.seed === true ? 'user' : argv.seed === 'false' ? false : argv.seed
-
     const { chains, services, tables } = apps[app as keyof typeof apps]
 
     if (mock) {
         /** Mock postgres database */
-        $`npm run watch:postgres --clean ${clean} --seed ${seed} --tables=${tables.join(',')} --workspace @casimir/data`
-        // $`npm run dev:postgres --clean --seed ${seed} --tables=${tables.join(',')} --workspace @casimir/data`
+        $`npm run watch:postgres --clean=${clean} --tables=${tables.join(',')} --workspace @casimir/data`
+        // $`npm run dev:postgres --clean=${clean} --tables=${tables.join(',')} --workspace @casimir/data`
 
         /** Mock services */
         let port = 4000
@@ -79,8 +75,8 @@ void async function () {
             $`npm run dev --workspace @casimir/${service}`
 
             try {
-                if (await spawnPromise(`lsof -ti:${port}`)) {
-                    await spawnPromise(`kill -9 $(lsof -ti:${port})`)
+                if (await run(`lsof -ti:${port}`)) {
+                    await run(`npx --yes kill-port ${port}`)
                 }
             } catch {
                 console.log(`Port ${port} is available.`)
@@ -96,7 +92,7 @@ void async function () {
             const url = `https://eth-${network}.g.alchemy.com/v2/${key}`
             process.env.ETHEREUM_RPC_URL = url
             echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(network) + chalk.bgBlackBright(` ${chain} network at ${url}`))
-        } else {
+        } else if (fork) {
             const chainFork = forks[chain][fork]
             $`npm run dev:${chain} --fork=${chainFork}`
         }
@@ -107,8 +103,8 @@ void async function () {
         /** Emulate Ledger */
         const port = 5001
         try { 
-            if (await spawnPromise(`lsof -ti:${port}`)) {
-                await spawnPromise(`kill -9 $(lsof -ti:${port})`)
+            if (await run(`lsof -ti:${port}`)) {
+                await run(`npx --yes kill-port ${port}`)
             }
         } catch { 
             console.log(`Port ${port} is available.`) 
@@ -128,5 +124,4 @@ void async function () {
 
     /** Run app */
     $`npm run dev --workspace @casimir/${app}`
-
 }()

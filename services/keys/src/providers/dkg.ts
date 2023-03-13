@@ -4,6 +4,7 @@ import { DepositData } from '../interfaces/DepositData'
 import { DKGOptions } from '../interfaces/DKGOptions'
 import { spawn } from 'child_process'
 import { ReshareInput } from '../interfaces/ReshareInput'
+import { retry } from '@casimir/helpers'
 
 export class DKG {
     /** Key generation service URL */
@@ -33,7 +34,7 @@ export class DKG {
     async startKeyGeneration(input: KeyGenerationInput): Promise<string> {
         const { operators, withdrawalAddress } = input
         const withdrawalCredentials = `01${'0'.repeat(22)}${withdrawalAddress.split('0x')[1]}`
-        const startKeyGeneration = await this.retry(`${this.serviceUrl}/keygen`, {
+        const startKeyGeneration = await retry(`${this.serviceUrl}/keygen`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -71,7 +72,7 @@ export class DKG {
      */
     async startReshare(input: ReshareInput): Promise<string> {
         const { operators, validatorPublicKey, oldOperators } = input
-        const startReshare = await this.retry(`${this.serviceUrl}/keygen`, {
+        const startReshare = await retry(`${this.serviceUrl}/keygen`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -101,7 +102,7 @@ export class DKG {
      * // ]
      */
     async getShares(ceremonyId: string): Promise<Share[]> {
-        const getKeyData = await this.retry(`${this.serviceUrl}/data/${ceremonyId}`)
+        const getKeyData = await retry(`${this.serviceUrl}/data/${ceremonyId}`)
         const { output: keyData } = await getKeyData.json()
         const shares = []
         for (const id in keyData) {
@@ -130,7 +131,7 @@ export class DKG {
      * // }
      */
     async getDepositData(ceremonyId: string): Promise<DepositData> {
-        const getDepositData = await this.retry(`${this.serviceUrl}/deposit_data/${ceremonyId}`)
+        const getDepositData = await retry(`${this.serviceUrl}/deposit_data/${ceremonyId}`)
         const [depositData] = await getDepositData.json()
         const {
             deposit_data_root: depositDataRoot,
@@ -184,33 +185,11 @@ export class DKG {
      */
     async ping(): Promise<boolean> {
         try {
-            const ping = await this.retry(`${this.serviceUrl}/ping`)
+            const ping = await retry(`${this.serviceUrl}/ping`)
             const { message } = await ping.json()
             return message === 'pong'
         } catch (error) {
             return false
         }
-    }
-
-    /**
-     * Retry a fetch request
-     * @param {RequestInfo} info - URL string or request object
-     * @param {RequestInit} init - Request init options
-     * @param {number} retriesLeft - Number of retries left (default: 5)
-     * @returns {Promise<Response>} Response
-     * @example
-     * const response = await retry('https://example.com')
-     */
-    async retry(info: RequestInfo, init?: RequestInit, retriesLeft = 25): Promise<Response> {
-        const response = await fetch(info, init)
-        if (response.status !== 200) {
-            if (retriesLeft === 0) {
-                throw new Error('API request failed after maximum retries')
-            }
-            console.log('Retrying fetch request to', info)
-            await new Promise(resolve => setTimeout(resolve, 5000))
-            return await this.retry(info, init || {}, retriesLeft - 1)
-        }
-        return response
     }
 }

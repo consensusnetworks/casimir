@@ -1,4 +1,3 @@
-import util from 'util'
 import { spawn } from 'child_process'
 import { fromIni } from '@aws-sdk/credential-providers'
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager'
@@ -94,17 +93,45 @@ export function kebabCase(string: string): string {
 }
 
 /**
- * Spawn a full command with a child process and return a promise.
+ * Run any shell command with a spawned child process and return a promise.
  * @param fullCommand - The full command to run
  * @returns A promise that resolves when the command exits
  */
-export async function spawnPromise(fullCommand: string) {
+export async function run(fullCommand: string) {
     const [command, ...args] = fullCommand.split(' ')
     const child = spawn(command, args, { stdio: 'inherit' })
     return new Promise((resolve, reject) => {
         child.on('error', reject)
         child.on('exit', resolve)
     })
+}
+
+/**
+ * Retry a fetch request.
+ * @param {RequestInfo} info - URL string or request object
+ * @param {RequestInit} init - Request init options
+ * @param {number | undefined} retriesLeft - Number of retries left (default: 5)
+ * @returns {Promise<Response>} Response
+ * @example
+ * const response = await retry('https://example.com')
+ */
+export async function retry(info: RequestInfo, init?: RequestInit, retriesLeft: number | undefined = 25): Promise<Response> {
+    if (retriesLeft === 0) {
+        throw new Error('API request failed after maximum retries')
+    }
+
+    console.log('Retrying fetch request to', info, init)
+    try {
+        const response = await fetch(info, init)
+        if (response.status !== 200) {
+            await new Promise(resolve => setTimeout(resolve, 5000))
+            return await retry(info, init || {}, retriesLeft - 1)
+        }
+        return response
+    } catch (error) {
+        await new Promise(resolve => setTimeout(resolve, 5000))
+        return await retry(info, init || {}, retriesLeft - 1)
+    }
 }
 
 /** 

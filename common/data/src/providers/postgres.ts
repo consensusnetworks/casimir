@@ -37,14 +37,6 @@ export class Postgres {
         const client = await this.pool.connect()
         const res = await client.query(text, params)
         const { rows } = res
-
-        /** Convert snake_case to PascalCase */
-        for (const row of rows) {
-            for (const key in row) {
-                if (key.includes('_')) row[key] = pascalCase(key)
-            }
-        }
-        
         client.release()
         return rows
     }

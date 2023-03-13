@@ -70,7 +70,6 @@ npm run dev
 | `--fork` | Which live Ethereum network to fork locally | goerli | --fork=mainnet |
 | `--mock` | Whether to mock services | true | --mock=false |
 | `--network` | Which live Ethereum network to use | goerli | --network=mainnet |
-| `--seed` | Whether to seed the local database | false | --seed=true |
 
 **Example commands:**
 
