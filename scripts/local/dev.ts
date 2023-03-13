@@ -41,7 +41,6 @@ void async function () {
     process.env.STAGE = process.env.STAGE || 'dev'
     process.env.PUBLIC_STAGE = process.env.STAGE // Pass stage to client apps
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
-    console.log('process.env.PUBLIC_CRYPTO_COMPARE_API_KEY :>> ', process.env.PUBLIC_CRYPTO_COMPARE_API_KEY)
 
     /** Todo get network/fork nonce based on selection and predict address */
     process.env.PUBLIC_SSV_MANAGER = '0xaaf5751d370d2fD5F1D5642C2f88bbFa67a29301'
