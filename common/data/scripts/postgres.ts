@@ -42,8 +42,10 @@ void async function () {
         const tableSchema = tableSchemas[table] as JsonSchema
         const schema = new Schema(tableSchema)
         const postgresTable = schema.getPostgresTable()
+    
         console.log(`${schema.getTitle()} JSON schema parsed to SQL:`)
         console.log(postgresTable)
+        
         fs.writeFileSync(`${sqlDir}/${table}.sql`, postgresTable)
     }
     

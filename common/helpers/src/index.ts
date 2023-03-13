@@ -120,16 +120,17 @@ export async function retry(info: RequestInfo, init?: RequestInit, retriesLeft: 
         throw new Error('API request failed after maximum retries')
     }
 
-    console.log('Retrying fetch request to', info, init)
     try {
         const response = await fetch(info, init)
         if (response.status !== 200) {
             await new Promise(resolve => setTimeout(resolve, 5000))
+            console.log('Retrying fetch request to', info, init)
             return await retry(info, init || {}, retriesLeft - 1)
         }
         return response
     } catch (error) {
         await new Promise(resolve => setTimeout(resolve, 5000))
+        console.log('Retrying fetch request to', info, init)
         return await retry(info, init || {}, retriesLeft - 1)
     }
 }
