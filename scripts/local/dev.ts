@@ -63,9 +63,14 @@ void async function () {
     const { chains, services, tables } = apps[app as keyof typeof apps]
 
     if (mock) {
+
         /** Mock postgres database */
-        $`npm run watch --clean=${clean} --tables=${tables.join(',')} --workspace @casimir/data`
-        // $`npm run dev --clean=${clean} --tables=${tables.join(',')} --workspace @casimir/data`
+        if (clean) {
+            await run('npm run clean --workspace @casimir/data')
+        }
+        $`npm run watch --tables=${tables.join(',')} --workspace @casimir/data`
+        /** Comment out line above and uncomment line below when schemas are stable */
+        // $`npm run dev --tables=${tables.join(',')} --workspace @casimir/data`
 
         /** Mock services */
         let port = 4000

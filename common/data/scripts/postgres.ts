@@ -17,7 +17,6 @@ const tableSchemas = {
  * Run a local postgres database with the given tables.
  * 
  * Arguments:
- *     --clean: delete existing services and data before deploy (optional, i.e., --clean)
  *     --tables: tables to deploy (optional, i.e., --tables=accounts,users)
  */
 void async function () {
@@ -25,15 +24,8 @@ void async function () {
     /** Parse command line arguments */
     const argv = minimist(process.argv.slice(2))
 
-    /** Default to clean services and data */
-    const clean = argv.clean !== false || argv.clean !== 'false'
-
     /** Default to all tables */
     const tables = argv.tables ? argv.tables.split(',') : ['accounts', 'nonces', 'users']
-
-    if (clean) {
-        await run('npm run clean --workspace @casimir/data')
-    }
 
     /** Write to sql file in ${resources}/sql */
     const sqlDir = `${resources}/.out/sql`
@@ -45,7 +37,9 @@ void async function () {
     
         console.log(`${schema.getTitle()} JSON schema parsed to SQL:`)
         console.log(postgresTable)
-        
+
+        // Todo if file exists, make alter statements to reflect schema changes
+
         fs.writeFileSync(`${sqlDir}/${table}.sql`, postgresTable)
     }
     
