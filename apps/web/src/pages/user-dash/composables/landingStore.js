@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 
 import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
-import useExchanges from '@/composables/external'
+import useExchanges from '@/composables/exchanges'
 
 const {
     getConversionRate,
