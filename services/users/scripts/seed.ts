@@ -30,7 +30,7 @@ void async function () {
     if (resources?.length) {
         console.log(`Seeding ${resources.length} ${plural} to API...`)
     
-        /** Seed resources with users API */
+        /** Seed Account or User resources with users API */
         const port = process.env.PUBLIC_USERS_PORT || 4000
         const seed = await fetch(`http://localhost:${port}/seed/${plural}`, {
             method: 'POST',

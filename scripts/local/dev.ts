@@ -11,7 +11,7 @@ import { loadCredentials, getSecret, spawnPromise } from '@casimir/helpers'
  *      --fork: fork name (optional, i.e., --fork=goerli)
  *      --mock: mock services (optional, i.e., --mock=true)
  *      --network: network name (optional, i.e., --network=goerli)
- *      --seed: seed database (optional, i.e., --seed=true)
+ *      --seed: seed database with resources (optional, i.e., --seed=user)
  */
 void async function () {
 
@@ -69,7 +69,7 @@ void async function () {
     if (mock) {
         /** Mock postgres database */
         $`npm run watch:postgres --clean ${clean} --seed ${seed} --tables=${tables.join(',')} --workspace @casimir/data`
-        // $`npm run dev:postgres --clean --tables=${tables.join(',')} --workspace @casimir/data`
+        // $`npm run dev:postgres --clean --seed ${seed} --tables=${tables.join(',')} --workspace @casimir/data`
 
         /** Mock services */
         let port = 4000

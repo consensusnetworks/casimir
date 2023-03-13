@@ -18,6 +18,7 @@ const tableSchemas = {
  * 
  * Arguments:
  *     --clean: delete existing pgdata before deploy (optional, i.e., --clean)
+ *     --seed: seed database with resources (optional, i.e., --seed=user)
  *     --tables: tables to deploy (optional, i.e., --tables=accounts,users)
  */
 void async function () {
@@ -27,6 +28,9 @@ void async function () {
 
     /** Default to keep data */
     const clean = argv.clean === true || argv.clean === 'true'
+
+    /** Default to no db seed or seed user resources if set vaguely */
+    const seed = argv.seed === 'true' || argv.seed === true ? 'user' : argv.seed === 'false' ? false : argv.seed
 
     /** Default to all tables */
     const tables = argv.tables ? argv.tables.split(',') : ['accounts', 'nonces', 'users']
