@@ -17,12 +17,16 @@ const tableSchemas = {
  * Run a local postgres database with the given tables.
  * 
  * Arguments:
+ *     --clean: clean the database before starting (optional, i.e., --clean)
  *     --tables: tables to deploy (optional, i.e., --tables=accounts,users)
  */
 void async function () {
 
     /** Parse command line arguments */
     const argv = minimist(process.argv.slice(2))
+
+    /** Default to clean services and data */
+    const clean = argv.clean !== 'false' || argv.clean !== false
 
     /** Default to all tables */
     const tables = argv.tables ? argv.tables.split(',') : ['accounts', 'nonces', 'users']
@@ -38,11 +42,12 @@ void async function () {
         console.log(`${schema.getTitle()} JSON schema parsed to SQL:`)
         console.log(postgresTable)
 
-        // Todo if file exists, make alter statements to reflect schema changes
-
         fs.writeFileSync(`${sqlDir}/${table}.sql`, postgresTable)
     }
     
-    /** Start local database */
+    /** Start or restart local database */
+    if (clean) {
+        await run('npm run clean --workspace @casimir/data')
+    }
     await run(`docker compose -p casimir-data -f ${resources}/docker-compose.yaml up -d`)
 }()

@@ -41,10 +41,6 @@
             "type": "array",
             "description": "The account transactions"
         },
-        "updated_at": {
-            "type": "string",
-            "description": "The account last update date in ISO 8601 format"
-        },
         "wallet": {
             "type": "string",
             "description": "The account wallet provider"
