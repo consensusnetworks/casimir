@@ -44,7 +44,6 @@ void async function () {
     
         console.log(`${schema.getTitle()} JSON schema parsed to SQL:`)
         console.log(postgresTable)
-        console.log('Output to', `${sqlDir}/${table}.sql`)
 
         fs.writeFileSync(`${sqlDir}/${table}.sql`, postgresTable)
     }
