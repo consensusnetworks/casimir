@@ -2,7 +2,7 @@ import * as cdk from 'aws-cdk-lib'
 import * as assertions from 'aws-cdk-lib/assertions'
 import { Config } from '../src/providers/config'
 import { EtlStack } from '../src/providers/etl'
-import { eventSchema, aggSchema, schemaToGlueColumns } from '@casimir/data'
+import { eventSchema, aggSchema, Schema } from '@casimir/data'
 
 test('ETL stack created', () => {
   const config = new Config()
@@ -17,8 +17,10 @@ test('ETL stack created', () => {
   const eventTable = Object.keys(resource).filter(key => key.includes('EventTable'))
   const eventColumns = resource[eventTable[0]].Properties.TableInput.StorageDescriptor.Columns
 
-  const eventGlueSchema = schemaToGlueColumns(eventSchema)
-  const aggGlueSchema = schemaToGlueColumns(aggSchema)
+
+  /** Get Glue Columns from JSON Schema for each table */
+  const eventGlueSchema = new Schema(eventSchema).getGlueColumns()
+  const aggGlueSchema = new Schema(aggSchema).getGlueColumns()
 
   for (const column of eventColumns) {
     const { Name: name, Type: type } = column

@@ -3,7 +3,7 @@ import * as cdk from 'aws-cdk-lib'
 import * as ec2 from 'aws-cdk-lib/aws-ec2'
 import * as ecs from 'aws-cdk-lib/aws-ecs'
 import { NetworkStackProps } from '../interfaces/StackProps'
-import { pascalCase } from '@casimir/string-helpers'
+import { pascalCase } from '@casimir/helpers'
 import { Config } from './config'
 
 /**

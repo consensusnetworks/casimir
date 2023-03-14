@@ -1,18 +1,16 @@
 import { $, argv, chalk, echo } from 'zx'
-import { loadCredentials, getSecret } from '@casimir/aws-helpers'
-import { parseStdout } from '@casimir/zx-helpers'
+import { loadCredentials, getSecret, run } from '@casimir/helpers'
 
 /**
- * Run a Casimir dev server
+ * Run a Casimir dev server.
  * 
  * Arguments:
  *      --app: app name (optional, i.e., --app=web)
+ *      --clean: delete existing pgdata before deploy (optional, i.e., --clean)
+ *      --emulate: emulate hardware wallet services (optional, i.e., --emulate=ethereum)
  *      --fork: fork name (optional, i.e., --fork=goerli)
- *      --ledger: emulate ledger for chain (optional, i.e., --ledger=ethereum)
  *      --mock: mock services (optional, i.e., --mock=true)
  *      --network: network name (optional, i.e., --network=goerli)
- *      --trezor: emulate trezor (optional, i.e., --trezor=true)
- *      --external: externalize all rpc urls (optional, i.e., --external=true)
  */
 void async function () {
 
@@ -20,8 +18,8 @@ void async function () {
     const apps = {
         web: {
             chains: ['ethereum'],
-            infrastructure: 'cdk',
-            services: ['users']
+            services: ['users'],
+            tables: ['accounts', 'nonces', 'users']
         }
     }
 
@@ -48,27 +46,30 @@ void async function () {
     /** Default to the web app */
     const app = argv.app || 'web'
 
+    /** Default to clean services and data */
+    const clean = argv.clean !== 'false' || argv.clean !== false
+
+    /** Default to no hardware wallet emulators or ethereum if set vaguely */
+    const emulate = (argv.emulate === 'true' || argv.emulate === true) ? 'ethereum' : argv.emulators === 'false' ? false : argv.emulate
+
+    /** Default to no fork or testnet if set vaguely */
+    const fork = argv.fork === 'true' || argv.fork === true ? 'testnet' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'testnet'
+
     /** Default to local mock */
-    const mock = argv.mock !== 'false'
+    const mock = argv.mock !== 'false' || argv.mock !== false
 
     /** Default to no network or testnet if set vaguely */
     const network = argv.network === 'true' ? 'testnet' : argv.network === 'false' ? false : argv.network
 
-    /** Default to no fork or testnet if set vaguely */
-    const fork = argv.fork === 'true' ? 'testnet' : argv.fork === 'false' ? false : argv.fork
-
-    /** Default to no external rpc */
-    const external = argv.external === 'true'
-
-    /** Default to no ledger emulator or ethereum if set vaguely */
-    const ledger = argv.ledger === 'true' ? 'ethereum' : argv.ledger === 'false' ? false : argv.ledger
-
-    /** Default to no trezor emulator */
-    const trezor = argv.trezor === 'true'
-
-    const { chains, services } = apps[app as keyof typeof apps]
+    const { chains, services, tables } = apps[app as keyof typeof apps]
 
     if (mock) {
+        /** Mock postgres database */
+        $`npm run watch --clean=${clean} --tables=${tables.join(',')} --workspace @casimir/data`
+        /** Comment out line above and uncomment line below when schemas are stable */
+        // $`npm run dev --clean=${clean} --tables=${tables.join(',')} --workspace @casimir/data`
+
+        /** Mock services */
         let port = 4000
         for (const service of services) {
             process.env[`PUBLIC_${service.toUpperCase()}_PORT`] = `${port}`
@@ -76,8 +77,8 @@ void async function () {
             $`npm run dev --workspace @casimir/${service}`
 
             try {
-                if (parseStdout(await $`lsof -ti:${port}`)) {
-                    $`kill -9 $(lsof -ti:${port})`
+                if (await run(`lsof -ti:${port}`)) {
+                    await run(`npx --yes kill-port ${port}`)
                 }
             } catch {
                 console.log(`Port ${port} is available.`)
@@ -93,40 +94,36 @@ void async function () {
             const url = `https://eth-${network}.g.alchemy.com/v2/${key}`
             process.env.ETHEREUM_RPC_URL = url
             echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(network) + chalk.bgBlackBright(` ${chain} network at ${url}`))
-        } else {
-            if (external) {
-                process.env.LOCAL_TUNNEL = 'true'
-            }
-
+        } else if (fork) {
             const chainFork = forks[chain][fork]
             $`npm run dev:${chain} --fork=${chainFork}`
         }
     }
 
-    if (ledger) {
-        console.log('LEDGER', ledger)
+    if (emulate) {
+
+        /** Emulate Ledger */
         const port = 5001
         try { 
-            if (parseStdout(await $`lsof -ti:${port}`)) {
-                $`kill -9 $(lsof -ti:${port})`
+            if (await run(`lsof -ti:${port}`)) {
+                await run(`npx --yes kill-port ${port}`)
             }
         } catch { 
             console.log(`Port ${port} is available.`) 
         }
 
         process.env.PUBLIC_SPECULOS_PORT = `${port}`
-        process.env.PUBLIC_LEDGER_APP = ledger
-        $`scripts/ledger/emulate -a ${ledger}`
+        process.env.PUBLIC_LEDGER_APP = emulate
+        $`scripts/ledger/emulate -a ${emulate}`
         /** Wait to push proxy announcement later in terminal run */
         setTimeout(() => {
             $`npx esno scripts/ledger/proxy.ts`
         }, 5000)
-    }
 
-    if (trezor) {
+        /** Emulate Trezor */
         $`scripts/trezor/emulate`
     }
 
+    /** Run app */
     $`npm run dev --workspace @casimir/${app}`
-
 }()

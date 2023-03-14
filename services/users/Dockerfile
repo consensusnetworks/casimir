@@ -1,5 +1,5 @@
-# Use Alpine with Node 18 as the base image
-FROM --platform=arm64 node:18-alpine
+# Use Node 18 Alpine as the base image
+FROM node:18-alpine
 
 # Set the working directory to /app
 WORKDIR /app

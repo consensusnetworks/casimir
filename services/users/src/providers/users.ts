@@ -2,7 +2,9 @@ import { userCollection } from '../collections/users'
 import { ProviderString } from '@casimir/types'
 import { User } from '@casimir/types'
 
+
 export default function useUsers() {
+
     function getMessage (address: string) {
         const user = userCollection.find(user => user.address === address)
         if (user) {
@@ -13,7 +15,7 @@ export default function useUsers() {
 
     function updateMessage (provider: ProviderString, address: string) {
         const user = userCollection.find(user => user.address === address)
-        provider = provider.toLowerCase()
+        provider = provider.toString().toLowerCase()
         if (user) {
             user.nonce = generateNonce()
         } else {
@@ -21,6 +23,7 @@ export default function useUsers() {
             const user: User = {
                 address,
                 nonce: generateNonce(),
+                pools: []
             }
             userCollection.push(user)
         }

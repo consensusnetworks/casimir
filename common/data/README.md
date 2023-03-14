@@ -1,16 +1,73 @@
 # Casimir Data
 
-JSON Schemas and Jupyter Notebooks for Casimir data modeling, exploration, and analytics
+Casimir schemas, databases, and notebooks for data modeling, exploration, and analytics
 
-## JSON Schemas
+## Schemas
 
-Find the `event` table schema in [src/schemas/event.schema.json](src/schemas/event.schema.json) and the `agg` table schema in [src/schemas/agg.schema.json](src/schemas/agg.schema.json).
+Find the core JSON schemas in [src/schemas](src/schemas). These are the source of truth for data modeling in Casimir. When we deploy our [Glue](https://docs.aws.amazon.com/glue/latest/dg/define-database.html) and [Postgres](https://www.postgresql.org/docs/) tables, we use the schemas to generate columns from each JSON object's properties. See the reference table below for the database, table, file, and description of each schema.
 
-### Making Changes
+| Database | Table | Schema | Description |
+| --- | --- | --- | --- |
+| Glue | `events` | [event.schema.json](src/schemas/event.schema.json) | On or off-chain event |
+| Glue | `aggs` | [agg.schema.json](src/schemas/agg.schema.json) | Aggregate of events |
+| Postgres | `accounts` | [account.schema.json](src/schemas/account.schema.json) | Wallet account |
+| Postgres | `users` | [user.schema.json](src/schemas/user.schema.json) | User profile |
 
-The JSON Schemas in [src/schemas](src/schemas/) are the source of truth for the data model. When we deploy our Glue tables, we use the JSON Schemas to generate the Glue columns. To make a schema change, create a branch from `develop`, edit the JSON, and then make a PR to `develop`.
+## Databases
 
-> 🚩 Schema versioning is coming soon.
+You can run a local Postgres instance for development and testing. This is a convenient way to iterate on schemas and test queries before deploying to production. (Schema reloading is still a work in progress - hopefully bootstrapping Postgres in Docker can be done faster.)
+
+```zsh
+npm run dev --workspace @casimir/data
+```
+
+**All options:**
+
+| Flag | Description | Default | Example |
+| --- | --- | --- | --- |
+| `--clean` | Delete existing pgdata before deploy | true | --clean=false |
+| `--tables` | Tables to deploy | accounts,users | --tables=accounts,users |
+
+**Example commands:**
+
+Run a local Postgres instance with the *current schemas*.
+
+```zsh
+npm run dev --workspace @casimir/data
+```
+
+Run a local Postgres instance and *watch the schemas for changes*.
+
+```zsh
+npm run watch --workspace @casimir/data
+```
+
+Clean local Docker Postgres environment, sql, and pgdata.
+
+```zsh
+npm run clean --workspace @casimir/data
+```
+
+### PSQL
+
+Query the local Postgres instance.
+
+```sql
+"Add a user"
+
+INSERT INTO users (address) VALUES ('0xd557a5745d4560B24D36A68b52351ffF9c86A212');
+
+"Add an account (with the same address as the user)"
+
+INSERT INTO accounts (address, owner_address) VALUES ('0xd557a5745d4560B24D36A68b52351ffF9c86A212', '0xd557a5745d4560B24D36A68b52351ffF9c86A212');
+
+"Query the user"
+
+SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN accounts a ON u.address = a.owner_address WHERE u.address = '0xd557a5745d4560B24D36A68b52351ffF9c86A212' GROUP BY u.address;
+
+```
+
+> 🚩 To iterate on a schema in context, use the commands above. To deploy a schema change, create a branch from `develop`, edit the JSON, and then make a PR to `develop`.
 
 ## Notebooks
 

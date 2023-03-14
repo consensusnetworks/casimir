@@ -22,4 +22,6 @@ export interface Account {
     stake?: string
     /** The wallet provider which helps us show user breakdown and connect when signing or sending TXs */
     walletProvider: ProviderString
+    /** The verified user owner address (only optional for compat, should be req) */
+    ownerAddress?: string
 }

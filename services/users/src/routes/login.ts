@@ -11,8 +11,8 @@ const router = express.Router()
 // TODO: Remove if we're not using.
 router.use('/', async (req: express.Request, res: express.Response) => {
     const { body } = req
-    const { address, message, signedMessage, provider } = body as LoginCredentials
-    const response = verifyMessage({ address, message, signedMessage, provider })
+    const { address, currency, message, signedMessage, provider } = body as LoginCredentials
+    const response = verifyMessage({ address, currency, message, signedMessage, provider })
     if (response) updateMessage(provider, address) // send back token if successful
     const user = userCollection.find(user => user.address === address.toLowerCase())
     res.setHeader('Content-Type', 'application/json')

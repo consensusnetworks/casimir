@@ -23,7 +23,8 @@ router.use('/', async (req: express.Request, res: express.Response) => {
                     walletProvider: provider
                 },
             ],
-            nonce: generateNonce()
+            nonce: generateNonce(),
+            pools: []
         }
         if (!user) {
             console.log('pushing in user')

@@ -1,0 +1,18 @@
+{
+    "name": "@casimir/helpers",
+    "private": true,
+    "main": "src/index.ts",
+    "scripts": {
+        "build": "esbuild src/index.ts --bundle --minify --sourcemap --platform=node --target=esnext --outfile=dist/index.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "@aws-sdk/client-secrets-manager": "^3.204.0",
+        "@aws-sdk/credential-providers": "^3.204.0",
+        "ethers": "^5.7.2"
+    },
+    "devDependencies": {
+        "@types/node": "^17.0.38",
+        "esbuild": "^0.15.9"
+    }
+}

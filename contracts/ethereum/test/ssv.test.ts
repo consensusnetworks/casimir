@@ -1,4 +1,4 @@
-import { deployContract } from '@casimir/hardhat-helpers'
+import { deployContract } from '@casimir/hardhat'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'

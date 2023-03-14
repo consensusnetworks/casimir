@@ -50,7 +50,7 @@ router.use('/login', async (req: express.Request, res: express.Response) => {
             error: false,
         })
     } else { // login
-        const response = verifyMessage({ address, message, signedMessage, provider })
+        const response = verifyMessage({ address, currency, message, signedMessage, provider })
         updateMessage(provider, address) // send back token if successful
         
         response ? await Session.createNewSession(req, res, address) : null

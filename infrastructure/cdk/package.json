@@ -4,7 +4,7 @@
         "index": "src/index.ts"
     },
     "scripts": {
-        "build": "echo 'Warning: @casimir/cdk build not specified. Disregard this warning and any listed errors above if @casimir/cdk is not needed for the current project build.' && exit 0",
+        "build": "echo '@casimir/cdk build not specified. Disregard this warning and any listed errors above if @casimir/cdk is not needed for the current project build.' && exit 0",
         "test": "jest",
         "bootstrap": "npx cdk bootstrap",
         "metadata": "npx cdk metadata",

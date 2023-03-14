@@ -3,6 +3,6 @@
     "private": true,
     "main": "src/index.ts",
     "scripts": {
-        "build": "echo 'Warning: @casimir/types build not specified. Disregard this warning and any listed errors above if @casimir/types is not needed for the current project build.' && exit 0"
+        "build": "echo '@casimir/types build not specified. Disregard this warning and any listed errors above if @casimir/types is not needed for the current project build.' && exit 0"
     }
 }

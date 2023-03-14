@@ -1,0 +1,12 @@
+{
+  "name": "@casimir/speculos",
+  "private":"true",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --minify --sourcemap --platform=node --target=esnext --outfile=dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@ledgerhq/hw-transport": "^6.27.10"
+  }
+}

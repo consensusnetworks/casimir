@@ -1,4 +1,4 @@
-import { pascalCase } from '@casimir/string-helpers'
+import { pascalCase } from '@casimir/helpers'
 import { ProjectConfig } from '../interfaces/ProjectConfig'
 
 /**
