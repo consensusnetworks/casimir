@@ -1,5 +1,4 @@
 import { Pool, PoolConfig } from 'pg'
-import { pascalCase } from '@casimir/helpers'
 
 /**
  * Postgres database provider with pool client auto-connect-and-release
