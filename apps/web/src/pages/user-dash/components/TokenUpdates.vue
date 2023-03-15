@@ -2,16 +2,14 @@
 import { onMounted, ref, onUnmounted } from 'vue'
 import PositiveChart from '@/components/PositiveChart.vue'
 import NegativeChart from '@/components/NegativeChart.vue'
-import useExchanges from '@/composables/exchanges'
+import usePrice from '@/composables/price'
 import { Currency } from '@casimir/types'
 import * as d3 from 'd3'
 
-const {
-    getConversionRate
-} = useExchanges()
+const { getConversionRateByDate } = usePrice()
 
 const convertToUSD = async (currency: Currency, date: string) => {
-    const conversion = await getConversionRate(currency, 'USD', date)
+    const conversion = await getConversionRateByDate(currency, 'USD', date)
     return conversion 
 }
 

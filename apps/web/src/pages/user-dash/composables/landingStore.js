@@ -2,18 +2,13 @@ import { onMounted, ref, watch } from 'vue'
 import * as d3 from 'd3'
 
 import useUsers from '@/composables/users'
-import useWallet from '@/composables/wallet'
-import useExchanges from '@/composables/exchanges'
+import uesPrice from '@/composables/price'
 
-const {
-    getConversionRate,
-    convertToWholeUnits
-} = useExchanges()
+const { getConversionRateByDate, convertToWholeUnits } = uesPrice()
 
 const initialized = ref(false)
 
-const { user, removeAccount } = useUsers()
-const { connectWallet, logout, loadingUserWallets } = useWallet()
+const { user } = useUsers()
 
 // D3 helpers
 const parseTime = d3.timeParse('%d/%m/%Y')
@@ -57,7 +52,7 @@ const netWorthData = ref([])
 // TD: use this composable to track user interactions to dynamically update other components
 export default function useLandingStore () {
     const convertToUSD = async (currency, date, amount) => {
-        const conversion = await getConversionRate(currency, 'USD', date)
+        const conversion = await getConversionRateByDate(currency, 'USD', date)
         const rate = convertToWholeUnits(currency, amount)
         return conversion * rate
     }
