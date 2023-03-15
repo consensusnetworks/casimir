@@ -17,7 +17,7 @@ void async function () {
     const container = await run('docker ps -q --filter name=postgres')
     if (container) {
         await run('docker stop postgres')
-        await run('docker rm postgres')
+        await run('docker rm -f -v postgres')
         console.log('🐘 Database stopped')
     }
 }()
