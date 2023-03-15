@@ -1,0 +1,7 @@
+version: '3.7'
+
+services:
+  users:
+    build:
+      context: ../../
+      dockerfile: ./Dockerfile

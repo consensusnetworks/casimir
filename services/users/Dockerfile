@@ -14,10 +14,12 @@ RUN npm install
 COPY . .
 
 # Build the TypeScript project
-RUN npm run build
+RUN npm run build --workspace @casimir/users
 
 # Expose port 4000
 EXPOSE 4000
 
+WORKDIR /app/services/users/dist
+
 # Run the app when the container launches
-CMD ["node", "dist/index.js"]
+CMD ["node", "index.js"]
