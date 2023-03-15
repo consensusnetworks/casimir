@@ -9,20 +9,20 @@ RUN apk add --no-cache git
 # Set the working directory to /tmp
 WORKDIR /tmp
 
-# Copy files to the working directory
+# Copy all files to /tmp
 COPY . .
 
 # Install the dependencies
 RUN npm install
 
-# Build the TypeScript project
+# Build the service
 RUN npm run build --workspace @casimir/users
+
+# Copy the build assets to /app
+COPY ./services/users/dist /app
 
 # Set the working directory to /app
 WORKDIR /app
-
-# Copy the build assets to the working directory
-COPY /tmp/services/users/dist .
 
 # Expose port 4000
 EXPOSE 4000
