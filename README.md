@@ -235,6 +235,6 @@ Feel free to use any editor, but here's a configuration that works with this cod
 
 ## License
 
-This respository is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+This respository is available as open source under the terms of the [Apache License](https://opensource.org/licenses/Apache).
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
+[![License: Apache](https://img.shields.io/badge/License-Apache-green.svg)](LICENSE.md)
