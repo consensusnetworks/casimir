@@ -1,5 +1,6 @@
 import { Construct } from 'constructs'
 import * as cdk from 'aws-cdk-lib'
+import * as ecrAssets from 'aws-cdk-lib/aws-ecr-assets'
 import * as ecs from 'aws-cdk-lib/aws-ecs'
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns'
 import { UsersStackProps } from '../interfaces/StackProps'
@@ -11,8 +12,10 @@ import { Config } from './config'
 export class UsersStack extends cdk.Stack {
     /** Stack name */
     public readonly name = 'users'
+    /** Path to monorepo root */
+    public readonly contextPath = '../..'
     /** Path to stack build assets or Dockerfile */
-    public readonly assetPath = '../../services/users'
+    public readonly assetPath = 'services/users/Dockerfile'
 
     constructor(scope: Construct, id: string, props: UsersStackProps) {
         super(scope, id, props)
@@ -20,6 +23,13 @@ export class UsersStack extends cdk.Stack {
         const config = new Config()
         const { project, stage, rootDomain, subdomains } = config
         const { certificate, cluster, hostedZone } = props
+
+        /** Create Docker image asset */
+        const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
+            directory: this.contextPath,
+            file: this.assetPath,
+            platform: ecrAssets.Platform.LINUX_AMD64
+        })
 
         /** Create a load-balanced service for the users express API */
         const usersService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, config.getFullStackResourceName(this.name, 'fargate'), {
@@ -30,7 +40,7 @@ export class UsersStack extends cdk.Stack {
             domainZone: hostedZone,
             taskImageOptions: {
                 containerPort: 4000,
-                image: ecs.ContainerImage.fromAsset(this.assetPath),
+                image: ecs.ContainerImage.fromDockerImageAsset(imageAsset),
                 environment: {
                     PROJECT: project,
                     STAGE: stage
