@@ -60,6 +60,19 @@ npm run dev
 
 > 🚩 This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set AWS_PROFILE="some-other-name" in a [.env](.env) if you want to override).
 
+**All options:**
+
+| Flag | Description | Default | Example |
+| --- | --- | --- | --- |
+| `--app` | Which app to run | web | --app=landing |
+| `--clean` | Whether to clean the local database | true | --clean=false |
+| `--emulate` | Whether to use local wallet emulators | false | --emulate=ethereum |
+| `--fork` | Which live Ethereum network to fork locally | goerli | --fork=mainnet |
+| `--mock` | Whether to mock services | true | --mock=false |
+| `--network` | Which live Ethereum network to use | goerli | --network=mainnet |
+
+**Example commands:**
+
 For fullstack changes – run the development server and mock the local backend services.
 
 ```zsh
@@ -78,12 +91,6 @@ Emulate a Trezor hardware wallet. You also need to make sure to add [these prere
 
 ```zsh
 npm run dev --trezor
-```
-
-Expose any servers running on local ports using local tunnel.
-
-```zsh
-npm run dev --external
 ```
 
 The commands above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
@@ -191,7 +198,7 @@ npm install -D some-dev-dependency --workspace @casimir/workspace-name
 
 ## 📊 Data
 
-Data schemas, data operations/workflows, and analytics and ML notebooks are stored in the [common/data/] directory (also namespaced as the @casimir/data npm workspace). See the [Data Contribution Guide](common/data/README.md) for detailed usage instructions.
+Data schemas, data operations/workflows, and analytics and ML notebooks are stored in the [common/data] directory (also namespaced as the @casimir/data npm workspace). See the [@casimir/data README](common/data/README.md) for detailed usage instructions.
 
 ## Layout
 
@@ -228,6 +235,6 @@ Feel free to use any editor, but here's a configuration that works with this cod
 
 ## License
 
-This respository is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+This respository is available as open source under the terms of the [Apache License](https://opensource.org/licenses/Apache).
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
+[![License: Apache](https://img.shields.io/badge/License-Apache-green.svg)](LICENSE.md)

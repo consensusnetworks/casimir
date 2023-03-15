@@ -2,20 +2,22 @@ import express from 'express'
 import { userCollection } from '../collections/users'
 import { verifySession } from 'supertokens-node/recipe/session/framework/express'
 import { SessionRequest } from 'supertokens-node/framework/express'
-const router = express.Router()
+import useDB from '../providers/db'
 
-router.get('/', verifySession(), (req: SessionRequest, res: express.Response) => {
-    const address = req.session?.getUserId()
-    const user = userCollection.find(user => user.address === address?.toLowerCase())
-    res.setHeader('Content-Type', 'application/json')
-    res.status(200)
+const router = express.Router()
+const { getUser } = useDB()
+
+router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
+    const address = req.session?.getUserId() as string
+    const user = await getUser(address)
     const message = user ? 'User found' : 'User not found'
     const error = user ? false : true
-    const data = user ? user : null
+    res.setHeader('Content-Type', 'application/json')
+    res.status(200)
     res.json({
         message,
         error,
-        data
+        user
     })
 })
 

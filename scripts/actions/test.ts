@@ -1,5 +1,5 @@
 import { $, argv, echo } from 'zx'
-import { loadCredentials } from '@casimir/aws-helpers'
+import { loadCredentials } from '@casimir/helpers'
 
 /**
  * Test the GitHub Actions workflows in `.github/workflows`
@@ -29,6 +29,5 @@ void async function () {
     --rebuild \
     --secret AWS_ACCESS_KEY_ID=${accessKeyId} \
     --secret AWS_SECRET_ACCESS_KEY=${secretAccessKey} \
-    --secret SLACK_WEBHOOK_URL=${slackWebhookURL} \
-    --verbose`
+    --secret SLACK_WEBHOOK_URL=${slackWebhookURL}`
 }()

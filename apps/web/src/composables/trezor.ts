@@ -1,4 +1,4 @@
-import EthersTrezorSigner from '@casimir/ethers-trezor-signer'
+import { EthersTrezorSigner } from '@casimir/wallets'
 import useEthers from '@/composables/ethers'
 import useEnvironment from '@/composables/environment'
 import { ethers } from 'ethers'

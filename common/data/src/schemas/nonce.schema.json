@@ -1,0 +1,20 @@
+{
+	"$id": "https://casimir.co/nonce.schema.json",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Nonce",
+	"type": "object",
+    "properties": {
+        "address": {
+			"type": "string",
+			"description": "The nonce user address (PK)"
+		},
+		"nonce": {
+			"type": "string",
+			"description": "The nonce value"
+		}
+	},
+	"required": [
+		"address",
+		"nonce"
+	]
+}

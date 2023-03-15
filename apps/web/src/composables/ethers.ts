@@ -8,7 +8,7 @@ import { MessageInit } from '@/interfaces/MessageInit'
 import useAuth from '@/composables/auth'
 import { Currency } from '@casimir/types'
 
-const { getMessage, signupOrLoginAuth, signUpAuth, login } = useAuth()
+const { getMessage, login } = useAuth()
 
 const defaultProviders = {
   MetaMask: undefined,
@@ -114,14 +114,14 @@ export default function useEthers() {
     return { gasPrice, gasLimit }
   }
 
-  async function signupLoginWithEthers(provider: ProviderString, address: string, currency: Currency) {
+  async function loginWithEthers(provider: ProviderString, address: string, currency: Currency) {
     const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const messageJson = await getMessage(provider, address)
     const { message } = await messageJson.json()
     const signer = web3Provider.getSigner()
     const signature = await signer.signMessage(message)
-    const response = await signupOrLoginAuth({ 
+    const response = await login({ 
       provider, 
       address, 
       message: message.toString(), 
@@ -136,6 +136,7 @@ export default function useEthers() {
     const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const network = await web3Provider.getNetwork()
+    console.log('network.chainId :>> ', network.chainId)
     const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
     return currency
   }
@@ -187,7 +188,7 @@ export default function useEthers() {
     sendEthersTransaction,
     signEthersMessage,
     getGasPriceAndLimit,
-    signupLoginWithEthers,
+    loginWithEthers,
     getEthersBrowserProviderSelectedCurrency,
     addEthersNetwork,
     switchEthersNetwork 
@@ -241,6 +242,10 @@ const currenciesByChainId = {
   '137': {
     name: 'Polygon',
     currency: 'MATIC',
+  },
+  '31337': {
+    name: 'Localhost Network',
+    currency: 'ETH',
   },
   '80001': {
     name: 'Polygon Testnet',

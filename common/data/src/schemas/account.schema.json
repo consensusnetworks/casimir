@@ -1,0 +1,58 @@
+{
+    "$id": "https://casimir.co/account.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Account",
+    "type": "object",
+    "properties": {
+        "address": {
+            "type": "string",
+            "description": "The account address (PK)"
+        },
+        "balance": {
+            "type": "number",
+            "description": "The account balance"
+        },
+        "created_at": {
+            "type": "string",
+            "description": "The account creation date in ISO 8601 format"
+        },
+        "owner_address": {
+            "type": "string",
+            "description": "The account owner address"
+        },
+        "snapshots": {
+            "type": "array",
+            "description": "The account snapshots",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "description": "The ISO 8601 snapshot date"
+                    },
+                    "balance": {
+                        "type": "number",
+                        "description": "The account balance snapshot"
+                    }
+                }
+            }
+        },
+        "transactions": {
+            "type": "array",
+            "description": "The account transactions"
+        },
+        "updated_at": {
+            "type": "string",
+            "description": "The account last update date in ISO 8601 format"
+        },
+        "wallet": {
+            "type": "string",
+            "description": "The account wallet provider"
+        }
+    },
+    "required": [
+        "address",
+        "owner_address",
+        "wallet"
+    ]
+}

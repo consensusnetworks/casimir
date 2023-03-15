@@ -3,7 +3,7 @@ import * as cdk from 'aws-cdk-lib'
 import * as certmgr from 'aws-cdk-lib/aws-certificatemanager'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import { DnsStackProps } from '../interfaces/StackProps'
-import { pascalCase } from '@casimir/string-helpers'
+import { pascalCase } from '@casimir/helpers'
 import { Config } from './config'
 
 /**

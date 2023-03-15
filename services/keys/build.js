@@ -8,5 +8,6 @@ esbuild.build({
     minify: true,
     sourcemap: true,
     platform: 'node',
-    target: 'esnext'
+    target: 'esnext',
+    external: ['pg-native']
 })

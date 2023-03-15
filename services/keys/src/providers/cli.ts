@@ -1,6 +1,6 @@
 import minimist from 'minimist'
 import { CommandArgs } from '../interfaces/CommandArgs'
-import { camelCase } from '@casimir/string-helpers'
+import { camelCase } from '@casimir/helpers'
 import { SSV } from './ssv'
 import { CLIOutput } from '../interfaces/CLIOutput'
 

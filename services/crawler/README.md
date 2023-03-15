@@ -1,34 +1,27 @@
-# @casimir/crawler
 
-Identify, structure and stream [@casimir/data events](common/data/src/schemas/event.schema.json) to s3.
+Install dependencies
 
-> 🚩 Run all commands from the monorepo root.
-
-## Development
-
-Run the crawler with default chains and mainnet networks.
-
-```zsh
-npm run dev:crawler # --upload=disabled disables s3 upload
+```bash
+go mod tidy
 ```
 
-**Available flags:**
+Build
 
-These flags modify the CHAINS, FORK, NETWORK, UPLOAD AND PUBLIC_${CHAIN}_RPC environment variables.
+```bash
+make build
+```
 
-| Name | Description | Default |
-| - | - | - |
-| --chains | Comma-separated list of chains | ethereum |
-| --fork | Network state to fork | mainnet |
-| --network | Network to query | mainnet |
-| --upload | Enable/disable upload to s3 | enabled |
+Run the crawler
 
-> Use an equals sign to set flags to variables, like `--upload=disabled`.
+Stream
 
-## Testing
+```bash
+./build/crawler stream
+```
 
-Test the crawler with [./test](./test/) files.
 
-```zsh
-npm run test:crawler
+Crawl
+
+```bash
+./build/crawler crawl
 ```
