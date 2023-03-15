@@ -25,8 +25,7 @@ npm run dev --workspace @casimir/data
 
 | Flag | Description | Default | Example |
 | --- | --- | --- | --- |
-| `--clean` | Delete existing pgdata before deploy | true | --clean=false |
-| `--tables` | Tables to deploy | accounts,users | --tables=accounts,users |
+| `--tables` | Tables to deploy | accounts,users | --tables=accounts,nonces,users |
 
 **Example commands:**
 

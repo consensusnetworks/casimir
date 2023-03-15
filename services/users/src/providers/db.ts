@@ -1,10 +1,10 @@
 import { Postgres } from '@casimir/data'
-import { pascalCase, snakeCase } from '@casimir/helpers'
+import { pascalCase } from '@casimir/helpers'
 import { Account, User } from '@casimir/types'
 
 const postgres = new Postgres({
     // These will become environment variables
-    host: '0.0.0.0',
+    host: 'localhost',
     port: 5432,
     database: 'postgres',
     user: 'postgres',
