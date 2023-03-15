@@ -5,6 +5,7 @@ import * as ecs from 'aws-cdk-lib/aws-ecs'
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns'
 import { UsersStackProps } from '../interfaces/StackProps'
 import { Config } from './config'
+import path from 'path'
 
 /**
  * Users API stack
@@ -26,7 +27,7 @@ export class UsersStack extends cdk.Stack {
 
         /** Create Docker image asset */
         const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
-            directory: this.contextPath,
+            directory: path.join(__dirname, this.contextPath),
             file: this.assetPath,
             platform: ecrAssets.Platform.LINUX_AMD64
         })

@@ -29,6 +29,5 @@ void async function () {
     --rebuild \
     --secret AWS_ACCESS_KEY_ID=${accessKeyId} \
     --secret AWS_SECRET_ACCESS_KEY=${secretAccessKey} \
-    --secret SLACK_WEBHOOK_URL=${slackWebhookURL} \
-    --verbose`
+    --secret SLACK_WEBHOOK_URL=${slackWebhookURL}`
 }()
