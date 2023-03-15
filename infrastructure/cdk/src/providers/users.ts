@@ -5,7 +5,6 @@ import * as ecs from 'aws-cdk-lib/aws-ecs'
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns'
 import { UsersStackProps } from '../interfaces/StackProps'
 import { Config } from './config'
-import path from 'path'
 
 /**
  * Users API stack
@@ -13,10 +12,10 @@ import path from 'path'
 export class UsersStack extends cdk.Stack {
     /** Stack name */
     public readonly name = 'users'
-    /** Path to monorepo root */
-    public readonly contextPath = '../../'
     /** Path to stack build assets or Dockerfile */
     public readonly assetPath = 'services/users/Dockerfile'
+    /** Path to stack build context */
+    public readonly contextPath = '../../'
 
     constructor(scope: Construct, id: string, props: UsersStackProps) {
         super(scope, id, props)
@@ -27,10 +26,10 @@ export class UsersStack extends cdk.Stack {
 
         /** Create Docker image asset */
         const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
-            directory: path.resolve(this.contextPath),
+            directory: this.contextPath,
             file: this.assetPath,
-            exclude: ['cdk.out'],
-            platform: ecrAssets.Platform.LINUX_AMD64
+            platform: ecrAssets.Platform.LINUX_AMD64,
+            ignoreMode: cdk.IgnoreMode.GIT
         })
 
         /** Create a load-balanced service for the users express API */

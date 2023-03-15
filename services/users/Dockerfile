@@ -1,25 +1,28 @@
+# Note: This Dockerfile assumes context is set to the git root (../../)
+
 # Use Node 18 Alpine as the base image
 FROM node:18-alpine
 
-# Set the working directory to /app
-WORKDIR /app
+# Set the working directory to /tmp
+WORKDIR /tmp
 
-# Copy package.json to the working directory
-COPY package.json ./
+# Copy files to the working directory
+COPY . .
 
 # Install the dependencies
 RUN npm install
 
-# Copy the rest of the files to the working directory
-COPY . .
-
 # Build the TypeScript project
 RUN npm run build --workspace @casimir/users
 
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the build assets to the working directory
+COPY /tmp/services/users/dist .
+
 # Expose port 4000
 EXPOSE 4000
-
-WORKDIR /app/services/users/dist
 
 # Run the app when the container launches
 CMD ["node", "index.js"]
