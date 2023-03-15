@@ -4,10 +4,10 @@ import { run } from '@casimir/helpers'
 const resources = './scripts'
 
 /**
- * Clean local Postgres data and SQL schema files.
+ * Clean up Docker containers, and Postgres data, and SQL schema files.
  */
 void async function () {
-    console.log(`Cleaning Postgres data and SQL schema files from ${resources}/.out`)
+    console.log(`Cleaning up Docker containers, Postgres data, and SQL schema files from ${resources}/.out`)
     
     /** Clear output directory for pgdata and sql */
     const outDir = `${resources}/.out`
