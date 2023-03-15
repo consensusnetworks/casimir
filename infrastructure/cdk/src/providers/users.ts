@@ -14,7 +14,7 @@ export class UsersStack extends cdk.Stack {
     /** Stack name */
     public readonly name = 'users'
     /** Path to monorepo root */
-    public readonly contextPath = '../..'
+    public readonly contextPath = '../../'
     /** Path to stack build assets or Dockerfile */
     public readonly assetPath = 'services/users/Dockerfile'
 
@@ -29,6 +29,7 @@ export class UsersStack extends cdk.Stack {
         const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
             directory: path.resolve(this.contextPath),
             file: this.assetPath,
+            exclude: ['cdk.out'],
             platform: ecrAssets.Platform.LINUX_AMD64
         })
 
