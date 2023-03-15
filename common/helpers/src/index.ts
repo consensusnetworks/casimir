@@ -99,10 +99,15 @@ export function kebabCase(string: string): string {
  */
 export async function run(fullCommand: string) {
     const [command, ...args] = fullCommand.split(' ')
-    const child = spawn(command, args, { stdio: 'inherit' })
+    const child = spawn(command, args)
+    let data = ''
     return new Promise((resolve, reject) => {
         child.on('error', reject)
-        child.on('exit', resolve)
+        child.stdout.on('data', chunk => {
+            process.stdout.write(chunk.toString())
+            data += chunk.toString()
+        })
+        child.on('exit', () => resolve(data))
     })
 }
 
