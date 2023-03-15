@@ -27,7 +27,7 @@ export class UsersStack extends cdk.Stack {
 
         /** Create Docker image asset */
         const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
-            directory: path.join(__dirname, this.contextPath),
+            directory: path.resolve(this.contextPath),
             file: this.assetPath,
             platform: ecrAssets.Platform.LINUX_AMD64
         })
