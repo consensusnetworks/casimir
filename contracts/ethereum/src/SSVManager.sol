@@ -15,21 +15,18 @@ import "hardhat/console.sol";
  * @title Manager contract that accepts and distributes deposits
  */
 contract SSVManager is IPoRAddressList {
-    /// Use counter for incrementing IDs
+    /** Use counter for incrementing IDs */
     using Counters for Counters.Counter;
-
-    /***** Structs *****/
-
     /** Rewards and stake balance */
     struct Balance {
         uint256 rewards;
         uint256 stake;
     }
-    /** Processed fee and stake amounts */
-    struct DepositFunds {
+    /** Processed deposit with stake and fee amounts */
+    struct ProcessedDeposit {
         uint256 linkAmount;
         uint256 ssvAmount;
-        uint256 stakeAmount;
+        uint256 ethAmount;
     }
     /** Token fees required for contract protocols */
     struct Fees {
@@ -38,7 +35,7 @@ contract SSVManager is IPoRAddressList {
     }
     /** SSV pool used for running a validator */
     struct Pool {
-        uint256 depositAmount;
+        uint256 deposits;
         uint32[] operatorIds;
         mapping(address => uint256) userStakes;
         bytes validatorPublicKey;
@@ -68,16 +65,13 @@ contract SSVManager is IPoRAddressList {
         bytes signature;
         bytes withdrawalCredentials;
     }
-
-    /***** Storage *****/
-
-    /** Pool ID generator */
+    /** Last pool ID generated for a new pool */
     Counters.Counter lastPoolId;
     /** Token addresses */
     mapping(Token => address) private tokens;
     /** Beacon deposit contract */
     IDepositContract private immutable beaconDeposit;
-    /** Chainlink rewards feed contract */
+    /** Chainlink feed contract */
     AggregatorV3Interface private immutable linkFeed;
     /** SSV network contract */
     ISSVNetwork private immutable ssvNetwork;
@@ -103,25 +97,22 @@ contract SSVManager is IPoRAddressList {
     bytes[] private activeValidatorPublicKeys;
     /** Inactive validator public keys */
     bytes[] private inactiveValidatorPublicKeys;
-
-    /***** Events *****/
-
     /** Event signaling a user deposit to the manager */
     event ManagerDeposit(
         address userAddress,
         uint256 linkAmount,
         uint256 ssvAmount,
-        uint256 stakeAmount,
+        uint256 ethAmount,
         uint256 depositTime
     );
-    /** Event signaling a user stake to a pool */
-    event PoolStake(
+    /** Event signaling a user deposit to a pool */
+    event PoolDeposit(
         address userAddress,
         uint32 poolId,
         uint256 linkAmount,
         uint256 ssvAmount,
-        uint256 stakeAmount,
-        uint256 stakeTime
+        uint256 ethAmount,
+        uint256 depositTime
     );
     /** Event signaling a validator activation */
     event ValidatorActivated(
@@ -170,79 +161,72 @@ contract SSVManager is IPoRAddressList {
 
         address userAddress = msg.sender;
         uint256 time = block.timestamp;
+        uint256 depositAmount = msg.value;
+        ProcessedDeposit memory processedDeposit = processDeposit(depositAmount);
 
-        /// Swap fees to protocol token funds
-        DepositFunds memory depositFunds = processDepositFunds(msg.value);
-
-        /// Emit manager deposit event
+        /** Emit manager deposit event */
         emit ManagerDeposit(
             userAddress,
-            depositFunds.linkAmount,
-            depositFunds.ssvAmount,
-            depositFunds.stakeAmount,
+            processedDeposit.linkAmount,
+            processedDeposit.ssvAmount,
+            processedDeposit.ethAmount,
             time
         );
 
-        /// Distribute ETH stake to pools
-        while (depositFunds.stakeAmount > 0) {
-            /// Get next open pool
+        /** Distribute */
+        while (processedDeposit.ethAmount > 0) {
+
+            /** Next open pool */
             uint32 poolId;
             if (openPoolIds.length > 0) {
                 poolId = openPoolIds[0];
             } else {
-                /// Generate a new pool ID
                 lastPoolId.increment();
                 poolId = uint32(lastPoolId.current());
-
-                /// Push new open pool ID
                 openPoolIds.push(poolId);
             }
-
-            /// Get the pool
             Pool storage pool;
             pool = pools[poolId];
 
-            /// Get contract amount for next open pool
-            uint256 poolDepositedAmount = pool.depositAmount;
-
-            /// Deposit to pool
-            uint256 poolRequiredAmount = 32 * 1e18 - poolDepositedAmount;
-            if (poolRequiredAmount > depositFunds.stakeAmount) {
-                /// Set pool stake amount to total available
-                pool.depositAmount += depositFunds.stakeAmount;
-                pool.userStakes[userAddress] += depositFunds.stakeAmount;
-                depositFunds.stakeAmount = 0;
+            /** Deposit  */
+            uint256 poolDeposits = pool.deposits;
+            uint256 remainingCap = 32 * 1e18 - poolDeposits;
+            if (remainingCap > processedDeposit.ethAmount) {
+                pool.deposits += processedDeposit.ethAmount;
+                pool.userStakes[userAddress] += processedDeposit.ethAmount;
+                processedDeposit.ethAmount = 0;
             } else {
-                /// Set pool stake amount to total required
-                pool.depositAmount += poolRequiredAmount;
-                pool.userStakes[userAddress] += poolRequiredAmount;
-                depositFunds.stakeAmount -= poolRequiredAmount;
+                pool.deposits += remainingCap;
+                pool.userStakes[userAddress] += remainingCap;
+                processedDeposit.ethAmount -= remainingCap;
 
-                /// Start a new validator to stake pool
-                activateValidator(poolId);
+                /** Start a new validator and stake pool */
+                stakePool(poolId);
 
-                /// Remove pool from open pools and add to staked pools
+                /** Remove pool from open pools */
                 for (uint i = 0; i < openPoolIds.length - 1; i++) {
                     openPoolIds[i] = openPoolIds[i + 1];
                 }
                 openPoolIds.pop();
+
+                /** Add pool to staked pools */
                 stakedPoolIds.push(poolId);
             }
 
-            /// Save pool address to user if new stake
+            /** Save pool address to user if new stake */
             User storage user = users[userAddress];
             if (!user.poolIdLookup[poolId]) {
                 user.poolIdLookup[poolId] = true;
                 user.poolIds.push(poolId);
             }
 
-            /// Emit pool stake event
-            emit PoolStake(
+            /** Emit pool stake event */
+            emit PoolDeposit(
                 userAddress,
                 poolId,
-                depositFunds.linkAmount,
-                depositFunds.ssvAmount,
-                depositFunds.stakeAmount,
+                processedDeposit.linkAmount,
+                processedDeposit.ssvAmount,
+                processedDeposit.ethAmount,
                 time
             );
         }
@@ -253,15 +237,15 @@ contract SSVManager is IPoRAddressList {
      * @param depositAmount The deposit amount
      * @return The fee and stake deposit amounts
      */
-    function processDepositFunds(
+    function processDeposit(
         uint256 depositAmount
-    ) private returns (DepositFunds memory) {
+    ) private returns (ProcessedDeposit memory) {
         Fees memory fees = getFees();
         uint32 feePercent = fees.LINK + fees.SSV;
-        uint256 stakeAmount = (depositAmount * 100) / (100 + feePercent);
-        uint256 feeAmount = depositAmount - stakeAmount;
+        uint256 ethAmount = (depositAmount * 100) / (100 + feePercent);
+        uint256 feeAmount = depositAmount - ethAmount;
 
-        /// Wrap ETH fees in ERC-20 to use in swap
+        /** Wrap ETH fees in ERC-20 to use in swap */
         wrap(feeAmount);
 
         uint256 linkAmount = swap(
@@ -276,7 +260,7 @@ contract SSVManager is IPoRAddressList {
             (feeAmount * fees.SSV) / feePercent
         );
 
-        return DepositFunds(linkAmount, ssvAmount, stakeAmount);
+        return ProcessedDeposit(linkAmount, ssvAmount, ethAmount);
     }
 
     /**
@@ -312,8 +296,6 @@ contract SSVManager is IPoRAddressList {
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
             });
-
-        /// The call to `exactInputSingle` executes the swap
         return swapRouter.exactInputSingle(params);
     }
 
@@ -345,14 +327,14 @@ contract SSVManager is IPoRAddressList {
      * @dev Activate a pool validator on beacon and SSV
      * @param poolId The pool ID
      */
-    function activateValidator(uint32 poolId) private {
+    function stakePool(uint32 poolId) private {
         bytes memory publicKey = inactiveValidatorPublicKeys[0];
         Validator memory validator = validators[publicKey];
         Pool storage pool = pools[poolId];
         uint256 mockSSVFee = 5 * 1e18;
 
-        /// Deposit validator stake
-        beaconDeposit.deposit{value: pool.depositAmount}(
+        /** Deposit validator */
+        beaconDeposit.deposit{value: pool.deposits}(
             publicKey, // bytes
             // Todo show proof that this is the contract
             validator.withdrawalCredentials, // bytes
@@ -360,7 +342,7 @@ contract SSVManager is IPoRAddressList {
             validator.depositDataRoot // bytes32
         );
 
-        /// Register validator with SSV Network
+        /** Pay SSV fees and register validator */
         ssvToken.approve(address(ssvNetwork), mockSSVFee);
         ssvNetwork.registerValidator(
             publicKey, // bytes
@@ -370,11 +352,11 @@ contract SSVManager is IPoRAddressList {
             mockSSVFee // uint256 (fees handled on user deposits)
         );
 
-        /// Update the pool
+        /** Update the pool */
         pool.operatorIds = validator.operatorIds;
         pool.validatorPublicKey = publicKey;
 
-        /// Remove validator from inactive validators and add to active validators
+        /** Remove validator from inactive validators and add to active validators */
         for (uint i = 0; i < inactiveValidatorPublicKeys.length - 1; i++) {
             inactiveValidatorPublicKeys[i] = inactiveValidatorPublicKeys[i + 1];
         }
@@ -548,20 +530,20 @@ contract SSVManager is IPoRAddressList {
         Pool storage pool = pools[poolId];
         uint256 rewards;
         uint256 stake;
-        uint256 depositAmount = pool.depositAmount;
+        uint256 deposits = pool.deposits;
 
         if (pool.operatorIds.length == 0) {
             /// Return deposit amount for open pools
-            stake = depositAmount;
+            stake = deposits;
         } else {
             /// Return balance feed amount for staked pools
             bytes memory validatorPublicKey = pool.validatorPublicKey;
             uint256 balance = uint256(
                 getLatestBalance(poolId, validatorPublicKey)
             );
-            rewards = balance - depositAmount;
-            if (balance > depositAmount) {
-                stake = depositAmount;
+            rewards = balance - deposits;
+            if (balance > deposits) {
+                stake = deposits;
             } else {
                 stake = balance;
             }
@@ -610,7 +592,7 @@ contract SSVManager is IPoRAddressList {
         //     /*uint256 timeStamp*/,
         //     /*uint80 answeredInRound*/
         // ) = linkFeed.latestRoundData();
-        int256 balance = int256(pools[poolId].depositAmount);
+        int256 balance = int256(pools[poolId].deposits);
         return balance;
     }
 
