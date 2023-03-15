@@ -3,6 +3,9 @@
 # Use Node 18 Alpine as the base image
 FROM node:18-alpine
 
+# Install git
+RUN apk add --no-cache git
+
 # Set the working directory to /tmp
 WORKDIR /tmp
 
