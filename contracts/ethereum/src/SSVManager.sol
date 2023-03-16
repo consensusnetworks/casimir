@@ -1,26 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import "./interfaces/IDepositContract.sol";
-import "./interfaces/IPoRAddressList.sol";
-import "./interfaces/ISSVNetwork.sol";
-import "./interfaces/ISSVToken.sol";
-import "./interfaces/IWETH9.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import "hardhat/console.sol";
+import './interfaces/IDepositContract.sol';
+import './interfaces/ISSVNetwork.sol';
+import './interfaces/ISSVToken.sol';
+import './interfaces/IWETH9.sol';
+import '@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol';
+import '@openzeppelin/contracts/utils/Counters.sol';
+import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
+import 'hardhat/console.sol';
 
 /**
  * @title Manager contract that accepts and distributes deposits
  */
-contract SSVManager is IPoRAddressList {
+contract SSVManager {
     /** Use counter for incrementing IDs */
     using Counters for Counters.Counter;
     /** Rewards and stake balance */
     struct Balance {
-        uint256 rewards;
         uint256 stake;
+        uint256 rewards;
     }
     /** Processed deposit with stake and fee amounts */
     struct ProcessedDeposit {
@@ -37,13 +36,7 @@ contract SSVManager is IPoRAddressList {
     struct Pool {
         uint256 deposits;
         uint32[] operatorIds;
-        mapping(address => uint256) userStakes;
         bytes validatorPublicKey;
-    }
-    /** SSV pool details for a user */
-    struct PoolUserDetails {
-        Balance balance;
-        Balance userBalance;
     }
     /** Token abbreviations */
     enum Token {
@@ -51,12 +44,12 @@ contract SSVManager is IPoRAddressList {
         SSV,
         WETH
     }
-    /** User account for storing pool addresses */
+    /** User staking account */
     struct User {
-        mapping(uint32 => bool) poolIdLookup;
-        uint32[] poolIds;
+        uint256 stake;
+        uint256 lastStakeTime;
     }
-    /** Validator data */
+    /** Validator deposit data and shares */
     struct Validator {
         bytes32 depositDataRoot;
         uint32[] operatorIds;
@@ -83,21 +76,23 @@ contract SSVManager is IPoRAddressList {
     uint24 private immutable swapFee = 3000;
     /** Uniswap router contract  */
     ISwapRouter private immutable swapRouter;
-    /** All users who have deposited to pools */
+    /** User staking accounts */
     mapping(address => User) private users;
-    /** SSV pools */
+    /** Staking pools */
     mapping(uint32 => Pool) private pools;
-    /** Pool IDs of pools accepting deposits */
+    /** Staking pool capacity (in WEI) */
+    uint256 private poolCapacity = 32 ether;
+    /** IDs of staking pools accepting deposits */
     uint32[] private openPoolIds;
-    /** Pool IDs of staked pools */
+    /** IDs of staking pools at full capacity */
     uint32[] private stakedPoolIds;
-    /** Validators (inactive and active) */
+    /** Validators (active or inactive) */
     mapping(bytes => Validator) private validators;
-    /** Active validator public keys */
+    /** Public keys of active validators  */
     bytes[] private activeValidatorPublicKeys;
-    /** Inactive validator public keys */
+    /** Public keys of inactive validators */
     bytes[] private inactiveValidatorPublicKeys;
-    /** Event signaling a user deposit to the manager */
+    /** Event signaling a user deposit to the pool manager */
     event ManagerDeposit(
         address userAddress,
         uint256 linkAmount,
@@ -116,12 +111,12 @@ contract SSVManager is IPoRAddressList {
     );
     /** Event signaling a validator activation */
     event ValidatorActivated(
-        uint32 poolId,
+        bytes publicKey,
         uint32[] operatorIds,
-        bytes publicKey
+        uint32 poolId
     );
     /** Event signaling a validator registration */
-    event ValidatorAdded(uint32[] operatorIds, bytes publicKey);
+    event ValidatorAdded(bytes publicKey, uint32[] operatorIds);
 
     /**
      * @notice Constructor
@@ -157,8 +152,6 @@ contract SSVManager is IPoRAddressList {
      * @notice Deposit to the pool manager
      */
     function deposit() external payable {
-        require(inactiveValidatorPublicKeys.length > 0, "no validators ready");
-
         address userAddress = msg.sender;
         uint256 time = block.timestamp;
         uint256 depositAmount = msg.value;
@@ -173,8 +166,14 @@ contract SSVManager is IPoRAddressList {
             time
         );
 
-        /** Distribute */
+        /** Update user stake info */
+        users[userAddress].stake += processedDeposit.ethAmount;
+        users[userAddress].lastStakeTime = time;
+
+        /** Distribute deposit */
         while (processedDeposit.ethAmount > 0) {
+
+            /** Todo check pool withdrawal queue here */
 
             /** Next open pool */
             uint32 poolId;
@@ -187,20 +186,16 @@ contract SSVManager is IPoRAddressList {
             }
             Pool storage pool;
             pool = pools[poolId];
-
-            /** Deposit  */
             uint256 poolDeposits = pool.deposits;
-            uint256 remainingCap = 32 * 1e18 - poolDeposits;
-            if (remainingCap > processedDeposit.ethAmount) {
+            uint256 remainingCapacity = poolCapacity - poolDeposits;
+            if (remainingCapacity > processedDeposit.ethAmount) {
                 pool.deposits += processedDeposit.ethAmount;
-                pool.userStakes[userAddress] += processedDeposit.ethAmount;
                 processedDeposit.ethAmount = 0;
             } else {
-                pool.deposits += remainingCap;
-                pool.userStakes[userAddress] += remainingCap;
-                processedDeposit.ethAmount -= remainingCap;
+                pool.deposits += remainingCapacity;
+                processedDeposit.ethAmount -= remainingCapacity;
 
-                /** Start a new validator and stake pool */
+                /** Get a new validator and stake pool */
                 stakePool(poolId);
 
                 /** Remove pool from open pools */
@@ -211,13 +206,6 @@ contract SSVManager is IPoRAddressList {
 
                 /** Add pool to staked pools */
                 stakedPoolIds.push(poolId);
-            }
-
-            /** Save pool address to user if new stake */
-            User storage user = users[userAddress];
-            if (!user.poolIdLookup[poolId]) {
-                user.poolIdLookup[poolId] = true;
-                user.poolIds.push(poolId);
             }
 
             /** Emit pool stake event */
@@ -343,6 +331,7 @@ contract SSVManager is IPoRAddressList {
         );
 
         /** Pay SSV fees and register validator */
+        /** Todo update for v3 SSV contracts */
         ssvToken.approve(address(ssvNetwork), mockSSVFee);
         ssvNetwork.registerValidator(
             publicKey, // bytes
@@ -353,8 +342,8 @@ contract SSVManager is IPoRAddressList {
         );
 
         /** Update the pool */
-        pool.operatorIds = validator.operatorIds;
         pool.validatorPublicKey = publicKey;
+        pool.operatorIds = validator.operatorIds;
 
         /** Remove validator from inactive validators and add to active validators */
         for (uint i = 0; i < inactiveValidatorPublicKeys.length - 1; i++) {
@@ -364,9 +353,9 @@ contract SSVManager is IPoRAddressList {
         activeValidatorPublicKeys.push(publicKey);
 
         emit ValidatorActivated(
-            poolId,
+            pool.validatorPublicKey,
             pool.operatorIds,
-            pool.validatorPublicKey
+            poolId
         );
     }
 
@@ -401,7 +390,7 @@ contract SSVManager is IPoRAddressList {
         );
         inactiveValidatorPublicKeys.push(publicKey);
 
-        emit ValidatorAdded(operatorIds, publicKey);
+        emit ValidatorAdded(publicKey, operatorIds);
     }
 
     // /**
@@ -454,219 +443,30 @@ contract SSVManager is IPoRAddressList {
     }
 
     /**
-     * @notice Get a list of a user's pool IDs by user address
+     * @notice Get the current balance of the pool manager
+     * @return The current balance of the pool manager
+     */
+    function getBalance() external view returns (Balance memory) {
+        uint256 stake = address(this).balance + stakedPoolIds.length * poolCapacity;
+        return Balance(stake, 0);
+    }
+
+    /**
+     * @notice Get the current balance of a user
      * @param userAddress The user address
-     * @return A list of a user's pool IDs
+     * @return The current balance of a user
      */
-    function getUserPoolIds(
-        address userAddress
-    ) external view returns (uint32[] memory) {
-        return users[userAddress].poolIds;
-    }
-
-    function getPoolUserDetails(
-        uint32 poolId,
-        address userAddress
-    ) external view returns (PoolUserDetails memory) {
-        PoolUserDetails memory poolUserDetails = PoolUserDetails(
-            getPoolBalance(poolId),
-            getPoolUserBalance(poolId, userAddress)
-        );
-        return poolUserDetails;
+    function getUserBalance(address userAddress) external view returns (Balance memory) {
+        uint256 stake = users[userAddress].stake;
+        return Balance(stake, 0);
     }
 
     /**
-     * @notice Get a user's balance in a pool by user address and pool ID
+     * @notice Get a pool by ID
      * @param poolId The pool ID
-     * @param userAddress The user address
-     * @return A user's balance in a pool
+     * @return The pool
      */
-    function getPoolUserBalance(
-        uint32 poolId,
-        address userAddress
-    ) public view returns (Balance memory) {
-        uint256 rewards = getPoolUserRewards(poolId, userAddress);
-        uint256 stake = getPoolUserStake(poolId, userAddress);
-        return Balance(rewards, stake);
-    }
-
-    /**
-     * @notice Get a user's rewards in a pool by user address and pool ID
-     * @param poolId The pool ID
-     * @param userAddress The user address
-     * @return A user's rewards in a pool
-     */
-    function getPoolUserRewards(
-        uint32 poolId,
-        address userAddress
-    ) public view returns (uint256) {
-        // Todo get user stake share of balance (this is incomplete/incorrect)
-        Pool storage pool = pools[poolId];
-        // getPoolUserStake(poolId, userAddress) * 100 / 32*1e18
-        return pool.userStakes[userAddress];
-    }
-
-    /**
-     * @notice Get a user's stake in a pool by user address and pool ID
-     * @param poolId The pool ID
-     * @param userAddress The user address
-     * @return A user's stake in a pool
-     */
-    function getPoolUserStake(
-        uint32 poolId,
-        address userAddress
-    ) public view returns (uint256) {
-        return pools[poolId].userStakes[userAddress];
-    }
-
-    /**
-     * @notice Get a pool's balance by pool ID
-     * @param poolId The pool ID
-     * @return The pool's balance
-     */
-    function getPoolBalance(
-        uint32 poolId
-    ) public view returns (Balance memory) {
-        Pool storage pool = pools[poolId];
-        uint256 rewards;
-        uint256 stake;
-        uint256 deposits = pool.deposits;
-
-        if (pool.operatorIds.length == 0) {
-            /// Return deposit amount for open pools
-            stake = deposits;
-        } else {
-            /// Return balance feed amount for staked pools
-            bytes memory validatorPublicKey = pool.validatorPublicKey;
-            uint256 balance = uint256(
-                getLatestBalance(poolId, validatorPublicKey)
-            );
-            rewards = balance - deposits;
-            if (balance > deposits) {
-                stake = deposits;
-            } else {
-                stake = balance;
-            }
-        }
-        return Balance(rewards, stake);
-    }
-
-    /**
-     * @notice Get a pool's validator public key by pool ID
-     * @param poolId The pool ID
-     * @return The pool's validator public key
-     */
-    function getPoolValidatorPublicKey(
-        uint32 poolId
-    ) external view returns (bytes memory) {
-        return pools[poolId].validatorPublicKey;
-    }
-
-    /**
-     * @notice Get a pool's operators by pool ID
-     * @param poolId The pool ID
-     * @return The pool's operators
-     */
-    function getPoolOperatorIds(
-        uint32 poolId
-    ) external view returns (uint32[] memory) {
-        return pools[poolId].operatorIds;
-    }
-
-    /**
-     * @notice Get the latest balance for a validator (PoR)
-     * @param validatorPublicKey The validator address
-     * @return The latest balance
-     */
-    function getLatestBalance(
-        uint32 poolId,
-        bytes memory validatorPublicKey
-    ) public view returns (int256) {
-        console.log("Getting balance for", toAddress(validatorPublicKey));
-
-        // prettier-ignore
-        // (
-        //     /*uint80 roundID*/,
-        //     int256 balance,
-        //     /*uint256 startedAt*/,
-        //     /*uint256 timeStamp*/,
-        //     /*uint80 answeredInRound*/
-        // ) = linkFeed.latestRoundData();
-        int256 balance = int256(pools[poolId].deposits);
-        return balance;
-    }
-
-    /***** IPoRAddressList interface methods *****/
-
-    /**
-     * @notice Get the length of the PoR (active) address list
-     * @return The length of the PoR address list
-     */
-    function getPoRAddressListLength()
-        external
-        view
-        override
-        returns (uint256)
-    {
-        return activeValidatorPublicKeys.length;
-    }
-
-    /**
-     * @notice Get a slice of the PoR address list as strings
-     * @param startIndex The list start index
-     * @param endIndex The list end index
-     * @return The slice of the PoR address list as strings
-     */
-    function getPoRAddressList(
-        uint256 startIndex,
-        uint256 endIndex
-    ) external view override returns (string[] memory) {
-        if (startIndex > endIndex) {
-            return new string[](0);
-        }
-        endIndex = endIndex > activeValidatorPublicKeys.length - 1
-            ? activeValidatorPublicKeys.length - 1
-            : endIndex;
-        string[] memory stringAddresses = new string[](
-            endIndex - startIndex + 1
-        );
-        uint256 currIdx = startIndex;
-        uint256 strAddrIdx = 0;
-        while (currIdx <= endIndex) {
-            stringAddresses[strAddrIdx] = toString(
-                abi.encodePacked(toAddress(activeValidatorPublicKeys[currIdx]))
-            );
-            strAddrIdx++;
-            currIdx++;
-        }
-        return stringAddresses;
-    }
-
-    /***** Utility methods *****/
-
-    /**
-     * @dev Convert bytes data to a string
-     * @param data The bytes data
-     * @return The corresponding string
-     */
-    function toString(bytes memory data) private pure returns (string memory) {
-        bytes memory alphabet = "0123456789abcdef";
-        bytes memory str = new bytes(2 + data.length * 2);
-        str[0] = "0";
-        str[1] = "x";
-        for (uint256 i = 0; i < data.length; i++) {
-            str[2 + i * 2] = alphabet[uint256(uint8(data[i] >> 4))];
-            str[3 + i * 2] = alphabet[uint256(uint8(data[i] & 0x0f))];
-        }
-        return string(str);
-    }
-
-    /**
-     * @dev Convert a public key to an address
-     * @param publicKey The public key bytes
-     * @return The corresponding address
-     */
-    function toAddress(bytes memory publicKey) private pure returns (address) {
-        return address(uint160(bytes20(keccak256(publicKey))));
+    function getPool(uint32 poolId) external view returns (Pool memory) {
+        return pools[poolId];
     }
 }
