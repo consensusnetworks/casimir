@@ -117,37 +117,29 @@ async function thirdUserDepositFixture() {
   return { ssvManager, firstUser, owner, secondUser, thirdUser }
 }
 
-// /** Fixture to report rewards (mini feed test) */
-// async function rewardsFixture() {
-//   const { ssvManager } = await loadFixture(thirdUserDepositFixture)
-//   const activeValidatorPublicKeys = await ssvManager.getActiveValidatorPublicKeys()
-//   const response = await fetch(`https://prater.beaconcha.in/api/v1/validator/${activeValidatorPublicKeys.join(',')}`)
-//   const { data } = await response.json()
-//   data.forEach((v: { balance: any; effectiveBalance: any; status: any }) => {
-//     const { balance, effectiveBalance, status } = v
-//     console.log(balance, effectiveBalance, status)
-//   })
-//   // Todo write to contract for mini feed test
-// }
-
 describe('SSV manager', async function () {
 
-  it ('Has valid deposit data', async function () {
-    await loadFixture(addValidatorsFixture)
-    expect(true).equal(true)
-  })
-
-  it('Registration adds 2 validators', async function () {
+  it('Registration adds 2 validators with 4 operators each', async function () {
     const { validators } = await loadFixture(addValidatorsFixture)
     expect(validators.length).equal(2)
+    
+    const operators = validators.map((v) => v.operatorIds).flat()
+    expect(operators.length).equal(4 * validators.length)
   })
 
-  it('First user\'s 16 ETH stake opens the first pool', async function () {
+  it('First user\'s 16 ETH stake opens the first pool with 16 ETH', async function () {
     const { ssvManager, owner } = await loadFixture(firstUserDepositFixture)
     const ssvOwnerAddress = await ssvManager.signer.getAddress()
     expect(ssvOwnerAddress).equal(owner.address)
+
     const openPools = await ssvManager.getOpenPoolIds()
     expect(openPools.length).equal(1)
+
+    const firstPoolId = openPools[0]
+    const pool = await ssvManager.getPool(firstPoolId)
+    expect(ethers.utils.formatEther(pool.deposits)).equal('16.0')
+    expect(pool.operatorIds.length).not.equal(4)
+    expect(pool.validatorPublicKey).equal('0x')
   })
 
   it('First user\'s 16 ETH stake increases the total stake to 16 ETH', async function () {
@@ -164,16 +156,26 @@ describe('SSV manager', async function () {
     expect(ethers.utils.formatEther(stake)).equal('16.0')
   })
 
-  it('Second user\'s 24 ETH stake completes the first pool', async function () {
+  it('Second user\'s 24 ETH stake completes the first pool with 32 ETH', async function () {
     const { ssvManager } = await loadFixture(secondUserDepositFixture)
     const stakedPools = await ssvManager.getStakedPoolIds()
     expect(stakedPools.length).equal(1)
+    
+    const firstPoolId = stakedPools[0]
+    const pool = await ssvManager.getPool(firstPoolId)
+    expect(ethers.utils.formatEther(pool.deposits)).equal('32.0')
+    expect(pool.operatorIds.length).equal(4)
+    expect(pool.validatorPublicKey).not.equal('0x')
   })
 
-  it('Second user\'s 24 ETH stake opens a second pool', async function () {
+  it('Second user\'s 24 ETH stake opens a second pool with 8 ETH', async function () {
     const { ssvManager } = await loadFixture(secondUserDepositFixture)
     const openPools = await ssvManager.getOpenPoolIds()
     expect(openPools.length).equal(1)
+    
+    const secondPoolId = openPools[0]
+    const pool = await ssvManager.getPool(secondPoolId)
+    expect(ethers.utils.formatEther(pool.deposits)).equal('8.0')
   })
 
   it('Second user\'s 24 ETH stake increases the total stake to 40 ETH', async function () {
@@ -191,10 +193,16 @@ describe('SSV manager', async function () {
     expect(ethers.utils.formatEther(stake)).equal('24.0')
   })
 
-  it('Third user\'s 24 ETH stake completes the second pool', async function () {
+  it('Third user\'s 24 ETH stake completes the second pool with 32 ETH', async function () {
     const { ssvManager } = await loadFixture(thirdUserDepositFixture)
     const stakedPools = await ssvManager.getStakedPoolIds()
     expect(stakedPools.length).equal(2)
+    
+    const secondPoolId = stakedPools[1]
+    const pool = await ssvManager.getPool(secondPoolId)
+    expect(ethers.utils.formatEther(pool.deposits)).equal('32.0')
+    expect(pool.operatorIds.length).equal(4)
+    expect(pool.validatorPublicKey).not.equal('0x')
   })
 
   it('Third user\'s 24 ETH stake does not open a third pool', async function () {
