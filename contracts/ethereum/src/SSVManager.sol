@@ -82,10 +82,10 @@ contract SSVManager {
     mapping(uint32 => Pool) private pools;
     /** Staking pool capacity */
     uint256 private poolCapacity = 32 ether;
-    /** Total open pool deposits */
-    uint256 private openPoolDeposits;
-    /** IDs of staking pools accepting deposits */
-    uint32[] private openPoolIds;
+    /** Total pool deposits ready for stake */
+    uint256 private unstakedDeposits;
+    /** IDs of staking pools readily accepting deposits */
+    uint32[] private readyPoolIds;
     /** IDs of staking pools at full capacity */
     uint32[] private stakedPoolIds;
     /** Validators (active or inactive) */
@@ -178,22 +178,22 @@ contract SSVManager {
 
             /** Next open pool */
             uint32 poolId;
-            if (openPoolIds.length > 0) {
-                poolId = openPoolIds[0];
+            if (readyPoolIds.length > 0) {
+                poolId = readyPoolIds[0];
             } else {
                 lastPoolId.increment();
                 poolId = uint32(lastPoolId.current());
-                openPoolIds.push(poolId);
+                readyPoolIds.push(poolId);
             }
             Pool storage pool;
             pool = pools[poolId];
             uint256 remainingCapacity = poolCapacity - pool.deposits;
             if (remainingCapacity > processedDeposit.ethAmount) {
-                openPoolDeposits += processedDeposit.ethAmount;
+                unstakedDeposits += processedDeposit.ethAmount;
                 pool.deposits += processedDeposit.ethAmount;
                 processedDeposit.ethAmount = 0;
             } else {
-                openPoolDeposits -= pool.deposits;
+                unstakedDeposits -= pool.deposits;
                 pool.deposits += remainingCapacity;
                 processedDeposit.ethAmount -= remainingCapacity;
 
@@ -201,10 +201,10 @@ contract SSVManager {
                 stakePool(poolId);
 
                 /** Remove pool from open pools */
-                for (uint i = 0; i < openPoolIds.length - 1; i++) {
-                    openPoolIds[i] = openPoolIds[i + 1];
+                for (uint i = 0; i < readyPoolIds.length - 1; i++) {
+                    readyPoolIds[i] = readyPoolIds[i + 1];
                 }
-                openPoolIds.pop();
+                readyPoolIds.pop();
 
                 /** Add pool to staked pools */
                 stakedPoolIds.push(poolId);
@@ -435,7 +435,7 @@ contract SSVManager {
      * @return A list of all open pool IDs
      */
     function getOpenPoolIds() external view returns (uint32[] memory) {
-        return openPoolIds;
+        return readyPoolIds;
     }
 
     /**
@@ -451,8 +451,8 @@ contract SSVManager {
      * @return The current balance of the pool manager
      */
     function getBalance() public view returns (Balance memory) {
-        uint256 stake = stakedPoolIds.length * poolCapacity + openPoolDeposits;
-        uint256 rewards = address(this).balance - openPoolDeposits;
+        uint256 stake = stakedPoolIds.length * poolCapacity + unstakedDeposits;
+        uint256 rewards = address(this).balance - unstakedDeposits;
         return Balance(stake, rewards);
     }
 
