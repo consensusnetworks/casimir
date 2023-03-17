@@ -99,7 +99,7 @@ async function secondUserDepositFixture() {
   const depositAmount = stakeAmount * ((100 + feePercent) / 100)
   const value = ethers.utils.parseEther(depositAmount.toString())
   const deposit = await ssvManager.connect(secondUser).deposit({ value })
-  await deposit.wait()
+  await deposit.wait(0)
   return { ssvManager, firstUser, owner, secondUser }
 }
 

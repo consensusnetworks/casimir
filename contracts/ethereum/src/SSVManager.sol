@@ -47,7 +47,7 @@ contract SSVManager {
     /** User staking account */
     struct User {
         uint256 stake;
-        uint256 lastStakeTime;
+        Balance startBalance;
     }
     /** Validator deposit data and shares */
     struct Validator {
@@ -80,8 +80,10 @@ contract SSVManager {
     mapping(address => User) private users;
     /** Staking pools */
     mapping(uint32 => Pool) private pools;
-    /** Staking pool capacity (in WEI) */
+    /** Staking pool capacity */
     uint256 private poolCapacity = 32 ether;
+    /** Total open pool deposits */
+    uint256 private openPoolDeposits;
     /** IDs of staking pools accepting deposits */
     uint32[] private openPoolIds;
     /** IDs of staking pools at full capacity */
@@ -166,9 +168,8 @@ contract SSVManager {
             time
         );
 
-        /** Update user stake info */
+        /** Update user stake */
         users[userAddress].stake += processedDeposit.ethAmount;
-        users[userAddress].lastStakeTime = time;
 
         /** Distribute deposit */
         while (processedDeposit.ethAmount > 0) {
@@ -186,12 +187,13 @@ contract SSVManager {
             }
             Pool storage pool;
             pool = pools[poolId];
-            uint256 poolDeposits = pool.deposits;
-            uint256 remainingCapacity = poolCapacity - poolDeposits;
+            uint256 remainingCapacity = poolCapacity - pool.deposits;
             if (remainingCapacity > processedDeposit.ethAmount) {
+                openPoolDeposits += processedDeposit.ethAmount;
                 pool.deposits += processedDeposit.ethAmount;
                 processedDeposit.ethAmount = 0;
             } else {
+                openPoolDeposits -= pool.deposits;
                 pool.deposits += remainingCapacity;
                 processedDeposit.ethAmount -= remainingCapacity;
 
@@ -218,6 +220,9 @@ contract SSVManager {
                 time
             );
         }
+
+        /** Update user start balance */
+        users[userAddress].startBalance = getBalance();
     }
 
     /**
@@ -319,19 +324,18 @@ contract SSVManager {
         bytes memory publicKey = inactiveValidatorPublicKeys[0];
         Validator memory validator = validators[publicKey];
         Pool storage pool = pools[poolId];
-        uint256 mockSSVFee = 5 * 1e18;
 
         /** Deposit validator */
         beaconDeposit.deposit{value: pool.deposits}(
             publicKey, // bytes
-            // Todo show proof that this is the contract
             validator.withdrawalCredentials, // bytes
             validator.signature, // bytes
             validator.depositDataRoot // bytes32
         );
 
         /** Pay SSV fees and register validator */
-        /** Todo update for v3 SSV contracts */
+        /** Todo update for v3 SSV contracts and dynamic fees */
+        uint256 mockSSVFee = 5 ether;
         ssvToken.approve(address(ssvNetwork), mockSSVFee);
         ssvNetwork.registerValidator(
             publicKey, // bytes
@@ -446,9 +450,10 @@ contract SSVManager {
      * @notice Get the current balance of the pool manager
      * @return The current balance of the pool manager
      */
-    function getBalance() external view returns (Balance memory) {
-        uint256 stake = address(this).balance + stakedPoolIds.length * poolCapacity;
-        return Balance(stake, 0);
+    function getBalance() public view returns (Balance memory) {
+        uint256 stake = stakedPoolIds.length * poolCapacity + openPoolDeposits;
+        uint256 rewards = address(this).balance - openPoolDeposits;
+        return Balance(stake, rewards);
     }
 
     /**
@@ -456,9 +461,15 @@ contract SSVManager {
      * @param userAddress The user address
      * @return The current balance of a user
      */
-    function getUserBalance(address userAddress) external view returns (Balance memory) {
+    function getUserBalance(address userAddress) public view returns (Balance memory) {
         uint256 stake = users[userAddress].stake;
-        return Balance(stake, 0);
+        Balance memory startBalance = users[userAddress].startBalance;
+        Balance memory balance = getBalance();
+        uint256 rewards;
+        if (balance.stake > 0 && startBalance.stake > 0) {
+            rewards = stake * ((balance.rewards / balance.stake) - (startBalance.rewards / startBalance.stake));
+        }
+        return Balance(stake, rewards);
     }
 
     /**
