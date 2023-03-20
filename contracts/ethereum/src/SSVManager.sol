@@ -47,7 +47,7 @@ contract SSVManager {
     /** User staking account */
     struct User {
         uint256 stake;
-        Balance startBalance;
+        uint256 initialRewardDistSum;
     }
     /** Validator deposit data and shares */
     struct Validator {
@@ -84,6 +84,10 @@ contract SSVManager {
     uint256 private poolCapacity = 32 ether;
     /** Total pool deposits ready for stake */
     uint256 private unstakedDeposits;
+    /** Scaled rewards ratio sum */
+    uint256 rewardDistSum;
+    /** Scale factor for rewards ratio sum */
+    uint256 rewardDistScale = 1 ether;
     /** IDs of staking pools readily accepting deposits */
     uint32[] private readyPoolIds;
     /** IDs of staking pools at full capacity */
@@ -151,7 +155,16 @@ contract SSVManager {
     }
 
     /**
-     * @notice Deposit to the pool manager
+     * @notice Receive ETH sent directly
+     */
+    receive() external payable {
+        Balance memory b = getBalance();
+        uint256 rr = rewardDistScale * msg.value / b.stake;
+        rewardDistSum += rr;
+    }
+
+    /**
+     * @notice Deposit to the pool manager to stake ETH
      */
     function deposit() external payable {
         address userAddress = msg.sender;
@@ -168,8 +181,9 @@ contract SSVManager {
             time
         );
 
-        /** Update user stake */
+        /** Update user */
         users[userAddress].stake += processedDeposit.ethAmount;
+        users[userAddress].initialRewardDistSum = rewardDistSum;
 
         /** Distribute deposit */
         while (processedDeposit.ethAmount > 0) {
@@ -220,9 +234,6 @@ contract SSVManager {
                 time
             );
         }
-
-        /** Update user start balance */
-        users[userAddress].startBalance = getBalance();
     }
 
     /**
@@ -462,14 +473,10 @@ contract SSVManager {
      * @return The current balance of a user
      */
     function getUserBalance(address userAddress) public view returns (Balance memory) {
-        uint256 stake = users[userAddress].stake;
-        Balance memory startBalance = users[userAddress].startBalance;
-        Balance memory balance = getBalance();
-        uint256 rewards;
-        if (balance.stake > 0 && startBalance.stake > 0) {
-            rewards = stake * ((balance.rewards / balance.stake) - (startBalance.rewards / startBalance.stake));
-        }
-        return Balance(stake, rewards);
+        uint256 userStake = users[userAddress].stake;
+        uint256 initialRewardDistSum = users[userAddress].initialRewardDistSum;
+        uint256 rewards = userStake * (rewardDistSum - initialRewardDistSum) / rewardDistScale;
+        return Balance(userStake, rewards);
     }
 
     /**
