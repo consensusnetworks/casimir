@@ -117,18 +117,23 @@ export default function useEthers() {
   async function loginWithEthers(provider: ProviderString, address: string, currency: Currency) {
     const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    const messageJson = await getMessage(provider, address)
-    const { message } = await messageJson.json()
-    const signer = web3Provider.getSigner()
-    const signature = await signer.signMessage(message)
-    const response = await login({ 
-      provider, 
-      address, 
-      message: message.toString(), 
-      signedMessage: signature,
-      currency
-    })
-    return await response.json()
+    try {
+      const messageJson = await getMessage(provider, address)
+      const { message } = await messageJson.json()
+      const signer = web3Provider.getSigner()
+      const signature = await signer.signMessage(message)
+      const response = await login({ 
+        provider, 
+        address, 
+        message: message.toString(), 
+        signedMessage: signature,
+        currency
+      })
+      return await response.json()
+    } catch (err) {
+      console.log('Error logging in: ', err)
+      return err
+    }
   }
 
   async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {

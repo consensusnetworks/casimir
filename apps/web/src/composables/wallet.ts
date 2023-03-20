@@ -80,6 +80,11 @@ export default function useWallet() {
     selectedCurrency.value = currency
   }
 
+  /**
+   * Checks if session exists and, if so: 
+   * Gets the user's account via the API
+   * Sets the user's account locally
+   */
   async function getUserAccount() {
     session.value = await Session.doesSessionExist()
     if (session.value) {
@@ -88,28 +93,35 @@ export default function useWallet() {
     }
   }
 
+  /**
+   * Runs the login method for the selected provider
+   * Checks if the user is logged in, if not, it will sign up or login
+   * @param provider 
+   * @param currency 
+   * @returns 
+   */
   async function connectWallet(provider: ProviderString, currency?: Currency) {
-    let response 
     try { // Sign Up or Login
       if (!loggedIn.value) {
         loadingUserWallets.value = true
-        const connectedAddress = await getConnectedAddress(provider, currency)
-        const connectedCurrency = await detectCurrency(provider) as Currency
-        response = await loginWithWallet(provider, connectedAddress, connectedCurrency)
-        loadingUserWallets.value = false
+        const connectedAddress = await getConnectedAddressFromProvider(provider, currency)
+        const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
+        const response = await loginWithWallet(provider, connectedAddress, connectedCurrency)
         if (!response?.error) {
-          await getUserAccount()
+          // TODO: Handle case where user is not logged in / errors
+          await getUserAccount() // This is querying the API for the user's account
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
           loggedIn.value = true
           primaryAddress.value = user.value?.address as string
         }
+        loadingUserWallets.value = false
       } else { // Add account
-        console.log('already logged in!')
-        const connectedAddress = await getConnectedAddress(provider, currency) // TODO: Remove currency from here? Maybe not.
-        const connectedCurrency = await detectCurrency(provider, currency) as Currency
-        response = await addAccount(provider, connectedAddress, connectedCurrency)
+        console.log('already logged in! attempting to add account')
+        const connectedAddress = await getConnectedAddressFromProvider(provider, currency) // TODO: Remove currency from here? Maybe not.
+        const connectedCurrency = await detectCurrencyInProvider(provider, currency) as Currency
+        const response = await addAccount(provider, connectedAddress, connectedCurrency)
         if (!response?.error) {
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
@@ -118,13 +130,19 @@ export default function useWallet() {
         }
       }
       console.log('user.value on connect wallet :>> ', user.value)
+      return user.value
     } catch (error) {
       console.error(error)
     }
-    console.log(response)
-    return response
   }
-  async function getConnectedAddress(provider: ProviderString, currency?: Currency) {
+
+  /**
+   * Retrieve the address from the selected provider
+   * @param provider - MetaMask, CoinbaseWallet, Ledger, Trezor, WalletConnect, etc.
+   * @param currency - ETH, BTC, IOTX, SOL, etc.
+   * @returns 
+   */
+  async function getConnectedAddressFromProvider(provider: ProviderString, currency?: Currency) {
     try {
       let address
       setSelectedProvider(provider)
@@ -150,14 +168,23 @@ export default function useWallet() {
     }
   }
 
+  /**
+   * Uses appropriate provider composable to login or sign up
+   * @param provider 
+   * @param address 
+   * @param currency 
+   * @returns 
+   */
   async function loginWithWallet(provider: ProviderString, address: string, currency: Currency) {
     if (ethersProviderList.includes(provider)) {
       const result = await loginWithEthers(provider, address, currency)
       if (result.error) {
-        console.log('result in loginWithWallet in wallet.ts :>> ', result)
-        alert('There was an error signing up. Please try again.')
-      } 
-      return result
+        console.log('There was an error logging in with loginWithWallet method in wallet.ts :>> ', result)
+        return result
+      } else {
+        console.log('Result of loginWithWallet in wallet.ts :>> ', result)
+        return result
+      }
     } else {
       // TODO: Implement this for other providers
       console.log('Sign up not yet supported for this wallet provider')
@@ -213,7 +240,13 @@ export default function useWallet() {
     }
   }
 
-  async function detectCurrency(provider: ProviderString, currency?: Currency) {
+  /**
+   * Detects the currency of the connected wallet provider and account
+   * @param provider 
+   * @param currency 
+   * @returns 
+   */
+  async function detectCurrencyInProvider(provider: ProviderString, currency?: Currency) {
     // TODO: Implement this for other providers
     if (ethersProviderList.includes(provider)){
       return await getEthersBrowserProviderSelectedCurrency(provider) as Currency
@@ -324,7 +357,7 @@ export default function useWallet() {
     logout,
     setPrimaryWalletAccount,
     removeConnectedAccount,
-    detectCurrency,
+    detectCurrencyInProvider,
     getCurrentBalance,
     sendTransaction,
     signMessage,
