@@ -1,29 +1,35 @@
 <template>
   <div class="grid grid-cols-6 px-margins py-y-spacer h-full bg-black">
     <div class="h-full col-span-4 csm-md:col-span-6">
-      <div class="flex mb-[65px]">
-        <RouterLink 
-          to="/"
-        >
-          <img
-            src="/casimir.svg"
-            alt="Casimir Logo"
-            class="nav-imgs"
+      <div class="flex mb-[65px] justify-between items-center">
+        <div class="flex">
+          <RouterLink 
+            to="/"
           >
-        </RouterLink>
-        <!-- Will add these links once the pages get added as well -->
-        <RouterLink 
-          to="/why-casimir"
-          class="my-auto"
-        >
-          <h6
-            class="nav-links"
-            :class="$route.fullPath.split('/')[1] === 'why-casimir'? 'nav-links-selected' : ''"
+            <img
+              src="/casimir.svg"
+              alt="Casimir Logo"
+              class="nav-imgs"
+            >
+          </RouterLink>
+          <!-- Will add these links once the pages get added as well -->
+          <RouterLink 
+            to="/why-casimir"
+            class="my-auto"
           >
-            Why Casimir?
-          </h6>
-        </RouterLink>
-
+            <h6
+              class="nav-links"
+              :class="$route.fullPath.split('/')[1] === 'why-casimir'? 'nav-links-selected' : ''"
+            >
+              Why Casimir?
+            </h6>
+          </RouterLink>
+        </div>
+        <div>
+          <button class=" bg-white">
+            Launch App
+          </button>
+        </div>
         <!-- <RouterLink
           to="community"
           class="my-auto"
