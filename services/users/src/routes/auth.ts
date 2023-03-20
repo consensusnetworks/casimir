@@ -1,6 +1,6 @@
 import express from 'express'
 import useUsers from '../providers/users'
-import { userCollection } from '../collections/users'
+import useDB from '../providers/db'
 import Session from 'supertokens-node/recipe/session'
 import useEthers from '../providers/ethers'
 import { Account } from '@casimir/types'
@@ -8,6 +8,7 @@ import { LoginCredentials } from '@casimir/types'
 
 const { verifyMessage } = useEthers()
 const { getMessage, updateMessage } = useUsers()
+const { getUser } = useDB()
 const router = express.Router()
 
 
@@ -28,8 +29,11 @@ router.get('/message/:provider/:address', (req: express.Request, res: express.Re
 router.use('/login', async (req: express.Request, res: express.Response) => {
     const { body } = req
     const { provider, address, currency, message, signedMessage } = body as LoginCredentials
-    const user = userCollection.find(user => user.address === address.toLowerCase())
+    // TODO: 3/20 Replace with checking if user exists in DB
+    const user = await getUser(address)
+    console.log('user :>> ', user)
     if (user && !user?.accounts) {  // signup
+        console.log('SIGNING UP!')
         const accounts: Array<Account> = [
             {
                 address: address,
@@ -50,6 +54,7 @@ router.use('/login', async (req: express.Request, res: express.Response) => {
             error: false,
         })
     } else { // login
+        console.log('LOGGING IN!')
         const response = verifyMessage({ address, currency, message, signedMessage, provider })
         updateMessage(provider, address) // send back token if successful
         

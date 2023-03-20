@@ -106,9 +106,11 @@ export default function useWallet() {
         loadingUserWallets.value = true
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency)
         const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
+        // STEP 0 & STEP 1
         const response = await loginWithWallet(provider, connectedAddress, connectedCurrency)
         if (!response?.error) {
           // TODO: Handle case where user is not logged in / errors
+          // STEP 2
           await getUserAccount() // This is querying the API for the user's account
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)

@@ -120,6 +120,7 @@ export default function useEthers() {
     try {
       const messageJson = await getMessage(provider, address)
       const { message } = await messageJson.json()
+      // Temporarily return here to make sure we're adding to db correctly.
       const signer = web3Provider.getSigner()
       const signature = await signer.signMessage(message)
       const response = await login({ 
