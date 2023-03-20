@@ -38,7 +38,7 @@ onMounted(() => {
     const next = ()=> {
         
         // let newText = (Math.floor(Math.random() * (3300 - 100) + 100) / 100).toString()
-        let newText = props.phrases[counter]
+        let newText = props.phrases[counter] as string 
         let oldText = text.value
 
         const randomChar = () => {
