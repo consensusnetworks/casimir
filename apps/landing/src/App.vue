@@ -48,17 +48,16 @@ import Scrambler from '@/components/Scrambler.vue'
           /> 
           <span class="pulse w-[2px] rounded bg-primary" />
         </div>
-        <!-- TD: change link to match app link not landing link -->
-        <a
+        <!-- <a
           class=" rounded-[4px] flex justify-center items-center gap-[10px]
         bg-primary text-white px-[25px] py-[7px] font-bold hover:bg-blue_4
         hover:text-black"
-          href="https://www.casimir.co/"
+          href="https://www.app.casimir.co/"
         >
           <i
             class="iconoir-drone-take-off"
           /> Launch App
-        </a>
+        </a> -->
       </div>
     </div>
   </div>
