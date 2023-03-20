@@ -6,7 +6,7 @@ import Scrambler from '@/components/Scrambler.vue'
 <template>
   <div class="border h-screen w-full flex flex-col gap-[20px] justify-center items-center bg-[#D0D6E1]">
     <div>
-      <div class="flex justify-center items-center gap-[20px]">
+      <div class="flex justify-center items-center">
         <img
           src="/ETHLogo.svg"
           alt=""
@@ -46,7 +46,7 @@ import Scrambler from '@/components/Scrambler.vue'
             :text-class="'font-semibold text-[20px] text-[#3a3a3a] leading-[30px] tracking-normal'"
             :transform-timer="10"
           /> 
-          <span class="pulse w-[1px] bg-primary" />
+          <span class="pulse w-[2px] rounded bg-primary" />
         </div>
         <!-- TD: change link to match app link not landing link -->
         <a
