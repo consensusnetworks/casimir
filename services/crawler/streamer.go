@@ -157,10 +157,11 @@ func (e *EthereumStreamer) Stream() error {
 					}
 
 					txEvent.Sender = from.Hex()
-					txEvent.SenderBalance = fromBalance.Int64()
+					txEvent.SenderBalance = fromBalance.String()
 
 					txEvent.Recipient = to.Hex()
-					txEvent.RecipientBalance = toBalance.Int64()
+					txEvent.RecipientBalance = toBalance.String()
+
 					txEvent.Price = price.Value
 
 					events = append(events, txEvent)

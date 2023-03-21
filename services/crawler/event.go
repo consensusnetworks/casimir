@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
@@ -47,10 +48,10 @@ type Event struct {
 	ReceivedAt       string       `json:"received_at,omitempty"`
 	Sender           string       `json:"sender,omitempty"`
 	Recipient        string       `json:"recipient,omitempty"`
-	Amount           int64        `json:"amount,omitempty"`
+	Amount           string       `json:"amount,omitempty"`
 	Price            float64      `json:"price,omitempty"`
-	SenderBalance    int64        `json:"sender_balance,omitempty"`
-	RecipientBalance int64        `json:"recipient_balance,omitempty"`
+	SenderBalance    string       `json:"sender_balance,omitempty"`
+	RecipientBalance string       `json:"recipient_balance,omitempty"`
 }
 
 func NewParquetWriter(dest source.ParquetFile) (*writer.ParquetWriter, error) {
@@ -133,28 +134,72 @@ func NewParquetWriter(dest source.ParquetFile) (*writer.ParquetWriter, error) {
 }
 
 func NewBlockEvent(block *types.Block) Event {
-	event := Event{
-		Chain:      Ethereum,
-		Network:    Mainnet,
-		Provider:   Alchemy,
-		Type:       Block,
-		Height:     block.Number().Int64(),
-		Block:      block.Hash().Hex(),
-		ReceivedAt: time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
+	if block == nil {
+		fmt.Println("block is nil")
+		return Event{}
 	}
+
+	event := Event{
+		Chain:    Ethereum,
+		Network:  Mainnet,
+		Provider: Alchemy,
+		Type:     Block,
+		// Height:     block.Number().Int64(),
+		// Block:      block.Hash().Hex(),
+		// ReceivedAt: time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
+	}
+
+	if block != nil {
+		event.Height = block.Number().Int64()
+	}
+
+	if block.Hash().Hex() != "" {
+		event.Block = block.Hash().Hex()
+	}
+
+	if block.Time() != 0 {
+		event.ReceivedAt = time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05.999999999")
+	}
+
 	return event
 }
 
 func NewTxEvent(block *types.Block, tx *types.Transaction) Event {
+	if block == nil {
+		fmt.Println("block is nil")
+		return Event{}
+	}
+
+	if tx == nil {
+		fmt.Println("tx is nil")
+		return Event{}
+	}
+
 	event := Event{
-		Network:     Mainnet,
-		Provider:    Alchemy,
-		Chain:       Ethereum,
-		Type:        Transaction,
-		Block:       tx.Hash().Hex(),
-		Transaction: tx.Hash().Hex(),
-		Height:      block.Number().Int64(),
-		ReceivedAt:  time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
+		Network:  Mainnet,
+		Provider: Alchemy,
+		Chain:    Ethereum,
+		Type:     Transaction,
+		// Block:       tx.Hash().Hex(),
+		// Height:      block.Number().Int64(),
+		// ReceivedAt:  time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
+		// Transaction: tx.Hash().Hex(),
+	}
+
+	if block.Number() != nil {
+		event.Height = block.Number().Int64()
+	}
+
+	if block.Hash().Hex() != "" {
+		event.Block = block.Hash().Hex()
+	}
+
+	if block.Time() != 0 {
+		event.ReceivedAt = time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05.999999999")
+	}
+
+	if tx.Hash().Hex() != "" {
+		event.Transaction = tx.Hash().Hex()
 	}
 
 	if tx.To() != nil {
@@ -162,7 +207,7 @@ func NewTxEvent(block *types.Block, tx *types.Transaction) Event {
 	}
 
 	if tx.Value() != nil {
-		event.Amount = tx.Value().Int64()
+		event.Amount = tx.Value().String()
 	}
 
 	return event

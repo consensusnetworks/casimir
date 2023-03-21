@@ -151,10 +151,14 @@ func multiplex(chans ...<-chan []Event) <-chan []Event {
 	return out
 }
 
-func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) <-chan []Event {
-	out := make(chan []Event)
+type BlockError struct {
+	Block int64
+	Err   error
+}
 
+func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockError {
 	wg.Add(1)
+	var crawlErrors []BlockError
 	go func() {
 		defer wg.Done()
 
@@ -163,23 +167,30 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) <-chan []E
 
 		fmt.Printf("crawling range: %d - %d\n", start, end)
 		for i := start; i <= end; i++ {
-
 			// gensis block
 			if i == 0 {
 				block, err := e.EthClient.BlockByNumber(context.Background(), big.NewInt(i))
 
 				if err != nil {
-					panic(err)
+					crawlErrors = append(crawlErrors, BlockError{
+						Block: i,
+						Err:   err,
+					})
 				}
 
 				blockEvent := NewBlockEvent(block)
 
 				blockEvent.Height = 0
 
-				e.TotalBlocks++
+				// e.TotalBlocks++
 
-				out <- []Event{
-					blockEvent,
+				err = e.Save([]Event{blockEvent})
+
+				if err != nil {
+					crawlErrors = append(crawlErrors, BlockError{
+						Block: i,
+						Err:   err,
+					})
 				}
 				continue
 			}
@@ -189,7 +200,10 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) <-chan []E
 			block, err := e.EthClient.BlockByNumber(context.Background(), big.NewInt(i))
 
 			if err != nil {
-				panic(err)
+				crawlErrors = append(crawlErrors, BlockError{
+					Block: i,
+					Err:   err,
+				})
 			}
 
 			blockEvent := NewBlockEvent(block)
@@ -197,19 +211,75 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) <-chan []E
 			event = append(event, blockEvent)
 
 			if block != nil && len(block.Transactions()) > 0 {
-				for _, tx := range block.Transactions() {
+				for k, tx := range block.Transactions() {
 					txEvent := NewTxEvent(block, tx)
+
+					if tx.To() != nil {
+						recipientBalance, err := e.EthClient.BalanceAt(context.Background(), *tx.To(), nil)
+
+						if err != nil {
+							crawlErrors = append(crawlErrors, BlockError{
+								Block: i,
+								Err:   err,
+							})
+						}
+
+						txEvent.Recipient = tx.To().Hex()
+						txEvent.RecipientBalance = recipientBalance.String()
+
+						senderAddr, err := e.EthClient.TransactionSender(context.Background(), tx, block.Hash(), uint(k))
+
+						if err != nil {
+							crawlErrors = append(crawlErrors, BlockError{
+								Block: i,
+								Err:   err,
+							})
+						}
+
+						senderBalance, err := e.EthClient.BalanceAt(context.Background(), senderAddr, block.Number())
+
+						if err != nil {
+							crawlErrors = append(crawlErrors, BlockError{
+								Block: i,
+								Err:   err,
+							})
+						}
+
+						txEvent.Sender = senderAddr.Hex()
+						txEvent.SenderBalance = senderBalance.String()
+					}
+
 					event = append(event, txEvent)
 				}
 			}
 
+			err = e.Save(event)
+
+			if err != nil {
+				crawlErrors = append(crawlErrors, BlockError{
+					Block: i,
+					Err:   err,
+				})
+			}
+			fmt.Printf("saved block: %d\n", i)
 			e.TotalBlocks++
-			// this send blocks until a receiver is ready
-			out <- event
 		}
-		close(out)
 	}()
-	return out
+
+	wg.Add(1)
+	go func() {
+		if len(crawlErrors) > 0 {
+			fmt.Printf("got %v errors\n", len(crawlErrors))
+
+			for _, err := range crawlErrors {
+				fmt.Printf("block: %d, error: %s\n", err.Block, err.Err.Error())
+			}
+		}
+
+		defer wg.Done()
+	}()
+
+	return crawlErrors
 }
 
 func (e *EthereumCrawler) Save(event []Event) error {
@@ -239,283 +309,26 @@ func (e *EthereumCrawler) Crawl() error {
 
 	begin := time.Now()
 
-	fixedHead := int64(10000)
+	// fixedHead := int64(1000)
 
-	intervals := sliceRangeChan(0, fixedHead, 200)
-
-	var chans []<-chan []Event
+	intervals := sliceRangeChan(14000000, 14000000+100, 20)
 
 	for i := range intervals {
-		out := e.Fetch(&wg, i)
-		chans = append(chans, out)
-	}
-
-	for n := range multiplex(chans...) {
-		err := e.Save(n)
+		err := e.Fetch(&wg, i)
 
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	defer func() {
+		wg.Wait()
 		e.Elapsed = time.Since(begin)
 		fmt.Println("total blocks crawled: ", e.TotalBlocks)
 		fmt.Println("elapsed: ", e.Elapsed)
 	}()
 
-	wg.Wait()
 	return nil
-}
-
-func (e *EthereumCrawler) FetchOldOld(interval []int64) <-chan []Event {
-	out := make(chan []Event)
-	var events []Event
-
-	go func() {
-		for _, i := range interval {
-			block, err := e.EthClient.BlockByNumber(context.Background(), big.NewInt(i))
-
-			if err != nil {
-				panic(err)
-			}
-
-			fmt.Println("block: ", block.Number().Int64())
-
-			blockEvent := NewBlockEvent(block)
-
-			events = append(events, blockEvent)
-
-			if len(block.Transactions()) > 0 {
-				for k, tx := range block.Transactions() {
-					_, err := e.EthClient.TransactionReceipt(context.Background(), tx.Hash())
-
-					if err != nil {
-						panic(err)
-					}
-
-					txEvent := NewTxEvent(block, tx)
-
-					if err != nil {
-						panic(err)
-					}
-
-					if tx.To() != nil {
-						balance, err := e.EthClient.BalanceAt(context.Background(), *tx.To(), nil)
-
-						if err != nil {
-							panic(err)
-						}
-						txEvent.Recipient = tx.To().Hex()
-						txEvent.RecipientBalance = balance.Int64()
-
-						sender, err := e.EthClient.TransactionSender(context.Background(), tx, block.Hash(), uint(k))
-
-						if err != nil {
-							panic(err)
-						}
-
-						balance, err = e.EthClient.BalanceAt(context.Background(), sender, block.Number())
-
-						if err != nil {
-							panic(err)
-
-						}
-						txEvent.Sender = sender.Hex()
-						txEvent.SenderBalance = balance.Int64()
-					}
-					events = append(events, txEvent)
-				}
-			}
-
-			e.TotalBlocks++
-
-			out <- events
-			events = nil
-		}
-		close(out)
-	}()
-
-	return out
-}
-
-func (e *EthereumCrawler) SaveOld(wg *sync.WaitGroup, events <-chan []Event, file string) error {
-	defer wg.Done()
-
-	wg.Add(1)
-	go func() {
-		for event := range events {
-			data, err := NDJSON(&event)
-
-			if err != nil {
-				panic(err)
-			}
-
-			ndjson := []byte(data)
-
-			err = e.SaveToS3(&file, &ndjson)
-
-			if err != nil {
-				panic(err)
-			}
-
-			e.Print("saved to s3: %s \n", file)
-		}
-	}()
-	return nil
-}
-
-func (e *EthereumCrawler) FetchOld(wg *sync.WaitGroup, errChan chan ChainErr, blockRange []int64) {
-	e.Print("new thread crawling blocks: %d - %d\n", blockRange[0], blockRange[1])
-
-	defer wg.Done()
-
-	bachSize := 500
-	start := blockRange[0]
-	end := blockRange[1]
-
-	var events []Event
-
-	for i := start; i <= end; i++ {
-		//fmt.Printf("crawling block: %d\n", i)
-		block, err := e.EthClient.BlockByNumber(context.Background(), big.NewInt(i))
-
-		if err != nil {
-			errChan <- ChainErr{
-				Block: i,
-				Error: err,
-			}
-		}
-
-		blockEvent := NewBlockEvent(block)
-
-		if err != nil {
-			errChan <- ChainErr{
-				Block: i,
-				Error: err,
-			}
-		}
-
-		//price, err := e.CurrentPrice("USD", Ethereum)
-
-		//if err != nil {
-		//	errChan <- ChainErr{
-		//		Block: i,
-		//		Error: err,
-		//	}
-		//}
-		//
-		//blockEvent.Price = price.Value
-
-		events = append(events, blockEvent)
-
-		if len(block.Transactions()) > 0 {
-			for k, tx := range block.Transactions() {
-				_, err := e.EthClient.TransactionReceipt(context.Background(), tx.Hash())
-
-				if err != nil {
-					fmt.Println("cant get tx receipt")
-					errChan <- ChainErr{
-						Block: i,
-						Error: err,
-					}
-				}
-
-				txEvent := NewTxEvent(block, tx)
-
-				if err != nil {
-					fmt.Println("cant get tx event")
-					errChan <- ChainErr{
-						Block: i,
-						Error: err,
-					}
-				}
-
-				//txEvent.Price = price.Value
-
-				if tx.To() != nil {
-					balance, err := e.EthClient.BalanceAt(context.Background(), *tx.To(), nil)
-
-					if err != nil {
-						fmt.Println("cant get balance for to address")
-						errChan <- ChainErr{
-							Block: i,
-							Error: err,
-						}
-					}
-					txEvent.Recipient = tx.To().Hex()
-					txEvent.RecipientBalance = balance.Int64()
-
-					//txIndex := k - len(block.Transactions())
-					sender, err := e.EthClient.TransactionSender(context.Background(), tx, block.Hash(), uint(k))
-
-					if err != nil {
-						fmt.Println("cant get sender")
-						errChan <- ChainErr{
-							Block: i,
-							Error: err,
-						}
-					}
-
-					balance, err = e.EthClient.BalanceAt(context.Background(), sender, block.Number())
-
-					if err != nil {
-						fmt.Println("cant get balance for sender")
-						errChan <- ChainErr{
-							Block: i,
-							Error: err,
-						}
-					}
-					txEvent.Sender = sender.Hex()
-					txEvent.SenderBalance = balance.Int64()
-				}
-				events = append(events, txEvent)
-			}
-		}
-		//if i%int64(bachSize) == 0 {
-		if i%int64(bachSize) == 0 && i != start {
-			eventsND, err := NDJSON(&events)
-
-			if err != nil {
-				panic(err)
-			}
-
-			key := fmt.Sprintf("%d-%d.ndjson", blockRange[0], i)
-
-			data := []byte(eventsND)
-
-			err = e.SaveToS3(&key, &data)
-
-			if err != nil {
-				errChan <- ChainErr{
-					Block: i,
-					Error: err,
-				}
-			}
-
-			e.Print("saved %s \n", key)
-		}
-	}
-
-	if len(events) > 0 {
-		eventsND, err := NDJSON(&events)
-
-		if err != nil {
-			panic(err)
-		}
-
-		key := fmt.Sprintf("%d-%d.ndjson", blockRange[0], blockRange[len(blockRange)-1])
-		data := []byte(eventsND)
-
-		err = e.SaveToS3(&key, &data)
-
-		if err != nil {
-			panic(err)
-		}
-		e.Print("saved %s \n", key)
-	}
 }
 
 func (e *EthereumCrawler) CurrentPrice(currency string, coin ChainType) (Price, error) {
