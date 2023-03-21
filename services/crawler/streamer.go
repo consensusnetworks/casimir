@@ -89,7 +89,7 @@ func (e *EthereumStreamer) Stream() error {
 				return err
 			}
 
-			blockEvent, err := NewBlockEvent(block)
+			blockEvent := NewBlockEvent(block)
 
 			if err != nil {
 				return err

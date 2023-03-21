@@ -14,7 +14,6 @@ type BaseConfig struct {
 	Verbose bool
 	Start   int64
 	End     int64
-	Head    int64
 	Bucket  string
 }
 
@@ -88,9 +87,9 @@ func Run(args []string) error {
 						Usage: "end block",
 					},
 					&cli.BoolFlag{
-						Name:  "verbose",
+						Name:  "silent",
 						Usage: "verbose output",
-						Value: true,
+						Value: false,
 					},
 				},
 				Action: func(c *cli.Context) error {
@@ -98,7 +97,7 @@ func Run(args []string) error {
 						Chain:   Ethereum,
 						Network: Mainnet,
 						Url:     os.Getenv("CONSENSUS_RPC_URL"),
-						Verbose: c.Bool("verbose"),
+						Verbose: !c.Bool("silent"),
 						Start:   c.Int64("start"),
 						End:     c.Int64("end"),
 						Bucket:  "",

@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/writer"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -30,6 +29,7 @@ type EthereumCrawler struct {
 	TotalBlocks   int64
 	ParquetWriter *writer.ParquetWriter
 	HttpClient    *http.Client
+	Head          int64
 }
 
 type ChainErr struct {
@@ -69,73 +69,6 @@ func NewEthereumCrawler(config BaseConfig) (*EthereumCrawler, error) {
 
 		crawler.HttpClient = http
 
-		schema := []*parquet.SchemaElement{
-			{
-				Name: "chain",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "network",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "provider",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "type",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "height",
-				Type: parquet.TypePtr(parquet.Type_INT64),
-			},
-			{
-				Name: "block",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "transaction",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "created_at",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "address",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "to_address",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "amount",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "address_balance",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "to_address_balance",
-				Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
-			},
-			{
-				Name: "price",
-				Type: parquet.TypePtr(parquet.Type_DOUBLE),
-			},
-		}
-
-		pw, err := NewParquetWriter(schema)
-
-		if err != nil {
-			return nil, err
-		}
-
-		crawler.ParquetWriter = pw
-
 		block, err := crawler.EthClient.HeaderByNumber(context.Background(), nil)
 
 		if err != nil {
@@ -149,74 +82,292 @@ func NewEthereumCrawler(config BaseConfig) (*EthereumCrawler, error) {
 	return nil, errors.New("unsupported chain")
 }
 
-func (e *EthereumCrawler) Crawl() error {
-	e.Print("process id: %d \n", os.Getpid())
-	s3Files, err := e.ListS3Files()
+func sliceRange(start, end, part int64) [][]int64 {
+	var result [][]int64
+	step := (end - start) / part
+	for i := int64(0); i < part; i++ {
+		var arr []int64
+		if i == 0 {
+			arr = append(arr, start)
+			arr = append(arr, start+step)
+		} else if i == part-1 {
+			arr = append(arr, start+i*step+1)
+			arr = append(arr, end)
+		} else {
+			arr = append(arr, start+i*step+1)
+			arr = append(arr, start+(i+1)*step)
+		}
+		result = append(result, arr)
+	}
+	return result
+}
+
+func sliceRangeChan(start, end, part int64) <-chan []int64 {
+	out := make(chan []int64)
+	go func() {
+		step := (end - start) / part
+		for i := int64(0); i < part; i++ {
+			var arr []int64
+			if i == 0 {
+				arr = append(arr, start)
+				arr = append(arr, start+step)
+			} else if i == part-1 {
+				arr = append(arr, start+i*step+1)
+				arr = append(arr, end)
+			} else {
+				arr = append(arr, start+i*step+1)
+				arr = append(arr, start+(i+1)*step)
+			}
+			out <- arr
+		}
+		close(out)
+	}()
+	return out
+}
+
+func multiplex(chans ...<-chan []Event) <-chan []Event {
+	var wg sync.WaitGroup
+
+	out := make(chan []Event)
+
+	// merges the inbound channels onto a single outbound channel
+	output := func(c <-chan []Event) {
+		for n := range c {
+			out <- n
+		}
+		wg.Done()
+	}
+
+	wg.Add(len(chans))
+
+	for _, c := range chans {
+		go output(c)
+	}
+
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+	return out
+}
+
+func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) <-chan []Event {
+	out := make(chan []Event)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		start := interval[0]
+		end := interval[1]
+
+		fmt.Printf("crawling range: %d - %d\n", start, end)
+		for i := start; i <= end; i++ {
+
+			// gensis block
+			if i == 0 {
+				block, err := e.EthClient.BlockByNumber(context.Background(), big.NewInt(i))
+
+				if err != nil {
+					panic(err)
+				}
+
+				blockEvent := NewBlockEvent(block)
+
+				blockEvent.Height = 0
+
+				e.TotalBlocks++
+
+				out <- []Event{
+					blockEvent,
+				}
+				continue
+			}
+
+			var event []Event
+
+			block, err := e.EthClient.BlockByNumber(context.Background(), big.NewInt(i))
+
+			if err != nil {
+				panic(err)
+			}
+
+			blockEvent := NewBlockEvent(block)
+
+			event = append(event, blockEvent)
+
+			if block != nil && len(block.Transactions()) > 0 {
+				for _, tx := range block.Transactions() {
+					txEvent := NewTxEvent(block, tx)
+					event = append(event, txEvent)
+				}
+			}
+
+			e.TotalBlocks++
+			// this send blocks until a receiver is ready
+			out <- event
+		}
+		close(out)
+	}()
+	return out
+}
+
+func (e *EthereumCrawler) Save(event []Event) error {
+	ndjson, err := NDJSON(&event)
 
 	if err != nil {
 		return err
 	}
 
-	intervals := sliceRange(14000000, 14000000+1000, 100)
+	file := fmt.Sprintf("%s/%s/%d.ndjson", e.Chain, e.Network, event[0].Height)
 
-	if len(s3Files) > 0 {
-		fmt.Println("some files already exists in s3")
+	data := []byte(ndjson)
+
+	err = e.SaveToS3(&file, &data)
+
+	if err != nil {
+		return err
 	}
 
+	return nil
+}
+
+func (e *EthereumCrawler) Crawl() error {
 	var wg sync.WaitGroup
 
-	var errs []ChainErr
-	errChan := make(chan ChainErr)
-
-	e.Print("crawling ethereum blocks...\n")
+	defer wg.Wait()
 
 	begin := time.Now()
 
-	for _, v := range intervals {
-		wg.Add(1)
-		go e.Fetch(&wg, errChan, v)
+	fixedHead := int64(10000)
+
+	intervals := sliceRangeChan(0, fixedHead, 200)
+
+	var chans []<-chan []Event
+
+	for i := range intervals {
+		out := e.Fetch(&wg, i)
+		chans = append(chans, out)
 	}
 
-	go func(ch chan ChainErr) {
-		for {
-			select {
-			case err := <-ch:
-				fmt.Printf("error: block %d, %v \n", err.Block, err.Error.Error())
-				errs = append(errs, ChainErr{
-					Block: err.Block,
-					Error: err.Error,
-				})
-				return
-			}
+	for n := range multiplex(chans...) {
+		err := e.Save(n)
+
+		if err != nil {
+			panic(err)
 		}
-	}(errChan)
+	}
 
-	defer func() {
-		if len(errs) > 0 {
-			errorsByte, err := json.Marshal(errs)
-
-			errorsByte = append(errorsByte, []byte(" \n")...)
-
-			if err != nil {
-				panic(err)
-			}
-
-			err = SaveErrorLog(errorsByte)
-
-			if err != nil {
-				panic(err)
-			}
-			e.Print("errors logged to %s.log \n", "crawler")
-		}
-		elapsed := time.Since(begin)
-		e.Elapsed = elapsed
-		e.Print("elapsed time: %v \n", elapsed)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		e.Elapsed = time.Since(begin)
+		fmt.Println("total blocks crawled: ", e.TotalBlocks)
+		fmt.Println("elapsed: ", e.Elapsed)
 	}()
+
 	wg.Wait()
 	return nil
 }
 
-func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, errChan chan ChainErr, blockRange []int64) {
+func (e *EthereumCrawler) FetchOldOld(interval []int64) <-chan []Event {
+	out := make(chan []Event)
+	var events []Event
+
+	go func() {
+		for _, i := range interval {
+			block, err := e.EthClient.BlockByNumber(context.Background(), big.NewInt(i))
+
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Println("block: ", block.Number().Int64())
+
+			blockEvent := NewBlockEvent(block)
+
+			events = append(events, blockEvent)
+
+			if len(block.Transactions()) > 0 {
+				for k, tx := range block.Transactions() {
+					_, err := e.EthClient.TransactionReceipt(context.Background(), tx.Hash())
+
+					if err != nil {
+						panic(err)
+					}
+
+					txEvent := NewTxEvent(block, tx)
+
+					if err != nil {
+						panic(err)
+					}
+
+					if tx.To() != nil {
+						balance, err := e.EthClient.BalanceAt(context.Background(), *tx.To(), nil)
+
+						if err != nil {
+							panic(err)
+						}
+						txEvent.Recipient = tx.To().Hex()
+						txEvent.RecipientBalance = balance.Int64()
+
+						sender, err := e.EthClient.TransactionSender(context.Background(), tx, block.Hash(), uint(k))
+
+						if err != nil {
+							panic(err)
+						}
+
+						balance, err = e.EthClient.BalanceAt(context.Background(), sender, block.Number())
+
+						if err != nil {
+							panic(err)
+
+						}
+						txEvent.Sender = sender.Hex()
+						txEvent.SenderBalance = balance.Int64()
+					}
+					events = append(events, txEvent)
+				}
+			}
+
+			e.TotalBlocks++
+
+			out <- events
+			events = nil
+		}
+		close(out)
+	}()
+
+	return out
+}
+
+func (e *EthereumCrawler) SaveOld(wg *sync.WaitGroup, events <-chan []Event, file string) error {
+	defer wg.Done()
+
+	wg.Add(1)
+	go func() {
+		for event := range events {
+			data, err := NDJSON(&event)
+
+			if err != nil {
+				panic(err)
+			}
+
+			ndjson := []byte(data)
+
+			err = e.SaveToS3(&file, &ndjson)
+
+			if err != nil {
+				panic(err)
+			}
+
+			e.Print("saved to s3: %s \n", file)
+		}
+	}()
+	return nil
+}
+
+func (e *EthereumCrawler) FetchOld(wg *sync.WaitGroup, errChan chan ChainErr, blockRange []int64) {
 	e.Print("new thread crawling blocks: %d - %d\n", blockRange[0], blockRange[1])
 
 	defer wg.Done()
@@ -238,7 +389,7 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, errChan chan ChainErr, block
 			}
 		}
 
-		blockEvent, err := NewBlockEvent(block)
+		blockEvent := NewBlockEvent(block)
 
 		if err != nil {
 			errChan <- ChainErr{
@@ -365,26 +516,6 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, errChan chan ChainErr, block
 		}
 		e.Print("saved %s \n", key)
 	}
-}
-
-func sliceRange(start, end, part int64) [][]int64 {
-	var result [][]int64
-	step := (end - start) / part
-	for i := int64(0); i < part; i++ {
-		var arr []int64
-		if i == 0 {
-			arr = append(arr, start)
-			arr = append(arr, start+step)
-		} else if i == part-1 {
-			arr = append(arr, start+i*step+1)
-			arr = append(arr, end)
-		} else {
-			arr = append(arr, start+i*step+1)
-			arr = append(arr, start+(i+1)*step)
-		}
-		result = append(result, arr)
-	}
-	return result
 }
 
 func (e *EthereumCrawler) CurrentPrice(currency string, coin ChainType) (Price, error) {

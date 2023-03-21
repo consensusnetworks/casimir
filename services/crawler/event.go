@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/source"
 	"github.com/xitongsys/parquet-go/writer"
 )
 
@@ -52,24 +53,86 @@ type Event struct {
 	RecipientBalance int64        `json:"recipient_balance,omitempty"`
 }
 
-func NewParquetWriter(schema []*parquet.SchemaElement) (*writer.ParquetWriter, error) {
-	by := "casimir.parquet.schema"
+func NewParquetWriter(dest source.ParquetFile) (*writer.ParquetWriter, error) {
+	identifier := "casimir.parquet.schema"
+
+	// TODO: couple this with the JSON schema
+	schema := []*parquet.SchemaElement{
+		{
+			Name: "chain",
+			Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
+		},
+		{
+			Name: "network",
+			Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
+		},
+		{
+			Name: "provider",
+			Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
+		},
+		{
+			Name: "type",
+			Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
+		},
+		{
+			Name: "height",
+			Type: parquet.TypePtr(parquet.Type_INT64),
+		},
+		{
+			Name: "block",
+			Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
+		},
+		{
+			Name: "transaction",
+			Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
+		},
+		{
+			Name: "received_at",
+			Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
+		},
+		{
+			Name: "sender",
+			Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
+		},
+		{
+			Name: "recipient",
+			Type: parquet.TypePtr(parquet.Type_BYTE_ARRAY),
+		},
+		{
+			Name: "amount",
+			Type: parquet.TypePtr(parquet.Type_INT64),
+		},
+		{
+			Name: "price",
+			Type: parquet.TypePtr(parquet.Type_DOUBLE),
+		},
+		{
+			Name: "sender_balance",
+			Type: parquet.TypePtr(parquet.Type_INT64),
+		},
+		{
+			Name: "recipient_balance",
+			Type: parquet.TypePtr(parquet.Type_INT64),
+		},
+	}
 
 	w := writer.ParquetWriter{
 		NP: 4,
 		Footer: &parquet.FileMetaData{
 			Schema:    schema,
 			Version:   1,
-			CreatedBy: &by,
+			CreatedBy: &identifier,
 		},
-		RowGroupSize: 128 * 1024 * 1024,
-		PageSize:     8 * 1024,
+		RowGroupSize:    128 * 1024 * 1024,
+		PageSize:        8 * 1024,
+		CompressionType: parquet.CompressionCodec_SNAPPY,
+		PFile:           dest,
 	}
-	w.CompressionType = parquet.CompressionCodec_SNAPPY
+
 	return &w, nil
 }
 
-func NewBlockEvent(block *types.Block) (Event, error) {
+func NewBlockEvent(block *types.Block) Event {
 	event := Event{
 		Chain:      Ethereum,
 		Network:    Mainnet,
@@ -79,7 +142,7 @@ func NewBlockEvent(block *types.Block) (Event, error) {
 		Block:      block.Hash().Hex(),
 		ReceivedAt: time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
 	}
-	return event, nil
+	return event
 }
 
 func NewTxEvent(block *types.Block, tx *types.Transaction) Event {
