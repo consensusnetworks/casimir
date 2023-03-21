@@ -52,7 +52,7 @@ const wallets = ref([
           <button
             v-for="wallet in wallets"
             :key="wallet"
-            class="flex justify-between items-center border-[2px] border-[#b2bacb] 
+            class="flex justify-between items-center border-[1.5px] border-[#b2bacb] 
             rounded-[5px] mb-[10px] px-10 py-5 w-full hover:border-blue_3"
             @click="connectWallet(wallet)"
           >
