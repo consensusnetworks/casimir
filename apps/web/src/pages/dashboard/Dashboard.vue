@@ -22,8 +22,8 @@
         </h6>
       </div>
     </div>
-    <div class="col-span-8 border h-[300px]">
-      <div>
+    <div class="col-span-8 h-[300px] pb-45">
+      <div class="w-full h-full border">
         <h6 class="font-bold text-[#727476]">
           Table
         </h6>

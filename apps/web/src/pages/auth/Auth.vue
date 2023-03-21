@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import useWallet from '@/composables/wallet'
 import { ProviderString } from '@casimir/types'
+import useUsers from '@/composables/users'
+
+const { user } = useUsers()
 
 const { connectWallet } = useWallet()
 
@@ -36,9 +39,10 @@ const wallets = ref([
           </div>
           <div>
             <p class="text-caption font-medium text-grey_5 mb-10">
-              New user? Connect any wallet to create an account with wallet.
-              Once wallet is connected, you can connect more wallets on the dashboard page with the 
-              Multi-Wallet tab in the top right of the page. 
+              New user? Connect any wallet to create an account.
+              Once wallet is connected, you can connect more wallets in the dashboard page with the 
+              Multi-Wallet tab in the top right of the page. Wallets connected will go under your 
+              sign-in wallet. On sign in all connected wallets will be populating the dashboard.
             </p>
             <p class="text-caption font-medium text-grey_5">
               By connecting your wallets you agree to 
@@ -52,7 +56,7 @@ const wallets = ref([
           <button
             v-for="wallet in wallets"
             :key="wallet"
-            class="flex justify-between items-center border-[1.5px] border-[#b2bacb] 
+            class="flex justify-between items-center border-[1px] border-[#b2bacb] 
             rounded-[5px] mb-[10px] px-10 py-5 w-full hover:border-blue_3"
             @click="connectWallet(wallet)"
           >

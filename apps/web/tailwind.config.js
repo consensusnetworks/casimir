@@ -15,7 +15,7 @@ module.exports = {
                 'secondary': '#C1D3F8',
                 'white': '#fff',
                 'shade': '#615959',
-                'grey' : '#E4E4E7',
+                'grey' : '#727476',
 
                 // Blues
                 'blue_1': '#E5EEFF',
@@ -45,7 +45,7 @@ module.exports = {
                 'warning': '#FBBD84',
                 'approve': '#7BE198',
                 'decline': '#FF8080',
-                'borders': '#E4E4E7',
+                'border': '#B2BACB',
             },
             spacing: {
                 'gutter': '16px',
