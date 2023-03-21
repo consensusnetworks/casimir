@@ -9,9 +9,9 @@ const { user } = useUsers()
     class="min-w-[360px] min-h-[100vh] h-[100vh] 
     w-[100vw] flex justify-center items-start py-45 overflow-y-auto"
   >
-    <div class="max-w-[1448px] w-full px-[140px]">
+    <div class="max-w-[1448px] h-full w-full px-[140px]">
       <div
-        v-if="!user"
+        v-if="user"
         class="flex justify-between items-center gap-45 w-full pb-[60px]"
       >
         <div class="flex items-center gap-50">

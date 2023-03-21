@@ -10,6 +10,10 @@
           Analytics
         </h6>
       </div>
+
+      <router-link to="/auth">
+        auth
+      </router-link>
     </div> <div class="col-span-1 h-[450px]" />
     <div class="col-span-3 border h-[450px]">
       <div>
