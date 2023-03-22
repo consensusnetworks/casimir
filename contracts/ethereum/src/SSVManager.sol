@@ -47,7 +47,7 @@ contract SSVManager {
     /** User staking account */
     struct User {
         uint256 stake;
-        uint256 initialRewardDistSum;
+        uint256 distributionRatioSum0;
     }
     /** Validator deposit data and shares */
     struct Validator {
@@ -84,10 +84,10 @@ contract SSVManager {
     uint256 private poolCapacity = 32 ether;
     /** Total pool deposits ready for stake */
     uint256 private unstakedDeposits;
-    /** Scaled rewards ratio sum */
-    uint256 rewardDistSum;
-    /** Scale factor for rewards ratio sum */
-    uint256 rewardDistScale = 1 ether;
+    /** Sum of scaled distribution ratios */
+    uint256 distributionRatioSum;
+    /** Scale factor for rewards ratio */
+    uint256 distributionRatioScale = 1 ether;
     /** IDs of staking pools readily accepting deposits */
     uint32[] private readyPoolIds;
     /** IDs of staking pools at full capacity */
@@ -98,6 +98,8 @@ contract SSVManager {
     bytes[] private activeValidatorPublicKeys;
     /** Public keys of inactive validators */
     bytes[] private inactiveValidatorPublicKeys;
+    /** Whether to auto-compound stake rewards */
+    bool autoCompound;
     /** Event signaling a user deposit to the pool manager */
     event ManagerDeposit(
         address userAddress,
@@ -133,6 +135,7 @@ contract SSVManager {
      * @param ssvTokenAddress The SSV token address
      * @param swapRouterAddress The Uniswap router address
      * @param wethTokenAddress The WETH contract address
+     * @param autoCompoundStake Whether to auto-compound stake rewards
      */
     constructor(
         address beaconDepositAddress,
@@ -141,7 +144,8 @@ contract SSVManager {
         address ssvNetworkAddress,
         address ssvTokenAddress,
         address swapRouterAddress,
-        address wethTokenAddress
+        address wethTokenAddress,
+        bool autoCompoundStake
     ) {
         beaconDeposit = IDepositContract(beaconDepositAddress);
         linkFeed = AggregatorV3Interface(linkFeedAddress);
@@ -152,15 +156,28 @@ contract SSVManager {
         ssvToken = ISSVToken(ssvTokenAddress);
         swapRouter = ISwapRouter(swapRouterAddress);
         tokens[Token.WETH] = wethTokenAddress;
+        autoCompound = (autoCompoundStake);
     }
 
     /**
-     * @notice Receive ETH sent directly
+     * @notice Receive ETH sent directly to mock Beacon rewards
      */
     receive() external payable {
-        Balance memory b = getBalance();
-        uint256 rr = rewardDistScale * msg.value / b.stake;
-        rewardDistSum += rr;
+        distribute(msg.value);
+    }
+
+    /**
+     * @dev Distribute ETH rewards to user rewards balances or stake
+     * @param distribution The amount of ETH to distribute
+     */
+    function distribute(uint256 distribution) private {
+        if (autoCompound) {
+            console.log("Todo: auto compound rewards");
+        } else {
+            Balance memory balance = getBalance();
+            uint256 distributionRatio = distributionRatioScale * distribution / balance.stake;
+            distributionRatioSum += distributionRatio;
+        }
     }
 
     /**
@@ -183,7 +200,7 @@ contract SSVManager {
 
         /** Update user */
         users[userAddress].stake += processedDeposit.ethAmount;
-        users[userAddress].initialRewardDistSum = rewardDistSum;
+        users[userAddress].distributionRatioSum0 = distributionRatioSum;
 
         /** Distribute deposit */
         while (processedDeposit.ethAmount > 0) {
@@ -474,8 +491,8 @@ contract SSVManager {
      */
     function getUserBalance(address userAddress) public view returns (Balance memory) {
         uint256 userStake = users[userAddress].stake;
-        uint256 initialRewardDistSum = users[userAddress].initialRewardDistSum;
-        uint256 rewards = userStake * (rewardDistSum - initialRewardDistSum) / rewardDistScale;
+        uint256 distributionRatioSum0 = users[userAddress].distributionRatioSum0;
+        uint256 rewards = userStake * (distributionRatioSum - distributionRatioSum0) / distributionRatioScale;
         return Balance(userStake, rewards);
     }
 

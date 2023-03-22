@@ -4,7 +4,7 @@
         "build": "echo '@casimir/ethereum build not specified. Disregard this warning and any listed errors above if @casimir/ethereum is not needed for the current project build.' && exit 0",
         "dev": "npx hardhat node",
         "dev:ganache": "npx esno scripts/ganache.ts",
-        "deploy": "npx hardhat run scripts/ssv.deploy.ts",
+        "dev:ssv": "npx hardhat run scripts/ssv.dev.ts",
         "docgen": "npx hardhat docgen",
         "test": "mocha --require hardhat/register --recursive --exit --extension ts --timeout 60000",
         "task:clean": "npx hardhat clean",

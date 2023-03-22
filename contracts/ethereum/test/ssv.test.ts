@@ -20,7 +20,8 @@ async function deploymentFixture() {
         ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
         ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
         swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
-        wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
+        wethTokenAddress: process.env.WETH_TOKEN_ADDRESS,
+        autoCompoundStake: process.env.AUTO_COMPOUND_STAKE === 'true'
       },
       options: {},
       proxy: false

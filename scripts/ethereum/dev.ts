@@ -38,13 +38,13 @@ void async function () {
         // Wait for ganache to start
         const ganacheWaitTime = 5000
         await new Promise(resolve => setTimeout(resolve, ganacheWaitTime))
-        $`npm run deploy --workspace @casimir/ethereum -- --network ganache`
+        $`npm run dev:ssv --workspace @casimir/ethereum -- --network ganache`
     } else {
         $`npm run dev --workspace @casimir/ethereum`
         // Wait for hardhat to start
         const hardhatWaitTime = 2500
         await new Promise(resolve => setTimeout(resolve, hardhatWaitTime))
-        $`npm run deploy --workspace @casimir/ethereum -- --network localhost`
+        $`npm run dev:ssv --workspace @casimir/ethereum -- --network localhost`
     }
 
 }()

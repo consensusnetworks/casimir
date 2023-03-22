@@ -15,7 +15,8 @@ void async function () {
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
-                wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
+                wethTokenAddress: process.env.WETH_TOKEN_ADDRESS,
+                autoCompoundStake: process.env.AUTO_COMPOUND_STAKE === 'true'
             },
             options: {},
             proxy: false
@@ -25,11 +26,6 @@ void async function () {
     for (const name in config) {
         console.log(`Deploying ${name} contract...`)
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
-
-        // Update SSVManager args with MockFeed address
-        if (name === 'SSVManager' && config.MockFeed) {
-            args.linkFeedAddress = config.MockFeed.address
-        }
 
         const contract = await deployContract(name, proxy, args, options)
         const { address } = contract
