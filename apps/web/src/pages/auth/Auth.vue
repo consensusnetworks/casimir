@@ -6,16 +6,8 @@ import useUsers from '@/composables/users'
 
 const { user } = useUsers()
 
-const { connectWallet } = useWallet()
+const { connectWallet, activeWallets } = useWallet()
 
-const wallets = ref([
-    'MetaMask',
-    'CoinbaseWallet',
-    'WalletConnect',
-    'Trezor',
-    'Ledger',
-    'IoPay'
-] as ProviderString[])
 </script>
 
 <template>
@@ -54,7 +46,7 @@ const wallets = ref([
         </div>
         <div class="w-[350px] h-full overflow-y-auto flex flex-col justify-center items-center">
           <button
-            v-for="wallet in wallets"
+            v-for="wallet in activeWallets"
             :key="wallet"
             class="flex justify-between items-center border-[1px] border-[#b2bacb] 
             rounded-[5px] mb-[10px] px-10 py-5 w-full hover:border-blue_3"
