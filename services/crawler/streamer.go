@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/xitongsys/parquet-go/writer"
 )
@@ -56,140 +54,144 @@ func NewEthereumStreamer(config BaseConfig) (*EthereumStreamer, error) {
 	return s, nil
 }
 
-func (e *EthereumStreamer) Stream() error {
-	fmt.Println("streaming ethereum blocks...")
+// func (e *EthereumStreamer) Stream() error {
+// 	fmt.Println("streaming ethereum blocks...")
 
-	header := make(chan *types.Header)
+// 	header := make(chan *types.Header)
 
-	sub, err := e.EthClient.SubscribeNewHead(context.Background(), header)
+// 	sub, err := e.EthClient.SubscribeNewHead(context.Background(), header)
 
-	if err != nil {
-		return err
-	}
+// 	if err != nil {
+// 		return err
+// 	}
 
-	defer sub.Unsubscribe()
+// 	defer sub.Unsubscribe()
 
-	if err != nil {
-		return err
-	}
+// 	if err != nil {
+// 		return err
+// 	}
 
-	for {
-		select {
-		case err := <-sub.Err():
-			return err
-		case h := <-header:
+// 	for {
+// 		select {
+// 		case err := <-sub.Err():
+// 			return err
+// 		case h := <-header:
 
-			fmt.Printf("block: %d", h.Number.Int64())
+// 			fmt.Printf("block: %d", h.Number.Int64())
 
-			var events []Event
+// 			var events []Event
 
-			block, err := e.EthClient.BlockByHash(context.Background(), h.Hash())
+// 			block, err := e.EthClient.BlockByHash(context.Background(), h.Hash())
 
-			if err != nil {
-				return err
-			}
+// 			if err != nil {
+// 				return err
+// 			}
 
-			blockEvent := NewBlockEvent(block)
+// 			blockEvent := NewBlockEvent(block)
 
-			if err != nil {
-				return err
-			}
+// 			if err != nil {
+// 				return err
+// 			}
 
-			price, err := e.CurrentPrice("USD", Ethereum)
+// 			price, err := e.CurrentPrice("USD", Ethereum)
 
-			if err != nil {
-				return err
-			}
+// 			if err != nil {
+// 				return err
+// 			}
 
-			blockEvent.Price = price.Value
+// 			blockEvent.Price = price.Value
 
-			events = append(events, blockEvent)
+// 			events = append(events, blockEvent)
 
-			if len(block.Transactions()) > 0 {
-				for _, t := range block.Transactions() {
-					tx, pending, err := e.EthClient.TransactionByHash(context.Background(), t.Hash())
+// 			if len(block.Transactions()) > 0 {
+// 				for _, t := range block.Transactions() {
+// 					tx, pending, err := e.EthClient.TransactionByHash(context.Background(), t.Hash())
 
-					if err != nil {
-						return err
-					}
+// 					if err != nil {
+// 						return err
+// 					}
 
-					if pending {
-						fmt.Printf("skipping pending transaction: %s", tx.Hash().String())
-						continue
-					}
+// 					if pending {
+// 						fmt.Printf("skipping pending transaction: %s", tx.Hash().String())
+// 						continue
+// 					}
 
-					if err != nil {
-						return err
-					}
+// 					if err != nil {
+// 						return err
+// 					}
 
-					if tx.To() == nil {
-						fmt.Printf("skipping contract transaction: %s", tx.Hash().String())
-						continue
-					}
+// 					if tx.To() == nil {
+// 						fmt.Printf("skipping contract transaction: %s", tx.Hash().String())
+// 						continue
+// 					}
 
-					chainID, err := e.EthClient.NetworkID(context.Background())
+// 					chainID, err := e.EthClient.NetworkID(context.Background())
 
-					if err != nil {
-						return err
-					}
+// 					if err != nil {
+// 						return err
+// 					}
 
-					txMsg, err := tx.AsMessage(types.NewEIP155Signer(chainID), nil)
+// 					txMsg, err := tx.AsMessage(types.NewEIP155Signer(chainID), nil)
 
-					if err != nil {
-						return err
-					}
+// 					if err != nil {
+// 						return err
+// 					}
 
-					from := txMsg.From()
-					to := txMsg.To()
+// 					from := txMsg.From()
+// 					to := txMsg.To()
 
-					txEvent := NewTxEvent(block, tx)
+// 					txEvent, err := NewTxEvent(block, tx)
 
-					fromBalance, err := e.EthClient.BalanceAt(context.Background(), from, nil)
+// 					if err != nil {
+// 						log.Fatalln(err)
+// 					}
 
-					if err != nil {
-						return err
-					}
+// 					fromBalance, err := e.EthClient.BalanceAt(context.Background(), from, nil)
 
-					toBalance, err := e.EthClient.BalanceAt(context.Background(), *to, nil)
+// 					if err != nil {
+// 						return err
+// 					}
 
-					if err != nil {
-						return nil
-					}
+// 					toBalance, err := e.EthClient.BalanceAt(context.Background(), *to, nil)
 
-					txEvent.Sender = from.Hex()
-					txEvent.SenderBalance = fromBalance.String()
+// 					if err != nil {
+// 						return nil
+// 					}
 
-					txEvent.Recipient = to.Hex()
-					txEvent.RecipientBalance = toBalance.String()
+// 					txEvent.Sender = from.Hex()
+// 					txEvent.SenderBalance = fromBalance.String()
 
-					txEvent.Price = price.Value
+// 					txEvent.Recipient = to.Hex()
+// 					txEvent.RecipientBalance = toBalance.String()
 
-					events = append(events, txEvent)
-				}
-			}
+// 					txEvent.Price = price.Value
 
-			if err != nil {
-				return err
-			}
+// 					events = append(events, txEvent)
+// 				}
+// 			}
 
-			key := fmt.Sprintf("%d.json", blockEvent.Height)
+// 			if err != nil {
+// 				return err
+// 			}
 
-			ev, err := NDJSON(&events)
+// 			key := fmt.Sprintf("%d.json", blockEvent.Height)
 
-			if err != nil {
-				return err
-			}
+// 			ev, err := NDJSON(&events)
 
-			err = e.Save(key, []byte(ev))
+// 			if err != nil {
+// 				return err
+// 			}
 
-			if err != nil {
-				return err
-			}
+// 			err = e.Save(key, []byte(ev))
 
-			fmt.Printf("\t saved %d events \n", len(events))
-		}
-	}
-}
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			fmt.Printf("\t saved %d events \n", len(events))
+// 		}
+// 	}
+// }
 
 func (e *EthereumStreamer) CurrentPrice(currency string, coin ChainType) (Price, error) {
 	if currency == "" {

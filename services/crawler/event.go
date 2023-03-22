@@ -30,13 +30,6 @@ const (
 	Transaction EventType = "transaction"
 )
 
-type Price struct {
-	Value    float64   `json:"price,omitempty"`
-	Currency string    `json:"currency,omitempty"`
-	Coin     string    `json:"coin,omitempty"`
-	Time     time.Time `json:"time,omitempty"`
-}
-
 type Event struct {
 	Chain            ChainType    `json:"chain,omitempty"`
 	Network          NetworkType  `json:"network,omitempty"`
@@ -133,24 +126,23 @@ func NewParquetWriter(dest source.ParquetFile) (*writer.ParquetWriter, error) {
 	return &w, nil
 }
 
-func NewBlockEvent(block *types.Block) Event {
+func (e *EthereumCrawler) NewBlockEvent(block *types.Block) (Event, error) {
+	var event Event
+
 	if block == nil {
-		fmt.Println("block is nil")
-		return Event{}
+		err := fmt.Errorf("failed to create block event: block is nil")
+		fmt.Println(err)
+		return Event{}, err
 	}
 
-	event := Event{
+	event = Event{
 		Chain:    Ethereum,
 		Network:  Mainnet,
 		Provider: Alchemy,
 		Type:     Block,
-		// Height:     block.Number().Int64(),
-		// Block:      block.Hash().Hex(),
+		Height:   block.Number().Int64(),
+		// Block:    block.Hash().Hex(),
 		// ReceivedAt: time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
-	}
-
-	if block != nil {
-		event.Height = block.Number().Int64()
 	}
 
 	if block.Hash().Hex() != "" {
@@ -161,23 +153,27 @@ func NewBlockEvent(block *types.Block) Event {
 		event.ReceivedAt = time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05.999999999")
 	}
 
-	return event
+	return event, nil
 }
 
-func NewTxEvent(block *types.Block, tx *types.Transaction) Event {
+func (e *EthereumCrawler) NewTxEvent(block *types.Block, tx *types.Transaction) (Event, error) {
+	var event Event
+
 	if block == nil {
-		fmt.Println("block is nil")
-		return Event{}
+		err := fmt.Errorf("failed to create transaction event: block is nil")
+		fmt.Println(err)
+		return event, err
 	}
 
 	if tx == nil {
-		fmt.Println("tx is nil")
-		return Event{}
+		err := fmt.Errorf("failed to create transaction event: transaction is nil")
+		fmt.Println(err)
+		return event, err
 	}
 
-	event := Event{
-		Network:  Mainnet,
-		Provider: Alchemy,
+	event = Event{
+		Network:  e.Network,
+		Provider: Consensus,
 		Chain:    Ethereum,
 		Type:     Transaction,
 		// Block:       tx.Hash().Hex(),
@@ -210,7 +206,7 @@ func NewTxEvent(block *types.Block, tx *types.Transaction) Event {
 		event.Amount = tx.Value().String()
 	}
 
-	return event
+	return event, nil
 }
 
 func NDJSON(events *[]Event) (string, error) {

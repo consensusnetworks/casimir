@@ -49,17 +49,20 @@ func Run(args []string) error {
 						Bucket:  "",
 					}
 
-					streamer, err := NewEthereumStreamer(*base)
+					fmt.Println("might stream")
+					fmt.Println(base)
 
-					if err != nil {
-						return err
-					}
+					// streamer, err := NewEthereumStreamer(*base)
 
-					err = streamer.Stream()
+					// if err != nil {
+					// 	return err
+					// }
 
-					if err != nil {
-						return err
-					}
+					// // err = streamer.Stream()
+
+					// if err != nil {
+					// 	return err
+					// }
 					return nil
 				},
 			},
