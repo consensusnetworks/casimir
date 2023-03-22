@@ -43,7 +43,6 @@ onMounted(()=>{
     w-[100vw] flex justify-center items-start py-45 overflow-y-auto"
   >
     <div class="max-w-[1448px] h-full w-full px-[140px]">
-      <!-- TD: change !user -> user -->
       <div
         v-if="user"
         class="flex justify-between items-center gap-45 w-full pb-[60px]"
