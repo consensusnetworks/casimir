@@ -40,7 +40,7 @@ export default function useUsers () {
         const validatorInitFilter = {
           address: ssvManager.address,
           topics: [
-            ethers.utils.id('ValidatorActivated(uint32,uint32[],string)')
+            ethers.utils.id('PoolStaked(uint32,bytes,uint32[])')
           ]
         }
         ssvManager.connect(provider).on(validatorInitFilter, async () => {

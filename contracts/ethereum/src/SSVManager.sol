@@ -23,9 +23,9 @@ contract SSVManager {
     }
     /** Processed deposit with stake and fee amounts */
     struct ProcessedDeposit {
+        uint256 ethAmount;
         uint256 linkAmount;
         uint256 ssvAmount;
-        uint256 ethAmount;
     }
     /** Token fees required for contract protocols */
     struct Fees {
@@ -47,7 +47,7 @@ contract SSVManager {
     /** User staking account */
     struct User {
         uint256 stake;
-        uint256 distributionRatioSum0;
+        uint256 rewardRatioSum0;
     }
     /** Validator deposit data and shares */
     struct Validator {
@@ -83,28 +83,26 @@ contract SSVManager {
     /** Staking pool capacity */
     uint256 private poolCapacity = 32 ether;
     /** Total pool deposits ready for stake */
-    uint256 private unstakedDeposits;
-    /** Sum of scaled distribution ratios */
-    uint256 distributionRatioSum;
+    uint256 private readyDeposits;
+    /** Sum of scaled reward ratios */
+    uint256 rewardRatioSum;
     /** Scale factor for rewards ratio */
-    uint256 distributionRatioScale = 1 ether;
+    uint256 rewardRatioScale = 1 ether;
     /** IDs of staking pools readily accepting deposits */
     uint32[] private readyPoolIds;
     /** IDs of staking pools at full capacity */
     uint32[] private stakedPoolIds;
-    /** Validators (active or inactive) */
+    /** Validators (staked or ready) */
     mapping(bytes => Validator) private validators;
-    /** Public keys of active validators  */
-    bytes[] private activeValidatorPublicKeys;
-    /** Public keys of inactive validators */
-    bytes[] private inactiveValidatorPublicKeys;
-    /** Whether to auto-compound stake rewards */
+    /** Public keys of staked validators  */
+    bytes[] private stakedValidatorPublicKeys;
+    /** Public keys of ready validators */
+    bytes[] private readyValidatorPublicKeys;
+    /** Whether to compound stake rewards (option for testing) */
     bool autoCompound;
     /** Event signaling a user deposit to the pool manager */
-    event ManagerDeposit(
+    event ManagerDistribution(
         address userAddress,
-        uint256 linkAmount,
-        uint256 ssvAmount,
         uint256 ethAmount,
         uint256 depositTime
     );
@@ -112,16 +110,14 @@ contract SSVManager {
     event PoolDeposit(
         address userAddress,
         uint32 poolId,
-        uint256 linkAmount,
-        uint256 ssvAmount,
         uint256 ethAmount,
         uint256 depositTime
     );
-    /** Event signaling a validator activation */
-    event ValidatorActivated(
+    /** Event signaling a pool validator activation */
+    event PoolStaked(
+        uint32 poolId,
         bytes publicKey,
-        uint32[] operatorIds,
-        uint32 poolId
+        uint32[] operatorIds
     );
     /** Event signaling a validator registration */
     event ValidatorAdded(bytes publicKey, uint32[] operatorIds);
@@ -135,7 +131,6 @@ contract SSVManager {
      * @param ssvTokenAddress The SSV token address
      * @param swapRouterAddress The Uniswap router address
      * @param wethTokenAddress The WETH contract address
-     * @param autoCompoundStake Whether to auto-compound stake rewards
      */
     constructor(
         address beaconDepositAddress,
@@ -145,7 +140,8 @@ contract SSVManager {
         address ssvTokenAddress,
         address swapRouterAddress,
         address wethTokenAddress,
-        bool autoCompoundStake
+        // Temporary option for testing
+        bool _autoCompound
     ) {
         beaconDeposit = IDepositContract(beaconDepositAddress);
         linkFeed = AggregatorV3Interface(linkFeedAddress);
@@ -156,58 +152,97 @@ contract SSVManager {
         ssvToken = ISSVToken(ssvTokenAddress);
         swapRouter = ISwapRouter(swapRouterAddress);
         tokens[Token.WETH] = wethTokenAddress;
-        autoCompound = (autoCompoundStake);
+        autoCompound = _autoCompound;
     }
 
     /**
-     * @notice Receive ETH sent directly to mock Beacon rewards
+     * @dev Production will use oracle reporting balance increases, but receive is used for mocking rewards
      */
     receive() external payable {
-        distribute(msg.value);
+        reward(msg.value);
     }
 
     /**
      * @dev Distribute ETH rewards to user rewards balances or stake
-     * @param distribution The amount of ETH to distribute
+     * @param rewardAmount The amount of ETH to reward
      */
-    function distribute(uint256 distribution) private {
+    function reward(uint256 rewardAmount) private {
+        Balance memory balance = getBalance();
+
+        // Todo process fees from reward distribution
+        // ProcessedDeposit memory processedDeposit = processFees(reward);
+
+        uint256 rewardRatio = rewardRatioScale * rewardAmount / balance.stake;
+        rewardRatioSum += rewardRatio;
+
+        /** If specified, compound rewards reward */
         if (autoCompound) {
-            console.log("Todo: auto compound rewards");
-        } else {
-            Balance memory balance = getBalance();
-            uint256 distributionRatio = distributionRatioScale * distribution / balance.stake;
-            distributionRatioSum += distributionRatio;
+            // Todo tune gas with a reward buffer
+            distribute(address(this), rewardAmount, block.timestamp);   
         }
     }
 
     /**
-     * @notice Deposit to the pool manager to stake ETH
+     * @notice Deposit user stake to the pool manager
      */
     function deposit() external payable {
         address userAddress = msg.sender;
-        uint256 time = block.timestamp;
-        uint256 depositAmount = msg.value;
-        ProcessedDeposit memory processedDeposit = processDeposit(depositAmount);
 
-        /** Emit manager deposit event */
-        emit ManagerDeposit(
+        ProcessedDeposit memory processedDeposit = processFees(msg.value);
+
+        users[userAddress].stake += processedDeposit.ethAmount;
+        users[userAddress].rewardRatioSum0 += rewardRatioSum;
+
+        distribute(userAddress, processedDeposit.ethAmount, block.timestamp);
+    }
+
+    /**
+     * @dev Process fees from a deposit 
+     */
+    function processFees(uint256 depositAmount) private returns (ProcessedDeposit memory) {
+        Fees memory fees = getFees();
+        uint32 feePercent = fees.LINK + fees.SSV;
+        uint256 ethAmount = (depositAmount * 100) / (100 + feePercent);
+
+        /** Wrap ETH fees in ERC-20 to use in swap */
+        uint256 feeAmount = depositAmount - ethAmount;
+        wrap(feeAmount);
+        uint256 linkAmount = swap(
+            tokens[Token.WETH],
+            tokens[Token.LINK],
+            (feeAmount * fees.LINK) / feePercent
+        );
+        uint256 ssvAmount = swap(
+            tokens[Token.WETH],
+            tokens[Token.SSV],
+            (feeAmount * fees.SSV) / feePercent
+        );
+        return ProcessedDeposit(ethAmount, linkAmount, ssvAmount);
+    }
+
+    /**
+     * @dev Distribute a processed deposit to ready pools
+     * @param userAddress The user address
+     * @param depositAmount The deposit amount
+     * @param time The deposit time
+     */
+    function distribute(
+        address userAddress,
+        uint256 depositAmount,
+        uint256 time
+    ) private {
+
+        /** Emit manager reward event */
+        emit ManagerDistribution(
             userAddress,
-            processedDeposit.linkAmount,
-            processedDeposit.ssvAmount,
-            processedDeposit.ethAmount,
+            depositAmount,
             time
         );
 
-        /** Update user */
-        users[userAddress].stake += processedDeposit.ethAmount;
-        users[userAddress].distributionRatioSum0 = distributionRatioSum;
+        /** Distribute to ready pools */
+        while (depositAmount > 0) {
 
-        /** Distribute deposit */
-        while (processedDeposit.ethAmount > 0) {
-
-            /** Todo check pool withdrawal queue here */
-
-            /** Next open pool */
+            /** Get the next ready pool */
             uint32 poolId;
             if (readyPoolIds.length > 0) {
                 poolId = readyPoolIds[0];
@@ -219,14 +254,32 @@ contract SSVManager {
             Pool storage pool;
             pool = pools[poolId];
             uint256 remainingCapacity = poolCapacity - pool.deposits;
-            if (remainingCapacity > processedDeposit.ethAmount) {
-                unstakedDeposits += processedDeposit.ethAmount;
-                pool.deposits += processedDeposit.ethAmount;
-                processedDeposit.ethAmount = 0;
+            if (remainingCapacity > depositAmount) {
+                
+                /** Emit pool deposit event */
+                emit PoolDeposit(
+                    userAddress,
+                    poolId,
+                    depositAmount,
+                    time
+                );
+
+                readyDeposits += depositAmount;
+                pool.deposits += depositAmount;
+                depositAmount = 0;
             } else {
-                unstakedDeposits -= pool.deposits;
+
+                /** Emit pool deposit event */
+                emit PoolDeposit(
+                    userAddress,
+                    poolId,
+                    remainingCapacity,
+                    time
+                );
+
+                readyDeposits -= pool.deposits;
                 pool.deposits += remainingCapacity;
-                processedDeposit.ethAmount -= remainingCapacity;
+                depositAmount -= remainingCapacity;
 
                 /** Get a new validator and stake pool */
                 stakePool(poolId);
@@ -240,48 +293,7 @@ contract SSVManager {
                 /** Add pool to staked pools */
                 stakedPoolIds.push(poolId);
             }
-
-            /** Emit pool stake event */
-            emit PoolDeposit(
-                userAddress,
-                poolId,
-                processedDeposit.linkAmount,
-                processedDeposit.ssvAmount,
-                processedDeposit.ethAmount,
-                time
-            );
         }
-    }
-
-    /**
-     * @dev Process fee and stake deposit amounts
-     * @param depositAmount The deposit amount
-     * @return The fee and stake deposit amounts
-     */
-    function processDeposit(
-        uint256 depositAmount
-    ) private returns (ProcessedDeposit memory) {
-        Fees memory fees = getFees();
-        uint32 feePercent = fees.LINK + fees.SSV;
-        uint256 ethAmount = (depositAmount * 100) / (100 + feePercent);
-        uint256 feeAmount = depositAmount - ethAmount;
-
-        /** Wrap ETH fees in ERC-20 to use in swap */
-        wrap(feeAmount);
-
-        uint256 linkAmount = swap(
-            tokens[Token.WETH],
-            tokens[Token.LINK],
-            (feeAmount * fees.LINK) / feePercent
-        );
-
-        uint256 ssvAmount = swap(
-            tokens[Token.WETH],
-            tokens[Token.SSV],
-            (feeAmount * fees.SSV) / feePercent
-        );
-
-        return ProcessedDeposit(linkAmount, ssvAmount, ethAmount);
     }
 
     /**
@@ -349,7 +361,7 @@ contract SSVManager {
      * @param poolId The pool ID
      */
     function stakePool(uint32 poolId) private {
-        bytes memory publicKey = inactiveValidatorPublicKeys[0];
+        bytes memory publicKey = readyValidatorPublicKeys[0];
         Validator memory validator = validators[publicKey];
         Pool storage pool = pools[poolId];
 
@@ -378,16 +390,16 @@ contract SSVManager {
         pool.operatorIds = validator.operatorIds;
 
         /** Remove validator from inactive validators and add to active validators */
-        for (uint i = 0; i < inactiveValidatorPublicKeys.length - 1; i++) {
-            inactiveValidatorPublicKeys[i] = inactiveValidatorPublicKeys[i + 1];
+        for (uint i = 0; i < readyValidatorPublicKeys.length - 1; i++) {
+            readyValidatorPublicKeys[i] = readyValidatorPublicKeys[i + 1];
         }
-        inactiveValidatorPublicKeys.pop();
-        activeValidatorPublicKeys.push(publicKey);
+        readyValidatorPublicKeys.pop();
+        stakedValidatorPublicKeys.push(publicKey);
 
-        emit ValidatorActivated(
+        emit PoolStaked(
+            poolId,
             pool.validatorPublicKey,
-            pool.operatorIds,
-            poolId
+            pool.operatorIds
         );
     }
 
@@ -420,7 +432,7 @@ contract SSVManager {
             signature,
             withdrawalCredentials
         );
-        inactiveValidatorPublicKeys.push(publicKey);
+        readyValidatorPublicKeys.push(publicKey);
 
         emit ValidatorAdded(publicKey, operatorIds);
     }
@@ -443,19 +455,19 @@ contract SSVManager {
         view
         returns (bytes[] memory)
     {
-        return activeValidatorPublicKeys;
+        return stakedValidatorPublicKeys;
     }
 
     /**
      * @notice Get inactive validator public keys
      * @return A list of inactive validator public keys
      */
-    function getInactiveValidatorPublicKeys()
+    function getInstakedValidatorPublicKeys()
         external
         view
         returns (bytes[] memory)
     {
-        return inactiveValidatorPublicKeys;
+        return readyValidatorPublicKeys;
     }
 
     /**
@@ -479,8 +491,8 @@ contract SSVManager {
      * @return The current balance of the pool manager
      */
     function getBalance() public view returns (Balance memory) {
-        uint256 stake = stakedPoolIds.length * poolCapacity + unstakedDeposits;
-        uint256 rewards = address(this).balance - unstakedDeposits;
+        uint256 stake = stakedPoolIds.length * poolCapacity + readyDeposits;
+        uint256 rewards = address(this).balance - readyDeposits;
         return Balance(stake, rewards);
     }
 
@@ -491,8 +503,8 @@ contract SSVManager {
      */
     function getUserBalance(address userAddress) public view returns (Balance memory) {
         uint256 userStake = users[userAddress].stake;
-        uint256 distributionRatioSum0 = users[userAddress].distributionRatioSum0;
-        uint256 rewards = userStake * (distributionRatioSum - distributionRatioSum0) / distributionRatioScale;
+        uint256 rewardRatioSum0 = users[userAddress].rewardRatioSum0;
+        uint256 rewards = userStake * (rewardRatioSum - rewardRatioSum0) / rewardRatioScale;
         return Balance(userStake, rewards);
     }
 

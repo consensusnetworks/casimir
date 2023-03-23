@@ -16,7 +16,7 @@ void async function () {
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
                 wethTokenAddress: process.env.WETH_TOKEN_ADDRESS,
-                autoCompoundStake: process.env.AUTO_COMPOUND_STAKE === 'true'
+                autoCompound: process.env.AUTO_COMPOUND === 'true'
             },
             options: {},
             proxy: false
@@ -40,28 +40,28 @@ void async function () {
         if (name === 'SSVManager') ssvManager = contract as SSVManager
     }
 
-    if (process.env.HARDHAT_NETWORK === 'localhost') {
-        const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
-        for (const validator of validators) {
-            const {
-                depositDataRoot,
-                publicKey,
-                operatorIds,
-                sharesEncrypted,
-                sharesPublicKeys,
-                signature,
-                withdrawalCredentials
-            } = validator
-            const registration = await ssvManager?.addValidator(
-                depositDataRoot,
-                publicKey,
-                operatorIds,
-                sharesEncrypted,
-                sharesPublicKeys,
-                signature,
-                withdrawalCredentials
-            )
-            await registration?.wait()
-        }
+    const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
+    for (const validator of validators) {
+        const {
+            depositDataRoot,
+            publicKey,
+            operatorIds,
+            sharesEncrypted,
+            sharesPublicKeys,
+            signature,
+            withdrawalCredentials
+        } = validator
+        const registration = await ssvManager?.addValidator(
+            depositDataRoot,
+            publicKey,
+            operatorIds,
+            sharesEncrypted,
+            sharesPublicKeys,
+            signature,
+            withdrawalCredentials
+        )
+        await registration?.wait()
     }
+
+    
 }()
