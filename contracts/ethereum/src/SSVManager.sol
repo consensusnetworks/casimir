@@ -177,7 +177,7 @@ contract SSVManager {
 
         /** If specified, compound rewards reward */
         if (autoCompound) {
-            // Todo tune gas with a reward buffer
+            // Todo tune gas with a reward distribution buffer
             distribute(address(this), rewardAmount, block.timestamp);   
         }
     }
@@ -502,10 +502,15 @@ contract SSVManager {
      * @return The current balance of a user
      */
     function getUserBalance(address userAddress) public view returns (Balance memory) {
-        uint256 userStake = users[userAddress].stake;
+        uint256 userStake0 = users[userAddress].stake;
         uint256 rewardRatioSum0 = users[userAddress].rewardRatioSum0;
-        uint256 rewards = userStake * (rewardRatioSum - rewardRatioSum0) / rewardRatioScale;
-        return Balance(userStake, rewards);
+        if (autoCompound) {
+            uint256 userStake = userStake0 * rewardRatioSum / rewardRatioSum0 / rewardRatioScale;
+            return Balance(userStake, 0);
+        } else {
+            uint256 rewards = userStake0 * (rewardRatioSum - rewardRatioSum0) / rewardRatioScale;
+            return Balance(userStake0, rewards);
+        }
     }
 
     /**
