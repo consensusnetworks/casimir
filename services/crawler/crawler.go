@@ -45,9 +45,9 @@ func (e *EthereumCrawler) Crawl() error {
 	begin := time.Now()
 
 	fixedStart := int64(14000000)
-	fixedHead := fixedStart + 1000
+	fixedHead := fixedStart + 1000000
 
-	intervals := sliceRange(14000000, fixedHead, 20)
+	intervals := sliceRange(14000000, fixedHead, 200)
 
 	for _, v := range intervals {
 		err := e.Fetch(&wg, v)
@@ -170,7 +170,7 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockErr
 				})
 			}
 
-			// genesis block
+			// genesis
 			if i == 0 {
 				blockEvent.Height = 0
 			}
@@ -179,6 +179,7 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockErr
 
 			if block != nil && len(block.Transactions()) > 0 {
 				for k, tx := range block.Transactions() {
+
 					txEvent, err := e.NewTxEvent(block, tx)
 
 					if err != nil {
@@ -188,7 +189,9 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockErr
 						})
 					}
 
+					// returns nil for contract creation
 					if tx.To() != nil {
+
 						recipientBalance, err := e.EthClient.BalanceAt(context.Background(), *tx.To(), nil)
 
 						if err != nil {
@@ -250,9 +253,8 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockErr
 			})
 		}
 
-		e.TotalBlocks = int64(start - end)
-		e.TotalEvents = int64(len(event))
-
+		e.TotalBlocks += end - start
+		e.TotalEvents += int64(len(event))
 		fmt.Printf("saved range %d - %d\n", start, end)
 	}()
 

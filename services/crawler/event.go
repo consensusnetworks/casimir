@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
@@ -45,6 +46,7 @@ type Event struct {
 	Price            float64      `json:"price,omitempty"`
 	SenderBalance    string       `json:"sender_balance,omitempty"`
 	RecipientBalance string       `json:"recipient_balance,omitempty"`
+	GasFee           string       `json:"gas_fee,omitempty"`
 }
 
 func NewParquetWriter(dest source.ParquetFile) (*writer.ParquetWriter, error) {
@@ -176,10 +178,12 @@ func (e *EthereumCrawler) NewTxEvent(block *types.Block, tx *types.Transaction) 
 		Provider: Consensus,
 		Chain:    Ethereum,
 		Type:     Transaction,
-		// Block:       tx.Hash().Hex(),
-		// Height:      block.Number().Int64(),
-		// ReceivedAt:  time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
-		// Transaction: tx.Hash().Hex(),
+	}
+
+	if tx.GasPrice() != nil {
+		gasPrice := tx.GasPrice().Uint64()
+		gasFee := new(big.Int).Mul(new(big.Int).SetUint64(gasPrice), new(big.Int).SetUint64(tx.Gas()))
+		event.GasFee = gasFee.String()
 	}
 
 	if block.Number() != nil {
@@ -198,9 +202,9 @@ func (e *EthereumCrawler) NewTxEvent(block *types.Block, tx *types.Transaction) 
 		event.Transaction = tx.Hash().Hex()
 	}
 
-	if tx.To() != nil {
-		event.Recipient = tx.To().Hex()
-	}
+	// if tx.To() != nil {
+	// 	event.Recipient = tx.To().Hex()
+	// }
 
 	if tx.Value() != nil {
 		event.Amount = tx.Value().String()
