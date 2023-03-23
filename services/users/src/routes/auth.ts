@@ -1,5 +1,4 @@
 import express from 'express'
-import useUsers from '../providers/users'
 import useDB from '../providers/db'
 import Session from 'supertokens-node/recipe/session'
 import useEthers from '../providers/ethers'
@@ -7,21 +6,26 @@ import { Account } from '@casimir/types'
 import { LoginCredentials } from '@casimir/types'
 
 const { verifyMessage } = useEthers()
-const { getMessage, updateMessage } = useUsers()
-const { getUser } = useDB()
+const { getUser, upsertNonce } = useDB()
 const router = express.Router()
 
 
-router.get('/message/:provider/:address', (req: express.Request, res: express.Response) => {
-    const { provider, address } = req.params
-    updateMessage(provider, address)
-    const message = getMessage(address)
-    if (message) {
-        res.setHeader('Content-Type', 'application/json')
-        res.status(200)
-        res.json({ message })
-    } else {
-        res.status(404)
+router.get('/message/:provider/:address', async (req: express.Request, res: express.Response) => {
+    const { address } = req.params
+    console.log('address in auth/message/:provider/:address', address)
+    try {
+        const nonce = await upsertNonce(address)
+        if (nonce) {
+            res.setHeader('Content-Type', 'application/json')
+            res.status(200)
+            res.json({ message: nonce })
+        } else {
+            res.status(404)
+            res.send()
+        }
+    } catch (error) {
+        console.log('error in /message/:provider/:address :>> ', error)
+        res.status(500)
         res.send()
     }
 })
