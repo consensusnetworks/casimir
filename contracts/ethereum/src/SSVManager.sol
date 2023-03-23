@@ -98,7 +98,7 @@ contract SSVManager {
     bytes[] private stakedValidatorPublicKeys;
     /** Public keys of ready validators */
     bytes[] private readyValidatorPublicKeys;
-    /** Whether to compound stake rewards (option for testing) */
+    /** Whether to compound stake rewards (temporarily optional for testing) */
     bool autoCompound;
     /** Event signaling a user deposit to the pool manager */
     event ManagerDistribution(
@@ -140,7 +140,7 @@ contract SSVManager {
         address ssvTokenAddress,
         address swapRouterAddress,
         address wethTokenAddress,
-        // Temporary option for testing
+        // Temporarily optional for testing
         bool _autoCompound
     ) {
         beaconDeposit = IDepositContract(beaconDepositAddress);
