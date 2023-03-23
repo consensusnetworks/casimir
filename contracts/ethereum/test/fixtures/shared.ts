@@ -7,8 +7,8 @@ import { validatorStore } from '@casimir/data'
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
-    let ssvManager
-    const [owner] = await ethers.getSigners()
+    let ssvManager: SSVManager | undefined
+    const [owner, , , , distributor] = await ethers.getSigners()
     const config: DeploymentConfig = {
         SSVManager: {
             address: '',
@@ -41,15 +41,15 @@ export async function deploymentFixture() {
         (config[name as keyof DeploymentConfig] as ContractConfig).address = address
 
         // Save SSV manager for export
-        if (name === 'SSVManager') ssvManager = contract
+        if (name === 'SSVManager') ssvManager = contract as SSVManager
     }
 
-    return { ssvManager: ssvManager as SSVManager, owner }
+    return { ssvManager: ssvManager as SSVManager, owner, distributor }
 }
 
 /** Fixture to add validators */
 export async function addValidatorsFixture() {
-    const { ssvManager, owner } = await loadFixture(deploymentFixture)
+    const { ssvManager, owner, distributor } = await loadFixture(deploymentFixture)
     const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
     for (const validator of validators) {
         const {
@@ -72,12 +72,12 @@ export async function addValidatorsFixture() {
         )
         await registration.wait()
     }
-    return { owner, ssvManager, validators }
+    return { ssvManager, owner, distributor, validators }
 }
 
 /** Fixture to stake 16 ETH for the first user */
 export async function firstUserDepositFixture() {
-    const { owner, ssvManager } = await loadFixture(addValidatorsFixture)
+    const { ssvManager, owner, distributor } = await loadFixture(addValidatorsFixture)
     const [, firstUser] = await ethers.getSigners()
     const stakeAmount = 16.0
     const fees = { ...await ssvManager.getFees() }
@@ -86,12 +86,12 @@ export async function firstUserDepositFixture() {
     const value = ethers.utils.parseEther(depositAmount.toString())
     const deposit = await ssvManager.connect(firstUser).deposit({ value })
     await deposit.wait()
-    return { ssvManager, firstUser, owner }
+    return { ssvManager, owner, distributor, firstUser}
 }
 
 /** Fixture to stake 24 ETH for the second user */
 export async function secondUserDepositFixture() {
-    const { ssvManager, firstUser, owner } = await loadFixture(firstUserDepositFixture)
+    const { ssvManager, owner, distributor, firstUser } = await loadFixture(firstUserDepositFixture)
     const [, , secondUser] = await ethers.getSigners()
     const stakeAmount = 24.0
     const fees = { ...await ssvManager.getFees() }
@@ -101,16 +101,19 @@ export async function secondUserDepositFixture() {
     const deposit = await ssvManager.connect(secondUser).deposit({ value })
     await deposit.wait()
 
-    // Send 0.1 ETH to contract to simulate rewards
-    const reward = await owner.sendTransaction({ to: ssvManager.address, value: ethers.utils.parseEther('0.1') })
-    await reward.wait()
+    const activeValidatorPublicKeys = await ssvManager?.getActiveValidatorPublicKeys()
+    if (activeValidatorPublicKeys?.length) {
+        const rewardAmount = (0.1 * activeValidatorPublicKeys.length).toString()
+        const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
+        await reward.wait()
+    }
 
-    return { ssvManager, firstUser, owner, secondUser }
+    return { ssvManager, owner, distributor, firstUser, secondUser }
 }
 
 /** Fixture to stake 24 ETH for the third user */
 export async function thirdUserDepositFixture() {
-    const { ssvManager, firstUser, owner, secondUser } = await loadFixture(secondUserDepositFixture)
+    const { ssvManager, owner, distributor, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
     const [, , , thirdUser] = await ethers.getSigners()
     const stakeAmount = 24.0
     const fees = { ...await ssvManager.getFees() }
@@ -120,9 +123,12 @@ export async function thirdUserDepositFixture() {
     const deposit = await ssvManager.connect(thirdUser).deposit({ value })
     await deposit.wait()
 
-    // Send 0.1 ETH to contract to simulate more rewards
-    const reward = await owner.sendTransaction({ to: ssvManager.address, value: ethers.utils.parseEther('0.1') })
-    await reward.wait()
+    const activeValidatorPublicKeys = await ssvManager?.getActiveValidatorPublicKeys()
+    if (activeValidatorPublicKeys?.length) {
+        const rewardAmount = (0.1 * activeValidatorPublicKeys.length).toString()
+        const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
+        await reward.wait()
+    }
 
-    return { ssvManager, firstUser, owner, secondUser, thirdUser }
+    return { ssvManager, owner, distributor, firstUser, secondUser, thirdUser }
 }

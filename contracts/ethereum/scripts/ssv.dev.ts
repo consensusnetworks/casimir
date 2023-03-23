@@ -2,9 +2,11 @@ import { deployContract } from '@casimir/hardhat'
 import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
 import { validatorStore } from '@casimir/data'
 import { SSVManager } from '../build/artifacts/types'
+import { ethers } from 'hardhat'
 
 void async function () {
-    let ssvManager
+    let ssvManager: SSVManager | undefined
+    const [ , , , , distributor] = await ethers.getSigners()
     const config: DeploymentConfig = {
         SSVManager: {
             address: '',
@@ -63,5 +65,16 @@ void async function () {
         await registration?.wait()
     }
 
-    
+    const blocksPerReward = 1
+    let lastRewardBlock = await ethers.provider.getBlockNumber()
+    ethers.provider.on('block', async (block) => {
+        if (block - blocksPerReward > lastRewardBlock) return
+        const activeValidatorPublicKeys = await ssvManager?.getActiveValidatorPublicKeys()
+        if (activeValidatorPublicKeys?.length) {
+            lastRewardBlock = block
+            const rewardAmount = (0.1 * activeValidatorPublicKeys.length).toString()
+            const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
+            await reward.wait()
+        }
+    })
 }()

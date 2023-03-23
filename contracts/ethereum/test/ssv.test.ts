@@ -127,14 +127,14 @@ describe('SSV manager', async function () {
     expect(ethers.utils.formatEther(stake)).equal('24.0')
   })
 
-  it('First, second, and third user\'s stake earns them 0.2 ETH total in rewards after some more time', async function () {
+  it('First, second, and third user\'s stake earns them 0.3 ETH total in rewards after some more time', async function () {
     const { ssvManager } = await loadFixture(thirdUserDepositFixture)
     const balance = await ssvManager.getBalance()
     const { rewards } = ({ ...balance })
-    expect(ethers.utils.formatEther(rewards)).equal('0.2')
+    expect(ethers.utils.formatEther(rewards)).equal('0.3')
   })
 
-  it('First, second, and third user\'s stake earns them 0.065, 0.0975 and 0.0375 ETH, respectively, in rewards after some time', async function () {
+  it('First, second, and third user\'s stake earns them 0.09, 0.135 and 0.075 ETH, respectively, in rewards after some time', async function () {
     const { ssvManager, firstUser, secondUser, thirdUser } = await loadFixture(thirdUserDepositFixture)
     const firstBalance = await ssvManager.getUserBalance(firstUser.address)
     const secondBalance = await ssvManager.getUserBalance(secondUser.address)
@@ -142,8 +142,8 @@ describe('SSV manager', async function () {
     const { rewards: firstRewards } = ({ ...firstBalance })
     const { rewards: secondRewards } = ({ ...secondBalance })
     const { rewards: thirdRewards } = ({ ...thirdBalance })
-    expect(ethers.utils.formatEther(firstRewards)).equal('0.065')
-    expect(ethers.utils.formatEther(secondRewards)).equal('0.0975')
-    expect(ethers.utils.formatEther(thirdRewards)).equal('0.0375')
+    expect(ethers.utils.formatEther(firstRewards)).equal('0.09')
+    expect(ethers.utils.formatEther(secondRewards)).equal('0.135')
+    expect(ethers.utils.formatEther(thirdRewards)).equal('0.075')
   })
 })
