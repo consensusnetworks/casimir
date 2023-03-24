@@ -7,11 +7,11 @@ import Analytics from './components/Analytics.vue'
 
 <template>
   <div class="grid grid-cols-8 gap-[24px] pb-45">
-    <div class="col-span-4 h-[450px]">
+    <div class="col-span-4 h-[480px]">
       <Analytics />
     </div> 
-    <div class="col-span-1 h-[450px]" />
-    <!-- <div class="col-span-3 h-[450px] flex flex-col gap-20">
+    <div class="col-span-1 h-[480px]" />
+    <div class="col-span-3 h-[480px] flex flex-col gap-20">
       <div>
         <h6 class="font-bold text-[#727476]">
           Stake
@@ -21,7 +21,7 @@ import Analytics from './components/Analytics.vue'
       <div class="w-full border border-border rounded-[5px] h-full">
         <Stake />
       </div>
-    </div> -->
+    </div>
     <!-- <div class="col-span-8 h-[300px] pb-45">
       <div class="w-full h-full flex flex-col gap-20">
         <div>
