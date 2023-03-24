@@ -13,8 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/xitongsys/parquet-go/writer"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -23,15 +21,14 @@ import (
 
 type EthereumCrawler struct {
 	BaseConfig
-	EthClient     *ethclient.Client
-	S3Client      *s3.S3
-	Elapsed       time.Duration
-	TotalBlocks   int64
-	TotalEvents   int64
-	ParquetWriter *writer.ParquetWriter
-	HttpClient    *http.Client
-	Head          int64
-	Provider      ProviderType
+	EthClient   *ethclient.Client
+	S3Client    *s3.S3
+	Elapsed     time.Duration
+	TotalBlocks int64
+	TotalEvents int64
+	HttpClient  *http.Client
+	Head        int64
+	Provider    ProviderType
 }
 
 type BlockError struct {
@@ -126,7 +123,7 @@ func (e *EthereumCrawler) Crawl() error {
 	}
 
 	if len(previousRun) > 0 {
-		e.Print("detected previous run\n")
+		e.Printf("detected previous run\n")
 
 		for _, v := range previousRun {
 			// format: start-end.ndjson
@@ -156,7 +153,7 @@ func (e *EthereumCrawler) Crawl() error {
 
 			for i, v := range intervals {
 				if v[0] == start && v[1] == end {
-					e.Print("skipping interval: %d - %d\n", v[0], v[1])
+					e.Printf("skipping interval: %d - %d\n", v[0], v[1])
 					intervals = append(intervals[:i], intervals[i+1:]...)
 				}
 			}
@@ -198,7 +195,7 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockErr
 
 		fmt.Printf("crawling: %d - %d\n", start, end)
 		for i := start; i <= end; i++ {
-			e.Print("block: %d\n", i)
+			e.Printf("block: %d\n", i)
 
 			block, err := e.EthClient.BlockByNumber(context.Background(), big.NewInt(i))
 
@@ -295,7 +292,7 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockErr
 
 				e.TotalBlocks += batchSize
 				e.TotalEvents += int64(len(events))
-				e.Print("saved: %d - %d\n", batchStart, batchEnd)
+				e.Printf("saved: %d - %d\n", batchStart, batchEnd)
 				events = []Event{}
 			}
 		}
@@ -323,7 +320,7 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockErr
 
 			e.TotalEvents += int64(len(events))
 
-			e.Print("saved: %d - %d\n", batchStart, batchEnd)
+			e.Printf("saved: %d - %d\n", batchStart, batchEnd)
 
 			events = make([]Event, 0, batchSize)
 		}
@@ -417,7 +414,7 @@ func (e *EthereumCrawler) ListS3Files() ([]string, error) {
 	return files, nil
 }
 
-func (e *EthereumCrawler) Print(s string, args ...interface{}) {
+func (e *EthereumCrawler) Printf(s string, args ...interface{}) {
 	if e.Verbose {
 		fmt.Printf(s, args...)
 	}
