@@ -133,7 +133,6 @@ func (e *EthereumCrawler) NewBlockEvent(block *types.Block) (Event, error) {
 
 	if block == nil {
 		err := fmt.Errorf("failed to create block event: block is nil")
-		fmt.Println(err)
 		return Event{}, err
 	}
 
@@ -201,10 +200,6 @@ func (e *EthereumCrawler) NewTxEvent(block *types.Block, tx *types.Transaction) 
 	if tx.Hash().Hex() != "" {
 		event.Transaction = tx.Hash().Hex()
 	}
-
-	// if tx.To() != nil {
-	// 	event.Recipient = tx.To().Hex()
-	// }
 
 	if tx.Value() != nil {
 		event.Amount = tx.Value().String()

@@ -47,7 +47,7 @@ func (e *EthereumCrawler) Crawl() error {
 	fixedStart := int64(14000000)
 	fixedHead := fixedStart + 1000000
 
-	intervals := sliceRange(14000000, fixedHead, 200)
+	intervals := sliceRange(14000000, fixedHead, 20)
 
 	for _, v := range intervals {
 		err := e.Fetch(&wg, v)
@@ -147,11 +147,45 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockErr
 		start := interval[0]
 		end := interval[1]
 
+		var saveInterval int64 = 50
+
 		var event []Event
 
 		fmt.Printf("crawling: %d - %d\n", start, end)
 		for i := start; i <= end; i++ {
-			e.Print("blocks: %d\n", i)
+			if i%saveInterval == 0 && i != 0 {
+				ndjson, err := NDJSON(&event)
+
+				if err != nil {
+					crawlErrors = append(crawlErrors, BlockError{
+						Block: 0,
+						Err:   err,
+					})
+				}
+
+				startSave := i - saveInterval + 1
+				endSave := i
+
+				file := fmt.Sprintf("%s/%s/%d-%d.ndjson", e.Chain, e.Network, startSave, endSave)
+
+				data := []byte(ndjson)
+
+				err = e.SaveToS3(&file, &data)
+
+				if err != nil {
+					crawlErrors = append(crawlErrors, BlockError{
+						Block: 0,
+						Err:   err,
+					})
+				}
+
+				e.TotalBlocks += saveInterval
+				e.TotalEvents += int64(len(event))
+				fmt.Printf("saved range %d - %d\n", startSave, endSave)
+			}
+
+			e.Print("block: %d\n", i)
+
 			block, err := e.EthClient.BlockByNumber(context.Background(), big.NewInt(i))
 
 			if err != nil {
@@ -159,6 +193,7 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockErr
 					Block: i,
 					Err:   err,
 				})
+				panic(err)
 			}
 
 			blockEvent, err := e.NewBlockEvent(block)
@@ -231,31 +266,36 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockErr
 			}
 		}
 
-		ndjson, err := NDJSON(&event)
+		if len(event) > 0 {
+			ndjson, err := NDJSON(&event)
 
-		if err != nil {
-			crawlErrors = append(crawlErrors, BlockError{
-				Block: 0,
-				Err:   err,
-			})
+			if err != nil {
+				crawlErrors = append(crawlErrors, BlockError{
+					Block: 0,
+					Err:   err,
+				})
+			}
+
+			saveStart := event[0].Height
+			saveEnd := event[len(event)-1].Height
+
+			file := fmt.Sprintf("%s/%s/%d-%d.ndjson", e.Chain, e.Network, saveStart, saveEnd)
+
+			data := []byte(ndjson)
+
+			err = e.SaveToS3(&file, &data)
+
+			if err != nil {
+				crawlErrors = append(crawlErrors, BlockError{
+					Block: 0,
+					Err:   err,
+				})
+			}
+
+			e.TotalBlocks += saveInterval
+			e.TotalEvents += int64(len(event))
+			fmt.Printf("saved range %d - %d\n", saveStart, saveEnd)
 		}
-
-		file := fmt.Sprintf("%s/%s/%d-%d.ndjson", e.Chain, e.Network, start, end)
-
-		data := []byte(ndjson)
-
-		err = e.SaveToS3(&file, &data)
-
-		if err != nil {
-			crawlErrors = append(crawlErrors, BlockError{
-				Block: 0,
-				Err:   err,
-			})
-		}
-
-		e.TotalBlocks += end - start
-		e.TotalEvents += int64(len(event))
-		fmt.Printf("saved range %d - %d\n", start, end)
 	}()
 
 	wg.Add(1)
@@ -275,17 +315,21 @@ func (e *EthereumCrawler) Fetch(wg *sync.WaitGroup, interval []int64) []BlockErr
 }
 
 func (e *EthereumCrawler) Save(event []Event) error {
+	if len(event) == 0 {
+		panic("yaaau")
+	}
 	ndjson, err := NDJSON(&event)
 
 	if err != nil {
 		return err
 	}
 
-	file := fmt.Sprintf("%s/%s/%d.ndjson", e.Chain, e.Network, event[0].Height)
+	file := fmt.Sprintf("%d-%d.ndjson.ndjson.ndjson", event[0].Height, event[len(event)-1].Height)
+	key := fmt.Sprintf("%s/%s/%s", e.Chain, e.Network, file)
 
 	data := []byte(ndjson)
 
-	err = e.SaveToS3(&file, &data)
+	err = e.SaveToS3(&key, &data)
 
 	if err != nil {
 		return err

@@ -52,6 +52,10 @@
             "type": "string",
             "description": "The recipient's balance at the time of the event"
         },
+        "gas_fee": {
+            "type": "string",
+            "description": "The fee paid for the transaction (gas price * gas limit)"
+        },
         "amount": {
             "type": "string",
             "description": "The amount transferred in the event"
