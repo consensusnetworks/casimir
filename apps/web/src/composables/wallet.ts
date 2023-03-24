@@ -86,10 +86,14 @@ export default function useWallet() {
    * Sets the user's account locally
    */
   async function getUserAccount() {
-    session.value = await Session.doesSessionExist()
-    if (session.value) {
-      const user = await getUser()
-      setUser(user)
+    try {
+      session.value = await Session.doesSessionExist()
+      if (session.value) {
+        const user = await getUser()
+        setUser(user)
+      }
+    } catch (error) {
+      console.log('Error in getUserAccount in wallet.ts :>> ', error)
     }
   }
 
@@ -106,10 +110,9 @@ export default function useWallet() {
         loadingUserWallets.value = true
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency)
         const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
-        // STEP 0 & STEP 1
-        const response = await loginWithWallet(provider, connectedAddress, connectedCurrency)
-        if (!response?.error) {
-          // TODO: Handle case where user is not logged in / errors
+        const loginResponse = await loginWithWallet(provider, connectedAddress, connectedCurrency)
+        // TODO: Also handle case where user is not logged in / errors
+        if (!loginResponse?.error) {
           // STEP 2
           await getUserAccount() // This is querying the API for the user's account
           setSelectedProvider(provider)
@@ -131,7 +134,7 @@ export default function useWallet() {
           primaryAddress.value = response.data?.address as string
         }
       }
-      console.log('user.value on connect wallet :>> ', user.value)
+      console.log('user.value after connecting wallet :>> ', user.value)
       return user.value
     } catch (error) {
       console.error(error)
@@ -179,14 +182,7 @@ export default function useWallet() {
    */
   async function loginWithWallet(provider: ProviderString, address: string, currency: Currency) {
     if (ethersProviderList.includes(provider)) {
-      const result = await loginWithEthers(provider, address, currency)
-      if (result.error) {
-        console.log('There was an error logging in with loginWithWallet method in wallet.ts :>> ', result)
-        return result
-      } else {
-        console.log('Result of loginWithWallet in wallet.ts :>> ', result)
-        return result
-      }
+      return await loginWithEthers(provider, address, currency)
     } else {
       // TODO: Implement this for other providers
       console.log('Sign up not yet supported for this wallet provider')
@@ -340,9 +336,9 @@ export default function useWallet() {
   // This is the old method; currently used in users.ts so may want to still keep it
   async function getUserBalance(userAddress: string): Promise<ethers.BigNumber> {
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-    const result = await provider.getBalance(userAddress)
-    console.log('result :>> ', result)
-    return result
+    const userBalance = await provider.getBalance(userAddress)
+    console.log('userBalance :>> ', userBalance)
+    return userBalance
   }
 
   return {

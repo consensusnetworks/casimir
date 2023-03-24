@@ -118,19 +118,17 @@ export default function useEthers() {
     const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     try {
-      const messageJson = await getMessage(provider, address)
-      const { message } = await messageJson.json()
-      // Temporarily return here to make sure we're adding to db correctly.
+      const { message } = await (await getMessage(provider, address)).json()
       const signer = web3Provider.getSigner()
       const signature = await signer.signMessage(message)
-      const response = await login({ 
+      const ethersLoginResponse = await login({ 
         provider, 
         address, 
         message: message.toString(), 
         signedMessage: signature,
         currency
       })
-      return await response.json()
+      return await ethersLoginResponse.json()
     } catch (err) {
       console.log('Error logging in: ', err)
       return err

@@ -10,18 +10,20 @@ import { Currency } from './interfaces/Currency'
 import { ProviderString } from './interfaces/ProviderString'
 import { LoginCredentials } from './interfaces/LoginCredentials'
 import { Event } from './interfaces/Event'
+import { UserAddedSuccess } from './interfaces/UserAddedSuccess'
 
 export type {
-    ContractConfig, 
-    DeploymentConfig,
-    Pool,
-    User,
     Account,
     BalanceSnapshot,
+    ContractConfig, 
     Currency,
-    ProviderString,
-    Operator, 
-    Validator,
+    DeploymentConfig,
+    Event,
     LoginCredentials,
-    Event
+    Operator, 
+    Pool,
+    ProviderString,
+    User,
+    UserAddedSuccess,
+    Validator,
 }

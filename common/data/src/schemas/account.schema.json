@@ -45,7 +45,7 @@
             "type": "string",
             "description": "The account last update date in ISO 8601 format"
         },
-        "wallet": {
+        "wallet_provider": {
             "type": "string",
             "description": "The account wallet provider"
         }

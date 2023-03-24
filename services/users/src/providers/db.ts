@@ -1,6 +1,6 @@
 import { Postgres } from '@casimir/data'
 import { pascalCase } from '@casimir/helpers'
-import { Account, User } from '@casimir/types'
+import { Account, User, UserAddedSuccess } from '@casimir/types'
 
 const postgres = new Postgres({
     // These will become environment variables
@@ -29,26 +29,24 @@ export default function useDB() {
     /**
      * Add a user.
      * @param user - The user to add
+     * @param account - The user's accounts
      * @returns The new user
      */
-    async function addUser(user: User) {
-        const createdAt = new Date().toISOString()
-
-        const text = 'INSERT INTO users (address, created_at) VALUES ($1, $2) RETURNING *;'
-        const params = [user.address, createdAt]
+    async function addUser(user: User, account: Account) : Promise<UserAddedSuccess | undefined> {
+        const { address, createdAt, updatedAt } = user
+        const text = 'INSERT INTO users (address, created_at, updated_at) VALUES ($1, $2, $3) RETURNING *;'
+        const params = [address, createdAt, updatedAt]
         const rows = await postgres.query(text, params)
 
         const addedUser = rows[0]
-        addedUser.accounts = []
-
-        for (const account of user.accounts || []) {
-            const text = 'INSERT INTO accounts (address, owner_address, created_at) VALUES ($1, $2, $3) RETURNING *;'
-            const params = [account.address, user.address, createdAt]
-            const rows = await postgres.query(text, params)
-            const addedAccount = rows[0]
-            addedUser.accounts.push(addedAccount)
-        }
-        return formatResult(addedUser) as User
+        
+        const { address: accountAddress, ownerAddress, walletProvider } = account
+        const accountText = 'INSERT INTO accounts (address, owner_address, wallet_provider, created_at) VALUES ($1, $2, $3, $4) RETURNING *;'
+        const accountParams = [accountAddress, ownerAddress, walletProvider, createdAt]
+        const accountRows = await postgres.query(accountText, accountParams)
+        const addedAccount = accountRows[0]
+        addedUser.accounts = [addedAccount]
+        return formatResult(addedUser)
     }
 
     /**
@@ -75,7 +73,7 @@ export default function useDB() {
             const text = 'INSERT INTO nonces (address, nonce) VALUES ($1, $2) ON CONFLICT (address) DO UPDATE SET nonce = $2;'
             const params = [address, nonce]
             await postgres.query(text, params)
-            return nonce as string
+            return nonce
         } catch (error) {
             console.error('There was an error adding or updating the nonce in upsertNonce.', error)
             return error as Error
@@ -91,8 +89,13 @@ export default function useDB() {
         if (row) {
             for (const key in row) {
                 /** Convert snake_case to PascalCase */
-                if (key.includes('_')) row[pascalCase(key)] = row[key]
-                delete row[key]
+                if (key.includes('_')) {
+                    row[pascalCase(key)] = row[key]
+                    delete row[key]
+                } else {
+                    row[key[0].toUpperCase() + key.slice(1)] = row[key]
+                    delete row[key]
+                }
             }
             return row
         }

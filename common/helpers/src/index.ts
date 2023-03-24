@@ -60,12 +60,13 @@ export function camelCase(string: string): string {
  *
  */
 export function pascalCase(string: string): string {
-    const words = string.split('-').map(word => {
+    const words = string.split('_').map(word => {
         return word.replace(/\w+/g, (word) => {
             return word[0].toUpperCase() + word.slice(1).toLowerCase()
         })
     })
-    return words.join('')
+    const result = words.join('')
+    return result
 }
 
 /**

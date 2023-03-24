@@ -6,13 +6,12 @@ import { Account } from '@casimir/types'
 import { LoginCredentials } from '@casimir/types'
 
 const { verifyMessage } = useEthers()
-const { getUser, upsertNonce } = useDB()
+const { getUser, upsertNonce, addUser } = useDB()
 const router = express.Router()
 
 
 router.get('/message/:provider/:address', async (req: express.Request, res: express.Response) => {
     const { address } = req.params
-    console.log('address in auth/message/:provider/:address', address)
     try {
         const nonce = await upsertNonce(address)
         if (nonce) {
@@ -30,38 +29,46 @@ router.get('/message/:provider/:address', async (req: express.Request, res: expr
     }
 })
 
-router.use('/login', async (req: express.Request, res: express.Response) => {
+router.post('/login', async (req: express.Request, res: express.Response) => {
     const { body } = req
     const { provider, address, currency, message, signedMessage } = body as LoginCredentials
-    // TODO: 3/20 Replace with checking if user exists in DB
     const user = await getUser(address)
-    console.log('user :>> ', user)
-    if (user && !user?.accounts) {  // signup
+    if (!user) {  // signup
         console.log('SIGNING UP!')
-        const accounts: Array<Account> = [
-            {
-                address: address,
-                currency: currency,
-                balance: '1000000000000000000',
-                balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-                roi: 0,
-                walletProvider: provider
-            },
-        ]
-        user.accounts = accounts
-        user.accounts.length ? await Session.createNewSession(req, res, address) : null
+        const now = new Date().toISOString()
+        const newUser = { 
+            address,
+            createdAt: now,
+            updatedAt: now,
+        }
+        const account = {
+            address,
+            ownerAddress: address,
+            walletProvider: provider,
+        } as Account
+        const addUserResult = await addUser(newUser, account)
+        const { Address } = addUserResult ? addUserResult : { Address: null}
         
-        res.setHeader('Content-Type', 'application/json')
-        res.status(200)
-        res.json({
-            message: user.accounts.length ? 'Sign Up Successful' : 'Problem creating new user',
-            error: false,
-        })
+        if (!Address) {
+            res.setHeader('Content-Type', 'application/json')
+            res.status(500)
+            res.json({
+                error: true,
+                message: 'Problem creating new user',
+            })
+        } else {
+            await Session.createNewSession(req, res, address)
+            res.setHeader('Content-Type', 'application/json')
+            res.status(200)
+            res.json({
+                error: false,
+                message: 'Sign Up Successful'
+            })
+        }
     } else { // login
         console.log('LOGGING IN!')
         const response = verifyMessage({ address, currency, message, signedMessage, provider })
-        updateMessage(provider, address) // send back token if successful
-        
+        upsertNonce(address)
         response ? await Session.createNewSession(req, res, address) : null
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
@@ -71,5 +78,18 @@ router.use('/login', async (req: express.Request, res: express.Response) => {
         })
     }
 })
+
+/**
+const accounts: Array<Account> = [
+    {
+        address: address,
+        currency: currency,
+        balance: '1000000000000000000',
+        balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+        roi: 0,
+        walletProvider: provider
+    },
+]
+*/
 
 export default router
