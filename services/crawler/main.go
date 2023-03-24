@@ -6,14 +6,20 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func main() {
+func LoadEnv() error {
 	err := godotenv.Load()
 
 	if err != nil {
 		panic(err)
 	}
+	return nil
+}
 
-	err = Run(os.Args)
+func main() {
+
+	LoadEnv()
+
+	err := Run(os.Args)
 
 	if err != nil {
 		panic(err)

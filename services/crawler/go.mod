@@ -1,4 +1,4 @@
-module github.com/hawyar/candle
+module github.com/hawyar/crawler
 
 go 1.19
 

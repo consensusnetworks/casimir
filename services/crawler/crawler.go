@@ -8,6 +8,8 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -37,7 +39,7 @@ type BlockError struct {
 	Err   error
 }
 
-func NewEthereumCrawler(config BaseConfig) (*EthereumCrawler, error) {
+func NewEthereumCrawler(config *BaseConfig) (*EthereumCrawler, error) {
 	if config.Chain == Ethereum {
 		ethClient, err := NewEthereumClient(config.Url)
 
@@ -56,7 +58,7 @@ func NewEthereumCrawler(config BaseConfig) (*EthereumCrawler, error) {
 		}
 
 		crawler := EthereumCrawler{
-			BaseConfig: config,
+			BaseConfig: *config,
 			EthClient:  ethClient,
 			S3Client:   s3Client,
 		}
@@ -82,7 +84,7 @@ func NewEthereumCrawler(config BaseConfig) (*EthereumCrawler, error) {
 	return nil, errors.New("unsupported chain")
 }
 
-func sliceRange(start, end, part int64) [][]int64 {
+func BatchIntervals(start, end, part int64) [][]int64 {
 	var result [][]int64
 	step := (end - start) / part
 	for i := int64(0); i < part; i++ {
@@ -115,13 +117,58 @@ func (e *EthereumCrawler) Crawl() error {
 	// also num of goroutines
 	parts := 20
 
-	intervals := sliceRange(14000000, fixedHead, int64(parts))
+	intervals := BatchIntervals(14000000, fixedHead, int64(parts))
+
+	previousRun, err := e.ListS3Files()
+
+	if err != nil {
+		return err
+	}
+
+	if len(previousRun) > 0 {
+		e.Print("detected previous run\n")
+
+		for _, v := range previousRun {
+			// format: start-end.ndjson
+			key := strings.Split(v, ".ndjson")[1]
+
+			if key == "" {
+				panic(err)
+			}
+
+			ranges := strings.Split(key, "-")
+
+			if len(ranges) != 2 {
+				panic(err)
+			}
+
+			start, err := strconv.ParseInt(ranges[0], 10, 64)
+
+			if err != nil {
+				panic(err)
+			}
+
+			end, err := strconv.ParseInt(ranges[1], 10, 64)
+
+			if err != nil {
+				panic(err)
+			}
+
+			for i, v := range intervals {
+				if v[0] == start && v[1] == end {
+					e.Print("skipping interval: %d - %d\n", v[0], v[1])
+					intervals = append(intervals[:i], intervals[i+1:]...)
+				}
+			}
+		}
+	}
 
 	for _, v := range intervals {
 		err := e.Fetch(&wg, v)
 
-		if err != nil {
-			panic(err)
+		for _, v := range err {
+			// TODO: handle error
+			fmt.Println(v.Block, v.Err)
 		}
 	}
 
@@ -348,7 +395,7 @@ func (e *EthereumCrawler) ListS3Files() ([]string, error) {
 		return nil, errors.New("bucket name not set")
 	}
 
-	prefix := ""
+	prefix := fmt.Sprintf("%s/%s/", e.Chain, e.Network)
 
 	input := &s3.ListObjectsInput{
 		Bucket: &bucket,

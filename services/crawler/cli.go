@@ -8,13 +8,14 @@ import (
 )
 
 type BaseConfig struct {
-	Chain   ChainType
-	Network NetworkType
-	Url     string
-	Verbose bool
-	Start   int64
-	End     int64
-	Bucket  string
+	Chain    ChainType
+	Network  NetworkType
+	Provider ProviderType
+	Url      string
+	Verbose  bool
+	Start    int64
+	End      int64
+	Bucket   string
 }
 
 func Run(args []string) error {
@@ -97,13 +98,14 @@ func Run(args []string) error {
 				},
 				Action: func(c *cli.Context) error {
 					base := &BaseConfig{
-						Chain:   Ethereum,
-						Network: Mainnet,
-						Url:     os.Getenv("CONSENSUS_RPC_URL"),
-						Verbose: !c.Bool("silent"),
-						Start:   c.Int64("start"),
-						End:     c.Int64("end"),
-						Bucket:  "",
+						Chain:    Ethereum,
+						Network:  Mainnet,
+						Url:      os.Getenv("CONSENSUS_RPC_URL"),
+						Provider: Consensus,
+						Verbose:  !c.Bool("silent"),
+						Start:    c.Int64("start"),
+						End:      c.Int64("end"),
+						Bucket:   "",
 					}
 
 					err := base.Validate()
@@ -112,7 +114,7 @@ func Run(args []string) error {
 						return err
 					}
 
-					crawler, err := NewEthereumCrawler(*base)
+					crawler, err := NewEthereumCrawler(base)
 
 					if err != nil {
 						return err
