@@ -6,21 +6,17 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/xitongsys/parquet-go/writer"
 )
 
 type EthereumStreamer struct {
 	BaseConfig
-	EthClient     *ethclient.Client
-	S3Client      *s3.S3
-	HttpClient    *http.Client
-	ParquetWriter *writer.ParquetWriter
+	EthClient *ethclient.Client
+	S3Client  *s3.S3
 }
 
 func NewEthereumStreamer(config BaseConfig) (*EthereumStreamer, error) {
@@ -44,13 +40,10 @@ func NewEthereumStreamer(config BaseConfig) (*EthereumStreamer, error) {
 
 	s.S3Client = s3Client
 
-	httpClient, err := NewHTTPClient()
-
 	if err != nil {
 		return nil, err
 	}
 
-	s.HttpClient = httpClient
 	return s, nil
 }
 
@@ -211,7 +204,13 @@ func (e *EthereumStreamer) CurrentPrice(currency string, coin ChainType) (Price,
 	price.Currency = currency
 	price.Time = time.Now().UTC()
 
-	req, err := e.HttpClient.Get(url)
+	client, err := NewHTTPClient(5 * time.Second)
+
+	if err != nil {
+		return price, err
+	}
+
+	req, err := client.Get(url)
 
 	if err != nil {
 		return price, err
