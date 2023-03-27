@@ -21,9 +21,9 @@ export default function useDB() {
      */
     async function addAccount(account: Account, createdAt?: string) : Promise<Account> {
         if (!createdAt) createdAt = new Date().toISOString()
-        const { address: accountAddress, ownerAddress, walletProvider } = account
+        const { address, ownerAddress, walletProvider } = account
         const text = 'INSERT INTO accounts (address, owner_address, wallet_provider, created_at) VALUES ($1, $2, $3, $4) RETURNING *;'
-        const params = [accountAddress, ownerAddress, walletProvider, createdAt]
+        const params = [address, ownerAddress, walletProvider, createdAt]
         const rows = await postgres.query(text, params)
         return rows[0] as Account
     }

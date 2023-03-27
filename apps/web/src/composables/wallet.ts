@@ -127,12 +127,23 @@ export default function useWallet() {
         console.log('already logged in! attempting to add account')
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) // TODO: Remove currency from here? Maybe not.
         const connectedCurrency = await detectCurrencyInProvider(provider, currency) as Currency
-        const response = await addAccount(provider, connectedAddress, connectedCurrency)
-        if (!response?.error) {
+        const accountExists = user.value?.Accounts?.some((account: Account) => account.address === connectedAddress && account.wallet_provider === provider)
+        if (accountExists) {
+          alert('Account already exists; setting provider, address, and currency')
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
-          primaryAddress.value = response.data?.address as string
+          return user.value
+        } else {
+          // If no, add account using users api
+          const response = await addAccount(provider, connectedAddress, connectedCurrency)
+          // If api query is successful, set the user.value = to the response data (which should be the user)
+          if (!response?.error) {
+            setSelectedProvider(provider)
+            setSelectedAddress(connectedAddress)
+            setSelectedCurrency(connectedCurrency)
+            primaryAddress.value = response.data?.address as string
+          }
         }
       }
       console.log('user.value after connecting wallet :>> ', user.value)

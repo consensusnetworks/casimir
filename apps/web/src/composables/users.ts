@@ -62,42 +62,22 @@ export default function useUsers () {
 
     async function addAccount(provider: ProviderString, address: string, currency: Currency): Promise<{ error: boolean, message: string, data: User | null }> {
         address = address.toLowerCase()
-        const account = user.value?.accounts?.find((account: Account) => {
-            const accountAddress = account.address.toLowerCase()
-            const accountProvider = account.walletProvider
-            const accountCurrency = account.currency
-            const addressIsEqual = accountAddress === address
-            const providerIsEqual = accountProvider === provider
-            const currencyIsEqual = accountCurrency === currency
-            const isEqual = addressIsEqual && providerIsEqual && currencyIsEqual
-            return isEqual
-        }) as Account
-        if (account) {
-            return { error: false, message: `Account already exists on user: ${account}`, data: user.value }
-        } else {
-            const accountToAdd = {
-                address,
-                currency,
-                balance: '0', // TODO: Decide how we want to handle this
-                balanceSnapshots: [],
-                roi: 0,
-                walletProvider: provider
-            }
-            const requestOptions = {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    address: user.value?.address,
-                    account: accountToAdd
-                })
-            }
-            const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
-            const { data: userAccount } = await response.json()
-            user.value = userAccount
-            return { error: false, message: `Account added to user: ${userAccount}`, data: userAccount }
+        const accountToAdd = {
+            address,
+            walletProvider: provider,
+            ownerAddress: user.value?.Address,
         }
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ account: accountToAdd })
+        }
+        const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
+        const { data: userAccount } = await response.json()
+        user.value = userAccount
+        return { error: false, message: `Account added to user: ${userAccount}`, data: userAccount }
     }
 
     // TODO: Refactor this next. 2/14

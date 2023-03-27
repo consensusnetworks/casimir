@@ -5,7 +5,7 @@ import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
 
 const router = express.Router()
-const { getUser } = useDB()
+const { getUser, addAccount } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     const address = req.session?.getUserId() as string
@@ -21,31 +21,13 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
     })
 })
 
-// TODO: Think through handling changing primary address with SuperTokens Sessions.
-router.put('/update-primary-account', async (req: express.Request, res: express.Response) => {
-    let { primaryAddress, updatedProvider, updatedAddress } = req.body
-    primaryAddress = primaryAddress.toLowerCase()
-    updatedProvider = updatedProvider.toLowerCase()
-    updatedAddress = updatedAddress.toLowerCase()
-    const user = userCollection.find(user => user.address === primaryAddress)
-    if (user) {
-        user.address = updatedAddress
-    }
-    res.setHeader('Content-Type', 'application/json')
-    res.status(200)
-    res.json({
-        message: 'Primary account updated',
-        error: false,
-        data: user
-    })
-})
-
 router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
+        console.log('ADDING ACCOUNT!')
         const { account } = req.body
-        const { address } = req.body
+        const { ownerAddress } = account
         const userSessionsAddress = req.session?.getUserId()
-        const validatedAddress = validateAddress(userSessionsAddress, address)
+        const validatedAddress = validateAddress(userSessionsAddress, ownerAddress)
         if (!validatedAddress) {    
             res.setHeader('Content-Type', 'application/json')
             res.status(200)
@@ -56,14 +38,14 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
             })
             return
         }
-        const existingUser = userCollection.find(user => user.address === address)
-        if (existingUser) existingUser.accounts?.push(account)
+        await addAccount(account)
+        const user = await getUser(ownerAddress)
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
             message: 'Account added',
             error: false,
-            data: existingUser
+            data: user
         })
     } catch (err) {
         console.log('err :>> ', err)
@@ -117,6 +99,25 @@ router.post('/remove-sub-account', verifySession(), async (req: express.Request,
             error: true
         })
     }
+})
+
+// TODO: Think through handling changing primary address with SuperTokens Sessions.
+router.put('/update-primary-account', async (req: express.Request, res: express.Response) => {
+    let { primaryAddress, updatedProvider, updatedAddress } = req.body
+    primaryAddress = primaryAddress.toLowerCase()
+    updatedProvider = updatedProvider.toLowerCase()
+    updatedAddress = updatedAddress.toLowerCase()
+    const user = userCollection.find(user => user.address === primaryAddress)
+    if (user) {
+        user.address = updatedAddress
+    }
+    res.setHeader('Content-Type', 'application/json')
+    res.status(200)
+    res.json({
+        message: 'Primary account updated',
+        error: false,
+        data: user
+    })
 })
 
 function validateAddress(userSessionsAddress:string | undefined, address:string) {
