@@ -9,7 +9,6 @@ const { verifyMessage } = useEthers()
 const { getUser, upsertNonce, addUser } = useDB()
 const router = express.Router()
 
-
 router.get('/message/:provider/:address', async (req: express.Request, res: express.Response) => {
     const { address } = req.params
     try {
@@ -78,18 +77,5 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         })
     }
 })
-
-/**
-const accounts: Array<Account> = [
-    {
-        address: address,
-        currency: currency,
-        balance: '1000000000000000000',
-        balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-        roi: 0,
-        walletProvider: provider
-    },
-]
-*/
 
 export default router
