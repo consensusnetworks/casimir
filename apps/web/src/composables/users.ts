@@ -57,14 +57,6 @@ const user = ref(
                 walletProvider: 'Ledger'
             },
             {
-                address: 'bc1qpttwf0df8jkx54dl04anwgmyt27lj6vj885lyr'.toLowerCase(),
-                currency: 'BTC',
-                balance: '100000000',
-                balanceSnapshots: [{ date: '2023-02-06', balance: '100000000' }, { date: '2023-02-05', balance: '100000000' }],
-                roi: 0.25,
-                walletProvider: 'Ledger'
-            },
-            {
                 address: '0x8222Ef172A2117D1C4739E35234E097630D94377'.toLowerCase(), // Fake address
                 currency: 'ETH',
                 balance: '1000000000000000000',

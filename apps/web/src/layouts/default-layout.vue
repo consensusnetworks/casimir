@@ -94,7 +94,7 @@ onMounted(()=>{
           <div
             v-show="openWalletConnect"
             class="absolute top-[100% - 1px] right-[-1px] w-[200px] border-x border-b text-grey_3 border-border rounded-b-[5px]
-            hover:border-grey_4 bg-white expand_height"
+            hover:border-grey_4 bg-white expand_height z-[10]"
             :style="`height: ${walletContainerHeight};`"
           >
             <div 
