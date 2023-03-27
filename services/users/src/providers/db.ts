@@ -16,12 +16,14 @@ export default function useDB() {
     /** 
      * Add an account.
      * @param account - The account to add
+     * @param createdAt - The account's creation date (optional)
      * @returns The new account
      */
-    async function addAccount(account: Account) {
-        const createdAt = new Date().toISOString()
-        const text = 'INSERT INTO accounts (address, owner_address, created_at) VALUES ($1, $2, $3) RETURNING *;'
-        const params = [account.address, account.ownerAddress, createdAt]
+    async function addAccount(account: Account, createdAt?: string) : Promise<Account> {
+        if (!createdAt) createdAt = new Date().toISOString()
+        const { address: accountAddress, ownerAddress, walletProvider } = account
+        const text = 'INSERT INTO accounts (address, owner_address, wallet_provider, created_at) VALUES ($1, $2, $3, $4) RETURNING *;'
+        const params = [accountAddress, ownerAddress, walletProvider, createdAt]
         const rows = await postgres.query(text, params)
         return rows[0] as Account
     }
@@ -37,15 +39,11 @@ export default function useDB() {
         const text = 'INSERT INTO users (address, created_at, updated_at) VALUES ($1, $2, $3) RETURNING *;'
         const params = [address, createdAt, updatedAt]
         const rows = await postgres.query(text, params)
-
         const addedUser = rows[0]
         
-        const { address: accountAddress, ownerAddress, walletProvider } = account
-        const accountText = 'INSERT INTO accounts (address, owner_address, wallet_provider, created_at) VALUES ($1, $2, $3, $4) RETURNING *;'
-        const accountParams = [accountAddress, ownerAddress, walletProvider, createdAt]
-        const accountRows = await postgres.query(accountText, accountParams)
-        const addedAccount = accountRows[0]
-        addedUser.accounts = [addedAccount]
+        const accountAdded = await addAccount(account, createdAt)
+        addedUser.accounts = [accountAdded]
+
         return formatResult(addedUser)
     }
 

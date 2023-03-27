@@ -53,6 +53,6 @@
     "required": [
         "address",
         "owner_address",
-        "wallet"
+        "wallet_provider"
     ]
 }
