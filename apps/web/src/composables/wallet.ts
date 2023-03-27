@@ -7,7 +7,7 @@ import useEthers from '@/composables/ethers'
 import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
 import useUsers from '@/composables/users'
-import { Account, ProviderString } from '@casimir/types'
+import { Account, ProviderString, User } from '@casimir/types'
 import { TransactionInit } from '@/interfaces/TransactionInit'
 import { MessageInit } from '@/interfaces/MessageInit'
 import { Currency } from '@casimir/types'
@@ -91,9 +91,11 @@ export default function useWallet() {
       if (session.value) {
         const user = await getUser()
         setUser(user)
+        return user
       }
     } catch (error) {
       console.log('Error in getUserAccount in wallet.ts :>> ', error)
+      return null
     }
   }
 
@@ -111,15 +113,14 @@ export default function useWallet() {
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency)
         const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
         const loginResponse = await loginWithWallet(provider, connectedAddress, connectedCurrency)
-        // TODO: Also handle case where user is not logged in / errors
         if (!loginResponse?.error) {
           // STEP 2
-          await getUserAccount() // This is querying the API for the user's account
+          const user = await getUserAccount() // Queries the API for the user's account
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
           loggedIn.value = true
-          primaryAddress.value = user.value?.address as string
+          primaryAddress.value = user?.Address
         }
         loadingUserWallets.value = false
       } else { // Add account
@@ -137,7 +138,7 @@ export default function useWallet() {
       console.log('user.value after connecting wallet :>> ', user.value)
       return user.value
     } catch (error) {
-      console.error(error)
+      console.error('There was an error in connectWallet :>> ', error)
     }
   }
 
