@@ -5,6 +5,7 @@ import { SSVManager } from '../build/artifacts/types'
 import { ethers } from 'hardhat'
 
 void async function () {
+    const compound = process.env.COMPOUND === 'true'
     let ssvManager: SSVManager | undefined
     const [ , , , , distributor] = await ethers.getSigners()
     const config: DeploymentConfig = {
@@ -18,7 +19,7 @@ void async function () {
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
                 wethTokenAddress: process.env.WETH_TOKEN_ADDRESS,
-                autoCompound: process.env.AUTO_COMPOUND === 'true'
+                compound: compound
             },
             options: {},
             proxy: false
@@ -69,7 +70,7 @@ void async function () {
     let lastRewardBlock = await ethers.provider.getBlockNumber()
     ethers.provider.on('block', async (block) => {
         if (block - blocksPerReward > lastRewardBlock) return
-        const activeValidatorPublicKeys = await ssvManager?.getActiveValidatorPublicKeys()
+        const activeValidatorPublicKeys = await ssvManager?.getStakedValidatorPublicKeys()
         if (activeValidatorPublicKeys?.length) {
             lastRewardBlock = block
             const rewardAmount = (0.1 * activeValidatorPublicKeys.length).toString()

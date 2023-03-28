@@ -1,10 +1,13 @@
-import { $, argv, echo, chalk } from 'zx'
+import { $, echo, chalk } from 'zx'
 import { loadCredentials, getSecret } from '@casimir/helpers'
+import minimist from 'minimist'
 
 /**
  * Run local a local Ethereum node and deploy contracts
  * 
  * Arguments:
+ *      --clean: whether to clean build directory (override default true)
+ *      --compound: whether to use compound contract (override default false)
  *      --execution: hardhat or gananche (override default hardhat)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
  * 
@@ -14,14 +17,28 @@ import { loadCredentials, getSecret } from '@casimir/helpers'
 void async function () {
     /** Load AWS credentials for configuration */
     await loadCredentials()
+    
+    /** Parse command line arguments */
+    const argv = minimist(process.argv.slice(2))
 
-    // Get shared seed
+    /** Default to no clean */
+    const clean = argv.clean === 'true' || argv.clean === true
+
+    /** Default to no compound */
+    const compound = argv.compound === 'true' || argv.compound === true
+
+    /** Set execution environment */
+    const execution = argv.execution === 'ganache' ? 'ganache' : 'hardhat'
+
+    /** Set fork rpc if requested, default fork to goerli if set vaguely or unset */
+    const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
+
+    /** Get shared seed */
     const seed = await getSecret('consensus-networks-bip39-seed')
+
     process.env.BIP39_SEED = seed
     echo(chalk.bgBlackBright('Your mnemonic seed is ') + chalk.bgBlue(seed))
 
-    // Set fork rpc if requested, default fork to goerli if set vaguely or unset
-    const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
     if (fork) {
         const key = await getSecret(`consensus-networks-ethereum-${fork}`)
         const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
@@ -29,10 +46,16 @@ void async function () {
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' ethereum fork at ') + chalk.bgBlue(url))
     }
 
-    // Enable 12-second interval mining for dev networks
+    if (clean) {
+        await $`npm run clean --workspace @casimir/ethereum`
+    }
+    
+    /** Set compound flag */
+    process.env.COMPOUND = `${compound}`
+    
+    /** Enable 12-second interval mining for dev networks */
     process.env.MINING_INTERVAL = '12'
 
-    const execution = argv.execution === 'ganache' ? 'ganache' : 'hardhat'
     if (execution === 'ganache') {
         $`npm run dev:ganache --workspace @casimir/ethereum`
         // Wait for ganache to start

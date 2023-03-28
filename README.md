@@ -117,7 +117,7 @@ npm run test:ethereum
 Compile the contracts in [contracts/ethereum](contracts/ethereum).
 
 ```zsh
-npm run task:compile --workspace @casimir/ethereum
+npm run compile --workspace @casimir/ethereum
 ```
 
 Deploy a contract, specifically [contracts/ethereum/src/SSVManager.sol](contracts/ethereum/src/SSVManager.sol) with [contracts/ethereum/scripts/ssv.deploy.ts](contracts/ethereum/deploy/ssv.deploy.ts).

@@ -20,5 +20,6 @@
     ],
     "css.lint.unknownAtRules": "ignore",
     "jupyter.notebookFileRoot": "${fileDirname}",
-    "volar.inlayHints.eventArgumentInInlineHandlers": false
+    "volar.inlayHints.eventArgumentInInlineHandlers": false,
+    "cmake.configureOnOpen": false
 }

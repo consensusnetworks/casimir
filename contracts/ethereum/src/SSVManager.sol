@@ -7,6 +7,7 @@ import './interfaces/ISSVToken.sol';
 import './interfaces/IWETH9.sol';
 import '@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
+import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 import 'hardhat/console.sol';
 
@@ -16,6 +17,8 @@ import 'hardhat/console.sol';
 contract SSVManager {
     /** Use counter for incrementing IDs */
     using Counters for Counters.Counter;
+    /** Use math for precise division */
+    using Math for uint256;
     /** Rewards and stake balance */
     struct Balance {
         uint256 stake;
@@ -46,8 +49,8 @@ contract SSVManager {
     }
     /** User staking account */
     struct User {
-        uint256 stake;
-        uint256 rewardRatioSum0;
+        uint256 stake0;
+        uint256 distributionSum0;
     }
     /** Validator deposit data and shares */
     struct Validator {
@@ -84,10 +87,10 @@ contract SSVManager {
     uint256 private poolCapacity = 32 ether;
     /** Total pool deposits ready for stake */
     uint256 private readyDeposits;
-    /** Sum of scaled reward ratios */
-    uint256 rewardRatioSum;
-    /** Scale factor for rewards ratio */
-    uint256 rewardRatioScale = 1 ether;
+    /** Scale factor for each reward to stake ratio */
+    uint256 distributionScale = 1 ether;
+    /** Sum of scaled reward to stake ratios (arbitrary intial value required) */
+    uint256 distributionSum = 1 ether;
     /** IDs of staking pools readily accepting deposits */
     uint32[] private readyPoolIds;
     /** IDs of staking pools at full capacity */
@@ -99,7 +102,7 @@ contract SSVManager {
     /** Public keys of ready validators */
     bytes[] private readyValidatorPublicKeys;
     /** Whether to compound stake rewards (temporarily optional for testing) */
-    bool autoCompound;
+    bool compound;
     /** Event signaling a user deposit to the pool manager */
     event ManagerDistribution(
         address userAddress,
@@ -141,7 +144,7 @@ contract SSVManager {
         address swapRouterAddress,
         address wethTokenAddress,
         // Temporarily optional for testing
-        bool _autoCompound
+        bool _compound
     ) {
         beaconDeposit = IDepositContract(beaconDepositAddress);
         linkFeed = AggregatorV3Interface(linkFeedAddress);
@@ -152,7 +155,7 @@ contract SSVManager {
         ssvToken = ISSVToken(ssvTokenAddress);
         swapRouter = ISwapRouter(swapRouterAddress);
         tokens[Token.WETH] = wethTokenAddress;
-        autoCompound = _autoCompound;
+        compound = _compound;
     }
 
     /**
@@ -167,18 +170,16 @@ contract SSVManager {
      * @param rewardAmount The amount of ETH to reward
      */
     function reward(uint256 rewardAmount) private {
-        Balance memory balance = getBalance();
 
         // Todo process fees from reward distribution
         // ProcessedDeposit memory processedDeposit = processFees(reward);
 
-        uint256 rewardRatio = rewardRatioScale * rewardAmount / balance.stake;
-        rewardRatioSum += rewardRatio;
-
         /** If specified, compound rewards reward */
-        if (autoCompound) {
-            // Todo tune gas with a reward distribution buffer
-            distribute(address(this), rewardAmount, block.timestamp);   
+        if (compound) {
+            distributionSum += Math.mulDiv(distributionSum, rewardAmount, getBalance().stake);
+            distribute(address(this), rewardAmount, block.timestamp);  
+        } else {
+            distributionSum += Math.mulDiv(distributionScale, rewardAmount, getBalance().stake);
         }
     }
 
@@ -190,8 +191,8 @@ contract SSVManager {
 
         ProcessedDeposit memory processedDeposit = processFees(msg.value);
 
-        users[userAddress].stake += processedDeposit.ethAmount;
-        users[userAddress].rewardRatioSum0 += rewardRatioSum;
+        users[userAddress].stake0 = processedDeposit.ethAmount;
+        users[userAddress].distributionSum0 = distributionSum;
 
         distribute(userAddress, processedDeposit.ethAmount, block.timestamp);
     }
@@ -447,10 +448,10 @@ contract SSVManager {
     // }
 
     /**
-     * @notice Get active validator public keys
+     * @notice Get staked validator public keys
      * @return A list of active validator public keys
      */
-    function getActiveValidatorPublicKeys()
+    function getStakedValidatorPublicKeys()
         external
         view
         returns (bytes[] memory)
@@ -459,10 +460,10 @@ contract SSVManager {
     }
 
     /**
-     * @notice Get inactive validator public keys
+     * @notice Get ready validator public keys
      * @return A list of inactive validator public keys
      */
-    function getInstakedValidatorPublicKeys()
+    function getReadyValidatorPublicKeys()
         external
         view
         returns (bytes[] memory)
@@ -502,15 +503,16 @@ contract SSVManager {
      * @return The current balance of a user
      */
     function getUserBalance(address userAddress) public view returns (Balance memory) {
-        uint256 userStake0 = users[userAddress].stake;
-        uint256 rewardRatioSum0 = users[userAddress].rewardRatioSum0;
-        if (autoCompound) {
-            uint256 userStake = userStake0 * rewardRatioSum / rewardRatioSum0 / rewardRatioScale;
-            return Balance(userStake, 0);
+        uint256 userStake = users[userAddress].stake0;
+        uint256 distributionSum0 = users[userAddress].distributionSum0;
+        uint256 rewards;
+        if (compound) {
+            userStake = Math.mulDiv(userStake, distributionSum, distributionSum0);
+            rewards = 0;
         } else {
-            uint256 rewards = userStake0 * (rewardRatioSum - rewardRatioSum0) / rewardRatioScale;
-            return Balance(userStake0, rewards);
+            rewards = Math.mulDiv(userStake, distributionSum - distributionSum0, distributionScale);
         }
+        return Balance(userStake, rewards);
     }
 
     /**

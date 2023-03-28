@@ -20,7 +20,7 @@ export async function deploymentFixture() {
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
                 wethTokenAddress: process.env.WETH_TOKEN_ADDRESS,
-                autoCompound: process.env.AUTO_COMPOUND === 'true'
+                compound: process.env.COMPOUND !== 'false'
             },
             options: {},
             proxy: false
@@ -100,20 +100,24 @@ export async function secondUserDepositFixture() {
     const value = ethers.utils.parseEther(depositAmount.toString())
     const deposit = await ssvManager.connect(secondUser).deposit({ value })
     await deposit.wait()
+    return { ssvManager, owner, distributor, firstUser, secondUser }
+}
 
-    const activeValidatorPublicKeys = await ssvManager?.getActiveValidatorPublicKeys()
-    if (activeValidatorPublicKeys?.length) {
-        const rewardAmount = (0.1 * activeValidatorPublicKeys.length).toString()
+/** Fixture to reward 0.1 * validator count to the first and second user */
+export async function rewardPostSecondUserDepositFixture() {
+    const { ssvManager, owner, distributor, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
+    const stakedValidatorPublicKeys = await ssvManager?.getStakedValidatorPublicKeys()
+    if (stakedValidatorPublicKeys?.length) {
+        const rewardAmount = (0.1 * stakedValidatorPublicKeys.length).toString()
         const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
         await reward.wait()
     }
-
     return { ssvManager, owner, distributor, firstUser, secondUser }
 }
 
 /** Fixture to stake 24 ETH for the third user */
 export async function thirdUserDepositFixture() {
-    const { ssvManager, owner, distributor, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
+    const { ssvManager, owner, distributor, firstUser, secondUser } = await loadFixture(rewardPostSecondUserDepositFixture)
     const [, , , thirdUser] = await ethers.getSigners()
     const stakeAmount = 24.0
     const fees = { ...await ssvManager.getFees() }
@@ -122,13 +126,81 @@ export async function thirdUserDepositFixture() {
     const value = ethers.utils.parseEther(depositAmount.toString())
     const deposit = await ssvManager.connect(thirdUser).deposit({ value })
     await deposit.wait()
+    return { ssvManager, owner, distributor, firstUser, secondUser, thirdUser }
+}
 
-    const activeValidatorPublicKeys = await ssvManager?.getActiveValidatorPublicKeys()
-    if (activeValidatorPublicKeys?.length) {
-        const rewardAmount = (0.1 * activeValidatorPublicKeys.length).toString()
+/** Fixture to reward 0.1 * validator count to the first, second, and third user */
+export async function rewardPostThirdUserDepositFixture() {
+    const { ssvManager, distributor, firstUser, secondUser, thirdUser } = await loadFixture(thirdUserDepositFixture)
+    const stakedValidatorPublicKeys = await ssvManager?.getStakedValidatorPublicKeys()
+    if (stakedValidatorPublicKeys?.length) {
+        const rewardAmount = (0.1 * stakedValidatorPublicKeys.length).toString()
         const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
         await reward.wait()
+
+        const balance = await ssvManager.getBalance()
+        const { stake } = ({ ...balance })
+        console.log('BALANCE', ethers.utils.formatEther(stake))
+    }
+    return { ssvManager, distributor, firstUser, secondUser, thirdUser }
+}
+
+/** Fixture to reward users a few more times */
+export async function rewardFixture() {
+    const { ssvManager, distributor, firstUser, secondUser, thirdUser } = await loadFixture(rewardPostThirdUserDepositFixture)
+    const stakedValidatorPublicKeys1 = await ssvManager?.getStakedValidatorPublicKeys()
+    if (stakedValidatorPublicKeys1?.length) {
+        const rewardAmount = (0.1 * stakedValidatorPublicKeys1.length).toString()
+        const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
+        await reward.wait()
+
+        const balance = await ssvManager.getBalance()
+        const firstBalance = await ssvManager.getUserBalance(firstUser.address)
+        const secondBalance = await ssvManager.getUserBalance(secondUser.address)
+        const thirdBalance = await ssvManager.getUserBalance(thirdUser.address)
+        const { stake } = ({ ...balance })
+        const { stake: firstStake } = ({ ...firstBalance })
+        const { stake: secondStake } = ({ ...secondBalance })
+        const { stake: thirdStake } = ({ ...thirdBalance })
+        console.log('DUST', ethers.utils.formatEther(stake.sub(firstStake.add(secondStake).add(thirdStake))))
     }
 
-    return { ssvManager, owner, distributor, firstUser, secondUser, thirdUser }
+    const stakedValidatorPublicKeys2 = await ssvManager?.getStakedValidatorPublicKeys()
+    if (stakedValidatorPublicKeys2?.length) {
+        const rewardAmount = (0.1 * stakedValidatorPublicKeys2.length).toString()
+        const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
+        await reward.wait()
+
+        const balance = await ssvManager.getBalance()
+        const firstBalance = await ssvManager.getUserBalance(firstUser.address)
+        const secondBalance = await ssvManager.getUserBalance(secondUser.address)
+        const thirdBalance = await ssvManager.getUserBalance(thirdUser.address)
+        const { stake } = ({ ...balance })
+        const { stake: firstStake } = ({ ...firstBalance })
+        const { stake: secondStake } = ({ ...secondBalance })
+        const { stake: thirdStake } = ({ ...thirdBalance })
+        console.log('DUST', ethers.utils.formatEther(stake.sub(firstStake.add(secondStake).add(thirdStake))))
+    }
+
+    const stakedValidatorPublicKeys3 = await ssvManager?.getStakedValidatorPublicKeys()
+    if (stakedValidatorPublicKeys3?.length) {
+        const rewardAmount = (0.1 * stakedValidatorPublicKeys3.length).toString()
+        const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
+        await reward.wait()
+
+        const balance = await ssvManager.getBalance()
+        const firstBalance = await ssvManager.getUserBalance(firstUser.address)
+        const secondBalance = await ssvManager.getUserBalance(secondUser.address)
+        const thirdBalance = await ssvManager.getUserBalance(thirdUser.address)
+        const { stake } = ({ ...balance })
+
+        console.log('BALANCE', ethers.utils.formatEther(stake))
+
+        const { stake: firstStake } = ({ ...firstBalance })
+        const { stake: secondStake } = ({ ...secondBalance })
+        const { stake: thirdStake } = ({ ...thirdBalance })
+        console.log('DUST', ethers.utils.formatEther(stake.sub(firstStake.add(secondStake).add(thirdStake))))
+    }
+
+    return { ssvManager, distributor, firstUser, secondUser, thirdUser }
 }
