@@ -125,7 +125,6 @@ const handleStakeAction = () => {
   openSignTransactionTab.value = true
 }
 
-
 const handleCancel = () => {
   stakeAmount.value = Number('')
   selectedWallet.value = null
@@ -144,7 +143,7 @@ onMounted(async ()=>{
   <div class="col-span-3 h-full flex flex-col gap-20">
     <div class="flex justify-between items-center w-full">
       <h6 class="font-bold text-[#727476]">
-        Stake {{ openSignTransactionTab }}
+        Stake
       </h6>
     </div>
     <div

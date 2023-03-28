@@ -40,11 +40,11 @@ import Scrambler from '@/components/Scrambler.vue'
       <div class="flex flex-col justify-center items-end gap-[25px]">
         <div class="flex gap-[3px]">
           <Scrambler 
-            :phrases="['No minimum amount.', 'Maximum staking rewards.']"
+            :phrases="['No minimum amount.', 'Maximum staking rewards.', 'Your keys, your coins.']"
             :repeat="true"
             :delay="300"
             :text-class="'font-semibold text-[20px] text-[#3a3a3a] leading-[30px] tracking-normal'"
-            :transform-timer="10"
+            :transform-timer="5"
           /> 
           <span class="pulse w-[2px] rounded bg-primary" />
         </div>
