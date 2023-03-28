@@ -57,17 +57,17 @@ void async function () {
     process.env.MINING_INTERVAL = '12'
 
     if (execution === 'ganache') {
-        $`npm run dev:ganache --workspace @casimir/ethereum`
+        $`npm run node:ganache --workspace @casimir/ethereum`
         // Wait for ganache to start
         const ganacheWaitTime = 5000
         await new Promise(resolve => setTimeout(resolve, ganacheWaitTime))
-        $`npm run dev:ssv --workspace @casimir/ethereum -- --network ganache`
+        $`npm run dev --workspace @casimir/ethereum -- --network ganache`
     } else {
-        $`npm run dev --workspace @casimir/ethereum`
+        $`npm run node --workspace @casimir/ethereum`
         // Wait for hardhat to start
         const hardhatWaitTime = 2500
         await new Promise(resolve => setTimeout(resolve, hardhatWaitTime))
-        $`npm run dev:ssv --workspace @casimir/ethereum -- --network localhost`
+        $`npm run dev --workspace @casimir/ethereum -- --network localhost`
     }
 
 }()

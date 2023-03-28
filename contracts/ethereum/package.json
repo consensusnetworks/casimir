@@ -1,9 +1,9 @@
 {
     "name": "@casimir/ethereum",
     "scripts": {
-        "dev": "npx hardhat node",
-        "dev:ganache": "npx esno scripts/ganache.ts",
-        "dev:ssv": "npx hardhat run scripts/dev.ts",
+        "node": "npx hardhat node",
+        "node:ganache": "npx esno scripts/ganache.ts",
+        "dev": "npx hardhat run scripts/dev.ts",
         "docgen": "npx hardhat docgen",
         "test": "npx esno scripts/test.ts --clean \"$npm_config_clean\" --compound \"$npm_config_compound\"",
         "clean": "npx hardhat clean",
