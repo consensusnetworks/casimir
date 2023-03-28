@@ -42,6 +42,7 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         }
         const account = {
             address,
+            currency,
             ownerAddress: address,
             walletProvider: provider,
         } as Account

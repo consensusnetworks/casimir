@@ -5,7 +5,7 @@ import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
 
 const router = express.Router()
-const { getUser, addAccount } = useDB()
+const { addAccount, getUser, removeAccount } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     const address = req.session?.getUserId() as string
@@ -57,30 +57,32 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
     }
 })
 
-router.post('/remove-sub-account', verifySession(), async (req: express.Request, res: express.Response) => {
+router.post('/remove-sub-account', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
-        const { provider, address, currency } = req.body
-        let { primaryAddress } = req.body
-        primaryAddress = primaryAddress.toLowerCase()
-        const existingUser = userCollection.find(user => user.address === primaryAddress)
-        let accountedRemoved = false
-        if (existingUser) {
-            existingUser.accounts = existingUser.accounts?.filter(account => {
-                const notAddress = account.walletProvider !== provider || account.address !== address || account.currency !== currency
-                if (!notAddress) {
-                    accountedRemoved = true
-                } else {
-                    return account
-                }
+        console.log('REMOVING ACCOUNT!')
+        const { address, currency, ownerAddress, walletProvider } = req.body
+        const userSessionsAddress = req.session?.getUserId()
+        const validatedAddress = validateAddress(userSessionsAddress, ownerAddress)
+        if (!validatedAddress) {    
+            res.setHeader('Content-Type', 'application/json')
+            res.status(200)
+            res.json({
+                message: 'Address does not match session',
+                error: true,
+                data: null
             })
+            return
         }
-        if (accountedRemoved) {
+        const accountRemoved = await removeAccount({ address, currency, ownerAddress, walletProvider })
+        const user = await getUser(ownerAddress)
+        
+        if (accountRemoved) {
             res.setHeader('Content-Type', 'application/json')
             res.status(200)
             res.json({
                 message: 'Account removed',
                 error: false,
-                data: existingUser
+                data: user
             })
         } else {
             res.setHeader('Content-Type', 'application/json')
@@ -88,7 +90,7 @@ router.post('/remove-sub-account', verifySession(), async (req: express.Request,
             res.json({
                 message: 'Account not found',
                 error: true,
-                data: existingUser
+                data: user
             })
         }
     } catch (err) {

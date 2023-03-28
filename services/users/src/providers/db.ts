@@ -1,6 +1,6 @@
 import { Postgres } from '@casimir/data'
 import { pascalCase } from '@casimir/helpers'
-import { Account, User, UserAddedSuccess } from '@casimir/types'
+import { Account, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
 
 const postgres = new Postgres({
     // These will become environment variables
@@ -21,9 +21,9 @@ export default function useDB() {
      */
     async function addAccount(account: Account, createdAt?: string) : Promise<Account> {
         if (!createdAt) createdAt = new Date().toISOString()
-        const { address, ownerAddress, walletProvider } = account
-        const text = 'INSERT INTO accounts (address, owner_address, wallet_provider, created_at) VALUES ($1, $2, $3, $4) RETURNING *;'
-        const params = [address, ownerAddress, walletProvider, createdAt]
+        const { address, currency, ownerAddress, walletProvider } = account
+        const text = 'INSERT INTO accounts (address, currency, owner_address, wallet_provider, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;'
+        const params = [address, currency, ownerAddress, walletProvider, createdAt]
         const rows = await postgres.query(text, params)
         return rows[0] as Account
     }
@@ -58,6 +58,21 @@ export default function useDB() {
         const rows = await postgres.query(text, params)
         const user = rows[0]
         return formatResult(user) as User
+    }
+
+    /**
+     * Remove an account.
+     * @param address - The account's address (pk)
+     * @param ownerAddress - The account's owner address
+     * @param walletProvider - The account's wallet provider
+     * @param currency - The account's currency
+     * @returns The removed account if found, otherwise undefined
+     */
+    async function removeAccount({ address, currency, ownerAddress, walletProvider } : RemoveAccountOptions) {
+        const text = 'DELETE FROM accounts WHERE address = $1 AND owner_address = $2 AND wallet_provider = $3 AND currency = $4 RETURNING *;'
+        const params = [address, ownerAddress, walletProvider, currency]
+        const rows = await postgres.query(text, params)
+        return rows[0] as Account
     }
 
     /**
@@ -99,7 +114,7 @@ export default function useDB() {
         }
     }
 
-    return { addAccount, addUser, getUser, upsertNonce }
+    return { addAccount, addUser, getUser, removeAccount, upsertNonce }
 }
 
 /**
