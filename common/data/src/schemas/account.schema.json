@@ -12,6 +12,10 @@
             "type": "number",
             "description": "The account balance"
         },
+        "currency": {
+            "type": "string",
+            "description": "The account currency"
+        },
         "created_at": {
             "type": "string",
             "description": "The account creation date in ISO 8601 format"
