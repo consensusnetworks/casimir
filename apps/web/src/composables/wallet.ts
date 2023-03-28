@@ -222,12 +222,12 @@ export default function useWallet() {
     loadingUserWallets.value = false
   }
 
+  // TODO: Implement this for other providers
   async function setPrimaryWalletAccount() {
     if (!loggedIn.value) {
       alert('Please login first')
     }
-    
-    // TODO: Implement this for other providers
+    return alert('Not yet implemented for this wallet provider')
     if (ethersProviderList.includes(selectedProvider.value)) {
       const result = await updatePrimaryAddress(primaryAddress.value, selectedProvider.value, selectedAddress.value)
       const { data } = await result.json()

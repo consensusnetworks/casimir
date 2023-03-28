@@ -11,7 +11,7 @@ export interface Account {
     /** Daily balance snapshots */
     balanceSnapshots?: BalanceSnapshot[]
     /** See Currency below */
-    currency?: Currency
+    currency: Currency
     /** The user's current staking pools and details (this interface/logic is in the web app wallet composable, but it will be moved to the processor, see https://github.com/consensusnetworks/casimir/blob/master/apps/web/src/composables/wallet.ts#L146) */
     pools?: Pool[]
     /** The total amount of stake rewards available to withdraw (ignore for now, see note on Account.pools) */
