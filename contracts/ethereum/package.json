@@ -8,7 +8,7 @@
         "test": "npx esno scripts/test.ts --clean \"$npm_config_clean\" --compound \"$npm_config_compound\"",
         "clean": "npx hardhat clean",
         "build": "npx hardhat compile --show-stack-traces",
-        "prepare": "npm run compile"
+        "prepare": "npm run build"
     },
     "dependencies": {
         "@chainlink/contracts": "^0.5.1",

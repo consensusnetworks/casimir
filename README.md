@@ -114,10 +114,10 @@ Run all contract tests.
 npm run test:ethereum
 ```
 
-Compile the contracts in [contracts/ethereum](contracts/ethereum).
+Build the contracts in [contracts/ethereum](contracts/ethereum).
 
 ```zsh
-npm run compile --workspace @casimir/ethereum
+npm run build --workspace @casimir/ethereum
 ```
 
 Deploy a contract, specifically [contracts/ethereum/src/SSVManager.sol](contracts/ethereum/src/SSVManager.sol) with [contracts/ethereum/scripts/ssv.deploy.ts](contracts/ethereum/deploy/ssv.deploy.ts).
