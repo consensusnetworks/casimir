@@ -2,10 +2,12 @@
 import { ref, watch, onMounted } from 'vue'
 import useUsers from '@/composables/users'
 import usePrice from '@/composables/price'
-import { Currency } from '@casimir/types'
-import { abort } from 'process'
+import useSSV from '@/composables/ssv'
+import router from '@/composables/router'
 
-const {convertToWholeUnits, getExchangeRate, getConversionRateByDate} = usePrice()
+const {convertToWholeUnits, } = usePrice()
+
+const { getDepositFees, deposit } = useSSV()
 
 const maxETHFromWallet = ref(null as null | number)
 // will use this for later when givin options of typing in usd or eth
@@ -13,8 +15,12 @@ const maxETHFromWallet = ref(null as null | number)
 const isMaxETHSelected = ref(false)
 const stakeAmount = ref()
 const { user } = useUsers()
+const fees = ref()
+const autoRestake = ref(true)
 
 const openSelectWalletTab = ref(false)
+const openSignTransactionTab = ref(false)
+
 const selectedWallet = ref(null as any)
 
 const stakingStatus = ref({
@@ -24,11 +30,15 @@ const stakingStatus = ref({
 
 const app = ref(null as any)
 
-onMounted(()=>{
-  app.value = document.getElementById('app')
-})
-
 const toggleSelectWalletModal = (on: boolean, e: any) => {
+  if(openSelectWalletTab.value && on){
+    if(e.target.id === ''){
+      openSelectWalletTab.value = false
+    }
+  }
+}
+
+const toggleSignTransactionModal = (on: boolean, e: any) => {
   if(openSelectWalletTab.value && on){
     if(e.target.id === ''){
       openSelectWalletTab.value = false
@@ -42,6 +52,15 @@ watch(openSelectWalletTab, () => {
     app.value.addEventListener('click', (e) => {toggleSelectWalletModal(true, e)})
   } else {
     app.value.removeEventListener('click', (e) => {toggleSelectWalletModal(false, e)})
+  }
+})
+
+watch(openSignTransactionTab, () => {
+  // console.log(openSelectWalletTab.value)
+  if(openSignTransactionTab.value){
+    app.value.addEventListener('click', (e) => {toggleSignTransactionModal(true, e)})
+  } else {
+    app.value.removeEventListener('click', (e) => {toggleSignTransactionModal(false, e)})
   }
 })
 
@@ -82,13 +101,50 @@ watch(stakeAmount, () => {
     stakeAmount.value = 0
   }
 })
+
+async function getFees() {
+  try {
+    const fees = await getDepositFees()
+    if (fees % 1 === 0) {
+        return `${fees}.00%`
+    }
+    return `${fees}%`
+  } catch (err){
+    console.error(err)
+    return 'Error connecting to SSV network. Please try again momentarily.'
+  }
+}
+const handleConfirm = async () => {
+  // loading.value = true
+  // await deposit({ amount: stakeAmount.value.toString(), walletProvider: selectedWallet.value.walletProvider })
+  // loading.value = false
+  // router.push('/stake/eth')
+}
+
+const handleStakeAction = () => {
+  openSignTransactionTab.value = true
+}
+
+
+const handleCancel = () => {
+  stakeAmount.value = Number('')
+  selectedWallet.value = null
+  isMaxETHSelected.value = false
+  maxETHFromWallet.value = null
+  openSignTransactionTab.value = false
+}
+
+onMounted(async ()=>{
+  app.value = document.getElementById('app')
+  fees.value = await getFees()
+})
 </script>
 
 <template>
   <div class="col-span-3 h-full flex flex-col gap-20">
     <div class="flex justify-between items-center w-full">
       <h6 class="font-bold text-[#727476]">
-        Stake
+        Stake {{ openSignTransactionTab }}
       </h6>
     </div>
     <div
@@ -197,9 +253,9 @@ watch(stakeAmount, () => {
         <div 
           v-if="openSelectWalletTab"
           id="select_wallet_modal"
-          class="absolute bg-white border border-border rounded-[5px] px-10 py-15 h-[400px] 
-          w-[300px] shadow-xl overflow-auto z-[10]"
-          style="top: calc(50% - 245px); left: calc(50% - 150px);"
+          class="absolute bg-white border border-border rounded-[5px] px-10 py-15 h-[420px] 
+          w-[340px] shadow-xl overflow-auto z-[10] flex flex-col"
+          style="top: calc(50% - 255px); left: calc(50% - 170px);"
         >
           <button
             v-for="act in user.accounts"
@@ -222,12 +278,97 @@ watch(stakeAmount, () => {
             </div>
           </button>
         </div>
+        <div 
+          v-if="openSignTransactionTab"
+          id="sign_transaction_modal"
+          class="absolute bg-white border border-border rounded-[5px] px-10 py-15 h-[420px] 
+          w-[340px] shadow-xl overflow-auto z-[10] flex flex-col"
+          style="top: calc(50% - 255px); left: calc(50% - 170px);"
+        >
+          <p class="text-caption font-bold text-black mb-40">
+            Stake ETH to SSV Validators
+          </p>
+          <div class="flex justify-between items-center mb-20">
+            <p class="text-body font-bold text-grey_3">
+              Amount
+            </p>
+            <p class="text-body font-bold text-grey_8">
+              {{ stakeAmount }} ETH
+            </p>
+          </div>
+          <div class="flex justify-between items-center mb-20">
+            <p class="text-body font-bold text-grey_3">
+              Fees
+            </p>
+            <p class="text-body font-bold text-grey_8">
+              {{ fees }}
+            </p>
+          </div>
+          <div class="flex justify-between items-center mb-20">
+            <p class="text-body font-bold text-grey_3 w-1/3">
+              From
+            </p>
+            <div class="text-body font-bold text-grey_8 w-2/3 truncate flex gap-3">
+              <span class="truncate text-body font-bold">
+                {{ selectedWallet.address }} ...
+              </span>
+              <img
+                :src="`/${selectedWallet.walletProvider.toLocaleUpperCase()}.svg`"
+                :alt="`${selectedWallet.walletProvider} Logo`"
+                class="w-15 h-15"
+              >
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center mb-20">
+            <p class="text-body font-bold text-grey_3">
+              Auto Stake {{ autoRestake }}
+            </p>
+            <div class="text-body font-bold text-grey_8">
+              <label class="switch">
+                <input
+                  v-model="autoRestake"
+                  type="checkbox"
+                >
+                <span class="slider round" />
+              </label>
+            </div>
+          </div>
+          <div class="h-full flex items-end justify-end">
+            <div class="text-center w-full">
+              <div class="flex flex-col w-full justify-center gap-5 items-center mb-10">
+                <button 
+                  class="bg-primary py-6 px-12 text-white rounded-[5px] hover:bg-blue_7 disabled:opacity-[0.55]"
+                  @click="handleConfirm"
+                >
+                  <h6 class="font-bold text-body">
+                    Sign Transaction
+                  </h6>
+                </button>
+                <button 
+                  class="bg-decline py-6 px-12 text-white rounded-[5px] hover:bg-blue_7 disabled:opacity-[0.55]"
+                  @click="handleCancel"
+                >
+                  <h6 class="font-bold text-body">
+                    Cancel
+                  </h6>
+                </button>
+              </div>
+              <div 
+                class="text-caption font-medium text-grey_7 pr-2"
+              >
+                Confirm and Sign Transaction
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="h-75 flex justify-end items-end">
         <div class="text-right">
           <button 
             :disabled="!stakingStatus.allowToStake"
             class="bg-primary py-6 px-12 text-white rounded-[5px] mb-10 hover:bg-blue_7 disabled:opacity-[0.55]"
+            @click="handleStakeAction"
           >
             <h6 class="font-semibold">
               Stake
@@ -274,10 +415,6 @@ watch(stakeAmount, () => {
 
 .on_hover:hover{
   filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
-}
-
-.input{
-
 }
 
 </style>
