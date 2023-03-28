@@ -39,6 +39,7 @@ import Scrambler from '@/components/Scrambler.vue'
       </div>
       <div class="flex flex-col justify-center items-end gap-[25px]">
         <div class="flex gap-[3px]">
+          <!-- , 'Permissionless.', 'Any wallet.' -->
           <Scrambler 
             :phrases="['No minimum amount.', 'Maximum staking rewards.', 'Your keys, your coins.']"
             :repeat="true"

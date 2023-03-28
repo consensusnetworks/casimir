@@ -30,6 +30,21 @@ const stakingStatus = ref({
 
 const app = ref(null as any)
 
+// Helpers
+async function getFees() {
+  try {
+    const fees = await getDepositFees()
+    if (fees % 1 === 0) {
+        return `${fees}.00%`
+    }
+    return `${fees}%`
+  } catch (err){
+    console.error(err)
+    return 'Error connecting to SSV network. Please try again momentarily.'
+  }
+}
+
+// Toggles
 const toggleSelectWalletModal = (on: boolean, e: any) => {
   if(openSelectWalletTab.value && on){
     if(e.target.id === ''){
@@ -37,7 +52,6 @@ const toggleSelectWalletModal = (on: boolean, e: any) => {
     }
   }
 }
-
 const toggleSignTransactionModal = (on: boolean, e: any) => {
   if(openSelectWalletTab.value && on){
     if(e.target.id === ''){
@@ -45,7 +59,12 @@ const toggleSignTransactionModal = (on: boolean, e: any) => {
     }
   }
 }
+const selectWallet = (wallet: any) => {
+  selectedWallet.value = wallet
+  openSelectWalletTab.value = false
+}
 
+// Watchers
 watch(openSelectWalletTab, () => {
   // console.log(openSelectWalletTab.value)
   if(openSelectWalletTab.value){
@@ -54,7 +73,6 @@ watch(openSelectWalletTab, () => {
     app.value.removeEventListener('click', (e) => {toggleSelectWalletModal(false, e)})
   }
 })
-
 watch(openSignTransactionTab, () => {
   // console.log(openSelectWalletTab.value)
   if(openSignTransactionTab.value){
@@ -63,18 +81,11 @@ watch(openSignTransactionTab, () => {
     app.value.removeEventListener('click', (e) => {toggleSignTransactionModal(false, e)})
   }
 })
-
-const selectWallet = (wallet: any) => {
-  selectedWallet.value = wallet
-  openSelectWalletTab.value = false
-}
-
 watch(selectedWallet, () => {
   if(selectedWallet.value){
     maxETHFromWallet.value = Number(convertToWholeUnits(selectedWallet.value.currency, Number(selectedWallet.value.balance)))
   }
 })
-
 watch([stakeAmount, selectedWallet], () => {
   if(stakeAmount.value && maxETHFromWallet.value) {
     if(stakeAmount.value > maxETHFromWallet.value){
@@ -90,30 +101,16 @@ watch([stakeAmount, selectedWallet], () => {
     stakingStatus.value.message = 'Select wallet, then select amount to stake.'
   }
 })
-
 watch(isMaxETHSelected, () => {
   stakeAmount.value = maxETHFromWallet.value
 })
-
-// checks if a valid number since we want it to be a text input
 watch(stakeAmount, () => {
   if(isNaN(stakeAmount.value)){
     stakeAmount.value = 0
   }
 })
 
-async function getFees() {
-  try {
-    const fees = await getDepositFees()
-    if (fees % 1 === 0) {
-        return `${fees}.00%`
-    }
-    return `${fees}%`
-  } catch (err){
-    console.error(err)
-    return 'Error connecting to SSV network. Please try again momentarily.'
-  }
-}
+// Action Handlers
 const handleConfirm = async () => {
   // loading.value = true
   // await deposit({ amount: stakeAmount.value.toString(), walletProvider: selectedWallet.value.walletProvider })
