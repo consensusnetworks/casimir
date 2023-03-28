@@ -88,7 +88,7 @@ contract SSVManager {
     /** Total pool deposits ready for stake */
     uint256 private readyDeposits;
     /** Scale factor for each reward to stake ratio */
-    uint256 distributionScale = 1 ether;
+    uint256 scaleFactor = 1 ether;
     /** Sum of scaled reward to stake ratios (arbitrary intial value required) */
     uint256 distributionSum = 1 ether;
     /** IDs of staking pools readily accepting deposits */
@@ -179,7 +179,7 @@ contract SSVManager {
             distributionSum += Math.mulDiv(distributionSum, rewardAmount, getBalance().stake);
             distribute(address(this), rewardAmount, block.timestamp);  
         } else {
-            distributionSum += Math.mulDiv(distributionScale, rewardAmount, getBalance().stake);
+            distributionSum += Math.mulDiv(scaleFactor, rewardAmount, getBalance().stake);
         }
     }
 
@@ -510,7 +510,7 @@ contract SSVManager {
             userStake = Math.mulDiv(userStake, distributionSum, distributionSum0);
             rewards = 0;
         } else {
-            rewards = Math.mulDiv(userStake, distributionSum - distributionSum0, distributionScale);
+            rewards = Math.mulDiv(userStake, distributionSum - distributionSum0, scaleFactor);
         }
         return Balance(userStake, rewards);
     }
