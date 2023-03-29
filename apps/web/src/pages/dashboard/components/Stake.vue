@@ -53,9 +53,9 @@ const toggleSelectWalletModal = (on: boolean, e: any) => {
   }
 }
 const toggleSignTransactionModal = (on: boolean, e: any) => {
-  if(openSelectWalletTab.value && on){
+  if(openSignTransactionTab.value && on){
     if(e.target.id === ''){
-      openSelectWalletTab.value = false
+      openSignTransactionTab.value = false
     }
   }
 }
@@ -205,7 +205,7 @@ onMounted(async ()=>{
         </button>
       </div>
       <div 
-        class="h-75 relative text-grey_5 bg-[#edeff3] flex justify-between items-center px-10 rounded-[5px]"
+        class="h-75 relative text-grey_5 bg-[#edeff3] flex justify-between items-center pl-15 rounded-[5px]"
       >
         <span class="text-body font-bold">
           From
@@ -213,7 +213,7 @@ onMounted(async ()=>{
         <button 
           v-if="selectedWallet === null"
           id="select_wallet_button"
-          class="text-body font-bold flex gap-10 items-center bg-primary text-white px-12 py-5 rounded-[5px]"
+          class="text-body font-bold h-full w-[170px] bg-grey_2 text-grey_5 rounded-r-[5px] hover:bg-grey_3 hover:text-grey_1"
           @click="openSelectWalletTab = true"
         >
           Select Wallet
@@ -221,7 +221,7 @@ onMounted(async ()=>{
         <button
           v-else
           id="selected_wallet_button_container"
-          class="w-[170px] border border-border rounded-[5px] px-20 py-5 hover:border-primary"
+          class="w-[170px] h-full bg-grey_2 rounded-r-[5px] px-20 py-5 hover:border-primary text-white hover:bg-grey_3 hover:text-grey_1"
           @click="openSelectWalletTab = true"
         >
           <div 
@@ -229,11 +229,16 @@ onMounted(async ()=>{
             class="flex items-center justify-end gap-5 w-full"
           >
             <img
+
+              id="selected_wallet_button_content_wallet_providor"
               :src="`/${selectedWallet.walletProvider.toLocaleUpperCase()}.svg`"
               :alt="`${selectedWallet.walletProvider} Logo`"
-              class="w-15 h-15"
+              class="w-15 h-15 rounded-[100%]"
             >
-            <span class="text-clip truncate text-body">
+            <span
+              id="selected_wallet_button_content_address"
+              class="truncate text-body"
+            >
               {{ selectedWallet.address }}
             </span>
           </div>
@@ -241,7 +246,9 @@ onMounted(async ()=>{
             id="selected_wallet_button_content_two"
             class="w-full flex justify-end truncate text-caption font-bold mt-10"
           >
-            <span>
+            <span 
+              id="selected_wallet_button_content_max_amount"
+            >
               {{ convertToWholeUnits(selectedWallet.currency, Number(selectedWallet.balance)) }} {{ selectedWallet.currency }}
             </span>
           </div>
@@ -249,30 +256,35 @@ onMounted(async ()=>{
         <div 
           v-if="openSelectWalletTab"
           id="select_wallet_modal"
-          class="absolute bg-white border border-border rounded-[5px] px-10 py-15 h-[420px] 
-          w-[340px] shadow-xl overflow-auto z-[10] flex flex-col"
+          class="absolute bg-white border border-border rounded-[5px] px-10 pb-15 h-[420px] 
+          w-[340px] shadow-xl z-[10] flex flex-col gap-10"
           style="top: calc(50% - 255px); left: calc(50% - 170px);"
         >
-          <button
-            v-for="act in user.accounts"
-            :key="act.address"
-            class="w-full border border-border rounded-[5px] mb-10 py-5 px-10 hover:border-primary"
-            @click="selectWallet(act)"
-          >
-            <div class="flex justify-between items-center mb-5">
-              <img
-                :src="`/${act.walletProvider.toLocaleUpperCase()}.svg`"
-                :alt="`${act.walletProvider} Logo`"
-                class="w-25 h-25"
-              >
-              <span>
-                {{ convertToWholeUnits(act.currency, Number(act.balance)) }} {{ act.currency }}
-              </span>
-            </div>
-            <div class="w-[100%] truncate text-body">
-              {{ act.address }}
-            </div>
-          </button>
+          <p class="text-caption font-bold text-black py-15 border-b">
+            Select a wallet to stake from
+          </p>
+          <div class="h-full overflow-auto pr-5">
+            <button
+              v-for="act in user.accounts"
+              :key="act.address"
+              class="w-full border border-border rounded-[5px] mb-10 py-5 px-10 hover:border-primary"
+              @click="selectWallet(act)"
+            >
+              <div class="flex justify-between items-center mb-5">
+                <img
+                  :src="`/${act.walletProvider.toLocaleUpperCase()}.svg`"
+                  :alt="`${act.walletProvider} Logo`"
+                  class="w-25 h-25 rounded-[100%]"
+                >
+                <span>
+                  {{ convertToWholeUnits(act.currency, Number(act.balance)) }} {{ act.currency }}
+                </span>
+              </div>
+              <div class="w-[100%] truncate text-body">
+                {{ act.address }}
+              </div>
+            </button>
+          </div>
         </div>
         <div 
           v-if="openSignTransactionTab"
@@ -281,34 +293,68 @@ onMounted(async ()=>{
           w-[340px] shadow-xl overflow-auto z-[10] flex flex-col"
           style="top: calc(50% - 255px); left: calc(50% - 170px);"
         >
-          <p class="text-caption font-bold text-black mb-40">
+          <p 
+            id="sign_transaction_title"
+            class="text-caption font-bold text-black pb-40 border-b"
+          >
             Stake ETH to SSV Validators
           </p>
-          <div class="flex justify-between items-center mb-20">
-            <p class="text-body font-bold text-grey_3">
+          <div 
+            id="sign_transaction_amount"
+            class="flex justify-between items-center py-20"
+          >
+            <p 
+              id="sign_transaction_amount_label"
+              class="text-body font-bold text-grey_3"
+            >
               Amount
             </p>
-            <p class="text-body font-bold text-grey_8">
+            <p 
+              id="sign_transaction_amount_stakingAmount"
+              class="text-body font-bold text-grey_8"
+            >
               {{ stakeAmount }} ETH
             </p>
           </div>
-          <div class="flex justify-between items-center mb-20">
-            <p class="text-body font-bold text-grey_3">
+          <div 
+            id="sign_transaction_fees"
+            class="flex justify-between items-center py-20"
+          >
+            <p 
+              id="sign_transaction_fees_label"
+              class="text-body font-bold text-grey_3"
+            >
               Fees
             </p>
-            <p class="text-body font-bold text-grey_8">
+            <p 
+              id="sign_transaction_fees_amount"
+              class="text-body font-bold text-grey_8"
+            >
               {{ fees }}
             </p>
           </div>
-          <div class="flex justify-between items-center mb-20">
-            <p class="text-body font-bold text-grey_3 w-1/3">
+          <div 
+            id="sign_transaction_from"
+            class="flex justify-between items-center py-20"
+          >
+            <p 
+              id="sign_transaction_from_label"
+              class="text-body font-bold text-grey_3 w-1/3"
+            >
               From
             </p>
-            <div class="text-body font-bold text-grey_8 w-2/3 truncate flex gap-3">
-              <span class="truncate text-body font-bold">
+            <div 
+              id="sign_transaction_from_content"
+              class="text-body font-bold text-grey_8 w-2/3 truncate flex gap-3"
+            >
+              <span 
+                id="sign_transaction_from_address"
+                class="truncate text-body font-bold"
+              >
                 {{ selectedWallet.address }} ...
               </span>
               <img
+                id="sign_transaction_from_wallet_providor"
                 :src="`/${selectedWallet.walletProvider.toLocaleUpperCase()}.svg`"
                 :alt="`${selectedWallet.walletProvider} Logo`"
                 class="w-15 h-15"
@@ -316,23 +362,42 @@ onMounted(async ()=>{
             </div>
           </div>
 
-          <div class="flex justify-between items-center mb-20">
-            <p class="text-body font-bold text-grey_3">
-              Auto Stake {{ autoRestake }}
+          <div 
+            id="sign_transaction_autorestake"
+            class="flex justify-between items-center py-20"
+          >
+            <p 
+              id="sign_transaction_autorestake_title"
+              class="text-body font-bold text-grey_3"
+            >
+              Auto Stake
             </p>
-            <div class="text-body font-bold text-grey_8">
-              <label class="switch">
+            <div 
+              id="sign_transaction_autorestake_checkbox_container"
+              class="text-body font-bold text-grey_8"
+            >
+              <label
+                id="sign_transaction_autorestake_checkbox_switch" 
+                class="switch"
+              >
                 <input
+                  id="sign_transaction_autorestake_checkbox_switch_input" 
                   v-model="autoRestake"
                   type="checkbox"
                 >
-                <span class="slider round" />
+                <span
+                  id="sign_transaction_autorestake_checkbox_switch_button" 
+                  class="slider round"
+                />
               </label>
             </div>
           </div>
-          <div class="h-full flex items-end justify-end">
+          <div 
+            id="sign_transaction_sign"
+            class="h-full flex items-end justify-end"
+          >
             <div class="text-center w-full">
-              <div class="flex flex-col w-full justify-center gap-5 items-center mb-10">
+              <div class="flex w-full justify-end gap-5 items-center mb-10">
                 <button 
                   class="bg-primary py-6 px-12 text-white rounded-[5px] hover:bg-blue_7 disabled:opacity-[0.55]"
                   @click="handleConfirm"
@@ -342,7 +407,7 @@ onMounted(async ()=>{
                   </h6>
                 </button>
                 <button 
-                  class="bg-decline py-6 px-12 text-white rounded-[5px] hover:bg-blue_7 disabled:opacity-[0.55]"
+                  class="bg-decline py-6 px-12 text-white rounded-[5px] hover:bg-red-600 disabled:opacity-[0.55]"
                   @click="handleCancel"
                 >
                   <h6 class="font-bold text-body">
@@ -351,7 +416,8 @@ onMounted(async ()=>{
                 </button>
               </div>
               <div 
-                class="text-caption font-medium text-grey_7 pr-2"
+                id="sign_transaction_message"
+                class="text-caption text-right font-medium text-grey_7 pr-2"
               >
                 Confirm and Sign Transaction
               </div>
@@ -360,13 +426,20 @@ onMounted(async ()=>{
         </div>
       </div>
       <div class="h-75 flex justify-end items-end">
-        <div class="text-right">
+        <div
+          id="stake_button_container" 
+          class="text-right"
+        >
           <button 
-            :disabled="!stakingStatus.allowToStake"
+            id="stake_button"
+            :disabled="!stakingStatus.allowToStake" 
             class="bg-primary py-6 px-12 text-white rounded-[5px] mb-10 hover:bg-blue_7 disabled:opacity-[0.55]"
             @click="handleStakeAction"
           >
-            <h6 class="font-semibold">
+            <h6
+              id="stake_button_contenet" 
+              class="font-semibold"
+            >
               Stake
             </h6>
           </button>

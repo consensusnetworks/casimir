@@ -180,47 +180,47 @@ const allTimeLow = ref({date: '12/12/2023', value: '$245.21'})
           <span class="text-caption font-bold text-border">
             ROI
           </span>
-          <button class="iconoir-expand text-blue_3 hover:text-primary text-body" />
+          <!-- No need for expandalbe modal atm -->
+          <!-- <button class="iconoir-expand text-blue_3 hover:text-primary text-body" /> -->
         </div>
         <div class="w-full text-right pb-5">
-          <h6 
+          <h5 
             class="font-bold"
             :class="roi_metric > 0? ' text-approve' : 'text-decline'"
           >
             {{ roi_metric }} %
-          </h6>
+          </h5>
         </div>
       </div>
       <div class="w-1 bg-border h-full" />
       <div class="w-4/6 h-full flex flex-col justify-between px-10">
         <div class="flex justify-between items-center w-full pt-10 mb-20">
           <span class="text-caption font-bold text-border">
-            All Time
+            All Time Net Values
           </span>
-          <button class="iconoir-expand text-blue_3 hover:text-primary text-body" />
+          <!-- No need for expandalbe modal atm -->
+          <!-- <button class="iconoir-expand text-blue_3 hover:text-primary text-body" /> -->
         </div>
         <div class="w-full flex justify-between items-center pb-5">
-          <div>
-            <h6 
-              class="font-bold text-approve text-body"
-            >
-              {{ allTimeHigh.value }}
-            </h6>
-
-            <span class="text-caption font-bold text-grey_3">
-              {{ allTimeHigh.date }}
-            </span>
-          </div>
-          <div class="text-right">
-            <h6 
-              class="font-bold text-decline text-body"
-            >
-              {{ allTimeLow.value }}
-            </h6>
-
-            <span class="text-caption font-bold text-grey_3">
+          <div class="text-left">
+            <span class="text-caption font-bold text-grey_2">
               {{ allTimeLow.date }}
             </span>
+            <h5 
+              class="font-bold text-decline"
+            >
+              {{ allTimeLow.value }}
+            </h5>
+          </div>
+          <div class="text-right">
+            <span class="text-caption font-bold text-grey_2">
+              {{ allTimeHigh.date }}
+            </span>
+            <h5
+              class="font-bold text-approve"
+            >
+              {{ allTimeHigh.value }}
+            </h5>
           </div>
         </div>
       </div>
