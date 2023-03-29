@@ -84,9 +84,11 @@ describe('SSV manager', async function () {
     const { ssvManager } = await loadFixture(rewardPostSecondUserDepositFixture)
     const balance = await ssvManager.getBalance()
     const { stake, rewards } = ({ ...balance })
-    console.log('stake', ethers.utils.formatEther(stake))
-    if (compound) expect(ethers.utils.formatEther(rewards)).equal('0.0')
-    else expect(ethers.utils.formatEther(rewards)).equal('0.1')
+    if (compound) {
+      expect(ethers.utils.formatEther(stake)).equal('40.1')
+    } else {
+      expect(ethers.utils.formatEther(rewards)).equal('0.1')
+    }
   })
 
   it('First and second user\'s stake earns them 0.04 and 0.06, respectively, in rewards after some time (or 0.0 each with compound)', async function () {
@@ -95,11 +97,9 @@ describe('SSV manager', async function () {
     const secondBalance = await ssvManager.getUserBalance(secondUser.address)
     const { stake: firstStake, rewards: firstRewards } = ({ ...firstBalance })
     const { stake: secondStake, rewards: secondRewards } = ({ ...secondBalance })
-    console.log('firstStake', ethers.utils.formatEther(firstStake))
-    console.log('secondStake', ethers.utils.formatEther(secondStake))
     if (compound) {
-      expect(ethers.utils.formatEther(firstRewards)).equal('0.0')
-      expect(ethers.utils.formatEther(secondRewards)).equal('0.0')
+      expect(ethers.utils.formatEther(firstStake)).equal('16.04')
+      expect(ethers.utils.formatEther(secondStake)).equal('24.06')
     } else {
       expect(ethers.utils.formatEther(firstRewards)).equal('0.04')
       expect(ethers.utils.formatEther(secondRewards)).equal('0.06')
@@ -121,16 +121,22 @@ describe('SSV manager', async function () {
   it('Third user\'s 24.0 stake does not open a third pool (or does with compound)', async function () {
     const { ssvManager } = await loadFixture(thirdUserDepositFixture)
     const openPools = await ssvManager.getOpenPoolIds()
-    if (compound) expect(openPools.length).equal(1)
-    else expect(openPools.length).equal(0)
+    if (compound) {
+      expect(openPools.length).equal(1)
+    } else {
+      expect(openPools.length).equal(0)
+    }
   })
 
   it('Third user\'s 24.0 stake increases the total stake to 64.0 (or 64.1 with compound)', async function () {
     const { ssvManager } = await loadFixture(thirdUserDepositFixture)
     const balance = await ssvManager.getBalance()
     const { stake } = ({ ...balance })
-    if (compound) expect(ethers.utils.formatEther(stake)).equal('64.1')
-    else expect(ethers.utils.formatEther(stake)).equal('64.0')
+    if (compound) {
+      expect(ethers.utils.formatEther(stake)).equal('64.1')
+    } else {
+      expect(ethers.utils.formatEther(stake)).equal('64.0')
+    }
   })
 
   it('Third user\'s 24.0 stake increases their stake to 24.0', async function () {
@@ -144,11 +150,11 @@ describe('SSV manager', async function () {
     const { ssvManager } = await loadFixture(rewardPostThirdUserDepositFixture)
     const balance = await ssvManager.getBalance()
     const { stake, rewards } = ({ ...balance })
-    
-    console.log('stake', ethers.utils.formatEther(stake))
-
-    if (compound) expect(ethers.utils.formatEther(rewards)).equal('0.0')
-    else expect(ethers.utils.formatEther(rewards)).equal('0.3')
+    if (compound) {
+      expect(ethers.utils.formatEther(stake)).equal('64.3')
+    } else {
+      expect(ethers.utils.formatEther(rewards)).equal('0.3')
+    }
   })
 
   it('First, second, and third user\'s stake earns them 0.09, 0.135 and 0.075, respectively, in rewards after some time (or 0.0 each with compound)', async function () {

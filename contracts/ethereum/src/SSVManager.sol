@@ -90,7 +90,7 @@ contract SSVManager {
     /** Scale factor for each reward to stake ratio */
     uint256 scaleFactor = 1 ether;
     /** Sum of scaled reward to stake ratios (arbitrary intial value required) */
-    uint256 distributionSum = 1 ether;
+    uint256 distributionSum = 1000 ether;
     /** IDs of staking pools readily accepting deposits */
     uint32[] private readyPoolIds;
     /** IDs of staking pools at full capacity */
