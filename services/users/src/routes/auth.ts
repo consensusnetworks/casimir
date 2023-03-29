@@ -47,9 +47,8 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
             walletProvider: provider,
         } as Account
         const addUserResult = await addUser(newUser, account)
-        const { Address } = addUserResult ? addUserResult : { Address: null}
         
-        if (!Address) {
+        if (addUserResult?.address !== address) {
             res.setHeader('Content-Type', 'application/json')
             res.status(500)
             res.json({

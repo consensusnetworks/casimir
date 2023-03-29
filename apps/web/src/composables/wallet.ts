@@ -7,10 +7,8 @@ import useEthers from '@/composables/ethers'
 import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
 import useUsers from '@/composables/users'
-import { Account, ProviderString, User } from '@casimir/types'
-import { TransactionInit } from '@/interfaces/TransactionInit'
-import { MessageInit } from '@/interfaces/MessageInit'
-import { Currency } from '@casimir/types'
+import { Account, ProviderString, Currency } from '@casimir/types'
+import { MessageInit, TransactionInit } from '@/interfaces/index'
 import * as Session from 'supertokens-web-js/recipe/session'
 
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
@@ -120,7 +118,7 @@ export default function useWallet() {
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
           loggedIn.value = true
-          primaryAddress.value = user?.Address
+          primaryAddress.value = user?.address
         }
         loadingUserWallets.value = false
       } else { // Add account
@@ -128,7 +126,7 @@ export default function useWallet() {
         console.log('checking if account exists on user')
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) // TODO: Remove currency from here? Maybe not.
         const connectedCurrency = await detectCurrencyInProvider(provider, currency) as Currency
-        const accountExists = user.value?.Accounts?.some((account: Account) => account.address === connectedAddress && account.wallet_provider === provider)
+        const accountExists = user.value?.accounts?.some((account: Account | any): boolean => account?.address === connectedAddress && account?.walletProvider === provider)
         console.log('accountExists :>> ', accountExists)
         if (accountExists) {
           alert('Account already exists; setting provider, address, and currency')
@@ -139,9 +137,9 @@ export default function useWallet() {
           // If no, add account using users api
           console.log('adding sub account')
           const account = {
-            address: connectedAddress.toLowerCase(),
+            address: connectedAddress.toLowerCase() as string,
             currency: connectedCurrency,
-            ownerAddress: user?.value?.Address.toLowerCase(),
+            ownerAddress: user?.value?.address.toLowerCase() as string,
             walletProvider: provider
           }
           const response = await addAccount(account)
@@ -150,7 +148,7 @@ export default function useWallet() {
             setSelectedProvider(provider)
             setSelectedAddress(connectedAddress)
             setSelectedCurrency(connectedCurrency)
-            primaryAddress.value = response.data?.Address as string
+            primaryAddress.value = response.data?.address as string
           }
         }
       }
@@ -254,7 +252,7 @@ export default function useWallet() {
       console.log('result :>> ', result)
       if (!result.error) {
         setSelectedAddress(result.data.address)
-        result.data.Accounts.forEach((account: Account) => {
+        result.data.accounts.forEach((account: Account) => {
           if (account.address === selectedAddress.value) {
             setSelectedProvider(account.walletProvider as ProviderString)
             setSelectedCurrency(account.currency as Currency)

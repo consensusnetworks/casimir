@@ -1,5 +1,5 @@
 import { Postgres } from '@casimir/data'
-import { pascalCase } from '@casimir/helpers'
+import { camelCase } from '@casimir/helpers'
 import { Account, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
 
 const postgres = new Postgres({
@@ -94,21 +94,29 @@ export default function useDB() {
     }
 
     /**
-     * Format data from a database result (snake_case to PascalCase).
+     * Format data from a database result (snake_case to camelCase).
      * @param rows - The result date
      * @returns The formatted data
      */
     function formatResult(row: any) {
         if (row) {
             for (const key in row) {
-                /** Convert snake_case to PascalCase */
+                /** Convert snake_case to camelCase */
                 if (key.includes('_')) {
-                    row[pascalCase(key)] = row[key]
-                    delete row[key]
-                } else {
-                    row[key[0].toUpperCase() + key.slice(1)] = row[key]
+                    row[camelCase(key, '_')] = row[key]
                     delete row[key]
                 }
+                /* Convert kebab-case to camelCase */
+                if (key.includes('-')) {
+                    row[camelCase(key, '-')] = row[key]
+                    delete row[key]
+                }
+            }
+            /** Format accounts as well */
+            if (row.accounts) {
+                row.accounts = row.accounts.map((account: any) => {
+                    return formatResult(account)
+                })
             }
             return row
         }

@@ -1,5 +1,5 @@
 export interface UserAddedSuccess {
-    Address: string
-    Created_at: string
-    Updated_at: string
+    address: string
+    created_at: string
+    updated_at: string
 }
