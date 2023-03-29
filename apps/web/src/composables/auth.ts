@@ -1,6 +1,5 @@
 import useEnvironment from '@/composables/environment'
-import { LoginCredentials } from '@casimir/types'
-import { ProviderString } from '@casimir/types'
+import { LoginCredentials, ProviderString } from '@casimir/types'
 
 const { usersBaseURL } = useEnvironment()
 

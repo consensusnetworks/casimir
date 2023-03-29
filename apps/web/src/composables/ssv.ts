@@ -7,8 +7,7 @@ import useEthers from './ethers'
 import useLedger from './ledger'
 import useTrezor from './trezor'
 import useWalletConnect from './walletConnect'
-import { ProviderString } from '@casimir/types'
-import { Pool } from '@casimir/types'
+import { Pool, ProviderString } from '@casimir/types'
 
 /** SSV Manager contract */
 let ssvManager: SSVManager

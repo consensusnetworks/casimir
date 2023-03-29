@@ -2,8 +2,7 @@ import express from 'express'
 import useDB from '../providers/db'
 import Session from 'supertokens-node/recipe/session'
 import useEthers from '../providers/ethers'
-import { Account } from '@casimir/types'
-import { LoginCredentials } from '@casimir/types'
+import { Account, LoginCredentials } from '@casimir/types'
 
 const { verifyMessage } = useEthers()
 const { getUser, upsertNonce, addUser } = useDB()

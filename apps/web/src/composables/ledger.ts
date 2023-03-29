@@ -1,7 +1,6 @@
 import { BitcoinLedgerSigner, EthersLedgerSigner } from '@casimir/wallets'
 import { ethers } from 'ethers'
-import { TransactionInit } from '@/interfaces/TransactionInit'
-import { MessageInit } from '@/interfaces/MessageInit'
+import { MessageInit, TransactionInit } from '@/interfaces/index'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 

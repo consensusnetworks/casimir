@@ -1,12 +1,9 @@
+import { onMounted, ref } from 'vue'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, User } from '@casimir/types'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useSSV from '@/composables/ssv'
 import useWallet from '@/composables/wallet'
-import { onMounted, ref } from 'vue'
-import { User } from '@casimir/types'
-import { AddAccountOptions } from '@casimir/types'
-import { RemoveAccountOptions } from '@casimir/types'
-import { ProviderString } from '@casimir/types'
 
 const { usersBaseURL, ethereumURL } = useEnvironment()
 

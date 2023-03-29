@@ -1,5 +1,4 @@
 import express from 'express'
-import { userCollection } from '../collections/users'
 import { verifySession } from 'supertokens-node/recipe/session/framework/express'
 import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
@@ -109,17 +108,28 @@ router.put('/update-primary-account', async (req: express.Request, res: express.
     primaryAddress = primaryAddress.toLowerCase()
     updatedProvider = updatedProvider.toLowerCase()
     updatedAddress = updatedAddress.toLowerCase()
-    const user = userCollection.find(user => user.address === primaryAddress)
-    if (user) {
-        user.address = updatedAddress
+
+    // TODO: Invoke updatePrimaryAccount function from here
+
+    // eslint-disable-next-line no-constant-condition
+    if (false) {
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            message: 'User not found',
+            error: true,
+            data: null 
+        })
+        return
+    } else {
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            message: 'Primary account updated',
+            error: false,
+            data: {}
+        })
     }
-    res.setHeader('Content-Type', 'application/json')
-    res.status(200)
-    res.json({
-        message: 'Primary account updated',
-        error: false,
-        data: user
-    })
 })
 
 function validateAddress(userSessionsAddress:string | undefined, address:string) {
