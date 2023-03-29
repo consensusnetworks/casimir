@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { addValidatorsFixture, firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, rewardFixture } from './fixtures/shared'
+import { addValidatorsFixture, firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, simulationFixture } from './fixtures/shared'
 
 const compound = process.env.COMPOUND !== 'false'
 
@@ -176,6 +176,6 @@ describe('SSV manager', async function () {
   })
 
   it('Check more rewards and dust', async function () {
-    await loadFixture(rewardFixture)
+    await loadFixture(simulationFixture)
   })
 })

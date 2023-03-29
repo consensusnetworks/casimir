@@ -3,9 +3,12 @@ import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
 import { validatorStore } from '@casimir/data'
 import { SSVManager } from '../build/artifacts/types'
 import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { simulationFixture } from '../test/fixtures/shared'
 
 void async function () {
     const compound = process.env.COMPOUND === 'true'
+    const simulation = process.env.SIMULATION === 'true'
     let ssvManager: SSVManager | undefined
     const [ , , , , distributor] = await ethers.getSigners()
     const config: DeploymentConfig = {
@@ -64,6 +67,11 @@ void async function () {
             withdrawalCredentials
         )
         await registration?.wait()
+    }
+
+    /** Load simulation fixture */
+    if (simulation) {
+        await loadFixture(simulationFixture)
     }
 
     /** Distribute rewards every ${blocksPerReward} blocks */

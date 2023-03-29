@@ -6,11 +6,13 @@ import { loadCredentials, getSecret, run } from '@casimir/helpers'
  * 
  * Arguments:
  *      --app: app name (optional, i.e., --app=web)
- *      --clean: delete existing pgdata before deploy (optional, i.e., --clean)
+ *      --clean: rebuild codegen and delete existing data before run (optional, i.e., --clean)
+ *      --compound: whether to use compound contract (override default false)
  *      --emulate: emulate hardware wallet services (optional, i.e., --emulate=ethereum)
  *      --fork: fork name (optional, i.e., --fork=goerli)
  *      --mock: mock services (optional, i.e., --mock=true)
  *      --network: network name (optional, i.e., --network=goerli)
+ *      --simulation: whether to run simulation (override default false)
  */
 void async function () {
 
@@ -49,6 +51,9 @@ void async function () {
     /** Default to clean services and data */
     const clean = argv.clean !== 'false' || argv.clean !== false
 
+    /** Default to no compound */
+    const compound = argv.compound === 'true' || argv.compound === true
+
     /** Default to no hardware wallet emulators or ethereum if set vaguely */
     const emulate = (argv.emulate === 'true' || argv.emulate === true) ? 'ethereum' : argv.emulators === 'false' ? false : argv.emulate
 
@@ -60,6 +65,9 @@ void async function () {
 
     /** Default to no network or testnet if set vaguely */
     const network = argv.network === 'true' ? 'testnet' : argv.network === 'false' ? false : argv.network
+
+    /** Default to no simulation */
+    const simulation = argv.simulation === 'true' || argv.simulation === true
 
     const { chains, services, tables } = apps[app as keyof typeof apps]
 
@@ -94,13 +102,14 @@ void async function () {
 
     for (const chain of chains) {
         if (network) {
-            const key = await getSecret(`consensus-networks-ethereum-${network}`)
-            const url = `https://eth-${network}.g.alchemy.com/v2/${key}`
+            const key = await getSecret(`consensus-networks-${chain}-${network}`)
+            const currency = chain.slice(0, 3)
+            const url = `https://${currency}-${network}.g.alchemy.com/v2/${key}`
             process.env.ETHEREUM_RPC_URL = url
             echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(network) + chalk.bgBlackBright(` ${chain} network at ${url}`))
         } else if (fork) {
             const chainFork = forks[chain][fork]
-            $`npm run dev:${chain} --fork=${chainFork}`
+            $`npm run dev:${chain} --clean=${clean} --compound=${compound} --fork=${chainFork} --simulation=${simulation}`
         }
     }
 

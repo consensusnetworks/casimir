@@ -137,16 +137,12 @@ export async function rewardPostThirdUserDepositFixture() {
         const rewardAmount = (0.1 * stakedValidatorPublicKeys.length).toString()
         const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
         await reward.wait()
-
-        const balance = await ssvManager.getBalance()
-        const { stake } = ({ ...balance })
-        console.log('BALANCE', ethers.utils.formatEther(stake))
     }
     return { ssvManager, distributor, firstUser, secondUser, thirdUser }
 }
 
 /** Fixture to reward users a few more times */
-export async function rewardFixture() {
+export async function simulationFixture() {
     const { ssvManager, distributor, firstUser, secondUser, thirdUser } = await loadFixture(rewardPostThirdUserDepositFixture)
     const stakedValidatorPublicKeys1 = await ssvManager?.getStakedValidatorPublicKeys()
     if (stakedValidatorPublicKeys1?.length) {
@@ -193,9 +189,6 @@ export async function rewardFixture() {
         const secondBalance = await ssvManager.getUserBalance(secondUser.address)
         const thirdBalance = await ssvManager.getUserBalance(thirdUser.address)
         const { stake } = ({ ...balance })
-
-        console.log('BALANCE', ethers.utils.formatEther(stake))
-
         const { stake: firstStake } = ({ ...firstBalance })
         const { stake: secondStake } = ({ ...secondBalance })
         const { stake: thirdStake } = ({ ...thirdBalance })

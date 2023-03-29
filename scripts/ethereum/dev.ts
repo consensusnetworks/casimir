@@ -10,6 +10,7 @@ import minimist from 'minimist'
  *      --compound: whether to use compound contract (override default false)
  *      --execution: hardhat or gananche (override default hardhat)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
+ *      --simulation: whether to run simulation (override default false)
  * 
  * For more info see:
  *      - https://hardhat.org/hardhat-network/docs/overview
@@ -36,6 +37,9 @@ void async function () {
     /** Get shared seed */
     const seed = await getSecret('consensus-networks-bip39-seed')
 
+    /** Default to no simulation */
+    const simulation = argv.simulation === 'true' || argv.simulation === true
+
     process.env.BIP39_SEED = seed
     echo(chalk.bgBlackBright('Your mnemonic seed is ') + chalk.bgBlue(seed))
 
@@ -55,6 +59,9 @@ void async function () {
     
     /** Enable 12-second interval mining for dev networks */
     process.env.MINING_INTERVAL = '12'
+
+    /** Enable simulation */
+    process.env.SIMULATION = `${simulation}`
 
     if (execution === 'ganache') {
         $`npm run node:ganache --workspace @casimir/ethereum`
