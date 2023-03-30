@@ -1,12 +1,9 @@
+import { onMounted, ref } from 'vue'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, User } from '@casimir/types'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useSSV from '@/composables/ssv'
 import useWallet from '@/composables/wallet'
-import { onMounted, ref } from 'vue'
-import { User } from '@casimir/types'
-import { Account } from '@casimir/types'
-import { Currency } from '@casimir/types'
-import { ProviderString } from '@casimir/types'
 
 const { usersBaseURL, ethereumURL } = useEnvironment()
 
@@ -125,48 +122,21 @@ export default function useUsers () {
     //     subscribeToUserEvents()
     // })
 
-    async function addAccount(provider: ProviderString, address: string, currency: Currency): Promise<{ error: boolean, message: string, data: User | null }> {
-        address = address.toLowerCase()
-        const account = user.value?.accounts?.find((account: Account) => {
-            const accountAddress = account.address.toLowerCase()
-            const accountProvider = account.walletProvider
-            const accountCurrency = account.currency
-            const addressIsEqual = accountAddress === address
-            const providerIsEqual = accountProvider === provider
-            const currencyIsEqual = accountCurrency === currency
-            const isEqual = addressIsEqual && providerIsEqual && currencyIsEqual
-            return isEqual
-        }) as Account
-        if (account) {
-            return { error: false, message: `Account already exists on user: ${account}`, data: user.value }
-        } else {
-            const accountToAdd = {
-                address,
-                currency,
-                balance: '0', // TODO: Decide how we want to handle this
-                balanceSnapshots: [],
-                roi: 0,
-                walletProvider: provider
-            }
-            const requestOptions = {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    address: user.value?.address,
-                    account: accountToAdd
-                })
-            }
-            const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
-            const { data: userAccount } = await response.json()
-            user.value = userAccount
-            return { error: false, message: `Account added to user: ${userAccount}`, data: userAccount }
+    async function addAccount(account: AddAccountOptions): Promise<{ error: boolean, message: string, data: User | null }> {
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ account })
         }
+        const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
+        const { data: userAccount } = await response.json()
+        user.value = userAccount
+        return { error: false, message: `Account added to user: ${userAccount}`, data: userAccount }
     }
 
-    // TODO: Refactor this next. 2/14
-    async function removeAccount(provider: ProviderString, address: string, currency: Currency) {
+    async function removeAccount({ address, currency, ownerAddress, walletProvider }: RemoveAccountOptions) {
         address = address.toLowerCase()
         const requestOptions = {
             method: 'POST',
@@ -174,13 +144,16 @@ export default function useUsers () {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                primaryAddress: user.value?.address,
-                provider,
                 address,
-                currency
+                currency,
+                ownerAddress,
+                walletProvider,
             })
         }
-        return await fetch(`${usersBaseURL}/user/remove-sub-account`, requestOptions)
+        const response = await fetch(`${usersBaseURL}/user/remove-sub-account`, requestOptions)
+        const { data: userAccount } = await response.json()
+        user.value = userAccount
+        return { error: false, message: `Account removed from user: ${userAccount}`, data: userAccount }
     }
     
     async function getMessage(address: string) {

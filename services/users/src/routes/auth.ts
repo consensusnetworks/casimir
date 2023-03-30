@@ -1,58 +1,72 @@
 import express from 'express'
-import useUsers from '../providers/users'
-import { userCollection } from '../collections/users'
+import useDB from '../providers/db'
 import Session from 'supertokens-node/recipe/session'
 import useEthers from '../providers/ethers'
-import { Account } from '@casimir/types'
-import { LoginCredentials } from '@casimir/types'
+import { Account, LoginCredentials } from '@casimir/types'
 
 const { verifyMessage } = useEthers()
-const { getMessage, updateMessage } = useUsers()
+const { getUser, upsertNonce, addUser } = useDB()
 const router = express.Router()
 
-
-router.get('/message/:provider/:address', (req: express.Request, res: express.Response) => {
-    const { provider, address } = req.params
-    updateMessage(provider, address)
-    const message = getMessage(address)
-    if (message) {
-        res.setHeader('Content-Type', 'application/json')
-        res.status(200)
-        res.json({ message })
-    } else {
-        res.status(404)
+router.get('/message/:provider/:address', async (req: express.Request, res: express.Response) => {
+    const { address } = req.params
+    try {
+        const nonce = await upsertNonce(address)
+        if (nonce) {
+            res.setHeader('Content-Type', 'application/json')
+            res.status(200)
+            res.json({ message: nonce })
+        } else {
+            res.status(404)
+            res.send()
+        }
+    } catch (error) {
+        console.log('error in /message/:provider/:address :>> ', error)
+        res.status(500)
         res.send()
     }
 })
 
-router.use('/login', async (req: express.Request, res: express.Response) => {
+router.post('/login', async (req: express.Request, res: express.Response) => {
     const { body } = req
     const { provider, address, currency, message, signedMessage } = body as LoginCredentials
-    const user = userCollection.find(user => user.address === address.toLowerCase())
-    if (user && !user?.accounts) {  // signup
-        const accounts: Array<Account> = [
-            {
-                address: address,
-                currency: currency,
-                balance: '1000000000000000000',
-                balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-                roi: 0,
-                walletProvider: provider
-            },
-        ]
-        user.accounts = accounts
-        user.accounts.length ? await Session.createNewSession(req, res, address) : null
+    const user = await getUser(address)
+    if (!user) {  // signup
+        console.log('SIGNING UP!')
+        const now = new Date().toISOString()
+        const newUser = { 
+            address,
+            createdAt: now,
+            updatedAt: now,
+        }
+        const account = {
+            address,
+            currency,
+            ownerAddress: address,
+            walletProvider: provider,
+        } as Account
+        const addUserResult = await addUser(newUser, account)
         
-        res.setHeader('Content-Type', 'application/json')
-        res.status(200)
-        res.json({
-            message: user.accounts.length ? 'Sign Up Successful' : 'Problem creating new user',
-            error: false,
-        })
+        if (addUserResult?.address !== address) {
+            res.setHeader('Content-Type', 'application/json')
+            res.status(500)
+            res.json({
+                error: true,
+                message: 'Problem creating new user',
+            })
+        } else {
+            await Session.createNewSession(req, res, address)
+            res.setHeader('Content-Type', 'application/json')
+            res.status(200)
+            res.json({
+                error: false,
+                message: 'Sign Up Successful'
+            })
+        }
     } else { // login
+        console.log('LOGGING IN!')
         const response = verifyMessage({ address, currency, message, signedMessage, provider })
-        updateMessage(provider, address) // send back token if successful
-        
+        upsertNonce(address)
         response ? await Session.createNewSession(req, res, address) : null
         res.setHeader('Content-Type', 'application/json')
         res.status(200)

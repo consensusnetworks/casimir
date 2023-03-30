@@ -1,12 +1,8 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
-import { BrowserProviders } from '@/interfaces/BrowserProviders'
-import { EthersProvider } from '@/interfaces/EthersProvider'
-import { ProviderString } from '@casimir/types'
-import { TransactionInit } from '@/interfaces/TransactionInit'
-import { MessageInit } from '@/interfaces/MessageInit'
+import { BrowserProviders, EthersProvider, MessageInit, TransactionInit } from '@/interfaces/index'
+import { Currency, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
-import { Currency } from '@casimir/types'
 
 const { getMessage, login } = useAuth()
 
@@ -117,18 +113,22 @@ export default function useEthers() {
   async function loginWithEthers(provider: ProviderString, address: string, currency: Currency) {
     const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    const messageJson = await getMessage(provider, address)
-    const { message } = await messageJson.json()
-    const signer = web3Provider.getSigner()
-    const signature = await signer.signMessage(message)
-    const response = await login({ 
-      provider, 
-      address, 
-      message: message.toString(), 
-      signedMessage: signature,
-      currency
-    })
-    return await response.json()
+    try {
+      const { message } = await (await getMessage(provider, address)).json()
+      const signer = web3Provider.getSigner()
+      const signature = await signer.signMessage(message)
+      const ethersLoginResponse = await login({ 
+        provider, 
+        address, 
+        message: message.toString(), 
+        signedMessage: signature,
+        currency
+      })
+      return await ethersLoginResponse.json()
+    } catch (err) {
+      console.log('Error logging in: ', err)
+      return err
+    }
   }
 
   async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
@@ -136,7 +136,7 @@ export default function useEthers() {
     const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const network = await web3Provider.getNetwork()
-    console.log('network.chainId :>> ', network.chainId)
+    // console.log('network.chainId :>> ', network.chainId)
     const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
     return currency
   }

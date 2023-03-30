@@ -3,7 +3,6 @@ import cors from 'cors'
 import supertokens from 'supertokens-node'
 import { middleware, errorHandler } from 'supertokens-node/framework/express'
 import { SuperTokensBackendConfig } from './sessions.config'
-import login from './routes/login'
 import auth from './routes/auth'
 import user from './routes/user'
 import health from './routes/health'
@@ -30,7 +29,6 @@ app.use(
 app.use(middleware())
 
 app.use('/auth', auth)
-app.use('/login', login)
 app.use('/user', user)
 app.use('/health', health)
 app.use('/seed', seed)

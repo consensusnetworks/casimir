@@ -1,5 +1,4 @@
-import { ProviderString } from '@/types/ProviderString'
-import { Pool } from './Pool'
+import { Pool, ProviderString } from '@casimir/types'
 
 export interface User {
     id: string
