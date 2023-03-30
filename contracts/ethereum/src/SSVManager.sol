@@ -144,7 +144,7 @@ contract SSVManager {
         address ssvTokenAddress,
         address swapRouterAddress,
         address wethTokenAddress,
-        // Temporarily optional for testing
+        /** Optionally set to classic for testing */
         bool _classic
     ) {
         beaconDeposit = IDepositContract(beaconDepositAddress);

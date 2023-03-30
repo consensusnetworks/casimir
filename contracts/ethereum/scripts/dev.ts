@@ -22,7 +22,8 @@ void async function () {
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
                 wethTokenAddress: process.env.WETH_TOKEN_ADDRESS,
-                classicMode: classic,
+                /** Optionally set to classic for testing */
+                _classic: classic
             },
             options: {},
             proxy: false
