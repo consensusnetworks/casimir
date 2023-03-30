@@ -48,11 +48,11 @@ void async function () {
     /** Default to the web app */
     const app = argv.app || 'web'
 
-    /** Default to clean services and data */
-    const clean = argv.clean !== 'false' || argv.clean !== false
-
     /** Default to compound */
     const classic = argv.classic === 'true' || argv.classic === true
+    
+    /** Default to clean services and data */
+    const clean = argv.clean !== 'false' || argv.clean !== false
 
     /** Default to no hardware wallet emulators or ethereum if set vaguely */
     const emulate = (argv.emulate === 'true' || argv.emulate === true) ? 'ethereum' : argv.emulators === 'false' ? false : argv.emulate

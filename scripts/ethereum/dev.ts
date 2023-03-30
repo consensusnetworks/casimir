@@ -22,11 +22,11 @@ void async function () {
     /** Parse command line arguments */
     const argv = minimist(process.argv.slice(2))
 
-    /** Default to no clean */
-    const clean = argv.clean === 'true' || argv.clean === true
-
     /** Default to compound */
     const classic = argv.classic === 'true' || argv.classic === true
+
+    /** Default to no clean */
+    const clean = argv.clean === 'true' || argv.clean === true
 
     /** Set execution environment */
     const execution = argv.execution === 'ganache' ? 'ganache' : 'hardhat'

@@ -5,18 +5,18 @@ import { run } from '@casimir/helpers'
  * Test Ethereum contracts
  * 
  * Arguments:
- *     --clean: whether to clean build directory (override default false)
  *     --classic: whether to use classic contract without compounding (override default false)
+ *     --clean: whether to clean build directory (override default false)
  */
 void async function () {
     /** Parse command line arguments */
     const argv = minimist(process.argv.slice(2))
 
-    /** Default to no clean */
-    const clean = argv.clean === 'true' || argv.clean === true
-
     /** Default to compound */
     const classic = argv.classic === 'true' || argv.classic === true
+    
+    /** Default to no clean */
+    const clean = argv.clean === 'true' || argv.clean === true
 
     if (clean) {
         await run('npm run clean --workspace @casimir/ethereum')
