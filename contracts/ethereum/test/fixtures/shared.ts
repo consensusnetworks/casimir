@@ -187,30 +187,9 @@ export async function simulationFixture() {
 
     const stakedValidatorCount5 = (await ssvManager?.getStakedValidatorPublicKeys())?.length
     if (stakedValidatorCount5) {
-        console.log('stakedValidatorCount5', stakedValidatorCount5)
         const rewardAmount = (rewardPerValidator * stakedValidatorCount5).toString()
         const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
         await reward.wait()
-
-        const balance = await ssvManager.getBalance()
-        const firstBalance = await ssvManager.getUserBalance(firstUser.address)
-        const secondBalance = await ssvManager.getUserBalance(secondUser.address)
-        const thirdBalance = await ssvManager.getUserBalance(thirdUser.address)
-        const { stake, rewards } = ({ ...balance })
-        const { stake: firstStake, rewards: firstRewards } = ({ ...firstBalance })
-        const { stake: secondStake, rewards: secondRewards } = ({ ...secondBalance })
-        const { stake: thirdStake, rewards: thirdRewards } = ({ ...thirdBalance })
-        const dust = stake.sub(firstStake.add(secondStake).add(thirdStake))
-        if (dust !== ethers.utils.parseEther('0.0')) {
-            console.log('🙊 Dust count', ethers.utils.formatEther(dust))
-        }
-        console.log('🏦 SSV Manager updated balance', ethers.utils.formatEther(stake.add(rewards)))
-        console.log('👤 First user updated balance', ethers.utils.formatEther(firstStake.add(firstRewards)))
-        console.log('👤 Second user updated balance', ethers.utils.formatEther(secondStake.add(secondRewards)))
-        console.log('👤 Third user updated balance', ethers.utils.formatEther(thirdStake.add(thirdRewards)))
-        
-        const readyDeposits = await ssvManager.getReadyDeposits()
-        console.log('📦 Ready deposits', ethers.utils.formatEther(readyDeposits))
     }
 
     return { ssvManager, distributor, firstUser, secondUser, thirdUser }
