@@ -29,15 +29,9 @@ export class EtlStack extends cdk.Stack {
         })
 
         /** Create S3 buckets */
-        const eventBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'event-bucket'), {
-            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'event-bucket')),
-        })
-        const aggBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'agg-bucket'), {
-            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'agg-bucket')),
-        })
-        new s3.Bucket(this, config.getFullStackResourceName(this.name, 'output-bucket'), {
-            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'output-bucket'))
-        })
+        const eventBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'event-bucket'))
+        const aggBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'agg-bucket'))
+        new s3.Bucket(this, config.getFullStackResourceName(this.name, 'output-bucket'))
 
         /** Create Glue tables */
         new glue.Table(this, config.getFullStackResourceName(this.name, 'event-table'), {
