@@ -101,8 +101,8 @@ contract SSVManager {
     bytes[] private stakedValidatorPublicKeys;
     /** Public keys of ready validators */
     bytes[] private readyValidatorPublicKeys;
-    /** Whether to compound stake rewards (temporarily optional for testing) */
-    bool compound;
+    /** Whether to use classic contract without compounding */
+    bool classic;
     /** Event signaling a user deposit to the pool manager */
     event ManagerDistribution(
         address userAddress,
@@ -134,6 +134,7 @@ contract SSVManager {
      * @param ssvTokenAddress The SSV token address
      * @param swapRouterAddress The Uniswap router address
      * @param wethTokenAddress The WETH contract address
+     * @param _classic Whether to use classic contract without compounding
      */
     constructor(
         address beaconDepositAddress,
@@ -144,7 +145,7 @@ contract SSVManager {
         address swapRouterAddress,
         address wethTokenAddress,
         // Temporarily optional for testing
-        bool _compound
+        bool _classic
     ) {
         beaconDeposit = IDepositContract(beaconDepositAddress);
         linkFeed = AggregatorV3Interface(linkFeedAddress);
@@ -155,7 +156,7 @@ contract SSVManager {
         ssvToken = ISSVToken(ssvTokenAddress);
         swapRouter = ISwapRouter(swapRouterAddress);
         tokens[Token.WETH] = wethTokenAddress;
-        compound = _compound;
+        classic = _classic;
     }
 
     /**
@@ -174,12 +175,11 @@ contract SSVManager {
         // Todo process fees from reward distribution
         // ProcessedDeposit memory processedDeposit = processFees(reward);
 
-        /** If specified, compound rewards reward */
-        if (compound) {
+        if (classic) {
+            distributionSum += Math.mulDiv(scaleFactor, rewardAmount, getBalance().stake);
+        } else {
             distributionSum += Math.mulDiv(distributionSum, rewardAmount, getBalance().stake);
             distribute(address(this), rewardAmount, block.timestamp);  
-        } else {
-            distributionSum += Math.mulDiv(scaleFactor, rewardAmount, getBalance().stake);
         }
     }
 
@@ -195,6 +195,18 @@ contract SSVManager {
         users[userAddress].distributionSum0 = distributionSum;
 
         distribute(userAddress, processedDeposit.ethAmount, block.timestamp);
+    }
+
+    /**
+     * @notice Withdraw user stake from the pool manager
+     * @param userAddress The user address 
+     * @param amount The amount of ETH to withdraw
+     */
+    function withdraw(address userAddress, uint256 amount) external {
+        require(msg.sender == userAddress, "Unauthorized");
+        users[userAddress].stake0 -= amount;
+        // users[userAddress].distributionSum0...
+        payable(userAddress).transfer(amount);
     }
 
     /**
@@ -498,6 +510,14 @@ contract SSVManager {
     }
 
     /**
+     * @notice Get the current ready deposits of the pool manager
+     * @return The current ready deposits of the pool manager
+     */
+    function getReadyDeposits() public view returns (uint256) {
+        return readyDeposits;
+    }
+
+    /**
      * @notice Get the current balance of a user
      * @param userAddress The user address
      * @return The current balance of a user
@@ -506,11 +526,11 @@ contract SSVManager {
         uint256 userStake = users[userAddress].stake0;
         uint256 distributionSum0 = users[userAddress].distributionSum0;
         uint256 rewards;
-        if (compound) {
+        if (classic) {
+            rewards = Math.mulDiv(userStake, distributionSum - distributionSum0, scaleFactor);
+        } else {
             userStake = Math.mulDiv(userStake, distributionSum, distributionSum0);
             rewards = 0;
-        } else {
-            rewards = Math.mulDiv(userStake, distributionSum - distributionSum0, scaleFactor);
         }
         return Balance(userStake, rewards);
     }

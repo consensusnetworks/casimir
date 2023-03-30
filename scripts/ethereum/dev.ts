@@ -6,8 +6,8 @@ import minimist from 'minimist'
  * Run local a local Ethereum node and deploy contracts
  * 
  * Arguments:
+ *      --classic: whether to use classic contract without compounding (override default false)
  *      --clean: whether to clean build directory (override default true)
- *      --compound: whether to use compound contract (override default false)
  *      --execution: hardhat or gananche (override default hardhat)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
  *      --simulation: whether to run simulation (override default false)
@@ -25,8 +25,8 @@ void async function () {
     /** Default to no clean */
     const clean = argv.clean === 'true' || argv.clean === true
 
-    /** Default to no compound */
-    const compound = argv.compound === 'true' || argv.compound === true
+    /** Default to compound */
+    const classic = argv.classic === 'true' || argv.classic === true
 
     /** Set execution environment */
     const execution = argv.execution === 'ganache' ? 'ganache' : 'hardhat'
@@ -54,8 +54,8 @@ void async function () {
         await $`npm run clean --workspace @casimir/ethereum`
     }
     
-    /** Set compound flag */
-    process.env.COMPOUND = `${compound}`
+    /** Set classic flag */
+    process.env.CLASSIC = `${classic}`
     
     /** Enable 12-second interval mining for dev networks */
     process.env.MINING_INTERVAL = '12'

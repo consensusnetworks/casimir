@@ -6,8 +6,8 @@ import minimist from 'minimist'
  * Test Ethereum contracts
  * 
  * Arguments:
+ *      --classic: whether to use classic contract without compounding (override default false)
  *      --clean: whether to clean build directory (override default false)
- *      --compound: whether to use compound contract (override default false)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
  * 
  * For more info see:
@@ -23,8 +23,8 @@ void async function () {
     /** Default to no clean */
     const clean = argv.clean === 'true' || argv.clean === true
 
-    /** Default to no compound */
-    const compound = argv.compound === 'true' || argv.compound === true
+    /** Default to compound */
+    const classic = argv.classic === 'true' || argv.classic === true
 
     /** Set fork rpc if requested, default fork to goerli if set vaguely */
     const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
@@ -42,5 +42,5 @@ void async function () {
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' fork at ') + chalk.bgBlue(url))
     }
 
-    $`npm run test --clean=${clean} --compound=${compound} --workspace @casimir/ethereum`
+    $`npm run test --clean=${clean} --classic=${classic} --workspace @casimir/ethereum`
 }()

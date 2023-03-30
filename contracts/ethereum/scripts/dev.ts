@@ -7,7 +7,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { simulationFixture } from '../test/fixtures/shared'
 
 void async function () {
-    const compound = process.env.COMPOUND === 'true'
+    const classic = process.env.CLASSIC === 'true'
     const simulation = process.env.SIMULATION === 'true'
     let ssvManager: SSVManager | undefined
     const [ , , , , distributor] = await ethers.getSigners()
@@ -22,7 +22,7 @@ void async function () {
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
                 wethTokenAddress: process.env.WETH_TOKEN_ADDRESS,
-                compound: compound
+                classicMode: classic,
             },
             options: {},
             proxy: false

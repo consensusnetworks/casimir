@@ -6,8 +6,8 @@ import { loadCredentials, getSecret, run } from '@casimir/helpers'
  * 
  * Arguments:
  *      --app: app name (optional, i.e., --app=web)
+ *      --classic: whether to use classic contract without compounding (override default false)
  *      --clean: rebuild codegen and delete existing data before run (optional, i.e., --clean)
- *      --compound: whether to use compound contract (override default false)
  *      --emulate: emulate hardware wallet services (optional, i.e., --emulate=ethereum)
  *      --fork: fork name (optional, i.e., --fork=goerli)
  *      --mock: mock services (optional, i.e., --mock=true)
@@ -51,8 +51,8 @@ void async function () {
     /** Default to clean services and data */
     const clean = argv.clean !== 'false' || argv.clean !== false
 
-    /** Default to no compound */
-    const compound = argv.compound === 'true' || argv.compound === true
+    /** Default to compound */
+    const classic = argv.classic === 'true' || argv.classic === true
 
     /** Default to no hardware wallet emulators or ethereum if set vaguely */
     const emulate = (argv.emulate === 'true' || argv.emulate === true) ? 'ethereum' : argv.emulators === 'false' ? false : argv.emulate
@@ -109,7 +109,7 @@ void async function () {
             echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(network) + chalk.bgBlackBright(` ${chain} network at ${url}`))
         } else if (fork) {
             const chainFork = forks[chain][fork]
-            $`npm run dev:${chain} --clean=${clean} --compound=${compound} --fork=${chainFork} --simulation=${simulation}`
+            $`npm run dev:${chain} --clean=${clean} --classic=${classic} --fork=${chainFork} --simulation=${simulation}`
         }
     }
 

@@ -6,7 +6,7 @@ import { run } from '@casimir/helpers'
  * 
  * Arguments:
  *     --clean: whether to clean build directory (override default false)
- *     --compound: whether to use compound contract (override default false)
+ *     --classic: whether to use classic contract without compounding (override default false)
  */
 void async function () {
     /** Parse command line arguments */
@@ -15,8 +15,8 @@ void async function () {
     /** Default to no clean */
     const clean = argv.clean === 'true' || argv.clean === true
 
-    /** Default to no compound */
-    const compound = argv.compound === 'true' || argv.compound === true
+    /** Default to compound */
+    const classic = argv.classic === 'true' || argv.classic === true
 
     if (clean) {
         await run('npm run clean --workspace @casimir/ethereum')
@@ -24,7 +24,7 @@ void async function () {
 
     await run('npm run build --workspace @casimir/ethereum')
 
-    process.env.COMPOUND = `${compound}`
+    process.env.CLASSIC = `${classic}`
 
     run('mocha --require hardhat/register --recursive --exit --extension ts --timeout 60000')
 }()

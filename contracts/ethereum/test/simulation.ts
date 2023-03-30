@@ -1,9 +1,9 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { addValidatorsFixture, firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, simulationFixture } from './fixtures/shared'
+import { addValidatorsFixture, firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture } from './fixtures/shared'
 
-const compound = process.env.COMPOUND !== 'false'
+const classic = process.env.CLASSIC !== 'false'
 
 describe('SSV manager', async function () {
 
@@ -84,10 +84,10 @@ describe('SSV manager', async function () {
     const { ssvManager } = await loadFixture(rewardPostSecondUserDepositFixture)
     const balance = await ssvManager.getBalance()
     const { stake, rewards } = ({ ...balance })
-    if (compound) {
-      expect(ethers.utils.formatEther(stake)).equal('40.1')
-    } else {
+    if (classic) {
       expect(ethers.utils.formatEther(rewards)).equal('0.1')
+    } else {
+      expect(ethers.utils.formatEther(stake)).equal('40.1')
     }
   })
 
@@ -97,12 +97,12 @@ describe('SSV manager', async function () {
     const secondBalance = await ssvManager.getUserBalance(secondUser.address)
     const { stake: firstStake, rewards: firstRewards } = ({ ...firstBalance })
     const { stake: secondStake, rewards: secondRewards } = ({ ...secondBalance })
-    if (compound) {
-      expect(ethers.utils.formatEther(firstStake)).equal('16.04')
-      expect(ethers.utils.formatEther(secondStake)).equal('24.06')
-    } else {
+    if (classic) {
       expect(ethers.utils.formatEther(firstRewards)).equal('0.04')
       expect(ethers.utils.formatEther(secondRewards)).equal('0.06')
+    } else {
+      expect(ethers.utils.formatEther(firstStake)).equal('16.04')
+      expect(ethers.utils.formatEther(secondStake)).equal('24.06')
     }
   })
 
@@ -121,10 +121,10 @@ describe('SSV manager', async function () {
   it('Third user\'s 24.0 stake does not open a third pool (or does with compound)', async function () {
     const { ssvManager } = await loadFixture(thirdUserDepositFixture)
     const openPools = await ssvManager.getOpenPoolIds()
-    if (compound) {
-      expect(openPools.length).equal(1)
-    } else {
+    if (classic) {
       expect(openPools.length).equal(0)
+    } else {
+      expect(openPools.length).equal(1)
     }
   })
 
@@ -132,10 +132,10 @@ describe('SSV manager', async function () {
     const { ssvManager } = await loadFixture(thirdUserDepositFixture)
     const balance = await ssvManager.getBalance()
     const { stake } = ({ ...balance })
-    if (compound) {
-      expect(ethers.utils.formatEther(stake)).equal('64.1')
-    } else {
+    if (classic) {
       expect(ethers.utils.formatEther(stake)).equal('64.0')
+    } else {
+      expect(ethers.utils.formatEther(stake)).equal('64.1')
     }
   })
 
@@ -150,10 +150,10 @@ describe('SSV manager', async function () {
     const { ssvManager } = await loadFixture(rewardPostThirdUserDepositFixture)
     const balance = await ssvManager.getBalance()
     const { stake, rewards } = ({ ...balance })
-    if (compound) {
-      expect(ethers.utils.formatEther(stake)).equal('64.3')
-    } else {
+    if (classic) {
       expect(ethers.utils.formatEther(rewards)).equal('0.3')
+    } else {
+      expect(ethers.utils.formatEther(stake)).equal('64.3')
     }
   })
 
@@ -170,14 +170,14 @@ describe('SSV manager', async function () {
     console.log('secondStake', ethers.utils.formatEther(secondStake))
     console.log('thirdStake', ethers.utils.formatEther(thirdStake))
 
-    if (compound) {
-      expect(ethers.utils.formatEther(firstRewards)).equal('0.0')
-      expect(ethers.utils.formatEther(secondRewards)).equal('0.0')
-      expect(ethers.utils.formatEther(thirdRewards)).equal('0.0')
-    } else {
+    if (classic) {
       expect(ethers.utils.formatEther(firstRewards)).equal('0.09')
       expect(ethers.utils.formatEther(secondRewards)).equal('0.135')
       expect(ethers.utils.formatEther(thirdRewards)).equal('0.075')
+    } else {
+      expect(ethers.utils.formatEther(firstRewards)).equal('0.0')
+      expect(ethers.utils.formatEther(secondRewards)).equal('0.0')
+      expect(ethers.utils.formatEther(thirdRewards)).equal('0.0')
     }
   })
 
