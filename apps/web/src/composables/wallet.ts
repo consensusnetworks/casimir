@@ -31,6 +31,15 @@ const amount = ref<string>('0.000001')
 const amountToStake = ref<string>('0.0')
 const session = ref<boolean>(false)
 
+const activeWallets = ref([
+  'MetaMask',
+  'CoinbaseWallet',
+  'WalletConnect',
+  'Trezor',
+  'Ledger',
+  'IoPay',
+] as ProviderString[])
+
 export default function useWallet() {
   const { ethereumURL } = useEnvironment()
   const { ethersProviderList, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
@@ -320,6 +329,7 @@ export default function useWallet() {
     amount,
     amountToStake,
     loadingUserWallets,
+    activeWallets,
     connectWallet,
     logout,
     setPrimaryWalletAccount,
