@@ -40,7 +40,7 @@ export default function usePrice() {
         return data[to]
     }
 
-    function convertToWholeUnits (currency: Currency, amount: number) {
+    function convertToWholeUnits (currency: Currency | string, amount: number) {
         switch (currency) {
             case 'BTC':
                 return amount / 100000000

@@ -1,10 +1,16 @@
-import { LoginCredentials } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
-import { ProviderString } from '@casimir/types'
+import { LoginCredentials, ProviderString } from '@casimir/types'
 
 const { usersBaseURL } = useEnvironment()
 
 export default function useAuth() {
+    /**
+     * Gets a message from the server to sign
+     * 
+     * @param {ProviderString} provider - The provider the user is using to sign in
+     * @param {string} address - The user's address
+     * @returns {Promise<Response>} - The response from the message request
+     */ 
     async function getMessage(provider: ProviderString, address: string) {
         const requestOptions = {
             method: 'GET',

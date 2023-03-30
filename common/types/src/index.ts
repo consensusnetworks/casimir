@@ -1,27 +1,33 @@
-import { ContractConfig } from './interfaces/ContractConfig'
-import { DeploymentConfig } from './interfaces/DeploymentConfig'
-import { Pool } from './interfaces/Pool'
-import { Operator } from './interfaces/Operator'
-import { Validator } from './interfaces/Validator'
-import { User } from './interfaces/User'
 import { Account } from './interfaces/Account'
+import { AddAccountOptions } from './interfaces/AddAccountOptions'
 import { BalanceSnapshot } from './interfaces/BalanceSnapshot'
+import { ContractConfig } from './interfaces/ContractConfig'
 import { Currency } from './interfaces/Currency'
-import { ProviderString } from './interfaces/ProviderString'
-import { LoginCredentials } from './interfaces/LoginCredentials'
+import { DeploymentConfig } from './interfaces/DeploymentConfig'
 import { Event } from './interfaces/Event'
+import { LoginCredentials } from './interfaces/LoginCredentials'
+import { Operator } from './interfaces/Operator'
+import { Pool } from './interfaces/Pool'
+import { ProviderString } from './interfaces/ProviderString'
+import { RemoveAccountOptions } from './interfaces/RemoveAccountOptions'
+import { User } from './interfaces/User'
+import { UserAddedSuccess } from './interfaces/UserAddedSuccess'
+import { Validator } from './interfaces/Validator'
 
 export type {
-    ContractConfig, 
-    DeploymentConfig,
-    Pool,
-    User,
     Account,
+    AddAccountOptions,
     BalanceSnapshot,
+    ContractConfig, 
     Currency,
-    ProviderString,
-    Operator, 
-    Validator,
+    DeploymentConfig,
+    Event,
     LoginCredentials,
-    Event
+    Operator, 
+    Pool,
+    ProviderString,
+    RemoveAccountOptions,
+    User,
+    UserAddedSuccess,
+    Validator,
 }
