@@ -10,7 +10,7 @@ import minimist from 'minimist'
  *      --clean: whether to clean build directory (override default true)
  *      --execution: hardhat or gananche (override default hardhat)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
- *      --simulation: whether to run simulation (override default false)
+ *      --simulation: whether to run contract simulation fixture (override default false)
  * 
  * For more info see:
  *      - https://hardhat.org/hardhat-network/docs/overview

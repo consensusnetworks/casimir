@@ -12,7 +12,7 @@ import { loadCredentials, getSecret, run } from '@casimir/helpers'
  *      --fork: fork name (optional, i.e., --fork=goerli)
  *      --mock: mock services (optional, i.e., --mock=true)
  *      --network: network name (optional, i.e., --network=goerli)
- *      --simulation: whether to run simulation (override default false)
+ *      --simulation: whether to run contract simulation fixture (override default false)
  */
 void async function () {
 
