@@ -76,7 +76,11 @@ void async function () {
     }
 
     /** Distribute rewards every ${blocksPerReward} blocks */
-    const blocksPerReward = 1
+    const blocksPerReward = 10
+
+    /** Simulation amount of reward to distribute per staked validator */
+    const rewardPerValidator = 0.1
+
     let lastRewardBlock = await ethers.provider.getBlockNumber()
     ethers.provider.on('block', async (block) => {
         if (block - blocksPerReward === lastRewardBlock) {
@@ -84,7 +88,7 @@ void async function () {
             const activeValidatorPublicKeys = await ssvManager?.getStakedValidatorPublicKeys()
             if (activeValidatorPublicKeys?.length) {
                 console.log(`Distributing rewards from ${activeValidatorPublicKeys.length} active validators...`)
-                const rewardAmount = (0.1 * activeValidatorPublicKeys.length).toString()
+                const rewardAmount = (rewardPerValidator * activeValidatorPublicKeys.length).toString()
                 const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
                 await reward.wait()
             }
