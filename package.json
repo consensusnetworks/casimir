@@ -13,9 +13,9 @@
     "clean": "npm exec --workspaces -- npx rimraf node_modules && npx rimraf node_modules package-lock.json && npm i",
     "curl": "curl -H 'Content-Type: application/json' -d \"$npm_config_body\" \"$npm_config_url\"",
     "deploy:cdk": "npx esno -r dotenv/config scripts/cdk/deploy.ts",
-    "dev": "npx esno -r dotenv/config scripts/local/dev.ts --app \"$npm_config_app\" --clean \"$npm_config_clean\" --emulate \"$npm_config_emulate\" --fork \"$npm_config_fork\" --mock \"$npm_config_mock\" --network \"$npm_config_network\" --simulation \"$npm_config_simulation\"",
+    "dev": "npx esno -r dotenv/config scripts/local/dev.ts --app \"$npm_config_app\" --classic \"$npm_config_classic\" --clean \"$npm_config_clean\" --emulate \"$npm_config_emulate\" --fork \"$npm_config_fork\" --mock \"$npm_config_mock\" --network \"$npm_config_network\" --simulation \"$npm_config_simulation\"",
     "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
-    "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --clean \"$npm_config_clean\" --classic \"$npm_config_classic\" --execution \"$npm_config_execution\" --fork \"$npm_config_fork\" --simulation \"$npm_config_simulation\"",
+    "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --classic \"$npm_config_classic\" --clean \"$npm_config_clean\" --execution \"$npm_config_execution\" --fork \"$npm_config_fork\" --simulation \"$npm_config_simulation\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
     "dev:ssv": "scripts/ssv/dev -n \"$npm_config_nodes\"",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
@@ -27,7 +27,7 @@
     "test:actions": "npx esno -r dotenv/config scripts/actions/test.ts --workflow \"$npm_config_workflow\"",
     "test:cdk": "npx esno -r dotenv/config scripts/cdk/test.ts",
     "test:crawler": "scripts/crawler/test -f \"$npm_config_fork\" -n \"$npm_config_network\"",
-    "test:ethereum": "npx esno -r dotenv/config scripts/ethereum/test.ts --clean \"$npm_config_clean\" --classic \"$npm_config_classic\" --fork \"$npm_config_fork\"",
+    "test:ethereum": "npx esno -r dotenv/config scripts/ethereum/test.ts --classic \"$npm_config_classic\" --clean \"$npm_config_clean\" --fork \"$npm_config_fork\"",
     "release": "release-it"
   },
   "repository": {
