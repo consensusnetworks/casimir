@@ -1,5 +1,4 @@
 import express from 'express'
-// import { verifySession } from 'supertokens-node/recipe/session/framework/express'
 import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
 
@@ -9,7 +8,7 @@ const { addUser } = useDB()
 router.post('/users'/*, verifySession()*/, async (req: SessionRequest, res: express.Response) => {
     const { users } = req.body
     for (const user of users) {
-        await addUser(user)
+        await addUser(user, user.accounts[0])
     }
     res.status(200).json(users)
 })

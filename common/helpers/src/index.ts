@@ -43,13 +43,14 @@ export async function loadCredentials() {
  * @param string - The input string
  * @returns A camelCase string from the input string
  */
-export function camelCase(string: string): string {
-    const words = string.split('-').map(word => {
+export function camelCase(string: string, delimiter: string): string {
+    const words = string.split(delimiter).map(word => {
         return word.replace(/\w+/g, (word) => {
             return word[0].toUpperCase() + word.slice(1).toLowerCase()
         })
     })
-    return words[0].toLowerCase() + words.slice(1).join('')
+    const result = words.join('')
+    return result[0].toLowerCase() + result.slice(1)
 }
 
 /**
@@ -60,12 +61,13 @@ export function camelCase(string: string): string {
  *
  */
 export function pascalCase(string: string): string {
-    const words = string.split('-').map(word => {
+    const words = string.split('_').map(word => {
         return word.replace(/\w+/g, (word) => {
             return word[0].toUpperCase() + word.slice(1).toLowerCase()
         })
     })
-    return words.join('')
+    const result = words.join('')
+    return result
 }
 
 /**

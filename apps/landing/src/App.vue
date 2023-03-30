@@ -1,15 +1,82 @@
 <script lang="ts" setup>
-import NavBar from '@/components/nav/NavBar.vue'
-
+import Scrambler from '@/components/Scrambler.vue'
 
 </script>
+
 <template>
-  <div class="h-screen min-w-[360px] overflow-auto">
-    <div class="h-navbar">
-      <NavBar />
-    </div>
-    <div class="overflow-auto">
-      <router-view />
+  <div class="border h-screen w-full flex flex-col gap-[20px] justify-center items-center bg-[#D0D6E1]">
+    <div>
+      <div class="flex justify-center items-center">
+        <img
+          src="/ETHLogo.svg"
+          alt=""
+          class="h-[200px]"
+        >
+        <div>
+          <div class=" flex gap-[10px]">
+            <img
+              src="/casimir.svg"
+              alt=""
+              class="h-[20px]"
+            >
+            <Scrambler 
+              :phrases="['Non-Custodial']"
+              :repeat="false"
+              :delay="0"
+              :text-class="'font-semibold text-[16px] text-[#343434] leading-[24px] tracking-normal'"
+              :transform-timer="5"
+            />
+          </div>
+          
+          <Scrambler 
+            :phrases="['Ethereum Staking']"
+            :repeat="false"
+            :delay="200"
+            :text-class="'font-medium text-[76px] text-[#3a3a3a] leading-[120px] tracking-wider'"
+            :transform-timer="15"
+          />
+        </div>
+      </div>
+      <div class="flex flex-col justify-center items-end gap-[25px]">
+        <div class="flex gap-[3px]">
+          <!-- , 'Permissionless.', 'Any wallet.' -->
+          <Scrambler 
+            :phrases="['No minimum amount.', 'Maximum staking rewards.', 'Your keys, your coins.']"
+            :repeat="true"
+            :delay="300"
+            :text-class="'font-semibold text-[20px] text-[#3a3a3a] leading-[30px] tracking-normal'"
+            :transform-timer="5"
+          /> 
+          <span class="pulse w-[2px] rounded bg-primary" />
+        </div>
+        <!-- <a
+          class=" rounded-[4px] flex justify-center items-center gap-[10px]
+        bg-primary text-white px-[25px] py-[7px] font-bold hover:bg-blue_4
+        hover:text-black"
+          href="https://www.app.casimir.co/"
+        >
+          <i
+            class="iconoir-drone-take-off"
+          /> Launch App
+        </a> -->
+      </div>
     </div>
   </div>
 </template>
+
+
+<style scoped>
+.pulse{
+  animation: pulse 1.25s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  from,
+  to {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+</style>

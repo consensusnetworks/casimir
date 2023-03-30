@@ -1,6 +1,6 @@
 import { Postgres } from '@casimir/data'
-import { pascalCase } from '@casimir/helpers'
-import { Account, User } from '@casimir/types'
+import { camelCase } from '@casimir/helpers'
+import { Account, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
 
 const postgres = new Postgres({
     // These will become environment variables
@@ -16,12 +16,14 @@ export default function useDB() {
     /** 
      * Add an account.
      * @param account - The account to add
+     * @param createdAt - The account's creation date (optional)
      * @returns The new account
      */
-    async function addAccount(account: Account) {
-        const createdAt = new Date().toISOString()
-        const text = 'INSERT INTO accounts (address, owner_address, created_at) VALUES ($1, $2, $3) RETURNING *;'
-        const params = [account.address, account.ownerAddress, createdAt]
+    async function addAccount(account: Account, createdAt?: string) : Promise<Account> {
+        if (!createdAt) createdAt = new Date().toISOString()
+        const { address, currency, ownerAddress, walletProvider } = account
+        const text = 'INSERT INTO accounts (address, currency, owner_address, wallet_provider, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;'
+        const params = [address, currency, ownerAddress, walletProvider, createdAt]
         const rows = await postgres.query(text, params)
         return rows[0] as Account
     }
@@ -29,26 +31,20 @@ export default function useDB() {
     /**
      * Add a user.
      * @param user - The user to add
+     * @param account - The user's accounts
      * @returns The new user
      */
-    async function addUser(user: User) {
-        const createdAt = new Date().toISOString()
-
-        const text = 'INSERT INTO users (address, created_at) VALUES ($1, $2) RETURNING *;'
-        const params = [user.address, createdAt]
+    async function addUser(user: User, account: Account) : Promise<UserAddedSuccess | undefined> {
+        const { address, createdAt, updatedAt } = user
+        const text = 'INSERT INTO users (address, created_at, updated_at) VALUES ($1, $2, $3) RETURNING *;'
+        const params = [address, createdAt, updatedAt]
         const rows = await postgres.query(text, params)
-
         const addedUser = rows[0]
-        addedUser.accounts = []
+        
+        const accountAdded = await addAccount(account, createdAt)
+        addedUser.accounts = [accountAdded]
 
-        for (const account of user.accounts || []) {
-            const text = 'INSERT INTO accounts (address, owner_address, created_at) VALUES ($1, $2, $3) RETURNING *;'
-            const params = [account.address, user.address, createdAt]
-            const rows = await postgres.query(text, params)
-            const addedAccount = rows[0]
-            addedUser.accounts.push(addedAccount)
-        }
-        return formatResult(addedUser) as User
+        return formatResult(addedUser)
     }
 
     /**
@@ -65,20 +61,75 @@ export default function useDB() {
     }
 
     /**
-     * Format data from a database result (snake_case to PascalCase).
+     * Remove an account.
+     * @param address - The account's address (pk)
+     * @param ownerAddress - The account's owner address
+     * @param walletProvider - The account's wallet provider
+     * @param currency - The account's currency
+     * @returns The removed account if found, otherwise undefined
+     */
+    async function removeAccount({ address, currency, ownerAddress, walletProvider } : RemoveAccountOptions) {
+        const text = 'DELETE FROM accounts WHERE address = $1 AND owner_address = $2 AND wallet_provider = $3 AND currency = $4 RETURNING *;'
+        const params = [address, ownerAddress, walletProvider, currency]
+        const rows = await postgres.query(text, params)
+        return rows[0] as Account
+    }
+
+    /**
+     * Add or update nonce for an address.
+     * @param address - The address
+     * @returns A promise that resolves when the nonce is added or updated
+     */
+    async function upsertNonce(address: string): Promise<string | Error> {
+        try {
+            const nonce = generateNonce()
+            const text = 'INSERT INTO nonces (address, nonce) VALUES ($1, $2) ON CONFLICT (address) DO UPDATE SET nonce = $2;'
+            const params = [address, nonce]
+            await postgres.query(text, params)
+            return nonce
+        } catch (error) {
+            console.error('There was an error adding or updating the nonce in upsertNonce.', error)
+            return error as Error
+        }
+    }
+
+    /**
+     * Format data from a database result (snake_case to camelCase).
      * @param rows - The result date
      * @returns The formatted data
      */
     function formatResult(row: any) {
         if (row) {
             for (const key in row) {
-                /** Convert snake_case to PascalCase */
-                if (key.includes('_')) row[pascalCase(key)] = row[key]
-                delete row[key]
+                /** Convert snake_case to camelCase */
+                if (key.includes('_')) {
+                    row[camelCase(key, '_')] = row[key]
+                    delete row[key]
+                }
+                /* Convert kebab-case to camelCase */
+                if (key.includes('-')) {
+                    row[camelCase(key, '-')] = row[key]
+                    delete row[key]
+                }
+            }
+            /** Format accounts as well */
+            if (row.accounts) {
+                row.accounts = row.accounts.map((account: any) => {
+                    return formatResult(account)
+                })
             }
             return row
         }
     }
 
-    return { addAccount, addUser, getUser }
+    return { addAccount, addUser, getUser, removeAccount, upsertNonce }
+}
+
+/**
+ * Generate and return a nonce.
+ * @returns string
+ */
+function generateNonce() {
+    return (Math.floor(Math.random()
+        * (Number.MAX_SAFE_INTEGER - 1)) + 1).toString()
 }

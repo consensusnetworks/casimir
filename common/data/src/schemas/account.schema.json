@@ -12,6 +12,10 @@
             "type": "number",
             "description": "The account balance"
         },
+        "currency": {
+            "type": "string",
+            "description": "The account currency"
+        },
         "created_at": {
             "type": "string",
             "description": "The account creation date in ISO 8601 format"
@@ -45,14 +49,15 @@
             "type": "string",
             "description": "The account last update date in ISO 8601 format"
         },
-        "wallet": {
+        "wallet_provider": {
             "type": "string",
             "description": "The account wallet provider"
         }
     },
     "required": [
         "address",
+        "currency",
         "owner_address",
-        "wallet"
+        "wallet_provider"
     ]
 }

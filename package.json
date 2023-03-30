@@ -79,5 +79,8 @@
     "hooks": {
       "after:bump": "npx auto-changelog -p"
     }
+  },
+  "dependencies": {
+    "chart.js": "^4.2.1"
   }
 }
