@@ -153,43 +153,18 @@ export async function firstUserPartialWithdrawalFixture() {
     return { ssvManager, distributor, firstUser, secondUser, thirdUser }
 }
 
-/** Fixture to reward users a few more times */
+/** Fixture to simulate some stakes and rewards */
 export async function simulationFixture() {
 
     const { ssvManager, distributor, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
-    const stakedValidatorCount1 = (await ssvManager?.getStakedValidatorPublicKeys())?.length
-    if (stakedValidatorCount1) {
-        const rewardAmount = (rewardPerValidator * stakedValidatorCount1).toString()
-        const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-        await reward.wait()
-    }
 
-    const stakedValidatorCount2 = (await ssvManager?.getStakedValidatorPublicKeys())?.length
-    if (stakedValidatorCount2) {
-        const rewardAmount = (rewardPerValidator * stakedValidatorCount2).toString()
-        const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-        await reward.wait()
-    }
-
-    const stakedValidatorCount3 = (await ssvManager?.getStakedValidatorPublicKeys())?.length
-    if (stakedValidatorCount3) {
-        const rewardAmount = (rewardPerValidator * stakedValidatorCount3).toString()
-        const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-        await reward.wait()
-    }
-
-    const stakedValidatorCount4 = (await ssvManager?.getStakedValidatorPublicKeys())?.length
-    if (stakedValidatorCount4) {
-        const rewardAmount = (rewardPerValidator * stakedValidatorCount4).toString()
-        const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-        await reward.wait()
-    }
-
-    const stakedValidatorCount5 = (await ssvManager?.getStakedValidatorPublicKeys())?.length
-    if (stakedValidatorCount5) {
-        const rewardAmount = (rewardPerValidator * stakedValidatorCount5).toString()
-        const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-        await reward.wait()
+    for (let i = 0; i < 5; i++) {
+        const stakedValidatorCount = (await ssvManager?.getStakedValidatorPublicKeys())?.length
+        if (stakedValidatorCount) {
+            const rewardAmount = (rewardPerValidator * stakedValidatorCount).toString()
+            const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
+            await reward.wait()
+        }
     }
 
     return { ssvManager, distributor, firstUser, secondUser, thirdUser }

@@ -196,6 +196,10 @@ contract SSVManager is Ownable, ReentrancyGuard {
 
         /** Update user staking account */
         if (classic) {
+            if (users[msg.sender].stake0 > 0) {
+                /** Settle user's latest stake */
+                users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
+            }
             users[msg.sender].distributionSum0 = distributionSum;
             users[msg.sender].stake0 = processedDeposit.ethAmount;
         } else {
@@ -215,9 +219,9 @@ contract SSVManager is Ownable, ReentrancyGuard {
      * @param amount The amount of ETH to withdraw
      */
     function withdraw(uint256 amount) external nonReentrant {
+        require(!classic, "Withdraw not available yet in classic mode");
         require(readyDeposits >= amount, "Withdrawing more than ready deposits");      
         require(users[msg.sender].stake0 > 0, "User does not have a stake");
-        require(!classic, "Withdraw not available yet in classic mode");
 
         // Todo remove after completing testing
         console.log('Warning: withdraw implementation is not yet fully tested');
@@ -225,9 +229,13 @@ contract SSVManager is Ownable, ReentrancyGuard {
         /** Settle user's latest stake */
         users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
 
+        if (users[msg.sender].stake0 < amount) {
+            revert("Withdrawing more than user stake");
+        }
+
         /** Update user staking account */
-        users[msg.sender].stake0 -= amount;
         users[msg.sender].distributionSum0 = distributionSum;
+        users[msg.sender].stake0 -= amount;
 
         /** Update ready deposits */
         readyDeposits -= amount;
@@ -272,12 +280,12 @@ contract SSVManager is Ownable, ReentrancyGuard {
 
     /**
      * @dev Distribute a processed deposit to ready pools
-     * @param userAddress The user address
+     * @param senderAddress The deposit sender address
      * @param processedDeposit The processed deposit
      * @param time The deposit time
      */
     function distribute(
-        address userAddress,
+        address senderAddress,
         ProcessedDeposit memory processedDeposit,
         uint256 time
     ) private {
@@ -290,7 +298,7 @@ contract SSVManager is Ownable, ReentrancyGuard {
 
         /** Emit manager reward event */
         emit ManagerDistribution(
-            userAddress,
+            senderAddress,
             processedDeposit.ethAmount,
             time
         );
@@ -314,7 +322,7 @@ contract SSVManager is Ownable, ReentrancyGuard {
                 
                 /** Emit pool deposit event */
                 emit PoolDeposit(
-                    userAddress,
+                    senderAddress,
                     poolId,
                     processedDeposit.ethAmount,
                     time
@@ -327,7 +335,7 @@ contract SSVManager is Ownable, ReentrancyGuard {
 
                 /** Emit pool deposit event */
                 emit PoolDeposit(
-                    userAddress,
+                    senderAddress,
                     poolId,
                     remainingCapacity,
                     time
@@ -568,8 +576,8 @@ contract SSVManager is Ownable, ReentrancyGuard {
     function getUserBalance(address userAddress) public view returns (Balance memory) {
         require(users[userAddress].stake0 > 0, "User does not have a stake");
 
-        uint256 userStake = users[userAddress].stake0;
         uint256 distributionSum0 = users[userAddress].distributionSum0;
+        uint256 userStake = users[userAddress].stake0;
         uint256 rewards;
         if (classic) {
             rewards = Math.mulDiv(userStake, distributionSum - distributionSum0, scaleFactor);
