@@ -168,6 +168,22 @@ describe('SSV manager', async function () {
     }
   })
 
+  it('First user\'s 0.3 withdrawal decreases their stake to ~15.79', async function () {
+    if (!classic) {
+      const { ssvManager, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
+      const firstBalance = await ssvManager.getUserBalance(firstUser.address)
+      const secondBalance = await ssvManager.getUserBalance(secondUser.address)
+      const thirdBalance = await ssvManager.getUserBalance(thirdUser.address)
+      const { stake: firstStake, rewards: firstRewards } = ({ ...firstBalance })
+      const { stake: secondStake, rewards: secondRewards } = ({ ...secondBalance })
+      const { stake: thirdStake, rewards: thirdRewards } = ({ ...thirdBalance })
+  
+      expect(ethers.utils.formatEther(firstStake.add(firstRewards))).equal('15.790046801872074882')
+      expect(ethers.utils.formatEther(secondStake.add(secondRewards))).equal('24.135070202808112324')
+      expect(ethers.utils.formatEther(thirdStake.add(thirdRewards))).equal('24.074882995319812792')
+    }
+  })
+
   it('Check more rewards and dust', async function () {
     const { ssvManager, firstUser, secondUser, thirdUser } = await loadFixture(simulationFixture)
     const balance = await ssvManager.getBalance()

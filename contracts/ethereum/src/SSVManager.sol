@@ -223,9 +223,6 @@ contract SSVManager is Ownable, ReentrancyGuard {
         require(readyDeposits >= amount, "Withdrawing more than ready deposits");      
         require(users[msg.sender].stake0 > 0, "User does not have a stake");
 
-        // Todo remove after completing testing
-        console.log('Warning: withdraw implementation is not yet fully tested');
-
         /** Settle user's latest stake */
         users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
 

@@ -144,20 +144,18 @@ export async function rewardPostThirdUserDepositFixture() {
     return { ssvManager, distributor, firstUser, secondUser, thirdUser }
 }
 
-/** Fixture to send ${readyDeposits} amount to fulfill ${firstUser} partial withdrawal */
+/** Fixture to withdraw ${readyDeposits} amount to fulfill ${firstUser} partial withdrawal */
 export async function firstUserPartialWithdrawalFixture() {
     const { ssvManager, distributor, firstUser, secondUser, thirdUser } = await loadFixture(rewardPostThirdUserDepositFixture)
-
-    // Todo
-
+    const readyDeposits = await ssvManager?.getReadyDeposits()
+    const withdrawal = await ssvManager.connect(firstUser).withdraw(readyDeposits)
+    await withdrawal.wait()
     return { ssvManager, distributor, firstUser, secondUser, thirdUser }
 }
 
-/** Fixture to simulate some stakes and rewards */
+/** Fixture to simulate stakes and rewards */
 export async function simulationFixture() {
-
     const { ssvManager, distributor, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
-
     for (let i = 0; i < 5; i++) {
         const stakedValidatorCount = (await ssvManager?.getStakedValidatorPublicKeys())?.length
         if (stakedValidatorCount) {
@@ -166,6 +164,5 @@ export async function simulationFixture() {
             await reward.wait()
         }
     }
-
     return { ssvManager, distributor, firstUser, secondUser, thirdUser }
 }
