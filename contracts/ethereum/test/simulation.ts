@@ -179,6 +179,9 @@ describe('SSV manager', async function () {
     const { stake: secondStake, rewards: secondRewards } = ({ ...secondBalance })
     const { stake: thirdStake, rewards: thirdRewards } = ({ ...thirdBalance })
     const dust = stake.sub(firstStake.add(secondStake).add(thirdStake))
+    
+    const line = '----------------------------------------'
+    console.log(`${line}\n💿 Post testing simulation results\n${line}`)
     if (dust !== ethers.utils.parseEther('0.0')) {
         console.log('🙊 Dust count', ethers.utils.formatEther(dust))
     }

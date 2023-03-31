@@ -7,6 +7,8 @@ import './interfaces/ISSVToken.sol';
 import './interfaces/IWETH9.sol';
 import '@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 import 'hardhat/console.sol';
@@ -14,7 +16,7 @@ import 'hardhat/console.sol';
 /**
  * @title Manager contract that accepts and distributes deposits
  */
-contract SSVManager {
+contract SSVManager is Ownable, ReentrancyGuard {
     /** Use counter for incrementing IDs */
     using Counters for Counters.Counter;
     /** Use math for precise division */
@@ -172,88 +174,124 @@ contract SSVManager {
      */
     function reward(uint256 rewardAmount) private {
 
-        // Todo process fees from reward distribution
-        // ProcessedDeposit memory processedDeposit = processFees(reward);
+        /** Reward fees set to zero for testing */
+        ProcessedDeposit memory processedDeposit = processFees(rewardAmount, Fees(0, 0));
 
         if (classic) {
-            distributionSum += Math.mulDiv(scaleFactor, rewardAmount, getBalance().stake);
+            distributionSum += Math.mulDiv(scaleFactor, processedDeposit.ethAmount, getBalance().stake);
         } else {
-            distributionSum += Math.mulDiv(distributionSum, rewardAmount, getBalance().stake);
-            distribute(address(this), rewardAmount, block.timestamp);  
+            distributionSum += Math.mulDiv(distributionSum, processedDeposit.ethAmount, getBalance().stake);
+            distribute(address(this), processedDeposit, block.timestamp);  
         }
     }
 
     /**
      * @notice Deposit user stake to the pool manager
      */
-    function deposit() external payable {
-        address userAddress = msg.sender;
+    function deposit() external payable nonReentrant {
+        require(msg.value > 0, "Deposit amount must be greater than 0");
+        require(!classic || users[msg.sender].stake0 == 0, "Multiple deposits per user not available yet in classic mode");
 
-        ProcessedDeposit memory processedDeposit = processFees(msg.value);
+        ProcessedDeposit memory processedDeposit = processFees(msg.value, getFees());
 
-        users[userAddress].stake0 = processedDeposit.ethAmount;
-        users[userAddress].distributionSum0 = distributionSum;
+        /** Update user staking account */
+        if (classic) {
+            users[msg.sender].distributionSum0 = distributionSum;
+            users[msg.sender].stake0 = processedDeposit.ethAmount;
+        } else {
+            if (users[msg.sender].stake0 > 0) {
+                /** Settle user's latest stake */
+                users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
+            }
+            users[msg.sender].distributionSum0 = distributionSum;
+            users[msg.sender].stake0 += processedDeposit.ethAmount;
+        }
 
-        distribute(userAddress, processedDeposit.ethAmount, block.timestamp);
+        distribute(msg.sender, processedDeposit, block.timestamp);
     }
 
     /**
      * @notice Withdraw user stake from the pool manager
-     * @param userAddress The user address 
      * @param amount The amount of ETH to withdraw
      */
-    function withdraw(address userAddress, uint256 amount) external {
-        require(msg.sender == userAddress, "Unauthorized");
-        users[userAddress].stake0 -= amount;
-        // users[userAddress].distributionSum0...
-        payable(userAddress).transfer(amount);
+    function withdraw(uint256 amount) external nonReentrant {
+        require(readyDeposits >= amount, "Withdrawing more than ready deposits");      
+        require(users[msg.sender].stake0 > 0, "User does not have a stake");
+        require(!classic, "Withdraw not available yet in classic mode");
+
+        /** Update user staking account */
+        users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
+        users[msg.sender].stake0 -= amount;
+        users[msg.sender].distributionSum0 = distributionSum;
+
+        /** Update ready deposits */
+        readyDeposits -= amount;
+
+        /** Send ETH from manager to user */
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed.");
     }
 
     /**
      * @dev Process fees from a deposit 
      */
-    function processFees(uint256 depositAmount) private returns (ProcessedDeposit memory) {
-        Fees memory fees = getFees();
+    function processFees(uint256 depositAmount, Fees memory fees) private returns (ProcessedDeposit memory) {
+        
+        /** Calculate total fee percentage */
         uint32 feePercent = fees.LINK + fees.SSV;
+
+        /** Calculate ETH amount to return in processed deposit */
         uint256 ethAmount = (depositAmount * 100) / (100 + feePercent);
 
-        /** Wrap ETH fees in ERC-20 to use in swap */
+        /** Calculate fee amount to swap */
         uint256 feeAmount = depositAmount - ethAmount;
-        wrap(feeAmount);
-        uint256 linkAmount = swap(
-            tokens[Token.WETH],
-            tokens[Token.LINK],
-            (feeAmount * fees.LINK) / feePercent
-        );
-        uint256 ssvAmount = swap(
-            tokens[Token.WETH],
-            tokens[Token.SSV],
-            (feeAmount * fees.SSV) / feePercent
-        );
+
+        /** Wrap ETH fees in ERC-20 to use in swap */
+        uint256 linkAmount;
+        uint256 ssvAmount;
+        if (feeAmount > 0) {
+            wrap(feeAmount);
+                linkAmount = swap(
+                tokens[Token.WETH],
+                tokens[Token.LINK],
+                (feeAmount * fees.LINK) / feePercent
+            );
+            ssvAmount = swap(
+                tokens[Token.WETH],
+                tokens[Token.SSV],
+                (feeAmount * fees.SSV) / feePercent
+            );
+        }
         return ProcessedDeposit(ethAmount, linkAmount, ssvAmount);
     }
 
     /**
      * @dev Distribute a processed deposit to ready pools
      * @param userAddress The user address
-     * @param depositAmount The deposit amount
+     * @param processedDeposit The processed deposit
      * @param time The deposit time
      */
     function distribute(
         address userAddress,
-        uint256 depositAmount,
+        ProcessedDeposit memory processedDeposit,
         uint256 time
     ) private {
+
+        /** 
+         * Todo distribute fees
+         * processedDeposit.linkAmount
+         * processedDeposit.ssvAmount 
+         */
 
         /** Emit manager reward event */
         emit ManagerDistribution(
             userAddress,
-            depositAmount,
+            processedDeposit.ethAmount,
             time
         );
 
         /** Distribute to ready pools */
-        while (depositAmount > 0) {
+        while (processedDeposit.ethAmount > 0) {
 
             /** Get the next ready pool */
             uint32 poolId;
@@ -267,19 +305,19 @@ contract SSVManager {
             Pool storage pool;
             pool = pools[poolId];
             uint256 remainingCapacity = poolCapacity - pool.deposits;
-            if (remainingCapacity > depositAmount) {
+            if (remainingCapacity > processedDeposit.ethAmount) {
                 
                 /** Emit pool deposit event */
                 emit PoolDeposit(
                     userAddress,
                     poolId,
-                    depositAmount,
+                    processedDeposit.ethAmount,
                     time
                 );
 
-                readyDeposits += depositAmount;
-                pool.deposits += depositAmount;
-                depositAmount = 0;
+                readyDeposits += processedDeposit.ethAmount;
+                pool.deposits += processedDeposit.ethAmount;
+                processedDeposit.ethAmount = 0;
             } else {
 
                 /** Emit pool deposit event */
@@ -292,7 +330,7 @@ contract SSVManager {
 
                 readyDeposits -= pool.deposits;
                 pool.deposits += remainingCapacity;
-                depositAmount -= remainingCapacity;
+                processedDeposit.ethAmount -= remainingCapacity;
 
                 /** Get a new validator and stake pool */
                 stakePool(poolId);
@@ -436,7 +474,7 @@ contract SSVManager {
         bytes[] memory sharesPublicKeys,
         bytes calldata signature,
         bytes calldata withdrawalCredentials
-    ) public {
+    ) public onlyOwner {
         validators[publicKey] = Validator(
             depositDataRoot,
             operatorIds,
@@ -523,6 +561,8 @@ contract SSVManager {
      * @return The current balance of a user
      */
     function getUserBalance(address userAddress) public view returns (Balance memory) {
+        require(users[userAddress].stake0 > 0, "User does not have a stake");
+
         uint256 userStake = users[userAddress].stake0;
         uint256 distributionSum0 = users[userAddress].distributionSum0;
         uint256 rewards;
@@ -542,5 +582,14 @@ contract SSVManager {
      */
     function getPool(uint32 poolId) external view returns (Pool memory) {
         return pools[poolId];
+    }
+
+    /**
+     * @notice Set compound or classic rewards
+     * @dev Only the owner can call this function
+     * @param _classic True for classic rewards, false for compound rewards
+     */
+    function setClassic(bool _classic) external onlyOwner {
+        classic = _classic;
     }
 }
