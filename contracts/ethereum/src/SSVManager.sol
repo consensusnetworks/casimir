@@ -219,6 +219,9 @@ contract SSVManager is Ownable, ReentrancyGuard {
         require(users[msg.sender].stake0 > 0, "User does not have a stake");
         require(!classic, "Withdraw not available yet in classic mode");
 
+        // Todo remove after completing testing
+        console.log('Warning: withdraw implementation is not yet fully tested');
+
         /** Update user staking account */
         users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
         users[msg.sender].stake0 -= amount;
