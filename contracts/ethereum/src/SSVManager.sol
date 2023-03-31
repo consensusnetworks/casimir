@@ -215,65 +215,6 @@ contract SSVManager is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Withdraw user stake from the pool manager
-     * @param amount The amount of ETH to withdraw
-     */
-    function withdraw(uint256 amount) external nonReentrant {
-        require(!classic, "Withdraw not available yet in classic mode");
-        require(readyDeposits >= amount, "Withdrawing more than ready deposits");      
-        require(users[msg.sender].stake0 > 0, "User does not have a stake");
-
-        /** Settle user's latest stake */
-        users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
-
-        require(users[msg.sender].stake0 >= amount, "Withdrawing more than user stake");
-
-        /** Update user staking account */
-        users[msg.sender].distributionSum0 = distributionSum;
-        users[msg.sender].stake0 -= amount;
-
-        /** Update ready deposits */
-        readyDeposits -= amount;
-
-        /** Send ETH from manager to user */
-        (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed");
-    }
-
-    /**
-     * @dev Process fees from a deposit 
-     */
-    function processFees(uint256 depositAmount, Fees memory fees) private returns (ProcessedDeposit memory) {
-        
-        /** Calculate total fee percentage */
-        uint32 feePercent = fees.LINK + fees.SSV;
-
-        /** Calculate ETH amount to return in processed deposit */
-        uint256 ethAmount = (depositAmount * 100) / (100 + feePercent);
-
-        /** Calculate fee amount to swap */
-        uint256 feeAmount = depositAmount - ethAmount;
-
-        /** Wrap ETH fees in ERC-20 to use in swap */
-        uint256 linkAmount;
-        uint256 ssvAmount;
-        if (feeAmount > 0) {
-            wrap(feeAmount);
-                linkAmount = swap(
-                tokens[Token.WETH],
-                tokens[Token.LINK],
-                (feeAmount * fees.LINK) / feePercent
-            );
-            ssvAmount = swap(
-                tokens[Token.WETH],
-                tokens[Token.SSV],
-                (feeAmount * fees.SSV) / feePercent
-            );
-        }
-        return ProcessedDeposit(ethAmount, linkAmount, ssvAmount);
-    }
-
-    /**
      * @dev Distribute a processed deposit to ready pools
      * @param senderAddress The deposit sender address
      * @param processedDeposit The processed deposit
@@ -356,6 +297,65 @@ contract SSVManager is Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Withdraw user stake from the pool manager
+     * @param amount The amount of ETH to withdraw
+     */
+    function withdraw(uint256 amount) external nonReentrant {
+        require(!classic, "Withdraw not available yet in classic mode");
+        require(readyDeposits >= amount, "Withdrawing more than ready deposits");      
+        require(users[msg.sender].stake0 > 0, "User does not have a stake");
+
+        /** Settle user's latest stake */
+        users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
+
+        require(users[msg.sender].stake0 >= amount, "Withdrawing more than user stake");
+
+        /** Update user staking account */
+        users[msg.sender].distributionSum0 = distributionSum;
+        users[msg.sender].stake0 -= amount;
+
+        /** Update ready deposits */
+        readyDeposits -= amount;
+
+        /** Send ETH from manager to user */
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+    }
+
+    /**
+     * @dev Process fees from a deposit 
+     */
+    function processFees(uint256 depositAmount, Fees memory fees) private returns (ProcessedDeposit memory) {
+        
+        /** Calculate total fee percentage */
+        uint32 feePercent = fees.LINK + fees.SSV;
+
+        /** Calculate ETH amount to return in processed deposit */
+        uint256 ethAmount = (depositAmount * 100) / (100 + feePercent);
+
+        /** Calculate fee amount to swap */
+        uint256 feeAmount = depositAmount - ethAmount;
+
+        /** Wrap ETH fees in ERC-20 to use in swap */
+        uint256 linkAmount;
+        uint256 ssvAmount;
+        if (feeAmount > 0) {
+            wrap(feeAmount);
+                linkAmount = swap(
+                tokens[Token.WETH],
+                tokens[Token.LINK],
+                (feeAmount * fees.LINK) / feePercent
+            );
+            ssvAmount = swap(
+                tokens[Token.WETH],
+                tokens[Token.SSV],
+                (feeAmount * fees.SSV) / feePercent
+            );
+        }
+        return ProcessedDeposit(ethAmount, linkAmount, ssvAmount);
+    }
+
+    /**
      * @dev Deposit WETH to use ETH in swaps
      * @param amount The amount of ETH to deposit
      */
@@ -419,7 +419,9 @@ contract SSVManager is Ownable, ReentrancyGuard {
      * @dev Activate a pool validator on beacon and SSV
      * @param poolId The pool ID
      */
-    function stakePool(uint32 poolId) private {
+    function stakePool(uint32 poolId) private returns (bool) {
+        require(readyValidatorPublicKeys.length > 0, "No ready validators");
+
         bytes memory publicKey = readyValidatorPublicKeys[0];
         Validator memory validator = validators[publicKey];
         Pool storage pool = pools[poolId];
@@ -460,6 +462,8 @@ contract SSVManager is Ownable, ReentrancyGuard {
             pool.validatorPublicKey,
             pool.operatorIds
         );
+
+        return true;
     }
 
     // /**
