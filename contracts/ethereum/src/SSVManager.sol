@@ -226,9 +226,7 @@ contract SSVManager is Ownable, ReentrancyGuard {
         /** Settle user's latest stake */
         users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
 
-        if (users[msg.sender].stake0 < amount) {
-            revert("Withdrawing more than user stake");
-        }
+        require(users[msg.sender].stake0 >= amount, "Withdrawing more than user stake");
 
         /** Update user staking account */
         users[msg.sender].distributionSum0 = distributionSum;
@@ -239,7 +237,7 @@ contract SSVManager is Ownable, ReentrancyGuard {
 
         /** Send ETH from manager to user */
         (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed.");
+        require(success, "Transfer failed");
     }
 
     /**
