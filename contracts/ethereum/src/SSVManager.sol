@@ -522,10 +522,10 @@ contract SSVManager is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get a list of all open pool IDs
-     * @return A list of all open pool IDs
+     * @notice Get a list of all ready pool IDs
+     * @return A list of all ready pool IDs
      */
-    function getOpenPoolIds() external view returns (uint32[] memory) {
+    function getReadyPoolIds() external view returns (uint32[] memory) {
         return readyPoolIds;
     }
 

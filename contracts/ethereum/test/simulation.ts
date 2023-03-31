@@ -20,7 +20,7 @@ describe('SSV manager', async function () {
     const ssvOwnerAddress = await ssvManager.signer.getAddress()
     expect(ssvOwnerAddress).equal(owner.address)
 
-    const openPools = await ssvManager.getOpenPoolIds()
+    const openPools = await ssvManager.getReadyPoolIds()
     expect(openPools.length).equal(1)
 
     const firstPoolId = openPools[0]
@@ -58,7 +58,7 @@ describe('SSV manager', async function () {
 
   it('Second user\'s 24.0 stake opens a second pool with 8.0', async function () {
     const { ssvManager } = await loadFixture(secondUserDepositFixture)
-    const openPools = await ssvManager.getOpenPoolIds()
+    const openPools = await ssvManager.getReadyPoolIds()
     expect(openPools.length).equal(1)
     
     const secondPoolId = openPools[0]
@@ -115,7 +115,7 @@ describe('SSV manager', async function () {
 
   it('Third user\'s 24.0 stake opens a third pool (or does not with no compound)', async function () {
     const { ssvManager } = await loadFixture(thirdUserDepositFixture)
-    const openPools = await ssvManager.getOpenPoolIds()
+    const openPools = await ssvManager.getReadyPoolIds()
     if (classic) {
       expect(openPools.length).equal(0)
     } else {
@@ -192,5 +192,6 @@ describe('SSV manager', async function () {
     
     const readyDeposits = await ssvManager.getReadyDeposits()
     console.log('📦 Ready deposits', ethers.utils.formatEther(readyDeposits))
+    console.log(line)
   })
 })
