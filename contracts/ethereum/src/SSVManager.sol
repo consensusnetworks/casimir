@@ -222,8 +222,10 @@ contract SSVManager is Ownable, ReentrancyGuard {
         // Todo remove after completing testing
         console.log('Warning: withdraw implementation is not yet fully tested');
 
-        /** Update user staking account */
+        /** Settle user's latest stake */
         users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
+
+        /** Update user staking account */
         users[msg.sender].stake0 -= amount;
         users[msg.sender].distributionSum0 = distributionSum;
 
