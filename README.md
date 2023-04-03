@@ -65,7 +65,6 @@ npm run dev
 | Flag | Description | Default | Example |
 | --- | --- | --- | --- |
 | `--app` | Which app to run | web | --app=landing |
-| `--classic` | Whether to use classic contract without compounding | false | --classic |
 | `--clean` | Whether to clean the local database | true | --clean=false |
 | `--emulate` | Whether to use local wallet emulators | false | --emulate=ethereum |
 | `--fork` | Which live Ethereum network to fork locally | goerli | --fork=mainnet |

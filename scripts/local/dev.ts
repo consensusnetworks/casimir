@@ -6,7 +6,6 @@ import { loadCredentials, getSecret, run } from '@casimir/helpers'
  * 
  * Arguments:
  *      --app: app name (optional, i.e., --app=web)
- *      --classic: whether to use classic contract without compounding (override default false)
  *      --clean: rebuild codegen and delete existing data before run (optional, i.e., --clean)
  *      --emulate: emulate hardware wallet services (optional, i.e., --emulate=ethereum)
  *      --fork: fork name (optional, i.e., --fork=goerli)
@@ -109,7 +108,7 @@ void async function () {
             echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(network) + chalk.bgBlackBright(` ${chain} network at ${url}`))
         } else if (fork) {
             const chainFork = forks[chain][fork]
-            $`npm run dev:${chain} --clean=${clean} --classic=${classic} --fork=${chainFork} --simulation=${simulation}`
+            $`npm run dev:${chain} --clean=${clean} --fork=${chainFork} --simulation=${simulation}`
         }
     }
 

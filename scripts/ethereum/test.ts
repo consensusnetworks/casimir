@@ -6,7 +6,6 @@ import minimist from 'minimist'
  * Test Ethereum contracts
  * 
  * Arguments:
- *      --classic: whether to use classic contract without compounding (override default false)
  *      --clean: whether to clean build directory (override default false)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
  * 
@@ -42,5 +41,5 @@ void async function () {
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' fork at ') + chalk.bgBlue(url))
     }
 
-    $`npm run test --clean=${clean} --classic=${classic} --workspace @casimir/ethereum`
+    $`npm run test --clean=${clean} --workspace @casimir/ethereum`
 }()

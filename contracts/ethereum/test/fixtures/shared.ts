@@ -21,9 +21,9 @@ export async function deploymentFixture() {
                 linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
+                swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
                 swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
-                wethTokenAddress: process.env.WETH_TOKEN_ADDRESS,
-                classic: process.env.CLASSIC !== 'false'
+                wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
             },
             options: {},
             proxy: false
