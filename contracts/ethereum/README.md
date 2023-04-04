@@ -25,14 +25,14 @@ In this approach, the user's stake is compounded as follows:
 2. When rewards are distributed, the distribution sum is updated to include the new reward-to-stake ratio.
 3. To calculate a user's current stake (including compounded rewards), Casimir SSV uses the following formula:
 
-   $$UserStake =\frac{UserStake_0\times DistributionSum}{UserDistributionSum_0}$$
+   $$userStake =\frac{userStake_0\times distributionSum}{userDistributionSum_0}$$
 
    Where:
 
-   - $UserStake$ is the calculated current stake of the user, including compounded rewards. This is [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
-   - $UserStake_0$ is the initial stake of the user at the time of their last deposit or stake update. This is also [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
-   - $DistributionSum$ is the current cumulative sum of reward-to-stake ratios in the contract. This is [**`distributionSum`**](./docs/index.md#distributionsum) in the contract.
-   - $UserDistributionSum_0$ is the cumulative sum of reward-to-stake ratios at the time the user made their last deposit or update to their stake. This is [**`users[userAddress].distributionSum0`**](./docs/index.md#user) in the contract.
+   - $userStake$ is the calculated current stake of the user, including compounded rewards. This is [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
+   - $userStake_0$ is the initial stake of the user at the time of their last deposit or stake update. This is also [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
+   - $distributionSum$ is the current cumulative sum of reward-to-stake ratios in the contract. This is [**`distributionSum`**](./docs/index.md#distributionsum) in the contract.
+   - $userDistributionSum_0$ is the cumulative sum of reward-to-stake ratios at the time the user made their last deposit or update to their stake. This is [**`users[userAddress].distributionSum0`**](./docs/index.md#user) in the contract.
 
 This approach ensures that users receive rewards proportional to their staked amount and that these rewards are compounded over time as new rewards are distributed.
 
@@ -44,12 +44,20 @@ The manager contract bootstraps validators for Casimir SSV by trustlessly distri
 
 The contract charges a small fee for each deposit (and some amount TBD in reward distribution) to fund the contract's operations. The fee is a percentage of the total amount deposited or distributed, and is calculated as follows:
 
-$$Fee=\frac{Amount\timesFeeRate}{100}$$
+1. $$feePercent = fees_{LINK} + fees_{SSV}$$
+
+2. $$ethAmount = \frac{depositAmount \times 100}{100 + feePercent}$$
+
+3. $$feeAmount = depositAmount - ethAmount$$
 
 Where:
 
-- $Amount$ is the total amount deposited or distributed.
-- $FeeRate$ is the fee rate, which is set to 0.2% (2/1000) in the contract. This is currently hardcoded to take 0.1% each for LINK and SSV fees.
+- $feePercent$ is the total fee percentage, which is the sum of the LINK and SSV fees.
+- $fees_{LINK}$ is the LINK fee percentage, which is [**`fees.link`**](./docs/index.md#getlinkfee) in the contract.
+- $fees_{SSV}$ is the SSV fee percentage, which is [**`fees.ssv`**](./docs/index.md#getssvfee) in the contract.
+- $depositAmount$ is the amount of ETH deposited.
+- $ethAmount$ is the amount of ETH to be distributed into the contract.
+- $feeAmount$ is the amount of ETH to be swapped for LINK and SSV to operate the contract.
 
 #### Operators
 
