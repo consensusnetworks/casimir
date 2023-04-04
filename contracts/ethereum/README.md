@@ -48,13 +48,13 @@ The contract charges a small fee for each deposit (and some amount TBD in reward
 
 2. $ethAmount = \frac{depositAmount \times 100}{100 + feePercent}$
 
-3. $feeAmount = depositAmount - ethAmount$$
+3. $feeAmount = depositAmount - ethAmount$
 
 Where:
 
-- $feePercent$ is the total fee percentage, which is the sum of the LINK and SSV fees.
 - $fees_{LINK}$ is the LINK fee percentage, which is [**`fees.link`**](./docs/index.md#getlinkfee) in the contract.
 - $fees_{SSV}$ is the SSV fee percentage, which is [**`fees.ssv`**](./docs/index.md#getssvfee) in the contract.
+- $feePercent$ is the total fee percentage, which is the sum of the LINK and SSV fees.
 - $depositAmount$ is the amount of ETH deposited.
 - $ethAmount$ is the amount of ETH to be distributed into the contract.
 - $feeAmount$ is the amount of ETH to be swapped for LINK and SSV to operate the contract.
