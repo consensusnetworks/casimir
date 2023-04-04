@@ -15,7 +15,7 @@ The Casimir SSV contracts are located in the [src](./src) directory.
 | [SSVManager](./src/SSVManager.sol) | Manages Casimir SSV stake distribution | [SSVManager](./docs/index.md#ssvmanager) |
 | [SSVAutomator](./src/SSVAutomation.sol) | Automates Casimir SSV event handling | [SSVAutomator](./docs/index.md#ssvautomator) |
 
-#### Compounding Stake
+#### Compounding
 
 The approach to user stake compounding rewards in the manager contract involves adjusting the user's stake based on the change in the distribution sum since their last interaction with the contract. The distribution sum represents the cumulative sum of reward-to-stake ratios at each reward distribution event. By tracking this sum, the contract can calculate the user's proportion of earned rewards relative to their initial stake and update their stake accordingly.
 
@@ -30,7 +30,7 @@ In this approach, the user's stake is compounded as follows:
    Where:
 
    - $userStake$ is the calculated current stake of the user, including compounded rewards. This is [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
-   - $userStake_0$ is the initial stake of the user at the time of their last deposit or stake update. This is also [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
+   - $userStake_0$ is the initial stake of the user at the time of their last deposit or stake update. This is also [**`users[userAddress].stake`**](./docs/index.md#user) in the contract, but it is accessed before settling the user's current stake.
    - $distributionSum$ is the current cumulative sum of reward-to-stake ratios in the contract. This is [**`distributionSum`**](./docs/index.md#distributionsum) in the contract.
    - $userDistributionSum_0$ is the cumulative sum of reward-to-stake ratios at the time the user made their last deposit or update to their stake. This is [**`users[userAddress].distributionSum0`**](./docs/index.md#user) in the contract.
 
