@@ -5,9 +5,9 @@ Solidity contracts for decentralized applications
 ## Contracts
 
 | Contract | Description | Docs |
-| --- | --- |
-| [SSVManager](./src/SSVManager.sol) | Manages Casimir SSV stake distribution | [#ssvmanager](./docs/index.md#ssvmanager) |
-| [SSVAutomator](./src/SSVAutomation.sol) | Automates Casimir SSV event handling | [#ssvautomator](./docs/index.md#ssvautomator) |
+| --- | --- | --- |
+| [SSVManager](./src/SSVManager.sol) | Manages Casimir SSV stake distribution | [SSVManager](./docs/index.md#ssvmanager) |
+| [SSVAutomator](./src/SSVAutomation.sol) | Automates Casimir SSV event handling | [SSVAutomator](./docs/index.md#ssvautomator) |
 
 ### SSV
 
