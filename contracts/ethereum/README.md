@@ -25,7 +25,7 @@ In this approach, the user's stake is compounded as follows:
 2. When rewards are distributed, the distribution sum is updated to include the new reward-to-stake ratio.
 3. To calculate a user's current stake (including compounded rewards), Casimir SSV uses the following formula:
 
-   $$userStake =\frac{userStake_0\times distributionSum}{userDistributionSum_0}$$
+   $userStake =\frac{userStake_0\times distributionSum}{userDistributionSum_0}$
 
    Where:
 
@@ -44,11 +44,11 @@ The manager contract bootstraps validators for Casimir SSV by trustlessly distri
 
 The contract charges a small fee for each deposit (and some amount TBD in reward distribution) to fund the contract's operations. The fee is a percentage of the total amount deposited or distributed, and is calculated as follows:
 
-1. $$feePercent = fees_{LINK} + fees_{SSV}$$
+1. $feePercent = fees_{LINK} + fees_{SSV}$
 
-2. $$ethAmount = \frac{depositAmount \times 100}{100 + feePercent}$$
+2. $ethAmount = \frac{depositAmount \times 100}{100 + feePercent}$
 
-3. $$feeAmount = depositAmount - ethAmount$$
+3. $feeAmount = depositAmount - ethAmount$$
 
 Where:
 
