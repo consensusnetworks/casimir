@@ -115,7 +115,7 @@ Run all contract tests.
 npm run test:ethereum
 ```
 
-Build the contracts in [contracts/ethereum](contracts/ethereum).
+Build the contracts in [contracts/ssv](contracts/ssv).
 
 ```zsh
 npm run build --workspace @casimir/ethereum

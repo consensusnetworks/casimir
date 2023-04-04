@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import './interfaces/IDepositContract.sol';
-import './interfaces/ISSVNetwork.sol';
-import './interfaces/ISSVToken.sol';
-import './interfaces/IWETH9.sol';
-import '@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol';
-import '@openzeppelin/contracts/utils/Counters.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import '@openzeppelin/contracts/utils/math/Math.sol';
-import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
-import '@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol';
-import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
-import 'hardhat/console.sol';
+import "./interfaces/IDepositContract.sol";
+import "./interfaces/ISSVNetwork.sol";
+import "./interfaces/ISSVToken.sol";
+import "./interfaces/IWETH9.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
+import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "hardhat/console.sol";
 
 /**
  * @title Manager contract that accepts and distributes deposits
@@ -164,7 +164,7 @@ contract SSVManager is Ownable, ReentrancyGuard {
     /**
      * @dev Production will use oracle reporting balance increases, but receive is used for mocking rewards
      */
-    receive() external payable {
+    receive() external payable nonReentrant {
         reward(msg.value);
     }
 
@@ -184,7 +184,7 @@ contract SSVManager is Ownable, ReentrancyGuard {
     /**
      * @notice Deposit user stake to the pool manager
      */
-    function deposit() external payable {
+    function deposit() external payable nonReentrant {
         require(msg.value > 0, "Deposit amount must be greater than 0");
 
         ProcessedDeposit memory processedDeposit = processFees(msg.value, getFees());
@@ -585,9 +585,12 @@ contract SSVManager is Ownable, ReentrancyGuard {
      */
     function getUserStake(address userAddress) public view returns (uint256) {
         require(users[userAddress].stake0 > 0, "User does not have a stake");
-
-        uint256 distributionSum0 = users[userAddress].distributionSum0;
-        return Math.mulDiv(users[userAddress].stake0, distributionSum, distributionSum0);
+        
+        return Math.mulDiv(
+            users[userAddress].stake0, 
+            distributionSum, 
+            users[userAddress].distributionSum0
+        );
     }
 
     /**
