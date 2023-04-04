@@ -4,10 +4,10 @@ Solidity contracts for decentralized applications
 
 ## Contracts
 
-| Contract | Description |
+| Contract | Description | Docs |
 | --- | --- |
-| SSVManager | Manages Casimir stake distribution |
-| SSVAutomator | Automates Casimir event handling |
+| [SSVManager](./src/SSVManager.sol) | Manages Casimir SSV stake distribution | [#ssvmanager](./docs/index.md#ssvmanager)
+| [SSVAutomator](./src/SSVAutomation.sol) | Automates Casimir SSV event handling | [#ssvautomator](./docs/index.md#ssvautomator)
 
 ### SSV
 
@@ -19,7 +19,7 @@ In this approach, the user's stake is compounded as follows:
 
 1. Whenever a user deposits or updates their stake, their initial stake and the current distribution sum are recorded.
 2. When rewards are distributed, the distribution sum is updated to include the new reward-to-stake ratio.
-3. To calculate a user's current stake (including compounded rewards), the formula is used:
+3. To calculate a user's current stake (including compounded rewards), Casimir SSV uses the following formula:
 
    $$UserStake =\frac{UserStake_0\times DistributionSum}{UserDistributionSum_0}$$
 
