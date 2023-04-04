@@ -4,12 +4,16 @@ Solidity contracts for decentralized applications
 
 ## Contracts
 
+The Casimir Ethereum contracts are configured with a Hardhat development environment in the [hardhat.config.ts](./hardhat.config.ts) file.
+
+### SSV
+
+The Casimir SSV contracts are located in the [src](./src) directory.
+
 | Contract | Description | Docs |
 | --- | --- | --- |
 | [SSVManager](./src/SSVManager.sol) | Manages Casimir SSV stake distribution | [SSVManager](./docs/index.md#ssvmanager) |
 | [SSVAutomator](./src/SSVAutomation.sol) | Automates Casimir SSV event handling | [SSVAutomator](./docs/index.md#ssvautomator) |
-
-### SSV
 
 #### Compounding Stake
 
@@ -24,6 +28,7 @@ In this approach, the user's stake is compounded as follows:
    $$UserStake =\frac{UserStake_0\times DistributionSum}{UserDistributionSum_0}$$
 
    Where:
+
    - $UserStake$ is the calculated current stake of the user, including compounded rewards. This is [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
    - $UserStake_0$ is the initial stake of the user at the time of their last deposit or stake update. This is also [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
    - $DistributionSum$ is the current cumulative sum of reward-to-stake ratios in the contract. This is [**`distributionSum`**](./docs/index.md#distributionsum) in the contract.
@@ -34,6 +39,25 @@ This approach ensures that users receive rewards proportional to their staked am
 #### Distributed Key Generation
 
 The manager contract bootstraps validators for Casimir SSV by trustlessly distributing key shares to operators using the [rockx-dkg-cli](https://github.com/RockX-SG/rockx-dkg-cli). The Casimir SSV key generation server is distributed by Chainlink nodes, which respond to requests from the contract.
+
+#### Fees
+
+The contract charges a small fee for each deposit (and some amount TBD in reward distribution) to fund the contract's operations. The fee is a percentage of the total amount deposited or distributed, and is calculated as follows:
+
+$$Fee=\frac{Amount\timesFeeRate}{100}$$
+
+Where:
+
+- $Amount$ is the total amount deposited or distributed.
+- $FeeRate$ is the fee rate, which is set to 0.2% (2/1000) in the contract. This is currently hardcoded to take 0.1% each for LINK and SSV fees.
+
+#### Operators
+
+SSV operators are responsible for running validators for Casimir SSV. Operators can be added to the contract by any user with a small deposit of ETH for slashing collateral (amount TBD, see [Fees](./README.md#fees)). Operators are selected by a formula that emphasizes decentralization (TBD) as new validators are required.
+
+Operators will need to follow the [node onboarding process from RockX](https://github.com/RockX-SG/rockx-dkg-cli/blob/main/docs/dkg_node_installation_instructions.md) to participate in DKG make their node available to new validator selections. Operator performance is monitored by Chainlink nodes, which can remove operators and reshare validators if performance is poor for an extended period of time (TBD).
+
+Todo @elizyoung0011 - we should add your details about operator selection and performance monitoring thresholds.
 
 #### Oracles
 
