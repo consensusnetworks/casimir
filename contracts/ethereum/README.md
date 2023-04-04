@@ -21,9 +21,7 @@ In this approach, the user's stake is compounded as follows:
 2. When rewards are distributed, the distribution sum is updated to include the new reward-to-stake ratio.
 3. To calculate a user's current stake (including compounded rewards), the formula is used:
 
-   $$
-   UserStake = \frac{UserStake_0 \times DistributionSum}{UserDistributionSum_0}
-   $$
+   $$UserStake =\frac{UserStake_0\times DistributionSum}{UserDistributionSum_0}$$
 
    Where:
    - $UserStake$: The calculated current stake of the user, including compounded rewards. (This is `users[userAddress].stake` in the contract.)
