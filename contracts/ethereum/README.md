@@ -8,7 +8,7 @@ The Casimir Ethereum contracts are configured with a Hardhat development environ
 
 ### SSV
 
-User deposits are distributed to Ethereum validators via the SSV manager contract, which connects to the Beacon deposit contract. PoR and Automation oracles connect to the manager contract, and Chainlink nodes run both oracles distributedly. Below is a high-level diagram of the Casimir SSV staking architecture.
+Casimir receives user deposits with a manager contract, which distributes funds to Ethereum validators operated by SSV operators via the Beacon deposit and SSV contracts. A PoR oracle publishes Beacon balance updates, and an automation oracle responds to on-and-off-chain events. Chainlink nodes run both oracles distributedly. Below is a high-level diagram of the Casimir SSV staking architecture.
 
 ```mermaid
 graph LR
