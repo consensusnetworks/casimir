@@ -8,44 +8,55 @@ Casimir receives user deposits with a manager contract, which distributes funds 
 
 ```mermaid
 graph LR
-    A[User] --> B[Manager Contract]
-    B --> C[Beacon Deposit Contract]
-    C --> D1[Ethereum Validator 1]
-    C --> D2[Ethereum Validator 2]
-    
+    subgraph Contracts
+        B[Manager Contract]
+        C[Beacon Deposit Contract]
+        D[SSV Contract]
+        G[PoR Contract]
+        H[Automation Contract]
+    end
+
+    A[User] --> B
+
+    B --> C
+    C --> D
+
+    C --> E1[Ethereum Validator 1]
+    C --> E2[Ethereum Validator 2]
+
     subgraph Validator 1
-        D1 --> E11[SSV Operator 1]
-        D1 --> E12[SSV Operator 2]
-        D1 --> E13[SSV Operator 3]
-        D1 --> E14[SSV Operator 4]
+        E1 --> F11[SSV Operator 1]
+        E1 --> F12[SSV Operator 2]
+        E1 --> F13[SSV Operator 3]
+        E1 --> F14[SSV Operator 4]
     end
     
     subgraph Validator 2
-        D2 --> E21[SSV Operator 5]
-        D2 --> E22[SSV Operator 6]
-        D2 --> E23[SSV Operator 7]
-        D2 --> E24[SSV Operator 8]
+        E2 --> F21[SSV Operator 5]
+        E2 --> F22[SSV Operator 6]
+        E2 --> F23[SSV Operator 7]
+        E2 --> F24[SSV Operator 8]
     end
-    
-    F[PoR Oracle] --> B
-    G[Automation Oracle] --> B
+
+    G --> B
+    H --> B
     
     subgraph Chainlink
-        H1[Chainlink Node 1]
-        H2[Chainlink Node 2]
-        H3[Chainlink Node 3]
-        H4[Chainlink Node 4]
+        I1[Chainlink Node 1]
+        I2[Chainlink Node 2]
+        I3[Chainlink Node 3]
+        I4[Chainlink Node 4]
     end
+
+    I1[Chainlink Node 1] --> G
+    I2[Chainlink Node 2] --> G
+    I3[Chainlink Node 3] --> G
+    I4[Chainlink Node 4] --> G
     
-    H1[Chainlink Node 1] --> F
-    H2[Chainlink Node 2] --> F
-    H3[Chainlink Node 3] --> F
-    H4[Chainlink Node 4] --> F
-    
-    H1 --> G
-    H2 --> G
-    H3 --> G
-    H4 --> G
+    I1 --> H
+    I2 --> H
+    I3 --> H
+    I4 --> H
 ```
 
 The Casimir SSV contracts are located in the [src](./src) directory.
