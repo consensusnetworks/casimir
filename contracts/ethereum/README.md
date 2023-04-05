@@ -19,7 +19,7 @@ graph LR
     A[User] --> B
 
     B --> C
-    C --> D
+    B --> D
 
     C --> E1[Ethereum Validator 1]
     C --> E2[Ethereum Validator 2]
