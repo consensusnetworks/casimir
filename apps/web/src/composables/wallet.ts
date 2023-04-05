@@ -288,8 +288,11 @@ export default function useWallet() {
     }
   }
 
-  async function getCurrentBalance() {
-    // TODO: Implement this for other providers
+  // TODO: What is this used for? 
+  // Do we need balance of active address only? 
+  // Or do we need balance of all addresses in accounts associated with user? 
+  // Is this calculated on front end or back end or both?
+  async function getUserBalance() {
     if (ethersProviderList.includes(selectedProvider.value)){
       const walletBalance = await getEthersBalance(selectedProvider.value, selectedAddress.value)
       console.log('walletBalance in wei in wallet.ts :>> ', walletBalance)
@@ -366,14 +369,6 @@ export default function useWallet() {
     }
   }
 
-  // This is the old method; currently used in users.ts so may want to still keep it
-  async function getUserBalance(userAddress: string): Promise<ethers.BigNumber> {
-    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-    const userBalance = await provider.getBalance(userAddress)
-    console.log('userBalance :>> ', userBalance)
-    return userBalance
-  }
-
   return {
     loggedIn,
     selectedProvider,
@@ -390,7 +385,6 @@ export default function useWallet() {
     setPrimaryWalletAccount,
     removeConnectedAccount,
     detectCurrencyInProvider,
-    getCurrentBalance,
     sendTransaction,
     signMessage,
     getUserBalance,

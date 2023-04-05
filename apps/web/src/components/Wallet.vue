@@ -1,11 +1,8 @@
 <template>
   <div>
     <div class="flex">
-      <button @click="getCurrentBalance()">
-        Get Balance New
-      </button>
-      <button @click="getUserBalance(selectedAddress)">
-        Get Balance Old
+      <button @click="getUserBalance()">
+        Get User Balance
       </button>
     </div>
     <div class="network-div w-100 mx-8">
@@ -221,7 +218,6 @@ const {
   sendTransaction,
   signMessage,
   getUserBalance,
-  getCurrentBalance,
   removeConnectedAccount,
   switchNetwork
 } = useWallet()
