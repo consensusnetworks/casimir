@@ -1,26 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
+import "./interfaces/ISSVManager.sol";
 import "@chainlink/contracts/src/v0.8/AutomationCompatible.sol";
 import "hardhat/console.sol";
 
-contract Counter is AutomationCompatibleInterface {
-    /**
-     * Public counter variable
-     */
-    uint public counter;
+contract SSVAutomation is AutomationCompatibleInterface {
+    /* Total stake */
+    uint256 public stake;
+    /* SSV manager contract */
+    ISSVManager private immutable ssvManager;
 
-    /**
-     * Use an interval in seconds and a timestamp to slow execution of Upkeep
-     */
-    uint public immutable interval;
-    uint public lastTimeStamp;
-
-    constructor(uint updateInterval) {
-        interval = updateInterval;
-        lastTimeStamp = block.timestamp;
-
-        counter = 0;
+    constructor(address ssvManagerAddress) {
+        ssvManager = ISSVManager(ssvManagerAddress);
+        stake = ssvManager.getStake();
     }
 
     function checkUpkeep(
@@ -38,13 +31,14 @@ contract Counter is AutomationCompatibleInterface {
     function performUpkeep(bytes calldata performData) external override {
         /** Revalidate the upkeep */
         if (validateUpkeep()) {
-            lastTimeStamp = block.timestamp;
-            counter = counter + 1;
+            console.log("Performing upkeep");
         }
         console.log(performData.length);
     }
 
-    function validateUpkeep() public view returns (bool) {
-        return (block.timestamp - lastTimeStamp) > interval;
+    function validateUpkeep() public view returns (bool upkeepNeeded) {
+        bool stakeChanged = stake != ssvManager.getStake();
+        console.log("Stake changed from %s to %s", stake, ssvManager.getStake());
+        upkeepNeeded = stakeChanged;
     }
 }
