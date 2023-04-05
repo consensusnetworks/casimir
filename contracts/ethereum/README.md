@@ -30,6 +30,13 @@ graph LR
     F[PoR Oracle] --> B
     G[Automation Oracle] --> B
     
+    subgraph Chainlink
+        H1[Chainlink Node 1]
+        H2[Chainlink Node 2]
+        H3[Chainlink Node 3]
+        H4[Chainlink Node 4]
+    end
+    
     H1[Chainlink Node 1] --> F
     H2[Chainlink Node 2] --> F
     H3[Chainlink Node 3] --> F
