@@ -58,15 +58,14 @@ The approach to user stake compounding rewards in the manager contract involves 
 
 1. Whenever a user deposits or updates their stake, their initial stake and the current distribution sum are recorded.
 2. When rewards are distributed, the distribution sum is updated to include the new reward-to-stake ratio.
-3. To calculate a user's current stake (including compounded rewards), Casimir SSV uses the following formula:
+3. $userStake =\frac{userStake_0\times distributionSum}{userDistributionSum_0}$ calculates a user's current compounded stake at any time.
 
-    $userStake =\frac{userStake_0\times distributionSum}{userDistributionSum_0}$
+*Where:*
 
-    Where:
-        - $userStake$ is the calculated current stake of the user, including compounded rewards. This is [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
-        - $userStake_0$ is the initial stake of the user at the time of their last deposit or stake update. This is also [**`users[userAddress].stake`**](./docs/index.md#user) in the contract, but it is accessed before settling the user's current stake.
-        - $distributionSum$ is the current cumulative sum of reward-to-stake ratios in the contract. This is [**`distributionSum`**](./docs/index.md#distributionsum) in the contract.
-        - $userDistributionSum_0$ is the cumulative sum of reward-to-stake ratios at the time the user made their last deposit or update to their stake. This is [**`users[userAddress].distributionSum0`**](./docs/index.md#user) in the contract.
+- $userStake$ is the calculated current stake of the user, including compounded rewards. This is [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
+- $userStake_0$ is the initial stake of the user at the time of their last deposit or stake update. This is also [**`users[userAddress].stake`**](./docs/index.md#user) in the contract, but it is accessed before settling the user's current stake.
+- $distributionSum$ is the current cumulative sum of reward-to-stake ratios in the contract. This is [**`distributionSum`**](./docs/index.md#distributionsum) in the contract.
+- $userDistributionSum_0$ is the cumulative sum of reward-to-stake ratios at the time the user made their last deposit or update to their stake. This is [**`users[userAddress].distributionSum0`**](./docs/index.md#user) in the contract.
 
 This approach ensures that users receive rewards proportional to their staked amount and that these rewards are compounded over time as new rewards are distributed.
 
@@ -86,13 +85,14 @@ The contract charges a small fee for each deposit (and some amount TBD in reward
 
 3. $feeAmount = depositAmount - ethAmount$
 
-    Where:
-        - $fees_{LINK}$ is the LINK fee percentage, which is [**`getLINKFee()`**](./docs/index.md#getlinkfee) in the contract.
-        - $fees_{SSV}$ is the SSV fee percentage, which is [**`getSSVFee()`**](./docs/index.md#getssvfee) in the contract.
-        - $feePercent$ is the total fee percentage, which is the sum of the LINK and SSV fees.
-        - $depositAmount$ is the amount of ETH deposited.
-        - $ethAmount$ is the amount of ETH to be distributed into the contract.
-        - $feeAmount$ is the amount of ETH to be swapped for LINK and SSV to operate the contract.
+*Where:*
+
+- $fees_{LINK}$ is the LINK fee percentage, which is [**`getLINKFee()`**](./docs/index.md#getlinkfee) in the contract.
+- $fees_{SSV}$ is the SSV fee percentage, which is [**`getSSVFee()`**](./docs/index.md#getssvfee) in the contract.
+- $feePercent$ is the total fee percentage, which is the sum of the LINK and SSV fees.
+- $depositAmount$ is the amount of ETH deposited.
+- $ethAmount$ is the amount of ETH to be distributed into the contract.
+- $feeAmount$ is the amount of ETH to be swapped for LINK and SSV to operate the contract.
 
 ### Operators
 
