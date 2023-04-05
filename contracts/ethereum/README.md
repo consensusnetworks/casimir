@@ -6,8 +6,6 @@ Solidity contracts for decentralized applications
 
 Casimir receives user deposits with a manager contract, which distributes funds to Ethereum validators operated by SSV operators via the Beacon deposit and SSV contracts. A PoR oracle publishes Beacon balance updates, and an automation oracle responds to on-and-off-chain events. Chainlink nodes run both oracles distributedly. Below is a high-level diagram of the Casimir SSV staking architecture.
 
-> 🚩 The Casimir SSV contracts are configured with a Hardhat development environment in the [hardhat.config.ts](./hardhat.config.ts) file.
-
 ```mermaid
 graph LR
     A[User] --> B[Manager Contract]
@@ -49,6 +47,8 @@ The Casimir SSV contracts are located in the [src](./src) directory.
 | --- | --- | --- |
 | [SSVManager](./src/SSVManager.sol) | Manages Casimir SSV stake distribution | [SSVManager](./docs/index.md#ssvmanager) |
 | [SSVAutomator](./src/SSVAutomation.sol) | Automates Casimir SSV event handling | [SSVAutomator](./docs/index.md#ssvautomator) |
+
+> 🚩 The Casimir SSV contracts are configured with a Hardhat development environment in the [hardhat.config.ts](./hardhat.config.ts) file.
 
 ### Compounding
 
