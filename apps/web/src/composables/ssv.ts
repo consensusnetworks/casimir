@@ -7,7 +7,8 @@ import useEthers from './ethers'
 import useLedger from './ledger'
 import useTrezor from './trezor'
 import useWalletConnect from './walletConnect'
-import { Pool, ProviderString } from '@casimir/types'
+import { Account, Pool, ProviderString } from '@casimir/types'
+import { ReadyOrStakeString } from '../interfaces'
 
 /** SSV Manager contract */
 let ssvManager: SSVManager
@@ -64,12 +65,18 @@ export default function useSSV() {
         return feesRounded
     }
 
-    async function getUserPools(userAddress: string): Promise<Pool[]> {
+    async function getPools(address: string, readyOrStake: ReadyOrStakeString): Promise<Pool[]> {
+        const { user } = useUsers()
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
         const ssvManagerProvider = ssvManager.connect(provider)
-        const userPoolsIds = await ssvManagerProvider.getUserPoolIds(userAddress)
-        return await Promise.all(userPoolsIds.map(async (poolId: number) => {
-            const { balance, userBalance } = await ssvManagerProvider.getPoolUserDetails(poolId, userAddress)
+        
+        const userBalance = await ssvManagerProvider.getUserBalance(address) // to get the stake and rewards for a given user
+        const balance = await ssvManagerProvider.getBalance() // to get the stake and rewards for the manager
+        const poolIds = readyOrStake === 'ready' ? await ssvManagerProvider.getReadyPoolIds() : await ssvManagerProvider.getStakedPoolIds() // to get ready (open) pool IDs OR to get staked (active) pool IDs
+
+
+        return await Promise.all(poolIds.map(async (poolId: number) => {
+            const { deposits, operatorIds, validatorPublicKey } = await ssvManagerProvider.getPool(poolId)
             let pool: Pool = {
                 id: poolId,
                 rewards: ethers.utils.formatEther(balance.rewards),
@@ -78,9 +85,7 @@ export default function useSSV() {
                 userStake: ethers.utils.formatEther(userBalance.stake)
             }
 
-            const validatorPublicKey = await ssvManagerProvider.getPoolValidatorPublicKey(poolId) // Public key bytes (i.e., 0x..)
             if (validatorPublicKey) {
-
                 // Validator data from beaconcha.in hardcoded for now
                 // const response = await fetch(`https://prater.beaconcha.in/api/v1/validator/${validatorPublicKey}`)
                 // const { data } = await response.json()
@@ -92,9 +97,12 @@ export default function useSSV() {
                     apr: '0%', // See issue #205 https://github.com/consensusnetworks/casimir/issues/205#issuecomment-1338142532
                     url: `https://prater.beaconcha.in/validator/${validatorPublicKey}`
                 }
-                const operatorIds = await ssvManagerProvider.getPoolOperatorIds(poolId) // Operator ID uint32[] (i.e., [1, 2, 3, 4])
+
+
+                // TODO: Replace with less hardcoded network call?
                 const operators = await Promise.all(operatorIds.map(async (operatorId: number) => {
-                    const response = await fetch(`https://api.ssv.network/api/v3/operators/${operatorId}`)
+                    const network = 'prater'
+                    const response = await fetch(`https://api.ssv.network/api/v3/${network}/operators/${operatorId}`)
                     const { performance } = await response.json()
                     return {
                         id: operatorId,
@@ -111,12 +119,17 @@ export default function useSSV() {
                 }
             }
             
-            const { user } = useUsers()
-            user.value?.pools.push(pool)
+            if (readyOrStake === 'stake') {
+                user.value?.accounts.forEach((account: Account) => {
+                    if (account.address === address) {
+                        account.pools ? account.pools.push(pool) : account.pools = [pool]
+                    }
+                })
+            }
             
             return pool
         }))
     }
 
-    return { ssvManager, deposit, getDepositFees, getUserPools }
+    return { ssvManager, deposit, getDepositFees, getPools }
 }
