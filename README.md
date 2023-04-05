@@ -107,7 +107,7 @@ npm run dev:landing
 
 ### Contracts
 
-Ethereum contracts are configured with a Hardhat development environment in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file.
+Ethereum contracts are configured with a Hardhat development environment in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file. Read more about `@casimir/ethereum` staking [here](contracts/ethereum/README.md). Below are some helpful commands for developing on or with the contracts.
 
 Run all contract tests.
 
