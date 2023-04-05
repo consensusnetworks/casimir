@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import './interfaces/IDepositContract.sol';
-import './interfaces/ISSVNetwork.sol';
-import './interfaces/ISSVToken.sol';
-import './interfaces/IWETH9.sol';
-import '@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol';
-import '@openzeppelin/contracts/utils/Counters.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import '@openzeppelin/contracts/utils/math/Math.sol';
-import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
-import 'hardhat/console.sol';
+import "./interfaces/IDepositContract.sol";
+import "./interfaces/ISSVNetwork.sol";
+import "./interfaces/ISSVToken.sol";
+import "./interfaces/IWETH9.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
+import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "hardhat/console.sol";
 
 /**
  * @title Manager contract that accepts and distributes deposits
@@ -21,11 +23,6 @@ contract SSVManager is Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
     /** Use math for precise division */
     using Math for uint256;
-    /** Rewards and stake balance */
-    struct Balance {
-        uint256 stake;
-        uint256 rewards;
-    }
     /** Processed deposit with stake and fee amounts */
     struct ProcessedDeposit {
         uint256 ethAmount;
@@ -79,8 +76,14 @@ contract SSVManager is Ownable, ReentrancyGuard {
     ISSVToken private immutable ssvToken;
     /** Uniswap 0.3% fee tier */
     uint24 private immutable swapFee = 3000;
+    /** Uniswap factory contract */
+    IUniswapV3Factory private immutable swapFactory;
     /** Uniswap router contract  */
     ISwapRouter private immutable swapRouter;
+    /** Unswapped LINK fees */
+    uint256 private unswappedLINKFees;
+    /** Unswapped SSV fees */
+    uint256 private unswappedSSVFees;
     /** User staking accounts */
     mapping(address => User) private users;
     /** Staking pools */
@@ -103,8 +106,6 @@ contract SSVManager is Ownable, ReentrancyGuard {
     bytes[] private stakedValidatorPublicKeys;
     /** Public keys of ready validators */
     bytes[] private readyValidatorPublicKeys;
-    /** Whether to use classic contract without compounding */
-    bool classic;
     /** Event signaling a user deposit to the pool manager */
     event ManagerDistribution(
         address userAddress,
@@ -134,9 +135,9 @@ contract SSVManager is Ownable, ReentrancyGuard {
      * @param linkTokenAddress The Chainlink token address
      * @param ssvNetworkAddress The SSV network address
      * @param ssvTokenAddress The SSV token address
+     * @param swapFactoryAddress The Uniswap factory address
      * @param swapRouterAddress The Uniswap router address
      * @param wethTokenAddress The WETH contract address
-     * @param _classic Whether to use classic contract without compounding
      */
     constructor(
         address beaconDepositAddress,
@@ -144,10 +145,9 @@ contract SSVManager is Ownable, ReentrancyGuard {
         address linkTokenAddress,
         address ssvNetworkAddress,
         address ssvTokenAddress,
+        address swapFactoryAddress,
         address swapRouterAddress,
-        address wethTokenAddress,
-        /** Optionally set to classic for testing */
-        bool _classic
+        address wethTokenAddress
     ) {
         beaconDeposit = IDepositContract(beaconDepositAddress);
         linkFeed = AggregatorV3Interface(linkFeedAddress);
@@ -156,20 +156,20 @@ contract SSVManager is Ownable, ReentrancyGuard {
         ssvNetwork = ISSVNetwork(ssvNetworkAddress);
         tokens[Token.SSV] = ssvTokenAddress;
         ssvToken = ISSVToken(ssvTokenAddress);
+        swapFactory = IUniswapV3Factory(swapFactoryAddress);
         swapRouter = ISwapRouter(swapRouterAddress);
         tokens[Token.WETH] = wethTokenAddress;
-        classic = _classic;
     }
 
     /**
      * @dev Production will use oracle reporting balance increases, but receive is used for mocking rewards
      */
-    receive() external payable {
+    receive() external payable nonReentrant {
         reward(msg.value);
     }
 
     /**
-     * @dev Distribute ETH rewards to user rewards balances or stake
+     * @dev Distribute ETH rewards
      * @param rewardAmount The amount of ETH to reward
      */
     function reward(uint256 rewardAmount) private {
@@ -177,12 +177,8 @@ contract SSVManager is Ownable, ReentrancyGuard {
         /** Reward fees set to zero for testing */
         ProcessedDeposit memory processedDeposit = processFees(rewardAmount, Fees(0, 0));
 
-        if (classic) {
-            distributionSum += Math.mulDiv(scaleFactor, processedDeposit.ethAmount, getBalance().stake);
-        } else {
-            distributionSum += Math.mulDiv(distributionSum, processedDeposit.ethAmount, getBalance().stake);
-            distribute(address(this), processedDeposit, block.timestamp);  
-        }
+        distributionSum += Math.mulDiv(distributionSum, processedDeposit.ethAmount, getStake());
+        distribute(address(this), processedDeposit, block.timestamp);
     }
 
     /**
@@ -190,26 +186,16 @@ contract SSVManager is Ownable, ReentrancyGuard {
      */
     function deposit() external payable nonReentrant {
         require(msg.value > 0, "Deposit amount must be greater than 0");
-        require(!classic || users[msg.sender].stake0 == 0, "Multiple deposits per user not available yet in classic mode");
 
         ProcessedDeposit memory processedDeposit = processFees(msg.value, getFees());
 
         /** Update user staking account */
-        if (classic) {
-            if (users[msg.sender].stake0 > 0) {
-                /** Settle user's latest stake */
-                users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
-            }
-            users[msg.sender].distributionSum0 = distributionSum;
-            users[msg.sender].stake0 = processedDeposit.ethAmount;
-        } else {
-            if (users[msg.sender].stake0 > 0) {
-                /** Settle user's latest stake */
-                users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
-            }
-            users[msg.sender].distributionSum0 = distributionSum;
-            users[msg.sender].stake0 += processedDeposit.ethAmount;
+        if (users[msg.sender].stake0 > 0) {
+            /** Settle user's current stake */
+            users[msg.sender].stake0 = getUserStake(msg.sender);
         }
+        users[msg.sender].distributionSum0 = distributionSum;
+        users[msg.sender].stake0 = users[msg.sender].stake0 + processedDeposit.ethAmount;
 
         distribute(msg.sender, processedDeposit, block.timestamp);
     }
@@ -301,12 +287,11 @@ contract SSVManager is Ownable, ReentrancyGuard {
      * @param amount The amount of ETH to withdraw
      */
     function withdraw(uint256 amount) external nonReentrant {
-        require(!classic, "Withdraw not available yet in classic mode");
         require(readyDeposits >= amount, "Withdrawing more than ready deposits");      
         require(users[msg.sender].stake0 > 0, "User does not have a stake");
 
-        /** Settle user's latest stake */
-        users[msg.sender].stake0 = getUserBalance(msg.sender).stake;
+        /** Settle user's current stake */
+        users[msg.sender].stake0 = getUserStake(msg.sender);
 
         require(users[msg.sender].stake0 >= amount, "Withdrawing more than user stake");
 
@@ -340,12 +325,15 @@ contract SSVManager is Ownable, ReentrancyGuard {
         uint256 linkAmount;
         uint256 ssvAmount;
         if (feeAmount > 0) {
+
             wrap(feeAmount);
-                linkAmount = swap(
+
+            linkAmount = swap(
                 tokens[Token.WETH],
                 tokens[Token.LINK],
                 (feeAmount * fees.LINK) / feePercent
             );
+
             ssvAmount = swap(
                 tokens[Token.WETH],
                 tokens[Token.SSV],
@@ -377,6 +365,29 @@ contract SSVManager is Ownable, ReentrancyGuard {
         address tokenOut,
         uint256 amountIn
     ) private returns (uint256) {
+
+        /** Temporarily handle unswappable fees due to liquidity */
+        address swapPool = swapFactory.getPool(tokenIn, tokenOut, swapFee);
+        uint128 liquidity = IUniswapV3PoolState(swapPool).liquidity();
+        if (liquidity == 0) {
+            if (tokenOut == tokens[Token.LINK]) {
+                console.log('No liquidity in LINK swap pool');
+                unswappedLINKFees += amountIn;
+            } else if (tokenOut == tokens[Token.SSV]) {
+                console.log('No liquidity in SSV swap pool');
+                unswappedSSVFees += amountIn;
+            }
+            return 0;
+        }
+        if (tokenOut == tokens[Token.LINK]) {
+            amountIn += unswappedLINKFees;
+            unswappedLINKFees = 0;
+        } else if (tokenOut == tokens[Token.SSV]) {
+            amountIn += unswappedSSVFees;
+            unswappedSSVFees = 0;
+        }
+
+        /** Get swap params */
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
             .ExactInputSingleParams({
                 tokenIn: tokenIn,
@@ -388,6 +399,8 @@ contract SSVManager is Ownable, ReentrancyGuard {
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
             });
+
+        /** Swap tokens */
         return swapRouter.exactInputSingle(params);
     }
 
@@ -550,13 +563,11 @@ contract SSVManager is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the current balance of the pool manager
-     * @return The current balance of the pool manager
+     * @notice Get the current stake of the pool manager
+     * @return The current stake of the pool manager
      */
-    function getBalance() public view returns (Balance memory) {
-        uint256 stake = stakedPoolIds.length * poolCapacity + readyDeposits;
-        uint256 rewards = address(this).balance - readyDeposits;
-        return Balance(stake, rewards);
+    function getStake() public view returns (uint256) {
+        return stakedPoolIds.length * poolCapacity + readyDeposits;
     }
 
     /**
@@ -568,23 +579,18 @@ contract SSVManager is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the current balance of a user
+     * @notice Get the current stake of a user
      * @param userAddress The user address
-     * @return The current balance of a user
+     * @return The current stake of a user
      */
-    function getUserBalance(address userAddress) public view returns (Balance memory) {
+    function getUserStake(address userAddress) public view returns (uint256) {
         require(users[userAddress].stake0 > 0, "User does not have a stake");
-
-        uint256 distributionSum0 = users[userAddress].distributionSum0;
-        uint256 userStake = users[userAddress].stake0;
-        uint256 rewards;
-        if (classic) {
-            rewards = Math.mulDiv(userStake, distributionSum - distributionSum0, scaleFactor);
-        } else {
-            userStake = Math.mulDiv(userStake, distributionSum, distributionSum0);
-            rewards = 0;
-        }
-        return Balance(userStake, rewards);
+        
+        return Math.mulDiv(
+            users[userAddress].stake0, 
+            distributionSum, 
+            users[userAddress].distributionSum0
+        );
     }
 
     /**
@@ -594,14 +600,5 @@ contract SSVManager is Ownable, ReentrancyGuard {
      */
     function getPool(uint32 poolId) external view returns (Pool memory) {
         return pools[poolId];
-    }
-
-    /**
-     * @notice Set compound or classic rewards
-     * @dev Only the owner can call this function
-     * @param _classic True for classic rewards, false for compound rewards
-     */
-    function setClassic(bool _classic) external onlyOwner {
-        classic = _classic;
     }
 }

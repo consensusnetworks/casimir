@@ -6,7 +6,6 @@ import minimist from 'minimist'
  * Run local a local Ethereum node and deploy contracts
  * 
  * Arguments:
- *      --classic: whether to use classic contract without compounding (override default false)
  *      --clean: whether to clean build directory (override default true)
  *      --execution: hardhat or gananche (override default hardhat)
  *      --fork: mainnet, goerli, true, or false (override default goerli)

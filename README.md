@@ -65,7 +65,6 @@ npm run dev
 | Flag | Description | Default | Example |
 | --- | --- | --- | --- |
 | `--app` | Which app to run | web | --app=landing |
-| `--classic` | Whether to use classic contract without compounding | false | --classic |
 | `--clean` | Whether to clean the local database | true | --clean=false |
 | `--emulate` | Whether to use local wallet emulators | false | --emulate=ethereum |
 | `--fork` | Which live Ethereum network to fork locally | goerli | --fork=mainnet |
@@ -108,7 +107,7 @@ npm run dev:landing
 
 ### Contracts
 
-Ethereum contracts are configured with a Hardhat development environment in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file.
+Ethereum contracts are configured with a Hardhat development environment in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file. Read more about `@casimir/ethereum` staking [here](contracts/ethereum/README.md). Below are some helpful commands for developing on or with the contracts.
 
 Run all contract tests.
 
@@ -116,7 +115,7 @@ Run all contract tests.
 npm run test:ethereum
 ```
 
-Build the contracts in [contracts/ethereum](contracts/ethereum).
+Build the contracts in [contracts/ssv](contracts/ssv).
 
 ```zsh
 npm run build --workspace @casimir/ethereum
