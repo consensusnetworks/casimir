@@ -74,6 +74,10 @@ export default function useSSV() {
         const poolStake = await ssvManagerProvider.getStake() // to get total stake balance
         const poolIds = readyOrStake === 'ready' ? await ssvManagerProvider.getReadyPoolIds() : await ssvManagerProvider.getStakedPoolIds() // to get ready (open) pool IDs OR to get staked (active) pool IDs
 
+        console.log('userStake :>> ', ethers.utils.formatEther(userStake))
+        console.log('poolStake :>> ', ethers.utils.formatEther(poolStake))
+        console.log('poolIds :>> ', poolIds)
+
         return await Promise.all(poolIds.map(async (poolId: number) => {
             const { deposits, operatorIds, validatorPublicKey } = await ssvManagerProvider.getPool(poolId)
             
@@ -132,5 +136,22 @@ export default function useSSV() {
         }))
     }
 
-    return { ssvManager, deposit, getDepositFees, getPools }
+    async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
+        const signerCreators = {
+            'Browser': getEthersBrowserSigner,
+            'Ledger': getEthersLedgerSigner,
+            'Trezor': getEthersTrezorSigner,
+            'WalletConnect': getEthersWalletConnectSigner
+        }
+        const signerType = ['MetaMask', 'CoinbaseWallet'].includes(walletProvider) ? 'Browser' : walletProvider
+        const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
+        let signer = signerCreator(walletProvider)
+        if (isWalletConnectSigner(signer)) signer = await signer
+        const ssvManagerSigner = ssvManager.connect(signer as ethers.Signer)
+        const value = ethers.utils.parseEther(amount)
+        const result = await ssvManagerSigner.withdraw(value)
+        return await result.wait()
+    }
+
+    return { ssvManager, deposit, getDepositFees, getPools, withdraw }
 }
