@@ -1,11 +1,8 @@
 <template>
   <div>
     <div class="flex">
-      <button @click="getCurrentBalance()">
-        Get Balance New
-      </button>
-      <button @click="getUserBalance(selectedAddress)">
-        Get Balance Old
+      <button @click="getUserBalance()">
+        Get User Balance
       </button>
     </div>
     <div class="network-div w-100 mx-8">
@@ -43,21 +40,28 @@
       </button>
     </div>
     <div class="staking-container">
-      <button @click="getUserPools(selectedAddress)">
-        What do I have staked where?
+      <button @click="getPools(selectedAddress, 'ready')">
+        Get ready user pools
       </button>
-      <ul>
+      <button @click="getPools(selectedAddress, 'stake')">
+        Get staked user pools
+      </button>
+      <!-- <ul>
         <li
-          v-for="(pool, index) in user?.pools"
+          v-for="(account, index) in user?.accounts"
           :key="index"
         >
-          <p>Pool ID: #{{ pool.id }}</p>
-          <p>Your Stake: {{ pool.userStake }} ETH</p>
-          <p>Your Rewards: {{ pool.userRewards }} ETH</p>
-          <p>Total Stake: {{ pool.stake }} ETH</p>
-          <p>Total Rewards: {{ pool.rewards }} ETH</p>
+          <ul v-for="(pool, index) in account"
+            :key="index"
+          >
+            <li>Pool ID: #{{ pool?.id }}</li>
+            <li>Your Stake: {{ pool?.userStake }} ETH</li>
+            <li>Your Rewards: {{ pool?.userRewards }} ETH</li>
+            <li>Total Stake: {{ pool?.stake }} ETH</li>
+            <li>Total Rewards: {{ pool?.rewards }} ETH</li>
+          </ul>
         </li>
-      </ul>
+      </ul> -->
       <input
         v-model="amountToStake"
         placeholder="Amount to Stake"
@@ -214,12 +218,11 @@ const {
   sendTransaction,
   signMessage,
   getUserBalance,
-  getCurrentBalance,
   removeConnectedAccount,
   switchNetwork
 } = useWallet()
 
-const { deposit, getUserPools } = useSSV()
+const { deposit, getPools } = useSSV()
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {

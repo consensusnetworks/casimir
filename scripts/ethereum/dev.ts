@@ -1,12 +1,15 @@
-import { $, argv, echo, chalk } from 'zx'
+import { $, echo, chalk } from 'zx'
 import { loadCredentials, getSecret } from '@casimir/helpers'
+import minimist from 'minimist'
 
 /**
  * Run local a local Ethereum node and deploy contracts
  * 
  * Arguments:
+ *      --clean: whether to clean build directory (override default true)
  *      --execution: hardhat or gananche (override default hardhat)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
+ *      --simulation: whether to run contract simulation fixture (override default false)
  * 
  * For more info see:
  *      - https://hardhat.org/hardhat-network/docs/overview
@@ -14,14 +17,31 @@ import { loadCredentials, getSecret } from '@casimir/helpers'
 void async function () {
     /** Load AWS credentials for configuration */
     await loadCredentials()
+    
+    /** Parse command line arguments */
+    const argv = minimist(process.argv.slice(2))
 
-    // Get shared seed
+    /** Default to compound */
+    const classic = argv.classic === 'true' || argv.classic === true
+
+    /** Default to no clean */
+    const clean = argv.clean === 'true' || argv.clean === true
+
+    /** Set execution environment */
+    const execution = argv.execution === 'ganache' ? 'ganache' : 'hardhat'
+
+    /** Set fork rpc if requested, default fork to goerli if set vaguely or unset */
+    const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
+
+    /** Get shared seed */
     const seed = await getSecret('consensus-networks-bip39-seed')
+
+    /** Default to no simulation */
+    const simulation = argv.simulation === 'true' || argv.simulation === true
+
     process.env.BIP39_SEED = seed
     echo(chalk.bgBlackBright('Your mnemonic seed is ') + chalk.bgBlue(seed))
 
-    // Set fork rpc if requested, default fork to goerli if set vaguely or unset
-    const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
     if (fork) {
         const key = await getSecret(`consensus-networks-ethereum-${fork}`)
         const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
@@ -29,22 +49,31 @@ void async function () {
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' ethereum fork at ') + chalk.bgBlue(url))
     }
 
-    // Enable 12-second interval mining for dev networks
+    if (clean) {
+        await $`npm run clean --workspace @casimir/ethereum`
+    }
+    
+    /** Set classic flag */
+    process.env.CLASSIC = `${classic}`
+    
+    /** Enable 12-second interval mining for dev networks */
     process.env.MINING_INTERVAL = '12'
 
-    const execution = argv.execution === 'ganache' ? 'ganache' : 'hardhat'
+    /** Enable simulation */
+    process.env.SIMULATION = `${simulation}`
+
     if (execution === 'ganache') {
-        $`npm run dev:ganache --workspace @casimir/ethereum`
+        $`npm run node:ganache --workspace @casimir/ethereum`
         // Wait for ganache to start
         const ganacheWaitTime = 5000
         await new Promise(resolve => setTimeout(resolve, ganacheWaitTime))
-        $`npm run deploy --workspace @casimir/ethereum -- --network ganache`
+        $`npm run dev --workspace @casimir/ethereum -- --network ganache`
     } else {
-        $`npm run dev --workspace @casimir/ethereum`
+        $`npm run node --workspace @casimir/ethereum`
         // Wait for hardhat to start
         const hardhatWaitTime = 2500
         await new Promise(resolve => setTimeout(resolve, hardhatWaitTime))
-        $`npm run deploy --workspace @casimir/ethereum -- --network localhost`
+        $`npm run dev --workspace @casimir/ethereum -- --network localhost`
     }
 
 }()

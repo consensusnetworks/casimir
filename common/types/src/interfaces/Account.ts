@@ -1,7 +1,4 @@
-import { Pool } from './Pool'
-import { ProviderString } from '@casimir/types'
-import { Currency } from '@casimir/types'
-import { BalanceSnapshot } from '@casimir/types'
+import { BalanceSnapshot, Currency, Pool, ProviderString } from '@casimir/types'
 
 export interface Account {
     /** Unique ID (only keeping the latest of each distinct address/currency pair per User to avoid double counting) */

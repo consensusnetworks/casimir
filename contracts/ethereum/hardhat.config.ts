@@ -31,6 +31,7 @@ const externalEnv = {
     LINK_TOKEN_ADDRESS: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
     SSV_NETWORK_ADDRESS: '',
     SSV_TOKEN_ADDRESS: '0x9D65fF81a3c488d585bBfb0Bfe3c7707c7917f54',
+    SWAP_FACTORY_ADDRESS: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
     SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
     WETH_TOKEN_ADDRESS: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
   },
@@ -40,6 +41,7 @@ const externalEnv = {
     LINK_TOKEN_ADDRESS: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
     SSV_NETWORK_ADDRESS: '0xb9e155e65B5c4D66df28Da8E9a0957f06F11Bc04',
     SSV_TOKEN_ADDRESS: '0x3a9f01091C446bdE031E39ea8354647AFef091E7',
+    SWAP_FACTORY_ADDRESS: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
     SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
     WETH_TOKEN_ADDRESS: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
   }
@@ -82,7 +84,7 @@ const config: HardhatUserConfig = {
       accounts: mnemonic ? { ...hid, accountsBalance: '96000000000000000000' } : undefined,
       chainId: forkingChainId || 1337,
       forking: forkingUrl ? { url: forkingUrl } : undefined,
-      mining: miningInterval ? mining : undefined,
+      mining: miningInterval ? mining : { auto: true },
       allowUnlimitedContractSize: true,
       gas: 'auto',
       gasPrice: 'auto'

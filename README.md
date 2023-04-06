@@ -70,6 +70,7 @@ npm run dev
 | `--fork` | Which live Ethereum network to fork locally | goerli | --fork=mainnet |
 | `--mock` | Whether to mock services | true | --mock=false |
 | `--network` | Which live Ethereum network to use | goerli | --network=mainnet |
+| `--simulation` | Whether to run contract simulation fixture | false | --simulation |
 
 **Example commands:**
 
@@ -106,7 +107,7 @@ npm run dev:landing
 
 ### Contracts
 
-Ethereum contracts are configured with a Hardhat development environment in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file.
+Ethereum contracts are configured with a Hardhat development environment in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file. Read more about `@casimir/ethereum` staking [here](contracts/ethereum/README.md). Below are some helpful commands for developing on or with the contracts.
 
 Run all contract tests.
 
@@ -114,10 +115,10 @@ Run all contract tests.
 npm run test:ethereum
 ```
 
-Compile the contracts in [contracts/ethereum](contracts/ethereum).
+Build the contracts in [contracts/ssv](contracts/ssv).
 
 ```zsh
-npm run task:compile --workspace @casimir/ethereum
+npm run build --workspace @casimir/ethereum
 ```
 
 Deploy a contract, specifically [contracts/ethereum/src/SSVManager.sol](contracts/ethereum/src/SSVManager.sol) with [contracts/ethereum/scripts/ssv.deploy.ts](contracts/ethereum/deploy/ssv.deploy.ts).

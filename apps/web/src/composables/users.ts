@@ -1,5 +1,5 @@
 import { onMounted, ref } from 'vue'
-import { AddAccountOptions, ProviderString, RemoveAccountOptions, User } from '@casimir/types'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts } from '@casimir/types'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useSSV from '@/composables/ssv'
@@ -8,73 +8,73 @@ import useWallet from '@/composables/wallet'
 const { usersBaseURL, ethereumURL } = useEnvironment()
 
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
-// const user = ref<User>()
-const user = ref(
-    {
-        address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
-        accounts: [
-            {
-                address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
-                currency: 'ETH',
-                balance: '1000000000000000000',
-                balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-                roi: 0.25,
-                walletProvider: 'MetaMask'
-            },
-            {
-                address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
-                currency: 'ETH',
-                balance: '1000000000000000000',
-                balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-                roi: 0.25,
-                walletProvider: 'CoinbaseWallet'
-            },
-            {
-                address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
-                currency: 'ETH',
-                balance: '1000000000000000000',
-                balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-                roi: 0.25,
-                walletProvider: 'CoinbaseWallet'
-            },
-            {
-                address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
-                currency: 'ETH',
-                balance: '1000000000000000000',
-                balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-                roi: 0.25,
-                walletProvider: 'CoinbaseWallet'
-            },
-            {
-                address: '0x8222Ef172A2117D1C4739E35234E097630D94376'.toLowerCase(),
-                currency: 'ETH',
-                balance: '1000000000000000000',
-                balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-                roi: 0.25,
-                walletProvider: 'Ledger'
-            },
-            {
-                address: '0x8222Ef172A2117D1C4739E35234E097630D94377'.toLowerCase(), // Fake address
-                currency: 'ETH',
-                balance: '1000000000000000000',
-                balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-                roi: 0.25,
-                walletProvider: 'Trezor'
-            },
-            {
-                address: '0x8222Ef172A2117D1C4739E35234E097630D94378'.toLowerCase(), // Fake address
-                currency: 'ETH',
-                balance: '1000000000000000000',
-                balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-                roi: 0.25,
-                walletProvider: 'WalletConnect'
-            },
-        ],
-        nonce: '1234567890',
-        pools: []
-    }
-)
-const { ssvManager } = useSSV()
+const user = ref<UserWithAccounts>()
+// const user = ref(
+//     {
+//         address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
+//         accounts: [
+//             {
+//                 address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
+//                 currency: 'ETH',
+//                 balance: '1000000000000000000',
+//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+//                 roi: 0.25,
+//                 walletProvider: 'MetaMask'
+//             },
+//             {
+//                 address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
+//                 currency: 'ETH',
+//                 balance: '1000000000000000000',
+//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+//                 roi: 0.25,
+//                 walletProvider: 'CoinbaseWallet'
+//             },
+//             {
+//                 address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
+//                 currency: 'ETH',
+//                 balance: '1000000000000000000',
+//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+//                 roi: 0.25,
+//                 walletProvider: 'CoinbaseWallet'
+//             },
+//             {
+//                 address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
+//                 currency: 'ETH',
+//                 balance: '1000000000000000000',
+//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+//                 roi: 0.25,
+//                 walletProvider: 'CoinbaseWallet'
+//             },
+//             {
+//                 address: '0x8222Ef172A2117D1C4739E35234E097630D94376'.toLowerCase(),
+//                 currency: 'ETH',
+//                 balance: '1000000000000000000',
+//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+//                 roi: 0.25,
+//                 walletProvider: 'Ledger'
+//             },
+//             {
+//                 address: '0x8222Ef172A2117D1C4739E35234E097630D94377'.toLowerCase(), // Fake address
+//                 currency: 'ETH',
+//                 balance: '1000000000000000000',
+//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+//                 roi: 0.25,
+//                 walletProvider: 'Trezor'
+//             },
+//             {
+//                 address: '0x8222Ef172A2117D1C4739E35234E097630D94378'.toLowerCase(), // Fake address
+//                 currency: 'ETH',
+//                 balance: '1000000000000000000',
+//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+//                 roi: 0.25,
+//                 walletProvider: 'WalletConnect'
+//             },
+//         ],
+//         nonce: '1234567890',
+//         pools: []
+//     }
+// )
+const { ssvManager, getPools } = useSSV()
 
 export default function useUsers () {
 
@@ -90,39 +90,40 @@ export default function useUsers () {
         return user
     }
 
-    function setUser(newUser?: User) {
+    function setUser(newUser?: UserWithAccounts) {
         user.value = newUser
     }
 
     // Todo filter for events for user addresses
     function subscribeToUserEvents() {
-        const { getUserBalance, getUserPools } = useWallet()
+        const { getUserBalance } = useWallet()
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     
         const validatorInitFilter = {
           address: ssvManager.address,
           topics: [
-            ethers.utils.id('ValidatorActivated(uint32,uint32[],string)')
+            ethers.utils.id('PoolStaked(uint32,bytes,uint32[])'),
+            // ethers.utils.id('ManagerDistribution(uint32,bytes,uint32[])'), // TODO: Make sure to query for past events on page load (Fetch and then subscribe)
           ]
         }
         ssvManager.connect(provider).on(validatorInitFilter, async () => {
           console.log('ValidatorInit event... updating pools')
-          user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
-          user.value.pools = await getUserPools(user.value.id)
+          user.value.balance = await getUserBalance()
+          user.value.pools = await getPools(user.value.id)
           user.value.stake = user.value.pools?.reduce((a, c) => a + parseFloat(c.userStake), 0).toString()
           user.value.rewards = user.value.pools?.reduce((a, c) => a + parseFloat(c.userRewards), 0).toString()
         })
     }
 
     // onMounted(async () => {
-    //     const { getUserBalance, getUserPools } = useWallet()
+    //     const { getUserBalance } = useWallet()
     //     // Just get pools for primary account for demo
     //     user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
-    //     user.value.pools = await getUserPools(user.value.id)
+    //     user.value.pools = await getPools(user.value.id)
     //     subscribeToUserEvents()
     // })
 
-    async function addAccount(account: AddAccountOptions): Promise<{ error: boolean, message: string, data: User | null }> {
+    async function addAccount(account: AddAccountOptions): Promise<{ error: boolean, message: string, data: UserWithAccounts | null }> {
         const requestOptions = {
             method: 'POST',
             headers: { 
