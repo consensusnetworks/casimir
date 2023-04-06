@@ -42,7 +42,7 @@ export default function useWallet() {
   const { ethereumURL } = useEnvironment()
   const { ethersProviderList, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
-  const { getBitcoinLedgerAddress, getEthersLedgerAddress, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { getBitcoinLedgerAddress, getEthersLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { getWalletConnectAddress, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
   const { user, getUser, setUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
@@ -118,7 +118,7 @@ export default function useWallet() {
       if (!loggedIn.value) {
         loadingUserWallets.value = true
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency)
-        const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
+        const connectedCurrency = currency ? currency : await detectCurrencyInProvider(provider) as Currency
         const loginResponse = await loginWithWallet(provider, connectedAddress, connectedCurrency)
         if (!loginResponse?.error) {
           // STEP 2
@@ -210,6 +210,8 @@ export default function useWallet() {
   async function loginWithWallet(provider: ProviderString, address: string, currency: Currency) {
     if (ethersProviderList.includes(provider)) {
       return await loginWithEthers(provider, address, currency)
+    } else if (provider === 'Ledger') {
+      return await loginWithLedger(provider, address, currency)
     } else {
       // TODO: Implement this for other providers
       console.log('Sign up not yet supported for this wallet provider')
