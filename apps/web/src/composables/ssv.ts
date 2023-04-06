@@ -70,19 +70,20 @@ export default function useSSV() {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
         const ssvManagerProvider = ssvManager.connect(provider)
         
-        const userBalance = await ssvManagerProvider.getUserBalance(address) // to get the stake and rewards for a given user
-        const balance = await ssvManagerProvider.getBalance() // to get the stake and rewards for the manager
+        const userStake = await ssvManagerProvider.getUserStake(address) // to get user's stake balance
+        const poolStake = await ssvManagerProvider.getStake() // to get total stake balance
         const poolIds = readyOrStake === 'ready' ? await ssvManagerProvider.getReadyPoolIds() : await ssvManagerProvider.getStakedPoolIds() // to get ready (open) pool IDs OR to get staked (active) pool IDs
-
 
         return await Promise.all(poolIds.map(async (poolId: number) => {
             const { deposits, operatorIds, validatorPublicKey } = await ssvManagerProvider.getPool(poolId)
+            
+            // TODO: Decide when/how to get rewards/userRewards
             let pool: Pool = {
                 id: poolId,
-                rewards: ethers.utils.formatEther(balance.rewards),
-                stake: ethers.utils.formatEther(balance.stake),
-                userRewards: ethers.utils.formatEther(userBalance.rewards),
-                userStake: ethers.utils.formatEther(userBalance.stake)
+                rewards: ethers.utils.formatEther(poolStake),
+                stake: ethers.utils.formatEther(poolStake),
+                userRewards: ethers.utils.formatEther(userStake),
+                userStake: ethers.utils.formatEther(userStake)
             }
 
             if (validatorPublicKey) {
