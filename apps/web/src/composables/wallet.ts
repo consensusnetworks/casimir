@@ -8,6 +8,7 @@ import useUsers from '@/composables/users'
 import { Account, ProviderString, Currency } from '@casimir/types'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
 import * as Session from 'supertokens-web-js/recipe/session'
+import router from './router'
 
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test ethereum send to address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
@@ -94,6 +95,7 @@ export default function useWallet() {
           primaryAddress.value = user?.address
         }
         loadingUserWallets.value = false
+        router.push('/')
       } else { // Add account
         console.log('already logged in')
         console.log('checking if account exists on user')

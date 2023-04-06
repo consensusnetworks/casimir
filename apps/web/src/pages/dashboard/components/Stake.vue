@@ -265,7 +265,7 @@ onMounted(async ()=>{
           </p>
           <div class="h-full overflow-auto pr-5">
             <button
-              v-for="act in user.accounts"
+              v-for="act in user?.accounts"
               :key="act.address"
               class="w-full border border-border rounded-[5px] mb-10 py-5 px-10 hover:border-primary"
               @click="selectWallet(act)"
