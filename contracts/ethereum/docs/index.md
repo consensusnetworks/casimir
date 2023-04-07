@@ -1,33 +1,17 @@
 # Solidity API
 
-## Counter
+## SSVAutomation
 
-### counter
-
-```solidity
-uint256 counter
-```
-
-Public counter variable
-
-### interval
+### stake
 
 ```solidity
-uint256 interval
-```
-
-Use an interval in seconds and a timestamp to slow execution of Upkeep
-
-### lastTimeStamp
-
-```solidity
-uint256 lastTimeStamp
+uint256 stake
 ```
 
 ### constructor
 
 ```solidity
-constructor(uint256 updateInterval) public
+constructor(address ssvManagerAddress) public
 ```
 
 ### checkUpkeep
@@ -63,7 +47,105 @@ Always validate the data passed in._
 ### validateUpkeep
 
 ```solidity
-function validateUpkeep() public view returns (bool)
+function validateUpkeep() public view returns (bool upkeepNeeded)
+```
+
+## ISSVManager
+
+### ManagerDistribution
+
+```solidity
+event ManagerDistribution(address sender, uint256 ethAmount, uint256 time)
+```
+
+### PoolDeposit
+
+```solidity
+event PoolDeposit(address sender, uint32 poolId, uint256 amount, uint256 time)
+```
+
+### PoolStaked
+
+```solidity
+event PoolStaked(uint32 poolId, bytes validatorPublicKey, uint32[] operatorIds)
+```
+
+### ValidatorAdded
+
+```solidity
+event ValidatorAdded(bytes publicKey, uint32[] operatorIds)
+```
+
+### deposit
+
+```solidity
+function deposit() external payable
+```
+
+### withdraw
+
+```solidity
+function withdraw(uint256 amount) external
+```
+
+### getFees
+
+```solidity
+function getFees() external view returns (uint32 LINKFee, uint32 SSVFee)
+```
+
+### getLINKFee
+
+```solidity
+function getLINKFee() external view returns (uint32)
+```
+
+### getSSVFee
+
+```solidity
+function getSSVFee() external view returns (uint32)
+```
+
+### getStakedValidatorPublicKeys
+
+```solidity
+function getStakedValidatorPublicKeys() external view returns (bytes[])
+```
+
+### getReadyValidatorPublicKeys
+
+```solidity
+function getReadyValidatorPublicKeys() external view returns (bytes[])
+```
+
+### getReadyPoolIds
+
+```solidity
+function getReadyPoolIds() external view returns (uint32[])
+```
+
+### getStakedPoolIds
+
+```solidity
+function getStakedPoolIds() external view returns (uint32[])
+```
+
+### getStake
+
+```solidity
+function getStake() external view returns (uint256)
+```
+
+### getReadyDeposits
+
+```solidity
+function getReadyDeposits() external view returns (uint256)
+```
+
+### getUserStake
+
+```solidity
+function getUserStake(address userAddress) external view returns (uint256)
 ```
 
 ## SSVManager

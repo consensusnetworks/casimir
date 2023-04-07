@@ -107,9 +107,9 @@ export async function firstUserDepositFixture() {
     await deposit.wait()
 
     const checkData = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(''))
-    const upkeepNeeded = await ssvAutomation.checkUpkeep(checkData)
+    const { ...check } = await ssvAutomation.checkUpkeep(checkData)
+    const { upkeepNeeded, performData } = check
     if (upkeepNeeded) {
-        const performData = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(''))
         const performUpkeep = await ssvAutomation.performUpkeep(performData)
         await performUpkeep.wait()
     }
