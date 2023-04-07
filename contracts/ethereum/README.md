@@ -76,7 +76,7 @@ The approach to user stake compounding rewards in the manager contract involves 
 
 1. Whenever a user deposits or updates their stake, their initial stake and the current distribution sum are recorded.
 2. When rewards are distributed, the distribution sum is updated to include the new reward-to-stake ratio.
-3. $userStake =\frac{userStake_0\times distributionSum}{userDistributionSum_0}$ calculates a user's current compounded stake at any time.
+3. $userStake =userStake_0\times{\frac{distributionSum}{userDistributionSum_0}}$ calculates a user's current compounded stake at any time.
 
 *Where:*
 
@@ -99,7 +99,7 @@ The contract charges a small fee for each deposit (and some amount TBD in reward
 
 1. $feePercent = fees_{LINK} + fees_{SSV}$
 
-2. $ethAmount = \frac{depositAmount \times 100}{100 + feePercent}$
+2. $ethAmount = depositAmount\times{\frac{100}{100 + feePercent}}$
 
 3. $feeAmount = depositAmount - ethAmount$
 
