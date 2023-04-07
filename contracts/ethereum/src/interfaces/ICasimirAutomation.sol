@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 import "@chainlink/contracts/src/v0.8/interfaces/PoRAddressList.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
 
-interface ISSVAutomation is AutomationCompatibleInterface, PoRAddressList {
+interface ICasimirAutomation is AutomationCompatibleInterface, PoRAddressList {
 
     /*************/
     /* Functions */

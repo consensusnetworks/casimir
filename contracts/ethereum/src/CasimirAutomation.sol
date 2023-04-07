@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "./interfaces/ISSVAutomation.sol";
-import "./interfaces/ISSVManager.sol";
+import "./interfaces/ICasimirAutomation.sol";
+import "./interfaces/ICasimirManager.sol";
 import "hardhat/console.sol";
 
 /**
  * @title Oracle contract that reports balances and triggers manager actions 
  */
-contract SSVAutomation is ISSVAutomation {
+contract CasimirAutomation is ICasimirAutomation {
     /* Total stake */
     uint256 private stake;
-    /* SSV manager contract */
-    ISSVManager private immutable ssvManager;
+    /* Manager contract */
+    ICasimirManager private immutable casimirManager;
 
-    constructor(address ssvManagerAddress) {
-        ssvManager = ISSVManager(ssvManagerAddress);
+    constructor(address casimirManagerAddress) {
+        casimirManager = ICasimirManager(casimirManagerAddress);
     }
 
     function checkUpkeep(
@@ -41,16 +41,16 @@ contract SSVAutomation is ISSVAutomation {
         if (validateUpkeep()) {
             
             /** Update the stake */
-            stake = ssvManager.getStake();
+            stake = casimirManager.getStake();
         }
     }
 
     function validateUpkeep() public view returns (bool upkeepNeeded) {
-        bool stakeChanged = stake != ssvManager.getStake();
+        bool stakeChanged = stake != casimirManager.getStake();
         console.log(
             "Stake changed from %s to %s",
             stake,
-            ssvManager.getStake()
+            casimirManager.getStake()
         );
         upkeepNeeded = stakeChanged;
     }
@@ -61,14 +61,14 @@ contract SSVAutomation is ISSVAutomation {
         override
         returns (uint256)
     {
-        return ssvManager.getStakedValidatorPublicKeys().length;
+        return casimirManager.getStakedValidatorPublicKeys().length;
     }
 
     function getPoRAddressList(
         uint256 startIndex,
         uint256 endIndex
     ) external view override returns (string[] memory) {
-        bytes[] memory publicKeys = ssvManager.getStakedValidatorPublicKeys();
+        bytes[] memory publicKeys = casimirManager.getStakedValidatorPublicKeys();
         address[] memory addresses = new address[](publicKeys.length);
         for (uint256 i = 0; i < publicKeys.length; i++) {
             addresses[i] = address(uint160(bytes20(keccak256(publicKeys[i]))));

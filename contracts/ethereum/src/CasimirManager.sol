@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import "./SSVAutomation.sol";
-import "./interfaces/ISSVManager.sol";
+import "./CasimirAutomation.sol";
+import "./interfaces/ICasimirManager.sol";
 import "./interfaces/IDepositContract.sol";
 import "./interfaces/ISSVNetwork.sol";
 import "./interfaces/ISSVToken.sol";
@@ -20,7 +20,7 @@ import "hardhat/console.sol";
 /**
  * @title Manager contract that accepts and distributes deposits
  */
-contract SSVManager is ISSVManager, Ownable, ReentrancyGuard {
+contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /*************/
     /* Libraries */
@@ -59,8 +59,8 @@ contract SSVManager is ISSVManager, Ownable, ReentrancyGuard {
     /* Global Variables */
     /********************/
 
-    /** Automation contract */
-    SSVAutomation private ssvAutomation;
+    /** Automation contract address */
+    CasimirAutomation public casimirAutomation;
     /** Last pool ID generated for a new pool */
     Counters.Counter lastPoolId;
     /** Token addresses */
@@ -127,11 +127,12 @@ contract SSVManager is ISSVManager, Ownable, ReentrancyGuard {
         tokens[Token.LINK] = linkTokenAddress;
         ssvNetwork = ISSVNetwork(ssvNetworkAddress);
         tokens[Token.SSV] = ssvTokenAddress;
-        ssvAutomation = new SSVAutomation(address(this));
         ssvToken = ISSVToken(ssvTokenAddress);
         swapFactory = IUniswapV3Factory(swapFactoryAddress);
         swapRouter = ISwapRouter(swapRouterAddress);
         tokens[Token.WETH] = wethTokenAddress;
+
+        casimirAutomation = new CasimirAutomation(address(this));
     }
 
     /**
@@ -191,7 +192,7 @@ contract SSVManager is ISSVManager, Ownable, ReentrancyGuard {
          */
 
         /** Distribute LINK fees to oracle */
-        linkToken.transfer(address(ssvAutomation), processedDeposit.linkAmount);
+        linkToken.transfer(getAutomationAddress(), processedDeposit.linkAmount);
 
         /** Emit manager reward event */
         emit ManagerDistribution(
@@ -593,5 +594,13 @@ contract SSVManager is ISSVManager, Ownable, ReentrancyGuard {
             /*uint80 answeredInRound*/
         ) = linkFeed.latestRoundData();
         return stake;
+    }
+
+    /**
+     * @notice Get the automation address
+     * @return The automation address
+     */
+    function getAutomationAddress() public view returns (address) {
+        return address(casimirAutomation);
     }
 }

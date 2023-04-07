@@ -63,8 +63,8 @@ The Casimir SSV contracts are located in the [src](./src) directory.
 
 | Contract | Description | Docs |
 | --- | --- | --- |
-| [SSVManager](./src/SSVManager.sol) | Manages Casimir SSV stake distribution | [SSVManager](./docs/index.md#ssvmanager) |
-| [SSVAutomator](./src/SSVAutomation.sol) | Automates Casimir SSV event handling | [SSVAutomator](./docs/index.md#ssvautomator) |
+| [CasimirManager](./src/CasimirManager.sol) | Manages Casimir SSV stake distribution | [docs/index.md#casimirmanager](./docs/index.md#casimirmanager) |
+| [CasimirAutomator](./src/CasimirAutomation.sol) | Automates Casimir SSV event handling | [docs/index.md#casimirautomator](./docs/index.md#casimirautomator) |
 
 > 🚩 The Casimir SSV contracts are configured with a Hardhat development environment in the [hardhat.config.ts](./hardhat.config.ts) file.
 

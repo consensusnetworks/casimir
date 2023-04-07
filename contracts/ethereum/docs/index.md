@@ -2,12 +2,6 @@
 
 ## SSVAutomation
 
-### stake
-
-```solidity
-uint256 stake
-```
-
 ### constructor
 
 ```solidity
@@ -17,7 +11,7 @@ constructor(address ssvManagerAddress) public
 ### checkUpkeep
 
 ```solidity
-function checkUpkeep(bytes) external view returns (bool upkeepNeeded, bytes checkData)
+function checkUpkeep(bytes) external view returns (bool upkeepNeeded, bytes performData)
 ```
 
 ### performUpkeep
@@ -50,174 +44,41 @@ Always validate the data passed in._
 function validateUpkeep() public view returns (bool upkeepNeeded)
 ```
 
-## ISSVManager
-
-### ManagerDistribution
+### getPoRAddressListLength
 
 ```solidity
-event ManagerDistribution(address sender, uint256 ethAmount, uint256 time)
+function getPoRAddressListLength() external view returns (uint256)
 ```
 
-### PoolDeposit
+Get total number of addresses in the list.
+
+### getPoRAddressList
 
 ```solidity
-event PoolDeposit(address sender, uint32 poolId, uint256 amount, uint256 time)
+function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
 ```
 
-### PoolStaked
+Get a batch of human-readable addresses from the address list. The requested batch size can be greater
+than the actual address list size, in which the full address list will be returned.
 
-```solidity
-event PoolStaked(uint32 poolId, bytes validatorPublicKey, uint32[] operatorIds)
-```
+_Due to limitations of gas usage in off-chain calls, we need to support fetching the addresses in batches.
+EVM addresses need to be converted to human-readable strings. The address strings need to be in the same format
+that would be used when querying the balance of that address._
 
-### ValidatorAdded
+#### Parameters
 
-```solidity
-event ValidatorAdded(bytes publicKey, uint32[] operatorIds)
-```
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The index of the first address in the batch. |
+| endIndex | uint256 | The index of the last address in the batch. If `endIndex > getPoRAddressListLength()-1`, endIndex need to default to `getPoRAddressListLength()-1`. |
 
-### deposit
+#### Return Values
 
-```solidity
-function deposit() external payable
-```
-
-### withdraw
-
-```solidity
-function withdraw(uint256 amount) external
-```
-
-### getFees
-
-```solidity
-function getFees() external view returns (uint32 LINKFee, uint32 SSVFee)
-```
-
-### getLINKFee
-
-```solidity
-function getLINKFee() external view returns (uint32)
-```
-
-### getSSVFee
-
-```solidity
-function getSSVFee() external view returns (uint32)
-```
-
-### getStakedValidatorPublicKeys
-
-```solidity
-function getStakedValidatorPublicKeys() external view returns (bytes[])
-```
-
-### getReadyValidatorPublicKeys
-
-```solidity
-function getReadyValidatorPublicKeys() external view returns (bytes[])
-```
-
-### getReadyPoolIds
-
-```solidity
-function getReadyPoolIds() external view returns (uint32[])
-```
-
-### getStakedPoolIds
-
-```solidity
-function getStakedPoolIds() external view returns (uint32[])
-```
-
-### getStake
-
-```solidity
-function getStake() external view returns (uint256)
-```
-
-### getReadyDeposits
-
-```solidity
-function getReadyDeposits() external view returns (uint256)
-```
-
-### getUserStake
-
-```solidity
-function getUserStake(address userAddress) external view returns (uint256)
-```
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string[] | Array of addresses as strings. |
 
 ## SSVManager
-
-### ProcessedDeposit
-
-```solidity
-struct ProcessedDeposit {
-  uint256 ethAmount;
-  uint256 linkAmount;
-  uint256 ssvAmount;
-}
-```
-
-### Fees
-
-```solidity
-struct Fees {
-  uint32 LINK;
-  uint32 SSV;
-}
-```
-
-### Pool
-
-```solidity
-struct Pool {
-  uint256 deposits;
-  uint32[] operatorIds;
-  bytes validatorPublicKey;
-}
-```
-
-### Token
-
-```solidity
-enum Token {
-  LINK,
-  SSV,
-  WETH
-}
-```
-
-### User
-
-```solidity
-struct User {
-  uint256 stake0;
-  uint256 distributionSum0;
-}
-```
-
-### Validator
-
-```solidity
-struct Validator {
-  bytes32 depositDataRoot;
-  uint32[] operatorIds;
-  bytes[] sharesEncrypted;
-  bytes[] sharesPublicKeys;
-  bytes signature;
-  bytes withdrawalCredentials;
-}
-```
-
-### lastPoolId
-
-```solidity
-struct Counters.Counter lastPoolId
-```
-
-Last pool ID generated for a new pool
 
 ### scaleFactor
 
@@ -235,37 +96,23 @@ uint256 distributionSum
 
 Sum of scaled reward to stake ratios (arbitrary intial value required)
 
-### ManagerDistribution
+### Token
 
 ```solidity
-event ManagerDistribution(address userAddress, uint256 ethAmount, uint256 depositTime)
+enum Token {
+  LINK,
+  SSV,
+  WETH
+}
 ```
 
-Event signaling a user deposit to the pool manager
-
-### PoolDeposit
+### lastPoolId
 
 ```solidity
-event PoolDeposit(address userAddress, uint32 poolId, uint256 ethAmount, uint256 depositTime)
+struct Counters.Counter lastPoolId
 ```
 
-Event signaling a user deposit to a pool
-
-### PoolStaked
-
-```solidity
-event PoolStaked(uint32 poolId, bytes publicKey, uint32[] operatorIds)
-```
-
-Event signaling a pool validator activation
-
-### ValidatorAdded
-
-```solidity
-event ValidatorAdded(bytes publicKey, uint32[] operatorIds)
-```
-
-Event signaling a validator registration
+Last pool ID generated for a new pool
 
 ### constructor
 
@@ -321,7 +168,7 @@ Withdraw user stake from the pool manager
 ### getFees
 
 ```solidity
-function getFees() public pure returns (struct SSVManager.Fees)
+function getFees() public pure returns (struct ISSVManager.Fees)
 ```
 
 Get the current token fees as percentages
@@ -330,7 +177,7 @@ Get the current token fees as percentages
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | struct SSVManager.Fees | The current token fees as percentages |
+| [0] | struct ISSVManager.Fees | The current token fees as percentages |
 
 ### getLINKFee
 
@@ -475,7 +322,7 @@ Get the current stake of a user
 ### getPool
 
 ```solidity
-function getPool(uint32 poolId) external view returns (struct SSVManager.Pool)
+function getPool(uint32 poolId) external view returns (struct ISSVManager.Pool)
 ```
 
 Get a pool by ID
@@ -490,7 +337,21 @@ Get a pool by ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | struct SSVManager.Pool | The pool |
+| [0] | struct ISSVManager.Pool | The pool |
+
+### getBeaconStake
+
+```solidity
+function getBeaconStake() public view returns (int256)
+```
+
+Get the latest total manager stake on beacon reported from chainlink PoR feed
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int256 | The latest total manager stake on beacon |
 
 ## IDepositContract
 
@@ -547,6 +408,260 @@ Query the current deposit count.
 | ---- | ---- | ----------- |
 | [0] | bytes | The deposit count encoded as a little endian 64-bit number. |
 
+## ISSVAutomation
+
+### checkUpkeep
+
+```solidity
+function checkUpkeep(bytes checkData) external returns (bool upkeepNeeded, bytes performData)
+```
+
+method that is simulated by the keepers to see if any work actually
+needs to be performed. This method does does not actually need to be
+executable, and since it is only ever simulated it can consume lots of gas.
+
+_To ensure that it is never called, you may want to add the
+cannotExecute modifier from KeeperBase to your implementation of this
+method._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| checkData | bytes | specified in the upkeep registration so it is always the same for a registered upkeep. This can easily be broken down into specific arguments using `abi.decode`, so multiple upkeeps can be registered on the same contract and easily differentiated by the contract. |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| upkeepNeeded | bool | boolean to indicate whether the keeper should call performUpkeep or not. |
+| performData | bytes | bytes that the keeper should call performUpkeep with, if upkeep is needed. If you would like to encode data to decode later, try `abi.encode`. |
+
+### performUpkeep
+
+```solidity
+function performUpkeep(bytes performData) external
+```
+
+method that is actually executed by the keepers, via the registry.
+The data returned by the checkUpkeep simulation will be passed into
+this method to actually be executed.
+
+_The input to this method should not be trusted, and the caller of the
+method should not even be restricted to any single registry. Anyone should
+be able call it, and the input should be validated, there is no guarantee
+that the data passed in is the performData returned from checkUpkeep. This
+could happen due to malicious keepers, racing keepers, or simply a state
+change while the performUpkeep transaction is waiting for confirmation.
+Always validate the data passed in._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| performData | bytes | is the data which was passed back from the checkData simulation. If it is encoded, it can easily be decoded into other types by calling `abi.decode`. This data should not be trusted, and should be validated against the contract's current state. |
+
+### validateUpkeep
+
+```solidity
+function validateUpkeep() external view returns (bool upkeepNeeded)
+```
+
+### getPoRAddressListLength
+
+```solidity
+function getPoRAddressListLength() external view returns (uint256)
+```
+
+Get total number of addresses in the list.
+
+### getPoRAddressList
+
+```solidity
+function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
+```
+
+Get a batch of human-readable addresses from the address list. The requested batch size can be greater
+than the actual address list size, in which the full address list will be returned.
+
+_Due to limitations of gas usage in off-chain calls, we need to support fetching the addresses in batches.
+EVM addresses need to be converted to human-readable strings. The address strings need to be in the same format
+that would be used when querying the balance of that address._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The index of the first address in the batch. |
+| endIndex | uint256 | The index of the last address in the batch. If `endIndex > getPoRAddressListLength()-1`, endIndex need to default to `getPoRAddressListLength()-1`. |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string[] | Array of addresses as strings. |
+
+## ISSVManager
+
+### ProcessedDeposit
+
+```solidity
+struct ProcessedDeposit {
+  uint256 ethAmount;
+  uint256 linkAmount;
+  uint256 ssvAmount;
+}
+```
+
+### Fees
+
+```solidity
+struct Fees {
+  uint32 LINK;
+  uint32 SSV;
+}
+```
+
+### Pool
+
+```solidity
+struct Pool {
+  uint256 deposits;
+  uint32[] operatorIds;
+  bytes validatorPublicKey;
+}
+```
+
+### User
+
+```solidity
+struct User {
+  uint256 stake0;
+  uint256 distributionSum0;
+}
+```
+
+### Validator
+
+```solidity
+struct Validator {
+  bytes32 depositDataRoot;
+  uint32[] operatorIds;
+  bytes[] sharesEncrypted;
+  bytes[] sharesPublicKeys;
+  bytes signature;
+  bytes withdrawalCredentials;
+}
+```
+
+### ManagerDistribution
+
+```solidity
+event ManagerDistribution(address sender, uint256 ethAmount, uint256 time)
+```
+
+### PoolDeposit
+
+```solidity
+event PoolDeposit(address sender, uint32 poolId, uint256 amount, uint256 time)
+```
+
+### PoolStaked
+
+```solidity
+event PoolStaked(uint32 poolId, bytes validatorPublicKey, uint32[] operatorIds)
+```
+
+### ValidatorAdded
+
+```solidity
+event ValidatorAdded(bytes publicKey, uint32[] operatorIds)
+```
+
+### ValidatorRemoved
+
+```solidity
+event ValidatorRemoved(bytes publicKey, uint32[] operatorIds)
+```
+
+### UserWithdrawal
+
+```solidity
+event UserWithdrawal(address sender, uint256 ethAmount, uint256 time)
+```
+
+### deposit
+
+```solidity
+function deposit() external payable
+```
+
+### withdraw
+
+```solidity
+function withdraw(uint256 amount) external
+```
+
+### getFees
+
+```solidity
+function getFees() external view returns (struct ISSVManager.Fees)
+```
+
+### getLINKFee
+
+```solidity
+function getLINKFee() external view returns (uint32)
+```
+
+### getSSVFee
+
+```solidity
+function getSSVFee() external view returns (uint32)
+```
+
+### getStakedValidatorPublicKeys
+
+```solidity
+function getStakedValidatorPublicKeys() external view returns (bytes[])
+```
+
+### getReadyValidatorPublicKeys
+
+```solidity
+function getReadyValidatorPublicKeys() external view returns (bytes[])
+```
+
+### getReadyPoolIds
+
+```solidity
+function getReadyPoolIds() external view returns (uint32[])
+```
+
+### getStakedPoolIds
+
+```solidity
+function getStakedPoolIds() external view returns (uint32[])
+```
+
+### getStake
+
+```solidity
+function getStake() external view returns (uint256)
+```
+
+### getReadyDeposits
+
+```solidity
+function getReadyDeposits() external view returns (uint256)
+```
+
+### getUserStake
+
+```solidity
+function getUserStake(address userAddress) external view returns (uint256)
+```
+
 ## ISSVToken
 
 ### mint
@@ -581,4 +696,84 @@ function withdraw(uint256) external
 ```
 
 Withdraw wrapped ether to get ether
+
+## MockAggregator
+
+### version
+
+```solidity
+uint256 version
+```
+
+### description
+
+```solidity
+string description
+```
+
+### decimals
+
+```solidity
+uint8 decimals
+```
+
+### latestAnswer
+
+```solidity
+int256 latestAnswer
+```
+
+### latestTimestamp
+
+```solidity
+uint256 latestTimestamp
+```
+
+### latestRound
+
+```solidity
+uint256 latestRound
+```
+
+### getAnswer
+
+```solidity
+mapping(uint256 => int256) getAnswer
+```
+
+### getTimestamp
+
+```solidity
+mapping(uint256 => uint256) getTimestamp
+```
+
+### constructor
+
+```solidity
+constructor(uint8 _decimals, int256 _initialAnswer) public
+```
+
+### updateAnswer
+
+```solidity
+function updateAnswer(int256 _answer) public
+```
+
+### updateRoundData
+
+```solidity
+function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt) public
+```
+
+### getRoundData
+
+```solidity
+function getRoundData(uint80 _roundId) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+```
+
+### latestRoundData
+
+```solidity
+function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+```
 
