@@ -182,14 +182,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { ref, watchEffect, onMounted } from 'vue'
 import useWallet from '@/composables/wallet'
 import useSSV from '@/composables/ssv'
 import useUsers from '@/composables/users'
 
 const message = ref('')
 const signedMessage = ref('')
-const { user } = useUsers()
+const { checkUserSessionExists } = useUsers()
 
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
@@ -223,6 +223,11 @@ const {
 } = useWallet()
 
 const { deposit, getPools } = useSSV()
+
+onMounted(async () => {
+  const user = await checkUserSessionExists()
+  console.log('user :>> ', user)
+})
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {

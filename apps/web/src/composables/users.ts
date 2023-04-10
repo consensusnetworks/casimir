@@ -4,6 +4,7 @@ import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useSSV from '@/composables/ssv'
 import useWallet from '@/composables/wallet'
+import * as Session from 'supertokens-web-js/recipe/session'
 
 const { usersBaseURL, ethereumURL } = useEnvironment()
 
@@ -74,6 +75,7 @@ const user = ref<UserWithAccounts>()
 //         pools: []
 //     }
 // )
+const session = ref<boolean>(false)
 const { ssvManager, getPools } = useSSV()
 
 export default function useUsers () {
@@ -164,6 +166,30 @@ export default function useUsers () {
         return message
     }
 
+    /**
+     * Checks if session exists and, if so: 
+     * Gets the user's account via the API
+     * Sets the user's account locally
+    */
+    async function checkUserSessionExists() : Promise<boolean> {
+        try {
+            session.value = await Session.doesSessionExist()
+            if (session.value) {
+                const user = await getUser()
+                if (user) {
+                    setUser(user)
+                    return true
+                } else {
+                    return false
+                }
+            }
+            return false
+        } catch (error) {
+            console.log('Error in checkUserSessionExists in wallet.ts :>> ', error)
+            return false
+        }
+    }
+
     async function updatePrimaryAddress(primaryAddress: string, updatedProvider: ProviderString, updatedAddress: string) {
         const requestOptions = {
             method: 'PUT',
@@ -177,9 +203,11 @@ export default function useUsers () {
 
     return {
         user,
+        session,
         getUser,
         setUser,
         addAccount,
+        checkUserSessionExists,
         removeAccount,
         getMessage,
         updatePrimaryAddress
