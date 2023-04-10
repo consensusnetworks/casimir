@@ -1,17 +1,17 @@
 import { deployContract } from '@casimir/hardhat'
 import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
 import { validatorStore } from '@casimir/data'
-import { SSVManager } from '../build/artifacts/types'
+import { CasimirManager } from '../build/artifacts/types'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { simulationFixture } from '../test/fixtures/shared'
 
 void async function () {
     const simulation = process.env.SIMULATION === 'true'
-    let ssvManager: SSVManager | undefined
+    let casimirManager: CasimirManager | undefined
     const [ , , , , distributor] = await ethers.getSigners()
     const config: DeploymentConfig = {
-        SSVManager: {
+        CasimirManager: {
             address: '',
             args: {
                 beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
@@ -42,7 +42,7 @@ void async function () {
         (config[name as keyof DeploymentConfig] as ContractConfig).address = address
 
         // Save SSV manager for export
-        if (name === 'SSVManager') ssvManager = contract as SSVManager
+        if (name == 'CasimirManager') casimirManager = contract as CasimirManager
     }
 
     const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
@@ -56,7 +56,7 @@ void async function () {
             signature,
             withdrawalCredentials
         } = validator
-        const registration = await ssvManager?.addValidator(
+        const registration = await casimirManager?.addValidator(
             depositDataRoot,
             publicKey,
             operatorIds,
@@ -83,11 +83,11 @@ void async function () {
     ethers.provider.on('block', async (block) => {
         if (block - blocksPerReward === lastRewardBlock) {
             lastRewardBlock = block
-            const activeValidatorPublicKeys = await ssvManager?.getStakedValidatorPublicKeys()
+            const activeValidatorPublicKeys = await casimirManager?.getStakedValidatorPublicKeys()
             if (activeValidatorPublicKeys?.length) {
                 console.log(`Distributing rewards from ${activeValidatorPublicKeys.length} active validators...`)
                 const rewardAmount = (rewardPerValidator * activeValidatorPublicKeys.length).toString()
-                const reward = await distributor.sendTransaction({ to: ssvManager?.address, value: ethers.utils.parseEther(rewardAmount) })
+                const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
                 await reward.wait()
             }
         }
