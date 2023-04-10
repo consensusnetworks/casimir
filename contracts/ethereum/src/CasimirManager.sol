@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
+import "./CasimirAutomation.sol";
+import "./interfaces/ICasimirManager.sol";
 import "./interfaces/IDepositContract.sol";
 import "./interfaces/ISSVNetwork.sol";
 import "./interfaces/ISSVToken.sol";
@@ -18,64 +20,57 @@ import "hardhat/console.sol";
 /**
  * @title Manager contract that accepts and distributes deposits
  */
-contract SSVManager is Ownable, ReentrancyGuard {
+contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
+
+    /*************/
+    /* Libraries */
+    /*************/
+
     /** Use counter for incrementing IDs */
     using Counters for Counters.Counter;
     /** Use math for precise division */
     using Math for uint256;
-    /** Processed deposit with stake and fee amounts */
-    struct ProcessedDeposit {
-        uint256 ethAmount;
-        uint256 linkAmount;
-        uint256 ssvAmount;
-    }
-    /** Token fees required for contract protocols */
-    struct Fees {
-        uint32 LINK;
-        uint32 SSV;
-    }
-    /** SSV pool used for running a validator */
-    struct Pool {
-        uint256 deposits;
-        uint32[] operatorIds;
-        bytes validatorPublicKey;
-    }
+
+    /*************/
+    /* Constants */
+    /*************/
+
+    /** Uniswap 0.3% fee tier */
+    uint24 private immutable uniswapFeeTier = 3000;
+    /** Staking pool capacity */
+    uint256 private poolCapacity = 32 ether;
+    /** Scale factor for each reward to stake ratio */
+    uint256 scaleFactor = 1 ether;
+    /** Sum of scaled reward to stake ratios (arbitrary intial value required) */
+    uint256 distributionSum = 1000 ether;
+
+    /***************/
+    /* Enumerators */
+    /***************/
+    
     /** Token abbreviations */
     enum Token {
         LINK,
         SSV,
         WETH
     }
-    /** User staking account */
-    struct User {
-        uint256 stake0;
-        uint256 distributionSum0;
-    }
-    /** Validator deposit data and shares */
-    struct Validator {
-        bytes32 depositDataRoot;
-        uint32[] operatorIds;
-        bytes[] sharesEncrypted;
-        bytes[] sharesPublicKeys;
-        bytes signature;
-        bytes withdrawalCredentials;
-    }
+
+    /********************/
+    /* Global Variables */
+    /********************/
+
+    /** Automation contract address */
+    CasimirAutomation public casimirAutomation;
     /** Last pool ID generated for a new pool */
     Counters.Counter lastPoolId;
     /** Token addresses */
     mapping(Token => address) private tokens;
     /** Beacon deposit contract */
     IDepositContract private immutable beaconDeposit;
-    /** Chainlink feed contract */
-    AggregatorV3Interface private immutable linkFeed;
     /** SSV network contract */
     ISSVNetwork private immutable ssvNetwork;
-    /** LINK ERC-20 token contract */
-    IERC20 private immutable linkToken;
     /** SSV ERC-20 token contract */
     ISSVToken private immutable ssvToken;
-    /** Uniswap 0.3% fee tier */
-    uint24 private immutable swapFee = 3000;
     /** Uniswap factory contract */
     IUniswapV3Factory private immutable swapFactory;
     /** Uniswap router contract  */
@@ -88,14 +83,8 @@ contract SSVManager is Ownable, ReentrancyGuard {
     mapping(address => User) private users;
     /** Staking pools */
     mapping(uint32 => Pool) private pools;
-    /** Staking pool capacity */
-    uint256 private poolCapacity = 32 ether;
     /** Total pool deposits ready for stake */
     uint256 private readyDeposits;
-    /** Scale factor for each reward to stake ratio */
-    uint256 scaleFactor = 1 ether;
-    /** Sum of scaled reward to stake ratios (arbitrary intial value required) */
-    uint256 distributionSum = 1000 ether;
     /** IDs of staking pools readily accepting deposits */
     uint32[] private readyPoolIds;
     /** IDs of staking pools at full capacity */
@@ -106,27 +95,10 @@ contract SSVManager is Ownable, ReentrancyGuard {
     bytes[] private stakedValidatorPublicKeys;
     /** Public keys of ready validators */
     bytes[] private readyValidatorPublicKeys;
-    /** Event signaling a user deposit to the pool manager */
-    event ManagerDistribution(
-        address userAddress,
-        uint256 ethAmount,
-        uint256 depositTime
-    );
-    /** Event signaling a user deposit to a pool */
-    event PoolDeposit(
-        address userAddress,
-        uint32 poolId,
-        uint256 ethAmount,
-        uint256 depositTime
-    );
-    /** Event signaling a pool validator activation */
-    event PoolStaked(
-        uint32 poolId,
-        bytes publicKey,
-        uint32[] operatorIds
-    );
-    /** Event signaling a validator registration */
-    event ValidatorAdded(bytes publicKey, uint32[] operatorIds);
+    /** Chainlink feed contract */
+    AggregatorV3Interface private immutable linkFeed;
+    /** LINK ERC-20 token contract */
+    IERC20 private immutable linkToken;
 
     /**
      * @notice Constructor
@@ -151,14 +123,16 @@ contract SSVManager is Ownable, ReentrancyGuard {
     ) {
         beaconDeposit = IDepositContract(beaconDepositAddress);
         linkFeed = AggregatorV3Interface(linkFeedAddress);
-        tokens[Token.LINK] = linkTokenAddress;
         linkToken = IERC20(linkTokenAddress);
+        tokens[Token.LINK] = linkTokenAddress;
         ssvNetwork = ISSVNetwork(ssvNetworkAddress);
         tokens[Token.SSV] = ssvTokenAddress;
         ssvToken = ISSVToken(ssvTokenAddress);
         swapFactory = IUniswapV3Factory(swapFactoryAddress);
         swapRouter = ISwapRouter(swapRouterAddress);
         tokens[Token.WETH] = wethTokenAddress;
+
+        casimirAutomation = new CasimirAutomation(address(this));
     }
 
     /**
@@ -202,25 +176,27 @@ contract SSVManager is Ownable, ReentrancyGuard {
 
     /**
      * @dev Distribute a processed deposit to ready pools
-     * @param senderAddress The deposit sender address
+     * @param sender The deposit sender address
      * @param processedDeposit The processed deposit
      * @param time The deposit time
      */
     function distribute(
-        address senderAddress,
+        address sender,
         ProcessedDeposit memory processedDeposit,
         uint256 time
     ) private {
 
         /** 
-         * Todo distribute fees
-         * processedDeposit.linkAmount
+         * Todo distribute SSV fees
          * processedDeposit.ssvAmount 
          */
 
+        /** Distribute LINK fees to oracle */
+        linkToken.transfer(getAutomationAddress(), processedDeposit.linkAmount);
+
         /** Emit manager reward event */
         emit ManagerDistribution(
-            senderAddress,
+            sender,
             processedDeposit.ethAmount,
             time
         );
@@ -244,7 +220,7 @@ contract SSVManager is Ownable, ReentrancyGuard {
                 
                 /** Emit pool deposit event */
                 emit PoolDeposit(
-                    senderAddress,
+                    sender,
                     poolId,
                     processedDeposit.ethAmount,
                     time
@@ -257,7 +233,7 @@ contract SSVManager is Ownable, ReentrancyGuard {
 
                 /** Emit pool deposit event */
                 emit PoolDeposit(
-                    senderAddress,
+                    sender,
                     poolId,
                     remainingCapacity,
                     time
@@ -309,6 +285,9 @@ contract SSVManager is Ownable, ReentrancyGuard {
 
     /**
      * @dev Process fees from a deposit 
+     * @param depositAmount The amount of ETH to deposit
+     * @param fees The fees to process
+     * @return The processed deposit
      */
     function processFees(uint256 depositAmount, Fees memory fees) private returns (ProcessedDeposit memory) {
         
@@ -367,7 +346,7 @@ contract SSVManager is Ownable, ReentrancyGuard {
     ) private returns (uint256) {
 
         /** Temporarily handle unswappable fees due to liquidity */
-        address swapPool = swapFactory.getPool(tokenIn, tokenOut, swapFee);
+        address swapPool = swapFactory.getPool(tokenIn, tokenOut, uniswapFeeTier);
         uint128 liquidity = IUniswapV3PoolState(swapPool).liquidity();
         if (liquidity == 0) {
             if (tokenOut == tokens[Token.LINK]) {
@@ -392,7 +371,7 @@ contract SSVManager is Ownable, ReentrancyGuard {
             .ExactInputSingleParams({
                 tokenIn: tokenIn,
                 tokenOut: tokenOut,
-                fee: swapFee,
+                fee: uniswapFeeTier,
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: amountIn,
@@ -600,5 +579,28 @@ contract SSVManager is Ownable, ReentrancyGuard {
      */
     function getPool(uint32 poolId) external view returns (Pool memory) {
         return pools[poolId];
+    }
+
+    /**
+     * @notice Get the latest total manager stake on beacon reported from chainlink PoR feed
+     * @return The latest total manager stake on beacon
+     */
+    function getBeaconStake() public view returns (int256) {
+        (
+            /*uint80 roundID*/,
+            int256 stake,
+            /*uint startedAt*/,
+            /*uint timeStamp*/,
+            /*uint80 answeredInRound*/
+        ) = linkFeed.latestRoundData();
+        return stake;
+    }
+
+    /**
+     * @notice Get the automation address
+     * @return The automation address
+     */
+    function getAutomationAddress() public view returns (address) {
+        return address(casimirAutomation);
     }
 }

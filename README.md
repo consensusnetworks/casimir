@@ -121,7 +121,7 @@ Build the contracts in [contracts/ssv](contracts/ssv).
 npm run build --workspace @casimir/ethereum
 ```
 
-Deploy a contract, specifically [contracts/ethereum/src/SSVManager.sol](contracts/ethereum/src/SSVManager.sol) with [contracts/ethereum/scripts/ssv.deploy.ts](contracts/ethereum/deploy/ssv.deploy.ts).
+Deploy a contract, specifically [contracts/ethereum/src/CasimirManager.sol](contracts/ethereum/src/CasimirManager.sol) with [contracts/ethereum/scripts/ssv.deploy.ts](contracts/ethereum/deploy/ssv.deploy.ts).
 
 ```zsh
 npm run deploy:ssv --workspace @casimir/ethereum
