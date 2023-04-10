@@ -1,11 +1,8 @@
 <template>
   <div>
     <div class="flex">
-      <button @click="getCurrentBalance()">
-        Get Balance New
-      </button>
-      <button @click="getUserBalance(selectedAddress)">
-        Get Balance Old
+      <button @click="getUserBalance()">
+        Get User Balance
       </button>
     </div>
     <div class="network-div w-100 mx-8">
@@ -23,8 +20,6 @@
       </div>
     </div>
     <div>
-      <h5>Are you logged in?</h5>
-      <div>{{ loggedIn ? 'Yes!' : 'No.' }}</div>
       <h5>Primary Account:</h5>
       <div>{{ primaryAddress ? primaryAddress : 'Please log in first.' }}</div>
       <button @click="setPrimaryWalletAccount()">
@@ -43,27 +38,37 @@
       </button>
     </div>
     <div class="staking-container">
-      <button @click="getUserPools(selectedAddress)">
-        What do I have staked where?
+      <button @click="getPools(selectedAddress, 'ready')">
+        Get ready user pools
       </button>
-      <ul>
+      <button @click="getPools(selectedAddress, 'stake')">
+        Get staked user pools
+      </button>
+      <!-- <ul>
         <li
-          v-for="(pool, index) in user?.pools"
+          v-for="(account, index) in user?.accounts"
           :key="index"
         >
-          <p>Pool ID: #{{ pool.id }}</p>
-          <p>Your Stake: {{ pool.userStake }} ETH</p>
-          <p>Your Rewards: {{ pool.userRewards }} ETH</p>
-          <p>Total Stake: {{ pool.stake }} ETH</p>
-          <p>Total Rewards: {{ pool.rewards }} ETH</p>
+          <ul v-for="(pool, index) in account"
+            :key="index"
+          >
+            <li>Pool ID: #{{ pool?.id }}</li>
+            <li>Your Stake: {{ pool?.userStake }} ETH</li>
+            <li>Your Rewards: {{ pool?.userRewards }} ETH</li>
+            <li>Total Stake: {{ pool?.stake }} ETH</li>
+            <li>Total Rewards: {{ pool?.rewards }} ETH</li>
+          </ul>
         </li>
-      </ul>
+      </ul> -->
       <input
         v-model="amountToStake"
         placeholder="Amount to Stake"
       >
       <button @click="deposit({ amount: amountToStake, walletProvider: selectedProvider })">
         Steak
+      </button>
+      <button @click="withdraw({ amount: amountToStake, walletProvider: selectedProvider })">
+        Withdraw
       </button>
     </div>
     <div class="connect-wallet-container">
@@ -178,14 +183,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { ref, watchEffect, onMounted } from 'vue'
 import useWallet from '@/composables/wallet'
 import useSSV from '@/composables/ssv'
 import useUsers from '@/composables/users'
 
 const message = ref('')
 const signedMessage = ref('')
-const { user } = useUsers()
+const { checkUserSessionExists } = useUsers()
 
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
@@ -201,7 +206,6 @@ const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
 const {
-  loggedIn,
   selectedProvider,
   selectedAddress,
   primaryAddress,
@@ -214,12 +218,16 @@ const {
   sendTransaction,
   signMessage,
   getUserBalance,
-  getCurrentBalance,
   removeConnectedAccount,
   switchNetwork
 } = useWallet()
 
-const { deposit, getUserPools } = useSSV()
+const { deposit, getPools, withdraw } = useSSV()
+
+onMounted(async () => {
+  const user = await checkUserSessionExists()
+  console.log('user :>> ', user)
+})
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {

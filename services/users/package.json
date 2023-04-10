@@ -21,6 +21,7 @@
     "@types/pg": "^8.6.6",
     "chai": "^4.3.6",
     "esbuild": "^0.15.9",
+    "minimist": "^1.2.8",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0"
   }

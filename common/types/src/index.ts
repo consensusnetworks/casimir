@@ -11,6 +11,7 @@ import { Pool } from './interfaces/Pool'
 import { ProviderString } from './interfaces/ProviderString'
 import { RemoveAccountOptions } from './interfaces/RemoveAccountOptions'
 import { User } from './interfaces/User'
+import { UserWithAccounts } from './interfaces/UserWithAccounts'
 import { UserAddedSuccess } from './interfaces/UserAddedSuccess'
 import { Validator } from './interfaces/Validator'
 
@@ -28,6 +29,7 @@ export type {
     ProviderString,
     RemoveAccountOptions,
     User,
+    UserWithAccounts,
     UserAddedSuccess,
     Validator,
 }

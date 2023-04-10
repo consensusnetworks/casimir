@@ -1,20 +1,20 @@
 {
     "name": "@casimir/ethereum",
     "scripts": {
-        "build": "echo '@casimir/ethereum build not specified. Disregard this warning and any listed errors above if @casimir/ethereum is not needed for the current project build.' && exit 0",
-        "dev": "npx hardhat node",
-        "dev:ganache": "npx esno scripts/ganache.ts",
-        "deploy": "npx hardhat run scripts/ssv.deploy.ts",
+        "node": "npx hardhat node",
+        "node:ganache": "npx esno scripts/ganache.ts",
+        "dev": "npx hardhat run scripts/dev.ts",
         "docgen": "npx hardhat docgen",
-        "test": "mocha --require hardhat/register --recursive --exit --extension ts --timeout 60000",
-        "task:clean": "npx hardhat clean",
-        "task:compile": "npm run task:clean && npx hardhat compile --show-stack-traces",
-        "pretest": "npm run task:compile",
-        "prepare": "npm run task:compile"
+        "test": "npx esno scripts/test.ts --clean \"$npm_config_clean\"",
+        "clean": "npx hardhat clean",
+        "build": "npx hardhat compile --show-stack-traces",
+        "prepare": "npm run build"
     },
     "dependencies": {
         "@chainlink/contracts": "^0.5.1",
-        "@uniswap/v3-core": "^1.0.1",
+        "@openzeppelin/contracts": "^4.8.0",
+        "@openzeppelin/contracts-upgradeable": "^4.8.0",
+        "@uniswap/v3-core": "1.0.1",
         "@uniswap/v3-periphery": "^1.4.3"
     },
     "devDependencies": {
@@ -22,8 +22,6 @@
         "@nomicfoundation/hardhat-toolbox": "^2.0.0",
         "@nomiclabs/hardhat-ethers": "^2.0.6",
         "@nomiclabs/hardhat-waffle": "^2.0.3",
-        "@openzeppelin/contracts": "^4.8.0",
-        "@openzeppelin/contracts-upgradeable": "^4.8.0",
         "@openzeppelin/hardhat-upgrades": "^1.21.0",
         "@typechain/ethers-v5": "^10.1.0",
         "@typechain/hardhat": "^6.1.2",
@@ -36,6 +34,7 @@
         "ganache": "^7.7.1",
         "hardhat": "^2.12.2",
         "localtunnel": "^2.0.2",
+        "minimist": "^1.2.8",
         "mocha": "^10.0.0",
         "solidity-docgen": "^0.6.0-beta.29",
         "ts-node": "^10.8.2",
