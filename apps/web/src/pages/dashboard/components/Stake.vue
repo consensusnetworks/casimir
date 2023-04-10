@@ -530,22 +530,6 @@ onMounted(async ()=>{
         </div>
       </transition>
     </div>
-    
-    <!-- <div 
-      v-if="openSignTransactionTab"
-      id="sign_transaction_modal"
-      class="absolute bg-white border border-border rounded-[5px] px-10 py-15 h-[420px] 
-          w-[340px] shadow-xl overflow-auto z-[10] flex flex-col"
-      style="top: calc(50% - 255px); left: calc(50% - 170px);"
-    >
-      <p 
-        id="sign_transaction_title"
-        class="text-caption font-bold text-black pb-40 border-b"
-      >
-        Stake ETH to SSV Validators
-      </p>
-      
-    </div> -->
   </div>
 </template>
 

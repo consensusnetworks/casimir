@@ -128,7 +128,7 @@ onMounted(()=>{
                       class="w-full h-full"
                     >
                       <div
-                        v-for="act in user.accounts"
+                        v-for="act in user?.accounts"
                         :key="act.address"
                         class="text-caption w-full truncate mb-10 pr-10 pb-2 border-b border-border"
                       >
@@ -139,7 +139,7 @@ onMounted(()=>{
                             class="w-20"
                           >
                           <div 
-                            v-if="act.address === user.address"
+                            v-if="act.address === user?.address"
                             class="w-5 h-5 bg-blue_3 rounded-[5px] absolute left-0 top-0"
                           />
                         </div>
