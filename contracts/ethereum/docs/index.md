@@ -5,14 +5,38 @@
 ### constructor
 
 ```solidity
-constructor(address casimirManagerAddress) public
+constructor(address casimirManagerAddress, address linkFeedAddress) public
 ```
+
+Constructor
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| casimirManagerAddress | address | The manager contract address |
+| linkFeedAddress | address | The chainlink feed contract address |
 
 ### checkUpkeep
 
 ```solidity
-function checkUpkeep(bytes) external view returns (bool upkeepNeeded, bytes performData)
+function checkUpkeep(bytes checkData) external view returns (bool upkeepNeeded, bytes performData)
 ```
+
+Check if the upkeep is needed
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| checkData | bytes | The data to check the upkeep |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| upkeepNeeded | bool | True if the upkeep is needed |
+| performData | bytes | The data to perform the upkeep |
 
 ### performUpkeep
 
@@ -20,29 +44,41 @@ function checkUpkeep(bytes) external view returns (bool upkeepNeeded, bytes perf
 function performUpkeep(bytes performData) external
 ```
 
-method that is actually executed by the keepers, via the registry.
-The data returned by the checkUpkeep simulation will be passed into
-this method to actually be executed.
-
-_The input to this method should not be trusted, and the caller of the
-method should not even be restricted to any single registry. Anyone should
-be able call it, and the input should be validated, there is no guarantee
-that the data passed in is the performData returned from checkUpkeep. This
-could happen due to malicious keepers, racing keepers, or simply a state
-change while the performUpkeep transaction is waiting for confirmation.
-Always validate the data passed in._
+Perform the upkeep
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| performData | bytes | is the data which was passed back from the checkData simulation. If it is encoded, it can easily be decoded into other types by calling `abi.decode`. This data should not be trusted, and should be validated against the contract's current state. |
+| performData | bytes | The data to perform the upkeep |
 
 ### validateUpkeep
 
 ```solidity
 function validateUpkeep() public view returns (bool upkeepNeeded)
 ```
+
+Validate if the upkeep is needed
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| upkeepNeeded | bool | True if the upkeep is needed |
+
+### getBeaconStake
+
+```solidity
+function getBeaconStake() public view returns (int256)
+```
+
+Get the latest total manager stake on beacon reported from chainlink PoR feed
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int256 | The latest total manager stake on beacon |
 
 ### getPoRAddressListLength
 
@@ -346,20 +382,6 @@ Get a pool by ID
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | struct ICasimirManager.Pool | The pool |
-
-### getBeaconStake
-
-```solidity
-function getBeaconStake() public view returns (int256)
-```
-
-Get the latest total manager stake on beacon reported from chainlink PoR feed
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | int256 | The latest total manager stake on beacon |
 
 ### getAutomationAddress
 

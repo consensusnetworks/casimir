@@ -94,7 +94,7 @@ export async function firstUserDepositFixture() {
     const deposit = await casimirManager.connect(firstUser).deposit({ value })
     await deposit.wait()
 
-    const checkData = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(''))
+    const checkData = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('Checking upkeep'))
     const { ...check } = await casimirAutomation.checkUpkeep(checkData)
     const { upkeepNeeded, performData } = check
     if (upkeepNeeded) {

@@ -46,6 +46,8 @@ contract CasimirAutomation is ICasimirAutomation {
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
+        console.log(abi.decode(checkData, (string)));
+
         upkeepNeeded = validateUpkeep();
 
         if (upkeepNeeded) {
