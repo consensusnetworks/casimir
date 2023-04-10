@@ -118,6 +118,7 @@ export default function useWallet() {
             walletProvider: provider
           }
           const response = await addAccount(account)
+          router.push('/')
           // If api query is successful, set the user.value = to the response data (which should be the user)
           if (!response?.error) {
             setSelectedProvider(provider)
@@ -243,6 +244,7 @@ export default function useWallet() {
     primaryAddress.value = ''
     console.log('user.value on logout :>> ', user.value)
     loadingUserWallets.value = false
+    router.push('/auth')
   }
 
   async function removeConnectedAccount() {

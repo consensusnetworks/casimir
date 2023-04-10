@@ -42,10 +42,10 @@ onMounted(()=>{
     class="min-w-[360px] min-h-[100vh] h-[100vh] 
     w-[100vw] flex justify-center items-start py-45 overflow-y-auto"
   >
-    <div class="max-w-[1448px] h-full w-full px-[140px]">
+    <div class="max-w-[1448px] h-full w-full px-[140px] 550s:px-50">
       <div
         v-if="user"
-        class="flex justify-between items-center gap-45 w-full pb-[60px]"
+        class="flex justify-between items-center w-full pb-[60px]"
       >
         <div class="flex items-center gap-50">
           <div class="w-[25px]">
@@ -57,10 +57,12 @@ onMounted(()=>{
               >
             </a>
           </div>
-          <div>
-            <h6 class="text-grey_6 font-medium">
-              Dashboard
-            </h6>
+          <div class="not-sr-only 700s:sr-only">
+            <router-link to="/">
+              <h6 class="text-grey_6 font-medium">
+                Dashboard
+              </h6>
+            </router-link>
           </div>
         </div>
         <div 

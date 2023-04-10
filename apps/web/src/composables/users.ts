@@ -8,72 +8,72 @@ import useWallet from '@/composables/wallet'
 const { usersBaseURL, ethereumURL } = useEnvironment()
 
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
-const user = ref<UserWithAccounts>()
-// const user = ref(
-//     {
-//         address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
-//         accounts: [
-//             {
-//                 address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'MetaMask'
-//             },
-//             {
-//                 address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'CoinbaseWallet'
-//             },
-//             {
-//                 address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'CoinbaseWallet'
-//             },
-//             {
-//                 address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'CoinbaseWallet'
-//             },
-//             {
-//                 address: '0x8222Ef172A2117D1C4739E35234E097630D94376'.toLowerCase(),
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'Ledger'
-//             },
-//             {
-//                 address: '0x8222Ef172A2117D1C4739E35234E097630D94377'.toLowerCase(), // Fake address
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'Trezor'
-//             },
-//             {
-//                 address: '0x8222Ef172A2117D1C4739E35234E097630D94378'.toLowerCase(), // Fake address
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'WalletConnect'
-//             },
-//         ],
-//         nonce: '1234567890',
-//         pools: []
-//     }
-// )
+// const user = ref<UserWithAccounts>()
+const user = ref<UserWithAccounts>({
+    address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
+    accounts: [
+        {
+            address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
+            currency: 'ETH',
+            balance: '1000000000000000000',
+            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+            roi: 0.25,
+            walletProvider: 'MetaMask'
+        },
+        {
+            address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
+            currency: 'ETH',
+            balance: '1000000000000000000',
+            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+            roi: 0.25,
+            walletProvider: 'CoinbaseWallet'
+        },
+        {
+            address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
+            currency: 'ETH',
+            balance: '1000000000000000000',
+            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+            roi: 0.25,
+            walletProvider: 'CoinbaseWallet'
+        },
+        {
+            address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
+            currency: 'ETH',
+            balance: '1000000000000000000',
+            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+            roi: 0.25,
+            walletProvider: 'CoinbaseWallet'
+        },
+        {
+            address: '0x8222Ef172A2117D1C4739E35234E097630D94376'.toLowerCase(),
+            currency: 'ETH',
+            balance: '1000000000000000000',
+            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+            roi: 0.25,
+            walletProvider: 'Ledger'
+        },
+        {
+            address: '0x8222Ef172A2117D1C4739E35234E097630D94377'.toLowerCase(), // Fake address
+            currency: 'ETH',
+            balance: '1000000000000000000',
+            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+            roi: 0.25,
+            walletProvider: 'Trezor'
+        },
+        {
+            address: '0x8222Ef172A2117D1C4739E35234E097630D94378'.toLowerCase(), // Fake address
+            currency: 'ETH',
+            balance: '1000000000000000000',
+            balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
+            roi: 0.25,
+            walletProvider: 'WalletConnect'
+        },
+    ],
+    createdAt: '',
+    updatedAt: ''
+    // nonce: '1234567890',
+    // pools: []
+})
 const { ssvManager, getPools } = useSSV()
 
 export default function useUsers () {

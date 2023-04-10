@@ -36,11 +36,11 @@ onMounted(() => {
 						label : 'Net Value',
 						borderColor : '#C1D3F8',
                         fill: false,
-                        tension: 0.4,
 					}]
 		},
 		options : {
-            responsive: true,
+            responsive: false,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: props.legend,
@@ -75,14 +75,31 @@ onMounted(() => {
             }
 		}
     })
+
+    const line_chart_container_el = document.getElementById('line_chart_container_' + props.id)
+    let WIDTH = 0
+    let HEIGHT =  0
+
+     // watches for size changes... 
+    const outputsize = () => {
+        if(line_chart_container_el){
+            WIDTH = line_chart_container_el.offsetWidth
+            HEIGHT = line_chart_container_el.offsetHeight
+        }
+        chart.value.resize(WIDTH -20 , HEIGHT)
+    }
+    if(line_chart_container_el){
+        new ResizeObserver(outputsize).observe(line_chart_container_el)   
+    }
 })
 </script>
 
 <template>
-  <div>
+  <div 
+    class="h-full w-full px-10"
+  >
     <canvas
       :id="props.id"
-      class="w-full h-full"
     />
   </div>
 </template>
