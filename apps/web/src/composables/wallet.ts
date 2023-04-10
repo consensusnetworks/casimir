@@ -232,11 +232,10 @@ export default function useWallet() {
         ownerAddress: primaryAddress.value,
         walletProvider: selectedProvider.value
       }
-      const result = await removeAccount(opts)
-      console.log('result :>> ', result)
-      if (!result.error) {
-        setSelectedAddress(result.data.address)
-        result.data.accounts.forEach((account: Account) => {
+      const removeAccountResult = await removeAccount(opts)
+      if (!removeAccountResult.error) {
+        setSelectedAddress(removeAccountResult.data.address)
+        removeAccountResult.data.accounts.forEach((account: Account) => {
           if (account.address === selectedAddress.value) {
             setSelectedProvider(account.walletProvider as ProviderString)
             setSelectedCurrency(account.currency as Currency)
