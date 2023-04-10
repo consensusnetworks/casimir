@@ -30,7 +30,7 @@ onMounted(()=>{
 
   if(user.value){
     const account = user.value.accounts.find((item) => {
-      return item.address === user.value.address
+      return item.address === user?.value?.address
     })
     userPrimaryAccount.value = account
   }
