@@ -26,12 +26,10 @@ const activeWallets = ref([
 const amount = ref<string>('0.000001')
 const amountToStake = ref<string>('0.0')
 const loadingUserWallets = ref(false)
-const loggedIn = ref(false)
 const primaryAddress = ref('')
 const selectedProvider = ref<ProviderString>('')
 const selectedAddress = ref<string>('')
 const selectedCurrency = ref<Currency>('')
-const session = ref<boolean>(false)
 const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 
 export default function useWallet() {
@@ -79,35 +77,31 @@ export default function useWallet() {
   */
   async function connectWallet(provider: ProviderString, currency?: Currency) {
     try { // Sign Up or Login
-      if (!loggedIn.value) {
-        loadingUserWallets.value = true
-        const connectedAddress = await getConnectedAddressFromProvider(provider, currency)
-        const connectedCurrency = currency ? currency : await detectCurrencyInProvider(provider) as Currency
-        const loginResponse = await loginWithWallet(provider, connectedAddress, connectedCurrency)
-        if (!loginResponse?.error) {
-          // STEP 2
-          const user = await getUserAccount() // Queries the API for the user's account
+      if (!user?.value?.address) {
+        const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
+        const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
+        await loginWithWallet(provider, connectedAddress, connectedCurrency)
+        const userResponse = await getUser()
+        if (!userResponse?.error) {
+          setUser(userResponse)
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
-          loggedIn.value = true
-          primaryAddress.value = user?.address
+          primaryAddress.value = user?.value?.address as string
         }
-        loadingUserWallets.value = false
       } else { // Add account
         console.log('already logged in')
-        console.log('checking if account exists on user')
-        const connectedAddress = await getConnectedAddressFromProvider(provider, currency) // TODO: Remove currency from here? Maybe not.
+        const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
         const connectedCurrency = await detectCurrencyInProvider(provider, currency) as Currency
-        const accountExists = user.value?.accounts?.some((account: Account | any): boolean => account?.address === connectedAddress && account?.walletProvider === provider)
-        console.log('accountExists :>> ', accountExists)
+        const accountExists = user.value?.accounts?.some((account: Account | any) => { account?.address === connectedAddress && account?.walletProvider === provider })
+        console.log('accountExists already exists on user :>> ', accountExists)
         if (accountExists) {
           alert('Account already exists; setting provider, address, and currency')
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
         } else {
-          // If no, add account using users api
+          // If account doesn't exist, add account using users api
           console.log('adding sub account')
           const account = {
             address: connectedAddress.toLowerCase() as string,
@@ -115,13 +109,14 @@ export default function useWallet() {
             ownerAddress: user?.value?.address.toLowerCase() as string,
             walletProvider: provider
           }
-          const response = await addAccount(account)
-          // If api query is successful, set the user.value = to the response data (which should be the user)
-          if (!response?.error) {
+          const addAccountResponse = await addAccount(account)
+          if (!addAccountResponse?.error) {
+            const userResponse = await getUser()
+            setUser(userResponse)
             setSelectedProvider(provider)
             setSelectedAddress(connectedAddress)
             setSelectedCurrency(connectedCurrency)
-            primaryAddress.value = response.data?.address as string
+            primaryAddress.value = user?.value?.address as string
           }
         }
       }
@@ -175,28 +170,9 @@ export default function useWallet() {
       } else {
         throw new Error('No provider selected')
       }
-      return address
+      return trimAndLowercaseAddress(address) as string
     } catch (error) {
       console.error(error)
-    }
-  }
-
-  /**
-   * Checks if session exists and, if so: 
-   * Gets the user's account via the API
-   * Sets the user's account locally
-   */
-  async function getUserAccount() {
-    try {
-      session.value = await Session.doesSessionExist()
-      if (session.value) {
-        const user = await getUser()
-        setUser(user)
-        return user
-      }
-    } catch (error) {
-      console.log('Error in getUserAccount in wallet.ts :>> ', error)
-      return null
     }
   }
 
@@ -235,7 +211,7 @@ export default function useWallet() {
   async function logout() {
     loadingUserWallets.value = true
     await Session.signOut()
-    loggedIn.value = false
+    user.value = undefined
     setSelectedAddress('')
     setSelectedProvider('')
     setSelectedCurrency('')
@@ -246,7 +222,7 @@ export default function useWallet() {
   }
 
   async function removeConnectedAccount() {
-    if (!loggedIn.value) {
+    if (!user?.value?.address) {
       alert('Please login first')
     }
     if (selectedAddress.value === primaryAddress.value) {
@@ -258,11 +234,10 @@ export default function useWallet() {
         ownerAddress: primaryAddress.value,
         walletProvider: selectedProvider.value
       }
-      const result = await removeAccount(opts)
-      console.log('result :>> ', result)
-      if (!result.error) {
-        setSelectedAddress(result.data.address)
-        result.data.accounts.forEach((account: Account) => {
+      const removeAccountResult = await removeAccount(opts)
+      if (!removeAccountResult.error) {
+        setSelectedAddress(removeAccountResult.data.address)
+        removeAccountResult.data.accounts.forEach((account: Account) => {
           if (account.address === selectedAddress.value) {
             setSelectedProvider(account.walletProvider as ProviderString)
             setSelectedCurrency(account.currency as Currency)
@@ -304,7 +279,7 @@ export default function useWallet() {
 
   // TODO: Implement this for other providers
   async function setPrimaryWalletAccount() {
-    if (!loggedIn.value) {
+    if (!user?.value?.address) {
       alert('Please login first')
     }
     return alert('Not yet implemented for this wallet provider')
@@ -366,12 +341,15 @@ export default function useWallet() {
     }
   }
 
+  function trimAndLowercaseAddress(address: string) : string {
+    return address.trim().toLowerCase()
+  }
+
   return {
     activeWallets,
     amount,
     amountToStake,
     loadingUserWallets,
-    loggedIn,
     primaryAddress,
     selectedAddress,
     selectedCurrency,

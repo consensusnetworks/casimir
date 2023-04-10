@@ -1062,4 +1062,3 @@ Get a pool by ID
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | struct SSVManager.Pool | The pool |
-
