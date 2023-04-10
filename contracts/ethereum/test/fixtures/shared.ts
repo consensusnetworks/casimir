@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { deployContract } from '@casimir/hardhat'
-import { CasimirManager, CasimirAutomation } from '../../build/artifacts/types'
+import { CasimirManager, CasimirAutomation, MockAggregator } from '../../build/artifacts/types'
 import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
 import { validatorStore } from '@casimir/data'
 
@@ -11,8 +11,9 @@ const rewardPerValidator = 0.1
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
     let casimirManager: CasimirManager | undefined
+    let mockAggregator: MockAggregator | undefined
     const [owner, , , , distributor] = await ethers.getSigners()
-    const config: DeploymentConfig = {
+    let config: DeploymentConfig = {
         CasimirManager: {
             address: '',
             args: {
@@ -30,8 +31,29 @@ export async function deploymentFixture() {
         }
     }
 
+    /** Insert any mock external contracts first */
+    if (process.env.MOCK_EXTERNAL_CONTRACTS === 'true') {
+        config = {
+            MockAggregator: {
+                address: '',
+                args: {
+                    decimals: 18,
+                    initialAnswer: 0
+                },
+                options: {},
+                proxy: false
+            },
+            ...config
+        }
+    }
+
     for (const name in config) {
         console.log(`Deploying ${name} contract...`)
+
+        /** Link mock external contracts to Casimir */
+        if (name === 'CasimirManager') {
+            (config[name as keyof typeof config] as ContractConfig).args.linkFeedAddress = config.MockAggregator?.address
+        }
 
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
 
@@ -46,17 +68,25 @@ export async function deploymentFixture() {
 
         // Save SSV manager for export
         if (name === 'CasimirManager') casimirManager = contract as CasimirManager
+
+        // Save mock aggregator for export
+        if (name === 'MockAggregator') mockAggregator = contract as MockAggregator
     }
 
     const automationAddress = await casimirManager?.getAutomationAddress() as string
     const casimirAutomation = await ethers.getContractAt('CasimirAutomation', automationAddress) as CasimirAutomation
 
-    return { casimirManager: casimirManager as CasimirManager, casimirAutomation: casimirAutomation as CasimirAutomation, owner, distributor }
+    return { casimirManager: casimirManager as CasimirManager, casimirAutomation: casimirAutomation as CasimirAutomation, mockAggregator, owner, distributor }
 }
 
 /** Fixture to add validators */
 export async function addValidatorsFixture() {
-    const { casimirManager, casimirAutomation, owner, distributor } = await loadFixture(deploymentFixture)
+    const { casimirManager, casimirAutomation, mockAggregator, owner, distributor } = await loadFixture(deploymentFixture)
+
+    if (mockAggregator) {
+        console.log('MockAggregator address', mockAggregator.address)
+    }
+
     const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
     for (const validator of validators) {
         const {
