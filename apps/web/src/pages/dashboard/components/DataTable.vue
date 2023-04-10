@@ -28,12 +28,14 @@ const page_size = ref(16)
 const page_number = ref(1)
 const max_pages = ref(0)
 
-const data = ref()
+const data = ref(null as any)
 const filteredData = ref()
 
 const filterData = () => {
   filteredData.value = data.value.slice((page_number.value - 1) * page_size.value, page_number.value * page_size.value)
   max_pages.value = data.value.length/page_size.value
+
+  if(page_number.value >= (Math.ceil(max_pages.value) + 1)) page_number.value = 1 
 }
 
 onMounted(()=>{
@@ -42,7 +44,7 @@ onMounted(()=>{
     randomData.push(
       {
         id: i + 'as;dkfjajsdfa', 
-        amount: i * 100 + ' $',
+        amount: i * Math.floor(Math.random() * 100) + ' $',
         autoRestake: true,
         date: '1/1/' + i
       }
@@ -54,9 +56,10 @@ onMounted(()=>{
   filterData()
 })
 
-watch([page_number, page_size], ()=>{
+watch([page_number, page_size, data, tableHeaders], ()=>{
   filterData()
 })
+
 const paginationOptions = ref(['Show All', 6, 8, 10, 12, 14, 16, 18, 20,])
 const openPaginationOptions = ref(false)
 
@@ -104,47 +107,80 @@ const openPaginationOptions = ref(false)
     </div>
 
     <div class="border border-border rounded-[5px] p-10">
-      <table class="w-full">
-        <thead>
-          <tr class="border-b border-border">
-            <th
-              v-for="header in tableHeaders"
-              :key="header.title"
-              style="transition: all 0.3s ease;"
-              class="text-caption font-bold text-left pb-10"
-              :class="selectedTableHeader === header.title? 'text-black font-extrabold w-max' : 'text-border w-min'"
-            >
-              <button
-                class="flex w-min items-center justify-start gap-10 whitespace-nowrap"
-                @click="selectedTableHeader = header.title"
+      <div class="not-sr-only 1000s:sr-only">
+        <table
+          class="w-full"
+        >
+          <thead>
+            <tr class="border-b border-border">
+              <th
+                v-for="header in tableHeaders"
+                :key="header.title"
+                style="transition: all 0.3s ease;"
+                class="text-caption font-bold text-left pb-10"
+                :class="selectedTableHeader === header.title? 'text-black font-extrabold w-max' : 'text-border w-min'"
               >
-                {{ header.title }}
-                <i
-                  v-show="selectedTableHeader === header.title"
-                  class="text-body"
-                  :class="`iconoir-arrow-${sortDirection}`"
-                  @click="sortDirection === 'down'? sortDirection = 'up' : sortDirection = 'down'"
-                />
-              </button>
-            </th>
-          </tr>
-        </thead>
-        <tbody class="w-full">
-          <tr
-            v-for="item in filteredData"
-            :key="item"
-            class="w-full text-grey_5 text-body border-b border-grey_2"
+                <button
+                  class="flex w-min items-center justify-start gap-10 whitespace-nowrap"
+                  @click="selectedTableHeader = header.title"
+                >
+                  {{ header.title }}
+                  <i
+                    v-show="selectedTableHeader === header.title"
+                    class="text-body"
+                    :class="`iconoir-arrow-${sortDirection}`"
+                    @click="sortDirection === 'down'? sortDirection = 'up' : sortDirection = 'down'"
+                  />
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody
+            class="w-full"
           >
-            <td
-              v-for="(header) in tableHeaders"
-              :key="header.value"
-              class="py-5"
+            <tr
+              v-for="item in filteredData"
+              :key="item"
+              class="w-full text-grey_5 text-body border-b border-grey_2"
             >
-              {{ item[header.value] }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <td
+                v-for="(header) in tableHeaders"
+                :key="header.value"
+                class="py-5"
+              >
+                {{ item[header.value] }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div
+          v-if="!data"
+          class="text-center w-full text-body font-bold py-20 text-grey_3 border-b border-b-grey_3"
+        >
+          No Data
+        </div>
+      </div>
+      <div class="sr-only 1000s:not-sr-only">
+        <div
+          v-for="(item, i) in filteredData"
+          :key="item"
+          class="py-10 border-b border-b-grey_3"
+          :class="i % 2 === 0? 'text-grey_5 ': 'text-grey_3 '"
+        >
+          <div
+            v-for="row in tableHeaders"
+            :key="row.value"
+            class="flex justify-between items-center text-caption pb-5"
+          >
+            <div class="whitespace-nowrap">
+              {{ row.title }}
+            </div>
+            <div class="w-full text-right truncate">
+              {{ item[row.value] }}
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="w-full mt-10 flex items-center justify-end gap-20"> 
         <div class="flex justify-center items-center gap-10 text-body">
           <button
