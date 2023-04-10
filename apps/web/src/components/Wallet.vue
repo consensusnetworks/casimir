@@ -20,8 +20,6 @@
       </div>
     </div>
     <div>
-      <h5>Are you logged in?</h5>
-      <div>{{ loggedIn ? 'Yes!' : 'No.' }}</div>
       <h5>Primary Account:</h5>
       <div>{{ primaryAddress ? primaryAddress : 'Please log in first.' }}</div>
       <button @click="setPrimaryWalletAccount()">
@@ -205,7 +203,6 @@ const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
 const {
-  loggedIn,
   selectedProvider,
   selectedAddress,
   primaryAddress,
