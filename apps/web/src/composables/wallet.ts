@@ -76,7 +76,7 @@ export default function useWallet() {
    * @param currency 
    * @returns 
   */
-  async function connectWallet(provider: ProviderString, currency?: Currency) {
+  async function connectWallet(provider: ProviderString, currency: Currency = 'ETH') {
     try { // Sign Up or Login
       if (!user?.value?.address) {
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
