@@ -1,6 +1,4 @@
 import { ref } from 'vue'
-import { ethers } from 'ethers'
-import useEnvironment from '@/composables/environment'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useEthers from '@/composables/ethers'
@@ -17,18 +15,6 @@ import * as Session from 'supertokens-web-js/recipe/session'
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 // Test bitcoin send to address : 2N3Petr4LMH9tRneZCYME9mu33gR5hExvds
 
-const loadingUserWallets = ref(false)
-
-const loggedIn = ref(false)
-const selectedProvider = ref<ProviderString>('')
-const selectedAddress = ref<string>('')
-const selectedCurrency = ref<Currency>('')
-const primaryAddress = ref('')
-const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
-const amount = ref<string>('0.000001')
-const amountToStake = ref<string>('0.0')
-const session = ref<boolean>(false)
-
 const activeWallets = ref([
   'MetaMask',
   'CoinbaseWallet',
@@ -37,9 +23,18 @@ const activeWallets = ref([
   'Ledger',
   'IoPay',
 ] as ProviderString[])
+const amount = ref<string>('0.000001')
+const amountToStake = ref<string>('0.0')
+const loadingUserWallets = ref(false)
+const loggedIn = ref(false)
+const primaryAddress = ref('')
+const selectedProvider = ref<ProviderString>('')
+const selectedAddress = ref<string>('')
+const selectedCurrency = ref<Currency>('')
+const session = ref<boolean>(false)
+const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 
 export default function useWallet() {
-  const { ethereumURL } = useEnvironment()
   const { ethersProviderList, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getBitcoinLedgerAddress, getEthersLedgerAddress, sendLedgerTransaction, signLedgerMessage } = useLedger()
@@ -75,44 +70,13 @@ export default function useWallet() {
     }
   }
 
-  const setSelectedProvider = (provider: ProviderString) => {
-    selectedProvider.value = provider
-  }
-
-  const setSelectedAddress = (address: string) => {
-    selectedAddress.value = address
-  }
-
-  const setSelectedCurrency = (currency: Currency) => {
-    selectedCurrency.value = currency
-  }
-
-  /**
-   * Checks if session exists and, if so: 
-   * Gets the user's account via the API
-   * Sets the user's account locally
-   */
-  async function getUserAccount() {
-    try {
-      session.value = await Session.doesSessionExist()
-      if (session.value) {
-        const user = await getUser()
-        setUser(user)
-        return user
-      }
-    } catch (error) {
-      console.log('Error in getUserAccount in wallet.ts :>> ', error)
-      return null
-    }
-  }
-
   /**
    * Runs the login method for the selected provider
    * Checks if the user is logged in, if not, it will sign up or login
    * @param provider 
    * @param currency 
    * @returns 
-   */
+  */
   async function connectWallet(provider: ProviderString, currency?: Currency) {
     try { // Sign Up or Login
       if (!loggedIn.value) {
@@ -169,6 +133,23 @@ export default function useWallet() {
   }
 
   /**
+   * Detects the currency of the connected wallet provider and account
+   * @param provider 
+   * @param currency 
+   * @returns 
+   */
+  async function detectCurrencyInProvider(provider: ProviderString, currency?: Currency) {
+    // TODO: Implement this for other providers
+    if (ethersProviderList.includes(provider)){
+      return await getEthersBrowserProviderSelectedCurrency(provider) as Currency
+    } else if (provider === 'Ledger') {
+      return currency as Currency
+    } else {
+      alert('Currency selection not yet supported for this wallet provider')
+    }
+  }
+
+  /**
    * Retrieve the address from the selected provider
    * @param provider - MetaMask, CoinbaseWallet, Ledger, Trezor, WalletConnect, etc.
    * @param currency - ETH, BTC, IOTX, SOL, etc.
@@ -201,6 +182,39 @@ export default function useWallet() {
   }
 
   /**
+   * Checks if session exists and, if so: 
+   * Gets the user's account via the API
+   * Sets the user's account locally
+   */
+  async function getUserAccount() {
+    try {
+      session.value = await Session.doesSessionExist()
+      if (session.value) {
+        const user = await getUser()
+        setUser(user)
+        return user
+      }
+    } catch (error) {
+      console.log('Error in getUserAccount in wallet.ts :>> ', error)
+      return null
+    }
+  }
+
+  // TODO: What is this used for? 
+  // Do we need balance of active address only? 
+  // Or do we need balance of all addresses in accounts associated with user? 
+  // Is this calculated on front end or back end or both?
+  async function getUserBalance() {
+    if (ethersProviderList.includes(selectedProvider.value)){
+      const walletBalance = await getEthersBalance(selectedProvider.value, selectedAddress.value)
+      console.log('walletBalance in wei in wallet.ts :>> ', walletBalance)
+    return walletBalance
+    } else {
+      alert('Please select account')
+    }
+  }
+
+  /**
    * Uses appropriate provider composable to login or sign up
    * @param provider 
    * @param address 
@@ -229,21 +243,6 @@ export default function useWallet() {
     loadingUserWallets.value = false
   }
 
-  // TODO: Implement this for other providers
-  async function setPrimaryWalletAccount() {
-    if (!loggedIn.value) {
-      alert('Please login first')
-    }
-    return alert('Not yet implemented for this wallet provider')
-    if (ethersProviderList.includes(selectedProvider.value)) {
-      const result = await updatePrimaryAddress(primaryAddress.value, selectedProvider.value, selectedAddress.value)
-      const { data } = await result.json()
-      if (data) {
-        primaryAddress.value = data.address
-      }
-    }
-  }
-
   async function removeConnectedAccount() {
     if (!loggedIn.value) {
       alert('Please login first')
@@ -268,44 +267,6 @@ export default function useWallet() {
           }
         })
       }
-    }
-  }
-
-  /**
-   * Detects the currency of the connected wallet provider and account
-   * @param provider 
-   * @param currency 
-   * @returns 
-   */
-  async function detectCurrencyInProvider(provider: ProviderString, currency?: Currency) {
-    // TODO: Implement this for other providers
-    if (ethersProviderList.includes(provider)){
-      return await getEthersBrowserProviderSelectedCurrency(provider) as Currency
-    } else if (provider === 'Ledger') {
-      return currency as Currency
-    } else {
-      alert('Currency selection not yet supported for this wallet provider')
-    }
-  }
-
-  async function getCurrentBalance() {
-    // TODO: Implement this for other providers
-    if (ethersProviderList.includes(selectedProvider.value)){
-      const walletBalance = await getEthersBalance(selectedProvider.value, selectedAddress.value)
-      console.log('walletBalance in wei in wallet.ts :>> ', walletBalance)
-    return walletBalance
-    } else {
-      alert('Please select account')
-    }
-  }
-  
-  async function switchNetwork(chainId: string) {
-    if (selectedProvider.value === 'MetaMask') {
-      switchEthersNetwork('MetaMask', chainId)
-    } else if (selectedProvider.value === 'CoinbaseWallet') {
-      switchEthersNetwork('CoinbaseWallet', chainId)
-    } else {
-      alert('Switching networks is only supported for MetaMask and Coinbase Wallet')
     }
   }
 
@@ -339,6 +300,33 @@ export default function useWallet() {
     }
   }
 
+  // TODO: Implement this for other providers
+  async function setPrimaryWalletAccount() {
+    if (!loggedIn.value) {
+      alert('Please login first')
+    }
+    return alert('Not yet implemented for this wallet provider')
+    if (ethersProviderList.includes(selectedProvider.value)) {
+      const result = await updatePrimaryAddress(primaryAddress.value, selectedProvider.value, selectedAddress.value)
+      const { data } = await result.json()
+      if (data) {
+        primaryAddress.value = data.address
+      }
+    }
+  }
+
+  function setSelectedAddress (address: string) {
+    selectedAddress.value = address
+  }
+
+  function setSelectedCurrency (currency: Currency) {
+    selectedCurrency.value = currency
+  }
+
+  function setSelectedProvider (provider: ProviderString) {
+    selectedProvider.value = provider
+  }
+
   async function signMessage(message: string) {
     const messageInit: MessageInit = {
       message,
@@ -366,34 +354,35 @@ export default function useWallet() {
     }
   }
 
-  // This is the old method; currently used in users.ts so may want to still keep it
-  async function getUserBalance(userAddress: string): Promise<ethers.BigNumber> {
-    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-    const userBalance = await provider.getBalance(userAddress)
-    console.log('userBalance :>> ', userBalance)
-    return userBalance
+  async function switchNetwork(chainId: string) {
+    if (selectedProvider.value === 'MetaMask') {
+      switchEthersNetwork('MetaMask', chainId)
+    } else if (selectedProvider.value === 'CoinbaseWallet') {
+      switchEthersNetwork('CoinbaseWallet', chainId)
+    } else {
+      alert('Switching networks is only supported for MetaMask and Coinbase Wallet')
+    }
   }
 
   return {
-    loggedIn,
-    selectedProvider,
-    selectedAddress,
-    selectedCurrency,
-    primaryAddress,
-    toAddress,
+    activeWallets,
     amount,
     amountToStake,
     loadingUserWallets,
-    activeWallets,
+    loggedIn,
+    primaryAddress,
+    selectedAddress,
+    selectedCurrency,
+    selectedProvider,
+    toAddress,
     connectWallet,
-    logout,
-    setPrimaryWalletAccount,
-    removeConnectedAccount,
     detectCurrencyInProvider,
-    getCurrentBalance,
-    sendTransaction,
-    signMessage,
+    logout,
     getUserBalance,
+    removeConnectedAccount,
+    sendTransaction,
+    setPrimaryWalletAccount,
+    signMessage,
     switchNetwork
   }
 }
