@@ -49,10 +49,7 @@ contract CasimirAutomation is ICasimirAutomation {
         console.log(abi.decode(checkData, (string)));
 
         upkeepNeeded = validateUpkeep();
-
-        if (upkeepNeeded) {
-            performData = abi.encodePacked("Performing upkeep");
-        }
+        performData = abi.encodePacked("Performing upkeep");
     }
 
     /**
