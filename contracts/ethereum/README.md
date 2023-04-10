@@ -38,7 +38,7 @@ graph LR
         E2 --> F24(SSV Operator 8)
     end
 
-    G --> B
+    H --> G
     H --> B
     
     subgraph Chainlink
