@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
-import { SSVManager } from '@casimir/ethereum/build/artifacts/types'
-import { abi } from '@casimir/ethereum/build/artifacts/src/SSVManager.sol/SSVManager.json'
+import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
+import { abi } from '@casimir/ethereum/build/artifacts/src/CasimirManager.sol/CasimirManager.json'
 import useEnvironment from './environment'
 import useUsers from './users'
 import useEthers from './ethers'
@@ -10,8 +10,8 @@ import useWalletConnect from './walletConnect'
 import { Account, Pool, ProviderString } from '@casimir/types'
 import { ReadyOrStakeString } from '../interfaces'
 
-/** SSV Manager contract */
-let ssvManager: SSVManager
+/** Manager contract */
+let casimirManager: CasimirManager
 
 export default function useSSV() {
     const { ethereumURL } = useEnvironment()
@@ -20,8 +20,8 @@ export default function useSSV() {
     const { getEthersTrezorSigner } = useTrezor()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
 
-    if (!ssvManager) {
-        ssvManager = (() => {
+    if (!casimirManager) {
+        casimirManager = (() => {
             const address = import.meta.env.PUBLIC_SSV_MANAGER
             if (!address) console.log(
                 `
@@ -30,7 +30,7 @@ export default function useSSV() {
                 If you are on the local network, check your terminal logs for a contract address or errors.
                 `
             )
-            return new ethers.Contract(address, abi) as SSVManager
+            return new ethers.Contract(address, abi) as CasimirManager
         })()
     }
 
@@ -45,20 +45,20 @@ export default function useSSV() {
         const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
         let signer = signerCreator(walletProvider)
         if (isWalletConnectSigner(signer)) signer = await signer
-        const ssvManagerSigner = ssvManager.connect(signer as ethers.Signer)
-        const fees = await ssvManagerSigner.getFees()
+        const casimirManagerSigner = casimirManager.connect(signer as ethers.Signer)
+        const fees = await casimirManagerSigner.getFees()
         const { LINK, SSV } = fees
         const feesTotalPercent = LINK + SSV
         const depositAmount = parseFloat(amount) * ((100 + feesTotalPercent) / 100)
         const value = ethers.utils.parseEther(depositAmount.toString())
-        const result = await ssvManagerSigner.deposit({ value, type: 0 })
+        const result = await casimirManagerSigner.deposit({ value, type: 0 })
         return await result.wait()
     }
 
     async function getDepositFees() {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-        const ssvManagerProvider = ssvManager.connect(provider)
-        const fees = await ssvManagerProvider.getFees()
+        const casimirManagerProvider = casimirManager.connect(provider)
+        const fees = await casimirManagerProvider.getFees()
         const { LINK, SSV } = fees
         const feesTotalPercent = LINK + SSV
         const feesRounded = Math.round(feesTotalPercent * 100) / 100
@@ -68,18 +68,18 @@ export default function useSSV() {
     async function getPools(address: string, readyOrStake: ReadyOrStakeString): Promise<Pool[]> {
         const { user } = useUsers()
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-        const ssvManagerProvider = ssvManager.connect(provider)
+        const casimirManagerProvider = casimirManager.connect(provider)
         
-        const userStake = await ssvManagerProvider.getUserStake(address) // to get user's stake balance
-        const poolStake = await ssvManagerProvider.getStake() // to get total stake balance
-        const poolIds = readyOrStake === 'ready' ? await ssvManagerProvider.getReadyPoolIds() : await ssvManagerProvider.getStakedPoolIds() // to get ready (open) pool IDs OR to get staked (active) pool IDs
+        const userStake = await casimirManagerProvider.getUserStake(address) // to get user's stake balance
+        const poolStake = await casimirManagerProvider.getStake() // to get total stake balance
+        const poolIds = readyOrStake === 'ready' ? await casimirManagerProvider.getReadyPoolIds() : await casimirManagerProvider.getStakedPoolIds() // to get ready (open) pool IDs OR to get staked (active) pool IDs
 
         console.log('userStake :>> ', ethers.utils.formatEther(userStake))
         console.log('poolStake :>> ', ethers.utils.formatEther(poolStake))
         console.log('poolIds :>> ', poolIds)
 
         return await Promise.all(poolIds.map(async (poolId: number) => {
-            const { deposits, operatorIds, validatorPublicKey } = await ssvManagerProvider.getPool(poolId)
+            const { deposits, operatorIds, validatorPublicKey } = await casimirManagerProvider.getPool(poolId)
             
             // TODO: Decide when/how to get rewards/userRewards
             let pool: Pool = {
@@ -147,11 +147,11 @@ export default function useSSV() {
         const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
         let signer = signerCreator(walletProvider)
         if (isWalletConnectSigner(signer)) signer = await signer
-        const ssvManagerSigner = ssvManager.connect(signer as ethers.Signer)
+        const casimirManagerSigner = casimirManager.connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
-        const result = await ssvManagerSigner.withdraw(value)
+        const result = await casimirManagerSigner.withdraw(value)
         return await result.wait()
     }
 
-    return { ssvManager, deposit, getDepositFees, getPools, withdraw }
+    return { casimirManager, deposit, getDepositFees, getPools, withdraw }
 }

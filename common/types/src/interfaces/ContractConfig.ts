@@ -1,7 +1,7 @@
 export interface ContractConfig {
     address: string | undefined
     args: {
-        [key: string]: string | boolean | undefined
+        [key: string]: boolean | number | string | undefined
     },
     options: {
         initializer?: boolean
