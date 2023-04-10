@@ -149,12 +149,65 @@ onMounted(async ()=>{
     >
       <div class="h-full w-full">
         <div
-          class="w-full h-full px-20 py-10 flex flex-col justify-between gap-20"
+          class="w-full h-full p-10 flex flex-col justify-between gap-20"
         >
           <div class="flex justify-between items-center w-full pt-10 mb-20">
             <span class="text-caption font-bold text-black">
               Stake ETH to SSV Validators
             </span>
+          </div>
+          <div 
+            class="h-75 relative text-grey_5 bg-[#edeff3] pl-15 rounded-[5px]"
+          >
+            <div class="flex items-center h-full">
+              <span class="text-body font-bold">
+                From
+              </span>
+            </div>
+            <button 
+              id="select_wallet_button"
+              class="text-body font-bold h-full bg-grey_2 text-grey_5 rounded-r-[5px] hover:bg-grey_3 hover:text-grey_1
+          hover:w-full absolute top-0 right-0 hover:rounded-l-[5px]"
+              style="transition: width .5s ease;"
+              :class="selectedWallet === null? 'w-1/2' : 'w-full rounded-l-[5px]'"
+              @click="openSelectWalletTab = true"
+            >
+              <div 
+                v-if="selectedWallet === null"
+                id="select_wallet_button_no_wallet"
+              >
+                Select Wallet
+              </div>
+              <div
+                v-else 
+                id="select_wallet_button_wallet"
+                class="flex justify-between items-center px-15"
+              >
+                <img
+                  id="selected_wallet_button_content_wallet_providor"
+                  :src="`/${selectedWallet.walletProvider.toLocaleUpperCase()}.svg`"
+                  :alt="`${selectedWallet.walletProvider} Logo`"
+                  class="w-50 h-50 rounded-[100%]"
+                >
+                <div
+                  id="selected_wallet_button_content" 
+                  class="w-4/6 truncate h-50 flex flex-col justify-between items-end py-5"
+                >
+                  <span 
+                    id="selected_wallet_button_content_max_amount"
+                    class="text-body font-bold pr-2"
+                  >
+                    {{ convertToWholeUnits(selectedWallet.currency, Number(selectedWallet.balance)) }} {{ selectedWallet.currency }}
+                  </span>
+                  <span
+                    id="selected_wallet_button_content_address"
+                    class="text-body w-full truncate"
+                  >
+                    {{ selectedWallet.address }}
+                  </span>
+                </div>
+              </div>
+            </button>
           </div>
           <div class="flex justify-between items-center gap-10 h-75">
             <div 
@@ -211,59 +264,7 @@ onMounted(async ()=>{
               </span>
             </button>
           </div>
-          <div 
-            class="h-75 relative text-grey_5 bg-[#edeff3] pl-15 rounded-[5px]"
-          >
-            <div class="flex items-center h-full">
-              <span class="text-body font-bold">
-                From
-              </span>
-            </div>
-            <button 
-              id="select_wallet_button"
-              class="text-body font-bold h-full bg-grey_2 text-grey_5 rounded-r-[5px] hover:bg-grey_3 hover:text-grey_1
-          hover:w-full absolute top-0 right-0 hover:rounded-l-[5px]"
-              style="transition: width .5s ease;"
-              :class="selectedWallet === null? 'w-1/2' : 'w-full rounded-l-[5px]'"
-              @click="openSelectWalletTab = true"
-            >
-              <div 
-                v-if="selectedWallet === null"
-                id="select_wallet_button_no_wallet"
-              >
-                Select Wallet
-              </div>
-              <div
-                v-else 
-                id="select_wallet_button_wallet"
-                class="flex justify-between items-center px-15"
-              >
-                <img
-                  id="selected_wallet_button_content_wallet_providor"
-                  :src="`/${selectedWallet.walletProvider.toLocaleUpperCase()}.svg`"
-                  :alt="`${selectedWallet.walletProvider} Logo`"
-                  class="w-50 h-50 rounded-[100%]"
-                >
-                <div
-                  id="selected_wallet_button_content" 
-                  class="w-4/6 truncate h-50 flex flex-col justify-between items-end py-5"
-                >
-                  <span 
-                    id="selected_wallet_button_content_max_amount"
-                    class="text-body font-bold pr-2"
-                  >
-                    {{ convertToWholeUnits(selectedWallet.currency, Number(selectedWallet.balance)) }} {{ selectedWallet.currency }}
-                  </span>
-                  <span
-                    id="selected_wallet_button_content_address"
-                    class="text-body w-full truncate"
-                  >
-                    {{ selectedWallet.address }}
-                  </span>
-                </div>
-              </div>
-            </button>
-          </div>
+          
           <div class="h-75 flex justify-end items-end">
             <div
               id="stake_button_container" 
