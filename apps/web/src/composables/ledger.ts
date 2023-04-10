@@ -1,8 +1,12 @@
 import { BitcoinLedgerSigner, EthersLedgerSigner } from '@casimir/wallets'
 import { ethers } from 'ethers'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
+import { Currency, ProviderString } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
+import useAuth from '@/composables/auth'
+
+const { getMessage, login } = useAuth()
 
 export default function useLedger() {
   const { ethereumURL, ledgerType, speculosURL } = useEnvironment()
@@ -33,6 +37,25 @@ export default function useLedger() {
   async function getEthersLedgerAddress() {
     const signer = getEthersLedgerSigner()
     return await signer.getAddress()
+  }
+
+  async function loginWithLedger(provider: ProviderString, address: string, currency: Currency) {
+    try {
+      const { message } = await (await getMessage(provider, address)).json()
+      const signer = getEthersLedgerSigner()
+      const signature = await signer.signMessage(message)
+      const loginResponse = await login({ 
+        provider, 
+        address, 
+        message: message.toString(), 
+        signedMessage: signature,
+        currency
+      })
+      return await loginResponse.json()
+    } catch (err) {
+      console.log('Error logging in: ', err)
+      return err
+    }
   }
 
   async function sendLedgerTransaction({ from, to, value, currency }: TransactionInit) {
@@ -73,11 +96,12 @@ export default function useLedger() {
   }
 
   return {
+    getBitcoinLedgerAddress,
+    getBitcoinLedgerSigner,
+    getEthersLedgerAddress,
+    getEthersLedgerSigner,
+    loginWithLedger,
     signLedgerMessage,
     sendLedgerTransaction,
-    getBitcoinLedgerAddress,
-    getEthersLedgerAddress,
-    getBitcoinLedgerSigner,
-    getEthersLedgerSigner,
   }
 }

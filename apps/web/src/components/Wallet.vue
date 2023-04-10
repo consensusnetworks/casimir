@@ -67,6 +67,9 @@
       <button @click="deposit({ amount: amountToStake, walletProvider: selectedProvider })">
         Steak
       </button>
+      <button @click="withdraw({ amount: amountToStake, walletProvider: selectedProvider })">
+        Withdraw
+      </button>
     </div>
     <div class="connect-wallet-container">
       <div class="metamask-div">
@@ -219,7 +222,7 @@ const {
   switchNetwork
 } = useWallet()
 
-const { deposit, getPools } = useSSV()
+const { deposit, getPools, withdraw } = useSSV()
 
 onMounted(async () => {
   const user = await checkUserSessionExists()
