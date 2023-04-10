@@ -3,23 +3,43 @@ pragma solidity ^0.8.7;
 
 import "./interfaces/ICasimirAutomation.sol";
 import "./interfaces/ICasimirManager.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "hardhat/console.sol";
 
 /**
  * @title Oracle contract that reports balances and triggers manager actions 
  */
 contract CasimirAutomation is ICasimirAutomation {
+
+    /********************/
+    /* Global Variables */
+    /********************/
+
     /* Total stake */
     uint256 private stake;
     /* Manager contract */
     ICasimirManager private immutable casimirManager;
+    /** Chainlink feed contract */
+    AggregatorV3Interface private immutable linkFeed;
 
-    constructor(address casimirManagerAddress) {
+    /**
+     * Constructor
+     * @param casimirManagerAddress The manager contract address
+     * @param linkFeedAddress The chainlink feed contract address
+     */
+    constructor(address casimirManagerAddress, address linkFeedAddress) {
         casimirManager = ICasimirManager(casimirManagerAddress);
+        linkFeed = AggregatorV3Interface(linkFeedAddress);
     }
 
+    /**
+     * @notice Check if the upkeep is needed
+     * @param checkData The data to check the upkeep
+     * @return upkeepNeeded True if the upkeep is needed
+     * @return performData The data to perform the upkeep
+     */
     function checkUpkeep(
-        bytes calldata /* checkData */
+        bytes calldata checkData
     )
         external
         view
@@ -33,9 +53,13 @@ contract CasimirAutomation is ICasimirAutomation {
         }
     }
 
+    /**
+     * @notice Perform the upkeep
+     * @param performData The data to perform the upkeep
+     */
     function performUpkeep(bytes calldata performData) external override {
 
-        console.log("Performing upkeep", performData.length);
+        console.log(abi.decode(performData, (string)));
 
         /** Revalidate the upkeep */
         if (validateUpkeep()) {
@@ -45,6 +69,10 @@ contract CasimirAutomation is ICasimirAutomation {
         }
     }
 
+    /**
+     * @notice Validate if the upkeep is needed
+     * @return upkeepNeeded True if the upkeep is needed
+     */
     function validateUpkeep() public view returns (bool upkeepNeeded) {
         bool stakeChanged = stake != casimirManager.getStake();
         console.log(
@@ -53,6 +81,21 @@ contract CasimirAutomation is ICasimirAutomation {
             casimirManager.getStake()
         );
         upkeepNeeded = stakeChanged;
+    }
+
+    /**
+     * @notice Get the latest total manager stake on beacon reported from chainlink PoR feed
+     * @return The latest total manager stake on beacon
+     */
+    function getBeaconStake() public view returns (int256) {
+        (
+            /*uint80 roundID*/,
+            int256 answer,
+            /*uint startedAt*/,
+            /*uint timeStamp*/,
+            /*uint80 answeredInRound*/
+        ) = linkFeed.latestRoundData();
+        return answer;
     }
 
     function getPoRAddressListLength()

@@ -7,7 +7,6 @@ import "./interfaces/IDepositContract.sol";
 import "./interfaces/ISSVNetwork.sol";
 import "./interfaces/ISSVToken.sol";
 import "./interfaces/IWETH9.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -95,8 +94,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     bytes[] private stakedValidatorPublicKeys;
     /** Public keys of ready validators */
     bytes[] private readyValidatorPublicKeys;
-    /** Chainlink feed contract */
-    AggregatorV3Interface private immutable linkFeed;
     /** LINK ERC-20 token contract */
     IERC20 private immutable linkToken;
 
@@ -122,7 +119,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         address wethTokenAddress
     ) {
         beaconDeposit = IDepositContract(beaconDepositAddress);
-        linkFeed = AggregatorV3Interface(linkFeedAddress);
         linkToken = IERC20(linkTokenAddress);
         tokens[Token.LINK] = linkTokenAddress;
         ssvNetwork = ISSVNetwork(ssvNetworkAddress);
@@ -132,7 +128,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         swapRouter = ISwapRouter(swapRouterAddress);
         tokens[Token.WETH] = wethTokenAddress;
 
-        casimirAutomation = new CasimirAutomation(address(this));
+        casimirAutomation = new CasimirAutomation(address(this), linkFeedAddress);
     }
 
     /**
@@ -579,21 +575,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getPool(uint32 poolId) external view returns (Pool memory) {
         return pools[poolId];
-    }
-
-    /**
-     * @notice Get the latest total manager stake on beacon reported from chainlink PoR feed
-     * @return The latest total manager stake on beacon
-     */
-    function getBeaconStake() public view returns (int256) {
-        (
-            /*uint80 roundID*/,
-            int256 stake,
-            /*uint startedAt*/,
-            /*uint timeStamp*/,
-            /*uint80 answeredInRound*/
-        ) = linkFeed.latestRoundData();
-        return stake;
     }
 
     /**
