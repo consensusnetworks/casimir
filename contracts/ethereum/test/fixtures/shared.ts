@@ -43,6 +43,12 @@ export async function deploymentFixture() {
                 options: {},
                 proxy: false
             },
+            MockKeeperRegistry: {
+                address: '',
+                args: {},
+                options: {},
+                proxy: false
+            },
             ...config
         }
     }
@@ -83,10 +89,6 @@ export async function deploymentFixture() {
 export async function addValidatorsFixture() {
     const { casimirManager, casimirAutomation, mockAggregator, owner, distributor } = await loadFixture(deploymentFixture)
 
-    if (mockAggregator) {
-        console.log('MockAggregator address', mockAggregator.address)
-    }
-
     const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
     for (const validator of validators) {
         const {
@@ -109,12 +111,12 @@ export async function addValidatorsFixture() {
         )
         await registration.wait()
     }
-    return { casimirManager, casimirAutomation, owner, distributor, validators }
+    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, validators }
 }
 
 /** Fixture to stake 16 ETH for the first user */
 export async function firstUserDepositFixture() {
-    const { casimirManager, casimirAutomation, owner, distributor } = await loadFixture(addValidatorsFixture)
+    const { casimirManager, casimirAutomation, mockAggregator, owner, distributor } = await loadFixture(addValidatorsFixture)
     const [, firstUser] = await ethers.getSigners()
     const stakeAmount = 16.0
     const fees = { ...await casimirManager.getFees() }
@@ -137,12 +139,12 @@ export async function firstUserDepositFixture() {
         await performUpkeep.wait()
     }
 
-    return { casimirManager, casimirAutomation, owner, distributor, firstUser}
+    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser}
 }
 
 /** Fixture to stake 24 ETH for the second user */
 export async function secondUserDepositFixture() {
-    const { casimirManager, casimirAutomation, owner, distributor, firstUser } = await loadFixture(firstUserDepositFixture)
+    const { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser } = await loadFixture(firstUserDepositFixture)
     const [, , secondUser] = await ethers.getSigners()
     const stakeAmount = 24.0
     const fees = { ...await casimirManager.getFees() }
@@ -151,24 +153,24 @@ export async function secondUserDepositFixture() {
     const value = ethers.utils.parseEther(depositAmount.toString())
     const deposit = await casimirManager.connect(secondUser).deposit({ value })
     await deposit.wait()
-    return { casimirManager, casimirAutomation, owner, distributor, firstUser, secondUser }
+    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser }
 }
 
 /** Fixture to reward ${rewardPerValidator} * ${stakedValidatorCount} to the first and second user */
 export async function rewardPostSecondUserDepositFixture() {
-    const { casimirManager, casimirAutomation, owner, distributor, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
+    const { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
     const stakedValidatorCount = (await casimirManager?.getStakedValidatorPublicKeys())?.length
     if (stakedValidatorCount) {
         const rewardAmount = (rewardPerValidator * stakedValidatorCount).toString()
         const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
         await reward.wait()
     }
-    return { casimirManager, casimirAutomation, owner, distributor, firstUser, secondUser }
+    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser }
 }
 
 /** Fixture to stake 24 ETH for the third user */
 export async function thirdUserDepositFixture() {
-    const { casimirManager, casimirAutomation, owner, distributor, firstUser, secondUser } = await loadFixture(rewardPostSecondUserDepositFixture)
+    const { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser } = await loadFixture(rewardPostSecondUserDepositFixture)
     const [, , , thirdUser] = await ethers.getSigners()
     const stakeAmount = 24.0
     const fees = { ...await casimirManager.getFees() }
@@ -177,33 +179,33 @@ export async function thirdUserDepositFixture() {
     const value = ethers.utils.parseEther(depositAmount.toString())
     const deposit = await casimirManager.connect(thirdUser).deposit({ value })
     await deposit.wait()
-    return { casimirManager, casimirAutomation, owner, distributor, firstUser, secondUser, thirdUser }
+    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser, thirdUser }
 }
 
 /** Fixture to reward ${rewardPerValidator} * ${stakedValidatorCount} to the first, second, and third user */
 export async function rewardPostThirdUserDepositFixture() {
-    const { casimirManager, casimirAutomation, distributor, firstUser, secondUser, thirdUser } = await loadFixture(thirdUserDepositFixture)
+    const { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser } = await loadFixture(thirdUserDepositFixture)
     const stakedValidatorCount = (await casimirManager?.getStakedValidatorPublicKeys())?.length
     if (stakedValidatorCount) {
         const rewardAmount = (rewardPerValidator * stakedValidatorCount).toString()
         const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
         await reward.wait()
     }
-    return { casimirManager, casimirAutomation, distributor, firstUser, secondUser, thirdUser }
+    return { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser }
 }
 
 /** Fixture to withdraw ${readyDeposits} amount to fulfill ${firstUser} partial withdrawal */
 export async function firstUserPartialWithdrawalFixture() {
-    const { casimirManager, casimirAutomation, distributor, firstUser, secondUser, thirdUser } = await loadFixture(rewardPostThirdUserDepositFixture)
+    const { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser } = await loadFixture(rewardPostThirdUserDepositFixture)
     const readyDeposits = await casimirManager?.getReadyDeposits()
     const withdrawal = await casimirManager.connect(firstUser).withdraw(readyDeposits)
     await withdrawal.wait()
-    return { casimirManager, casimirAutomation, distributor, firstUser, secondUser, thirdUser }
+    return { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser }
 }
 
 /** Fixture to simulate stakes and rewards */
 export async function simulationFixture() {
-    const { casimirManager, casimirAutomation, distributor, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
+    const { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
     for (let i = 0; i < 5; i++) {
         const stakedValidatorCount = (await casimirManager?.getStakedValidatorPublicKeys())?.length
         if (stakedValidatorCount) {
@@ -212,5 +214,5 @@ export async function simulationFixture() {
             await reward.wait()
         }
     }
-    return { casimirManager, casimirAutomation, distributor, firstUser, secondUser, thirdUser }
+    return { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser }
 }
