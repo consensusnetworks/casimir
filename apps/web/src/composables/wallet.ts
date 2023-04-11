@@ -36,7 +36,7 @@ const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 export default function useWallet() {
   const { ethersProviderList, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
-  const { getBitcoinLedgerAddress, getEthersLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { getBitcoinLedgerAddress, getEthersLedgerAddress, getLedgerBalance, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { getWalletConnectAddress, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
   const { user, getUser, setUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
@@ -125,6 +125,7 @@ export default function useWallet() {
         }
       }
       console.log('user.value after connecting wallet :>> ', user.value)
+      // await setUserAccountBalances()
       return user.value
     } catch (error) {
       console.error('There was an error in connectWallet :>> ', error)
@@ -177,6 +178,37 @@ export default function useWallet() {
       return trimAndLowercaseAddress(address) as string
     } catch (error) {
       console.error(error)
+    }
+  }
+
+  async function getAccountBalance(account: Account) {
+    // TODO: Refactor to ethers to use our own api endpoint (find where api endpoint is configured for this?)
+    if (ethersProviderList.includes(account.walletProvider)){
+      const balance = await getEthersBalance(account.walletProvider, account.address)
+      console.log('MetaMask / CoinbaseWallet balance :>> ', balance)
+      return balance
+    } else if (account.walletProvider === 'Ledger') {
+      const balance = await getLedgerBalance(selectedAddress.value)
+      console.log('Ledger balance :>> ', balance)
+      return balance
+    } else {
+      console.error('No provider selected')
+    }
+  }
+
+  async function setUserAccountBalances() {
+    if (user?.value?.accounts) {
+      const accounts = user.value.accounts
+      const accountsWithBalances = await Promise.all(accounts.map(async (account: Account) => {
+        const balance = await getAccountBalance(account)
+        return {
+          ...account,
+          balance
+        }
+      }))
+      user.value.accounts = accountsWithBalances
+      setUser(user.value)
+      console.log('user.value :>> ', user.value)
     }
   }
 

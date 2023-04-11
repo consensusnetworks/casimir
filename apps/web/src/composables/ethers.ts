@@ -25,21 +25,11 @@ export default function useEthers() {
     }
   }
 
-  // TODO: Identify the difference beteween the two functions below (requestEthersBalance and getEthersBalance)
-  async function requestEthersBalance(provider: EthersProvider, address: string) {
-    if (provider?.request) {
-      return await provider.request({
-        method: 'eth_getBalance',
-        params: [address, 'latest'],
-      })
-    }
-  }
-
   async function getEthersBalance(providerString: ProviderString, address: string, ) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = availableProviders.value[providerString as keyof BrowserProviders] as ethers.providers.Provider
     if (provider) {
-      const balance = await requestEthersBalance(provider as EthersProvider, address)
-      console.log('balance :>> ', balance)
+      const ethersProvider = new ethers.providers.Web3Provider(provider as EthersProvider)
+      const balance = await ethersProvider.getBalance(address)
       return ethers.utils.formatEther(balance)
     }
   }
