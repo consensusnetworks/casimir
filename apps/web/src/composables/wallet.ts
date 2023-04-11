@@ -182,17 +182,12 @@ export default function useWallet() {
   }
 
   async function getAccountBalance(account: Account) {
-    // TODO: Refactor to ethers to use our own api endpoint (find where api endpoint is configured for this?)
-    if (ethersProviderList.includes(account.walletProvider)){
-      const balance = await getEthersBalance(account.walletProvider, account.address)
-      console.log('MetaMask / CoinbaseWallet balance :>> ', balance)
+    // TODO: Find where api endpoint is configured for ethers.
+    try {
+      const balance = await getEthersBalance(account.address)
       return balance
-    } else if (account.walletProvider === 'Ledger') {
-      const balance = await getLedgerBalance(selectedAddress.value)
-      console.log('Ledger balance :>> ', balance)
-      return balance
-    } else {
-      console.error('No provider selected')
+    } catch (err) {
+      console.error('There was an error in getAccountBalance :>> ', err)
     }
   }
 
@@ -398,6 +393,7 @@ export default function useWallet() {
     getUserBalance,
     removeConnectedAccount,
     sendTransaction,
+    setUserAccountBalances,
     setPrimaryWalletAccount,
     signMessage,
     switchNetwork

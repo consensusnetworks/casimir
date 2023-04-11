@@ -40,15 +40,6 @@ export default function useLedger() {
     return await signer.getAddress()
   }
 
-  async function getLedgerBalance(address: string) {
-    const signer = getEthersLedgerSigner()
-    // const provider = signer.provider as ethers.providers.Provider
-    // const balance = await provider.getBalance(address)
-    const ethersProvider = new ethers.providers.Web3Provider(signer as EthersProvider)
-    const balance = await ethersProvider.getBalance(address)
-    return ethers.utils.formatEther(balance)
-  }
-
   async function loginWithLedger(provider: ProviderString, address: string, currency: Currency) {
     try {
       const { message } = await (await getMessage(provider, address)).json()
@@ -110,7 +101,6 @@ export default function useLedger() {
     getBitcoinLedgerSigner,
     getEthersLedgerAddress,
     getEthersLedgerSigner,
-    getLedgerBalance,
     loginWithLedger,
     signLedgerMessage,
     sendLedgerTransaction,
