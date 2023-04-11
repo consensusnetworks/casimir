@@ -133,6 +133,8 @@ const handleCancel = () => {
 onMounted(async ()=>{
   app.value = document.getElementById('app')
   fees.value = await getFees()
+
+  console.log('User', user.value)
 })
 </script>
 
@@ -329,11 +331,12 @@ onMounted(async ()=>{
               class="bg-grey_2 h-2 w-full"
             />
             <div 
+              v-if="user"
               id="select_wallet_item"
               class="h-full overflow-auto pr-5"
             >
               <button
-                v-for="act in user?.accounts"
+                v-for="act in user.accounts"
                 id="select_wallet_item"
                 :key="act.address"
                 class="w-full border border-border rounded-[5px] 

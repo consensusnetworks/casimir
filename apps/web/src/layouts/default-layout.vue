@@ -16,6 +16,7 @@ const walletContainerHeight = ref('0px')
 
 const userPrimaryAccount = ref(null as any)
 onMounted(()=>{
+
   const tab_el = document.getElementById('wallet_providers_container')
 
   const outputsize = () => {
@@ -23,7 +24,12 @@ onMounted(()=>{
       walletContainerHeight.value = (tab_el.offsetHeight + 90)  + 'px'
     }
   }
-  outputsize()
+
+  setTimeout(() => {
+    outputsize()
+  }, 100)
+
+  
   if(tab_el){
     new ResizeObserver(outputsize).observe(tab_el)   
   }
@@ -97,7 +103,7 @@ onMounted(()=>{
             v-show="openWalletConnect"
             class="absolute top-[100% - 1px] right-[-1px] w-[200px] border-x border-b text-grey_3 border-border rounded-b-[5px]
             hover:border-grey_4 bg-white expand_height z-[10]"
-            :style="`height: ${walletContainerHeight};`"
+            :style="`height: 400px;`"
           >
             <div 
               class="w-full h-full flex flex-col justify-between pt-10"

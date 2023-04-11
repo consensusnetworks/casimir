@@ -34,8 +34,9 @@ const router = createRouter({
 // dynamically fixes rerouting to auth page
 
 router.beforeEach((to, from, next) => {
-    const { checkUserSessionExists } = useUsers()
+    const { checkUserSessionExists, user } = useUsers()
     const loggedIn = checkUserSessionExists()
+    console.log('user in router', user.value)
     if (to.name !== 'Auth' && !loggedIn) next({ name: 'Auth' })
     else next()
 })
