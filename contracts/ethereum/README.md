@@ -1,10 +1,14 @@
 # @casimir/ethereum
 
-Solidity contracts for decentralized applications
+Solidity contracts for decentralized staking on Ethereum
 
-## SSV
+## Overview
 
-Casimir receives user deposits with a manager contract, which distributes funds to Ethereum validators operated by SSV operators via the Beacon deposit and SSV contracts. A PoR oracle publishes Beacon balance updates, and an automation oracle responds to on-and-off-chain events. Chainlink nodes run both oracles distributedly. Below is a high-level diagram of the Casimir SSV staking architecture.
+Casimir distributes user deposits to Ethereum validators operated by SSV. Validator keys are shared with zero-coordination distributed key generation. Chainlink nodes report from the Beacon chain and SSV to sync rewards, manage slashing, and automate validator creation and exiting.
+
+### Architecture
+
+Todo add some general notes. Below is a high-level diagram of the Casimir staking architecture.
 
 ```mermaid
 graph LR
@@ -58,44 +62,34 @@ graph LR
     I3 --> H
     I4 --> H
 ```
+### Contracts
 
-The Casimir SSV contracts are located in the [src](./src) directory.
+Todo add some general notes. Below is a table of the core Casimir contracts.
 
 | Contract | Description | Docs |
 | --- | --- | --- |
-| [CasimirManager](./src/CasimirManager.sol) | Manages Casimir SSV stake distribution | [docs/index.md#casimirmanager](./docs/index.md#casimirmanager) |
-| [CasimirAutomation](./src/CasimirAutomation.sol) | Automates Casimir SSV event handling | [docs/index.md#casimirautomation](./docs/index.md#casimirautomation) |
+| [CasimirManager](./src/CasimirManager.sol) | Manages stake distribution | [docs/index.md#casimirmanager](./docs/index.md#casimirmanager) |
+| [CasimirAutomation](./src/CasimirAutomation.sol) | Automates event handling | [docs/index.md#casimirautomation](./docs/index.md#casimirautomation) |
 
-> 🚩 The Casimir SSV contracts are configured with a Hardhat development environment in the [hardhat.config.ts](./hardhat.config.ts) file.
-
-### Compounding
-
-The approach to user stake compounding rewards in the manager contract involves adjusting the user's stake based on the change in the distribution sum since their last interaction with the contract. The distribution sum represents the cumulative sum of reward-to-stake ratios at each reward distribution event. By tracking this sum, the contract can calculate the user's proportion of earned rewards relative to their initial stake and update their stake accordingly.
-
-**Stake Calculation:**
-
-1. Whenever a user deposits or updates their stake, their initial stake and the current distribution sum are recorded.
-2. When rewards are distributed, the distribution sum is updated to include the new reward-to-stake ratio.
-3. $userStake =userStake_0\times{\frac{distributionSum}{userDistributionSum_0}}$ calculates a user's current compounded stake at any time.
-
-*Where:*
-
-- $userStake$ is the calculated current stake of the user, including compounded rewards. This is [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
-- $userStake_0$ is the initial stake of the user at the time of their last deposit or stake update. This is also [**`users[userAddress].stake`**](./docs/index.md#user) in the contract, but it is accessed before settling the user's current stake.
-- $distributionSum$ is the current cumulative sum of reward-to-stake ratios in the contract. This is [**`distributionSum`**](./docs/index.md#distributionsum) in the contract.
-- $userDistributionSum_0$ is the cumulative sum of reward-to-stake ratios at the time the user made their last deposit or update to their stake. This is [**`users[userAddress].distributionSum0`**](./docs/index.md#user) in the contract.
-
-This approach ensures that users receive rewards proportional to their staked amount and that these rewards are compounded over time as new rewards are distributed.
+> 🚩 The Casimir contracts are located in the [src](./src) directory. They are configured with a Hardhat development environment in the [hardhat.config.ts](./hardhat.config.ts) file.
 
 ### Distributed Key Generation
 
-The manager contract bootstraps validators for Casimir SSV by trustlessly distributing key shares to operators using the [rockx-dkg-cli](https://github.com/RockX-SG/rockx-dkg-cli). The Casimir SSV key generation server is distributed by Chainlink nodes, which respond to requests from the contract.
+Casimir trustlessly distributes validator key shares to operators using the [rockx-dkg-cli](https://github.com/RockX-SG/rockx-dkg-cli). The DKG server is called via [Automated Chainlink Functions](https://docs.chain.link/chainlink-functions/tutorials/automate-functions/) to generate, reshare, and exit validators.
 
-### Fees
+### Oracles
 
-The contract charges a small fee for each deposit (and some amount TBD in reward distribution) to fund the contract's operations. The fee is a percentage of the total amount deposited or distributed.
+The contract loosely depends on two decentralized oracles. The first oracle provides a PoR feed aggregating the total of all Casimir validator balances on the Beacon chain. The second oracle automates checking balance changes, responds with relevant validator actions, and updates the contract (only when necessary conditions are met). See more about Chainlink PoR feeds [here](https://docs.chain.link/data-feeds/proof-of-reserve). See more about Chainlink automation upkeeps [here](https://docs.chain.link/chainlink-automation/introduction).
 
-**Fee Calculation:**
+## Users
+
+Users can deposit any amount of ETH to the manager contract. Their deposits are staked to validators run by SSV operators (see [Operators](./README.md#operators)), and their rewards are auto-compounded into their total stake.
+
+### User Fees
+
+The contract charges a small user fee for each deposit (and some amount TBD in reward distribution) to fund the contract's operations. The fee is a percentage of the amount deposited by a user or reward distibution.
+
+**User Fee Calculation:**
 
 1. $feePercent = fees_{LINK} + fees_{SSV}$
 
@@ -112,18 +106,47 @@ The contract charges a small fee for each deposit (and some amount TBD in reward
 - $ethAmount$ is the amount of ETH to be distributed into the contract.
 - $feeAmount$ is the amount of ETH to be swapped for LINK and SSV to operate the contract.
 
-### Operators
+### User Stake
 
-SSV operators are responsible for running validators for Casimir SSV. Operators can be added to the contract by any user with a small deposit of ETH for slashing collateral (amount TBD, see [Fees](./README.md#fees)). Operators are selected by a formula that emphasizes decentralization (TBD) as new validators are required.
+The manager contract adjusts a user's stake based on the change in the total reward-to-stake distribution sum since their last interaction with the contract. Each time new rewards are distributed (after either a heartbeat interval or a threshold change is detected in the oracle), the distribution sum is updated and the new rewards are staked in an auto-compounding fashion.
 
-Operators will need to follow the [node onboarding process from RockX](https://github.com/RockX-SG/rockx-dkg-cli/blob/main/docs/dkg_node_installation_instructions.md) to participate in DKG make their node available to new validator selections. Operator performance is monitored by Chainlink nodes, which can remove operators and reshare validators if performance is poor for an extended period of time (TBD).
+**User Stake Calculation:**
+
+1. Whenever a user deposits or updates their stake, their initial stake and the current distribution sum are recorded.
+2. When rewards are distributed, the distribution sum is updated to include the new reward-to-stake ratio.
+3. $userStake =userStake_0\times{\frac{distributionSum}{userDistributionSum_0}}$ calculates a user's current compounded stake at any time.
+
+*Where:*
+
+- $userStake$ is the calculated current stake of the user, including compounded rewards. This is [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
+- $userStake_0$ is the initial stake of the user at the time of their last deposit or stake update. This is also [**`users[userAddress].stake`**](./docs/index.md#user) in the contract, but it is accessed before settling the user's current stake.
+- $distributionSum$ is the current cumulative sum of reward-to-stake ratios in the contract. This is [**`distributionSum`**](./docs/index.md#distributionsum) in the contract.
+- $userDistributionSum_0$ is the cumulative sum of reward-to-stake ratios at the time the user made their last deposit or update to their stake. This is [**`users[userAddress].distributionSum0`**](./docs/index.md#user) in the contract.
+
+### User Withdrawals
+
+Users can initiate a withdrawal of any amount of their stake at any time. **Full exits and withdrawal liquidity are still a WIP.** In the meantime, valid user withdrawals up to the to total current `readyDeposits` will be fulfilled by the contract. Note, more notes are coming soon on withdrawal liquidity, alongside an additional contract.
+
+## Operators
+
+Casimir validators are run by four registered operators, each holding a key share to sign attestations. Registration is open to any SSV operator (see [Operator Registration](./README.md#operatorregistration). Operators are selected by an algorithm that emphasizes a mix of performance and decentralization (see [Operator Selection](./README.md#operatorselection)) as user's deposit stake and new validators are required.
+
+### Operator Registration
+
+Operators can join the contract registry with a small deposit of ETH for slashing collateral (see [Operator Collateral](./README.md#operatorcollateral)) and a lightweight SSV node config add-on (see [Operator Config](./README.md#operatorconfig)).
+
+### Operator Selection
+
+Operators are chosen to run validators based on metrics fetched and derived directly from the SSV network, mainly performance, market share, and fees.
 
 Todo @elizyoung0011 - we should add your details about operator selection and performance monitoring thresholds.
 
-### Oracles
+Operator performance is reported by (Chainlink) monitoring SSV exporter attestations. If an operator's performance is poor for an extended period of time, and their slashing collateral is below a threshold, Casimir removes the operator from existing operator groups by resharing or exiting. The latter is only required in the rare case that a validator has already undergone more than two reshares to avoid leaving the full key recoverable outside of the currently selected operators.
 
-The contract uses two sufficiently decentralized Chainlink oracles. The first oracle provides a PoR feed that aggregates the total of all Casimir validator balances on the Beacon chain. The second oracle automates checking for contract and Beacon balance changes, responds with relevant validator actions, and updates the contract (only when necessary conditions are met). See more about Chainlink PoR feeds [here](https://docs.chain.link/data-feeds/proof-of-reserve). See more about Chainlink automation upkeeps [here](https://docs.chain.link/chainlink-automation/introduction).
+### Operator Collateral
 
-### Withdrawals
+Todo add notes.
 
-Users can initiate a withdrawal of any amount of their stake at any time. **Full exits and withdrawal liquidity are still a WIP.** In the meantime, valid user withdrawals up to the to total current `readyDeposits` will be fulfilled by the contract. Note, more notes are coming soon on withdrawal liquidity, alongside an additional contract.
+### Operator Config
+
+Operators will need to follow the [node onboarding process from RockX](https://github.com/RockX-SG/rockx-dkg-cli/blob/main/docs/dkg_node_installation_instructions.md) to participate in DKG make their node available to new validator selections. Todo add details.
