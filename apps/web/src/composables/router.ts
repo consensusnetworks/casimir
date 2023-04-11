@@ -1,4 +1,5 @@
 import { createWebHistory, createRouter } from 'vue-router'
+import useUsers from './users'
 
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import Dashboard from '@/pages/dashboard/Dashboard.vue'
@@ -31,5 +32,13 @@ const router = createRouter({
 
 // TO DO: Add a routing beforeEach that 
 // dynamically fixes rerouting to auth page
+
+router.beforeEach((to, from, next) => {
+    const { checkUserSessionExists, user } = useUsers()
+    const loggedIn = checkUserSessionExists()
+    console.log('user in router', user.value)
+    if (to.name !== 'Auth' && !loggedIn) next({ name: 'Auth' })
+    else next()
+})
 
 export default router
