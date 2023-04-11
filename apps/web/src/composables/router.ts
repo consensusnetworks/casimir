@@ -36,7 +36,6 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     const { checkUserSessionExists, user } = useUsers()
     const loggedIn = checkUserSessionExists()
-    console.log('user in router', user.value)
     if (to.name !== 'Auth' && !loggedIn) next({ name: 'Auth' })
     else next()
 })

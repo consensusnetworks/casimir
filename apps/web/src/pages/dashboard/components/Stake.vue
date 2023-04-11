@@ -133,8 +133,6 @@ const handleCancel = () => {
 onMounted(async ()=>{
   app.value = document.getElementById('app')
   fees.value = await getFees()
-
-  console.log('User', user.value)
 })
 </script>
 
