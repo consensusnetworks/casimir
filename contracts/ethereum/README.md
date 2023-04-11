@@ -2,7 +2,7 @@
 
 Solidity contracts for decentralized staking on Ethereum
 
-## Overview
+## 📝 Overview
 
 Casimir distributes user deposits to Ethereum validators operated by SSV. Validator keys are shared with zero-coordination distributed key generation. Chainlink nodes report from the Beacon chain and SSV to sync rewards, manage slashing, and automate validator creation and exiting.
 
@@ -81,7 +81,7 @@ Casimir trustlessly distributes validator key shares to operators using the [roc
 
 The contract loosely depends on two decentralized oracles. The first oracle provides a PoR feed aggregating the total of all Casimir validator balances on the Beacon chain. The second oracle automates checking balance changes, responds with relevant validator actions, and updates the contract (only when necessary conditions are met). See more about Chainlink PoR feeds [here](https://docs.chain.link/data-feeds/proof-of-reserve). See more about Chainlink automation upkeeps [here](https://docs.chain.link/chainlink-automation/introduction).
 
-## Users
+## 👥 Users
 
 Users can deposit any amount of ETH to the manager contract. Their deposits are staked to validators run by SSV operators (see [Operators](./README.md#operators)), and their rewards are auto-compounded into their total stake.
 
@@ -127,7 +127,7 @@ The manager contract adjusts a user's stake based on the change in the total rew
 
 Users can initiate a withdrawal of any amount of their stake at any time. **Full exits and withdrawal liquidity are still a WIP.** In the meantime, valid user withdrawals up to the to total current `readyDeposits` will be fulfilled by the contract. Note, more notes are coming soon on withdrawal liquidity, alongside an additional contract.
 
-## Operators
+## 👷 Operators
 
 Casimir validators are run by four registered operators, each holding a key share to sign attestations. Registration is open to any SSV operator (see [Operator Registration](./README.md#operatorregistration). Operators are selected by an algorithm that emphasizes a mix of performance and decentralization (see [Operator Selection](./README.md#operatorselection)) as user's deposit stake and new validators are required.
 
