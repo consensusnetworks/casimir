@@ -1,4 +1,5 @@
 import { BitcoinLedgerSigner, EthersLedgerSigner } from '@casimir/wallets'
+import { EthersProvider } from '@/interfaces/index'
 import { ethers } from 'ethers'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
 import { Currency, ProviderString } from '@casimir/types'
@@ -37,6 +38,15 @@ export default function useLedger() {
   async function getEthersLedgerAddress() {
     const signer = getEthersLedgerSigner()
     return await signer.getAddress()
+  }
+
+  async function getLedgerBalance(address: string) {
+    const signer = getEthersLedgerSigner()
+    // const provider = signer.provider as ethers.providers.Provider
+    // const balance = await provider.getBalance(address)
+    const ethersProvider = new ethers.providers.Web3Provider(signer as EthersProvider)
+    const balance = await ethersProvider.getBalance(address)
+    return ethers.utils.formatEther(balance)
   }
 
   async function loginWithLedger(provider: ProviderString, address: string, currency: Currency) {
@@ -100,6 +110,7 @@ export default function useLedger() {
     getBitcoinLedgerSigner,
     getEthersLedgerAddress,
     getEthersLedgerSigner,
+    getLedgerBalance,
     loginWithLedger,
     signLedgerMessage,
     sendLedgerTransaction,
