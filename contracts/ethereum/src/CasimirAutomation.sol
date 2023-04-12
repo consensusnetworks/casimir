@@ -8,6 +8,13 @@ import {Functions, FunctionsClient} from "./dev/FunctionsClient.sol";
 // import "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol"; // Once published
 import "hardhat/console.sol";
 
+// Todo handle:
+// - (Change ready pool to open pool and use ready for unstaked pools without a validator)
+// - Ready pool DKG triggering
+// - Balance increase from rewards and exit completion
+// - Slash reshare triggering
+// - Withdrawal or maximum reshare exit triggering
+
 /**
  * @title Oracle contract that reports balances and triggers manager actions
  */
