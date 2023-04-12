@@ -1,6 +1,7 @@
 import { Account } from './interfaces/Account'
 import { AddAccountOptions } from './interfaces/AddAccountOptions'
 import { BalanceSnapshot } from './interfaces/BalanceSnapshot'
+import { ContractArgs } from './interfaces/ContractArgs'
 import { ContractConfig } from './interfaces/ContractConfig'
 import { Currency } from './interfaces/Currency'
 import { DeploymentConfig } from './interfaces/DeploymentConfig'
@@ -19,6 +20,7 @@ export type {
     Account,
     AddAccountOptions,
     BalanceSnapshot,
+    ContractArgs,
     ContractConfig, 
     Currency,
     DeploymentConfig,

@@ -1,8 +1,8 @@
+import { ContractArgs } from './ContractArgs'
+
 export interface ContractConfig {
     address: string | undefined
-    args: {
-        [key: string]: boolean | number | string | undefined
-    },
+    args: ContractArgs,
     options: {
         initializer?: boolean
     },

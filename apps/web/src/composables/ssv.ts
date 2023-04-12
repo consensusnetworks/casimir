@@ -22,10 +22,10 @@ export default function useSSV() {
 
     if (!casimirManager) {
         casimirManager = (() => {
-            const address = import.meta.env.PUBLIC_SSV_MANAGER
+            const address = import.meta.env.PUBLIC_CASIMIR_MANAGER
             if (!address) console.log(
                 `
-                The PUBLIC_SSV_MANAGER environment variable is empty.\n
+                The PUBLIC_CASIMIR_MANAGER environment variable is empty.\n
                 If you are on mainnet or testnet, the contract does not exist yet.\n
                 If you are on the local network, check your terminal logs for a contract address or errors.
                 `
