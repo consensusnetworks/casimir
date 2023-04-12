@@ -24,6 +24,8 @@ fi
 # # Set the shared bip39 seed
 # export BIP39_SEED="$seed"
 
+export PHYSICAL_TREZOR=false
+
 resource_path=scripts/trezor/resources
 cd $resource_path/trezor-user-env
 ./run.sh

@@ -1,16 +1,14 @@
 import { deployContract } from '@casimir/hardhat'
 import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
 import { validatorStore } from '@casimir/data'
-import { CasimirManager } from '../build/artifacts/types'
+import { CasimirManager, MockAggregator } from '../build/artifacts/types'
 import { ethers } from 'hardhat'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { simulationFixture } from '../test/fixtures/shared'
 
 void async function () {
-    const simulation = process.env.SIMULATION === 'true'
     let casimirManager: CasimirManager | undefined
+    let mockAggregator: MockAggregator | undefined
     const [ , , , , distributor] = await ethers.getSigners()
-    const config: DeploymentConfig = {
+    let config: DeploymentConfig = {
         CasimirManager: {
             address: '',
             args: {
@@ -28,8 +26,29 @@ void async function () {
         }
     }
 
+    if (process.env.MOCK_EXTERNAL_CONTRACTS === 'true') {
+        config = {
+            MockAggregator: {
+                address: '',
+                args: {
+                    decimals: 18,
+                    initialAnswer: 0
+                },
+                options: {},
+                proxy: false
+            },
+            ...config
+        }
+    }
+
     for (const name in config) {
         console.log(`Deploying ${name} contract...`)
+
+        /** Link mock external contracts to Casimir */
+        if (name === 'CasimirManager') {
+            (config[name as keyof typeof config] as ContractConfig).args.linkFeedAddress = config.MockAggregator?.address
+        }
+
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
 
         const contract = await deployContract(name, proxy, args, options)
@@ -43,6 +62,9 @@ void async function () {
 
         // Save SSV manager for export
         if (name == 'CasimirManager') casimirManager = contract as CasimirManager
+
+        // Save mock aggregator for export
+        if (name == 'MockAggregator') mockAggregator = contract as MockAggregator
     }
 
     const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
@@ -66,11 +88,6 @@ void async function () {
             withdrawalCredentials
         )
         await registration?.wait()
-    }
-
-    /** Load simulation fixture */
-    if (simulation) {
-        await loadFixture(simulationFixture)
     }
 
     /** Distribute rewards every ${blocksPerReward} blocks */
