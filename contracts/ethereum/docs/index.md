@@ -1131,100 +1131,6 @@ Sends a request (encoded as data) using the provided subscriptionId
 | ---- | ---- | ----------- |
 | [0] | bytes32 | requestId A unique request identifier (unique per DON) |
 
-## MockAggregator
-
-### version
-
-```solidity
-uint256 version
-```
-
-### description
-
-```solidity
-string description
-```
-
-### decimals
-
-```solidity
-uint8 decimals
-```
-
-### latestAnswer
-
-```solidity
-int256 latestAnswer
-```
-
-### latestTimestamp
-
-```solidity
-uint256 latestTimestamp
-```
-
-### latestRound
-
-```solidity
-uint256 latestRound
-```
-
-### getAnswer
-
-```solidity
-mapping(uint256 => int256) getAnswer
-```
-
-### getTimestamp
-
-```solidity
-mapping(uint256 => uint256) getTimestamp
-```
-
-### constructor
-
-```solidity
-constructor(uint8 _decimals, int256 _initialAnswer) public
-```
-
-### updateAnswer
-
-```solidity
-function updateAnswer(int256 _answer) public
-```
-
-### updateRoundData
-
-```solidity
-function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt) public
-```
-
-### getRoundData
-
-```solidity
-function getRoundData(uint80 _roundId) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
-```
-
-### latestRoundData
-
-```solidity
-function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
-```
-
-## MockKeeperRegistry
-
-### registerUpkeep
-
-```solidity
-function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external view returns (uint256 id)
-```
-
-### getState
-
-```solidity
-function getState() external pure returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
-```
-
 ## Buffer
 
 _A library for working with mutable byte buffers in Solidity.
@@ -1623,258 +1529,98 @@ function writeKVMap(struct CBOR.CBORBuffer buf, string key) internal pure
 function writeKVArray(struct CBOR.CBORBuffer buf, string key) internal pure
 ```
 
-## ICasimirAutomation
+## MockAggregator
 
-### checkUpkeep
+### version
 
 ```solidity
-function checkUpkeep(bytes checkData) external returns (bool upkeepNeeded, bytes performData)
+uint256 version
 ```
 
-method that is simulated by the keepers to see if any work actually
-needs to be performed. This method does does not actually need to be
-executable, and since it is only ever simulated it can consume lots of gas.
-
-_To ensure that it is never called, you may want to add the
-cannotExecute modifier from KeeperBase to your implementation of this
-method._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| checkData | bytes | specified in the upkeep registration so it is always the same for a registered upkeep. This can easily be broken down into specific arguments using `abi.decode`, so multiple upkeeps can be registered on the same contract and easily differentiated by the contract. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| upkeepNeeded | bool | boolean to indicate whether the keeper should call performUpkeep or not. |
-| performData | bytes | bytes that the keeper should call performUpkeep with, if upkeep is needed. If you would like to encode data to decode later, try `abi.encode`. |
-
-### performUpkeep
+### description
 
 ```solidity
-function performUpkeep(bytes performData) external
+string description
 ```
 
-method that is actually executed by the keepers, via the registry.
-The data returned by the checkUpkeep simulation will be passed into
-this method to actually be executed.
-
-_The input to this method should not be trusted, and the caller of the
-method should not even be restricted to any single registry. Anyone should
-be able call it, and the input should be validated, there is no guarantee
-that the data passed in is the performData returned from checkUpkeep. This
-could happen due to malicious keepers, racing keepers, or simply a state
-change while the performUpkeep transaction is waiting for confirmation.
-Always validate the data passed in._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| performData | bytes | is the data which was passed back from the checkData simulation. If it is encoded, it can easily be decoded into other types by calling `abi.decode`. This data should not be trusted, and should be validated against the contract's current state. |
-
-### validateUpkeep
+### decimals
 
 ```solidity
-function validateUpkeep() external view returns (bool upkeepNeeded)
+uint8 decimals
 ```
 
-### getPoRAddressListLength
+### latestAnswer
 
 ```solidity
-function getPoRAddressListLength() external view returns (uint256)
+int256 latestAnswer
 ```
 
-Get total number of addresses in the list.
-
-### getPoRAddressList
+### latestTimestamp
 
 ```solidity
-function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
+uint256 latestTimestamp
 ```
 
-Get a batch of human-readable addresses from the address list. The requested batch size can be greater
-than the actual address list size, in which the full address list will be returned.
-
-_Due to limitations of gas usage in off-chain calls, we need to support fetching the addresses in batches.
-EVM addresses need to be converted to human-readable strings. The address strings need to be in the same format
-that would be used when querying the balance of that address._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The index of the first address in the batch. |
-| endIndex | uint256 | The index of the last address in the batch. If `endIndex > getPoRAddressListLength()-1`, endIndex need to default to `getPoRAddressListLength()-1`. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | string[] | Array of addresses as strings. |
-
-## ICasimirManager
-
-### ProcessedDeposit
+### latestRound
 
 ```solidity
-struct ProcessedDeposit {
-  uint256 ethAmount;
-  uint256 linkAmount;
-  uint256 ssvAmount;
-}
+uint256 latestRound
 ```
 
-### Fees
+### getAnswer
 
 ```solidity
-struct Fees {
-  uint32 LINK;
-  uint32 SSV;
-}
+mapping(uint256 => int256) getAnswer
 ```
 
-### Pool
+### getTimestamp
 
 ```solidity
-struct Pool {
-  uint256 deposits;
-  uint32[] operatorIds;
-  bytes validatorPublicKey;
-}
+mapping(uint256 => uint256) getTimestamp
 ```
 
-### User
+### constructor
 
 ```solidity
-struct User {
-  uint256 stake0;
-  uint256 distributionSum0;
-}
+constructor(uint8 _decimals, int256 _initialAnswer) public
 ```
 
-### Validator
+### updateAnswer
 
 ```solidity
-struct Validator {
-  bytes32 depositDataRoot;
-  uint32[] operatorIds;
-  bytes[] sharesEncrypted;
-  bytes[] sharesPublicKeys;
-  bytes signature;
-  bytes withdrawalCredentials;
-}
+function updateAnswer(int256 _answer) public
 ```
 
-### ManagerDistribution
+### updateRoundData
 
 ```solidity
-event ManagerDistribution(address sender, uint256 ethAmount, uint256 time)
+function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt) public
 ```
 
-### PoolDeposit
+### getRoundData
 
 ```solidity
-event PoolDeposit(address sender, uint32 poolId, uint256 amount, uint256 time)
+function getRoundData(uint80 _roundId) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 ```
 
-### PoolStaked
+### latestRoundData
 
 ```solidity
-event PoolStaked(uint32 poolId, bytes validatorPublicKey, uint32[] operatorIds)
+function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 ```
 
-### ValidatorAdded
+## MockKeeperRegistry
+
+### registerUpkeep
 
 ```solidity
-event ValidatorAdded(bytes publicKey, uint32[] operatorIds)
+function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external view returns (uint256 id)
 ```
 
-### ValidatorRemoved
+### getState
 
 ```solidity
-event ValidatorRemoved(bytes publicKey, uint32[] operatorIds)
-```
-
-### UserWithdrawal
-
-```solidity
-event UserWithdrawal(address sender, uint256 ethAmount, uint256 time)
-```
-
-### deposit
-
-```solidity
-function deposit() external payable
-```
-
-### withdraw
-
-```solidity
-function withdraw(uint256 amount) external
-```
-
-### getFees
-
-```solidity
-function getFees() external view returns (struct ICasimirManager.Fees)
-```
-
-### getLINKFee
-
-```solidity
-function getLINKFee() external view returns (uint32)
-```
-
-### getSSVFee
-
-```solidity
-function getSSVFee() external view returns (uint32)
-```
-
-### getStakedValidatorPublicKeys
-
-```solidity
-function getStakedValidatorPublicKeys() external view returns (bytes[])
-```
-
-### getReadyValidatorPublicKeys
-
-```solidity
-function getReadyValidatorPublicKeys() external view returns (bytes[])
-```
-
-### getReadyPoolIds
-
-```solidity
-function getReadyPoolIds() external view returns (uint32[])
-```
-
-### getStakedPoolIds
-
-```solidity
-function getStakedPoolIds() external view returns (uint32[])
-```
-
-### getStake
-
-```solidity
-function getStake() external view returns (uint256)
-```
-
-### getReadyDeposits
-
-```solidity
-function getReadyDeposits() external view returns (uint256)
-```
-
-### getUserStake
-
-```solidity
-function getUserStake(address userAddress) external view returns (uint256)
+function getState() external pure returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
 ```
 
 ## IDepositContract
@@ -2140,4 +1886,258 @@ function withdraw(uint256) external
 ```
 
 Withdraw wrapped ether to get ether
+
+## ICasimirAutomation
+
+### checkUpkeep
+
+```solidity
+function checkUpkeep(bytes checkData) external returns (bool upkeepNeeded, bytes performData)
+```
+
+method that is simulated by the keepers to see if any work actually
+needs to be performed. This method does does not actually need to be
+executable, and since it is only ever simulated it can consume lots of gas.
+
+_To ensure that it is never called, you may want to add the
+cannotExecute modifier from KeeperBase to your implementation of this
+method._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| checkData | bytes | specified in the upkeep registration so it is always the same for a registered upkeep. This can easily be broken down into specific arguments using `abi.decode`, so multiple upkeeps can be registered on the same contract and easily differentiated by the contract. |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| upkeepNeeded | bool | boolean to indicate whether the keeper should call performUpkeep or not. |
+| performData | bytes | bytes that the keeper should call performUpkeep with, if upkeep is needed. If you would like to encode data to decode later, try `abi.encode`. |
+
+### performUpkeep
+
+```solidity
+function performUpkeep(bytes performData) external
+```
+
+method that is actually executed by the keepers, via the registry.
+The data returned by the checkUpkeep simulation will be passed into
+this method to actually be executed.
+
+_The input to this method should not be trusted, and the caller of the
+method should not even be restricted to any single registry. Anyone should
+be able call it, and the input should be validated, there is no guarantee
+that the data passed in is the performData returned from checkUpkeep. This
+could happen due to malicious keepers, racing keepers, or simply a state
+change while the performUpkeep transaction is waiting for confirmation.
+Always validate the data passed in._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| performData | bytes | is the data which was passed back from the checkData simulation. If it is encoded, it can easily be decoded into other types by calling `abi.decode`. This data should not be trusted, and should be validated against the contract's current state. |
+
+### validateUpkeep
+
+```solidity
+function validateUpkeep() external view returns (bool upkeepNeeded)
+```
+
+### getPoRAddressListLength
+
+```solidity
+function getPoRAddressListLength() external view returns (uint256)
+```
+
+Get total number of addresses in the list.
+
+### getPoRAddressList
+
+```solidity
+function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
+```
+
+Get a batch of human-readable addresses from the address list. The requested batch size can be greater
+than the actual address list size, in which the full address list will be returned.
+
+_Due to limitations of gas usage in off-chain calls, we need to support fetching the addresses in batches.
+EVM addresses need to be converted to human-readable strings. The address strings need to be in the same format
+that would be used when querying the balance of that address._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The index of the first address in the batch. |
+| endIndex | uint256 | The index of the last address in the batch. If `endIndex > getPoRAddressListLength()-1`, endIndex need to default to `getPoRAddressListLength()-1`. |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string[] | Array of addresses as strings. |
+
+## ICasimirManager
+
+### ProcessedDeposit
+
+```solidity
+struct ProcessedDeposit {
+  uint256 ethAmount;
+  uint256 linkAmount;
+  uint256 ssvAmount;
+}
+```
+
+### Fees
+
+```solidity
+struct Fees {
+  uint32 LINK;
+  uint32 SSV;
+}
+```
+
+### Pool
+
+```solidity
+struct Pool {
+  uint256 deposits;
+  uint32[] operatorIds;
+  bytes validatorPublicKey;
+}
+```
+
+### User
+
+```solidity
+struct User {
+  uint256 stake0;
+  uint256 distributionSum0;
+}
+```
+
+### Validator
+
+```solidity
+struct Validator {
+  bytes32 depositDataRoot;
+  uint32[] operatorIds;
+  bytes[] sharesEncrypted;
+  bytes[] sharesPublicKeys;
+  bytes signature;
+  bytes withdrawalCredentials;
+}
+```
+
+### ManagerDistribution
+
+```solidity
+event ManagerDistribution(address sender, uint256 ethAmount, uint256 time)
+```
+
+### PoolDeposit
+
+```solidity
+event PoolDeposit(address sender, uint32 poolId, uint256 amount, uint256 time)
+```
+
+### PoolStaked
+
+```solidity
+event PoolStaked(uint32 poolId, bytes validatorPublicKey, uint32[] operatorIds)
+```
+
+### ValidatorAdded
+
+```solidity
+event ValidatorAdded(bytes publicKey, uint32[] operatorIds)
+```
+
+### ValidatorRemoved
+
+```solidity
+event ValidatorRemoved(bytes publicKey, uint32[] operatorIds)
+```
+
+### UserWithdrawal
+
+```solidity
+event UserWithdrawal(address sender, uint256 ethAmount, uint256 time)
+```
+
+### deposit
+
+```solidity
+function deposit() external payable
+```
+
+### withdraw
+
+```solidity
+function withdraw(uint256 amount) external
+```
+
+### getFees
+
+```solidity
+function getFees() external view returns (struct ICasimirManager.Fees)
+```
+
+### getLINKFee
+
+```solidity
+function getLINKFee() external view returns (uint32)
+```
+
+### getSSVFee
+
+```solidity
+function getSSVFee() external view returns (uint32)
+```
+
+### getStakedValidatorPublicKeys
+
+```solidity
+function getStakedValidatorPublicKeys() external view returns (bytes[])
+```
+
+### getReadyValidatorPublicKeys
+
+```solidity
+function getReadyValidatorPublicKeys() external view returns (bytes[])
+```
+
+### getReadyPoolIds
+
+```solidity
+function getReadyPoolIds() external view returns (uint32[])
+```
+
+### getStakedPoolIds
+
+```solidity
+function getStakedPoolIds() external view returns (uint32[])
+```
+
+### getStake
+
+```solidity
+function getStake() external view returns (uint256)
+```
+
+### getReadyDeposits
+
+```solidity
+function getReadyDeposits() external view returns (uint256)
+```
+
+### getUserStake
+
+```solidity
+function getUserStake(address userAddress) external view returns (uint256)
+```
 

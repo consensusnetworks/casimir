@@ -20,8 +20,6 @@
       </div>
     </div>
     <div>
-      <h5>Are you logged in?</h5>
-      <div>{{ loggedIn ? 'Yes!' : 'No.' }}</div>
       <h5>Primary Account:</h5>
       <div>{{ primaryAddress ? primaryAddress : 'Please log in first.' }}</div>
       <button @click="setPrimaryWalletAccount()">
@@ -185,14 +183,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { ref, watchEffect, onMounted } from 'vue'
 import useWallet from '@/composables/wallet'
 import useSSV from '@/composables/ssv'
 import useUsers from '@/composables/users'
 
 const message = ref('')
 const signedMessage = ref('')
-const { user } = useUsers()
+const { checkUserSessionExists } = useUsers()
 
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
@@ -208,7 +206,6 @@ const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
 
 const {
-  loggedIn,
   selectedProvider,
   selectedAddress,
   primaryAddress,
@@ -226,6 +223,11 @@ const {
 } = useWallet()
 
 const { deposit, getPools, withdraw } = useSSV()
+
+onMounted(async () => {
+  const user = await checkUserSessionExists()
+  console.log('user :>> ', user)
+})
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {

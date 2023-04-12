@@ -94,33 +94,43 @@ module.exports = {
             'light': 'OpenSauceOneLight',
         },
         screens: {
+            '360s': {'min': '0px', 'max': '360px'},
+            '400s': {'min': '0px', 'max': '400px'},
+            '450s': {'min': '0px', 'max': '450px'},
+            '550s': {'min': '0px', 'max': '550px'},
+            '600s': {'min': '0px', 'max': '600px'},
+            '700s': {'min': '0px', 'max': '700px'},
+            '800s': {'min': '0px', 'max': '800px'},
+            '1000s': {'min': '0px', 'max': '1000px'},
+            '1100s': {'min': '0px', 'max': '1100px'},
+            '1200s': {'min': '0px', 'max': '1200px'},
             // no screen 
-            'noscreen': {'min': '360px'},
-            'xsm': {'min': '0px', 'max': '359px'},
-            'sm': {'min': '360px', 'max': '719px'},
-            'md': {'min': '720px', 'max': '1023px'},
-            'lg': {'min': '1024px'},
+            // 'noscreen': {'min': '360px'},
+            // 'xsm': {'min': '0px', 'max': '359px'},
+            // 'sm': {'min': '360px', 'max': '719px'},
+            // 'md': {'min': '720px', 'max': '1023px'},
+            // 'lg': {'min': '1024px'},
 
             // Combine smalls
-            'csm': {'min': '0px', 'max': '719px'},
+            // 'csm': {'min': '0px', 'max': '719px'},
 
             // Combine smalls & medium
-            'csm-md': {'min': '0px', 'max': '1023px'},
+            // 'csm-md': {'min': '0px', 'max': '1023px'},
 
             // nav-bar text-container
-            'nav-mid': {'min': '720px', 'max': '1100px'},
-            'nav-sm': {'min': '500px', 'max': '719px'},
-            'nav-xsm': {'min': '0px', 'max': '499px'},
+            // 'nav-mid': {'min': '720px', 'max': '1100px'},
+            // 'nav-sm': {'min': '500px', 'max': '719px'},
+            // 'nav-xsm': {'min': '0px', 'max': '499px'},
 
             // breakpoints for staking page
-            's_lg' : {'min':'1100px'},
-            's_md' : {'min':'900px'},
-            's_sm' : {'min':'700px'},
-            's_xsm' : {'min':'550px'},
+            // 's_lg' : {'min':'1100px'},
+            // 's_md' : {'min':'900px'},
+            // 's_sm' : {'min':'700px'},
+            // 's_xsm' : {'min':'550px'},
 
             // dashboard breakpoints
-            'dash_s_sm' : {'min':'750px'},
-            'dash_mid': {'min': '700px', 'max': '750px'},
+            // 'dash_s_sm' : {'min':'750px'},
+            // 'dash_mid': {'min': '700px', 'max': '750px'},
         },
     },
     plugins: []
