@@ -36,7 +36,7 @@ const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 export default function useWallet() {
   const { ethersProviderList, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
-  const { getBitcoinLedgerAddress, getEthersLedgerAddress, getLedgerBalance, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { getBitcoinLedgerAddress, getEthersLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { getWalletConnectAddress, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
   const { user, getUser, setUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
@@ -124,8 +124,8 @@ export default function useWallet() {
           }
         }
       }
+      await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
-      // await setUserAccountBalances()
       return user.value
     } catch (error) {
       console.error('There was an error in connectWallet :>> ', error)
@@ -203,7 +203,6 @@ export default function useWallet() {
       }))
       user.value.accounts = accountsWithBalances
       setUser(user.value)
-      console.log('user.value :>> ', user.value)
     }
   }
 

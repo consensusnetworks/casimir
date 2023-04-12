@@ -2,6 +2,14 @@
 import Analytics from './components/Analytics.vue'
 import Stake from './components/Stake.vue'
 import DataTable from './components/DataTable.vue'
+import { onMounted } from 'vue'
+import useWallet from '@/composables/wallet'
+
+const { setUserAccountBalances } = useWallet()
+
+onMounted(async () => {
+  await setUserAccountBalances()
+})
 
 </script>
 

@@ -5,7 +5,7 @@ import usePrice from '@/composables/price'
 import useSSV from '@/composables/ssv'
 import router from '@/composables/router'
 
-const {convertToWholeUnits, } = usePrice()
+const {convertToWholeUnits } = usePrice()
 
 const { getDepositFees, deposit } = useSSV()
 
