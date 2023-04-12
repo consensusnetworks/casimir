@@ -138,7 +138,7 @@ Users can initiate a withdrawal of any amount of their stake at any time. **Full
 
 ## 👷 Operators
 
-Casimir validators are run by four registered operators, each holding a key share to sign attestations. Registration is open to any SSV operator (see [Operator Registration](./README.md#operatorregistration). Operators are selected by an algorithm that emphasizes a mix of performance and decentralization (see [Operator Selection](./README.md#operatorselection)) as user's deposit stake and new validators are required.
+Each Casimir validator is run by four selected operators holding key share to perform duties with threshold signatures on SSV. Registration is open to any SSV operator (see [Operator Registration](./README.md#operatorregistration). Operators are selected by an algorithm that ensures high-performance but emphasizes decentralization (see [Operator Selection](./README.md#operatorselection)) as user's deposit stake and new validators are required.
 
 ### Operator Registration
 
@@ -146,11 +146,11 @@ Operators can join the contract registry with a small deposit of ETH for slashin
 
 ### Operator Selection
 
-Operators are chosen to run validators based on metrics fetched and derived directly from the SSV network, mainly performance, market share, and fees.
+Operators are chosen to run validators based on metrics fetched and derived directly from the SSV network. These metrics are mainly performance, market share, and fees.
 
 Todo @elizyoung0011 - we should add your details about operator selection and performance monitoring thresholds.
 
-Operator performance is reported by (Chainlink) monitoring SSV exporter attestations. If an operator's performance is poor for an extended period of time, and their slashing collateral is below a threshold, Casimir removes the operator from existing operator groups by resharing or exiting. The latter is only required in the rare case that a validator has already undergone more than two reshares to avoid leaving the full key recoverable outside of the currently selected operators.
+Operator performance is reported by (Chainlink) monitoring SSV exporter attestations. If an operator's performance is poor for an extended period of time, and their slashing collateral is below a threshold, Casimir removes the operator from existing operator groups by resharing or exiting. The latter is only required in the case that a validator has already undergone more than two reshares to avoid leaving the full key recoverable outside of the currently selected operators.
 
 ### Operator Collateral
 
