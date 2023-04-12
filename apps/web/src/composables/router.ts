@@ -19,6 +19,11 @@ const routes = [
         component: Auth,
     },
     { 
+        path: '/:pathMatch(.*)*', 
+        name: Dashboard, 
+        component: Dashboard,
+    },
+    { 
         path: '/test', 
         name: Test, 
         component: Test,
