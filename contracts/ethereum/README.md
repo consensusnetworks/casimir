@@ -67,14 +67,14 @@ graph LR
 ```
 ### Contracts
 
+The internal Casimir contracts are located in the [src](./src) directory. They are configured with a Hardhat development environment in the [hardhat.config.ts](./hardhat.config.ts) file. Casimir also relies on external contracts from Chainlink, Uniswap, and SSV.
+
 **Internal Contracts:**
 
 | Contract | Description | Docs |
 | --- | --- | --- |
 | [CasimirManager](./src/CasimirManager.sol) | Manages stake distribution | [docs/index.md#casimirmanager](./docs/index.md#casimirmanager) |
 | [CasimirAutomation](./src/CasimirAutomation.sol) | Automates event handling | [docs/index.md#casimirautomation](./docs/index.md#casimirautomation) |
-
-> 🚩 The Casimir contracts are located in the [src](./src) directory. They are configured with a Hardhat development environment in the [hardhat.config.ts](./hardhat.config.ts) file.
 
 **External Contracts:**
 
