@@ -706,6 +706,180 @@ Query the current deposit count.
 | ---- | ---- | ----------- |
 | [0] | bytes | The deposit count encoded as a little endian 64-bit number. |
 
+## OnchainConfig
+
+```solidity
+struct OnchainConfig {
+  uint32 paymentPremiumPPB;
+  uint32 flatFeeMicroLink;
+  uint32 checkGasLimit;
+  uint24 stalenessSeconds;
+  uint16 gasCeilingMultiplier;
+  uint96 minUpkeepSpend;
+  uint32 maxPerformGas;
+  uint32 maxCheckDataSize;
+  uint32 maxPerformDataSize;
+  uint256 fallbackGasPrice;
+  uint256 fallbackLinkPrice;
+  address transcoder;
+  address registrar;
+}
+```
+
+## State
+
+```solidity
+struct State {
+  uint32 nonce;
+  uint96 ownerLinkBalance;
+  uint256 expectedLinkBalance;
+  uint96 totalPremium;
+  uint256 numUpkeeps;
+  uint32 configCount;
+  uint32 latestConfigBlockNumber;
+  bytes32 latestConfigDigest;
+  uint32 latestEpoch;
+  bool paused;
+}
+```
+
+## UpkeepInfo
+
+```solidity
+struct UpkeepInfo {
+  address target;
+  uint32 executeGas;
+  bytes checkData;
+  uint96 balance;
+  address admin;
+  uint64 maxValidBlocknumber;
+  uint32 lastPerformBlockNumber;
+  uint96 amountSpent;
+  bool paused;
+  bytes offchainConfig;
+}
+```
+
+## UpkeepFailureReason
+
+```solidity
+enum UpkeepFailureReason {
+  NONE,
+  UPKEEP_CANCELLED,
+  UPKEEP_PAUSED,
+  TARGET_CHECK_REVERTED,
+  UPKEEP_NOT_NEEDED,
+  PERFORM_DATA_EXCEEDS_LIMIT,
+  INSUFFICIENT_BALANCE
+}
+```
+
+## KeeperRegistryBaseInterface
+
+### registerUpkeep
+
+```solidity
+function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external returns (uint256 id)
+```
+
+### cancelUpkeep
+
+```solidity
+function cancelUpkeep(uint256 id) external
+```
+
+### pauseUpkeep
+
+```solidity
+function pauseUpkeep(uint256 id) external
+```
+
+### unpauseUpkeep
+
+```solidity
+function unpauseUpkeep(uint256 id) external
+```
+
+### transferUpkeepAdmin
+
+```solidity
+function transferUpkeepAdmin(uint256 id, address proposed) external
+```
+
+### acceptUpkeepAdmin
+
+```solidity
+function acceptUpkeepAdmin(uint256 id) external
+```
+
+### updateCheckData
+
+```solidity
+function updateCheckData(uint256 id, bytes newCheckData) external
+```
+
+### addFunds
+
+```solidity
+function addFunds(uint256 id, uint96 amount) external
+```
+
+### setUpkeepGasLimit
+
+```solidity
+function setUpkeepGasLimit(uint256 id, uint32 gasLimit) external
+```
+
+### setUpkeepOffchainConfig
+
+```solidity
+function setUpkeepOffchainConfig(uint256 id, bytes config) external
+```
+
+### getUpkeep
+
+```solidity
+function getUpkeep(uint256 id) external view returns (struct UpkeepInfo upkeepInfo)
+```
+
+### getActiveUpkeepIDs
+
+```solidity
+function getActiveUpkeepIDs(uint256 startIndex, uint256 maxCount) external view returns (uint256[])
+```
+
+### getTransmitterInfo
+
+```solidity
+function getTransmitterInfo(address query) external view returns (bool active, uint8 index, uint96 balance, uint96 lastCollected, address payee)
+```
+
+### getState
+
+```solidity
+function getState() external view returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
+```
+
+## IKeeperRegistry
+
+_The view methods are not actually marked as view in the implementation
+but we want them to be easily queried off-chain. Solidity will not compile
+if we actually inherit from this interface, so we document it here._
+
+### checkUpkeep
+
+```solidity
+function checkUpkeep(uint256 upkeepId) external view returns (bool upkeepNeeded, bytes performData, enum UpkeepFailureReason upkeepFailureReason, uint256 gasUsed, uint256 fastGasWei, uint256 linkNative)
+```
+
+## KeeperRegistryExecutableInterface
+
+### checkUpkeep
+
+```solidity
+function checkUpkeep(uint256 upkeepId) external returns (bool upkeepNeeded, bytes performData, enum UpkeepFailureReason upkeepFailureReason, uint256 gasUsed, uint256 fastGasWei, uint256 linkNative)
+```
+
 ## ISSVToken
 
 ### mint
@@ -741,347 +915,97 @@ function withdraw(uint256) external
 
 Withdraw wrapped ether to get ether
 
-## SSVManager
+## MockAggregator
 
-### ProcessedDeposit
-
-```solidity
-struct ProcessedDeposit {
-  uint256 ethAmount;
-  uint256 linkAmount;
-  uint256 ssvAmount;
-}
-```
-
-### Fees
+### version
 
 ```solidity
-struct Fees {
-  uint32 LINK;
-  uint32 SSV;
-}
+uint256 version
 ```
 
-### Pool
+### description
 
 ```solidity
-struct Pool {
-  uint256 deposits;
-  uint32[] operatorIds;
-  bytes validatorPublicKey;
-}
+string description
 ```
 
-### Token
+### decimals
 
 ```solidity
-enum Token {
-  LINK,
-  SSV,
-  WETH
-}
+uint8 decimals
 ```
 
-### User
+### latestAnswer
 
 ```solidity
-struct User {
-  uint256 stake0;
-  uint256 distributionSum0;
-}
+int256 latestAnswer
 ```
 
-### Validator
+### latestTimestamp
 
 ```solidity
-struct Validator {
-  bytes32 depositDataRoot;
-  uint32[] operatorIds;
-  bytes[] sharesEncrypted;
-  bytes[] sharesPublicKeys;
-  bytes signature;
-  bytes withdrawalCredentials;
-}
+uint256 latestTimestamp
 ```
 
-### lastPoolId
+### latestRound
 
 ```solidity
-struct Counters.Counter lastPoolId
+uint256 latestRound
 ```
 
-Last pool ID generated for a new pool
-
-### scaleFactor
+### getAnswer
 
 ```solidity
-uint256 scaleFactor
+mapping(uint256 => int256) getAnswer
 ```
 
-Scale factor for each reward to stake ratio
-
-### distributionSum
+### getTimestamp
 
 ```solidity
-uint256 distributionSum
+mapping(uint256 => uint256) getTimestamp
 ```
-
-Sum of scaled reward to stake ratios (arbitrary intial value required)
-
-### ManagerDistribution
-
-```solidity
-event ManagerDistribution(address userAddress, uint256 ethAmount, uint256 depositTime)
-```
-
-Event signaling a user deposit to the pool manager
-
-### PoolDeposit
-
-```solidity
-event PoolDeposit(address userAddress, uint32 poolId, uint256 ethAmount, uint256 depositTime)
-```
-
-Event signaling a user deposit to a pool
-
-### PoolStaked
-
-```solidity
-event PoolStaked(uint32 poolId, bytes publicKey, uint32[] operatorIds)
-```
-
-Event signaling a pool validator activation
-
-### ValidatorAdded
-
-```solidity
-event ValidatorAdded(bytes publicKey, uint32[] operatorIds)
-```
-
-Event signaling a validator registration
 
 ### constructor
 
 ```solidity
-constructor(address beaconDepositAddress, address linkFeedAddress, address linkTokenAddress, address ssvNetworkAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
+constructor(uint8 _decimals, int256 _initialAnswer) public
 ```
 
-Constructor
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| beaconDepositAddress | address | The Beacon deposit address |
-| linkFeedAddress | address | The Chainlink data feed address |
-| linkTokenAddress | address | The Chainlink token address |
-| ssvNetworkAddress | address | The SSV network address |
-| ssvTokenAddress | address | The SSV token address |
-| swapFactoryAddress | address | The Uniswap factory address |
-| swapRouterAddress | address | The Uniswap router address |
-| wethTokenAddress | address | The WETH contract address |
-
-### receive
+### updateAnswer
 
 ```solidity
-receive() external payable
+function updateAnswer(int256 _answer) public
 ```
 
-_Production will use oracle reporting balance increases, but receive is used for mocking rewards_
-
-### deposit
+### updateRoundData
 
 ```solidity
-function deposit() external payable
+function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt) public
 ```
 
-Deposit user stake to the pool manager
-
-### withdraw
+### getRoundData
 
 ```solidity
-function withdraw(uint256 amount) external
+function getRoundData(uint80 _roundId) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 ```
 
-Withdraw user stake from the pool manager
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| amount | uint256 | The amount of ETH to withdraw |
-
-### getFees
+### latestRoundData
 
 ```solidity
-function getFees() public pure returns (struct SSVManager.Fees)
+function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 ```
 
-Get the current token fees as percentages
+## MockKeeperRegistry
 
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct SSVManager.Fees | The current token fees as percentages |
-
-### getLINKFee
+### registerUpkeep
 
 ```solidity
-function getLINKFee() public pure returns (uint32)
+function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external view returns (uint256 id)
 ```
 
-Get the LINK fee percentage to charge on each deposit
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32 | The LINK fee percentage to charge on each deposit |
-
-### getSSVFee
+### getState
 
 ```solidity
-function getSSVFee() public pure returns (uint32)
+function getState() external pure returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
 ```
-
-Get the SSV fee percentage to charge on each deposit
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32 | The SSV fee percentage to charge on each deposit |
-
-### addValidator
-
-```solidity
-function addValidator(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) public
-```
-
-_Add a validator to the pool manager_
-
-### getStakedValidatorPublicKeys
-
-```solidity
-function getStakedValidatorPublicKeys() external view returns (bytes[])
-```
-
-Get staked validator public keys
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes[] | A list of active validator public keys |
-
-### getReadyValidatorPublicKeys
-
-```solidity
-function getReadyValidatorPublicKeys() external view returns (bytes[])
-```
-
-Get ready validator public keys
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes[] | A list of inactive validator public keys |
-
-### getReadyPoolIds
-
-```solidity
-function getReadyPoolIds() external view returns (uint32[])
-```
-
-Get a list of all ready pool IDs
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32[] | A list of all ready pool IDs |
-
-### getStakedPoolIds
-
-```solidity
-function getStakedPoolIds() external view returns (uint32[])
-```
-
-Get a list of all staked pool IDs
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32[] | A list of all staked pool IDs |
-
-### getStake
-
-```solidity
-function getStake() public view returns (uint256)
-```
-
-Get the current stake of the pool manager
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | The current stake of the pool manager |
-
-### getReadyDeposits
-
-```solidity
-function getReadyDeposits() public view returns (uint256)
-```
-
-Get the current ready deposits of the pool manager
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | The current ready deposits of the pool manager |
-
-### getUserStake
-
-```solidity
-function getUserStake(address userAddress) public view returns (uint256)
-```
-
-Get the current stake of a user
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| userAddress | address | The user address |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | The current stake of a user |
-
-### getPool
-
-```solidity
-function getPool(uint32 poolId) external view returns (struct SSVManager.Pool)
-```
-
-Get a pool by ID
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| poolId | uint32 | The pool ID |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct SSVManager.Pool | The pool |
 

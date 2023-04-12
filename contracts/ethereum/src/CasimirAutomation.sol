@@ -4,13 +4,14 @@ pragma solidity ^0.8.7;
 import "./interfaces/ICasimirAutomation.sol";
 import "./interfaces/ICasimirManager.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {Functions, FunctionsClient} from "./dev/FunctionsClient.sol";
+// import "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol"; // Once published
 import "hardhat/console.sol";
 
 /**
- * @title Oracle contract that reports balances and triggers manager actions 
+ * @title Oracle contract that reports balances and triggers manager actions
  */
 contract CasimirAutomation is ICasimirAutomation {
-
     /********************/
     /* Global Variables */
     /********************/
@@ -57,12 +58,10 @@ contract CasimirAutomation is ICasimirAutomation {
      * @param performData The data to perform the upkeep
      */
     function performUpkeep(bytes calldata performData) external override {
-
         console.log(abi.decode(performData, (string)));
 
         /** Revalidate the upkeep */
         if (validateUpkeep()) {
-            
             /** Update the stake */
             stake = casimirManager.getStake();
         }
@@ -87,13 +86,8 @@ contract CasimirAutomation is ICasimirAutomation {
      * @return The latest total manager stake on beacon
      */
     function getBeaconStake() public view returns (int256) {
-        (
-            /*uint80 roundID*/,
-            int256 answer,
-            /*uint startedAt*/,
-            /*uint timeStamp*/,
-            /*uint80 answeredInRound*/
-        ) = linkFeed.latestRoundData();
+        (, /*uint80 roundID*/ int256 answer, , , ) = /*uint startedAt*/ /*uint timeStamp*/ /*uint80 answeredInRound*/
+        linkFeed.latestRoundData();
         return answer;
     }
 
@@ -110,7 +104,8 @@ contract CasimirAutomation is ICasimirAutomation {
         uint256 startIndex,
         uint256 endIndex
     ) external view override returns (string[] memory) {
-        bytes[] memory publicKeys = casimirManager.getStakedValidatorPublicKeys();
+        bytes[] memory publicKeys = casimirManager
+            .getStakedValidatorPublicKeys();
         address[] memory addresses = new address[](publicKeys.length);
         for (uint256 i = 0; i < publicKeys.length; i++) {
             addresses[i] = address(uint160(bytes20(keccak256(publicKeys[i]))));
