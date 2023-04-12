@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
 
@@ -34,6 +34,15 @@ onMounted(()=>{
     new ResizeObserver(outputsize).observe(tab_el)   
   }
 
+  if(user.value){
+    const account = user.value.accounts.find((item) => {
+      return item.address === user?.value?.address
+    })
+    userPrimaryAccount.value = account
+  }
+})
+
+watch(user, () => {
   if(user.value){
     const account = user.value.accounts.find((item) => {
       return item.address === user?.value?.address

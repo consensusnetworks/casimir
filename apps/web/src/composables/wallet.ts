@@ -124,6 +124,7 @@ export default function useWallet() {
           }
         }
       }
+      await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
       return user.value
     } catch (error) {
@@ -177,6 +178,31 @@ export default function useWallet() {
       return trimAndLowercaseAddress(address) as string
     } catch (error) {
       console.error(error)
+    }
+  }
+
+  async function getAccountBalance(account: Account) {
+    // TODO: Find where api endpoint is configured for ethers.
+    try {
+      const balance = await getEthersBalance(account.address)
+      return balance
+    } catch (err) {
+      console.error('There was an error in getAccountBalance :>> ', err)
+    }
+  }
+
+  async function setUserAccountBalances() {
+    if (user?.value?.accounts) {
+      const accounts = user.value.accounts
+      const accountsWithBalances = await Promise.all(accounts.map(async (account: Account) => {
+        const balance = await getAccountBalance(account)
+        return {
+          ...account,
+          balance
+        }
+      }))
+      user.value.accounts = accountsWithBalances
+      setUser(user.value)
     }
   }
 
@@ -366,6 +392,7 @@ export default function useWallet() {
     getUserBalance,
     removeConnectedAccount,
     sendTransaction,
+    setUserAccountBalances,
     setPrimaryWalletAccount,
     signMessage,
     switchNetwork

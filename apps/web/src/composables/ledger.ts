@@ -1,4 +1,5 @@
 import { BitcoinLedgerSigner, EthersLedgerSigner } from '@casimir/wallets'
+import { EthersProvider } from '@/interfaces/index'
 import { ethers } from 'ethers'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
 import { Currency, ProviderString } from '@casimir/types'

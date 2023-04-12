@@ -105,7 +105,6 @@ export default function useUsers () {
             if (session.value) {
                 const user = await getUser()
                 if (user) {
-                    console.log('user in checkUserSessionExists :>> ', user)
                     setUser(user)
                     return true
                 } else {

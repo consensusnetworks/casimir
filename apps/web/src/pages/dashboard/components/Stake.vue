@@ -5,7 +5,7 @@ import usePrice from '@/composables/price'
 import useSSV from '@/composables/ssv'
 import router from '@/composables/router'
 
-const {convertToWholeUnits, } = usePrice()
+const {convertToWholeUnits } = usePrice()
 
 const { getDepositFees, deposit } = useSSV()
 
@@ -83,7 +83,9 @@ watch(openSignTransactionTab, () => {
 })
 watch(selectedWallet, () => {
   if(selectedWallet.value){
-    maxETHFromWallet.value = Number(convertToWholeUnits(selectedWallet.value.currency, Number(selectedWallet.value.balance)))
+    // If we need a convert from Wei to Whole ETH
+    // maxETHFromWallet.value = Number(convertToWholeUnits(selectedWallet.value.currency, Number(selectedWallet.value.balance)))
+    maxETHFromWallet.value =  Math.round(selectedWallet.value.balance * 100) / 100 
   }
 })
 watch([stakeAmount, selectedWallet], () => {
@@ -133,8 +135,6 @@ const handleCancel = () => {
 onMounted(async ()=>{
   app.value = document.getElementById('app')
   fees.value = await getFees()
-
-  console.log('User', user.value)
 })
 </script>
 
@@ -199,7 +199,8 @@ onMounted(async ()=>{
                     id="selected_wallet_button_content_max_amount"
                     class="text-body font-bold pr-2"
                   >
-                    {{ convertToWholeUnits(selectedWallet.currency, Number(selectedWallet.balance)) }} {{ selectedWallet.currency }}
+                    {{ Math.round(selectedWallet.balance * 100) / 100 }} {{ selectedWallet.currency }}
+                    <!-- {{ convertToWholeUnits(selectedWallet.currency, Number(selectedWallet.balance)) }} {{ selectedWallet.currency }} -->
                   </span>
                   <span
                     id="selected_wallet_button_content_address"
@@ -247,7 +248,7 @@ onMounted(async ()=>{
               </div>
             </div>
             <button 
-              class="w-1/3 relative border border-border rounded-[5px] flex 
+              class="min-w-1/3 relative border border-border rounded-[5px] flex gap-5 
           items-center justify-between h-full px-10 hover:border-primary"
               :class="isMaxETHSelected? 'border-primary' : 'opacity-[0.75]'"
               :disabled="maxETHFromWallet === null? true : false"
@@ -356,7 +357,8 @@ onMounted(async ()=>{
                   <span 
                     id="select_wallet_item"
                   >
-                    {{ convertToWholeUnits(act.currency, Number(act.balance)) }} {{ act.currency }}
+                    {{ act.balance? Math.round(Number(act.balance) * 100) / 100 : '---' }} {{ act.currency }}
+                    <!-- {{ convertToWholeUnits(act.currency, Number(act.balance)) }} {{ act.currency }} -->
                   </span>
                 </div>
                 <div  
