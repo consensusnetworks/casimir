@@ -4,11 +4,14 @@ Solidity contracts for decentralized staking on Ethereum
 
 ## 📝 Overview
 
-Casimir distributes user deposits to Ethereum validators operated by SSV. Validator keys are shared with zero-coordination distributed key generation. Chainlink nodes report from the Beacon chain and SSV to sync rewards, manage slashing, and automate validator creation and exiting.
+The Casimir contracts seamlessly connect stakers with any amount of ETH directly to high-performing Ethereum validators. Casimir proposes an approach that minimizes counterparty risk for users and improves decentralization in Ethereum staking: 
+- Validators duties are performed by registered (collateralized) operators running SSV's distributed validator technology (DVT)
+- Keys are trustlessly managed using RockX's distributed key generation (DKG)
+- Automated actions (like compounding stake or handling a slash) are carried out by Chainlink's decentralized oracle network (DON)
 
 ### Architecture
 
-Todo add some general notes. Below is a high-level diagram of the Casimir staking architecture.
+Casimir distributes user deposits to Ethereum validators operated by SSV. Validator keys are shared with zero-coordination distributed key generation. Chainlink nodes report from the Beacon chain and SSV to sync rewards, manage slashing, and automate validator creation and exiting.
 
 ```mermaid
 graph LR
@@ -64,7 +67,7 @@ graph LR
 ```
 ### Contracts
 
-Todo add some general notes. Below is a table of the core Casimir contracts.
+**Internal Contracts:**
 
 | Contract | Description | Docs |
 | --- | --- | --- |
@@ -73,17 +76,23 @@ Todo add some general notes. Below is a table of the core Casimir contracts.
 
 > 🚩 The Casimir contracts are located in the [src](./src) directory. They are configured with a Hardhat development environment in the [hardhat.config.ts](./hardhat.config.ts) file.
 
+**External Contracts:**
+
+| Contract | Description | Docs |
+| --- | --- | --- |
+| Todo | Todo | Todo |
+
 ### Distributed Key Generation
 
 Casimir trustlessly distributes validator key shares to operators using the [rockx-dkg-cli](https://github.com/RockX-SG/rockx-dkg-cli). The DKG server is called via [Automated Chainlink Functions](https://docs.chain.link/chainlink-functions/tutorials/automate-functions/) to generate, reshare, and exit validators.
 
 ### Oracles
 
-The contract loosely depends on two decentralized oracles. The first oracle provides a PoR feed aggregating the total of all Casimir validator balances on the Beacon chain. The second oracle automates checking balance changes, responds with relevant validator actions, and updates the contract (only when necessary conditions are met). See more about Chainlink PoR feeds [here](https://docs.chain.link/data-feeds/proof-of-reserve). See more about Chainlink automation upkeeps [here](https://docs.chain.link/chainlink-automation/introduction).
+The contract loosely depends on two decentralized oracles. The first oracle provides a PoR feed aggregating the total of all Casimir validator balances on the Beacon chain. The second oracle automates checking balance changes, responds with relevant validator actions, and updates the contract only when necessary conditions are met (see [Chainlink PoR](https://docs.chain.link/data-feeds/proof-of-reserve) and [Chainlink Automation](https://docs.chain.link/chainlink-automation/introduction)). External requests are made using trust-minimized compute infrastructure (see [Chainlink Functions](https://docs.chain.link/chainlink-functions)).
 
 ## 👥 Users
 
-Users can deposit any amount of ETH to the manager contract. Their deposits are staked to validators run by SSV operators (see [Operators](./README.md#operators)), and their rewards are auto-compounded into their total stake.
+Users can deposit any amount of ETH to the manager contract. Their deposits are staked to validators run by SSV operators (see [Operators](./README.md#operators)). Rewards are auto-compounded into stake and users can withdraw their principal plus any earned proportion of new stake (or a partial amount of their choice) at any time.
 
 ### User Fees
 
