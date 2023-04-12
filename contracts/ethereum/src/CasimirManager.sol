@@ -3,10 +3,10 @@ pragma solidity 0.8.16;
 
 import "./CasimirAutomation.sol";
 import "./interfaces/ICasimirManager.sol";
-import "./interfaces/IDepositContract.sol";
-import "./interfaces/ISSVNetwork.sol";
-import "./interfaces/ISSVToken.sol";
-import "./interfaces/IWETH9.sol";
+import "./external/interfaces/IDepositContract.sol";
+import "./external/interfaces/ISSVNetwork.sol";
+import "./external/interfaces/ISSVToken.sol";
+import "./external/interfaces/IWETH9.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";

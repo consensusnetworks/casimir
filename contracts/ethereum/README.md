@@ -66,11 +66,19 @@ graph LR
     I3 --> H
     I4 --> H
 ```
+
 ### Contracts
 
-The internal Casimir contracts are located in the [src](./src) directory. They are configured with a Hardhat development environment in the [hardhat.config.ts](./hardhat.config.ts) file. Casimir also relies on external contracts from Chainlink, Uniswap, and SSV.
+A Hardhat environment for development and deployment is configured in the [hardhat.config.ts](./hardhat.config.ts) file. The following contract scripts are run from the monorepo root directory:
+
+- `npm run dev:ethereum` - Run a local Ethereum network and deploy contracts
+- `npm run test:ethereum` - Run tests for the Ethereum contracts
+- `npm run clean --workspace @casimir/ethereum` - Clean the Ethereum build directory
+- `npm run build --workspace @casimir/ethereum` - Compile the Ethereum contracts
 
 **Internal Contracts:**
+
+Core internal contracts and interfaces are located in the [src](./src) directory.
 
 | Contract | Description | Docs |
 | --- | --- | --- |
@@ -79,9 +87,19 @@ The internal Casimir contracts are located in the [src](./src) directory. They a
 
 **External Contracts:**
 
+Vendor external contracts and interfaces are located in the [src/external](./src/external) directory.
+
 | Contract | Description | Docs |
 | --- | --- | --- |
-| Todo | Todo | Todo |
+| [DepositContract](./src/external/interfaces/IDepositContract.sol) | Accepts Beacon deposits | Todo |
+| [KeeperRegistry](./src/external/interfaces/IKeeperRegistry.sol) | Manages Chainlink upkeeps | Todo |
+| [SSVNetwork](./src/external/interfaces/ISSVNetwork.sol) | Connects distributed validators | Todo |
+| [SSVToken](./src/external/interfaces/ISSVToken.sol) | Serves as operator utility token | Todo |
+| [WETH](./src/external/interfaces/IWETH.sol) | Serves as wrapped ETH for swaps | Todo |
+
+**Dev Contracts:**
+
+Development-only contracts and interfaces are located in the [src/dev](./src/dev) directory.
 
 ### Distributed Key Generation
 
