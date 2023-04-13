@@ -132,7 +132,7 @@ export class EthersLedgerSigner extends ethers.Signer {
     constructor(options: LedgerSignerOptions) {
         super()
 
-        if (options.type) this.type
+        if (options.type) this.type = options.type
         if (options.path) this.path = options.path        
         this.baseURL = options.baseURL
 
