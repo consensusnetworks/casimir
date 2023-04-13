@@ -130,7 +130,6 @@ export class EthersLedgerSigner extends ethers.Signer {
     readonly eth?: Promise<Eth>
 
     constructor(options: LedgerSignerOptions) {
-        console.log('options in EthersLedgerSigner :>> ', options)
         super()
 
         if (options.type) this.type = options.type
@@ -143,11 +142,8 @@ export class EthersLedgerSigner extends ethers.Signer {
         }
 
         // Set readonly eth to Promise<Eth>
-        console.log('options in EthersLedgerSigner :>> ', options)
         const transportCreatorType = this.type as keyof typeof transports
         const transportCreator = transports[transportCreatorType]
-        console.log('transportCreatorType :>> ', transportCreatorType)
-        console.log('transportCreator :>> ', transportCreator)
         if (!transportCreator) console.log('Unknown or unsupported type', this.type)
         ethers.utils.defineReadOnly(this, 'eth', transportCreator(this.baseURL).then(transport => {
             return new Eth(transport)
