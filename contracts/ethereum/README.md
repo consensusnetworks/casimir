@@ -16,12 +16,14 @@ Casimir distributes user deposits to Ethereum validators operated by SSV. Valida
 
 ```mermaid
 graph LR
+
     subgraph Contracts
         B(Manager Contract)
         C(Beacon Deposit Contract)
         D(SSV Contract)
         G(PoR Contract)
-        H(Automation Contract)
+        H(Functions Contract)
+        I(Automation Contract)
     end
 
     A((User)) --> B
@@ -46,25 +48,31 @@ graph LR
         E2 --> F24(SSV Operator 8)
     end
 
-    H --> G
-    H --> B
+    G <--> I
+    H <--> I
+    I <--> B
     
     subgraph Chainlink
-        I1(Chainlink Node 1)
-        I2(Chainlink Node 2)
-        I3(Chainlink Node 3)
-        I4(Chainlink Node 4)
+        J1(Chainlink Node 1)
+        J2(Chainlink Node 2)
+        J3(Chainlink Node 3)
+        J4(Chainlink Node 4)
     end
 
-    I1(Chainlink Node 1) --> G
-    I2(Chainlink Node 2) --> G
-    I3(Chainlink Node 3) --> G
-    I4(Chainlink Node 4) --> G
+    J1 --> G
+    J2 --> G
+    J3 --> G
+    J4 --> G
     
-    I1 --> H
-    I2 --> H
-    I3 --> H
-    I4 --> H
+    J1 --> H
+    J2 --> H
+    J3 --> H
+    J4 --> H
+
+    J1 --> I
+    J2 --> I
+    J3 --> I
+    J4 --> I
 ```
 
 ### Contracts
