@@ -8,6 +8,7 @@ import useUsers from '@/composables/users'
 import { Account, ProviderString, Currency } from '@casimir/types'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
 import * as Session from 'supertokens-web-js/recipe/session'
+import router from './router'
 
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
 // Test ethereum send to address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
@@ -75,7 +76,7 @@ export default function useWallet() {
    * @param currency 
    * @returns 
   */
-  async function connectWallet(provider: ProviderString, currency?: Currency) {
+  async function connectWallet(provider: ProviderString, currency: Currency = 'ETH') {
     try { // Sign Up or Login
       if (!user?.value?.address) {
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
@@ -89,6 +90,8 @@ export default function useWallet() {
           setSelectedCurrency(connectedCurrency)
           primaryAddress.value = user?.value?.address as string
         }
+        loadingUserWallets.value = false
+        router.push('/')
       } else { // Add account
         console.log('already logged in')
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
@@ -117,9 +120,11 @@ export default function useWallet() {
             setSelectedAddress(connectedAddress)
             setSelectedCurrency(connectedCurrency)
             primaryAddress.value = user?.value?.address as string
+            router.push('/')
           }
         }
       }
+      await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
       return user.value
     } catch (error) {
@@ -176,6 +181,31 @@ export default function useWallet() {
     }
   }
 
+  async function getAccountBalance(account: Account) {
+    // TODO: Find where api endpoint is configured for ethers.
+    try {
+      const balance = await getEthersBalance(account.address)
+      return balance
+    } catch (err) {
+      console.error('There was an error in getAccountBalance :>> ', err)
+    }
+  }
+
+  async function setUserAccountBalances() {
+    if (user?.value?.accounts) {
+      const accounts = user.value.accounts
+      const accountsWithBalances = await Promise.all(accounts.map(async (account: Account) => {
+        const balance = await getAccountBalance(account)
+        return {
+          ...account,
+          balance
+        }
+      }))
+      user.value.accounts = accountsWithBalances
+      setUser(user.value)
+    }
+  }
+
   // TODO: What is this used for? 
   // Do we need balance of active address only? 
   // Or do we need balance of all addresses in accounts associated with user? 
@@ -219,6 +249,7 @@ export default function useWallet() {
     primaryAddress.value = ''
     console.log('user.value on logout :>> ', user.value)
     loadingUserWallets.value = false
+    router.push('/auth')
   }
 
   async function removeConnectedAccount() {
@@ -361,6 +392,7 @@ export default function useWallet() {
     getUserBalance,
     removeConnectedAccount,
     sendTransaction,
+    setUserAccountBalances,
     setPrimaryWalletAccount,
     signMessage,
     switchNetwork

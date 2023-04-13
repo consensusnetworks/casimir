@@ -9,7 +9,7 @@ import minimist from 'minimist'
  *      --clean: whether to clean build directory (override default true)
  *      --execution: hardhat or gananche (override default hardhat)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
- *      --simulation: whether to run contract simulation fixture (override default false)
+ *      --mock: whether to use mock contracts (override default true)
  * 
  * For more info see:
  *      - https://hardhat.org/hardhat-network/docs/overview
@@ -21,9 +21,6 @@ void async function () {
     /** Parse command line arguments */
     const argv = minimist(process.argv.slice(2))
 
-    /** Default to compound */
-    const classic = argv.classic === 'true' || argv.classic === true
-
     /** Default to no clean */
     const clean = argv.clean === 'true' || argv.clean === true
 
@@ -33,11 +30,11 @@ void async function () {
     /** Set fork rpc if requested, default fork to goerli if set vaguely or unset */
     const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
 
+    /** Default to mock external contracts */
+    const mock = argv.mock !== 'false' && argv.mock !== false
+
     /** Get shared seed */
     const seed = await getSecret('consensus-networks-bip39-seed')
-
-    /** Default to no simulation */
-    const simulation = argv.simulation === 'true' || argv.simulation === true
 
     process.env.BIP39_SEED = seed
     echo(chalk.bgBlackBright('Your mnemonic seed is ') + chalk.bgBlue(seed))
@@ -53,14 +50,11 @@ void async function () {
         await $`npm run clean --workspace @casimir/ethereum`
     }
     
-    /** Set classic flag */
-    process.env.CLASSIC = `${classic}`
-    
-    /** Enable 12-second interval mining for dev networks */
+    /** Set 12-second interval mining for dev networks */
     process.env.MINING_INTERVAL = '12'
 
-    /** Enable simulation */
-    process.env.SIMULATION = `${simulation}`
+    /** Set mock */
+    process.env.MOCK_EXTERNAL_CONTRACTS = `${mock}`
 
     if (execution === 'ganache') {
         $`npm run node:ganache --workspace @casimir/ethereum`

@@ -9,9 +9,8 @@ import { loadCredentials, getSecret, run } from '@casimir/helpers'
  *      --clean: rebuild codegen and delete existing data before run (optional, i.e., --clean)
  *      --emulate: emulate hardware wallet services (optional, i.e., --emulate=ethereum)
  *      --fork: fork name (optional, i.e., --fork=goerli)
- *      --mock: mock services (optional, i.e., --mock=true)
+ *      --mock: mock backend services and external contracts (optional, i.e., --mock=false)
  *      --network: network name (optional, i.e., --network=goerli)
- *      --simulation: whether to run contract simulation fixture (override default false)
  */
 void async function () {
 
@@ -32,6 +31,13 @@ void async function () {
         }
     }
 
+    /** Casimir addresses */
+    const addresses = {
+        mainnet: '',
+        testnet: '0xaaf5751d370d2fD5F1D5642C2f88bbFa67a29301',
+        local: '0x07E05700CB4E946BA50244e27f01805354cD8eF0'
+    }
+
     /** Load AWS credentials for configuration */
     await loadCredentials()
 
@@ -41,14 +47,8 @@ void async function () {
     process.env.PUBLIC_STAGE = process.env.STAGE // Pass stage to client apps
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
 
-    /** Todo get network/fork nonce based on selection and predict address */
-    process.env.PUBLIC_SSV_MANAGER = '0xaaf5751d370d2fD5F1D5642C2f88bbFa67a29301'
-
     /** Default to the web app */
     const app = argv.app || 'web'
-
-    /** Default to compound */
-    const classic = argv.classic === 'true' || argv.classic === true
     
     /** Default to clean services and data */
     const clean = argv.clean !== 'false' || argv.clean !== false
@@ -64,9 +64,6 @@ void async function () {
 
     /** Default to no network or testnet if set vaguely */
     const network = argv.network === 'true' ? 'testnet' : argv.network === 'false' ? false : argv.network
-
-    /** Default to no simulation */
-    const simulation = argv.simulation === 'true' || argv.simulation === true
 
     const { chains, services, tables } = apps[app as keyof typeof apps]
 
@@ -101,14 +98,27 @@ void async function () {
 
     for (const chain of chains) {
         if (network) {
+
+            /** Use ${network} manager address */
+            process.env.PUBLIC_CASIMIR_MANAGER = addresses[network]
+
             const key = await getSecret(`consensus-networks-${chain}-${network}`)
             const currency = chain.slice(0, 3)
             const url = `https://${currency}-${network}.g.alchemy.com/v2/${key}`
             process.env.ETHEREUM_RPC_URL = url
             echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(network) + chalk.bgBlackBright(` ${chain} network at ${url}`))
         } else if (fork) {
+
+            if (mock) {
+                /** Use local manager address */
+                process.env.PUBLIC_CASIMIR_MANAGER = addresses['local']
+            } else {
+                /** Use ${fork} manager address */
+                process.env.PUBLIC_CASIMIR_MANAGER = addresses[fork]
+            }
+
             const chainFork = forks[chain][fork]
-            $`npm run dev:${chain} --clean=${clean} --fork=${chainFork} --simulation=${simulation}`
+            $`npm run dev:${chain} --clean=${clean} --mock=${mock} --fork=${chainFork}`
         }
     }
 

@@ -3,8 +3,10 @@ import { ethers } from 'ethers'
 import { BrowserProviders, EthersProvider, MessageInit, TransactionInit } from '@/interfaces/index'
 import { Currency, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
+import useEnvironment from '@/composables/environment'
 
 const { getMessage, login } = useAuth()
+const { ethereumURL } = useEnvironment()
 
 const defaultProviders = {
   MetaMask: undefined,
@@ -25,23 +27,10 @@ export default function useEthers() {
     }
   }
 
-  // TODO: Identify the difference beteween the two functions below (requestEthersBalance and getEthersBalance)
-  async function requestEthersBalance(provider: EthersProvider, address: string) {
-    if (provider?.request) {
-      return await provider.request({
-        method: 'eth_getBalance',
-        params: [address, 'latest'],
-      })
-    }
-  }
-
-  async function getEthersBalance(providerString: ProviderString, address: string, ) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
-    if (provider) {
-      const balance = await requestEthersBalance(provider as EthersProvider, address)
-      console.log('balance :>> ', balance)
-      return ethers.utils.formatEther(balance)
-    }
+  async function getEthersBalance(address: string, ) {
+    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    const balance = await provider.getBalance(address)
+    return ethers.utils.formatEther(balance)
   }
 
   function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {

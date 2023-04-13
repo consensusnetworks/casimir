@@ -14,8 +14,8 @@ const allTimeLow = ref({date: '12/12/2023', value: '$245.21'})
 </script>
 
 <template>
-  <div class="col-span-3 h-full flex flex-col gap-20">
-    <div class="flex justify-between items-center w-full">
+  <div class="w-full h-full flex flex-col justify-between gap-20">
+    <div class="flex justify-between items-center">
       <h6 class="font-bold text-[#727476]">
         Analytics
       </h6>
@@ -48,10 +48,10 @@ const allTimeLow = ref({date: '12/12/2023', value: '$245.21'})
       </div>
     </div>
     <div
-      class="w-full border border-border rounded-[5px] h-full px-20 py-10
-    flex flex-col gap-20"
+      class="h-full flex flex-wrap items-start
+      border border-border rounded-[5px]"
     >
-      <div class="flex justify-between items-center">
+      <div class="w-full h-50 flex items-center justify-between px-10">
         <div class="flex items-center text-caption gap-5 font-bold text-border">
           <button 
             :class="selectedNetMetric === 'Net Value'? 'text-black font-extrabold' :'hover:text-grey_8'"
@@ -163,7 +163,10 @@ const allTimeLow = ref({date: '12/12/2023', value: '$245.21'})
           </div>
         </div>
       </div>
-      <div class="h-full w-full">
+      <div
+        :id="'line_chart_container_user_dash_linechart'" 
+        class="w-full h-[240px] flex justify-center"
+      >
         <LineChartJS 
           :id="'user_dash_linechart'"
           :x-grid-lines="false"
@@ -171,29 +174,32 @@ const allTimeLow = ref({date: '12/12/2023', value: '$245.21'})
         />
       </div>
     </div>
-    <div 
-      class="w-full border border-border rounded-[5px] px-20 py-10 h-[140px]
-    flex justify-between items-center"
-    >
-      <div class="w-2/6 h-full flex flex-col justify-between pr-10">
+    <div class="h-[120px] flex justify-between items-center gap-20 800s:gap-10">
+      <div
+        class="w-2/6 h-full flex flex-col justify-between px-15
+        border border-border rounded-[5px] 800s:px-10"
+      >
         <div class="mb-10 flex justify-between items-center w-full pt-10">
           <span class="text-caption font-bold text-border">
             ROI
           </span>
-          <!-- No need for expandalbe modal atm -->
-          <!-- <button class="iconoir-expand text-blue_3 hover:text-primary text-body" /> -->
+        <!-- No need for expandalbe modal atm -->
+        <!-- <button class="iconoir-expand text-blue_3 hover:text-primary text-body" /> -->
         </div>
         <div class="w-full text-right pb-5">
           <h5 
-            class="font-bold"
+            class="font-bold text-[24px] 800s:text-[16px]"
             :class="roi_metric > 0? ' text-approve' : 'text-decline'"
           >
             {{ roi_metric }} %
           </h5>
         </div>
       </div>
-      <div class="w-1 bg-border h-full" />
-      <div class="w-4/6 h-full flex flex-col justify-between px-10">
+      <!-- <div class="w-1 bg-border h-full" /> -->
+      <div
+        class="w-4/6 h-full flex flex-col justify-between px-15 
+        border border-border rounded-[5px] 800s:px-10"
+      >
         <div class="flex justify-between items-center w-full pt-10 mb-20">
           <span class="text-caption font-bold text-border">
             All Time Net Values
@@ -207,9 +213,11 @@ const allTimeLow = ref({date: '12/12/2023', value: '$245.21'})
               {{ allTimeLow.date }}
             </span>
             <h5 
-              class="font-bold text-decline"
+              class="font-bold text-decline text-[24px] 800s:text-[16px]"
             >
-              {{ allTimeLow.value }}
+              <span class="400s:text-body 400s:font-bold">
+                {{ allTimeLow.value }}
+              </span>
             </h5>
           </div>
           <div class="text-right">
@@ -217,9 +225,11 @@ const allTimeLow = ref({date: '12/12/2023', value: '$245.21'})
               {{ allTimeHigh.date }}
             </span>
             <h5
-              class="font-bold text-approve"
+              class="font-bold text-approve text-[24px] 800s:text-[16px]"
             >
-              {{ allTimeHigh.value }}
+              <span class="400s:text-body 400s:font-bold">
+                {{ allTimeHigh.value }}
+              </span>
             </h5>
           </div>
         </div>

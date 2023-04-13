@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
 
@@ -16,6 +16,7 @@ const walletContainerHeight = ref('0px')
 
 const userPrimaryAccount = ref(null as any)
 onMounted(()=>{
+
   const tab_el = document.getElementById('wallet_providers_container')
 
   const outputsize = () => {
@@ -23,14 +24,28 @@ onMounted(()=>{
       walletContainerHeight.value = (tab_el.offsetHeight + 90)  + 'px'
     }
   }
-  outputsize()
+
+  setTimeout(() => {
+    outputsize()
+  }, 100)
+
+  
   if(tab_el){
     new ResizeObserver(outputsize).observe(tab_el)   
   }
 
   if(user.value){
     const account = user.value.accounts.find((item) => {
-      return item.address === user.value.address
+      return item.address === user?.value?.address
+    })
+    userPrimaryAccount.value = account
+  }
+})
+
+watch(user, () => {
+  if(user.value){
+    const account = user.value.accounts.find((item) => {
+      return item.address === user?.value?.address
     })
     userPrimaryAccount.value = account
   }
@@ -42,10 +57,10 @@ onMounted(()=>{
     class="min-w-[360px] min-h-[100vh] h-[100vh] 
     w-[100vw] flex justify-center items-start py-45 overflow-y-auto"
   >
-    <div class="max-w-[1448px] h-full w-full px-[140px]">
+    <div class="max-w-[1448px] h-full w-full px-[140px] 550s:px-50">
       <div
         v-if="user"
-        class="flex justify-between items-center gap-45 w-full pb-[60px]"
+        class="flex justify-between items-center w-full pb-[60px]"
       >
         <div class="flex items-center gap-50">
           <div class="w-[25px]">
@@ -57,10 +72,12 @@ onMounted(()=>{
               >
             </a>
           </div>
-          <div>
-            <h6 class="text-grey_6 font-medium">
-              Dashboard
-            </h6>
+          <div class="not-sr-only 700s:sr-only">
+            <router-link to="/">
+              <h6 class="text-grey_6 font-medium">
+                Dashboard
+              </h6>
+            </router-link>
           </div>
         </div>
         <div 
@@ -95,7 +112,7 @@ onMounted(()=>{
             v-show="openWalletConnect"
             class="absolute top-[100% - 1px] right-[-1px] w-[200px] border-x border-b text-grey_3 border-border rounded-b-[5px]
             hover:border-grey_4 bg-white expand_height z-[10]"
-            :style="`height: ${walletContainerHeight};`"
+            :style="`height: 400px;`"
           >
             <div 
               class="w-full h-full flex flex-col justify-between pt-10"
@@ -126,7 +143,7 @@ onMounted(()=>{
                       class="w-full h-full"
                     >
                       <div
-                        v-for="act in user.accounts"
+                        v-for="act in user?.accounts"
                         :key="act.address"
                         class="text-caption w-full truncate mb-10 pr-10 pb-2 border-b border-border"
                       >
@@ -137,7 +154,7 @@ onMounted(()=>{
                             class="w-20"
                           >
                           <div 
-                            v-if="act.address === user.address"
+                            v-if="act.address === user?.address"
                             class="w-5 h-5 bg-blue_3 rounded-[5px] absolute left-0 top-0"
                           />
                         </div>

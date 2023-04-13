@@ -152,20 +152,19 @@ describe('Casimir manager', async function () {
     const firstStake = await casimirManager.getUserStake(firstUser.address)
     const secondStake = await casimirManager.getUserStake(secondUser.address)
     const thirdStake = await casimirManager.getUserStake(thirdUser.address)
-    const dust = stake.sub(firstStake.add(secondStake).add(thirdStake))
     
     const line = '----------------------------------------'
     console.log(`${line}\n💿 Post testing simulation results\n${line}`)
-    if (dust !== ethers.utils.parseEther('0.0')) {
-        console.log('🙊 Dust count', ethers.utils.formatEther(dust))
-    }
     console.log('🏦 Manager updated balance', ethers.utils.formatEther(stake))
     console.log('👤 First user updated balance', ethers.utils.formatEther(firstStake))
     console.log('👤 Second user updated balance', ethers.utils.formatEther(secondStake))
     console.log('👤 Third user updated balance', ethers.utils.formatEther(thirdStake))
-    
     const readyDeposits = await casimirManager.getReadyDeposits()
     console.log('📦 Ready deposits', ethers.utils.formatEther(readyDeposits))
+    const dust = stake.sub(firstStake.add(secondStake).add(thirdStake))
+    if (dust !== ethers.utils.parseEther('0.0')) {
+        console.log('🧹 Dust', ethers.utils.formatEther(dust))
+    }
     console.log(line)
   })
 })
