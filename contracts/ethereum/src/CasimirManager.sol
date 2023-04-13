@@ -85,22 +85,26 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint256 private unswappedLINKFees;
     /** Unswapped SSV fees */
     uint256 private unswappedSSVFees;
-    /** User staking accounts */
+    /** All users */
     mapping(address => User) private users;
-    /** Staking pools */
+    /** All pools (open, ready, or staked) */
     mapping(uint32 => Pool) private pools;
-    /** Total pool deposits ready for stake */
+    /** Total deposits in open pools */
+    uint256 private openDeposits;
+    /** Total deposits in ready pools */
     uint256 private readyDeposits;
-    /** IDs of staking pools readily accepting deposits */
+    /** IDs of pools open for deposits */
+    uint32[] private openPoolIds;
+    /** IDs of pools ready for stake */
     uint32[] private readyPoolIds;
     /** IDs of staking pools at full capacity */
     uint32[] private stakedPoolIds;
-    /** Validators (staked or ready) */
+    /** All validators (ready or staked) */
     mapping(bytes => Validator) private validators;
-    /** Public keys of staked validators  */
-    bytes[] private stakedValidatorPublicKeys;
     /** Public keys of ready validators */
     bytes[] private readyValidatorPublicKeys;
+    /** Public keys of staked validators  */
+    bytes[] private stakedValidatorPublicKeys;
 
     /**
      * @notice Constructor
@@ -182,9 +186,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             users[msg.sender].stake0 = getUserStake(msg.sender);
         }
         users[msg.sender].distributionSum0 = distributionSum;
-        users[msg.sender].stake0 =
-            users[msg.sender].stake0 +
-            processedDeposit.ethAmount;
+        users[msg.sender].stake0 += processedDeposit.ethAmount;            
 
         distribute(msg.sender, processedDeposit, block.timestamp);
     }
@@ -271,7 +273,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
         require(users[msg.sender].stake0 > 0, "User does not have a stake");
 
-        /** Settle user's current stake */
+        /** Settle user's compounded stake */
         users[msg.sender].stake0 = getUserStake(msg.sender);
 
         require(
@@ -420,7 +422,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Activate a pool validator on beacon and SSV
+     * @dev Stake a pool validator and register with SSV
      * @param poolId The pool ID
      */
     function stakePool(uint32 poolId) private returns (bool) {
