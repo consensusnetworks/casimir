@@ -3,10 +3,10 @@ pragma solidity 0.8.16;
 
 import "./CasimirAutomation.sol";
 import "./interfaces/ICasimirManager.sol";
-import "./external/interfaces/IDepositContract.sol";
-import "./external/interfaces/ISSVNetwork.sol";
-import "./external/interfaces/ISSVToken.sol";
-import "./external/interfaces/IWETH9.sol";
+import "./vendor/interfaces/IDepositContract.sol";
+import "./vendor/interfaces/ISSVNetwork.sol";
+import "./vendor/interfaces/ISSVToken.sol";
+import "./vendor/interfaces/IWETH9.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -42,6 +42,26 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Sum of scaled reward to stake ratios (arbitrary intial value required) */
     uint256 distributionSum = 1000 ether;
 
+    /*************/
+    /* Contracts */
+    /*************/
+
+    /** Automation contract address */
+    ICasimirAutomation private immutable casimirAutomation;
+    /** Beacon deposit contract */
+    IDepositContract private immutable beaconDeposit;
+    /** LINK ERC-20 token contract */
+    IERC20 private immutable linkToken;
+    /** SSV network contract */
+    ISSVNetwork private immutable ssvNetwork;
+    /** SSV ERC-20 token contract */
+    ISSVToken private immutable ssvToken;
+    /** Uniswap factory contract */
+    IUniswapV3Factory private immutable swapFactory;
+    /** Uniswap router contract  */
+    ISwapRouter private immutable swapRouter;
+
+
     /***************/
     /* Enumerators */
     /***************/
@@ -57,22 +77,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /* Global Variables */
     /********************/
 
-    /** Automation contract address */
-    CasimirAutomation public casimirAutomation;
     /** Last pool ID generated for a new pool */
     Counters.Counter lastPoolId;
     /** Token addresses */
     mapping(Token => address) private tokens;
-    /** Beacon deposit contract */
-    IDepositContract private immutable beaconDeposit;
-    /** SSV network contract */
-    ISSVNetwork private immutable ssvNetwork;
-    /** SSV ERC-20 token contract */
-    ISSVToken private immutable ssvToken;
-    /** Uniswap factory contract */
-    IUniswapV3Factory private immutable swapFactory;
-    /** Uniswap router contract  */
-    ISwapRouter private immutable swapRouter;
     /** Unswapped LINK fees */
     uint256 private unswappedLINKFees;
     /** Unswapped SSV fees */
@@ -93,8 +101,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     bytes[] private stakedValidatorPublicKeys;
     /** Public keys of ready validators */
     bytes[] private readyValidatorPublicKeys;
-    /** LINK ERC-20 token contract */
-    IERC20 private immutable linkToken;
 
     /**
      * @notice Constructor

@@ -77,7 +77,7 @@ graph LR
 
 ### Contracts
 
-A Hardhat environment for development and deployment is configured in the [hardhat.config.ts](./hardhat.config.ts) file. The following contract scripts are run from the monorepo root directory:
+Casimir deploys two internal contracts and interfaces with suite of vendor contracts from the Consensus Specs, Chainlink, OpenZeppelin, SSV, and Uniswap. All contract source code is located in the [./src](./src) directory. A Hardhat environment for development and deployment is configured in the [hardhat.config.ts](./hardhat.config.ts) file. The following contract scripts can be executed from the **monorepo root** directory:
 
 - `npm run dev:ethereum` - Run a local Ethereum network and deploy contracts
 - `npm run test:ethereum` - Run tests for the Ethereum contracts
@@ -93,21 +93,25 @@ Core internal contracts and interfaces are located in the [src](./src) directory
 | [CasimirManager](./src/CasimirManager.sol) | Manages stake distribution | [docs/index.md#casimirmanager](./docs/index.md#casimirmanager) |
 | [CasimirAutomation](./src/CasimirAutomation.sol) | Automates event handling | [docs/index.md#casimirautomation](./docs/index.md#casimirautomation) |
 
-**External Contracts:**
+**Vendor Contracts:**
 
-Vendor external contracts and interfaces are located in the [src/external](./src/external) directory.
+Vendor contracts and interfaces are located in the [src/vendor](./src/vendor) directory.
 
 | Contract | Description | Docs |
 | --- | --- | --- |
-| [DepositContract](./src/external/interfaces/IDepositContract.sol) | Accepts Beacon deposits | Todo |
-| [KeeperRegistry](./src/external/interfaces/IKeeperRegistry.sol) | Manages Chainlink upkeeps | Todo |
-| [SSVNetwork](./src/external/interfaces/ISSVNetwork.sol) | Connects distributed validators | Todo |
-| [SSVToken](./src/external/interfaces/ISSVToken.sol) | Serves as operator utility token | Todo |
-| [WETH](./src/external/interfaces/IWETH.sol) | Serves as wrapped ETH for swaps | Todo |
+| [DepositContract](./src/vendor/interfaces/IDepositContract.sol) | Accepts Beacon deposits | Todo |
+| [Functions](./src/vendor/Functions.sol) | Provides a library for Chainlink functions | Todo |
+| [FunctionsBillingRegistry](./src/vendor/interfaces/FunctionsBillingRegistryInterface.sol) | Manages Chainlink function billing | Todo |
+| [FunctionsClient](./src/vendor/FunctionsClient.sol) | Executes Chainlink function requests | Todo |
+| [FunctionsOracle](./src/vendor/interfaces/FunctionsOracleInterface.sol) | Handles Chainlink function requests | Todo |
+| [KeeperRegistry](./src/vendor/interfaces/IKeeperRegistry.sol) | Manages Chainlink upkeeps | Todo |
+| [SSVNetwork](./src/vendor/interfaces/ISSVNetwork.sol) | Connects distributed validators | Todo |
+| [SSVToken](./src/vendor/interfaces/ISSVToken.sol) | Serves as operator utility token | Todo |
+| [WETH](./src/vendor/interfaces/IWETH.sol) | Wraps ETH for swapping | Todo |
 
-**Dev Contracts:**
+**Mock Contracts:**
 
-Development-only contracts and interfaces are located in the [src/dev](./src/dev) directory.
+Mock (development-only) contracts and interfaces are located in the [src/mock](./src/mock) directory.
 
 ### Distributed Key Generation
 

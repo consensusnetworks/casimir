@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 import "./interfaces/ICasimirAutomation.sol";
 import "./interfaces/ICasimirManager.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import {Functions, FunctionsClient} from "./dev/FunctionsClient.sol";
+import {Functions, FunctionsClient} from "./vendor/FunctionsClient.sol";
 // import "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol"; // Once published
 import "hardhat/console.sol";
 

@@ -16,7 +16,7 @@
         "scripts/*.ts",
         "./test/*.ts",       
         "src/index.ts"    
-    ],
+, "test/e2e/simulation.ts"    ],
     "typeRoots": [
         "node_modules/@types"
     ],
