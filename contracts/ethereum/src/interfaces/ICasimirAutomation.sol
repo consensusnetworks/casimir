@@ -15,8 +15,6 @@ interface ICasimirAutomation is AutomationCompatibleInterface, PoRAddressList {
 
     function performUpkeep(bytes calldata performData) external;
 
-    function validateUpkeep() external view returns (bool upkeepNeeded);
-
     function getPoRAddressListLength() external view returns (uint256);
 
     function getPoRAddressList(

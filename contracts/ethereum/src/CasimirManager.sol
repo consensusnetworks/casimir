@@ -36,11 +36,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Uniswap 0.3% fee tier */
     uint24 private immutable uniswapFeeTier = 3000;
     /** Staking pool capacity */
-    uint256 private poolCapacity = 32 ether;
+    uint256 private immutable poolCapacity = 32 ether;
     /** Scale factor for each reward to stake ratio */
-    uint256 scaleFactor = 1 ether;
-    /** Sum of scaled reward to stake ratios (arbitrary intial value required) */
-    uint256 distributionSum = 1000 ether;
+    uint256 private immutable scaleFactor = 1 ether;
 
     /*************/
     /* Contracts */
@@ -60,7 +58,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     IUniswapV3Factory private immutable swapFactory;
     /** Uniswap router contract  */
     ISwapRouter private immutable swapRouter;
-
 
     /***************/
     /* Enumerators */
@@ -91,8 +88,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     mapping(uint32 => Pool) private pools;
     /** Total deposits in open pools */
     uint256 private openDeposits;
-    /** Total deposits in ready pools */
-    uint256 private readyDeposits;
     /** IDs of pools open for deposits */
     uint32[] private openPoolIds;
     /** IDs of pools ready for stake */
@@ -105,6 +100,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     bytes[] private readyValidatorPublicKeys;
     /** Public keys of staked validators  */
     bytes[] private stakedValidatorPublicKeys;
+    /** Public keys of exiting validators */
+    bytes[] private exitingValidatorPublicKeys;
+    /** Sum of scaled reward to stake ratios (intial value required) */
+    uint256 distributionSum = 1000 ether;
+    /** LINK fee percentage (intial value required) */
+    uint32 linkFee = 1;
+    /** SSV fee percentage (intial value required) */
+    uint32 ssvFee = 1;
 
     /**
      * @notice Constructor
@@ -166,7 +169,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             processedDeposit.ethAmount,
             getStake()
         );
-        distribute(address(this), processedDeposit, block.timestamp);
+        distribute(address(this), processedDeposit);
     }
 
     /**
@@ -180,27 +183,25 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             getFees()
         );
 
-        /** Update user staking account */
+        /** Update user account state */
         if (users[msg.sender].stake0 > 0) {
             /** Settle user's current stake */
             users[msg.sender].stake0 = getUserStake(msg.sender);
         }
         users[msg.sender].distributionSum0 = distributionSum;
-        users[msg.sender].stake0 += processedDeposit.ethAmount;            
+        users[msg.sender].stake0 += processedDeposit.ethAmount;
 
-        distribute(msg.sender, processedDeposit, block.timestamp);
+        distribute(msg.sender, processedDeposit);
     }
 
     /**
      * @dev Distribute a processed deposit to ready pools
      * @param sender The deposit sender address
      * @param processedDeposit The processed deposit
-     * @param time The deposit time
      */
     function distribute(
         address sender,
-        ProcessedDeposit memory processedDeposit,
-        uint256 time
+        ProcessedDeposit memory processedDeposit
     ) private {
         /**
          * Todo distribute SSV fees
@@ -210,54 +211,46 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         /** Distribute LINK fees to oracle */
         linkToken.transfer(getAutomationAddress(), processedDeposit.linkAmount);
 
-        /** Emit manager reward event */
-        emit ManagerDistribution(sender, processedDeposit.ethAmount, time);
+        emit ManagerDistribution(
+            sender,
+            processedDeposit.ethAmount,
+            processedDeposit.linkAmount,
+            processedDeposit.ssvAmount
+        );
 
-        /** Distribute to ready pools */
+        /** Distribute to open pools */
         while (processedDeposit.ethAmount > 0) {
-            /** Get the next ready pool */
+            /** Get the next open pool */
             uint32 poolId;
-            if (readyPoolIds.length > 0) {
-                poolId = readyPoolIds[0];
+            if (openPoolIds.length > 0) {
+                poolId = openPoolIds[0];
             } else {
                 lastPoolId.increment();
                 poolId = uint32(lastPoolId.current());
-                readyPoolIds.push(poolId);
+                openPoolIds.push(poolId);
             }
             Pool storage pool;
             pool = pools[poolId];
             uint256 remainingCapacity = poolCapacity - pool.deposits;
             if (remainingCapacity > processedDeposit.ethAmount) {
-                /** Emit pool deposit event */
-                emit PoolDeposit(
-                    sender,
-                    poolId,
-                    processedDeposit.ethAmount,
-                    time
-                );
+                emit PoolDeposit(sender, poolId, processedDeposit.ethAmount);
 
-                readyDeposits += processedDeposit.ethAmount;
+                openDeposits += processedDeposit.ethAmount;
                 pool.deposits += processedDeposit.ethAmount;
                 processedDeposit.ethAmount = 0;
             } else {
-                /** Emit pool deposit event */
-                emit PoolDeposit(sender, poolId, remainingCapacity, time);
+                emit PoolDeposit(sender, poolId, remainingCapacity);
 
-                readyDeposits -= pool.deposits;
+                openDeposits -= pool.deposits;
                 pool.deposits += remainingCapacity;
                 processedDeposit.ethAmount -= remainingCapacity;
 
-                /** Get a new validator and stake pool */
-                stakePool(poolId);
-
-                /** Remove pool from open pools */
-                for (uint i = 0; i < readyPoolIds.length - 1; i++) {
-                    readyPoolIds[i] = readyPoolIds[i + 1];
+                /** Move pool from open to ready state */
+                for (uint i = 0; i < openPoolIds.length - 1; i++) {
+                    openPoolIds[i] = openPoolIds[i + 1];
                 }
-                readyPoolIds.pop();
-
-                /** Add pool to staked pools */
-                stakedPoolIds.push(poolId);
+                openPoolIds.pop();
+                readyPoolIds.push(poolId);
             }
         }
     }
@@ -268,8 +261,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function withdraw(uint256 amount) external nonReentrant {
         require(
-            readyDeposits >= amount,
-            "Withdrawing more than ready deposits"
+            openDeposits >= amount,
+            "Withdrawing more than open deposits"
         );
         require(users[msg.sender].stake0 > 0, "User does not have a stake");
 
@@ -281,15 +274,18 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             "Withdrawing more than user stake"
         );
 
-        /** Update user staking account */
+        /** Send ETH from manager to user */
+        (bool success, ) = msg.sender.call{value: amount}("");
+
+        emit UserWithdrawed(msg.sender, amount);
+
+        /** Update user account state */
         users[msg.sender].distributionSum0 = distributionSum;
         users[msg.sender].stake0 -= amount;
 
-        /** Update ready deposits */
-        readyDeposits -= amount;
+        /** Update balance state */
+        openDeposits -= amount;
 
-        /** Send ETH from manager to user */
-        (bool success, ) = msg.sender.call{value: amount}("");
         require(success, "Transfer failed");
     }
 
@@ -307,7 +303,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint32 feePercent = fees.LINK + fees.SSV;
 
         /** Calculate ETH amount to return in processed deposit */
-        uint256 ethAmount = (depositAmount * 100) / (100 + feePercent);
+        uint256 ethAmount = Math.mulDiv(depositAmount, 100, 100 + feePercent);
 
         /** Calculate fee amount to swap */
         uint256 feeAmount = depositAmount - ethAmount;
@@ -364,10 +360,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint128 liquidity = IUniswapV3PoolState(swapPool).liquidity();
         if (liquidity == 0) {
             if (tokenOut == tokens[Token.LINK]) {
-                console.log("No liquidity in LINK swap pool");
                 unswappedLINKFees += amountIn;
             } else if (tokenOut == tokens[Token.SSV]) {
-                console.log("No liquidity in SSV swap pool");
                 unswappedSSVFees += amountIn;
             }
             return 0;
@@ -401,7 +395,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Get the current token fees as percentages
      * @return The current token fees as percentages
      */
-    function getFees() public pure returns (Fees memory) {
+    function getFees() public view returns (Fees memory) {
         return Fees(getLINKFee(), getSSVFee());
     }
 
@@ -409,27 +403,30 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Get the LINK fee percentage to charge on each deposit
      * @return The LINK fee percentage to charge on each deposit
      */
-    function getLINKFee() public pure returns (uint32) {
-        return 1;
+    function getLINKFee() public view returns (uint32) {
+        return linkFee;
     }
 
     /**
      * @notice Get the SSV fee percentage to charge on each deposit
      * @return The SSV fee percentage to charge on each deposit
      */
-    function getSSVFee() public pure returns (uint32) {
-        return 1;
+    function getSSVFee() public view returns (uint32) {
+        return ssvFee;
     }
 
     /**
      * @dev Stake a pool validator and register with SSV
      * @param poolId The pool ID
      */
-    function stakePool(uint32 poolId) private returns (bool) {
+    function stakePool(uint32 poolId) external {
         require(readyValidatorPublicKeys.length > 0, "No ready validators");
 
+        /** Get next ready validator */
         bytes memory publicKey = readyValidatorPublicKeys[0];
         Validator memory validator = validators[publicKey];
+
+        /** Get the pool */
         Pool storage pool = pools[poolId];
 
         /** Deposit validator */
@@ -452,33 +449,53 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             mockSSVFee // uint256 (fees handled on user deposits)
         );
 
-        /** Update the pool */
-        pool.validatorPublicKey = publicKey;
-        pool.operatorIds = validator.operatorIds;
+        /** Move pool from ready to staked state */
+        for (uint i = 0; i < readyPoolIds.length - 1; i++) {
+            readyPoolIds[i] = readyPoolIds[i + 1];
+        }
+        readyPoolIds.pop();
+        stakedPoolIds.push(poolId);
 
-        /** Remove validator from inactive validators and add to active validators */
+        /** Move validator from inactive to active state and add to pool */
         for (uint i = 0; i < readyValidatorPublicKeys.length - 1; i++) {
             readyValidatorPublicKeys[i] = readyValidatorPublicKeys[i + 1];
         }
         readyValidatorPublicKeys.pop();
         stakedValidatorPublicKeys.push(publicKey);
+        pool.validatorIndex = stakedValidatorPublicKeys.length - 1;
 
-        emit PoolStaked(poolId, pool.validatorPublicKey, pool.operatorIds);
-
-        return true;
+        emit PoolStaked(poolId);
     }
 
-    // /**
-    //  * @dev Deactivate a validator from beacon and SSV
-    //  */
-    // function removeValidator(
+    /**
+     * @dev Remove a pool
+     * @param poolId The pool ID
+     */
+    function removePool(uint32 poolId) external /**onlyUpkeep*/ {
+        Pool storage pool = pools[poolId];
 
-    // ) {
-    // Todo mark a validator inactive (distinguish from active)
-    // }
+        /** Remove pool validator from Beacon and SSV */
+        removeValidator(pool.validatorIndex);
+
+        /** Remove pool from staked pools and delete */
+        for (uint i = 0; i < stakedPoolIds.length - 1; i++) {
+            stakedPoolIds[i] = stakedPoolIds[i + 1];
+        }
+        stakedPoolIds.pop();
+        delete pools[poolId];
+        
+        emit PoolRemoved(poolId);
+    }
 
     /**
      * @dev Add a validator to the pool manager
+     * @param depositDataRoot The deposit data root
+     * @param publicKey The validator public key
+     * @param operatorIds The operator IDs
+     * @param sharesEncrypted The encrypted shares
+     * @param sharesPublicKeys The public keys of the shares
+     * @param signature The signature
+     * @param withdrawalCredentials The withdrawal credentials
      */
     function addValidator(
         bytes32 depositDataRoot,
@@ -488,7 +505,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bytes[] memory sharesPublicKeys,
         bytes calldata signature,
         bytes calldata withdrawalCredentials
-    ) public onlyOwner {
+    ) external /**onlyUpkeep*/ {
+
+        /** Create validator and add to ready state */
         validators[publicKey] = Validator(
             depositDataRoot,
             operatorIds,
@@ -499,17 +518,51 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
         readyValidatorPublicKeys.push(publicKey);
 
-        emit ValidatorAdded(publicKey, operatorIds);
+        emit ValidatorAdded(publicKey);
     }
 
-    // /**
-    //  * @dev Remove a validator from the pool manager
-    //  */
-    // function removeValidator(
+    function exitValidator(
+        uint index
+    ) external /**onlyUpkeep*/ {
 
-    // ) {
-    // Todo mark a validator removed (distinguish from inactive)
-    // }
+        /** Get validator public key */
+        bytes memory publicKey = stakedValidatorPublicKeys[index];
+
+        /** Todo remove validator from Beacon */
+
+        /** Remove validator from SSV */
+        ssvNetwork.removeValidator(publicKey);
+
+        /** Move validator from staked to exiting state */
+        for (uint i = index; i < stakedValidatorPublicKeys.length - 1; i++) {
+            stakedValidatorPublicKeys[i] = stakedValidatorPublicKeys[i + 1];
+        }
+        stakedValidatorPublicKeys.pop();
+        exitingValidatorPublicKeys.push(publicKey);
+
+        emit ValidatorExited(publicKey);
+    }
+
+    /**
+     * @dev Remove a validator from the pool manager
+     * @param index The validator index
+     */
+    function removeValidator(
+        uint index
+    ) private /**onlyUpkeep*/ {
+
+        /** Get public key */
+        bytes memory publicKey = exitingValidatorPublicKeys[index];
+
+        /** Remove validator from exiting state and delete */
+        for (uint i = index; i < exitingValidatorPublicKeys.length - 1; i++) {
+            exitingValidatorPublicKeys[i] = exitingValidatorPublicKeys[i + 1];
+        }
+        exitingValidatorPublicKeys.pop();
+        delete validators[publicKey];
+
+        emit ValidatorRemoved(publicKey);
+    }
 
     /**
      * @notice Get staked validator public keys
@@ -536,6 +589,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Get a list of all open pool IDs
+     * @return A list of all open pool IDs
+     */
+    function getOpenPoolIds() external view returns (uint32[] memory) {
+        return openPoolIds;
+    }
+
+    /**
      * @notice Get a list of all ready pool IDs
      * @return A list of all ready pool IDs
      */
@@ -556,15 +617,18 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @return The current stake of the pool manager
      */
     function getStake() public view returns (uint256) {
-        return stakedPoolIds.length * poolCapacity + readyDeposits;
+        return
+            (readyPoolIds.length + stakedPoolIds.length) *
+            poolCapacity +
+            openDeposits;
     }
 
     /**
      * @notice Get the current ready deposits of the pool manager
      * @return The current ready deposits of the pool manager
      */
-    function getReadyDeposits() public view returns (uint256) {
-        return readyDeposits;
+    function getOpenDeposits() public view returns (uint256) {
+        return openDeposits;
     }
 
     /**
@@ -584,12 +648,22 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get a pool by ID
+     * @notice Get pool details
      * @param poolId The pool ID
-     * @return The pool
+     * @return The pool details
      */
-    function getPool(uint32 poolId) external view returns (Pool memory) {
-        return pools[poolId];
+    function getPoolDetails(uint32 poolId) external view returns (PoolDetails memory) {
+        Pool memory pool = pools[poolId];
+        if (pool.deposits < poolCapacity) {
+            return PoolDetails(pool.deposits, new bytes(0), new uint32[](0));
+        }
+        bytes memory publicKey = stakedValidatorPublicKeys[pool.validatorIndex];
+        Validator memory validator = validators[publicKey];
+        return PoolDetails(
+            pool.deposits,
+            publicKey,
+            validator.operatorIds
+        );
     }
 
     /**

@@ -56,8 +56,13 @@ contract CasimirAutomation is ICasimirAutomation {
     {
         console.log(abi.decode(checkData, (string)));
 
-        upkeepNeeded = validateUpkeep();
-        performData = abi.encodePacked("Performing upkeep");
+        uint32[] memory readyPoolIds = casimirManager.getReadyPoolIds();
+
+        if (readyPoolIds.length > 0) {
+            upkeepNeeded = true;
+        }
+
+        performData = abi.encode(readyPoolIds);
     }
 
     /**
@@ -65,27 +70,12 @@ contract CasimirAutomation is ICasimirAutomation {
      * @param performData The data to perform the upkeep
      */
     function performUpkeep(bytes calldata performData) external override {
-        console.log(abi.decode(performData, (string)));
 
-        /** Revalidate the upkeep */
-        if (validateUpkeep()) {
-            /** Update the stake */
-            stake = casimirManager.getStake();
+        /** Stake ready pools */
+        uint32[] memory readyPoolIds = abi.decode(performData, (uint32[]));
+        for (uint i = 0; i < readyPoolIds.length; i++) {
+            casimirManager.stakePool(readyPoolIds[i]);
         }
-    }
-
-    /**
-     * @notice Validate if the upkeep is needed
-     * @return upkeepNeeded True if the upkeep is needed
-     */
-    function validateUpkeep() public view returns (bool upkeepNeeded) {
-        bool stakeChanged = stake != casimirManager.getStake();
-        console.log(
-            "Stake changed from %s to %s",
-            stake,
-            casimirManager.getStake()
-        );
-        upkeepNeeded = stakeChanged;
     }
 
     /**
