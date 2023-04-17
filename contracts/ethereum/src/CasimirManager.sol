@@ -7,6 +7,7 @@ import "./vendor/interfaces/IDepositContract.sol";
 import "./vendor/interfaces/ISSVNetwork.sol";
 import "./vendor/interfaces/ISSVToken.sol";
 import "./vendor/interfaces/IWETH9.sol";
+import "./libraries/Arrays.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -28,6 +29,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
     /** Use math for precise division */
     using Math for uint256;
+    /** Use uint32 array lib */
+    using Uint32Array for uint32[];
+    /** Use bytes array lib */
+    using BytesArray for bytes[];
 
     /*************/
     /* Constants */
@@ -246,10 +251,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 processedDeposit.ethAmount -= remainingCapacity;
 
                 /** Move pool from open to ready state */
-                for (uint i = 0; i < openPoolIds.length - 1; i++) {
-                    openPoolIds[i] = openPoolIds[i + 1];
-                }
-                openPoolIds.pop();
+                openPoolIds.remove(0);
                 readyPoolIds.push(poolId);
             }
         }
@@ -450,17 +452,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
 
         /** Move pool from ready to staked state */
-        for (uint i = 0; i < readyPoolIds.length - 1; i++) {
-            readyPoolIds[i] = readyPoolIds[i + 1];
-        }
-        readyPoolIds.pop();
+        readyPoolIds.remove(0);
         stakedPoolIds.push(poolId);
 
         /** Move validator from inactive to active state and add to pool */
-        for (uint i = 0; i < readyValidatorPublicKeys.length - 1; i++) {
-            readyValidatorPublicKeys[i] = readyValidatorPublicKeys[i + 1];
-        }
-        readyValidatorPublicKeys.pop();
+        readyValidatorPublicKeys.remove(0);
         stakedValidatorPublicKeys.push(publicKey);
         pool.validatorIndex = stakedValidatorPublicKeys.length - 1;
 
@@ -478,10 +474,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         removeValidator(pool.validatorIndex);
 
         /** Remove pool from staked pools and delete */
-        for (uint i = 0; i < stakedPoolIds.length - 1; i++) {
-            stakedPoolIds[i] = stakedPoolIds[i + 1];
-        }
-        stakedPoolIds.pop();
+        stakedPoolIds.remove(0);
         delete pools[poolId];
         
         emit PoolRemoved(poolId);
@@ -534,10 +527,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ssvNetwork.removeValidator(publicKey);
 
         /** Move validator from staked to exiting state */
-        for (uint i = index; i < stakedValidatorPublicKeys.length - 1; i++) {
-            stakedValidatorPublicKeys[i] = stakedValidatorPublicKeys[i + 1];
-        }
-        stakedValidatorPublicKeys.pop();
+        stakedValidatorPublicKeys.remove(index);
         exitingValidatorPublicKeys.push(publicKey);
 
         emit ValidatorExited(publicKey);
@@ -555,10 +545,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bytes memory publicKey = exitingValidatorPublicKeys[index];
 
         /** Remove validator from exiting state and delete */
-        for (uint i = index; i < exitingValidatorPublicKeys.length - 1; i++) {
-            exitingValidatorPublicKeys[i] = exitingValidatorPublicKeys[i + 1];
-        }
-        exitingValidatorPublicKeys.pop();
+        exitingValidatorPublicKeys.remove(index);
         delete validators[publicKey];
 
         emit ValidatorRemoved(publicKey);
