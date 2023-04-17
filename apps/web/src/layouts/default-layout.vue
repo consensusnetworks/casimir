@@ -82,7 +82,7 @@ watch(user, () => {
         </div>
         <div 
           class="text-grey_3 border border-border rounded-[5px]
-           px-10 py-8 w-[200px] relative hover:border-grey_4"
+           px-10 py-8 w-[225px] relative hover:border-grey_4"
           @mouseenter="openWalletConnect = true"
           @mouseleave="openWalletConnect = false"
         >
@@ -91,12 +91,16 @@ watch(user, () => {
               v-if="userPrimaryAccount"
               class="flex items-center gap-10"
             >
-              <img
-                :src="`/${userPrimaryAccount.walletProvider.toLocaleLowerCase()}.svg`"
-                alt="MetaMask SVG"
-                class="w-[16px]"
-              >
-              {{ userPrimaryAccount.walletProvider }} 
+              <!-- <h6 class="iconoir-verified-user text-approve" /> -->
+              Wallets Connected ( {{ user.accounts.length }} )
+              <!-- <div class="flex gap-5 border-b border-border">
+                <img
+                  :src="`/${userPrimaryAccount.walletProvider.toLocaleLowerCase()}.svg`"
+                  alt="MetaMask SVG"
+                  class="w-[16px]"
+                >
+                {{ userPrimaryAccount.walletProvider }} 
+              </div> -->
             </div>
             <div 
               v-else
@@ -110,7 +114,7 @@ watch(user, () => {
           </div>
           <div
             v-show="openWalletConnect"
-            class="absolute top-[100% - 1px] right-[-1px] w-[200px] border-x border-b text-grey_3 border-border rounded-b-[5px]
+            class="absolute top-[100% - 1px] right-[-1px] w-[225px] border-x border-b text-grey_3 border-border rounded-b-[5px]
             hover:border-grey_4 bg-white expand_height z-[10]"
             :style="`height: 400px;`"
           >
@@ -145,7 +149,7 @@ watch(user, () => {
                       <div
                         v-for="act in user?.accounts"
                         :key="act.address"
-                        class="text-caption w-full truncate mb-10 pr-10 pb-2 border-b border-border"
+                        class="text-caption w-full truncate mb-10 pr-10 pb-2 border-b border-border h-[47px] mb-5"
                       >
                         <div class="relative mb-0 w-full">
                           <img

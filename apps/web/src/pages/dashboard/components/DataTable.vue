@@ -5,7 +5,7 @@ const selectedTab = ref('Staked' as 'Staked' | 'Transactions')
 
 const selectedTableHeader = ref('')
 const sortDirection = ref('down')
-const tableHeaders = ref([
+const stakingTableHeaders = ref([
   {
     title: 'ID',
     value: 'id'
@@ -15,16 +15,24 @@ const tableHeaders = ref([
     value: 'amount'
   },
   {
-    title: 'Auto Restake',
-    value: 'autoRestake'
-  },
-  {
     title: 'Date Staked',
     value: 'date'
   },
+  {
+    title: 'Staking Pool',
+    value: 'pool_id'
+  },
+  {
+    title: 'Validators/Operators',
+    value: 'validators'
+  },
+  {
+    title: 'Status',
+    value: 'status'
+  },
 ])
 
-const page_size = ref(16)
+const page_size = ref(8)
 const page_number = ref(1)
 const max_pages = ref(0)
 
@@ -38,15 +46,73 @@ const filterData = () => {
   if(page_number.value >= (Math.ceil(max_pages.value) + 1)) page_number.value = 1 
 }
 
+const timeElapsed = (date: string) => {
+  const now = new Date() as any
+  const past = new Date(date) as any
+
+  let elapsed = (now - past)
+  const msPerSecond = 1000
+  const msPerMinute = msPerSecond * 60
+  const msPerHour = msPerMinute * 60
+  const msPerDay = msPerHour * 24
+  const msPerMonth = msPerDay * 30 
+  const msPerYear = msPerDay * 365 
+
+  const years = Math.floor(elapsed / msPerYear)
+  elapsed -= years * msPerYear
+
+  const months = Math.floor(elapsed / msPerMonth)
+  elapsed -= months * msPerMonth
+
+  const days = Math.floor(elapsed / msPerDay)
+  elapsed -= days * msPerDay
+
+  // const hours = Math.floor(elapsed / msPerHour)
+  // elapsed -= hours * msPerHour
+
+  // const minutes = Math.floor(elapsed / msPerMinute)
+  // elapsed -= minutes * msPerMinute
+
+  // const seconds = Math.floor(elapsed / msPerSecond)
+  // ${hours} hours, ${minutes} minutes, ${seconds} seconds
+
+  return `${years} years, ${months} months, ${days} days`
+}
+
 onMounted(()=>{
   const randomData = []
+
+  var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()'
+
+  const randomString = () => {
+    let result = ''
+    for ( var i = 0; i < 20; i++ ) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return result
+  }
+
   for (let i = 0; i < 100; i++) {
     randomData.push(
       {
-        id: i + 'as;dkfjajsdfa', 
-        amount: i * Math.floor(Math.random() * 100) + ' $',
-        autoRestake: true,
-        date: '1/1/' + i
+        id: randomString(), 
+        amount: i * Math.floor(Math.random() * 100),
+        date: new Date(Math.floor(Math.random() * Date.now())).toDateString(),
+        pool_id: randomString(),
+        validators: randomString(),
+        status: Math.random() < 0.5 ? {
+          status: 'In Waiting'
+        } : {
+          status: 'Staked',
+          dateStaked: new Date(Math.floor(Math.random() * Date.now())).toDateString(),
+          autoStake: Math.random() < 0.5 ? {
+            restake: false, 
+            rewardsAccumulated: '35 ETH'
+          } : {
+            restake: true,
+            ammountRestaked: '25 ETH'
+          }
+        }
       }
     )
   }
@@ -56,7 +122,7 @@ onMounted(()=>{
   filterData()
 })
 
-watch([page_number, page_size, data, tableHeaders], ()=>{
+watch([page_number, page_size, data, stakingTableHeaders], ()=>{
   filterData()
 })
 
@@ -114,7 +180,7 @@ const openPaginationOptions = ref(false)
           <thead>
             <tr class="border-b border-border">
               <th
-                v-for="header in tableHeaders"
+                v-for="header in stakingTableHeaders"
                 :key="header.title"
                 style="transition: all 0.3s ease;"
                 class="text-caption font-bold text-left pb-10"
@@ -144,11 +210,34 @@ const openPaginationOptions = ref(false)
               class="w-full text-grey_5 text-body border-b border-grey_2"
             >
               <td
-                v-for="(header) in tableHeaders"
+                v-for="(header) in stakingTableHeaders"
                 :key="header.value"
                 class="py-5"
               >
-                {{ item[header.value] }}
+                <div
+                  v-if="header.value === 'id'"
+                  class="text-grey_7 font-bold truncate pr-20"
+                >
+                  {{ item.id }}
+                </div>
+                <div
+                  v-else-if="header.value === 'amount'"
+                  class="pr-20 whitespace-nowrap"
+                >
+                  {{ item.amount }} ETH
+                </div>
+                <div
+                  v-else-if="header.value === 'date'"
+                  class="pr-20 whitespace-nowrap"
+                >
+                  <span class="mr-10 font-bold">{{ item.date }}</span>
+                  <span class="font-light">
+                    {{ timeElapsed(item.date) }}
+                  </span>
+                </div>
+                <div v-else>
+                  {{ item[header.value] }}
+                </div>
               </td>
             </tr>
           </tbody>
@@ -168,7 +257,7 @@ const openPaginationOptions = ref(false)
           :class="i % 2 === 0? 'text-grey_5 ': 'text-grey_3 '"
         >
           <div
-            v-for="row in tableHeaders"
+            v-for="row in stakingTableHeaders"
             :key="row.value"
             class="flex justify-between items-center text-caption pb-5"
           >

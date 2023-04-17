@@ -79,6 +79,7 @@ module.exports = {
                 '70': '70px',
                 '75': '75px',
                 '100': '100px',
+                '150': '150px',
                 // if change, change anim in index.css
                 'sidebar-open': '300px',
                 'sidebar-closed': '75px'

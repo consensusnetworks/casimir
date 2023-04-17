@@ -2,14 +2,18 @@
 import { ref } from 'vue'
 import LineChartJS from '@/components/charts/LineChartJS.vue'
 
-const selectedTimeframe = ref('All Time')
-const selectedNetMetric = ref('Net Value')
-const openFilters = ref(false)
-const net_value_filter = ref('eth')
-const net_volume_filter = ref('all')
 const roi_metric = ref(-4.2)
-const allTimeHigh = ref({date: '01/01/2023', value: '$10,245.21'})
-const allTimeLow = ref({date: '12/12/2023', value: '$245.21'})
+
+const selectedTimeFrame = ref('All Time')
+const timeFrameOptions = ref(['All Time', '1 Year', '6 Month', '1 Month'])
+const openTimeFrameOptions = ref(false)
+
+const selectedWallet = ref('All Wallets')
+// TD: Aggergate through wallets and add them to the options (by address or providors?)
+const selectWalletOptions = ref(['All Wallets'])
+const openWallletOptions = ref(false)
+
+const selectedAssetLocation = ref(null as null | string)
 
 </script>
 
@@ -17,220 +21,177 @@ const allTimeLow = ref({date: '12/12/2023', value: '$245.21'})
   <div class="w-full h-full flex flex-col justify-between gap-20">
     <div class="flex justify-between items-center">
       <h6 class="font-bold text-[#727476]">
-        Analytics
+        Staking Analytics
       </h6>
-      <div class="flex items-center text-caption gap-10 font-bold text-border">
-        <button 
-          :class="selectedTimeframe === '1y'? 'text-black font-extrabold' :'hover:text-grey_8'"
-          @click="selectedTimeframe = '1y'"
-        >
-          1y
-        </button>
-        <button 
-          :class="selectedTimeframe === '6m'? 'text-black font-extrabold' :'hover:text-grey_8'"
-          @click="selectedTimeframe = '6m'"
-        >
-          6m
-        </button>
-        <button 
-          :class="selectedTimeframe === '1m'? 'text-black font-extrabold' :'hover:text-grey_8'"
-          @click="selectedTimeframe = '1m'"
-        >
-          1m
-        </button>
-        |
-        <button 
-          :class="selectedTimeframe === 'All Time'? 'text-black font-extrabold' :'hover:text-grey_8'"
-          @click="selectedTimeframe = 'All Time'"
-        >
-          All Time
-        </button>
-      </div>
     </div>
     <div
-      class="h-full flex flex-wrap items-start
-      border border-border rounded-[5px]"
+      class="h-full flex flex-col gap-0 items-center
+      border border-border rounded-[5px] px-10 py-20"
     >
-      <div class="w-full h-50 flex items-center justify-between px-10">
-        <div class="flex items-center text-caption gap-5 font-bold text-border">
-          <button 
-            :class="selectedNetMetric === 'Net Value'? 'text-black font-extrabold' :'hover:text-grey_8'"
-            @click="selectedNetMetric = 'Net Value'"
-          >
-            Net Value
-          </button> |
-          <button 
-            :class="selectedNetMetric === 'Net Volume'? 'text-black font-extrabold' :'hover:text-grey_8'"
-            @click="selectedNetMetric = 'Net Volume'"
-          >
-            Net Volume
-          </button>
-        </div>
-        <div 
-          class="text-grey_3 border border-border rounded-[5px]
-           px-10 py-4 w-[100px] relative hover:border-grey_4"
-          @mouseenter="openFilters = true"
-          @mouseleave="openFilters = false"
+      <!-- TD: Make this clickable to adjust the line chart && make the size dynamic -->
+      <div class="w-full flex gap-5 px-15 justify-between items-center whitespace-nowrap">
+        <button
+          class="w-2/6 text-left text-body text-grey_4
+          hover:text-grey_6 min-w-[60px]"
+          :class="selectedAssetLocation === 'In Wallets'? 
+            'text-grey_6' :
+            selectedAssetLocation === null? 
+              'text-grey_4': 'text-grey_4 opacity-40 hover:opacity-100'
+          "
+          @click="selectedAssetLocation === 'In Wallets'?
+            selectedAssetLocation = null :
+            selectedAssetLocation = 'In Wallets'
+          "
         >
-          <div class="text-caption font-bold flex items-center justify-between text-grey w-full">
-            <div>
-              Filter
-            </div>
-            <i
-              :class="!openFilters ? 'iconoir-nav-arrow-down text-[10px]' : 'iconoir-nav-arrow-up text-[10px]'"
-            />
+          <div class="font-bold mb-5">
+            In Wallets
           </div>
-          <div
-            v-show="openFilters"
-            class="absolute right-0 top-[100% - 2px] bg-white h-2 w-[98px] z-[2]"
-          />
-          <div
-            v-show="openFilters"
-            class="absolute top-[100% - 1px] right-[-1px] w-[200px] border text-grey_3 border-border rounded-b-[5px] rounded-l-[5px]
-            hover:border-grey_4 bg-white expand_height"
-          >
-            <div 
-              class="w-full h-full flex justify-between p-10"
-              :class="openFilters? 'delay_show opacity-[1]' : 'opacity-0'"
-            >
-              <div class="w-full border-r border-r-border">
-                <span class="font-bold text-border text-body pr-10">
-                  Net Value
-                </span>
-                <hr class="mr-10"> 
-                <div class="text-body font-medium flex gap-5 items-center my-5">
-                  <input
-                    id="all"
-                    v-model="net_value_filter"
-                    type="radio"
-                    value="all"
-                  >
-                  <label for="all"> All Assets</label>
-                </div>
-                <div class="text-body font-medium flex gap-5 items-center my-5">
-                  <input
-                    id="eth"
-                    v-model="net_value_filter"
-                    type="radio"
-                    value="eth"
-                  >
-                  <label for="eth"> ETH</label>
-                </div>
-              </div>
-              <div class="w-full  pl-10">
-                <span class="font-bold text-border text-body">
-                  Net Volume
-                </span>
-                <hr class=""> 
-                <div class="text-body font-medium flex gap-5 items-center my-5">
-                  <input
-                    id="all"
-                    v-model="net_volume_filter"
-                    type="radio"
-                    value="all"
-                  >
-                  <label for="all"> All Assets</label>
-                </div>
-                <div class="text-body font-medium flex gap-5 items-center my-5">
-                  <input
-                    id="wallets"
-                    v-model="net_volume_filter"
-                    type="radio"
-                    value="wallets"
-                  >
-                  <label for="wallets"> In Wallets</label>
-                </div>
-                <div class="text-body font-medium flex gap-5 items-center my-5">
-                  <input
-                    id="staked"
-                    v-model="net_volume_filter"
-                    type="radio"
-                    value="staked"
-                  >
-                  <label for="staked"> Staked</label>
-                </div>
-                <div class="text-body font-medium flex gap-5 items-center my-5">
-                  <input
-                    id="claimable"
-                    v-model="net_volume_filter"
-                    type="radio"
-                    value="claimable"
-                  >
-                  <label for="claimable"> Claimable</label>
-                </div>
-              </div>
-            </div>
+          <div class="w-full rounded-[5px] bg-blue_3 h-10" />
+        </button>
+        <button
+          class="w-3/6 text-left text-body text-grey_4
+          hover:text-grey_6 min-w-[50px]"
+          :class="selectedAssetLocation === 'Staked'? 
+            'text-grey_6' :
+            selectedAssetLocation === null? 
+              'text-grey_4': 'text-grey_4 opacity-40 hover:opacity-100'
+          "
+          @click="selectedAssetLocation === 'Staked'?
+            selectedAssetLocation = null :
+            selectedAssetLocation = 'Staked'
+          "
+        >
+          <div class="font-bold mb-5">
+            Staked
           </div>
-        </div>
+          <div class="w-full rounded-[5px] bg-blue_4 h-10" />
+        </button>
+        <button
+          class="w-1/6 text-left text-body
+          hover:text-grey_6 min-w-[65px]"
+          :class="selectedAssetLocation === 'Claimable'? 
+            'text-grey_6' :
+            selectedAssetLocation === null? 
+              'text-grey_4': 'text-grey_4 opacity-40 hover:opacity-100'
+          "
+          @click="selectedAssetLocation === 'Claimable'?
+            selectedAssetLocation = null :
+            selectedAssetLocation = 'Claimable'
+          "
+        >
+          <div class="font-bold mb-5">
+            Claimable
+          </div>
+          <div class="w-full rounded-[5px] bg-blue_5 h-10" />
+        </button>
       </div>
+
       <div
         :id="'line_chart_container_user_dash_linechart'" 
-        class="w-full h-[240px] flex justify-center"
+        class="w-full h-full flex justify-center"
       >
         <LineChartJS 
           :id="'user_dash_linechart'"
-          :x-grid-lines="false"
-          :y-grid-lines="true"
+          :x-grid-lines="true"
+          :y-grid-lines="false"
         />
       </div>
-    </div>
-    <div class="h-[120px] flex justify-between items-center gap-20 800s:gap-10">
-      <div
-        class="w-2/6 h-full flex flex-col justify-between px-15
-        border border-border rounded-[5px] 800s:px-10"
-      >
-        <div class="mb-10 flex justify-between items-center w-full pt-10">
-          <span class="text-caption font-bold text-border">
-            ROI
-          </span>
-        <!-- No need for expandalbe modal atm -->
-        <!-- <button class="iconoir-expand text-blue_3 hover:text-primary text-body" /> -->
-        </div>
-        <div class="w-full text-right pb-5">
-          <h5 
-            class="font-bold text-[24px] 800s:text-[16px]"
-            :class="roi_metric > 0? ' text-approve' : 'text-decline'"
+
+      <div class="w-full flex gap-5 px-15 justify-between items-center whitespace-nowrap">
+        <h6
+          class="font-bold text-grey_4"
+        >
+          <span 
+            :class="roi_metric > 0? 
+              ' text-approve' : 
+              'text-decline'"
           >
             {{ roi_metric }} %
-          </h5>
-        </div>
-      </div>
-      <!-- <div class="w-1 bg-border h-full" /> -->
-      <div
-        class="w-4/6 h-full flex flex-col justify-between px-15 
-        border border-border rounded-[5px] 800s:px-10"
-      >
-        <div class="flex justify-between items-center w-full pt-10 mb-20">
-          <span class="text-caption font-bold text-border">
-            All Time Net Values
           </span>
-          <!-- No need for expandalbe modal atm -->
-          <!-- <button class="iconoir-expand text-blue_3 hover:text-primary text-body" /> -->
-        </div>
-        <div class="w-full flex justify-between items-center pb-5">
-          <div class="text-left">
-            <span class="text-caption font-bold text-grey_2">
-              {{ allTimeLow.date }}
-            </span>
-            <h5 
-              class="font-bold text-decline text-[24px] 800s:text-[16px]"
+          <span class="text-body font-bold ml-5">
+            ROI
+          </span>
+        </h6>
+        <div class="flex items-center gap-10">
+          <div 
+            class="text-grey_3 border border-grey_3
+           px-10 py-4 w-[100px] relative hover:border-grey_4"
+            :class="openWallletOptions? 'rounded-b-[5px]':'rounded-[5px]'"
+            @mouseenter="openWallletOptions = true"
+            @mouseleave="openWallletOptions = false"
+          >
+            <div class="text-caption font-bold flex items-center justify-between text-grey_3 w-full">
+              <div>
+                {{ selectedWallet }}
+              </div>
+              <i
+                :class="!openWallletOptions ? 'iconoir-nav-arrow-down text-[10px]' : 'iconoir-nav-arrow-up text-[10px]'"
+              />
+            </div>
+            <div
+              v-show="openWallletOptions"
+              class="absolute border text-grey_3 border-border rounded-t-[5px]
+            hover:border-grey_4 bg-white expand_height"
+              :style="
+                `bottom: calc(100% - 1px);
+                right: calc(-1px);
+                width: calc(100% + 2px);`
+              "
             >
-              <span class="400s:text-body 400s:font-bold">
-                {{ allTimeLow.value }}
-              </span>
-            </h5>
+              <div 
+                class="w-full p-10 h-full flex flex-col gap-5"
+                :class="openWallletOptions? 'delay_show opacity-[1]' : 'opacity-0'"
+              >
+                <button
+                  v-for="option in selectWalletOptions"
+                  :key="option"
+                  class="w-full text-caption text-grey_3 text-left hover:text-grey_7"
+                  @click="selectedWallet = option"
+                >
+                  {{ option }}
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="text-right">
-            <span class="text-caption font-bold text-grey_2">
-              {{ allTimeHigh.date }}
-            </span>
-            <h5
-              class="font-bold text-approve text-[24px] 800s:text-[16px]"
+          <div 
+            class="text-grey_3 border border-grey_3
+           px-10 py-4 w-[100px] relative hover:border-grey_4"
+            :class="openTimeFrameOptions? 'rounded-b-[5px]':'rounded-[5px]'"
+            @mouseenter="openTimeFrameOptions = true"
+            @mouseleave="openTimeFrameOptions = false"
+          >
+            <div class="text-caption font-bold flex items-center justify-between text-grey_3 w-full">
+              <div>
+                {{ selectedTimeFrame }}
+              </div>
+              <i
+                :class="!openTimeFrameOptions ? 'iconoir-nav-arrow-down text-[10px]' : 'iconoir-nav-arrow-up text-[10px]'"
+              />
+            </div>
+            <div
+              v-show="openTimeFrameOptions"
+              class="absolute border text-grey_3 border-border rounded-t-[5px]
+            hover:border-grey_4 bg-white expand_height"
+              :style="
+                `bottom: calc(100% - 1px);
+                right: calc(-1px);
+                width: calc(100% + 2px);`
+              "
             >
-              <span class="400s:text-body 400s:font-bold">
-                {{ allTimeHigh.value }}
-              </span>
-            </h5>
+              <div 
+                class="w-full p-10 h-full flex flex-col gap-5"
+                :class="openTimeFrameOptions? 'delay_show opacity-[1]' : 'opacity-0'"
+              >
+                <button
+                  v-for="option in timeFrameOptions"
+                  :key="option"
+                  class="w-full text-caption text-grey_3 text-left hover:text-grey_7"
+                  @click="selectedTimeFrame = option"
+                >
+                  {{ option }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

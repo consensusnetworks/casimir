@@ -96,7 +96,7 @@ watch([stakeAmount, selectedWallet], () => {
     } else {
 
       stakingStatus.value.allowToStake = true
-      stakingStatus.value.message = `Stake ${stakeAmount.value} ${selectedWallet.value.currency}  from ${selectedWallet.value.walletProvider}`
+      stakingStatus.value.message = `Stake ${Number(stakeAmount.value)} ${selectedWallet.value.currency}  from ${selectedWallet.value.walletProvider}`
     }
   } else {
     stakingStatus.value.allowToStake = false
@@ -147,72 +147,79 @@ onMounted(async ()=>{
     </div>
 
     <div
-      class="w-full border border-border rounded-[5px] h-full overflow-hidden relative"
+      class="h-full border border-border rounded-[5px] px-10 py-20"
     >
       <div class="h-full w-full">
         <div
-          class="w-full h-full p-10 flex flex-col justify-between gap-20"
+          class="w-full h-full flex flex-col justify-between"
         >
-          <div class="flex justify-between items-center w-full pt-10 mb-20">
-            <span class="text-caption font-bold text-black">
-              Stake ETH to SSV Validators
-            </span>
-          </div>
-          <div 
-            class="h-75 relative text-grey_5 bg-[#edeff3] pl-15 rounded-[5px]"
-          >
-            <div class="flex items-center h-full">
-              <span class="text-body font-bold">
-                From
-              </span>
+          <div>
+            <div class="font-bold text-body text-grey_5 mb-5">
+              Select Wallet
             </div>
             <button 
               id="select_wallet_button"
-              class="text-body font-bold h-full bg-grey_2 text-grey_5 rounded-r-[5px] hover:bg-grey_3 hover:text-grey_1
-          hover:w-full absolute top-0 right-0 hover:rounded-l-[5px]"
-              style="transition: width .5s ease;"
-              :class="selectedWallet === null? 'w-1/2' : 'w-full rounded-l-[5px]'"
+              class="relative text-grey_7 bg-grey_2  rounded-[5px] text-body font-bold w-full
+              hover:bg-grey_3 hover:text-grey_1 h-[200px]"
               @click="openSelectWalletTab = true"
             >
               <div 
-                v-if="selectedWallet === null"
-                id="select_wallet_button_no_wallet"
+                v-if="!selectedWallet"
+                id="select_wallet_button_content"
               >
-                Select Wallet
+                No Wallet Selected
               </div>
               <div
                 v-else 
-                id="select_wallet_button_wallet"
-                class="flex justify-between items-center px-15"
+                id="select_wallet_button_content"
+                class="px-15 py-15 text-center"
               >
-                <img
-                  id="selected_wallet_button_content_wallet_providor"
-                  :src="`/${selectedWallet.walletProvider.toLocaleUpperCase()}.svg`"
-                  :alt="`${selectedWallet.walletProvider} Logo`"
-                  class="w-50 h-50 rounded-[100%]"
-                >
                 <div
-                  id="selected_wallet_button_content" 
-                  class="w-4/6 truncate h-50 flex flex-col justify-between items-end py-5"
+                  id="select_wallet_button_content"
+                  class="flex justify-center"
                 >
-                  <span 
-                    id="selected_wallet_button_content_max_amount"
-                    class="text-body font-bold pr-2"
+                  <img 
+                    id="select_wallet_button_content"
+                    :src="`/${selectedWallet.walletProvider.toLocaleUpperCase()}.svg`"
+                    :alt="`${selectedWallet.walletProvider} Logo`"
+                    class="w-40 h-40 rounded-[100%]"
+                  >
+                </div>
+                <div 
+                  id="select_wallet_button_content"
+                  class="text-body font-light opacity-70"
+                >
+                  {{ selectedWallet.walletProvider }}
+                </div>
+
+                <div 
+                  id="select_wallet_button_content"
+                  class="my-20"
+                >
+                  <h5  
+                    id="select_wallet_button_content"
+                    class="font-bold"
                   >
                     {{ Math.round(selectedWallet.balance * 100) / 100 }} {{ selectedWallet.currency }}
-                    <!-- {{ convertToWholeUnits(selectedWallet.currency, Number(selectedWallet.balance)) }} {{ selectedWallet.currency }} -->
-                  </span>
-                  <span
-                    id="selected_wallet_button_content_address"
-                    class="text-body w-full truncate"
+                  </h5>
+                </div>
+
+                <div 
+                  id="select_wallet_button_content"
+                  class="opacity-70"
+                >
+                  <h6 
+                    id="select_wallet_button_content"
+                    class="text-body truncate"
                   >
                     {{ selectedWallet.address }}
-                  </span>
+                  </h6>
                 </div>
               </div>
             </button>
           </div>
-          <div class="flex justify-between items-center gap-10 h-75">
+          
+          <div class="flex justify-between items-center gap-10 h-75 py-10">
             <div 
               :class="isMaxETHSelected? 'opacity-[0.25]' : ''"
               class="flex items-center gap-20 h-full px-10 w-2/3"
@@ -254,14 +261,13 @@ onMounted(async ()=>{
               :disabled="maxETHFromWallet === null? true : false"
               @click="isMaxETHSelected = true"
             >
-              <h5 class="font-bold text-border 1100s:text-[16px] 1100s:font-bold 1100s:mt-5">
-                <span v-if="maxETHFromWallet">{{ maxETHFromWallet }}</span>
+              <h5 class="font-bold text-border 1100s:text-[16px] 1100s:font-bold 1100s:mt-5 whitespace-nowrap">
+                <span v-if="maxETHFromWallet">{{ maxETHFromWallet }} ETH</span>
                 <span
                   v-else
                   class=" 550s:text-caption 550s:font-bold"
                 > - - - </span>
               </h5> 
-              <span class="text-body font-light pt-10 text-border">ETH</span>
               <span class="font-bold text-grey_6 absolute top-[-9px] right-[10px] text-body bg-white px-5">
                 max
               </span>
@@ -276,7 +282,8 @@ onMounted(async ()=>{
               <button 
                 id="stake_button"
                 :disabled="!stakingStatus.allowToStake" 
-                class="bg-primary py-6 px-12 text-white rounded-[5px] mb-10 hover:bg-blue_7 disabled:opacity-[0.55]"
+                class="bg-primary py-6 px-12 text-white rounded-[5px] mb-10 mr-5
+                 hover:bg-blue_7 disabled:opacity-[0.55]"
                 @click="handleStakeAction"
               >
                 <h6
@@ -286,9 +293,11 @@ onMounted(async ()=>{
                   Stake
                 </h6>
               </button>
+              <!-- TD: Add tooltip for staking info -->
+              <h5 class="iconoir-info-empty mb-1 align-middle text-grey_5 cursor-pointer" />
               <div 
                 :class="stakingStatus.allowToStake? ' text-grey_7' : 'text-decline'"
-                class="text-caption font-medium"
+                class="text-body font-medium"
               >
                 {{ stakingStatus.message }}
               </div>
@@ -303,9 +312,9 @@ onMounted(async ()=>{
         <div
           v-if="openSelectWalletTab"
           id="select_wallet_conatiner"
-          class="page__boot shadow-lg h-[300px] absolute
-          animate_up bg-[#edeff3] rounded-[5px] w-[200px] px-10"
-          style="top: calc(50% - 150px); left: calc(50% - 100px)"
+          class="page__boot shadow-lg h-[400px] absolute
+          animate_up bg-[#edeff3] rounded-[5px] w-[250px] px-10"
+          style="top: calc(50% - 185px); left: calc(50% - 125px)"
         >
           <div 
             id="select_wallet_item"
@@ -317,7 +326,7 @@ onMounted(async ()=>{
             >
               <p
                 id="select_wallet_title"
-                class="text-caption font-bold text-black"
+                class="text-body font-bold text-black"
               >
                 Select a wallet to stake from
               </p>
@@ -344,7 +353,42 @@ onMounted(async ()=>{
                 mb-10 py-5 px-10 hover:bg-grey_3"
                 @click="selectWallet(act)"
               >
-                <div 
+                <div
+                  id="select_wallet_item"
+                  class="flex justify-between items-center gap-20"
+                >
+                  <img
+                    id="select_wallet_item"
+                    :src="`/${act.walletProvider.toLocaleUpperCase()}.svg`"
+                    :alt="`${act.walletProvider} Logo`"
+                    class="w-50 h-50 rounded-[100%]"
+                  >
+                  <div 
+                    id="select_wallet_item"
+                    class="text-right w-full truncate"
+                  >
+                    <div 
+                      id="select_wallet_item"
+                      class="mb-5"
+                    >
+                      <h6 id="select_wallet_item">
+                        {{ act.balance? Math.round(Number(act.balance) * 100) / 100 : '---' }} {{ act.currency }}
+                      </h6>
+                    </div>
+                    <div 
+                      id="select_wallet_item"
+                      class="truncate"
+                    >
+                      <span
+                        id="select_wallet_item"
+                        class="text-body truncate"
+                      >
+                        {{ act.address }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <!-- <div 
                   id="select_wallet_item"
                   class="flex justify-between items-center mb-5 text-caption"
                 >
@@ -358,7 +402,6 @@ onMounted(async ()=>{
                     id="select_wallet_item"
                   >
                     {{ act.balance? Math.round(Number(act.balance) * 100) / 100 : '---' }} {{ act.currency }}
-                    <!-- {{ convertToWholeUnits(act.currency, Number(act.balance)) }} {{ act.currency }} -->
                   </span>
                 </div>
                 <div  
@@ -366,13 +409,12 @@ onMounted(async ()=>{
                   class="w-[100%] truncate text-caption"
                 >
                   {{ act.address }}
-                </div>
+                </div> -->
               </button>
             </div>
           </div>
         </div>
       </transition>
-
 
       <transition
         id="sign_transaction_section"
@@ -381,47 +423,67 @@ onMounted(async ()=>{
         <div
           v-if="openSignTransactionTab"
           id="sign_transaction_section"
-          class="page__boot shadow-lg h-[300px] absolute
-          animate_up bg-[#edeff3] rounded-[5px] w-[200px] px-10"
-          style="top: calc(50% - 150px); left: calc(50% - 100px)"
+          class="page__boot shadow-lg h-[400px] absolute
+          animate_up bg-[#edeff3] rounded-[5px] w-[250px] px-10"
+          style="top: calc(50% - 185px); left: calc(50% - 125px)"
         >
           <div 
             id="sign_transaction_item"
-            class="w-full h-full flex flex-col gap-10 py-10"
+            class="w-full h-full flex flex-col gap-20 py-10"
           >
-            <div
-              id="sign_transaction_item"
-              class="flex justify-between items-center w-full"
-            >
-              <p
+            <div>
+              <div
                 id="sign_transaction_item"
-                class="text-caption font-bold text-black"
+                class="flex justify-between items-center w-full mb-10"
               >
-                Sign transaction to stake
-              </p>
-              <button
+                <p
+                  id="sign_transaction_item"
+                  class="text-body font-bold text-black"
+                >
+                  Sign transaction to stake
+                </p>
+                <button
+                  id="sign_transaction_item"
+                  class="iconoir-cancel"
+                  @click="openSignTransactionTab = false"
+                />
+              </div>
+              <div 
                 id="sign_transaction_item"
-                class="iconoir-cancel"
-                @click="openSignTransactionTab = false"
+                class="bg-grey_2 h-2 w-full"
               />
             </div>
-            <div 
-              id="sign_transaction_item"
-              class="bg-grey_2 h-2 w-full"
-            />
+          
             <div 
               id="sign_transaction_amount"
               class="flex justify-between items-center pb-10"
             >
               <p 
                 id="sign_transaction_amount_label"
-                class="text-caption font-bold text-grey_3"
+                class="text-body font-bold text-grey_3"
+              >
+                Staking To
+              </p>
+              <p 
+                id="sign_transaction_amount_stakingAmount"
+                class="text-body font-bold text-grey_8"
+              >
+                SSV Validators
+              </p>
+            </div>
+            <div 
+              id="sign_transaction_amount"
+              class="flex justify-between items-center pb-10"
+            >
+              <p 
+                id="sign_transaction_amount_label"
+                class="text-body font-bold text-grey_3"
               >
                 Amount
               </p>
               <p 
                 id="sign_transaction_amount_stakingAmount"
-                class="text-caption font-bold text-grey_8"
+                class="text-body font-bold text-grey_8"
               >
                 {{ stakeAmount }} ETH
               </p>
@@ -432,13 +494,13 @@ onMounted(async ()=>{
             >
               <p 
                 id="sign_transaction_fees_label"
-                class="text-caption font-bold text-grey_3"
+                class="text-body font-bold text-grey_3"
               >
                 Fees
               </p>
               <p 
                 id="sign_transaction_fees_amount"
-                class="text-caption font-bold text-grey_8"
+                class="text-body font-bold text-grey_8"
               >
                 {{ fees }}
               </p>
@@ -449,13 +511,13 @@ onMounted(async ()=>{
             >
               <p 
                 id="sign_transaction_from_label"
-                class="text-caption font-bold text-grey_3 w-1/3"
+                class="text-body font-bold text-grey_3 w-1/3"
               >
                 From
               </p>
               <div 
                 id="sign_transaction_from_content"
-                class="text-caption font-bold text-grey_8 w-2/3 truncate flex gap-3"
+                class="text-body font-bold text-grey_8 w-2/3 truncate flex gap-3"
               >
                 <span 
                   id="sign_transaction_from_address"
@@ -477,7 +539,7 @@ onMounted(async ()=>{
             >
               <p 
                 id="sign_transaction_autorestake_title"
-                class="text-caption font-bold text-grey_3"
+                class="text-body font-bold text-grey_3"
               >
                 Auto Stake
               </p>
@@ -511,7 +573,7 @@ onMounted(async ()=>{
                     class="bg-primary py-6 px-12 text-white rounded-[5px] hover:bg-blue_7 disabled:opacity-[0.55]"
                     @click="handleConfirm"
                   >
-                    <h6 class="font-bold text-caption">
+                    <h6 class="font-bold text-body">
                       Sign Transaction
                     </h6>
                   </button>
@@ -519,14 +581,14 @@ onMounted(async ()=>{
                     class="bg-decline py-6 px-12 text-white rounded-[5px] hover:bg-red-600 disabled:opacity-[0.55]"
                     @click="handleCancel"
                   >
-                    <h6 class="font-bold text-caption">
+                    <h6 class="font-bold text-body">
                       Cancel
                     </h6>
                   </button>
                 </div>
                 <div 
                   id="sign_transaction_message"
-                  class="text-caption text-right font-medium text-grey_7 pr-2"
+                  class="text-body text-center font-medium text-grey_7 pr-2"
                 >
                   Confirm and Sign Transaction
                 </div>
