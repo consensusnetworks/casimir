@@ -453,7 +453,7 @@ onMounted(async ()=>{
                 class="bg-grey_2 h-2 w-full"
               />
             </div>
-          
+            <!-- TD: ADD APY? -->
             <div 
               id="sign_transaction_amount"
               class="flex justify-between items-center pb-10"
@@ -490,7 +490,7 @@ onMounted(async ()=>{
             </div>
             <div 
               id="sign_transaction_fees"
-              class="flex justify-between items-center pb-10"
+              class="flex justify-between gap-20 items-center pb-10"
             >
               <p 
                 id="sign_transaction_fees_label"
@@ -500,7 +500,7 @@ onMounted(async ()=>{
               </p>
               <p 
                 id="sign_transaction_fees_amount"
-                class="text-body font-bold text-grey_8"
+                class="text-body text-right font-bold text-grey_8"
               >
                 {{ fees }}
               </p>

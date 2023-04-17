@@ -8,9 +8,9 @@ const selectedTimeFrame = ref('All Time')
 const timeFrameOptions = ref(['All Time', '1 Year', '6 Month', '1 Month'])
 const openTimeFrameOptions = ref(false)
 
-const selectedWallet = ref('All Wallets')
+const selectedWallet = ref('Across All Wallets')
 // TD: Aggergate through wallets and add them to the options (by address or providors?)
-const selectWalletOptions = ref(['All Wallets'])
+const selectWalletOptions = ref(['Across All Wallets'])
 const openWallletOptions = ref(false)
 
 const selectedAssetLocation = ref(null as null | string)
@@ -19,10 +19,14 @@ const selectedAssetLocation = ref(null as null | string)
 
 <template>
   <div class="w-full h-full flex flex-col justify-between gap-20">
-    <div class="flex justify-between items-center">
+    <div class=" justify-between items-center">
       <h6 class="font-bold text-[#727476]">
-        Staking Analytics
+        Analytics 
       </h6>
+
+      <span class="text-body text-decline font-bold"> 
+        This section is mocked! Data shown does not reflect your balances. 
+      </span>
     </div>
     <div
       class="h-full flex flex-col gap-0 items-center
@@ -97,30 +101,28 @@ const selectedAssetLocation = ref(null as null | string)
         />
       </div>
 
-      <div class="w-full flex gap-5 px-15 justify-between items-center whitespace-nowrap">
-        <h6
+      <div class="w-full flex gap-5 px-15 justify-between items-end whitespace-nowrap">
+        <h5
           class="font-bold text-grey_4"
         >
+          <div class="text-body font-bold ml-5">
+            ROI
+          </div>
           <span 
-            :class="roi_metric > 0? 
-              ' text-approve' : 
-              'text-decline'"
+            :class="roi_metric >= 0? 'text-approve' : 'text-decline'"
           >
             {{ roi_metric }} %
           </span>
-          <span class="text-body font-bold ml-5">
-            ROI
-          </span>
-        </h6>
+        </h5>
         <div class="flex items-center gap-10">
           <div 
             class="text-grey_3 border border-grey_3
-           px-10 py-4 w-[100px] relative hover:border-grey_4"
+           px-10 py-4 w-[150px] relative hover:border-grey_4"
             :class="openWallletOptions? 'rounded-b-[5px]':'rounded-[5px]'"
             @mouseenter="openWallletOptions = true"
             @mouseleave="openWallletOptions = false"
           >
-            <div class="text-caption font-bold flex items-center justify-between text-grey_3 w-full">
+            <div class="text-body font-bold flex items-center justify-between text-grey_3 w-full">
               <div>
                 {{ selectedWallet }}
               </div>
@@ -139,13 +141,13 @@ const selectedAssetLocation = ref(null as null | string)
               "
             >
               <div 
-                class="w-full p-10 h-full flex flex-col gap-5"
+                class="w-full p-10 h-full flex flex-col gap-15"
                 :class="openWallletOptions? 'delay_show opacity-[1]' : 'opacity-0'"
               >
                 <button
                   v-for="option in selectWalletOptions"
                   :key="option"
-                  class="w-full text-caption text-grey_3 text-left hover:text-grey_7"
+                  class="w-full text-body text-grey_3 text-left hover:text-grey_7"
                   @click="selectedWallet = option"
                 >
                   {{ option }}
@@ -160,7 +162,7 @@ const selectedAssetLocation = ref(null as null | string)
             @mouseenter="openTimeFrameOptions = true"
             @mouseleave="openTimeFrameOptions = false"
           >
-            <div class="text-caption font-bold flex items-center justify-between text-grey_3 w-full">
+            <div class="text-body font-bold flex items-center justify-between text-grey_3 w-full">
               <div>
                 {{ selectedTimeFrame }}
               </div>
@@ -179,13 +181,13 @@ const selectedAssetLocation = ref(null as null | string)
               "
             >
               <div 
-                class="w-full p-10 h-full flex flex-col gap-5"
+                class="w-full p-10 h-full flex flex-col gap-15"
                 :class="openTimeFrameOptions? 'delay_show opacity-[1]' : 'opacity-0'"
               >
                 <button
                   v-for="option in timeFrameOptions"
                   :key="option"
-                  class="w-full text-caption text-grey_3 text-left hover:text-grey_7"
+                  class="w-full text-body text-grey_3 text-left hover:text-grey_7"
                   @click="selectedTimeFrame = option"
                 >
                   {{ option }}

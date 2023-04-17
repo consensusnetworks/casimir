@@ -22,7 +22,7 @@ const activeWallets = ref([
   'WalletConnect',
   'Trezor',
   'Ledger',
-  'IoPay',
+  // 'IoPay',
 ] as ProviderString[])
 const amount = ref<string>('0.000001')
 const amountToStake = ref<string>('0.0')

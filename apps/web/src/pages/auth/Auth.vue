@@ -12,6 +12,7 @@ const { connectWallet, activeWallets } = useWallet()
 
 <template>
   <div class="h-full w-full flex justify-center items-center">
+    <!-- TD: Add modal for Ledger -->
     <div class="min-w-[360px] w-full max-w-[600px]">
       <div class="mb-25">
         <img
@@ -21,7 +22,7 @@ const { connectWallet, activeWallets } = useWallet()
         >
       </div>
       <div 
-        class="flex justify-between items-center gap-50 h-[400px]"
+        class="flex justify-between items-start gap-50 h-[400px]"
       >
         <div class="w-full border-y-[2px] border-l-[2px] rounded-l-[5px] h-full p-35 flex flex-col justify-between">
           <div>
@@ -44,7 +45,7 @@ const { connectWallet, activeWallets } = useWallet()
             </p>
           </div>
         </div>
-        <div class="w-[350px] h-full overflow-y-auto flex flex-col justify-center items-center">
+        <div class="w-[350px] overflow-y-auto flex flex-col justify-center items-center">
           <button
             v-for="wallet in activeWallets"
             :key="wallet"
