@@ -3,12 +3,13 @@
 Solidity contracts for decentralized staking on Ethereum
 
 ## 📝 Overview
+Current Ethereum staking implementations either require a user to have 32 Ethereum or utilize a centralized 3rd party implementation that introduces additional counterparty risk to their staked assets. We propose a methodology to decentralize the Ethereum staking process that will not only improve Ethereum staking decentralization but improve the staking User Experience and create a more equitable staking experience for smaller stakers.
 
 The Casimir contracts seamlessly connect stakers with any amount of ETH directly to high-performing Ethereum validators. Casimir proposes an approach that minimizes counterparty risk for users and improves decentralization in Ethereum staking:
 
-- Validators duties are performed by registered (collateralized) operators running SSV's distributed validator technology (DVT)
-- Keys are trustlessly managed using RockX's distributed key generation (DKG)
-- Automated actions (like compounding stake or handling a slash) are carried out by Chainlink's decentralized oracle network (DON)
+- Validators duties are performed by registered (collateralized) operators running distributed validator technology (DVT) (Initially we are using SSV as a first implementation)
+- Keys are trustlessly managed using distributed key generation (DKG) (current implementation uses RockX's)
+- Automated actions (like compounding stake or handling a slash) are carried out by a decentralized oracle network (DON) (current implementation uses Chainlink)
 
 ### Architecture
 
