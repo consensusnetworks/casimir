@@ -718,6 +718,22 @@ function getOpenDeposits() external view returns (uint256)
 function getUserStake(address userAddress) external view returns (uint256)
 ```
 
+## Uint32Array
+
+### remove
+
+```solidity
+function remove(uint32[] arr, uint256 index) internal
+```
+
+## BytesArray
+
+### remove
+
+```solidity
+function remove(bytes[] arr, uint256 index) internal
+```
+
 ## Functions
 
 ### DEFAULT_BUFFER_SIZE

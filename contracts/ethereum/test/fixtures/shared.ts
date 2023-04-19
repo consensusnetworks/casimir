@@ -159,6 +159,16 @@ export async function secondUserDepositFixture() {
         await performUpkeep.wait()
     }
 
+    /** Update PoR mock aggregator answer */
+    if (mockAggregator) {
+        const { ...feed } = await mockAggregator.latestRoundData()
+        const { answer } = feed
+        const consensusStakeIncrease = ethers.utils.parseEther('32')
+        const newAnswer = answer.add(consensusStakeIncrease)
+        const update = await mockAggregator.updateAnswer(newAnswer)
+        await update.wait()
+    }
+
     return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser }
 }
 
@@ -193,6 +203,16 @@ export async function thirdUserDepositFixture() {
     if (upkeepNeeded) {
         const performUpkeep = await casimirAutomation.performUpkeep(performData)
         await performUpkeep.wait()
+    }
+
+    /** Update PoR mock aggregator answer */
+    if (mockAggregator) {
+        const { ...feed } = await mockAggregator.latestRoundData()
+        const { answer } = feed
+        const consensusStakeIncrease = ethers.utils.parseEther('32')
+        const newAnswer = answer.add(consensusStakeIncrease)
+        const update = await mockAggregator.updateAnswer(newAnswer)
+        await update.wait()
     }
 
     return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser, thirdUser }

@@ -2,16 +2,18 @@
 pragma solidity 0.8.16;
 
 import "./CasimirAutomation.sol";
+import "./CasimirPoR.sol";
 import "./interfaces/ICasimirManager.sol";
 import "./vendor/interfaces/IDepositContract.sol";
 import "./vendor/interfaces/ISSVNetwork.sol";
 import "./vendor/interfaces/ISSVToken.sol";
 import "./vendor/interfaces/IWETH9.sol";
-import "./libraries/Arrays.sol";
+import "./libraries/Types.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
@@ -29,28 +31,30 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
     /** Use math for precise division */
     using Math for uint256;
-    /** Use uint32 array lib */
-    using Uint32Array for uint32[];
-    /** Use bytes array lib */
-    using BytesArray for bytes[];
+    /** Use internal type for uint32 array */
+    using Types32Array for uint32[];
+    /** Use internal type for bytes array */
+    using TypesBytesArray for bytes[];
 
     /*************/
     /* Constants */
     /*************/
 
-    /** Uniswap 0.3% fee tier */
-    uint24 private immutable uniswapFeeTier = 3000;
-    /** Staking pool capacity */
-    uint256 private immutable poolCapacity = 32 ether;
+    /** Pool capacity */
+    uint256 private constant poolCapacity = 32 ether;
     /** Scale factor for each reward to stake ratio */
-    uint256 private immutable scaleFactor = 1 ether;
+    uint256 private constant scaleFactor = 1 ether;
+    /** Uniswap 0.3% fee tier */
+    uint24 private constant uniswapFeeTier = 3000;
 
     /*************/
     /* Contracts */
     /*************/
 
-    /** Automation contract address */
+    /** Automation contract */
     ICasimirAutomation private immutable casimirAutomation;
+    /** PoR contract */
+    ICasimirPoR private immutable casimirPoR;
     /** Beacon deposit contract */
     IDepositContract private immutable beaconDeposit;
     /** LINK ERC-20 token contract */
@@ -76,7 +80,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /********************/
-    /* Global Variables */
+    /* Dynamic State */
     /********************/
 
     /** Last pool ID generated for a new pool */
@@ -145,7 +149,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         swapRouter = ISwapRouter(swapRouterAddress);
         tokens[Token.WETH] = wethTokenAddress;
 
+        /** Create automation and PoR contracts */
         casimirAutomation = new CasimirAutomation(
+            address(this)
+        );
+        casimirPoR = new CasimirPoR(
             address(this),
             linkFeedAddress
         );
@@ -278,8 +286,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         /** Send ETH from manager to user */
         (bool success, ) = msg.sender.call{value: amount}("");
-
-        emit UserWithdrawed(msg.sender, amount);
+        require(success, "Transfer failed");
 
         /** Update user account state */
         users[msg.sender].distributionSum0 = distributionSum;
@@ -288,7 +295,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         /** Update balance state */
         openDeposits -= amount;
 
-        require(success, "Transfer failed");
+        emit UserWithdrawed(msg.sender, amount);
     }
 
     /**
@@ -587,7 +594,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Get a list of all ready pool IDs
      * @return A list of all ready pool IDs
      */
-    function getReadyPoolIds() external view returns (uint32[] memory) {
+    function getReadyPoolIds() public view returns (uint32[] memory) {
         return readyPoolIds;
     }
 
@@ -595,33 +602,53 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Get a list of all staked pool IDs
      * @return A list of all staked pool IDs
      */
-    function getStakedPoolIds() external view returns (uint32[] memory) {
+    function getStakedPoolIds() public view returns (uint32[] memory) {
         return stakedPoolIds;
     }
 
     /**
-     * @notice Get the current stake of the pool manager
-     * @return The current stake of the pool manager
+     * @notice Get the total manager stake
+     * @return The total manager stake
      */
     function getStake() public view returns (uint256) {
-        return
-            (readyPoolIds.length + stakedPoolIds.length) *
-            poolCapacity +
-            openDeposits;
+
+        /** Total manager execution stake */
+        int256 executionStake = int256(readyPoolIds.length * poolCapacity + openDeposits);
+
+        /** Total manager consensus stake */
+        int256 consensusStake = getConsensusStake();
+
+        return SafeCast.toUint256(executionStake + consensusStake);
     }
 
     /**
-     * @notice Get the current ready deposits of the pool manager
-     * @return The current ready deposits of the pool manager
+     * @notice Get the total manager consensus stake
+     * @return The latest total manager consensus stake
+     */
+    function getConsensusStake() public view returns (int256) {
+        return casimirPoR.getConsensusStake();
+    }
+
+    /**
+     * @notice Get the total manager expected consensus stake principal
+     * @return The the total manager expected consensus stake principal
+     */
+    function getExpectedConsensusPrincipal() public view returns (uint256) {
+        return getStakedPoolIds().length * poolCapacity;
+    }
+
+    /**
+     * @notice Get the total manager open deposits
+     * @return The total manager open deposits
      */
     function getOpenDeposits() public view returns (uint256) {
         return openDeposits;
     }
 
     /**
-     * @notice Get the current stake of a user
+     * @notice Get the total user stake for a given user address
      * @param userAddress The user address
-     * @return The current stake of a user
+     * @return The total user stake
      */
     function getUserStake(address userAddress) public view returns (uint256) {
         require(users[userAddress].stake0 > 0, "User does not have a stake");
@@ -635,15 +662,18 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get pool details
+     * @notice Get the pool details for a given pool ID
      * @param poolId The pool ID
      * @return The pool details
      */
     function getPoolDetails(uint32 poolId) external view returns (PoolDetails memory) {
         Pool memory pool = pools[poolId];
+
+        /** Will return invalid data if pool is still in ready state */
         if (pool.deposits < poolCapacity) {
             return PoolDetails(pool.deposits, new bytes(0), new uint32[](0));
         }
+
         bytes memory publicKey = stakedValidatorPublicKeys[pool.validatorIndex];
         Validator memory validator = validators[publicKey];
         return PoolDetails(
@@ -659,5 +689,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getAutomationAddress() public view returns (address) {
         return address(casimirAutomation);
+    }
+
+    /**
+     * @notice Get the PoR address
+     * @return The PoR address
+     */
+    function getPoRAddress() public view returns (address) {
+        return address(casimirPoR);
     }
 }

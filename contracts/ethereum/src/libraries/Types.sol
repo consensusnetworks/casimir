@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-library Uint32Array {
+library Types32Array {
     function remove(uint32[] storage arr, uint index) internal {
         require(arr.length > 0, "Can't remove from empty array");
         require(index < arr.length, "Index out of bounds");
@@ -12,7 +12,7 @@ library Uint32Array {
     }
 }
 
-library BytesArray {
+library TypesBytesArray {
     function remove(bytes[] storage arr, uint index) internal {
         require(arr.length > 0, "Can't remove from empty array");
         require(index < arr.length, "Index out of bounds");

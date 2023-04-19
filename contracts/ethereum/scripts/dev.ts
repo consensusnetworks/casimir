@@ -109,4 +109,17 @@ void async function () {
             }
         }
     })
+    
+    /** Update mock aggregator after each pool is staked */
+    casimirManager?.on('PoolStaked(uint32)', async () => {
+        if (mockAggregator) {
+            const { ...feed } = await mockAggregator.latestRoundData()
+            const { answer } = feed
+            const consensusStakeIncrease = ethers.utils.parseEther('32')
+            const newAnswer = answer.add(consensusStakeIncrease)
+            const update = await mockAggregator.updateAnswer(newAnswer)
+            await update?.wait()
+        }
+    })
+
 }()

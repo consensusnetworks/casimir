@@ -178,8 +178,8 @@ export default function useUsers () {
         const validatorInitFilter = {
           address: casimirManager.address,
           topics: [
-            ethers.utils.id('PoolStaked(uint32,bytes,uint32[])'),
-            // ethers.utils.id('ManagerDistribution(uint32,bytes,uint32[])'), // TODO: Make sure to query for past events on page load (Fetch and then subscribe)
+            // ethers.utils.id('ManagerDistribution(address,uint256,uint256,uint256)'), // TODO: Make sure to query for past events on page load (Fetch and then subscribe),
+            ethers.utils.id('PoolStaked(uint32)'),
           ]
         }
         casimirManager.connect(provider).on(validatorInitFilter, async () => {
