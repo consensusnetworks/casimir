@@ -1,4 +1,5 @@
 import { Account } from './interfaces/Account'
+import { AccountWithStakingInfo } from './interfaces/AccountWithStakingInfo'
 import { AddAccountOptions } from './interfaces/AddAccountOptions'
 import { BalanceSnapshot } from './interfaces/BalanceSnapshot'
 import { ContractArgs } from './interfaces/ContractArgs'
@@ -18,6 +19,7 @@ import { Validator } from './interfaces/Validator'
 
 export type {
     Account,
+    AccountWithStakingInfo,
     AddAccountOptions,
     BalanceSnapshot,
     ContractArgs,
