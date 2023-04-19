@@ -57,27 +57,41 @@ Perform the upkeep
 function getStake() external view returns (uint256)
 ```
 
-Get the total stake
+Get the total manager stake
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The total stake |
+| [0] | uint256 | The total manager stake |
 
-### getExpectedConsensusPrincipal
+### getExecutionSwept
 
 ```solidity
-function getExpectedConsensusPrincipal() external view returns (uint256)
+function getExecutionSwept() public view returns (int256)
 ```
 
-Get the expected consensus stake principal
+Get the total manager execution swept amount
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The expected consensus stake principal |
+| [0] | int256 | The total manager execution swept amount |
+
+### getExpectedConsensusStake
+
+```solidity
+function getExpectedConsensusStake() external view returns (int256)
+```
+
+Get the total manager expected consensus stake
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int256 | The total manager expected consensus stake |
 
 ## CasimirManager
 
@@ -150,7 +164,7 @@ Constructor
 receive() external payable
 ```
 
-_Production will use oracle reporting balance increases, but receive is used for mocking rewards_
+_Used for mocking sweeps from Beacon to the manager_
 
 ### reward
 
@@ -368,6 +382,34 @@ Get the total manager stake
 | ---- | ---- | ----------- |
 | [0] | uint256 | The total manager stake |
 
+### getExecutionStake
+
+```solidity
+function getExecutionStake() public view returns (int256)
+```
+
+Get the total manager execution stake
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int256 | The total manager execution stake |
+
+### getExecutionSwept
+
+```solidity
+function getExecutionSwept() public view returns (int256)
+```
+
+Get the total manager execution swept amount
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int256 | The total manager execution swept amount |
+
 ### getConsensusStake
 
 ```solidity
@@ -382,19 +424,21 @@ Get the total manager consensus stake
 | ---- | ---- | ----------- |
 | [0] | int256 | The latest total manager consensus stake |
 
-### getExpectedConsensusPrincipal
+### getExpectedConsensusStake
 
 ```solidity
-function getExpectedConsensusPrincipal() public view returns (uint256)
+function getExpectedConsensusStake() public view returns (int256)
 ```
 
-Get the total manager expected consensus stake principal
+Get the total manager expected consensus stake
+
+_The expected stake will be honored with slashing recovery in place_
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The the total manager expected consensus stake principal |
+| [0] | int256 | The the total manager expected consensus stake |
 
 ### getOpenDeposits
 
@@ -779,16 +823,28 @@ function getStakedPoolIds() external view returns (uint32[])
 function getStake() external view returns (uint256)
 ```
 
+### getExecutionStake
+
+```solidity
+function getExecutionStake() external view returns (int256)
+```
+
+### getExecutionSwept
+
+```solidity
+function getExecutionSwept() external view returns (int256)
+```
+
 ### getConsensusStake
 
 ```solidity
 function getConsensusStake() external view returns (int256)
 ```
 
-### getExpectedConsensusPrincipal
+### getExpectedConsensusStake
 
 ```solidity
-function getExpectedConsensusPrincipal() external view returns (uint256)
+function getExpectedConsensusStake() external view returns (int256)
 ```
 
 ### getOpenDeposits

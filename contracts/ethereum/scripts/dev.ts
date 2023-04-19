@@ -1,7 +1,7 @@
 import { deployContract } from '@casimir/hardhat'
 import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
 import { validatorStore } from '@casimir/data'
-import { CasimirManager, MockAggregator } from '../build/artifacts/types'
+import { CasimirAutomation, CasimirManager, MockAggregator } from '../build/artifacts/types'
 import { ethers } from 'hardhat'
 
 void async function () {
@@ -90,6 +90,9 @@ void async function () {
         await registration?.wait()
     }
 
+    const automationAddress = await casimirManager?.getAutomationAddress() as string
+    const casimirAutomation = await ethers.getContractAt('CasimirAutomation', automationAddress) as CasimirAutomation
+
     /** Distribute rewards every ${blocksPerReward} blocks */
     const blocksPerReward = 10
 
@@ -106,6 +109,15 @@ void async function () {
                 const rewardAmount = (rewardPerValidator * activeValidatorPublicKeys.length).toString()
                 const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
                 await reward.wait()
+
+                /** Perform upkeep (todo add bounds to check data) */
+                const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
+                const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+                const { upkeepNeeded, performData } = check
+                if (upkeepNeeded) {
+                    const performUpkeep = await casimirAutomation.performUpkeep(performData)
+                    await performUpkeep.wait()
+                }
             }
         }
     })
