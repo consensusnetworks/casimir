@@ -34,7 +34,7 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
     if (!user) {  // signup
         console.log('SIGNING UP!')
         const now = new Date().toISOString()
-        const newUser = { 
+        const newUser = {
             address,
             createdAt: now,
             updatedAt: now,
@@ -42,11 +42,11 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         const account = {
             address,
             currency,
-            ownerAddress: address,
             walletProvider: provider,
         } as Account
+
         const addUserResult = await addUser(newUser, account)
-        
+
         if (addUserResult?.address !== address) {
             res.setHeader('Content-Type', 'application/json')
             res.status(500)
