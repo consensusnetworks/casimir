@@ -124,6 +124,16 @@ void async function () {
     
     /** Increase PoR mock aggregator answer after each pool is staked */
     casimirManager?.on('PoolStaked(uint32)', async () => {
+
+        /** Perform upkeep (todo add bounds to check data) */
+        const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
+        const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+        const { upkeepNeeded, performData } = check
+        if (upkeepNeeded) {
+            const performUpkeep = await casimirAutomation.performUpkeep(performData)
+            await performUpkeep.wait()
+        }
+
         if (mockAggregator) {
             const { ...feed } = await mockAggregator.latestRoundData()
             const { answer } = feed
