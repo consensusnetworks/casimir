@@ -42,6 +42,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /** Pool capacity */
     uint256 private constant poolCapacity = 32 ether;
+    /* Reward threshold (0.1 ETH) */
+    uint256 private constant rewardThreshold = 100000000000000000;
     /** Scale factor for each reward to stake ratio */
     uint256 private constant scaleFactor = 1 ether;
     /** Uniswap 0.3% fee tier */
@@ -160,18 +162,16 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Production will use oracle reporting balance increases, but receive is used for mocking rewards
+     * @dev Used for mocking sweeps from Beacon to the manager
      */
-    receive() external payable nonReentrant {
-        reward(msg.value);
-    }
+    receive() external payable nonReentrant {}
 
     /**
      * @dev Distribute ETH rewards
      * @param amount The amount of ETH to reward
      */
     function reward(uint256 amount) public {
-        require(amount > 0, "Reward amount must be greater than 0");
+        require(amount >= rewardThreshold, "Reward amount must be equal or greater than reward threshold");
 
         /** Reward fees set to zero for testing */
         ProcessedDeposit memory processedDeposit = processFees(
@@ -615,12 +615,28 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function getStake() public view returns (uint256) {
 
         /** Total manager execution stake */
-        int256 executionStake = int256(readyPoolIds.length * poolCapacity + openDeposits);
+        int256 executionStake = getExecutionStake();
 
         /** Total manager consensus stake */
-        int256 consensusStake = getConsensusStake();
+        int256 consensusStake = getExpectedConsensusStake();
 
         return SafeCast.toUint256(executionStake + consensusStake);
+    }
+
+    /**
+     * @notice Get the total manager execution stake
+     * @return The total manager execution stake
+     */
+    function getExecutionStake() public view returns (int256) {
+        return int256(readyPoolIds.length * poolCapacity + openDeposits);
+    }
+
+    /**
+     * @notice Get the total manager execution swept amount
+     * @return The total manager execution swept amount
+     */
+    function getExecutionSwept() public view returns (int256) {
+        return int256(address(this).balance) - getExecutionStake();
     }
 
     /**
@@ -632,11 +648,12 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the total manager expected consensus stake principal
-     * @return The the total manager expected consensus stake principal
+     * @notice Get the total manager expected consensus stake
+     * @dev The expected stake will be honored with slashing recovery in place
+     * @return The the total manager expected consensus stake
      */
-    function getExpectedConsensusPrincipal() public view returns (uint256) {
-        return getStakedPoolIds().length * poolCapacity;
+    function getExpectedConsensusStake() public view returns (int256) {
+        return int256(getStakedPoolIds().length * poolCapacity);
     }
 
     /**

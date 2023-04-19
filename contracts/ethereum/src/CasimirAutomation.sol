@@ -6,6 +6,7 @@ import "./interfaces/ICasimirManager.sol";
 import "./interfaces/ICasimirPoR.sol";
 import {Functions, FunctionsClient} from "./vendor/FunctionsClient.sol";
 // import "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol"; // Once published
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "hardhat/console.sol";
 
 // Todo handle:
@@ -18,6 +19,13 @@ import "hardhat/console.sol";
  * @title Oracle contract that triggers and handles actions
  */
 contract CasimirAutomation is ICasimirAutomation {
+    /*************/ 
+    /* Constants */
+    /*************/
+
+    /* Reward threshold (0.1 ETH) */
+    uint256 private constant rewardThreshold = 100000000000000000;
+
     /*************/
     /* Contracts */
     /*************/
@@ -60,13 +68,24 @@ contract CasimirAutomation is ICasimirAutomation {
     {
         console.log(abi.decode(checkData, (string)));
 
+        /** Get ready pools to stake */
         uint32[] memory readyPoolIds = casimirManager.getReadyPoolIds();
 
         if (readyPoolIds.length > 0) {
             upkeepNeeded = true;
         }
 
-        performData = abi.encode(readyPoolIds);
+        /** Get Beacon rewards swept to manager */
+        uint256 executionSwept = SafeCast.toUint256(casimirManager.getExecutionSwept());
+
+        if (executionSwept >= rewardThreshold) {
+            upkeepNeeded = true;
+        } else {
+            /** Set swept amounts below threshold to zero */
+            executionSwept = 0;
+        }
+
+        performData = abi.encode(readyPoolIds, executionSwept);
     }
 
     /**
@@ -75,26 +94,40 @@ contract CasimirAutomation is ICasimirAutomation {
      */
     function performUpkeep(bytes calldata performData) external override {
 
+        (uint32[] memory readyPoolIds, uint256 executionSwept) = abi.decode(performData, (uint32[], uint256));
+
         /** Stake ready pools */
-        uint32[] memory readyPoolIds = abi.decode(performData, (uint32[]));
         for (uint i = 0; i < readyPoolIds.length; i++) {
             casimirManager.stakePool(readyPoolIds[i]);
+        }
+
+        /** Compound rewards */
+        if (executionSwept > 0) {
+            casimirManager.reward(executionSwept);
         }
     }
 
     /**
-     * @notice Get the total stake
-     * @return The total stake
+     * @notice Get the total manager stake
+     * @return The total manager stake
      */
     function getStake() external view returns (uint256) {
         return casimirManager.getStake();
     }
 
     /**
-     * @notice Get the expected consensus stake principal
-     * @return The expected consensus stake principal
+     * @notice Get the total manager execution swept amount
+     * @return The total manager execution swept amount
      */
-    function getExpectedConsensusPrincipal() external view returns (uint256) {
-        return casimirManager.getExpectedConsensusPrincipal();
+    function getExecutionSwept() public view returns (int256) {
+        return casimirManager.getExecutionSwept();
+    }
+
+    /**
+     * @notice Get the total manager expected consensus stake
+     * @return The total manager expected consensus stake
+     */
+    function getExpectedConsensusStake() external view returns (int256) {
+        return casimirManager.getExpectedConsensusStake();
     }
 }

@@ -106,9 +106,13 @@ interface ICasimirManager {
 
     function getStake() external view returns (uint256);
 
+    function getExecutionStake() external view returns (int256);
+
+    function getExecutionSwept() external view returns (int256);
+
     function getConsensusStake() external view returns (int256);
 
-    function getExpectedConsensusPrincipal() external view returns (uint256);
+    function getExpectedConsensusStake() external view returns (int256);
 
     function getOpenDeposits() external view returns (uint256);
 
