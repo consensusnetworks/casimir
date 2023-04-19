@@ -6,7 +6,7 @@
     "properties": {
         "address": {
             "type": "string",
-            "description": "The account address (PK)"
+            "description": "The account address"
         },
         "balance": {
             "type": "number",
@@ -20,9 +20,9 @@
             "type": "string",
             "description": "The account creation date in ISO 8601 format"
         },
-        "owner_address": {
-            "type": "string",
-            "description": "The account owner address"
+        "id": {
+            "type": "serial",
+            "description": "The account ID (PK)"
         },
         "snapshots": {
             "type": "array",
@@ -49,15 +49,27 @@
             "type": "string",
             "description": "The account last update date in ISO 8601 format"
         },
+        "user_id": {
+            "type": "integer",
+            "description": "The account user ID (FK)"
+        },
         "wallet_provider": {
             "type": "string",
             "description": "The account wallet provider"
         }
     },
-    "required": [
+    "uniqueFields": [
         "address",
+        "user_id",
+        "wallet_provider"
+    ],
+    "required": [
+        "id",
+        "address",
+        "created_at",
         "currency",
-        "owner_address",
+        "updated_at",
+        "user_id",
         "wallet_provider"
     ]
 }

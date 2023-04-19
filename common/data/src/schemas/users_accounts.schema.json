@@ -1,0 +1,27 @@
+{
+    "$id": "https://casimir.co/users_accounts.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "User_Account",
+    "type": "object",
+    "properties": {
+        "account_id": {
+            "type": "integer",
+            "description": "The unique identifier for an account (pk part 2) and the FK to the account table"
+        },
+        "created_at": {
+            "type": "string",
+            "description": "The date and time the user_account was created"
+        },
+        "user_id": {
+            "type": "integer",
+            "description": "The unique identifier for a user (pk part 1) and the FK to the user table"
+        }
+    },
+    "composite_key": "user_id, account_id",
+    "required": [
+        "account_id",
+        "created_at",
+        "user_id"
+    ]
+  }
+  

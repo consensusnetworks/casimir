@@ -9,4 +9,6 @@ export interface JsonSchema {
             description: string
         }
     },
+    uniqueFields?: string[],
+    composite_key?: string
 }
