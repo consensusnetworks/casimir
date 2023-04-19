@@ -5,7 +5,7 @@
 ### constructor
 
 ```solidity
-constructor(address casimirManagerAddress, address linkFeedAddress) public
+constructor(address casimirManagerAddress) public
 ```
 
 Constructor
@@ -15,7 +15,6 @@ Constructor
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | casimirManagerAddress | address | The manager contract address |
-| linkFeedAddress | address | The chainlink feed contract address |
 
 ### checkUpkeep
 
@@ -52,53 +51,33 @@ Perform the upkeep
 | ---- | ---- | ----------- |
 | performData | bytes | The data to perform the upkeep |
 
-### getBeaconStake
+### getStake
 
 ```solidity
-function getBeaconStake() public view returns (int256)
+function getStake() external view returns (uint256)
 ```
 
-Get the latest total manager stake on beacon reported from chainlink PoR feed
+Get the total stake
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The latest total manager stake on beacon |
+| [0] | uint256 | The total stake |
 
-### getPoRAddressListLength
-
-```solidity
-function getPoRAddressListLength() external view returns (uint256)
-```
-
-Get total number of addresses in the list.
-
-### getPoRAddressList
+### getExpectedConsensusPrincipal
 
 ```solidity
-function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
+function getExpectedConsensusPrincipal() external view returns (uint256)
 ```
 
-Get a batch of human-readable addresses from the address list. The requested batch size can be greater
-than the actual address list size, in which the full address list will be returned.
-
-_Due to limitations of gas usage in off-chain calls, we need to support fetching the addresses in batches.
-EVM addresses need to be converted to human-readable strings. The address strings need to be in the same format
-that would be used when querying the balance of that address._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The index of the first address in the batch. |
-| endIndex | uint256 | The index of the last address in the batch. If `endIndex > getPoRAddressListLength()-1`, endIndex need to default to `getPoRAddressListLength()-1`. |
+Get the expected consensus stake principal
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | string[] | Array of addresses as strings. |
+| [0] | uint256 | The expected consensus stake principal |
 
 ## CasimirManager
 
@@ -336,7 +315,7 @@ Get a list of all open pool IDs
 ### getReadyPoolIds
 
 ```solidity
-function getReadyPoolIds() external view returns (uint32[])
+function getReadyPoolIds() public view returns (uint32[])
 ```
 
 Get a list of all ready pool IDs
@@ -350,7 +329,7 @@ Get a list of all ready pool IDs
 ### getStakedPoolIds
 
 ```solidity
-function getStakedPoolIds() external view returns (uint32[])
+function getStakedPoolIds() public view returns (uint32[])
 ```
 
 Get a list of all staked pool IDs
@@ -367,13 +346,41 @@ Get a list of all staked pool IDs
 function getStake() public view returns (uint256)
 ```
 
-Get the current stake of the pool manager
+Get the total manager stake
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The current stake of the pool manager |
+| [0] | uint256 | The total manager stake |
+
+### getConsensusStake
+
+```solidity
+function getConsensusStake() public view returns (int256)
+```
+
+Get the total manager consensus stake
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int256 | The latest total manager consensus stake |
+
+### getExpectedConsensusPrincipal
+
+```solidity
+function getExpectedConsensusPrincipal() public view returns (uint256)
+```
+
+Get the total manager expected consensus stake principal
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The the total manager expected consensus stake principal |
 
 ### getOpenDeposits
 
@@ -381,13 +388,13 @@ Get the current stake of the pool manager
 function getOpenDeposits() public view returns (uint256)
 ```
 
-Get the current ready deposits of the pool manager
+Get the total manager open deposits
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The current ready deposits of the pool manager |
+| [0] | uint256 | The total manager open deposits |
 
 ### getUserStake
 
@@ -395,7 +402,7 @@ Get the current ready deposits of the pool manager
 function getUserStake(address userAddress) public view returns (uint256)
 ```
 
-Get the current stake of a user
+Get the total user stake for a given user address
 
 #### Parameters
 
@@ -407,7 +414,7 @@ Get the current stake of a user
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The current stake of a user |
+| [0] | uint256 | The total user stake |
 
 ### getPoolDetails
 
@@ -415,7 +422,7 @@ Get the current stake of a user
 function getPoolDetails(uint32 poolId) external view returns (struct ICasimirManager.PoolDetails)
 ```
 
-Get pool details
+Get the pool details for a given pool ID
 
 #### Parameters
 
@@ -442,6 +449,86 @@ Get the automation address
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | address | The automation address |
+
+### getPoRAddress
+
+```solidity
+function getPoRAddress() public view returns (address)
+```
+
+Get the PoR address
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | The PoR address |
+
+## CasimirPoR
+
+### constructor
+
+```solidity
+constructor(address casimirManagerAddress, address linkFeedAddress) public
+```
+
+Constructor
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| casimirManagerAddress | address | The manager contract address |
+| linkFeedAddress | address | The chainlink feed contract address |
+
+### getPoRAddressListLength
+
+```solidity
+function getPoRAddressListLength() external view returns (uint256)
+```
+
+Get the PoR address list length
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The PoR address list length |
+
+### getPoRAddressList
+
+```solidity
+function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
+```
+
+Get the PoR address list given a start and end index
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string[] | The PoR address list |
+
+### getConsensusStake
+
+```solidity
+function getConsensusStake() external view returns (int256)
+```
+
+Get the total manager consensus stake
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int256 | The latest total manager consensus stake |
 
 ## ICasimirAutomation
 
@@ -495,40 +582,6 @@ Always validate the data passed in._
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | performData | bytes | is the data which was passed back from the checkData simulation. If it is encoded, it can easily be decoded into other types by calling `abi.decode`. This data should not be trusted, and should be validated against the contract's current state. |
-
-### getPoRAddressListLength
-
-```solidity
-function getPoRAddressListLength() external view returns (uint256)
-```
-
-Get total number of addresses in the list.
-
-### getPoRAddressList
-
-```solidity
-function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
-```
-
-Get a batch of human-readable addresses from the address list. The requested batch size can be greater
-than the actual address list size, in which the full address list will be returned.
-
-_Due to limitations of gas usage in off-chain calls, we need to support fetching the addresses in batches.
-EVM addresses need to be converted to human-readable strings. The address strings need to be in the same format
-that would be used when querying the balance of that address._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The index of the first address in the batch. |
-| endIndex | uint256 | The index of the last address in the batch. If `endIndex > getPoRAddressListLength()-1`, endIndex need to default to `getPoRAddressListLength()-1`. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | string[] | Array of addresses as strings. |
 
 ## ICasimirManager
 
@@ -706,6 +759,18 @@ function getStakedPoolIds() external view returns (uint32[])
 function getStake() external view returns (uint256)
 ```
 
+### getConsensusStake
+
+```solidity
+function getConsensusStake() external view returns (int256)
+```
+
+### getExpectedConsensusPrincipal
+
+```solidity
+function getExpectedConsensusPrincipal() external view returns (uint256)
+```
+
 ### getOpenDeposits
 
 ```solidity
@@ -718,7 +783,49 @@ function getOpenDeposits() external view returns (uint256)
 function getUserStake(address userAddress) external view returns (uint256)
 ```
 
-## Uint32Array
+## ICasimirPoR
+
+### getPoRAddressListLength
+
+```solidity
+function getPoRAddressListLength() external view returns (uint256)
+```
+
+Get total number of addresses in the list.
+
+### getPoRAddressList
+
+```solidity
+function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
+```
+
+Get a batch of human-readable addresses from the address list. The requested batch size can be greater
+than the actual address list size, in which the full address list will be returned.
+
+_Due to limitations of gas usage in off-chain calls, we need to support fetching the addresses in batches.
+EVM addresses need to be converted to human-readable strings. The address strings need to be in the same format
+that would be used when querying the balance of that address._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The index of the first address in the batch. |
+| endIndex | uint256 | The index of the last address in the batch. If `endIndex > getPoRAddressListLength()-1`, endIndex need to default to `getPoRAddressListLength()-1`. |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string[] | Array of addresses as strings. |
+
+### getConsensusStake
+
+```solidity
+function getConsensusStake() external view returns (int256)
+```
+
+## Types32Array
 
 ### remove
 
@@ -726,12 +833,106 @@ function getUserStake(address userAddress) external view returns (uint256)
 function remove(uint32[] arr, uint256 index) internal
 ```
 
-## BytesArray
+## TypesBytesArray
 
 ### remove
 
 ```solidity
 function remove(bytes[] arr, uint256 index) internal
+```
+
+## MockAggregator
+
+### version
+
+```solidity
+uint256 version
+```
+
+### description
+
+```solidity
+string description
+```
+
+### decimals
+
+```solidity
+uint8 decimals
+```
+
+### latestAnswer
+
+```solidity
+int256 latestAnswer
+```
+
+### latestTimestamp
+
+```solidity
+uint256 latestTimestamp
+```
+
+### latestRound
+
+```solidity
+uint256 latestRound
+```
+
+### getAnswer
+
+```solidity
+mapping(uint256 => int256) getAnswer
+```
+
+### getTimestamp
+
+```solidity
+mapping(uint256 => uint256) getTimestamp
+```
+
+### constructor
+
+```solidity
+constructor(uint8 _decimals, int256 _initialAnswer) public
+```
+
+### updateAnswer
+
+```solidity
+function updateAnswer(int256 _answer) public
+```
+
+### updateRoundData
+
+```solidity
+function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt) public
+```
+
+### getRoundData
+
+```solidity
+function getRoundData(uint80 _roundId) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+```
+
+### latestRoundData
+
+```solidity
+function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+```
+
+## MockKeeperRegistry
+
+### registerUpkeep
+
+```solidity
+function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external view returns (uint256 id)
+```
+
+### getState
+
+```solidity
+function getState() external pure returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
 ```
 
 ## Functions
@@ -1523,6 +1724,180 @@ Query the current deposit count.
 | ---- | ---- | ----------- |
 | [0] | bytes | The deposit count encoded as a little endian 64-bit number. |
 
+## OnchainConfig
+
+```solidity
+struct OnchainConfig {
+  uint32 paymentPremiumPPB;
+  uint32 flatFeeMicroLink;
+  uint32 checkGasLimit;
+  uint24 stalenessSeconds;
+  uint16 gasCeilingMultiplier;
+  uint96 minUpkeepSpend;
+  uint32 maxPerformGas;
+  uint32 maxCheckDataSize;
+  uint32 maxPerformDataSize;
+  uint256 fallbackGasPrice;
+  uint256 fallbackLinkPrice;
+  address transcoder;
+  address registrar;
+}
+```
+
+## State
+
+```solidity
+struct State {
+  uint32 nonce;
+  uint96 ownerLinkBalance;
+  uint256 expectedLinkBalance;
+  uint96 totalPremium;
+  uint256 numUpkeeps;
+  uint32 configCount;
+  uint32 latestConfigBlockNumber;
+  bytes32 latestConfigDigest;
+  uint32 latestEpoch;
+  bool paused;
+}
+```
+
+## UpkeepInfo
+
+```solidity
+struct UpkeepInfo {
+  address target;
+  uint32 executeGas;
+  bytes checkData;
+  uint96 balance;
+  address admin;
+  uint64 maxValidBlocknumber;
+  uint32 lastPerformBlockNumber;
+  uint96 amountSpent;
+  bool paused;
+  bytes offchainConfig;
+}
+```
+
+## UpkeepFailureReason
+
+```solidity
+enum UpkeepFailureReason {
+  NONE,
+  UPKEEP_CANCELLED,
+  UPKEEP_PAUSED,
+  TARGET_CHECK_REVERTED,
+  UPKEEP_NOT_NEEDED,
+  PERFORM_DATA_EXCEEDS_LIMIT,
+  INSUFFICIENT_BALANCE
+}
+```
+
+## KeeperRegistryBaseInterface
+
+### registerUpkeep
+
+```solidity
+function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external returns (uint256 id)
+```
+
+### cancelUpkeep
+
+```solidity
+function cancelUpkeep(uint256 id) external
+```
+
+### pauseUpkeep
+
+```solidity
+function pauseUpkeep(uint256 id) external
+```
+
+### unpauseUpkeep
+
+```solidity
+function unpauseUpkeep(uint256 id) external
+```
+
+### transferUpkeepAdmin
+
+```solidity
+function transferUpkeepAdmin(uint256 id, address proposed) external
+```
+
+### acceptUpkeepAdmin
+
+```solidity
+function acceptUpkeepAdmin(uint256 id) external
+```
+
+### updateCheckData
+
+```solidity
+function updateCheckData(uint256 id, bytes newCheckData) external
+```
+
+### addFunds
+
+```solidity
+function addFunds(uint256 id, uint96 amount) external
+```
+
+### setUpkeepGasLimit
+
+```solidity
+function setUpkeepGasLimit(uint256 id, uint32 gasLimit) external
+```
+
+### setUpkeepOffchainConfig
+
+```solidity
+function setUpkeepOffchainConfig(uint256 id, bytes config) external
+```
+
+### getUpkeep
+
+```solidity
+function getUpkeep(uint256 id) external view returns (struct UpkeepInfo upkeepInfo)
+```
+
+### getActiveUpkeepIDs
+
+```solidity
+function getActiveUpkeepIDs(uint256 startIndex, uint256 maxCount) external view returns (uint256[])
+```
+
+### getTransmitterInfo
+
+```solidity
+function getTransmitterInfo(address query) external view returns (bool active, uint8 index, uint96 balance, uint96 lastCollected, address payee)
+```
+
+### getState
+
+```solidity
+function getState() external view returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
+```
+
+## IKeeperRegistry
+
+_The view methods are not actually marked as view in the implementation
+but we want them to be easily queried off-chain. Solidity will not compile
+if we actually inherit from this interface, so we document it here._
+
+### checkUpkeep
+
+```solidity
+function checkUpkeep(uint256 upkeepId) external view returns (bool upkeepNeeded, bytes performData, enum UpkeepFailureReason upkeepFailureReason, uint256 gasUsed, uint256 fastGasWei, uint256 linkNative)
+```
+
+## KeeperRegistryExecutableInterface
+
+### checkUpkeep
+
+```solidity
+function checkUpkeep(uint256 upkeepId) external returns (bool upkeepNeeded, bytes performData, enum UpkeepFailureReason upkeepFailureReason, uint256 gasUsed, uint256 fastGasWei, uint256 linkNative)
+```
+
 ## ISSVToken
 
 ### mint
@@ -1954,273 +2329,5 @@ function writeKVMap(struct CBOR.CBORBuffer buf, string key) internal pure
 
 ```solidity
 function writeKVArray(struct CBOR.CBORBuffer buf, string key) internal pure
-```
-
-## MockAggregator
-
-### version
-
-```solidity
-uint256 version
-```
-
-### description
-
-```solidity
-string description
-```
-
-### decimals
-
-```solidity
-uint8 decimals
-```
-
-### latestAnswer
-
-```solidity
-int256 latestAnswer
-```
-
-### latestTimestamp
-
-```solidity
-uint256 latestTimestamp
-```
-
-### latestRound
-
-```solidity
-uint256 latestRound
-```
-
-### getAnswer
-
-```solidity
-mapping(uint256 => int256) getAnswer
-```
-
-### getTimestamp
-
-```solidity
-mapping(uint256 => uint256) getTimestamp
-```
-
-### constructor
-
-```solidity
-constructor(uint8 _decimals, int256 _initialAnswer) public
-```
-
-### updateAnswer
-
-```solidity
-function updateAnswer(int256 _answer) public
-```
-
-### updateRoundData
-
-```solidity
-function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt) public
-```
-
-### getRoundData
-
-```solidity
-function getRoundData(uint80 _roundId) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
-```
-
-### latestRoundData
-
-```solidity
-function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
-```
-
-## MockKeeperRegistry
-
-### registerUpkeep
-
-```solidity
-function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external view returns (uint256 id)
-```
-
-### getState
-
-```solidity
-function getState() external pure returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
-```
-
-## OnchainConfig
-
-```solidity
-struct OnchainConfig {
-  uint32 paymentPremiumPPB;
-  uint32 flatFeeMicroLink;
-  uint32 checkGasLimit;
-  uint24 stalenessSeconds;
-  uint16 gasCeilingMultiplier;
-  uint96 minUpkeepSpend;
-  uint32 maxPerformGas;
-  uint32 maxCheckDataSize;
-  uint32 maxPerformDataSize;
-  uint256 fallbackGasPrice;
-  uint256 fallbackLinkPrice;
-  address transcoder;
-  address registrar;
-}
-```
-
-## State
-
-```solidity
-struct State {
-  uint32 nonce;
-  uint96 ownerLinkBalance;
-  uint256 expectedLinkBalance;
-  uint96 totalPremium;
-  uint256 numUpkeeps;
-  uint32 configCount;
-  uint32 latestConfigBlockNumber;
-  bytes32 latestConfigDigest;
-  uint32 latestEpoch;
-  bool paused;
-}
-```
-
-## UpkeepInfo
-
-```solidity
-struct UpkeepInfo {
-  address target;
-  uint32 executeGas;
-  bytes checkData;
-  uint96 balance;
-  address admin;
-  uint64 maxValidBlocknumber;
-  uint32 lastPerformBlockNumber;
-  uint96 amountSpent;
-  bool paused;
-  bytes offchainConfig;
-}
-```
-
-## UpkeepFailureReason
-
-```solidity
-enum UpkeepFailureReason {
-  NONE,
-  UPKEEP_CANCELLED,
-  UPKEEP_PAUSED,
-  TARGET_CHECK_REVERTED,
-  UPKEEP_NOT_NEEDED,
-  PERFORM_DATA_EXCEEDS_LIMIT,
-  INSUFFICIENT_BALANCE
-}
-```
-
-## KeeperRegistryBaseInterface
-
-### registerUpkeep
-
-```solidity
-function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external returns (uint256 id)
-```
-
-### cancelUpkeep
-
-```solidity
-function cancelUpkeep(uint256 id) external
-```
-
-### pauseUpkeep
-
-```solidity
-function pauseUpkeep(uint256 id) external
-```
-
-### unpauseUpkeep
-
-```solidity
-function unpauseUpkeep(uint256 id) external
-```
-
-### transferUpkeepAdmin
-
-```solidity
-function transferUpkeepAdmin(uint256 id, address proposed) external
-```
-
-### acceptUpkeepAdmin
-
-```solidity
-function acceptUpkeepAdmin(uint256 id) external
-```
-
-### updateCheckData
-
-```solidity
-function updateCheckData(uint256 id, bytes newCheckData) external
-```
-
-### addFunds
-
-```solidity
-function addFunds(uint256 id, uint96 amount) external
-```
-
-### setUpkeepGasLimit
-
-```solidity
-function setUpkeepGasLimit(uint256 id, uint32 gasLimit) external
-```
-
-### setUpkeepOffchainConfig
-
-```solidity
-function setUpkeepOffchainConfig(uint256 id, bytes config) external
-```
-
-### getUpkeep
-
-```solidity
-function getUpkeep(uint256 id) external view returns (struct UpkeepInfo upkeepInfo)
-```
-
-### getActiveUpkeepIDs
-
-```solidity
-function getActiveUpkeepIDs(uint256 startIndex, uint256 maxCount) external view returns (uint256[])
-```
-
-### getTransmitterInfo
-
-```solidity
-function getTransmitterInfo(address query) external view returns (bool active, uint8 index, uint96 balance, uint96 lastCollected, address payee)
-```
-
-### getState
-
-```solidity
-function getState() external view returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
-```
-
-## IKeeperRegistry
-
-_The view methods are not actually marked as view in the implementation
-but we want them to be easily queried off-chain. Solidity will not compile
-if we actually inherit from this interface, so we document it here._
-
-### checkUpkeep
-
-```solidity
-function checkUpkeep(uint256 upkeepId) external view returns (bool upkeepNeeded, bytes performData, enum UpkeepFailureReason upkeepFailureReason, uint256 gasUsed, uint256 fastGasWei, uint256 linkNative)
-```
-
-## KeeperRegistryExecutableInterface
-
-### checkUpkeep
-
-```solidity
-function checkUpkeep(uint256 upkeepId) external returns (bool upkeepNeeded, bytes performData, enum UpkeepFailureReason upkeepFailureReason, uint256 gasUsed, uint256 fastGasWei, uint256 linkNative)
 ```
 
