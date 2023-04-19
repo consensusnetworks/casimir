@@ -441,11 +441,11 @@ background: #555;
     }
     
     input:checked + .slider {
-        background-color: #0D5FFF;
+        background-color: #80ABFF;
     }
     
     input:focus + .slider {
-        box-shadow: 0 0 1px #0D5FFF;
+        box-shadow: 0 0 1px #80ABFF;
     }
     
     input:checked + .slider:before {
@@ -495,12 +495,17 @@ background: #555;
     }
     .loading {
         background: linear-gradient(50deg, 
-        #80ABFF,#4D89FF, #0D5FFF, #0D5FFF,#4D89FF, #80ABFF);
+        #80ABFF,#4D89FF, #80ABFF, #80ABFF,#4D89FF, #80ABFF);
         animation: movingBackground 2s ease infinite;
         background-size: 200%;
     }
     .loading_grey {
         background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+        animation: 2s shine linear infinite;
+        background-size: 200%;
+    }
+    .loading_red {
+        background: linear-gradient(110deg, #FF8080 8%, #f7cdcd 40%, #FF8080 90%);
         animation: 2s shine linear infinite;
         background-size: 200%;
     }
@@ -520,6 +525,60 @@ background: #555;
             background-position: 0% 50%;
         }
     }
+    .dot-bricks {
+        position: relative;
+        top: 15px;
+        left: -9999px;
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        background-color: #80ABFF;
+        color: #80ABFF;
+        box-shadow: 9991px -16px 0 0 #80ABFF, 9991px 0 0 0 #80ABFF, 10007px 0 0 0 #80ABFF;
+        animation: dot-bricks 5s infinite ease;
+    }
+      
+      @keyframes dot-bricks {
+        0% {
+          box-shadow: 9991px -16px 0 0 #80ABFF, 9991px 0 0 0 #80ABFF, 10007px 0 0 0 #80ABFF;
+        }
+        8.333% {
+          box-shadow: 10007px -16px 0 0 #80ABFF, 9991px 0 0 0 #80ABFF, 10007px 0 0 0 #80ABFF;
+        }
+        16.667% {
+          box-shadow: 10007px -16px 0 0 #80ABFF, 9991px -16px 0 0 #80ABFF, 10007px 0 0 0 #80ABFF;
+        }
+        25% {
+          box-shadow: 10007px -16px 0 0 #80ABFF, 9991px -16px 0 0 #80ABFF, 9991px 0 0 0 #80ABFF;
+        }
+        33.333% {
+          box-shadow: 10007px 0 0 0 #80ABFF, 9991px -16px 0 0 #80ABFF, 9991px 0 0 0 #80ABFF;
+        }
+        41.667% {
+          box-shadow: 10007px 0 0 0 #80ABFF, 10007px -16px 0 0 #80ABFF, 9991px 0 0 0 #80ABFF;
+        }
+        50% {
+          box-shadow: 10007px 0 0 0 #80ABFF, 10007px -16px 0 0 #80ABFF, 9991px -16px 0 0 #80ABFF;
+        }
+        58.333% {
+          box-shadow: 9991px 0 0 0 #80ABFF, 10007px -16px 0 0 #80ABFF, 9991px -16px 0 0 #80ABFF;
+        }
+        66.666% {
+          box-shadow: 9991px 0 0 0 #80ABFF, 10007px 0 0 0 #80ABFF, 9991px -16px 0 0 #80ABFF;
+        }
+        75% {
+          box-shadow: 9991px 0 0 0 #80ABFF, 10007px 0 0 0 #80ABFF, 10007px -16px 0 0 #80ABFF;
+        }
+        83.333% {
+          box-shadow: 9991px -16px 0 0 #80ABFF, 10007px 0 0 0 #80ABFF, 10007px -16px 0 0 #80ABFF;
+        }
+        91.667% {
+          box-shadow: 9991px -16px 0 0 #80ABFF, 9991px 0 0 0 #80ABFF, 10007px -16px 0 0 #80ABFF;
+        }
+        100% {
+          box-shadow: 9991px -16px 0 0 #80ABFF, 9991px 0 0 0 #80ABFF, 10007px 0 0 0 #80ABFF;
+        }
+      }
     .side-nav-container {
         @apply 
         w-sidebar-closed 

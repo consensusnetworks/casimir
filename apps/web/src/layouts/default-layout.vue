@@ -3,7 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
 
-const { connectWallet, logout, activeWallets } = useWallet()
+const { connectWallet, logout, activeWallets, loadingLogout } = useWallet()
 const { user } = useUsers()
 
 const openWalletConnect = ref(false)
@@ -118,7 +118,7 @@ watch(user, () => {
             v-show="openWalletConnect"
             class="absolute top-[100% - 1px] right-[-1px] w-[225px] border-x border-b text-grey_3 border-border rounded-b-[5px]
             hover:border-grey_4 bg-white expand_height z-[10]"
-            :style="`height: 400px;`"
+            :style="`height: 340px;`"
           >
             <div 
               class="w-full h-full flex flex-col justify-between pt-10"
@@ -193,6 +193,7 @@ watch(user, () => {
                   class="border-t border-decline w-full flex items-center justify-center 
                   gap-10 py-12 font-bold text-body text-decline hover:bg-decline 
                 hover:text-white"
+                  :class="loadingLogout? 'loading_red text-white' : ''"
                   @click="logout"
                 >
                   Disconnect

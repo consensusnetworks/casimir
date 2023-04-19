@@ -6,20 +6,36 @@ import useUsers from '@/composables/users'
 
 const { user } = useUsers()
 
-const { connectWallet, activeWallets, logout } = useWallet()
+const { connectWallet, activeWallets, loadingUserWallets } = useWallet()
+
+const selectedWallet = ref(null as null | string)
 
 </script>
 
 <template>
-  <div class="h-full w-full flex justify-center items-center">
+  <div
+    class="h-full w-full flex justify-center items-center"
+  >
     <!-- TD: Add modal for Ledger -->
     <div class="min-w-[360px] w-full max-w-[600px]">
-      <div class="mb-25">
+      <div class="mb-25 flex justify-between items-center pr-10">
         <img
           src="/casimir.svg"
           alt="Casimir Logo"
           class="w-30"
         >
+
+        <div
+          v-show="loadingUserWallets"
+          class="flex justify-between items-end gap-20"
+        >
+          <span class="text-caption text-grey_5 font-bold">
+            Waiting to connect with {{ selectedWallet }}
+          </span>
+          <div class="h-[25px]">
+            <div class="dot-bricks" />
+          </div>
+        </div>
       </div>
       <div 
         class="flex justify-between items-start gap-50 h-[400px]"
@@ -51,7 +67,7 @@ const { connectWallet, activeWallets, logout } = useWallet()
             :key="wallet"
             class="flex justify-between items-center border-[1px] border-[#b2bacb] 
             rounded-[5px] mb-[10px] px-10 py-5 w-full hover:border-blue_3"
-            @click="connectWallet(wallet)"
+            @click="connectWallet(wallet), selectedWallet = wallet"
           >
             <img
               :src="'/'+wallet.toLocaleLowerCase()+'.svg'"
@@ -61,10 +77,6 @@ const { connectWallet, activeWallets, logout } = useWallet()
             <h6 class="text-body font-bold text-[#8E9095]">
               {{ wallet }}
             </h6>
-          </button>
-
-          <button @click="logout">
-            logout
           </button>
         </div>
       </div>

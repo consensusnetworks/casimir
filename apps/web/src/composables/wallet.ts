@@ -27,6 +27,7 @@ const activeWallets = ref([
 const amount = ref<string>('0.000001')
 const amountToStake = ref<string>('0.0')
 const loadingUserWallets = ref(false)
+const loadingLogout = ref(false)
 const primaryAddress = ref('')
 const selectedProvider = ref<ProviderString>('')
 const selectedAddress = ref<string>('')
@@ -79,6 +80,7 @@ export default function useWallet() {
   async function connectWallet(provider: ProviderString, currency: Currency = 'ETH') {
     try { // Sign Up or Login
       if (!user?.value?.address) {
+        loadingUserWallets.value = true
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
         const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
         await loginWithWallet(provider, connectedAddress, connectedCurrency)
@@ -239,7 +241,7 @@ export default function useWallet() {
   }
 
   async function logout() {
-    loadingUserWallets.value = true
+    loadingLogout.value = true
     await Session.signOut()
     user.value = undefined
     setSelectedAddress('')
@@ -248,7 +250,7 @@ export default function useWallet() {
     setUser()
     primaryAddress.value = ''
     console.log('user.value on logout :>> ', user.value)
-    loadingUserWallets.value = false
+    loadingLogout.value = false
     router.push('/auth')
   }
 
@@ -386,6 +388,7 @@ export default function useWallet() {
     selectedCurrency,
     selectedProvider,
     toAddress,
+    loadingLogout,
     connectWallet,
     detectCurrencyInProvider,
     logout,
