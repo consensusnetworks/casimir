@@ -107,6 +107,7 @@ export default function useWallet() {
           // If account doesn't exist, add account using users api
           console.log('adding sub account')
           const account = {
+            userId: user?.value?.id,
             address: connectedAddress.toLowerCase() as string,
             currency: connectedCurrency,
             ownerAddress: user?.value?.address.toLowerCase() as string,
@@ -206,13 +207,12 @@ export default function useWallet() {
     }
   }
 
-  // TODO: What is this used for? 
   // Do we need balance of active address only? 
   // Or do we need balance of all addresses in accounts associated with user? 
   // Is this calculated on front end or back end or both?
   async function getUserBalance() {
     if (ethersProviderList.includes(selectedProvider.value)){
-      const walletBalance = await getEthersBalance(selectedProvider.value, selectedAddress.value)
+      const walletBalance = await getEthersBalance(selectedAddress.value)
       console.log('walletBalance in wei in wallet.ts :>> ', walletBalance)
     return walletBalance
     } else {
@@ -312,14 +312,14 @@ export default function useWallet() {
   async function setPrimaryWalletAccount() {
     if (!user?.value?.address) {
       alert('Please login first')
-    }
-    return alert('Not yet implemented for this wallet provider')
-    if (ethersProviderList.includes(selectedProvider.value)) {
-      const result = await updatePrimaryAddress(primaryAddress.value, selectedProvider.value, selectedAddress.value)
+    } else if (ethersProviderList.includes(selectedProvider.value)) {
+      const result = await updatePrimaryAddress(selectedAddress.value)
       const { data } = await result.json()
       if (data) {
         primaryAddress.value = data.address
       }
+    } else {
+      return alert('Not yet implemented for this wallet provider')
     }
   }
 
