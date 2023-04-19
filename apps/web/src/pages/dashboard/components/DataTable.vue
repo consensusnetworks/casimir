@@ -6,34 +6,46 @@ const selectedTab = ref('Staked' as 'Staked' | 'Transactions')
 const selectedTableHeader = ref('')
 const sortDirection = ref('down')
 const stakingTableHeaders = ref([
-  // {
-  //   title: 'ID',
-  //   value: 'id'
-  // },
   {
     title: 'Wallet',
     value: 'wallet'
   },
   {
-    title: 'Amount',
-    value: 'amount'
+    title: 'Origonal Staked',
+    value: 'origonal_staked'
+  },
+  {
+    title: 'Compounded Rewards',
+    value: 'compounded_rewards'
+  },
+  {
+    title: 'Total',
+    value: 'total_staked'
   },
   {
     title: 'Date Staked',
     value: 'date'
   },
   {
-    title: 'Staking Pool',
-    value: 'pool_id'
+    title: 'APY',
+    value: 'apy'
   },
   {
-    title: 'Validators/Operators',
-    value: 'validators'
+    title: 'Operator\'s Pref.',
+    value: 'operator_preformance'
+  },
+  {
+    title: 'Validator\'s Pref.',
+    value: 'validator_preformance'
   },
   {
     title: 'Status',
     value: 'status'
   },
+  {
+    title: 'Withdraw',
+    value: 'withdraw'
+  }
 ])
 
 const page_size = ref(8)
@@ -70,15 +82,6 @@ const timeElapsed = (date: string) => {
 
   const days = Math.floor(elapsed / msPerDay)
   elapsed -= days * msPerDay
-
-  // const hours = Math.floor(elapsed / msPerHour)
-  // elapsed -= hours * msPerHour
-
-  // const minutes = Math.floor(elapsed / msPerMinute)
-  // elapsed -= minutes * msPerMinute
-
-  // const seconds = Math.floor(elapsed / msPerSecond)
-  // ${hours} hours, ${minutes} minutes, ${seconds} seconds
   
   return  (years > 0? `${years} years`: '') +  (years > 0 && months > 0? ', ': '') +
           (months > 0? `${months} months`: '') + (months > 0 && days > 0 || years > 0? ', ': '') +
@@ -99,35 +102,33 @@ onMounted(()=>{
   }
 
   for (let i = 0; i < 100; i++) {
+    let origonal_staked = Math.floor(Math.random() * 100) +1
+    let compounded_rewards = Math.floor(Math.random() * 100)
     randomData.push(
       {
-        // id: randomString(), 
-        amount: i * Math.floor(Math.random() * 100),
-        date: new Date(Math.floor(Math.random() * Date.now())).toDateString(),
         wallet: {
           address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
           currency: 'ETH',
-          balance: '1000000000000000000',
+          balance: '36',
           balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
           roi: 0.25,
           walletProvider: 'MetaMask'
         },
-        pool_id: randomString(),
-        validators: randomString(),
-        status: Math.random() < 0.5 ? {
-          status: 'In Waiting'
+        origonal_staked: origonal_staked,
+        compounded_rewards: compounded_rewards,
+        total_staked: origonal_staked + compounded_rewards,
+        date: new Date(Math.floor(Math.random() * Date.now())).toDateString(),
+        apy: '2.3%',
+        operator_preformance: Math.random() < 0.5 ? {
+          accurcy: 100,
+          value: '100%'
         } : {
-          status: 'Staked',
-          dateStaked: new Date(Math.floor(Math.random() * Date.now())).toDateString(),
-          apy: 2.5,
-          autoStake: Math.random() < 0.5 ? {
-            restake: false, 
-            rewardsAccumulated: '35 ETH'
-          } : {
-            restake: true,
-            ammountRestaked: '25 ETH'
-          }
-        }
+          accurcy: 90,
+          value: '86%'
+        },
+        validator_preformance: '100%',
+        status: Math.random() < 0.5 ? 'In Waiting' : 'Staked',
+        withdraw: true
       }
     )
   }
@@ -135,17 +136,46 @@ onMounted(()=>{
   data.value = randomData
 
   filterData()
+
 })
 
 watch([page_number, page_size, data, stakingTableHeaders], ()=>{
   filterData()
 })
 
+
 const paginationOptions = ref(['Show All', 6, 8, 10, 12, 14, 16, 18, 20,])
 const openPaginationOptions = ref(false)
 
 const selectedTableRow = ref(null as any)
 
+const withdrawAmount = ref(0)
+watch(withdrawAmount, () => {
+  if(isNaN(withdrawAmount.value)){
+    withdrawAmount.value = 0
+  }
+})
+function resizeInput(this: any) {
+  console.log(this)
+    this.style.width = (this.value.length + 1) + 'ch'
+}
+watch(selectedTableRow, () => {
+  if(selectedTableRow.value) {
+    setTimeout(() => {
+      var input = document.getElementById('withdraw_amount_input') 
+      if(input)
+      input.addEventListener('input', resizeInput) 
+      resizeInput.call(input) 
+    }, 100)
+  } else {
+
+    setTimeout(() => {
+      var input = document.getElementById('withdraw_amount_input') 
+      if(input)
+      input.removeEventListener('input', resizeInput) 
+    }, 100)
+  }
+})
 </script>
 
 <template>
@@ -196,18 +226,58 @@ const selectedTableRow = ref(null as any)
       >
         <div
           v-if="selectedTableRow"
-          class="page__boot shadow-lg h-[420px] absolute
-          animate_up bg-[#edeff3] rounded-[5px] w-[600px] px-10 py-15"
-          style="top: calc(50% - 220px); left: calc(50% - 300px)"
+          class="page__boot shadow-lg h-[350px] absolute flex flex-col justify-between gap-10
+          animate_up bg-[#edeff3] rounded-[5px] w-[350px] px-10 py-15 z-10"
+          style="top: calc(50% - 175px); left: calc(50% - 200px)"
         >
-          <div class="flex justify-end w-full mb-10">
+          <div class="flex justify-between w-full border-b border-grey_2 pb-10">
+            <h6 class="text-grey_5 font-bold">
+              Withdraw
+            </h6>
             <button
               class="iconoir-cancel text-[20px]"
               @click="selectedTableRow = null"
             />
           </div>
 
-          {{ selectedTableRow }}
+
+          <div class="flex items-start justify-center">
+            <img
+              src="/eth.svg"
+              alt="ETH Logo"
+              class="h-30 w-30"
+            >
+            <input
+              id="withdraw_amount_input"
+              v-model="withdrawAmount"
+              placeholder="0"
+              type="text"
+              class="text-[60px] pl-5 text-border font-medium outline-none bg-transparent"
+            >
+          </div>
+
+
+          <div>
+            <div class="flex justify-between items-center mb-10">
+              <button 
+                class="text-body font-bold border disabled:opacity-[0.55] rounded-[5px] 
+                px-10 py-8 bg-primary text-white hover:bg-blue_8 w-full"
+              >
+                Withdraw
+              </button>
+              <button 
+                class="text-body font-bold border disabled:opacity-[0.55] rounded-[5px] 
+                px-10 py-8 bg-blue_3 text-grey_1 hover:bg-blue_6 w-full"
+              >
+                Withdraw All ( {{ selectedTableRow.total_staked }} ETH )
+              </button>
+            </div>
+            <div class="text-caption font-bold text-center leading-5 px-5">
+              Withdraws will automaically return to origonal stake of orgin wallet address 
+              ( <span class="text-grey_4">{{ selectedTableRow.wallet.address }} </span> )
+              within 2 to 4 business days. 
+            </div>
+          </div>
         </div>
       </transition>
       
@@ -229,6 +299,7 @@ const selectedTableRow = ref(null as any)
                   @click="selectedTableHeader = header.title"
                 >
                   {{ header.title }}
+                  <!-- TD: Add sorting method -->
                   <i
                     v-show="selectedTableHeader === header.title"
                     class="text-body"
@@ -243,33 +314,48 @@ const selectedTableRow = ref(null as any)
             class="w-full"
           >
             <tr
-              v-for="item in filteredData"
+              v-for="(item, i) in filteredData"
               :key="item"
-              class="w-full text-grey_5 text-body border-b border-grey_2 cursor-pointer hover:bg-grey_1"
-              @click="selectedTableRow = item"
+              class="w-full text-body border-b border-grey_2 hover:bg-grey_1"
+              :class="i % 2 === 0? 'text-grey_5' : 'text-grey_3'"
+              :style="item === selectedTableRow? 'background-color: #F2F2F2;' : ''"
             >
               <td
                 v-for="(header) in stakingTableHeaders"
                 :key="header.value"
-                class="py-5"
+                class="py-15 font-bold"
               >
                 <div
                   v-if="header.value === 'wallet'"
-                  class="text-grey_5 font-bold truncate pr-20 max-w-[150px]"
+                  class="truncate pr-10 max-w-[150px]"
                 >
                   {{ item.wallet.address }}
                 </div>
 
                 <div
-                  v-else-if="header.value === 'amount'"
-                  class="pr-20 whitespace-nowrap font-bold"
+                  v-else-if="header.value === 'origonal_staked'"
+                  class="truncate pr-10"
                 >
-                  {{ item.amount }} ETH
+                  {{ item.origonal_staked }} ETH
+                </div>
+
+                <div
+                  v-else-if="header.value === 'compounded_rewards'"
+                  class="truncate pr-10"
+                >
+                  {{ item.compounded_rewards }} ETH
+                </div>
+
+                <div
+                  v-else-if="header.value === 'total_staked'"
+                  class="truncate pr-10"
+                >
+                  {{ item.total_staked }} ETH
                 </div>
 
                 <div
                   v-else-if="header.value === 'date'"
-                  class="pr-20 whitespace-nowrap py-10 flex justify-between gap-10 items-center max-w-[260px]"
+                  class="pr-10 whitespace-nowrap flex justify-between gap-10 items-center max-w-[260px]"
                 >
                   <div class="font-bold">
                     {{ new Date(item.date).toLocaleDateString() }}
@@ -280,33 +366,37 @@ const selectedTableRow = ref(null as any)
                 </div>
 
                 <div
-                  v-else-if="header.value === 'pool_id'"
-                  class="pr-20 whitespace-nowrap font-bold truncate max-w-[150px]"
+                  v-else-if="header.value === 'operator_preformance'"
+                  class="truncate pr-10 flex items-center gap-5"
                 >
-                  {{ item.pool_id }}
-                </div>
-
-                <div
-                  v-else-if="header.value === 'validators'"
-                  class="pr-20 whitespace-nowrap font-bold truncate max-w-[150px]"
-                >
-                  {{ item.validators }}
+                  {{ item.operator_preformance.value }} 
+                  <!-- TD: Add tooltip -->
+                  <h6 
+                    v-show="item.operator_preformance.accurcy < 100"
+                    class="iconoir-warning-circle text-warning"
+                  />
                 </div>
 
                 <div
                   v-else-if="header.value === 'status'"
-                  class="pr-20 whitespace-nowrap font-bold truncate"
+                  class="truncate pr-10"
+                  :class="item.status === 'In Waiting'? 'text-warning' : ''"
                 >
-                  <div v-if="item.status.status === 'In Waiting'">
-                    <!-- TD: Add tooltip to explain the in waiting -->
-                    In Waiting 
-                  </div>
-                  <div
-                    v-else
-                    class="flex items-center gap-5"
+                  {{ item.status }}
+                </div>
+
+                <div
+                  v-else-if="header.value === 'withdraw'"
+                  class="truncate pr-10"
+                >
+                  <button 
+                    class="bg-primary py-6 px-12 text-white rounded-[5px]
+                  hover:bg-blue_7 disabled:opacity-[0.55]"
+                    :disabled="selectedTableRow"
+                    @click="selectedTableRow = item"
                   >
-                    Staked <span class="iconoir-nav-arrow-right" />
-                  </div>
+                    Withdraw
+                  </button>
                 </div>
 
                 <div
@@ -353,8 +443,9 @@ const selectedTableRow = ref(null as any)
       <div class="w-full mt-10 flex items-center justify-between gap-20"> 
         <div>
           <button 
-            class="flex items-center gap-10 text-body font-bold border 
-          rounded-[5px] px-10 py-8 bg-primary text-white hover:bg-blue_8"
+            class="flex items-center gap-10 text-body font-bold border disabled:opacity-[0.55]
+            rounded-[5px] px-10 py-8 bg-primary text-white hover:bg-blue_8"
+            :disabled="selectedTableRow"
           >
             Export <i class="iconoir-download" />
           </button>

@@ -6,7 +6,7 @@ import useUsers from '@/composables/users'
 
 const { user } = useUsers()
 
-const { connectWallet, activeWallets } = useWallet()
+const { connectWallet, activeWallets, logout } = useWallet()
 
 </script>
 
@@ -61,6 +61,10 @@ const { connectWallet, activeWallets } = useWallet()
             <h6 class="text-body font-bold text-[#8E9095]">
               {{ wallet }}
             </h6>
+          </button>
+
+          <button @click="logout">
+            logout
           </button>
         </div>
       </div>
