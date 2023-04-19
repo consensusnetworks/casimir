@@ -168,12 +168,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * @dev Distribute ETH rewards
-     * @param rewardAmount The amount of ETH to reward
+     * @param amount The amount of ETH to reward
      */
-    function reward(uint256 rewardAmount) private {
+    function reward(uint256 amount) public {
+        require(amount > 0, "Reward amount must be greater than 0");
+
         /** Reward fees set to zero for testing */
         ProcessedDeposit memory processedDeposit = processFees(
-            rewardAmount,
+            amount,
             Fees(0, 0)
         );
 

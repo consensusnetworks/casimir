@@ -78,6 +78,8 @@ interface ICasimirManager {
 
     function deposit() external payable;
 
+    function reward(uint256 amount) external;
+
     function withdraw(uint256 amount) external;
 
     function stakePool(uint32 poolId) external;

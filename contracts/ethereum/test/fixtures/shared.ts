@@ -159,7 +159,7 @@ export async function secondUserDepositFixture() {
         await performUpkeep.wait()
     }
 
-    /** Update PoR mock aggregator answer */
+    /** Increase PoR mock aggregator answer */
     if (mockAggregator) {
         const { ...feed } = await mockAggregator.latestRoundData()
         const { answer } = feed
@@ -205,7 +205,7 @@ export async function thirdUserDepositFixture() {
         await performUpkeep.wait()
     }
 
-    /** Update PoR mock aggregator answer */
+    /** Increase PoR mock aggregator answer */
     if (mockAggregator) {
         const { ...feed } = await mockAggregator.latestRoundData()
         const { answer } = feed

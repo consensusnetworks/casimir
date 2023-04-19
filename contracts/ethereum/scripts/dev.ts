@@ -110,7 +110,7 @@ void async function () {
         }
     })
     
-    /** Update mock aggregator after each pool is staked */
+    /** Increase PoR mock aggregator answer after each pool is staked */
     casimirManager?.on('PoolStaked(uint32)', async () => {
         if (mockAggregator) {
             const { ...feed } = await mockAggregator.latestRoundData()
@@ -121,5 +121,4 @@ void async function () {
             await update?.wait()
         }
     })
-
 }()
