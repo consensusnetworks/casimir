@@ -2,9 +2,8 @@ import { KeyGenerationInput } from '../interfaces/KeyGenerationInput'
 import { Share } from '../interfaces/Share'
 import { DepositData } from '../interfaces/DepositData'
 import { DKGOptions } from '../interfaces/DKGOptions'
-import { spawn } from 'child_process'
 import { ReshareInput } from '../interfaces/ReshareInput'
-import { retry } from '@casimir/helpers'
+import { retry, run } from '@casimir/helpers'
 
 export class DKG {
     /** Key generation service URL */
@@ -153,7 +152,7 @@ export class DKG {
      */
     async start(): Promise<void> {
 
-        spawn('docker', ['compose', '-f', 'scripts/resources/dkg/docker-compose.yaml', 'up', '-d'])
+        run('cd scripts/resources/dkg && docker compose up -d')
 
         /** Wait for the success */
         let pong = false
@@ -169,7 +168,7 @@ export class DKG {
      */
     async stop(): Promise<void> {
 
-        spawn('docker', ['compose', '-f', 'scripts/resources/dkg/docker-compose.yaml', 'down'])
+        run('cd scripts/resources/dkg && docker compose down')
 
         /** Wait for the failure */
         let pong = true
