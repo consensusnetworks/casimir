@@ -1,7 +1,7 @@
 {
-    "$id": "https://casimir.co/users_accounts.schema.json",
+    "$id": "https://casimir.co/user_account.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "User_Account",
+    "title": "User Account",
     "type": "object",
     "properties": {
         "account_id": {

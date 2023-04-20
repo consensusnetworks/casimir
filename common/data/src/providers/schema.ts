@@ -1,5 +1,6 @@
 import * as glue from '@aws-cdk/aws-glue-alpha'
 import { JsonSchema } from '../interfaces/JsonSchema'
+import { snakeCase } from '@casimir/helpers'
 
 export type JsonType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null'
 export type GlueType = glue.Type
@@ -91,7 +92,7 @@ export class Schema {
         if (compositeKey) columns.push(`PRIMARY KEY (${compositeKey})`)
 
         /** Make table name plural of schema objects (todo: check edge-cases) */
-        const tableName = this.getTitle().toLowerCase() + 's'
+        const tableName = this.getTitle()
 
         const queryString = uniqueFields.length > 0 ? `CREATE TABLE ${tableName} (\n\t${columns.join(',\n\t')}, \n\tUNIQUE (${uniqueFields.join(', ')}));` : `CREATE TABLE ${tableName} (\n\t${columns.join(',\n\t')}\n);`
         return queryString
@@ -101,6 +102,6 @@ export class Schema {
      * Get the title of the JSON schema object.
      */
     getTitle(): string {
-        return this.jsonSchema.title
+        return snakeCase(this.jsonSchema.title) + 's'
     }
 }

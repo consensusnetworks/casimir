@@ -2,7 +2,7 @@ import express from 'express'
 import useDB from '../providers/db'
 import Session from 'supertokens-node/recipe/session'
 import useEthers from '../providers/ethers'
-import { Account, LoginCredentials } from '@casimir/types'
+import { Account, LoginCredentials, User } from '@casimir/types'
 
 const { verifyMessage } = useEthers()
 const { getUser, upsertNonce, addUser } = useDB()
@@ -38,7 +38,7 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
             address,
             createdAt: now,
             updatedAt: now,
-        }
+        } as User
         const account = {
             address,
             currency,

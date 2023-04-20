@@ -19,7 +19,7 @@ void async function () {
         web: {
             chains: ['ethereum'],
             services: ['users'],
-            tables: ['accounts', 'nonces', 'users', 'users_accounts'],
+            tables: ['accounts', 'nonces', 'users', 'user_accounts'],
         }
     }
 
