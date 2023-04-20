@@ -2,7 +2,7 @@ import express from 'express'
 import useDB from '../providers/db'
 import Session from 'supertokens-node/recipe/session'
 import useEthers from '../providers/ethers'
-import { Account, LoginCredentials } from '@casimir/types'
+import { Account, LoginCredentials, User } from '@casimir/types'
 
 const { verifyMessage } = useEthers()
 const { getUser, upsertNonce, addUser } = useDB()
@@ -34,19 +34,19 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
     if (!user) {  // signup
         console.log('SIGNING UP!')
         const now = new Date().toISOString()
-        const newUser = { 
+        const newUser = {
             address,
             createdAt: now,
             updatedAt: now,
-        }
+        } as User
         const account = {
             address,
             currency,
-            ownerAddress: address,
             walletProvider: provider,
         } as Account
+
         const addUserResult = await addUser(newUser, account)
-        
+
         if (addUserResult?.address !== address) {
             res.setHeader('Content-Type', 'application/json')
             res.status(500)

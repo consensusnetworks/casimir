@@ -6,11 +6,15 @@
     "properties": {
         "address": {
             "type": "string",
-            "description": "The user address (PK)"
+            "description": "The user address used to sign in"
         },
         "created_at": {
             "type": "string",
             "description": "The account creation date in ISO 8601 format"
+        },
+        "id": {
+            "type": "serial",
+            "description": "The user ID (PK)"
         },
         "updated_at": {
             "type": "string",
@@ -18,6 +22,9 @@
         }
     },
     "required": [
-        "address"
+        "address",
+        "created_at",
+        "id",
+        "updated_at"
     ]
 }

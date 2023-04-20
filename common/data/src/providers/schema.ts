@@ -1,5 +1,6 @@
 import * as glue from '@aws-cdk/aws-glue-alpha'
 import { JsonSchema } from '../interfaces/JsonSchema'
+import { snakeCase } from '@casimir/helpers'
 
 export type JsonType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null'
 export type GlueType = glue.Type
@@ -61,6 +62,8 @@ export class Schema {
      * ```
      */
     getPostgresTable(): string {
+        const compositeKey = this.jsonSchema.composite_key
+        const uniqueFields = this.jsonSchema.uniqueFields || []
         const columns = Object.keys(this.jsonSchema.properties).map((name: string) => {
             const property = this.jsonSchema.properties[name]
             let type = {
@@ -70,7 +73,8 @@ export class Schema {
                 boolean: 'BOOLEAN',
                 object: 'JSON',
                 array: 'JSON',
-                null: 'VARCHAR'
+                null: 'VARCHAR',
+                serial: 'SERIAL'
             }[property.type as JsonType] as PostgresType
 
             if (name.endsWith('_at')) type = 'TIMESTAMP'
@@ -80,20 +84,24 @@ export class Schema {
 
             const comment = property.description
             if (comment.includes('PK')) column += ' PRIMARY KEY'
-            
+
             return column
         })
 
-        /** Make table name plural of schema objects (todo: check edge-cases) */
-        const tableName = this.getTitle().toLowerCase() + 's'
+        /** Check for composite key property and add the primary key if so */
+        if (compositeKey) columns.push(`PRIMARY KEY (${compositeKey})`)
 
-        return `CREATE TABLE ${tableName} (\n\t${columns.join(',\n\t')}\n);`
+        /** Make table name plural of schema objects (todo: check edge-cases) */
+        const tableName = this.getTitle()
+
+        const queryString = uniqueFields.length > 0 ? `CREATE TABLE ${tableName} (\n\t${columns.join(',\n\t')}, \n\tUNIQUE (${uniqueFields.join(', ')}));` : `CREATE TABLE ${tableName} (\n\t${columns.join(',\n\t')}\n);`
+        return queryString
     }
 
     /**
      * Get the title of the JSON schema object.
      */
     getTitle(): string {
-        return this.jsonSchema.title
+        return snakeCase(this.jsonSchema.title) + 's'
     }
 }
