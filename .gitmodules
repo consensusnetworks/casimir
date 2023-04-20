@@ -22,6 +22,3 @@
 [submodule "scripts/trezor/resources/trezor-user-env"]
 	path = scripts/trezor/resources/trezor-user-env
 	url = https://github.com/trezor/trezor-user-env.git
-[submodule "services/keys/scripts/resources/dkg"]
-	path = services/keys/scripts/resources/dkg
-	url = https://github.com/RockX-SG/frost-dkg-demo.git
