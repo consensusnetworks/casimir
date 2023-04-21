@@ -46,7 +46,7 @@ describe('Casimir manager', async function () {
     const firstPoolId = stakedPools[0]
     const pool = await casimirManager.getPoolDetails(firstPoolId)
     expect(ethers.utils.formatEther(pool.deposits)).equal('32.0')
-    expect(pool.publicKey).not.equal('0x')
+    expect(pool.validatorPublicKey).not.equal('0x')
     expect(pool.operatorIds.length).equal(4)
   })
 
@@ -94,7 +94,7 @@ describe('Casimir manager', async function () {
     const secondPoolId = stakedPools[1]
     const pool = await casimirManager.getPoolDetails(secondPoolId)
     expect(ethers.utils.formatEther(pool.deposits)).equal('32.0')
-    expect(pool.publicKey).not.equal('0x')
+    expect(pool.validatorPublicKey).not.equal('0x')
     expect(pool.operatorIds.length).equal(4)
   })
 
@@ -152,13 +152,13 @@ describe('Casimir manager', async function () {
     const thirdPoolId = stakedPools[2]
     const thirdPool = await casimirManager.getPoolDetails(thirdPoolId)
     expect(ethers.utils.formatEther(thirdPool.deposits)).equal('32.0')
-    expect(thirdPool.publicKey).not.equal('0x')
+    expect(thirdPool.validatorPublicKey).not.equal('0x')
     expect(thirdPool.operatorIds.length).equal(4)
 
     const fourthPoolId = stakedPools[3]
     const fourthPool = await casimirManager.getPoolDetails(fourthPoolId)
     expect(ethers.utils.formatEther(fourthPool.deposits)).equal('32.0')
-    expect(fourthPool.publicKey).not.equal('0x')
+    expect(fourthPool.validatorPublicKey).not.equal('0x')
     expect(fourthPool.operatorIds.length).equal(4)
   })
 
@@ -171,12 +171,12 @@ describe('Casimir manager', async function () {
     const fourthStake = await casimirManager.getUserStake(fourthUser.address)
     
     const line = '----------------------------------------'
-    console.log(`${line}\n💿 Post testing simulation results\n${line}`)
-    console.log('🏦 Manager updated balance', ethers.utils.formatEther(stake))
-    console.log('👤 First user updated balance', ethers.utils.formatEther(firstStake))
-    console.log('👤 Second user updated balance', ethers.utils.formatEther(secondStake))
-    console.log('👤 Third user updated balance', ethers.utils.formatEther(thirdStake))
-    console.log('👤 Fourth user updated balance', ethers.utils.formatEther(fourthStake))
+    console.log(`${line}\n💿 Simulation results\n${line}`)
+    console.log('🏦 Manager stake', ethers.utils.formatEther(stake))
+    console.log('👤 First user stake', ethers.utils.formatEther(firstStake))
+    console.log('👤 Second user stake', ethers.utils.formatEther(secondStake))
+    console.log('👤 Third user stake', ethers.utils.formatEther(thirdStake))
+    console.log('👤 Fourth user stake', ethers.utils.formatEther(fourthStake))
     const openDeposits = await casimirManager.getOpenDeposits()
     console.log('📦 Open deposits', ethers.utils.formatEther(openDeposits))
     const dust = stake.sub(firstStake.add(secondStake).add(thirdStake).add(fourthStake))

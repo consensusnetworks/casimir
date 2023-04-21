@@ -6,6 +6,7 @@ import "./interfaces/ICasimirManager.sol";
 import "./interfaces/ICasimirPoR.sol";
 import {Functions, FunctionsClient} from "./vendor/FunctionsClient.sol";
 // import "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol"; // Once published
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "hardhat/console.sol";
 
@@ -18,7 +19,10 @@ import "hardhat/console.sol";
 /**
  * @title Oracle contract that triggers and handles actions
  */
-contract CasimirAutomation is ICasimirAutomation {
+contract CasimirAutomation is ICasimirAutomation, Ownable {
+
+    // Todo add FunctionsClient before Ownable
+
     /*************/ 
     /* Constants */
     /*************/
@@ -48,8 +52,10 @@ contract CasimirAutomation is ICasimirAutomation {
      * Constructor
      * @param casimirManagerAddress The manager contract address
      */
-    constructor(address casimirManagerAddress) {
+    constructor(address casimirManagerAddress/*, address linkFunctionsAddress*/) {
         casimirManager = ICasimirManager(casimirManagerAddress);
+
+        // Todo add FunctionsClient(linkFunctionsAddress) after constructor params
     }
 
     /**
@@ -97,7 +103,7 @@ contract CasimirAutomation is ICasimirAutomation {
         (uint32[] memory readyPoolIds, uint256 executionSwept) = abi.decode(performData, (uint32[], uint256));
 
         /** Stake ready pools */
-        for (uint i = 0; i < readyPoolIds.length; i++) {
+        for (uint256 i = 0; i < readyPoolIds.length; i++) {
             casimirManager.stakePool(readyPoolIds[i]);
         }
 
@@ -106,6 +112,29 @@ contract CasimirAutomation is ICasimirAutomation {
             casimirManager.reward(executionSwept);
         }
     }
+
+    // /**
+    //  * @notice Callback that is invoked once the DON has resolved the request or hit an error
+    //  *
+    //  * @param requestId The request ID, returned by sendRequest()
+    //  * @param response Aggregated response from the user code
+    //  * @param err Aggregated error from the user code or from the execution pipeline
+    //  * Either response or error parameter will be set, but never both
+    //  */
+    // function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err) internal override {
+    //     latestResponse = response;
+    //     latestError = err;
+    //     responseCounter = responseCounter + 1;
+    //     emit OCRResponse(requestId, response, err);
+    // }
+
+    // /**
+    //  * @notice Update the Functions oracle address
+    //  * @param oracle New oracle address
+    //  */
+    // function updateOracleAddress(address oracle) public onlyOwner {
+    //     setOracle(oracle);
+    // }
 
     /**
      * @notice Get the total manager stake

@@ -15,7 +15,7 @@ contract CasimirPoR is ICasimirPoR {
 
     /* Manager contract */
     ICasimirManager private immutable casimirManager;
-    /** Chainlink feed contract */
+    /** Chainlink PoR feed contract */
     AggregatorV3Interface private immutable linkFeed;
 
     /***************/
@@ -25,7 +25,7 @@ contract CasimirPoR is ICasimirPoR {
     /**
      * Constructor
      * @param casimirManagerAddress The manager contract address
-     * @param linkFeedAddress The chainlink feed contract address
+     * @param linkFeedAddress The chainlink PoR feed contract address
      */
     constructor(address casimirManagerAddress, address linkFeedAddress) {
         casimirManager = ICasimirManager(casimirManagerAddress);

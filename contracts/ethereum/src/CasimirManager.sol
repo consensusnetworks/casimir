@@ -88,11 +88,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Last pool ID generated for a new pool */
     Counters.Counter lastPoolId;
     /** Token addresses */
-    mapping(Token => address) private tokens;
-    /** Unswapped LINK fees */
-    uint256 private unswappedLINKFees;
-    /** Unswapped SSV fees */
-    uint256 private unswappedSSVFees;
+    mapping(Token => address) private tokenAddresses;
+    /** Unswapped tokens by address */
+    mapping(address => uint256) private unswappedTokens;
     /** All users */
     mapping(address => User) private users;
     /** All pools (open, ready, or staked) */
@@ -109,7 +107,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     mapping(bytes => Validator) private validators;
     /** Public keys of ready validators */
     bytes[] private readyValidatorPublicKeys;
-    /** Public keys of staked validators  */
+    /** Public keys of staked validators */
     bytes[] private stakedValidatorPublicKeys;
     /** Public keys of exiting validators */
     bytes[] private exitingValidatorPublicKeys;
@@ -143,13 +141,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     ) {
         beaconDeposit = IDepositContract(beaconDepositAddress);
         linkToken = IERC20(linkTokenAddress);
-        tokens[Token.LINK] = linkTokenAddress;
+        tokenAddresses[Token.LINK] = linkTokenAddress;
         ssvNetwork = ISSVNetwork(ssvNetworkAddress);
-        tokens[Token.SSV] = ssvTokenAddress;
+        tokenAddresses[Token.SSV] = ssvTokenAddress;
         ssvToken = ISSVToken(ssvTokenAddress);
         swapFactory = IUniswapV3Factory(swapFactoryAddress);
         swapRouter = ISwapRouter(swapRouterAddress);
-        tokens[Token.WETH] = wethTokenAddress;
+        tokenAddresses[Token.WETH] = wethTokenAddress;
 
         /** Create automation and PoR contracts */
         casimirAutomation = new CasimirAutomation(address(this));
@@ -261,58 +259,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             }
         }
 
-        /**
-         * Handle SSV fee distribution in stakePool
-         */
-
         /** Distribute LINK fees to automation contract */
         linkToken.transfer(getAutomationAddress(), processedDeposit.linkAmount);
-    }
-
-    /**
-     * @dev Stake a pool validator and register with SSV
-     * @param poolId The pool ID
-     */
-    function stakePool(uint32 poolId) external {
-        require(readyValidatorPublicKeys.length > 0, "No ready validators");
-
-        /** Get next ready validator */
-        bytes memory publicKey = readyValidatorPublicKeys[0];
-        Validator memory validator = validators[publicKey];
-
-        /** Get the pool */
-        Pool storage pool = pools[poolId];
-
-        /** Move pool from ready to staked state */
-        readyPoolIds.remove(0);
-        stakedPoolIds.push(poolId);
-
-        /** Move validator from inactive to active state and add to pool */
-        readyValidatorPublicKeys.remove(0);
-        stakedValidatorPublicKeys.push(publicKey);
-        pool.validatorIndex = stakedValidatorPublicKeys.length - 1;
-
-        /** Deposit validator */
-        beaconDeposit.deposit{value: pool.deposits}(
-            publicKey, // bytes
-            validator.withdrawalCredentials, // bytes
-            validator.signature, // bytes
-            validator.depositDataRoot // bytes32
-        );
-
-        /** Pay SSV fees and register validator */
-        /** Todo update for v3 SSV contracts and dynamic fees */
-        uint256 mockSSVFee = 5 ether;
-        ssvToken.approve(address(ssvNetwork), mockSSVFee);
-        ssvNetwork.registerValidator(
-            publicKey, // bytes
-            validator.operatorIds, // uint32[]
-            validator.sharesPublicKeys, // bytes[]
-            validator.sharesEncrypted, // bytes[],
-            mockSSVFee // uint256 (fees handled on user deposits)
-        );
-
-        emit PoolStaked(poolId);
     }
 
     /**
@@ -348,6 +296,52 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @dev Stake a pool validator and register with SSV
+     * @param poolId The pool ID
+     */
+    function stakePool(uint32 poolId) public {
+        require(readyValidatorPublicKeys.length > 0, "No ready validators");
+
+        /** Get next ready validator */
+        bytes memory validatorPublicKey = readyValidatorPublicKeys[0];
+        Validator memory validator = validators[validatorPublicKey];
+
+        /** Get the pool */
+        Pool storage pool = pools[poolId];
+        pool.validatorPublicKey = validatorPublicKey;
+
+        /** Move pool from ready to staked state */
+        readyPoolIds.remove(0);
+        stakedPoolIds.push(poolId);
+
+        /** Move validator from inactive to active state and add to pool */
+        readyValidatorPublicKeys.remove(0);
+        stakedValidatorPublicKeys.push(validatorPublicKey);
+
+        /** Deposit validator */
+        beaconDeposit.deposit{value: pool.deposits}(
+            validatorPublicKey, // bytes
+            validator.withdrawalCredentials, // bytes
+            validator.signature, // bytes
+            validator.depositDataRoot // bytes32
+        );
+
+        /** Pay SSV fees and register validator */
+        /** Todo update for v3 SSV contracts and dynamic fees */
+        uint256 mockSSVFee = 5 ether;
+        ssvToken.approve(address(ssvNetwork), mockSSVFee);
+        ssvNetwork.registerValidator(
+            validatorPublicKey, // bytes
+            validator.operatorIds, // uint32[]
+            validator.sharesPublicKeys, // bytes[]
+            validator.sharesEncrypted, // bytes[],
+            mockSSVFee // uint256 (fees handled on user deposits)
+        );
+
+        emit PoolStaked(poolId);
+    }
+
+    /**
      * @dev Process fees from a deposit
      * @param depositAmount The amount of ETH to deposit
      * @param fees The fees to process
@@ -373,14 +367,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             wrap(feeAmount);
 
             linkAmount = swap(
-                tokens[Token.WETH],
-                tokens[Token.LINK],
+                tokenAddresses[Token.WETH],
+                tokenAddresses[Token.LINK],
                 (feeAmount * fees.LINK) / feePercent
             );
 
             ssvAmount = swap(
-                tokens[Token.WETH],
-                tokens[Token.SSV],
+                tokenAddresses[Token.WETH],
+                tokenAddresses[Token.SSV],
                 (feeAmount * fees.SSV) / feePercent
             );
         }
@@ -392,7 +386,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The amount of ETH to deposit
      */
     function wrap(uint256 amount) private {
-        IWETH9 wethToken = IWETH9(tokens[Token.WETH]);
+        IWETH9 wethToken = IWETH9(tokenAddresses[Token.WETH]);
         wethToken.deposit{value: amount}();
         wethToken.approve(address(swapRouter), amount);
     }
@@ -402,68 +396,99 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param tokenIn The token-in address
      * @param tokenOut The token-out address
      * @param amountIn The amount of token-in to input
-     * @return The amount of token-out
+     * @return amountOut The amount of token-out
      */
     function swap(
         address tokenIn,
         address tokenOut,
         uint256 amountIn
-    ) private returns (uint256) {
+    ) private returns (uint256 amountOut) {
         /** Temporarily handle unswappable fees due to liquidity */
         address swapPool = swapFactory.getPool(
             tokenIn,
             tokenOut,
             uniswapFeeTier
         );
-        uint128 liquidity = IUniswapV3PoolState(swapPool).liquidity();
-        if (liquidity == 0) {
-            if (tokenOut == tokens[Token.LINK]) {
-                unswappedLINKFees += amountIn;
-            } else if (tokenOut == tokens[Token.SSV]) {
-                unswappedSSVFees += amountIn;
-            }
-            return 0;
-        }
-        if (tokenOut == tokens[Token.LINK]) {
-            amountIn += unswappedLINKFees;
-            unswappedLINKFees = 0;
-        } else if (tokenOut == tokens[Token.SSV]) {
-            amountIn += unswappedSSVFees;
-            unswappedSSVFees = 0;
+        uint256 liquidity = IUniswapV3PoolState(swapPool).liquidity();
+        uint256 desiredAmountIn = amountIn + unswappedTokens[tokenIn];
+        uint256 realAmountIn;
+
+        if (liquidity < desiredAmountIn) {
+            realAmountIn = liquidity;
+            unswappedTokens[tokenIn] = desiredAmountIn - liquidity;
+        } else {
+            realAmountIn = desiredAmountIn;
+            unswappedTokens[tokenIn] = 0;
         }
 
-        /** Get swap params */
-        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
-            .ExactInputSingleParams({
-                tokenIn: tokenIn,
-                tokenOut: tokenOut,
-                fee: uniswapFeeTier,
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: amountIn,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
+        if (realAmountIn > 0) {
+            /** Get swap params */
+            ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
+                .ExactInputSingleParams({
+                    tokenIn: tokenIn,
+                    tokenOut: tokenOut,
+                    fee: uniswapFeeTier,
+                    recipient: address(this),
+                    deadline: block.timestamp,
+                    amountIn: realAmountIn,
+                    amountOutMinimum: 0,
+                    sqrtPriceLimitX96: 0
+                });
 
-        /** Swap tokens */
-        return swapRouter.exactInputSingle(params);
+            /** Swap token */
+            amountOut = swapRouter.exactInputSingle(params);
+        }
     }
 
     /**
-     * @dev Remove a pool
-     * @param poolId The pool ID
+     * @dev Request a pool exit
+     * @param poolId The staked pool ID
      */
-    function removePool(uint32 poolId) external /**onlyUpkeep*/ {
+    function requestPoolExit(uint32 poolId) public {
+        require(msg.sender == getAutomationAddress(), "Only automation can request pool exits");
+        
+        Pool storage pool = pools[poolId];
+        pool.exiting = true;
+
+        /** Record validator as exiting for automation */
+        exitingValidatorPublicKeys.push(pool.validatorPublicKey);
+
+        emit PoolExitRequested(poolId);
+    }
+
+    /**
+     * @dev Complete a pool exit
+     * @param poolIndex The staked pool index
+     * @param stakedValidatorIndex The staked validator index
+     * @param exitingValidatorIndex The exiting validator index
+     */
+    function completePoolExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) public {
+        require(msg.sender == getAutomationAddress(), "Only automation can complete pool exits");
+        
+        uint32 poolId = stakedPoolIds[poolIndex];
         Pool storage pool = pools[poolId];
 
-        /** Remove pool validator from Beacon and SSV */
-        removeValidator(pool.validatorIndex);
+        require(pool.exiting, "Pool is not exiting");
+
+        bytes memory validatorPublicKey = pool.validatorPublicKey;
+        bytes memory stakedValidatorPublicKey = stakedValidatorPublicKeys[stakedValidatorIndex];
+        bytes memory exitingValidatorPublicKey = exitingValidatorPublicKeys[exitingValidatorIndex];
+
+        require(keccak256(validatorPublicKey) == keccak256(stakedValidatorPublicKey) && keccak256(validatorPublicKey) == keccak256(exitingValidatorPublicKey), "Pool validator does not match staked and exiting validator");
 
         /** Remove pool from staked pools and delete */
-        stakedPoolIds.remove(0);
+        stakedPoolIds.remove(poolIndex);
         delete pools[poolId];
 
-        emit PoolRemoved(poolId);
+        /** Remove validator from staked and exiting states and delete */
+        stakedValidatorPublicKeys.remove(stakedValidatorIndex);
+        exitingValidatorPublicKeys.remove(exitingValidatorIndex);
+        delete validators[validatorPublicKey];
+
+        /** Remove validator from SSV */
+        ssvNetwork.removeValidator(validatorPublicKey);
+
+        emit PoolExitCompleted(poolId);
     }
 
     /**
@@ -484,7 +509,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bytes[] memory sharesPublicKeys,
         bytes calldata signature,
         bytes calldata withdrawalCredentials
-    ) external /**onlyUpkeep*/ {
+    ) public onlyOwner {
         /** Create validator and add to ready state */
         validators[publicKey] = Validator(
             depositDataRoot,
@@ -497,35 +522,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         readyValidatorPublicKeys.push(publicKey);
 
         emit ValidatorAdded(publicKey);
-    }
-
-    function exitValidator(uint index) external /**onlyUpkeep*/ {
-        /** Get validator public key */
-        bytes memory publicKey = stakedValidatorPublicKeys[index];
-
-        /** Move validator from staked to exiting state */
-        stakedValidatorPublicKeys.remove(index);
-        exitingValidatorPublicKeys.push(publicKey);
-
-        emit ValidatorExited(publicKey);
-    }
-
-    /**
-     * @dev Remove a validator from the pool manager
-     * @param index The validator index
-     */
-    function removeValidator(uint index) private /**onlyUpkeep*/ {
-        /** Get public key */
-        bytes memory publicKey = exitingValidatorPublicKeys[index];
-
-        /** Remove validator from exiting state and delete */
-        exitingValidatorPublicKeys.remove(index);
-        delete validators[publicKey];
-
-        /** Remove validator from SSV */
-        ssvNetwork.removeValidator(publicKey);
-
-        emit ValidatorRemoved(publicKey);
     }
 
     /**
@@ -681,14 +677,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     ) external view returns (PoolDetails memory) {
         Pool memory pool = pools[poolId];
 
-        /** Will return invalid data if pool is still in ready state */
-        if (pool.deposits < poolCapacity) {
-            return PoolDetails(pool.deposits, new bytes(0), new uint32[](0));
+        /** Pool will not have validator or operators if still in ready state */
+        bytes memory emptyBytes = new bytes(0);
+        if (keccak256(pool.validatorPublicKey) == keccak256(emptyBytes)) {
+            return PoolDetails(pool.deposits, emptyBytes, new uint32[](0), pool.exiting);
+        } else {
+            Validator memory validator = validators[pool.validatorPublicKey];
+            return PoolDetails(pool.deposits, pool.validatorPublicKey, validator.operatorIds, pool.exiting);
         }
-
-        bytes memory publicKey = stakedValidatorPublicKeys[pool.validatorIndex];
-        Validator memory validator = validators[publicKey];
-        return PoolDetails(pool.deposits, publicKey, validator.operatorIds);
     }
 
     /**

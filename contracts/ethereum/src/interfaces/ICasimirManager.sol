@@ -20,13 +20,15 @@ interface ICasimirManager {
     /** Pool used for running a validator */
     struct Pool {
         uint256 deposits;
-        uint validatorIndex;
+        bytes validatorPublicKey;
+        bool exiting;
     }
     /** Pool with details */
     struct PoolDetails {
         uint256 deposits;
-        bytes publicKey;
+        bytes validatorPublicKey;
         uint32[] operatorIds;
+        bool exiting;
     }
     /** User staking account */
     struct User {
@@ -58,18 +60,13 @@ interface ICasimirManager {
         uint32 poolId,
         uint256 amount
     );
-    event PoolStaked(
-        uint32 indexed poolId
-    );
-    event PoolRemoved(
-        uint32 indexed poolId
-    );
-    event ValidatorAdded(bytes publicKey);
-    event ValidatorExited(bytes publicKey);
-    event ValidatorRemoved(bytes publicKey);
+    event PoolStaked(uint32 indexed poolId);
+    event PoolExitRequested(uint32 indexed poolId);
+    event PoolExitCompleted(uint32 indexed poolId);
+    event ValidatorAdded(bytes indexed publicKey);
     event UserWithdrawed(
         address indexed sender,
-        uint256 ethAmount
+        uint256 amount
     );
 
     /*************/
@@ -83,6 +80,20 @@ interface ICasimirManager {
     function withdraw(uint256 amount) external;
 
     function stakePool(uint32 poolId) external;
+
+    function requestPoolExit(uint32 poolId) external;
+
+    function completePoolExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external;
+
+    function addValidator(
+        bytes32 depositDataRoot,
+        bytes calldata publicKey,
+        uint32[] memory operatorIds,
+        bytes[] memory sharesEncrypted,
+        bytes[] memory sharesPublicKeys,
+        bytes calldata signature,
+        bytes calldata withdrawalCredentials
+    ) external;
 
     function getFees() external view returns (Fees memory);
 
