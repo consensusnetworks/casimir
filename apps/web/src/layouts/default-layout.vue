@@ -57,6 +57,7 @@ watch(user, () => {
     class="min-w-[360px] min-h-[100vh] h-[100vh] 
     w-[100vw] flex justify-center items-start py-45 overflow-y-auto"
   >
+    <!-- TD: make alerts for Metamask and others to remind them to have that account connected when connecting -->
     <!-- TD: add modal for ledger -->
     <!-- TD: ADD loading animation across all of the application -->
     <div class="max-w-[1448px] h-full w-full px-[140px] 550s:px-50">

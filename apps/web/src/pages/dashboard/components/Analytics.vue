@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import LineChartJS from '@/components/charts/LineChartJS.vue'
 
 const roi_metric = ref(-4.2)
 
 const selectedTimeFrame = ref('All Time')
-const timeFrameOptions = ref(['All Time', '1 Year', '6 Month', '1 Month'])
+const timeFrameOptions = ref(['All Time', '1 Year', '6 Months', '1 Month'])
 const openTimeFrameOptions = ref(false)
 
 const selectedWallet = ref('Across All Wallets')
@@ -14,6 +14,326 @@ const selectWalletOptions = ref(['Across All Wallets'])
 const openWallletOptions = ref(false)
 
 const selectedAssetLocation = ref(null as null | string)
+
+
+const labels = ref([ 'Jan 22', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan 23', 'Feb', 'Mar' ])
+const datasets = ref([
+  {
+      data : labels.value.map(() => {return Math.floor(Math.random() * (5999 - 401 + 1) + 401)}),
+      label : 'Net Value',
+      borderColor : '#C1D3F8',
+      borderWidth: 3,
+      tension: 0.01,
+      fill: false,
+      pointRadius: 0
+  },
+  {
+      data: labels.value.map(() => {return 6000}),
+      label: 'All Time High',
+      backgroundColor: '#b9b9b9',
+      borderDash: [5, 5],
+      borderWidth: 2,
+      fill: false,
+      pointRadius: 0
+  },
+  {
+      data: labels.value.map(() => {return 400}),
+      label: 'All Time Low',
+      backgroundColor: '#b9b9b9',
+      borderDash: [5, 5],
+      borderWidth: 2,
+      fill: false,
+      pointRadius: 0
+  }
+])
+const data = ref({
+  labels: labels.value,
+  datasets: datasets.value
+  }
+)
+
+watch(selectedTimeFrame, ()=> {
+  if(selectedTimeFrame.value === 'All Time'){
+    labels.value = [ 'Jan 22', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan 23', 'Feb', 'Mar' ]
+    datasets.value = [
+      {
+          data : labels.value.map(() => {return Math.floor(Math.random() * (5999 - 401 + 1) + 401)}),
+          label : 'Net Value',
+          borderColor : '#C1D3F8',
+          borderWidth: 3,
+          tension: 0.01,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 6000}),
+          label: 'All Time High',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 400}),
+          label: 'All Time Low',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      }
+    ]
+  }else if(selectedTimeFrame.value === '1 Year'){
+    labels.value = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar']
+    datasets.value = [
+      {
+          data : labels.value.map(() => {return Math.floor(Math.random() * (5999 - 401 + 1) + 401)}),
+          label : 'Net Value',
+          borderColor : '#C1D3F8',
+          borderWidth: 3,
+          tension: 0.01,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 6000}),
+          label: 'All Time High',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 400}),
+          label: 'All Time Low',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      }
+    ]
+  }else if(selectedTimeFrame.value === '6 Months'){
+    labels.value = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar']
+    datasets.value = [
+      {
+          data : labels.value.map(() => {return Math.floor(Math.random() * (5999 - 401 + 1) + 401)}),
+          label : 'Net Value',
+          borderColor : '#C1D3F8',
+          borderWidth: 3,
+          tension: 0.01,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 6000}),
+          label: 'All Time High',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 400}),
+          label: 'All Time Low',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      }
+    ]
+  }else if(selectedTimeFrame.value === '1 Month'){
+    labels.value = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15',
+    '16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31']
+    datasets.value = [
+      {
+          data : labels.value.map(() => {return Math.floor(Math.random() * (5999 - 401 + 1) + 401)}),
+          label : 'Net Value',
+          borderColor : '#C1D3F8',
+          borderWidth: 3,
+          tension: 0.01,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 6000}),
+          label: 'All Time High',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 400}),
+          label: 'All Time Low',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      }
+    ]
+  }
+  data.value.labels = labels.value
+  data.value.datasets = datasets.value
+})
+
+watch(selectedAssetLocation, () => {
+  if(!selectedAssetLocation.value) {
+    datasets.value = [
+      {
+          data : labels.value.map(() => {return Math.floor(Math.random() * (5999 - 401 + 1) + 401)}),
+          label : 'Net Value',
+          borderColor : '#C1D3F8',
+          borderWidth: 3,
+          tension: 0.01,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 6000}),
+          label: 'All Time High',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 400}),
+          label: 'All Time Low',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      }
+    ]
+  } else if( selectedAssetLocation.value === 'Claimable'){
+    datasets.value = [
+      {
+          data : labels.value.map(() => {return Math.floor(Math.random() * (5999 - 401 + 1) + 401)}),
+          label : 'Net Value',
+          borderColor : 'rgb(0,0,0,0.1)',
+          borderWidth: 1,
+          tension: 0.01,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data : labels.value.map(() => {return Math.floor(Math.random() * (3000 - 401 + 1) + 401)}),
+          label : 'Claimable',
+          borderColor : '#C1D3F8',
+          borderWidth: 3,
+          tension: 0.01,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 6000}),
+          label: 'All Time High',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 400}),
+          label: 'All Time Low',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      }
+    ]
+  }else if( selectedAssetLocation.value === 'Staked'){
+    datasets.value = [
+      {
+          data : labels.value.map(() => {return Math.floor(Math.random() * (5999 - 401 + 1) + 401)}),
+          label : 'Net Value',
+          borderColor : 'rgb(0,0,0,0.1)',
+          borderWidth: 1,
+          tension: 0.01,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data : labels.value.map(() => {return Math.floor(Math.random() * (3000 - 401 + 1) + 401)}),
+          label : 'Staked',
+          borderColor : '#C1D3F8',
+          borderWidth: 3,
+          tension: 0.01,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 6000}),
+          label: 'All Time High',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 400}),
+          label: 'All Time Low',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      }
+    ]
+  }else if( selectedAssetLocation.value === 'In Wallets'){
+    datasets.value = [
+      {
+          data : labels.value.map(() => {return Math.floor(Math.random() * (5999 - 401 + 1) + 401)}),
+          label : 'Net Value',
+          borderColor : 'rgb(0,0,0,0.1)',
+          borderWidth: 1,
+          tension: 0.01,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data : labels.value.map(() => {return Math.floor(Math.random() * (3000 - 401 + 1) + 401)}),
+          label : 'In Wallets',
+          borderColor : '#C1D3F8',
+          borderWidth: 3,
+          tension: 0.01,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 6000}),
+          label: 'All Time High',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      },
+      {
+          data: labels.value.map(() => {return 400}),
+          label: 'All Time Low',
+          backgroundColor: '#b9b9b9',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+      }
+    ]
+  }
+  data.value.datasets = datasets.value
+})
 
 </script>
 
@@ -29,7 +349,7 @@ const selectedAssetLocation = ref(null as null | string)
       </span>
     </div>
     <div
-      class="h-full flex flex-col gap-0 items-center
+      class="h-full flex flex-col gap-20 items-center
       border border-border rounded-[5px] px-10 py-20"
     >
       <!-- TD: Make this clickable to adjust the line chart && make the size dynamic -->
@@ -98,6 +418,7 @@ const selectedAssetLocation = ref(null as null | string)
           :id="'user_dash_linechart'"
           :x-grid-lines="true"
           :y-grid-lines="false"
+          :data="data"
         />
       </div>
 
