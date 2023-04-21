@@ -1,13 +1,13 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { addValidatorsFixture, firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture } from './fixtures/shared'
+import { addValidatorsFixture, firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture } from './fixtures/shared'
 
 describe('Casimir manager', async function () {
 
-  it('Registration adds 2 validators with 4 operators each', async function () {
+  it('Registration adds 5 validators with 4 operators each', async function () {
     const { validators } = await loadFixture(addValidatorsFixture)
-    expect(validators.length).equal(2)
+    expect(validators.length).equal(5)
     
     const operators = validators.map((v) => v.operatorIds).flat()
     expect(operators.length).equal(4 * validators.length)
@@ -144,12 +144,31 @@ describe('Casimir manager', async function () {
     expect(ethers.utils.formatEther(thirdStake)).equal('24.074882995319812792')
   })
 
+  it('Fourth user\'s 72 stake completes the third and fourth pool with 72', async function () {
+    const { casimirManager } = await loadFixture(fourthUserDepositFixture)
+    const stakedPools = await casimirManager.getStakedPoolIds()
+    expect(stakedPools.length).equal(4)
+    
+    const thirdPoolId = stakedPools[2]
+    const thirdPool = await casimirManager.getPoolDetails(thirdPoolId)
+    expect(ethers.utils.formatEther(thirdPool.deposits)).equal('32.0')
+    expect(thirdPool.publicKey).not.equal('0x')
+    expect(thirdPool.operatorIds.length).equal(4)
+
+    const fourthPoolId = stakedPools[3]
+    const fourthPool = await casimirManager.getPoolDetails(fourthPoolId)
+    expect(ethers.utils.formatEther(fourthPool.deposits)).equal('32.0')
+    expect(fourthPool.publicKey).not.equal('0x')
+    expect(fourthPool.operatorIds.length).equal(4)
+  })
+
   it('Check more rewards and dust', async function () {
-    const { casimirManager, firstUser, secondUser, thirdUser } = await loadFixture(simulationFixture)
+    const { casimirManager, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(simulationFixture)
     const stake = await casimirManager.getStake()
     const firstStake = await casimirManager.getUserStake(firstUser.address)
     const secondStake = await casimirManager.getUserStake(secondUser.address)
     const thirdStake = await casimirManager.getUserStake(thirdUser.address)
+    const fourthStake = await casimirManager.getUserStake(fourthUser.address)
     
     const line = '----------------------------------------'
     console.log(`${line}\n💿 Post testing simulation results\n${line}`)
@@ -157,9 +176,10 @@ describe('Casimir manager', async function () {
     console.log('👤 First user updated balance', ethers.utils.formatEther(firstStake))
     console.log('👤 Second user updated balance', ethers.utils.formatEther(secondStake))
     console.log('👤 Third user updated balance', ethers.utils.formatEther(thirdStake))
+    console.log('👤 Fourth user updated balance', ethers.utils.formatEther(fourthStake))
     const openDeposits = await casimirManager.getOpenDeposits()
     console.log('📦 Open deposits', ethers.utils.formatEther(openDeposits))
-    const dust = stake.sub(firstStake.add(secondStake).add(thirdStake))
+    const dust = stake.sub(firstStake.add(secondStake).add(thirdStake).add(fourthStake))
     if (dust !== ethers.utils.parseEther('0.0')) {
         console.log('🧹 Dust', ethers.utils.formatEther(dust))
     }

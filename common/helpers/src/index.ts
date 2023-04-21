@@ -174,3 +174,12 @@ export function getWallet(mnemonic?: string) {
     }
     return ethers.Wallet.createRandom()
 }
+
+/**
+ * Get withdrawal credentials from withdrawal address
+ * @param {string} withdrawalAddress - Withdrawal address
+ * @returns {string} Withdrawal credentials
+ */
+export function getWithdrawalCredentials(withdrawalAddress: string): string {
+    return '01' + '0'.repeat(22) + withdrawalAddress.split('0x')[1]
+}

@@ -12,7 +12,7 @@ const rewardPerValidator = 0.1
 export async function deploymentFixture() {
     let casimirManager: CasimirManager | undefined
     let mockAggregator: MockAggregator | undefined
-    const [owner, , , , distributor] = await ethers.getSigners()
+    const [owner, , , , , distributor] = await ethers.getSigners()
     let config: DeploymentConfig = {
         CasimirManager: {
             address: '',
@@ -89,7 +89,7 @@ export async function deploymentFixture() {
 export async function addValidatorsFixture() {
     const { casimirManager, casimirAutomation, mockAggregator, owner, distributor } = await loadFixture(deploymentFixture)
 
-    const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
+    const validators = Object.keys(validatorStore).map((key) => validatorStore[key]) as Validator[]
     for (const validator of validators) {
         const {
             depositDataRoot,
@@ -135,7 +135,7 @@ export async function firstUserDepositFixture() {
         await performUpkeep.wait()
     }
 
-    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser}
+    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser }
 }
 
 /** Fixture to stake 24 ETH for the second user */
@@ -254,19 +254,63 @@ export async function firstUserPartialWithdrawalFixture() {
     const readyDeposits = await casimirManager?.getOpenDeposits()
     const withdrawal = await casimirManager.connect(firstUser).withdraw(readyDeposits)
     await withdrawal.wait()
+
+    /** Perform upkeep (todo add bounds to check data) */
+    const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
+    const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+    const { upkeepNeeded, performData } = check
+    if (upkeepNeeded) {
+        const performUpkeep = await casimirAutomation.performUpkeep(performData)
+        await performUpkeep.wait()
+    }
+
     return { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser }
+}
+
+/** Fixture to stake 72 ETH for the fourth user */
+export async function fourthUserDepositFixture() {
+    const { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
+    const [, , , , fourthUser] = await ethers.getSigners()
+    const stakeAmount = 72.0
+    const fees = { ...await casimirManager.getFees() }
+    const feePercent = fees.LINK + fees.SSV
+    const depositAmount = stakeAmount * ((100 + feePercent) / 100)
+    const value = ethers.utils.parseEther(depositAmount.toString())
+    const deposit = await casimirManager.connect(fourthUser).deposit({ value })
+    await deposit.wait()
+
+    /** Perform upkeep (todo add bounds to check data) */
+    const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
+    const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+    const { upkeepNeeded, performData } = check
+    if (upkeepNeeded) {
+        const performUpkeep = await casimirAutomation.performUpkeep(performData)
+        await performUpkeep.wait()
+    }
+
+    /** Increase PoR mock aggregator answer */
+    if (mockAggregator) {
+        const { ...feed } = await mockAggregator.latestRoundData()
+        const { answer } = feed
+        const consensusStakeIncrease = ethers.utils.parseEther('64')
+        const newAnswer = answer.add(consensusStakeIncrease)
+        const update = await mockAggregator.updateAnswer(newAnswer)
+        await update.wait()
+    }
+
+    return { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser, fourthUser }
 }
 
 /** Fixture to simulate stakes and rewards */
 export async function simulationFixture() {
-    const { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
+    const { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(fourthUserDepositFixture)
     for (let i = 0; i < 5; i++) {
         const stakedValidatorCount = (await casimirManager?.getStakedValidatorPublicKeys())?.length
         if (stakedValidatorCount) {
             const rewardAmount = (rewardPerValidator * stakedValidatorCount).toString()
             const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
             await reward.wait()
-            
+
             /** Perform upkeep (todo add bounds to check data) */
             const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
             const { ...check } = await casimirAutomation.checkUpkeep(checkData)
@@ -277,5 +321,5 @@ export async function simulationFixture() {
             }
         }
     }
-    return { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser }
+    return { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser, fourthUser }
 }

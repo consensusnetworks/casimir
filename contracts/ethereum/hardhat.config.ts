@@ -9,7 +9,7 @@ import '@openzeppelin/hardhat-upgrades'
 
 // Seed is provided
 const mnemonic = process.env.BIP39_SEED as string
-const hid = { mnemonic, count: 5 }
+const hid = { mnemonic, count: 10 }
 
 // Mining interval is provided
 const miningInterval = parseInt(process.env.MINING_INTERVAL as string)

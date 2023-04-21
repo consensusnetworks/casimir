@@ -5,4 +5,6 @@ export interface ReshareValidatorOptions {
     validatorPublicKey: string;
     /** Old operator registry IDs */
     oldOperatorIds: number[];
+    /** Validator withdrawal address */
+    withdrawalAddress?: string
 }
