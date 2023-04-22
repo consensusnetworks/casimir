@@ -188,20 +188,6 @@ function deposit() external payable
 
 Deposit user stake to the pool manager
 
-### stakePool
-
-```solidity
-function stakePool(uint32 poolId) external
-```
-
-_Stake a pool validator and register with SSV_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| poolId | uint32 | The pool ID |
-
 ### withdraw
 
 ```solidity
@@ -216,13 +202,13 @@ Withdraw user stake from the pool manager
 | ---- | ---- | ----------- |
 | amount | uint256 | The amount of ETH to withdraw |
 
-### removePool
+### stakePool
 
 ```solidity
-function removePool(uint32 poolId) external
+function stakePool(uint32 poolId) public
 ```
 
-_Remove a pool_
+_Stake a pool validator and register with SSV_
 
 #### Parameters
 
@@ -230,10 +216,40 @@ _Remove a pool_
 | ---- | ---- | ----------- |
 | poolId | uint32 | The pool ID |
 
+### requestPoolExit
+
+```solidity
+function requestPoolExit(uint32 poolId) public
+```
+
+_Request a pool exit_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolId | uint32 | The staked pool ID |
+
+### completePoolExit
+
+```solidity
+function completePoolExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) public
+```
+
+_Complete a pool exit_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolIndex | uint256 | The staked pool index |
+| stakedValidatorIndex | uint256 | The staked validator index |
+| exitingValidatorIndex | uint256 | The exiting validator index |
+
 ### addValidator
 
 ```solidity
-function addValidator(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) external
+function addValidator(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) public
 ```
 
 _Add a validator to the pool manager_
@@ -249,12 +265,6 @@ _Add a validator to the pool manager_
 | sharesPublicKeys | bytes[] | The public keys of the shares |
 | signature | bytes | The signature |
 | withdrawalCredentials | bytes | The withdrawal credentials |
-
-### exitValidator
-
-```solidity
-function exitValidator(uint256 index) external
-```
 
 ### getFees
 
@@ -537,7 +547,7 @@ Constructor
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | casimirManagerAddress | address | The manager contract address |
-| linkFeedAddress | address | The chainlink feed contract address |
+| linkFeedAddress | address | The chainlink PoR feed contract address |
 
 ### getPoRAddressListLength
 
@@ -589,6 +599,12 @@ Get the total manager consensus stake
 | [0] | int256 | The latest total manager consensus stake |
 
 ## ICasimirAutomation
+
+### OCRResponse
+
+```solidity
+event OCRResponse(bytes32 requestId, bytes result, bytes err)
+```
 
 ### checkUpkeep
 
@@ -667,7 +683,8 @@ struct Fees {
 ```solidity
 struct Pool {
   uint256 deposits;
-  uint256 validatorIndex;
+  bytes validatorPublicKey;
+  bool exiting;
 }
 ```
 
@@ -676,8 +693,9 @@ struct Pool {
 ```solidity
 struct PoolDetails {
   uint256 deposits;
-  bytes publicKey;
+  bytes validatorPublicKey;
   uint32[] operatorIds;
+  bool exiting;
 }
 ```
 
@@ -721,10 +739,16 @@ event PoolDeposit(address sender, uint32 poolId, uint256 amount)
 event PoolStaked(uint32 poolId)
 ```
 
-### PoolRemoved
+### PoolExitRequested
 
 ```solidity
-event PoolRemoved(uint32 poolId)
+event PoolExitRequested(uint32 poolId)
+```
+
+### PoolExitCompleted
+
+```solidity
+event PoolExitCompleted(uint32 poolId)
 ```
 
 ### ValidatorAdded
@@ -733,22 +757,10 @@ event PoolRemoved(uint32 poolId)
 event ValidatorAdded(bytes publicKey)
 ```
 
-### ValidatorExited
-
-```solidity
-event ValidatorExited(bytes publicKey)
-```
-
-### ValidatorRemoved
-
-```solidity
-event ValidatorRemoved(bytes publicKey)
-```
-
 ### UserWithdrawed
 
 ```solidity
-event UserWithdrawed(address sender, uint256 ethAmount)
+event UserWithdrawed(address sender, uint256 amount)
 ```
 
 ### deposit
@@ -773,6 +785,24 @@ function withdraw(uint256 amount) external
 
 ```solidity
 function stakePool(uint32 poolId) external
+```
+
+### requestPoolExit
+
+```solidity
+function requestPoolExit(uint32 poolId) external
+```
+
+### completePoolExit
+
+```solidity
+function completePoolExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external
+```
+
+### addValidator
+
+```solidity
+function addValidator(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) external
 ```
 
 ### getFees

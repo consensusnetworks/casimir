@@ -49,21 +49,35 @@ interface ICasimirManager {
     /* Events */
     /**********/
 
-    event ManagerDistribution(
+    event RewardDistributed(
         address indexed sender,
         uint256 ethAmount,
         uint256 linkAmount,
         uint256 ssvAmount
     );
-    event PoolDeposit(
+    event UserDeposited(
+        address indexed sender,
+        uint256 ethAmount,
+        uint256 linkAmount,
+        uint256 ssvAmount
+    );
+    event PoolIncreased(
         address indexed sender,
         uint32 poolId,
         uint256 amount
     );
     event PoolStaked(uint32 indexed poolId);
     event PoolExitRequested(uint32 indexed poolId);
-    event PoolExitCompleted(uint32 indexed poolId);
+    event PoolExited(uint32 indexed poolId);
     event ValidatorAdded(bytes indexed publicKey);
+    event UserWithdrawalRequested(
+        address indexed sender,
+        uint256 amount
+    );
+    event UserWithdrawalInitiated(
+        address indexed sender,
+        uint256 amount
+    );
     event UserWithdrawed(
         address indexed sender,
         uint256 amount
@@ -79,11 +93,11 @@ interface ICasimirManager {
 
     function withdraw(uint256 amount) external;
 
-    function stakePool(uint32 poolId) external;
+    function stake(uint32 poolId) external;
 
-    function requestPoolExit(uint32 poolId) external;
+    function requestExit(uint32 poolId) external;
 
-    function completePoolExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external;
+    function completeExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external;
 
     function addValidator(
         bytes32 depositDataRoot,

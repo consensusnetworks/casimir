@@ -149,7 +149,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         swapRouter = ISwapRouter(swapRouterAddress);
         tokenAddresses[Token.WETH] = wethTokenAddress;
 
-        /** Create automation and PoR contracts */
+        /** Deploy automation and PoR contracts */
         casimirAutomation = new CasimirAutomation(address(this));
         casimirPoR = new CasimirPoR(address(this), linkFeedAddress);
     }
@@ -163,7 +163,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @dev Distribute ETH rewards
      * @param amount The amount of ETH to reward
      */
-    function reward(uint256 amount) public {
+    function reward(uint256 amount) external {
+        require(
+            msg.sender == address(casimirAutomation),
+            "Only automation contract can distribute rewards"
+        );
         require(
             amount >= rewardThreshold,
             "Reward amount must be equal or greater than reward threshold"
@@ -180,7 +184,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             processedDeposit.ethAmount,
             getStake()
         );
+        
         distribute(address(this), processedDeposit);
+
+        emit RewardDistributed(
+            msg.sender,
+            processedDeposit.ethAmount,
+            processedDeposit.linkAmount,
+            processedDeposit.ssvAmount
+        );
     }
 
     /**
@@ -203,6 +215,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         users[msg.sender].stake0 += processedDeposit.ethAmount;
 
         distribute(msg.sender, processedDeposit);
+
+        emit UserDeposited(
+            msg.sender,
+            processedDeposit.ethAmount,
+            processedDeposit.linkAmount,
+            processedDeposit.ssvAmount
+        );
     }
 
     /**
@@ -214,14 +233,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         address sender,
         ProcessedDeposit memory processedDeposit
     ) private {
-        emit ManagerDistribution(
-            sender,
-            processedDeposit.ethAmount,
-            processedDeposit.linkAmount,
-            processedDeposit.ssvAmount
-        );
+        /** Approve LINK fees for automation contract */
+        linkToken.approve(getAutomationAddress(), processedDeposit.linkAmount);
 
-        /** Distribute to open pools */
+        /** Distribute ETH to open pools */
         while (processedDeposit.ethAmount > 0) {
             /** Get the next open pool */
             uint32 poolId;
@@ -237,7 +252,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             uint256 remainingCapacity = poolCapacity - pool.deposits;
             if (remainingCapacity > processedDeposit.ethAmount) {
                 /** Emit event before updating values */
-                emit PoolDeposit(sender, poolId, processedDeposit.ethAmount);
+                emit PoolIncreased(sender, poolId, processedDeposit.ethAmount);
 
                 /** Update pool state */
                 openDeposits += processedDeposit.ethAmount;
@@ -246,7 +261,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 processedDeposit.ethAmount = 0;
             } else {
                 /** Emit event before updating values */
-                emit PoolDeposit(sender, poolId, remainingCapacity);
+                emit PoolIncreased(sender, poolId, remainingCapacity);
 
                 /** Move pool from open to ready state */
                 openDeposits -= pool.deposits;
@@ -258,13 +273,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 processedDeposit.ethAmount -= remainingCapacity;
             }
         }
-
-        /** Distribute LINK fees to automation contract */
-        linkToken.transfer(getAutomationAddress(), processedDeposit.linkAmount);
     }
 
     /**
-     * @notice Withdraw user stake from the pool manager
+     * @notice Withdraw user stake
      * @param amount The amount of ETH to withdraw
      */
     function withdraw(uint256 amount) external nonReentrant {
@@ -279,6 +291,20 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             "Withdrawing more than user stake"
         );
 
+        /** Instantly withdraw if full amount is available */
+        if (amount <= openDeposits) {
+            withdrawInstantly(msg.sender, amount);
+        } else {
+            requestWithdrawal(msg.sender, amount);
+        }
+    }
+
+    /**
+     * @dev Withdraw user stake instantly from open deposits
+     * @param user The user address
+     * @param amount The amount of ETH to withdraw
+     */
+    function withdrawInstantly(address user, uint256 amount) private {
         /** Update user account state */
         users[msg.sender].distributionSum0 = distributionSum;
         users[msg.sender].stake0 -= amount;
@@ -288,18 +314,76 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         pool.deposits -= amount;
         openDeposits -= amount;
 
-        /** Send ETH from manager to user */
-        (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed");
+        send(user, amount);
 
-        emit UserWithdrawed(msg.sender, amount);
+        emit UserWithdrawed(user, amount); 
     }
 
     /**
-     * @dev Stake a pool validator and register with SSV
+     * @dev Request to withdraw user stake from exited deposits
+     * @param user The user address
+     * @param amount The amount of ETH to withdraw
+     */
+    function requestWithdrawal(address user, uint256 amount) private {
+        /** Add withdrawal to queue */
+        // Todo
+
+        emit UserWithdrawalRequested(user, amount);
+    }
+
+    /**
+     * @notice Initiate withdrawal of user stake from exited deposits
+     * @param user The user address
+     * @param amount The amount of ETH to withdraw
+     */
+    function inititateWithdrawal(address user, uint256 amount) external {
+        require(
+            msg.sender == getAutomationAddress(),
+            "Only automation contract can initiate withdrawals"
+        );
+
+        /** Update user account state */
+        users[user].distributionSum0 = distributionSum;
+        users[user].stake0 -= amount;
+
+        emit UserWithdrawalInitiated(user, amount);
+    }
+
+    /**
+     * @notice Withdraw user stake from exited deposits
+     * @param user The user address
+     * @param amount The amount of ETH to withdraw
+     */
+    function completeWithdrawal(address user, uint256 amount) external {
+        require(
+            msg.sender == getAutomationAddress(),
+            "Only automation contract can complete withdrawals"
+        );
+
+        /** Remove from withdrawal queue */
+        // Todo
+
+        send(user, amount);
+
+        emit UserWithdrawed(user, amount);
+    }
+
+    /**
+     * @dev Send ETH to a recipient
+     * @param recipient The recipient address
+     * @param amount The amount of ETH to send
+     */
+    function send(address recipient, uint256 amount) private {
+        (bool success, ) = recipient.call{value: amount}("");
+        require(success, "Transfer failed");
+    }
+
+    /**
+     * @notice Stake a pool validator and register with SSV
      * @param poolId The pool ID
      */
-    function stakePool(uint32 poolId) public {
+    function stake(uint32 poolId) external {
+        require(msg.sender == getAutomationAddress(), "Only automation contract can stake pools");
         require(readyValidatorPublicKeys.length > 0, "No ready validators");
 
         /** Get next ready validator */
@@ -441,10 +525,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Request a pool exit
+     * @notice Request a pool exit
      * @param poolId The staked pool ID
      */
-    function requestPoolExit(uint32 poolId) public {
+    function requestExit(uint32 poolId) external {
         require(msg.sender == getAutomationAddress(), "Only automation can request pool exits");
         
         Pool storage pool = pools[poolId];
@@ -457,12 +541,12 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Complete a pool exit
+     * @notice Complete a pool exit
      * @param poolIndex The staked pool index
      * @param stakedValidatorIndex The staked validator index
      * @param exitingValidatorIndex The exiting validator index
      */
-    function completePoolExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) public {
+    function completeExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external {
         require(msg.sender == getAutomationAddress(), "Only automation can complete pool exits");
         
         uint32 poolId = stakedPoolIds[poolIndex];
@@ -488,11 +572,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         /** Remove validator from SSV */
         ssvNetwork.removeValidator(validatorPublicKey);
 
-        emit PoolExitCompleted(poolId);
+        emit PoolExited(poolId);
     }
 
     /**
-     * @dev Add a validator to the pool manager
+     * @notice Add a validator to the pool manager
      * @param depositDataRoot The deposit data root
      * @param publicKey The validator public key
      * @param operatorIds The operator IDs
@@ -509,7 +593,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bytes[] memory sharesPublicKeys,
         bytes calldata signature,
         bytes calldata withdrawalCredentials
-    ) public onlyOwner {
+    ) external onlyOwner {
         /** Create validator and add to ready state */
         validators[publicKey] = Validator(
             depositDataRoot,
@@ -525,11 +609,27 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the current token fees as percentages
-     * @return The current token fees as percentages
+     * @dev Update link fee
+     * @param newFee The new fee 
      */
-    function getFees() public view returns (Fees memory) {
-        return Fees(getLINKFee(), getSSVFee());
+    function setLINKFee(uint32 newFee) public onlyOwner {
+        linkFee = newFee;
+    }
+
+    /**
+     * @dev Update ssv fee
+     * @param newFee The new fee 
+     */
+    function setSSVFee(uint32 newFee) public onlyOwner {
+        ssvFee = newFee;
+    }
+
+    /**
+     * @notice Get the current token fees as percentages
+     * @return fees The current token fees as percentages
+     */
+    function getFees() public view returns (Fees memory fees) {
+        fees = Fees(getLINKFee(), getSSVFee());
     }
 
     /**
@@ -640,7 +740,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @return The the total manager expected consensus stake
      */
     function getExpectedConsensusStake() public view returns (int256) {
-        return int256(getStakedPoolIds().length * poolCapacity);
+
+        // Todo account for queued withdrawal amount
+
+        return int256(stakedPoolIds.length * poolCapacity);
     }
 
     /**
@@ -654,52 +757,50 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @notice Get the total user stake for a given user address
      * @param userAddress The user address
-     * @return The total user stake
+     * @return userStake The total user stake
      */
-    function getUserStake(address userAddress) public view returns (uint256) {
+    function getUserStake(address userAddress) public view returns (uint256 userStake) {
         require(users[userAddress].stake0 > 0, "User does not have a stake");
-
-        return
-            Math.mulDiv(
-                users[userAddress].stake0,
-                distributionSum,
-                users[userAddress].distributionSum0
-            );
+        userStake = Math.mulDiv(
+            users[userAddress].stake0,
+            distributionSum,
+            users[userAddress].distributionSum0
+        );
     }
 
     /**
      * @notice Get the pool details for a given pool ID
      * @param poolId The pool ID
-     * @return The pool details
+     * @return poolDetails The pool details
      */
     function getPoolDetails(
         uint32 poolId
-    ) external view returns (PoolDetails memory) {
+    ) external view returns (PoolDetails memory poolDetails) {
         Pool memory pool = pools[poolId];
 
         /** Pool will not have validator or operators if still in ready state */
         bytes memory emptyBytes = new bytes(0);
         if (keccak256(pool.validatorPublicKey) == keccak256(emptyBytes)) {
-            return PoolDetails(pool.deposits, emptyBytes, new uint32[](0), pool.exiting);
+            poolDetails = PoolDetails(pool.deposits, emptyBytes, new uint32[](0), pool.exiting);
         } else {
             Validator memory validator = validators[pool.validatorPublicKey];
-            return PoolDetails(pool.deposits, pool.validatorPublicKey, validator.operatorIds, pool.exiting);
+            poolDetails = PoolDetails(pool.deposits, pool.validatorPublicKey, validator.operatorIds, pool.exiting);
         }
     }
 
     /**
      * @notice Get the automation address
-     * @return The automation address
+     * @return automationAddress The automation address
      */
-    function getAutomationAddress() public view returns (address) {
-        return address(casimirAutomation);
+    function getAutomationAddress() public view returns (address automationAddress) {
+        automationAddress = address(casimirAutomation);
     }
 
     /**
      * @notice Get the PoR address
-     * @return The PoR address
+     * @return porAddress The PoR address
      */
-    function getPoRAddress() public view returns (address) {
-        return address(casimirPoR);
+    function getPoRAddress() public view returns (address porAddress) {
+        porAddress = address(casimirPoR);
     }
 }
