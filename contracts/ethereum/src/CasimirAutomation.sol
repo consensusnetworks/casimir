@@ -104,7 +104,7 @@ contract CasimirAutomation is ICasimirAutomation, Ownable {
 
         /** Stake ready pools */
         for (uint256 i = 0; i < readyPoolIds.length; i++) {
-            casimirManager.stake(readyPoolIds[i]);
+            casimirManager.stakePool(readyPoolIds[i]);
         }
 
         /** Compound rewards */

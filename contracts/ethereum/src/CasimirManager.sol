@@ -306,8 +306,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function withdrawInstantly(address user, uint256 amount) private {
         /** Update user account state */
-        users[msg.sender].distributionSum0 = distributionSum;
-        users[msg.sender].stake0 -= amount;
+        users[user].distributionSum0 = distributionSum;
+        users[user].stake0 -= amount;
 
         /** Update balance state */
         Pool storage pool = pools[openPoolIds[0]];
@@ -379,12 +379,16 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Stake a pool validator and register with SSV
+     * @notice Stake a pool
      * @param poolId The pool ID
      */
-    function stake(uint32 poolId) external {
-        require(msg.sender == getAutomationAddress(), "Only automation contract can stake pools");
+    function stakePool(uint32 poolId) external {
+        require(
+            msg.sender == getAutomationAddress(), 
+            "Only automation contract can stake pools"
+        );
         require(readyValidatorPublicKeys.length > 0, "No ready validators");
+        require(readyPoolIds[0] == poolId, "Pool is not the next ready for stake");
 
         /** Get next ready validator */
         bytes memory validatorPublicKey = readyValidatorPublicKeys[0];
@@ -423,6 +427,99 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
 
         emit PoolStaked(poolId);
+    }
+
+    /**
+     * @notice Request a pool exit
+     * @param poolId The staked pool ID
+     */
+    function requestExit(uint32 poolId) external {
+        require(
+            msg.sender == getAutomationAddress(), 
+            "Only automation can request pool exits"
+        );
+        
+        Pool storage pool = pools[poolId];
+
+        require(!pool.exiting, "Pool is already exiting");
+        
+        pool.exiting = true;
+
+        /** Record validator as exiting for automation */
+        exitingValidatorPublicKeys.push(pool.validatorPublicKey);
+
+        emit PoolExitRequested(poolId);
+    }
+
+    /**
+     * @notice Complete a pool exit
+     * @param poolStakedIndex The pool's staked index
+     * @param validatorStakedIndex The validator's staked index
+     * @param validatorExitingIndex The validator's exiting index
+     */
+    function completeExit(uint256 poolStakedIndex, uint256 validatorStakedIndex, uint256 validatorExitingIndex) external {
+        require(
+            msg.sender == getAutomationAddress(), 
+            "Only automation can complete pool exits"
+        );
+        
+        uint32 poolId = stakedPoolIds[poolStakedIndex];
+        Pool storage pool = pools[poolId];
+
+        require(pool.exiting, "Pool is not exiting");
+
+        bytes memory validatorPublicKey = pool.validatorPublicKey;
+        bytes memory stakedValidatorPublicKey = stakedValidatorPublicKeys[validatorStakedIndex];
+        bytes memory exitingValidatorPublicKey = exitingValidatorPublicKeys[validatorExitingIndex];
+
+        require(keccak256(validatorPublicKey) == keccak256(stakedValidatorPublicKey) && keccak256(validatorPublicKey) == keccak256(exitingValidatorPublicKey), "Pool validator does not match staked and exiting validator");
+
+        /** Remove pool from staked pools and delete */
+        stakedPoolIds.remove(poolStakedIndex);
+        delete pools[poolId];
+
+        /** Remove validator from staked and exiting states and delete */
+        stakedValidatorPublicKeys.remove(validatorStakedIndex);
+        exitingValidatorPublicKeys.remove(validatorExitingIndex);
+        delete validators[validatorPublicKey];
+
+        /** Remove validator from SSV */
+        ssvNetwork.removeValidator(validatorPublicKey);
+
+        emit PoolExited(poolId);
+    }
+
+    /**
+     * @notice Add a validator to the pool manager
+     * @param depositDataRoot The deposit data root
+     * @param publicKey The validator public key
+     * @param operatorIds The operator IDs
+     * @param sharesEncrypted The encrypted shares
+     * @param sharesPublicKeys The public keys of the shares
+     * @param signature The signature
+     * @param withdrawalCredentials The withdrawal credentials
+     */
+    function addValidator(
+        bytes32 depositDataRoot,
+        bytes calldata publicKey,
+        uint32[] memory operatorIds,
+        bytes[] memory sharesEncrypted,
+        bytes[] memory sharesPublicKeys,
+        bytes calldata signature,
+        bytes calldata withdrawalCredentials
+    ) external onlyOwner {
+        /** Create validator and add to ready state */
+        validators[publicKey] = Validator(
+            depositDataRoot,
+            operatorIds,
+            sharesEncrypted,
+            sharesPublicKeys,
+            signature,
+            withdrawalCredentials
+        );
+        readyValidatorPublicKeys.push(publicKey);
+
+        emit ValidatorAdded(publicKey);
     }
 
     /**
@@ -525,90 +622,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Request a pool exit
-     * @param poolId The staked pool ID
-     */
-    function requestExit(uint32 poolId) external {
-        require(msg.sender == getAutomationAddress(), "Only automation can request pool exits");
-        
-        Pool storage pool = pools[poolId];
-        pool.exiting = true;
-
-        /** Record validator as exiting for automation */
-        exitingValidatorPublicKeys.push(pool.validatorPublicKey);
-
-        emit PoolExitRequested(poolId);
-    }
-
-    /**
-     * @notice Complete a pool exit
-     * @param poolIndex The staked pool index
-     * @param stakedValidatorIndex The staked validator index
-     * @param exitingValidatorIndex The exiting validator index
-     */
-    function completeExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external {
-        require(msg.sender == getAutomationAddress(), "Only automation can complete pool exits");
-        
-        uint32 poolId = stakedPoolIds[poolIndex];
-        Pool storage pool = pools[poolId];
-
-        require(pool.exiting, "Pool is not exiting");
-
-        bytes memory validatorPublicKey = pool.validatorPublicKey;
-        bytes memory stakedValidatorPublicKey = stakedValidatorPublicKeys[stakedValidatorIndex];
-        bytes memory exitingValidatorPublicKey = exitingValidatorPublicKeys[exitingValidatorIndex];
-
-        require(keccak256(validatorPublicKey) == keccak256(stakedValidatorPublicKey) && keccak256(validatorPublicKey) == keccak256(exitingValidatorPublicKey), "Pool validator does not match staked and exiting validator");
-
-        /** Remove pool from staked pools and delete */
-        stakedPoolIds.remove(poolIndex);
-        delete pools[poolId];
-
-        /** Remove validator from staked and exiting states and delete */
-        stakedValidatorPublicKeys.remove(stakedValidatorIndex);
-        exitingValidatorPublicKeys.remove(exitingValidatorIndex);
-        delete validators[validatorPublicKey];
-
-        /** Remove validator from SSV */
-        ssvNetwork.removeValidator(validatorPublicKey);
-
-        emit PoolExited(poolId);
-    }
-
-    /**
-     * @notice Add a validator to the pool manager
-     * @param depositDataRoot The deposit data root
-     * @param publicKey The validator public key
-     * @param operatorIds The operator IDs
-     * @param sharesEncrypted The encrypted shares
-     * @param sharesPublicKeys The public keys of the shares
-     * @param signature The signature
-     * @param withdrawalCredentials The withdrawal credentials
-     */
-    function addValidator(
-        bytes32 depositDataRoot,
-        bytes calldata publicKey,
-        uint32[] memory operatorIds,
-        bytes[] memory sharesEncrypted,
-        bytes[] memory sharesPublicKeys,
-        bytes calldata signature,
-        bytes calldata withdrawalCredentials
-    ) external onlyOwner {
-        /** Create validator and add to ready state */
-        validators[publicKey] = Validator(
-            depositDataRoot,
-            operatorIds,
-            sharesEncrypted,
-            sharesPublicKeys,
-            signature,
-            withdrawalCredentials
-        );
-        readyValidatorPublicKeys.push(publicKey);
-
-        emit ValidatorAdded(publicKey);
-    }
-
-    /**
      * @dev Update link fee
      * @param newFee The new fee 
      */
@@ -698,52 +711,52 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * @notice Get the total manager stake
-     * @return The total manager stake
+     * @return stake The total manager stake
      */
-    function getStake() public view returns (uint256) {
+    function getStake() public view returns (uint256 stake) {
         /** Total manager execution stake */
         int256 executionStake = getExecutionStake();
 
         /** Total manager consensus stake */
         int256 consensusStake = getExpectedConsensusStake();
 
-        return SafeCast.toUint256(executionStake + consensusStake);
+        stake = SafeCast.toUint256(executionStake + consensusStake);
     }
 
     /**
      * @notice Get the total manager execution stake
-     * @return The total manager execution stake
+     * @return executionStake The total manager execution stake
      */
-    function getExecutionStake() public view returns (int256) {
-        return int256(readyPoolIds.length * poolCapacity + openDeposits);
+    function getExecutionStake() public view returns (int256 executionStake) {
+        executionStake = int256(readyPoolIds.length * poolCapacity + openDeposits);
     }
 
     /**
      * @notice Get the total manager execution swept amount
-     * @return The total manager execution swept amount
+     * @return executionSwept The total manager execution swept amount
      */
-    function getExecutionSwept() public view returns (int256) {
-        return int256(address(this).balance) - getExecutionStake();
+    function getExecutionSwept() public view returns (int256 executionSwept) {
+        executionSwept = int256(address(this).balance) - getExecutionStake();
     }
 
     /**
      * @notice Get the total manager consensus stake
-     * @return The latest total manager consensus stake
+     * @return consensusStake The total manager consensus stake
      */
-    function getConsensusStake() public view returns (int256) {
-        return casimirPoR.getConsensusStake();
+    function getConsensusStake() public view returns (int256 consensusStake) {
+        consensusStake = casimirPoR.getConsensusStake();
     }
 
     /**
      * @notice Get the total manager expected consensus stake
      * @dev The expected stake will be honored with slashing recovery in place
-     * @return The the total manager expected consensus stake
+     * @return expectedConsensusStake The total manager expected consensus stake
      */
-    function getExpectedConsensusStake() public view returns (int256) {
+    function getExpectedConsensusStake() public view returns (int256 expectedConsensusStake) {
 
-        // Todo account for queued withdrawal amount
+        // Todo account for pending withdrawal amount
 
-        return int256(stakedPoolIds.length * poolCapacity);
+        expectedConsensusStake = int256(stakedPoolIds.length * poolCapacity);
     }
 
     /**

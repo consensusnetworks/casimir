@@ -169,7 +169,7 @@ _Used for mocking sweeps from Beacon to the manager_
 ### reward
 
 ```solidity
-function reward(uint256 amount) public
+function reward(uint256 amount) external
 ```
 
 _Distribute ETH rewards_
@@ -194,7 +194,7 @@ Deposit user stake to the pool manager
 function withdraw(uint256 amount) external
 ```
 
-Withdraw user stake from the pool manager
+Withdraw user stake
 
 #### Parameters
 
@@ -202,13 +202,43 @@ Withdraw user stake from the pool manager
 | ---- | ---- | ----------- |
 | amount | uint256 | The amount of ETH to withdraw |
 
-### stakePool
+### inititateWithdrawal
 
 ```solidity
-function stakePool(uint32 poolId) public
+function inititateWithdrawal(address user, uint256 amount) external
 ```
 
-_Stake a pool validator and register with SSV_
+Initiate withdrawal of user stake from exited deposits
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| user | address | The user address |
+| amount | uint256 | The amount of ETH to withdraw |
+
+### completeWithdrawal
+
+```solidity
+function completeWithdrawal(address user, uint256 amount) external
+```
+
+Withdraw user stake from exited deposits
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| user | address | The user address |
+| amount | uint256 | The amount of ETH to withdraw |
+
+### stake
+
+```solidity
+function stake(uint32 poolId) external
+```
+
+Stake a pool validator and register with SSV
 
 #### Parameters
 
@@ -216,13 +246,13 @@ _Stake a pool validator and register with SSV_
 | ---- | ---- | ----------- |
 | poolId | uint32 | The pool ID |
 
-### requestPoolExit
+### requestExit
 
 ```solidity
-function requestPoolExit(uint32 poolId) public
+function requestExit(uint32 poolId) external
 ```
 
-_Request a pool exit_
+Request a pool exit
 
 #### Parameters
 
@@ -230,13 +260,13 @@ _Request a pool exit_
 | ---- | ---- | ----------- |
 | poolId | uint32 | The staked pool ID |
 
-### completePoolExit
+### completeExit
 
 ```solidity
-function completePoolExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) public
+function completeExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external
 ```
 
-_Complete a pool exit_
+Complete a pool exit
 
 #### Parameters
 
@@ -249,10 +279,10 @@ _Complete a pool exit_
 ### addValidator
 
 ```solidity
-function addValidator(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) public
+function addValidator(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) external
 ```
 
-_Add a validator to the pool manager_
+Add a validator to the pool manager
 
 #### Parameters
 
@@ -266,10 +296,38 @@ _Add a validator to the pool manager_
 | signature | bytes | The signature |
 | withdrawalCredentials | bytes | The withdrawal credentials |
 
+### setLINKFee
+
+```solidity
+function setLINKFee(uint32 newFee) public
+```
+
+_Update link fee_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newFee | uint32 | The new fee |
+
+### setSSVFee
+
+```solidity
+function setSSVFee(uint32 newFee) public
+```
+
+_Update ssv fee_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newFee | uint32 | The new fee |
+
 ### getFees
 
 ```solidity
-function getFees() public view returns (struct ICasimirManager.Fees)
+function getFees() public view returns (struct ICasimirManager.Fees fees)
 ```
 
 Get the current token fees as percentages
@@ -278,7 +336,7 @@ Get the current token fees as percentages
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | struct ICasimirManager.Fees | The current token fees as percentages |
+| fees | struct ICasimirManager.Fees | The current token fees as percentages |
 
 ### getLINKFee
 
@@ -467,7 +525,7 @@ Get the total manager open deposits
 ### getUserStake
 
 ```solidity
-function getUserStake(address userAddress) public view returns (uint256)
+function getUserStake(address userAddress) public view returns (uint256 userStake)
 ```
 
 Get the total user stake for a given user address
@@ -482,12 +540,12 @@ Get the total user stake for a given user address
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The total user stake |
+| userStake | uint256 | The total user stake |
 
 ### getPoolDetails
 
 ```solidity
-function getPoolDetails(uint32 poolId) external view returns (struct ICasimirManager.PoolDetails)
+function getPoolDetails(uint32 poolId) external view returns (struct ICasimirManager.PoolDetails poolDetails)
 ```
 
 Get the pool details for a given pool ID
@@ -502,12 +560,12 @@ Get the pool details for a given pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | struct ICasimirManager.PoolDetails | The pool details |
+| poolDetails | struct ICasimirManager.PoolDetails | The pool details |
 
 ### getAutomationAddress
 
 ```solidity
-function getAutomationAddress() public view returns (address)
+function getAutomationAddress() public view returns (address automationAddress)
 ```
 
 Get the automation address
@@ -516,12 +574,12 @@ Get the automation address
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address | The automation address |
+| automationAddress | address | The automation address |
 
 ### getPoRAddress
 
 ```solidity
-function getPoRAddress() public view returns (address)
+function getPoRAddress() public view returns (address porAddress)
 ```
 
 Get the PoR address
@@ -530,7 +588,7 @@ Get the PoR address
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address | The PoR address |
+| porAddress | address | The PoR address |
 
 ## CasimirPoR
 
@@ -721,16 +779,22 @@ struct Validator {
 }
 ```
 
-### ManagerDistribution
+### RewardDistributed
 
 ```solidity
-event ManagerDistribution(address sender, uint256 ethAmount, uint256 linkAmount, uint256 ssvAmount)
+event RewardDistributed(address sender, uint256 ethAmount, uint256 linkAmount, uint256 ssvAmount)
 ```
 
-### PoolDeposit
+### UserDeposited
 
 ```solidity
-event PoolDeposit(address sender, uint32 poolId, uint256 amount)
+event UserDeposited(address sender, uint256 ethAmount, uint256 linkAmount, uint256 ssvAmount)
+```
+
+### PoolIncreased
+
+```solidity
+event PoolIncreased(address sender, uint32 poolId, uint256 amount)
 ```
 
 ### PoolStaked
@@ -745,16 +809,28 @@ event PoolStaked(uint32 poolId)
 event PoolExitRequested(uint32 poolId)
 ```
 
-### PoolExitCompleted
+### PoolExited
 
 ```solidity
-event PoolExitCompleted(uint32 poolId)
+event PoolExited(uint32 poolId)
 ```
 
 ### ValidatorAdded
 
 ```solidity
 event ValidatorAdded(bytes publicKey)
+```
+
+### UserWithdrawalRequested
+
+```solidity
+event UserWithdrawalRequested(address sender, uint256 amount)
+```
+
+### UserWithdrawalInitiated
+
+```solidity
+event UserWithdrawalInitiated(address sender, uint256 amount)
 ```
 
 ### UserWithdrawed
@@ -781,22 +857,22 @@ function reward(uint256 amount) external
 function withdraw(uint256 amount) external
 ```
 
-### stakePool
+### stake
 
 ```solidity
-function stakePool(uint32 poolId) external
+function stake(uint32 poolId) external
 ```
 
-### requestPoolExit
+### requestExit
 
 ```solidity
-function requestPoolExit(uint32 poolId) external
+function requestExit(uint32 poolId) external
 ```
 
-### completePoolExit
+### completeExit
 
 ```solidity
-function completePoolExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external
+function completeExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external
 ```
 
 ### addValidator

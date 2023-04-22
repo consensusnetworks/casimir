@@ -93,7 +93,7 @@ interface ICasimirManager {
 
     function withdraw(uint256 amount) external;
 
-    function stake(uint32 poolId) external;
+    function stakePool(uint32 poolId) external;
 
     function requestExit(uint32 poolId) external;
 
