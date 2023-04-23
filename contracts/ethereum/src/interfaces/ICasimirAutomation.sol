@@ -19,4 +19,6 @@ interface ICasimirAutomation is AutomationCompatibleInterface {
     ) external returns (bool upkeepNeeded, bytes memory performData);
 
     function performUpkeep(bytes calldata performData) external;
+
+    function setOracleAddress(address oracleAddress) external;
 }

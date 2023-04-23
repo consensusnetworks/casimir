@@ -3,25 +3,35 @@ pragma solidity ^0.8.7;
 
 import "./interfaces/ICasimirAutomation.sol";
 import "./interfaces/ICasimirManager.sol";
-import "./interfaces/ICasimirPoR.sol";
 import {Functions, FunctionsClient} from "./vendor/FunctionsClient.sol";
 // import "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol"; // Once published
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
+// Dev-only imports
 import "hardhat/console.sol";
 
-// Todo handle:
-// - Ready pool DKG triggering
-// - Balance increase from rewards and exit completion
-// - Slash reshare triggering
-// - Withdrawal or maximum reshare exit triggering
+// To be done by automation and functions oracle:
+// 1. Store withdrawal requests ✔
+// 2. Request exits for withdrawals
+// 3. Store pending exits and pending withdrawals
+// 4. Get completed exits in upkeep (triggered by any amount increase > reward threshold)
+// 5. Fulfill withdrawals and redistribute
+// 6. Get cluster snapshots before staking ready pools
+
+// To be enabled with operator registry and selection (not an audit essential, postponing for now):
+// 1. Replace lost stake with operator collateral
+// 2. Distribute operators to minimize undercollateralization risk
+
+// To be enabled with single-instance @casimir/keys oracle (not an audit essential, postponing for now):
+// 1. Validator keygen triggering
+// 2. Validator reshare triggering (for penalties or otherwise)
+// 3. Validator exit triggering (for max reshares or by liquidity needs)
 
 /**
  * @title Oracle contract that triggers and handles actions
  */
-contract CasimirAutomation is ICasimirAutomation, Ownable {
-
-    // Todo add FunctionsClient before Ownable
+contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
 
     /*************/ 
     /* Constants */
@@ -41,8 +51,12 @@ contract CasimirAutomation is ICasimirAutomation, Ownable {
     /* Dynamic State */
     /********************/
 
-    /* Total stake */
-    uint256 private stake;
+    /* Latest functions response */
+    bytes private latestResponse;
+    /* Latest functions error */
+    bytes private latestError;
+    /* Latest functions response count */
+    uint256 private responseCounter;
 
     /***************/
     /* Constructor */
@@ -52,10 +66,8 @@ contract CasimirAutomation is ICasimirAutomation, Ownable {
      * Constructor
      * @param casimirManagerAddress The manager contract address
      */
-    constructor(address casimirManagerAddress/*, address linkFunctionsAddress*/) {
+    constructor(address casimirManagerAddress, address linkFunctionsAddress) FunctionsClient(linkFunctionsAddress) {
         casimirManager = ICasimirManager(casimirManagerAddress);
-
-        // Todo add FunctionsClient(linkFunctionsAddress) after constructor params
     }
 
     /**
@@ -76,22 +88,20 @@ contract CasimirAutomation is ICasimirAutomation, Ownable {
 
         /** Get ready pools to stake */
         uint32[] memory readyPoolIds = casimirManager.getReadyPoolIds();
-
         if (readyPoolIds.length > 0) {
             upkeepNeeded = true;
         }
 
-        /** Get Beacon rewards swept to manager */
-        uint256 executionSwept = SafeCast.toUint256(casimirManager.getExecutionSwept());
-
-        if (executionSwept >= rewardThreshold) {
+        /** Get amount swept to manager */
+        uint256 amountSwept = SafeCast.toUint256(casimirManager.getExecutionSwept());
+        if (amountSwept >= rewardThreshold) {
             upkeepNeeded = true;
         } else {
             /** Set swept amounts below threshold to zero */
-            executionSwept = 0;
+            amountSwept = 0;
         }
 
-        performData = abi.encode(readyPoolIds, executionSwept);
+        performData = abi.encode(readyPoolIds, amountSwept);
     }
 
     /**
@@ -104,7 +114,7 @@ contract CasimirAutomation is ICasimirAutomation, Ownable {
 
         /** Stake ready pools */
         for (uint256 i = 0; i < readyPoolIds.length; i++) {
-            casimirManager.stakePool(readyPoolIds[i]);
+            casimirManager.stakeNextPool();
         }
 
         /** Compound rewards */
@@ -113,50 +123,26 @@ contract CasimirAutomation is ICasimirAutomation, Ownable {
         }
     }
 
-    // /**
-    //  * @notice Callback that is invoked once the DON has resolved the request or hit an error
-    //  *
-    //  * @param requestId The request ID, returned by sendRequest()
-    //  * @param response Aggregated response from the user code
-    //  * @param err Aggregated error from the user code or from the execution pipeline
-    //  * Either response or error parameter will be set, but never both
-    //  */
-    // function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err) internal override {
-    //     latestResponse = response;
-    //     latestError = err;
-    //     responseCounter = responseCounter + 1;
-    //     emit OCRResponse(requestId, response, err);
-    // }
-
-    // /**
-    //  * @notice Update the Functions oracle address
-    //  * @param oracle New oracle address
-    //  */
-    // function updateOracleAddress(address oracle) public onlyOwner {
-    //     setOracle(oracle);
-    // }
-
     /**
-     * @notice Get the total manager stake
-     * @return The total manager stake
+     * @notice Callback that is invoked once the DON has resolved the request or hit an error
+     *
+     * @param requestId The request ID, returned by sendRequest()
+     * @param response Aggregated response from the user code
+     * @param err Aggregated error from the user code or from the execution pipeline
+     * Either response or error parameter will be set, but never both
      */
-    function getStake() external view returns (uint256) {
-        return casimirManager.getStake();
+    function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err) internal override {
+        latestResponse = response;
+        latestError = err;
+        responseCounter = responseCounter + 1;
+        emit OCRResponse(requestId, response, err);
     }
 
     /**
-     * @notice Get the total manager execution swept amount
-     * @return The total manager execution swept amount
+     * @notice Update the functions oracle address
+     * @param oracle New oracle address
      */
-    function getExecutionSwept() public view returns (int256) {
-        return casimirManager.getExecutionSwept();
-    }
-
-    /**
-     * @notice Get the total manager expected consensus stake
-     * @return The total manager expected consensus stake
-     */
-    function getExpectedConsensusStake() external view returns (int256) {
-        return casimirManager.getExpectedConsensusStake();
+    function setOracleAddress(address oracle) external onlyOwner {
+        setOracle(oracle);
     }
 }

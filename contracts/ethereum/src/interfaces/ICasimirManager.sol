@@ -35,6 +35,11 @@ interface ICasimirManager {
         uint256 stake0;
         uint256 distributionSum0;
     }
+    /** User withdrawal */
+    struct UserWithdrawal {
+        address user;
+        uint256 amount;
+    }
     /** Validator deposit data and shares */
     struct Validator {
         bytes32 depositDataRoot;
@@ -49,18 +54,6 @@ interface ICasimirManager {
     /* Events */
     /**********/
 
-    event RewardDistributed(
-        address indexed sender,
-        uint256 ethAmount,
-        uint256 linkAmount,
-        uint256 ssvAmount
-    );
-    event UserDeposited(
-        address indexed sender,
-        uint256 ethAmount,
-        uint256 linkAmount,
-        uint256 ssvAmount
-    );
     event PoolIncreased(
         address indexed sender,
         uint32 poolId,
@@ -69,7 +62,14 @@ interface ICasimirManager {
     event PoolStaked(uint32 indexed poolId);
     event PoolExitRequested(uint32 indexed poolId);
     event PoolExited(uint32 indexed poolId);
-    event ValidatorAdded(bytes indexed publicKey);
+    event RewardDistributed(
+        address indexed sender,
+        uint256 amount
+    );
+    event UserDepositDistributed(
+        address indexed sender,
+        uint256 amount
+    );
     event UserWithdrawalRequested(
         address indexed sender,
         uint256 amount
@@ -82,6 +82,7 @@ interface ICasimirManager {
         address indexed sender,
         uint256 amount
     );
+    event ValidatorAdded(bytes indexed publicKey);
 
     /*************/
     /* Functions */
@@ -93,13 +94,13 @@ interface ICasimirManager {
 
     function withdraw(uint256 amount) external;
 
-    function stakePool(uint32 poolId) external;
+    function stakeNextPool() external;
 
-    function requestExit(uint32 poolId) external;
+    function requestPoolExit(uint32 poolId) external;
 
-    function completeExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external;
+    function completePoolExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external;
 
-    function addValidator(
+    function registerValidator(
         bytes32 depositDataRoot,
         bytes calldata publicKey,
         uint32[] memory operatorIds,
@@ -108,6 +109,12 @@ interface ICasimirManager {
         bytes calldata signature,
         bytes calldata withdrawalCredentials
     ) external;
+
+    function setLINKFee(uint32 fee) external;
+
+    function setSSVFee(uint32 fee) external;
+
+    function setOracleAddress(address oracleAddress) external;
 
     function getFees() external view returns (Fees memory);
 
@@ -134,8 +141,6 @@ interface ICasimirManager {
     function getExecutionStake() external view returns (int256);
 
     function getExecutionSwept() external view returns (int256);
-
-    function getConsensusStake() external view returns (int256);
 
     function getExpectedConsensusStake() external view returns (int256);
 

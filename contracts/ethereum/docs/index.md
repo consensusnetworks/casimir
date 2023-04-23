@@ -232,13 +232,13 @@ Withdraw user stake from exited deposits
 | user | address | The user address |
 | amount | uint256 | The amount of ETH to withdraw |
 
-### stake
+### stakePool
 
 ```solidity
-function stake(uint32 poolId) external
+function stakePool(uint32 poolId) external
 ```
 
-Stake a pool validator and register with SSV
+Stake a pool
 
 #### Parameters
 
@@ -263,7 +263,7 @@ Request a pool exit
 ### completeExit
 
 ```solidity
-function completeExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external
+function completeExit(uint256 poolStakedIndex, uint256 validatorStakedIndex, uint256 validatorExitingIndex) external
 ```
 
 Complete a pool exit
@@ -272,9 +272,9 @@ Complete a pool exit
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| poolIndex | uint256 | The staked pool index |
-| stakedValidatorIndex | uint256 | The staked validator index |
-| exitingValidatorIndex | uint256 | The exiting validator index |
+| poolStakedIndex | uint256 | The pool's staked index |
+| validatorStakedIndex | uint256 | The validator's staked index |
+| validatorExitingIndex | uint256 | The validator's exiting index |
 
 ### addValidator
 
@@ -439,7 +439,7 @@ Get a list of all staked pool IDs
 ### getStake
 
 ```solidity
-function getStake() public view returns (uint256)
+function getStake() public view returns (uint256 stake)
 ```
 
 Get the total manager stake
@@ -448,12 +448,12 @@ Get the total manager stake
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The total manager stake |
+| stake | uint256 | The total manager stake |
 
 ### getExecutionStake
 
 ```solidity
-function getExecutionStake() public view returns (int256)
+function getExecutionStake() public view returns (int256 executionStake)
 ```
 
 Get the total manager execution stake
@@ -462,12 +462,12 @@ Get the total manager execution stake
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The total manager execution stake |
+| executionStake | int256 | The total manager execution stake |
 
 ### getExecutionSwept
 
 ```solidity
-function getExecutionSwept() public view returns (int256)
+function getExecutionSwept() public view returns (int256 executionSwept)
 ```
 
 Get the total manager execution swept amount
@@ -476,12 +476,12 @@ Get the total manager execution swept amount
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The total manager execution swept amount |
+| executionSwept | int256 | The total manager execution swept amount |
 
 ### getConsensusStake
 
 ```solidity
-function getConsensusStake() public view returns (int256)
+function getConsensusStake() public view returns (int256 consensusStake)
 ```
 
 Get the total manager consensus stake
@@ -490,12 +490,12 @@ Get the total manager consensus stake
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The latest total manager consensus stake |
+| consensusStake | int256 | The total manager consensus stake |
 
 ### getExpectedConsensusStake
 
 ```solidity
-function getExpectedConsensusStake() public view returns (int256)
+function getExpectedConsensusStake() public view returns (int256 expectedConsensusStake)
 ```
 
 Get the total manager expected consensus stake
@@ -506,7 +506,7 @@ _The expected stake will be honored with slashing recovery in place_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The the total manager expected consensus stake |
+| expectedConsensusStake | int256 | The total manager expected consensus stake |
 
 ### getOpenDeposits
 
@@ -857,10 +857,10 @@ function reward(uint256 amount) external
 function withdraw(uint256 amount) external
 ```
 
-### stake
+### stakePool
 
 ```solidity
-function stake(uint32 poolId) external
+function stakePool(uint32 poolId) external
 ```
 
 ### requestExit
@@ -2245,85 +2245,35 @@ function writeKVMap(struct CBOR.CBORBuffer buf, string key) internal pure
 function writeKVArray(struct CBOR.CBORBuffer buf, string key) internal pure
 ```
 
-## MockAggregator
-
-### version
-
-```solidity
-uint256 version
-```
-
-### description
-
-```solidity
-string description
-```
-
-### decimals
-
-```solidity
-uint8 decimals
-```
-
-### latestAnswer
-
-```solidity
-int256 latestAnswer
-```
-
-### latestTimestamp
-
-```solidity
-uint256 latestTimestamp
-```
-
-### latestRound
-
-```solidity
-uint256 latestRound
-```
-
-### getAnswer
-
-```solidity
-mapping(uint256 => int256) getAnswer
-```
-
-### getTimestamp
-
-```solidity
-mapping(uint256 => uint256) getTimestamp
-```
+## MockFunctionsOracle
 
 ### constructor
 
 ```solidity
-constructor(uint8 _decimals, int256 _initialAnswer) public
+constructor() public
 ```
 
-### updateAnswer
+### sendRequest
 
 ```solidity
-function updateAnswer(int256 _answer) public
+function sendRequest(uint64 subscriptionId, bytes data, uint32 gasLimit) external returns (bytes32)
 ```
 
-### updateRoundData
+Sends a request (encoded as data) using the provided subscriptionId
 
-```solidity
-function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt) public
-```
+#### Parameters
 
-### getRoundData
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
+| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
+| gasLimit | uint32 | Gas limit for the fulfillment callback |
 
-```solidity
-function getRoundData(uint80 _roundId) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
-```
+#### Return Values
 
-### latestRoundData
-
-```solidity
-function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
-```
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes32 | requestId A unique request identifier (unique per DON) |
 
 ## MockKeeperRegistry
 
@@ -2511,5 +2461,85 @@ function checkUpkeep(uint256 upkeepId) external view returns (bool upkeepNeeded,
 
 ```solidity
 function checkUpkeep(uint256 upkeepId) external returns (bool upkeepNeeded, bytes performData, enum UpkeepFailureReason upkeepFailureReason, uint256 gasUsed, uint256 fastGasWei, uint256 linkNative)
+```
+
+## MockAggregator
+
+### version
+
+```solidity
+uint256 version
+```
+
+### description
+
+```solidity
+string description
+```
+
+### decimals
+
+```solidity
+uint8 decimals
+```
+
+### latestAnswer
+
+```solidity
+int256 latestAnswer
+```
+
+### latestTimestamp
+
+```solidity
+uint256 latestTimestamp
+```
+
+### latestRound
+
+```solidity
+uint256 latestRound
+```
+
+### getAnswer
+
+```solidity
+mapping(uint256 => int256) getAnswer
+```
+
+### getTimestamp
+
+```solidity
+mapping(uint256 => uint256) getTimestamp
+```
+
+### constructor
+
+```solidity
+constructor(uint8 _decimals, int256 _initialAnswer) public
+```
+
+### updateAnswer
+
+```solidity
+function updateAnswer(int256 _answer) public
+```
+
+### updateRoundData
+
+```solidity
+function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt) public
+```
+
+### getRoundData
+
+```solidity
+function getRoundData(uint80 _roundId) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+```
+
+### latestRoundData
+
+```solidity
+function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 ```
 

@@ -1,19 +1,19 @@
 import { deployContract } from '@casimir/hardhat'
 import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
 import { validatorStore } from '@casimir/data'
-import { CasimirAutomation, CasimirManager, MockAggregator } from '../build/artifacts/types'
+import { CasimirAutomation, CasimirManager, MockFunctionsOracle } from '../build/artifacts/types'
 import { ethers } from 'hardhat'
 
 void async function () {
     let casimirManager: CasimirManager | undefined
-    let mockAggregator: MockAggregator | undefined
-    const [ , , , , distributor] = await ethers.getSigners()
+    let mockFunctionsOracle: MockFunctionsOracle | undefined
+    const [, , , , , distributor] = await ethers.getSigners()
     let config: DeploymentConfig = {
         CasimirManager: {
             address: '',
             args: {
                 beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
-                linkFeedAddress: process.env.LINK_FEED_ADDRESS,
+                linkOracleAddress: process.env.LINK_ORACLE_ADDRESS,
                 linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
@@ -26,14 +26,18 @@ void async function () {
         }
     }
 
+    /** Insert any mock external contracts first */
     if (process.env.MOCK_EXTERNAL_CONTRACTS === 'true') {
         config = {
-            MockAggregator: {
+            MockFunctionsOracle: {
                 address: '',
-                args: {
-                    decimals: 18,
-                    initialAnswer: 0
-                },
+                args: {},
+                options: {},
+                proxy: false
+            },
+            MockKeeperRegistry: {
+                address: '',
+                args: {},
                 options: {},
                 proxy: false
             },
@@ -46,7 +50,7 @@ void async function () {
 
         /** Link mock external contracts to Casimir */
         if (name === 'CasimirManager') {
-            (config[name as keyof typeof config] as ContractConfig).args.linkFeedAddress = config.MockAggregator?.address
+            (config[name as keyof typeof config] as ContractConfig).args.linkOracleAddress = config.MockFunctionsOracle?.address
         }
 
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
@@ -63,11 +67,11 @@ void async function () {
         // Save SSV manager for export
         if (name == 'CasimirManager') casimirManager = contract as CasimirManager
 
-        // Save mock aggregator for export
-        if (name == 'MockAggregator') mockAggregator = contract as MockAggregator
+        // Save mock functions oracle for export
+        if (name == 'MockFunctionsOracle') mockFunctionsOracle = contract as MockFunctionsOracle
     }
 
-    const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
+    const validators = Object.keys(validatorStore).map((key) => validatorStore[key]) as Validator[]
     for (const validator of validators) {
         const {
             depositDataRoot,
@@ -78,7 +82,7 @@ void async function () {
             signature,
             withdrawalCredentials
         } = validator
-        const registration = await casimirManager?.addValidator(
+        const registration = await casimirManager?.registerValidator(
             depositDataRoot,
             publicKey,
             operatorIds,
@@ -134,13 +138,8 @@ void async function () {
             await performUpkeep.wait()
         }
 
-        if (mockAggregator) {
-            const { ...feed } = await mockAggregator.latestRoundData()
-            const { answer } = feed
-            const consensusStakeIncrease = ethers.utils.parseEther('32')
-            const newAnswer = answer.add(consensusStakeIncrease)
-            const update = await mockAggregator.updateAnswer(newAnswer)
-            await update?.wait()
+        if (mockFunctionsOracle) {
+            //
         }
     })
 }()

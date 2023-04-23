@@ -1,12 +1,12 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { addValidatorsFixture, firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture } from './fixtures/shared'
+import { registerValidatorsFixture, firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture } from './fixtures/shared'
 
 describe('Casimir manager', async function () {
 
   it('Registration adds 5 validators with 4 operators each', async function () {
-    const { validators } = await loadFixture(addValidatorsFixture)
+    const { validators } = await loadFixture(registerValidatorsFixture)
     expect(validators.length).equal(5)
     
     const operators = validators.map((v) => v.operatorIds).flat()
