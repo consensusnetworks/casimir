@@ -217,140 +217,32 @@ background: #555;
     .nav_modal_container:hover .nav_modal{
         @apply visible;
     }
-    /* TD: Fix tooltip locations... for some reason not working... */
     .tooltip{
         @apply relative inline-block;
     }
     .tooltip .tooltip_text {
-        @apply invisible bg-black text-white
-        text-center px-12 py-8 z-10;
+        @apply absolute invisible bg-black text-white
+        px-12 py-6 z-10 rounded-[5px] opacity-0;
+        bottom: calc(100% + 10px);
+        left: calc(0px);
+        transition: all .4s ease;
+        transition-delay: 1.5s;
     }
     .tooltip:hover .tooltip_text {
-        @apply visible;
+        @apply visible opacity-100;
     }
-    .tooltip_topleft{
-        @apply absolute w-max
-        top-[-185%] left-[-90%];
-    }
-    .tooltip_topleft::after {
+
+    .tooltip_text::after {
         content: " ";
         position: absolute;
         top: 100%;
-        right: calc(5px);
+        left: calc(15px);
         margin-left: -5px;
         border-width: 5px;
         border-style: solid;
         border-color: black transparent transparent transparent;
     }
-    .tooltip_topcenter{
-        @apply absolute w-full;
-        top: calc(-100% - 10px);
-    }
-    .tooltip_topcenter::after {
-        content: " ";
-        position: absolute;
-        top: 100%;
-        left: calc(50%);
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: black transparent transparent transparent;
-    }
-    .tooltip_topright{
-        @apply absolute w-max
-        top-[-185%] left-[85%];
-    }
-    .tooltip_topright::after {
-        content: " ";
-        position: absolute;
-        top: 100%;
-        left: calc(10px);
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: black transparent transparent transparent;
-    }
-    .tooltip_middleleft{
-        @apply absolute w-max;
-        top: calc(-25% - 4px);
-        right: calc(100% + 10px);
-    }
-    .tooltip_middleleft::after {
-        content: " ";
-        position: absolute;
-        top: calc(50% - 3px); 
-        left: calc(100% + 5px);
-        rotate: -90deg;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: black transparent transparent transparent;
-    }
-    .tooltip_middleright{
-        @apply absolute w-max;
-        top: calc(25% - 4px);
-        left: calc(100% + 10px);
-    }
-    .tooltip_middleright::after {
-        content: " ";
-        position: absolute;
-        top: calc(45% - 3px); 
-        right: calc(100% );
-        rotate: 90deg;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: black transparent transparent transparent;
-    }
-    .tooltip_bottomleft{
-        @apply absolute w-max;
-        top: calc(100% + 10px);
-        right: calc(100% - 20px);
-    }
-    .tooltip_bottomleft::after {
-        content: " ";
-        position: absolute;
-        bottom: 100%; 
-        right: calc(5px);
-        rotate: 180deg;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: black transparent transparent transparent;
-    }
-    .tooltip_bottomcenter{
-        @apply absolute w-max mx-auto;
-        top: calc(100% + 10px);
-        left: 50%;
-        transform: translate(-50%, 0);
-    }
-    .tooltip_bottomcenter::after {
-        content: " ";
-        position: absolute;
-        bottom: 100%; 
-        left: calc(50%);
-        rotate: 180deg;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: black transparent transparent transparent;
-    }
-    .tooltip_bottomright{
-        @apply absolute w-max;
-        top: calc(100% + 10px);
-        left: calc(100% - 20px);
-    }
-    .tooltip_bottomright::after {
-        content: " ";
-        position: absolute;
-        bottom: 100%; 
-        left: calc(10px);
-        rotate: 180deg;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: black transparent transparent transparent;
-    }
+
     .slider {
         @apply flex items-center justify-between gap-[20px];
     }

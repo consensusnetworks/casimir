@@ -105,6 +105,7 @@ module.exports = {
             '1000s': {'min': '0px', 'max': '1000px'},
             '1100s': {'min': '0px', 'max': '1100px'},
             '1200s': {'min': '0px', 'max': '1200px'},
+            '1400s': {'min': '0px', 'max': '1400px'},
             // no screen 
             // 'noscreen': {'min': '360px'},
             // 'xsm': {'min': '0px', 'max': '359px'},

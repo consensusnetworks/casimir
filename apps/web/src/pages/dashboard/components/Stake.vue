@@ -16,7 +16,6 @@ const isMaxETHSelected = ref(false)
 const stakeAmount = ref()
 const { user } = useUsers()
 const fees = ref()
-const autoRestake = ref(true)
 
 const openSelectWalletTab = ref(false)
 const openSignTransactionTab = ref(false)
@@ -294,7 +293,11 @@ onMounted(async ()=>{
                 </h6>
               </button>
               <!-- TD: Add tooltip for staking info -->
-              <h5 class="iconoir-info-empty mb-1 align-middle text-grey_5 cursor-pointer" />
+              <h5 class="iconoir-info-empty mb-1 align-middle text-grey_5 cursor-pointer tooltip">
+                <span class="tooltip_text text-caption w-max">
+                  Staking Through SSV Validators
+                </span>
+              </h5>
               <div 
                 :class="stakingStatus.allowToStake? ' text-grey_7' : 'text-decline'"
                 class="text-body font-medium"
@@ -453,7 +456,6 @@ onMounted(async ()=>{
                 class="bg-grey_2 h-2 w-full"
               />
             </div>
-            <!-- TD: ADD APY? -->
             <div 
               id="sign_transaction_amount"
               class="flex justify-between items-center pb-10"
@@ -541,26 +543,13 @@ onMounted(async ()=>{
                 id="sign_transaction_autorestake_title"
                 class="text-body font-bold text-grey_3"
               >
-                Auto Stake
+                APY
               </p>
               <div 
                 id="sign_transaction_autorestake_checkbox_container"
                 class="text-caption font-bold text-grey_8"
               >
-                <label
-                  id="sign_transaction_autorestake_checkbox_switch" 
-                  class="switch"
-                >
-                  <input
-                    id="sign_transaction_autorestake_checkbox_switch_input" 
-                    v-model="autoRestake"
-                    type="checkbox"
-                  >
-                  <span
-                    id="sign_transaction_autorestake_checkbox_switch_button" 
-                    class="slider round"
-                  />
-                </label>
+                2.3%
               </div>
             </div>
             <div 

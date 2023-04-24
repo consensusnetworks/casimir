@@ -352,7 +352,6 @@ watch(selectedAssetLocation, () => {
       class="h-full flex flex-col gap-20 items-center
       border border-border rounded-[5px] px-10 py-20"
     >
-      <!-- TD: Make this clickable to adjust the line chart && make the size dynamic -->
       <div class="w-full flex gap-5 px-15 justify-between items-center whitespace-nowrap">
         <button
           class="w-2/6 text-left text-body text-grey_4

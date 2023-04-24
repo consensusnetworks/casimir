@@ -8,43 +8,53 @@ const sortDirection = ref('down')
 const stakingTableHeaders = ref([
   {
     title: 'Wallet',
-    value: 'wallet'
+    value: 'wallet',
+    tooltipInfo: 'Wallet Tooltip'
   },
   {
     title: 'Origonal Staked',
-    value: 'origonal_staked'
+    value: 'origonal_staked',
+    tooltipInfo: 'Origonal ETH Staked '
   },
   {
     title: 'Compounded Rewards',
-    value: 'compounded_rewards'
+    value: 'compounded_rewards',
+    tooltipInfo: 'Compounded Rewards Over Time'
   },
   {
     title: 'Total',
-    value: 'total_staked'
+    value: 'total_staked',
+    tooltipInfo: 'Total Staked ( Original + Compounded Rewards)'
   },
   {
     title: 'Date Staked',
-    value: 'date'
+    value: 'date',
+    tooltipInfo: 'Date Of Stake'
   },
   {
     title: 'APY',
-    value: 'apy'
+    value: 'apy',
+    tooltipInfo: 'Annual Percentage Yield'
   },
   {
     title: 'Operator\'s Pref.',
-    value: 'operator_preformance'
+    value: 'operator_preformance',
+    tooltipInfo: 'Operator\'s Preformance'
   },
   {
     title: 'Validator\'s Pref.',
-    value: 'validator_preformance'
+    value: 'validator_preformance',
+    tooltipInfo: 'Validator\'s Preformance'
   },
   {
     title: 'Status',
-    value: 'status'
+    value: 'status',
+    tooltipInfo: 'Status Of Staked Item'
   },
   {
     title: 'Withdraw',
-    value: 'withdraw'
+    value: 'withdraw',
+    tooltipInfo: 'Withdraw Action'
   }
 ])
 
@@ -298,7 +308,13 @@ watch(selectedTableRow, () => {
                   class="flex w-min items-center justify-start gap-10 whitespace-nowrap"
                   @click="selectedTableHeader = header.title"
                 >
-                  {{ header.title }}
+                  <span class="tooltip 1200s:max-w-[50px] 1200s:truncate">
+                    {{ header.title }}
+                    <span class="tooltip_text">
+                      {{ header.tooltipInfo }}
+                    </span>
+                  </span>
+
                   <!-- TD: Add sorting method -->
                   <i
                     v-show="selectedTableHeader === header.title"
@@ -327,7 +343,7 @@ watch(selectedTableRow, () => {
               >
                 <div
                   v-if="header.value === 'wallet'"
-                  class="truncate pr-10 max-w-[150px]"
+                  class="truncate pr-10 max-w-[150px] 1200s:max-w-[100px]"
                 >
                   {{ item.wallet.address }}
                 </div>
@@ -360,21 +376,25 @@ watch(selectedTableRow, () => {
                   <div class="font-bold">
                     {{ new Date(item.date).toLocaleDateString() }}
                   </div>
-                  <div>
+                  <div class="not-sr-only 1400s:sr-only">
                     {{ timeElapsed(item.date) }}
                   </div>
                 </div>
 
                 <div
                   v-else-if="header.value === 'operator_preformance'"
-                  class="truncate pr-10 flex items-center gap-5"
+                  class="pr-10 flex items-center gap-5"
                 >
                   {{ item.operator_preformance.value }} 
-                  <!-- TD: Add tooltip -->
+
                   <h6 
                     v-show="item.operator_preformance.accurcy < 100"
-                    class="iconoir-warning-circle text-warning"
-                  />
+                    class="iconoir-warning-circle text-warning tooltip"
+                  >
+                    <span class="tooltip_text text-caption w-[205px]">
+                      Operator's preformance may not be 100% accurate due to offline operators
+                    </span>
+                  </h6>
                 </div>
 
                 <div
@@ -428,13 +448,86 @@ watch(selectedTableRow, () => {
           <div
             v-for="row in stakingTableHeaders"
             :key="row.value"
-            class="flex justify-between items-center text-caption pb-5"
+            class="flex justify-between items-center text-caption pb-10"
           >
             <div class="whitespace-nowrap">
               {{ row.title }}
             </div>
             <div class="w-full text-right truncate">
-              {{ item[row.value] }}
+              <div
+                v-if="row.value === 'wallet'"
+              >
+                {{ item.wallet.address }}
+              </div>
+
+              <div
+                v-else-if="row.value === 'origonal_staked'"
+              >
+                {{ item.origonal_staked }} ETH
+              </div>
+
+              <div
+                v-else-if="row.value === 'compounded_rewards'"
+              >
+                {{ item.compounded_rewards }} ETH
+              </div>
+
+              <div
+                v-else-if="row.value === 'total_staked'"
+              >
+                {{ item.total_staked }} ETH
+              </div>
+
+              <div
+                v-else-if="row.value === 'date'"
+              >
+                <div class="font-bold pb-3">
+                  {{ new Date(item.date).toLocaleDateString() }}
+                </div>
+                {{ timeElapsed(item.date) }}
+              </div>
+
+              <div
+                v-else-if="row.value === 'operator_preformance'"
+                class="flex items-center justify-end gap-5"
+              >
+                {{ item.operator_preformance.value }} 
+
+                <h6 
+                  v-show="item.operator_preformance.accurcy < 100"
+                  class="iconoir-warning-circle text-warning tooltip"
+                >
+                  <span class="tooltip_text text-caption w-[205px]">
+                    Operator's preformance may not be 100% accurate due to offline operators
+                  </span>
+                </h6>
+              </div>
+
+              <div
+                v-else-if="row.value === 'status'"
+                :class="item.status === 'In Waiting'? 'text-warning' : ''"
+              >
+                {{ item.status }}
+              </div>
+
+              <div
+                v-else-if="row.value === 'withdraw'"
+              >
+                <button 
+                  class="bg-primary py-6 px-12 text-white rounded-[5px]
+                  hover:bg-blue_7 disabled:opacity-[0.55]"
+                  :disabled="selectedTableRow"
+                  @click="selectedTableRow = item"
+                >
+                  Withdraw
+                </button>
+              </div>
+
+              <div
+                v-else 
+              >
+                {{ item[row.value] }}
+              </div>
             </div>
           </div>
         </div>
