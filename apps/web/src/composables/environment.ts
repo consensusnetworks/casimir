@@ -1,4 +1,6 @@
 export default function useEnvironment() {
+    const domain = window.location.host
+    const origin = window.location.origin
     const usersBaseURL = getUsersBaseURL()
     const ethereumURL = import.meta.env.PUBLIC_ETHEREUM_URL || 'http://127.0.0.1:8545'
     const ledgerType = import.meta.env.PUBLIC_SPECULOS_PORT ? 'speculos' : 'usb'
@@ -20,6 +22,8 @@ export default function useEnvironment() {
         }
     }
     return {
+        domain,
+        origin,
         usersBaseURL,
         ethereumURL,
         ledgerType,

@@ -5,7 +5,7 @@ import { Currency, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
 
-const { getMessage, login } = useAuth()
+const { createSiweMessage, signInWithEthereum } = useAuth()
 const { ethereumURL } = useEnvironment()
 
 const defaultProviders = {
@@ -103,15 +103,15 @@ export default function useEthers() {
     const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     try {
-      const { message } = await (await getMessage(provider, address)).json()
+      const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signer = web3Provider.getSigner()
-      const signature = await signer.signMessage(message)
-      const ethersLoginResponse = await login({ 
+      const signedMessage = await signer.signMessage(message)
+      const ethersLoginResponse = await signInWithEthereum({ 
+        address,
+        currency,
+        message, 
         provider, 
-        address, 
-        message: message.toString(), 
-        signedMessage: signature,
-        currency
+        signedMessage
       })
       return await ethersLoginResponse.json()
     } catch (err) {

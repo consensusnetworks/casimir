@@ -77,11 +77,12 @@ export default function useWallet() {
    * @returns 
   */
   async function connectWallet(provider: ProviderString, currency: Currency = 'ETH') {
+    console.clear()
     try { // Sign Up or Login
       if (!user?.value?.address) {
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
         const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
-        await loginWithWallet(provider, connectedAddress, connectedCurrency)
+        await login(provider, connectedAddress, connectedCurrency)
         const userResponse = await getUser()
         if (!userResponse?.error) {
           setUser(userResponse)
@@ -227,7 +228,7 @@ export default function useWallet() {
    * @param currency 
    * @returns 
    */
-  async function loginWithWallet(provider: ProviderString, address: string, currency: Currency) {
+  async function login(provider: ProviderString, address: string, currency: Currency) {
     if (ethersProviderList.includes(provider)) {
       return await loginWithEthers(provider, address, currency)
     } else if (provider === 'Ledger') {

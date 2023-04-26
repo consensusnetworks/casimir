@@ -1,6 +1,9 @@
 import { Postgres } from '@casimir/data'
 import { camelCase } from '@casimir/helpers'
 import { Account, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
+import useEthers from './ethers'
+
+const { generateNonce } = useEthers()
 
 const postgres = new Postgres({
     // These will become environment variables
@@ -63,6 +66,19 @@ export default function useDB() {
         const params = [user_id, account_id, createdAt]
         const rows = await postgres.query(text, params)
         return rows[0]
+    }
+
+    /**
+     * Get nonce by address.
+     * @param address - The address user is using to sign in with ethereum
+     * @returns - The nonce if address is a pk on the table or undefined
+     */
+    async function getNonce(address:string) {
+        const text = 'SELECT nonce FROM nonces WHERE address = $1;'
+        const params = [address]
+        const rows = await postgres.query(text, params)
+        const { nonce } = rows[0]
+        return formatResult(nonce)
     }
 
     /**
@@ -164,14 +180,5 @@ export default function useDB() {
         }
     }
 
-    return { addAccount, addUser, getUser, removeAccount, updateUserAddress, upsertNonce }
-}
-
-/**
- * Generate and return a nonce.
- * @returns string
- */
-function generateNonce() {
-    return (Math.floor(Math.random()
-        * (Number.MAX_SAFE_INTEGER - 1)) + 1).toString()
+    return { addAccount, addUser, getNonce, getUser, removeAccount, updateUserAddress, upsertNonce }
 }
