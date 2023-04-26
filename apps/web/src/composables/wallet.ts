@@ -93,19 +93,16 @@ export default function useWallet() {
         }
         loadingUserWallets.value = false
         router.push('/')
-      } else { // Add account
-        console.log('already logged in')
+      } else { // Add account if it doesn't already exist
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
         const connectedCurrency = await detectCurrencyInProvider(provider, currency) as Currency
         const accountExists = user.value?.accounts?.some((account: Account | any) => account?.address === connectedAddress && account?.walletProvider === provider)
-        console.log('accountExists already exists on user :>> ', accountExists)
         if (accountExists) {
           alert('Account already exists; setting provider, address, and currency')
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
         } else {
-          // If account doesn't exist, add account using users api
           console.log('adding sub account')
           const account = {
             userId: user?.value?.id,

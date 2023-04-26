@@ -2,7 +2,7 @@ import express from 'express'
 import useDB from '../providers/db'
 import Session from 'supertokens-node/recipe/session'
 import useEthers from '../providers/ethers'
-import { Account, LoginCredentials, User } from '@casimir/types'
+import { Account, User } from '@casimir/types'
 
 const { verifyMessageSignature } = useEthers()
 const { addUser, getNonce, getUser, upsertNonce } = useDB()
@@ -99,6 +99,13 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
     }
 })
 
+function parseDomain(msg: string) {
+    const uri = msg.split('URI:')[1].split('Version:')[0].trim()
+    const parsedUri = uri.split('://')[1].split('/')[0]
+    const domain = msg.split('wants you to sign in with your Ethereum account:')[0].trim()
+    return domain === parsedUri ? domain : null
+}
+
 function parseMessage(msg: string) {
     const parsedDomain = parseDomain(msg)
     const parsedNonce = parseNonce(msg)
@@ -107,13 +114,6 @@ function parseMessage(msg: string) {
 
 function parseNonce(msg: string) {
     return msg.split('Nonce:')[1].split('Issued At:')[0].trim()
-}
-
-function parseDomain(msg: string) {
-    const uri = msg.split('URI:')[1].split('Version:')[0].trim()
-    const parsedUri = uri.split('://')[1].split('/')[0]
-    const domain = msg.split('wants you to sign in with your Ethereum account:')[0].trim()
-    return domain === parsedUri ? domain : null
 }
 
 function verifyMessageDomain(domain: string): boolean {
