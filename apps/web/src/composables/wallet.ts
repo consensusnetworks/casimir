@@ -77,11 +77,12 @@ export default function useWallet() {
    * @returns 
   */
   async function connectWallet(provider: ProviderString, currency: Currency = 'ETH') {
+    console.clear()
     try { // Sign Up or Login
       if (!user?.value?.address) {
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
         const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
-        await loginWithWallet(provider, connectedAddress, connectedCurrency)
+        await login(provider, connectedAddress, connectedCurrency)
         const userResponse = await getUser()
         if (!userResponse?.error) {
           setUser(userResponse)
@@ -92,19 +93,16 @@ export default function useWallet() {
         }
         loadingUserWallets.value = false
         router.push('/')
-      } else { // Add account
-        console.log('already logged in')
+      } else { // Add account if it doesn't already exist
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
         const connectedCurrency = await detectCurrencyInProvider(provider, currency) as Currency
         const accountExists = user.value?.accounts?.some((account: Account | any) => account?.address === connectedAddress && account?.walletProvider === provider)
-        console.log('accountExists already exists on user :>> ', accountExists)
         if (accountExists) {
           alert('Account already exists; setting provider, address, and currency')
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
         } else {
-          // If account doesn't exist, add account using users api
           console.log('adding sub account')
           const account = {
             userId: user?.value?.id,
@@ -227,7 +225,7 @@ export default function useWallet() {
    * @param currency 
    * @returns 
    */
-  async function loginWithWallet(provider: ProviderString, address: string, currency: Currency) {
+  async function login(provider: ProviderString, address: string, currency: Currency) {
     if (ethersProviderList.includes(provider)) {
       return await loginWithEthers(provider, address, currency)
     } else if (provider === 'Ledger') {
