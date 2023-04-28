@@ -1,6 +1,6 @@
 import minimist from 'minimist'
 import { userStore, accountStore } from '@casimir/data'
-import { retry } from '@casimir/helpers'
+import { retryFetch } from '@casimir/helpers'
 import { Account, User } from '@casimir/types'
 
 /**
@@ -34,7 +34,7 @@ void async function () {
     
         /** Seed Account or User resources with users API */
         const port = process.env.PUBLIC_USERS_PORT || 4000
-        const seed = await retry(`http://localhost:${port}/seed/${plural}`, {
+        const seed = await retryFetch(`http://localhost:${port}/seed/${plural}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

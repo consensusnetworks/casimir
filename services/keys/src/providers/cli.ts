@@ -19,56 +19,19 @@ export class CLI {
     commands = {
         createValidator: async (args: CommandArgs) => {
             const { dkgServiceUrl, operatorIds, withdrawalAddress } = args
-            console.log('@casimir/keys')
-            console.log('Command:\n')
-            console.log('\tkeys create-validator')
-            console.log(`\t  --dkgServiceUrl ${dkgServiceUrl}`)
-            console.log(`\t  --operatorIds ${operatorIds}`)
-            console.log(`\t  --withdrawalAddress ${withdrawalAddress}\n`)
 
             const ssv = new SSV({ dkgServiceUrl })
-            
-            /** Mock the local DKG service in development mode */
-            if (ssv.dkgService.serviceUrl.includes('0.0.0.0')) {
-                console.log('Starting local DKG service...')
-                await ssv.dkgService.start()
-            }
 
             const validator = await ssv.createValidator({ operatorIds, withdrawalAddress })
-
-            /** Stop the local DKG service */
-            if (ssv.dkgService.serviceUrl.includes('0.0.0.0')) {
-                console.log('Stopping local DKG service...')
-                await ssv.dkgService.stop()
-            }
 
             return { status: 200, validator }
         },
         reshareValidator: async (args: CommandArgs) => {
             const { dkgServiceUrl, operatorIds, validatorPublicKey, oldOperatorIds } = args
-            console.log('@casimir/keys')
-            console.log('Command:\n')
-            console.log('\tkeys reshare-validator')
-            console.log(`\t  --dkgServiceUrl ${dkgServiceUrl}`)
-            console.log(`\t  --operatorIds ${operatorIds}`)
-            console.log(`\t  --validatorPublicKey ${validatorPublicKey}`)
-            console.log(`\t  --oldOperatorIds ${oldOperatorIds}\n`)
 
             const ssv = new SSV({ dkgServiceUrl })
-            
-            /** Mock the local DKG service in development mode */
-            if (ssv.dkgService.serviceUrl.includes('0.0.0.0')) {
-                console.log('Starting local DKG service...')
-                await ssv.dkgService.start()
-            }
 
             const validator = await ssv.reshareValidator({ operatorIds, validatorPublicKey, oldOperatorIds })
-
-            /** Stop the local DKG service */
-            if (ssv.dkgService.serviceUrl.includes('0.0.0.0')) {
-                console.log('Stopping local DKG service...')
-                await ssv.dkgService.stop()
-            }
 
             return { status: 200, validator }
         },

@@ -33,7 +33,7 @@ interface ICasimirManager {
     /** User staking account */
     struct User {
         uint256 stake0;
-        uint256 distributionSum0;
+        uint256 rewardRatioSum0;
     }
     /** User withdrawal */
     struct UserWithdrawal {
@@ -48,41 +48,25 @@ interface ICasimirManager {
         bytes[] sharesPublicKeys;
         bytes signature;
         bytes withdrawalCredentials;
+        uint256 reshareCount;
     }
 
     /**********/
     /* Events */
     /**********/
 
-    event PoolIncreased(
-        address indexed sender,
-        uint32 poolId,
-        uint256 amount
-    );
+    event DistributionRebalanced(address indexed sender, uint256 amount);
+    event PoolIncreased(address indexed sender, uint32 poolId, uint256 amount);
     event PoolStaked(uint32 indexed poolId);
     event PoolExitRequested(uint32 indexed poolId);
     event PoolExited(uint32 indexed poolId);
-    event RewardDistributed(
-        address indexed sender,
-        uint256 amount
-    );
-    event UserDepositDistributed(
-        address indexed sender,
-        uint256 amount
-    );
-    event UserWithdrawalRequested(
-        address indexed sender,
-        uint256 amount
-    );
-    event UserWithdrawalInitiated(
-        address indexed sender,
-        uint256 amount
-    );
-    event UserWithdrawed(
-        address indexed sender,
-        uint256 amount
-    );
-    event ValidatorAdded(bytes indexed publicKey);
+    event StakeDistributed(address indexed sender, uint256 amount);
+    event StakeWithdrawalRequested(address indexed sender, uint256 amount);
+    event StakeWithdrawalInitiated(address indexed sender, uint256 amount);
+    event StakeWithdrawn(address indexed sender, uint256 amount);
+    event RewardDistributed(address indexed sender, uint256 amount);
+    event ValidatorRegistered(bytes indexed publicKey);
+    event ValidatorReshared(bytes indexed publicKey);
 
     /*************/
     /* Functions */
@@ -90,15 +74,18 @@ interface ICasimirManager {
 
     function deposit() external payable;
 
-    function reward(uint256 amount) external;
+    function reportStake(uint256 current, uint256 withdrawn) external;
 
     function withdraw(uint256 amount) external;
 
-    function stakeNextPool() external;
+    function stakeReadyPools() external;
 
     function requestPoolExit(uint32 poolId) external;
 
-    function completePoolExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external;
+    function completePoolExit(
+        uint256 poolIndex,
+        uint256 validatorIndex
+    ) external;
 
     function registerValidator(
         bytes32 depositDataRoot,
@@ -122,27 +109,34 @@ interface ICasimirManager {
 
     function getSSVFee() external view returns (uint32);
 
-    function getStakedValidatorPublicKeys()
-        external
-        view
-        returns (bytes[] memory);
-
     function getReadyValidatorPublicKeys()
         external
         view
         returns (bytes[] memory);
 
+    function getStakedValidatorPublicKeys()
+        external
+        view
+        returns (bytes[] memory);
+
+    function getExitingValidatorCount()
+        external
+        view
+        returns (uint256);
+
     function getReadyPoolIds() external view returns (uint32[] memory);
+
+    function getPendingPoolIds() external view returns (uint32[] memory);
 
     function getStakedPoolIds() external view returns (uint32[] memory);
 
     function getStake() external view returns (uint256);
 
-    function getExecutionStake() external view returns (int256);
+    function getQueuedStake() external view returns (uint256);
 
-    function getExecutionSwept() external view returns (int256);
+    function getSweptStake() external view returns (uint256);
 
-    function getExpectedConsensusStake() external view returns (int256);
+    function getActiveStake() external view returns (uint256);
 
     function getOpenDeposits() external view returns (uint256);
 

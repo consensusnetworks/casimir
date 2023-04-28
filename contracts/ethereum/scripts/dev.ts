@@ -7,14 +7,15 @@ import { ethers } from 'hardhat'
 void async function () {
     let casimirManager: CasimirManager | undefined
     let mockFunctionsOracle: MockFunctionsOracle | undefined
-    const [, , , , , distributor] = await ethers.getSigners()
+    const [, , , , , chainlink] = await ethers.getSigners()
     let config: DeploymentConfig = {
         CasimirManager: {
             address: '',
             args: {
                 beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
-                linkOracleAddress: process.env.LINK_ORACLE_ADDRESS,
                 linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
+                oracleAddress: process.env.ORACLE_ADDRESS,
+                oracleSubId: process.env.ORACLE_SUB_ID,
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
@@ -35,12 +36,6 @@ void async function () {
                 options: {},
                 proxy: false
             },
-            MockKeeperRegistry: {
-                address: '',
-                args: {},
-                options: {},
-                proxy: false
-            },
             ...config
         }
     }
@@ -50,7 +45,7 @@ void async function () {
 
         /** Link mock external contracts to Casimir */
         if (name === 'CasimirManager') {
-            (config[name as keyof typeof config] as ContractConfig).args.linkOracleAddress = config.MockFunctionsOracle?.address
+            (config[name as keyof typeof config] as ContractConfig).args.oracleAddress = config.MockFunctionsOracle?.address
         }
 
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
@@ -111,12 +106,12 @@ void async function () {
             if (activeValidatorPublicKeys?.length) {
                 console.log(`Distributing rewards from ${activeValidatorPublicKeys.length} active validators...`)
                 const rewardAmount = (rewardPerValidator * activeValidatorPublicKeys.length).toString()
-                const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
+                const reward = await chainlink.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
                 await reward.wait()
 
                 /** Perform upkeep (todo add bounds to check data) */
                 const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-                const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+                const { ...check } = await casimirAutomation.connect(chainlink).checkUpkeep(checkData)
                 const { upkeepNeeded, performData } = check
                 if (upkeepNeeded) {
                     const performUpkeep = await casimirAutomation.performUpkeep(performData)
@@ -131,10 +126,10 @@ void async function () {
 
         /** Perform upkeep (todo add bounds to check data) */
         const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-        const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+        const { ...check } = await casimirAutomation.connect(chainlink).checkUpkeep(checkData)
         const { upkeepNeeded, performData } = check
         if (upkeepNeeded) {
-            const performUpkeep = await casimirAutomation.performUpkeep(performData)
+            const performUpkeep = await casimirAutomation.connect(chainlink).performUpkeep(performData)
             await performUpkeep.wait()
         }
 

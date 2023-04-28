@@ -95,7 +95,7 @@ export function kebabCase(string: string): string {
 }
 
 /**
- * Run any shell command with a spawned child process and return a promise.
+ * Run any shell command with a spawned child process and return a promise
  * @param fullCommand - The full command to run
  * @returns A promise that resolves when the command exits
  */
@@ -114,15 +114,35 @@ export async function run(fullCommand: string) {
 }
 
 /**
+ * Retry run any shell command with a spawned child process and return a promise
+ * @param fullCommand - The full command to run
+ * @param retriesLeft - Number of retries left (default: 5)
+ * @returns A promise that resolves when the command exits
+ */
+export async function retryRun(fullCommand: string, retriesLeft: number | undefined = 25) {
+    if (retriesLeft === 0) {
+        throw new Error('Command failed after maximum retries')
+    }
+
+    try {
+        return await run(fullCommand)
+    } catch (error) {
+        await new Promise(resolve => setTimeout(resolve, 5000))
+        console.log('Retrying command', fullCommand)
+        return await retryRun(fullCommand, retriesLeft - 1)
+    }
+}
+
+/**
  * Retry a fetch request.
  * @param {RequestInfo} info - URL string or request object
  * @param {RequestInit} init - Request init options
  * @param {number | undefined} retriesLeft - Number of retries left (default: 5)
  * @returns {Promise<Response>} Response
  * @example
- * const response = await retry('https://example.com')
+ * const response = await retryFetch('https://example.com')
  */
-export async function retry(info: RequestInfo, init?: RequestInit, retriesLeft: number | undefined = 25): Promise<Response> {
+export async function retryFetch(info: RequestInfo, init?: RequestInit, retriesLeft: number | undefined = 25): Promise<Response> {
     if (retriesLeft === 0) {
         throw new Error('API request failed after maximum retries')
     }
@@ -132,13 +152,13 @@ export async function retry(info: RequestInfo, init?: RequestInit, retriesLeft: 
         if (response.status !== 200) {
             await new Promise(resolve => setTimeout(resolve, 5000))
             console.log('Retrying fetch request to', info, init)
-            return await retry(info, init || {}, retriesLeft - 1)
+            return await retryFetch(info, init || {}, retriesLeft - 1)
         }
         return response
     } catch (error) {
         await new Promise(resolve => setTimeout(resolve, 5000))
         console.log('Retrying fetch request to', info, init)
-        return await retry(info, init || {}, retriesLeft - 1)
+        return await retryFetch(info, init || {}, retriesLeft - 1)
     }
 }
 

@@ -3,7 +3,7 @@ import { DepositData } from '../interfaces/DepositData'
 import { Shares } from '../interfaces/Shares'
 import { DKGOptions } from '../interfaces/DKGOptions'
 import { ReshareInput } from '../interfaces/ReshareInput'
-import { retry, run, getWithdrawalCredentials } from '@casimir/helpers'
+import { retryFetch, retryRun, run, getWithdrawalCredentials } from '@casimir/helpers'
 import fs from 'fs'
 
 export class DKG {
@@ -37,8 +37,10 @@ export class DKG {
         const thresholdFlag = `--threshold ${Object.keys(operators).length - 1}`
         const withdrawalCredentialsFlag = `--withdrawal-credentials ${getWithdrawalCredentials(withdrawalAddress)}`
         const forkVersionFlag = '--fork-version prater'
-        const startKeyGeneration = await run(`rockx-dkg-cli keygen ${operatorFlags} ${thresholdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`) as string
-        return startKeyGeneration.split(':')[1].trim()
+        const command = `rockx-dkg-cli keygen ${operatorFlags} ${thresholdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
+        const startKeyGeneration = await retryRun(`${command}`) as string
+        const ceremonyId = startKeyGeneration.split(' ').pop() as string
+        return ceremonyId
     }
 
     /**
@@ -69,8 +71,10 @@ export class DKG {
         const thresholdFlag = `--threshold ${Object.keys(operators).length - 1}`
         const validatorPublicKeyFlag = `--validator-public-key ${validatorPublicKey}`
         const oldOperatorFlags = Object.entries(oldOperators).map(([id, url]) => `--old-operator ${id}=${url}`).join(' ')
-        const startReshare = await run(`rockx-dkg-cli reshare ${operatorFlags} ${thresholdFlag} ${validatorPublicKeyFlag} ${oldOperatorFlags}`) as string
-        return startReshare.split(':')[1].trim()
+        const command = `rockx-dkg-cli reshare ${operatorFlags} ${thresholdFlag} ${validatorPublicKeyFlag} ${oldOperatorFlags}`
+        const startReshare = await retryRun(`${command}`) as string
+        const ceremonyId = startReshare.split(' ').pop() as string
+        return ceremonyId
     }
 
     /**
@@ -87,9 +91,13 @@ export class DKG {
      */
     async getShares(ceremonyId: string): Promise<Shares> {
         const requestIdFlag = `--request-id ${ceremonyId}`
-        const getShares = await run(`rockx-dkg-cli get-keyshares ${requestIdFlag}`) as string
-        const sharesFile = getShares.split(':')[1].trim()
-        const sharesJSON = JSON.parse(fs.readFileSync(sharesFile, 'utf8'))
+        const command = `rockx-dkg-cli get-keyshares ${requestIdFlag}`
+        const getShares = await retryRun(`${command}`) as string
+        console.log('shares getShares', getShares)
+        ceremonyId = getShares.split(':').pop() as string
+        console.log('shares ceremonyId', ceremonyId)
+        const sharesFile = `keyshares-${ceremonyId}`
+        const sharesJSON = JSON.parse(fs.readFileSync(`${sharesFile}`, 'utf8'))
         fs.rmSync(sharesFile)
         return {
             encryptedKeys: sharesJSON.data.shares.encryptedKeys.map((key: string) => '0x' + key),
@@ -116,8 +124,10 @@ export class DKG {
         const requestIdFlag = `--request-id ${ceremonyId}`
         const withdrawalCredentialsFlag = `--withdrawal-credentials 01${'0'.repeat(22)}${withdrawalAddress.split('0x')[1]}`
         const forkVersionFlag = '--fork-version prater'
-        const getDepositData = await run(`rockx-dkg-cli generate-deposit-data ${requestIdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`) as string
-        const depositDataFile = getDepositData.split('file ')[1].trim()
+        const command = `rockx-dkg-cli generate-deposit-data ${requestIdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
+        const getDepositData = await retryRun(`${command}`) as string
+        const datetime = getDepositData.split(' ').pop() as string
+        const depositDataFile = `depositdata-${datetime}`
         const depositData = JSON.parse(fs.readFileSync(depositDataFile, 'utf8'))
         fs.rmSync(depositDataFile)
         const {
@@ -131,44 +141,6 @@ export class DKG {
             publicKey: `0x${publicKey}`,
             signature: `0x${signature}`,
             withdrawalCredentials: `0x${withdrawalCredentials}`
-        }
-    }
-
-    /**
-     * Start the local key generation API service
-     * @returns {Promise<boolean>}
-     */
-    async start(): Promise<void> {
-
-        await run('docker compose -f scripts/resources/rockx-dkg-cli/docker-compose.yaml up -d')
-
-        /** Wait for the success */
-        let pong = false
-        while (!pong) {
-            pong = await this.ping()
-            await new Promise(resolve => setTimeout(resolve, 500))
-        }
-    }
-
-    /**
-     * Stop the local key generation API service
-     * @returns {Promise<void>}
-     */
-    async stop(): Promise<void> {
-        await run('docker compose -f scripts/resources/rockx-dkg-cli/docker-compose.yaml down')
-    }
-
-    /**
-     * Ping the key generation service for a pong
-     * @returns {Promise<boolean>}
-     */
-    async ping(): Promise<boolean> {
-        try {
-            const ping = await retry(`${this.serviceUrl}/ping`)
-            const { message } = await ping.json()
-            return message === 'pong'
-        } catch (error) {
-            return false
         }
     }
 }

@@ -10,16 +10,17 @@ const rewardPerValidator = 0.1
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
-    let casimirManager: CasimirManager | undefined
+    let manager: CasimirManager | undefined
     let mockFunctionsOracle: MockFunctionsOracle | undefined
-    const [owner, , , , , distributor] = await ethers.getSigners()
+    const [owner, , , , , chainlink] = await ethers.getSigners()
     let config: DeploymentConfig = {
         CasimirManager: {
             address: '',
             args: {
                 beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
-                linkOracleAddress: process.env.LINK_ORACLE_ADDRESS,
                 linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
+                oracleAddress: process.env.ORACLE_ADDRESS,
+                oracleSubId: process.env.ORACLE_SUB_ID,
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
@@ -40,12 +41,6 @@ export async function deploymentFixture() {
                 options: {},
                 proxy: false
             },
-            MockKeeperRegistry: {
-                address: '',
-                args: {},
-                options: {},
-                proxy: false
-            },
             ...config
         }
     }
@@ -55,7 +50,7 @@ export async function deploymentFixture() {
 
         /** Link mock external contracts to Casimir */
         if (name === 'CasimirManager') {
-            (config[name as keyof typeof config] as ContractConfig).args.linkOracleAddress = config.MockFunctionsOracle?.address
+            (config[name as keyof typeof config] as ContractConfig).args.oracleAddress = config.MockFunctionsOracle?.address
         }
 
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
@@ -70,21 +65,21 @@ export async function deploymentFixture() {
         (config[name as keyof DeploymentConfig] as ContractConfig).address = address
 
         // Save SSV manager for export
-        if (name === 'CasimirManager') casimirManager = contract as CasimirManager
+        if (name === 'CasimirManager') manager = contract as CasimirManager
 
         // Save mock Functions oracle for export
         if (name === 'MockFunctionsOracle') mockFunctionsOracle = contract as MockFunctionsOracle
     }
 
-    const automationAddress = await casimirManager?.getAutomationAddress() as string
-    const casimirAutomation = await ethers.getContractAt('CasimirAutomation', automationAddress) as CasimirAutomation
+    const automationAddress = await manager?.getAutomationAddress() as string
+    const automation = await ethers.getContractAt('CasimirAutomation', automationAddress) as CasimirAutomation
 
-    return { casimirManager: casimirManager as CasimirManager, casimirAutomation: casimirAutomation as CasimirAutomation, mockFunctionsOracle, owner, distributor }
+    return { manager: manager as CasimirManager, automation: automation as CasimirAutomation, mockFunctionsOracle, owner, chainlink }
 }
 
 /** Fixture to add validators */
 export async function registerValidatorsFixture() {
-    const { casimirManager, casimirAutomation, mockFunctionsOracle, owner, distributor } = await loadFixture(deploymentFixture)
+    const { manager, automation, mockFunctionsOracle, owner, chainlink } = await loadFixture(deploymentFixture)
 
     const validators = Object.keys(validatorStore).map((key) => validatorStore[key]) as Validator[]
     for (const validator of validators) {
@@ -97,7 +92,7 @@ export async function registerValidatorsFixture() {
             signature,
             withdrawalCredentials
         } = validator
-        const registerValidator = await casimirManager.registerValidator(
+        const registerValidator = await manager.registerValidator(
             depositDataRoot,
             publicKey,
             operatorIds,
@@ -108,200 +103,339 @@ export async function registerValidatorsFixture() {
         )
         await registerValidator.wait()
     }
-    return { casimirManager, casimirAutomation, mockFunctionsOracle, owner, distributor, validators }
+    return { manager, automation, mockFunctionsOracle, owner, chainlink, validators }
 }
 
 /** Fixture to stake 16 ETH for the first user */
 export async function firstUserDepositFixture() {
-    const { casimirManager, casimirAutomation, mockFunctionsOracle, owner, distributor } = await loadFixture(registerValidatorsFixture)
+    const { manager, automation, mockFunctionsOracle, owner, chainlink } = await loadFixture(registerValidatorsFixture)
     const [, firstUser] = await ethers.getSigners()
-    const stakeAmount = 16.0
-    const fees = { ...await casimirManager.getFees() }
+
+    const stakeAmount = 16
+
+    const fees = { ...await manager.getFees() }
     const feePercent = fees.LINK + fees.SSV
     const depositAmount = stakeAmount * ((100 + feePercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await casimirManager.connect(firstUser).deposit({ value })
+    const deposit = await manager.connect(firstUser).deposit({ value })
     await deposit.wait()
 
-    /** Perform upkeep (todo add bounds to check data) */
-    const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-    const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+    /** Perform upkeep */
+    const checkData = ethers.utils.toUtf8Bytes('')
+    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
     const { upkeepNeeded, performData } = check
     if (upkeepNeeded) {
-        const performUpkeep = await casimirAutomation.performUpkeep(performData)
+        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
         await performUpkeep.wait()
     }
-
-    return { casimirManager, casimirAutomation, mockFunctionsOracle, owner, distributor, firstUser }
+    return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser }
 }
 
 /** Fixture to stake 24 ETH for the second user */
 export async function secondUserDepositFixture() {
-    const { casimirManager, casimirAutomation, mockFunctionsOracle, owner, distributor, firstUser } = await loadFixture(firstUserDepositFixture)
+    const { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser } = await loadFixture(firstUserDepositFixture)
     const [, , secondUser] = await ethers.getSigners()
-    const stakeAmount = 24.0
-    const fees = { ...await casimirManager.getFees() }
+
+    const stakeAmount = 24
+    const nextActiveAmount = 32
+    const nextSweptAmount = 0
+
+    const fees = { ...await manager.getFees() }
     const feePercent = fees.LINK + fees.SSV
     const depositAmount = stakeAmount * ((100 + feePercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await casimirManager.connect(secondUser).deposit({ value })
+    const deposit = await manager.connect(secondUser).deposit({ value })
     await deposit.wait()
 
-    /** Perform upkeep (todo add bounds to check data) */
-    const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-    const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+    /** Perform upkeep */
+    const checkData = ethers.utils.toUtf8Bytes('')
+    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
     const { upkeepNeeded, performData } = check
     if (upkeepNeeded) {
-        const performUpkeep = await casimirAutomation.performUpkeep(performData)
+        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
+        await performUpkeep.wait()
+    }
+
+    /** Fulfill oracle answer */
+    if (mockFunctionsOracle) {
+        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
+        const responseBytes = ethers.utils.defaultAbiCoder.encode(
+            ['uint256', 'uint256'],
+            [
+                ethers.utils.parseEther(nextActiveAmount.toString()),
+                ethers.utils.parseEther(nextSweptAmount.toString())
+            ]
+        )
+        const errorBytes = ethers.utils.toUtf8Bytes('')
+        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
+        await mockFulfillRequest.wait()
+    }
+    return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser }
+}
+
+/** Fixture to reward 0.1 ETH in total to the first and second user */
+export async function rewardPostSecondUserDepositFixture() {
+    const { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
+
+    const rewardAmount = 0.1
+    const nextActiveAmount = 32 + rewardAmount
+    const nextSweptAmount = 0
+
+    /** Perform upkeep */
+    const checkData = ethers.utils.toUtf8Bytes('')
+    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
+    const { upkeepNeeded, performData } = check
+    if (upkeepNeeded) {
+        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
         await performUpkeep.wait()
     }
 
     /** Fulfill mock Functions oracle answer */
     if (mockFunctionsOracle) {
-        //
+        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
+        const responseBytes = ethers.utils.defaultAbiCoder.encode(
+            ['uint256', 'uint256'],
+            [
+                ethers.utils.parseEther(nextActiveAmount.toString()),
+                ethers.utils.parseEther(nextSweptAmount.toString())
+            ]
+        )
+        const errorBytes = ethers.utils.toUtf8Bytes('')
+        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
+        await mockFulfillRequest.wait()
     }
-
-    return { casimirManager, casimirAutomation, mockFunctionsOracle, owner, distributor, firstUser, secondUser }
+    return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser }
 }
 
-/** Fixture to reward ${rewardPerValidator} * ${stakedValidatorCount} to the first and second user */
-export async function rewardPostSecondUserDepositFixture() {
-    const { casimirManager, casimirAutomation, mockFunctionsOracle, owner, distributor, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
-    const stakedValidatorCount = (await casimirManager?.getStakedValidatorPublicKeys())?.length
-    if (stakedValidatorCount) {
-        const rewardAmount = (rewardPerValidator * stakedValidatorCount).toString()
-        const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-        await reward.wait()
+/** Fixture to sweep 0.1 ETH to the manager */
+export async function sweepPostSecondUserDepositFixture() {
+    const { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
 
-        /** Perform upkeep (todo add bounds to check data) */
-        const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-        const { ...check } = await casimirAutomation.checkUpkeep(checkData)
-        const { upkeepNeeded, performData } = check
-        if (upkeepNeeded) {
-            const performUpkeep = await casimirAutomation.performUpkeep(performData)
-            await performUpkeep.wait()
-        }
+    const nextActiveAmount = 32
+    const nextSweptAmount = 0.1
+
+    const sweep = await chainlink.sendTransaction({ to: manager?.address, value: ethers.utils.parseEther('0.1') })
+    await sweep.wait()
+
+    /** Perform upkeep */
+    const checkData = ethers.utils.toUtf8Bytes('')
+    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
+    const { upkeepNeeded, performData } = check
+    if (upkeepNeeded) {
+        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
+        await performUpkeep.wait()
     }
-    return { casimirManager, casimirAutomation, mockFunctionsOracle, owner, distributor, firstUser, secondUser }
+
+    /** Fulfill oracle answer */
+    if (mockFunctionsOracle) {
+        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
+        const responseBytes = ethers.utils.defaultAbiCoder.encode(
+            ['uint256', 'uint256'],
+            [
+                ethers.utils.parseEther(nextActiveAmount.toString()),
+                ethers.utils.parseEther(nextSweptAmount.toString())
+            ]
+        )
+        const errorBytes = ethers.utils.toUtf8Bytes('')
+        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
+        await mockFulfillRequest.wait()
+    }
+    return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser }
 }
 
 /** Fixture to stake 24 ETH for the third user */
 export async function thirdUserDepositFixture() {
-    const { casimirManager, casimirAutomation, mockFunctionsOracle, owner, distributor, firstUser, secondUser } = await loadFixture(rewardPostSecondUserDepositFixture)
+    const { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser } = await loadFixture(sweepPostSecondUserDepositFixture)
     const [, , , thirdUser] = await ethers.getSigners()
-    const stakeAmount = 24.0
-    const fees = { ...await casimirManager.getFees() }
+
+    const stakeAmount = 24
+    const nextActiveAmount = 64
+    const nextSweptAmount = 0
+
+    const fees = { ...await manager.getFees() }
     const feePercent = fees.LINK + fees.SSV
     const depositAmount = stakeAmount * ((100 + feePercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await casimirManager.connect(thirdUser).deposit({ value })
+    const deposit = await manager.connect(thirdUser).deposit({ value })
     await deposit.wait()
 
-    /** Perform upkeep (todo add bounds to check data) */
-    const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-    const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+    /** Perform upkeep */
+    const checkData = ethers.utils.toUtf8Bytes('')
+    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
     const { upkeepNeeded, performData } = check
     if (upkeepNeeded) {
-        const performUpkeep = await casimirAutomation.performUpkeep(performData)
+        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
         await performUpkeep.wait()
-    }
 
-    /** Fulfill mock Functions oracle answer */
-    if (mockFunctionsOracle) {
-        //
+        /** Fulfill oracle answer */
+        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
+        const responseBytes = ethers.utils.defaultAbiCoder.encode(
+            ['uint256', 'uint256'],
+            [
+                ethers.utils.parseEther(nextActiveAmount.toString()),
+                ethers.utils.parseEther(nextSweptAmount.toString())
+            ]
+        )
+        const errorBytes = ethers.utils.toUtf8Bytes('')
+        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
+        await mockFulfillRequest.wait()
     }
-
-    return { casimirManager, casimirAutomation, mockFunctionsOracle, owner, distributor, firstUser, secondUser, thirdUser }
+    return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser, thirdUser }
 }
 
-/** Fixture to reward ${rewardPerValidator} * ${stakedValidatorCount} to the first, second, and third user */
+/** Fixture to reward 0.2 ETH in total to the first, second, and third user */
 export async function rewardPostThirdUserDepositFixture() {
-    const { casimirManager, casimirAutomation, mockFunctionsOracle, distributor, firstUser, secondUser, thirdUser } = await loadFixture(thirdUserDepositFixture)
-    const stakedValidatorCount = (await casimirManager?.getStakedValidatorPublicKeys())?.length
-    if (stakedValidatorCount) {
-        const rewardAmount = (rewardPerValidator * stakedValidatorCount).toString()
-        const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-        await reward.wait()
+    const { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser, thirdUser } = await loadFixture(thirdUserDepositFixture)
 
-        /** Perform upkeep (todo add bounds to check data) */
-        const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-        const { ...check } = await casimirAutomation.checkUpkeep(checkData)
-        const { upkeepNeeded, performData } = check
-        if (upkeepNeeded) {
-            const performUpkeep = await casimirAutomation.performUpkeep(performData)
-            await performUpkeep.wait()
-        }
-    }
-    return { casimirManager, casimirAutomation, mockFunctionsOracle, distributor, firstUser, secondUser, thirdUser }
-}
+    const rewardAmount = 0.2
+    const nextActiveAmount = 64 + rewardAmount
+    const nextSweptAmount = 0
 
-/** Fixture to withdraw ${readyDeposits} amount to fulfill ${firstUser} partial withdrawal */
-export async function firstUserPartialWithdrawalFixture() {
-    const { casimirManager, casimirAutomation, mockFunctionsOracle, distributor, firstUser, secondUser, thirdUser } = await loadFixture(rewardPostThirdUserDepositFixture)
-    const readyDeposits = await casimirManager?.getOpenDeposits()
-    const withdrawal = await casimirManager.connect(firstUser).withdraw(readyDeposits)
-    await withdrawal.wait()
-
-    /** Perform upkeep (todo add bounds to check data) */
-    const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-    const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+    /** Perform upkeep */
+    const checkData = ethers.utils.toUtf8Bytes('')
+    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
     const { upkeepNeeded, performData } = check
     if (upkeepNeeded) {
-        const performUpkeep = await casimirAutomation.performUpkeep(performData)
+        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
         await performUpkeep.wait()
-    }
 
-    return { casimirManager, casimirAutomation, mockFunctionsOracle, distributor, firstUser, secondUser, thirdUser }
+        /** Fulfill oracle answer */
+        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
+        const responseBytes = ethers.utils.defaultAbiCoder.encode(
+            ['uint256', 'uint256'],
+            [
+                ethers.utils.parseEther(nextActiveAmount.toString()),
+                ethers.utils.parseEther(nextSweptAmount.toString())
+            ]
+        )
+        const errorBytes = ethers.utils.toUtf8Bytes('')
+        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
+        await mockFulfillRequest.wait()
+    }
+    return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser, thirdUser }
 }
 
-/** Fixture to stake 72 ETH for the fourth user */
+/** Fixture to sweep 0.2 ETH to the manager */
+export async function sweepPostThirdUserDepositFixture() {
+    const { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser, thirdUser } = await loadFixture(rewardPostThirdUserDepositFixture)
+
+    const nextActiveAmount = 64
+    const nextSweptAmount = 0.2
+
+    /** Sweep rewards before upkeep (balance will increment silently) */
+    const sweep = await chainlink.sendTransaction({ to: manager?.address, value: ethers.utils.parseEther(nextSweptAmount.toString()) })
+    await sweep.wait()
+
+    /** Perform upkeep */
+    const checkData = ethers.utils.toUtf8Bytes('')
+    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
+    const { upkeepNeeded, performData } = check
+    if (upkeepNeeded) {
+        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
+        await performUpkeep.wait()
+
+        /** Fulfill oracle answer */
+        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
+        const responseBytes = ethers.utils.defaultAbiCoder.encode(
+            ['uint256', 'uint256'],
+            [
+                ethers.utils.parseEther(nextActiveAmount.toString()),
+                ethers.utils.parseEther(nextSweptAmount.toString())
+            ]
+        )
+        const errorBytes = ethers.utils.toUtf8Bytes('')
+        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
+        await mockFulfillRequest.wait()
+    }
+    return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser, thirdUser }
+}
+
+/** Fixture to withdraw 0.3 to the first user */
+export async function firstUserPartialWithdrawalFixture() {
+    const { manager, automation, mockFunctionsOracle, chainlink, firstUser, secondUser, thirdUser } = await loadFixture(sweepPostThirdUserDepositFixture)
+    const openDeposits = await manager?.getOpenDeposits()
+    const withdraw = await manager.connect(firstUser).withdraw(openDeposits)
+    await withdraw.wait()
+    return { manager, automation, mockFunctionsOracle, chainlink, firstUser, secondUser, thirdUser }
+}
+
+/** Fixture to stake 72 for the fourth user */
 export async function fourthUserDepositFixture() {
-    const { casimirManager, casimirAutomation, mockFunctionsOracle, distributor, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
+    const { manager, automation, mockFunctionsOracle, chainlink, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
     const [, , , , fourthUser] = await ethers.getSigners()
-    const stakeAmount = 72.0
-    const fees = { ...await casimirManager.getFees() }
+
+    const stakeAmount = 72
+    const nextActiveAmount = 128
+    const nextSweptAmount = 0
+
+    const fees = { ...await manager.getFees() }
     const feePercent = fees.LINK + fees.SSV
     const depositAmount = stakeAmount * ((100 + feePercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await casimirManager.connect(fourthUser).deposit({ value })
+    const deposit = await manager.connect(fourthUser).deposit({ value })
     await deposit.wait()
 
-    /** Perform upkeep (todo add bounds to check data) */
-    const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-    const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+    /** Perform upkeep */
+    const checkData = ethers.utils.toUtf8Bytes('')
+    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
     const { upkeepNeeded, performData } = check
     if (upkeepNeeded) {
-        const performUpkeep = await casimirAutomation.performUpkeep(performData)
+        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
         await performUpkeep.wait()
-    }
 
-    /** Fulfill mock Functions oracle answer */
-    if (mockFunctionsOracle) {
-        //
+        /** Fulfill oracle answer */
+        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
+        const responseBytes = ethers.utils.defaultAbiCoder.encode(
+            ['uint256', 'uint256'],
+            [
+                ethers.utils.parseEther(nextActiveAmount.toString()),
+                ethers.utils.parseEther(nextSweptAmount.toString())
+            ]
+        )
+        const errorBytes = ethers.utils.toUtf8Bytes('')
+        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
+        await mockFulfillRequest.wait()
     }
-
-    return { casimirManager, casimirAutomation, mockFunctionsOracle, distributor, firstUser, secondUser, thirdUser, fourthUser }
+    return { manager, automation, mockFunctionsOracle, chainlink, firstUser, secondUser, thirdUser, fourthUser }
 }
 
 /** Fixture to simulate stakes and rewards */
 export async function simulationFixture() {
-    const { casimirManager, casimirAutomation, mockFunctionsOracle, distributor, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(fourthUserDepositFixture)
-    for (let i = 0; i < 5; i++) {
-        const stakedValidatorCount = (await casimirManager?.getStakedValidatorPublicKeys())?.length
-        if (stakedValidatorCount) {
-            const rewardAmount = (rewardPerValidator * stakedValidatorCount).toString()
-            const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-            await reward.wait()
+    const { manager, automation, mockFunctionsOracle, chainlink, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(fourthUserDepositFixture)
 
-            /** Perform upkeep (todo add bounds to check data) */
-            const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-            const { ...check } = await casimirAutomation.checkUpkeep(checkData)
+    let activeAmount = 128
+
+    for (let i = 0; i < 5; i++) {
+        const stakedValidatorCount = (await manager?.getStakedValidatorPublicKeys())?.length
+        if (stakedValidatorCount) {
+            const rewardAmount = rewardPerValidator * stakedValidatorCount
+            const nextActiveAmount = activeAmount + rewardAmount
+            const nextSweptAmount = 0
+
+            /** Perform upkeep */
+            const checkData = ethers.utils.toUtf8Bytes('')
+            const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
             const { upkeepNeeded, performData } = check
             if (upkeepNeeded) {
-                const performUpkeep = await casimirAutomation.performUpkeep(performData)
+                const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
                 await performUpkeep.wait()
+
+                /** Fulfill oracle answer */
+                const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
+                const responseBytes = ethers.utils.defaultAbiCoder.encode(
+                    ['uint256', 'uint256'],
+                    [
+                        ethers.utils.parseEther(nextActiveAmount.toString()),
+                        ethers.utils.parseEther(nextSweptAmount.toString())
+                    ]
+                )
+                const errorBytes = ethers.utils.toUtf8Bytes('')
+                const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
+                await mockFulfillRequest.wait()
+
+                activeAmount = nextActiveAmount // For next iteration
             }
         }
     }
-    return { casimirManager, casimirAutomation, mockFunctionsOracle, distributor, firstUser, secondUser, thirdUser, fourthUser }
+    return { manager, automation, mockFunctionsOracle, chainlink, firstUser, secondUser, thirdUser, fourthUser }
 }
