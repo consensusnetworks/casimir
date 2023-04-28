@@ -163,17 +163,7 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
             upkeepNeeded = true;
         }
 
-        /** Get amount swept to manager */
-        uint256 sweptStake = manager.getSweptStake();
-
-        /** Need upkeep for rebalance or compounding */
-        if (sweptStake >= compoundThreshold) {
-            upkeepNeeded = true;
-        } else {
-            sweptStake = 0;
-        }
-
-        performData = abi.encode(readyPoolIds, sweptStake);
+        performData = abi.encode(readyPoolIds);
     }
 
     /**
@@ -183,24 +173,22 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
         (bool upkeepNeeded, bytes memory performData) = checkUpkeep("");
         require(upkeepNeeded, "Upkeep not needed");
 
-        (uint32[] memory readyPoolIds, uint256 sweptStake) = abi.decode(
+        (uint32[] memory readyPoolIds) = abi.decode( // Is decoding more efficient than getting again?
             performData,
-            (uint32[], uint256)
+            (uint32[])
         );
 
         /** Stake the ready pools */
-        manager.stakeReadyPools();
-
-        /** Need to request a report */
-        if (readyPoolIds.length > 0 || sweptStake >= oracleThreshold) {
-            // Checked in request:
-            // - readyValidatorPublicKeys
-            // - stakedValidatorPublicKeys
-            // - exitingValidatorPublicKeys
-            // Returned in response:
-            // - activeStake
-            // - sweptStake
+        if (readyPoolIds.length > 0) {
+            manager.stakeReadyPools(); // Deposit and move ready to pending
         }
+
+        /** Request a report */
+        // bytes32 requestId = s_oracle.sendRequest(oracleSubId, requestCBOR, fulfillGasLimit);
+        // s_pendingRequests[requestId] = s_oracle.getRegistry();
+        // latestRequestId = requestId;
+
+        // emit RequestSent(requestId);
     }
 
     /**
@@ -226,6 +214,9 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
                 response,
                 (uint256, uint256)
             );
+
+            // Todo apply a sensible heuristic to bound changes in stake
+
             manager.reportStake(activeStake, sweptStake);
         }
 

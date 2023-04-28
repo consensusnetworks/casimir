@@ -2,10 +2,58 @@
 
 ## CasimirAutomation
 
+### oracleHeartbeat
+
+```solidity
+uint256 oracleHeartbeat
+```
+
+Oracle heartbeat
+
+### oracleThreshold
+
+```solidity
+uint256 oracleThreshold
+```
+
+Oracle threshold
+
+### compoundThreshold
+
+```solidity
+uint256 compoundThreshold
+```
+
+Compound threshold (0.1 ETH)
+
+### requestCBOR
+
+```solidity
+bytes requestCBOR
+```
+
+Serialized oracle source code
+
+### latestRequestId
+
+```solidity
+bytes32 latestRequestId
+```
+
+Latest oracle request ID
+
+### fulfillGasLimit
+
+```solidity
+uint32 fulfillGasLimit
+```
+
+Oracle fulfillment gas limit
+
 ### constructor
 
 ```solidity
-constructor(address casimirManagerAddress, address linkFunctionsAddress) public
+constructor(address managerAddress, address oracleAddress, uint64 _oracleSubId) public
 ```
 
 Constructor
@@ -14,43 +62,64 @@ Constructor
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| casimirManagerAddress | address | The manager contract address |
-| linkFunctionsAddress | address |  |
+| managerAddress | address | The manager contract address |
+| oracleAddress | address | The oracle contract address |
+| _oracleSubId | uint64 | The oracle subscription ID |
 
-### checkUpkeep
+### generateRequest
 
 ```solidity
-function checkUpkeep(bytes checkData) external view returns (bool upkeepNeeded, bytes performData)
+function generateRequest(string source, bytes secrets, string[] args) public pure returns (bytes)
 ```
 
-Check if the upkeep is needed
+Generate a new Functions.Request(off-chain, saving gas)
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| checkData | bytes | The data to check the upkeep |
+| source | string | JavaScript source code |
+| secrets | bytes | Encrypted secrets payload |
+| args | string[] | List of arguments accessible from within the source code |
+
+### setRequest
+
+```solidity
+function setRequest(uint32 _fulfillGasLimit, uint64 _oracleSubId, bytes _requestCBOR) external
+```
+
+Set the bytes representing the CBOR-encoded Functions.Request
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _fulfillGasLimit | uint32 | Maximum amount of gas used to call the client contract's `handleOracleFulfillment` function |
+| _oracleSubId | uint64 | The oracle billing subscription ID used to pay for Functions requests |
+| _requestCBOR | bytes | Bytes representing the CBOR-encoded Functions.Request |
+
+### checkUpkeep
+
+```solidity
+function checkUpkeep(bytes) public view returns (bool upkeepNeeded, bytes performData)
+```
+
+Check if the upkeep is needed
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | upkeepNeeded | bool | True if the upkeep is needed |
-| performData | bytes | The data to perform the upkeep |
+| performData | bytes |  |
 
 ### performUpkeep
 
 ```solidity
-function performUpkeep(bytes performData) external
+function performUpkeep(bytes) external
 ```
 
 Perform the upkeep
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| performData | bytes | The data to perform the upkeep |
 
 ### fulfillRequest
 
@@ -66,12 +135,12 @@ Callback that is invoked once the DON has resolved the request or hit an error
 | ---- | ---- | ----------- |
 | requestId | bytes32 | The request ID, returned by sendRequest() |
 | response | bytes | Aggregated response from the user code |
-| err | bytes | Aggregated error from the user code or from the execution pipeline Either response or error parameter will be set, but never both |
+| err | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
 
 ### setOracleAddress
 
 ```solidity
-function setOracleAddress(address oracle) external
+function setOracleAddress(address newOracleAddress) external
 ```
 
 Update the functions oracle address
@@ -80,7 +149,23 @@ Update the functions oracle address
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| oracle | address | New oracle address |
+| newOracleAddress | address | New oracle address |
+
+### mockFulfillRequest
+
+```solidity
+function mockFulfillRequest(bytes32 requestId, bytes response, bytes err) external
+```
+
+Fulfill the request for testing
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | bytes32 | The request ID, returned by sendRequest() |
+| response | bytes | Aggregated response from the user code |
+| err | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
 
 ## CasimirManager
 
@@ -94,18 +179,26 @@ enum Token {
 }
 ```
 
+### latestActiveStake
+
+```solidity
+uint256 latestActiveStake
+```
+
+Latest active (consensus) balance reported from automation
+
 ### lastPoolId
 
 ```solidity
 uint256 lastPoolId
 ```
 
-Last pool ID generated for a new pool
+Last pool ID created
 
-### distributionSum
+### rewardRatioSum
 
 ```solidity
-uint256 distributionSum
+uint256 rewardRatioSum
 ```
 
 Sum of scaled reward to stake ratios (intial value required)
@@ -129,7 +222,7 @@ SSV fee percentage (intial value required)
 ### constructor
 
 ```solidity
-constructor(address beaconDepositAddress, address linkOracleAddress, address linkTokenAddress, address ssvNetworkAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
+constructor(address beaconDepositAddress, address linkTokenAddress, address oracleAddress, uint64 oracleSubId, address ssvNetworkAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
 ```
 
 Constructor
@@ -139,27 +232,35 @@ Constructor
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | beaconDepositAddress | address | The Beacon deposit address |
-| linkOracleAddress | address | The Chainlink functions oracle address |
 | linkTokenAddress | address | The Chainlink token address |
+| oracleAddress | address | The Chainlink functions oracle address |
+| oracleSubId | uint64 | The Chainlink functions oracle subscription ID |
 | ssvNetworkAddress | address | The SSV network address |
 | ssvTokenAddress | address | The SSV token address |
 | swapFactoryAddress | address | The Uniswap factory address |
 | swapRouterAddress | address | The Uniswap router address |
 | wethTokenAddress | address | The WETH contract address |
 
-### reward
+### reportStake
 
 ```solidity
-function reward(uint256 amount) external
+function reportStake(uint256 active, uint256 swept) external
 ```
 
-_Distribute ETH rewards_
+Report the latest consensus stake to the manager
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amount | uint256 | The amount of ETH to reward |
+| active | uint256 | The active consensus stake |
+| swept | uint256 | The swept consensus stake |
+
+### getPrincipal
+
+```solidity
+function getPrincipal() public view returns (uint256)
+```
 
 ### deposit
 
@@ -199,13 +300,13 @@ function completeNextWithdrawal() external
 
 Complete the next withdrawal of user stake from exited deposits
 
-### stakeNextPool
+### stakeReadyPools
 
 ```solidity
-function stakeNextPool() external
+function stakeReadyPools() external
 ```
 
-Stake the next ready pool
+Stake the ready pools
 
 ### requestPoolExit
 
@@ -224,7 +325,7 @@ Request a pool exit
 ### completePoolExit
 
 ```solidity
-function completePoolExit(uint256 poolStakedIndex, uint256 validatorStakedIndex, uint256 validatorExitingIndex) external
+function completePoolExit(uint256 poolIndex, uint256 validatorIndex) external
 ```
 
 Complete a pool exit
@@ -233,9 +334,22 @@ Complete a pool exit
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| poolStakedIndex | uint256 | The pool's staked index |
-| validatorStakedIndex | uint256 | The validator's staked index |
-| validatorExitingIndex | uint256 | The validator's exiting index |
+| poolIndex | uint256 | The staked pool index |
+| validatorIndex | uint256 | The staked validator (internal) index |
+
+### registerOperator
+
+```solidity
+function registerOperator(uint32 operatorId) external payable
+```
+
+Register an operator with the pool manager
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint32 | The operator ID |
 
 ### registerValidator
 
@@ -256,6 +370,23 @@ Register a validator with the pool manager
 | sharesPublicKeys | bytes[] | The public keys of the shares |
 | signature | bytes | The signature |
 | withdrawalCredentials | bytes | The withdrawal credentials |
+
+### reshareValidator
+
+```solidity
+function reshareValidator(bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys) external
+```
+
+Reshare a registered validator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| publicKey | bytes | The validator public key |
+| operatorIds | uint32[] | The operator IDs |
+| sharesEncrypted | bytes[] | The encrypted shares |
+| sharesPublicKeys | bytes[] | The public keys of the shares |
 
 ### setLINKFee
 
@@ -299,20 +430,6 @@ Update the functions oracle address
 | ---- | ---- | ----------- |
 | oracle | address | New oracle address |
 
-### getFees
-
-```solidity
-function getFees() public view returns (struct ICasimirManager.Fees fees)
-```
-
-Get the current token fees as percentages
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| fees | struct ICasimirManager.Fees | The current token fees as percentages |
-
 ### getStake
 
 ```solidity
@@ -327,50 +444,47 @@ Get the total manager stake
 | ---- | ---- | ----------- |
 | stake | uint256 | The total manager stake |
 
-### getExecutionStake
+### getQueuedStake
 
 ```solidity
-function getExecutionStake() public view returns (int256 executionStake)
+function getQueuedStake() public view returns (uint256 queuedStake)
 ```
 
-Get the total manager execution stake
+Get the total manager queued (execution) stake
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| executionStake | int256 | The total manager execution stake |
+| queuedStake | uint256 | The total manager queued (execution) stake |
 
-### getExecutionSwept
+### getSweptStake
 
 ```solidity
-function getExecutionSwept() public view returns (int256 executionSwept)
+function getSweptStake() public view returns (uint256 sweptStake)
 ```
 
-Get the total manager execution swept amount
+Get the total manager swept (execution) stake
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| executionSwept | int256 | The total manager execution swept amount |
+| sweptStake | uint256 | The total manager swept (execution) stake |
 
-### getExpectedConsensusStake
+### getActiveStake
 
 ```solidity
-function getExpectedConsensusStake() public view returns (int256 expectedConsensusStake)
+function getActiveStake() public view returns (uint256 activeStake)
 ```
 
-Get the total manager expected consensus stake
-
-_Pending user withdrawal amount is subtracted from the expected stake
-The expected stake will be honored with penalty recovery in place_
+Get the manager active (consensus) stake
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| expectedConsensusStake | int256 | The total manager expected consensus stake |
+| activeStake | uint256 | The total manager active (consensus) stake |
 
 ### getUserStake
 
@@ -391,6 +505,20 @@ Get the total user stake for a given user address
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | userStake | uint256 | The total user stake |
+
+### getFees
+
+```solidity
+function getFees() public view returns (struct ICasimirManager.Fees fees)
+```
+
+Get the current token fees as percentages
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| fees | struct ICasimirManager.Fees | The current token fees as percentages |
 
 ### getLINKFee
 
@@ -420,6 +548,20 @@ Get the SSV fee percentage to charge on each deposit
 | ---- | ---- | ----------- |
 | [0] | uint32 | The SSV fee percentage to charge on each deposit |
 
+### getReadyValidatorPublicKeys
+
+```solidity
+function getReadyValidatorPublicKeys() external view returns (bytes[])
+```
+
+Get ready validator public keys
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes[] | A list of inactive validator public keys |
+
 ### getStakedValidatorPublicKeys
 
 ```solidity
@@ -434,19 +576,19 @@ Get staked validator public keys
 | ---- | ---- | ----------- |
 | [0] | bytes[] | A list of active validator public keys |
 
-### getReadyValidatorPublicKeys
+### getExitingValidatorCount
 
 ```solidity
-function getReadyValidatorPublicKeys() external view returns (bytes[])
+function getExitingValidatorCount() external view returns (uint256)
 ```
 
-Get ready validator public keys
+Get the count of exiting validators
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes[] | A list of inactive validator public keys |
+| [0] | uint256 | The count of exiting validators |
 
 ### getOpenPoolIds
 
@@ -475,6 +617,20 @@ Get a list of all ready pool IDs
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint32[] | A list of all ready pool IDs |
+
+### getPendingPoolIds
+
+```solidity
+function getPendingPoolIds() external view returns (uint32[])
+```
+
+Get a list of all pending pool IDs
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint32[] | A list of all pending pool IDs |
 
 ### getStakedPoolIds
 
@@ -549,6 +705,15 @@ Used for mocking sweeps from Beacon to the manager_
 
 ## ICasimirAutomation
 
+### OracleReport
+
+```solidity
+struct OracleReport {
+  uint256 activeStake;
+  uint256 withdrawnStake;
+}
+```
+
 ### OCRResponse
 
 ```solidity
@@ -612,6 +777,12 @@ Always validate the data passed in._
 function setOracleAddress(address oracleAddress) external
 ```
 
+### mockFulfillRequest
+
+```solidity
+function mockFulfillRequest(bytes32 requestId, bytes result, bytes err) external
+```
+
 ## ICasimirManager
 
 ### ProcessedDeposit
@@ -659,7 +830,7 @@ struct PoolDetails {
 ```solidity
 struct User {
   uint256 stake0;
-  uint256 distributionSum0;
+  uint256 rewardRatioSum0;
 }
 ```
 
@@ -682,7 +853,14 @@ struct Validator {
   bytes[] sharesPublicKeys;
   bytes signature;
   bytes withdrawalCredentials;
+  uint256 reshareCount;
 }
+```
+
+### DistributionRebalanced
+
+```solidity
+event DistributionRebalanced(address sender, uint256 amount)
 ```
 
 ### PoolIncreased
@@ -709,40 +887,46 @@ event PoolExitRequested(uint32 poolId)
 event PoolExited(uint32 poolId)
 ```
 
+### StakeDistributed
+
+```solidity
+event StakeDistributed(address sender, uint256 amount)
+```
+
+### StakeWithdrawalRequested
+
+```solidity
+event StakeWithdrawalRequested(address sender, uint256 amount)
+```
+
+### StakeWithdrawalInitiated
+
+```solidity
+event StakeWithdrawalInitiated(address sender, uint256 amount)
+```
+
+### StakeWithdrawn
+
+```solidity
+event StakeWithdrawn(address sender, uint256 amount)
+```
+
 ### RewardDistributed
 
 ```solidity
 event RewardDistributed(address sender, uint256 amount)
 ```
 
-### UserDepositDistributed
+### ValidatorRegistered
 
 ```solidity
-event UserDepositDistributed(address sender, uint256 amount)
+event ValidatorRegistered(bytes publicKey)
 ```
 
-### UserWithdrawalRequested
+### ValidatorReshared
 
 ```solidity
-event UserWithdrawalRequested(address sender, uint256 amount)
-```
-
-### UserWithdrawalInitiated
-
-```solidity
-event UserWithdrawalInitiated(address sender, uint256 amount)
-```
-
-### UserWithdrawed
-
-```solidity
-event UserWithdrawed(address sender, uint256 amount)
-```
-
-### ValidatorAdded
-
-```solidity
-event ValidatorAdded(bytes publicKey)
+event ValidatorReshared(bytes publicKey)
 ```
 
 ### deposit
@@ -751,10 +935,10 @@ event ValidatorAdded(bytes publicKey)
 function deposit() external payable
 ```
 
-### reward
+### reportStake
 
 ```solidity
-function reward(uint256 amount) external
+function reportStake(uint256 current, uint256 withdrawn) external
 ```
 
 ### withdraw
@@ -763,10 +947,10 @@ function reward(uint256 amount) external
 function withdraw(uint256 amount) external
 ```
 
-### stakeNextPool
+### stakeReadyPools
 
 ```solidity
-function stakeNextPool() external
+function stakeReadyPools() external
 ```
 
 ### requestPoolExit
@@ -778,7 +962,7 @@ function requestPoolExit(uint32 poolId) external
 ### completePoolExit
 
 ```solidity
-function completePoolExit(uint256 poolIndex, uint256 stakedValidatorIndex, uint256 exitingValidatorIndex) external
+function completePoolExit(uint256 poolIndex, uint256 validatorIndex) external
 ```
 
 ### registerValidator
@@ -823,22 +1007,34 @@ function getLINKFee() external view returns (uint32)
 function getSSVFee() external view returns (uint32)
 ```
 
-### getStakedValidatorPublicKeys
-
-```solidity
-function getStakedValidatorPublicKeys() external view returns (bytes[])
-```
-
 ### getReadyValidatorPublicKeys
 
 ```solidity
 function getReadyValidatorPublicKeys() external view returns (bytes[])
 ```
 
+### getStakedValidatorPublicKeys
+
+```solidity
+function getStakedValidatorPublicKeys() external view returns (bytes[])
+```
+
+### getExitingValidatorCount
+
+```solidity
+function getExitingValidatorCount() external view returns (uint256)
+```
+
 ### getReadyPoolIds
 
 ```solidity
 function getReadyPoolIds() external view returns (uint32[])
+```
+
+### getPendingPoolIds
+
+```solidity
+function getPendingPoolIds() external view returns (uint32[])
 ```
 
 ### getStakedPoolIds
@@ -853,22 +1049,22 @@ function getStakedPoolIds() external view returns (uint32[])
 function getStake() external view returns (uint256)
 ```
 
-### getExecutionStake
+### getQueuedStake
 
 ```solidity
-function getExecutionStake() external view returns (int256)
+function getQueuedStake() external view returns (uint256)
 ```
 
-### getExecutionSwept
+### getSweptStake
 
 ```solidity
-function getExecutionSwept() external view returns (int256)
+function getSweptStake() external view returns (uint256)
 ```
 
-### getExpectedConsensusStake
+### getActiveStake
 
 ```solidity
-function getExpectedConsensusStake() external view returns (int256)
+function getActiveStake() external view returns (uint256)
 ```
 
 ### getOpenDeposits
