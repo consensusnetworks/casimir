@@ -10,7 +10,8 @@ interface ICasimirAutomation is AutomationCompatibleInterface {
 
     struct OracleReport {
         uint256 activeStake;
-        uint256 withdrawnStake;
+        uint256 sweptRewards;
+        uint256 sweptExits;
         // bytes[] exitedValidatorPublicKeys;
         // uint256[] exitedValidatorIndices;
     }

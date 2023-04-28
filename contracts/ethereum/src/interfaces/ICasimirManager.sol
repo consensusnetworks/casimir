@@ -74,13 +74,15 @@ interface ICasimirManager {
 
     function deposit() external payable;
 
-    function reportStake(uint256 current, uint256 withdrawn) external;
+    function rebalance(uint256 activeStake, uint256 sweptRewards) external;
 
     function withdraw(uint256 amount) external;
 
     function stakeReadyPools() external;
 
-    function requestPoolExit(uint32 poolId) external;
+    function completePendingPools() external;
+
+    function requestNextPoolExit() external;
 
     function completePoolExit(
         uint256 poolIndex,
@@ -141,4 +143,9 @@ interface ICasimirManager {
     function getOpenDeposits() external view returns (uint256);
 
     function getUserStake(address userAddress) external view returns (uint256);
+
+    function getRequestedWithdrawals() external view returns (uint256);
+
+    function getPendingWithdrawals() external view returns (uint256);
+
 }

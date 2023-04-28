@@ -137,8 +137,9 @@ export async function secondUserDepositFixture() {
     const [, , secondUser] = await ethers.getSigners()
 
     const stakeAmount = 24
-    const nextActiveAmount = 32
-    const nextSweptAmount = 0
+    const nextActiveStakeAmount = 32
+    const nextSweptRewardsAmount = 0
+    const nextSweptExitsAmount = 0
 
     const fees = { ...await manager.getFees() }
     const feePercent = fees.LINK + fees.SSV
@@ -160,10 +161,11 @@ export async function secondUserDepositFixture() {
     if (mockFunctionsOracle) {
         const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
         const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256'],
+            ['uint256', 'uint256', 'uint256'],
             [
-                ethers.utils.parseEther(nextActiveAmount.toString()),
-                ethers.utils.parseEther(nextSweptAmount.toString())
+                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
+                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
+                ethers.utils.parseEther(nextSweptExitsAmount.toString())
             ]
         )
         const errorBytes = ethers.utils.toUtf8Bytes('')
@@ -178,8 +180,9 @@ export async function rewardPostSecondUserDepositFixture() {
     const { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
 
     const rewardAmount = 0.1
-    const nextActiveAmount = 32 + rewardAmount
-    const nextSweptAmount = 0
+    const nextActiveStakeAmount = 32 + rewardAmount
+    const nextSweptRewardsAmount = 0
+    const nextSweptExitsAmount = 0
 
     /** Perform upkeep */
     const checkData = ethers.utils.toUtf8Bytes('')
@@ -194,10 +197,11 @@ export async function rewardPostSecondUserDepositFixture() {
     if (mockFunctionsOracle) {
         const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
         const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256'],
+            ['uint256', 'uint256', 'uint256'],
             [
-                ethers.utils.parseEther(nextActiveAmount.toString()),
-                ethers.utils.parseEther(nextSweptAmount.toString())
+                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
+                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
+                ethers.utils.parseEther(nextSweptExitsAmount.toString())
             ]
         )
         const errorBytes = ethers.utils.toUtf8Bytes('')
@@ -211,8 +215,9 @@ export async function rewardPostSecondUserDepositFixture() {
 export async function sweepPostSecondUserDepositFixture() {
     const { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
 
-    const nextActiveAmount = 32
-    const nextSweptAmount = 0.1
+    const nextActiveStakeAmount = 32
+    const nextSweptRewardsAmount = 0.1
+    const nextSweptExitsAmount = 0
 
     const sweep = await chainlink.sendTransaction({ to: manager?.address, value: ethers.utils.parseEther('0.1') })
     await sweep.wait()
@@ -230,10 +235,11 @@ export async function sweepPostSecondUserDepositFixture() {
     if (mockFunctionsOracle) {
         const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
         const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256'],
+            ['uint256', 'uint256', 'uint256'],
             [
-                ethers.utils.parseEther(nextActiveAmount.toString()),
-                ethers.utils.parseEther(nextSweptAmount.toString())
+                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
+                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
+                ethers.utils.parseEther(nextSweptExitsAmount.toString())
             ]
         )
         const errorBytes = ethers.utils.toUtf8Bytes('')
@@ -249,8 +255,9 @@ export async function thirdUserDepositFixture() {
     const [, , , thirdUser] = await ethers.getSigners()
 
     const stakeAmount = 24
-    const nextActiveAmount = 64
-    const nextSweptAmount = 0
+    const nextActiveStakeAmount = 64
+    const nextSweptRewardsAmount = 0
+    const nextSweptExitsAmount = 0
 
     const fees = { ...await manager.getFees() }
     const feePercent = fees.LINK + fees.SSV
@@ -270,10 +277,11 @@ export async function thirdUserDepositFixture() {
         /** Fulfill oracle answer */
         const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
         const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256'],
+            ['uint256', 'uint256', 'uint256'],
             [
-                ethers.utils.parseEther(nextActiveAmount.toString()),
-                ethers.utils.parseEther(nextSweptAmount.toString())
+                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
+                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
+                ethers.utils.parseEther(nextSweptExitsAmount.toString())
             ]
         )
         const errorBytes = ethers.utils.toUtf8Bytes('')
@@ -288,8 +296,9 @@ export async function rewardPostThirdUserDepositFixture() {
     const { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser, thirdUser } = await loadFixture(thirdUserDepositFixture)
 
     const rewardAmount = 0.2
-    const nextActiveAmount = 64 + rewardAmount
-    const nextSweptAmount = 0
+    const nextActiveStakeAmount = 64 + rewardAmount
+    const nextSweptRewardsAmount = 0
+    const nextSweptExitsAmount = 0
 
     /** Perform upkeep */
     const checkData = ethers.utils.toUtf8Bytes('')
@@ -302,10 +311,11 @@ export async function rewardPostThirdUserDepositFixture() {
         /** Fulfill oracle answer */
         const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
         const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256'],
+            ['uint256', 'uint256', 'uint256'],
             [
-                ethers.utils.parseEther(nextActiveAmount.toString()),
-                ethers.utils.parseEther(nextSweptAmount.toString())
+                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
+                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
+                ethers.utils.parseEther(nextSweptExitsAmount.toString())
             ]
         )
         const errorBytes = ethers.utils.toUtf8Bytes('')
@@ -319,11 +329,12 @@ export async function rewardPostThirdUserDepositFixture() {
 export async function sweepPostThirdUserDepositFixture() {
     const { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser, thirdUser } = await loadFixture(rewardPostThirdUserDepositFixture)
 
-    const nextActiveAmount = 64
-    const nextSweptAmount = 0.2
+    const nextActiveStakeAmount = 64
+    const nextSweptRewardsAmount = 0.2
+    const nextSweptExitsAmount = 0
 
     /** Sweep rewards before upkeep (balance will increment silently) */
-    const sweep = await chainlink.sendTransaction({ to: manager?.address, value: ethers.utils.parseEther(nextSweptAmount.toString()) })
+    const sweep = await chainlink.sendTransaction({ to: manager?.address, value: ethers.utils.parseEther(nextSweptRewardsAmount.toString()) })
     await sweep.wait()
 
     /** Perform upkeep */
@@ -337,10 +348,11 @@ export async function sweepPostThirdUserDepositFixture() {
         /** Fulfill oracle answer */
         const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
         const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256'],
+            ['uint256', 'uint256', 'uint256'],
             [
-                ethers.utils.parseEther(nextActiveAmount.toString()),
-                ethers.utils.parseEther(nextSweptAmount.toString())
+                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
+                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
+                ethers.utils.parseEther(nextSweptExitsAmount.toString())
             ]
         )
         const errorBytes = ethers.utils.toUtf8Bytes('')
@@ -365,8 +377,9 @@ export async function fourthUserDepositFixture() {
     const [, , , , fourthUser] = await ethers.getSigners()
 
     const stakeAmount = 72
-    const nextActiveAmount = 128
-    const nextSweptAmount = 0
+    const nextActiveStakeAmount = 128
+    const nextSweptRewardsAmount = 0
+    const nextSweptExitsAmount = 0
 
     const fees = { ...await manager.getFees() }
     const feePercent = fees.LINK + fees.SSV
@@ -386,10 +399,11 @@ export async function fourthUserDepositFixture() {
         /** Fulfill oracle answer */
         const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
         const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256'],
+            ['uint256', 'uint256', 'uint256'],
             [
-                ethers.utils.parseEther(nextActiveAmount.toString()),
-                ethers.utils.parseEther(nextSweptAmount.toString())
+                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
+                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
+                ethers.utils.parseEther(nextSweptExitsAmount.toString())
             ]
         )
         const errorBytes = ethers.utils.toUtf8Bytes('')
@@ -409,8 +423,9 @@ export async function simulationFixture() {
         const stakedValidatorCount = (await manager?.getStakedValidatorPublicKeys())?.length
         if (stakedValidatorCount) {
             const rewardAmount = rewardPerValidator * stakedValidatorCount
-            const nextActiveAmount = activeAmount + rewardAmount
-            const nextSweptAmount = 0
+            const nextActiveStakeAmount = activeAmount + rewardAmount
+            const nextSweptRewardsAmount = 0
+            const nextSweptExitsAmount = 0
 
             /** Perform upkeep */
             const checkData = ethers.utils.toUtf8Bytes('')
@@ -423,17 +438,18 @@ export async function simulationFixture() {
                 /** Fulfill oracle answer */
                 const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
                 const responseBytes = ethers.utils.defaultAbiCoder.encode(
-                    ['uint256', 'uint256'],
+                    ['uint256', 'uint256', 'uint256'],
                     [
-                        ethers.utils.parseEther(nextActiveAmount.toString()),
-                        ethers.utils.parseEther(nextSweptAmount.toString())
+                        ethers.utils.parseEther(nextActiveStakeAmount.toString()),
+                        ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
+                        ethers.utils.parseEther(nextSweptExitsAmount.toString())
                     ]
                 )
                 const errorBytes = ethers.utils.toUtf8Bytes('')
                 const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
                 await mockFulfillRequest.wait()
 
-                activeAmount = nextActiveAmount // For next iteration
+                activeAmount = nextActiveStakeAmount // For next iteration
             }
         }
     }

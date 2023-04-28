@@ -199,7 +199,7 @@ describe('Casimir manager', async function () {
     console.log('📦 Open deposits', ethers.utils.formatEther(openDeposits))
     const dust = stake.sub(firstStake.add(secondStake).add(thirdStake).add(fourthStake))
     if (dust !== ethers.utils.parseEther('0.0')) {
-        console.log('🧹 Dust', ethers.utils.formatEther(dust))
+      console.log('🧹 Dust', ethers.utils.formatEther(dust))
     }
     console.log(line)
   })

@@ -43,10 +43,6 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
 
     /** Oracle heartbeat */
     uint256 public constant oracleHeartbeat = 0; // Will use ~half a day in production
-    /** Oracle threshold */
-    uint256 public constant oracleThreshold = 16 ether;
-    /** Compound threshold (0.1 ETH) */
-    uint256 public constant compoundThreshold = 100000000000000000;
 
     /*************/
     /* Contracts */
@@ -118,7 +114,6 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
         if (args.length > 0) {
             req.addArgs(args);
         }
-
         return req.encodeCBOR();
     }
 
@@ -150,15 +145,20 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
-        /** Get whether heartbeat interval is lapsed */
+        /** Check if the heartbeat interval is lapsed */
         if ((block.timestamp - latestResponseTimestamp) >= oracleHeartbeat) {
             upkeepNeeded = true;
         }
 
-        /** Get pools ready to stake */
-        uint32[] memory readyPoolIds = manager.getReadyPoolIds();
+        /** Check if any pools need to exit */
+        int256 requiredWithdrawals = int256(manager.getRequestedWithdrawals() + manager.getPendingWithdrawals()) - int256(manager.getExitingValidatorCount() * 32 ether);
+        if (requiredWithdrawals > 0) {
+            upkeepNeeded = true;
+        }
+        // Todo provide required withdrawals as performData (or some optimial input, maybe validator count)
 
-        /** Need upkeep for staking */
+        /** Check if any pools are ready */
+        uint32[] memory readyPoolIds = manager.getReadyPoolIds();
         if (readyPoolIds.length > 0) {
             upkeepNeeded = true;
         }
@@ -173,10 +173,7 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
         (bool upkeepNeeded, bytes memory performData) = checkUpkeep("");
         require(upkeepNeeded, "Upkeep not needed");
 
-        (uint32[] memory readyPoolIds) = abi.decode( // Is decoding more efficient than getting again?
-            performData,
-            (uint32[])
-        );
+        uint32[] memory readyPoolIds = abi.decode(performData, (uint32[])); // Is encode/decode more efficient than getting again?
 
         /** Stake the ready pools */
         if (readyPoolIds.length > 0) {
@@ -210,14 +207,17 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
 
         if (err.length == 0) {
             /** Decode report */
-            (uint256 activeStake, uint256 sweptStake) = abi.decode(
-                response,
-                (uint256, uint256)
-            );
+            (
+                uint256 activeStake,
+                uint256 sweptStake,
+                uint256 sweptExits
+            ) = abi.decode(response, (uint256, uint256, uint256));
 
-            // Todo apply a sensible heuristic to bound changes in stake
+            // Todo apply sensible heuristics to bound changes in stake
 
-            manager.reportStake(activeStake, sweptStake);
+            // Todo check simulation test for mistyped input
+            manager.rebalance(activeStake, sweptStake);
+            manager.completePendingPools();
         }
 
         emit OCRResponse(requestId, response, err);

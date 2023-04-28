@@ -40,8 +40,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /* Constants */
     /*************/
 
-    /** Pool capacity */
-    uint256 private constant poolCapacity = 32 ether;
     /* Distribution threshold (100 WEI) */
     uint256 private constant distributionThreshold = 100 wei;
     /** Scale factor for each reward to stake ratio */
@@ -172,33 +170,20 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Report the latest consensus stake to the manager
-     * @param active The active consensus stake
-     * @param swept The swept consensus stake
+     * @notice Rebalance the reward to stake ratio and redistribute swept rewards
+     * @param activeStake The active consensus stake
+     * @param sweptRewards The swept consensus stake
      */
-    function reportStake(uint256 active, uint256 swept) external {
+    function rebalance(uint256 activeStake, uint256 sweptRewards) external {
         require(
             msg.sender == address(automation),
             "Only automation can distribute rewards"
         );
 
-        int256 change = int256(active + swept) -
-            int256(latestActiveStake + pendingPoolIds.length * poolCapacity);
+        int256 change = int256(activeStake + sweptRewards) -
+            int256(latestActiveStake + pendingPoolIds.length * 32 ether);
 
-        /** Rebalance reward ratio */
-        rebalance(change);
-
-        /** Distribute swept */
-        distribute(swept); // Todo handle exits
-
-        /** Complete pending pools which were staked */
-        completePendingPools();
-
-        /** Update latest active balance */
-        latestActiveStake = active;
-    }
-
-    function rebalance(int256 change) private {
+        /** Update reward to stake ratio */
         if (change > 0) {
             uint256 reward = SafeCast.toUint256(change);
             // /** Reward fees set to zero for testing */
@@ -210,10 +195,12 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             rewardRatioSum -= Math.mulDiv(rewardRatioSum, penalty, getStake());
             emit DistributionRebalanced(msg.sender, penalty);
         }
-    }
 
-    function getPrincipal() public view returns (uint256) {
-        return getQueuedStake() + getActiveStake();
+        /** Distribute swept rewards */
+        distribute(sweptRewards);
+
+        /** Update latest active stake */
+        latestActiveStake = activeStake;
     }
 
     /**
@@ -255,7 +242,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             }
             Pool storage pool;
             pool = pools[poolId];
-            uint256 remainingCapacity = poolCapacity - pool.deposits;
+            uint256 remainingCapacity = 32 ether - pool.deposits;
             if (remainingCapacity > amount) {
                 /** Emit event before updating values */
                 emit PoolIncreased(msg.sender, poolId, amount);
@@ -453,7 +440,12 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @notice Move pending pools to staked
      */
-    function completePendingPools() private {
+    function completePendingPools() external {
+        require(
+            msg.sender == address(automation),
+            "Only automation can complete pending pools"
+        );
+
         while (pendingPoolIds.length > 0) {
             /** Get next pending pool */
             uint32 poolId = pendingPoolIds[0];
@@ -470,25 +462,29 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Request a pool exit
-     * @param poolId The staked pool ID
+     * @notice Request the next staked pool to exit
      */
-    function requestPoolExit(uint32 poolId) external {
+    function requestNextPoolExit() external {
         require(
             msg.sender == address(automation),
             "Only automation can request pool exits"
         );
 
-        Pool storage pool = pools[poolId];
+        for (uint256 i = 0; i < stakedPoolIds.length; i++) {
+            uint32 poolId = stakedPoolIds[i];
+            Pool storage pool = pools[poolId];
 
-        require(!pool.exiting, "Pool is already exiting");
+            if (!pool.exiting) {
+                pool.exiting = true;
 
-        pool.exiting = true;
+                /** Increase exiting validators */
+                exitingValidatorCount++;
 
-        /** Increase exiting validators */
-        exitingValidatorCount++;
+                emit PoolExitRequested(poolId);
 
-        emit PoolExitRequested(poolId);
+                break;
+            }
+        }
     }
 
     /**
@@ -754,7 +750,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function getQueuedStake() public view returns (uint256 queuedStake) {
         queuedStake =
             (readyPoolIds.length + pendingPoolIds.length) *
-            poolCapacity +
+            32 ether +
             openDeposits;
     }
 
@@ -801,19 +797,19 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     // External view functions
 
     /**
-     * @notice Get the LINK fee percentage to charge on each deposit
-     * @return The LINK fee percentage to charge on each deposit
+     * @notice Get the total requested withdrawals
+     * @return requestedWithdrawals The total requested withdrawals
      */
-    function getLINKFee() external view returns (uint32) {
-        return linkFee;
+    function getRequestedWithdrawals() external view returns (uint256) {
+        return requestedWithdrawals;
     }
 
     /**
-     * @notice Get the SSV fee percentage to charge on each deposit
-     * @return The SSV fee percentage to charge on each deposit
+     * @notice Get the total pending withdrawals
+     * @return pendingWithdrawals The total pending withdrawals
      */
-    function getSSVFee() external view returns (uint32) {
-        return ssvFee;
+    function getPendingWithdrawals() external view returns (uint256) {
+        return pendingWithdrawals;
     }
 
     /**
@@ -896,14 +892,12 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function getPoolDetails(
         uint32 poolId
     ) external view returns (PoolDetails memory poolDetails) {
+        /** Pool in open or ready state will not have validator or operators */
         Pool memory pool = pools[poolId];
-
-        /** Pool in ready state will not have validator or operators */
-        bytes memory emptyBytes = new bytes(0);
-        if (keccak256(pool.validatorPublicKey) == keccak256(emptyBytes)) {
+        if (pool.validatorPublicKey.length == 0) {
             poolDetails = PoolDetails(
                 pool.deposits,
-                emptyBytes,
+                pool.validatorPublicKey,
                 new uint32[](0),
                 pool.exiting
             );
@@ -916,6 +910,22 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 pool.exiting
             );
         }
+    }
+
+    /**
+     * @notice Get the LINK fee percentage to charge on each deposit
+     * @return The LINK fee percentage to charge on each deposit
+     */
+    function getLINKFee() external view returns (uint32) {
+        return linkFee;
+    }
+
+    /**
+     * @notice Get the SSV fee percentage to charge on each deposit
+     * @return The SSV fee percentage to charge on each deposit
+     */
+    function getSSVFee() external view returns (uint32) {
+        return ssvFee;
     }
 
     /**
