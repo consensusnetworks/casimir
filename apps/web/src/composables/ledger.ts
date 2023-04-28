@@ -1,5 +1,4 @@
 import { BitcoinLedgerSigner, EthersLedgerSigner } from '@casimir/wallets'
-import { EthersProvider } from '@/interfaces/index'
 import { ethers } from 'ethers'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
 import { Currency, ProviderString } from '@casimir/types'
@@ -7,7 +6,7 @@ import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useAuth from '@/composables/auth'
 
-const { getMessage, login } = useAuth()
+const { createSiweMessage, signInWithEthereum } = useAuth()
 
 export default function useLedger() {
   const { ethereumURL, ledgerType, speculosURL } = useEnvironment()
@@ -42,15 +41,15 @@ export default function useLedger() {
 
   async function loginWithLedger(provider: ProviderString, address: string, currency: Currency) {
     try {
-      const { message } = await (await getMessage(provider, address)).json()
+      const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signer = getEthersLedgerSigner()
-      const signature = await signer.signMessage(message)
-      const loginResponse = await login({ 
-        provider, 
+      const signedMessage = await signer.signMessage(message)
+      const loginResponse = await signInWithEthereum({ 
         address, 
-        message: message.toString(), 
-        signedMessage: signature,
-        currency
+        currency,
+        message, 
+        provider, 
+        signedMessage
       })
       return await loginResponse.json()
     } catch (err) {
