@@ -94,8 +94,8 @@ describe('Casimir manager', async function () {
 
   it('First pool\'s 0.1 is swept and compounded after some time', async function () {
     const { manager } = await loadFixture(sweepPostSecondUserDepositFixture)
-    const queuedStake = await manager.getQueuedStake()
-    expect(ethers.utils.formatEther(queuedStake)).equal('8.1')
+    const bufferedStake = await manager.getBufferedStake()
+    expect(ethers.utils.formatEther(bufferedStake)).equal('8.1')
   })
 
   it('Third user\'s 24.0 stake completes the second pool with 32.0', async function () {
@@ -147,8 +147,8 @@ describe('Casimir manager', async function () {
 
   it('First and second pool\'s 0.2 is swept and compounded after some time', async function () {
     const { manager } = await loadFixture(sweepPostThirdUserDepositFixture)
-    const queuedStake = await manager.getQueuedStake()
-    expect(ethers.utils.formatEther(queuedStake)).equal('0.3')
+    const bufferedStake = await manager.getBufferedStake()
+    expect(ethers.utils.formatEther(bufferedStake)).equal('0.3')
   })
 
   it('First user\'s 0.3 withdrawal decreases their stake to ~15.79', async function () {
@@ -187,7 +187,7 @@ describe('Casimir manager', async function () {
     const secondStake = await manager.getUserStake(secondUser.address)
     const thirdStake = await manager.getUserStake(thirdUser.address)
     const fourthStake = await manager.getUserStake(fourthUser.address)
-    
+
     const line = '----------------------------------------'
     console.log(`${line}\n💿 Simulation results\n${line}`)
     console.log('🏦 Manager stake', ethers.utils.formatEther(stake))

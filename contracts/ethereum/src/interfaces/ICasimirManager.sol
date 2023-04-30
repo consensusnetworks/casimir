@@ -35,8 +35,8 @@ interface ICasimirManager {
         uint256 stake0;
         uint256 rewardRatioSum0;
     }
-    /** User withdrawal */
-    struct UserWithdrawal {
+    /** Withdrawal */
+    struct Withdrawal {
         address user;
         uint256 amount;
     }
@@ -55,16 +55,16 @@ interface ICasimirManager {
     /* Events */
     /**********/
 
-    event DistributionRebalanced(address indexed sender, uint256 amount);
     event PoolIncreased(address indexed sender, uint32 poolId, uint256 amount);
-    event PoolStaked(uint32 indexed poolId);
+    event PoolInitiated(uint32 indexed poolId);
+    event PoolCompleted(uint32 indexed poolId);
     event PoolExitRequested(uint32 indexed poolId);
     event PoolExited(uint32 indexed poolId);
     event StakeDistributed(address indexed sender, uint256 amount);
-    event StakeWithdrawalRequested(address indexed sender, uint256 amount);
-    event StakeWithdrawalInitiated(address indexed sender, uint256 amount);
-    event StakeWithdrawn(address indexed sender, uint256 amount);
-    event RewardDistributed(address indexed sender, uint256 amount);
+    event StakeRebalanced(address indexed sender, uint256 amount);
+    event WithdrawalRequested(address indexed sender, uint256 amount);
+    event WithdrawalInitiated(address indexed sender, uint256 amount);
+    event WithdrawalCompleted(address indexed sender, uint256 amount);
     event ValidatorRegistered(bytes indexed publicKey);
     event ValidatorReshared(bytes indexed publicKey);
 
@@ -72,17 +72,21 @@ interface ICasimirManager {
     /* Functions */
     /*************/
 
-    function deposit() external payable;
+    function depositStake() external payable;
 
-    function rebalance(uint256 activeStake, uint256 sweptRewards) external;
+    function rebalanceStake(uint256 activeStake, uint256 sweptRewards) external;
 
-    function withdraw(uint256 amount) external;
+    function requestWithdrawal(uint256 amount) external;
 
-    function stakeReadyPools() external;
+    function initiateRequestedWithdrawals(uint256 count) external;
 
-    function completePendingPools() external;
+    function completePendingWithdrawals(uint256 count) external;
 
-    function requestNextPoolExit() external;
+    function initiateReadyPools(uint256 count) external;
+
+    function completePendingPools(uint256 count) external;
+
+    function requestPoolExits(uint256 count) external;
 
     function completePoolExit(
         uint256 poolIndex,
@@ -134,7 +138,7 @@ interface ICasimirManager {
 
     function getStake() external view returns (uint256);
 
-    function getQueuedStake() external view returns (uint256);
+    function getBufferedStake() external view returns (uint256);
 
     function getSweptStake() external view returns (uint256);
 

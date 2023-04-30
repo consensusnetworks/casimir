@@ -417,13 +417,13 @@ export async function fourthUserDepositFixture() {
 export async function simulationFixture() {
     const { manager, automation, mockFunctionsOracle, chainlink, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(fourthUserDepositFixture)
 
-    let activeAmount = 128
+    let nextActiveStakeAmount = 128
 
     for (let i = 0; i < 5; i++) {
         const stakedValidatorCount = (await manager?.getStakedValidatorPublicKeys())?.length
         if (stakedValidatorCount) {
             const rewardAmount = rewardPerValidator * stakedValidatorCount
-            const nextActiveStakeAmount = activeAmount + rewardAmount
+            nextActiveStakeAmount = Math.round((nextActiveStakeAmount + rewardAmount) * 10) / 10 // Fixes weird rounding error
             const nextSweptRewardsAmount = 0
             const nextSweptExitsAmount = 0
 
@@ -448,8 +448,6 @@ export async function simulationFixture() {
                 const errorBytes = ethers.utils.toUtf8Bytes('')
                 const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
                 await mockFulfillRequest.wait()
-
-                activeAmount = nextActiveStakeAmount // For next iteration
             }
         }
     }

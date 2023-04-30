@@ -33,8 +33,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     using Types32Array for uint32[];
     /** Use internal type for bytes array */
     using TypesBytesArray for bytes[];
-    /** Use internal type for user withdrawal array */
-    using TypesUserWithdrawalArray for UserWithdrawal[];
+    /** Use internal type for withdrawal array */
+    using TypesWithdrawalArray for Withdrawal[];
+    /** Use internal type for address */
+    using TypesAddress for address;
 
     /*************/
     /* Constants */
@@ -116,9 +118,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Sum of scaled reward to stake ratios (intial value required) */
     uint256 rewardRatioSum = 1000 ether;
     /** Requested withdrawals */
-    UserWithdrawal[] private requestedWithdrawalQueue;
+    Withdrawal[] private requestedWithdrawalQueue;
     /** Pending withdrawals */
-    UserWithdrawal[] private pendingWithdrawalQueue;
+    Withdrawal[] private pendingWithdrawalQueue;
     /** Total requested withdrawals */
     uint256 private requestedWithdrawals;
     /** Total pending withdrawals */
@@ -170,11 +172,37 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Deposit user stake
+     */
+    function depositStake() external payable nonReentrant {
+        require(msg.value > 0, "Deposit amount must be greater than 0");
+        uint256 processedAmount = processFees(msg.value, getFees());
+        require(
+            processedAmount >= distributionThreshold,
+            "Stake amount must be greater than 100 WEI"
+        );
+        // Todo cap deposits to avoid exhausting gas
+
+        /** Update user account state */
+        if (users[msg.sender].stake0 > 0) {
+            /** Settle user's current stake */
+            users[msg.sender].stake0 = getUserStake(msg.sender);
+        }
+        users[msg.sender].rewardRatioSum0 = rewardRatioSum;
+        users[msg.sender].stake0 += processedAmount;
+
+        /** Distribute stake to open pools */
+        distributeStake(processedAmount);
+
+        emit StakeDistributed(msg.sender, processedAmount);
+    }
+
+    /**
      * @notice Rebalance the reward to stake ratio and redistribute swept rewards
      * @param activeStake The active consensus stake
      * @param sweptRewards The swept consensus stake
      */
-    function rebalance(uint256 activeStake, uint256 sweptRewards) external {
+    function rebalanceStake(uint256 activeStake, uint256 sweptRewards) external {
         require(
             msg.sender == address(automation),
             "Only automation can distribute rewards"
@@ -189,46 +217,27 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             // /** Reward fees set to zero for testing */
             // uint256 processedReward = processFees(reward, Fees(0, 0));
             rewardRatioSum += Math.mulDiv(rewardRatioSum, reward, getStake());
-            emit DistributionRebalanced(msg.sender, reward);
+            emit StakeRebalanced(msg.sender, reward);
         } else if (change < 0) {
             uint256 penalty = SafeCast.toUint256(change);
             rewardRatioSum -= Math.mulDiv(rewardRatioSum, penalty, getStake());
-            emit DistributionRebalanced(msg.sender, penalty);
+            emit StakeRebalanced(msg.sender, penalty);
         }
-
-        /** Distribute swept rewards */
-        distribute(sweptRewards);
 
         /** Update latest active stake */
         latestActiveStake = activeStake;
+
+        /** Distribute swept rewards */
+        distributeStake(sweptRewards);
+
+        emit StakeDistributed(msg.sender, sweptRewards);
     }
 
     /**
-     * @notice Deposit user stake to the pool manager
+     * @dev Distribute stake to open pools
+     * @param amount The amount of stake to distribute
      */
-    function deposit() external payable nonReentrant {
-        require(msg.value > 0, "Deposit amount must be greater than 0");
-        uint256 processedAmount = processFees(msg.value, getFees());
-        require(
-            processedAmount >= distributionThreshold,
-            "Stake amount must be greater than 100 WEI"
-        );
-        /** Update user account state */
-        if (users[msg.sender].stake0 > 0) {
-            /** Settle user's current stake */
-            users[msg.sender].stake0 = getUserStake(msg.sender);
-        }
-        users[msg.sender].rewardRatioSum0 = rewardRatioSum;
-        users[msg.sender].stake0 += processedAmount;
-        distribute(processedAmount);
-        emit StakeDistributed(msg.sender, processedAmount);
-    }
-
-    /**
-     * @dev Distribute ETH to ready pools
-     * @param amount The amount of ETH to distribute
-     */
-    function distribute(uint256 amount) private {
+    function distributeStake(uint256 amount) private {
         /** Distribute ETH to open pools */
         while (amount > 0) {
             /** Get the next open pool */
@@ -266,10 +275,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Withdraw user stake
-     * @param amount The amount of ETH to withdraw
+     * @notice Request to withdraw user stake
+     * @param amount The amount of stake to withdraw
      */
-    function withdraw(uint256 amount) external nonReentrant {
+    function requestWithdrawal(uint256 amount) external nonReentrant {
         require(openDeposits >= amount, "Withdrawing more than open deposits");
         require(users[msg.sender].stake0 > 0, "User does not have a stake");
 
@@ -281,119 +290,93 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             "Withdrawing more than user stake"
         );
 
-        /** Instantly withdraw if full amount is available */
-        if (amount <= openDeposits) {
-            withdrawInstantly(amount);
-        } else {
-            requestWithdrawal(amount);
-        }
-    }
-
-    /**
-     * @dev Withdraw user stake instantly from open deposits
-     * @param amount The amount of ETH to withdraw
-     */
-    function withdrawInstantly(uint256 amount) private {
-        /** Update user account state */
-        users[msg.sender].rewardRatioSum0 = rewardRatioSum;
-        users[msg.sender].stake0 -= amount;
-
-        /** Update balance state */
-        Pool storage pool = pools[openPoolIds[0]];
-        pool.deposits -= amount;
-        openDeposits -= amount;
-
-        send(msg.sender, amount);
-
-        emit StakeWithdrawn(msg.sender, amount);
-    }
-
-    /**
-     * @dev Request to withdraw user stake from exited deposits
-     * @param amount The amount of ETH to withdraw
-     */
-    function requestWithdrawal(uint256 amount) private {
         /** Update requested withdrawals state */
         requestedWithdrawalQueue.push(
-            UserWithdrawal({user: msg.sender, amount: amount})
+            Withdrawal({user: msg.sender, amount: amount})
         );
         requestedWithdrawals += amount;
 
-        emit StakeWithdrawalRequested(msg.sender, amount);
+        emit WithdrawalRequested(msg.sender, amount);
     }
 
     /**
-     * @notice Initiate the next withdrawal of user stake from exited deposits
+     * @notice Initiate a given count of requested withdrawals
+     * @param count The number of withdrawals to initiate
      */
-    function inititateNextWithdrawal() external {
+    function initiateRequestedWithdrawals(uint256 count) external {
         require(
             msg.sender == address(automation),
             "Only automation can initiate withdrawals"
         );
 
-        /** Get next requested withdrawal */
-        UserWithdrawal memory userWithdrawal = requestedWithdrawalQueue[0];
+        while (count > 0) {
+            count--;
 
-        /** Update requested withdrawals state */
-        requestedWithdrawalQueue.remove(0);
-        requestedWithdrawals -= userWithdrawal.amount;
+            /** Get next requested withdrawal */
+            Withdrawal memory withdrawal = requestedWithdrawalQueue[0];
 
-        /** Update pending withdrawals state */
-        pendingWithdrawalQueue.push(userWithdrawal);
-        pendingWithdrawals += userWithdrawal.amount;
+            /** Update requested withdrawals state */
+            requestedWithdrawalQueue.remove(0);
+            requestedWithdrawals -= withdrawal.amount;
 
-        /** Update user account state */
-        users[userWithdrawal.user].rewardRatioSum0 = rewardRatioSum;
-        users[userWithdrawal.user].stake0 -= userWithdrawal.amount;
+            /** Update requested withdrawals state */
+            pendingWithdrawalQueue.push(withdrawal);
+            pendingWithdrawals += withdrawal.amount;
 
-        emit StakeWithdrawalInitiated(
-            userWithdrawal.user,
-            userWithdrawal.amount
-        );
+            /** Update user account state */
+            users[withdrawal.user].rewardRatioSum0 = rewardRatioSum;
+            users[withdrawal.user].stake0 -= withdrawal.amount;
+
+            emit WithdrawalInitiated(
+                withdrawal.user,
+                withdrawal.amount
+            );
+        }
     }
 
     /**
-     * @notice Complete the next withdrawal of user stake from exited deposits
+     * @notice Complete a given count of pending withdrawals
+     * @param count The number of withdrawals to complete
      */
-    function completeNextWithdrawal() external {
+    function completePendingWithdrawals(uint256 count) external {
         require(
             msg.sender == address(automation),
             "Only automation can complete withdrawals"
         );
 
-        /** Get next pending withdrawal */
-        UserWithdrawal memory userWithdrawal = pendingWithdrawalQueue[0];
+        while (count > 0) {
+            count--;
 
-        /** Update pending withdrawals state */
-        pendingWithdrawalQueue.remove(0);
-        pendingWithdrawals -= userWithdrawal.amount;
+            /** Get next pending withdrawal */
+            Withdrawal memory withdrawal = pendingWithdrawalQueue[0];
 
-        send(userWithdrawal.user, userWithdrawal.amount);
+            /** Update pending withdrawals state */
+            pendingWithdrawalQueue.remove(0);
+            pendingWithdrawals -= withdrawal.amount;
 
-        emit StakeWithdrawn(userWithdrawal.user, userWithdrawal.amount);
+            withdrawal.user.send(withdrawal.amount);
+
+            emit WithdrawalCompleted(withdrawal.user, withdrawal.amount);
+        }
     }
 
     /**
-     * @dev Send ETH to a recipient
-     * @param recipient The recipient address
-     * @param amount The amount of ETH to send
+     * @notice Initiate a given count of next ready pools
+     * @param count The number of pools to stake
      */
-    function send(address recipient, uint256 amount) private {
-        (bool success, ) = recipient.call{value: amount}("");
-        require(success, "Transfer failed");
-    }
-
-    /**
-     * @notice Stake the ready pools
-     */
-    function stakeReadyPools() external {
+    function initiateReadyPools(uint256 count) external {
         require(
             msg.sender == address(automation),
             "Only automation can stake pools"
         );
-        require(readyValidatorPublicKeys.length > 0, "No ready validators");
 
-        while (readyPoolIds.length > 0) {
+        // Todo move these checks to automation
+        require(readyValidatorPublicKeys.length >= count, "Not enough ready validators");
+        require(readyPoolIds.length >= count, "Not enough ready pools");
+
+        while (count > 0) {
+            count--;
+
             /** Get next ready pool ID */
             uint32 poolId = readyPoolIds[0];
 
@@ -433,20 +416,24 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 mockSSVFee // uint256 (fees handled on user deposits)
             );
 
-            emit PoolStaked(poolId);
+            emit PoolInitiated(poolId);
         }
     }
 
     /**
-     * @notice Move pending pools to staked
+     * @notice Complete a given count of the next pending pools
+     * @param count The number of pools to complete
      */
-    function completePendingPools() external {
+    function completePendingPools(uint256 count) external {
         require(
             msg.sender == address(automation),
             "Only automation can complete pending pools"
         );
+        require(pendingPoolIds.length >= count, "Not enough pending pools");
 
-        while (pendingPoolIds.length > 0) {
+        while (count > 0) {
+            count--;
+
             /** Get next pending pool */
             uint32 poolId = pendingPoolIds[0];
             Pool memory pool = pools[poolId];
@@ -458,31 +445,36 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             /** Move validator from pending to staked state */
             pendingValidatorPublicKeys.remove(0);
             stakedValidatorPublicKeys.push(pool.validatorPublicKey);
+
+            emit PoolCompleted(poolId);
         }
     }
 
     /**
-     * @notice Request the next staked pool to exit
+     * @notice Request a given count of staked pool exits
+     * @param count The number of exits to request
      */
-    function requestNextPoolExit() external {
+    function requestPoolExits(uint256 count) external {
         require(
             msg.sender == address(automation),
             "Only automation can request pool exits"
         );
 
-        for (uint256 i = 0; i < stakedPoolIds.length; i++) {
-            uint32 poolId = stakedPoolIds[i];
+        uint256 index = 0; // Keeping the same staked pool array
+        while (count > 0) {
+            uint32 poolId = stakedPoolIds[index];
             Pool storage pool = pools[poolId];
 
             if (!pool.exiting) {
+                count--;
+                index++;
+
                 pool.exiting = true;
 
                 /** Increase exiting validators */
                 exitingValidatorCount++;
 
                 emit PoolExitRequested(poolId);
-
-                break;
             }
         }
     }
@@ -740,15 +732,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @return stake The total manager stake
      */
     function getStake() public view returns (uint256 stake) {
-        stake = getQueuedStake() + getActiveStake(); // - pendingWithdrawals;
+        stake = getBufferedStake() + getActiveStake(); // - pendingWithdrawals;
     }
 
     /**
-     * @notice Get the total manager queued (execution) stake
-     * @return queuedStake The total manager queued (execution) stake
+     * @notice Get the total manager buffered (execution) stake
+     * @return bufferedStake The total manager buffered (execution) stake
      */
-    function getQueuedStake() public view returns (uint256 queuedStake) {
-        queuedStake =
+    function getBufferedStake() public view returns (uint256 bufferedStake) {
+        bufferedStake =
             (readyPoolIds.length + pendingPoolIds.length) *
             32 ether +
             openDeposits;
@@ -759,7 +751,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @return sweptStake The total manager swept (execution) stake
      */
     function getSweptStake() public view returns (uint256 sweptStake) {
-        sweptStake = address(this).balance - getQueuedStake();
+        sweptStake = address(this).balance - getBufferedStake();
     }
 
     /**

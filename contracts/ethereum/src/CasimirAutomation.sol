@@ -175,9 +175,9 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
 
         uint32[] memory readyPoolIds = abi.decode(performData, (uint32[])); // Is encode/decode more efficient than getting again?
 
-        /** Stake the ready pools */
+        /** Initiate a bounded count of ready pools */
         if (readyPoolIds.length > 0) {
-            manager.stakeReadyPools(); // Deposit and move ready to pending
+            manager.initiateReadyPools(readyPoolIds.length); // Todo find good bounds for batching
         }
 
         /** Request a report */
@@ -216,8 +216,13 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
             // Todo apply sensible heuristics to bound changes in stake
 
             // Todo check simulation test for mistyped input
-            manager.rebalance(activeStake, sweptStake);
-            manager.completePendingPools();
+            manager.rebalanceStake(activeStake, sweptStake);
+
+            /** Complete the bounded count of pending pools */
+            uint32[] memory pendingPoolIds = manager.getPendingPoolIds();
+            if (pendingPoolIds.length > 0) {
+                manager.completePendingPools(pendingPoolIds.length); // Todo find good bounds for batching
+            }
         }
 
         emit OCRResponse(requestId, response, err);
