@@ -2,6 +2,7 @@ import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { deployContract } from '@casimir/hardhat'
 import { CasimirManager, CasimirAutomation, MockFunctionsOracle } from '../../build/artifacts/types'
+import { fulfillOracleAnswer, runUpkeep } from '../helpers/automation'
 import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
 import { validatorStore } from '@casimir/data'
 
@@ -120,14 +121,9 @@ export async function firstUserDepositFixture() {
     const deposit = await manager.connect(firstUser).depositStake({ value })
     await deposit.wait()
 
-    /** Perform upkeep */
-    const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
-        await performUpkeep.wait()
-    }
+    /** Run upkeep */
+    await runUpkeep(automation, chainlink)
+
     return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser }
 }
 
@@ -148,30 +144,14 @@ export async function secondUserDepositFixture() {
     const deposit = await manager.connect(secondUser).depositStake({ value })
     await deposit.wait()
 
-    /** Perform upkeep */
-    const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
-        await performUpkeep.wait()
-    }
+    /** Run upkeep */
+    const ranUpkeep = await runUpkeep(automation, chainlink)
 
     /** Fulfill oracle answer */
-    if (mockFunctionsOracle) {
-        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
-        const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256', 'uint256'],
-            [
-                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
-                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
-                ethers.utils.parseEther(nextSweptExitsAmount.toString())
-            ]
-        )
-        const errorBytes = ethers.utils.toUtf8Bytes('')
-        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
-        await mockFulfillRequest.wait()
+    if (ranUpkeep) {
+        await fulfillOracleAnswer(automation, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount)
     }
+
     return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser }
 }
 
@@ -184,30 +164,14 @@ export async function rewardPostSecondUserDepositFixture() {
     const nextSweptRewardsAmount = 0
     const nextSweptExitsAmount = 0
 
-    /** Perform upkeep */
-    const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
-        await performUpkeep.wait()
+    /** Run upkeep */
+    const ranUpkeep = await runUpkeep(automation, chainlink)
+
+    /** Fulfill oracle answer */
+    if (ranUpkeep) {
+        await fulfillOracleAnswer(automation, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount)
     }
 
-    /** Fulfill mock Functions oracle answer */
-    if (mockFunctionsOracle) {
-        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
-        const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256', 'uint256'],
-            [
-                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
-                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
-                ethers.utils.parseEther(nextSweptExitsAmount.toString())
-            ]
-        )
-        const errorBytes = ethers.utils.toUtf8Bytes('')
-        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
-        await mockFulfillRequest.wait()
-    }
     return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser }
 }
 
@@ -222,30 +186,14 @@ export async function sweepPostSecondUserDepositFixture() {
     const sweep = await chainlink.sendTransaction({ to: manager?.address, value: ethers.utils.parseEther('0.1') })
     await sweep.wait()
 
-    /** Perform upkeep */
-    const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
-        await performUpkeep.wait()
-    }
+    /** Run upkeep */
+    const ranUpkeep = await runUpkeep(automation, chainlink)
 
     /** Fulfill oracle answer */
-    if (mockFunctionsOracle) {
-        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
-        const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256', 'uint256'],
-            [
-                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
-                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
-                ethers.utils.parseEther(nextSweptExitsAmount.toString())
-            ]
-        )
-        const errorBytes = ethers.utils.toUtf8Bytes('')
-        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
-        await mockFulfillRequest.wait()
+    if (ranUpkeep) {
+        await fulfillOracleAnswer(automation, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount)
     }
+
     return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser }
 }
 
@@ -266,28 +214,14 @@ export async function thirdUserDepositFixture() {
     const deposit = await manager.connect(thirdUser).depositStake({ value })
     await deposit.wait()
 
-    /** Perform upkeep */
-    const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
-        await performUpkeep.wait()
+    /** Run upkeep */
+    const ranUpkeep = await runUpkeep(automation, chainlink)
 
-        /** Fulfill oracle answer */
-        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
-        const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256', 'uint256'],
-            [
-                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
-                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
-                ethers.utils.parseEther(nextSweptExitsAmount.toString())
-            ]
-        )
-        const errorBytes = ethers.utils.toUtf8Bytes('')
-        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
-        await mockFulfillRequest.wait()
+    /** Fulfill oracle answer */
+    if (ranUpkeep) {
+        await fulfillOracleAnswer(automation, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount)
     }
+
     return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser, thirdUser }
 }
 
@@ -300,28 +234,14 @@ export async function rewardPostThirdUserDepositFixture() {
     const nextSweptRewardsAmount = 0
     const nextSweptExitsAmount = 0
 
-    /** Perform upkeep */
-    const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
-        await performUpkeep.wait()
+    /** Run upkeep */
+    const ranUpkeep = await runUpkeep(automation, chainlink)
 
-        /** Fulfill oracle answer */
-        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
-        const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256', 'uint256'],
-            [
-                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
-                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
-                ethers.utils.parseEther(nextSweptExitsAmount.toString())
-            ]
-        )
-        const errorBytes = ethers.utils.toUtf8Bytes('')
-        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
-        await mockFulfillRequest.wait()
+    /** Fulfill oracle answer */
+    if (ranUpkeep) {
+        await fulfillOracleAnswer(automation, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount)
     }
+
     return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser, thirdUser }
 }
 
@@ -337,28 +257,14 @@ export async function sweepPostThirdUserDepositFixture() {
     const sweep = await chainlink.sendTransaction({ to: manager?.address, value: ethers.utils.parseEther(nextSweptRewardsAmount.toString()) })
     await sweep.wait()
 
-    /** Perform upkeep */
-    const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
-        await performUpkeep.wait()
+    /** Run upkeep */
+    const ranUpkeep = await runUpkeep(automation, chainlink)
 
-        /** Fulfill oracle answer */
-        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
-        const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256', 'uint256'],
-            [
-                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
-                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
-                ethers.utils.parseEther(nextSweptExitsAmount.toString())
-            ]
-        )
-        const errorBytes = ethers.utils.toUtf8Bytes('')
-        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
-        await mockFulfillRequest.wait()
+    /** Fulfill oracle answer */
+    if (ranUpkeep) {
+        await fulfillOracleAnswer(automation, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount)
     }
+
     return { manager, automation, mockFunctionsOracle, owner, chainlink, firstUser, secondUser, thirdUser }
 }
 
@@ -369,14 +275,9 @@ export async function firstUserPartialWithdrawalFixture() {
     const withdraw = await manager.connect(firstUser).requestWithdrawal(openDeposits)
     await withdraw.wait()
 
-    /** Perform upkeep */
-    const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
-        await performUpkeep.wait()
-    }
+    /** Run upkeep */
+    await runUpkeep(automation, chainlink)
+
     return { manager, automation, mockFunctionsOracle, chainlink, firstUser, secondUser, thirdUser }
 }
 
@@ -397,28 +298,14 @@ export async function fourthUserDepositFixture() {
     const deposit = await manager.connect(fourthUser).depositStake({ value })
     await deposit.wait()
 
-    /** Perform upkeep */
-    const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
-        await performUpkeep.wait()
+    /** Run upkeep */
+    const ranUpkeep = await runUpkeep(automation, chainlink)
 
-        /** Fulfill oracle answer */
-        const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
-        const responseBytes = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'uint256', 'uint256'],
-            [
-                ethers.utils.parseEther(nextActiveStakeAmount.toString()),
-                ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
-                ethers.utils.parseEther(nextSweptExitsAmount.toString())
-            ]
-        )
-        const errorBytes = ethers.utils.toUtf8Bytes('')
-        const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
-        await mockFulfillRequest.wait()
+    /** Fulfill oracle answer */
+    if (ranUpkeep) {
+        await fulfillOracleAnswer(automation, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount)
     }
+
     return { manager, automation, mockFunctionsOracle, chainlink, firstUser, secondUser, thirdUser, fourthUser }
 }
 
@@ -436,27 +323,12 @@ export async function simulationFixture() {
             const nextSweptRewardsAmount = 0
             const nextSweptExitsAmount = 0
 
-            /** Perform upkeep */
-            const checkData = ethers.utils.toUtf8Bytes('')
-            const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
-            const { upkeepNeeded, performData } = check
-            if (upkeepNeeded) {
-                const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
-                await performUpkeep.wait()
+            /** Run upkeep */
+            const ranUpkeep = await runUpkeep(automation, chainlink)
 
-                /** Fulfill oracle answer */
-                const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
-                const responseBytes = ethers.utils.defaultAbiCoder.encode(
-                    ['uint256', 'uint256', 'uint256'],
-                    [
-                        ethers.utils.parseEther(nextActiveStakeAmount.toString()),
-                        ethers.utils.parseEther(nextSweptRewardsAmount.toString()),
-                        ethers.utils.parseEther(nextSweptExitsAmount.toString())
-                    ]
-                )
-                const errorBytes = ethers.utils.toUtf8Bytes('')
-                const mockFulfillRequest = await automation.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
-                await mockFulfillRequest.wait()
+            /** Fulfill oracle answer */
+            if (ranUpkeep) {
+                await fulfillOracleAnswer(automation, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount)
             }
         }
     }

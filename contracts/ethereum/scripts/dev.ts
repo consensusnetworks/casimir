@@ -3,9 +3,10 @@ import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
 import { validatorStore } from '@casimir/data'
 import { CasimirAutomation, CasimirManager, MockFunctionsOracle } from '../build/artifacts/types'
 import { ethers } from 'hardhat'
+import { fulfillOracleAnswer, runUpkeep } from '../test/helpers/automation'
 
 void async function () {
-    let casimirManager: CasimirManager | undefined
+    let manager: CasimirManager | undefined
     let mockFunctionsOracle: MockFunctionsOracle | undefined
     const [, , , , , chainlink] = await ethers.getSigners()
     let config: DeploymentConfig = {
@@ -60,11 +61,14 @@ void async function () {
         (config[name as keyof DeploymentConfig] as ContractConfig).address = address
 
         // Save SSV manager for export
-        if (name == 'CasimirManager') casimirManager = contract as CasimirManager
+        if (name == 'CasimirManager') manager = contract as CasimirManager
 
         // Save mock functions oracle for export
         if (name == 'MockFunctionsOracle') mockFunctionsOracle = contract as MockFunctionsOracle
     }
+
+    const automationAddress = await manager?.getAutomationAddress() as string
+    const automation = await ethers.getContractAt('CasimirAutomation', automationAddress) as CasimirAutomation
 
     const validators = Object.keys(validatorStore).map((key) => validatorStore[key]) as Validator[]
     for (const validator of validators) {
@@ -77,7 +81,7 @@ void async function () {
             signature,
             withdrawalCredentials
         } = validator
-        const registration = await casimirManager?.registerValidator(
+        const registration = await manager?.registerValidator(
             depositDataRoot,
             publicKey,
             operatorIds,
@@ -89,9 +93,6 @@ void async function () {
         await registration?.wait()
     }
 
-    const automationAddress = await casimirManager?.getAutomationAddress() as string
-    const casimirAutomation = await ethers.getContractAt('CasimirAutomation', automationAddress) as CasimirAutomation
-
     /** Distribute rewards every ${blocksPerReward} blocks */
     const blocksPerReward = 10
 
@@ -102,39 +103,51 @@ void async function () {
     ethers.provider.on('block', async (block) => {
         if (block - blocksPerReward === lastRewardBlock) {
             lastRewardBlock = block
-            const activeValidatorPublicKeys = await casimirManager?.getStakedValidatorPublicKeys()
-            if (activeValidatorPublicKeys?.length) {
-                console.log(`Distributing rewards from ${activeValidatorPublicKeys.length} active validators...`)
-                const rewardAmount = (rewardPerValidator * activeValidatorPublicKeys.length).toString()
-                const reward = await chainlink.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-                await reward.wait()
+            const stakedValidatorPublicKeys = await manager?.getStakedValidatorPublicKeys()
+            if (stakedValidatorPublicKeys?.length) {
 
-                /** Perform upkeep (todo add bounds to check data) */
-                const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-                const { ...check } = await casimirAutomation.connect(chainlink).checkUpkeep(checkData)
-                const { upkeepNeeded, performData } = check
-                if (upkeepNeeded) {
-                    const performUpkeep = await casimirAutomation.performUpkeep(performData)
-                    await performUpkeep.wait()
+                const rewardAmount = (rewardPerValidator * stakedValidatorPublicKeys.length).toString()
+
+                // const nextActiveStakeAmount = ethers.utils.formatEther(await manager?.getActiveStake() as ) + parseFloat(rewardAmount)
+                // const nextSweptRewardsAmount = 0.2
+                // const nextSweptExitsAmount = 0
+
+                /** Perform upkeep */
+                const ranUpkeepBefore = await runUpkeep(automation, chainlink)
+
+                /** Fulfill oracle answer */
+                if (ranUpkeepBefore) {
+                    // await fulfillOracleAnswer(automation, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount)
                 }
+
+                /** Sweep rewards before next upkeep (balance will increment silently) */
+                // const sweep = await chainlink.sendTransaction({ to: manager?.address, value: ethers.utils.parseEther(nextSweptRewardsAmount.toString()) })
+                // await sweep.wait()
+
+                /** Perform upkeep */
+                const ranUpkeepAfter = await runUpkeep(automation, chainlink)
+
+                /** Fulfill oracle answer */
+                if (ranUpkeepAfter) {
+                    // await fulfillOracleAnswer(automation, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount)
+                }
+                
             }
         }
     })
-    
-    /** Increase PoR mock aggregator answer after each pool is staked */
-    casimirManager?.on('PoolStaked(uint32)', async () => {
 
-        /** Perform upkeep (todo add bounds to check data) */
-        const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-        const { ...check } = await casimirAutomation.connect(chainlink).checkUpkeep(checkData)
-        const { upkeepNeeded, performData } = check
-        if (upkeepNeeded) {
-            const performUpkeep = await casimirAutomation.connect(chainlink).performUpkeep(performData)
-            await performUpkeep.wait()
-        }
+    /** Perform upkeep and fulfill oracle answer after each pool is staked */
+    manager?.on('PoolStaked(uint32)', async () => {
 
-        if (mockFunctionsOracle) {
-            //
+        /** Perform upkeep */
+        const ranUpkeep = await runUpkeep(automation, chainlink)
+
+        /** Fulfill oracle answer */
+        if (ranUpkeep) {
+            // const nextActiveStakeAmount = 
+            // const nextSweptRewardsAmount = 
+            // const nextSweptExitsAmount = 
+            // await fulfillOracleAnswer(automation, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount)
         }
     })
 }()

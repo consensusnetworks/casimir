@@ -558,6 +558,34 @@ Get the total pending withdrawals
 | ---- | ---- | ----------- |
 | [0] | uint256 | pendingWithdrawals The total pending withdrawals |
 
+### getRequestedWithdrawalQueue
+
+```solidity
+function getRequestedWithdrawalQueue() external view returns (struct ICasimirManager.Withdrawal[])
+```
+
+Get the requested withdrawal queue
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | struct ICasimirManager.Withdrawal[] | requestedWithdrawalQueue The requested withdrawal queue |
+
+### getPendingWithdrawalQueue
+
+```solidity
+function getPendingWithdrawalQueue() external view returns (struct ICasimirManager.Withdrawal[])
+```
+
+Get the pending withdrawal queue
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | struct ICasimirManager.Withdrawal[] | pendingWithdrawalQueue The pending withdrawal queue |
+
 ### getReadyValidatorPublicKeys
 
 ```solidity
@@ -599,20 +627,6 @@ Get the count of exiting validators
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint256 | The count of exiting validators |
-
-### getOpenPoolIds
-
-```solidity
-function getOpenPoolIds() external view returns (uint32[])
-```
-
-Get a list of all open pool IDs
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32[] | A list of all open pool IDs |
 
 ### getReadyPoolIds
 
@@ -896,10 +910,10 @@ struct Validator {
 }
 ```
 
-### PoolIncreased
+### PoolFilled
 
 ```solidity
-event PoolIncreased(address sender, uint32 poolId, uint256 amount)
+event PoolFilled(address sender, uint32 poolId)
 ```
 
 ### PoolInitiated
@@ -1146,6 +1160,18 @@ function getRequestedWithdrawals() external view returns (uint256)
 
 ```solidity
 function getPendingWithdrawals() external view returns (uint256)
+```
+
+### getRequestedWithdrawalQueue
+
+```solidity
+function getRequestedWithdrawalQueue() external view returns (struct ICasimirManager.Withdrawal[])
+```
+
+### getPendingWithdrawalQueue
+
+```solidity
+function getPendingWithdrawalQueue() external view returns (struct ICasimirManager.Withdrawal[])
 ```
 
 ## Types32Array
