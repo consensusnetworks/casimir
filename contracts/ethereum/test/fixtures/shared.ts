@@ -117,7 +117,7 @@ export async function firstUserDepositFixture() {
     const feePercent = fees.LINK + fees.SSV
     const depositAmount = stakeAmount * ((100 + feePercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await manager.connect(firstUser).deposit({ value })
+    const deposit = await manager.connect(firstUser).depositStake({ value })
     await deposit.wait()
 
     /** Perform upkeep */
@@ -145,7 +145,7 @@ export async function secondUserDepositFixture() {
     const feePercent = fees.LINK + fees.SSV
     const depositAmount = stakeAmount * ((100 + feePercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await manager.connect(secondUser).deposit({ value })
+    const deposit = await manager.connect(secondUser).depositStake({ value })
     await deposit.wait()
 
     /** Perform upkeep */
@@ -263,7 +263,7 @@ export async function thirdUserDepositFixture() {
     const feePercent = fees.LINK + fees.SSV
     const depositAmount = stakeAmount * ((100 + feePercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await manager.connect(thirdUser).deposit({ value })
+    const deposit = await manager.connect(thirdUser).depositStake({ value })
     await deposit.wait()
 
     /** Perform upkeep */
@@ -366,8 +366,17 @@ export async function sweepPostThirdUserDepositFixture() {
 export async function firstUserPartialWithdrawalFixture() {
     const { manager, automation, mockFunctionsOracle, chainlink, firstUser, secondUser, thirdUser } = await loadFixture(sweepPostThirdUserDepositFixture)
     const openDeposits = await manager?.getOpenDeposits()
-    const withdraw = await manager.connect(firstUser).withdraw(openDeposits)
+    const withdraw = await manager.connect(firstUser).requestWithdrawal(openDeposits)
     await withdraw.wait()
+
+    /** Perform upkeep */
+    const checkData = ethers.utils.toUtf8Bytes('')
+    const { ...check } = await automation.connect(chainlink).checkUpkeep(checkData)
+    const { upkeepNeeded, performData } = check
+    if (upkeepNeeded) {
+        const performUpkeep = await automation.connect(chainlink).performUpkeep(performData)
+        await performUpkeep.wait()
+    }
     return { manager, automation, mockFunctionsOracle, chainlink, firstUser, secondUser, thirdUser }
 }
 
@@ -385,7 +394,7 @@ export async function fourthUserDepositFixture() {
     const feePercent = fees.LINK + fees.SSV
     const depositAmount = stakeAmount * ((100 + feePercent) / 100)
     const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await manager.connect(fourthUser).deposit({ value })
+    const deposit = await manager.connect(fourthUser).depositStake({ value })
     await deposit.wait()
 
     /** Perform upkeep */

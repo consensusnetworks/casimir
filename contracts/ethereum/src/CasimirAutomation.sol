@@ -163,7 +163,7 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
             upkeepNeeded = true;
         }
 
-        performData = abi.encode(readyPoolIds);
+        performData = abi.encode(requiredWithdrawals, readyPoolIds);
     }
 
     /**
@@ -173,7 +173,14 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
         (bool upkeepNeeded, bytes memory performData) = checkUpkeep("");
         require(upkeepNeeded, "Upkeep not needed");
 
-        uint32[] memory readyPoolIds = abi.decode(performData, (uint32[])); // Is encode/decode more efficient than getting again?
+        (int256 requiredWithdrawals, uint32[] memory readyPoolIds) = abi.decode(performData, (int256, uint32[]));
+
+        /** Initiate withdrawals and request exits */
+        if (requiredWithdrawals > 0) {
+            // Todo this should bound withdrawals and request exits
+            manager.initiateRequestedWithdrawals(manager.getRequestedWithdrawalQueue().length);
+            manager.completePendingWithdrawals(manager.getPendingWithdrawalQueue().length);
+        }
 
         /** Initiate a bounded count of ready pools */
         if (readyPoolIds.length > 0) {

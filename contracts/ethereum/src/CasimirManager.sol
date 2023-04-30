@@ -48,6 +48,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint256 private constant scaleFactor = 1 ether;
     /** Uniswap 0.3% fee tier */
     uint24 private constant uniswapFeeTier = 3000;
+    /** Pool capacity */
+    uint256 private constant poolCapacity = 32 ether;
 
     /*************/
     /* Contracts */
@@ -95,15 +97,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     mapping(address => User) private users;
     /** All pools (open, ready, or staked) */
     mapping(uint32 => Pool) private pools;
-    /** Total deposits in open pools */
+    /** Total deposits not yet in pools */
     uint256 private openDeposits;
-    /** IDs of pools open for deposits */
-    uint32[] private openPoolIds;
-    /** IDs of pools ready for stake */
+    /** IDs of pools ready for initiation */
     uint32[] private readyPoolIds;
-    /** IDS of pools pending stake */
+    /** IDS of pools pending deposit confirmation */
     uint32[] private pendingPoolIds;
-    /** IDs of staking pools at full capacity */
+    /** IDs of pools staked */
     uint32[] private stakedPoolIds;
     /** All validators (ready or staked) */
     mapping(bytes => Validator) private validators;
@@ -193,8 +193,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         /** Distribute stake to open pools */
         distributeStake(processedAmount);
-
-        emit StakeDistributed(msg.sender, processedAmount);
     }
 
     /**
@@ -209,7 +207,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
 
         int256 change = int256(activeStake + sweptRewards) -
-            int256(latestActiveStake + pendingPoolIds.length * 32 ether);
+            int256(latestActiveStake + pendingPoolIds.length * poolCapacity);
 
         /** Update reward to stake ratio */
         if (change > 0) {
@@ -229,8 +227,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         /** Distribute swept rewards */
         distributeStake(sweptRewards);
-
-        emit StakeDistributed(msg.sender, sweptRewards);
     }
 
     /**
@@ -238,38 +234,29 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The amount of stake to distribute
      */
     function distributeStake(uint256 amount) private {
+        emit StakeDistributed(msg.sender, amount);
+
         /** Distribute ETH to open pools */
         while (amount > 0) {
-            /** Get the next open pool */
-            uint32 poolId;
-            if (openPoolIds.length > 0) {
-                poolId = openPoolIds[0];
-            } else {
-                lastPoolId++;
-                poolId = uint32(lastPoolId);
-                openPoolIds.push(poolId);
-            }
-            Pool storage pool;
-            pool = pools[poolId];
-            uint256 remainingCapacity = 32 ether - pool.deposits;
+            uint256 remainingCapacity = poolCapacity - openDeposits;
             if (remainingCapacity > amount) {
-                /** Emit event before updating values */
-                emit PoolIncreased(msg.sender, poolId, amount);
-
+                /** Add remaining amount to open deposits */
                 openDeposits += amount;
-                pool.deposits += amount;
                 amount = 0;
             } else {
-                /** Emit event before updating values */
-                emit PoolIncreased(msg.sender, poolId, remainingCapacity);
+                /** Create new pool */
+                lastPoolId++;
+                uint32 poolId = uint32(lastPoolId);
+                Pool storage pool;
+                pool = pools[poolId];
 
-                openDeposits -= pool.deposits;
-                pool.deposits += remainingCapacity;
+                /** Move open deposits and remaining capacity to pool */
+                openDeposits = 0;
                 amount -= remainingCapacity;
-
-                /** Move pool from open to ready state */
-                openPoolIds.remove(0);
+                pool.deposits = poolCapacity;
                 readyPoolIds.push(poolId);
+
+                emit PoolFilled(msg.sender, poolId);
             }
         }
     }
@@ -315,22 +302,34 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             /** Get next requested withdrawal */
             Withdrawal memory withdrawal = requestedWithdrawalQueue[0];
 
-            /** Update requested withdrawals state */
-            requestedWithdrawalQueue.remove(0);
-            requestedWithdrawals -= withdrawal.amount;
-
-            /** Update requested withdrawals state */
-            pendingWithdrawalQueue.push(withdrawal);
-            pendingWithdrawals += withdrawal.amount;
-
             /** Update user account state */
             users[withdrawal.user].rewardRatioSum0 = rewardRatioSum;
             users[withdrawal.user].stake0 -= withdrawal.amount;
 
-            emit WithdrawalInitiated(
-                withdrawal.user,
-                withdrawal.amount
-            );
+            /** Update requested withdrawals state */
+            requestedWithdrawalQueue.remove(0);
+            requestedWithdrawals -= withdrawal.amount;
+
+            if (withdrawal.amount <= openDeposits) {
+                /** Withdraw amount from open deposits */
+                openDeposits -= withdrawal.amount;
+
+                withdrawal.user.send(withdrawal.amount);
+
+                emit WithdrawalCompleted(
+                    withdrawal.user,
+                    withdrawal.amount
+                );
+            } else {
+                /** Update requested withdrawals state */
+                pendingWithdrawalQueue.push(withdrawal);
+                pendingWithdrawals += withdrawal.amount;
+
+                emit WithdrawalInitiated(
+                    withdrawal.user,
+                    withdrawal.amount
+                );
+            }
         }
     }
 
@@ -742,7 +741,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function getBufferedStake() public view returns (uint256 bufferedStake) {
         bufferedStake =
             (readyPoolIds.length + pendingPoolIds.length) *
-            32 ether +
+            poolCapacity +
             openDeposits;
     }
 
@@ -805,6 +804,28 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Get the requested withdrawal queue
+     * @return requestedWithdrawalQueue The requested withdrawal queue
+     */
+    function getRequestedWithdrawalQueue()
+        external
+        view
+        returns (Withdrawal[] memory) {
+        return requestedWithdrawalQueue;
+    }
+
+    /**
+     * @notice Get the pending withdrawal queue
+     * @return pendingWithdrawalQueue The pending withdrawal queue
+     */
+    function getPendingWithdrawalQueue()
+        external
+        view
+        returns (Withdrawal[] memory) {
+        return pendingWithdrawalQueue;
+    }
+
+    /**
      * @notice Get ready validator public keys
      * @return A list of inactive validator public keys
      */
@@ -834,14 +855,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getExitingValidatorCount() external view returns (uint256) {
         return exitingValidatorCount;
-    }
-
-    /**
-     * @notice Get a list of all open pool IDs
-     * @return A list of all open pool IDs
-     */
-    function getOpenPoolIds() external view returns (uint32[] memory) {
-        return openPoolIds;
     }
 
     /**

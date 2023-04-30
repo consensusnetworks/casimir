@@ -13,19 +13,6 @@ describe('Casimir manager', async function () {
     expect(operators.length).equal(4 * validators.length)
   })
 
-  it('First user\'s 16.0 stake opens the first pool with 16.0', async function () {
-    const { manager, owner } = await loadFixture(firstUserDepositFixture)
-    const ssvOwnerAddress = await manager.signer.getAddress()
-    expect(ssvOwnerAddress).equal(owner.address)
-
-    const openPools = await manager.getOpenPoolIds()
-    expect(openPools.length).equal(1)
-
-    const firstPoolId = openPools[0]
-    const pool = await manager.getPoolDetails(firstPoolId)
-    expect(ethers.utils.formatEther(pool.deposits)).equal('16.0')
-  })
-
   it('First user\'s 16.0 stake increases the total stake to 16.0', async function () {
     const { manager } = await loadFixture(firstUserDepositFixture)
     const stake = await manager.getStake()
@@ -50,16 +37,6 @@ describe('Casimir manager', async function () {
     expect(pool.operatorIds.length).equal(4)
   })
 
-  it('Second user\'s 24.0 stake opens a second pool with 8.0', async function () {
-    const { manager } = await loadFixture(secondUserDepositFixture)
-    const openPools = await manager.getOpenPoolIds()
-    expect(openPools.length).equal(1)
-    
-    const secondPoolId = openPools[0]
-    const pool = await manager.getPoolDetails(secondPoolId)
-    expect(ethers.utils.formatEther(pool.deposits)).equal('8.0')
-  })
-
   it('Second user\'s 24.0 stake increases the total stake to 40.0', async function () {
     const { manager } = await loadFixture(secondUserDepositFixture)
     const stake = await manager.getStake()
@@ -70,12 +47,6 @@ describe('Casimir manager', async function () {
     const { manager, secondUser } = await loadFixture(secondUserDepositFixture)
     const stake = await manager.getUserStake(secondUser.address)
     expect(ethers.utils.formatEther(stake)).equal('24.0')
-  })
-
-  it('First pool is staked after the oracle request is fulfilled', async function () {
-    const { manager } = await loadFixture(secondUserDepositFixture)
-    const stakedPools = await manager.getStakedPoolIds()
-    expect(stakedPools.length).equal(1)
   })
 
   it('First and second user\'s stake earns 0.1 in total after some time', async function () {
@@ -108,12 +79,6 @@ describe('Casimir manager', async function () {
     expect(ethers.utils.formatEther(pool.deposits)).equal('32.0')
     expect(pool.validatorPublicKey).not.equal('0x')
     expect(pool.operatorIds.length).equal(4)
-  })
-
-  it('Third user\'s 24.0 stake opens a third pool', async function () {
-    const { manager } = await loadFixture(thirdUserDepositFixture)
-    const openPools = await manager.getOpenPoolIds()
-    expect(openPools.length).equal(1)
   })
 
   it('Third user\'s 24.0 stake increases the total stake to 64.1', async function () {

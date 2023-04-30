@@ -55,7 +55,7 @@ interface ICasimirManager {
     /* Events */
     /**********/
 
-    event PoolIncreased(address indexed sender, uint32 poolId, uint256 amount);
+    event PoolFilled(address indexed sender, uint32 poolId);
     event PoolInitiated(uint32 indexed poolId);
     event PoolCompleted(uint32 indexed poolId);
     event PoolExitRequested(uint32 indexed poolId);
@@ -152,4 +152,7 @@ interface ICasimirManager {
 
     function getPendingWithdrawals() external view returns (uint256);
 
+    function getRequestedWithdrawalQueue() external view returns (Withdrawal[] memory);
+
+    function getPendingWithdrawalQueue() external view returns (Withdrawal[] memory);
 }
