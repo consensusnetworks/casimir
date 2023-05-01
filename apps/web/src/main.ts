@@ -3,7 +3,6 @@ import App from '@/App.vue'
 import '@/index.css'
 import router from '@/composables/router'
 
-
 import SuperTokens from 'supertokens-web-js'
 import { SuperTokensWebJSConfig } from './sessions.config'
 

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import Balance from './components/Balance.vue'
+import TotalStaked from './components/TotalStaked.vue'
+import StakingRewards from './components/StakingRewards.vue'
+import Staking from './components/Staking.vue'
 </script>
 
 <template>
@@ -10,14 +14,14 @@
     <div class="flex justify-between items-start gap-[63px] text-white">
       <div class="w-full">
         <div class="w-full flex justify-between gap-30 items-start mb-[32px]">
-          <div class="border h-[127px] w-full">
-            Balance
+          <div class="h-[127px] w-full">
+            <Balance />
           </div>
-          <div class="border h-[127px] w-full">
-            Total Staked
+          <div class="h-[127px] w-full">
+            <TotalStaked />
           </div>
-          <div class="border h-[127px] w-full">
-            Staking Rewards
+          <div class="h-[127px] w-full">
+            <StakingRewards />
           </div>
         </div>
 
@@ -30,9 +34,9 @@
         </div>
       </div>
 
-      <div class="border max-w-[300px] w-full">
-        <div class="border w-full h-[494px]">
-          staking 
+      <div class="max-w-[300px] w-full">
+        <div class="w-full h-[494px]">
+          <Staking />
         </div>
         <div class="border w-full h-[386px] my-[31px]">
           Rewards 

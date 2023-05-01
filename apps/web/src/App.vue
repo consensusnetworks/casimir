@@ -9,6 +9,7 @@
 
   onMounted(() => {
     // Needed for new Icon Library
+
     // eslint-disable-next-line no-undef
     feather.replace()
   })
