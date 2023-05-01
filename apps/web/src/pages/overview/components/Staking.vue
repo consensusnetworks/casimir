@@ -38,7 +38,7 @@ onMounted(() => {
     </p>
 
     <h6 class="card_title mb-[11px]">
-      Sale Amount
+      Sale amount
     </h6>
 
     <div class="card_input text-black">
@@ -69,7 +69,7 @@ onMounted(() => {
       <div class="flex items-center gap-[12px]">
         <i
           data-feather="help-circle" 
-          class="w-[14px] text-[#98A2B3]"
+          class="w-[14px] h-min text-[#98A2B3]"
         /> 
         <h6 class="card_analytics_label">
           Fees
@@ -83,7 +83,7 @@ onMounted(() => {
       <div class="flex items-center gap-[12px]">
         <i
           data-feather="help-circle" 
-          class="w-[14px] text-[#98A2B3]"
+          class="w-[14px] h-min text-[#98A2B3]"
         /> 
         <h6 class="card_analytics_label">
           APY %
@@ -97,7 +97,7 @@ onMounted(() => {
       <div class="flex items-center gap-[12px]">
         <i
           data-feather="help-circle" 
-          class="w-[14px] text-[#98A2B3]"
+          class="w-[14px] h-min text-[#98A2B3]"
         /> 
         <h6 class="card_analytics_label">
           Estimated Gas Fee
