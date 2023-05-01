@@ -169,6 +169,7 @@ import useWallet from '@/composables/wallet'
 
 const message = ref('')
 const signedMessage = ref('')
+console.log('line 172')
 const { checkUserSessionExists } = useUsers()
 
 const metamaskButtonText = ref<string>('Connect Metamask')
@@ -203,6 +204,7 @@ const {
 const { deposit, getPools, withdraw } = useSSV()
 
 onMounted(async () => {
+  console.log('got to Wallet.vue onMounted')
   const user = await checkUserSessionExists()
   console.log('user :>> ', user)
 })
