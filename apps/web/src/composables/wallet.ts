@@ -36,13 +36,13 @@ const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 export default function useWallet() {
   const { ethersProviderList, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
-  const { getBitcoinLedgerAddress, getEthersLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { getBitcoinLedgerAddress, getEthersLedgerAddresses, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { getWalletConnectAddress, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
   const { user, getUser, setUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
-    'ETH': getEthersLedgerAddress,
+    'ETH': getEthersLedgerAddresses,
     'IOTX': () => {
       return new Promise((resolve, reject) => {
         console.log('IOTX is not yet supported on Ledger')
@@ -80,7 +80,14 @@ export default function useWallet() {
     console.clear()
     try { // Sign Up or Login
       if (!user?.value?.address) {
+        // TODO: Perhaps offer a different function for hw wallets like Ledger or Trezor
+        if (provider === 'Ledger') {
+          // Get possible addresses from Ledger
+          // Present user with a list of addresses to choose from
+          // Login with selected address
+        }
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
+        console.log('connectedAddress :>> ', connectedAddress)
         const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
         await login(provider, connectedAddress, connectedCurrency)
         const userResponse = await getUser()
@@ -168,6 +175,7 @@ export default function useWallet() {
         // address = await getIoPayAddress()
       } else if (provider === 'Ledger') {
         setSelectedCurrency(currency as Currency)
+        // Ask user to select an account
         address = await getLedgerAddress[currency as Currency]()
       } else if (provider === 'Trezor') {
         address = await getTrezorAddress()

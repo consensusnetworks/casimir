@@ -5,6 +5,7 @@ import Transport from '@ledgerhq/hw-transport'
 import { TransportSpeculosHTTP } from '@casimir/speculos'
 import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
 import { TransactionInit } from '../interfaces/TransactionInit'
+import { LedgerAddress } from '@casimir/types'
 
 const transports = {
     'usb': async function createUSBTransport(): Promise<Transport> {
@@ -180,9 +181,20 @@ export class EthersLedgerSigner extends ethers.Signer {
         })
     }
 
-    async getAddress(): Promise<string> {
-        const { address } = await this.retry((eth) => eth.getAddress(this.path))
-        return ethers.utils.getAddress(address)
+    async getAddresses(): Promise<Array<LedgerAddress> | null> {
+        const ledgerAddresses = []
+        
+        for (let i = 0; i < 10; i++) {
+            // m/coin_type'/account_index'/external_chain_index'/address_index/change_index
+            const path = `m/44'/60'/${i}'/0/0`
+            const { address } = await this.retry((eth) => eth.getAddress(path))
+            // TODO: Replace with our own provider depending on environment
+            const provider = new ethers.providers.JsonRpcProvider('https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7')
+            const balance = await provider.getBalance(address)
+            const ethBalance = ethers.utils.formatEther(balance)
+            if (parseInt(ethBalance) > 0) ledgerAddresses.push({ address, balance: ethBalance })
+        }
+        return ledgerAddresses.length ? ledgerAddresses : null
     }
 
     async signMessage(message: ethers.utils.Bytes | string): Promise<string> {
