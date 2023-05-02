@@ -4,6 +4,7 @@ import TotalStaked from './components/TotalStaked.vue'
 import StakingRewards from './components/StakingRewards.vue'
 import Staking from './components/Staking.vue'
 import Announcements from './components/Announcements.vue'
+import StakingAvg from './components/StakingAvg.vue'
 
 </script>
 
@@ -40,8 +41,8 @@ import Announcements from './components/Announcements.vue'
         <div class="w-full h-[494px]">
           <Staking />
         </div>
-        <div class="border w-full h-[386px] my-[31px]">
-          Rewards 
+        <div class="w-full h-[386px] my-[31px]">
+          <StakingAvg /> 
         </div>
         <div class="w-full h-[261px]">
           <Announcements />
