@@ -86,6 +86,7 @@ onMounted(() => {
             WIDTH = line_chart_container_el.offsetWidth
             HEIGHT = line_chart_container_el.offsetHeight
         }
+        console.log(WIDTH, HEIGHT)
         chart.value.resize(WIDTH -20 , HEIGHT)
     }
     if(line_chart_container_el){
@@ -96,7 +97,7 @@ onMounted(() => {
 
 <template>
   <div 
-    class="h-full w-full px-10"
+    class="h-full w-full"
   >
     <canvas
       :id="props.id"

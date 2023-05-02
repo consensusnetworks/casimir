@@ -5,6 +5,7 @@ import StakingRewards from './components/StakingRewards.vue'
 import Staking from './components/Staking.vue'
 import Announcements from './components/Announcements.vue'
 import StakingAvg from './components/StakingAvg.vue'
+import CrossProviderChart from './components/CrossProviderChart.vue'
 
 </script>
 
@@ -28,8 +29,8 @@ import StakingAvg from './components/StakingAvg.vue'
           </div>
         </div>
 
-        <div class="w-full h-[447px] border mb-[61px]">
-          Cross Provider chart
+        <div class="w-full h-[447px] mb-[61px]">
+          <CrossProviderChart />
         </div>
 
         <div class="w-full h-[805px] border">
