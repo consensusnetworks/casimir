@@ -184,7 +184,7 @@ export class EthersLedgerSigner extends ethers.Signer {
     async getAddresses(): Promise<Array<LedgerAddress> | null> {
         const ledgerAddresses = []
         
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 5; i++) {
             // m/coin_type'/account_index'/external_chain_index'/address_index/change_index
             const path = `m/44'/60'/${i}'/0/0`
             const { address } = await this.retry((eth) => eth.getAddress(path))
@@ -192,7 +192,7 @@ export class EthersLedgerSigner extends ethers.Signer {
             const provider = new ethers.providers.JsonRpcProvider('https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7')
             const balance = await provider.getBalance(address)
             const ethBalance = ethers.utils.formatEther(balance)
-            if (parseInt(ethBalance) > 0) ledgerAddresses.push({ address, balance: ethBalance })
+            if (parseFloat(ethBalance) > 0) ledgerAddresses.push({ address, balance: ethBalance })
         }
         return ledgerAddresses.length ? ledgerAddresses : null
     }

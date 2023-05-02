@@ -76,55 +76,35 @@ export default function useWallet() {
    * @param currency 
    * @returns 
   */
-  async function connectWallet(provider: ProviderString, currency: Currency = 'ETH') {
+  async function connectWallet() {
     console.clear()
     try { // Sign Up or Login
       if (!user?.value?.address) {
-        // TODO: Perhaps offer a different function for hw wallets like Ledger or Trezor
-        if (provider === 'Ledger') {
-          // Get possible addresses from Ledger
-          // Present user with a list of addresses to choose from
-          // Login with selected address
-        }
-        const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
-        console.log('connectedAddress :>> ', connectedAddress)
-        const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
-        await login(provider, connectedAddress, connectedCurrency)
+        await login(selectedProvider.value, selectedAddress.value, selectedCurrency.value || 'ETH')
         const userResponse = await getUser()
         if (!userResponse?.error) {
           setUser(userResponse)
-          setSelectedProvider(provider)
-          setSelectedAddress(connectedAddress)
-          setSelectedCurrency(connectedCurrency)
           primaryAddress.value = user?.value?.address as string
         }
         loadingUserWallets.value = false
         router.push('/')
       } else { // Add account if it doesn't already exist
-        const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
-        const connectedCurrency = await detectCurrencyInProvider(provider, currency) as Currency
-        const accountExists = user.value?.accounts?.some((account: Account | any) => account?.address === connectedAddress && account?.walletProvider === provider)
+        const accountExists = user.value?.accounts?.some((account: Account | any) => account?.address === selectedAddress.value && account?.walletProvider === selectedProvider.value && account?.currency === selectedCurrency.value)
         if (accountExists) {
           alert('Account already exists; setting provider, address, and currency')
-          setSelectedProvider(provider)
-          setSelectedAddress(connectedAddress)
-          setSelectedCurrency(connectedCurrency)
         } else {
           console.log('adding sub account')
           const account = {
             userId: user?.value?.id,
-            address: connectedAddress.toLowerCase() as string,
-            currency: connectedCurrency,
+            address: selectedAddress.value.toLowerCase() as string,
+            currency: selectedCurrency.value || 'ETH',
             ownerAddress: user?.value?.address.toLowerCase() as string,
-            walletProvider: provider
+            walletProvider: selectedProvider.value
           }
           const addAccountResponse = await addAccount(account)
           if (!addAccountResponse?.error) {
             const userResponse = await getUser()
             setUser(userResponse)
-            setSelectedProvider(provider)
-            setSelectedAddress(connectedAddress)
-            setSelectedCurrency(connectedCurrency)
             primaryAddress.value = user?.value?.address as string
             router.push('/')
           }
@@ -195,21 +175,6 @@ export default function useWallet() {
       return balance
     } catch (err) {
       console.error('There was an error in getAccountBalance :>> ', err)
-    }
-  }
-
-  async function setUserAccountBalances() {
-    if (user?.value?.accounts) {
-      const accounts = user.value.accounts
-      const accountsWithBalances = await Promise.all(accounts.map(async (account: Account) => {
-        const balance = await getAccountBalance(account)
-        return {
-          ...account,
-          balance
-        }
-      }))
-      user.value.accounts = accountsWithBalances
-      setUser(user.value)
     }
   }
 
@@ -314,6 +279,40 @@ export default function useWallet() {
     }
   }
 
+  /**
+   * Sets the selected address and returns the address
+   * @param provider 
+   * @param currency 
+   */
+  function selectAddress(address: string) {
+    setSelectedAddress(address)
+    return address
+  }
+
+  // TODO: Check if we can find a way to scroll through addresses on MetaMask and CoinbaseWallet
+  /**
+   * Sets the selected provider and returns the set of addresses available for the selected provider
+   * @param provider 
+   * @param currency 
+   */
+  async function selectProvider(provider: ProviderString, currency: Currency = 'ETH') {
+    console.clear()
+    try {
+      if (provider === 'WalletConnect') {
+        alert('WalletConnect is not yet supported')
+      } else if (ethersProviderList.includes(provider)) {
+        alert('MetaMask and CoinbaseWallet are not yet supported')
+      } else if (provider === 'Ledger') {
+        setSelectedProvider(provider)
+        const ledgerAddresses = await getLedgerAddress[currency]()
+        console.log('ledgerAddresses :>> ', ledgerAddresses)
+        return ledgerAddresses
+      }
+    } catch (error) {
+      console.error('There was an error in selectProvider :>> ', error)
+    }
+  }
+
   // TODO: Implement this for other providers
   async function setPrimaryWalletAccount() {
     if (!user?.value?.address) {
@@ -339,6 +338,21 @@ export default function useWallet() {
 
   function setSelectedProvider (provider: ProviderString) {
     selectedProvider.value = provider
+  }
+
+  async function setUserAccountBalances() {
+    if (user?.value?.accounts) {
+      const accounts = user.value.accounts
+      const accountsWithBalances = await Promise.all(accounts.map(async (account: Account) => {
+        const balance = await getAccountBalance(account)
+        return {
+          ...account,
+          balance
+        }
+      }))
+      user.value.accounts = accountsWithBalances
+      setUser(user.value)
+    }
   }
 
   async function signMessage(message: string) {
@@ -397,6 +411,8 @@ export default function useWallet() {
     logout,
     getUserBalance,
     removeConnectedAccount,
+    selectAddress,
+    selectProvider,
     sendTransaction,
     setUserAccountBalances,
     setPrimaryWalletAccount,
