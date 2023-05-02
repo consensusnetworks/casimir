@@ -77,11 +77,12 @@ export default function useWallet() {
    * @returns 
   */
   async function connectWallet(provider: ProviderString, currency: Currency = 'ETH') {
+    console.clear()
     try { // Sign Up or Login
       if (!user?.value?.address) {
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
         const connectedCurrency = await detectCurrencyInProvider(provider) as Currency
-        await loginWithWallet(provider, connectedAddress, connectedCurrency)
+        await login(provider, connectedAddress, connectedCurrency)
         const userResponse = await getUser()
         if (!userResponse?.error) {
           setUser(userResponse)
@@ -92,21 +93,19 @@ export default function useWallet() {
         }
         loadingUserWallets.value = false
         router.push('/')
-      } else { // Add account
-        console.log('already logged in')
+      } else { // Add account if it doesn't already exist
         const connectedAddress = await getConnectedAddressFromProvider(provider, currency) as string
         const connectedCurrency = await detectCurrencyInProvider(provider, currency) as Currency
-        const accountExists = user.value?.accounts?.some((account: Account | any) => { account?.address === connectedAddress && account?.walletProvider === provider })
-        console.log('accountExists already exists on user :>> ', accountExists)
+        const accountExists = user.value?.accounts?.some((account: Account | any) => account?.address === connectedAddress && account?.walletProvider === provider)
         if (accountExists) {
           alert('Account already exists; setting provider, address, and currency')
           setSelectedProvider(provider)
           setSelectedAddress(connectedAddress)
           setSelectedCurrency(connectedCurrency)
         } else {
-          // If account doesn't exist, add account using users api
           console.log('adding sub account')
           const account = {
+            userId: user?.value?.id,
             address: connectedAddress.toLowerCase() as string,
             currency: connectedCurrency,
             ownerAddress: user?.value?.address.toLowerCase() as string,
@@ -206,13 +205,12 @@ export default function useWallet() {
     }
   }
 
-  // TODO: What is this used for? 
   // Do we need balance of active address only? 
   // Or do we need balance of all addresses in accounts associated with user? 
   // Is this calculated on front end or back end or both?
   async function getUserBalance() {
     if (ethersProviderList.includes(selectedProvider.value)){
-      const walletBalance = await getEthersBalance(selectedProvider.value, selectedAddress.value)
+      const walletBalance = await getEthersBalance(selectedAddress.value)
       console.log('walletBalance in wei in wallet.ts :>> ', walletBalance)
     return walletBalance
     } else {
@@ -227,7 +225,7 @@ export default function useWallet() {
    * @param currency 
    * @returns 
    */
-  async function loginWithWallet(provider: ProviderString, address: string, currency: Currency) {
+  async function login(provider: ProviderString, address: string, currency: Currency) {
     if (ethersProviderList.includes(provider)) {
       return await loginWithEthers(provider, address, currency)
     } else if (provider === 'Ledger') {
@@ -312,14 +310,14 @@ export default function useWallet() {
   async function setPrimaryWalletAccount() {
     if (!user?.value?.address) {
       alert('Please login first')
-    }
-    return alert('Not yet implemented for this wallet provider')
-    if (ethersProviderList.includes(selectedProvider.value)) {
-      const result = await updatePrimaryAddress(primaryAddress.value, selectedProvider.value, selectedAddress.value)
+    } else if (ethersProviderList.includes(selectedProvider.value)) {
+      const result = await updatePrimaryAddress(selectedAddress.value)
       const { data } = await result.json()
       if (data) {
         primaryAddress.value = data.address
       }
+    } else {
+      return alert('Not yet implemented for this wallet provider')
     }
   }
 

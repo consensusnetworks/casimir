@@ -3,12 +3,13 @@
 Solidity contracts for decentralized staking on Ethereum
 
 ## 📝 Overview
+Current Ethereum staking implementations either require a user to have 32 Ethereum or utilize a centralized 3rd party implementation that introduces additional counterparty risk to their staked assets. We propose a methodology to decentralize the Ethereum staking process that will not only improve Ethereum staking decentralization but improve the staking User Experience and create a more equitable staking experience for smaller stakers.
 
 The Casimir contracts seamlessly connect stakers with any amount of ETH directly to high-performing Ethereum validators. Casimir proposes an approach that minimizes counterparty risk for users and improves decentralization in Ethereum staking:
 
-- Validators duties are performed by registered (collateralized) operators running SSV's distributed validator technology (DVT)
-- Keys are trustlessly managed using RockX's distributed key generation (DKG)
-- Automated actions (like compounding stake or handling a slash) are carried out by Chainlink's decentralized oracle network (DON)
+- Validators duties are performed by registered (collateralized) operators running distributed validator technology (DVT) (Initially we are using SSV as a first implementation)
+- Keys are trustlessly managed using distributed key generation (DKG) (current implementation uses RockX's)
+- Automated actions (like compounding stake or handling a slash) are carried out by a decentralized oracle network (DON) (current implementation uses Chainlink)
 
 ### Architecture
 
@@ -16,12 +17,14 @@ Casimir distributes user deposits to Ethereum validators operated by SSV. Valida
 
 ```mermaid
 graph LR
+
     subgraph Contracts
         B(Manager Contract)
         C(Beacon Deposit Contract)
         D(SSV Contract)
         G(PoR Contract)
-        H(Automation Contract)
+        H(Functions Contract)
+        I(Automation Contract)
     end
 
     A((User)) --> B
@@ -46,30 +49,36 @@ graph LR
         E2 --> F24(SSV Operator 8)
     end
 
-    H --> G
-    H --> B
+    G <--> I
+    H <--> I
+    I <--> B
     
     subgraph Chainlink
-        I1(Chainlink Node 1)
-        I2(Chainlink Node 2)
-        I3(Chainlink Node 3)
-        I4(Chainlink Node 4)
+        J1(Chainlink Node 1)
+        J2(Chainlink Node 2)
+        J3(Chainlink Node 3)
+        J4(Chainlink Node 4)
     end
 
-    I1(Chainlink Node 1) --> G
-    I2(Chainlink Node 2) --> G
-    I3(Chainlink Node 3) --> G
-    I4(Chainlink Node 4) --> G
+    J1 --> G
+    J2 --> G
+    J3 --> G
+    J4 --> G
     
-    I1 --> H
-    I2 --> H
-    I3 --> H
-    I4 --> H
+    J1 --> H
+    J2 --> H
+    J3 --> H
+    J4 --> H
+
+    J1 --> I
+    J2 --> I
+    J3 --> I
+    J4 --> I
 ```
 
 ### Contracts
 
-A Hardhat environment for development and deployment is configured in the [hardhat.config.ts](./hardhat.config.ts) file. The following contract scripts are run from the monorepo root directory:
+Casimir deploys two internal contracts and interfaces with suite of vendor contracts from the Consensus Specs, Chainlink, OpenZeppelin, SSV, and Uniswap. All contract source code is located in the [./src](./src) directory. A Hardhat environment for development and deployment is configured in the [hardhat.config.ts](./hardhat.config.ts) file. The following contract scripts can be executed from the **monorepo root** directory:
 
 - `npm run dev:ethereum` - Run a local Ethereum network and deploy contracts
 - `npm run test:ethereum` - Run tests for the Ethereum contracts
@@ -85,21 +94,25 @@ Core internal contracts and interfaces are located in the [src](./src) directory
 | [CasimirManager](./src/CasimirManager.sol) | Manages stake distribution | [docs/index.md#casimirmanager](./docs/index.md#casimirmanager) |
 | [CasimirAutomation](./src/CasimirAutomation.sol) | Automates event handling | [docs/index.md#casimirautomation](./docs/index.md#casimirautomation) |
 
-**External Contracts:**
+**Vendor Contracts:**
 
-Vendor external contracts and interfaces are located in the [src/external](./src/external) directory.
+Vendor contracts and interfaces are located in the [src/vendor](./src/vendor) directory.
 
 | Contract | Description | Docs |
 | --- | --- | --- |
-| [DepositContract](./src/external/interfaces/IDepositContract.sol) | Accepts Beacon deposits | Todo |
-| [KeeperRegistry](./src/external/interfaces/IKeeperRegistry.sol) | Manages Chainlink upkeeps | Todo |
-| [SSVNetwork](./src/external/interfaces/ISSVNetwork.sol) | Connects distributed validators | Todo |
-| [SSVToken](./src/external/interfaces/ISSVToken.sol) | Serves as operator utility token | Todo |
-| [WETH](./src/external/interfaces/IWETH.sol) | Serves as wrapped ETH for swaps | Todo |
+| [DepositContract](./src/vendor/interfaces/IDepositContract.sol) | Accepts Beacon deposits | Todo |
+| [Functions](./src/vendor/Functions.sol) | Provides a library for Chainlink functions | Todo |
+| [FunctionsBillingRegistry](./src/vendor/interfaces/FunctionsBillingRegistryInterface.sol) | Manages Chainlink function billing | Todo |
+| [FunctionsClient](./src/vendor/FunctionsClient.sol) | Executes Chainlink function requests | Todo |
+| [FunctionsOracle](./src/vendor/interfaces/FunctionsOracleInterface.sol) | Handles Chainlink function requests | Todo |
+| [KeeperRegistry](./src/vendor/interfaces/IKeeperRegistry.sol) | Manages Chainlink upkeeps | Todo |
+| [SSVNetwork](./src/vendor/interfaces/ISSVNetwork.sol) | Connects distributed validators | Todo |
+| [SSVToken](./src/vendor/interfaces/ISSVToken.sol) | Serves as operator utility token | Todo |
+| [WETH](./src/vendor/interfaces/IWETH.sol) | Wraps ETH for swapping | Todo |
 
-**Dev Contracts:**
+**Mock Contracts:**
 
-Development-only contracts and interfaces are located in the [src/dev](./src/dev) directory.
+Mock (development-only) contracts and interfaces are located in the [src/mock](./src/mock) directory.
 
 ### Distributed Key Generation
 

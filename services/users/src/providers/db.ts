@@ -1,6 +1,9 @@
 import { Postgres } from '@casimir/data'
 import { camelCase } from '@casimir/helpers'
 import { Account, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
+import useEthers from './ethers'
+
+const { generateNonce } = useEthers()
 
 const postgres = new Postgres({
     // These will become environment variables
@@ -21,11 +24,14 @@ export default function useDB() {
      */
     async function addAccount(account: Account, createdAt?: string) : Promise<Account> {
         if (!createdAt) createdAt = new Date().toISOString()
-        const { address, currency, ownerAddress, walletProvider } = account
-        const text = 'INSERT INTO accounts (address, currency, owner_address, wallet_provider, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;'
-        const params = [address, currency, ownerAddress, walletProvider, createdAt]
+        const { address, currency, userId, walletProvider } = account
+        const text = 'INSERT INTO accounts (address, currency, user_id, wallet_provider, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;'
+        const params = [address, currency, userId, walletProvider, createdAt]
         const rows = await postgres.query(text, params)
-        return rows[0] as Account
+        const accountAdded = rows[0]
+        const accountId = accountAdded.id
+        await addUserAccount(parseInt(userId), accountId)
+        return accountAdded as Account
     }
 
     /**
@@ -40,6 +46,7 @@ export default function useDB() {
         const params = [address, createdAt, updatedAt]
         const rows = await postgres.query(text, params)
         const addedUser = rows[0]
+        account.userId = addedUser.id
         
         const accountAdded = await addAccount(account, createdAt)
         addedUser.accounts = [accountAdded]
@@ -48,12 +55,39 @@ export default function useDB() {
     }
 
     /**
+     * Add a user account.
+     * @param user_id - The user's id
+     * @param account_id - The account's id
+     * @returns The new user account
+     */
+    async function addUserAccount(user_id: number, account_id: number) {
+        const createdAt = new Date().toISOString()
+        const text = 'INSERT INTO user_accounts (user_id, account_id, created_at) VALUES ($1, $2, $3) RETURNING *;'
+        const params = [user_id, account_id, createdAt]
+        const rows = await postgres.query(text, params)
+        return rows[0]
+    }
+
+    /**
+     * Get nonce by address.
+     * @param address - The address user is using to sign in with ethereum
+     * @returns - The nonce if address is a pk on the table or undefined
+     */
+    async function getNonce(address:string) {
+        const text = 'SELECT nonce FROM nonces WHERE address = $1;'
+        const params = [address]
+        const rows = await postgres.query(text, params)
+        const { nonce } = rows[0]
+        return formatResult(nonce)
+    }
+
+    /**
      * Get a user by address.
      * @param address - The user's address
      * @returns The user if found, otherwise undefined
      */
     async function getUser(address: string) {
-        const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN accounts a ON u.address = a.owner_address WHERE u.address = $1 GROUP BY u.address'
+        const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.address = $1 GROUP BY u.id'
         const params = [address]
         const rows = await postgres.query(text, params)
         const user = rows[0]
@@ -73,6 +107,30 @@ export default function useDB() {
         const params = [address, ownerAddress, walletProvider, currency]
         const rows = await postgres.query(text, params)
         return rows[0] as Account
+    }
+
+    /**
+     * Update user's address based on userId.
+     * @param userId - The user's id
+     * @param address - The user's new address
+     * @returns A promise that resolves when the user's address is updated
+     * @throws Error if the user is not found
+     * @throws Error if the user's address is not updated
+     */
+    async function updateUserAddress(userId: number, address: string): Promise<User> {
+        try {
+            const updated_at = new Date().toISOString()
+            const text = 'UPDATE users SET address = $1, updated_at = $2 WHERE id = $3 RETURNING *;'
+            const params = [address, updated_at, userId]
+            const rows = await postgres.query(text, params)
+            const user = rows[0]
+            if (!user) throw new Error('User not found.')
+            if (user.address !== address) throw new Error('User address not updated.')
+            return user
+        } catch (error) {
+            console.error('There was an error updating the user address in updateUserAddress.', error)
+            throw error
+        }
     }
 
     /**
@@ -122,14 +180,5 @@ export default function useDB() {
         }
     }
 
-    return { addAccount, addUser, getUser, removeAccount, upsertNonce }
-}
-
-/**
- * Generate and return a nonce.
- * @returns string
- */
-function generateNonce() {
-    return (Math.floor(Math.random()
-        * (Number.MAX_SAFE_INTEGER - 1)) + 1).toString()
+    return { addAccount, addUser, getNonce, getUser, removeAccount, updateUserAddress, upsertNonce }
 }

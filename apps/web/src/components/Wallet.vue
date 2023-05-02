@@ -1,10 +1,5 @@
 <template>
   <div>
-    <div class="flex">
-      <button @click="getUserBalance()">
-        Get User Balance
-      </button>
-    </div>
     <div class="network-div w-100 mx-8">
       Choose Network
       <div class="choose-network flex">
@@ -44,22 +39,6 @@
       <button @click="getPools(selectedAddress, 'stake')">
         Get staked user pools
       </button>
-      <!-- <ul>
-        <li
-          v-for="(account, index) in user?.accounts"
-          :key="index"
-        >
-          <ul v-for="(pool, index) in account"
-            :key="index"
-          >
-            <li>Pool ID: #{{ pool?.id }}</li>
-            <li>Your Stake: {{ pool?.userStake }} ETH</li>
-            <li>Your Rewards: {{ pool?.userRewards }} ETH</li>
-            <li>Total Stake: {{ pool?.stake }} ETH</li>
-            <li>Total Rewards: {{ pool?.rewards }} ETH</li>
-          </ul>
-        </li>
-      </ul> -->
       <input
         v-model="amountToStake"
         placeholder="Amount to Stake"
@@ -184,9 +163,9 @@
 
 <script setup lang="ts">
 import { ref, watchEffect, onMounted } from 'vue'
-import useWallet from '@/composables/wallet'
 import useSSV from '@/composables/ssv'
 import useUsers from '@/composables/users'
+import useWallet from '@/composables/wallet'
 
 const message = ref('')
 const signedMessage = ref('')
@@ -217,7 +196,6 @@ const {
   setPrimaryWalletAccount,
   sendTransaction,
   signMessage,
-  getUserBalance,
   removeConnectedAccount,
   switchNetwork
 } = useWallet()

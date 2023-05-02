@@ -3,34 +3,53 @@ pragma solidity ^0.8.7;
 
 import "./interfaces/ICasimirAutomation.sol";
 import "./interfaces/ICasimirManager.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import {Functions, FunctionsClient} from "./dev/FunctionsClient.sol";
+import "./interfaces/ICasimirPoR.sol";
+import {Functions, FunctionsClient} from "./vendor/FunctionsClient.sol";
 // import "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol"; // Once published
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "hardhat/console.sol";
 
+// Todo handle:
+// - Ready pool DKG triggering
+// - Balance increase from rewards and exit completion
+// - Slash reshare triggering
+// - Withdrawal or maximum reshare exit triggering
+
 /**
- * @title Oracle contract that reports balances and triggers manager actions
+ * @title Oracle contract that triggers and handles actions
  */
 contract CasimirAutomation is ICasimirAutomation {
+    /*************/ 
+    /* Constants */
+    /*************/
+
+    /* Reward threshold (0.1 ETH) */
+    uint256 private constant rewardThreshold = 100000000000000000;
+
+    /*************/
+    /* Contracts */
+    /*************/
+
+    /* Manager contract */
+    ICasimirManager private immutable casimirManager;
+
     /********************/
-    /* Global Variables */
+    /* Dynamic State */
     /********************/
 
     /* Total stake */
     uint256 private stake;
-    /* Manager contract */
-    ICasimirManager private immutable casimirManager;
-    /** Chainlink feed contract */
-    AggregatorV3Interface private immutable linkFeed;
+
+    /***************/
+    /* Constructor */
+    /***************/
 
     /**
      * Constructor
      * @param casimirManagerAddress The manager contract address
-     * @param linkFeedAddress The chainlink feed contract address
      */
-    constructor(address casimirManagerAddress, address linkFeedAddress) {
+    constructor(address casimirManagerAddress) {
         casimirManager = ICasimirManager(casimirManagerAddress);
-        linkFeed = AggregatorV3Interface(linkFeedAddress);
     }
 
     /**
@@ -49,8 +68,24 @@ contract CasimirAutomation is ICasimirAutomation {
     {
         console.log(abi.decode(checkData, (string)));
 
-        upkeepNeeded = validateUpkeep();
-        performData = abi.encodePacked("Performing upkeep");
+        /** Get ready pools to stake */
+        uint32[] memory readyPoolIds = casimirManager.getReadyPoolIds();
+
+        if (readyPoolIds.length > 0) {
+            upkeepNeeded = true;
+        }
+
+        /** Get Beacon rewards swept to manager */
+        uint256 executionSwept = SafeCast.toUint256(casimirManager.getExecutionSwept());
+
+        if (executionSwept >= rewardThreshold) {
+            upkeepNeeded = true;
+        } else {
+            /** Set swept amounts below threshold to zero */
+            executionSwept = 0;
+        }
+
+        performData = abi.encode(readyPoolIds, executionSwept);
     }
 
     /**
@@ -58,90 +93,41 @@ contract CasimirAutomation is ICasimirAutomation {
      * @param performData The data to perform the upkeep
      */
     function performUpkeep(bytes calldata performData) external override {
-        console.log(abi.decode(performData, (string)));
 
-        /** Revalidate the upkeep */
-        if (validateUpkeep()) {
-            /** Update the stake */
-            stake = casimirManager.getStake();
+        (uint32[] memory readyPoolIds, uint256 executionSwept) = abi.decode(performData, (uint32[], uint256));
+
+        /** Stake ready pools */
+        for (uint i = 0; i < readyPoolIds.length; i++) {
+            casimirManager.stakePool(readyPoolIds[i]);
+        }
+
+        /** Compound rewards */
+        if (executionSwept > 0) {
+            casimirManager.reward(executionSwept);
         }
     }
 
     /**
-     * @notice Validate if the upkeep is needed
-     * @return upkeepNeeded True if the upkeep is needed
+     * @notice Get the total manager stake
+     * @return The total manager stake
      */
-    function validateUpkeep() public view returns (bool upkeepNeeded) {
-        bool stakeChanged = stake != casimirManager.getStake();
-        console.log(
-            "Stake changed from %s to %s",
-            stake,
-            casimirManager.getStake()
-        );
-        upkeepNeeded = stakeChanged;
+    function getStake() external view returns (uint256) {
+        return casimirManager.getStake();
     }
 
     /**
-     * @notice Get the latest total manager stake on beacon reported from chainlink PoR feed
-     * @return The latest total manager stake on beacon
+     * @notice Get the total manager execution swept amount
+     * @return The total manager execution swept amount
      */
-    function getBeaconStake() public view returns (int256) {
-        (, /*uint80 roundID*/ int256 answer, , , ) = /*uint startedAt*/ /*uint timeStamp*/ /*uint80 answeredInRound*/
-        linkFeed.latestRoundData();
-        return answer;
+    function getExecutionSwept() public view returns (int256) {
+        return casimirManager.getExecutionSwept();
     }
 
-    function getPoRAddressListLength()
-        external
-        view
-        override
-        returns (uint256)
-    {
-        return casimirManager.getStakedValidatorPublicKeys().length;
-    }
-
-    function getPoRAddressList(
-        uint256 startIndex,
-        uint256 endIndex
-    ) external view override returns (string[] memory) {
-        bytes[] memory publicKeys = casimirManager
-            .getStakedValidatorPublicKeys();
-        address[] memory addresses = new address[](publicKeys.length);
-        for (uint256 i = 0; i < publicKeys.length; i++) {
-            addresses[i] = address(uint160(bytes20(keccak256(publicKeys[i]))));
-        }
-
-        if (startIndex > endIndex) {
-            return new string[](0);
-        }
-        endIndex = endIndex > addresses.length - 1
-            ? addresses.length - 1
-            : endIndex;
-        string[] memory stringAddresses = new string[](
-            endIndex - startIndex + 1
-        );
-        uint256 currIdx = startIndex;
-        uint256 strAddrIdx = 0;
-        while (currIdx <= endIndex) {
-            stringAddresses[strAddrIdx] = toString(
-                abi.encodePacked(addresses[currIdx])
-            );
-            strAddrIdx++;
-            currIdx++;
-        }
-        return stringAddresses;
-    }
-
-    function toString(bytes memory data) private pure returns (string memory) {
-        bytes memory alphabet = "0123456789abcdef";
-
-        bytes memory str = new bytes(2 + data.length * 2);
-        str[0] = "0";
-        str[1] = "x";
-        for (uint256 i = 0; i < data.length; i++) {
-            str[2 + i * 2] = alphabet[uint256(uint8(data[i] >> 4))];
-            str[3 + i * 2] = alphabet[uint256(uint8(data[i] & 0x0f))];
-        }
-        return string(str);
+    /**
+     * @notice Get the total manager expected consensus stake
+     * @return The total manager expected consensus stake
+     */
+    function getExpectedConsensusStake() external view returns (int256) {
+        return casimirManager.getExpectedConsensusStake();
     }
 }

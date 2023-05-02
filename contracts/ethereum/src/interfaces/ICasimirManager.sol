@@ -17,11 +17,16 @@ interface ICasimirManager {
         uint32 LINK;
         uint32 SSV;
     }
-    /** SSV pool used for running a validator */
+    /** Pool used for running a validator */
     struct Pool {
         uint256 deposits;
+        uint validatorIndex;
+    }
+    /** Pool with details */
+    struct PoolDetails {
+        uint256 deposits;
+        bytes publicKey;
         uint32[] operatorIds;
-        bytes validatorPublicKey;
     }
     /** User staking account */
     struct User {
@@ -45,25 +50,26 @@ interface ICasimirManager {
     event ManagerDistribution(
         address indexed sender,
         uint256 ethAmount,
-        uint256 time
+        uint256 linkAmount,
+        uint256 ssvAmount
     );
     event PoolDeposit(
         address indexed sender,
         uint32 poolId,
-        uint256 amount,
-        uint256 time
+        uint256 amount
     );
     event PoolStaked(
-        uint32 indexed poolId,
-        bytes validatorPublicKey,
-        uint32[] operatorIds
+        uint32 indexed poolId
     );
-    event ValidatorAdded(bytes publicKey, uint32[] operatorIds);
-    event ValidatorRemoved(bytes publicKey, uint32[] operatorIds);
-    event UserWithdrawal(
+    event PoolRemoved(
+        uint32 indexed poolId
+    );
+    event ValidatorAdded(bytes publicKey);
+    event ValidatorExited(bytes publicKey);
+    event ValidatorRemoved(bytes publicKey);
+    event UserWithdrawed(
         address indexed sender,
-        uint256 ethAmount,
-        uint256 time
+        uint256 ethAmount
     );
 
     /*************/
@@ -72,7 +78,11 @@ interface ICasimirManager {
 
     function deposit() external payable;
 
+    function reward(uint256 amount) external;
+
     function withdraw(uint256 amount) external;
+
+    function stakePool(uint32 poolId) external;
 
     function getFees() external view returns (Fees memory);
 
@@ -96,7 +106,15 @@ interface ICasimirManager {
 
     function getStake() external view returns (uint256);
 
-    function getReadyDeposits() external view returns (uint256);
+    function getExecutionStake() external view returns (int256);
+
+    function getExecutionSwept() external view returns (int256);
+
+    function getConsensusStake() external view returns (int256);
+
+    function getExpectedConsensusStake() external view returns (int256);
+
+    function getOpenDeposits() external view returns (uint256);
 
     function getUserStake(address userAddress) external view returns (uint256);
 }
