@@ -5,7 +5,7 @@ import useEthers from '@/composables/ethers'
 import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
 import useUsers from '@/composables/users'
-import { Account, ProviderString, Currency } from '@casimir/types'
+import { Account, ProviderString, Currency, LedgerAddress } from '@casimir/types'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
 import * as Session from 'supertokens-web-js/recipe/session'
 import router from './router'
@@ -26,6 +26,7 @@ const activeWallets = ref([
 ] as ProviderString[])
 const amount = ref<string>('0.000001')
 const amountToStake = ref<string>('0.0')
+const userAddresses = ref<string[]>([])
 const loadingUserWallets = ref(false)
 const primaryAddress = ref('')
 const selectedProvider = ref<ProviderString>('')
@@ -284,9 +285,9 @@ export default function useWallet() {
    * @param provider 
    * @param currency 
    */
-  function selectAddress(address: string) {
+  async function selectAddress(address: any) {
     setSelectedAddress(address)
-    return address
+    await connectWallet()
   }
 
   // TODO: Check if we can find a way to scroll through addresses on MetaMask and CoinbaseWallet
@@ -304,9 +305,8 @@ export default function useWallet() {
         alert('MetaMask and CoinbaseWallet are not yet supported')
       } else if (provider === 'Ledger') {
         setSelectedProvider(provider)
-        const ledgerAddresses = await getLedgerAddress[currency]()
-        console.log('ledgerAddresses :>> ', ledgerAddresses)
-        return ledgerAddresses
+        const ledgerAddresses = await getLedgerAddress[currency]() as LedgerAddress[]
+        userAddresses.value = ledgerAddresses.map((address: LedgerAddress) => address.address)
       }
     } catch (error) {
       console.error('There was an error in selectProvider :>> ', error)
@@ -417,6 +417,7 @@ export default function useWallet() {
     setUserAccountBalances,
     setPrimaryWalletAccount,
     signMessage,
-    switchNetwork
+    switchNetwork,
+    userAddresses
   }
 }

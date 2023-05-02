@@ -1,5 +1,28 @@
 <template>
   <div>
+    <div>
+      <button @click="selectProvider('MetaMask')">
+        Select MetaMask
+      </button>
+      <button @click="selectProvider('CoinbaseWallet')">
+        Select CoinbaseWallet
+      </button>
+      <button @click="selectProvider('Ledger')">
+        Select Ledger
+      </button>
+      <button @click="selectProvider('Ledger')">
+        Select Trezor
+      </button>
+    </div>
+    <ul>
+      <button
+        v-for="address in userAddresses"
+        :key="address"
+        @click="selectAddress(address)"
+      >
+        Connect this address: {{ address }}
+      </button>
+    </ul>
     <div class="network-div w-100 mx-8">
       Choose Network
       <div class="choose-network flex">
@@ -193,10 +216,13 @@ const {
   amountToStake,
   connectWallet,
   logout,
+  selectAddress,
+  selectProvider,
   setPrimaryWalletAccount,
   sendTransaction,
   signMessage,
   removeConnectedAccount,
+  userAddresses,
   switchNetwork
 } = useWallet()
 
