@@ -109,7 +109,10 @@ onMounted(() => {
     </div>
 
     <div class="flex items-center gap-[18px] mb-[27px]">
-      <input type="checkbox"> 
+      <input
+        type="checkbox"
+        class="card_checkbox"
+      > 
       <p class="card_checkbox_text">
         I agree to the terms of service for the single transaction
       </p>
@@ -213,5 +216,12 @@ onMounted(() => {
     letter-spacing: -0.01em;
 
     color: #344054;
+}
+
+.card_checkbox{
+    background: #FFFFFF;
+    border: 1px solid #7F7889;
+    box-shadow: 0px 0px 0px 4px rgba(237, 235, 255, 0.26);
+    border-radius: 4px;
 }
 </style>
