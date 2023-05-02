@@ -59,6 +59,8 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
     bytes public requestCBOR;
     /** Latest oracle request ID */
     bytes32 public latestRequestId;
+    /** Latest fulfilled oracle request ID */
+    bytes32 public latestFulfilledRequestId;
     /** Latest oracle response */
     bytes private latestResponse;
     /** Latest oracle response timestamp */
@@ -163,6 +165,11 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
             upkeepNeeded = true;
         }
 
+        // /** Check if last request has been fulfilled */
+        // if (latestRequestId != latestFulfilledRequestId) {
+        //     upkeepNeeded = false;
+        // }
+
         performData = abi.encode(requiredWithdrawals, readyPoolIds);
     }
 
@@ -188,11 +195,11 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
         }
 
         /** Request a report */
-        // bytes32 requestId = s_oracle.sendRequest(oracleSubId, requestCBOR, fulfillGasLimit);
-        // s_pendingRequests[requestId] = s_oracle.getRegistry();
-        // latestRequestId = requestId;
+        bytes32 requestId = s_oracle.sendRequest(oracleSubId, requestCBOR, fulfillGasLimit);
+        s_pendingRequests[requestId] = s_oracle.getRegistry();
+        latestRequestId = requestId;
 
-        // emit RequestSent(requestId);
+        emit RequestSent(requestId);
     }
 
     /**
@@ -207,6 +214,7 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
         bytes memory response,
         bytes memory err
     ) internal override {
+        latestFulfilledRequestId = requestId;
         latestResponseTimestamp = block.timestamp;
         latestResponse = response;
         latestError = err;
