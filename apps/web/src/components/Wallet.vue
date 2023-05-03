@@ -1,5 +1,6 @@
 <template>
   <div>
+    <h5>Connect Wallet to Log In or Add Account</h5>
     <div>
       <button @click="selectProvider('MetaMask')">
         Select MetaMask
@@ -29,37 +30,18 @@
         Select WalletConnect
       </button>
     </div>
-    <ul>
-      <button
-        v-for="address in userAddresses"
-        :key="address"
-        @click="selectAddress(address)"
-      >
-        Connect this address: {{ address }}
-      </button>
-    </ul>
-    <div class="network-div w-100 mx-8">
-      Choose Network
-      <div class="choose-network flex">
-        <button @click="switchNetwork('5')">
-          Switch MetaMask to Goerli Network
-        </button>
-        <button
-          class="iopay-btn"
-          @click="switchNetwork('4690')"
-        >
-          Switch MetaMask to IoTeX Network
-        </button>
-      </div>
-    </div>
+    <button
+      v-for="address in userAddresses"
+      :key="address"
+      @click="selectAddress(address)"
+    >
+      Connect this address: {{ address }}
+    </button>
     <div>
       <h5>Primary Account:</h5>
       <div>{{ primaryAddress ? primaryAddress : 'Please log in first.' }}</div>
       <button @click="setPrimaryWalletAccount()">
         Set Primary Account
-      </button>
-      <button @click="logout">
-        logout
       </button>
     </div>
     <div>
@@ -70,6 +52,7 @@
         Remove Account
       </button>
     </div>
+    <h5>Staking</h5>
     <div class="staking-container">
       <button @click="getPools(selectedAddress, 'ready')">
         Get ready user pools
@@ -88,84 +71,10 @@
         Withdraw
       </button>
     </div>
-    <div class="connect-wallet-container">
-      <div class="metamask-div">
-        <button @click="connectWallet('MetaMask')">
-          {{ metamaskButtonText }}
-        </button>
-        <p>
-          Connected Metamask Account:
-          <span> {{ metamaskAccountsResult }} </span>
-        </p>
-      </div>
-      <div class="coinbase-div">
-        <button
-          class="coinbase-btn"
-          @click="connectWallet('CoinbaseWallet')"
-        >
-          {{ coinbaseButtonText }}
-        </button>
-        <p>
-          Connected Coinbase Account:
-          <span> {{ coinbaseAccountsResult }} </span>
-        </p>
-      </div>
-      <div class="phantom-div">
-        <button
-          class="phantom-btn"
-          @click="connectWallet('Phantom')"
-        >
-          {{ phantomButtonText }}
-        </button>
-        <p>
-          Connected phantom Account:
-          <span> {{ phantomAccountsResult }} </span>
-        </p>
-      </div>
-      <div class="ledger-div">
-        <button
-          class="ledger-btn"
-          @click="connectWallet('Ledger', 'BTC')"
-        >
-          {{ ledgerButtonText }} (Using 'bitcoin' app)
-        </button>
-        <button
-          class="ledger-btn"
-          @click="connectWallet('Ledger', 'ETH')"
-        >
-          {{ ledgerButtonText }} (Using 'ethereum' app)
-        </button>
-        <p>
-          Connected Ledger Account:
-          <span> {{ ledgerAccountsResult }} </span>
-        </p>
-      </div>
-      <div class="trezor-div">
-        <button
-          class="trezor-btn"
-          @click="connectWallet('Trezor')"
-        >
-          {{ trezorButtonText }}
-        </button>
-        <p>
-          Connected Trezor ETH Account:
-          <span> {{ trezorAccountsResult }} </span>
-        </p>
-      </div>
-      <div>
-        <button
-          class="wallet-connect-btn"
-          @click="connectWallet('WalletConnect')"
-        >
-          {{ walletConnectButtonText }}
-        </button>
-        <p>
-          Connected WalletConnect Account:
-          <span> {{ walletConnectAccountsResult }} </span>
-        </p>
-      </div>
-    </div>
-    <div class="form-container">
+    <h5 class="my-4">
+      Signing and Sending
+    </h5>
+    <div class="sign-and-stake">
       <div class="sign-message-container">
         <input
           v-model="message"
@@ -196,6 +105,24 @@
         </button>
       </form>
     </div>
+    <h5>
+      Choose Network
+      <div>
+        <button @click="switchNetwork('5')">
+          Switch MetaMask to Goerli Network
+        </button>
+        <button
+          class="iopay-btn"
+          @click="switchNetwork('4690')"
+        >
+          Switch MetaMask to IoTeX Network
+        </button>
+      </div>
+    </h5>
+    <h5>Logout</h5>
+    <button @click="logout">
+      logout
+    </button>
   </div>
 </template>
 
@@ -229,7 +156,6 @@ const {
   toAddress,
   amount,
   amountToStake,
-  connectWallet,
   logout,
   selectAddress,
   selectProvider,
@@ -244,8 +170,8 @@ const {
 const { deposit, getPools, withdraw } = useSSV()
 
 onMounted(async () => {
-  const user = await checkUserSessionExists()
-  console.log('user :>> ', user)
+  // const user = await checkUserSessionExists()
+  // console.log('user :>> ', user)
 })
 
 watchEffect(() => {
