@@ -5,7 +5,7 @@ import useEthers from '@/composables/ethers'
 import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
 import useUsers from '@/composables/users'
-import { Account, ProviderString, Currency, LedgerAddress } from '@casimir/types'
+import { Account, CryptoAddress, Currency, ProviderString} from '@casimir/types'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
 import * as Session from 'supertokens-web-js/recipe/session'
 import router from './router'
@@ -35,7 +35,7 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 
 export default function useWallet() {
-  const { ethersProviderList, getEthersAddress, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
+  const { ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getBitcoinLedgerAddress, getEthersLedgerAddresses, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, sendTrezorTransaction, signTrezorMessage } = useTrezor()
@@ -79,6 +79,7 @@ export default function useWallet() {
   */
   async function connectWallet() {
     console.clear()
+    console.log('hi')
     try { // Sign Up or Login
       if (!user?.value?.address) {
         await login(selectedProvider.value, selectedAddress.value, selectedCurrency.value || 'ETH')
@@ -136,6 +137,16 @@ export default function useWallet() {
     }
   }
 
+  async function getAccountBalance(account: Account) {
+    // TODO: Find where api endpoint is configured for ethers.
+    try {
+      const balance = await getEthersBalance(account.address)
+      return balance
+    } catch (err) {
+      console.error('There was an error in getAccountBalance :>> ', err)
+    }
+  }
+
   /**
    * Retrieve the address from the selected provider
    * @param provider - MetaMask, CoinbaseWallet, Ledger, Trezor, WalletConnect, etc.
@@ -166,16 +177,6 @@ export default function useWallet() {
       return trimAndLowercaseAddress(address) as string
     } catch (error) {
       console.error(error)
-    }
-  }
-
-  async function getAccountBalance(account: Account) {
-    // TODO: Find where api endpoint is configured for ethers.
-    try {
-      const balance = await getEthersBalance(account.address)
-      return balance
-    } catch (err) {
-      console.error('There was an error in getAccountBalance :>> ', err)
     }
   }
 
@@ -302,11 +303,19 @@ export default function useWallet() {
       if (provider === 'WalletConnect') {
         alert('WalletConnect is not yet supported')
       } else if (ethersProviderList.includes(provider)) {
-        alert('MetaMask and CoinbaseWallet are not yet supported')
+        setSelectedProvider(provider)
+        const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
+        userAddresses.value = ethersAddresses.map((address: CryptoAddress) => address.address)
+        console.log('userAddresses.value :>> ', userAddresses.value)
       } else if (provider === 'Ledger') {
         setSelectedProvider(provider)
-        const ledgerAddresses = await getLedgerAddress[currency]() as LedgerAddress[]
-        userAddresses.value = ledgerAddresses.map((address: LedgerAddress) => address.address)
+        const ledgerAddresses = await getLedgerAddress[currency]() as CryptoAddress[]
+        userAddresses.value = ledgerAddresses.map((address: CryptoAddress) => address.address)
+      } else if (provider === 'Trezor') {
+        setSelectedProvider(provider)
+        alert('Trezor is not yet supported')
+        // const trezorAddresses = await getTrezorAddress() as CryptoAddress[]
+        // userAddresses.value = trezorAddresses.map((address: CryptoAddress) => address.address)
       }
     } catch (error) {
       console.error('There was an error in selectProvider :>> ', error)
