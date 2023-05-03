@@ -38,6 +38,12 @@ jobs:
       - name: Deploy cdk infrastructure
         run: npm run deploy:cdk
 
+      - name: Check out develop
+        uses: actions/checkout@v3
+        with:
+          ref: develop
+          token: ${{ github.token }}
+
       - name: Reset release branch
         run: |
           git fetch origin master:master
