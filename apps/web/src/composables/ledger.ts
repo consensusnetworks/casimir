@@ -39,7 +39,7 @@ export default function useLedger() {
     return await signer.getAddresses() as Array<CryptoAddress>
   }
 
-  async function loginWithLedger(loginCredentials: LoginCredentials) {
+  async function loginWithLedger(loginCredentials: LoginCredentials, pathIndex: string) {
     // ETH Mainnet: 0x8222ef172a2117d1c4739e35234e097630d94376
     // ETH Goerli 1: 0x8222Ef172A2117D1C4739E35234E097630D94376
     // ETH Goerli 2: 0x8ed535c94DC22218D74A77593228cbb1B7FF6D13
@@ -48,7 +48,7 @@ export default function useLedger() {
     try {
       const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signer = getEthersLedgerSigner()
-      const signedMessage = await signer.signMessage(message)
+      const signedMessage = await signer.signMessageWithIndex(message, pathIndex)
       const loginResponse = await signInWithEthereum({ 
         address, 
         currency,

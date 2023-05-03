@@ -192,7 +192,7 @@ export class EthersLedgerSigner extends ethers.Signer {
             const provider = new ethers.providers.JsonRpcProvider('https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7')
             const balance = await provider.getBalance(address)
             const ethBalance = ethers.utils.formatEther(balance)
-            if (parseFloat(ethBalance) > 0) ledgerAddresses.push({ address, balance: ethBalance })
+            if (parseFloat(ethBalance) > 0) ledgerAddresses.push({ address, balance: ethBalance, pathIndex: i.toString() })
         }
         return ledgerAddresses.length ? ledgerAddresses : null
     }
@@ -207,8 +207,20 @@ export class EthersLedgerSigner extends ethers.Signer {
             message = ethers.utils.toUtf8Bytes(message)
         }
         const messageHex = ethers.utils.hexlify(message).substring(2)
-
-        const signature = await this.retry((eth) => eth.signPersonalMessage(this.path, messageHex))
+        const testPath = 'm/44\'/60\'/1\'/0/0'
+        const signature = await this.retry((eth) => eth.signPersonalMessage(testPath, messageHex))
+        signature.r = '0x' + signature.r
+        signature.s = '0x' + signature.s
+        return ethers.utils.joinSignature(signature)
+    }
+    
+    async signMessageWithIndex(message: ethers.utils.Bytes | string, index: string): Promise<string> {
+        if (typeof (message) === 'string') {
+            message = ethers.utils.toUtf8Bytes(message)
+        }
+        const messageHex = ethers.utils.hexlify(message).substring(2)
+        const testPath = `m/44'/60'/${index}'/0/0`
+        const signature = await this.retry((eth) => eth.signPersonalMessage(testPath, messageHex))
         signature.r = '0x' + signature.r
         signature.s = '0x' + signature.s
         return ethers.utils.joinSignature(signature)

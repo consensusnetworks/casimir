@@ -26,11 +26,12 @@ const activeWallets = ref([
 ] as ProviderString[])
 const amount = ref<string>('0.000001')
 const amountToStake = ref<string>('0.0')
-const userAddresses = ref<string[]>([])
+const userAddresses = ref<CryptoAddress[]>([])
 const loadingUserWallets = ref(false)
 const primaryAddress = ref('')
 const selectedProvider = ref<ProviderString>('')
 const selectedAddress = ref<string>('')
+const selectedPathIndex = ref<string>('')
 const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 
@@ -78,7 +79,6 @@ export default function useWallet() {
    * @returns 
   */
   async function connectWallet() {
-    console.clear()
     try { // Sign Up or Login
       if (!user?.value?.address) {
         await login()
@@ -88,7 +88,7 @@ export default function useWallet() {
           primaryAddress.value = user?.value?.address as string
         }
         loadingUserWallets.value = false
-        router.push('/')
+        // router.push('/')
       } else { // Add account if it doesn't already exist
         const accountExists = user.value?.accounts?.some((account: Account | any) => account?.address === selectedAddress.value && account?.walletProvider === selectedProvider.value && account?.currency === selectedCurrency.value)
         if (accountExists) {
@@ -107,7 +107,8 @@ export default function useWallet() {
             const userResponse = await getUser()
             setUser(userResponse)
             primaryAddress.value = user?.value?.address as string
-            router.push('/')
+            console.log('primaryAddress.value :>> ', primaryAddress.value)
+            // router.push('/')
           }
         }
       }
@@ -208,7 +209,7 @@ export default function useWallet() {
     if (ethersProviderList.includes(selectedProvider.value)) {
       return await loginWithEthers(loginCredentials)
     } else if (selectedProvider.value === 'Ledger') {
-      return await loginWithLedger(loginCredentials)
+      return await loginWithLedger(loginCredentials, selectedPathIndex.value)
     } else if (selectedProvider.value === 'Trezor') {
       alert('Trezor login not yet supported')
     } else if (selectedProvider.value === 'WalletConnect'){
@@ -228,9 +229,8 @@ export default function useWallet() {
     setSelectedCurrency('')
     setUser()
     primaryAddress.value = ''
-    console.log('user.value on logout :>> ', user.value)
     loadingUserWallets.value = false
-    router.push('/auth')
+    // router.push('/auth')
   }
 
   async function removeConnectedAccount() {
@@ -294,8 +294,9 @@ export default function useWallet() {
    * @param provider 
    * @param currency 
    */
-  async function selectAddress(address: any) {
+  async function selectAddress(address: any, pathIndex?: string) {
     setSelectedAddress(address)
+    if (pathIndex) setSelectedPathIndex(pathIndex)
     await connectWallet()
   }
 
@@ -315,11 +316,16 @@ export default function useWallet() {
       } else if (ethersProviderList.includes(provider)) {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
-        userAddresses.value = ethersAddresses.map((address: CryptoAddress) => address.address)
+        console.log('ethersAddresses :>> ', ethersAddresses)
+        userAddresses.value = ethersAddresses.map((address: CryptoAddress) => { 
+          return {
+            address,
+            pathIndex: address.pathIndex
+          }
+        })
       } else if (provider === 'Ledger') {
         setSelectedProvider(provider)
-        const ledgerAddresses = await getLedgerAddress[currency]() as CryptoAddress[]
-        userAddresses.value = ledgerAddresses.map((address: CryptoAddress) => address.address)
+        userAddresses.value = await getLedgerAddress[currency]() as CryptoAddress[]
       } else if (provider === 'Trezor') {
         setSelectedProvider(provider)
         const trezorAddresses = await getTrezorAddresses()
@@ -351,6 +357,10 @@ export default function useWallet() {
 
   function setSelectedCurrency (currency: Currency) {
     selectedCurrency.value = currency
+  }
+
+  function setSelectedPathIndex (pathIndex: string) {
+    selectedPathIndex.value = pathIndex
   }
 
   function setSelectedProvider (provider: ProviderString) {
