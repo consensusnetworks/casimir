@@ -5,7 +5,7 @@ import useEthers from '@/composables/ethers'
 import useWalletConnect from '@/composables/walletConnect'
 import useSolana from '@/composables/solana'
 import useUsers from '@/composables/users'
-import { Account, CryptoAddress, Currency, ProviderString} from '@casimir/types'
+import { Account, CryptoAddress, Currency, ProviderString, LoginCredentials} from '@casimir/types'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
 import * as Session from 'supertokens-web-js/recipe/session'
 import router from './router'
@@ -39,7 +39,7 @@ export default function useWallet() {
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getBitcoinLedgerAddress, getEthersLedgerAddresses, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, sendTrezorTransaction, signTrezorMessage } = useTrezor()
-  const { getWalletConnectAddress, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
+  const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
   const { user, getUser, setUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
   const getLedgerAddress = {
     'BTC': getBitcoinLedgerAddress,
@@ -79,10 +79,9 @@ export default function useWallet() {
   */
   async function connectWallet() {
     console.clear()
-    console.log('hi')
     try { // Sign Up or Login
       if (!user?.value?.address) {
-        await login(selectedProvider.value, selectedAddress.value, selectedCurrency.value || 'ETH')
+        await login()
         const userResponse = await getUser()
         if (!userResponse?.error) {
           setUser(userResponse)
@@ -200,11 +199,18 @@ export default function useWallet() {
    * @param currency 
    * @returns 
    */
-  async function login(provider: ProviderString, address: string, currency: Currency) {
-    if (ethersProviderList.includes(provider)) {
-      return await loginWithEthers(provider, address, currency)
-    } else if (provider === 'Ledger') {
-      return await loginWithLedger(provider, address, currency)
+  async function login() {
+    const loginCredentials = {
+      provider: selectedProvider.value,
+      address: selectedAddress.value,
+      currency: selectedCurrency.value || 'ETH'
+    } as LoginCredentials
+    if (ethersProviderList.includes(selectedProvider.value)) {
+      return await loginWithEthers(loginCredentials)
+    } else if (selectedProvider.value === 'Ledger') {
+      return await loginWithLedger(loginCredentials)
+    } else if (selectedProvider.value === 'WalletConnect'){
+      return await loginWithWalletConnect(loginCredentials)
     } else {
       // TODO: Implement this for other providers
       console.log('Sign up not yet supported for this wallet provider')
@@ -301,12 +307,13 @@ export default function useWallet() {
     console.clear()
     try {
       if (provider === 'WalletConnect') {
-        alert('WalletConnect is not yet supported')
+        setSelectedProvider(provider)
+        const walletConnectAddresses = await getWalletConnectAddress()
+        userAddresses.value = [walletConnectAddresses]
       } else if (ethersProviderList.includes(provider)) {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
         userAddresses.value = ethersAddresses.map((address: CryptoAddress) => address.address)
-        console.log('userAddresses.value :>> ', userAddresses.value)
       } else if (provider === 'Ledger') {
         setSelectedProvider(provider)
         const ledgerAddresses = await getLedgerAddress[currency]() as CryptoAddress[]

@@ -4,14 +4,29 @@
       <button @click="selectProvider('MetaMask')">
         Select MetaMask
       </button>
-      <button @click="selectProvider('CoinbaseWallet')">
+      <button
+        class="coinbase-btn"
+        @click="selectProvider('CoinbaseWallet')"
+      >
         Select CoinbaseWallet
       </button>
-      <button @click="selectProvider('Ledger')">
+      <button
+        class="ledger-btn"
+        @click="selectProvider('Ledger')"
+      >
         Select Ledger
       </button>
-      <button @click="selectProvider('Ledger')">
+      <button
+        class="trezor-btn"
+        @click="selectProvider('Trezor')"
+      >
         Select Trezor
+      </button>
+      <button
+        class="wallet-connect-btn"
+        @click="selectProvider('WalletConnect')"
+      >
+        Select WalletConnect
       </button>
     </div>
     <ul>

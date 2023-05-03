@@ -1,8 +1,12 @@
 import { ethers } from 'ethers'
 import WalletConnectProvider from '@walletconnect/web3-provider'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
+import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
+import { LoginCredentials } from '@casimir/types'
+
+const { createSiweMessage, signInWithEthereum } = useAuth()
 
 /** WalletConnect signer promise needs to be resolved */
 const isWalletConnectSigner = (signer: ethers.Signer | Promise<ethers.Signer> | undefined) => typeof (signer as Promise<ethers.Signer>).then === 'function'
@@ -27,6 +31,24 @@ export default function useWalletConnect() {
   async function getWalletConnectAddress() {
     const signer = await getEthersWalletConnectSigner()
     return await signer.getAddress()
+  }
+
+  async function loginWithWalletConnect(loginCredentials: LoginCredentials) {
+    const { provider, address, currency } = loginCredentials
+    try {
+      const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
+      const signedMessage = await signWalletConnectMessage({ message, providerString: provider })
+      const walletConnectLoginResponse = await signInWithEthereum({
+        address,
+        currency: currency || 'ETH',
+        provider,
+        message,
+        signedMessage
+      })
+      return await walletConnectLoginResponse.json()
+    } catch (err) {
+      console.log('error in loginWithWalletConnect :>> ', err)
+    }
   }
 
   async function signWalletConnectMessage(messageInit: MessageInit) {
@@ -65,6 +87,7 @@ export default function useWalletConnect() {
     isWalletConnectSigner,
     getEthersWalletConnectSigner,
     getWalletConnectAddress,
+    loginWithWalletConnect,
     signWalletConnectMessage,
     sendWalletConnectTransaction
   }

@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
 import { BrowserProviders, EthersProvider, MessageInit, TransactionInit } from '@/interfaces/index'
-import { Currency, ProviderString, CryptoAddress } from '@casimir/types'
+import { LoginCredentials, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
 
@@ -80,7 +80,8 @@ export default function useEthers() {
     return currency
   }
 
-  async function loginWithEthers(provider: ProviderString, address: string, currency: Currency) {
+  async function loginWithEthers(loginCredentials: LoginCredentials) {
+    const { provider, address, currency } = loginCredentials
     const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     try {

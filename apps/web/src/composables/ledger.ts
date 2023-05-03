@@ -1,7 +1,7 @@
 import { BitcoinLedgerSigner, EthersLedgerSigner } from '@casimir/wallets'
 import { ethers } from 'ethers'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
-import { Currency, ProviderString, LedgerAddress } from '@casimir/types'
+import { CryptoAddress, LoginCredentials } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useAuth from '@/composables/auth'
@@ -34,16 +34,17 @@ export default function useLedger() {
     return await signer.getAddress()
   }
 
-  async function getEthersLedgerAddresses(): Promise<Array<LedgerAddress>> {
+  async function getEthersLedgerAddresses(): Promise<Array<CryptoAddress>> {
     const signer = getEthersLedgerSigner()
-    return await signer.getAddresses() as Array<LedgerAddress>
+    return await signer.getAddresses() as Array<CryptoAddress>
   }
 
-  async function loginWithLedger(provider: ProviderString, address: string, currency: Currency) {
+  async function loginWithLedger(loginCredentials: LoginCredentials) {
     // ETH Mainnet: 0x8222ef172a2117d1c4739e35234e097630d94376
     // ETH Goerli 1: 0x8222Ef172A2117D1C4739E35234E097630D94376
     // ETH Goerli 2: 0x8ed535c94DC22218D74A77593228cbb1B7FF6D13
     // Derivation path m/44\'/60\'/0\'/0/1: 0x1a16ae0F5cf84CaE346a1D586d00366bBA69bccc
+    const { provider, address, currency } = loginCredentials
     try {
       const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signer = getEthersLedgerSigner()
