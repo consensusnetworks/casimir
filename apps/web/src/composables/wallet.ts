@@ -38,7 +38,7 @@ export default function useWallet() {
   const { ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getBitcoinLedgerAddress, getEthersLedgerAddresses, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
-  const { getTrezorAddress, sendTrezorTransaction, signTrezorMessage } = useTrezor()
+  const { getTrezorAddress, getTrezorAddresses, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
   const { user, getUser, setUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
   const getLedgerAddress = {
@@ -209,6 +209,8 @@ export default function useWallet() {
       return await loginWithEthers(loginCredentials)
     } else if (selectedProvider.value === 'Ledger') {
       return await loginWithLedger(loginCredentials)
+    } else if (selectedProvider.value === 'Trezor') {
+      alert('Trezor login not yet supported')
     } else if (selectedProvider.value === 'WalletConnect'){
       return await loginWithWalletConnect(loginCredentials)
     } else {
@@ -320,9 +322,8 @@ export default function useWallet() {
         userAddresses.value = ledgerAddresses.map((address: CryptoAddress) => address.address)
       } else if (provider === 'Trezor') {
         setSelectedProvider(provider)
-        alert('Trezor is not yet supported')
-        // const trezorAddresses = await getTrezorAddress() as CryptoAddress[]
-        // userAddresses.value = trezorAddresses.map((address: CryptoAddress) => address.address)
+        const trezorAddresses = await getTrezorAddresses()
+        userAddresses.value = trezorAddresses.map((address: CryptoAddress) => address.address)
       }
     } catch (error) {
       console.error('There was an error in selectProvider :>> ', error)

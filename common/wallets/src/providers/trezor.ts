@@ -1,5 +1,6 @@
 import { ethers } from 'ethers'
 import TrezorConnect, { Address, EthereumTransaction, EthereumSignedTx } from '@trezor/connect-web'
+import { CryptoAddress } from '@casimir/types'
 
 export interface TrezorMessageSignature {
     address: string
@@ -34,6 +35,33 @@ export class EthersTrezorSigner extends ethers.Signer {
         const { payload } = await this.eth.ethereumGetAddress({ path: this.path })
         const { address } = payload as Address
         return ethers.utils.getAddress(address)
+    }
+
+    async getAddresses(): Promise<Array<CryptoAddress>> {
+        const trezorAddresses = []
+        const bundle = []
+        for (let i = 0; i < 5; i++) {
+            // TODO: Figure out how to access Goerli derivation paths
+            // m/coin_type'/account_index'/external_chain_index'/address_index/change_index
+            // const path = `m/44'/60'/${i}'/0/0` // Mainnet
+            // const path = `m/44'/1'/${i}'/0/0` // Ropsten
+            const path = `m/44'/60'/${i}'/0/0` // Goerli?
+            bundle.push({ path, showOnTrezor: false })
+        }
+
+        const { payload } = await this.eth.ethereumGetAddress({ bundle }) as any
+        
+        for (let i = 0; i < payload.length; i++) {
+            const { address } = payload[i]
+            // TODO: Replace with our own provider depending on environment
+            const provider = new ethers.providers.JsonRpcProvider('https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7')
+            const modifiedAddress = address.toLowerCase().trim()
+            const balance = await provider.getBalance(modifiedAddress)
+            const ethBalance = ethers.utils.formatEther(balance)
+            if (parseFloat(ethBalance) > 0) trezorAddresses.push({ address, balance: ethBalance })
+        }
+        
+        return trezorAddresses.length ? trezorAddresses : []
     }
 
     async signMessage(message: ethers.utils.Bytes | string): Promise<string> {

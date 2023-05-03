@@ -23,6 +23,11 @@ export default function useTrezor() {
         return await signer.getAddress()    
     }
 
+    async function getTrezorAddresses() {
+        const signer = getEthersTrezorSigner()
+        return await signer.getAddresses()
+    }
+
     async function sendTrezorTransaction({ from, to, value }: TransactionInit) {
         const signer = getEthersTrezorSigner()
         const provider = signer.provider as ethers.providers.Provider
@@ -54,5 +59,5 @@ export default function useTrezor() {
         return await signer.signMessage(message)
     }
 
-    return { getEthersTrezorSigner, getTrezorAddress, sendTrezorTransaction, signTrezorMessage }
+    return { getEthersTrezorSigner, getTrezorAddress, getTrezorAddresses, sendTrezorTransaction, signTrezorMessage }
 }

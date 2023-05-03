@@ -5,7 +5,7 @@ import Transport from '@ledgerhq/hw-transport'
 import { TransportSpeculosHTTP } from '@casimir/speculos'
 import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
 import { TransactionInit } from '../interfaces/TransactionInit'
-import { LedgerAddress } from '@casimir/types'
+import { CryptoAddress } from '@casimir/types'
 
 const transports = {
     'usb': async function createUSBTransport(): Promise<Transport> {
@@ -181,7 +181,7 @@ export class EthersLedgerSigner extends ethers.Signer {
         })
     }
 
-    async getAddresses(): Promise<Array<LedgerAddress> | null> {
+    async getAddresses(): Promise<Array<CryptoAddress> | null> {
         const ledgerAddresses = []
         
         for (let i = 0; i < 5; i++) {
@@ -195,6 +195,11 @@ export class EthersLedgerSigner extends ethers.Signer {
             if (parseFloat(ethBalance) > 0) ledgerAddresses.push({ address, balance: ethBalance })
         }
         return ledgerAddresses.length ? ledgerAddresses : null
+    }
+
+    async getAddress(): Promise<string> {
+        const { address } = await this.retry((eth) => eth.getAddress(this.path))
+        return address
     }
 
     async signMessage(message: ethers.utils.Bytes | string): Promise<string> {
