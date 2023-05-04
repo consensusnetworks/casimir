@@ -1,8 +1,12 @@
 import { EthersTrezorSigner } from '@casimir/wallets'
+import useAuth from '@/composables/auth'
 import useEthers from '@/composables/ethers'
 import useEnvironment from '@/composables/environment'
 import { ethers } from 'ethers'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
+import { LoginCredentials } from '@casimir/types'
+
+const { createSiweMessage, signInWithEthereum } = useAuth()
 
 const trezorPath = 'm/44\'/60\'/0\'/0/0'
 
@@ -26,6 +30,27 @@ export default function useTrezor() {
     async function getTrezorAddresses() {
         const signer = getEthersTrezorSigner()
         return await signer.getAddresses()
+    }
+
+    async function loginWithTrezor(loginCredentials: LoginCredentials, pathIndex: string) {
+        const { provider, address, currency } = loginCredentials
+        console.log('provider :>> ', provider)
+        try {
+            const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
+            const signer = getEthersTrezorSigner()
+            const signedMessage = await signer.signMessageWithIndex(message, pathIndex)
+            const loginResponse = await signInWithEthereum({ 
+                address, 
+                currency,
+                message, 
+                provider, 
+                signedMessage
+            })
+            return await loginResponse.json()
+        } catch (err) {
+            console.log(err)
+            throw new Error(err)
+        }
     }
 
     async function sendTrezorTransaction({ from, to, value }: TransactionInit) {
@@ -59,5 +84,5 @@ export default function useTrezor() {
         return await signer.signMessage(message)
     }
 
-    return { getEthersTrezorSigner, getTrezorAddress, getTrezorAddresses, sendTrezorTransaction, signTrezorMessage }
+    return { getEthersTrezorSigner, getTrezorAddress, getTrezorAddresses, loginWithTrezor, sendTrezorTransaction, signTrezorMessage }
 }

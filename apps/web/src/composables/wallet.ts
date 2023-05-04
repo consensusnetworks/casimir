@@ -39,7 +39,7 @@ export default function useWallet() {
   const { ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getBitcoinLedgerAddress, getEthersLedgerAddresses, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
-  const { getTrezorAddress, getTrezorAddresses, sendTrezorTransaction, signTrezorMessage } = useTrezor()
+  const { getTrezorAddress, getTrezorAddresses, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
   const { user, getUser, setUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
   const getLedgerAddress = {
@@ -211,7 +211,7 @@ export default function useWallet() {
     } else if (selectedProvider.value === 'Ledger') {
       return await loginWithLedger(loginCredentials, selectedPathIndex.value)
     } else if (selectedProvider.value === 'Trezor') {
-      alert('Trezor login not yet supported')
+      return await loginWithTrezor(loginCredentials, selectedPathIndex.value)
     } else if (selectedProvider.value === 'WalletConnect'){
       return await loginWithWalletConnect(loginCredentials)
     } else {
@@ -316,7 +316,6 @@ export default function useWallet() {
       } else if (ethersProviderList.includes(provider)) {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
-        console.log('ethersAddresses :>> ', ethersAddresses)
         userAddresses.value = ethersAddresses.map((address: CryptoAddress) => { 
           return {
             address,
@@ -329,7 +328,7 @@ export default function useWallet() {
       } else if (provider === 'Trezor') {
         setSelectedProvider(provider)
         const trezorAddresses = await getTrezorAddresses()
-        userAddresses.value = trezorAddresses.map((address: CryptoAddress) => address.address)
+        userAddresses.value = trezorAddresses
       }
     } catch (error) {
       console.error('There was an error in selectProvider :>> ', error)
