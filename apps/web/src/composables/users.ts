@@ -36,7 +36,6 @@ export default function useUsers () {
     */
     async function checkUserSessionExists() : Promise<boolean> {
         try {
-            console.log('got to checkUserSessionExists')
             session.value = await Session.doesSessionExist()
             if (session.value) {
                 const user = await getUser()
