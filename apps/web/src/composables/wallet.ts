@@ -85,7 +85,7 @@ export default function useWallet() {
         const userResponse = await getUser()
         if (!userResponse?.error) {
           setUser(userResponse)
-          primaryAddress.value = user?.value?.address as string
+          setPrimaryAddress(user?.value?.address as string)
         }
         loadingUserWallets.value = false
         // router.push('/')
@@ -106,7 +106,7 @@ export default function useWallet() {
           if (!addAccountResponse?.error) {
             const userResponse = await getUser()
             setUser(userResponse)
-            primaryAddress.value = user?.value?.address as string
+            setPrimaryAddress(user?.value?.address as string)
             // router.push('/')
           }
         }
@@ -222,12 +222,12 @@ export default function useWallet() {
   async function logout() {
     loadingUserWallets.value = true
     await Session.signOut()
-    user.value = undefined
+    setUser(undefined)
     setSelectedAddress('')
     setSelectedProvider('')
     setSelectedCurrency('')
     setUser()
-    primaryAddress.value = ''
+    setPrimaryAddress('')
     loadingUserWallets.value = false
     // router.push('/auth')
   }
@@ -311,23 +311,19 @@ export default function useWallet() {
       if (provider === 'WalletConnect') {
         setSelectedProvider(provider)
         const walletConnectAddresses = await getWalletConnectAddress()
-        userAddresses.value = [walletConnectAddresses]
+        setUserAddresses([walletConnectAddresses])
       } else if (ethersProviderList.includes(provider)) {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
-        userAddresses.value = ethersAddresses.map((address: CryptoAddress) => { 
-          return {
-            address,
-            pathIndex: address.pathIndex
-          }
-        })
+        setUserAddresses(ethersAddresses)
       } else if (provider === 'Ledger') {
         setSelectedProvider(provider)
-        userAddresses.value = await getLedgerAddress[currency]() as CryptoAddress[]
+        const ledgerAddresses = await getLedgerAddress[currency]() as CryptoAddress[]
+        setUserAddresses(ledgerAddresses)
       } else if (provider === 'Trezor') {
         setSelectedProvider(provider)
         const trezorAddresses = await getTrezorAddresses()
-        userAddresses.value = trezorAddresses
+        setUserAddresses(trezorAddresses)
       }
     } catch (error) {
       console.error('There was an error in selectProvider :>> ', error)
@@ -342,11 +338,15 @@ export default function useWallet() {
       const result = await updatePrimaryAddress(selectedAddress.value)
       const { data } = await result.json()
       if (data) {
-        primaryAddress.value = data.address
+        setPrimaryAddress(data.address)
       }
     } else {
       return alert('Not yet implemented for this wallet provider')
     }
+  }
+
+  function setPrimaryAddress(address: string) {
+    primaryAddress.value = address
   }
 
   function setSelectedAddress (address: string) {
@@ -378,6 +378,10 @@ export default function useWallet() {
       user.value.accounts = accountsWithBalances
       setUser(user.value)
     }
+  }
+
+  function setUserAddresses(addresses: CryptoAddress[]) {
+    userAddresses.value = addresses
   }
 
   async function signMessage(message: string) {
