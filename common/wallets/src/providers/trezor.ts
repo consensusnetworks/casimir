@@ -144,4 +144,4 @@ function convertSignature(signature: string): string {
     const s = '0x' + signature.slice(64, 128)
     const v = parseInt('0x' + signature.slice(128, 130), 16)
     return ethers.utils.joinSignature({ r, s, v })
-  }
+}
