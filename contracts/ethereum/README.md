@@ -92,7 +92,7 @@ Core internal contracts and interfaces are located in the [src](./src) directory
 | Contract | Description | Docs |
 | --- | --- | --- |
 | [CasimirManager](./src/CasimirManager.sol) | Manages stake distribution | [docs/index.md#casimirmanager](./docs/index.md#casimirmanager) |
-| [CasimirAutomation](./src/CasimirAutomation.sol) | Automates event handling | [docs/index.md#casimirautomation](./docs/index.md#casimirautomation) |
+| [CasimirUpkeep](./src/CasimirUpkeep.sol) | Automates event handling | [docs/index.md#CasimirUpkeep](./docs/index.md#CasimirUpkeep) |
 
 **Vendor Contracts:**
 
@@ -116,11 +116,11 @@ Mock (development-only) contracts and interfaces are located in the [src/mock](.
 
 ### Distributed Key Generation
 
-Casimir trustlessly distributes validator key shares to operators using the [rockx-dkg-cli](https://github.com/RockX-SG/rockx-dkg-cli). The DKG server is called via [Automated Chainlink Functions](https://docs.chain.link/chainlink-functions/tutorials/automate-functions/) to generate, reshare, and exit validators.
+Casimir trustlessly distributes validator key shares to operators using the [rockx-dkg-cli](https://github.com/RockX-SG/rockx-dkg-cli).
 
 ### Oracles
 
-The contract loosely depends on two decentralized oracles. The first oracle provides a PoR feed aggregating the total of all Casimir validator balances on the Beacon chain. The second oracle automates checking balance changes, responds with relevant validator actions, and updates the contract only when necessary conditions are met (see [Chainlink PoR](https://docs.chain.link/data-feeds/proof-of-reserve) and [Chainlink Automation](https://docs.chain.link/chainlink-automation/introduction)). External requests are made using trust-minimized compute infrastructure (see [Chainlink Functions](https://docs.chain.link/chainlink-functions)).
+The contract loosely depends on two decentralized oracles. The first oracle automatically syncs validator configuration, statuses, and balances when necessary conditions are met (see [Chainlink Automation](https://docs.chain.link/chainlink-automation/introduction)) by performing external requests with trust-minimized compute infrastructure (see [Chainlink Functions](https://docs.chain.link/chainlink-functions)). The second oracle watches the manager contract events, automatically executes zero-coordination distributed key generation (DKG) operations: validator key creating, resharing, and exiting (see [Chainlink Keepers](https://docs.chain.link/chainlink-keepers/introduction)) off-chain, and submits ceremony verification proofs.
 
 ## 👥 Users
 

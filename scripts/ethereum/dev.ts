@@ -15,6 +15,21 @@ import minimist from 'minimist'
  *      - https://hardhat.org/hardhat-network/docs/overview
  */
 void async function () {
+    /** Chain forks */
+    const forks = {
+        ethereum: {
+            mainnet: 'mainnet',
+            testnet: 'goerli'
+        }
+    }
+
+    /** Casimir addresses */
+    const addresses = {
+        mainnet: '',
+        testnet: '0xaaf5751d370d2fD5F1D5642C2f88bbFa67a29301',
+        local: '0x07E05700CB4E946BA50244e27f01805354cD8eF0'
+    }
+
     /** Load AWS credentials for configuration */
     await loadCredentials()
     
@@ -44,6 +59,14 @@ void async function () {
         const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
         process.env.ETHEREUM_FORKING_URL = url
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' ethereum fork at ') + chalk.bgBlue(url))
+    }
+
+    if (mock) {
+        /** Use local manager address */
+        process.env.PUBLIC_MANAGER_ADDRESS = addresses['local']
+    } else {
+        /** Use ${fork} manager address */
+        process.env.PUBLIC_MANAGER_ADDRESS = addresses[fork]
     }
 
     if (clean) {

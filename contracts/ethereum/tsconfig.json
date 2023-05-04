@@ -10,13 +10,14 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "isolatedModules": true
+        "isolatedModules": true,
+        "resolveJsonModule": true
     },
     "include": [
         "scripts/*.ts",
         "./test/*.ts",       
         "src/index.ts"    
-, "test/e2e/simulation.ts"    ],
+, "test/e2e/simulation.ts", "helpers/deploy.ts"    ],
     "typeRoots": [
         "node_modules/@types"
     ],

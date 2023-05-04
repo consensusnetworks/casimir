@@ -100,7 +100,7 @@ void async function () {
         if (network) {
 
             /** Use ${network} manager address */
-            process.env.CASIMIR_MANAGER_ADDRESS = addresses[network]
+            process.env.PUBLIC_MANAGER_ADDRESS = addresses[network]
 
             const key = await getSecret(`consensus-networks-${chain}-${network}`)
             const currency = chain.slice(0, 3)
@@ -111,10 +111,10 @@ void async function () {
 
             if (mock) {
                 /** Use local manager address */
-                process.env.CASIMIR_MANAGER_ADDRESS = addresses['local']
+                process.env.PUBLIC_MANAGER_ADDRESS = addresses['local']
             } else {
                 /** Use ${fork} manager address */
-                process.env.CASIMIR_MANAGER_ADDRESS = addresses[fork]
+                process.env.PUBLIC_MANAGER_ADDRESS = addresses[fork]
             }
 
             const chainFork = forks[chain][fork]

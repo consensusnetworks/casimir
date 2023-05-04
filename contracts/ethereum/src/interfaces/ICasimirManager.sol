@@ -55,18 +55,18 @@ interface ICasimirManager {
     /* Events */
     /**********/
 
-    event PoolFilled(address indexed sender, uint32 poolId);
-    event PoolInitiated(uint32 indexed poolId);
-    event PoolCompleted(uint32 indexed poolId);
-    event PoolExitRequested(uint32 indexed poolId);
-    event PoolExited(uint32 indexed poolId);
-    event StakeDistributed(address indexed sender, uint256 amount);
-    event StakeRebalanced(address indexed sender, uint256 amount);
-    event WithdrawalRequested(address indexed sender, uint256 amount);
-    event WithdrawalInitiated(address indexed sender, uint256 amount);
-    event WithdrawalCompleted(address indexed sender, uint256 amount);
-    event ValidatorRegistered(bytes indexed publicKey);
-    event ValidatorReshared(bytes indexed publicKey);
+    event PoolFilled(address sender, uint32 poolId);
+    event PoolInitiated(uint32 poolId);
+    event PoolCompleted(uint32 poolId);
+    event PoolExitRequested(uint32 poolId);
+    event PoolExited(uint32 poolId);
+    event StakeDistributed(address sender, uint256 amount);
+    event StakeRebalanced(address sender, uint256 amount);
+    event WithdrawalRequested(address sender, uint256 amount);
+    event WithdrawalInitiated(address sender, uint256 amount);
+    event WithdrawalCompleted(address sender, uint256 amount);
+    event ValidatorRegistered(bytes publicKey);
+    event ValidatorReshared(bytes publicKey);
 
     /*************/
     /* Functions */

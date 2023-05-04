@@ -1,6 +1,6 @@
 # Solidity API
 
-## CasimirAutomation
+## CasimirUpkeep
 
 ### oracleHeartbeat
 
@@ -755,7 +755,7 @@ receive() external payable
 _Will be removed in production
 Used for mocking sweeps from Beacon to the manager_
 
-## ICasimirAutomation
+## ICasimirUpkeep
 
 ### OracleReport
 

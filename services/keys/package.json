@@ -4,12 +4,11 @@
     "main": "src/index.ts",
     "scripts": {
         "build": "node build.js",
-        "dev": "npx esno -r dotenv/config scripts/dev.ts",
+        "dev": "npx esno -r dotenv/config src/index.ts",
         "test": "jest --config jest.config.js"
     },
     "dependencies": {
-        "ethers": "^5.7.2",
-        "minimist": "^1.2.7"
+        "ethers": "^5.7.2"
     },
     "devDependencies": {
         "@types/cors": "^2.8.12",

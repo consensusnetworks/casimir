@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
 
-interface ICasimirAutomation is AutomationCompatibleInterface {
+interface ICasimirUpkeep is AutomationCompatibleInterface {
     /***********/
     /* Structs */
     /***********/
@@ -21,6 +21,7 @@ interface ICasimirAutomation is AutomationCompatibleInterface {
     /**********/
     
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
+    event UpkeepPerformed(bytes performData);
 
     /*************/
     /* Functions */

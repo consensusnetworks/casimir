@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import "./CasimirAutomation.sol";
+import "./CasimirUpkeep.sol";
 import "./interfaces/ICasimirManager.sol";
 import "./libraries/Types.sol";
 import "./vendor/interfaces/IDepositContract.sol";
@@ -55,8 +55,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /* Contracts */
     /*************/
 
-    /** Automation contract */
-    ICasimirAutomation private immutable automation;
+    /** Upkeep contract */
+    ICasimirUpkeep private immutable upkeep;
     /** Beacon deposit contract */
     IDepositContract private immutable beaconDeposit;
     /** LINK ERC-20 token contract */
@@ -85,7 +85,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /* Dynamic State */
     /********************/
 
-    /** Latest active (consensus) balance reported from automation */
+    /** Latest active (consensus) balance reported from upkeep */
     uint256 latestActiveStake;
     /** Last pool ID created */
     uint256 lastPoolId;
@@ -163,8 +163,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         swapRouter = ISwapRouter(swapRouterAddress);
         tokenAddresses[Token.WETH] = wethTokenAddress;
 
-        /** Deploy automation contract */
-        automation = new CasimirAutomation(
+        /** Deploy upkeep contract */
+        upkeep = new CasimirUpkeep(
             address(this),
             oracleAddress,
             oracleSubId
@@ -202,8 +202,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function rebalanceStake(uint256 activeStake, uint256 sweptRewards) external {
         require(
-            msg.sender == address(automation),
-            "Only automation can distribute rewards"
+            msg.sender == address(upkeep),
+            "Only upkeep can distribute rewards"
         );
 
         int256 change = int256(activeStake + sweptRewards) -
@@ -292,8 +292,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function initiateRequestedWithdrawals(uint256 count) external {
         require(
-            msg.sender == address(automation),
-            "Only automation can initiate withdrawals"
+            msg.sender == address(upkeep),
+            "Only upkeep can initiate withdrawals"
         );
 
         while (count > 0) {
@@ -339,8 +339,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function completePendingWithdrawals(uint256 count) external {
         require(
-            msg.sender == address(automation),
-            "Only automation can complete withdrawals"
+            msg.sender == address(upkeep),
+            "Only upkeep can complete withdrawals"
         );
 
         while (count > 0) {
@@ -365,11 +365,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function initiateReadyPools(uint256 count) external {
         require(
-            msg.sender == address(automation),
-            "Only automation can stake pools"
+            msg.sender == address(upkeep),
+            "Only upkeep can stake pools"
         );
 
-        // Todo move these checks to automation
+        // Todo move these checks to upkeep
         require(readyValidatorPublicKeys.length >= count, "Not enough ready validators");
         require(readyPoolIds.length >= count, "Not enough ready pools");
 
@@ -425,8 +425,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function completePendingPools(uint256 count) external {
         require(
-            msg.sender == address(automation),
-            "Only automation can complete pending pools"
+            msg.sender == address(upkeep),
+            "Only upkeep can complete pending pools"
         );
         require(pendingPoolIds.length >= count, "Not enough pending pools");
 
@@ -455,8 +455,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function requestPoolExits(uint256 count) external {
         require(
-            msg.sender == address(automation),
-            "Only automation can request pool exits"
+            msg.sender == address(upkeep),
+            "Only upkeep can request pool exits"
         );
 
         uint256 index = 0; // Keeping the same staked pool array
@@ -488,8 +488,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint256 validatorIndex
     ) external {
         require(
-            msg.sender == address(automation),
-            "Only automation can complete pool exits"
+            msg.sender == address(upkeep),
+            "Only upkeep can complete pool exits"
         );
         require(exitingValidatorCount > 0, "No exiting validators");
 
@@ -631,7 +631,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             );
             // Todo use linkToken.increaseAllowance(swappedLINK) if available
             linkToken.approve(
-                address(automation),
+                address(upkeep),
                 linkToken.balanceOf(address(this))
             );
             unswappedTokens[tokenAddresses[Token.LINK]] += unswappedLINK;
@@ -643,7 +643,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             );
             // Todo use ssvToken.increaseAllowance(swappedSSV) if available
             ssvToken.approve(
-                address(automation),
+                address(upkeep),
                 ssvToken.balanceOf(address(this))
             );
             unswappedTokens[tokenAddresses[Token.SSV]] += unswappedSSV;
@@ -723,7 +723,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param oracle New oracle address
      */
     function setOracleAddress(address oracle) external onlyOwner {
-        automation.setOracleAddress(oracle);
+        upkeep.setOracleAddress(oracle);
     }
 
     /**
@@ -934,15 +934,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the automation address
-     * @return automationAddress The automation address
+     * @notice Get the upkeep address
+     * @return upkeepAddress The upkeep address
      */
-    function getAutomationAddress()
+    function getUpkeepAddress()
         external
         view
-        returns (address automationAddress)
+        returns (address upkeepAddress)
     {
-        automationAddress = address(automation);
+        upkeepAddress = address(upkeep);
     }
 
     // Dev-only functions

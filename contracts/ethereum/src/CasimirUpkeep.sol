@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "./interfaces/ICasimirAutomation.sol";
+import "./interfaces/ICasimirUpkeep.sol";
 import "./interfaces/ICasimirManager.sol";
-import {Functions, FunctionsClient} from "./vendor/FunctionsClient.sol";
-// import "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol"; // Once published
+import {Functions, FunctionsClient} from "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Dev-only imports
@@ -30,7 +29,7 @@ import "hardhat/console.sol";
 /**
  * @title Oracle contract that triggers and handles actions
  */
-contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
+contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /*************/
     /* Libraries */
     /*************/
@@ -194,12 +193,14 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
             manager.initiateReadyPools(readyPoolIds.length); // Todo find good bounds for batching
         }
 
+        /** Placeholder request */
+        Functions.Request memory req;
+
         /** Request a report */
-        bytes32 requestId = s_oracle.sendRequest(oracleSubId, requestCBOR, fulfillGasLimit);
-        s_pendingRequests[requestId] = s_oracle.getRegistry();
+        bytes32 requestId = sendRequest(req, oracleSubId, fulfillGasLimit);
         latestRequestId = requestId;
 
-        emit RequestSent(requestId);
+        emit UpkeepPerformed(performData);
     }
 
     /**
@@ -222,16 +223,17 @@ contract CasimirAutomation is ICasimirAutomation, FunctionsClient, Ownable {
 
         if (err.length == 0) {
             /** Decode report */
-            (
-                uint256 activeStake,
-                uint256 sweptStake,
-                uint256 sweptExits
-            ) = abi.decode(response, (uint256, uint256, uint256));
+            uint256 report = abi.decode(response, (uint256));
+            console.log('Report: %s', report);
 
-            // Todo apply sensible heuristics to bound changes in stake
+            /** Unpack values */
+            uint256 activeStake = uint256(uint64(report)) * 1 gwei;
+            uint256 sweptRewards = uint256(uint64(report >> 64)) * 1 gwei;
+            // uint256 sweptExits = uint256(uint64(report >> 128)) * 1 gwei;
+            // uint32 depositCount = uint32(report >> 192);
+            // uint32 withdrawalCount = uint32(report >> 224);
 
-            // Todo check simulation test for mistyped input
-            manager.rebalanceStake(activeStake, sweptStake);
+            manager.rebalanceStake(activeStake, sweptRewards);
 
             /** Complete the bounded count of pending pools */
             uint32[] memory pendingPoolIds = manager.getPendingPoolIds();

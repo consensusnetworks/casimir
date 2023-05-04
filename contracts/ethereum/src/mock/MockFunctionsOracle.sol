@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../vendor/interfaces/FunctionsOracleInterface.sol"; // Todo implement this interface
+import "@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsOracleInterface.sol";
+
 import "hardhat/console.sol";
 
 /**

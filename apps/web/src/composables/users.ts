@@ -76,7 +76,7 @@ const user = ref<UserWithAccounts>()
 //         pools: []
 //     }
 // )
-const { casimirManager, getPools } = useSSV()
+const { manager, getPools } = useSSV()
 
 export default function useUsers () {
 
@@ -176,13 +176,13 @@ export default function useUsers () {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     
         const validatorInitFilter = {
-          address: casimirManager.address,
+          address: manager.address,
           topics: [
             // ethers.utils.id('ManagerDistribution(address,uint256,uint256,uint256)'), // TODO: Make sure to query for past events on page load (Fetch and then subscribe),
-            ethers.utils.id('PoolStaked(uint32)'),
+            ethers.utils.id('PoolInitiated(uint32)'),
           ]
         }
-        casimirManager.connect(provider).on(validatorInitFilter, async () => {
+        manager.connect(provider).on(validatorInitFilter, async () => {
           console.log('ValidatorInit event... updating pools')
           user.value.balance = await getUserBalance()
           user.value.pools = await getPools(user.value.id)
