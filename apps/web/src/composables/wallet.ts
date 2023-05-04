@@ -38,36 +38,24 @@ const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
 export default function useWallet() {
   const { ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
-  const { getBitcoinLedgerAddress, getEthersLedgerAddresses, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
-  const { getTrezorAddress, getTrezorAddresses, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
+  const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
   const { user, getUser, setUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
-  const getLedgerAddress = {
-    'BTC': getBitcoinLedgerAddress,
-    'ETH': getEthersLedgerAddresses,
-    'IOTX': () => {
+
+  function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
+    if (provider === 'Ledger') {
+      new Promise((resolve, reject) => {
+        resolve(getLedgerAddress[currency]())
+      })
+    } else if (provider === 'Trezor') {
+      new Promise((resolve, reject) => {
+        resolve(getTrezorAddress[currency]())
+      })
+    } else {
       return new Promise((resolve, reject) => {
-        console.log('IOTX is not yet supported on Ledger')
-        resolve('IOTX is not yet supported on Ledger')
-      }) as Promise<string>
-    },
-    'SOL': () => {
-      return new Promise((resolve, reject) => {
-        console.log('SOL is not yet supported on Ledger')
-        resolve('SOL is not yet supported on Ledger')
-      }) as Promise<string>
-    },
-    '': () => {
-      return new Promise((resolve, reject) => {
-        console.log('No currency selected')
-        resolve('No currency selected')
-      }) as Promise<string>
-    },
-    'USD': () => {
-      return new Promise((resolve, reject) => {
-        console.log('USD is not yet supported on Ledger')
-        resolve('USD is not yet supported on Ledger')
-      }) as Promise<string>
+        resolve('Cold storage provider not yet supported')
+      })
     }
   }
 
@@ -167,9 +155,9 @@ export default function useWallet() {
       } else if (provider === 'Ledger') {
         setSelectedCurrency(currency as Currency)
         // Ask user to select an account
-        address = await getLedgerAddress[currency as Currency]()
+        address = await getColdStorageAddress(provider, currency as Currency)
       } else if (provider === 'Trezor') {
-        address = await getTrezorAddress()
+        address = await getColdStorageAddress(provider, currency as Currency)
       } else {
         throw new Error('No provider selected')
       }
@@ -222,11 +210,10 @@ export default function useWallet() {
   async function logout() {
     loadingUserWallets.value = true
     await Session.signOut()
-    setUser(undefined)
     setSelectedAddress('')
     setSelectedProvider('')
     setSelectedCurrency('')
-    setUser()
+    setUser(undefined)
     setPrimaryAddress('')
     loadingUserWallets.value = false
     // router.push('/auth')
@@ -322,7 +309,7 @@ export default function useWallet() {
         setUserAddresses(ledgerAddresses)
       } else if (provider === 'Trezor') {
         setSelectedProvider(provider)
-        const trezorAddresses = await getTrezorAddresses()
+        const trezorAddresses = await getTrezorAddress[currency]() as CryptoAddress[]
         setUserAddresses(trezorAddresses)
       }
     } catch (error) {

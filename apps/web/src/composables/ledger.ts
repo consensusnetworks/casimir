@@ -29,6 +29,35 @@ export default function useLedger() {
     return new EthersLedgerSigner(options)
   }
 
+  const getLedgerAddress = {
+    'BTC': getBitcoinLedgerAddress,
+    'ETH': getEthersLedgerAddresses,
+    'IOTX': () => {
+      return new Promise((resolve, reject) => {
+        console.log('IOTX is not yet supported on Ledger')
+        resolve('IOTX is not yet supported on Ledger')
+      }) as Promise<string>
+    },
+    'SOL': () => {
+      return new Promise((resolve, reject) => {
+        console.log('SOL is not yet supported on Ledger')
+        resolve('SOL is not yet supported on Ledger')
+      }) as Promise<string>
+    },
+    '': () => {
+      return new Promise((resolve, reject) => {
+        console.log('No currency selected')
+        resolve('No currency selected')
+      }) as Promise<string>
+    },
+    'USD': () => {
+      return new Promise((resolve, reject) => {
+        console.log('USD is not yet supported on Ledger')
+        resolve('USD is not yet supported on Ledger')
+      }) as Promise<string>
+    }
+  }
+
   async function getBitcoinLedgerAddress() {
     const signer = getBitcoinLedgerSigner()
     return await signer.getAddress()
@@ -101,10 +130,9 @@ export default function useLedger() {
   }
 
   return {
-    getBitcoinLedgerAddress,
     getBitcoinLedgerSigner,
-    getEthersLedgerAddresses,
     getEthersLedgerSigner,
+    getLedgerAddress,
     loginWithLedger,
     signLedgerMessage,
     sendLedgerTransaction,
