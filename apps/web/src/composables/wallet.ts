@@ -298,7 +298,7 @@ export default function useWallet() {
       if (provider === 'WalletConnect') {
         setSelectedProvider(provider)
         const walletConnectAddresses = await getWalletConnectAddress()
-        setUserAddresses([walletConnectAddresses])
+        setUserAddresses(walletConnectAddresses)
       } else if (ethersProviderList.includes(provider)) {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]

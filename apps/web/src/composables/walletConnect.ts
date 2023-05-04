@@ -4,7 +4,7 @@ import { MessageInit, TransactionInit } from '@/interfaces/index'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
-import { LoginCredentials } from '@casimir/types'
+import { LoginCredentials, CryptoAddress } from '@casimir/types'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
 
@@ -28,9 +28,17 @@ export default function useWalletConnect() {
     return provider.getSigner()
   }
 
-  async function getWalletConnectAddress() {
-    const signer = await getEthersWalletConnectSigner()
-    return await signer.getAddress()
+  async function getWalletConnectAddress(): Promise<CryptoAddress[]> {
+    try {
+      const signer = await getEthersWalletConnectSigner()
+      const address = await signer.getAddress()
+      const balance = await signer.getBalance()
+      const ethBalance = ethers.utils.formatEther(balance)
+      return [{ address, balance: ethBalance }] as CryptoAddress[]
+    } catch (err) {
+      console.log('error in getWalletConnectAddress :>> ', err)
+      return []
+    }
   }
 
   async function loginWithWalletConnect(loginCredentials: LoginCredentials) {
