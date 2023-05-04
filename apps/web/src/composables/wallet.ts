@@ -107,7 +107,6 @@ export default function useWallet() {
             const userResponse = await getUser()
             setUser(userResponse)
             primaryAddress.value = user?.value?.address as string
-            console.log('primaryAddress.value :>> ', primaryAddress.value)
             // router.push('/')
           }
         }

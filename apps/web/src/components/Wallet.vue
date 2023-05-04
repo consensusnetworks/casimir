@@ -32,10 +32,10 @@
     </div>
     <button
       v-for="address in userAddresses"
-      :key="address"
-      @click="selectAddress(address)"
+      :key="address.address"
+      @click="selectAddress(address.address, address.pathIndex)"
     >
-      Connect this address: {{ address }}
+      Connect this address: {{ address.address }}
     </button>
     <div>
       <h5>Primary Account:</h5>
@@ -129,12 +129,12 @@
 <script setup lang="ts">
 import { ref, watchEffect, onMounted } from 'vue'
 import useSSV from '@/composables/ssv'
-import useUsers from '@/composables/users'
+// import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
 
 const message = ref('')
-const signedMessage = ref('')
-const { checkUserSessionExists } = useUsers()
+const signedMessage = ref('hi')
+// const { checkUserSessionExists } = useUsers()
 
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
@@ -168,11 +168,6 @@ const {
 } = useWallet()
 
 const { deposit, getPools, withdraw } = useSSV()
-
-onMounted(async () => {
-  // const user = await checkUserSessionExists()
-  // console.log('user :>> ', user)
-})
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {

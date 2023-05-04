@@ -7,7 +7,7 @@ const router = express.Router()
 const { addAccount, getUser, updateUserAddress, removeAccount } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
-    const address = req.session?.getUserId() as string
+    const address = req.session?.getUserId().toLowerCase() as string
     const user = await getUser(address)
     const message = user ? 'User found' : 'User not found'
     const error = user ? false : true
@@ -25,7 +25,7 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
         console.log('ADDING ACCOUNT!')
         const { account } = req.body
         const { ownerAddress } = account
-        const userSessionsAddress = req.session?.getUserId()
+        const userSessionsAddress = req.session?.getUserId().toLowerCase()
         const validatedAddress = validateAddress(userSessionsAddress, ownerAddress)
         if (!validatedAddress) {    
             res.setHeader('Content-Type', 'application/json')
