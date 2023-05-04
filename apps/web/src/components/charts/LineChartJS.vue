@@ -96,7 +96,7 @@ onMounted(() => {
 
 <template>
   <div 
-    class="h-full w-full px-10"
+    class="h-full w-full"
   >
     <canvas
       :id="props.id"
