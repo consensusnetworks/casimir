@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
 import { BrowserProviders, EthersProvider, MessageInit, TransactionInit } from '@/interfaces/index'
-import { Currency, ProviderString } from '@casimir/types'
+import { LoginCredentials, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
 
@@ -19,11 +19,31 @@ const availableProviders = ref<BrowserProviders>(getBrowserProviders(ethereum))
 export default function useEthers() {
   const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
 
-  async function requestEthersAccount(provider: EthersProvider) {
-    if (provider?.request) {
-      return await provider.request({
-        method: 'eth_requestAccounts',
+  async function addEthersNetwork (providerString: ProviderString, network: any) {
+    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    try {
+      await provider.request({
+        method: 'wallet_addEthereumChain',
+        params: [network]
       })
+    } catch(err){
+      console.log(`Error occurred while adding network ${network.chainName}, Message: ${err.message} Code: ${err.code}`)
+    }
+  }
+
+  async function getEthersAddress (providerString: ProviderString) {
+    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    if (provider) {
+      return (await requestEthersAccount(provider as EthersProvider))
+    }
+  }
+
+  async function getEthersAddressWithBalance (providerString: ProviderString) {
+    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    if (provider) {
+      const address = (await requestEthersAccount(provider as EthersProvider))[0]
+      const balance = await getEthersBalance(address)
+      return [{ address, balance }]
     }
   }
 
@@ -33,6 +53,16 @@ export default function useEthers() {
     return ethers.utils.formatEther(balance)
   }
 
+  async function getGasPriceAndLimit(
+    rpcUrl: string,
+    unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+  ) {
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+    const gasPrice = await provider.getGasPrice()
+    const gasLimit = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    return { gasPrice, gasLimit }
+  }
+
   function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
     const provider = availableProviders.value[providerString as keyof BrowserProviders]
     if (provider) {
@@ -40,25 +70,43 @@ export default function useEthers() {
     }
   }
 
-  async function getEthersAddress (providerString: ProviderString) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
-    if (provider) {
-      return (await requestEthersAccount(provider as EthersProvider))[0]
+  async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
+    // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
+    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
+    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const network = await web3Provider.getNetwork()
+    // console.log('network.chainId :>> ', network.chainId)
+    const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
+    return currency
+  }
+
+  async function loginWithEthers(loginCredentials: LoginCredentials) {
+    const { provider, address, currency } = loginCredentials
+    const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
+    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    try {
+      const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
+      const signer = web3Provider.getSigner()
+      const signedMessage = await signer.signMessage(message)
+      const ethersLoginResponse = await signInWithEthereum({ 
+        address,
+        currency,
+        message, 
+        provider, 
+        signedMessage
+      })
+      return await ethersLoginResponse.json()
+    } catch (err) {
+      console.log('Error logging in: ', err)
+      return err
     }
   }
 
-  async function getBalance (providerString: ProviderString) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
-    try {
-      if (provider?.request) {
-        const balance = await provider.request({
-          method: 'eth_getBalance',
-          params: [await getEthersAddress(providerString), 'latest'],
-        })
-        return ethers.utils.formatEther(balance)
-      }
-    } catch (err) {
-      console.log('Error getting balance: ', err)
+  async function requestEthersAccount(provider: EthersProvider) {
+    if (provider?.request) {
+      return await provider.request({
+        method: 'eth_requestAccounts',
+      })
     }
   }
 
@@ -89,59 +137,6 @@ export default function useEthers() {
     return signature
   }
 
-  async function getGasPriceAndLimit(
-    rpcUrl: string,
-    unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
-  ) {
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
-    const gasPrice = await provider.getGasPrice()
-    const gasLimit = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
-    return { gasPrice, gasLimit }
-  }
-
-  async function loginWithEthers(provider: ProviderString, address: string, currency: Currency) {
-    const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
-    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    try {
-      const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
-      const signer = web3Provider.getSigner()
-      const signedMessage = await signer.signMessage(message)
-      const ethersLoginResponse = await signInWithEthereum({ 
-        address,
-        currency,
-        message, 
-        provider, 
-        signedMessage
-      })
-      return await ethersLoginResponse.json()
-    } catch (err) {
-      console.log('Error logging in: ', err)
-      return err
-    }
-  }
-
-  async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
-    // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
-    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
-    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    const network = await web3Provider.getNetwork()
-    // console.log('network.chainId :>> ', network.chainId)
-    const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
-    return currency
-  }
-
-  async function addEthersNetwork (providerString: ProviderString, network: any) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
-    try {
-      await provider.request({
-        method: 'wallet_addEthereumChain',
-        params: [network]
-      })
-    } catch(err: any){
-      console.log(`Error occurred while adding network ${network.chainName}, Message: ${err.message} Code: ${err.code}`)
-    }
-  }
-
   async function switchEthersNetwork (providerString: ProviderString, chainId: string) {
     const provider = availableProviders.value[providerString as keyof BrowserProviders]
     const currentChainId = await provider.networkVersion
@@ -170,17 +165,18 @@ export default function useEthers() {
   }
 
   return { 
+    addEthersNetwork,
     ethersProviderList, 
-    getEthersBrowserSigner, 
     getEthersAddress,
+    getEthersAddressWithBalance,
     getEthersBalance,
-    sendEthersTransaction,
-    signEthersMessage,
+    getEthersBrowserSigner, 
+    getEthersBrowserProviderSelectedCurrency,
     getGasPriceAndLimit,
     loginWithEthers,
-    getEthersBrowserProviderSelectedCurrency,
-    addEthersNetwork,
-    switchEthersNetwork 
+    signEthersMessage,
+    sendEthersTransaction,
+    switchEthersNetwork
   }
 }
 
@@ -249,6 +245,7 @@ const currenciesByChainId = {
     currency: 'IOTX',
   },
 }
+
 const iotexNetwork = {
   chainId: ethers.utils.hexlify(4690),
   chainName: 'IoTeX',

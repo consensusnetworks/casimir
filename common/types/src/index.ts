@@ -7,6 +7,7 @@ import { ContractConfig } from './interfaces/ContractConfig'
 import { Currency } from './interfaces/Currency'
 import { DeploymentConfig } from './interfaces/DeploymentConfig'
 import { Event } from './interfaces/Event'
+import { CryptoAddress } from './interfaces/CryptoAddress'
 import { LoginCredentials } from './interfaces/LoginCredentials'
 import { Operator } from './interfaces/Operator'
 import { Pool } from './interfaces/Pool'
@@ -24,6 +25,7 @@ export type {
     BalanceSnapshot,
     ContractArgs,
     ContractConfig, 
+    CryptoAddress,
     Currency,
     DeploymentConfig,
     Event,
