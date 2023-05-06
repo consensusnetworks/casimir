@@ -1,18 +1,18 @@
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { CasimirManager, CasimirUpkeep, MockFunctionsOracle } from '../build/artifacts/types'
+import { CasimirUpkeep } from '../build/artifacts/types'
 
 export async function runUpkeep({
-    upkeep, chainlink
+    upkeep, keeper
 }: {
-    upkeep: CasimirUpkeep, chainlink: SignerWithAddress
+    upkeep: CasimirUpkeep, keeper: SignerWithAddress
 }) {
     let ranUpkeep = false
     const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await upkeep.connect(chainlink).checkUpkeep(checkData)
+    const { ...check } = await upkeep.connect(keeper).checkUpkeep(checkData)
     const { upkeepNeeded, performData } = check
     if (upkeepNeeded) {
-        const performUpkeep = await upkeep.connect(chainlink).performUpkeep(performData)
+        const performUpkeep = await upkeep.connect(keeper).performUpkeep(performData)
         await performUpkeep.wait()
         ranUpkeep = true
     }
@@ -20,10 +20,10 @@ export async function runUpkeep({
 }
 
 export async function fulfillOracleAnswer({
-    upkeep, chainlink, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount
+    upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount
 }: {
     upkeep: CasimirUpkeep,
-    chainlink: SignerWithAddress,
+    keeper: SignerWithAddress,
     nextActiveStakeAmount: number,
     nextSweptRewardsAmount: number,
     nextSweptExitsAmount: number,
@@ -45,7 +45,7 @@ export async function fulfillOracleAnswer({
     )
     const responseBytes = ethers.utils.defaultAbiCoder.encode(['uint256'], [packedResponse.toString()])
     const errorBytes = ethers.utils.toUtf8Bytes('')
-    const mockFulfillRequest = await upkeep.connect(chainlink).mockFulfillRequest(requestId, responseBytes, errorBytes)
+    const mockFulfillRequest = await upkeep.connect(keeper).mockFulfillRequest(requestId, responseBytes, errorBytes)
     await mockFulfillRequest.wait()
 }
 
@@ -56,4 +56,4 @@ function packResponse(activeStakeAmount: string, sweptRewardsAmount: string, swe
     packed = packed.or(ethers.BigNumber.from(depositedCount).shl(192))
     packed = packed.or(ethers.BigNumber.from(exitedCount).shl(224))
     return packed
-  }
+}

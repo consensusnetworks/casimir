@@ -1,5 +1,5 @@
 import { $, echo, chalk } from 'zx'
-import { loadCredentials, getSecret } from '@casimir/helpers'
+import { loadCredentials, getSecret, getFutureContractAddress, getWallet } from '@casimir/helpers'
 import minimist from 'minimist'
 
 /**
@@ -15,19 +15,11 @@ import minimist from 'minimist'
  *      - https://hardhat.org/hardhat-network/docs/overview
  */
 void async function () {
-    /** Chain forks */
-    const forks = {
-        ethereum: {
-            mainnet: 'mainnet',
-            testnet: 'goerli'
-        }
-    }
 
-    /** Casimir addresses */
-    const addresses = {
-        mainnet: '',
-        testnet: '0xaaf5751d370d2fD5F1D5642C2f88bbFa67a29301',
-        local: '0x07E05700CB4E946BA50244e27f01805354cD8eF0'
+    /** Chain fork nonces */
+    const nonces = {
+        mainnet: 0,
+        goerli: 12
     }
 
     /** Load AWS credentials for configuration */
@@ -48,10 +40,17 @@ void async function () {
     /** Default to mock external contracts */
     const mock = argv.mock !== 'false' && argv.mock !== false
 
-    /** Get shared seed */
+    /** Get manager address based on shared seed nonce */
     const seed = await getSecret('consensus-networks-bip39-seed')
-
+    if (!process.env.PUBLIC_MANAGER_ADDRESS) {
+        const wallet = getWallet(seed)
+        const nonce = nonces[fork]
+        const managerIndex = 1 // We deploy a mock oracle before the manager
+        const managerAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
+        process.env.PUBLIC_MANAGER_ADDRESS = `${managerAddress}`
+    }
     process.env.BIP39_SEED = seed
+
     echo(chalk.bgBlackBright('Your mnemonic seed is ') + chalk.bgBlue(seed))
 
     if (fork) {
@@ -59,14 +58,6 @@ void async function () {
         const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
         process.env.ETHEREUM_FORKING_URL = url
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' ethereum fork at ') + chalk.bgBlue(url))
-    }
-
-    if (mock) {
-        /** Use local manager address */
-        process.env.PUBLIC_MANAGER_ADDRESS = addresses['local']
-    } else {
-        /** Use ${fork} manager address */
-        process.env.PUBLIC_MANAGER_ADDRESS = addresses[fork]
     }
 
     if (clean) {
@@ -93,4 +84,7 @@ void async function () {
         $`npm run dev --workspace @casimir/ethereum -- --network localhost`
     }
 
+    /** Start local oracle */
+    process.env.ETHEREUM_RPC_URL = 'http://localhost:8545'
+    $`npm run dev --workspace @casimir/oracle`
 }()

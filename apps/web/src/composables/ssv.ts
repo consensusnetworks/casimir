@@ -76,7 +76,7 @@ export default function useSSV() {
         console.log('poolIds :>> ', poolIds)
 
         return await Promise.all(poolIds.map(async (poolId: number) => {
-            const { deposits, operatorIds, validatorPublicKey } = await manager.connect(provider).getPoolDetails(poolId)
+            const { deposits, publicKey, operatorIds } = await manager.connect(provider).getPool(poolId)
             
             // TODO: Decide when/how to get rewards/userRewards
             let pool: Pool = {
@@ -87,17 +87,17 @@ export default function useSSV() {
                 userStake: ethers.utils.formatEther(userStake)
             }
 
-            if (validatorPublicKey) {
+            if (publicKey) {
                 // Validator data from beaconcha.in hardcoded for now
                 // const response = await fetch(`https://prater.beaconcha.in/api/v1/validator/${validatorPublicKey}`)
                 // const { data } = await response.json()
                 // const { status } = data
                 const validator = {
-                    publicKey: validatorPublicKey,
+                    publicKey,
                     status: 'Active',
                     effectiveness: '0%',
                     apr: '0%', // See issue #205 https://github.com/consensusnetworks/casimir/issues/205#issuecomment-1338142532
-                    url: `https://prater.beaconcha.in/validator/${validatorPublicKey}`
+                    url: `https://prater.beaconcha.in/validator/${publicKey}`
                 }
 
 

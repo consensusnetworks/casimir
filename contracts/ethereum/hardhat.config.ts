@@ -82,7 +82,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: mnemonic ? { ...hid, accountsBalance: '96000000000000000000' } : undefined,
+      accounts: mnemonic ? { ...hid, accountsBalance: '10000000000000000000000' } : undefined,
       chainId: forkingChainId || 1337,
       forking: forkingUrl ? { url: forkingUrl } : undefined,
       mining: miningInterval ? mining : { auto: true },

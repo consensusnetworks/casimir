@@ -41,7 +41,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /*************/
 
     /** Oracle heartbeat */
-    uint256 public constant oracleHeartbeat = 0; // Will use ~half a day in production
+    uint256 public constant oracleHeartbeat = 0; // Will use a ~quarter of a day in production
 
     /*************/
     /* Contracts */
@@ -158,18 +158,12 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         }
         // Todo provide required withdrawals as performData (or some optimial input, maybe validator count)
 
-        /** Check if any pools are ready */
-        uint32[] memory readyPoolIds = manager.getReadyPoolIds();
-        if (readyPoolIds.length > 0) {
-            upkeepNeeded = true;
-        }
-
         // /** Check if last request has been fulfilled */
         // if (latestRequestId != latestFulfilledRequestId) {
         //     upkeepNeeded = false;
         // }
 
-        performData = abi.encode(requiredWithdrawals, readyPoolIds);
+        performData = abi.encode(requiredWithdrawals);
     }
 
     /**
@@ -179,18 +173,13 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         (bool upkeepNeeded, bytes memory performData) = checkUpkeep("");
         require(upkeepNeeded, "Upkeep not needed");
 
-        (int256 requiredWithdrawals, uint32[] memory readyPoolIds) = abi.decode(performData, (int256, uint32[]));
+        int256 requiredWithdrawals = abi.decode(performData, (int256));
 
         /** Initiate withdrawals and request exits */
         if (requiredWithdrawals > 0) {
             // Todo this should bound withdrawals and request exits
             manager.initiateRequestedWithdrawals(manager.getRequestedWithdrawalQueue().length);
             manager.completePendingWithdrawals(manager.getPendingWithdrawalQueue().length);
-        }
-
-        /** Initiate a bounded count of ready pools */
-        if (readyPoolIds.length > 0) {
-            manager.initiateReadyPools(readyPoolIds.length); // Todo find good bounds for batching
         }
 
         /** Placeholder request */
@@ -224,7 +213,6 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         if (err.length == 0) {
             /** Decode report */
             uint256 report = abi.decode(response, (uint256));
-            console.log('Report: %s', report);
 
             /** Unpack values */
             uint256 activeStake = uint256(uint64(report)) * 1 gwei;

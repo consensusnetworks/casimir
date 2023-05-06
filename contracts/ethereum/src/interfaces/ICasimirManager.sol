@@ -20,15 +20,15 @@ interface ICasimirManager {
     /** Pool used for running a validator */
     struct Pool {
         uint256 deposits;
-        bytes validatorPublicKey;
         bool exiting;
-    }
-    /** Pool with details */
-    struct PoolDetails {
-        uint256 deposits;
-        bytes validatorPublicKey;
+        uint256 reshareCount;
+        bytes32 depositDataRoot;
+        bytes publicKey;
         uint32[] operatorIds;
-        bool exiting;
+        bytes[] sharesEncrypted;
+        bytes[] sharesPublicKeys;
+        bytes signature;
+        bytes withdrawalCredentials;
     }
     /** User staking account */
     struct User {
@@ -40,24 +40,16 @@ interface ICasimirManager {
         address user;
         uint256 amount;
     }
-    /** Validator deposit data and shares */
-    struct Validator {
-        bytes32 depositDataRoot;
-        uint32[] operatorIds;
-        bytes[] sharesEncrypted;
-        bytes[] sharesPublicKeys;
-        bytes signature;
-        bytes withdrawalCredentials;
-        uint256 reshareCount;
-    }
 
     /**********/
     /* Events */
     /**********/
 
-    event PoolFilled(address sender, uint32 poolId);
+    event PoolFilled(uint32 poolId);
     event PoolInitiated(uint32 poolId);
     event PoolCompleted(uint32 poolId);
+    event PoolReshareRequested(uint32 poolId);
+    event PoolReshared(uint32 poolId);
     event PoolExitRequested(uint32 poolId);
     event PoolExited(uint32 poolId);
     event StakeDistributed(address sender, uint256 amount);
@@ -65,8 +57,6 @@ interface ICasimirManager {
     event WithdrawalRequested(address sender, uint256 amount);
     event WithdrawalInitiated(address sender, uint256 amount);
     event WithdrawalCompleted(address sender, uint256 amount);
-    event ValidatorRegistered(bytes publicKey);
-    event ValidatorReshared(bytes publicKey);
 
     /*************/
     /* Functions */
@@ -82,7 +72,15 @@ interface ICasimirManager {
 
     function completePendingWithdrawals(uint256 count) external;
 
-    function initiateReadyPools(uint256 count) external;
+    function initiateNextReadyPool(        
+        bytes32 depositDataRoot,
+        bytes calldata publicKey,
+        uint32[] memory operatorIds,
+        bytes[] memory sharesEncrypted,
+        bytes[] memory sharesPublicKeys,
+        bytes calldata signature,
+        bytes calldata withdrawalCredentials
+    ) external;
 
     function completePendingPools(uint256 count) external;
 
@@ -91,16 +89,6 @@ interface ICasimirManager {
     function completePoolExit(
         uint256 poolIndex,
         uint256 validatorIndex
-    ) external;
-
-    function registerValidator(
-        bytes32 depositDataRoot,
-        bytes calldata publicKey,
-        uint32[] memory operatorIds,
-        bytes[] memory sharesEncrypted,
-        bytes[] memory sharesPublicKeys,
-        bytes calldata signature,
-        bytes calldata withdrawalCredentials
     ) external;
 
     function setLINKFee(uint32 fee) external;
@@ -114,11 +102,6 @@ interface ICasimirManager {
     function getLINKFee() external view returns (uint32);
 
     function getSSVFee() external view returns (uint32);
-
-    function getReadyValidatorPublicKeys()
-        external
-        view
-        returns (bytes[] memory);
 
     function getStakedValidatorPublicKeys()
         external

@@ -119,7 +119,7 @@ export async function run(fullCommand: string) {
  * @param retriesLeft - Number of retries left (default: 5)
  * @returns A promise that resolves when the command exits
  */
-export async function retryRun(fullCommand: string, retriesLeft: number | undefined = 25) {
+export async function retryRun(fullCommand: string, retriesLeft: number | undefined = 25): Promise<unknown> {
     if (retriesLeft === 0) {
         throw new Error('Command failed after maximum retries')
     }
@@ -188,7 +188,7 @@ export async function getWalletKeystore(mnemonic?: string) {
  * @param mnemonic - The wallet mnemonic (optional)
  * @returns The wallet
  */
-export function getWallet(mnemonic?: string) {
+export function getWallet(mnemonic?: string): ethers.Wallet {
     if (mnemonic) {
         return ethers.Wallet.fromMnemonic(mnemonic)
     }
@@ -202,4 +202,18 @@ export function getWallet(mnemonic?: string) {
  */
 export function getWithdrawalCredentials(withdrawalAddress: string): string {
     return '01' + '0'.repeat(22) + withdrawalAddress.split('0x')[1]
+}
+
+export async function getFutureContractAddress({ wallet, nonce, index }: { 
+    wallet: ethers.Wallet,
+    nonce: number, 
+    index?: number 
+}): Promise<string> {
+
+    console.log(`Wallet Address: ${wallet.address}`)
+    console.log(`Current Nonce: ${nonce}`)
+
+    const futureAddress = ethers.utils.getContractAddress({ from: wallet.address, nonce: nonce + (index || 0) })
+    console.log(`Predicted Contract Address: ${futureAddress}`)
+    return futureAddress
 }

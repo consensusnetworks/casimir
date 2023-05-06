@@ -1,17 +1,9 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { registerValidatorsFixture, firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture } from './fixtures/shared'
+import { firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture } from './fixtures/shared'
 
 describe('Casimir manager', async function () {
-
-  it('Registration adds 5 validators with 4 operators each', async function () {
-    const { validators } = await loadFixture(registerValidatorsFixture)
-    expect(validators.length).equal(5)
-    
-    const operators = validators.map((v) => v.operatorIds).flat()
-    expect(operators.length).equal(4 * validators.length)
-  })
 
   it('First user\'s 16.0 stake increases the total stake to 16.0', async function () {
     const { manager } = await loadFixture(firstUserDepositFixture)
@@ -31,9 +23,9 @@ describe('Casimir manager', async function () {
     expect(stakedPoolIds.length).equal(1)
     
     const firstPoolId = stakedPoolIds[0]
-    const pool = await manager.getPoolDetails(firstPoolId)
+    const pool = await manager.getPool(firstPoolId)
     expect(ethers.utils.formatEther(pool.deposits)).equal('32.0')
-    expect(pool.validatorPublicKey).not.equal('0x')
+    expect(pool.publicKey).not.equal('0x')
     expect(pool.operatorIds.length).equal(4)
   })
 
@@ -75,9 +67,9 @@ describe('Casimir manager', async function () {
     expect(stakedPools.length).equal(2)
     
     const secondPoolId = stakedPools[1]
-    const pool = await manager.getPoolDetails(secondPoolId)
+    const pool = await manager.getPool(secondPoolId)
     expect(ethers.utils.formatEther(pool.deposits)).equal('32.0')
-    expect(pool.validatorPublicKey).not.equal('0x')
+    expect(pool.publicKey).not.equal('0x')
     expect(pool.operatorIds.length).equal(4)
   })
 
@@ -133,15 +125,15 @@ describe('Casimir manager', async function () {
     expect(stakedPools.length).equal(4)
     
     const thirdPoolId = stakedPools[2]
-    const thirdPool = await manager.getPoolDetails(thirdPoolId)
+    const thirdPool = await manager.getPool(thirdPoolId)
     expect(ethers.utils.formatEther(thirdPool.deposits)).equal('32.0')
-    expect(thirdPool.validatorPublicKey).not.equal('0x')
+    expect(thirdPool.publicKey).not.equal('0x')
     expect(thirdPool.operatorIds.length).equal(4)
 
     const fourthPoolId = stakedPools[3]
-    const fourthPool = await manager.getPoolDetails(fourthPoolId)
+    const fourthPool = await manager.getPool(fourthPoolId)
     expect(ethers.utils.formatEther(fourthPool.deposits)).equal('32.0')
-    expect(fourthPool.validatorPublicKey).not.equal('0x')
+    expect(fourthPool.publicKey).not.equal('0x')
     expect(fourthPool.operatorIds.length).equal(4)
   })
 

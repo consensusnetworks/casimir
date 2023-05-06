@@ -1,6 +1,6 @@
 # @casimir/keys
 
-Casimir key generation service and CLI
+Service to run secure key operations with a RockX DKG messenger
 
 ## Usage
 
@@ -14,7 +14,7 @@ npm install @casimir/keys @casimir/types # (Alternatively install as devDependen
 
 ### Package
 
-Use the package in your Node.js or browser project.
+Use the package in your Node.js project.
 
 ```ts
 import { Validator } from '@casimir/types'
@@ -29,22 +29,6 @@ const options: CreateValidatorOptions = {
 }
 const validators: Validator[] = await ssv.createValidator(options)
 ```
-
-### CLI
-
-Use the CLI to output to a file or stdout.
-
-```zsh
-npx @casimir/keys create-validator
-```
-
-Options:
-
-- `--dkgServiceUrl` - URL of the DKG service to use for key generation (default: 'http://0.0.0.0:8000')
-- `--operatorIds` - Four operator registry IDs to use for the key generation (default: [1, 2, 3, 4])
-- `--withdrawalAddress` - Validator withdrawal address (default: '0x07e05700cb4e946ba50244e27f01805354cd8ef0')
-
-> 🚩 If you'd like to save validator output, add ./data/validator_store.json to the current package directory.
 
 ### Environment Variables
 

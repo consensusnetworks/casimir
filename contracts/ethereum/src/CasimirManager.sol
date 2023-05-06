@@ -105,12 +105,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint32[] private pendingPoolIds;
     /** IDs of pools staked */
     uint32[] private stakedPoolIds;
-    /** All validators (ready or staked) */
-    mapping(bytes => Validator) private validators;
-    /** Public keys of ready validators */
-    bytes[] private readyValidatorPublicKeys;
-    /** Public keys of pending validators */
-    bytes[] private pendingValidatorPublicKeys;
     /** Public keys of staked validators */
     bytes[] private stakedValidatorPublicKeys;
     /** Exiting validator count */
@@ -256,7 +250,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 pool.deposits = poolCapacity;
                 readyPoolIds.push(poolId);
 
-                emit PoolFilled(msg.sender, poolId);
+                emit PoolFilled(poolId);
             }
         }
     }
@@ -360,63 +354,66 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Initiate a given count of next ready pools
-     * @param count The number of pools to stake
+     * @notice Initiate the next ready pool
+     * @param depositDataRoot The deposit data root
+     * @param publicKey The validator public key
+     * @param operatorIds The operator IDs
+     * @param sharesEncrypted The encrypted shares
+     * @param sharesPublicKeys The public keys of the shares
+     * @param signature The signature
+     * @param withdrawalCredentials The withdrawal credentials
      */
-    function initiateReadyPools(uint256 count) external {
-        require(
-            msg.sender == address(upkeep),
-            "Only upkeep can stake pools"
+    function initiateNextReadyPool(   
+        bytes32 depositDataRoot,
+        bytes calldata publicKey,
+        uint32[] memory operatorIds,
+        bytes[] memory sharesEncrypted,
+        bytes[] memory sharesPublicKeys,
+        bytes calldata signature,
+        bytes calldata withdrawalCredentials
+    ) external {
+        // Todo restrict to oracle
+
+        require(readyPoolIds.length > 0, "No ready pools");
+
+        /** Get next filled pool ID */
+        uint32 poolId = readyPoolIds[0];
+
+        /** Get the pool and update it */
+        Pool storage pool = pools[poolId];
+        pool.depositDataRoot = depositDataRoot;
+        pool.publicKey = publicKey;
+        pool.operatorIds = operatorIds;
+        pool.sharesEncrypted = sharesEncrypted;
+        pool.sharesPublicKeys = sharesPublicKeys;
+        pool.signature = signature;
+        pool.withdrawalCredentials = withdrawalCredentials;
+
+        /** Move pool from ready to pending state */
+        readyPoolIds.remove(0);
+        pendingPoolIds.push(poolId); 
+
+        /** Deposit validator */
+        beaconDeposit.deposit{value: pool.deposits}(
+            pool.publicKey, // bytes
+            pool.withdrawalCredentials, // bytes
+            pool.signature, // bytes
+            pool.depositDataRoot // bytes32
         );
 
-        // Todo move these checks to upkeep
-        require(readyValidatorPublicKeys.length >= count, "Not enough ready validators");
-        require(readyPoolIds.length >= count, "Not enough ready pools");
+        /** Pay SSV fees and register validator */
+        /** Todo update for v3 SSV contracts and dynamic fees */
+        uint256 mockSSVFee = 5 ether;
+        ssvToken.approve(address(ssvNetwork), mockSSVFee);
+        ssvNetwork.registerValidator(
+            pool.publicKey, // bytes
+            pool.operatorIds, // uint32[]
+            pool.sharesPublicKeys, // bytes[]
+            pool.sharesEncrypted, // bytes[],
+            mockSSVFee // uint256 (fees handled on user deposits)
+        );
 
-        while (count > 0) {
-            count--;
-
-            /** Get next ready pool ID */
-            uint32 poolId = readyPoolIds[0];
-
-            /** Get next ready validator */
-            bytes memory validatorPublicKey = readyValidatorPublicKeys[0];
-            Validator memory validator = validators[validatorPublicKey];
-
-            /** Get the pool */
-            Pool storage pool = pools[poolId];
-            pool.validatorPublicKey = validatorPublicKey;
-
-            /** Move pool from ready to pending state */
-            readyPoolIds.remove(0);
-            pendingPoolIds.push(poolId);
-
-            /** Move validator from ready to pending state and add to pool */
-            readyValidatorPublicKeys.remove(0);
-            pendingValidatorPublicKeys.push(validatorPublicKey);
-
-            /** Deposit validator */
-            beaconDeposit.deposit{value: pool.deposits}(
-                validatorPublicKey, // bytes
-                validator.withdrawalCredentials, // bytes
-                validator.signature, // bytes
-                validator.depositDataRoot // bytes32
-            );
-
-            /** Pay SSV fees and register validator */
-            /** Todo update for v3 SSV contracts and dynamic fees */
-            uint256 mockSSVFee = 5 ether;
-            ssvToken.approve(address(ssvNetwork), mockSSVFee);
-            ssvNetwork.registerValidator(
-                validatorPublicKey, // bytes
-                validator.operatorIds, // uint32[]
-                validator.sharesPublicKeys, // bytes[]
-                validator.sharesEncrypted, // bytes[],
-                mockSSVFee // uint256 (fees handled on user deposits)
-            );
-
-            emit PoolInitiated(poolId);
-        }
+        emit PoolInitiated(poolId);
     }
 
     /**
@@ -441,9 +438,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             pendingPoolIds.remove(0);
             stakedPoolIds.push(poolId);
 
-            /** Move validator from pending to staked state */
-            pendingValidatorPublicKeys.remove(0);
-            stakedValidatorPublicKeys.push(pool.validatorPublicKey);
+            /** Add validator to staked state */
+            stakedValidatorPublicKeys.push(pool.publicKey);
 
             emit PoolCompleted(poolId);
         }
@@ -498,7 +494,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         require(pool.exiting, "Pool is not exiting");
 
-        bytes memory validatorPublicKey = pool.validatorPublicKey;
+        bytes memory validatorPublicKey = pool.publicKey;
         bytes memory stakedValidatorPublicKey = stakedValidatorPublicKeys[
             validatorIndex
         ];
@@ -515,7 +511,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         /** Remove validator from staked and exiting states and delete */
         stakedValidatorPublicKeys.remove(validatorIndex);
-        delete validators[validatorPublicKey];
 
         /** Decrease exiting validators */
         exitingValidatorCount--;
@@ -538,67 +533,31 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Register a validator with the pool manager
-     * @param depositDataRoot The deposit data root
-     * @param publicKey The validator public key
-     * @param operatorIds The operator IDs
-     * @param sharesEncrypted The encrypted shares
-     * @param sharesPublicKeys The public keys of the shares
-     * @param signature The signature
-     * @param withdrawalCredentials The withdrawal credentials
-     */
-    function registerValidator(
-        bytes32 depositDataRoot,
-        bytes calldata publicKey,
-        uint32[] memory operatorIds,
-        bytes[] memory sharesEncrypted,
-        bytes[] memory sharesPublicKeys,
-        bytes calldata signature,
-        bytes calldata withdrawalCredentials
-    ) external onlyOwner {
-        /** Create validator and add to ready state */
-        validators[publicKey] = Validator(
-            depositDataRoot,
-            operatorIds,
-            sharesEncrypted,
-            sharesPublicKeys,
-            signature,
-            withdrawalCredentials,
-            0
-        );
-        readyValidatorPublicKeys.push(publicKey);
-
-        emit ValidatorRegistered(publicKey);
-    }
-
-    /**
-     * @notice Reshare a registered validator
-     * @param publicKey The validator public key
+     * @notice Reshare a given pool's validator
+     * @param poolId The pool ID
      * @param operatorIds The operator IDs
      * @param sharesEncrypted The encrypted shares
      * @param sharesPublicKeys The public keys of the shares
      */
-    function reshareValidator(
-        bytes calldata publicKey,
+    function resharePool(
+        uint32 poolId,
         uint32[] memory operatorIds,
         bytes[] memory sharesEncrypted,
         bytes[] memory sharesPublicKeys
-    ) external onlyOwner {
-        /** Get validator */
-        Validator storage validator = validators[publicKey];
-
+    ) external {
+        Pool memory pool = pools[poolId];
         require(
-            validator.reshareCount < 3,
-            "Validator has been reshared twice"
+            pool.reshareCount < 3,
+            "Pool has been reshared twice"
         );
 
-        /** Update validator */
-        validator.operatorIds = operatorIds;
-        validator.sharesEncrypted = sharesEncrypted;
-        validator.sharesPublicKeys = sharesPublicKeys;
-        validator.reshareCount++;
+        /** Update pool */
+        pool.operatorIds = operatorIds;
+        pool.sharesEncrypted = sharesEncrypted;
+        pool.sharesPublicKeys = sharesPublicKeys;
+        pool.reshareCount++;
 
-        emit ValidatorReshared(publicKey);
+        emit PoolReshared(poolId);
     }
 
     /**
@@ -826,18 +785,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get ready validator public keys
-     * @return A list of inactive validator public keys
-     */
-    function getReadyValidatorPublicKeys()
-        external
-        view
-        returns (bytes[] memory)
-    {
-        return readyValidatorPublicKeys;
-    }
-
-    /**
      * @notice Get staked validator public keys
      * @return A list of active validator public keys
      */
@@ -855,6 +802,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getExitingValidatorCount() external view returns (uint256) {
         return exitingValidatorCount;
+    }
+
+    /**
+     * @notice Get a list of all filled pool IDs
+     * @return A list of all filled pool IDs
+     */
+    function getFilledPoolIds() external view returns (uint32[] memory) {
+        return readyPoolIds;
     }
 
     /**
@@ -890,31 +845,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the pool details for a given pool ID
+     * @notice Get a pool by ID
      * @param poolId The pool ID
-     * @return poolDetails The pool details
+     * @return pool The pool details
      */
-    function getPoolDetails(
+    function getPool(
         uint32 poolId
-    ) external view returns (PoolDetails memory poolDetails) {
-        /** Pool in open or ready state will not have validator or operators */
-        Pool memory pool = pools[poolId];
-        if (pool.validatorPublicKey.length == 0) {
-            poolDetails = PoolDetails(
-                pool.deposits,
-                pool.validatorPublicKey,
-                new uint32[](0),
-                pool.exiting
-            );
-        } else {
-            Validator memory validator = validators[pool.validatorPublicKey];
-            poolDetails = PoolDetails(
-                pool.deposits,
-                pool.validatorPublicKey,
-                validator.operatorIds,
-                pool.exiting
-            );
-        }
+    ) external view returns (Pool memory pool) {
+        /** Pool in ready state will not have validator or operators */
+        pool = pools[poolId];
     }
 
     /**
