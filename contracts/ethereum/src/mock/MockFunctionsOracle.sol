@@ -38,11 +38,9 @@ contract MockFunctionsOracle {
         bytes calldata _data,
         uint32 _gasLimit
     ) external returns (bytes32 requestId) {
-
         subscriptionId = _subscriptionId;
         data = _data;
         gasLimit = _gasLimit;
-
         requestId = keccak256(abi.encode(latestRequestIdNumber));
     }
 }

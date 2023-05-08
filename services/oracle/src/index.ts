@@ -16,7 +16,7 @@ void async function () {
     if (!managerAddress) throw new Error('No manager address provided')
     const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi, wallet).connect(provider)
 
-    for await (const event of on(manager as unknown as EventEmitter, 'PoolFilled')) {
+    for await (const event of on(manager as unknown as EventEmitter, 'PoolReady')) {
         const [ id, details ] = event
         console.log(`Pool ${id} filled at block number ${details.blockNumber}`)
 

@@ -1,156 +1,5 @@
 # Solidity API
 
-## CasimirUpkeep
-
-### oracleHeartbeat
-
-```solidity
-uint256 oracleHeartbeat
-```
-
-Oracle heartbeat
-
-### requestCBOR
-
-```solidity
-bytes requestCBOR
-```
-
-Serialized oracle source code
-
-### latestRequestId
-
-```solidity
-bytes32 latestRequestId
-```
-
-Latest oracle request ID
-
-### fulfillGasLimit
-
-```solidity
-uint32 fulfillGasLimit
-```
-
-Oracle fulfillment gas limit
-
-### constructor
-
-```solidity
-constructor(address managerAddress, address oracleAddress, uint64 _oracleSubId) public
-```
-
-Constructor
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| managerAddress | address | The manager contract address |
-| oracleAddress | address | The oracle contract address |
-| _oracleSubId | uint64 | The oracle subscription ID |
-
-### generateRequest
-
-```solidity
-function generateRequest(string source, bytes secrets, string[] args) public pure returns (bytes)
-```
-
-Generate a new Functions.Request(off-chain, saving gas)
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| source | string | JavaScript source code |
-| secrets | bytes | Encrypted secrets payload |
-| args | string[] | List of arguments accessible from within the source code |
-
-### setRequest
-
-```solidity
-function setRequest(uint32 _fulfillGasLimit, uint64 _oracleSubId, bytes _requestCBOR) external
-```
-
-Set the bytes representing the CBOR-encoded Functions.Request
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _fulfillGasLimit | uint32 | Maximum amount of gas used to call the client contract's `handleOracleFulfillment` function |
-| _oracleSubId | uint64 | The oracle billing subscription ID used to pay for Functions requests |
-| _requestCBOR | bytes | Bytes representing the CBOR-encoded Functions.Request |
-
-### checkUpkeep
-
-```solidity
-function checkUpkeep(bytes) public view returns (bool upkeepNeeded, bytes performData)
-```
-
-Check if the upkeep is needed
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| upkeepNeeded | bool | True if the upkeep is needed |
-| performData | bytes |  |
-
-### performUpkeep
-
-```solidity
-function performUpkeep(bytes) external
-```
-
-Perform the upkeep
-
-### fulfillRequest
-
-```solidity
-function fulfillRequest(bytes32 requestId, bytes response, bytes err) internal
-```
-
-Callback that is invoked once the DON has resolved the request or hit an error
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The request ID, returned by sendRequest() |
-| response | bytes | Aggregated response from the user code |
-| err | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
-
-### setOracleAddress
-
-```solidity
-function setOracleAddress(address newOracleAddress) external
-```
-
-Update the functions oracle address
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| newOracleAddress | address | New oracle address |
-
-### mockFulfillRequest
-
-```solidity
-function mockFulfillRequest(bytes32 requestId, bytes response, bytes err) external
-```
-
-Fulfill the request for testing
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The request ID, returned by sendRequest() |
-| response | bytes | Aggregated response from the user code |
-| err | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
-
 ## CasimirManager
 
 ### Token
@@ -169,7 +18,7 @@ enum Token {
 uint256 latestActiveStake
 ```
 
-Latest active (consensus) balance reported from automation
+Latest active (consensus) balance reported from upkeep
 
 ### lastPoolId
 
@@ -290,24 +139,30 @@ Complete a given count of pending withdrawals
 | ---- | ---- | ----------- |
 | count | uint256 | The number of withdrawals to complete |
 
-### initiateReadyPools
+### initiatePoolDeposit
 
 ```solidity
-function initiateReadyPools(uint256 count) external
+function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) external
 ```
 
-Initiate a given count of next ready pools
+Initiate the next ready pool
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| count | uint256 | The number of pools to stake |
+| depositDataRoot | bytes32 | The deposit data root |
+| publicKey | bytes | The validator public key |
+| operatorIds | uint32[] | The operator IDs |
+| sharesEncrypted | bytes[] | The encrypted shares |
+| sharesPublicKeys | bytes[] | The public keys of the shares |
+| signature | bytes | The signature |
+| withdrawalCredentials | bytes | The withdrawal credentials |
 
-### completePendingPools
+### completePoolDeposits
 
 ```solidity
-function completePendingPools(uint256 count) external
+function completePoolDeposits(uint256 count) external
 ```
 
 Complete a given count of the next pending pools
@@ -361,39 +216,19 @@ Register an operator with the pool manager
 | ---- | ---- | ----------- |
 | operatorId | uint32 | The operator ID |
 
-### registerValidator
+### resharePool
 
 ```solidity
-function registerValidator(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) external
+function resharePool(uint32 poolId, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys) external
 ```
 
-Register a validator with the pool manager
+Reshare a given pool's validator
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| depositDataRoot | bytes32 | The deposit data root |
-| publicKey | bytes | The validator public key |
-| operatorIds | uint32[] | The operator IDs |
-| sharesEncrypted | bytes[] | The encrypted shares |
-| sharesPublicKeys | bytes[] | The public keys of the shares |
-| signature | bytes | The signature |
-| withdrawalCredentials | bytes | The withdrawal credentials |
-
-### reshareValidator
-
-```solidity
-function reshareValidator(bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys) external
-```
-
-Reshare a registered validator
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| publicKey | bytes | The validator public key |
+| poolId | uint32 | The pool ID |
 | operatorIds | uint32[] | The operator IDs |
 | sharesEncrypted | bytes[] | The encrypted shares |
 | sharesPublicKeys | bytes[] | The public keys of the shares |
@@ -586,20 +421,6 @@ Get the pending withdrawal queue
 | ---- | ---- | ----------- |
 | [0] | struct ICasimirManager.Withdrawal[] | pendingWithdrawalQueue The pending withdrawal queue |
 
-### getReadyValidatorPublicKeys
-
-```solidity
-function getReadyValidatorPublicKeys() external view returns (bytes[])
-```
-
-Get ready validator public keys
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes[] | A list of inactive validator public keys |
-
 ### getStakedValidatorPublicKeys
 
 ```solidity
@@ -627,6 +448,20 @@ Get the count of exiting validators
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint256 | The count of exiting validators |
+
+### getFilledPoolIds
+
+```solidity
+function getFilledPoolIds() external view returns (uint32[])
+```
+
+Get a list of all filled pool IDs
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint32[] | A list of all filled pool IDs |
 
 ### getReadyPoolIds
 
@@ -684,13 +519,13 @@ Get the total manager open deposits
 | ---- | ---- | ----------- |
 | [0] | uint256 | The total manager open deposits |
 
-### getPoolDetails
+### getPool
 
 ```solidity
-function getPoolDetails(uint32 poolId) external view returns (struct ICasimirManager.PoolDetails poolDetails)
+function getPool(uint32 poolId) external view returns (struct ICasimirManager.Pool pool)
 ```
 
-Get the pool details for a given pool ID
+Get a pool by ID
 
 #### Parameters
 
@@ -702,7 +537,7 @@ Get the pool details for a given pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| poolDetails | struct ICasimirManager.PoolDetails | The pool details |
+| pool | struct ICasimirManager.Pool | The pool details |
 
 ### getLINKFee
 
@@ -732,19 +567,19 @@ Get the SSV fee percentage to charge on each deposit
 | ---- | ---- | ----------- |
 | [0] | uint32 | The SSV fee percentage to charge on each deposit |
 
-### getAutomationAddress
+### getUpkeepAddress
 
 ```solidity
-function getAutomationAddress() external view returns (address automationAddress)
+function getUpkeepAddress() external view returns (address upkeepAddress)
 ```
 
-Get the automation address
+Get the upkeep address
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| automationAddress | address | The automation address |
+| upkeepAddress | address | The upkeep address |
 
 ### receive
 
@@ -755,86 +590,164 @@ receive() external payable
 _Will be removed in production
 Used for mocking sweeps from Beacon to the manager_
 
-## ICasimirUpkeep
+## CasimirUpkeep
 
-### OracleReport
-
-```solidity
-struct OracleReport {
-  uint256 activeStake;
-  uint256 sweptRewards;
-  uint256 sweptExits;
-}
-```
-
-### OCRResponse
+### oracleHeartbeat
 
 ```solidity
-event OCRResponse(bytes32 requestId, bytes result, bytes err)
+uint256 oracleHeartbeat
 ```
 
-### checkUpkeep
+Oracle heartbeat
+
+### requestCBOR
 
 ```solidity
-function checkUpkeep(bytes checkData) external returns (bool upkeepNeeded, bytes performData)
+bytes requestCBOR
 ```
 
-method that is simulated by the keepers to see if any work actually
-needs to be performed. This method does does not actually need to be
-executable, and since it is only ever simulated it can consume lots of gas.
+Serialized oracle source code
 
-_To ensure that it is never called, you may want to add the
-cannotExecute modifier from KeeperBase to your implementation of this
-method._
+### latestRequestId
+
+```solidity
+bytes32 latestRequestId
+```
+
+Latest oracle request ID
+
+### latestFulfilledRequestId
+
+```solidity
+bytes32 latestFulfilledRequestId
+```
+
+Latest fulfilled oracle request ID
+
+### fulfillGasLimit
+
+```solidity
+uint32 fulfillGasLimit
+```
+
+Oracle fulfillment gas limit
+
+### constructor
+
+```solidity
+constructor(address managerAddress, address oracleAddress, uint64 _oracleSubId) public
+```
+
+Constructor
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| checkData | bytes | specified in the upkeep registration so it is always the same for a registered upkeep. This can easily be broken down into specific arguments using `abi.decode`, so multiple upkeeps can be registered on the same contract and easily differentiated by the contract. |
+| managerAddress | address | The manager contract address |
+| oracleAddress | address | The oracle contract address |
+| _oracleSubId | uint64 | The oracle subscription ID |
+
+### generateRequest
+
+```solidity
+function generateRequest(string source, bytes secrets, string[] args) public pure returns (bytes)
+```
+
+Generate a new Functions.Request(off-chain, saving gas)
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| source | string | JavaScript source code |
+| secrets | bytes | Encrypted secrets payload |
+| args | string[] | List of arguments accessible from within the source code |
+
+### setRequest
+
+```solidity
+function setRequest(uint32 _fulfillGasLimit, uint64 _oracleSubId, bytes _requestCBOR) external
+```
+
+Set the bytes representing the CBOR-encoded Functions.Request
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _fulfillGasLimit | uint32 | Maximum amount of gas used to call the client contract's `handleOracleFulfillment` function |
+| _oracleSubId | uint64 | The oracle billing subscription ID used to pay for Functions requests |
+| _requestCBOR | bytes | Bytes representing the CBOR-encoded Functions.Request |
+
+### checkUpkeep
+
+```solidity
+function checkUpkeep(bytes) public view returns (bool upkeepNeeded, bytes performData)
+```
+
+Check if the upkeep is needed
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| upkeepNeeded | bool | boolean to indicate whether the keeper should call performUpkeep or not. |
-| performData | bytes | bytes that the keeper should call performUpkeep with, if upkeep is needed. If you would like to encode data to decode later, try `abi.encode`. |
+| upkeepNeeded | bool | True if the upkeep is needed |
+| performData | bytes |  |
 
 ### performUpkeep
 
 ```solidity
-function performUpkeep(bytes performData) external
+function performUpkeep(bytes) external
 ```
 
-method that is actually executed by the keepers, via the registry.
-The data returned by the checkUpkeep simulation will be passed into
-this method to actually be executed.
+Perform the upkeep
 
-_The input to this method should not be trusted, and the caller of the
-method should not even be restricted to any single registry. Anyone should
-be able call it, and the input should be validated, there is no guarantee
-that the data passed in is the performData returned from checkUpkeep. This
-could happen due to malicious keepers, racing keepers, or simply a state
-change while the performUpkeep transaction is waiting for confirmation.
-Always validate the data passed in._
+### fulfillRequest
+
+```solidity
+function fulfillRequest(bytes32 requestId, bytes response, bytes err) internal
+```
+
+Callback that is invoked once the DON has resolved the request or hit an error
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| performData | bytes | is the data which was passed back from the checkData simulation. If it is encoded, it can easily be decoded into other types by calling `abi.decode`. This data should not be trusted, and should be validated against the contract's current state. |
+| requestId | bytes32 | The request ID, returned by sendRequest() |
+| response | bytes | Aggregated response from the user code |
+| err | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
 
 ### setOracleAddress
 
 ```solidity
-function setOracleAddress(address oracleAddress) external
+function setOracleAddress(address newOracleAddress) external
 ```
+
+Update the functions oracle address
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newOracleAddress | address | New oracle address |
 
 ### mockFulfillRequest
 
 ```solidity
-function mockFulfillRequest(bytes32 requestId, bytes result, bytes err) external
+function mockFulfillRequest(bytes32 requestId, bytes response, bytes err) external
 ```
+
+Fulfill the request for testing
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | bytes32 | The request ID, returned by sendRequest() |
+| response | bytes | Aggregated response from the user code |
+| err | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
 
 ## ICasimirManager
 
@@ -862,19 +775,15 @@ struct Fees {
 ```solidity
 struct Pool {
   uint256 deposits;
-  bytes validatorPublicKey;
   bool exiting;
-}
-```
-
-### PoolDetails
-
-```solidity
-struct PoolDetails {
-  uint256 deposits;
-  bytes validatorPublicKey;
+  uint256 reshareCount;
+  bytes32 depositDataRoot;
+  bytes publicKey;
   uint32[] operatorIds;
-  bool exiting;
+  bytes[] sharesEncrypted;
+  bytes[] sharesPublicKeys;
+  bytes signature;
+  bytes withdrawalCredentials;
 }
 ```
 
@@ -896,24 +805,10 @@ struct Withdrawal {
 }
 ```
 
-### Validator
+### PoolReady
 
 ```solidity
-struct Validator {
-  bytes32 depositDataRoot;
-  uint32[] operatorIds;
-  bytes[] sharesEncrypted;
-  bytes[] sharesPublicKeys;
-  bytes signature;
-  bytes withdrawalCredentials;
-  uint256 reshareCount;
-}
-```
-
-### PoolFilled
-
-```solidity
-event PoolFilled(address sender, uint32 poolId)
+event PoolReady(uint32 poolId)
 ```
 
 ### PoolInitiated
@@ -926,6 +821,18 @@ event PoolInitiated(uint32 poolId)
 
 ```solidity
 event PoolCompleted(uint32 poolId)
+```
+
+### PoolReshareRequested
+
+```solidity
+event PoolReshareRequested(uint32 poolId)
+```
+
+### PoolReshared
+
+```solidity
+event PoolReshared(uint32 poolId)
 ```
 
 ### PoolExitRequested
@@ -970,18 +877,6 @@ event WithdrawalInitiated(address sender, uint256 amount)
 event WithdrawalCompleted(address sender, uint256 amount)
 ```
 
-### ValidatorRegistered
-
-```solidity
-event ValidatorRegistered(bytes publicKey)
-```
-
-### ValidatorReshared
-
-```solidity
-event ValidatorReshared(bytes publicKey)
-```
-
 ### depositStake
 
 ```solidity
@@ -1012,16 +907,16 @@ function initiateRequestedWithdrawals(uint256 count) external
 function completePendingWithdrawals(uint256 count) external
 ```
 
-### initiateReadyPools
+### initiatePoolDeposit
 
 ```solidity
-function initiateReadyPools(uint256 count) external
+function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) external
 ```
 
-### completePendingPools
+### completePoolDeposits
 
 ```solidity
-function completePendingPools(uint256 count) external
+function completePoolDeposits(uint256 count) external
 ```
 
 ### requestPoolExits
@@ -1034,12 +929,6 @@ function requestPoolExits(uint256 count) external
 
 ```solidity
 function completePoolExit(uint256 poolIndex, uint256 validatorIndex) external
-```
-
-### registerValidator
-
-```solidity
-function registerValidator(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) external
 ```
 
 ### setLINKFee
@@ -1076,12 +965,6 @@ function getLINKFee() external view returns (uint32)
 
 ```solidity
 function getSSVFee() external view returns (uint32)
-```
-
-### getReadyValidatorPublicKeys
-
-```solidity
-function getReadyValidatorPublicKeys() external view returns (bytes[])
 ```
 
 ### getStakedValidatorPublicKeys
@@ -1174,6 +1057,93 @@ function getRequestedWithdrawalQueue() external view returns (struct ICasimirMan
 function getPendingWithdrawalQueue() external view returns (struct ICasimirManager.Withdrawal[])
 ```
 
+## ICasimirUpkeep
+
+### OracleReport
+
+```solidity
+struct OracleReport {
+  uint256 activeStake;
+  uint256 sweptRewards;
+  uint256 sweptExits;
+}
+```
+
+### OCRResponse
+
+```solidity
+event OCRResponse(bytes32 requestId, bytes result, bytes err)
+```
+
+### UpkeepPerformed
+
+```solidity
+event UpkeepPerformed(bytes performData)
+```
+
+### checkUpkeep
+
+```solidity
+function checkUpkeep(bytes checkData) external returns (bool upkeepNeeded, bytes performData)
+```
+
+method that is simulated by the keepers to see if any work actually
+needs to be performed. This method does does not actually need to be
+executable, and since it is only ever simulated it can consume lots of gas.
+
+_To ensure that it is never called, you may want to add the
+cannotExecute modifier from KeeperBase to your implementation of this
+method._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| checkData | bytes | specified in the upkeep registration so it is always the same for a registered upkeep. This can easily be broken down into specific arguments using `abi.decode`, so multiple upkeeps can be registered on the same contract and easily differentiated by the contract. |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| upkeepNeeded | bool | boolean to indicate whether the keeper should call performUpkeep or not. |
+| performData | bytes | bytes that the keeper should call performUpkeep with, if upkeep is needed. If you would like to encode data to decode later, try `abi.encode`. |
+
+### performUpkeep
+
+```solidity
+function performUpkeep(bytes performData) external
+```
+
+method that is actually executed by the keepers, via the registry.
+The data returned by the checkUpkeep simulation will be passed into
+this method to actually be executed.
+
+_The input to this method should not be trusted, and the caller of the
+method should not even be restricted to any single registry. Anyone should
+be able call it, and the input should be validated, there is no guarantee
+that the data passed in is the performData returned from checkUpkeep. This
+could happen due to malicious keepers, racing keepers, or simply a state
+change while the performUpkeep transaction is waiting for confirmation.
+Always validate the data passed in._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| performData | bytes | is the data which was passed back from the checkData simulation. If it is encoded, it can easily be decoded into other types by calling `abi.decode`. This data should not be trusted, and should be validated against the contract's current state. |
+
+### setOracleAddress
+
+```solidity
+function setOracleAddress(address oracleAddress) external
+```
+
+### mockFulfillRequest
+
+```solidity
+function mockFulfillRequest(bytes32 requestId, bytes result, bytes err) external
+```
+
 ## Types32Array
 
 ### remove
@@ -1241,740 +1211,6 @@ _Send ETH to a user_
 | ---- | ---- | ----------- |
 | user | address | The user address |
 | amount | uint256 | The amount of stake to send |
-
-## Functions
-
-### DEFAULT_BUFFER_SIZE
-
-```solidity
-uint256 DEFAULT_BUFFER_SIZE
-```
-
-### Location
-
-```solidity
-enum Location {
-  Inline,
-  Remote
-}
-```
-
-### CodeLanguage
-
-```solidity
-enum CodeLanguage {
-  JavaScript
-}
-```
-
-### Request
-
-```solidity
-struct Request {
-  enum Functions.Location codeLocation;
-  enum Functions.Location secretsLocation;
-  enum Functions.CodeLanguage language;
-  string source;
-  bytes secrets;
-  string[] args;
-}
-```
-
-### EmptySource
-
-```solidity
-error EmptySource()
-```
-
-### EmptyUrl
-
-```solidity
-error EmptyUrl()
-```
-
-### EmptySecrets
-
-```solidity
-error EmptySecrets()
-```
-
-### EmptyArgs
-
-```solidity
-error EmptyArgs()
-```
-
-### NoInlineSecrets
-
-```solidity
-error NoInlineSecrets()
-```
-
-### encodeCBOR
-
-```solidity
-function encodeCBOR(struct Functions.Request self) internal pure returns (bytes)
-```
-
-Encodes a Request to CBOR encoded bytes
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| self | struct Functions.Request | The request to encode |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | CBOR encoded bytes |
-
-### initializeRequest
-
-```solidity
-function initializeRequest(struct Functions.Request self, enum Functions.Location location, enum Functions.CodeLanguage language, string source) internal pure
-```
-
-Initializes a Chainlink Functions Request
-
-_Sets the codeLocation and code on the request_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| self | struct Functions.Request | The uninitialized request |
-| location | enum Functions.Location | The user provided source code location |
-| language | enum Functions.CodeLanguage | The programming language of the user code |
-| source | string | The user provided source code or a url |
-
-### initializeRequestForInlineJavaScript
-
-```solidity
-function initializeRequestForInlineJavaScript(struct Functions.Request self, string javaScriptSource) internal pure
-```
-
-Initializes a Chainlink Functions Request
-
-_Simplified version of initializeRequest for PoC_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| self | struct Functions.Request | The uninitialized request |
-| javaScriptSource | string | The user provided JS code (must not be empty) |
-
-### addRemoteSecrets
-
-```solidity
-function addRemoteSecrets(struct Functions.Request self, bytes encryptedSecretsURLs) internal pure
-```
-
-Adds Remote user encrypted secrets to a Request
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| self | struct Functions.Request | The initialized request |
-| encryptedSecretsURLs | bytes | Encrypted comma-separated string of URLs pointing to off-chain secrets |
-
-### addArgs
-
-```solidity
-function addArgs(struct Functions.Request self, string[] args) internal pure
-```
-
-Adds args for the user run function
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| self | struct Functions.Request | The initialized request |
-| args | string[] | The array of args (must not be empty) |
-
-## FunctionsClient
-
-Contract writers can inherit this contract in order to create Chainlink Functions requests
-
-### s_oracle
-
-```solidity
-contract FunctionsOracleInterface s_oracle
-```
-
-### s_pendingRequests
-
-```solidity
-mapping(bytes32 => address) s_pendingRequests
-```
-
-### RequestSent
-
-```solidity
-event RequestSent(bytes32 id)
-```
-
-### RequestFulfilled
-
-```solidity
-event RequestFulfilled(bytes32 id)
-```
-
-### SenderIsNotRegistry
-
-```solidity
-error SenderIsNotRegistry()
-```
-
-### RequestIsAlreadyPending
-
-```solidity
-error RequestIsAlreadyPending()
-```
-
-### RequestIsNotPending
-
-```solidity
-error RequestIsNotPending()
-```
-
-### constructor
-
-```solidity
-constructor(address oracle) internal
-```
-
-### getDONPublicKey
-
-```solidity
-function getDONPublicKey() external view returns (bytes)
-```
-
-Returns the DON's secp256k1 public key used to encrypt secrets
-
-_All Oracles nodes have the corresponding private key
-needed to decrypt the secrets encrypted with the public key_
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | publicKey DON's public key |
-
-### estimateCost
-
-```solidity
-function estimateCost(struct Functions.Request req, uint64 subscriptionId, uint32 gasLimit, uint256 gasPrice) public view returns (uint96)
-```
-
-Estimate the total cost that will be charged to a subscription to make a request: gas re-imbursement, plus DON fee, plus Registry fee
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| req | struct Functions.Request | The initialized Functions.Request |
-| subscriptionId | uint64 | The subscription ID |
-| gasLimit | uint32 | gas limit for the fulfillment callback |
-| gasPrice | uint256 |  |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint96 | billedCost Cost in Juels (1e18) of LINK |
-
-### sendRequest
-
-```solidity
-function sendRequest(struct Functions.Request req, uint64 subscriptionId, uint32 gasLimit) internal returns (bytes32)
-```
-
-Sends a Chainlink Functions request to the stored oracle address
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| req | struct Functions.Request | The initialized Functions.Request |
-| subscriptionId | uint64 | The subscription ID |
-| gasLimit | uint32 | gas limit for the fulfillment callback |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes32 | requestId The generated request ID |
-
-### fulfillRequest
-
-```solidity
-function fulfillRequest(bytes32 requestId, bytes response, bytes err) internal virtual
-```
-
-User defined function to handle a response
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The request ID, returned by sendRequest() |
-| response | bytes | Aggregated response from the user code |
-| err | bytes | Aggregated error from the user code or from the execution pipeline Either response or error parameter will be set, but never both |
-
-### handleOracleFulfillment
-
-```solidity
-function handleOracleFulfillment(bytes32 requestId, bytes response, bytes err) external
-```
-
-Chainlink Functions response handler called by the designated transmitter node in an OCR round.
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The requestId returned by FunctionsClient.sendRequest(). |
-| response | bytes | Aggregated response from the user code. |
-| err | bytes | Aggregated error either from the user code or from the execution pipeline. Either response or error parameter will be set, but never both. |
-
-### setOracle
-
-```solidity
-function setOracle(address oracle) internal
-```
-
-Sets the stored Oracle address
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| oracle | address | The address of Functions Oracle contract |
-
-### getChainlinkOracleAddress
-
-```solidity
-function getChainlinkOracleAddress() internal view returns (address)
-```
-
-Gets the stored address of the oracle contract
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | The address of the oracle contract |
-
-### addExternalRequest
-
-```solidity
-function addExternalRequest(address oracleAddress, bytes32 requestId) internal
-```
-
-Allows for a request which was created on another contract to be fulfilled
-on this contract
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| oracleAddress | address | The address of the oracle contract that will fulfill the request |
-| requestId | bytes32 | The request ID used for the response |
-
-### recordChainlinkFulfillment
-
-```solidity
-modifier recordChainlinkFulfillment(bytes32 requestId)
-```
-
-_Reverts if the sender is not the oracle that serviced the request.
-Emits RequestFulfilled event._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The request ID for fulfillment |
-
-### notPendingRequest
-
-```solidity
-modifier notPendingRequest(bytes32 requestId)
-```
-
-_Reverts if the request is already pending_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The request ID for fulfillment |
-
-## FunctionsBillingRegistryInterface
-
-### RequestBilling
-
-```solidity
-struct RequestBilling {
-  uint64 subscriptionId;
-  address client;
-  uint32 gasLimit;
-  uint256 gasPrice;
-}
-```
-
-### FulfillResult
-
-```solidity
-enum FulfillResult {
-  USER_SUCCESS,
-  USER_ERROR,
-  INVALID_REQUEST_ID
-}
-```
-
-### getRequestConfig
-
-```solidity
-function getRequestConfig() external view returns (uint32, address[])
-```
-
-Get configuration relevant for making requests
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32 | uint32 global max for request gas limit |
-| [1] | address[] | address[] list of registered DONs |
-
-### getRequiredFee
-
-```solidity
-function getRequiredFee(bytes data, struct FunctionsBillingRegistryInterface.RequestBilling billing) external view returns (uint96)
-```
-
-Determine the charged fee that will be paid to the Registry owner
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| billing | struct FunctionsBillingRegistryInterface.RequestBilling | The request's billing configuration |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint96 | fee Cost in Juels (1e18) of LINK |
-
-### estimateCost
-
-```solidity
-function estimateCost(uint32 gasLimit, uint256 gasPrice, uint96 donFee, uint96 registryFee) external view returns (uint96)
-```
-
-Estimate the total cost to make a request: gas re-imbursement, plus DON fee, plus Registry fee
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| gasLimit | uint32 | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| gasPrice | uint256 | The request's billing configuration |
-| donFee | uint96 | Fee charged by the DON that is paid to Oracle Node |
-| registryFee | uint96 | Fee charged by the DON that is paid to Oracle Node |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint96 | costEstimate Cost in Juels (1e18) of LINK |
-
-### startBilling
-
-```solidity
-function startBilling(bytes data, struct FunctionsBillingRegistryInterface.RequestBilling billing) external returns (bytes32)
-```
-
-Initiate the billing process for an Functions request
-
-_Only callable by a node that has been approved on the Registry_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| billing | struct FunctionsBillingRegistryInterface.RequestBilling | Billing configuration for the request |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes32 | requestId - A unique identifier of the request. Can be used to match a request to a response in fulfillRequest. |
-
-### fulfillAndBill
-
-```solidity
-function fulfillAndBill(bytes32 requestId, bytes response, bytes err, address transmitter, address[31] signers, uint8 signerCount, uint256 reportValidationGas, uint256 initialGas) external returns (enum FunctionsBillingRegistryInterface.FulfillResult)
-```
-
-Finalize billing process for an Functions request by sending a callback to the Client contract and then charging the subscription
-
-_Only callable by a node that has been approved on the Registry
-simulated offchain to determine if sufficient balance is present to fulfill the request_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | identifier for the request that was generated by the Registry in the beginBilling commitment |
-| response | bytes | response data from DON consensus |
-| err | bytes | error from DON consensus |
-| transmitter | address | the Oracle who sent the report |
-| signers | address[31] | the Oracles who had a part in generating the report |
-| signerCount | uint8 | the number of signers on the report |
-| reportValidationGas | uint256 | the amount of gas used for the report validation. Cost is split by all fulfillments on the report. |
-| initialGas | uint256 | the initial amount of gas that should be used as a baseline to charge the single fulfillment for execution cost |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | enum FunctionsBillingRegistryInterface.FulfillResult | result fulfillment result |
-
-### getSubscriptionOwner
-
-```solidity
-function getSubscriptionOwner(uint64 subscriptionId) external view returns (address owner)
-```
-
-Gets subscription owner.
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| subscriptionId | uint64 | - ID of the subscription |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| owner | address | - owner of the subscription. |
-
-## FunctionsClientInterface
-
-### getDONPublicKey
-
-```solidity
-function getDONPublicKey() external view returns (bytes)
-```
-
-Returns the DON's secp256k1 public key used to encrypt secrets
-
-_All Oracles nodes have the corresponding private key
-needed to decrypt the secrets encrypted with the public key_
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | publicKey DON's public key |
-
-### handleOracleFulfillment
-
-```solidity
-function handleOracleFulfillment(bytes32 requestId, bytes response, bytes err) external
-```
-
-Chainlink Functions response handler called by the designated transmitter node in an OCR round.
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The requestId returned by FunctionsClient.sendRequest(). |
-| response | bytes | Aggregated response from the user code. |
-| err | bytes | Aggregated error either from the user code or from the execution pipeline. Either response or error parameter will be set, but never both. |
-
-## FunctionsOracleInterface
-
-### getRegistry
-
-```solidity
-function getRegistry() external view returns (address)
-```
-
-Gets the stored billing registry address
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | registryAddress The address of Chainlink Functions billing registry contract |
-
-### setRegistry
-
-```solidity
-function setRegistry(address registryAddress) external
-```
-
-Sets the stored billing registry address
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| registryAddress | address | The new address of Chainlink Functions billing registry contract |
-
-### getDONPublicKey
-
-```solidity
-function getDONPublicKey() external view returns (bytes)
-```
-
-Returns the DON's secp256k1 public key that is used to encrypt secrets
-
-_All nodes on the DON have the corresponding private key
-needed to decrypt the secrets encrypted with the public key_
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | publicKey the DON's public key |
-
-### setDONPublicKey
-
-```solidity
-function setDONPublicKey(bytes donPublicKey) external
-```
-
-Sets DON's secp256k1 public key used to encrypt secrets
-
-_Used to rotate the key_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| donPublicKey | bytes | The new public key |
-
-### setNodePublicKey
-
-```solidity
-function setNodePublicKey(address node, bytes publicKey) external
-```
-
-Sets a per-node secp256k1 public key used to encrypt secrets for that node
-
-_Callable only by contract owner and DON members_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| node | address | node's address |
-| publicKey | bytes | node's public key |
-
-### deleteNodePublicKey
-
-```solidity
-function deleteNodePublicKey(address node) external
-```
-
-Deletes node's public key
-
-_Callable only by contract owner or the node itself_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| node | address | node's address |
-
-### getAllNodePublicKeys
-
-```solidity
-function getAllNodePublicKeys() external view returns (address[], bytes[])
-```
-
-Return two arrays of equal size containing DON members' addresses and their corresponding
-public keys (or empty byte arrays if per-node key is not defined)
-
-### getRequiredFee
-
-```solidity
-function getRequiredFee(bytes data, struct FunctionsBillingRegistryInterface.RequestBilling billing) external view returns (uint96)
-```
-
-Determine the fee charged by the DON that will be split between signing Node Operators for servicing the request
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| billing | struct FunctionsBillingRegistryInterface.RequestBilling | The request's billing configuration |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint96 | fee Cost in Juels (1e18) of LINK |
-
-### estimateCost
-
-```solidity
-function estimateCost(uint64 subscriptionId, bytes data, uint32 gasLimit, uint256 gasPrice) external view returns (uint96)
-```
-
-Estimate the total cost that will be charged to a subscription to make a request: gas re-imbursement, plus DON fee, plus Registry fee
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
-| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| gasLimit | uint32 | Gas limit for the fulfillment callback |
-| gasPrice | uint256 |  |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint96 | billedCost Cost in Juels (1e18) of LINK |
-
-### sendRequest
-
-```solidity
-function sendRequest(uint64 subscriptionId, bytes data, uint32 gasLimit) external returns (bytes32)
-```
-
-Sends a request (encoded as data) using the provided subscriptionId
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
-| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| gasLimit | uint32 | Gas limit for the fulfillment callback |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes32 | requestId A unique request identifier (unique per DON) |
 
 ## IDepositContract
 
@@ -2049,404 +1285,6 @@ function withdraw(uint256) external
 
 Withdraw wrapped ether to get ether
 
-## Buffer
-
-_A library for working with mutable byte buffers in Solidity.
-
-Byte buffers are mutable and expandable, and provide a variety of primitives
-for appending to them. At any time you can fetch a bytes object containing the
-current contents of the buffer. The bytes object should not be stored between
-operations, as it may change due to resizing of the buffer._
-
-### buffer
-
-```solidity
-struct buffer {
-  bytes buf;
-  uint256 capacity;
-}
-```
-
-### init
-
-```solidity
-function init(struct Buffer.buffer buf, uint256 capacity) internal pure returns (struct Buffer.buffer)
-```
-
-_Initializes a buffer with an initial capacity._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to initialize. |
-| capacity | uint256 | The number of bytes of space to allocate the buffer. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The buffer, for chaining. |
-
-### fromBytes
-
-```solidity
-function fromBytes(bytes b) internal pure returns (struct Buffer.buffer)
-```
-
-_Initializes a new buffer from an existing bytes object.
-     Changes to the buffer may mutate the original value._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| b | bytes | The bytes object to initialize the buffer with. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | A new buffer. |
-
-### truncate
-
-```solidity
-function truncate(struct Buffer.buffer buf) internal pure returns (struct Buffer.buffer)
-```
-
-_Sets buffer length to 0._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to truncate. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chaining.. |
-
-### append
-
-```solidity
-function append(struct Buffer.buffer buf, bytes data, uint256 len) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends len bytes of a byte string to a buffer. Resizes if doing so would exceed
-     the capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | bytes | The data to append. |
-| len | uint256 | The number of bytes to copy. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chaining. |
-
-### append
-
-```solidity
-function append(struct Buffer.buffer buf, bytes data) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends a byte string to a buffer. Resizes if doing so would exceed
-     the capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | bytes | The data to append. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chaining. |
-
-### appendUint8
-
-```solidity
-function appendUint8(struct Buffer.buffer buf, uint8 data) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends a byte to the buffer. Resizes if doing so would exceed the
-     capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | uint8 | The data to append. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chaining. |
-
-### appendBytes20
-
-```solidity
-function appendBytes20(struct Buffer.buffer buf, bytes20 data) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends a bytes20 to the buffer. Resizes if doing so would exceed
-     the capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | bytes20 | The data to append. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chhaining. |
-
-### appendBytes32
-
-```solidity
-function appendBytes32(struct Buffer.buffer buf, bytes32 data) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends a bytes32 to the buffer. Resizes if doing so would exceed
-     the capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | bytes32 | The data to append. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chaining. |
-
-### appendInt
-
-```solidity
-function appendInt(struct Buffer.buffer buf, uint256 data, uint256 len) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends a byte to the end of the buffer. Resizes if doing so would
-     exceed the capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | uint256 | The data to append. |
-| len | uint256 | The number of bytes to write (right-aligned). |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer. |
-
-## CBOR
-
-_A library for populating CBOR encoded payload in Solidity.
-
-https://datatracker.ietf.org/doc/html/rfc7049
-
-The library offers various write* and start* methods to encode values of different types.
-The resulted buffer can be obtained with data() method.
-Encoding of primitive types is staightforward, whereas encoding of sequences can result
-in an invalid CBOR if start/write/end flow is violated.
-For the purpose of gas saving, the library does not verify start/write/end flow internally,
-except for nested start/end pairs._
-
-### CBORBuffer
-
-```solidity
-struct CBORBuffer {
-  struct Buffer.buffer buf;
-  uint256 depth;
-}
-```
-
-### create
-
-```solidity
-function create(uint256 capacity) internal pure returns (struct CBOR.CBORBuffer cbor)
-```
-
-### data
-
-```solidity
-function data(struct CBOR.CBORBuffer buf) internal pure returns (bytes)
-```
-
-### writeUInt256
-
-```solidity
-function writeUInt256(struct CBOR.CBORBuffer buf, uint256 value) internal pure
-```
-
-### writeInt256
-
-```solidity
-function writeInt256(struct CBOR.CBORBuffer buf, int256 value) internal pure
-```
-
-### writeUInt64
-
-```solidity
-function writeUInt64(struct CBOR.CBORBuffer buf, uint64 value) internal pure
-```
-
-### writeInt64
-
-```solidity
-function writeInt64(struct CBOR.CBORBuffer buf, int64 value) internal pure
-```
-
-### writeBytes
-
-```solidity
-function writeBytes(struct CBOR.CBORBuffer buf, bytes value) internal pure
-```
-
-### writeString
-
-```solidity
-function writeString(struct CBOR.CBORBuffer buf, string value) internal pure
-```
-
-### writeBool
-
-```solidity
-function writeBool(struct CBOR.CBORBuffer buf, bool value) internal pure
-```
-
-### writeNull
-
-```solidity
-function writeNull(struct CBOR.CBORBuffer buf) internal pure
-```
-
-### writeUndefined
-
-```solidity
-function writeUndefined(struct CBOR.CBORBuffer buf) internal pure
-```
-
-### startArray
-
-```solidity
-function startArray(struct CBOR.CBORBuffer buf) internal pure
-```
-
-### startFixedArray
-
-```solidity
-function startFixedArray(struct CBOR.CBORBuffer buf, uint64 length) internal pure
-```
-
-### startMap
-
-```solidity
-function startMap(struct CBOR.CBORBuffer buf) internal pure
-```
-
-### startFixedMap
-
-```solidity
-function startFixedMap(struct CBOR.CBORBuffer buf, uint64 length) internal pure
-```
-
-### endSequence
-
-```solidity
-function endSequence(struct CBOR.CBORBuffer buf) internal pure
-```
-
-### writeKVString
-
-```solidity
-function writeKVString(struct CBOR.CBORBuffer buf, string key, string value) internal pure
-```
-
-### writeKVBytes
-
-```solidity
-function writeKVBytes(struct CBOR.CBORBuffer buf, string key, bytes value) internal pure
-```
-
-### writeKVUInt256
-
-```solidity
-function writeKVUInt256(struct CBOR.CBORBuffer buf, string key, uint256 value) internal pure
-```
-
-### writeKVInt256
-
-```solidity
-function writeKVInt256(struct CBOR.CBORBuffer buf, string key, int256 value) internal pure
-```
-
-### writeKVUInt64
-
-```solidity
-function writeKVUInt64(struct CBOR.CBORBuffer buf, string key, uint64 value) internal pure
-```
-
-### writeKVInt64
-
-```solidity
-function writeKVInt64(struct CBOR.CBORBuffer buf, string key, int64 value) internal pure
-```
-
-### writeKVBool
-
-```solidity
-function writeKVBool(struct CBOR.CBORBuffer buf, string key, bool value) internal pure
-```
-
-### writeKVNull
-
-```solidity
-function writeKVNull(struct CBOR.CBORBuffer buf, string key) internal pure
-```
-
-### writeKVUndefined
-
-```solidity
-function writeKVUndefined(struct CBOR.CBORBuffer buf, string key) internal pure
-```
-
-### writeKVMap
-
-```solidity
-function writeKVMap(struct CBOR.CBORBuffer buf, string key) internal pure
-```
-
-### writeKVArray
-
-```solidity
-function writeKVArray(struct CBOR.CBORBuffer buf, string key) internal pure
-```
-
 ## MockFunctionsOracle
 
 ### constructor
@@ -2455,10 +1293,24 @@ function writeKVArray(struct CBOR.CBORBuffer buf, string key) internal pure
 constructor() public
 ```
 
+### getRegistry
+
+```solidity
+function getRegistry() external view returns (address)
+```
+
+Returns the address of the registry contract
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | address The address of the registry contract |
+
 ### sendRequest
 
 ```solidity
-function sendRequest(uint64 subscriptionId, bytes data, uint32 gasLimit) external returns (bytes32 requestId)
+function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
 ```
 
 Sends a request (encoded as data) using the provided subscriptionId
@@ -2467,201 +1319,13 @@ Sends a request (encoded as data) using the provided subscriptionId
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
-| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| gasLimit | uint32 | Gas limit for the fulfillment callback |
+| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
+| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
+| _gasLimit | uint32 | Gas limit for the fulfillment callback |
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | requestId | bytes32 | A unique request identifier (unique per DON) |
-
-## MockKeeperRegistry
-
-### registerUpkeep
-
-```solidity
-function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external view returns (uint256 id)
-```
-
-### getState
-
-```solidity
-function getState() external pure returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
-```
-
-## OnchainConfig
-
-```solidity
-struct OnchainConfig {
-  uint32 paymentPremiumPPB;
-  uint32 flatFeeMicroLink;
-  uint32 checkGasLimit;
-  uint24 stalenessSeconds;
-  uint16 gasCeilingMultiplier;
-  uint96 minUpkeepSpend;
-  uint32 maxPerformGas;
-  uint32 maxCheckDataSize;
-  uint32 maxPerformDataSize;
-  uint256 fallbackGasPrice;
-  uint256 fallbackLinkPrice;
-  address transcoder;
-  address registrar;
-}
-```
-
-## State
-
-```solidity
-struct State {
-  uint32 nonce;
-  uint96 ownerLinkBalance;
-  uint256 expectedLinkBalance;
-  uint96 totalPremium;
-  uint256 numUpkeeps;
-  uint32 configCount;
-  uint32 latestConfigBlockNumber;
-  bytes32 latestConfigDigest;
-  uint32 latestEpoch;
-  bool paused;
-}
-```
-
-## UpkeepInfo
-
-```solidity
-struct UpkeepInfo {
-  address target;
-  uint32 executeGas;
-  bytes checkData;
-  uint96 balance;
-  address admin;
-  uint64 maxValidBlocknumber;
-  uint32 lastPerformBlockNumber;
-  uint96 amountSpent;
-  bool paused;
-  bytes offchainConfig;
-}
-```
-
-## UpkeepFailureReason
-
-```solidity
-enum UpkeepFailureReason {
-  NONE,
-  UPKEEP_CANCELLED,
-  UPKEEP_PAUSED,
-  TARGET_CHECK_REVERTED,
-  UPKEEP_NOT_NEEDED,
-  PERFORM_DATA_EXCEEDS_LIMIT,
-  INSUFFICIENT_BALANCE
-}
-```
-
-## KeeperRegistryBaseInterface
-
-### registerUpkeep
-
-```solidity
-function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external returns (uint256 id)
-```
-
-### cancelUpkeep
-
-```solidity
-function cancelUpkeep(uint256 id) external
-```
-
-### pauseUpkeep
-
-```solidity
-function pauseUpkeep(uint256 id) external
-```
-
-### unpauseUpkeep
-
-```solidity
-function unpauseUpkeep(uint256 id) external
-```
-
-### transferUpkeepAdmin
-
-```solidity
-function transferUpkeepAdmin(uint256 id, address proposed) external
-```
-
-### acceptUpkeepAdmin
-
-```solidity
-function acceptUpkeepAdmin(uint256 id) external
-```
-
-### updateCheckData
-
-```solidity
-function updateCheckData(uint256 id, bytes newCheckData) external
-```
-
-### addFunds
-
-```solidity
-function addFunds(uint256 id, uint96 amount) external
-```
-
-### setUpkeepGasLimit
-
-```solidity
-function setUpkeepGasLimit(uint256 id, uint32 gasLimit) external
-```
-
-### setUpkeepOffchainConfig
-
-```solidity
-function setUpkeepOffchainConfig(uint256 id, bytes config) external
-```
-
-### getUpkeep
-
-```solidity
-function getUpkeep(uint256 id) external view returns (struct UpkeepInfo upkeepInfo)
-```
-
-### getActiveUpkeepIDs
-
-```solidity
-function getActiveUpkeepIDs(uint256 startIndex, uint256 maxCount) external view returns (uint256[])
-```
-
-### getTransmitterInfo
-
-```solidity
-function getTransmitterInfo(address query) external view returns (bool active, uint8 index, uint96 balance, uint96 lastCollected, address payee)
-```
-
-### getState
-
-```solidity
-function getState() external view returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
-```
-
-## IKeeperRegistry
-
-_The view methods are not actually marked as view in the implementation
-but we want them to be easily queried off-chain. Solidity will not compile
-if we actually inherit from this interface, so we document it here._
-
-### checkUpkeep
-
-```solidity
-function checkUpkeep(uint256 upkeepId) external view returns (bool upkeepNeeded, bytes performData, enum UpkeepFailureReason upkeepFailureReason, uint256 gasUsed, uint256 fastGasWei, uint256 linkNative)
-```
-
-## KeeperRegistryExecutableInterface
-
-### checkUpkeep
-
-```solidity
-function checkUpkeep(uint256 upkeepId) external returns (bool upkeepNeeded, bytes performData, enum UpkeepFailureReason upkeepFailureReason, uint256 gasUsed, uint256 fastGasWei, uint256 linkNative)
-```
 

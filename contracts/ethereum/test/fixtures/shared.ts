@@ -2,8 +2,8 @@ import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { deployContract } from '@casimir/ethereum/helpers/deploy'
 import { CasimirManager, CasimirUpkeep } from '@casimir/ethereum/build/artifacts/types'
-import { fulfillOracleAnswer, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
-import { initiatePool } from '@casimir/ethereum/helpers/oracle'
+import { fulfillFunctionsRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
+import { initiatePoolDeposit } from '@casimir/ethereum/helpers/dkg'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 
 /** Simulation amount of reward to distribute per staked validator */
@@ -11,15 +11,16 @@ const rewardPerValidator = 0.1
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
-    const [owner, , , , , keeper, oracle] = await ethers.getSigners()
+    const [owner, , , , , keeper, dkg] = await ethers.getSigners()
     let config: DeploymentConfig = {
         CasimirManager: {
             address: '',
             args: {
                 beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
+                dkgOracleAddress: dkg.address || process.env.DKG_ORACLE_ADDRESS,
+                functionsOracleAddress: process.env.FUNCTIONS_ORACLE_ADDRESS,
+                functionsSubscriptionId: process.env.FUNCTIONS_SUBSCRIPTION_ID,
                 linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
-                oracleAddress: process.env.ORACLE_ADDRESS,
-                oracleSubId: process.env.ORACLE_SUB_ID,
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
@@ -49,7 +50,7 @@ export async function deploymentFixture() {
 
         /** Link mock external contracts to Casimir */
         if (name === 'CasimirManager') {
-            (config[name as keyof typeof config] as ContractConfig).args.oracleAddress = config.MockFunctionsOracle?.address
+            (config[name as keyof typeof config] as ContractConfig).args.functionsOracleAddress = config.MockFunctionsOracle?.address
         }
 
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
@@ -67,12 +68,12 @@ export async function deploymentFixture() {
     const manager = await ethers.getContractAt('CasimirManager', config.CasimirManager.address as string) as CasimirManager
     const upkeep = await ethers.getContractAt('CasimirUpkeep', await manager.getUpkeepAddress()) as CasimirUpkeep
 
-    return { manager: manager as CasimirManager, upkeep: upkeep as CasimirUpkeep, owner, keeper, oracle }
+    return { manager: manager as CasimirManager, upkeep: upkeep as CasimirUpkeep, owner, keeper, dkg }
 }
 
 /** Fixture to stake 16 ETH for the first user */
 export async function firstUserDepositFixture() {
-    const { manager, upkeep, owner, keeper, oracle } = await loadFixture(deploymentFixture)
+    const { manager, upkeep, owner, keeper, dkg } = await loadFixture(deploymentFixture)
     const [, firstUser] = await ethers.getSigners()
 
     const stakeAmount = 16
@@ -87,12 +88,12 @@ export async function firstUserDepositFixture() {
     /** Run upkeep */
     await runUpkeep({ upkeep, keeper })
 
-    return { manager, upkeep, owner, firstUser, keeper, oracle }
+    return { manager, upkeep, owner, firstUser, keeper, dkg }
 }
 
 /** Fixture to stake 24 ETH for the second user */
 export async function secondUserDepositFixture() {
-    const { manager, upkeep, owner, firstUser, keeper, oracle } = await loadFixture(firstUserDepositFixture)
+    const { manager, upkeep, owner, firstUser, keeper, dkg } = await loadFixture(firstUserDepositFixture)
     const [, , secondUser] = await ethers.getSigners()
 
     const stakeAmount = 24
@@ -111,22 +112,22 @@ export async function secondUserDepositFixture() {
 
     /** Initiate next ready pool */
     const nextValidatorIndex = (await manager.getPendingPoolIds()).length + (await manager.getStakedPoolIds()).length
-    await initiatePool({ manager, oracle, index: nextValidatorIndex })
+    await initiatePoolDeposit({ manager, dkg, index: nextValidatorIndex })
 
     /** Run upkeep */
     const ranUpkeep = await runUpkeep({ upkeep, keeper })
 
-    /** Fulfill oracle answer */
+    /** Fulfill functions request */
     if (ranUpkeep) {
-        await fulfillOracleAnswer({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+        await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
     }
 
-    return { manager, upkeep, owner, firstUser, secondUser, keeper, oracle }
+    return { manager, upkeep, owner, firstUser, secondUser, keeper, dkg }
 }
 
 /** Fixture to reward 0.1 ETH in total to the first and second user */
 export async function rewardPostSecondUserDepositFixture() {
-    const { manager, upkeep, owner, firstUser, secondUser, keeper, oracle } = await loadFixture(secondUserDepositFixture)
+    const { manager, upkeep, owner, firstUser, secondUser, keeper, dkg } = await loadFixture(secondUserDepositFixture)
 
     const rewardAmount = 0.1
     const nextActiveStakeAmount = 32 + rewardAmount
@@ -138,17 +139,17 @@ export async function rewardPostSecondUserDepositFixture() {
     /** Run upkeep */
     const ranUpkeep = await runUpkeep({ upkeep, keeper })
 
-    /** Fulfill oracle answer */
+    /** Fulfill functions request */
     if (ranUpkeep) {
-        await fulfillOracleAnswer({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+        await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
     }
 
-    return { manager, upkeep, owner, firstUser, secondUser, keeper, oracle }
+    return { manager, upkeep, owner, firstUser, secondUser, keeper, dkg }
 }
 
 /** Fixture to sweep 0.1 ETH to the manager */
 export async function sweepPostSecondUserDepositFixture() {
-    const { manager, upkeep, owner, firstUser, secondUser, keeper, oracle } = await loadFixture(secondUserDepositFixture)
+    const { manager, upkeep, owner, firstUser, secondUser, keeper, dkg } = await loadFixture(secondUserDepositFixture)
 
     const sweptRewards = 0.1
     const sweep = await keeper.sendTransaction({ to: manager.address, value: ethers.utils.parseEther(sweptRewards.toString()) })
@@ -163,17 +164,17 @@ export async function sweepPostSecondUserDepositFixture() {
     /** Run upkeep */
     const ranUpkeep = await runUpkeep({ upkeep, keeper })
 
-    /** Fulfill oracle answer */
+    /** Fulfill functions request */
     if (ranUpkeep) {
-        await fulfillOracleAnswer({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+        await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
     }
 
-    return { manager, upkeep, owner, firstUser, secondUser, keeper, oracle }
+    return { manager, upkeep, owner, firstUser, secondUser, keeper, dkg }
 }
 
 /** Fixture to stake 24 ETH for the third user */
 export async function thirdUserDepositFixture() {
-    const { manager, upkeep, owner, firstUser, secondUser, keeper, oracle } = await loadFixture(sweepPostSecondUserDepositFixture)
+    const { manager, upkeep, owner, firstUser, secondUser, keeper, dkg } = await loadFixture(sweepPostSecondUserDepositFixture)
     const [, , , thirdUser] = await ethers.getSigners()
 
     const stakeAmount = 24
@@ -192,22 +193,22 @@ export async function thirdUserDepositFixture() {
 
     /** Initiate next ready pool */
     const nextValidatorIndex = (await manager.getPendingPoolIds()).length + (await manager.getStakedPoolIds()).length
-    await initiatePool({ manager, oracle, index: nextValidatorIndex })
+    await initiatePoolDeposit({ manager, dkg, index: nextValidatorIndex })
 
     /** Run upkeep */
     const ranUpkeep = await runUpkeep({ upkeep, keeper })
 
-    /** Fulfill oracle answer */
+    /** Fulfill functions request */
     if (ranUpkeep) {
-        await fulfillOracleAnswer({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+        await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
     }
 
-    return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, oracle }
+    return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg }
 }
 
 /** Fixture to reward 0.2 ETH in total to the first, second, and third user */
 export async function rewardPostThirdUserDepositFixture() {
-    const { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, oracle } = await loadFixture(thirdUserDepositFixture)
+    const { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg } = await loadFixture(thirdUserDepositFixture)
 
     const rewardAmount = 0.2
     const nextActiveStakeAmount = 64 + rewardAmount
@@ -219,17 +220,17 @@ export async function rewardPostThirdUserDepositFixture() {
     /** Run upkeep */
     const ranUpkeep = await runUpkeep({ upkeep, keeper })
 
-    /** Fulfill oracle answer */
+    /** Fulfill functions request */
     if (ranUpkeep) {
-        await fulfillOracleAnswer({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+        await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
     }
 
-    return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, oracle }
+    return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg }
 }
 
 /** Fixture to sweep 0.2 ETH to the manager */
 export async function sweepPostThirdUserDepositFixture() {
-    const { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, oracle } = await loadFixture(rewardPostThirdUserDepositFixture)
+    const { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg } = await loadFixture(rewardPostThirdUserDepositFixture)
 
     const sweptRewards = 0.2
     const sweep = await keeper.sendTransaction({ to: manager.address, value: ethers.utils.parseEther(sweptRewards.toString()) })
@@ -244,17 +245,17 @@ export async function sweepPostThirdUserDepositFixture() {
     /** Run upkeep */
     const ranUpkeep = await runUpkeep({ upkeep, keeper })
 
-    /** Fulfill oracle answer */
+    /** Fulfill functions request */
     if (ranUpkeep) {
-        await fulfillOracleAnswer({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+        await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
     }
 
-    return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, oracle }
+    return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg }
 }
 
 /** Fixture to withdraw 0.3 to the first user */
 export async function firstUserPartialWithdrawalFixture() {
-    const { manager, upkeep, firstUser, secondUser, thirdUser, keeper, oracle } = await loadFixture(sweepPostThirdUserDepositFixture)
+    const { manager, upkeep, firstUser, secondUser, thirdUser, keeper, dkg } = await loadFixture(sweepPostThirdUserDepositFixture)
     const openDeposits = await manager.getOpenDeposits()
     const withdraw = await manager.connect(firstUser).requestWithdrawal(openDeposits)
     await withdraw.wait()
@@ -262,12 +263,12 @@ export async function firstUserPartialWithdrawalFixture() {
     /** Run upkeep */
     await runUpkeep({ upkeep, keeper })
 
-    return { manager, upkeep, firstUser, secondUser, thirdUser, keeper, oracle }
+    return { manager, upkeep, firstUser, secondUser, thirdUser, keeper, dkg }
 }
 
 /** Fixture to stake 72 for the fourth user */
 export async function fourthUserDepositFixture() {
-    const { manager, upkeep, firstUser, secondUser, thirdUser, keeper, oracle } = await loadFixture(firstUserPartialWithdrawalFixture)
+    const { manager, upkeep, firstUser, secondUser, thirdUser, keeper, dkg } = await loadFixture(firstUserPartialWithdrawalFixture)
     const [, , , , fourthUser] = await ethers.getSigners()
 
     const stakeAmount = 72
@@ -287,23 +288,23 @@ export async function fourthUserDepositFixture() {
     /** Initiate next ready pools (2) */
     for (let i = 0; i < 2; i++) {
         const nextValidatorIndex = (await manager.getPendingPoolIds()).length + (await manager.getStakedPoolIds()).length
-        await initiatePool({ manager, oracle, index: nextValidatorIndex })
+        await initiatePoolDeposit({ manager, dkg, index: nextValidatorIndex })
     }
 
     /** Run upkeep */
     const ranUpkeep = await runUpkeep({ upkeep, keeper })
 
-    /** Fulfill oracle answer */
+    /** Fulfill functions request */
     if (ranUpkeep) {
-        await fulfillOracleAnswer({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+        await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
     }
 
-    return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle }
+    return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, dkg }
 }
 
 /** Fixture to simulate stakes and rewards */
 export async function simulationFixture() {
-    const { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle } = await loadFixture(fourthUserDepositFixture)
+    const { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, dkg } = await loadFixture(fourthUserDepositFixture)
 
     let nextActiveStakeAmount = 128
 
@@ -320,11 +321,11 @@ export async function simulationFixture() {
             /** Run upkeep */
             const ranUpkeep = await runUpkeep({ upkeep, keeper })
 
-            /** Fulfill oracle answer */
+            /** Fulfill functions request */
             if (ranUpkeep) {
-                await fulfillOracleAnswer({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+                await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
             }
         }
     }
-    return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle }
+    return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, dkg }
 }

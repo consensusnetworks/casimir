@@ -44,7 +44,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /* Distribution threshold (100 WEI) */
     uint256 private constant distributionThreshold = 100 wei;
-    /** Scale factor for each reward to stake ratio */
+    /** Scale factor for each rewards to stake ratio */
     uint256 private constant scaleFactor = 1 ether;
     /** Uniswap 0.3% fee tier */
     uint24 private constant uniswapFeeTier = 3000;
@@ -52,9 +52,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint256 private constant poolCapacity = 32 ether;
 
     /*************/
-    /* Contracts */
+    /* Immutable */
     /*************/
 
+    /** DKG oracle address */
+    address private immutable dkgOracleAddress;
     /** Upkeep contract */
     ICasimirUpkeep private immutable upkeep;
     /** Beacon deposit contract */
@@ -88,7 +90,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Latest active (consensus) balance reported from upkeep */
     uint256 latestActiveStake;
     /** Last pool ID created */
-    uint256 lastPoolId;
+    uint32 nextPoolId;
     /** Token addresses */
     mapping(Token => address) private tokenAddresses;
     /** Unswapped tokens by address */
@@ -109,8 +111,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     bytes[] private stakedValidatorPublicKeys;
     /** Exiting validator count */
     uint256 private exitingValidatorCount;
-    /** Sum of scaled reward to stake ratios (intial value required) */
-    uint256 rewardRatioSum = 1000 ether;
+    /** Sum of scaled rewards to stake ratios (intial value required) */
+    uint256 rewardsRatioSum = 1000 ether;
     /** Requested withdrawals */
     Withdrawal[] private requestedWithdrawalQueue;
     /** Pending withdrawals */
@@ -127,9 +129,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @notice Constructor
      * @param beaconDepositAddress The Beacon deposit address
+     * @param _dkgOracleAddress The DKG oracle address
+     * @param functionsOracleAddress The Chainlink functions oracle address
+     * @param functionsSubscriptionId The Chainlink functions subscription ID
      * @param linkTokenAddress The Chainlink token address
-     * @param oracleAddress The Chainlink functions oracle address
-     * @param oracleSubId The Chainlink functions oracle subscription ID
      * @param ssvNetworkAddress The SSV network address
      * @param ssvTokenAddress The SSV token address
      * @param swapFactoryAddress The Uniswap factory address
@@ -138,9 +141,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     constructor(
         address beaconDepositAddress,
+        address _dkgOracleAddress,
+        address functionsOracleAddress,
+        uint64 functionsSubscriptionId,
         address linkTokenAddress,
-        address oracleAddress,
-        uint64 oracleSubId,
         address ssvNetworkAddress,
         address ssvTokenAddress,
         address swapFactoryAddress,
@@ -148,6 +152,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         address wethTokenAddress
     ) {
         beaconDeposit = IDepositContract(beaconDepositAddress);
+        dkgOracleAddress = _dkgOracleAddress;
         linkToken = IERC20(linkTokenAddress);
         tokenAddresses[Token.LINK] = linkTokenAddress;
         ssvNetwork = ISSVNetwork(ssvNetworkAddress);
@@ -157,11 +162,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         swapRouter = ISwapRouter(swapRouterAddress);
         tokenAddresses[Token.WETH] = wethTokenAddress;
 
-        /** Deploy upkeep contract */
         upkeep = new CasimirUpkeep(
             address(this),
-            oracleAddress,
-            oracleSubId
+            functionsOracleAddress,
+            functionsSubscriptionId
         );
     }
 
@@ -175,52 +179,52 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             processedAmount >= distributionThreshold,
             "Stake amount must be greater than 100 WEI"
         );
-        // Todo cap deposits to avoid exhausting gas
 
-        /** Update user account state */
         if (users[msg.sender].stake0 > 0) {
-            /** Settle user's current stake */
             users[msg.sender].stake0 = getUserStake(msg.sender);
         }
-        users[msg.sender].rewardRatioSum0 = rewardRatioSum;
+        users[msg.sender].rewardsRatioSum0 = rewardsRatioSum;
         users[msg.sender].stake0 += processedAmount;
 
-        /** Distribute stake to open pools */
         distributeStake(processedAmount);
+
+        emit StakeDeposited(msg.sender, processedAmount);
     }
 
     /**
      * @notice Rebalance the reward to stake ratio and redistribute swept rewards
      * @param activeStake The active consensus stake
-     * @param sweptRewards The swept consensus stake
+     * @param sweptRewards The swept consensus rewards
+     * @param sweptExits The swept consensus exits
      */
-    function rebalanceStake(uint256 activeStake, uint256 sweptRewards) external {
+    function rebalanceStake(uint256 activeStake, uint256 sweptRewards, uint256 sweptExits) external {
         require(
             msg.sender == address(upkeep),
-            "Only upkeep can distribute rewards"
+            "Only upkeep can rebalance stake"
         );
 
-        int256 change = int256(activeStake + sweptRewards) -
-            int256(latestActiveStake + pendingPoolIds.length * poolCapacity);
+        int256 current = int256(activeStake + sweptRewards + sweptExits);
+        int256 previous = int256(latestActiveStake + pendingPoolIds.length * poolCapacity);
+        int256 change = current - previous;
 
-        /** Update reward to stake ratio */
         if (change > 0) {
-            uint256 reward = SafeCast.toUint256(change);
+            uint256 rewards = SafeCast.toUint256(change);
             // /** Reward fees set to zero for testing */
             // uint256 processedReward = processFees(reward, Fees(0, 0));
-            rewardRatioSum += Math.mulDiv(rewardRatioSum, reward, getStake());
-            emit StakeRebalanced(msg.sender, reward);
+            rewardsRatioSum += Math.mulDiv(rewardsRatioSum, rewards, getStake());
+            emit StakeRebalanced(rewards);
         } else if (change < 0) {
             uint256 penalty = SafeCast.toUint256(change);
-            rewardRatioSum -= Math.mulDiv(rewardRatioSum, penalty, getStake());
-            emit StakeRebalanced(msg.sender, penalty);
+            rewardsRatioSum -= Math.mulDiv(rewardsRatioSum, penalty, getStake());
+            emit StakeRebalanced(penalty);
         }
 
-        /** Update latest active stake */
         latestActiveStake = activeStake;
 
-        /** Distribute swept rewards */
-        distributeStake(sweptRewards);
+        if (sweptRewards > 0) {
+            distributeStake(sweptRewards);
+            emit RewardsDeposited(sweptRewards);
+        }
     }
 
     /**
@@ -228,29 +232,22 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The amount of stake to distribute
      */
     function distributeStake(uint256 amount) private {
-        emit StakeDistributed(msg.sender, amount);
-
-        /** Distribute ETH to open pools */
         while (amount > 0) {
             uint256 remainingCapacity = poolCapacity - openDeposits;
             if (remainingCapacity > amount) {
-                /** Add remaining amount to open deposits */
                 openDeposits += amount;
                 amount = 0;
             } else {
-                /** Create new pool */
-                lastPoolId++;
-                uint32 poolId = uint32(lastPoolId);
+                uint32 poolId = nextPoolId;
+                nextPoolId++;
                 Pool storage pool;
                 pool = pools[poolId];
-
-                /** Move open deposits and remaining capacity to pool */
                 openDeposits = 0;
                 amount -= remainingCapacity;
                 pool.deposits = poolCapacity;
                 readyPoolIds.push(poolId);
 
-                emit PoolFilled(poolId);
+                emit PoolReady(poolId);
             }
         }
     }
@@ -260,18 +257,12 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The amount of stake to withdraw
      */
     function requestWithdrawal(uint256 amount) external nonReentrant {
-        require(openDeposits >= amount, "Withdrawing more than open deposits");
-        require(users[msg.sender].stake0 > 0, "User does not have a stake");
-
-        /** Settle user's compounded stake */
         users[msg.sender].stake0 = getUserStake(msg.sender);
-
         require(
-            users[msg.sender].stake0 >= amount,
+            users[msg.sender].stake0 > amount,
             "Withdrawing more than user stake"
         );
 
-        /** Update requested withdrawals state */
         requestedWithdrawalQueue.push(
             Withdrawal({user: msg.sender, amount: amount})
         );
@@ -293,21 +284,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         while (count > 0) {
             count--;
 
-            /** Get next requested withdrawal */
             Withdrawal memory withdrawal = requestedWithdrawalQueue[0];
-
-            /** Update user account state */
-            users[withdrawal.user].rewardRatioSum0 = rewardRatioSum;
+            users[withdrawal.user].rewardsRatioSum0 = rewardsRatioSum;
             users[withdrawal.user].stake0 -= withdrawal.amount;
-
-            /** Update requested withdrawals state */
             requestedWithdrawalQueue.remove(0);
             requestedWithdrawals -= withdrawal.amount;
 
             if (withdrawal.amount <= openDeposits) {
-                /** Withdraw amount from open deposits */
                 openDeposits -= withdrawal.amount;
-
                 withdrawal.user.send(withdrawal.amount);
 
                 emit WithdrawalCompleted(
@@ -315,7 +299,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                     withdrawal.amount
                 );
             } else {
-                /** Update requested withdrawals state */
                 pendingWithdrawalQueue.push(withdrawal);
                 pendingWithdrawals += withdrawal.amount;
 
@@ -340,13 +323,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         while (count > 0) {
             count--;
 
-            /** Get next pending withdrawal */
             Withdrawal memory withdrawal = pendingWithdrawalQueue[0];
-
-            /** Update pending withdrawals state */
             pendingWithdrawalQueue.remove(0);
             pendingWithdrawals -= withdrawal.amount;
-
             withdrawal.user.send(withdrawal.amount);
 
             emit WithdrawalCompleted(withdrawal.user, withdrawal.amount);
@@ -363,7 +342,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param signature The signature
      * @param withdrawalCredentials The withdrawal credentials
      */
-    function initiateNextReadyPool(   
+    function initiatePoolDeposit(   
         bytes32 depositDataRoot,
         bytes calldata publicKey,
         uint32[] memory operatorIds,
@@ -372,14 +351,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bytes calldata signature,
         bytes calldata withdrawalCredentials
     ) external {
-        // Todo restrict to oracle
-
+        require(
+            msg.sender == dkgOracleAddress, 
+            "Only DKG oracle can initiate pools"
+        );
         require(readyPoolIds.length > 0, "No ready pools");
 
-        /** Get next filled pool ID */
-        uint32 poolId = readyPoolIds[0];
+        // Todo validate deposit data
 
-        /** Get the pool and update it */
+        uint32 poolId = readyPoolIds[0];
         Pool storage pool = pools[poolId];
         pool.depositDataRoot = depositDataRoot;
         pool.publicKey = publicKey;
@@ -388,29 +368,25 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         pool.sharesPublicKeys = sharesPublicKeys;
         pool.signature = signature;
         pool.withdrawalCredentials = withdrawalCredentials;
-
-        /** Move pool from ready to pending state */
         readyPoolIds.remove(0);
         pendingPoolIds.push(poolId); 
 
-        /** Deposit validator */
         beaconDeposit.deposit{value: pool.deposits}(
-            pool.publicKey, // bytes
-            pool.withdrawalCredentials, // bytes
-            pool.signature, // bytes
-            pool.depositDataRoot // bytes32
+            pool.publicKey,
+            pool.withdrawalCredentials,
+            pool.signature,
+            pool.depositDataRoot
         );
 
-        /** Pay SSV fees and register validator */
-        /** Todo update for v3 SSV contracts and dynamic fees */
+        // Todo update for v3 SSV contracts and dynamic fees
         uint256 mockSSVFee = 5 ether;
         ssvToken.approve(address(ssvNetwork), mockSSVFee);
         ssvNetwork.registerValidator(
-            pool.publicKey, // bytes
-            pool.operatorIds, // uint32[]
-            pool.sharesPublicKeys, // bytes[]
-            pool.sharesEncrypted, // bytes[],
-            mockSSVFee // uint256 (fees handled on user deposits)
+            pool.publicKey,
+            pool.operatorIds,
+            pool.sharesPublicKeys,
+            pool.sharesEncrypted,
+            mockSSVFee
         );
 
         emit PoolInitiated(poolId);
@@ -420,7 +396,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Complete a given count of the next pending pools
      * @param count The number of pools to complete
      */
-    function completePendingPools(uint256 count) external {
+    function completePoolDeposits(uint256 count) external {
         require(
             msg.sender == address(upkeep),
             "Only upkeep can complete pending pools"
@@ -430,15 +406,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         while (count > 0) {
             count--;
 
-            /** Get next pending pool */
             uint32 poolId = pendingPoolIds[0];
             Pool memory pool = pools[poolId];
-
-            /** Move pool from pending to staked state */
             pendingPoolIds.remove(0);
             stakedPoolIds.push(poolId);
-
-            /** Add validator to staked state */
             stakedValidatorPublicKeys.push(pool.publicKey);
 
             emit PoolCompleted(poolId);
@@ -455,7 +426,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             "Only upkeep can request pool exits"
         );
 
-        uint256 index = 0; // Keeping the same staked pool array
+        uint256 index = 0;
         while (count > 0) {
             uint32 poolId = stakedPoolIds[index];
             Pool storage pool = pools[poolId];
@@ -465,8 +436,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 index++;
 
                 pool.exiting = true;
-
-                /** Increase exiting validators */
                 exitingValidatorCount++;
 
                 emit PoolExitRequested(poolId);
@@ -505,17 +474,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             "Pool validator does not match staked validator"
         );
 
-        /** Remove pool from staked pools and delete */
         stakedPoolIds.remove(poolIndex);
         delete pools[poolId];
-
-        /** Remove validator from staked and exiting states and delete */
         stakedValidatorPublicKeys.remove(validatorIndex);
-
-        /** Decrease exiting validators */
         exitingValidatorCount--;
 
-        /** Remove validator from SSV */
         ssvNetwork.removeValidator(validatorPublicKey);
 
         emit PoolExited(poolId);
@@ -526,10 +489,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param operatorId The operator ID
      */
     function registerOperator(uint32 operatorId) external payable {
-        // require(
-        //     msg.value >= operatorCollateralMinimum,
-        //     "Insufficient operator collateral"
-        // );
+        //
     }
 
     /**
@@ -545,13 +505,17 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bytes[] memory sharesEncrypted,
         bytes[] memory sharesPublicKeys
     ) external {
+        require(
+            msg.sender == dkgOracleAddress, 
+            "Only DKG oracle can initiate pools"
+        );
+
         Pool memory pool = pools[poolId];
         require(
             pool.reshareCount < 3,
             "Pool has been reshared twice"
         );
 
-        /** Update pool */
         pool.operatorIds = operatorIds;
         pool.sharesEncrypted = sharesEncrypted;
         pool.sharesPublicKeys = sharesPublicKeys;
@@ -570,16 +534,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint256 depositAmount,
         Fees memory fees
     ) private returns (uint256 processedAmount) {
-        /** Calculate total fee percentage */
         uint32 feePercent = fees.LINK + fees.SSV;
-
-        /** Calculate ETH amount to return in processed deposit */
         uint256 ethAmount = Math.mulDiv(depositAmount, 100, 100 + feePercent);
-
-        /** Calculate fee amount to swap */
         uint256 feeAmount = depositAmount - ethAmount;
 
-        /** Wrap and swap */
         if (feeAmount > 0) {
             wrapFees(feeAmount);
 
@@ -588,7 +546,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 tokenAddresses[Token.LINK],
                 Math.mulDiv(feeAmount, fees.LINK, feePercent)
             );
-            // Todo use linkToken.increaseAllowance(swappedLINK) if available
             linkToken.approve(
                 address(upkeep),
                 linkToken.balanceOf(address(this))
@@ -600,7 +557,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 tokenAddresses[Token.SSV],
                 Math.mulDiv(feeAmount, fees.SSV, feePercent)
             );
-            // Todo use ssvToken.increaseAllowance(swappedSSV) if available
             ssvToken.approve(
                 address(upkeep),
                 ssvToken.balanceOf(address(this))
@@ -617,7 +573,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function wrapFees(uint256 amount) private {
         IWETH9 wethToken = IWETH9(tokenAddresses[Token.WETH]);
         wethToken.deposit{value: amount}();
-        // Todo use wethToken.increaseAllowance(swappedSSV) if available
         wethToken.approve(
             address(swapRouter),
             wethToken.balanceOf(address(this))
@@ -643,7 +598,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             amountIn = liquidity;
         }
         if (amountIn > 0) {
-            /** Get swap params */
             ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
                 .ExactInputSingleParams({
                     tokenIn: tokenIn,
@@ -655,8 +609,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                     amountOutMinimum: 0,
                     sqrtPriceLimitX96: 0
                 });
-
-            /** Perform swap */
             amountOut = swapRouter.exactInputSingle(params);
         }
     }
@@ -690,7 +642,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @return stake The total manager stake
      */
     function getStake() public view returns (uint256 stake) {
-        stake = getBufferedStake() + getActiveStake(); // - pendingWithdrawals;
+        stake = getBufferedStake() + getActiveStake();
     }
 
     /**
@@ -731,8 +683,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         require(users[userAddress].stake0 > 0, "User does not have a stake");
         userStake = Math.mulDiv(
             users[userAddress].stake0,
-            rewardRatioSum,
-            users[userAddress].rewardRatioSum0
+            rewardsRatioSum,
+            users[userAddress].rewardsRatioSum0
         );
     }
 
@@ -852,7 +804,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function getPool(
         uint32 poolId
     ) external view returns (Pool memory pool) {
-        /** Pool in ready state will not have validator or operators */
         pool = pools[poolId];
     }
 

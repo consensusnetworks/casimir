@@ -191,3 +191,11 @@ Todo add notes.
 ### Operator Config
 
 Operators will need to follow the [node onboarding process from RockX](https://github.com/RockX-SG/rockx-dkg-cli/blob/main/docs/dkg_node_installation_instructions.md) to participate in DKG make their node available to new validator selections. Todo add details.
+
+## Todo
+
+- [ ] Add notes on operator selection and performance monitoring thresholds
+- [ ] Add notes on operator collateral
+- [ ] Add notes on relationship between operator selection, performance, and collateral
+- [ ] Add notes on operator config
+- [ ] Add notes on distributed key generation and oracle integration

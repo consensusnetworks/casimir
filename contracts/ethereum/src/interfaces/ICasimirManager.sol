@@ -33,7 +33,7 @@ interface ICasimirManager {
     /** User staking account */
     struct User {
         uint256 stake0;
-        uint256 rewardRatioSum0;
+        uint256 rewardsRatioSum0;
     }
     /** Withdrawal */
     struct Withdrawal {
@@ -45,15 +45,16 @@ interface ICasimirManager {
     /* Events */
     /**********/
 
-    event PoolFilled(uint32 poolId);
+    event PoolReady(uint32 poolId);
     event PoolInitiated(uint32 poolId);
     event PoolCompleted(uint32 poolId);
     event PoolReshareRequested(uint32 poolId);
     event PoolReshared(uint32 poolId);
     event PoolExitRequested(uint32 poolId);
     event PoolExited(uint32 poolId);
-    event StakeDistributed(address sender, uint256 amount);
-    event StakeRebalanced(address sender, uint256 amount);
+    event StakeDeposited(address sender, uint256 amount);
+    event StakeRebalanced(uint256 amount);
+    event RewardsDeposited(uint256 amount);
     event WithdrawalRequested(address sender, uint256 amount);
     event WithdrawalInitiated(address sender, uint256 amount);
     event WithdrawalCompleted(address sender, uint256 amount);
@@ -64,7 +65,7 @@ interface ICasimirManager {
 
     function depositStake() external payable;
 
-    function rebalanceStake(uint256 activeStake, uint256 sweptRewards) external;
+    function rebalanceStake(uint256 activeStake, uint256 sweptRewards, uint256 sweptExits) external;
 
     function requestWithdrawal(uint256 amount) external;
 
@@ -72,7 +73,7 @@ interface ICasimirManager {
 
     function completePendingWithdrawals(uint256 count) external;
 
-    function initiateNextReadyPool(        
+    function initiatePoolDeposit(        
         bytes32 depositDataRoot,
         bytes calldata publicKey,
         uint32[] memory operatorIds,
@@ -82,7 +83,7 @@ interface ICasimirManager {
         bytes calldata withdrawalCredentials
     ) external;
 
-    function completePendingPools(uint256 count) external;
+    function completePoolDeposits(uint256 count) external;
 
     function requestPoolExits(uint256 count) external;
 

@@ -2,20 +2,21 @@ import { deployContract } from '@casimir/ethereum/helpers/deploy'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 import { CasimirUpkeep, CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { ethers } from 'hardhat'
-import { fulfillOracleAnswer, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
-import { initiatePool } from '@casimir/ethereum/helpers/oracle'
+import { fulfillFunctionsRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
+import { initiatePoolDeposit } from '@casimir/ethereum/helpers/dkg'
 import EventEmitter, { on } from 'events'
 
 void async function () {
-    const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
+    const [, , , , fourthUser, keeper, dkg] = await ethers.getSigners()
     let config: DeploymentConfig = {
         CasimirManager: {
             address: '',
             args: {
                 beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
+                dkgOracleAddress: dkg.address || process.env.DKG_ORACLE_ADDRESS,
+                functionsOracleAddress: process.env.FUNCTIONS_ORACLE_ADDRESS,
+                functionsSubscriptionId: process.env.FUNCTIONS_SUBSCRIPTION_ID,
                 linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
-                oracleAddress: process.env.ORACLE_ADDRESS,
-                oracleSubId: process.env.ORACLE_SUB_ID,
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
@@ -45,7 +46,7 @@ void async function () {
 
         /** Link mock external contracts to Casimir */
         if (name === 'CasimirManager') {
-            (config[name as keyof typeof config] as ContractConfig).args.oracleAddress = config.MockFunctionsOracle?.address
+            (config[name as keyof typeof config] as ContractConfig).args.dkgAddress = config.MockFunctionsOracle?.address
         }
 
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
@@ -78,14 +79,14 @@ void async function () {
                 /** Perform upkeep */
                 const ranUpkeepBefore = await runUpkeep({ upkeep, keeper })
 
-                /** Fulfill oracle answer */
+                /** Fulfill functions request */
                 if (ranUpkeepBefore) {
                     const nextActiveStakeAmount = Math.round((parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) + rewardAmount) * 10) / 10
                     const nextSweptRewardsAmount = 0
                     const nextSweptExitsAmount = 0
                     const nextDepositedCount = 0
                     const nextExitedCount = 0
-                    await fulfillOracleAnswer({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+                    await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
                 }
 
                 /** Sweep rewards before next upkeep (balance will increment silently) */
@@ -95,14 +96,14 @@ void async function () {
                 /** Perform upkeep */
                 const ranUpkeepAfter = await runUpkeep({ upkeep, keeper })
 
-                /** Fulfill oracle answer */
+                /** Fulfill functions request */
                 if (ranUpkeepAfter) {
                     const nextActiveStakeAmount = Math.round((parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) - rewardAmount) * 10) / 10
                     const nextSweptRewardsAmount = rewardAmount
                     const nextSweptExitsAmount = 0
                     const nextDepositedCount = 0
                     const nextExitedCount = 0
-                    await fulfillOracleAnswer({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+                    await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
                 }
                 
             }
@@ -119,25 +120,25 @@ void async function () {
         await fourthUserStake?.wait()
     }, 1000)
 
-    /** Perform upkeep and fulfill oracle answer after each pool is filled */
-    for await (const event of on(manager as unknown as EventEmitter, 'PoolFilled')) {
+    /** Perform upkeep and fulfill dkg answer after each pool is filled */
+    for await (const event of on(manager as unknown as EventEmitter, 'PoolReady')) {
         const [ id, details ] = event
         console.log(`Pool ${id} filled at block number ${details.blockNumber}`)
 
         const nextValidatorIndex = (await manager.getPendingPoolIds()).length + (await manager.getStakedPoolIds()).length
-        await initiatePool({ manager, oracle, index: nextValidatorIndex })
+        await initiatePoolDeposit({ manager, dkg, index: nextValidatorIndex })
 
         /** Perform upkeep */
         const ranUpkeep = await runUpkeep({ upkeep, keeper })
 
-        /** Fulfill oracle answer */
+        /** Fulfill functions request */
         if (ranUpkeep) {
             const nextActiveStakeAmount = parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) + 32
             const nextSweptRewardsAmount = 0
             const nextSweptExitsAmount = 0
             const nextDepositedCount = 1
             const nextExitedCount = 0
-            await fulfillOracleAnswer({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+            await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
         }
     }
 }()

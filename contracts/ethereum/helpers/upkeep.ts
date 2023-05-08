@@ -19,7 +19,7 @@ export async function runUpkeep({
     return ranUpkeep
 }
 
-export async function fulfillOracleAnswer({
+export async function fulfillFunctionsRequest({
     upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount
 }: {
     upkeep: CasimirUpkeep,
