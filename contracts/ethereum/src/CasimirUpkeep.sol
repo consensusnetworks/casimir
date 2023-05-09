@@ -39,23 +39,23 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /* Dynamic State */
     /********************/
 
-    /** Serialized oracle source code */
+    /** Binary request source code */
     bytes public requestCBOR;
-    /** Latest oracle request ID */
+    /** Latest request ID */
     bytes32 public latestRequestId;
-    /** Latest fulfilled oracle request ID */
+    /** Latest fulfilled request ID */
     bytes32 public latestFulfilledRequestId;
-    /** Latest oracle response */
+    /** Latest response */
     bytes private latestResponse;
-    /** Latest oracle response timestamp */
+    /** Latest response timestamp */
     uint256 private latestResponseTimestamp;
-    /** Latest oracle error */
+    /** Latest error */
     bytes private latestError;
-    /** Latest oracle response count */
+    /** Latest response count */
     uint256 private responseCounter;
-    /** Oracle fulfillment gas limit */
+    /** Fulfillment gas limit */
     uint32 fulfillGasLimit;
-    /** Oracle subscription ID */
+    /** Functions subscription ID */
     uint64 private functionsSubscriptionId;
 
     /***************/
@@ -201,19 +201,20 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             uint256 sweptRewards = uint256(uint64(report >> 64)) * 1 gwei;
             uint256 sweptExits = uint256(uint64(report >> 128)) * 1 gwei;
             uint32 depositCount = uint32(report >> 192);
-            // uint32 exitCount = uint32(report >> 224);
+            uint32 exitCount = uint32(report >> 224);
 
             // if (sweptExits < exitCount * poolCapacity) {
             //     sweptExits = amount recovered from blamed operator collateral
             // }
 
             /** Rebalance the stake */
-            manager.rebalanceStake(activeStake, sweptRewards, sweptExits);
-
-            /** Complete the deposit count of pending pools */
-            if (depositCount > 0) {
-                manager.completePoolDeposits(depositCount);
-            }
+            manager.rebalanceStake(
+                activeStake, 
+                sweptRewards, 
+                sweptExits,
+                depositCount,
+                exitCount
+            );
         }
 
         emit OCRResponse(requestId, response, err);

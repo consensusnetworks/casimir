@@ -12,11 +12,6 @@ interface ICasimirManager {
         uint256 linkAmount;
         uint256 ssvAmount;
     }
-    /** Token fees required for contract protocols */
-    struct Fees {
-        uint32 LINK;
-        uint32 SSV;
-    }
     /** Pool used for running a validator */
     struct Pool {
         uint256 deposits;
@@ -65,7 +60,13 @@ interface ICasimirManager {
 
     function depositStake() external payable;
 
-    function rebalanceStake(uint256 activeStake, uint256 sweptRewards, uint256 sweptExits) external;
+    function rebalanceStake(
+        uint256 activeStake, 
+        uint256 sweptRewards, 
+        uint256 sweptExits,
+        uint32 depositCount,
+        uint32 exitCount
+    ) external;
 
     function requestWithdrawal(uint256 amount) external;
 
@@ -80,10 +81,9 @@ interface ICasimirManager {
         bytes[] memory sharesEncrypted,
         bytes[] memory sharesPublicKeys,
         bytes calldata signature,
-        bytes calldata withdrawalCredentials
+        bytes calldata withdrawalCredentials,
+        uint256 feeAmount
     ) external;
-
-    function completePoolDeposits(uint256 count) external;
 
     function requestPoolExits(uint256 count) external;
 
@@ -92,17 +92,17 @@ interface ICasimirManager {
         uint256 validatorIndex
     ) external;
 
-    function setLINKFee(uint32 fee) external;
-
-    function setSSVFee(uint32 fee) external;
+    function setFeePercents(uint32 ethFeePercent, uint32 linkFeePercent, uint32 ssvFeePercent) external;
 
     function setOracleAddress(address oracleAddress) external;
 
-    function getFees() external view returns (Fees memory);
+    function getFeePercent() external view returns (uint32);
 
-    function getLINKFee() external view returns (uint32);
+    function getETHFeePercent() external view returns (uint32);
 
-    function getSSVFee() external view returns (uint32);
+    function getLINKFeePercent() external view returns (uint32);
+
+    function getSSVFeePercent() external view returns (uint32);
 
     function getStakedValidatorPublicKeys()
         external
@@ -123,8 +123,6 @@ interface ICasimirManager {
     function getStake() external view returns (uint256);
 
     function getBufferedStake() external view returns (uint256);
-
-    function getSweptStake() external view returns (uint256);
 
     function getActiveStake() external view returns (uint256);
 

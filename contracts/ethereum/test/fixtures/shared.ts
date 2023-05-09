@@ -4,10 +4,11 @@ import { deployContract } from '@casimir/ethereum/helpers/deploy'
 import { CasimirManager, CasimirUpkeep } from '@casimir/ethereum/build/artifacts/types'
 import { fulfillFunctionsRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { initiatePoolDeposit } from '@casimir/ethereum/helpers/dkg'
+import { round } from '@casimir/ethereum/helpers/math'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 
-/** Simulation amount of reward to distribute per staked validator */
-const rewardPerValidator = 0.1
+/** Simulation amount of rewards to distribute per staked validator */
+const rewardsPerValidator = 0.105
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
@@ -77,12 +78,8 @@ export async function firstUserDepositFixture() {
     const [, firstUser] = await ethers.getSigners()
 
     const stakeAmount = 16
-
-    const fees = { ...await manager.getFees() }
-    const feePercent = fees.LINK + fees.SSV
-    const depositAmount = stakeAmount * ((100 + feePercent) / 100)
-    const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await manager.connect(firstUser).depositStake({ value })
+    const depositAmount = round(stakeAmount * ((100 + await manager.getFeePercent()) / 100), 10)
+    const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
     /** Run upkeep */
@@ -102,12 +99,8 @@ export async function secondUserDepositFixture() {
     const nextSweptExitsAmount = 0
     const nextDepositedCount = 1
     const nextExitedCount = 0
-
-    const fees = { ...await manager.getFees() }
-    const feePercent = fees.LINK + fees.SSV
-    const depositAmount = stakeAmount * ((100 + feePercent) / 100)
-    const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await manager.connect(secondUser).depositStake({ value })
+    const depositAmount = round(stakeAmount * ((100 + await manager.getFeePercent()) / 100), 10)    
+    const deposit = await manager.connect(secondUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
     /** Initiate next ready pool */
@@ -125,12 +118,12 @@ export async function secondUserDepositFixture() {
     return { manager, upkeep, owner, firstUser, secondUser, keeper, dkg }
 }
 
-/** Fixture to reward 0.1 ETH in total to the first and second user */
+/** Fixture to report increase of 0.105 ETH in total rewards (before fees) */
 export async function rewardPostSecondUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, keeper, dkg } = await loadFixture(secondUserDepositFixture)
 
-    const rewardAmount = 0.1
-    const nextActiveStakeAmount = 32 + rewardAmount
+    const rewardsAmount = 0.105
+    const nextActiveStakeAmount = 32 + rewardsAmount
     const nextSweptRewardsAmount = 0
     const nextSweptExitsAmount = 0
     const nextDepositedCount = 0
@@ -147,11 +140,11 @@ export async function rewardPostSecondUserDepositFixture() {
     return { manager, upkeep, owner, firstUser, secondUser, keeper, dkg }
 }
 
-/** Fixture to sweep 0.1 ETH to the manager */
+/** Fixture to sweep 0.105 ETH to the manager */
 export async function sweepPostSecondUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, keeper, dkg } = await loadFixture(secondUserDepositFixture)
 
-    const sweptRewards = 0.1
+    const sweptRewards = 0.105
     const sweep = await keeper.sendTransaction({ to: manager.address, value: ethers.utils.parseEther(sweptRewards.toString()) })
     await sweep.wait()
 
@@ -183,12 +176,8 @@ export async function thirdUserDepositFixture() {
     const nextSweptExitsAmount = 0
     const nextDepositedCount = 1
     const nextExitedCount = 0
-
-    const fees = { ...await manager.getFees() }
-    const feePercent = fees.LINK + fees.SSV
-    const depositAmount = stakeAmount * ((100 + feePercent) / 100)
-    const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await manager.connect(thirdUser).depositStake({ value })
+    const depositAmount = round(stakeAmount * ((100 + await manager.getFeePercent()) / 100), 10)    
+    const deposit = await manager.connect(thirdUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
     /** Initiate next ready pool */
@@ -206,12 +195,12 @@ export async function thirdUserDepositFixture() {
     return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg }
 }
 
-/** Fixture to reward 0.2 ETH in total to the first, second, and third user */
+/** Fixture to report increase of 0.21 ETH in total rewards (before fees) */
 export async function rewardPostThirdUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg } = await loadFixture(thirdUserDepositFixture)
 
-    const rewardAmount = 0.2
-    const nextActiveStakeAmount = 64 + rewardAmount
+    const rewardsAmount = 0.21
+    const nextActiveStakeAmount = 64 + rewardsAmount
     const nextSweptRewardsAmount = 0
     const nextSweptExitsAmount = 0
     const nextDepositedCount = 0
@@ -228,11 +217,11 @@ export async function rewardPostThirdUserDepositFixture() {
     return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg }
 }
 
-/** Fixture to sweep 0.2 ETH to the manager */
+/** Fixture to sweep 0.21 ETH to the manager */
 export async function sweepPostThirdUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg } = await loadFixture(rewardPostThirdUserDepositFixture)
 
-    const sweptRewards = 0.2
+    const sweptRewards = 0.21
     const sweep = await keeper.sendTransaction({ to: manager.address, value: ethers.utils.parseEther(sweptRewards.toString()) })
     await sweep.wait()
 
@@ -277,12 +266,8 @@ export async function fourthUserDepositFixture() {
     const nextSweptExitsAmount = 0
     const nextDepositedCount = 2
     const nextExitedCount = 0
-
-    const fees = { ...await manager.getFees() }
-    const feePercent = fees.LINK + fees.SSV
-    const depositAmount = stakeAmount * ((100 + feePercent) / 100)
-    const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await manager.connect(fourthUser).depositStake({ value })
+    const depositAmount = round(stakeAmount * ((100 + await manager.getFeePercent()) / 100), 10)
+    const deposit = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
     /** Initiate next ready pools (2) */
@@ -307,12 +292,14 @@ export async function simulationFixture() {
     const { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, dkg } = await loadFixture(fourthUserDepositFixture)
 
     let nextActiveStakeAmount = 128
+    let totalRewards = 0
 
     for (let i = 0; i < 5; i++) {
         const stakedValidatorCount = (await manager.getStakedValidatorPublicKeys())?.length
         if (stakedValidatorCount) {
-            const rewardAmount = rewardPerValidator * stakedValidatorCount
-            nextActiveStakeAmount = Math.round((nextActiveStakeAmount + rewardAmount) * 10) / 10 // Fixes weird rounding error
+            const rewardsAmount = rewardsPerValidator * stakedValidatorCount
+            totalRewards += round(rewardsAmount, 10)
+            nextActiveStakeAmount = round(nextActiveStakeAmount + rewardsAmount, 10)
             const nextSweptRewardsAmount = 0
             const nextSweptExitsAmount = 0
             const nextDepositedCount = 0
@@ -327,5 +314,24 @@ export async function simulationFixture() {
             }
         }
     }
+
+    const sweptRewards = totalRewards
+    const sweep = await keeper.sendTransaction({ to: manager.address, value: ethers.utils.parseEther(sweptRewards.toString()) })
+    await sweep.wait()
+
+    nextActiveStakeAmount = 128
+    const nextSweptRewardsAmount = sweptRewards
+    const nextSweptExitsAmount = 0
+    const nextDepositedCount = 0
+    const nextExitedCount = 0
+
+    /** Run upkeep */
+    const ranUpkeep = await runUpkeep({ upkeep, keeper })
+
+    /** Fulfill functions request */
+    if (ranUpkeep) {
+        await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+    }
+
     return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, dkg }
 }

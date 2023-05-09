@@ -20,21 +20,21 @@ uint256 latestActiveStake
 
 Latest active (consensus) balance reported from upkeep
 
-### lastPoolId
+### nextPoolId
 
 ```solidity
-uint256 lastPoolId
+uint32 nextPoolId
 ```
 
 Last pool ID created
 
-### rewardRatioSum
+### rewardsRatioSum
 
 ```solidity
-uint256 rewardRatioSum
+uint256 rewardsRatioSum
 ```
 
-Sum of scaled reward to stake ratios (intial value required)
+Sum of scaled rewards to stake ratios (intial value required)
 
 ### linkFee
 
@@ -55,7 +55,7 @@ SSV fee percentage (intial value required)
 ### constructor
 
 ```solidity
-constructor(address beaconDepositAddress, address linkTokenAddress, address oracleAddress, uint64 oracleSubId, address ssvNetworkAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
+constructor(address beaconDepositAddress, address _dkgOracleAddress, address functionsOracleAddress, uint64 functionsSubscriptionId, address linkTokenAddress, address ssvNetworkAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
 ```
 
 Constructor
@@ -65,9 +65,10 @@ Constructor
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | beaconDepositAddress | address | The Beacon deposit address |
+| _dkgOracleAddress | address | The DKG oracle address |
+| functionsOracleAddress | address | The Chainlink functions oracle address |
+| functionsSubscriptionId | uint64 | The Chainlink functions subscription ID |
 | linkTokenAddress | address | The Chainlink token address |
-| oracleAddress | address | The Chainlink functions oracle address |
-| oracleSubId | uint64 | The Chainlink functions oracle subscription ID |
 | ssvNetworkAddress | address | The SSV network address |
 | ssvTokenAddress | address | The SSV token address |
 | swapFactoryAddress | address | The Uniswap factory address |
@@ -85,7 +86,7 @@ Deposit user stake
 ### rebalanceStake
 
 ```solidity
-function rebalanceStake(uint256 activeStake, uint256 sweptRewards) external
+function rebalanceStake(uint256 activeStake, uint256 sweptRewards, uint256 sweptExits) external
 ```
 
 Rebalance the reward to stake ratio and redistribute swept rewards
@@ -95,7 +96,8 @@ Rebalance the reward to stake ratio and redistribute swept rewards
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | activeStake | uint256 | The active consensus stake |
-| sweptRewards | uint256 | The swept consensus stake |
+| sweptRewards | uint256 | The swept consensus rewards |
+| sweptExits | uint256 | The swept consensus exits |
 
 ### requestWithdrawal
 
@@ -592,13 +594,21 @@ Used for mocking sweeps from Beacon to the manager_
 
 ## CasimirUpkeep
 
-### oracleHeartbeat
+### reportHeartbeat
 
 ```solidity
-uint256 oracleHeartbeat
+uint256 reportHeartbeat
 ```
 
 Oracle heartbeat
+
+### poolCapacity
+
+```solidity
+uint256 poolCapacity
+```
+
+Pool capacity
 
 ### requestCBOR
 
@@ -635,7 +645,7 @@ Oracle fulfillment gas limit
 ### constructor
 
 ```solidity
-constructor(address managerAddress, address oracleAddress, uint64 _oracleSubId) public
+constructor(address managerAddress, address functionsOracleAddress, uint64 _functionsSubscriptionId) public
 ```
 
 Constructor
@@ -645,8 +655,8 @@ Constructor
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | managerAddress | address | The manager contract address |
-| oracleAddress | address | The oracle contract address |
-| _oracleSubId | uint64 | The oracle subscription ID |
+| functionsOracleAddress | address | The functions oracle contract address |
+| _functionsSubscriptionId | uint64 | The functions subscription ID |
 
 ### generateRequest
 
@@ -667,7 +677,7 @@ Generate a new Functions.Request(off-chain, saving gas)
 ### setRequest
 
 ```solidity
-function setRequest(uint32 _fulfillGasLimit, uint64 _oracleSubId, bytes _requestCBOR) external
+function setRequest(uint32 _fulfillGasLimit, uint64 _functionsSubscriptionId, bytes _requestCBOR) external
 ```
 
 Set the bytes representing the CBOR-encoded Functions.Request
@@ -677,7 +687,7 @@ Set the bytes representing the CBOR-encoded Functions.Request
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _fulfillGasLimit | uint32 | Maximum amount of gas used to call the client contract's `handleOracleFulfillment` function |
-| _oracleSubId | uint64 | The oracle billing subscription ID used to pay for Functions requests |
+| _functionsSubscriptionId | uint64 | The functions billing subscription ID used to pay for Functions requests |
 | _requestCBOR | bytes | Bytes representing the CBOR-encoded Functions.Request |
 
 ### checkUpkeep
@@ -792,7 +802,7 @@ struct Pool {
 ```solidity
 struct User {
   uint256 stake0;
-  uint256 rewardRatioSum0;
+  uint256 rewardsRatioSum0;
 }
 ```
 
@@ -847,16 +857,22 @@ event PoolExitRequested(uint32 poolId)
 event PoolExited(uint32 poolId)
 ```
 
-### StakeDistributed
+### StakeDeposited
 
 ```solidity
-event StakeDistributed(address sender, uint256 amount)
+event StakeDeposited(address sender, uint256 amount)
 ```
 
 ### StakeRebalanced
 
 ```solidity
-event StakeRebalanced(address sender, uint256 amount)
+event StakeRebalanced(uint256 amount)
+```
+
+### RewardsDeposited
+
+```solidity
+event RewardsDeposited(uint256 amount)
 ```
 
 ### WithdrawalRequested
@@ -886,7 +902,7 @@ function depositStake() external payable
 ### rebalanceStake
 
 ```solidity
-function rebalanceStake(uint256 activeStake, uint256 sweptRewards) external
+function rebalanceStake(uint256 activeStake, uint256 sweptRewards, uint256 sweptExits) external
 ```
 
 ### requestWithdrawal

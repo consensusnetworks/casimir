@@ -4,6 +4,7 @@ import { CasimirUpkeep, CasimirManager } from '@casimir/ethereum/build/artifacts
 import { ethers } from 'hardhat'
 import { fulfillFunctionsRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { initiatePoolDeposit } from '@casimir/ethereum/helpers/dkg'
+import { round } from '@casimir/ethereum/helpers/math'
 import EventEmitter, { on } from 'events'
 
 void async function () {
@@ -66,7 +67,7 @@ void async function () {
     
     /** Simulate rewards per staked validator */
     const blocksPerReward = 50
-    const rewardPerValidator = 0.1
+    const rewardPerValidator = 0.105
     let lastRewardBlock = await ethers.provider.getBlockNumber()
     ethers.provider.on('block', async (block) => {
         if (block - blocksPerReward === lastRewardBlock) {
@@ -81,7 +82,7 @@ void async function () {
 
                 /** Fulfill functions request */
                 if (ranUpkeepBefore) {
-                    const nextActiveStakeAmount = Math.round((parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) + rewardAmount) * 10) / 10
+                    const nextActiveStakeAmount = round(parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) + rewardAmount)
                     const nextSweptRewardsAmount = 0
                     const nextSweptExitsAmount = 0
                     const nextDepositedCount = 0
@@ -98,7 +99,7 @@ void async function () {
 
                 /** Fulfill functions request */
                 if (ranUpkeepAfter) {
-                    const nextActiveStakeAmount = Math.round((parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) - rewardAmount) * 10) / 10
+                    const nextActiveStakeAmount = round(parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) - rewardAmount)
                     const nextSweptRewardsAmount = rewardAmount
                     const nextSweptExitsAmount = 0
                     const nextDepositedCount = 0
@@ -112,12 +113,11 @@ void async function () {
 
     /** Stake 64 from the fourth user */
     setTimeout(async () => {
-        const fourthUserStakeAmount = 64
-        const fourthUserFees = { ...await (manager as CasimirManager).getFees() }
-        const fourthUserFeePercent = fourthUserFees.LINK + fourthUserFees.SSV
-        const fourthUserDepositAmount = fourthUserStakeAmount * ((100 + fourthUserFeePercent) / 100)
-        const fourthUserStake = await manager?.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(fourthUserDepositAmount.toString()) })
-        await fourthUserStake?.wait()
+        const stakeAmount = 64
+        const feePercent = await manager.getFeePercent()
+        const depositAmount = stakeAmount * ((100 + feePercent) / 100)
+        const stake = await manager?.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        await stake?.wait()
     }, 1000)
 
     /** Perform upkeep and fulfill dkg answer after each pool is filled */

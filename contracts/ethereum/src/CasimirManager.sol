@@ -87,7 +87,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /* Dynamic State */
     /********************/
 
-    /** Latest active (consensus) balance reported from upkeep */
+    /** Latest active (consensus) balance */
+    uint256 latestActiveBalance;
+    /** Latest active (consensus) stake after fees */
     uint256 latestActiveStake;
     /** Last pool ID created */
     uint32 nextPoolId;
@@ -121,10 +123,16 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint256 private requestedWithdrawals;
     /** Total pending withdrawals */
     uint256 private pendingWithdrawals;
-    /** LINK fee percentage (intial value required) */
-    uint32 linkFee = 1;
-    /** SSV fee percentage (intial value required) */
-    uint32 ssvFee = 1;
+    /** Total pending fees reserved */
+    uint256 pendingFeesReserved;
+    /** Total fees reserved */
+    uint256 private reservedFees;
+    /** ETH fee percentage */
+    uint32 ethFeePercent = 3;
+    /** LINK fee percentage */
+    uint32 linkFeePercent = 1;
+    /** SSV fee percentage */
+    uint32 ssvFeePercent = 1;
 
     /**
      * @notice Constructor
@@ -174,56 +182,85 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function depositStake() external payable nonReentrant {
         require(msg.value > 0, "Deposit amount must be greater than 0");
-        uint256 processedAmount = processFees(msg.value, getFees());
-        require(
-            processedAmount >= distributionThreshold,
-            "Stake amount must be greater than 100 WEI"
-        );
+        
+        uint256 depositAfterFees = subtractFees(msg.value);
+        reservedFees += msg.value - depositAfterFees;
 
         if (users[msg.sender].stake0 > 0) {
             users[msg.sender].stake0 = getUserStake(msg.sender);
         }
         users[msg.sender].rewardsRatioSum0 = rewardsRatioSum;
-        users[msg.sender].stake0 += processedAmount;
+        users[msg.sender].stake0 += depositAfterFees;
 
-        distributeStake(processedAmount);
+        distributeStake(depositAfterFees);
 
-        emit StakeDeposited(msg.sender, processedAmount);
+        emit StakeDeposited(msg.sender, depositAfterFees);
     }
 
     /**
-     * @notice Rebalance the reward to stake ratio and redistribute swept rewards
-     * @param activeStake The active consensus stake
+     * @notice Deposit rewards
+     * @param rewards The amount of rewards to deposit
+     */
+    function depositRewards(uint256 rewards) private {
+        uint256 rewardsAfterFees = subtractFees(rewards);
+        reservedFees += rewards - rewardsAfterFees;
+        distributeStake(rewardsAfterFees);
+
+        emit RewardsDeposited(rewardsAfterFees);
+    }
+
+    /**
+     * @notice Rebalance the rewards to stake ratio and redistribute swept rewards
+     * @param activeBalance The active consensus balance
      * @param sweptRewards The swept consensus rewards
      * @param sweptExits The swept consensus exits
      */
-    function rebalanceStake(uint256 activeStake, uint256 sweptRewards, uint256 sweptExits) external {
+    function rebalanceStake(
+        uint256 activeBalance, 
+        uint256 sweptRewards, 
+        uint256 sweptExits,
+        uint32 depositCount,
+        uint32 exitCount
+    ) external {
         require(
             msg.sender == address(upkeep),
             "Only upkeep can rebalance stake"
         );
 
-        int256 current = int256(activeStake + sweptRewards + sweptExits);
-        int256 previous = int256(latestActiveStake + pendingPoolIds.length * poolCapacity);
+        uint256 depositedStake = depositCount * poolCapacity;
+        int256 current = int256(activeBalance + sweptRewards + sweptExits);
+        int256 previous = int256(latestActiveBalance + depositedStake);
         int256 change = current - previous;
+
+        latestActiveBalance = activeBalance;
 
         if (change > 0) {
             uint256 rewards = SafeCast.toUint256(change);
-            // /** Reward fees set to zero for testing */
-            // uint256 processedReward = processFees(reward, Fees(0, 0));
-            rewardsRatioSum += Math.mulDiv(rewardsRatioSum, rewards, getStake());
-            emit StakeRebalanced(rewards);
+            uint256 rewardsAfterFees = subtractFees(rewards);
+            rewardsRatioSum += Math.mulDiv(rewardsRatioSum, rewardsAfterFees, getStake());
+            latestActiveStake += rewardsAfterFees;
+            
+            emit StakeRebalanced(rewardsAfterFees);
         } else if (change < 0) {
             uint256 penalty = SafeCast.toUint256(change);
             rewardsRatioSum -= Math.mulDiv(rewardsRatioSum, penalty, getStake());
+            latestActiveStake -= penalty;
+            
             emit StakeRebalanced(penalty);
         }
 
-        latestActiveStake = activeStake;
+        latestActiveStake += depositedStake;
+        latestActiveStake -= subtractFees(sweptRewards);
+        latestActiveStake -= sweptExits;
 
+        /** Deposit swept rewards */
         if (sweptRewards > 0) {
-            distributeStake(sweptRewards);
-            emit RewardsDeposited(sweptRewards);
+            depositRewards(sweptRewards);
+        }
+
+        /** Complete the deposit count of pending pools */
+        if (depositCount > 0) {
+            completePoolDeposits(depositCount);
         }
     }
 
@@ -232,6 +269,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The amount of stake to distribute
      */
     function distributeStake(uint256 amount) private {
+        require(
+            amount >= distributionThreshold,
+            "Stake amount must be greater than or equal to 100 WEI"
+        );
+
         while (amount > 0) {
             uint256 remainingCapacity = poolCapacity - openDeposits;
             if (remainingCapacity > amount) {
@@ -341,6 +383,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param sharesPublicKeys The public keys of the shares
      * @param signature The signature
      * @param withdrawalCredentials The withdrawal credentials
+     * @param feeAmount The fee amount
      */
     function initiatePoolDeposit(   
         bytes32 depositDataRoot,
@@ -349,15 +392,22 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bytes[] memory sharesEncrypted,
         bytes[] memory sharesPublicKeys,
         bytes calldata signature,
-        bytes calldata withdrawalCredentials
+        bytes calldata withdrawalCredentials,
+        uint256 feeAmount
     ) external {
         require(
             msg.sender == dkgOracleAddress, 
             "Only DKG oracle can initiate pools"
         );
         require(readyPoolIds.length > 0, "No ready pools");
+        require(reservedFees >= feeAmount, "Not enough reserved fees");
+
+        reservedFees -= feeAmount;
 
         // Todo validate deposit data
+
+        // Todo transfer LINK fees to keeper and functions subscriptions
+        (, uint256 ssvFees) = processFees(feeAmount);
 
         uint32 poolId = readyPoolIds[0];
         Pool storage pool = pools[poolId];
@@ -378,16 +428,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             pool.depositDataRoot
         );
 
-        // Todo update for v3 SSV contracts and dynamic fees
-        uint256 mockSSVFee = 5 ether;
-        ssvToken.approve(address(ssvNetwork), mockSSVFee);
-        ssvNetwork.registerValidator(
-            pool.publicKey,
-            pool.operatorIds,
-            pool.sharesPublicKeys,
-            pool.sharesEncrypted,
-            mockSSVFee
-        );
+        ssvToken.approve(address(ssvNetwork), ssvFees);
+        // ssvNetwork.registerValidator(
+        //     pool.publicKey,
+        //     pool.operatorIds,
+        //     pool.sharesPublicKeys,
+        //     pool.sharesEncrypted,
+        //     ssvFees
+        // );
 
         emit PoolInitiated(poolId);
     }
@@ -396,11 +444,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Complete a given count of the next pending pools
      * @param count The number of pools to complete
      */
-    function completePoolDeposits(uint256 count) external {
-        require(
-            msg.sender == address(upkeep),
-            "Only upkeep can complete pending pools"
-        );
+    function completePoolDeposits(uint256 count) private {
         require(pendingPoolIds.length >= count, "Not enough pending pools");
 
         while (count > 0) {
@@ -525,45 +569,54 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Process fees from a deposit
-     * @param depositAmount The full deposit amount
-     * @param fees The fees to process
-     * @return processedAmount The processed deposit amount
+     * @dev Get reservable fees from a given amount
+     * @param amount The amount to reserve fees from
+     * @return amountAfterFees The amount after fees
+     */
+    function subtractFees(
+        uint256 amount
+    ) private view returns (uint256 amountAfterFees) {
+        uint32 feePercent = getFeePercent();
+        amountAfterFees = Math.mulDiv(amount, 100, 100 + feePercent);
+    }
+        
+
+    /**
+     * @dev Process fees
+     * @param amount The amount of ETH to process
+     * @return linkFees The amount of swapped LINK fees
+     * @return ssvFees The amount of swapped SSV fees
      */
     function processFees(
-        uint256 depositAmount,
-        Fees memory fees
-    ) private returns (uint256 processedAmount) {
-        uint32 feePercent = fees.LINK + fees.SSV;
-        uint256 ethAmount = Math.mulDiv(depositAmount, 100, 100 + feePercent);
-        uint256 feeAmount = depositAmount - ethAmount;
+        uint256 amount
+    ) private returns (uint256 linkFees, uint256 ssvFees) {
+        wrapFees(amount);
 
-        if (feeAmount > 0) {
-            wrapFees(feeAmount);
+        uint32 feePercent = getFeePercent();
 
-            (, uint256 unswappedLINK) = swapFees(
-                tokenAddresses[Token.WETH],
-                tokenAddresses[Token.LINK],
-                Math.mulDiv(feeAmount, fees.LINK, feePercent)
-            );
-            linkToken.approve(
-                address(upkeep),
-                linkToken.balanceOf(address(this))
-            );
-            unswappedTokens[tokenAddresses[Token.LINK]] += unswappedLINK;
+        (uint256 swappedLINK, uint256 unswappedLINK) = swapFees(
+            tokenAddresses[Token.WETH],
+            tokenAddresses[Token.LINK],
+            Math.mulDiv(amount, linkFeePercent, feePercent)
+        );
+        linkToken.approve(
+            address(upkeep),
+            linkToken.balanceOf(address(this))
+        );
+        linkFees = swappedLINK;
+        unswappedTokens[tokenAddresses[Token.LINK]] += unswappedLINK;
 
-            (, uint256 unswappedSSV) = swapFees(
-                tokenAddresses[Token.WETH],
-                tokenAddresses[Token.SSV],
-                Math.mulDiv(feeAmount, fees.SSV, feePercent)
-            );
-            ssvToken.approve(
-                address(upkeep),
-                ssvToken.balanceOf(address(this))
-            );
-            unswappedTokens[tokenAddresses[Token.SSV]] += unswappedSSV;
-        }
-        processedAmount = ethAmount;
+        (uint256 swappedSSV, uint256 unswappedSSV) = swapFees(
+            tokenAddresses[Token.WETH],
+            tokenAddresses[Token.SSV],
+            Math.mulDiv(amount, ssvFeePercent, feePercent)
+        );
+        ssvToken.approve(
+            address(upkeep),
+            ssvToken.balanceOf(address(this))
+        );
+        ssvFees = swappedSSV;
+        unswappedTokens[tokenAddresses[Token.SSV]] += unswappedSSV;
     }
 
     /**
@@ -581,6 +634,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * @dev Swap token in for token out
+     * @param tokenIn The token to swap in
+     * @param tokenOut The token to swap out
+     * @param amountIn The amount of token in
      */
     function swapFees(
         address tokenIn,
@@ -614,19 +670,20 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Update link fee
-     * @param newFee The new fee
+     * @dev Update fee percentages
+     * @param _ethFeePercent The new ETH fee percentage
+     * @param _linkFeePercent The new LINK fee percentage
+     * @param _ssvFeePercent The new SSV fee percentage
      */
-    function setLINKFee(uint32 newFee) external onlyOwner {
-        linkFee = newFee;
-    }
-
-    /**
-     * @dev Update ssv fee
-     * @param newFee The new fee
-     */
-    function setSSVFee(uint32 newFee) external onlyOwner {
-        ssvFee = newFee;
+    function setFeePercents(
+        uint32 _ethFeePercent, 
+        uint32 _linkFeePercent, 
+        uint32 _ssvFeePercent
+    ) external onlyOwner {
+        ethFeePercent = _ethFeePercent;
+        linkFeePercent = _linkFeePercent;
+        ssvFeePercent = _ssvFeePercent;
+        // If new sum total, also set estimated block to use new percentages for swept rewards
     }
 
     /**
@@ -638,38 +695,30 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the total manager stake
-     * @return stake The total manager stake
+     * @notice Get the manager stake
+     * @return stake The manager stake
      */
     function getStake() public view returns (uint256 stake) {
         stake = getBufferedStake() + getActiveStake();
     }
 
     /**
-     * @notice Get the total manager buffered (execution) stake
-     * @return bufferedStake The total manager buffered (execution) stake
+     * @notice Get the manager buffered (execution) stake
+     * @return stake The manager buffered (execution) stake
      */
-    function getBufferedStake() public view returns (uint256 bufferedStake) {
-        bufferedStake =
+    function getBufferedStake() public view returns (uint256 stake) {
+        stake =
             (readyPoolIds.length + pendingPoolIds.length) *
             poolCapacity +
             openDeposits;
     }
 
     /**
-     * @notice Get the total manager swept (execution) stake
-     * @return sweptStake The total manager swept (execution) stake
-     */
-    function getSweptStake() public view returns (uint256 sweptStake) {
-        sweptStake = address(this).balance - getBufferedStake();
-    }
-
-    /**
      * @notice Get the manager active (consensus) stake
-     * @return activeStake The total manager active (consensus) stake
+     * @return stake The manager active (consensus) stake
      */
-    function getActiveStake() public view returns (uint256 activeStake) {
-        activeStake = latestActiveStake;
+    function getActiveStake() public view returns (uint256 stake) {
+        stake = latestActiveStake;
     }
 
     /**
@@ -689,11 +738,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the current token fees as percentages
-     * @return fees The current token fees as percentages
+     * @notice Get the total fee percentage
+     * @return feePercent The total fee percentage
      */
-    function getFees() public view returns (Fees memory fees) {
-        fees = Fees(linkFee, ssvFee);
+    function getFeePercent() public view returns (uint32 feePercent) {
+        feePercent = ethFeePercent + linkFeePercent + ssvFeePercent;
     }
 
     // External view functions
@@ -808,19 +857,27 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Get the ETH fee percentage to charge on each deposit
+     * @return The ETH fee percentage to charge on each deposit
+     */
+    function getETHFeePercent() external view returns (uint32) {
+        return ethFeePercent;
+    }
+
+    /**
      * @notice Get the LINK fee percentage to charge on each deposit
      * @return The LINK fee percentage to charge on each deposit
      */
-    function getLINKFee() external view returns (uint32) {
-        return linkFee;
+    function getLINKFeePercent() external view returns (uint32) {
+        return linkFeePercent;
     }
 
     /**
      * @notice Get the SSV fee percentage to charge on each deposit
      * @return The SSV fee percentage to charge on each deposit
      */
-    function getSSVFee() external view returns (uint32) {
-        return ssvFee;
+    function getSSVFeePercent() external view returns (uint32) {
+        return ssvFeePercent;
     }
 
     /**

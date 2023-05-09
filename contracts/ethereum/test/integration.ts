@@ -41,7 +41,7 @@ describe('Casimir manager', async function () {
     expect(ethers.utils.formatEther(stake)).equal('24.0')
   })
 
-  it('First and second user\'s stake earns 0.1 in total after some time', async function () {
+  it('Functions oracle reports an increase of 0.1 in total after fees', async function () {
     const { manager } = await loadFixture(rewardPostSecondUserDepositFixture)
     const stake = await manager.getStake()
     expect(ethers.utils.formatEther(stake)).equal('40.1')
@@ -85,7 +85,7 @@ describe('Casimir manager', async function () {
     expect(ethers.utils.formatEther(stake)).equal('24.0')
   })
 
-  it('First, second, and third user\'s stake earns them 0.3 in total after some time', async function () {
+  it('Functions oracle reports an increase of 0.2 in total after fees', async function () {
     const { manager } = await loadFixture(rewardPostThirdUserDepositFixture)
     const stake = await manager.getStake()
     expect(ethers.utils.formatEther(stake)).equal('64.3')
