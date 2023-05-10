@@ -31,6 +31,48 @@ export default function useEthers() {
     }
   }
 
+  /**
+   * Estimate gas fee using EIP 1559 methodology
+   * @returns string in ETH
+   */
+  async function estimateEIP1559GasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) {
+    try {
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+      const gasPrice = await provider.getFeeData() as ethers.providers.FeeData
+      const { maxFeePerGas, maxPriorityFeePerGas } = gasPrice
+      const maxFeePerGasInWei = maxFeePerGas ? ethers.utils.parseEther(maxFeePerGas.toString()) : '0'
+      const maxPriorityFeePerGasInWei = maxPriorityFeePerGas ? ethers.utils.parseEther(maxPriorityFeePerGas.toString()) : '0'
+      if (maxFeePerGasInWei === '0') throw new Error('maxFeePerGasInWei is zero')
+      if (maxPriorityFeePerGasInWei === '0') throw new Error('maxPriorityFeePerGasInWei is zero')
+
+      const { to, from, value } = unsignedTransaction
+      const tx = {
+        from,
+        to,
+        value,
+        type: 2, // TODO: 2 is for EIP 1559, 0 is for legacy; make this dynamic
+        maxFeePerGas: maxFeePerGasInWei,
+        maxPriorityFeePerGas: maxPriorityFeePerGasInWei
+      }
+      const gasEstimate = await provider.estimateGas(tx)
+      // TODO: What is the way to get gas estimate in human readable format?
+      // const gasEstimateInEth = ethers.utils.formatEther(gasEstimate)
+      const fee = maxPriorityFeePerGasInWei?.mul(gasEstimate).add(maxFeePerGasInWei)
+      const feeInWei = ethers.utils.formatEther(fee)
+      const feeInEth = (parseInt(feeInWei) / 10**18).toString()
+      return {
+        gasEstimate,
+        fee: feeInEth
+      }
+    } catch (err) {
+      console.error('There was an error in estimateGasFee :>> ', err)
+      return {
+        gasEstimate: '0',
+        fee: '0'
+      }
+    }
+  }
+
   async function getEthersAddress (providerString: ProviderString) {
     const provider = availableProviders.value[providerString as keyof BrowserProviders]
     if (provider) {
@@ -80,6 +122,13 @@ export default function useEthers() {
     return currency
   }
 
+  async function getMaxETHAfterFees(rpcUrl: string, unsignedTx: ethers.utils.Deferrable<ethers.providers.TransactionRequest>, totalAmount: string) {
+    const { fee } = await estimateEIP1559GasFee(rpcUrl, unsignedTx)
+    const total = parseInt(totalAmount) - parseInt(fee)
+    const maxAfterFees = ethers.utils.formatEther(total).toString()
+    return maxAfterFees
+  }
+
   async function loginWithEthers(loginCredentials: LoginCredentials) {
     const { provider, address, currency } = loginCredentials
     const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
@@ -111,19 +160,23 @@ export default function useEthers() {
   }
 
   async function sendEthersTransaction(
-    { to, value, providerString }: TransactionInit
+    { from, to, value, providerString }: TransactionInit
   ) {
-    const browserProvider =
-      availableProviders.value[providerString as keyof BrowserProviders]
-    const web3Provider: ethers.providers.Web3Provider =
-      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    const signer = web3Provider.getSigner()
-    const etherAmount = ethers.utils.parseEther(value)
+    const signer = getEthersBrowserSigner(providerString) as ethers.Signer
+    const weiAmount = ethers.utils.parseEther(value)
     const tx = {
+      from,
       to,
-      value: etherAmount
+      value: weiAmount
     }
-    console.log('tx :>> ', tx)
+    const ethFees = await estimateEIP1559GasFee(ethereumURL, tx)
+    const { fee, gasEstimate } = ethFees
+    const requiredBalance = parseInt(value) + parseInt(fee)
+    const balance = await getEthersBalance(from)
+    if (parseInt(balance) < requiredBalance) {
+      throw new Error('Insufficient balance')
+    }
+    console.log(`Sending ${value} ETH to ${to} with estimated ${fee} ETH in fees using ~${gasEstimate} in gas.`)
     return await signer.sendTransaction(tx)
   }
 
@@ -166,11 +219,13 @@ export default function useEthers() {
 
   return { 
     addEthersNetwork,
-    ethersProviderList, 
+    estimateEIP1559GasFee,
+    ethersProviderList,
+    getMaxETHAfterFees,
     getEthersAddress,
     getEthersAddressWithBalance,
     getEthersBalance,
-    getEthersBrowserSigner, 
+    getEthersBrowserSigner,
     getEthersBrowserProviderSelectedCurrency,
     getGasPriceAndLimit,
     loginWithEthers,
