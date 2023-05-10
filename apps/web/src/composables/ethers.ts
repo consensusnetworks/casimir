@@ -59,7 +59,7 @@ export default function useEthers() {
       // const gasEstimateInEth = ethers.utils.formatEther(gasEstimate)
       const fee = maxPriorityFeePerGasInWei?.mul(gasEstimate).add(maxFeePerGasInWei)
       const feeInWei = ethers.utils.formatEther(fee)
-      const feeInEth = ((parseInt(feeInWei) / 10**18).toFixed(8)).toString()
+      const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
       return {
         gasEstimate,
         fee: feeInEth
@@ -78,7 +78,7 @@ export default function useEthers() {
    * @returns string in ETH
    * @deprecated
    * @see estimateEIP1559GasFee
-   */
+  */
   async function estimateLegacyGasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) {
     try {
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
@@ -247,6 +247,7 @@ export default function useEthers() {
   return { 
     addEthersNetwork,
     estimateEIP1559GasFee,
+    estimateLegacyGasFee,
     ethersProviderList,
     getMaxETHAfterFees,
     getEthersAddress,
