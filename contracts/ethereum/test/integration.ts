@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture } from './fixtures/shared'
+import { firstUserDepositFixture, rewardsPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardsPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture } from './fixtures/shared'
 
 describe('Casimir manager', async function () {
 
@@ -42,13 +42,13 @@ describe('Casimir manager', async function () {
   })
 
   it('Functions oracle reports an increase of 0.1 in total after fees', async function () {
-    const { manager } = await loadFixture(rewardPostSecondUserDepositFixture)
+    const { manager } = await loadFixture(rewardsPostSecondUserDepositFixture)
     const stake = await manager.getStake()
     expect(ethers.utils.formatEther(stake)).equal('40.1')
   })
 
   it('First and second user\'s stake earns them 0.04 and 0.06, respectively, after some time', async function () {
-    const { manager, firstUser, secondUser } = await loadFixture(rewardPostSecondUserDepositFixture)
+    const { manager, firstUser, secondUser } = await loadFixture(rewardsPostSecondUserDepositFixture)
     const firstStake = await manager.getUserStake(firstUser.address)
     const secondStake = await manager.getUserStake(secondUser.address)
     expect(ethers.utils.formatEther(firstStake)).equal('16.04')
@@ -86,13 +86,13 @@ describe('Casimir manager', async function () {
   })
 
   it('Functions oracle reports an increase of 0.2 in total after fees', async function () {
-    const { manager } = await loadFixture(rewardPostThirdUserDepositFixture)
+    const { manager } = await loadFixture(rewardsPostThirdUserDepositFixture)
     const stake = await manager.getStake()
     expect(ethers.utils.formatEther(stake)).equal('64.3')
   })
 
   it('First, second, and third user\'s stake earns them ~0.09, ~0.135 and ~0.075, respectively, after some time', async function () {
-    const { manager, firstUser, secondUser, thirdUser } = await loadFixture(rewardPostThirdUserDepositFixture)
+    const { manager, firstUser, secondUser, thirdUser } = await loadFixture(rewardsPostThirdUserDepositFixture)
     const firstStake = await manager.getUserStake(firstUser.address)
     const secondStake = await manager.getUserStake(secondUser.address)
     const thirdStake = await manager.getUserStake(thirdUser.address)

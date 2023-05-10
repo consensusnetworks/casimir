@@ -7,7 +7,7 @@ import { Validator } from '@casimir/types'
 const mockValidators: Validator[] = Object.values(validatorStore)
 const mockFee = 0.1
 
-export async function initiatePoolDeposit({ manager, dkg, index }: { manager: CasimirManager, dkg: SignerWithAddress, index: number }) {
+export async function initiatePoolDeposit({ manager, signer, index }: { manager: CasimirManager, signer: SignerWithAddress, index: number }) {
     const {
         depositDataRoot,
         publicKey,
@@ -17,7 +17,7 @@ export async function initiatePoolDeposit({ manager, dkg, index }: { manager: Ca
         signature,
         withdrawalCredentials
     } = mockValidators[index]
-    const initiatePool = await manager.connect(dkg).initiatePoolDeposit(
+    const initiatePool = await manager.connect(signer).initiatePoolDeposit(
         depositDataRoot,
         publicKey,
         operatorIds,

@@ -92,7 +92,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Latest active (consensus) stake after fees */
     uint256 latestActiveStake;
     /** Last pool ID created */
-    uint32 nextPoolId;
+    uint32 lastPoolId;
     /** Token addresses */
     mapping(Token => address) private tokenAddresses;
     /** Unswapped tokens by address */
@@ -280,8 +280,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 openDeposits += amount;
                 amount = 0;
             } else {
-                uint32 poolId = nextPoolId;
-                nextPoolId++;
+                lastPoolId++;
+                uint32 poolId = lastPoolId;
                 Pool storage pool;
                 pool = pools[poolId];
                 openDeposits = 0;

@@ -3,7 +3,6 @@ import { ContractConfig, DeploymentConfig } from '@casimir/types'
 import { CasimirUpkeep, CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { ethers } from 'hardhat'
 import { fulfillFunctionsRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
-import { initiatePoolDeposit } from '@casimir/ethereum/helpers/dkg'
 import { round } from '@casimir/ethereum/helpers/math'
 import EventEmitter, { on } from 'events'
 
@@ -47,7 +46,7 @@ void async function () {
 
         /** Link mock external contracts to Casimir */
         if (name === 'CasimirManager') {
-            (config[name as keyof typeof config] as ContractConfig).args.dkgAddress = config.MockFunctionsOracle?.address
+            (config[name as keyof typeof config] as ContractConfig).args.functionsOracleAddress = config.MockFunctionsOracle?.address
         }
 
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
@@ -120,13 +119,10 @@ void async function () {
         await stake?.wait()
     }, 1000)
 
-    /** Perform upkeep and fulfill dkg answer after each pool is filled */
-    for await (const event of on(manager as unknown as EventEmitter, 'PoolReady')) {
+    /** Perform upkeep and fulfill dkg answer after each pool is initiated by the local oracle */
+    for await (const event of on(manager as unknown as EventEmitter, 'PoolInitiated')) {
         const [ id, details ] = event
-        console.log(`Pool ${id} filled at block number ${details.blockNumber}`)
-
-        const nextValidatorIndex = (await manager.getPendingPoolIds()).length + (await manager.getStakedPoolIds()).length
-        await initiatePoolDeposit({ manager, dkg, index: nextValidatorIndex })
+        console.log(`Pool ${id} initiated at block number ${details.blockNumber}`)
 
         /** Perform upkeep */
         const ranUpkeep = await runUpkeep({ upkeep, keeper })

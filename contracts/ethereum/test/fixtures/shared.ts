@@ -7,9 +7,6 @@ import { initiatePoolDeposit } from '@casimir/ethereum/helpers/dkg'
 import { round } from '@casimir/ethereum/helpers/math'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 
-/** Simulation amount of rewards to distribute per staked validator */
-const rewardsPerValidator = 0.105
-
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
     const [owner, , , , , keeper, dkg] = await ethers.getSigners()
@@ -72,7 +69,7 @@ export async function deploymentFixture() {
     return { manager: manager as CasimirManager, upkeep: upkeep as CasimirUpkeep, owner, keeper, dkg }
 }
 
-/** Fixture to stake 16 ETH for the first user */
+/** Fixture to stake 16 for the first user */
 export async function firstUserDepositFixture() {
     const { manager, upkeep, owner, keeper, dkg } = await loadFixture(deploymentFixture)
     const [, firstUser] = await ethers.getSigners()
@@ -88,7 +85,7 @@ export async function firstUserDepositFixture() {
     return { manager, upkeep, owner, firstUser, keeper, dkg }
 }
 
-/** Fixture to stake 24 ETH for the second user */
+/** Fixture to stake 24 for the second user */
 export async function secondUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, keeper, dkg } = await loadFixture(firstUserDepositFixture)
     const [, , secondUser] = await ethers.getSigners()
@@ -105,7 +102,7 @@ export async function secondUserDepositFixture() {
 
     /** Initiate next ready pool */
     const nextValidatorIndex = (await manager.getPendingPoolIds()).length + (await manager.getStakedPoolIds()).length
-    await initiatePoolDeposit({ manager, dkg, index: nextValidatorIndex })
+    await initiatePoolDeposit({ manager, signer: dkg, index: nextValidatorIndex })
 
     /** Run upkeep */
     const ranUpkeep = await runUpkeep({ upkeep, keeper })
@@ -118,8 +115,8 @@ export async function secondUserDepositFixture() {
     return { manager, upkeep, owner, firstUser, secondUser, keeper, dkg }
 }
 
-/** Fixture to report increase of 0.105 ETH in total rewards (before fees) */
-export async function rewardPostSecondUserDepositFixture() {
+/** Fixture to report increase of 0.105 in total rewards before fees */
+export async function rewardsPostSecondUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, keeper, dkg } = await loadFixture(secondUserDepositFixture)
 
     const rewardsAmount = 0.105
@@ -140,7 +137,7 @@ export async function rewardPostSecondUserDepositFixture() {
     return { manager, upkeep, owner, firstUser, secondUser, keeper, dkg }
 }
 
-/** Fixture to sweep 0.105 ETH to the manager */
+/** Fixture to sweep 0.105 to the manager */
 export async function sweepPostSecondUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, keeper, dkg } = await loadFixture(secondUserDepositFixture)
 
@@ -165,7 +162,7 @@ export async function sweepPostSecondUserDepositFixture() {
     return { manager, upkeep, owner, firstUser, secondUser, keeper, dkg }
 }
 
-/** Fixture to stake 24 ETH for the third user */
+/** Fixture to stake 24 for the third user */
 export async function thirdUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, keeper, dkg } = await loadFixture(sweepPostSecondUserDepositFixture)
     const [, , , thirdUser] = await ethers.getSigners()
@@ -182,7 +179,7 @@ export async function thirdUserDepositFixture() {
 
     /** Initiate next ready pool */
     const nextValidatorIndex = (await manager.getPendingPoolIds()).length + (await manager.getStakedPoolIds()).length
-    await initiatePoolDeposit({ manager, dkg, index: nextValidatorIndex })
+    await initiatePoolDeposit({ manager, signer: dkg, index: nextValidatorIndex })
 
     /** Run upkeep */
     const ranUpkeep = await runUpkeep({ upkeep, keeper })
@@ -195,8 +192,8 @@ export async function thirdUserDepositFixture() {
     return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg }
 }
 
-/** Fixture to report increase of 0.21 ETH in total rewards (before fees) */
-export async function rewardPostThirdUserDepositFixture() {
+/** Fixture to report increase of 0.21 in total rewards before fees */
+export async function rewardsPostThirdUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg } = await loadFixture(thirdUserDepositFixture)
 
     const rewardsAmount = 0.21
@@ -217,9 +214,9 @@ export async function rewardPostThirdUserDepositFixture() {
     return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg }
 }
 
-/** Fixture to sweep 0.21 ETH to the manager */
+/** Fixture to sweep 0.21 to the manager */
 export async function sweepPostThirdUserDepositFixture() {
-    const { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg } = await loadFixture(rewardPostThirdUserDepositFixture)
+    const { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg } = await loadFixture(rewardsPostThirdUserDepositFixture)
 
     const sweptRewards = 0.21
     const sweep = await keeper.sendTransaction({ to: manager.address, value: ethers.utils.parseEther(sweptRewards.toString()) })
@@ -242,7 +239,7 @@ export async function sweepPostThirdUserDepositFixture() {
     return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, dkg }
 }
 
-/** Fixture to withdraw 0.3 to the first user */
+/** Fixture to partial withdraw 0.3 to the first user */
 export async function firstUserPartialWithdrawalFixture() {
     const { manager, upkeep, firstUser, secondUser, thirdUser, keeper, dkg } = await loadFixture(sweepPostThirdUserDepositFixture)
     const openDeposits = await manager.getOpenDeposits()
@@ -273,7 +270,7 @@ export async function fourthUserDepositFixture() {
     /** Initiate next ready pools (2) */
     for (let i = 0; i < 2; i++) {
         const nextValidatorIndex = (await manager.getPendingPoolIds()).length + (await manager.getStakedPoolIds()).length
-        await initiatePoolDeposit({ manager, dkg, index: nextValidatorIndex })
+        await initiatePoolDeposit({ manager, signer: dkg, index: nextValidatorIndex })
     }
 
     /** Run upkeep */
@@ -287,10 +284,25 @@ export async function fourthUserDepositFixture() {
     return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, dkg }
 }
 
-/** Fixture to simulate stakes and rewards */
-export async function simulationFixture() {
+/** Fixture to full withdraw ~24.07 */
+export async function thirdUserFullWithdrawalFixture() {
     const { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, dkg } = await loadFixture(fourthUserDepositFixture)
 
+    const thirdStake = await manager.getUserStake(thirdUser.address)
+    const withdraw = await manager.connect(thirdUser).requestWithdrawal(thirdStake)
+    await withdraw.wait()
+
+    /** Run upkeep */
+    await runUpkeep({ upkeep, keeper })
+
+    return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, dkg }
+}
+
+/** Fixture to simulate stakes and rewards */
+export async function simulationFixture() {
+    const { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, dkg } = await loadFixture(thirdUserFullWithdrawalFixture)
+
+    const rewardsPerValidator = 0.105
     let nextActiveStakeAmount = 128
     let totalRewards = 0
 

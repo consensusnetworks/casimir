@@ -1,6 +1,6 @@
 # @casimir/dkg
 
-Trustless DKG oracle service
+DKG oracle service
 
 ## About
 

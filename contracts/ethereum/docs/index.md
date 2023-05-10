@@ -12,13 +12,21 @@ enum Token {
 }
 ```
 
+### latestActiveBalance
+
+```solidity
+uint256 latestActiveBalance
+```
+
+Latest active (consensus) balance
+
 ### latestActiveStake
 
 ```solidity
 uint256 latestActiveStake
 ```
 
-Latest active (consensus) balance reported from upkeep
+Latest active (consensus) stake after fees
 
 ### nextPoolId
 
@@ -36,21 +44,37 @@ uint256 rewardsRatioSum
 
 Sum of scaled rewards to stake ratios (intial value required)
 
-### linkFee
+### pendingFeesReserved
 
 ```solidity
-uint32 linkFee
+uint256 pendingFeesReserved
 ```
 
-LINK fee percentage (intial value required)
+Total pending fees reserved
 
-### ssvFee
+### ethFeePercent
 
 ```solidity
-uint32 ssvFee
+uint32 ethFeePercent
 ```
 
-SSV fee percentage (intial value required)
+ETH fee percentage
+
+### linkFeePercent
+
+```solidity
+uint32 linkFeePercent
+```
+
+LINK fee percentage
+
+### ssvFeePercent
+
+```solidity
+uint32 ssvFeePercent
+```
+
+SSV fee percentage
 
 ### constructor
 
@@ -86,18 +110,20 @@ Deposit user stake
 ### rebalanceStake
 
 ```solidity
-function rebalanceStake(uint256 activeStake, uint256 sweptRewards, uint256 sweptExits) external
+function rebalanceStake(uint256 activeBalance, uint256 sweptRewards, uint256 sweptExits, uint32 depositCount, uint32 exitCount) external
 ```
 
-Rebalance the reward to stake ratio and redistribute swept rewards
+Rebalance the rewards to stake ratio and redistribute swept rewards
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| activeStake | uint256 | The active consensus stake |
+| activeBalance | uint256 | The active consensus balance |
 | sweptRewards | uint256 | The swept consensus rewards |
 | sweptExits | uint256 | The swept consensus exits |
+| depositCount | uint32 |  |
+| exitCount | uint32 |  |
 
 ### requestWithdrawal
 
@@ -144,7 +170,7 @@ Complete a given count of pending withdrawals
 ### initiatePoolDeposit
 
 ```solidity
-function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) external
+function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials, uint256 feeAmount) external
 ```
 
 Initiate the next ready pool
@@ -160,20 +186,7 @@ Initiate the next ready pool
 | sharesPublicKeys | bytes[] | The public keys of the shares |
 | signature | bytes | The signature |
 | withdrawalCredentials | bytes | The withdrawal credentials |
-
-### completePoolDeposits
-
-```solidity
-function completePoolDeposits(uint256 count) external
-```
-
-Complete a given count of the next pending pools
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| count | uint256 | The number of pools to complete |
+| feeAmount | uint256 | The fee amount |
 
 ### requestPoolExits
 
@@ -235,33 +248,21 @@ Reshare a given pool's validator
 | sharesEncrypted | bytes[] | The encrypted shares |
 | sharesPublicKeys | bytes[] | The public keys of the shares |
 
-### setLINKFee
+### setFeePercents
 
 ```solidity
-function setLINKFee(uint32 newFee) external
+function setFeePercents(uint32 _ethFeePercent, uint32 _linkFeePercent, uint32 _ssvFeePercent) external
 ```
 
-_Update link fee_
+_Update fee percentages_
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newFee | uint32 | The new fee |
-
-### setSSVFee
-
-```solidity
-function setSSVFee(uint32 newFee) external
-```
-
-_Update ssv fee_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| newFee | uint32 | The new fee |
+| _ethFeePercent | uint32 | The new ETH fee percentage |
+| _linkFeePercent | uint32 | The new LINK fee percentage |
+| _ssvFeePercent | uint32 | The new SSV fee percentage |
 
 ### setOracleAddress
 
@@ -283,46 +284,32 @@ Update the functions oracle address
 function getStake() public view returns (uint256 stake)
 ```
 
-Get the total manager stake
+Get the manager stake
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| stake | uint256 | The total manager stake |
+| stake | uint256 | The manager stake |
 
 ### getBufferedStake
 
 ```solidity
-function getBufferedStake() public view returns (uint256 bufferedStake)
+function getBufferedStake() public view returns (uint256 stake)
 ```
 
-Get the total manager buffered (execution) stake
+Get the manager buffered (execution) stake
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| bufferedStake | uint256 | The total manager buffered (execution) stake |
-
-### getSweptStake
-
-```solidity
-function getSweptStake() public view returns (uint256 sweptStake)
-```
-
-Get the total manager swept (execution) stake
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| sweptStake | uint256 | The total manager swept (execution) stake |
+| stake | uint256 | The manager buffered (execution) stake |
 
 ### getActiveStake
 
 ```solidity
-function getActiveStake() public view returns (uint256 activeStake)
+function getActiveStake() public view returns (uint256 stake)
 ```
 
 Get the manager active (consensus) stake
@@ -331,7 +318,7 @@ Get the manager active (consensus) stake
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| activeStake | uint256 | The total manager active (consensus) stake |
+| stake | uint256 | The manager active (consensus) stake |
 
 ### getUserStake
 
@@ -353,19 +340,19 @@ Get the total user stake for a given user address
 | ---- | ---- | ----------- |
 | userStake | uint256 | The total user stake |
 
-### getFees
+### getFeePercent
 
 ```solidity
-function getFees() public view returns (struct ICasimirManager.Fees fees)
+function getFeePercent() public view returns (uint32 feePercent)
 ```
 
-Get the current token fees as percentages
+Get the total fee percentage
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| fees | struct ICasimirManager.Fees | The current token fees as percentages |
+| feePercent | uint32 | The total fee percentage |
 
 ### getRequestedWithdrawals
 
@@ -541,10 +528,24 @@ Get a pool by ID
 | ---- | ---- | ----------- |
 | pool | struct ICasimirManager.Pool | The pool details |
 
-### getLINKFee
+### getETHFeePercent
 
 ```solidity
-function getLINKFee() external view returns (uint32)
+function getETHFeePercent() external view returns (uint32)
+```
+
+Get the ETH fee percentage to charge on each deposit
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint32 | The ETH fee percentage to charge on each deposit |
+
+### getLINKFeePercent
+
+```solidity
+function getLINKFeePercent() external view returns (uint32)
 ```
 
 Get the LINK fee percentage to charge on each deposit
@@ -555,10 +556,10 @@ Get the LINK fee percentage to charge on each deposit
 | ---- | ---- | ----------- |
 | [0] | uint32 | The LINK fee percentage to charge on each deposit |
 
-### getSSVFee
+### getSSVFeePercent
 
 ```solidity
-function getSSVFee() external view returns (uint32)
+function getSSVFeePercent() external view returns (uint32)
 ```
 
 Get the SSV fee percentage to charge on each deposit
@@ -616,7 +617,7 @@ Pool capacity
 bytes requestCBOR
 ```
 
-Serialized oracle source code
+Binary request source code
 
 ### latestRequestId
 
@@ -624,7 +625,7 @@ Serialized oracle source code
 bytes32 latestRequestId
 ```
 
-Latest oracle request ID
+Latest request ID
 
 ### latestFulfilledRequestId
 
@@ -632,7 +633,7 @@ Latest oracle request ID
 bytes32 latestFulfilledRequestId
 ```
 
-Latest fulfilled oracle request ID
+Latest fulfilled request ID
 
 ### fulfillGasLimit
 
@@ -640,7 +641,7 @@ Latest fulfilled oracle request ID
 uint32 fulfillGasLimit
 ```
 
-Oracle fulfillment gas limit
+Fulfillment gas limit
 
 ### constructor
 
@@ -771,15 +772,6 @@ struct ProcessedDeposit {
 }
 ```
 
-### Fees
-
-```solidity
-struct Fees {
-  uint32 LINK;
-  uint32 SSV;
-}
-```
-
 ### Pool
 
 ```solidity
@@ -902,7 +894,7 @@ function depositStake() external payable
 ### rebalanceStake
 
 ```solidity
-function rebalanceStake(uint256 activeStake, uint256 sweptRewards, uint256 sweptExits) external
+function rebalanceStake(uint256 activeStake, uint256 sweptRewards, uint256 sweptExits, uint32 depositCount, uint32 exitCount) external
 ```
 
 ### requestWithdrawal
@@ -926,13 +918,7 @@ function completePendingWithdrawals(uint256 count) external
 ### initiatePoolDeposit
 
 ```solidity
-function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) external
-```
-
-### completePoolDeposits
-
-```solidity
-function completePoolDeposits(uint256 count) external
+function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials, uint256 feeAmount) external
 ```
 
 ### requestPoolExits
@@ -947,16 +933,10 @@ function requestPoolExits(uint256 count) external
 function completePoolExit(uint256 poolIndex, uint256 validatorIndex) external
 ```
 
-### setLINKFee
+### setFeePercents
 
 ```solidity
-function setLINKFee(uint32 fee) external
-```
-
-### setSSVFee
-
-```solidity
-function setSSVFee(uint32 fee) external
+function setFeePercents(uint32 ethFeePercent, uint32 linkFeePercent, uint32 ssvFeePercent) external
 ```
 
 ### setOracleAddress
@@ -965,22 +945,28 @@ function setSSVFee(uint32 fee) external
 function setOracleAddress(address oracleAddress) external
 ```
 
-### getFees
+### getFeePercent
 
 ```solidity
-function getFees() external view returns (struct ICasimirManager.Fees)
+function getFeePercent() external view returns (uint32)
 ```
 
-### getLINKFee
+### getETHFeePercent
 
 ```solidity
-function getLINKFee() external view returns (uint32)
+function getETHFeePercent() external view returns (uint32)
 ```
 
-### getSSVFee
+### getLINKFeePercent
 
 ```solidity
-function getSSVFee() external view returns (uint32)
+function getLINKFeePercent() external view returns (uint32)
+```
+
+### getSSVFeePercent
+
+```solidity
+function getSSVFeePercent() external view returns (uint32)
 ```
 
 ### getStakedValidatorPublicKeys
@@ -1023,12 +1009,6 @@ function getStake() external view returns (uint256)
 
 ```solidity
 function getBufferedStake() external view returns (uint256)
-```
-
-### getSweptStake
-
-```solidity
-function getSweptStake() external view returns (uint256)
 ```
 
 ### getActiveStake

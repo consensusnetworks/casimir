@@ -86,5 +86,5 @@ void async function () {
 
     /** Start local oracle */
     process.env.ETHEREUM_RPC_URL = 'http://localhost:8545'
-    $`npm run dev --workspace @casimir/oracle`
+    $`npm run dev --workspace @casimir/dkg`
 }()
