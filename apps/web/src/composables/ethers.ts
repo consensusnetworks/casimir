@@ -59,7 +59,7 @@ export default function useEthers() {
       // const gasEstimateInEth = ethers.utils.formatEther(gasEstimate)
       const fee = maxPriorityFeePerGasInWei?.mul(gasEstimate).add(maxFeePerGasInWei)
       const feeInWei = ethers.utils.formatEther(fee)
-      const feeInEth = (parseInt(feeInWei) / 10**18).toString()
+      const feeInEth = ((parseInt(feeInWei) / 10**18).toFixed(8)).toString()
       return {
         gasEstimate,
         fee: feeInEth
@@ -68,6 +68,33 @@ export default function useEthers() {
       console.error('There was an error in estimateGasFee :>> ', err)
       return {
         gasEstimate: '0',
+        fee: '0'
+      }
+    }
+  }
+
+  /**
+   * Estimate gas fee using legacy methodology
+   * @returns string in ETH
+   * @deprecated
+   * @see estimateEIP1559GasFee
+   */
+  async function estimateLegacyGasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) {
+    try {
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+      const gasPrice = await provider.getGasPrice()
+      const gasLimit = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+      const fee = gasPrice.mul(gasLimit)
+      const feeInWei = ethers.utils.formatEther(fee)
+      const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
+      return {
+        gasLimit,
+        fee: feeInEth
+      }
+    } catch (err) {
+      console.error('There was an error in estimateGasFee :>> ', err)
+      return {
+        gasLimit: '0',
         fee: '0'
       }
     }
