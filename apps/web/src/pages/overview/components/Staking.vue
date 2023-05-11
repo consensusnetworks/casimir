@@ -10,20 +10,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black">
+  <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black h-full">
+    <h6 class="account_blance mb-[12px]">
+      Account Balance
+    </h6>
+    <h5 class="account_balance_amount mb-[27px]">
+      $2,740
+    </h5>
     <h6 class="card_title mb-[11px]">
-      Staking Provider
+      Wallet
     </h6>
 
-    <div class="card_input text-black">
+    <div class="card_input text-black mb-[22px]">
       <div class="flex items-center gap-[8px]">
-        <img
-          src="/Mastercard.svg"
-          alt="Master card Icon"
-          class="border border-[#F2F4F7] rounded-[4px] p-[6px]"
-        >
         <h6>
-          SSB Providers
+          0x834...7C4621976578
         </h6>
       </div>
       
@@ -33,12 +34,8 @@ onMounted(() => {
       />
     </div>
 
-    <p class="card_message mb-[14px]">
-      The provider you are staking to
-    </p>
-
     <h6 class="card_title mb-[11px]">
-      Sale amount
+      Amount
     </h6>
 
     <div class="card_input text-black">
@@ -67,44 +64,32 @@ onMounted(() => {
 
     <div class="flex justify-between items-center mt-[32px]">
       <div class="flex items-center gap-[12px]">
-        <i
-          data-feather="help-circle" 
-          class="w-[14px] h-min text-[#98A2B3]"
-        /> 
         <h6 class="card_analytics_label">
           Fees
         </h6>
       </div>
       <h6 class="card_analytics_amount">
-        0.02 ETH
+        0.0002 ETH
       </h6>
     </div>
     <div class="flex justify-between items-center my-[10px]">
       <div class="flex items-center gap-[12px]">
-        <i
-          data-feather="help-circle" 
-          class="w-[14px] h-min text-[#98A2B3]"
-        /> 
         <h6 class="card_analytics_label">
-          APY %
+          Exchange Price
         </h6>
       </div>
       <h6 class="card_analytics_amount">
-        0.5%
+        1 USD - 0.000ETH
       </h6>
     </div>
     <div class="flex justify-between items-center mb-[39px]">
       <div class="flex items-center gap-[12px]">
-        <i
-          data-feather="help-circle" 
-          class="w-[14px] h-min text-[#98A2B3]"
-        /> 
         <h6 class="card_analytics_label">
-          Estimated Gas Fee
+          Estimated APY
         </h6>
       </div>
       <h6 class="card_analytics_amount">
-        0.0041324
+        $0.04
       </h6>
     </div>
 
@@ -114,17 +99,36 @@ onMounted(() => {
         class="card_checkbox"
       > 
       <p class="card_checkbox_text">
-        I agree to the terms of service for the single transaction
+        I agree to the terms of service
       </p>
     </div>
 
-    <button class="card_button h-[37px] w-full ">
+    <button
+      class="card_button h-[37px] w-full "
+      disabled
+    >
       Stake
     </button>
   </div>
 </template>
 
 <style scoped>
+.account_balance_amount{
+  font-style: normal;
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  color: #344054;
+}
+.account_blance{
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  color: #667085;
+}
 .card_container{
     width: 100%;
     height: 100%;
@@ -177,15 +181,17 @@ onMounted(() => {
 }
 
 .card_button {
-    background: #0F6AF2;
-    border-radius: 5px;
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 18px;
-    letter-spacing: -0.03em;
-    color: #FFFFFF;
+  background: #0F6AF2;
+  border-radius: 5px;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 18px;
+  letter-spacing: -0.03em;
+  color: #FFFFFF;
+}:disabled{
+  background: rgba(15, 106, 242, 0.31);
 }
 
 .card_analytics_label {
@@ -214,7 +220,7 @@ onMounted(() => {
     font-size: 11px;
     line-height: 14px;
     letter-spacing: -0.01em;
-
+    text-decoration-line: underline;
     color: #344054;
 }
 

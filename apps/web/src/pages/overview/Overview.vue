@@ -20,10 +20,8 @@ import StakingProvidersTable from './components/StakingProvidersTable.vue'
       <div class="w-full h-full">
         <BreakdownChart />
       </div>
-      <div class="max-w-[300px] w-full">
-        <div class="w-full h-[494px]">
-          <Staking />
-        </div>
+      <div class="max-w-[300px] w-full h-full">
+        <Staking />
       </div>
     </div>
     <div class="flex justify-between items-start gap-[63px] text-white">

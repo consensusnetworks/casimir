@@ -60,7 +60,7 @@ onMounted(() => {
         <button class="timeframe_button border-x border-x-[#D0D5DD] bg-[#F3F3F3]">
           6 months
         </button>
-        <button class="timeframe_button border-x border-x-[#D0D5DD]">
+        <button class="timeframe_button border-r border-r-[#D0D5DD]">
           12 months
         </button>
         <button class="timeframe_button">
