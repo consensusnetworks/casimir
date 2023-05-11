@@ -1,12 +1,9 @@
 <script setup lang="ts">
-// import Balance from './components/Balance.vue'
-// import TotalStaked from './components/TotalStaked.vue'
-// import StakingRewards from './components/StakingRewards.vue'
 import Staking from './components/Staking.vue'
 import Announcements from './components/Announcements.vue'
 import StakingAvg from './components/StakingAvg.vue'
 import BreakdownChart from './components/BreakdownChart.vue'
-import StakingProvidersTable from './components/StakingProvidersTable.vue'
+import BreakdownTable from './components/BreakdownTable.vue'
 
 </script>
 
@@ -26,7 +23,7 @@ import StakingProvidersTable from './components/StakingProvidersTable.vue'
     </div>
     <div class="flex justify-between items-start gap-[63px] text-white">
       <div class="w-full h-full">
-        <StakingProvidersTable />
+        <BreakdownTable />
       </div>
       <div class="max-w-[300px] w-full">
         <div class="w-full mb-[37px]">
