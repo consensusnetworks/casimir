@@ -314,6 +314,7 @@ export default function useWallet() {
       }
     } catch (error) {
       console.error('There was an error in selectProvider :>> ', error)
+      if (error.name === 'TransportStatusError') alert('Please enter your PIN and open the Ethereum application on your device.')
     }
   }
 
