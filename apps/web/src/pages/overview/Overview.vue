@@ -29,7 +29,7 @@ import StakingProvidersTable from './components/StakingProvidersTable.vue'
         <StakingProvidersTable />
       </div>
       <div class="max-w-[300px] w-full">
-        <div class="w-full h-[386px] mb-[31px]">
+        <div class="w-full mb-[37px]">
           <StakingAvg /> 
         </div>
         <div class="w-full h-[261px]">
