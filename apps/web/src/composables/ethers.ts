@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
 import { BrowserProviders, EthersProvider, MessageInit, TransactionInit } from '@/interfaces/index'
-import { LoginCredentials, ProviderString } from '@casimir/types'
+import { GasEstimate, LoginCredentials, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
 
@@ -35,7 +35,7 @@ export default function useEthers() {
    * Estimate gas fee using EIP 1559 methodology
    * @returns string in ETH
    */
-  async function estimateEIP1559GasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) {
+  async function estimateEIP1559GasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) : Promise<GasEstimate> {
     try {
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
       const gasPrice = await provider.getFeeData() as ethers.providers.FeeData
@@ -79,7 +79,7 @@ export default function useEthers() {
    * @deprecated
    * @see estimateEIP1559GasFee
   */
-  async function estimateLegacyGasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) {
+  async function estimateLegacyGasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) : Promise<GasEstimate> {
     try {
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
       const gasPrice = await provider.getGasPrice()
