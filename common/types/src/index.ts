@@ -4,10 +4,11 @@ import { AddAccountOptions } from './interfaces/AddAccountOptions'
 import { BalanceSnapshot } from './interfaces/BalanceSnapshot'
 import { ContractArgs } from './interfaces/ContractArgs'
 import { ContractConfig } from './interfaces/ContractConfig'
+import { CryptoAddress } from './interfaces/CryptoAddress'
 import { Currency } from './interfaces/Currency'
 import { DeploymentConfig } from './interfaces/DeploymentConfig'
 import { Event } from './interfaces/Event'
-import { CryptoAddress } from './interfaces/CryptoAddress'
+import { GasEstimate } from './interfaces/GasEstimate'
 import { LoginCredentials } from './interfaces/LoginCredentials'
 import { Operator } from './interfaces/Operator'
 import { Pool } from './interfaces/Pool'
@@ -29,6 +30,7 @@ export type {
     Currency,
     DeploymentConfig,
     Event,
+    GasEstimate,
     LoginCredentials,
     Operator, 
     Pool,

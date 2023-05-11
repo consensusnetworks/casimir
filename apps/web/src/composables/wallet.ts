@@ -10,8 +10,8 @@ import { MessageInit, TransactionInit } from '@/interfaces/index'
 import * as Session from 'supertokens-web-js/recipe/session'
 import router from './router'
 
+// Test ethereum send from address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
-// Test ethereum send to address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 // Test solana address: 7aVow9eVQjwn7Y4y7tAbPM1pfrE1TzjmJhxcRt8QwX5F
 // Test iotex send to address: acc://06da5e904240736b1e21ca6dbbd5f619860803af04ff3d54/acme
 // Test bitcoin send to address : 2N3Petr4LMH9tRneZCYME9mu33gR5hExvds
@@ -24,7 +24,7 @@ const activeWallets = ref([
   'Ledger',
   'IoPay',
 ] as ProviderString[])
-const amount = ref<string>('0.000001')
+const amount = ref<string>('1')
 const amountToStake = ref<string>('0.0')
 const userAddresses = ref<CryptoAddress[]>([])
 const loadingUserWallets = ref(false)
@@ -33,10 +33,10 @@ const selectedProvider = ref<ProviderString>('')
 const selectedAddress = ref<string>('')
 const selectedPathIndex = ref<string>('')
 const selectedCurrency = ref<Currency>('')
-const toAddress = ref<string>('2N3Petr4LMH9tRneZCYME9mu33gR5hExvds')
+const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
-  const { ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
+  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
