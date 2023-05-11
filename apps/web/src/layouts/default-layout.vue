@@ -1,16 +1,42 @@
 <script lang="ts" setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+const show_setting_modal = ref(false)
+
+const handleOutsideClick = (event: any) => {
+  const setting_modal = document.getElementById('setting_modal')
+  const setting_modal_button = document.getElementById('setting_modal_button')
+  if(setting_modal && setting_modal_button){
+    if(show_setting_modal.value) {
+      if(!setting_modal.contains(event.target)) {
+        show_setting_modal.value = false
+      }
+    } else {
+      if(setting_modal_button.contains(event.target)) {
+        show_setting_modal.value = true
+      }
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', handleOutsideClick)
+})
+
+onUnmounted(() =>{
+  window.removeEventListener('click', handleOutsideClick)
+})
 </script>
 
 <template>
   <div>
-    <div class="px-[60px] h-[54px] pt-[21px] flex justify-between items-start bg-black border-b border-b-[#2C2C2E]">
+    <div class="px-[60px] pt-[17px] pb-[19px] flex justify-between items-center bg-black relative">
       <img
         src="/casimir.svg"
         alt="Casimir Logo"
         class="w-[21px]"
       >
 
-      <div class="flex items-start gap-50 h-full">
+      <div class="flex items-center gap-50 h-full">
         <router-link
           to="/"
           class="nav_items_active"
@@ -37,25 +63,72 @@
         </router-link>
       </div>
 
-      <div class="flex items-center justify-between gap-[64px] text-white">
-        <div class="flex items-start justify-between gap-[24px]">
+      <div class="flex items-center justify-between gap-[45px] text-white">
+        <button
+          id="setting_modal_button"
+        >
           <i
-            data-feather="bell"
-            class="h-[18px]"
+            data-feather="settings"
+            class="w-[19px] h-min"
           />
-          <i
-            data-feather="book-open" 
-            class="h-[18px]"
-          />
+        </button>
+
+        <div class="connect_wallet_gradient">
+          <button class="connect_wallet flex justify-between items-center gap-[8px]">
+            Connect Wallet
+          </button>
         </div>
+      </div>
 
-        <button class="account_dropdown flex justify-between items-center gap-[8px] px-[10px] py-[4px]">
-          Primary
-
+      <div
+        v-show="show_setting_modal"
+        id="setting_modal"
+        class="absolute right-[60px] bg-white top-[100%] w-[200px] setting_modal"
+      >
+        <button class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full">
           <i
-            data-feather="chevron-down" 
-            class="h-[12px]"
+            data-feather="user"
+            class="w-[17px] h-min"
           />
+          <span>
+            Account
+          </span>
+        </button>
+        <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
+          <i
+            data-feather="layers"
+            class="w-[17px] h-min"
+          />
+          <span>
+            Chanelog
+          </span>
+        </button>
+        <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
+          <i
+            data-feather="help-circle"
+            class="w-[17px] h-min"
+          />
+          <span>
+            Support
+          </span>
+        </button>
+        <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
+          <i
+            data-feather="code"
+            class="w-[17px] h-min"
+          />
+          <span>
+            API
+          </span>
+        </button>
+        <button class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full">
+          <i
+            data-feather="log-out"
+            class="w-[17px] h-min"
+          />
+          <span>
+            Log out
+          </span>
         </button>
       </div>
     </div>
@@ -73,6 +146,19 @@
 </template>
 
 <style scoped>
+.setting_modal{
+  background: #FFFFFF;
+  border: 1px solid #F2F4F7;
+  box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  border-radius: 8px;
+  z-index: 10;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #344054;
+}
 .nav_items{
   font-family: 'IBM Plex Sans';
   font-style: normal;
@@ -100,20 +186,28 @@
   height: 100%;
 
   color: #FFFFFF;
-  border-bottom: 1px solid #9BA4B5;
+  /* border-bottom: 1px solid #9BA4B5; */
 }
-
-.account_dropdown{
-  background: #FFFFFF;
-  border: 1px solid #D0D5DD;
-  box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
-  border-radius: 8px; 
-  color: #344054;
+.connect_wallet_gradient{
+  background: linear-gradient(101.44deg, rgba(23, 22, 22, 0.2) 9.24%, rgba(0, 0, 0, 0) 65.23%),
+              linear-gradient(0deg, #484848, #484848),
+              linear-gradient(298.92deg, rgba(131, 131, 131, 0.2) 7.46%, rgba(0, 0, 0, 0) 61.96%),
+              linear-gradient(282.67deg, rgba(255, 252, 252, 0.2) -1.18%, rgba(0, 0, 0, 0.2) 55.48%);
+  padding: 1px;
+  border-radius: 8px;
+}
+.connect_wallet{
+  padding: 0px 14px;
+  filter: drop-shadow(0px 1px 2px rgba(16, 24, 40, 0.05));
+  border-radius: 8px;
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 500;
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #FFFFFF;
+  background: black;
+  height: 36px;
 }
 
 </style>
