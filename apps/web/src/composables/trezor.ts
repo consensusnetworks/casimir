@@ -23,7 +23,7 @@ export default function useTrezor() {
         // return new BitcoinTrezorSigner(options)
     }
 
-    function getEthersTrezorSigner(): ethers.Signer {
+    function getEthersTrezorSigner(): EthersTrezorSigner {
         const options = {
             provider: new ethers.providers.JsonRpcProvider(ethereumURL),
             path: trezorPath

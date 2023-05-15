@@ -57,7 +57,7 @@ export class EthersTrezorSigner extends ethers.Signer {
             const modifiedAddress = address.toLowerCase().trim()
             const balance = await provider.getBalance(modifiedAddress)
             const ethBalance = ethers.utils.formatEther(balance)
-            // if (parseFloat(ethBalance) > 0) trezorAddresses.push({ address, balance: ethBalance, index: i.toString() })
+            // if (parseFloat(ethBalance) > 0) trezorAddresses.push({ address, balance: ethBalance, index: i.toString() }) // TODO: Uncomment this line; it is currently commented out for testing
             trezorAddresses.push({ address, balance: ethBalance, pathIndex: i.toString() }) // TODO: Remove this line; it is currently for testing
         }
         return trezorAddresses.length ? trezorAddresses : [] 
