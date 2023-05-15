@@ -109,12 +109,12 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint32[] private pendingPoolIds;
     /** IDs of pools staked */
     uint32[] private stakedPoolIds;
-    /** Public keys of staked validators */
-    bytes[] private stakedValidatorPublicKeys;
+    /** Public keys of registered validators */
+    bytes[] private validatorPublicKeys;
     /** Exiting validator count */
     uint256 private exitingValidatorCount;
     /** Sum of scaled rewards to stake ratios (intial value required) */
-    uint256 rewardsRatioSum = 1000 ether;
+    uint256 stakeRatioSum = 1000 ether;
     /** Requested withdrawals */
     Withdrawal[] private requestedWithdrawalQueue;
     /** Pending withdrawals */
@@ -123,8 +123,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint256 private requestedWithdrawals;
     /** Total pending withdrawals */
     uint256 private pendingWithdrawals;
-    /** Total pending fees reserved */
-    uint256 pendingFeesReserved;
     /** Total fees reserved */
     uint256 private reservedFees;
     /** ETH fee percentage */
@@ -189,7 +187,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         if (users[msg.sender].stake0 > 0) {
             users[msg.sender].stake0 = getUserStake(msg.sender);
         }
-        users[msg.sender].rewardsRatioSum0 = rewardsRatioSum;
+        users[msg.sender].stakeRatioSum0 = stakeRatioSum;
         users[msg.sender].stake0 += depositAfterFees;
 
         distributeStake(depositAfterFees);
@@ -227,34 +225,46 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             "Only upkeep can rebalance stake"
         );
 
-        uint256 depositedStake = depositCount * poolCapacity;
-        int256 current = int256(activeBalance + sweptRewards + sweptExits);
-        int256 previous = int256(latestActiveBalance + depositedStake);
-        int256 change = current - previous;
-
-        latestActiveBalance = activeBalance;
+        uint256 expectedDeposits = depositCount * poolCapacity;
+        uint256 expectedExits = exitCount * poolCapacity;
+        int256 expectedEffective = int256(stakedPoolIds.length * poolCapacity + expectedDeposits + expectedExits);
+        int256 previousExpectedEffective = int256(stakedPoolIds.length * poolCapacity);
+        int256 previousActiveRewards = int256(latestActiveBalance) - previousExpectedEffective;
+        int256 actualActiveBalance = int256(activeBalance + sweptRewards + sweptExits);
+        int256 actualActiveRewards = actualActiveBalance - expectedEffective;
+        int256 change = actualActiveRewards - previousActiveRewards;
 
         if (change > 0) {
-            uint256 rewards = SafeCast.toUint256(change);
-            uint256 rewardsAfterFees = subtractFees(rewards);
-            rewardsRatioSum += Math.mulDiv(rewardsRatioSum, rewardsAfterFees, getStake());
-            latestActiveStake += rewardsAfterFees;
-            
-            emit StakeRebalanced(rewardsAfterFees);
+
+            uint256 gain = SafeCast.toUint256(change);
+            if (actualActiveRewards > 0) {
+                uint256 gainAfterFees = subtractFees(gain);
+                stakeRatioSum += Math.mulDiv(stakeRatioSum, gainAfterFees, getStake());
+                latestActiveStake += gainAfterFees;
+                
+                emit StakeRebalanced(gainAfterFees);
+            } else {
+                stakeRatioSum += Math.mulDiv(stakeRatioSum, gain, getStake());
+                latestActiveStake += gain;
+
+                emit StakeRebalanced(gain);
+            }
+
         } else if (change < 0) {
-            uint256 penalty = SafeCast.toUint256(change);
-            rewardsRatioSum -= Math.mulDiv(rewardsRatioSum, penalty, getStake());
-            latestActiveStake -= penalty;
+            uint256 loss = SafeCast.toUint256(-change);
+            stakeRatioSum -= Math.mulDiv(stakeRatioSum, loss, getStake());
+            latestActiveStake -= loss;
             
-            emit StakeRebalanced(penalty);
+            emit StakeRebalanced(loss);
         }
 
-        latestActiveStake += depositedStake;
-        latestActiveStake -= subtractFees(sweptRewards);
+        latestActiveBalance = activeBalance;
+        latestActiveStake += expectedDeposits;
         latestActiveStake -= sweptExits;
 
         /** Deposit swept rewards */
         if (sweptRewards > 0) {
+            latestActiveStake -= subtractFees(sweptRewards);
             depositRewards(sweptRewards);
         }
 
@@ -289,7 +299,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 pool.deposits = poolCapacity;
                 readyPoolIds.push(poolId);
 
-                emit PoolReady(poolId);
+                emit PoolDepositRequested(poolId);
             }
         }
     }
@@ -327,7 +337,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             count--;
 
             Withdrawal memory withdrawal = requestedWithdrawalQueue[0];
-            users[withdrawal.user].rewardsRatioSum0 = rewardsRatioSum;
+            users[withdrawal.user].stakeRatioSum0 = stakeRatioSum;
             users[withdrawal.user].stake0 -= withdrawal.amount;
             requestedWithdrawalQueue.remove(0);
             requestedWithdrawals -= withdrawal.amount;
@@ -420,6 +430,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         pool.withdrawalCredentials = withdrawalCredentials;
         readyPoolIds.remove(0);
         pendingPoolIds.push(poolId); 
+        validatorPublicKeys.push(publicKey);
 
         beaconDeposit.deposit{value: pool.deposits}(
             pool.publicKey,
@@ -437,7 +448,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         //     ssvFees
         // );
 
-        emit PoolInitiated(poolId);
+        emit PoolDepositInitiated(poolId);
     }
 
     /**
@@ -451,12 +462,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             count--;
 
             uint32 poolId = pendingPoolIds[0];
-            Pool memory pool = pools[poolId];
             pendingPoolIds.remove(0);
             stakedPoolIds.push(poolId);
-            stakedValidatorPublicKeys.push(pool.publicKey);
 
-            emit PoolCompleted(poolId);
+            emit PoolDeposited(poolId);
         }
     }
 
@@ -508,7 +517,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         require(pool.exiting, "Pool is not exiting");
 
         bytes memory validatorPublicKey = pool.publicKey;
-        bytes memory stakedValidatorPublicKey = stakedValidatorPublicKeys[
+        bytes memory stakedValidatorPublicKey = validatorPublicKeys[
             validatorIndex
         ];
 
@@ -520,7 +529,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         stakedPoolIds.remove(poolIndex);
         delete pools[poolId];
-        stakedValidatorPublicKeys.remove(validatorIndex);
+        validatorPublicKeys.remove(validatorIndex);
         exitingValidatorCount--;
 
         ssvNetwork.removeValidator(validatorPublicKey);
@@ -699,7 +708,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @return stake The manager stake
      */
     function getStake() public view returns (uint256 stake) {
-        stake = getBufferedStake() + getActiveStake();
+        stake = getBufferedStake() + getPendingStake() + getActiveStake();
     }
 
     /**
@@ -707,10 +716,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @return stake The manager buffered (execution) stake
      */
     function getBufferedStake() public view returns (uint256 stake) {
-        stake =
-            (readyPoolIds.length + pendingPoolIds.length) *
-            poolCapacity +
-            openDeposits;
+        stake = openDeposits + readyPoolIds.length * poolCapacity;
+    }
+
+    /**
+     * @notice Get the manager pending (consensus) stake
+     * @return stake The manager pending (consensus) stake
+     */
+    function getPendingStake() public view returns (uint256 stake) {
+        stake = pendingPoolIds.length * poolCapacity;
     }
 
     /**
@@ -732,9 +746,25 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         require(users[userAddress].stake0 > 0, "User does not have a stake");
         userStake = Math.mulDiv(
             users[userAddress].stake0,
-            rewardsRatioSum,
-            users[userAddress].rewardsRatioSum0
+            stakeRatioSum,
+            users[userAddress].stakeRatioSum0
         );
+    }
+
+    /**
+     * @notice Get the manager reserved fees
+     * @return reservedFees The manager reserved fees
+     */
+    function getReservedFees() public view returns (uint256) {
+        return reservedFees;
+    }
+
+    /**
+     * @notice Get the manager swept balance
+     * @return balance The manager swept balance
+     */
+    function getSweptBalance() public view returns (uint256 balance) {
+        balance = address(this).balance - getBufferedStake() - getReservedFees();
     }
 
     /**
@@ -786,15 +816,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get staked validator public keys
-     * @return A list of active validator public keys
+     * @notice Get validator public keys
+     * @return A list of pending and active validator public keys
      */
-    function getStakedValidatorPublicKeys()
+    function getValidatorPublicKeys()
         external
         view
         returns (bytes[] memory)
     {
-        return stakedValidatorPublicKeys;
+        return validatorPublicKeys;
     }
 
     /**

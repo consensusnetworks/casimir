@@ -1,29 +1,26 @@
 import { config } from './providers/config'
 import { getEventEmitter } from './providers/events'
-import { initiatePoolDepositCommand, initiatePoolExitCommand } from './providers/commands'
+import { initiatePoolDepositCommand, initiatePoolExitCommand, initiatePoolReshareCommand } from './providers/commands'
 
 const { manager, signer, messengerUrl } = config()
 
-const events = [
-    'PoolReady',
-    'PoolExitRequested'
-]
+const commands = {
+    PoolDepositRequested: initiatePoolDepositCommand,
+    PoolReshareRequested: initiatePoolReshareCommand,
+    PoolExitRequested: initiatePoolExitCommand
+}
 
-const eventEmitter = getEventEmitter({ manager, events })
+const eventEmitter = getEventEmitter({ manager, events: Object.keys(commands) })
 
 ;(async function () {
     for await (const event of eventEmitter) {
         const [ id, details ] = event
 
-        if (details.event === 'PoolReady') {
-            await initiatePoolDepositCommand({ manager, signer, messengerUrl })
-            console.log(`Pool ${id} deposit initiated at block number ${details.blockNumber}`)
-        }
+        const command = commands[details.event as keyof typeof commands]
+        if (!command) throw new Error(`No command found for event ${details.event}`)
 
-        if (details.event === 'PoolExitRequested') {
-            await initiatePoolExitCommand({ manager, messengerUrl, id })
-            console.log(`Pool ${id} exit initiated at block number ${details.blockNumber}`)
-        }
+        console.log(`Executing ${details.event} command for pool ${id}`)
+        await command({ manager, signer, messengerUrl, id })
     }
 })()
 

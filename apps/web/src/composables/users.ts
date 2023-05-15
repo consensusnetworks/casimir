@@ -179,7 +179,7 @@ export default function useUsers () {
           address: manager.address,
           topics: [
             // ethers.utils.id('ManagerDistribution(address,uint256,uint256,uint256)'), // TODO: Make sure to query for past events on page load (Fetch and then subscribe),
-            ethers.utils.id('PoolInitiated(uint32)'),
+            ethers.utils.id('PoolDepositInitiated(uint32)'),
           ]
         }
         manager.connect(provider).on(validatorInitFilter, async () => {

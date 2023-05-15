@@ -20,24 +20,24 @@ export async function runUpkeep({
 }
 
 export async function fulfillFunctionsRequest({
-    upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount
+    upkeep, keeper, nextActiveBalanceAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount
 }: {
     upkeep: CasimirUpkeep,
     keeper: SignerWithAddress,
-    nextActiveStakeAmount: number,
+    nextActiveBalanceAmount: number,
     nextSweptRewardsAmount: number,
     nextSweptExitsAmount: number,
     nextDepositedCount: number,
     nextExitedCount: number
 }) {
-    const activeStakeAmount = ethers.utils.parseUnits(nextActiveStakeAmount.toString(), 'gwei').toString()
+    const activeBalanceAmount = ethers.utils.parseUnits(nextActiveBalanceAmount.toString(), 'gwei').toString()
     const sweptRewardsAmount = ethers.utils.parseUnits(nextSweptRewardsAmount.toString(), 'gwei').toString()
     const sweptExitsAmount = ethers.utils.parseUnits(nextSweptExitsAmount.toString(), 'gwei').toString()
     const depositedCount = nextDepositedCount.toString()
     const exitedCount = nextExitedCount.toString()
     const requestId = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]))
     const packedResponse = packResponse(
-        activeStakeAmount,
+        activeBalanceAmount,
         sweptRewardsAmount,
         sweptExitsAmount,
         depositedCount,
@@ -49,8 +49,8 @@ export async function fulfillFunctionsRequest({
     await mockFulfillRequest.wait()
 }
 
-function packResponse(activeStakeAmount: string, sweptRewardsAmount: string, sweptExitsAmount: string, depositedCount: string, exitedCount: string) {
-    let packed = ethers.BigNumber.from(activeStakeAmount)
+function packResponse(activeBalanceAmount: string, sweptRewardsAmount: string, sweptExitsAmount: string, depositedCount: string, exitedCount: string) {
+    let packed = ethers.BigNumber.from(activeBalanceAmount)
     packed = packed.or(ethers.BigNumber.from(sweptRewardsAmount).shl(64))
     packed = packed.or(ethers.BigNumber.from(sweptExitsAmount).shl(128))
     packed = packed.or(ethers.BigNumber.from(depositedCount).shl(192))

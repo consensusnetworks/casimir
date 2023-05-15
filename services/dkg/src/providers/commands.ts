@@ -1,19 +1,12 @@
 import { ethers } from 'ethers'
-import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { DKG } from './dkg'
+import { CommandOptions } from '../interfaces/CommandOptions'
 
-export async function initiatePoolDepositCommand({
-    manager,
-    signer,
-    messengerUrl
-}: {
-    manager: CasimirManager,
-    signer: ethers.Signer,
-    messengerUrl: string
-}) {
-    const group = [1, 2, 3, 4]
+export async function initiatePoolDepositCommand(options: CommandOptions) {
+    const { manager, signer, messengerUrl } = options
+    const newOperatorGroup = [1, 2, 3, 4] // Todo get new group here
     const ssv = new DKG({ messengerUrl })
-    const validator = await ssv.createValidator({ operatorIds: group })
+    const validator = await ssv.createValidator({ operatorIds: newOperatorGroup, withdrawalAddress: manager.address })
     const {
         depositDataRoot,
         publicKey,
@@ -36,7 +29,30 @@ export async function initiatePoolDepositCommand({
     await initiatePoolDeposit.wait()
 }
 
-export async function initiatePoolExitCommand({ manager, messengerUrl, id }: { manager: CasimirManager, messengerUrl: string, id: number }) {
+export async function initiatePoolReshareCommand(options: CommandOptions) {
+    const { manager, signer, messengerUrl, id } = options
+
+    // Todo reshare event will include the operator to boot
+
+    // Get pool to reshare
+    const pool = await manager.getPool(id)
+    const { publicKey, operatorIds } = pool
+
+    // Todo old operators and new operators only different by 1 operator
+    const newOperatorGroup = [1, 2, 3, 4]
+
+    // Get operators to sign reshare
+    const ssv = new DKG({ messengerUrl })
+    const validator = await ssv.reshareValidator({ publicKey, operatorIds: newOperatorGroup, oldOperatorIds: operatorIds, withdrawalAddress: manager.address })
+
+
+    // Submit new shares to pool
+
+}
+
+export async function initiatePoolExitCommand(options: CommandOptions) {
+    const { manager, signer, messengerUrl, id } = options
+    
     // Get pool to exit
     const pool = await manager.getPool(id)
     const { publicKey, operatorIds } = pool

@@ -28,18 +28,18 @@ uint256 latestActiveStake
 
 Latest active (consensus) stake after fees
 
-### nextPoolId
+### lastPoolId
 
 ```solidity
-uint32 nextPoolId
+uint32 lastPoolId
 ```
 
 Last pool ID created
 
-### rewardsRatioSum
+### stakeRatioSum
 
 ```solidity
-uint256 rewardsRatioSum
+uint256 stakeRatioSum
 ```
 
 Sum of scaled rewards to stake ratios (intial value required)
@@ -410,10 +410,10 @@ Get the pending withdrawal queue
 | ---- | ---- | ----------- |
 | [0] | struct ICasimirManager.Withdrawal[] | pendingWithdrawalQueue The pending withdrawal queue |
 
-### getStakedValidatorPublicKeys
+### getValidatorPublicKeys
 
 ```solidity
-function getStakedValidatorPublicKeys() external view returns (bytes[])
+function getValidatorPublicKeys() external view returns (bytes[])
 ```
 
 Get staked validator public keys
@@ -794,7 +794,7 @@ struct Pool {
 ```solidity
 struct User {
   uint256 stake0;
-  uint256 rewardsRatioSum0;
+  uint256 stakeRatioSum0;
 }
 ```
 
@@ -807,22 +807,22 @@ struct Withdrawal {
 }
 ```
 
-### PoolReady
+### PoolDepositRequested
 
 ```solidity
-event PoolReady(uint32 poolId)
+event PoolDepositRequested(uint32 poolId)
 ```
 
-### PoolInitiated
+### PoolDepositInitiated
 
 ```solidity
-event PoolInitiated(uint32 poolId)
+event PoolDepositInitiated(uint32 poolId)
 ```
 
-### PoolCompleted
+### PoolDeposited
 
 ```solidity
-event PoolCompleted(uint32 poolId)
+event PoolDeposited(uint32 poolId)
 ```
 
 ### PoolReshareRequested
@@ -969,10 +969,10 @@ function getLINKFeePercent() external view returns (uint32)
 function getSSVFeePercent() external view returns (uint32)
 ```
 
-### getStakedValidatorPublicKeys
+### getValidatorPublicKeys
 
 ```solidity
-function getStakedValidatorPublicKeys() external view returns (bytes[])
+function getValidatorPublicKeys() external view returns (bytes[])
 ```
 
 ### getExitingValidatorCount

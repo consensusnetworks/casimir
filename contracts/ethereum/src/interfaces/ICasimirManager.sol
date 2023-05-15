@@ -28,7 +28,7 @@ interface ICasimirManager {
     /** User staking account */
     struct User {
         uint256 stake0;
-        uint256 rewardsRatioSum0;
+        uint256 stakeRatioSum0;
     }
     /** Withdrawal */
     struct Withdrawal {
@@ -40,9 +40,9 @@ interface ICasimirManager {
     /* Events */
     /**********/
 
-    event PoolReady(uint32 poolId);
-    event PoolInitiated(uint32 poolId);
-    event PoolCompleted(uint32 poolId);
+    event PoolDepositRequested(uint32 poolId);
+    event PoolDepositInitiated(uint32 poolId);
+    event PoolDeposited(uint32 poolId);
     event PoolReshareRequested(uint32 poolId);
     event PoolReshared(uint32 poolId);
     event PoolExitRequested(uint32 poolId);
@@ -104,7 +104,7 @@ interface ICasimirManager {
 
     function getSSVFeePercent() external view returns (uint32);
 
-    function getStakedValidatorPublicKeys()
+    function getValidatorPublicKeys()
         external
         view
         returns (bytes[] memory);

@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { firstUserDepositFixture, rewardsPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardsPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture } from './fixtures/shared'
+import { firstUserDepositFixture, rewardsPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardsPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture, activeBalanceLossFixture, activeBalanceRecoveryFixture } from './fixtures/shared'
 
 describe('Casimir manager', async function () {
 
@@ -135,6 +135,18 @@ describe('Casimir manager', async function () {
     expect(ethers.utils.formatEther(fourthPool.deposits)).equal('32.0')
     expect(fourthPool.publicKey).not.equal('0x')
     expect(fourthPool.operatorIds.length).equal(4)
+  })
+
+  it('A loss is reported and brings the active stake below expected', async function () {
+    const { manager } = await loadFixture(activeBalanceLossFixture)
+    const activeStake = await manager.getActiveStake()
+    expect(ethers.utils.formatEther(activeStake)).equal('126.0')
+  })
+
+  it('Gains are reported and bring the active stake back to expected', async function () {
+    const { manager } = await loadFixture(activeBalanceRecoveryFixture)
+    const activeStake = await manager.getActiveStake()
+    expect(ethers.utils.formatEther(activeStake)).equal('128.0')
   })
 
   it('Check more rewards and dust', async function () {

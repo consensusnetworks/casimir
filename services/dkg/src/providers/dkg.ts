@@ -30,9 +30,7 @@ export class DKG {
      * })
      */
     async createValidator(options: CreateValidatorOptions): Promise<Validator> {
-
-        const operatorIds = options?.operatorIds || process.env.OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [1, 2, 3, 4, 5, 6, 7, 8]
-        const withdrawalAddress = options?.withdrawalAddress || process.env.WITHDRAWAL_ADDRESS || '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
+        const { operatorIds, withdrawalAddress } = options
         const operators = this.getOperatorGroup(operatorIds)
 
         /** Start a key generation ceremony with the given operators */
@@ -69,7 +67,7 @@ export class DKG {
      * @example
      * const validator = await reshareValidator({
      *   operatorIds: [1, 2, 3, 4],
-     *   validatorPublicKey: '0x8eb0f05adc697cdcbdf8848f7f1e8c2277f4fc7b0efc97ceb87ce75286e4328db7259fc0c1b39ced0c594855a30d415c',
+     *   publicKey: '0x8eb0f05adc697cdcbdf8848f7f1e8c2277f4fc7b0efc97ceb87ce75286e4328db7259fc0c1b39ced0c594855a30d415c',
      *   oldOperators: {
      *     "2": "http://0.0.0.0:8082",
      *     "3": "http://0.0.0.0:8083",
@@ -78,23 +76,19 @@ export class DKG {
      * })
      */
     async reshareValidator(options: ReshareValidatorOptions): Promise<Validator> {
-
-        const operatorIds = options?.operatorIds || process.env.OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [2, 3, 4, 5]
-        const validatorPublicKey = options?.validatorPublicKey || process.env.VALIDATOR_PUBLIC_KEY || '0x8eb0f05adc697cdcbdf8848f7f1e8c2277f4fc7b0efc97ceb87ce75286e4328db7259fc0c1b39ced0c594855a30d415c'
-        const oldOperatorIds = options?.oldOperatorIds || process.env.OLD_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [2, 3, 4]
+        const { operatorIds, publicKey, oldOperatorIds, withdrawalAddress } = options
         const operators = this.getOperatorGroup(operatorIds)
         const oldOperators = this.getOperatorGroup(oldOperatorIds)
-        const withdrawalAddress = options?.withdrawalAddress || process.env.WITHDRAWAL_ADDRESS || '0x07e05700cb4e946ba50244e27f01805354cd8ef0'
 
         /** Start a key generation ceremony with the given operators */
-        const ceremonyId = await this.startReshare({ operators, validatorPublicKey, oldOperators })
+        const ceremonyId = await this.startReshare({ operators, publicKey, oldOperators })
         console.log(`Started ceremony with ID ${ceremonyId}`)
 
         /** Get operator key shares */
         const { encryptedKeys, publicKeys } = await this.getShares(ceremonyId)
 
         /** Get validator deposit data */
-        const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData(ceremonyId, withdrawalAddress)
+        const { depositDataRoot, signature, withdrawalCredentials } = await this.getDepositData(ceremonyId, withdrawalAddress)
 
         /** Create validator */
         const validator: Validator = {
@@ -173,7 +167,7 @@ export class DKG {
      *      "4": "http://host.docker.internal:8084",
      *      "5": "http://host.docker.internal:8085"
      *   },
-     *   validatorPublicKey: '0x8eb0f05adc697cdcbdf8848f7f1e8c2277f4fc7b0efc97ceb87ce75286e4328db7259fc0c1b39ced0c594855a30d415c',
+     *   publicKey: '0x8eb0f05adc697cdcbdf8848f7f1e8c2277f4fc7b0efc97ceb87ce75286e4328db7259fc0c1b39ced0c594855a30d415c',
      *   oldOperators: {
      *     "2": "http://host.docker.internal:8082",
      *     "3": "http://host.docker.internal:8083",
@@ -184,12 +178,12 @@ export class DKG {
      * // => "b7e8b0e0-5c1a-4b1e-9b1e-8c1c1c1c1c1c"
      */
     async startReshare(input: ReshareInput): Promise<string> {
-        const { operators, validatorPublicKey, oldOperators } = input
+        const { operators, publicKey, oldOperators } = input
         const operatorFlags = Object.entries(operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
         const thresholdFlag = `--threshold ${Object.keys(operators).length - 1}`
-        const validatorPublicKeyFlag = `--validator-public-key ${validatorPublicKey}`
+        const publicKeyFlag = `--validator-public-key ${publicKey}`
         const oldOperatorFlags = Object.entries(oldOperators).map(([id, url]) => `--old-operator ${id}=${url}`).join(' ')
-        const command = `rockx-dkg-cli reshare ${operatorFlags} ${thresholdFlag} ${validatorPublicKeyFlag} ${oldOperatorFlags}`
+        const command = `rockx-dkg-cli reshare ${operatorFlags} ${thresholdFlag} ${publicKeyFlag} ${oldOperatorFlags}`
         const startReshare = execSync(`${command}`).toString().trim() as string
         const ceremonyId = startReshare.split(' ').pop() as string
         return ceremonyId

@@ -71,22 +71,22 @@ void async function () {
     ethers.provider.on('block', async (block) => {
         if (block - blocksPerReward === lastRewardBlock) {
             lastRewardBlock = block
-            const stakedValidatorPublicKeys = await manager.getStakedValidatorPublicKeys()
-            if (stakedValidatorPublicKeys?.length) {
-                console.log(`Rewarding ${stakedValidatorPublicKeys.length} validators ${rewardPerValidator} each`)
-                const rewardAmount = rewardPerValidator * stakedValidatorPublicKeys.length
+            const validatorCount = await manager.getValidatorPublicKeys()
+            if (validatorCount?.length) {
+                console.log(`Rewarding ${validatorCount.length} validators ${rewardPerValidator} each`)
+                const rewardAmount = rewardPerValidator * validatorCount.length
 
                 /** Perform upkeep */
                 const ranUpkeepBefore = await runUpkeep({ upkeep, keeper })
 
                 /** Fulfill functions request */
                 if (ranUpkeepBefore) {
-                    const nextActiveStakeAmount = round(parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) + rewardAmount)
+                    const nextActiveBalanceAmount = round(parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) + rewardAmount)
                     const nextSweptRewardsAmount = 0
                     const nextSweptExitsAmount = 0
                     const nextDepositedCount = 0
                     const nextExitedCount = 0
-                    await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+                    await fulfillFunctionsRequest({ upkeep, keeper, nextActiveBalanceAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
                 }
 
                 /** Sweep rewards before next upkeep (balance will increment silently) */
@@ -98,12 +98,12 @@ void async function () {
 
                 /** Fulfill functions request */
                 if (ranUpkeepAfter) {
-                    const nextActiveStakeAmount = round(parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) - rewardAmount)
+                    const nextActiveBalanceAmount = round(parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) - rewardAmount)
                     const nextSweptRewardsAmount = rewardAmount
                     const nextSweptExitsAmount = 0
                     const nextDepositedCount = 0
                     const nextExitedCount = 0
-                    await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+                    await fulfillFunctionsRequest({ upkeep, keeper, nextActiveBalanceAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
                 }
                 
             }
@@ -120,7 +120,7 @@ void async function () {
     }, 1000)
 
     /** Perform upkeep and fulfill dkg answer after each pool is initiated by the local oracle */
-    for await (const event of on(manager as unknown as EventEmitter, 'PoolInitiated')) {
+    for await (const event of on(manager as unknown as EventEmitter, 'PoolDepositInitiated')) {
         const [ id, details ] = event
         console.log(`Pool ${id} initiated at block number ${details.blockNumber}`)
 
@@ -129,12 +129,12 @@ void async function () {
 
         /** Fulfill functions request */
         if (ranUpkeep) {
-            const nextActiveStakeAmount = parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) + 32
+            const nextActiveBalanceAmount = parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) + 32
             const nextSweptRewardsAmount = 0
             const nextSweptExitsAmount = 0
             const nextDepositedCount = 1
             const nextExitedCount = 0
-            await fulfillFunctionsRequest({ upkeep, keeper, nextActiveStakeAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
+            await fulfillFunctionsRequest({ upkeep, keeper, nextActiveBalanceAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
         }
     }
 }()

@@ -8,7 +8,7 @@ async function deployContract(name: string, proxy?: boolean, args?: Record<strin
     if (proxy) {
         if (Object.keys(args).length) inputs.push([...Object.values(args)])
         if (Object.keys(options).length) inputs.push(options)
-        const proxy = await upgrades.deployProxy(factory, ...inputs)
+        const proxy = await upgrades.deployProxy(factory, inputs)
         return await proxy.deployed()
     } else {
         if (Object.keys(args).length) inputs.push(...Object.values(args))

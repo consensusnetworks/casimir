@@ -1,6 +1,6 @@
 export interface CreateValidatorOptions {
     /** Operator registry IDs */
-    operatorIds?: number[]
+    operatorIds: number[]
     /** Validator withdrawal address */
-    withdrawalAddress?: string
+    withdrawalAddress: string
 }
