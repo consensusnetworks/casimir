@@ -99,7 +99,7 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
     }
 })
 
-router.post('/check-address-exists', async (req: express.Request, res: express.Response) => {
+router.post('/check-secondary-address', async (req: express.Request, res: express.Response) => {
     try {
         const { body } = req
         const { address } = body

@@ -51,7 +51,7 @@ export default function useUsers () {
                 },
                 body: JSON.stringify({ address })
             }
-            const response = await fetch(`${usersBaseURL}/auth/check-address-exists`, requestOptions)
+            const response = await fetch(`${usersBaseURL}/auth/check-secondary-address`, requestOptions)
             const json = await response.json()
             const { accounts } = json
             return accounts
