@@ -1,6 +1,6 @@
 import minimist from 'minimist'
 import fs from 'fs'
-import { run } from '@casimir/helpers'
+import { run, runSync } from '@casimir/helpers'
 import { JsonSchema, Schema, accountSchema, nonceSchema, userSchema } from '@casimir/data'
 
 /** Resource path from package caller */
@@ -48,9 +48,9 @@ void async function () {
     if (!container) {
         /** Start local database */
         await run(`docker compose -p ${stackName} -f ${resourcePath}/docker-compose.yaml up -d`)
-        console.log('🐘 Database started')
+        console.log('🐘 Database resources started')
     } else {   
         await run(`docker exec ${containerName} psql -U postgres -d postgres -f /docker-entrypoint-initdb.d/schema.sql`)
-        console.log('🐘 Database synced')
+        console.log('🐘 Database resources synced')
     }
 }()

@@ -1,4 +1,4 @@
-import { Account } from '@casimir/types'
+import { Account } from './Account'
 
 export interface UserWithAccounts {
     /** Unique ID (and essential for auth verification) */

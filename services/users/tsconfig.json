@@ -19,5 +19,5 @@
   "include": [
     "./src/*",
     "env.d.ts"
-, "scripts/seed.ts", "scripts/seed.ts"  ]
+  ]
 }

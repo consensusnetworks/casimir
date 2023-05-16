@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url'
 import * as path from 'path'
 
 export default defineConfig({
-  server: { port: 3000 },
+  server: { port: 3001 },
   plugins: [
     vue({ include: [/\.vue$/] })
   ],

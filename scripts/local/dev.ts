@@ -1,6 +1,5 @@
 import { $, argv, chalk, echo } from 'zx'
-import { loadCredentials, getSecret, run, getFutureContractAddress, getWallet } from '@casimir/helpers'
-import { ethers } from 'ethers'
+import { loadCredentials, getSecret, getFutureContractAddress, getWallet, run, runSync } from '@casimir/helpers'
 
 /**
  * Run a Casimir dev server.
@@ -62,14 +61,8 @@ void async function () {
     const { chains, services, tables } = apps[app as keyof typeof apps]
 
     if (mock) {
-
-        if (clean) {
-            /** Clean postgres database */
-            await $`npm run clean --workspace @casimir/data`
-        }
-
         /** Mock postgres database */
-        $`npm run watch --tables=${tables.join(',')} --workspace @casimir/data`
+        run(`npm run watch --tables=${tables.join(',')} --workspace @casimir/data`)
 
         /** Mock services */
         let port = 4000
@@ -80,7 +73,7 @@ void async function () {
 
             try {
                 if (await run(`lsof -ti:${port}`)) {
-                    await run(`npx --yes kill-port ${port}`)
+                    await run(`kill -9 $(lsof -ti:${port})`)
                 }
             } catch {
                 console.log(`Port ${port} is available.`)
@@ -135,7 +128,7 @@ void async function () {
         const port = 5001
         try { 
             if (await run(`lsof -ti:${port}`)) {
-                await run(`npx --yes kill-port ${port}`)
+                await run(`kill -9 $(lsof -ti:${port})`)
             }
         } catch { 
             console.log(`Port ${port} is available.`) 
@@ -144,10 +137,7 @@ void async function () {
         process.env.PUBLIC_SPECULOS_PORT = `${port}`
         process.env.PUBLIC_LEDGER_APP = emulate
         $`scripts/ledger/emulate -a ${emulate}`
-        /** Wait to push proxy announcement later in terminal run */
-        setTimeout(() => {
-            $`npx esno scripts/ledger/proxy.ts`
-        }, 5000)
+        $`npx esno scripts/ledger/proxy.ts`
 
         /** Emulate Trezor */
         $`scripts/trezor/emulate`
@@ -155,4 +145,14 @@ void async function () {
 
     /** Run app */
     $`npm run dev --workspace @casimir/${app}`
+
+    process.on('SIGINT', () => {
+        const messes = ['data', 'dkg']
+        if (clean) {
+            const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
+            console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)
+            runSync(`${cleaners}`)
+        }
+        process.exit()
+    })
 }()

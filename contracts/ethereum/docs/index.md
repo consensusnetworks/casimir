@@ -44,14 +44,6 @@ uint256 stakeRatioSum
 
 Sum of scaled rewards to stake ratios (intial value required)
 
-### pendingFeesReserved
-
-```solidity
-uint256 pendingFeesReserved
-```
-
-Total pending fees reserved
-
 ### ethFeePercent
 
 ```solidity
@@ -306,6 +298,20 @@ Get the manager buffered (execution) stake
 | ---- | ---- | ----------- |
 | stake | uint256 | The manager buffered (execution) stake |
 
+### getPendingStake
+
+```solidity
+function getPendingStake() public view returns (uint256 stake)
+```
+
+Get the manager pending (consensus) stake
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| stake | uint256 | The manager pending (consensus) stake |
+
 ### getActiveStake
 
 ```solidity
@@ -339,6 +345,34 @@ Get the total user stake for a given user address
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | userStake | uint256 | The total user stake |
+
+### getReservedFees
+
+```solidity
+function getReservedFees() public view returns (uint256)
+```
+
+Get the manager reserved fees
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | reservedFees The manager reserved fees |
+
+### getSweptBalance
+
+```solidity
+function getSweptBalance() public view returns (uint256 balance)
+```
+
+Get the manager swept balance
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| balance | uint256 | The manager swept balance |
 
 ### getFeePercent
 
@@ -416,13 +450,13 @@ Get the pending withdrawal queue
 function getValidatorPublicKeys() external view returns (bytes[])
 ```
 
-Get staked validator public keys
+Get validator public keys
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes[] | A list of active validator public keys |
+| [0] | bytes[] | A list of pending and active validator public keys |
 
 ### getExitingValidatorCount
 

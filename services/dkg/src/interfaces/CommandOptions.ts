@@ -2,12 +2,14 @@ import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { ethers } from 'ethers'
 
 export interface CommandOptions {
-    /** The manager contract */
+    /** Manager contract */
     manager: ethers.Contract & CasimirManager
-    /** The command signer */
+    /** Command signer */
     signer: ethers.Signer
-    /** The distributed key generation messenger service URL */
+    /** DKG cli path */
+    cliPath: string
+    /** DKG messenger service URL */
     messengerUrl: string
-    /** The pool ID */
+    /** Pool ID */
     id: number
 }

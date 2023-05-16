@@ -17,8 +17,11 @@ export function config() {
     if (!managerAddress) throw new Error('No manager address provided')
     const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi, signer) as ethers.Contract & CasimirManager
 
+    const cliPath = process.env.CLI_PATH
+    if (!cliPath) throw new Error('No cli path provided')
+
     const messengerUrl = process.env.MESSENGER_SRV_ADDR
     if (!messengerUrl) throw new Error('No messenger url provided')
 
-    return { manager, signer, messengerUrl }
+    return { manager, signer, cliPath, messengerUrl }
 }

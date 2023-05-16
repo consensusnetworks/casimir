@@ -1,21 +1,23 @@
 import fs from 'fs'
-import { execSync } from 'child_process'
 import { KeyGenerationInput } from '../interfaces/KeyGenerationInput'
 import { DepositData } from '../interfaces/DepositData'
 import { Shares } from '../interfaces/Shares'
 import { DKGOptions } from '../interfaces/DKGOptions'
 import { ReshareInput } from '../interfaces/ReshareInput'
-import { getWithdrawalCredentials } from '@casimir/helpers'
+import { getWithdrawalCredentials, runSync } from '@casimir/helpers'
 import { CreateValidatorOptions } from '../interfaces/CreateValidatorOptions'
 import { Validator } from '@casimir/types'
 import { ReshareValidatorOptions } from '../interfaces/ReshareValidatorOptions'
 import { operatorStore } from '@casimir/data'
 
 export class DKG {
-    /** Key generation messenger service URL */
+    /** DKG CLI path */
+    cliPath: string
+    /** DKG messenger service URL */
     messengerUrl: string
 
     constructor(options: DKGOptions) {
+        this.cliPath = options.cliPath
         this.messengerUrl = options.messengerUrl
     }
 
@@ -45,6 +47,8 @@ export class DKG {
 
         /** Get validator deposit data */
         const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData(ceremonyId, withdrawalAddress)
+
+        console.log('VALIDATOR PK', publicKey)
 
         /** Create validator */
         const validator: Validator = {
@@ -149,8 +153,8 @@ export class DKG {
         const thresholdFlag = `--threshold ${Object.keys(operators).length - 1}`
         const withdrawalCredentialsFlag = `--withdrawal-credentials ${getWithdrawalCredentials(withdrawalAddress)}`
         const forkVersionFlag = '--fork-version prater'
-        const command = `rockx-dkg-cli keygen ${operatorFlags} ${thresholdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
-        const startKeyGeneration = execSync(`${command}`).toString().trim() as string
+        const command = `${this.cliPath} keygen ${operatorFlags} ${thresholdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
+        const startKeyGeneration = runSync(`${command}`).toString().trim() as string
         const ceremonyId = startKeyGeneration.split(' ').pop() as string
         return ceremonyId
     }
@@ -183,8 +187,8 @@ export class DKG {
         const thresholdFlag = `--threshold ${Object.keys(operators).length - 1}`
         const publicKeyFlag = `--validator-public-key ${publicKey}`
         const oldOperatorFlags = Object.entries(oldOperators).map(([id, url]) => `--old-operator ${id}=${url}`).join(' ')
-        const command = `rockx-dkg-cli reshare ${operatorFlags} ${thresholdFlag} ${publicKeyFlag} ${oldOperatorFlags}`
-        const startReshare = execSync(`${command}`).toString().trim() as string
+        const command = `${this.cliPath} reshare ${operatorFlags} ${thresholdFlag} ${publicKeyFlag} ${oldOperatorFlags}`
+        const startReshare = runSync(`${command}`).toString().trim() as string
         const ceremonyId = startReshare.split(' ').pop() as string
         return ceremonyId
     }
@@ -203,8 +207,8 @@ export class DKG {
      */
     async getShares(ceremonyId: string): Promise<Shares> {
         const requestIdFlag = `--request-id ${ceremonyId}`
-        const command = `rockx-dkg-cli get-keyshares ${requestIdFlag}`
-        const getShares = execSync(`${command}`).toString().trim() as string
+        const command = `${this.cliPath} get-keyshares ${requestIdFlag}`
+        const getShares = runSync(`${command}`).toString().trim() as string
         const sharesFile = getShares.split(' ').pop() as string
         const sharesJSON = JSON.parse(fs.readFileSync(`${sharesFile}`, 'utf8'))
         fs.rmSync(sharesFile)
@@ -233,8 +237,8 @@ export class DKG {
         const requestIdFlag = `--request-id ${ceremonyId}`
         const withdrawalCredentialsFlag = `--withdrawal-credentials 01${'0'.repeat(22)}${withdrawalAddress.split('0x')[1]}`
         const forkVersionFlag = '--fork-version prater'
-        const command = `rockx-dkg-cli generate-deposit-data ${requestIdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
-        const getDepositData = execSync(`${command}`).toString().trim() as string
+        const command = `${this.cliPath} generate-deposit-data ${requestIdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
+        const getDepositData = runSync(`${command}`).toString().trim() as string
         const depositDataFile = getDepositData.split(' ').pop() as string
         const depositData = JSON.parse(fs.readFileSync(depositDataFile, 'utf8'))
         fs.rmSync(depositDataFile)

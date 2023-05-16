@@ -5,6 +5,7 @@
     "main": "dist/index.js",
     "scripts": {
         "build": "tsc",
+        "clean": "npx esno -r dotenv/config scripts/clean.ts",
         "start": "node dist/index.js",
         "dev": "npx esno -r dotenv/config scripts/dev.ts",
         "test": "echo \"Error: no test specified\" && exit 1"

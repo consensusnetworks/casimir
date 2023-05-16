@@ -1,4 +1,4 @@
-import { spawn, execSync } from 'child_process'
+import { exec, execSync } from 'child_process'
 import { fromIni } from '@aws-sdk/credential-providers'
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager'
 import { ethers } from 'ethers'
@@ -95,17 +95,16 @@ export function kebabCase(string: string): string {
 }
 
 /**
- * Run any shell command with a spawned child process and return a promise
- * @param fullCommand - The full command to run
+ * Run any shell command in a child process and return a promise
+ * @param command - The full command to run
  * @returns A promise that resolves when the command exits
  */
-export async function run(fullCommand: string) {
-    const [command, ...args] = fullCommand.split(' ')
-    const child = spawn(command, args)
+export async function run(command: string) {
+    const child = exec(command)
     let data = ''
     return new Promise((resolve, reject) => {
         child.on('error', reject)
-        child.stdout.on('data', chunk => {
+        child.stdout?.on('data', chunk => {
             process.stdout.write(chunk.toString())
             data += chunk.toString()
         })
@@ -114,23 +113,32 @@ export async function run(fullCommand: string) {
 }
 
 /**
- * Retry run any shell command with a spawned child process and return a promise
- * @param fullCommand - The full command to run
+ * Retry run any shell command in a child process and return a promise
+ * @param command - The full command to run
  * @param retriesLeft - Number of retries left (default: 5)
  * @returns A promise that resolves when the command exits
  */
-export async function retryRun(fullCommand: string, retriesLeft: number | undefined = 25): Promise<unknown> {
+export async function runRetry(command: string, retriesLeft: number | undefined = 25): Promise<unknown> {
     if (retriesLeft === 0) {
         throw new Error('Command failed after maximum retries')
     }
 
     try {
-        return await run(fullCommand)
+        return await run(command)
     } catch (error) {
         await new Promise(resolve => setTimeout(resolve, 5000))
-        console.log('Retrying command', fullCommand)
-        return await retryRun(fullCommand, retriesLeft - 1)
+        console.log('Retrying command', command)
+        return await runRetry(command, retriesLeft - 1)
     }
+}
+
+/**
+ * Run any shell command synchronously in a child process
+ * @param command - The full command to run
+ * @returns The output of the command
+ */
+export function runSync(command: string) {
+    return execSync(command).toString()
 }
 
 /**
@@ -140,25 +148,25 @@ export async function retryRun(fullCommand: string, retriesLeft: number | undefi
  * @param {number | undefined} retriesLeft - Number of retries left (default: 5)
  * @returns {Promise<Response>} Response
  * @example
- * const response = await retryFetch('https://example.com')
+ * const response = await fetchRetry('https://example.com')
  */
-export async function retryFetch(info: RequestInfo, init?: RequestInit, retriesLeft: number | undefined = 25): Promise<Response> {
+export async function fetchRetry(info: RequestInfo, init?: RequestInit, retriesLeft: number | undefined = 25): Promise<Response> {
     if (retriesLeft === 0) {
         throw new Error('API request failed after maximum retries')
     }
 
     try {
-        const response = await fetch(info, init)
+        const response = await fetch(info, init)        
         if (response.status !== 200) {
             await new Promise(resolve => setTimeout(resolve, 5000))
             console.log('Retrying fetch request to', info, init)
-            return await retryFetch(info, init || {}, retriesLeft - 1)
+            return await fetchRetry(info, init || {}, retriesLeft - 1)
         }
         return response
     } catch (error) {
         await new Promise(resolve => setTimeout(resolve, 5000))
         console.log('Retrying fetch request to', info, init)
-        return await retryFetch(info, init || {}, retriesLeft - 1)
+        return await fetchRetry(info, init || {}, retriesLeft - 1)
     }
 }
 

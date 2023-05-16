@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import WalletConnectProvider from '@walletconnect/web3-provider'
-import { MessageInit, TransactionInit } from '@/interfaces/index'
+import { MessageInit, TransactionInit } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 

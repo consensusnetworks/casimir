@@ -1,4 +1,4 @@
-import { EthersProvider } from '@/interfaces/EthersProvider'
+import { EthersProvider } from './EthersProvider'
 
 export interface BrowserProviders {
   MetaMask?: EthersProvider

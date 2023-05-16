@@ -8,7 +8,7 @@ import useLedger from './ledger'
 import useTrezor from './trezor'
 import useWalletConnect from './walletConnect'
 import { Account, Pool, ProviderString } from '@casimir/types'
-import { ReadyOrStakeString } from '../interfaces'
+import { ReadyOrStakeString } from '@/interfaces/ReadyOrStakeString'
 
 /** Manager contract */
 let manager: CasimirManager
@@ -46,10 +46,8 @@ export default function useSSV() {
         let signer = signerCreator(walletProvider)
         if (isWalletConnectSigner(signer)) signer = await signer
         const managerSigner = manager.connect(signer as ethers.Signer)
-        const fees = await managerSigner.getFees()
-        const { LINK, SSV } = fees
-        const feesTotalPercent = LINK + SSV
-        const depositAmount = parseFloat(amount) * ((100 + feesTotalPercent) / 100)
+        const fees = await managerSigner.getFeePercent()
+        const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
         const value = ethers.utils.parseEther(depositAmount.toString())
         const result = await managerSigner.depositStake({ value, type: 0 })
         return await result.wait()
@@ -57,10 +55,8 @@ export default function useSSV() {
 
     async function getDepositFees() {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-        const fees = await manager.connect(provider).getFees()
-        const { LINK, SSV } = fees
-        const feesTotalPercent = LINK + SSV
-        const feesRounded = Math.round(feesTotalPercent * 100) / 100
+        const fees = await manager.connect(provider).getFeePercent()
+        const feesRounded = Math.round(fees * 100) / 100
         return feesRounded
     }
 

@@ -1,28 +1,19 @@
 {
-    "compilerOptions": {
-      "target": "ESNext",
-      "module": "CommonJS",
-      "lib": [
-        "ESNext",
-        "DOM"
-      ],
-      "declaration": true,
-      "strict": true,
-      "noEmit": true,
-      "noImplicitAny": true,
-      "strictNullChecks": true,
-      "noImplicitThis": true,
-      "alwaysStrict": true,
-      "noUnusedLocals": false,
-      "noUnusedParameters": false,
-      "noImplicitReturns": true,
-      "noFallthroughCasesInSwitch": false,
-      "inlineSourceMap": true,
-      "inlineSources": true,
-      "experimentalDecorators": true,
-      "strictPropertyInitialization": false,
-      "types": ["node", "jest"],
-      "esModuleInterop": true,
-      "resolveJsonModule": true
-    }
-  }
+  "compilerOptions": {
+    "target": "ESNext",
+    "strict": true,
+    "preserveConstEnums": true,
+    "noEmit": true,
+    "sourceMap": false,
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "./src/*"
+  ]
+}

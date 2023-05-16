@@ -4,22 +4,9 @@ import { run } from '@casimir/helpers'
 const resourcePath = './scripts'
 
 /**
- * Clean Docker containers, Postgres data, and SQL schema files.
+ * Clean up resources
  */
 void async function () {
-    console.log(`Cleaning up Docker containers, Postgres data, and SQL schema files from ${resourcePath}/.out`)
-
-    /** Stop postgres database */
-    const stackName = 'casimir-data'
-    const containerName = `${stackName}-postgres-1`
-    const container = await run(`docker ps -q --filter name=${containerName}`)
-    if (container) {
-        await run(`docker compose -p ${stackName} -f ${resourcePath}/docker-compose.yaml down`)
-    }
-
-    /** Clear output directory for pgdata and sql */
-    const outDir = `${resourcePath}/.out`
-    await run(`npx rimraf ${outDir}`)
-
-    console.log('🐘 Database resources cleaned')
+    await run(`rm -rf ${resourcePath}/.out`)
+    await run(`docker compose -p casimir-data -f ${resourcePath}/docker-compose.yaml down`)
 }()

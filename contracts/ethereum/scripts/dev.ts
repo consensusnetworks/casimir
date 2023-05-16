@@ -81,11 +81,18 @@ void async function () {
 
                 /** Fulfill functions request */
                 if (ranUpkeepBefore) {
-                    const nextActiveBalanceAmount = round(parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) + rewardAmount)
+                    const nextActiveBalanceAmount = round(
+                        parseFloat(
+                            ethers.utils.formatEther(
+                                (await manager.getActiveStake()).add((await manager.getPendingPoolIds()).length * 32)
+                            )
+                        ) + rewardAmount
+                    )
                     const nextSweptRewardsAmount = 0
                     const nextSweptExitsAmount = 0
-                    const nextDepositedCount = 0
+                    const nextDepositedCount = (await manager.getPendingPoolIds()).length
                     const nextExitedCount = 0
+
                     await fulfillFunctionsRequest({ upkeep, keeper, nextActiveBalanceAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
                 }
 
@@ -98,11 +105,18 @@ void async function () {
 
                 /** Fulfill functions request */
                 if (ranUpkeepAfter) {
-                    const nextActiveBalanceAmount = round(parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) - rewardAmount)
+                    const nextActiveBalanceAmount = round(
+                        parseFloat(
+                            ethers.utils.formatEther(
+                                (await manager.getActiveStake()).add((await manager.getPendingPoolIds()).length * 32)
+                            )
+                        ) - rewardAmount
+                    )
                     const nextSweptRewardsAmount = rewardAmount
                     const nextSweptExitsAmount = 0
-                    const nextDepositedCount = 0
+                    const nextDepositedCount = (await manager.getPendingPoolIds()).length
                     const nextExitedCount = 0
+
                     await fulfillFunctionsRequest({ upkeep, keeper, nextActiveBalanceAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
                 }
                 
@@ -123,18 +137,5 @@ void async function () {
     for await (const event of on(manager as unknown as EventEmitter, 'PoolDepositInitiated')) {
         const [ id, details ] = event
         console.log(`Pool ${id} initiated at block number ${details.blockNumber}`)
-
-        /** Perform upkeep */
-        const ranUpkeep = await runUpkeep({ upkeep, keeper })
-
-        /** Fulfill functions request */
-        if (ranUpkeep) {
-            const nextActiveBalanceAmount = parseFloat(ethers.utils.formatEther(await manager.getActiveStake())) + 32
-            const nextSweptRewardsAmount = 0
-            const nextSweptExitsAmount = 0
-            const nextDepositedCount = 1
-            const nextExitedCount = 0
-            await fulfillFunctionsRequest({ upkeep, keeper, nextActiveBalanceAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
-        }
     }
 }()

@@ -2,7 +2,7 @@ import { EthersTrezorSigner } from '@casimir/wallets'
 import useEthers from '@/composables/ethers'
 import useEnvironment from '@/composables/environment'
 import { ethers } from 'ethers'
-import { MessageInit, TransactionInit } from '@/interfaces/index'
+import { MessageInit, TransactionInit } from '@casimir/types'
 
 const trezorPath = 'm/44\'/60\'/0\'/0/0'
 

@@ -1,4 +1,4 @@
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts } from '@casimir/types'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'

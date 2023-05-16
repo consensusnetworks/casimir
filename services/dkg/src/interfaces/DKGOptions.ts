@@ -1,4 +1,6 @@
 export interface DKGOptions {
-    /** The distributed key generation messenger service URL */
+    /** DKG CLI path */
+    cliPath: string
+    /** DKG messenger service URL */
     messengerUrl: string
 }

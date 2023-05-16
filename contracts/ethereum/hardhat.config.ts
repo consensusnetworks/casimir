@@ -132,7 +132,6 @@ if (process.env.LOCAL_TUNNEL) {
       }
       process.on('SIGINT', () => {
         tunnel.close()
-        process.exit(0)
       })
     }
   )

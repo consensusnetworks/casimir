@@ -1,5 +1,33 @@
 // Arguments can be provided when a request is initated on-chain and used in the request source code as shown below
 
+function repeat(str, num) {
+    if (str.length === 0 || num <= 1) {
+        if (num === 1) {
+            return str
+        }
+
+        return ''
+    }
+
+    let result = ''
+    let pattern = str
+
+    while (num > 0) {
+        if (num & 1) {
+            result += pattern
+        }
+
+        num >>= 1
+        pattern += pattern
+    }
+
+    return result
+}
+
+function lpad(obj, str, num) {
+    return repeat(str, num - obj.length) + obj
+}
+
 const managerAddress = "0x07e05700cb4e946ba50244e27f01805354cd8ef0"
 // We want to get a string (not bytes) array of length of the number of validators
 // See PoR Address List
@@ -22,27 +50,24 @@ const getPublicKeys = await Functions.makeHttpRequest({
 
 const { result } = getPublicKeys.data
 
-// Remove the '0x' prefix
-let raw = result.slice(2);
+    // Convert the hex string to a byte array.
+    const bytes = new BigUint64Array(result.slice(2))
 
-// Fetch the number of keys from the start of the data
-let numKeys = parseInt(raw.slice(0, 64), 16);
+    console.log('Bytes', bytes)
 
-// Initial offset is 32 bytes (or 64 characters), multiplied by 2 for hex
-let offset = 64 * 2;
+    // Create a new array to store the decoded values.
+    const publicKeys = []
 
-let publicKeys = [];
+    // Iterate over the byte array.
+    for (let i = 0; i < bytes.length; i++) {
+        // Convert each byte in the byte array to a string.
+        const publicKey = bytes[i].toString('hex')
 
-for (let i = 0; i < numKeys; i++) {
-  // Extract each public key
-  let publicKey = raw.slice(offset, offset + 128);
-  publicKeys.push('0x' + publicKey);
-
-  // Move the offset to the next key
-  offset += 128;
+    // Push the converted string to the new array.
+    publicKeys.push('0x' + publicKey)
 }
 
-console.log(publicKeys);
+console.log('PKs', publicKeys)
 
 // To make an HTTP request, use the Functions.makeHttpRequest function
 // Functions.makeHttpRequest function parameters:

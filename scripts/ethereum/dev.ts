@@ -1,5 +1,5 @@
 import { $, echo, chalk } from 'zx'
-import { loadCredentials, getSecret, getFutureContractAddress, getWallet } from '@casimir/helpers'
+import { loadCredentials, getSecret, getFutureContractAddress, getWallet, runSync } from '@casimir/helpers'
 import minimist from 'minimist'
 
 /**
@@ -62,6 +62,7 @@ void async function () {
 
     if (clean) {
         await $`npm run clean --workspace @casimir/ethereum`
+        await $`npm run clean --workspace @casimir/dkg`
     }
     
     /** Set 12-second interval mining for dev networks */
@@ -87,4 +88,14 @@ void async function () {
     /** Start local oracle */
     process.env.ETHEREUM_RPC_URL = 'http://localhost:8545'
     $`npm run dev --workspace @casimir/dkg`
+
+    process.on('SIGINT', () => {
+        const messes = ['dkg']
+        if (clean) {
+            const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
+            console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)
+            runSync(`${cleaners}`)
+        }
+        process.exit()
+    })
 }()

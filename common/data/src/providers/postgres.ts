@@ -17,7 +17,7 @@ export class Postgres {
      */
     constructor(config?: PoolConfig) {
         this.pool = new Pool(config)
-        process.on('exit', () => this.close())
+        process.on('SIGINT', () => this.close())
     }
 
     /**

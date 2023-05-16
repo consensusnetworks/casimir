@@ -5,8 +5,7 @@ import {
   SystemProgram,
   PublicKey
 } from '@solana/web3.js'
-import { BrowserProviders, MessageInit, TransactionInit } from '@/interfaces/index'
-import { ProviderString } from '@casimir/types'
+import { BrowserProviders, MessageInit, ProviderString, TransactionInit } from '@casimir/types'
 
 export default function useSolana() {
   const solanaProviderList = ['Phantom']
