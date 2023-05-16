@@ -41,7 +41,7 @@ export default function useWallet() {
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
-  const { user, getUser, setUser, addAccount, removeAccount, updatePrimaryAddress } = useUsers()
+  const { user, getUser, setUser, addAccount, checkIfSecondaryAddress, checkIfPrimaryByAddress, removeAccount, updatePrimaryAddress } = useUsers()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
     if (provider === 'Ledger') {
@@ -78,9 +78,9 @@ export default function useWallet() {
         loadingUserWallets.value = false
         // router.push('/')
       } else { // Add account if it doesn't already exist
-        const accountExists = user.value?.accounts?.some((account: Account | any) => account?.address === selectedAddress.value && account?.walletProvider === selectedProvider.value && account?.currency === selectedCurrency.value)
-        if (accountExists) {
-          alert('Account already exists; setting provider, address, and currency')
+        const userAccountExists = user.value?.accounts?.some((account: Account | any) => account?.address === selectedAddress.value && account?.walletProvider === selectedProvider.value && account?.currency === selectedCurrency.value)
+        if (userAccountExists) {
+          alert('A user account already exists; setting provider, address, and currency')
         } else {
           console.log('adding sub account')
           const account = {
@@ -280,10 +280,23 @@ export default function useWallet() {
    * @param provider 
    * @param currency 
    */
-  async function selectAddress(address: any, pathIndex?: string) {
+  async function selectAddress(address: any, pathIndex?: string) : Promise<void | Account[]> {
+    address = trimAndLowercaseAddress(address)
     setSelectedAddress(address)
+    
     if (pathIndex) setSelectedPathIndex(pathIndex)
-    await connectWallet()
+    
+    const isPrimaryAddress : boolean = await checkIfPrimaryByAddress(selectedAddress.value)
+    if (isPrimaryAddress) {
+      return await connectWallet() // login
+    }
+    
+    const accountsIfSecondaryAddress : Account[] | void = await checkIfSecondaryAddress(selectedAddress.value)
+    if (accountsIfSecondaryAddress.length) {
+      return accountsIfSecondaryAddress
+    } else {
+      return await connectWallet() // sign up
+    }
   }
 
   // TODO: Check if we can find a way to scroll through addresses on MetaMask and CoinbaseWallet
@@ -417,24 +430,24 @@ export default function useWallet() {
     activeWallets,
     amount,
     amountToStake,
-    loadingUserWallets,
-    primaryAddress,
-    selectedAddress,
-    selectedCurrency,
-    selectedProvider,
-    toAddress,
     connectWallet,
     detectCurrencyInProvider,
-    logout,
     getUserBalance,
+    loadingUserWallets,
+    logout,
+    primaryAddress,
     removeConnectedAccount,
     selectAddress,
     selectProvider,
+    selectedAddress,
+    selectedCurrency,
+    selectedProvider,
     sendTransaction,
-    setUserAccountBalances,
     setPrimaryWalletAccount,
+    setUserAccountBalances,
     signMessage,
     switchNetwork,
+    toAddress,
     userAddresses
   }
 }

@@ -1,5 +1,5 @@
 import { onMounted, ref } from 'vue'
-import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts } from '@casimir/types'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, Account } from '@casimir/types'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useSSV from '@/composables/ssv'
@@ -27,6 +27,38 @@ export default function useUsers () {
         const { data: userAccount } = await response.json()
         user.value = userAccount
         return { error: false, message: `Account added to user: ${userAccount}`, data: userAccount }
+    }
+
+    async function checkIfPrimaryByAddress(address: string): Promise<boolean> {
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ address })
+        }
+        const response = await fetch(`${usersBaseURL}/auth/get-user-by-address`, requestOptions)
+        const { userExists } = await response.json()
+        return userExists
+    }
+
+    async function checkIfSecondaryAddress(address: string) : Promise<Account[]> {
+        try {
+            const requestOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ address })
+            }
+            const response = await fetch(`${usersBaseURL}/auth/check-secondary-address`, requestOptions)
+            const json = await response.json()
+            const { accounts } = json
+            return accounts
+        } catch (error) {
+            console.log('Error in checkIfSecondaryAddress in wallet.ts :>> ', error)
+            return [] as Account[]
+        }
     }
 
     /**
@@ -141,6 +173,8 @@ export default function useUsers () {
         session,
         user,
         addAccount,
+        checkIfSecondaryAddress,
+        checkIfPrimaryByAddress,
         checkUserSessionExists,
         getMessage,
         getUser,

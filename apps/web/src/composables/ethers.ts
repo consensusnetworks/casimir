@@ -113,6 +113,8 @@ export default function useEthers() {
       const address = (await requestEthersAccount(provider as EthersProvider))[0]
       const balance = await getEthersBalance(address)
       return [{ address, balance }]
+    } else {
+      throw new Error('Provider not yet connected to this dapp. Please connect and try again.')
     }
   }
 

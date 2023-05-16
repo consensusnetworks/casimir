@@ -5,7 +5,7 @@ import useEthers from '../providers/ethers'
 import { Account, User } from '@casimir/types'
 
 const { verifyMessageSignature } = useEthers()
-const { addUser, getNonce, getUser, upsertNonce } = useDB()
+const { addUser, getAccounts, getNonce, getUser, upsertNonce } = useDB()
 const router = express.Router()
 
 router.post('/nonce', async (req: express.Request, res: express.Response) => {
@@ -98,6 +98,56 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         console.log('CAUGHT ERROR IN /siwe: ', e)
     }
 })
+
+router.post('/check-secondary-address', async (req: express.Request, res: express.Response) => {
+    try {
+        const { body } = req
+        const { address } = body
+        const accounts = maskAddresses(await getAccounts(address))
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            error: false,
+            accounts
+        })
+    } catch (error) {
+        res.setHeader('Content-Type', 'application/json')
+        res.status(500)
+        res.json({
+            error: true,
+            message: 'Problem checking secondary address'
+        })
+    }
+})
+
+router.post('/get-user-by-address', async (req: express.Request, res: express.Response) => {
+    try {
+        const { body } = req
+        const { address } = body
+        const user = await getUser(address)
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            error: false,
+            userExists: !!user,
+        })
+    } catch (error) {
+        console.log('error in /get-user-by-address :>> ', error)
+        res.status(500)
+        res.send()
+    }
+})
+
+function maskAddresses(accounts: Account[]) {
+    return accounts.map(account => {
+        const { address, currency, walletProvider } = account
+        return {
+            address: address.slice(0, 6) + '...' + address.slice(-4),
+            currency,
+            walletProvider
+        }
+    })
+}
 
 function parseDomain(msg: string) {
     const uri = msg.split('URI:')[1].split('Version:')[0].trim()
