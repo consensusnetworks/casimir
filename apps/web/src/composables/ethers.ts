@@ -17,7 +17,7 @@ const ethereum: any = window.ethereum
 const availableProviders = ref<BrowserProviders>(getBrowserProviders(ethereum))
 
 export default function useEthers() {
-  const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
+  const ethersProviderList = ['CoinbaseWallet', 'MetaMask' /*, 'TrustWallet' */]
 
   async function addEthersNetwork (providerString: ProviderString, network: any) {
     const provider = availableProviders.value[providerString as keyof BrowserProviders]
@@ -115,6 +115,25 @@ export default function useEthers() {
       return [{ address, balance }]
     } else {
       throw new Error('Provider not yet connected to this dapp. Please connect and try again.')
+    }
+  }
+
+  async function getTrustWalletAddressWithBalance() {
+    const trustWalletProvider = detectTrustWalletAndGetProvider()
+    if (trustWalletProvider) {
+      const address = (await requestEthersAccount(trustWalletProvider))[0]
+      const balance = await getEthersBalance(address)
+      return [{ address, balance }]
+    }
+  }
+
+  function detectTrustWalletAndGetProvider() {
+    const { ethereum } = window
+    const providers = ethereum?.providers
+    if (providers) {
+      for (const provider of providers) {
+        if (provider.isTrustWallet) return provider
+      }
     }
   }
 
@@ -258,6 +277,7 @@ export default function useEthers() {
     getEthersBrowserSigner,
     getEthersBrowserProviderSelectedCurrency,
     getGasPriceAndLimit,
+    getTrustWalletAddressWithBalance,
     loginWithEthers,
     signEthersMessage,
     sendEthersTransaction,

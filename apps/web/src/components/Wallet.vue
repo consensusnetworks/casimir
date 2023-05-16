@@ -2,6 +2,12 @@
   <div>
     <h5>Connect Wallet to Log In or Add Account</h5>
     <div>
+      <button
+        class="trust-btn"
+        @click="selectProvider('TrustWallet')"
+      >
+        Select Trust Wallet
+      </button>
       <button @click="selectProvider('MetaMask')">
         Select MetaMask
       </button>
@@ -290,6 +296,10 @@ button {
 
 .coinbase-btn {
   background-color: blue;
+}
+
+.trust-btn {
+  background-color: rgb(61, 61, 228);
 }
 
 .iopay-btn {

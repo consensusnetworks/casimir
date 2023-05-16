@@ -36,7 +36,7 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
-  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
+  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, getTrustWalletAddressWithBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
@@ -324,6 +324,10 @@ export default function useWallet() {
         setSelectedProvider(provider)
         const trezorAddresses = await getTrezorAddress[currency]() as CryptoAddress[]
         setUserAddresses(trezorAddresses)
+      } else if (provider === 'TrustWallet') {
+        setSelectedProvider(provider)
+        const trustWalletAddresses = await getTrustWalletAddressWithBalance() as CryptoAddress[]
+        setUserAddresses(trustWalletAddresses)
       }
     } catch (error) {
       console.error('There was an error in selectProvider :>> ', error)

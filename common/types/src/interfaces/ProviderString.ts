@@ -4,6 +4,7 @@ export type ProviderString =
   | 'IoPay'
   | 'Ledger'
   | 'Trezor'
+  | 'TrustWallet'
   | 'WalletConnect'
   |  'Phantom'
   | ''
