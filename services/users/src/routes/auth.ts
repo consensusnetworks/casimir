@@ -111,9 +111,12 @@ router.post('/check-secondary-address', async (req: express.Request, res: expres
             accounts
         })
     } catch (error) {
-        console.log('error in /check-accounts-exists :>> ', error)
+        res.setHeader('Content-Type', 'application/json')
         res.status(500)
-        res.send()
+        res.json({
+            error: true,
+            message: 'Problem checking secondary address'
+        })
     }
 })
 
