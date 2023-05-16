@@ -292,14 +292,8 @@ export default function useWallet() {
     }
     
     const accountsIfSecondaryAddress : Account[] | void = await checkIfSecondaryAddress(selectedAddress.value)
-    if (accountsIfSecondaryAddress.length > 0) {
-      return accountsIfSecondaryAddress.map((account: Account) => { // give user choice to login with a different address
-        return {
-          address: account.address,
-          currency: account.currency,
-          walletProvider: account.walletProvider,
-        } as Account
-      })
+    if (accountsIfSecondaryAddress.length) {
+      return accountsIfSecondaryAddress
     } else {
       return await connectWallet() // sign up
     }

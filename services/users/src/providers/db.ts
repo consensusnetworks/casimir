@@ -168,7 +168,10 @@ export default function useDB() {
      * @param rows - The result date
      * @returns The formatted data
      */
-    function formatResult(row: any) {
+    function formatResult(row: any) : any {
+        if (Array.isArray(row)) {
+            return row.map((item) => formatResult(item)) 
+        }
         if (row) {
             for (const key in row) {
                 /** Convert snake_case to camelCase */

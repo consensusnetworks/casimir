@@ -103,7 +103,7 @@ router.post('/check-address-exists', async (req: express.Request, res: express.R
     try {
         const { body } = req
         const { address } = body
-        const accounts = await getAccounts(address)
+        const accounts = maskAddresses(await getAccounts(address))
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
@@ -134,6 +134,17 @@ router.post('/get-user-by-address', async (req: express.Request, res: express.Re
         res.send()
     }
 })
+
+function maskAddresses(accounts: Account[]) {
+    return accounts.map(account => {
+        const { address, currency, walletProvider } = account
+        return {
+            address: address.slice(0, 6) + '...' + address.slice(-4),
+            currency,
+            walletProvider
+        }
+    })
+}
 
 function parseDomain(msg: string) {
     const uri = msg.split('URI:')[1].split('Version:')[0].trim()
