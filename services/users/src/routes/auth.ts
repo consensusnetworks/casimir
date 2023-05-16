@@ -5,7 +5,7 @@ import useEthers from '../providers/ethers'
 import { Account, User } from '@casimir/types'
 
 const { verifyMessageSignature } = useEthers()
-const { addUser, getNonce, getUser, upsertNonce } = useDB()
+const { addUser, getAccounts, getNonce, getUser, upsertNonce } = useDB()
 const router = express.Router()
 
 router.post('/nonce', async (req: express.Request, res: express.Response) => {
@@ -96,6 +96,42 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         }
     } catch (e) {
         console.log('CAUGHT ERROR IN /siwe: ', e)
+    }
+})
+
+router.post('/check-address-exists', async (req: express.Request, res: express.Response) => {
+    try {
+        const { body } = req
+        const { address } = body
+        const accounts = await getAccounts(address)
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            error: false,
+            accounts
+        })
+    } catch (error) {
+        console.log('error in /check-accounts-exists :>> ', error)
+        res.status(500)
+        res.send()
+    }
+})
+
+router.post('/get-user-by-address', async (req: express.Request, res: express.Response) => {
+    try {
+        const { body } = req
+        const { address } = body
+        const user = await getUser(address)
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            error: false,
+            userExists: !!user,
+        })
+    } catch (error) {
+        console.log('error in /get-user-by-address :>> ', error)
+        res.status(500)
+        res.send()
     }
 })
 

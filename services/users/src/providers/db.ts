@@ -69,6 +69,18 @@ export default function useDB() {
     }
 
     /**
+     * Get accounts by address.
+     * @param address - The account's address
+     * @returns The account if found, otherwise undefined
+     */
+    async function getAccounts(address: string): Promise<Account[]> {
+        const text = 'SELECT * FROM accounts WHERE address = $1;'
+        const params = [address.toLowerCase()]
+        const rows = await postgres.query(text, params)
+        return formatResult(rows) as Account[]
+    }
+
+    /**
      * Get nonce by address.
      * @param address - The address user is using to sign in with ethereum
      * @returns - The nonce if address is a pk on the table or undefined
@@ -180,5 +192,14 @@ export default function useDB() {
         }
     }
 
-    return { addAccount, addUser, getNonce, getUser, removeAccount, updateUserAddress, upsertNonce }
+    return { 
+        addAccount, 
+        addUser, 
+        getAccounts,
+        getNonce, 
+        getUser, 
+        removeAccount, 
+        updateUserAddress, 
+        upsertNonce 
+    }
 }
