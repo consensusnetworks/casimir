@@ -28,8 +28,8 @@ void async function () {
     /** Parse command line arguments */
     const argv = minimist(process.argv.slice(2))
 
-    /** Default to no clean */
-    const clean = argv.clean === 'true' || argv.clean === true
+    /** Default to clean services and data */
+    const clean = argv.clean !== 'false' || argv.clean !== false
 
     /** Set execution environment */
     const execution = argv.execution === 'ganache' ? 'ganache' : 'hardhat'
@@ -62,7 +62,6 @@ void async function () {
 
     if (clean) {
         await $`npm run clean --workspace @casimir/ethereum`
-        await $`npm run clean --workspace @casimir/dkg`
     }
     
     /** Set 12-second interval mining for dev networks */

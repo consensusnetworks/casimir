@@ -1,4 +1,4 @@
-import { fetchRetry, run, runSync } from '@casimir/helpers'
+import { fetchRetry, run } from '@casimir/helpers'
 
 const resourcePath = 'scripts/resources/rockx-dkg-cli'
 
