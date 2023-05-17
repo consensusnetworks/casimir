@@ -199,6 +199,8 @@ export default function useWallet() {
     } as LoginCredentials
     if (ethersProviderList.includes(selectedProvider.value)) {
       return await loginWithEthers(loginCredentials)
+    } else if (selectedProvider.value === 'BraveWallet') {
+      return await loginWithBraveWallet(loginCredentials)
     } else if (selectedProvider.value === 'Ledger') {
       return await loginWithLedger(loginCredentials, selectedPathIndex.value)
     } else if (selectedProvider.value === 'Trezor') {
