@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import useBraveWallet from '@/composables/braveWallet'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useSolana from '@/composables/solana'
@@ -37,6 +38,7 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
+  const { getBraveAddressWithBalance, loginWithBraveWallet } = useBraveWallet()
   const { estimateEIP1559GasFee, ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
@@ -321,6 +323,10 @@ export default function useWallet() {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
         setUserAddresses(ethersAddresses)
+      } else if (provider ==='BraveWallet') {
+        setSelectedProvider(provider)
+        const braveAddresses = await getBraveAddressWithBalance() as CryptoAddress[]
+        setUserAddresses(braveAddresses)
       } else if (provider === 'Ledger') {
         setSelectedProvider(provider)
         const ledgerAddresses = await getLedgerAddress[currency]() as CryptoAddress[]

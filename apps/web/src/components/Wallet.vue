@@ -6,10 +6,16 @@
         Select MetaMask
       </button>
       <button
+        class="brave-btn"
+        @click="selectProvider('BraveWallet')"
+      >
+        Select Brave Wallet
+      </button>
+      <button
         class="coinbase-btn"
         @click="selectProvider('CoinbaseWallet')"
       >
-        Select CoinbaseWallet
+        Select Coinbase Wallet
       </button>
       <button
         class="ledger-btn"
@@ -292,6 +298,10 @@ button {
   margin-top: 1rem;
   margin-bottom: 1rem;
   width: 750px;
+}
+
+.brave-btn {
+  background-color: rgb(228, 169, 123);
 }
 
 .coinbase-btn {
