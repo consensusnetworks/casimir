@@ -118,25 +118,6 @@ export default function useEthers() {
     }
   }
 
-  async function getTrustWalletAddressWithBalance() {
-    const trustWalletProvider = detectTrustWalletAndGetProvider()
-    if (trustWalletProvider) {
-      const address = (await requestEthersAccount(trustWalletProvider))[0]
-      const balance = await getEthersBalance(address)
-      return [{ address, balance }]
-    }
-  }
-
-  function detectTrustWalletAndGetProvider() {
-    const { ethereum } = window
-    const providers = ethereum?.providers
-    if (providers) {
-      for (const provider of providers) {
-        if (provider.isTrustWallet) return provider
-      }
-    }
-  }
-
   async function getEthersBalance(address: string, ) {
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     const balance = await provider.getBalance(address)
@@ -277,8 +258,8 @@ export default function useEthers() {
     getEthersBrowserSigner,
     getEthersBrowserProviderSelectedCurrency,
     getGasPriceAndLimit,
-    getTrustWalletAddressWithBalance,
     loginWithEthers,
+    requestEthersAccount,
     signEthersMessage,
     sendEthersTransaction,
     switchEthersNetwork

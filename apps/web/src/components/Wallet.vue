@@ -2,12 +2,6 @@
   <div>
     <h5>Connect Wallet to Log In or Add Account</h5>
     <div>
-      <button
-        class="trust-btn"
-        @click="selectProvider('TrustWallet')"
-      >
-        Select Trust Wallet
-      </button>
       <button @click="selectProvider('MetaMask')">
         Select MetaMask
       </button>
@@ -28,6 +22,12 @@
         @click="selectProvider('Trezor')"
       >
         Select Trezor
+      </button>
+      <button
+        class="trust-btn"
+        @click="selectProvider('TrustWallet')"
+      >
+        Select Trust Wallet
       </button>
       <button
         class="wallet-connect-btn"

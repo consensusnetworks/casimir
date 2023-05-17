@@ -1,10 +1,11 @@
 import { ref } from 'vue'
-import useLedger from '@/composables/ledger'
-import useTrezor from '@/composables/trezor'
 import useEthers from '@/composables/ethers'
-import useWalletConnect from '@/composables/walletConnect'
+import useLedger from '@/composables/ledger'
 import useSolana from '@/composables/solana'
+import useTrezor from '@/composables/trezor'
+import useTrustWallet from '@/composables/trustWallet'
 import useUsers from '@/composables/users'
+import useWalletConnect from '@/composables/walletConnect'
 import { Account, CryptoAddress, Currency, ProviderString, LoginCredentials} from '@casimir/types'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
 import * as Session from 'supertokens-web-js/recipe/session'
@@ -36,12 +37,13 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
-  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, getTrustWalletAddressWithBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
-  const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
+  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
-  const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
+  const { getTrustWalletAddressWithBalance, loginWithTrustWallet } = useTrustWallet()
   const { user, getUser, setUser, addAccount, checkIfSecondaryAddress, checkIfPrimaryByAddress, removeAccount, updatePrimaryAddress } = useUsers()
+  const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
     if (provider === 'Ledger') {
@@ -199,6 +201,8 @@ export default function useWallet() {
       return await loginWithLedger(loginCredentials, selectedPathIndex.value)
     } else if (selectedProvider.value === 'Trezor') {
       return await loginWithTrezor(loginCredentials, selectedPathIndex.value)
+    } else if (selectedProvider.value === 'TrustWallet') {
+      return await loginWithTrustWallet(loginCredentials)
     } else if (selectedProvider.value === 'WalletConnect'){
       return await loginWithWalletConnect(loginCredentials)
     } else {
