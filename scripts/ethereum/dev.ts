@@ -59,10 +59,6 @@ void async function () {
         process.env.ETHEREUM_FORKING_URL = url
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' ethereum fork at ') + chalk.bgBlue(url))
     }
-
-    if (clean) {
-        await $`npm run clean --workspace @casimir/ethereum`
-    }
     
     /** Set 12-second interval mining for dev networks */
     process.env.MINING_INTERVAL = '12'
