@@ -64,7 +64,7 @@ const compilerSettings = {
     runs: 1
   }
 }
-const compilerVersions = ['0.8.16']
+const compilerVersions = ['0.8.18']
 const externalCompilerVersions = ['0.4.22', '0.4.24', '0.6.6', '0.6.11', '0.8.4']
 const compilers = [...compilerVersions, ...externalCompilerVersions].map(version => ({ version, settings: compilerSettings }))
 

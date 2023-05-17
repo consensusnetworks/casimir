@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+// SPDX-License-Identifier: Apache
+pragma solidity 0.8.18;
 
 interface ICasimirManager {
     /***********/

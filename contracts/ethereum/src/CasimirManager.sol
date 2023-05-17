@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.16;
+// SPDX-License-Identifier: Apache
+pragma solidity 0.8.18;
 
 import "./CasimirUpkeep.sol";
 import "./interfaces/ICasimirManager.sol";
@@ -532,7 +532,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         validatorPublicKeys.remove(validatorIndex);
         exitingValidatorCount--;
 
-        ssvNetwork.removeValidator(validatorPublicKey);
+        // ssvNetwork.removeValidator(validatorPublicKey);
 
         emit PoolExited(poolId);
     }

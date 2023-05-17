@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+// SPDX-License-Identifier: Apache
+pragma solidity 0.8.18;
 
 // 1. Handle exits, withdrawals, and clusters
 // 2. Pick between Functions, EA, and custom oracle
