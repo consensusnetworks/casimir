@@ -41,9 +41,9 @@ export default function useDB() {
      * @returns The new user
      */
     async function addUser(user: User, account: Account) : Promise<UserAddedSuccess | undefined> {
-        const { address, createdAt, updatedAt } = user
-        const text = 'INSERT INTO users (address, created_at, updated_at) VALUES ($1, $2, $3) RETURNING *;'
-        const params = [address, createdAt, updatedAt]
+        const { address, createdAt, updatedAt, walletProvider } = user
+        const text = 'INSERT INTO users (address, created_at, updated_at, wallet_provider) VALUES ($1, $2, $3, $4) RETURNING *;'
+        const params = [address, createdAt, updatedAt, walletProvider]
         const rows = await postgres.query(text, params)
         const addedUser = rows[0]
         account.userId = addedUser.id

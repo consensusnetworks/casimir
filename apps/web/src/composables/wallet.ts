@@ -296,6 +296,7 @@ export default function useWallet() {
     }
     
     const accountsIfSecondaryAddress : Account[] | void = await checkIfSecondaryAddress(selectedAddress.value)
+    console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
     if (accountsIfSecondaryAddress.length) {
       return accountsIfSecondaryAddress
     } else {

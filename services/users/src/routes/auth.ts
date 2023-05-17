@@ -56,6 +56,7 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
                     address,
                     createdAt: now,
                     updatedAt: now,
+                    walletProvider: provider,
                 } as User
                 const account = {
                     address,
@@ -107,9 +108,11 @@ router.post('/check-secondary-address', async (req: express.Request, res: expres
         const users = await Promise.all(accounts.map(async account => {
             const { userId } = account
             const user = await getUserById(userId)
-            // TODO: Update users schema to include walletProvider
-            const { address } = user
-            return { address: maskAddress(address) }
+            const { address, walletProvider } = user
+            return { 
+                address: maskAddress(address),
+                walletProvider,
+            }
         }))
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
