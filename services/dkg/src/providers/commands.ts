@@ -1,18 +1,24 @@
 import { ethers } from 'ethers'
 import { DKG } from './dkg'
 import { CommandOptions } from '../interfaces/CommandOptions'
+import fs from 'fs'
 
 export async function initiatePoolDepositCommand(options: CommandOptions) {
     const { manager, signer, cliPath, messengerUrl } = options
     const newOperatorGroup = [1, 2, 3, 4] // Todo get new group here
     const ssv = new DKG({ cliPath, messengerUrl })
     const validator = await ssv.createValidator({ operatorIds: newOperatorGroup, withdrawalAddress: manager.address })
+    
+    // Save validator for mocks
+    const validators = JSON.parse(fs.readFileSync('./scripts/.out/validators.json', 'utf8'))
+    validators[Date.now()] = validator
+    fs.writeFileSync('./scripts/.out/validators.json', JSON.stringify(validators, null, 4))
+    
     const {
         depositDataRoot,
         publicKey,
         operatorIds,
-        sharesEncrypted,
-        sharesPublicKeys,
+        shares,
         signature,
         withdrawalCredentials
     } = validator
@@ -20,13 +26,12 @@ export async function initiatePoolDepositCommand(options: CommandOptions) {
         depositDataRoot,
         publicKey,
         operatorIds,
-        sharesEncrypted,
-        sharesPublicKeys,
+        shares,
         signature,
         withdrawalCredentials,
         ethers.utils.parseEther('0.1') // Mock fee amount estimate ~ 10 SSV
     )
-    await initiatePoolDeposit.wait()
+    return await initiatePoolDeposit.wait()
 }
 
 export async function initiatePoolReshareCommand(options: CommandOptions) {

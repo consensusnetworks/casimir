@@ -20,8 +20,7 @@ interface ICasimirManager {
         bytes32 depositDataRoot;
         bytes publicKey;
         uint32[] operatorIds;
-        bytes[] sharesEncrypted;
-        bytes[] sharesPublicKeys;
+        bytes shares;
         bytes signature;
         bytes withdrawalCredentials;
     }
@@ -78,8 +77,7 @@ interface ICasimirManager {
         bytes32 depositDataRoot,
         bytes calldata publicKey,
         uint32[] memory operatorIds,
-        bytes[] memory sharesEncrypted,
-        bytes[] memory sharesPublicKeys,
+        bytes memory shares,
         bytes calldata signature,
         bytes calldata withdrawalCredentials,
         uint256 feeAmount

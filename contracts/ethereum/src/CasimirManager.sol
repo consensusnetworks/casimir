@@ -389,8 +389,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param depositDataRoot The deposit data root
      * @param publicKey The validator public key
      * @param operatorIds The operator IDs
-     * @param sharesEncrypted The encrypted shares
-     * @param sharesPublicKeys The public keys of the shares
+     * @param shares The operator shares
      * @param signature The signature
      * @param withdrawalCredentials The withdrawal credentials
      * @param feeAmount The fee amount
@@ -399,8 +398,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bytes32 depositDataRoot,
         bytes calldata publicKey,
         uint32[] memory operatorIds,
-        bytes[] memory sharesEncrypted,
-        bytes[] memory sharesPublicKeys,
+        bytes memory shares,
         bytes calldata signature,
         bytes calldata withdrawalCredentials,
         uint256 feeAmount
@@ -424,8 +422,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         pool.depositDataRoot = depositDataRoot;
         pool.publicKey = publicKey;
         pool.operatorIds = operatorIds;
-        pool.sharesEncrypted = sharesEncrypted;
-        pool.sharesPublicKeys = sharesPublicKeys;
+        pool.shares = shares;
         pool.signature = signature;
         pool.withdrawalCredentials = withdrawalCredentials;
         readyPoolIds.remove(0);
@@ -549,14 +546,12 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Reshare a given pool's validator
      * @param poolId The pool ID
      * @param operatorIds The operator IDs
-     * @param sharesEncrypted The encrypted shares
-     * @param sharesPublicKeys The public keys of the shares
+     * @param shares The operator shares
      */
     function resharePool(
         uint32 poolId,
         uint32[] memory operatorIds,
-        bytes[] memory sharesEncrypted,
-        bytes[] memory sharesPublicKeys
+        bytes memory shares
     ) external {
         require(
             msg.sender == dkgOracleAddress, 
@@ -570,8 +565,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
 
         pool.operatorIds = operatorIds;
-        pool.sharesEncrypted = sharesEncrypted;
-        pool.sharesPublicKeys = sharesPublicKeys;
+        pool.shares = shares;
         pool.reshareCount++;
 
         emit PoolReshared(poolId);

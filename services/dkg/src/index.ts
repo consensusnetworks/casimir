@@ -16,6 +16,8 @@ const eventEmitter = getEventEmitter({ manager, events: Object.keys(commands) })
     for await (const event of eventEmitter) {
         const [ id, details ] = event
 
+        console.log(`Received ${details.event} event for pool ${id}`)
+
         const command = commands[details.event as keyof typeof commands]
         if (!command) throw new Error(`No command found for event ${details.event}`)
 

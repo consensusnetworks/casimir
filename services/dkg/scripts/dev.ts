@@ -5,7 +5,7 @@ const resourcePath = 'scripts/resources/rockx-dkg-cli'
 void async function () {
     process.env.CLI_PATH = `./${resourcePath}/build/bin/rockx-dkg-cli`
     process.env.MESSENGER_SRV_ADDR = 'http://0.0.0.0:3000'
-    process.env.USE_HARDCODED_OPERATORS ='true'
+    process.env.USE_HARDCODED_OPERATORS = 'true'
 
     /** Build and check if the CLI is available */
     await run(`make -C ${resourcePath} build`)

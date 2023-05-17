@@ -12,8 +12,7 @@ export async function initiatePoolDeposit({ manager, signer, index }: { manager:
         depositDataRoot,
         publicKey,
         operatorIds,
-        sharesEncrypted,
-        sharesPublicKeys,
+        shares,
         signature,
         withdrawalCredentials
     } = mockValidators[index]
@@ -21,8 +20,7 @@ export async function initiatePoolDeposit({ manager, signer, index }: { manager:
         depositDataRoot,
         publicKey,
         operatorIds,
-        sharesEncrypted,
-        sharesPublicKeys,
+        shares,
         signature,
         withdrawalCredentials,
         ethers.utils.parseEther(mockFee.toString()) // Mock fee amount estimate ~ 10 SSV

@@ -1,7 +1,6 @@
 import fs from 'fs'
 import { KeyGenerationInput } from '../interfaces/KeyGenerationInput'
 import { DepositData } from '../interfaces/DepositData'
-import { Shares } from '../interfaces/Shares'
 import { DKGOptions } from '../interfaces/DKGOptions'
 import { ReshareInput } from '../interfaces/ReshareInput'
 import { getWithdrawalCredentials, runSync } from '@casimir/helpers'
@@ -43,20 +42,17 @@ export class DKG {
         await new Promise(resolve => setTimeout(resolve, 2000))
 
         /** Get operator key shares */
-        const { encryptedKeys, publicKeys } = await this.getShares(ceremonyId)
+        const shares = await this.getShares(ceremonyId)
 
         /** Get validator deposit data */
         const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData(ceremonyId, withdrawalAddress)
-
-        console.log('VALIDATOR PK', publicKey)
 
         /** Create validator */
         const validator: Validator = {
             depositDataRoot,
             publicKey,
             operatorIds, 
-            sharesEncrypted: encryptedKeys,
-            sharesPublicKeys: publicKeys,
+            shares,
             signature,
             withdrawalCredentials
         }
@@ -89,7 +85,7 @@ export class DKG {
         console.log(`Started ceremony with ID ${ceremonyId}`)
 
         /** Get operator key shares */
-        const { encryptedKeys, publicKeys } = await this.getShares(ceremonyId)
+        const shares = await this.getShares(ceremonyId)
 
         /** Get validator deposit data */
         const { depositDataRoot, signature, withdrawalCredentials } = await this.getDepositData(ceremonyId, withdrawalAddress)
@@ -99,8 +95,7 @@ export class DKG {
             depositDataRoot,
             publicKey,
             operatorIds, 
-            sharesEncrypted: encryptedKeys,
-            sharesPublicKeys: publicKeys,
+            shares,
             signature,
             withdrawalCredentials
         }
@@ -205,18 +200,14 @@ export class DKG {
      * //     publicKeys: ["0x000000...", ...]
      * // }
      */
-    async getShares(ceremonyId: string): Promise<Shares> {
+    async getShares(ceremonyId: string): Promise<string> {
         const requestIdFlag = `--request-id ${ceremonyId}`
         const command = `${this.cliPath} get-keyshares ${requestIdFlag}`
         const getShares = runSync(`${command}`).toString().trim() as string
         const sharesFile = getShares.split(' ').pop() as string
         const sharesJSON = JSON.parse(fs.readFileSync(`${sharesFile}`, 'utf8'))
         fs.rmSync(sharesFile)
-        return {
-            encryptedKeys: sharesJSON.data.shares.encryptedKeys.map((key: string) => '0x' + key),
-            publicKeys: sharesJSON.data.shares.publicKeys
-        }
-
+        return sharesJSON.payload.readable.shares
     }
 
     /**

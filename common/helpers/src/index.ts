@@ -217,11 +217,8 @@ export async function getFutureContractAddress({ wallet, nonce, index }: {
     nonce: number, 
     index?: number 
 }): Promise<string> {
-
-    console.log(`Wallet Address: ${wallet.address}`)
-    console.log(`Current Nonce: ${nonce}`)
-
-    const futureAddress = ethers.utils.getContractAddress({ from: wallet.address, nonce: nonce + (index || 0) })
-    console.log(`Predicted Contract Address: ${futureAddress}`)
-    return futureAddress
+    return ethers.utils.getContractAddress({ 
+        from: wallet.address, 
+        nonce: nonce + (index || 0) 
+    })
 }
