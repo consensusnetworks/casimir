@@ -5,7 +5,7 @@ import useEthers from '../providers/ethers'
 import { Account, User } from '@casimir/types'
 
 const { verifyMessageSignature } = useEthers()
-const { addUser, getAccounts, getNonce, getUser, upsertNonce } = useDB()
+const { addUser, getAccounts, getNonce, getUser, getUserById, upsertNonce } = useDB()
 const router = express.Router()
 
 router.post('/nonce', async (req: express.Request, res: express.Response) => {
@@ -103,12 +103,19 @@ router.post('/check-secondary-address', async (req: express.Request, res: expres
     try {
         const { body } = req
         const { address } = body
-        const accounts = maskAddresses(await getAccounts(address))
+        const accounts = await getAccounts(address)
+        const users = await Promise.all(accounts.map(async account => {
+            const { userId } = account
+            const user = await getUserById(userId)
+            // TODO: Update users schema to include walletProvider
+            const { address } = user
+            return { address: maskAddress(address) }
+        }))
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
             error: false,
-            accounts
+            users
         })
     } catch (error) {
         res.setHeader('Content-Type', 'application/json')
@@ -138,15 +145,8 @@ router.post('/get-user-by-address', async (req: express.Request, res: express.Re
     }
 })
 
-function maskAddresses(accounts: Account[]) {
-    return accounts.map(account => {
-        const { address, currency, walletProvider } = account
-        return {
-            address: address.slice(0, 6) + '...' + address.slice(-4),
-            currency,
-            walletProvider
-        }
-    })
+function maskAddress(address: string) {
+    return address.slice(0, 6) + '...' + address.slice(-4)
 }
 
 function parseDomain(msg: string) {

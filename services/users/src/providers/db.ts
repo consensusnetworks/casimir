@@ -107,6 +107,21 @@ export default function useDB() {
     }
 
     /**
+     * Get a user by id.
+     * @param id - The user's id
+     * @returns The user if found, otherwise undefined
+     * @throws Error if the user is not found
+     */
+    async function getUserById(id: string) {
+        const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.id = $1 GROUP BY u.id'
+        const params = [id]
+        const rows = await postgres.query(text, params)
+        const user = rows[0]
+        if (!user) throw new Error('User not found')
+        return formatResult(user) as User
+    }
+
+    /**
      * Remove an account.
      * @param address - The account's address (pk)
      * @param ownerAddress - The account's owner address
@@ -200,7 +215,8 @@ export default function useDB() {
         addUser, 
         getAccounts,
         getNonce, 
-        getUser, 
+        getUser,
+        getUserById,
         removeAccount, 
         updateUserAddress, 
         upsertNonce 

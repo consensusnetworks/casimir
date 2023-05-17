@@ -53,8 +53,8 @@ export default function useUsers () {
             }
             const response = await fetch(`${usersBaseURL}/auth/check-secondary-address`, requestOptions)
             const json = await response.json()
-            const { accounts } = json
-            return accounts
+            const { users } = json
+            return users
         } catch (error) {
             console.log('Error in checkIfSecondaryAddress in wallet.ts :>> ', error)
             return [] as Account[]
