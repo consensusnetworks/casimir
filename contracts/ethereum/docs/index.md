@@ -1341,6 +1341,816 @@ Query the current deposit count.
 | ---- | ---- | ----------- |
 | [0] | bytes | The deposit count encoded as a little endian 64-bit number. |
 
+## ISSVNetwork
+
+### OperatorAdded
+
+```solidity
+event OperatorAdded(uint64 operatorId, address owner, bytes publicKey, uint256 fee)
+```
+
+_Emitted when a new operator has been added._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | operator's ID. |
+| owner | address | Operator's ethereum address that can collect fees. |
+| publicKey | bytes | Operator's public key. Will be used to encrypt secret shares of validators keys. |
+| fee | uint256 | Operator's fee. |
+
+### OperatorRemoved
+
+```solidity
+event OperatorRemoved(uint64 operatorId)
+```
+
+_Emitted when operator has been removed._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | operator's ID. |
+
+### OperatorWhitelistUpdated
+
+```solidity
+event OperatorWhitelistUpdated(uint64 operatorId, address whitelisted)
+```
+
+_Emitted when the whitelist of an operator is updated._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | operator's ID. |
+| whitelisted | address | operator's new whitelisted address. |
+
+### ValidatorAdded
+
+```solidity
+event ValidatorAdded(address owner, uint64[] operatorIds, bytes publicKey, bytes shares, struct ISSVNetworkCore.Cluster cluster)
+```
+
+_Emitted when the validator has been added._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address |  |
+| operatorIds | uint64[] | The operator ids list. |
+| publicKey | bytes | The public key of a validator. |
+| shares | bytes | snappy compressed shares(a set of encrypted and public shares). |
+| cluster | struct ISSVNetworkCore.Cluster | All the cluster data. |
+
+### ValidatorRemoved
+
+```solidity
+event ValidatorRemoved(address owner, uint64[] operatorIds, bytes publicKey, struct ISSVNetworkCore.Cluster cluster)
+```
+
+_Emitted when the validator is removed._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address |  |
+| operatorIds | uint64[] | The operator ids list. |
+| publicKey | bytes | The public key of a validator. |
+| cluster | struct ISSVNetworkCore.Cluster | All the cluster data. |
+
+### OperatorFeeDeclared
+
+```solidity
+event OperatorFeeDeclared(address owner, uint64 operatorId, uint256 blockNumber, uint256 fee)
+```
+
+### OperatorFeeCancellationDeclared
+
+```solidity
+event OperatorFeeCancellationDeclared(address owner, uint64 operatorId)
+```
+
+### OperatorFeeExecuted
+
+```solidity
+event OperatorFeeExecuted(address owner, uint64 operatorId, uint256 blockNumber, uint256 fee)
+```
+
+_Emitted when an operator's fee is updated._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | Operator's owner. |
+| operatorId | uint64 |  |
+| blockNumber | uint256 | from which block number. |
+| fee | uint256 | updated fee value. |
+
+### ClusterLiquidated
+
+```solidity
+event ClusterLiquidated(address owner, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster)
+```
+
+### ClusterReactivated
+
+```solidity
+event ClusterReactivated(address owner, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster)
+```
+
+### OperatorFeeIncreaseLimitUpdated
+
+```solidity
+event OperatorFeeIncreaseLimitUpdated(uint64 value)
+```
+
+### DeclareOperatorFeePeriodUpdated
+
+```solidity
+event DeclareOperatorFeePeriodUpdated(uint64 value)
+```
+
+### ExecuteOperatorFeePeriodUpdated
+
+```solidity
+event ExecuteOperatorFeePeriodUpdated(uint64 value)
+```
+
+### LiquidationThresholdPeriodUpdated
+
+```solidity
+event LiquidationThresholdPeriodUpdated(uint64 value)
+```
+
+### MinimumLiquidationCollateralUpdated
+
+```solidity
+event MinimumLiquidationCollateralUpdated(uint256 value)
+```
+
+### NetworkFeeUpdated
+
+```solidity
+event NetworkFeeUpdated(uint256 oldFee, uint256 newFee)
+```
+
+_Emitted when the network fee is updated._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| oldFee | uint256 | The old fee |
+| newFee | uint256 | The new fee |
+
+### NetworkEarningsWithdrawn
+
+```solidity
+event NetworkEarningsWithdrawn(uint256 value, address recipient)
+```
+
+_Emitted when transfer fees are withdrawn._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| value | uint256 | The amount of tokens withdrawn. |
+| recipient | address | The recipient address. |
+
+### ClusterWithdrawn
+
+```solidity
+event ClusterWithdrawn(address owner, uint64[] operatorIds, uint256 value, struct ISSVNetworkCore.Cluster cluster)
+```
+
+### OperatorWithdrawn
+
+```solidity
+event OperatorWithdrawn(address owner, uint64 operatorId, uint256 value)
+```
+
+### ClusterDeposited
+
+```solidity
+event ClusterDeposited(address owner, uint64[] operatorIds, uint256 value, struct ISSVNetworkCore.Cluster cluster)
+```
+
+### FeeRecipientAddressUpdated
+
+```solidity
+event FeeRecipientAddressUpdated(address owner, address recipientAddress)
+```
+
+### initialize
+
+```solidity
+function initialize(string initialVersion_, contract IERC20 token_, uint64 operatorMaxFeeIncrease_, uint64 declareOperatorFeePeriod_, uint64 executeOperatorFeePeriod_, uint64 minimumBlocksBeforeLiquidation_, uint256 minimumLiquidationCollateral_, uint32 validatorsPerOperatorLimit_) external
+```
+
+_Initializes the contract._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| initialVersion_ | string |  |
+| token_ | contract IERC20 | The network token. |
+| operatorMaxFeeIncrease_ | uint64 | The step limit to increase the operator fee |
+| declareOperatorFeePeriod_ | uint64 | The period an operator needs to wait before they can approve their fee. |
+| executeOperatorFeePeriod_ | uint64 | The length of the period in which an operator can approve their fee. |
+| minimumBlocksBeforeLiquidation_ | uint64 |  |
+| minimumLiquidationCollateral_ | uint256 |  |
+| validatorsPerOperatorLimit_ | uint32 |  |
+
+### registerOperator
+
+```solidity
+function registerOperator(bytes publicKey, uint256 fee) external returns (uint64)
+```
+
+_Registers a new operator._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| publicKey | bytes | Operator's public key. Used to encrypt secret shares of validators keys. |
+| fee | uint256 | operator's fee. When fee is set to zero (mostly for private operators), it can not be increased. |
+
+### removeOperator
+
+```solidity
+function removeOperator(uint64 operatorId) external
+```
+
+_Removes an operator._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | Operator's id. |
+
+### setOperatorWhitelist
+
+```solidity
+function setOperatorWhitelist(uint64 operatorId, address whitelisted) external
+```
+
+### declareOperatorFee
+
+```solidity
+function declareOperatorFee(uint64 operatorId, uint256 fee) external
+```
+
+### executeOperatorFee
+
+```solidity
+function executeOperatorFee(uint64 operatorId) external
+```
+
+### cancelDeclaredOperatorFee
+
+```solidity
+function cancelDeclaredOperatorFee(uint64 operatorId) external
+```
+
+### reduceOperatorFee
+
+```solidity
+function reduceOperatorFee(uint64 operatorId, uint256 fee) external
+```
+
+### setFeeRecipientAddress
+
+```solidity
+function setFeeRecipientAddress(address feeRecipientAddress) external
+```
+
+### registerValidator
+
+```solidity
+function registerValidator(bytes publicKey, uint64[] operatorIds, bytes shares, uint256 amount, struct ISSVNetworkCore.Cluster cluster) external
+```
+
+### removeValidator
+
+```solidity
+function removeValidator(bytes publicKey, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster) external
+```
+
+### liquidate
+
+```solidity
+function liquidate(address owner, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster) external
+```
+
+### reactivate
+
+```solidity
+function reactivate(uint64[] operatorIds, uint256 amount, struct ISSVNetworkCore.Cluster cluster) external
+```
+
+### deposit
+
+```solidity
+function deposit(address owner, uint64[] operatorIds, uint256 amount, struct ISSVNetworkCore.Cluster cluster) external
+```
+
+### withdrawOperatorEarnings
+
+```solidity
+function withdrawOperatorEarnings(uint64 operatorId, uint256 tokenAmount) external
+```
+
+### withdrawOperatorEarnings
+
+```solidity
+function withdrawOperatorEarnings(uint64 operatorId) external
+```
+
+### withdraw
+
+```solidity
+function withdraw(uint64[] operatorIds, uint256 tokenAmount, struct ISSVNetworkCore.Cluster cluster) external
+```
+
+### updateNetworkFee
+
+```solidity
+function updateNetworkFee(uint256 fee) external
+```
+
+### withdrawNetworkEarnings
+
+```solidity
+function withdrawNetworkEarnings(uint256 amount) external
+```
+
+### updateOperatorFeeIncreaseLimit
+
+```solidity
+function updateOperatorFeeIncreaseLimit(uint64 newOperatorMaxFeeIncrease) external
+```
+
+### updateDeclareOperatorFeePeriod
+
+```solidity
+function updateDeclareOperatorFeePeriod(uint64 newDeclareOperatorFeePeriod) external
+```
+
+### updateExecuteOperatorFeePeriod
+
+```solidity
+function updateExecuteOperatorFeePeriod(uint64 newExecuteOperatorFeePeriod) external
+```
+
+### updateLiquidationThresholdPeriod
+
+```solidity
+function updateLiquidationThresholdPeriod(uint64 blocks) external
+```
+
+### updateMinimumLiquidationCollateral
+
+```solidity
+function updateMinimumLiquidationCollateral(uint256 amount) external
+```
+
+### validatorPKs
+
+```solidity
+function validatorPKs(bytes32 validatorId) external view returns (address owner, bool active)
+```
+
+### clusters
+
+```solidity
+function clusters(bytes32 clusterId) external view returns (bytes32 clusterData)
+```
+
+### operators
+
+```solidity
+function operators(uint64 operatorId) external view returns (address operatorOwner, uint64 fee, uint32 validatorCount, struct ISSVNetworkCore.Snapshot snapshot)
+```
+
+### operatorFeeChangeRequests
+
+```solidity
+function operatorFeeChangeRequests(uint64 operatorId) external view returns (uint64 fee, uint64 approvalBeginTime, uint64 approvalEndTime)
+```
+
+### operatorsWhitelist
+
+```solidity
+function operatorsWhitelist(uint64 operatorId) external view returns (address whitelisted)
+```
+
+### network
+
+```solidity
+function network() external view returns (uint64 networkFee, uint64 networkFeeIndex, uint64 networkFeeIndexBlockNumber)
+```
+
+### dao
+
+```solidity
+function dao() external view returns (uint32 validatorCount, uint64 balance, uint64 block)
+```
+
+### minimumBlocksBeforeLiquidation
+
+```solidity
+function minimumBlocksBeforeLiquidation() external view returns (uint64)
+```
+
+### minimumLiquidationCollateral
+
+```solidity
+function minimumLiquidationCollateral() external view returns (uint64)
+```
+
+### operatorMaxFeeIncrease
+
+```solidity
+function operatorMaxFeeIncrease() external view returns (uint64)
+```
+
+### executeOperatorFeePeriod
+
+```solidity
+function executeOperatorFeePeriod() external view returns (uint64)
+```
+
+### declareOperatorFeePeriod
+
+```solidity
+function declareOperatorFeePeriod() external view returns (uint64)
+```
+
+### version
+
+```solidity
+function version() external view returns (bytes32)
+```
+
+## ISSVNetworkCore
+
+### Validator
+
+```solidity
+struct Validator {
+  address owner;
+  bool active;
+}
+```
+
+### Snapshot
+
+```solidity
+struct Snapshot {
+  uint64 block;
+  uint64 index;
+  uint64 balance;
+}
+```
+
+### Operator
+
+```solidity
+struct Operator {
+  address owner;
+  uint64 fee;
+  uint32 validatorCount;
+  struct ISSVNetworkCore.Snapshot snapshot;
+}
+```
+
+### OperatorFeeChangeRequest
+
+```solidity
+struct OperatorFeeChangeRequest {
+  uint64 fee;
+  uint64 approvalBeginTime;
+  uint64 approvalEndTime;
+}
+```
+
+### Cluster
+
+```solidity
+struct Cluster {
+  uint32 validatorCount;
+  uint64 networkFeeIndex;
+  uint64 index;
+  bool active;
+  uint256 balance;
+}
+```
+
+### DAO
+
+```solidity
+struct DAO {
+  uint32 validatorCount;
+  uint64 balance;
+  uint64 block;
+}
+```
+
+### Network
+
+```solidity
+struct Network {
+  uint64 networkFee;
+  uint64 networkFeeIndex;
+  uint64 networkFeeIndexBlockNumber;
+}
+```
+
+### CallerNotOwner
+
+```solidity
+error CallerNotOwner()
+```
+
+### CallerNotWhitelisted
+
+```solidity
+error CallerNotWhitelisted()
+```
+
+### FeeTooLow
+
+```solidity
+error FeeTooLow()
+```
+
+### FeeExceedsIncreaseLimit
+
+```solidity
+error FeeExceedsIncreaseLimit()
+```
+
+### NoFeeDeclared
+
+```solidity
+error NoFeeDeclared()
+```
+
+### ApprovalNotWithinTimeframe
+
+```solidity
+error ApprovalNotWithinTimeframe()
+```
+
+### OperatorDoesNotExist
+
+```solidity
+error OperatorDoesNotExist()
+```
+
+### InsufficientBalance
+
+```solidity
+error InsufficientBalance()
+```
+
+### ValidatorAlreadyExists
+
+```solidity
+error ValidatorAlreadyExists()
+```
+
+### ValidatorDoesNotExist
+
+```solidity
+error ValidatorDoesNotExist()
+```
+
+### ClusterNotLiquidatable
+
+```solidity
+error ClusterNotLiquidatable()
+```
+
+### InvalidPublicKeyLength
+
+```solidity
+error InvalidPublicKeyLength()
+```
+
+### InvalidOperatorIdsLength
+
+```solidity
+error InvalidOperatorIdsLength()
+```
+
+### ValidatorOwnedByOtherAddress
+
+```solidity
+error ValidatorOwnedByOtherAddress()
+```
+
+### ClusterAlreadyEnabled
+
+```solidity
+error ClusterAlreadyEnabled()
+```
+
+### ClusterIsLiquidated
+
+```solidity
+error ClusterIsLiquidated()
+```
+
+### ClusterDoesNotExists
+
+```solidity
+error ClusterDoesNotExists()
+```
+
+### IncorrectClusterState
+
+```solidity
+error IncorrectClusterState()
+```
+
+### UnsortedOperatorsList
+
+```solidity
+error UnsortedOperatorsList()
+```
+
+### NewBlockPeriodIsBelowMinimum
+
+```solidity
+error NewBlockPeriodIsBelowMinimum()
+```
+
+### ExceedValidatorLimit
+
+```solidity
+error ExceedValidatorLimit()
+```
+
+### TokenTransferFailed
+
+```solidity
+error TokenTransferFailed()
+```
+
+### SameFeeChangeNotAllowed
+
+```solidity
+error SameFeeChangeNotAllowed()
+```
+
+### FeeIncreaseNotAllowed
+
+```solidity
+error FeeIncreaseNotAllowed()
+```
+
+### NotAuthorized
+
+```solidity
+error NotAuthorized()
+```
+
+### OperatorsListNotUnique
+
+```solidity
+error OperatorsListNotUnique()
+```
+
+### OperatorAlreadyExists
+
+```solidity
+error OperatorAlreadyExists()
+```
+
+## ISSVNetworkViews
+
+### initialize
+
+```solidity
+function initialize(contract ISSVNetwork ssvNetwork_) external
+```
+
+_Initializes the contract._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| ssvNetwork_ | contract ISSVNetwork | The SSVNetwork contract. |
+
+### getValidator
+
+```solidity
+function getValidator(bytes publicKey) external returns (address, bool)
+```
+
+### getOperatorFee
+
+```solidity
+function getOperatorFee(uint64 operatorId) external returns (uint256)
+```
+
+### getOperatorDeclaredFee
+
+```solidity
+function getOperatorDeclaredFee(uint64 operatorId) external returns (uint256, uint256, uint256)
+```
+
+### getOperatorById
+
+```solidity
+function getOperatorById(uint64 operatorId) external view returns (address owner, uint256 fee, uint32 validatorCount, bool isPrivate, bool active)
+```
+
+### isLiquidatable
+
+```solidity
+function isLiquidatable(address owner, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster) external returns (bool)
+```
+
+### isLiquidated
+
+```solidity
+function isLiquidated(address owner, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster) external returns (bool)
+```
+
+### getBurnRate
+
+```solidity
+function getBurnRate(address owner, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster) external returns (uint256)
+```
+
+### getOperatorEarnings
+
+```solidity
+function getOperatorEarnings(uint64 operatorId) external returns (uint256)
+```
+
+### getBalance
+
+```solidity
+function getBalance(address owner, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster) external returns (uint256)
+```
+
+### getNetworkFee
+
+```solidity
+function getNetworkFee() external returns (uint256)
+```
+
+### getNetworkEarnings
+
+```solidity
+function getNetworkEarnings() external returns (uint256)
+```
+
+### getOperatorFeeIncreaseLimit
+
+```solidity
+function getOperatorFeeIncreaseLimit() external returns (uint64)
+```
+
+### getExecuteOperatorFeePeriod
+
+```solidity
+function getExecuteOperatorFeePeriod() external returns (uint64)
+```
+
+### getDeclaredOperatorFeePeriod
+
+```solidity
+function getDeclaredOperatorFeePeriod() external returns (uint64)
+```
+
+### getLiquidationThresholdPeriod
+
+```solidity
+function getLiquidationThresholdPeriod() external returns (uint64)
+```
+
+### getMinimumLiquidationCollateral
+
+```solidity
+function getMinimumLiquidationCollateral() external returns (uint256)
+```
+
 ## IWETH9
 
 ### deposit

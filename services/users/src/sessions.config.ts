@@ -10,7 +10,7 @@ export const SuperTokensBackendConfig: TypeInput = {
     appInfo: {
         appName: 'Casimir',
         apiDomain: 'http://localhost:4000',
-        websiteDomain: 'http://localhost:3000',
+        websiteDomain: 'http://localhost:3001',
     },
     recipeList: [
         Session.init(),
