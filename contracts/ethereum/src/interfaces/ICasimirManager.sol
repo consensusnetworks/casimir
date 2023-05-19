@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
+import "../vendor/interfaces/ISSVNetwork.sol";
+
 interface ICasimirManager {
     /***********/
     /* Structs */
@@ -19,7 +21,7 @@ interface ICasimirManager {
         uint256 reshareCount;
         bytes32 depositDataRoot;
         bytes publicKey;
-        uint32[] operatorIds;
+        uint64[] operatorIds;
         bytes shares;
         bytes signature;
         bytes withdrawalCredentials;
@@ -76,8 +78,9 @@ interface ICasimirManager {
     function initiatePoolDeposit(        
         bytes32 depositDataRoot,
         bytes calldata publicKey,
-        uint32[] memory operatorIds,
-        bytes memory shares,
+        uint64[] memory operatorIds,
+        bytes calldata shares,
+        ISSVNetworkCore.Cluster memory cluster,
         bytes calldata signature,
         bytes calldata withdrawalCredentials,
         uint256 feeAmount

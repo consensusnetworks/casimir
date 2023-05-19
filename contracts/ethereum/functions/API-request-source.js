@@ -28,11 +28,12 @@ function lpad(obj, str, num) {
     return repeat(str, num - obj.length) + obj
 }
 
+const getSweptRewards = "0x9d816764"
 const managerAddress = "0x07e05700cb4e946ba50244e27f01805354cd8ef0"
 // We want to get a string (not bytes) array of length of the number of validators
 // See PoR Address List
+
 const getValidatorPublicKeys = "0xeab1442e"
-const getSweptRewards = "0x9d816764"
 
 const getPublicKeys = await Functions.makeHttpRequest({
     url: 'http://localhost:8545',

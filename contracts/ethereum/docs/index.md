@@ -162,7 +162,7 @@ Complete a given count of pending withdrawals
 ### initiatePoolDeposit
 
 ```solidity
-function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials, uint256 feeAmount) external
+function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes shares, bytes signature, bytes withdrawalCredentials, uint256 feeAmount) external
 ```
 
 Initiate the next ready pool
@@ -174,8 +174,7 @@ Initiate the next ready pool
 | depositDataRoot | bytes32 | The deposit data root |
 | publicKey | bytes | The validator public key |
 | operatorIds | uint32[] | The operator IDs |
-| sharesEncrypted | bytes[] | The encrypted shares |
-| sharesPublicKeys | bytes[] | The public keys of the shares |
+| shares | bytes | The operator shares |
 | signature | bytes | The signature |
 | withdrawalCredentials | bytes | The withdrawal credentials |
 | feeAmount | uint256 | The fee amount |
@@ -226,7 +225,7 @@ Register an operator with the pool manager
 ### resharePool
 
 ```solidity
-function resharePool(uint32 poolId, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys) external
+function resharePool(uint32 poolId, uint32[] operatorIds, bytes shares) external
 ```
 
 Reshare a given pool's validator
@@ -237,8 +236,7 @@ Reshare a given pool's validator
 | ---- | ---- | ----------- |
 | poolId | uint32 | The pool ID |
 | operatorIds | uint32[] | The operator IDs |
-| sharesEncrypted | bytes[] | The encrypted shares |
-| sharesPublicKeys | bytes[] | The public keys of the shares |
+| shares | bytes | The operator shares |
 
 ### setFeePercents
 
@@ -816,8 +814,7 @@ struct Pool {
   bytes32 depositDataRoot;
   bytes publicKey;
   uint32[] operatorIds;
-  bytes[] sharesEncrypted;
-  bytes[] sharesPublicKeys;
+  bytes shares;
   bytes signature;
   bytes withdrawalCredentials;
 }
@@ -952,7 +949,7 @@ function completePendingWithdrawals(uint256 count) external
 ### initiatePoolDeposit
 
 ```solidity
-function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials, uint256 feeAmount) external
+function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes shares, bytes signature, bytes withdrawalCredentials, uint256 feeAmount) external
 ```
 
 ### requestPoolExits
@@ -1241,50 +1238,6 @@ _Send ETH to a user_
 | ---- | ---- | ----------- |
 | user | address | The user address |
 | amount | uint256 | The amount of stake to send |
-
-## MockFunctionsOracle
-
-### constructor
-
-```solidity
-constructor() public
-```
-
-### getRegistry
-
-```solidity
-function getRegistry() external view returns (address)
-```
-
-Returns the address of the registry contract
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | address The address of the registry contract |
-
-### sendRequest
-
-```solidity
-function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
-```
-
-Sends a request (encoded as data) using the provided subscriptionId
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
-| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| _gasLimit | uint32 | Gas limit for the fulfillment callback |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | A unique request identifier (unique per DON) |
 
 ## IDepositContract
 
@@ -2039,6 +1992,68 @@ error OperatorsListNotUnique()
 error OperatorAlreadyExists()
 ```
 
+## IWETH9
+
+### deposit
+
+```solidity
+function deposit() external payable
+```
+
+Deposit ether to get wrapped ether
+
+### withdraw
+
+```solidity
+function withdraw(uint256) external
+```
+
+Withdraw wrapped ether to get ether
+
+## MockFunctionsOracle
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### getRegistry
+
+```solidity
+function getRegistry() external view returns (address)
+```
+
+Returns the address of the registry contract
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | address The address of the registry contract |
+
+### sendRequest
+
+```solidity
+function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
+```
+
+Sends a request (encoded as data) using the provided subscriptionId
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
+| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
+| _gasLimit | uint32 | Gas limit for the fulfillment callback |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | bytes32 | A unique request identifier (unique per DON) |
+
 ## ISSVNetworkViews
 
 ### initialize
@@ -2150,22 +2165,4 @@ function getLiquidationThresholdPeriod() external returns (uint64)
 ```solidity
 function getMinimumLiquidationCollateral() external returns (uint256)
 ```
-
-## IWETH9
-
-### deposit
-
-```solidity
-function deposit() external payable
-```
-
-Deposit ether to get wrapped ether
-
-### withdraw
-
-```solidity
-function withdraw(uint256) external
-```
-
-Withdraw wrapped ether to get ether
 

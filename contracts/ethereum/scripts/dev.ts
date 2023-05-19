@@ -8,6 +8,7 @@ import EventEmitter, { on } from 'events'
 
 void async function () {
     const [, , , , fourthUser, keeper, dkg] = await ethers.getSigners()
+
     let config: DeploymentConfig = {
         CasimirManager: {
             address: '',

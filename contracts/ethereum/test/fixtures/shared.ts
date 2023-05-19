@@ -7,11 +7,11 @@ import { initiatePoolDeposit } from '@casimir/ethereum/helpers/dkg'
 import { round } from '@casimir/ethereum/helpers/math'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 
-const getSweptBalanceFunctionSignature = ethers.utils.id('getSweptBalance()').slice(0, 10)
-console.log(getSweptBalanceFunctionSignature)
+const getSweptBalance = ethers.utils.id('getSweptBalance()').slice(0, 10)
+console.log(getSweptBalance)
 
-const getValidatorPublicKeysFunctionSignature = ethers.utils.id('getValidatorPublicKeys()').slice(0, 10)
-console.log(getValidatorPublicKeysFunctionSignature)
+const getValidatorPublicKeys = ethers.utils.id('getValidatorPublicKeys()').slice(0, 10)
+console.log(getValidatorPublicKeys)
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {

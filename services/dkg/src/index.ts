@@ -1,28 +1,26 @@
 import { config } from './providers/config'
 import { getEventEmitter } from './providers/events'
-import { initiatePoolDepositCommand, initiatePoolExitCommand, initiatePoolReshareCommand } from './providers/commands'
+import { initiatePoolDepositHandler, initiatePoolExitHandler, initiatePoolReshareHandler } from './providers/handlers'
 
-const { manager, signer, cliPath, messengerUrl } = config()
-
-const commands = {
-    PoolDepositRequested: initiatePoolDepositCommand,
-    PoolReshareRequested: initiatePoolReshareCommand,
-    PoolExitRequested: initiatePoolExitCommand
+const handlers = {
+    PoolDepositRequested: initiatePoolDepositHandler,
+    PoolReshareRequested: initiatePoolReshareHandler,
+    PoolExitRequested: initiatePoolExitHandler
 }
 
-const eventEmitter = getEventEmitter({ manager, events: Object.keys(commands) })
-
 ;(async function () {
+    const { manager, ssv, provider, signer, cliPath, messengerUrl } = await config()
+
+    const eventEmitter = await getEventEmitter({ manager, events: Object.keys(handlers) })
     for await (const event of eventEmitter) {
         const [ id, details ] = event
+        const { filter } = details
 
-        console.log(`Received ${details.event} event for pool ${id}`)
+        console.log(`Event ${filter} received for pool ${Number(id)}`)
 
-        const command = commands[details.event as keyof typeof commands]
-        if (!command) throw new Error(`No command found for event ${details.event}`)
-
-        console.log(`Executing ${details.event} command for pool ${id}`)
-        await command({ manager, signer, cliPath, messengerUrl, id })
+        const handler = handlers[filter as keyof typeof handlers]
+        if (!handler) throw new Error(`No handler found for event ${filter}`)
+        await handler({ manager, ssv, provider, signer, cliPath, messengerUrl, id: Number(id) })
     }
 })()
 

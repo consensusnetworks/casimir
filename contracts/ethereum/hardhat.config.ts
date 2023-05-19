@@ -42,7 +42,7 @@ const externalEnv = {
     FUNCTIONS_ORACLE_ADDRESS: '0x3de1bE9407645533CD0CbeCf88dFE5297E7125e6',
     FUNCTIONS_SUBSCRIPTION_ID: '1',
     LINK_TOKEN_ADDRESS: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
-    SSV_NETWORK_ADDRESS: '0xb9e155e65B5c4D66df28Da8E9a0957f06F11Bc04',
+    SSV_NETWORK_ADDRESS: '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3',
     SSV_TOKEN_ADDRESS: '0x3a9f01091C446bdE031E39ea8354647AFef091E7',
     SWAP_FACTORY_ADDRESS: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
     SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
@@ -95,9 +95,7 @@ const config: HardhatUserConfig = {
     ganache: {
       accounts: mnemonic ? { ...hid } : undefined,
       url: 'http://127.0.0.1:8545',
-      allowUnlimitedContractSize: true,
-      gas: 'auto',
-      gasPrice: 'auto'
+      allowUnlimitedContractSize: true
     },
     mainnet: {
       accounts: mnemonic ? { ...hid } : undefined,

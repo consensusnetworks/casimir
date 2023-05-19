@@ -5,7 +5,10 @@ const mnemonic = process.env.BIP39_SEED as string
 
 // Mining interval is provided
 const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
-const mining = { blockTime: miningInterval }
+const mining = { 
+  blockTime: miningInterval,
+  defaultTransactionGasLimit: 'estimate'
+}
 
 // Local network fork rpc is provided
 const forkingUrl = process.env.ETHEREUM_FORKING_URL as string
