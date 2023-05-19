@@ -24,6 +24,12 @@
         Select Ledger
       </button>
       <button
+        class="okx-btn"
+        @click="selectProvider('OkxWallet')"
+      >
+        Select OKX Wallet
+      </button>
+      <button
         class="trezor-btn"
         @click="selectProvider('Trezor')"
       >
@@ -318,6 +324,10 @@ button {
 
 .ledger-btn {
   background-color: rgb(0, 0, 0);
+}
+
+.okx-btn {
+  background-color: rgb(125, 1, 182);
 }
 
 .trezor-btn {

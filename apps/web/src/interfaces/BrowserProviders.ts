@@ -5,6 +5,7 @@ export interface BrowserProviders {
   BraveWallet?: EthersProvider
   CoinbaseWallet?: EthersProvider
   MetaMask?: EthersProvider
+  OkxWallet?: EthersProvider
   TrustWallet?: EthersProvider
   // Phantom?: any // TODO: Fix this.
 }

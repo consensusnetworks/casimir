@@ -7,13 +7,8 @@ import useEnvironment from '@/composables/environment'
 const { createSiweMessage, signInWithEthereum } = useAuth()
 const { ethereumURL } = useEnvironment()
 
-const defaultProviders = {
-  MetaMask: window.ethereum?.providerMap?.get('MetaMask') || undefined,
-  CoinbaseWallet: window.ethereum?.providerMap?.get('CoinbaseWallet') || undefined,
-}
-
 export default function useEthers() {
-  const ethersProviderList = ['CoinbaseWallet', 'MetaMask', 'BraveWallet', 'TrustWallet']
+  const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
 
   async function addEthersNetwork (providerString: ProviderString, network: any) {
     const provider = availableProviders.value[providerString as keyof BrowserProviders]
@@ -264,11 +259,13 @@ export default function useEthers() {
 
 function getBrowserProvider(providerString: ProviderString) {
   if (providerString === 'MetaMask' || providerString === 'CoinbaseWallet') {
-    return defaultProviders[providerString] as EthersProvider
+    return window.ethereum?.providerMap?.get(providerString) || undefined
   } else if (providerString === 'BraveWallet') {
     return getBraveWallet()
   } else if (providerString === 'TrustWallet') {
     return getTrustWallet()
+  } else if (providerString === 'OkxWallet') {
+    return getOkxWallet()
   }
 }
 
@@ -279,6 +276,12 @@ function getBraveWallet() {
   } else {
     window.open('https://brave.com/download/', '_blank')
   }
+}
+
+function getOkxWallet() {
+  const { okxwallet } = window as any
+  const { okexchain } = window as any
+  return okxwallet || okexchain
 }
 
 function getTrustWallet() {
