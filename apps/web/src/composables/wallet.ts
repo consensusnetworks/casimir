@@ -25,7 +25,7 @@ const activeWallets = ref([
   'IoPay',
 ] as ProviderString[])
 const amount = ref<string>('1')
-const amountToStake = ref<string>('0.0')
+const amountToStake = ref<string>('1.2')
 const userAddresses = ref<CryptoAddress[]>([])
 const loadingUserWallets = ref(false)
 const primaryAddress = ref('')

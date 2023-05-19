@@ -15,7 +15,7 @@ let casimirManager: CasimirManager
 
 export default function useSSV() {
     const { ethereumURL } = useEnvironment()
-    const { getEthersBrowserSigner } = useEthers()
+    const { ethersProviderList, getEthersBrowserSigner } = useEthers()
     const { getEthersLedgerSigner } = useLedger()
     const { getEthersTrezorSigner } = useTrezor()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
@@ -41,7 +41,7 @@ export default function useSSV() {
             'Trezor': getEthersTrezorSigner,
             'WalletConnect': getEthersWalletConnectSigner
         }
-        const signerType = ['MetaMask', 'CoinbaseWallet'].includes(walletProvider) ? 'Browser' : walletProvider
+        const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
         const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
         let signer = signerCreator(walletProvider)
         if (isWalletConnectSigner(signer)) signer = await signer

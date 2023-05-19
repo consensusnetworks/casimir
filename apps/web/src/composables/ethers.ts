@@ -126,7 +126,7 @@ export default function useEthers() {
   }
 
   function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     if (provider) {
       return new ethers.providers.Web3Provider(provider as EthersProvider).getSigner()
     }
