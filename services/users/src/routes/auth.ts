@@ -100,10 +100,10 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
     }
 })
 
-router.post('/check-secondary-address', async (req: express.Request, res: express.Response) => {
+router.get('/check-secondary-address/:address', async (req: express.Request, res: express.Response) => {
     try {
-        const { body } = req
-        const { address } = body
+        const { params } = req
+        const { address } = params
         const accounts = await getAccounts(address)
         const users = await Promise.all(accounts.map(async account => {
             const { userId } = account
@@ -130,16 +130,21 @@ router.post('/check-secondary-address', async (req: express.Request, res: expres
     }
 })
 
-router.post('/get-user-by-address', async (req: express.Request, res: express.Response) => {
+router.get('/check-if-primary-address-exists/:provider/:address', async (req: express.Request, res: express.Response) => {
     try {
-        const { body } = req
-        const { address } = body
+        const { params } = req
+        const { address, provider } = params
         const user = await getUser(address)
+        const userAddress = user?.address
+        const userProvider = user?.walletProvider
+        const sameAddress = userAddress === address
+        const sameProvider = userProvider === provider
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
             error: false,
-            userExists: !!user,
+            sameAddress,
+            sameProvider
         })
     } catch (error) {
         console.log('error in /get-user-by-address :>> ', error)

@@ -1,13 +1,11 @@
 import { ref } from 'vue'
-import useBraveWallet from '@/composables/braveWallet'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useSolana from '@/composables/solana'
 import useTrezor from '@/composables/trezor'
-import useTrustWallet from '@/composables/trustWallet'
 import useUsers from '@/composables/users'
 import useWalletConnect from '@/composables/walletConnect'
-import { Account, CryptoAddress, Currency, ProviderString, LoginCredentials} from '@casimir/types'
+import { Account, CryptoAddress, Currency, ProviderString, LoginCredentials, ExistingUserCheck} from '@casimir/types'
 import { MessageInit, TransactionInit } from '@/interfaces/index'
 import * as Session from 'supertokens-web-js/recipe/session'
 import router from './router'
@@ -38,13 +36,11 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
-  const { getBraveAddressWithBalance, loginWithBraveWallet } = useBraveWallet()
   const { estimateEIP1559GasFee, ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
-  const { getTrustWalletAddressWithBalance, loginWithTrustWallet } = useTrustWallet()
-  const { user, getUser, setUser, addAccount, checkIfSecondaryAddress, checkIfPrimaryByAddress, removeAccount, updatePrimaryAddress } = useUsers()
+  const { user, getUser, setUser, addAccount, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, updatePrimaryAddress } = useUsers()
   const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
@@ -199,14 +195,10 @@ export default function useWallet() {
     } as LoginCredentials
     if (ethersProviderList.includes(selectedProvider.value)) {
       return await loginWithEthers(loginCredentials)
-    } else if (selectedProvider.value === 'BraveWallet') {
-      return await loginWithBraveWallet(loginCredentials)
     } else if (selectedProvider.value === 'Ledger') {
       return await loginWithLedger(loginCredentials, selectedPathIndex.value)
     } else if (selectedProvider.value === 'Trezor') {
       return await loginWithTrezor(loginCredentials, selectedPathIndex.value)
-    } else if (selectedProvider.value === 'TrustWallet') {
-      return await loginWithTrustWallet(loginCredentials)
     } else if (selectedProvider.value === 'WalletConnect'){
       return await loginWithWalletConnect(loginCredentials)
     } else {
@@ -289,22 +281,29 @@ export default function useWallet() {
    * @param currency 
    */
   async function selectAddress(address: any, pathIndex?: string) : Promise<void | Account[]> {
-    address = trimAndLowercaseAddress(address)
-    setSelectedAddress(address)
-    
-    if (pathIndex) setSelectedPathIndex(pathIndex)
-    
-    const isPrimaryAddress : boolean = await checkIfPrimaryByAddress(selectedAddress.value)
-    if (isPrimaryAddress) {
-      return await connectWallet() // login
-    }
-    
-    const accountsIfSecondaryAddress : Account[] | void = await checkIfSecondaryAddress(selectedAddress.value)
-    console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
-    if (accountsIfSecondaryAddress.length) {
-      return accountsIfSecondaryAddress
-    } else {
-      return await connectWallet() // sign up
+    try {
+      address = trimAndLowercaseAddress(address)
+      setSelectedAddress(address)
+      
+      if (pathIndex) setSelectedPathIndex(pathIndex)
+      
+      const { sameAddress, sameProvider } : ExistingUserCheck = await checkIfPrimaryUserExists(selectedProvider.value, selectedAddress.value)
+      if (sameAddress && sameProvider ) {
+        return await connectWallet() // login
+      } else if (sameAddress && !sameProvider) {
+        // TODO: Handle this on front-end: do you want to change your primary provider?
+        throw new Error('Address already exists as a primary address using another provider')
+      }
+      
+      const accountsIfSecondaryAddress : Account[] | void = await checkIfSecondaryAddress(selectedAddress.value)
+      console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
+      if (accountsIfSecondaryAddress.length) {
+        throw new Error(`${selectedAddress.value} already exists as a secondary address on this/these account(s): ${JSON.stringify(accountsIfSecondaryAddress)}`)
+      } else {
+        return await connectWallet() // sign up or add account
+      }
+    } catch (err) {
+      console.error('selectAddress error: ', err)
     }
   }
 
@@ -325,10 +324,6 @@ export default function useWallet() {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
         setUserAddresses(ethersAddresses)
-      } else if (provider ==='BraveWallet') {
-        setSelectedProvider(provider)
-        const braveAddresses = await getBraveAddressWithBalance() as CryptoAddress[]
-        setUserAddresses(braveAddresses)
       } else if (provider === 'Ledger') {
         setSelectedProvider(provider)
         const ledgerAddresses = await getLedgerAddress[currency]() as CryptoAddress[]
@@ -337,10 +332,6 @@ export default function useWallet() {
         setSelectedProvider(provider)
         const trezorAddresses = await getTrezorAddress[currency]() as CryptoAddress[]
         setUserAddresses(trezorAddresses)
-      } else if (provider === 'TrustWallet') {
-        setSelectedProvider(provider)
-        const trustWalletAddresses = await getTrustWalletAddressWithBalance() as CryptoAddress[]
-        setUserAddresses(trustWalletAddresses)
       }
     } catch (error) {
       console.error('There was an error in selectProvider :>> ', error)

@@ -1,4 +1,3 @@
-import { ref } from 'vue'
 import { ethers } from 'ethers'
 import { BrowserProviders, EthersProvider, MessageInit, TransactionInit } from '@/interfaces/index'
 import { GasEstimate, LoginCredentials, ProviderString } from '@casimir/types'
@@ -9,15 +8,12 @@ const { createSiweMessage, signInWithEthereum } = useAuth()
 const { ethereumURL } = useEnvironment()
 
 const defaultProviders = {
-  MetaMask: undefined,
-  CoinbaseWallet: undefined,
+  MetaMask: window.ethereum?.providerMap?.get('MetaMask') || undefined,
+  CoinbaseWallet: window.ethereum?.providerMap?.get('CoinbaseWallet') || undefined,
 }
 
-const ethereum: any = window.ethereum
-const availableProviders = ref<BrowserProviders>(getBrowserProviders(ethereum))
-
 export default function useEthers() {
-  const ethersProviderList = ['CoinbaseWallet', 'MetaMask' /*, 'TrustWallet' */]
+  const ethersProviderList = ['CoinbaseWallet', 'MetaMask', 'BraveWallet', 'TrustWallet']
 
   async function addEthersNetwork (providerString: ProviderString, network: any) {
     const provider = availableProviders.value[providerString as keyof BrowserProviders]
@@ -101,14 +97,14 @@ export default function useEthers() {
   }
 
   async function getEthersAddress (providerString: ProviderString) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     if (provider) {
       return (await requestEthersAccount(provider as EthersProvider))
     }
   }
 
   async function getEthersAddressWithBalance (providerString: ProviderString) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     if (provider) {
       const address = (await requestEthersAccount(provider as EthersProvider))[0]
       const balance = await getEthersBalance(address)
@@ -160,7 +156,7 @@ export default function useEthers() {
 
   async function loginWithEthers(loginCredentials: LoginCredentials) {
     const { provider, address, currency } = loginCredentials
-    const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
+    const browserProvider = getBrowserProvider(provider)
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     try {
       const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
@@ -266,17 +262,31 @@ export default function useEthers() {
   }
 }
 
-function getBrowserProviders(ethereum: any) {
-  if (!ethereum) return defaultProviders
-  else if (!ethereum.providerMap) {
-    return {
-      MetaMask: ethereum.isMetaMask ? ethereum : undefined,
-      CoinbaseWallet: ethereum.isCoinbaseWallet ? ethereum : undefined,
-    }
+function getBrowserProvider(providerString: ProviderString) {
+  if (providerString === 'MetaMask' || providerString === 'CoinbaseWallet') {
+    return defaultProviders[providerString] as EthersProvider
+  } else if (providerString === 'BraveWallet') {
+    return getBraveWallet()
+  } else if (providerString === 'TrustWallet') {
+    return getTrustWallet()
+  }
+}
+
+function getBraveWallet() {
+  const { ethereum } = window as any
+  if (ethereum?.isBraveWallet) {
+    return ethereum
   } else {
-    return {
-      MetaMask: ethereum.providerMap.get('MetaMask'),
-      CoinbaseWallet: ethereum.providerMap.get('CoinbaseWallet'),
+    window.open('https://brave.com/download/', '_blank')
+  }
+}
+
+function getTrustWallet() {
+  const { ethereum } = window as any
+  const providers = ethereum?.providers
+  if (providers) {
+    for (const provider of providers) {
+      if (provider.isTrustWallet) return provider
     }
   }
 }

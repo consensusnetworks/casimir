@@ -8,6 +8,7 @@ import { CryptoAddress } from './interfaces/CryptoAddress'
 import { Currency } from './interfaces/Currency'
 import { DeploymentConfig } from './interfaces/DeploymentConfig'
 import { Event } from './interfaces/Event'
+import { ExistingUserCheck } from './interfaces/ExistingUserCheck'
 import { GasEstimate } from './interfaces/GasEstimate'
 import { LoginCredentials } from './interfaces/LoginCredentials'
 import { Operator } from './interfaces/Operator'
@@ -30,6 +31,7 @@ export type {
     Currency,
     DeploymentConfig,
     Event,
+    ExistingUserCheck,
     GasEstimate,
     LoginCredentials,
     Operator, 
