@@ -11,7 +11,7 @@ export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
 
   async function addEthersNetwork (providerString: ProviderString, network: any) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     try {
       await provider.request({
         method: 'wallet_addEthereumChain',
@@ -134,7 +134,7 @@ export default function useEthers() {
 
   async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
     // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
-    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
+    const browserProvider = getBrowserProvider(providerString)
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const network = await web3Provider.getNetwork()
     // console.log('network.chainId :>> ', network.chainId)
@@ -202,7 +202,7 @@ export default function useEthers() {
 
   async function signEthersMessage(messageInit: MessageInit): Promise<string> {
     const { providerString, message } = messageInit
-    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
+    const browserProvider = getBrowserProvider(providerString)
     const web3Provider: ethers.providers.Web3Provider =
       new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const signer = web3Provider.getSigner()
@@ -211,7 +211,7 @@ export default function useEthers() {
   }
 
   async function switchEthersNetwork (providerString: ProviderString, chainId: string) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     const currentChainId = await provider.networkVersion
     if (chainId === '5') {
       chainId = '0x5'
