@@ -1,15 +1,15 @@
-import { ISSVNetwork } from '@casimir/ethereum/build/artifacts/types'
+import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { ethers } from 'ethers'
 
 export interface ReshareValidatorInput {
-    /** SSV network contract */
-    ssv: ISSVNetwork & ethers.Contract
     /** JSON RPC provider */
-    provider: ethers.JsonRpcProvider
-    /** Operator registry IDs */
-    operatorIds: number[]
+    provider: ethers.providers.JsonRpcProvider
+    /** Manager contract */
+    manager: ethers.Contract & CasimirManager
     /** Validator public key */
     publicKey: string
+    /** Operator registry IDs */
+    operatorIds: number[]
     /** Old operator registry IDs */
     oldOperatorIds: number[]
     /** Validator withdrawal address */

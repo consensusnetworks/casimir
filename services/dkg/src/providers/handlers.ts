@@ -5,15 +5,15 @@ import fs from 'fs'
 import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 
 export async function initiatePoolDepositHandler(input: HandlerInput) {
-    const { manager, ssv, provider, signer, cliPath, messengerUrl } = input
+    const { provider, signer, manager, cliPath, messengerUrl } = input
     const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
     const dkg = new DKG({ cliPath, messengerUrl })
 
     const validator = await dkg.createValidator({
-        ssv, 
-        operatorIds: newOperatorIds, 
         provider,
-        withdrawalAddress: await manager.getAddress() 
+        manager,
+        operatorIds: newOperatorIds, 
+        withdrawalAddress: manager.address 
     })
     
     // Save validator for mocks
@@ -39,7 +39,7 @@ export async function initiatePoolDepositHandler(input: HandlerInput) {
         cluster,
         signature,
         withdrawalCredentials,
-        ethers.parseEther('0.1') // Mock fee amount estimate ~ 10 SSV
+        ethers.utils.parseEther('0.1') // Mock fee amount estimate ~ 10 SSV
     )
     await initiatePoolDeposit.wait()
 }
@@ -59,6 +59,8 @@ export async function initiatePoolReshareHandler(input: HandlerInput) {
     // Get operators to sign reshare
     const dkg = new DKG({ cliPath, messengerUrl })
     // const validator = await dkg.reshareValidator({ 
+    //     provider,
+    //     manager,
     //     publicKey, 
     //     operatorIds: newOperatorGroup, 
     //     oldOperatorIds: operatorIds, 

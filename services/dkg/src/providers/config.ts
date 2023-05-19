@@ -1,33 +1,32 @@
 import { ethers } from 'ethers'
 import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/CasimirManager.sol/CasimirManager.json'
-import SSVNetworkJson from '@casimir/ethereum/build/artifacts/src/vendor/interfaces/ISSVNetwork.sol/ISSVNetwork.json'
-import { CasimirManager, ISSVNetwork } from '@casimir/ethereum/build/artifacts/types'
+import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 
-export async function config() {
+export function config() {
+    /** Get JSON RPC node provider */
     const url = process.env.ETHEREUM_RPC_URL
     if (!url) throw new Error('No rpc url provided')
-    const provider = new ethers.JsonRpcProvider(url)
+    const provider = new ethers.providers.JsonRpcProvider(url)
     
+    /** Get transaction signer */
     const mnemonic = process.env.BIP39_SEED
-    const pathIndex = process.env.BIP39_PATH_INDEX
+    // const pathIndex = process.env.BIP39_PATH_INDEX
+    // const path = `m/44'/60'/0'/0/${pathIndex || 0}`
     if (!mnemonic) throw new Error('No mnemonic provided')
-    ethers.Wallet.fromPhrase(mnemonic, provider)
-    const accounts = await provider.listAccounts()
-    const signer = accounts[Number(pathIndex || 0)]
+    const signer = ethers.Wallet.fromMnemonic(mnemonic, 'm/44\'/60\'/0\'/0/6').connect(provider)
     
+    /** Get manager contract */
     const managerAddress = process.env.MANAGER_ADDRESS
     if (!managerAddress) throw new Error('No manager address provided')
     const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi, provider) as CasimirManager & ethers.Contract
-
-    const ssvAddress = process.env.SSV_ADDRESS
-    if (!ssvAddress) throw new Error('No ssv address provided')
-    const ssv = new ethers.Contract(ssvAddress, SSVNetworkJson.abi, provider) as ISSVNetwork & ethers.Contract
-
+    
+    /** Get DKG CLI path */
     const cliPath = process.env.CLI_PATH
     if (!cliPath) throw new Error('No cli path provided')
 
+    /** Get DKG messenger service url */
     const messengerUrl = process.env.MESSENGER_SRV_ADDR
     if (!messengerUrl) throw new Error('No messenger url provided')
 
-    return { manager, ssv, provider, signer, cliPath, messengerUrl }
+    return { provider, signer, manager, cliPath, messengerUrl }
 }

@@ -1,13 +1,12 @@
-import { ISSVNetwork } from '@casimir/ethereum/build/artifacts/types'
 import { ethers } from 'ethers'
 
 export interface ClusterInput {
-    /** SSV network contract */
-    ssv: ISSVNetwork & ethers.Contract
+    /** SSV network address */
+    networkAddress: string
     /** Operator IDs */
     operatorIds: number[]
     /** JSON RPC node provider */
-    provider: ethers.JsonRpcProvider
+    provider: ethers.providers.JsonRpcProvider
     /** Withdrawal address */
     withdrawalAddress: string
 }

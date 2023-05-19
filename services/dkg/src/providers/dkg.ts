@@ -5,14 +5,11 @@ import { DKGOptions } from '../interfaces/DKGOptions'
 import { ReshareInput } from '../interfaces/ReshareInput'
 import { getWithdrawalCredentials, runRetry } from '@casimir/helpers'
 import { CreateValidatorInput } from '../interfaces/CreateValidatorInput'
-import { Validator, Cluster } from '@casimir/types'
+import { Validator } from '@casimir/types'
 import { ReshareValidatorInput } from '../interfaces/ReshareValidatorInput'
 import { operatorStore } from '@casimir/data'
-import { ClusterInput } from '../interfaces/ClusterInput'
 import { DepositDataInput } from '../interfaces/DepositDataInput'
-import { ethers } from 'ethers'
-
-const lastPoolId = 0
+import { getCluster } from '@casimir/ssv'
 
 export class DKG {
     /** DKG CLI path */
@@ -31,7 +28,7 @@ export class DKG {
      * @returns {Promise<Validator>} Validator with operator key shares and deposit data
      */
     async createValidator(input: CreateValidatorInput): Promise<Validator> {
-        const { provider, ssv, operatorIds, withdrawalAddress } = input
+        const { provider, manager, operatorIds, withdrawalAddress } = input
 
         const operators = this.getOperatorUrls(operatorIds)
 
@@ -48,8 +45,11 @@ export class DKG {
         /** Get validator deposit data */
         const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData({ ceremonyId, withdrawalAddress })
 
+        /** Get SSV network address */
+        const networkAddress = await manager.getSSVNetworkAddress()
+
         /** Get SSV cluster snapshot */
-        const cluster = await this.getCluster({ ssv, operatorIds, provider, withdrawalAddress })
+        const cluster = await getCluster({ networkAddress, operatorIds, provider, withdrawalAddress })
 
         /** Create validator */
         const validator: Validator = {
@@ -71,7 +71,7 @@ export class DKG {
      * @returns {Promise<Validator>} Validator with operator key shares and deposit data
      */
     async reshareValidator(input: ReshareValidatorInput): Promise<Validator> {
-        const { ssv, provider, operatorIds, publicKey, oldOperatorIds, withdrawalAddress } = input
+        const { provider, manager, operatorIds, publicKey, oldOperatorIds, withdrawalAddress } = input
         const operators = this.getOperatorUrls(operatorIds)
         const oldOperators = this.getOperatorUrls(oldOperatorIds)
 
@@ -85,8 +85,11 @@ export class DKG {
         /** Get validator deposit data */
         const { depositDataRoot, signature, withdrawalCredentials } = await this.getDepositData({ ceremonyId, withdrawalAddress })
 
+        /** Get SSV network address */
+        const networkAddress = await manager.getSSVNetworkAddress()
+
         /** Get SSV cluster snapshot */
-        const cluster = await this.getCluster({ ssv, operatorIds, provider, withdrawalAddress })
+        const cluster = await getCluster({ networkAddress, operatorIds, provider, withdrawalAddress })
 
         /** Create validator */
         const validator: Validator = {
@@ -191,85 +194,5 @@ export class DKG {
             group[key] = operatorStore[key]
             return group
         }, {})
-    }
-
-    /**
-     * Get cluster snapshot
-     * @param {ClusterInput} input - Operator IDs and withdrawal address
-     * @returns {Promise<Cluster>} Cluster snapshot
-     */
-    async getCluster(input: ClusterInput): Promise<Cluster> {
-        const { ssv, provider, operatorIds, withdrawalAddress } = input
-        
-        const DAY = 5400
-        const WEEK = DAY * 7
-        const MONTH = DAY * 30
-        const latestBlockNumber = await provider.getBlockNumber()
-        let step = MONTH
-        let cluster
-        let biggestBlockNumber = 0
-
-        const eventList = [
-            'ClusterDeposited', 
-            'ClusterWithdrawn', 
-            'ValidatorAdded', 
-            'ValidatorRemoved', 
-            'ClusterLiquidated', 
-            'ClusterReactivated' 
-        ]
-        
-        const topicFilter: ethers.TopicFilter = []
-        for (const event of eventList) {
-            const topic = await ssv.filters[event](withdrawalAddress).getTopicFilter()
-            topicFilter.concat(topic)
-        }
-
-        let fromBlock = latestBlockNumber - step
-        let toBlock = latestBlockNumber
-
-        while (!cluster && fromBlock > 0) {
-            try {
-                const result = await provider.getLogs({
-                    address: await ssv.getAddress(),
-                    fromBlock,
-                    toBlock,
-                    topics: topicFilter
-                })
-
-                for (const item of result) {
-                    const { blockNumber, data, topics } = item
-                    const log = ssv.interface.parseLog({ data, topics: topics as string[] })
-                    
-                    const checkClusterEvent = eventList.includes(log.name)
-                    const checkOwner = log.args.owner === withdrawalAddress
-                    const checkOperators = JSON.stringify(log.args.operatorIds.map((value: string) => Number(value))) === JSON.stringify(operatorIds)
-
-                    if (checkClusterEvent && checkOwner && checkOperators) {
-                        if (blockNumber > biggestBlockNumber) {
-                            biggestBlockNumber = blockNumber
-                            cluster = log.args.cluster
-                            console.log('CLUSTER SNAPSHOT', cluster)
-                        }
-                    }
-                }
-                toBlock = fromBlock
-            } catch (e) {
-                console.error(e)
-                if (step === MONTH) {
-                    step = WEEK
-                } else if (step === WEEK) {
-                    step = DAY
-                }
-            }
-            fromBlock = toBlock - step
-        }
-
-        return cluster || {
-            validatorCount: 0,
-            networkFeeIndex: 0,
-            index: 0,
-            balance: 0,
-            active: true
-        }
     }
 }

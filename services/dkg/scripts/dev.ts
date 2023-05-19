@@ -5,7 +5,6 @@ const resourcePath = 'scripts/resources/rockx-dkg-cli'
 void async function () {
     process.env.BIP39_PATH_INDEX = '6'
     process.env.MANAGER_ADDRESS = process.env.PUBLIC_MANAGER_ADDRESS
-    process.env.SSV_ADDRESS = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
     process.env.CLI_PATH = `./${resourcePath}/build/bin/rockx-dkg-cli`
     process.env.MESSENGER_SRV_ADDR = 'http://0.0.0.0:3000'
     process.env.USE_HARDCODED_OPERATORS = 'true'

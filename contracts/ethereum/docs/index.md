@@ -71,7 +71,7 @@ SSV fee percentage
 ### constructor
 
 ```solidity
-constructor(address beaconDepositAddress, address _dkgOracleAddress, address functionsOracleAddress, uint64 functionsSubscriptionId, address linkTokenAddress, address ssvNetworkAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
+constructor(address beaconDepositAddress, address _dkgOracleAddress, address functionsOracleAddress, uint32 functionsSubscriptionId, address linkTokenAddress, address ssvNetworkAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
 ```
 
 Constructor
@@ -83,7 +83,7 @@ Constructor
 | beaconDepositAddress | address | The Beacon deposit address |
 | _dkgOracleAddress | address | The DKG oracle address |
 | functionsOracleAddress | address | The Chainlink functions oracle address |
-| functionsSubscriptionId | uint64 | The Chainlink functions subscription ID |
+| functionsSubscriptionId | uint32 | The Chainlink functions subscription ID |
 | linkTokenAddress | address | The Chainlink token address |
 | ssvNetworkAddress | address | The SSV network address |
 | ssvTokenAddress | address | The SSV token address |
@@ -162,7 +162,7 @@ Complete a given count of pending withdrawals
 ### initiatePoolDeposit
 
 ```solidity
-function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes shares, bytes signature, bytes withdrawalCredentials, uint256 feeAmount) external
+function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, bytes signature, bytes withdrawalCredentials, uint256 feeAmount) external
 ```
 
 Initiate the next ready pool
@@ -173,11 +173,18 @@ Initiate the next ready pool
 | ---- | ---- | ----------- |
 | depositDataRoot | bytes32 | The deposit data root |
 | publicKey | bytes | The validator public key |
-| operatorIds | uint32[] | The operator IDs |
+| operatorIds | uint64[] | The operator IDs |
 | shares | bytes | The operator shares |
+| cluster | struct ISSVNetworkCore.Cluster |  |
 | signature | bytes | The signature |
 | withdrawalCredentials | bytes | The withdrawal credentials |
 | feeAmount | uint256 | The fee amount |
+
+### _getRevertMsg
+
+```solidity
+function _getRevertMsg(bytes _returnData) internal pure returns (string)
+```
 
 ### requestPoolExits
 
@@ -225,7 +232,7 @@ Register an operator with the pool manager
 ### resharePool
 
 ```solidity
-function resharePool(uint32 poolId, uint32[] operatorIds, bytes shares) external
+function resharePool(uint32 poolId, uint64[] operatorIds, bytes shares) external
 ```
 
 Reshare a given pool's validator
@@ -235,7 +242,7 @@ Reshare a given pool's validator
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | poolId | uint32 | The pool ID |
-| operatorIds | uint32[] | The operator IDs |
+| operatorIds | uint64[] | The operator IDs |
 | shares | bytes | The operator shares |
 
 ### setFeePercents
@@ -813,7 +820,7 @@ struct Pool {
   uint256 reshareCount;
   bytes32 depositDataRoot;
   bytes publicKey;
-  uint32[] operatorIds;
+  uint64[] operatorIds;
   bytes shares;
   bytes signature;
   bytes withdrawalCredentials;
@@ -949,7 +956,7 @@ function completePendingWithdrawals(uint256 count) external
 ### initiatePoolDeposit
 
 ```solidity
-function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes shares, bytes signature, bytes withdrawalCredentials, uint256 feeAmount) external
+function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, bytes signature, bytes withdrawalCredentials, uint256 feeAmount) external
 ```
 
 ### requestPoolExits
@@ -1505,7 +1512,7 @@ event FeeRecipientAddressUpdated(address owner, address recipientAddress)
 ### initialize
 
 ```solidity
-function initialize(string initialVersion_, contract IERC20 token_, uint64 operatorMaxFeeIncrease_, uint64 declareOperatorFeePeriod_, uint64 executeOperatorFeePeriod_, uint64 minimumBlocksBeforeLiquidation_, uint256 minimumLiquidationCollateral_, uint32 validatorsPerOperatorLimit_) external
+function initialize(string initialVersion_, contract IERC20 token_, uint64 operatorMaxFeeIncrease_, uint64 declareOperatorFeePeriod_, uint64 executeOperatorFeePeriod_, uint64 minimumBlocksBeforeLiquidation_, uint256 minimumLiquidationCollateral_) external
 ```
 
 _Initializes the contract._
@@ -1521,7 +1528,6 @@ _Initializes the contract._
 | executeOperatorFeePeriod_ | uint64 | The length of the period in which an operator can approve their fee. |
 | minimumBlocksBeforeLiquidation_ | uint64 |  |
 | minimumLiquidationCollateral_ | uint256 |  |
-| validatorsPerOperatorLimit_ | uint32 |  |
 
 ### registerOperator
 
@@ -1591,7 +1597,7 @@ function setFeeRecipientAddress(address feeRecipientAddress) external
 ### registerValidator
 
 ```solidity
-function registerValidator(bytes publicKey, uint64[] operatorIds, bytes shares, uint256 amount, struct ISSVNetworkCore.Cluster cluster) external
+function registerValidator(bytes publicKey, uint64[] operatorIds, bytes sharesEncrypted, uint256 amount, struct ISSVNetworkCore.Cluster cluster) external
 ```
 
 ### removeValidator
@@ -1678,84 +1684,6 @@ function updateLiquidationThresholdPeriod(uint64 blocks) external
 function updateMinimumLiquidationCollateral(uint256 amount) external
 ```
 
-### validatorPKs
-
-```solidity
-function validatorPKs(bytes32 validatorId) external view returns (address owner, bool active)
-```
-
-### clusters
-
-```solidity
-function clusters(bytes32 clusterId) external view returns (bytes32 clusterData)
-```
-
-### operators
-
-```solidity
-function operators(uint64 operatorId) external view returns (address operatorOwner, uint64 fee, uint32 validatorCount, struct ISSVNetworkCore.Snapshot snapshot)
-```
-
-### operatorFeeChangeRequests
-
-```solidity
-function operatorFeeChangeRequests(uint64 operatorId) external view returns (uint64 fee, uint64 approvalBeginTime, uint64 approvalEndTime)
-```
-
-### operatorsWhitelist
-
-```solidity
-function operatorsWhitelist(uint64 operatorId) external view returns (address whitelisted)
-```
-
-### network
-
-```solidity
-function network() external view returns (uint64 networkFee, uint64 networkFeeIndex, uint64 networkFeeIndexBlockNumber)
-```
-
-### dao
-
-```solidity
-function dao() external view returns (uint32 validatorCount, uint64 balance, uint64 block)
-```
-
-### minimumBlocksBeforeLiquidation
-
-```solidity
-function minimumBlocksBeforeLiquidation() external view returns (uint64)
-```
-
-### minimumLiquidationCollateral
-
-```solidity
-function minimumLiquidationCollateral() external view returns (uint64)
-```
-
-### operatorMaxFeeIncrease
-
-```solidity
-function operatorMaxFeeIncrease() external view returns (uint64)
-```
-
-### executeOperatorFeePeriod
-
-```solidity
-function executeOperatorFeePeriod() external view returns (uint64)
-```
-
-### declareOperatorFeePeriod
-
-```solidity
-function declareOperatorFeePeriod() external view returns (uint64)
-```
-
-### version
-
-```solidity
-function version() external view returns (bytes32)
-```
-
 ## ISSVNetworkCore
 
 ### Validator
@@ -1805,8 +1733,8 @@ struct Cluster {
   uint32 validatorCount;
   uint64 networkFeeIndex;
   uint64 index;
-  bool active;
   uint256 balance;
+  bool active;
 }
 ```
 
@@ -1854,10 +1782,10 @@ error FeeTooLow()
 error FeeExceedsIncreaseLimit()
 ```
 
-### NoFeeDeclared
+### NoFeeDelcared
 
 ```solidity
-error NoFeeDeclared()
+error NoFeeDelcared()
 ```
 
 ### ApprovalNotWithinTimeframe
@@ -1974,24 +1902,6 @@ error SameFeeChangeNotAllowed()
 error FeeIncreaseNotAllowed()
 ```
 
-### NotAuthorized
-
-```solidity
-error NotAuthorized()
-```
-
-### OperatorsListNotUnique
-
-```solidity
-error OperatorsListNotUnique()
-```
-
-### OperatorAlreadyExists
-
-```solidity
-error OperatorAlreadyExists()
-```
-
 ## IWETH9
 
 ### deposit
@@ -2009,160 +1919,4 @@ function withdraw(uint256) external
 ```
 
 Withdraw wrapped ether to get ether
-
-## MockFunctionsOracle
-
-### constructor
-
-```solidity
-constructor() public
-```
-
-### getRegistry
-
-```solidity
-function getRegistry() external view returns (address)
-```
-
-Returns the address of the registry contract
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | address The address of the registry contract |
-
-### sendRequest
-
-```solidity
-function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
-```
-
-Sends a request (encoded as data) using the provided subscriptionId
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
-| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| _gasLimit | uint32 | Gas limit for the fulfillment callback |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | A unique request identifier (unique per DON) |
-
-## ISSVNetworkViews
-
-### initialize
-
-```solidity
-function initialize(contract ISSVNetwork ssvNetwork_) external
-```
-
-_Initializes the contract._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| ssvNetwork_ | contract ISSVNetwork | The SSVNetwork contract. |
-
-### getValidator
-
-```solidity
-function getValidator(bytes publicKey) external returns (address, bool)
-```
-
-### getOperatorFee
-
-```solidity
-function getOperatorFee(uint64 operatorId) external returns (uint256)
-```
-
-### getOperatorDeclaredFee
-
-```solidity
-function getOperatorDeclaredFee(uint64 operatorId) external returns (uint256, uint256, uint256)
-```
-
-### getOperatorById
-
-```solidity
-function getOperatorById(uint64 operatorId) external view returns (address owner, uint256 fee, uint32 validatorCount, bool isPrivate, bool active)
-```
-
-### isLiquidatable
-
-```solidity
-function isLiquidatable(address owner, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster) external returns (bool)
-```
-
-### isLiquidated
-
-```solidity
-function isLiquidated(address owner, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster) external returns (bool)
-```
-
-### getBurnRate
-
-```solidity
-function getBurnRate(address owner, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster) external returns (uint256)
-```
-
-### getOperatorEarnings
-
-```solidity
-function getOperatorEarnings(uint64 operatorId) external returns (uint256)
-```
-
-### getBalance
-
-```solidity
-function getBalance(address owner, uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster) external returns (uint256)
-```
-
-### getNetworkFee
-
-```solidity
-function getNetworkFee() external returns (uint256)
-```
-
-### getNetworkEarnings
-
-```solidity
-function getNetworkEarnings() external returns (uint256)
-```
-
-### getOperatorFeeIncreaseLimit
-
-```solidity
-function getOperatorFeeIncreaseLimit() external returns (uint64)
-```
-
-### getExecuteOperatorFeePeriod
-
-```solidity
-function getExecuteOperatorFeePeriod() external returns (uint64)
-```
-
-### getDeclaredOperatorFeePeriod
-
-```solidity
-function getDeclaredOperatorFeePeriod() external returns (uint64)
-```
-
-### getLiquidationThresholdPeriod
-
-```solidity
-function getLiquidationThresholdPeriod() external returns (uint64)
-```
-
-### getMinimumLiquidationCollateral
-
-```solidity
-function getMinimumLiquidationCollateral() external returns (uint256)
-```
 

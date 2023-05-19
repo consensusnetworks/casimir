@@ -8,19 +8,18 @@ const handlers = {
     PoolExitRequested: initiatePoolExitHandler
 }
 
+const { provider, signer, manager, cliPath, messengerUrl } = config()
+
 ;(async function () {
-    const { manager, ssv, provider, signer, cliPath, messengerUrl } = await config()
-
-    const eventEmitter = await getEventEmitter({ manager, events: Object.keys(handlers) })
-    for await (const event of eventEmitter) {
+    const eventEmitter = getEventEmitter({ manager, events: Object.keys(handlers) })    
+    for await (const event of eventEmitter) {    
         const [ id, details ] = event
-        const { filter } = details
 
-        console.log(`Event ${filter} received for pool ${Number(id)}`)
+        console.log(`Event ${details.event} received for pool ${id}`)
 
-        const handler = handlers[filter as keyof typeof handlers]
-        if (!handler) throw new Error(`No handler found for event ${filter}`)
-        await handler({ manager, ssv, provider, signer, cliPath, messengerUrl, id: Number(id) })
+        const handler = handlers[details.event as keyof typeof handlers]
+        if (!handler) throw new Error(`No handler found for event ${details.event}`)
+        await handler({ provider, signer, manager, cliPath, messengerUrl, id: id })
     }
 })()
 

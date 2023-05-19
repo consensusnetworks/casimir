@@ -64,12 +64,27 @@ void async function () {
 
     const manager = await ethers.getContractAt('CasimirManager', config.CasimirManager.address as string) as CasimirManager
     const upkeep = await ethers.getContractAt('CasimirUpkeep', await manager.getUpkeepAddress() as string) as CasimirUpkeep
-    
+
+    /** Stake 160 from the fourth user */
+    setTimeout(async () => {
+        const stakeAmount = 160
+        const feePercent = await manager.getFeePercent()
+        const depositAmount = stakeAmount * ((100 + feePercent) / 100)
+        const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        await stake?.wait()
+    }, 1000)
+
+    /** Perform upkeep and fulfill dkg answer after each pool is initiated by the local oracle */
+    for await (const event of on(manager as unknown as EventEmitter, 'PoolDepositInitiated')) {
+        const [id, details] = event
+        console.log(`Pool ${id} initiated at block number ${details.blockNumber}`)
+    }
+
     /** Simulate rewards per staked validator */
     const blocksPerReward = 50
     const rewardPerValidator = 0.105
     let lastRewardBlock = await ethers.provider.getBlockNumber()
-    ethers.provider.on('block', async (block) => {
+    for await (const block of on(ethers.provider as unknown as EventEmitter, 'block')) {
         if (block - blocksPerReward === lastRewardBlock) {
             lastRewardBlock = block
             const validatorCount = await manager.getValidatorPublicKeys()
@@ -93,6 +108,13 @@ void async function () {
                     const nextSweptExitsAmount = 0
                     const nextDepositedCount = (await manager.getPendingPoolIds()).length
                     const nextExitedCount = 0
+
+                    console.log('Fulfilling before sweep:')
+                    console.log('nextActiveBalanceAmount', nextActiveBalanceAmount)
+                    console.log('nextSweptRewardsAmount', nextSweptRewardsAmount)
+                    console.log('nextSweptExitsAmount', nextSweptExitsAmount)
+                    console.log('nextDepositedCount', nextDepositedCount)
+                    console.log('nextExitedCount', nextExitedCount)
 
                     await fulfillFunctionsRequest({ upkeep, keeper, nextActiveBalanceAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
                 }
@@ -118,25 +140,17 @@ void async function () {
                     const nextDepositedCount = (await manager.getPendingPoolIds()).length
                     const nextExitedCount = 0
 
+                    console.log('Fulfilling after sweep:')
+                    console.log('nextActiveBalanceAmount', nextActiveBalanceAmount)
+                    console.log('nextSweptRewardsAmount', nextSweptRewardsAmount)
+                    console.log('nextSweptExitsAmount', nextSweptExitsAmount)
+                    console.log('nextDepositedCount', nextDepositedCount)
+                    console.log('nextExitedCount', nextExitedCount)
+
                     await fulfillFunctionsRequest({ upkeep, keeper, nextActiveBalanceAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
                 }
-                
+
             }
         }
-    })
-
-    /** Stake 64 from the fourth user */
-    setTimeout(async () => {
-        const stakeAmount = 64
-        const feePercent = await manager.getFeePercent()
-        const depositAmount = stakeAmount * ((100 + feePercent) / 100)
-        const stake = await manager?.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
-        await stake?.wait()
-    }, 1000)
-
-    /** Perform upkeep and fulfill dkg answer after each pool is initiated by the local oracle */
-    for await (const event of on(manager as unknown as EventEmitter, 'PoolDepositInitiated')) {
-        const [ id, details ] = event
-        console.log(`Pool ${id} initiated at block number ${details.blockNumber}`)
     }
 }()

@@ -1,7 +1,9 @@
+import { ethers } from 'ethers'
+
 export interface Cluster {
-    validatorCount: number
-    networkFeeIndex: number
-    index: number
-    balance: number
+    validatorCount: number | ethers.BigNumber
+    networkFeeIndex: number | ethers.BigNumber
+    index: number | ethers.BigNumber
+    balance: number | ethers.BigNumber
     active: boolean
 }
