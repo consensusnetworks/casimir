@@ -9,7 +9,7 @@ const mockValidators: Validator[] = Object.values(validatorStore)
 
 const mockFee = 0.1
 
-export async function initiatePoolDepositHander({ manager, signer, index }: { manager: CasimirManager, signer: SignerWithAddress, index: number }) {
+export async function initiatePoolDepositHandler({ manager, signer, index }: { manager: CasimirManager, signer: SignerWithAddress, index: number }) {
     const {
         depositDataRoot,
         publicKey,

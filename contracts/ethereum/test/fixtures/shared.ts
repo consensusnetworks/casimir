@@ -3,7 +3,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { deployContract } from '@casimir/ethereum/helpers/deploy'
 import { CasimirManager, CasimirUpkeep } from '@casimir/ethereum/build/artifacts/types'
 import { fulfillFunctionsRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
-import { initiatePoolDepositHander } from '@casimir/ethereum/helpers/validators'
+import { initiatePoolDepositHandler } from '@casimir/ethereum/helpers/validators'
 import { round } from '@casimir/ethereum/helpers/math'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 
@@ -108,7 +108,7 @@ export async function secondUserDepositFixture() {
 
     /** Initiate next ready pool */
     const nextValidatorIndex = (await manager.getPendingPoolIds()).length + (await manager.getStakedPoolIds()).length
-    await initiatePoolDepositHander({ manager, signer: dkg, index: nextValidatorIndex })
+    await initiatePoolDepositHandler({ manager, signer: dkg, index: nextValidatorIndex })
 
     /** Run upkeep */
     const ranUpkeep = await runUpkeep({ upkeep, keeper })
@@ -209,7 +209,7 @@ export async function thirdUserDepositFixture() {
 
     /** Initiate next ready pool */
     const nextValidatorIndex = (await manager.getPendingPoolIds()).length + (await manager.getStakedPoolIds()).length
-    await initiatePoolDepositHander({ manager, signer: dkg, index: nextValidatorIndex })
+    await initiatePoolDepositHandler({ manager, signer: dkg, index: nextValidatorIndex })
 
     /** Run upkeep */
     const ranUpkeep = await runUpkeep({ upkeep, keeper })
@@ -324,7 +324,7 @@ export async function fourthUserDepositFixture() {
     /** Initiate next ready pools (2) */
     for (let i = 0; i < 2; i++) {
         const nextValidatorIndex = (await manager.getPendingPoolIds()).length + (await manager.getStakedPoolIds()).length
-        await initiatePoolDepositHander({ manager, signer: dkg, index: nextValidatorIndex })
+        await initiatePoolDepositHandler({ manager, signer: dkg, index: nextValidatorIndex })
     }
 
     /** Run upkeep */
