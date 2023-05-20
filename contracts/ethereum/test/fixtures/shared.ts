@@ -3,7 +3,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { deployContract } from '@casimir/ethereum/helpers/deploy'
 import { CasimirManager, CasimirUpkeep } from '@casimir/ethereum/build/artifacts/types'
 import { fulfillFunctionsRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
-import { initiatePoolDepositHander } from '@casimir/ethereum/helpers/dkg'
+import { initiatePoolDepositHander } from '@casimir/ethereum/helpers/validators'
 import { round } from '@casimir/ethereum/helpers/math'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 

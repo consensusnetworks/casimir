@@ -180,12 +180,6 @@ Initiate the next ready pool
 | withdrawalCredentials | bytes | The withdrawal credentials |
 | feeAmount | uint256 | The fee amount |
 
-### _getRevertMsg
-
-```solidity
-function _getRevertMsg(bytes _returnData) internal pure returns (string)
-```
-
 ### requestPoolExits
 
 ```solidity

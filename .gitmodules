@@ -13,6 +13,6 @@
 [submodule "scripts/trezor/resources/trezor-user-env"]
 	path = scripts/trezor/resources/trezor-user-env
 	url = https://github.com/trezor/trezor-user-env.git
-[submodule "services/keys/scripts/resources/rockx-dkg-cli"]
+[submodule "services/validators/scripts/resources/rockx-dkg-cli"]
 	path = services/validators/scripts/resources/rockx-dkg-cli
 	url = https://github.com/RockX-SG/rockx-dkg-cli.git
