@@ -609,6 +609,20 @@ Get the SSV fee percentage to charge on each deposit
 | ---- | ---- | ----------- |
 | [0] | uint32 | The SSV fee percentage to charge on each deposit |
 
+### getSSVNetworkAddress
+
+```solidity
+function getSSVNetworkAddress() external view returns (address ssvNetworkAddress)
+```
+
+Get the SSV network address
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| ssvNetworkAddress | address | The SSV network address |
+
 ### getUpkeepAddress
 
 ```solidity
