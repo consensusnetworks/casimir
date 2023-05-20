@@ -684,7 +684,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ethFeePercent = _ethFeePercent;
         linkFeePercent = _linkFeePercent;
         ssvFeePercent = _ssvFeePercent;
-        // If new sum total, also set estimated block to use new percentages for swept rewards
     }
 
     /**
@@ -826,14 +825,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getExitingValidatorCount() external view returns (uint256) {
         return exitingValidatorCount;
-    }
-
-    /**
-     * @notice Get a list of all filled pool IDs
-     * @return A list of all filled pool IDs
-     */
-    function getFilledPoolIds() external view returns (uint32[] memory) {
-        return readyPoolIds;
     }
 
     /**

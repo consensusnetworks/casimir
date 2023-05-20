@@ -30,47 +30,41 @@ export async function getCluster(input: ClusterInput): Promise<Cluster> {
         'ClusterReactivated'
     ]
 
-    // Todo create query filter for events
-
+    const eventFilters = eventList.map(event => ssv.filters[event](withdrawalAddress))
     let fromBlock = latestBlockNumber - step
     let toBlock = latestBlockNumber
 
     while (!cluster && fromBlock > 0) {
         try {
-            const result = await ssv.queryFilter('*', fromBlock, toBlock)
+            const items = (await Promise.all(
+                eventFilters.map(async eventFilter => {
+                    return await ssv.queryFilter(eventFilter, fromBlock, toBlock)
+                })
+            )).flat()
 
-            for (const item of result) {
-                const { args, blockNumber, event } = item
+            for (const item of items) {
+                const { args, blockNumber } = item
 
-                try {
-                    const checkClusterEvent = eventList.map(e => e.split('(')[0]).includes(event as string)
-                    if (!checkClusterEvent) continue
-                    const checkOwner = args?.owner === withdrawalAddress
-                    if (!checkOwner) continue
-                    const checkOperators = JSON.stringify(args?.operatorIds.map((value: string) => Number(value))) === JSON.stringify(operatorIds)
-                    if (!checkOperators) continue
-                    const checkCluster = args?.cluster !== undefined
-                    if (!checkCluster) continue
+                const clusterMatch = args?.cluster !== undefined
+                const operatorsMatch = JSON.stringify(args?.operatorIds.map((value: string) => Number(value))) === JSON.stringify(operatorIds)
+                if (!clusterMatch || !operatorsMatch) continue
 
-                    if (blockNumber > biggestBlockNumber) {
-                        biggestBlockNumber = blockNumber
-                        const [
-                            validatorCount,
-                            networkFeeIndex,
-                            index,
-                            balance,
-                            active
-                        ] = args.cluster
-                        cluster = {
-                            validatorCount,
-                            networkFeeIndex,
-                            index,
-                            balance,
-                            active
-                        }
+                if (blockNumber > biggestBlockNumber) {
+                    biggestBlockNumber = blockNumber
+                    const [
+                        validatorCount,
+                        networkFeeIndex,
+                        index,
+                        balance,
+                        active
+                    ] = args.cluster
+                    cluster = {
+                        validatorCount,
+                        networkFeeIndex,
+                        index,
+                        balance,
+                        active
                     }
-                } catch (e) {
-                    console.error('ERROR FILTERING CLUSTER EVENTS', e)
                 }
             }
             toBlock = fromBlock

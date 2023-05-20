@@ -12,7 +12,5 @@ export function getEventEmitter({ manager, events }: { manager: ethers.Contract,
 }
 
 function getEvent({ manager, event }: { manager: ethers.Contract, event: string }) {
-    const eventEmitter = new EventEmitter()
-    manager.on(event, (...args: any[]) => eventEmitter.emit(event, ...args))
-    return on(eventEmitter, event)
+    return on(manager as ethers.Contract & EventEmitter, event)
 }
