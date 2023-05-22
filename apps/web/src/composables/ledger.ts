@@ -1,6 +1,6 @@
 import { BitcoinLedgerSigner, EthersLedgerSigner } from '@casimir/wallets'
 import { ethers } from 'ethers'
-import { MessageInit, TransactionInit } from '@/interfaces/index'
+import { MessageRequest, TransactionRequest } from '@/interfaces/index'
 import { CryptoAddress, LoginCredentials } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
@@ -92,7 +92,7 @@ export default function useLedger() {
     }
   }
 
-  async function sendLedgerTransaction({ from, to, value, currency }: TransactionInit) {
+  async function sendLedgerTransaction({ from, to, value, currency }: TransactionRequest) {
     if (currency === 'ETH') {
       const signer = getEthersLedgerSigner()
       const provider = signer.provider as ethers.providers.Provider
@@ -115,13 +115,13 @@ export default function useLedger() {
     }
   }
 
-  async function signLedgerMessage(messageInit: MessageInit): Promise<string> {
-    if (messageInit.currency === 'ETH') {
-      const { message } = messageInit
+  async function signLedgerMessage(messageRequest: MessageRequest): Promise<string> {
+    if (messageRequest.currency === 'ETH') {
+      const { message } = messageRequest
       const signer = getEthersLedgerSigner()
       return await signer.signMessage(message)
-    } else if ( messageInit.currency === 'BTC') {
-      const { message } = messageInit
+    } else if ( messageRequest.currency === 'BTC') {
+      const { message } = messageRequest
       const signer = getBitcoinLedgerSigner()
       return await signer.signMessage(message)
     } else {

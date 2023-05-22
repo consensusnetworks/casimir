@@ -6,7 +6,7 @@ import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
 import useWalletConnect from '@/composables/walletConnect'
 import { Account, CryptoAddress, Currency, ProviderString, LoginCredentials, ExistingUserCheck} from '@casimir/types'
-import { MessageInit, TransactionInit } from '@/interfaces/index'
+import { MessageRequest, TransactionRequest } from '@/interfaces/index'
 import * as Session from 'supertokens-web-js/recipe/session'
 import router from './router'
 
@@ -246,7 +246,7 @@ export default function useWallet() {
   }
 
   async function sendTransaction() {
-    const txInit: TransactionInit = {
+    const txRequest: TransactionRequest = {
       from: selectedAddress.value,
       to: toAddress.value,
       value: amount.value,
@@ -255,18 +255,18 @@ export default function useWallet() {
     }
 
     try {
-      if (txInit.providerString === 'WalletConnect') {
-        await sendWalletConnectTransaction(txInit)
-      } else if (ethersProviderList.includes(txInit.providerString)) {
-        await sendEthersTransaction(txInit)
-      } else if (solanaProviderList.includes(txInit.providerString)) {
-        await sendSolanaTransaction(txInit)
+      if (txRequest.providerString === 'WalletConnect') {
+        await sendWalletConnectTransaction(txRequest)
+      } else if (ethersProviderList.includes(txRequest.providerString)) {
+        await sendEthersTransaction(txRequest)
+      } else if (solanaProviderList.includes(txRequest.providerString)) {
+        await sendSolanaTransaction(txRequest)
       } else if (selectedProvider.value === 'IoPay') {
-        // await sendIoPayTransaction(txInit)
+        // await sendIoPayTransaction(txRequest)
       } else if (selectedProvider.value === 'Ledger') {
-        await sendLedgerTransaction(txInit)
+        await sendLedgerTransaction(txRequest)
       } else if (selectedProvider.value === 'Trezor') {
-        await sendTrezorTransaction(txInit)
+        await sendTrezorTransaction(txRequest)
       } else {
         throw new Error('Provider selected not yet supported')
       }
@@ -394,24 +394,24 @@ export default function useWallet() {
   }
 
   async function signMessage(message: string) {
-    const messageInit: MessageInit = {
+    const messageRequest: MessageRequest = {
       message,
       providerString: selectedProvider.value,
       currency: selectedCurrency.value || ''
     }
     try {
-      if (messageInit.providerString === 'WalletConnect') {
-        await signWalletConnectMessage(messageInit)
-      } else if (ethersProviderList.includes(messageInit.providerString)) {
-        await signEthersMessage(messageInit)
-      } else if (solanaProviderList.includes(messageInit.providerString)) {
-        await signSolanaMessage(messageInit)
-      } else if (messageInit.providerString === 'IoPay') {
-        // await signIoPayMessage(messageInit)
-      } else if (messageInit.providerString === 'Ledger') {
-        await signLedgerMessage(messageInit)
-      } else if (messageInit.providerString === 'Trezor') {
-        await signTrezorMessage(messageInit)
+      if (messageRequest.providerString === 'WalletConnect') {
+        await signWalletConnectMessage(messageRequest)
+      } else if (ethersProviderList.includes(messageRequest.providerString)) {
+        await signEthersMessage(messageRequest)
+      } else if (solanaProviderList.includes(messageRequest.providerString)) {
+        await signSolanaMessage(messageRequest)
+      } else if (messageRequest.providerString === 'IoPay') {
+        // await signIoPayMessage(messageRequest)
+      } else if (messageRequest.providerString === 'Ledger') {
+        await signLedgerMessage(messageRequest)
+      } else if (messageRequest.providerString === 'Trezor') {
+        await signTrezorMessage(messageRequest)
       } else {
         console.log('signMessage not yet supported for this wallet provider')
       }

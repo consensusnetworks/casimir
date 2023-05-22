@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { BrowserProviders, EthersProvider, MessageInit, TransactionInit } from '@/interfaces/index'
+import { BrowserProviders, EthersProvider, MessageRequest, TransactionRequest } from '@/interfaces/index'
 import { GasEstimate, LoginCredentials, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
@@ -180,7 +180,7 @@ export default function useEthers() {
   }
 
   async function sendEthersTransaction(
-    { from, to, value, providerString }: TransactionInit
+    { from, to, value, providerString }: TransactionRequest
   ) {
     const signer = getEthersBrowserSigner(providerString) as ethers.Signer
     const weiAmount = ethers.utils.parseEther(value)
@@ -200,8 +200,8 @@ export default function useEthers() {
     return await signer.sendTransaction(tx)
   }
 
-  async function signEthersMessage(messageInit: MessageInit): Promise<string> {
-    const { providerString, message } = messageInit
+  async function signEthersMessage(messageRequest: MessageRequest): Promise<string> {
+    const { providerString, message } = messageRequest
     const browserProvider = getBrowserProvider(providerString)
     const web3Provider: ethers.providers.Web3Provider =
       new ethers.providers.Web3Provider(browserProvider as EthersProvider)

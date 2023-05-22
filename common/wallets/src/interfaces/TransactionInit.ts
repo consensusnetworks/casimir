@@ -1,6 +1,6 @@
 import ethers from 'ethers'
 
-export interface TransactionInit extends ethers.providers.TransactionRequest {
+export interface TransactionRequest extends ethers.providers.TransactionRequest {
     /** The transaction sender's address */
     from: string;
     /** The transaction receiver's address */

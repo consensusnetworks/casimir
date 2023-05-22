@@ -3,7 +3,7 @@ import useAuth from '@/composables/auth'
 import useEthers from '@/composables/ethers'
 import useEnvironment from '@/composables/environment'
 import { ethers } from 'ethers'
-import { MessageInit, TransactionInit } from '@/interfaces/index'
+import { MessageRequest, TransactionRequest } from '@/interfaces/index'
 import { LoginCredentials } from '@casimir/types'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
@@ -90,7 +90,7 @@ export default function useTrezor() {
         }
     }
 
-    async function sendTrezorTransaction({ from, to, value }: TransactionInit) {
+    async function sendTrezorTransaction({ from, to, value }: TransactionRequest) {
         const signer = getEthersTrezorSigner()
         const provider = signer.provider as ethers.providers.Provider
         const { chainId } = await provider.getNetwork()
@@ -115,8 +115,8 @@ export default function useTrezor() {
         return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
     }
 
-    async function signTrezorMessage(messageInit: MessageInit): Promise<string> {
-        const { message } = messageInit
+    async function signTrezorMessage(messageRequest: MessageRequest): Promise<string> {
+        const { message } = messageRequest
         const signer = getEthersTrezorSigner()
         return await signer.signMessage(message)
     }

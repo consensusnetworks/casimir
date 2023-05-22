@@ -4,7 +4,7 @@ import Eth, { ledgerService } from '@ledgerhq/hw-app-eth'
 import Transport from '@ledgerhq/hw-transport'
 import { TransportSpeculosHTTP } from '@casimir/speculos'
 import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
-import { TransactionInit } from '../interfaces/TransactionInit'
+import { TransactionRequest } from '../interfaces/TransactionRequest'
 import { CryptoAddress } from '@casimir/types'
 
 const transports = {
@@ -102,7 +102,7 @@ export class BitcoinLedgerSigner {
     // async signTransaction(path: string, transaction: any) {
     // }
 
-    async sendTransaction({ from, to, value }: TransactionInit): Promise<string> {
+    async sendTransaction({ from, to, value }: TransactionRequest): Promise<string> {
         // Build the transaction object using splitTransaction to then pass into getTrustedInput
         // Create a transaction hex string
         const transactionHex = 'f85f49b51366f7150d2adea6544bc256743707a38e2bdfbf839349ba1ff2875c'
