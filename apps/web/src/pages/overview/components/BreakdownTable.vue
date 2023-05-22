@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
+
+const tableView = ref('Wallets')
 
 onMounted(() => {
     // Needed for new Icon Library
@@ -16,14 +18,11 @@ onMounted(() => {
         <div>
           <div class="flex items-center gap-[8px]">
             <h6 class="card_title">
-              Staking Providers
+              {{ tableView }}
             </h6>
-            <div class="provider_amount_pill">
-              25 providers
-            </div>
           </div>
           <div class="card_subtitle mt-[4px]">
-            Keep track of vendor and their security ratings
+            List of transactions by wallet and staking actions
           </div>
         </div>
         <div class="flex items-start gap-[12px]">
@@ -34,26 +33,23 @@ onMounted(() => {
             />
             Export
           </button>
-
-          <button class="flex items-center gap-[8px] add_vendor_button">
-            <i
-              data-feather="plus" 
-              class="w-[16px] h-min"
-            />
-            Add vendor
-          </button>
         </div>
       </div>
       <div class="flex justify-between items-center h-[64px] border-b border-b-[#EAECF0]">
         <div class="grouped_buttons overflow-hidden">
-          <button class="timeframe_button">
-            View all
+          <button
+            class="timeframe_button"
+            :class="tableView === 'Wallets'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
+            @click="tableView = 'Wallets'"
+          >
+            Wallets
           </button>
-          <button class="timeframe_button border-x border-x-[#D0D5DD] bg-[#F3F3F3]">
-            Monitored
-          </button>
-          <button class="timeframe_button">
-            Unmonitored
+          <button
+            class="timeframe_button border-l border-l-[#D0D5DD] " 
+            :class="tableView === 'Transactions'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
+            @click="tableView = 'Transactions'"
+          >
+            Transactions
           </button>
         </div>
 
@@ -81,6 +77,7 @@ onMounted(() => {
       </div>
     </div>
     <table
+      v-show="tableView === 'Wallets'"
       class="w-full"
     >
       <thead>
@@ -93,7 +90,7 @@ onMounted(() => {
                   class="w-[14px] h-min"
                 />
               </button>
-              Vendor
+              Wallet Provider
               <button class="ml-[4px]">
                 <i
                   data-feather="arrow-down" 
@@ -102,19 +99,24 @@ onMounted(() => {
               </button>
             </div>
           </th>
-          <th class="w-[290px]">
+          <th>
             <div class="table_header">
-              Rating
+              Account
             </div>
           </th>
-          <th class="w-[128px]">
+          <th>
             <div class="table_header">
-              Last assessed
+              Balance
             </div>
           </th>
-          <th class="w-[163px]">
+          <th>
             <div class="table_header">
-              Status
+              Staked Amount
+            </div>
+          </th>
+          <th>
+            <div class="table_header">
+              Staked Reward
             </div>
           </th>
         </tr>
@@ -125,7 +127,7 @@ onMounted(() => {
         <tr
           v-for="item in 7"
           :key="item"
-          class="w-full text-grey_5 text-body border-b border-grey_2"
+          class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
         >
           <td class="px-[24px] py-[12px]">
             <div class="flex gap-[12px] items-center">
@@ -136,54 +138,151 @@ onMounted(() => {
                 />
               </button>
               <img
-                src="/Avatar.svg"
+                src="/metamask.svg"
                 alt="Avatar "
-                class="w-[40px] h-[40px] rounded-[999px]"
+                class="w-[20px] h-[20px]"
               >
-              <h6 class="vendor_name">
-                Catalog
+              <h6 class="title_name">
+                MetaMask
               </h6>
             </div>
           </td>
           <td class="pl-[24px] py-[12px]">
             <div class="flex items-center gap-[8px]">
-              <div class="flex items-center gap-[12px]">
-                <div class="w-[157px] bg-[#EAECF0] rounded-[4px] overflow-hidden h-[8px]">
-                  <div class="w-[67%] bg-[#4B5059] rounded-[4px] h-full" />
-                </div>
-                <span class="rating_text">
-                  67
-                </span>
-              </div>
-              <div class="flex gap-[4px] items-center text-[#027A48] px-[6px] py-[5px] rounded-[16px] bg-[#ECFDF3]">
-                <i
-                  data-feather="arrow-up" 
-                  class="w-[12px] h-min text-[#12B76A]"
-                />
-                <span class="rating_percentage">
-                  5%
-                </span>
-              </div>
+              0x9219d...E991
             </div>
           </td>
           <td class="pl-[24px] py-[12px]">
             <div class="flex items-center gap-[8px]">
-              <span class="last_assessed_text">
-                22 Jan 2022
-              </span>
+              1.5 ETH
             </div>
           </td>
           <td class="pl-[24px] py-[12px]">
-            <div class="flex items-center gap-[7px] status_pill w-min">
-              <div class="w-[6px] h-[6px] rounded-[999px] bg-[#12B76A]" />
-              <span>
-                Active
-              </span>
+            <div class="flex items-center gap-[8px]">
+              0.00051 ETH
+            </div>
+          </td>
+          <td class="pl-[24px] py-[12px]">
+            <div class="flex items-center gap-[8px]">
+              0.0001 ETH
             </div>
           </td>
         </tr>
       </tbody>
     </table>
+    <table
+      v-show="tableView === 'Transactions'"
+      class="w-full"
+    >
+      <thead>
+        <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
+          <th class="w-[218px]">
+            <div class="table_header flex items-center">
+              <button class="checkbox_button mr-[12px]">
+                <i
+                  data-feather="minus" 
+                  class="w-[14px] h-min"
+                />
+              </button>
+              Tx Hash
+              <button class="ml-[4px]">
+                <i
+                  data-feather="arrow-down" 
+                  class="w-[16px] h-min text-[#667085]"
+                />
+              </button>
+            </div>
+          </th>
+          <th>
+            <div class="table_header">
+              Staked Amount
+            </div>
+          </th>
+          <th>
+            <div class="table_header">
+              Staked Reward
+            </div>
+          </th>
+          <th>
+            <div class="table_header">
+              Date
+            </div>
+          </th>
+          <th>
+            <div class="table_header">
+              APY
+            </div>
+          </th>
+          <th>
+            <div class="table_header">
+              Status
+            </div>
+          </th>
+          <th>
+            <div class="table_header">
+              Operators
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody
+        class="w-full"
+      >
+        <tr
+          v-for="item in 7"
+          :key="item"
+          class="w-full text-grey_5 text-body border-b border-grey_2  h-[72px]"
+        >
+          <td class="px-[24px] py-[12px]">
+            <div class="flex gap-[12px] items-center underline">
+              <button class="checkbox_button mr-[12px]">
+                <i
+                  data-feather="check" 
+                  class="w-[14px] h-min"
+                />
+              </button>
+              0x962...
+            </div>
+          </td>
+          <td class="pl-[24px] py-[12px]">
+            <div class="flex items-center gap-[8px]">
+              0.00051 ETH
+            </div>
+          </td>
+          <td class="pl-[24px] py-[12px]">
+            <div class="flex items-center gap-[8px]">
+              0.0001 ETH
+            </div>
+          </td>
+          <td class="pl-[24px] py-[12px]">
+            <div class="flex items-center gap-[8px]">
+              May-08-2023
+            </div>
+          </td>
+          <td class="pl-[24px] py-[12px]">
+            <div class="flex items-center gap-[8px]">
+              0.5%
+            </div>
+          </td>
+          <td class="pl-[24px] py-[12px]">
+            <div class="flex items-center gap-[8px] status_pill">
+              <div class="bg-[#027A48] rounded-[999px] w-[8px] h-[8px]" />
+              Staked
+            </div>
+          </td>
+
+          <td class="pl-[24px] py-[12px]">
+            <div class="flex items-center ">
+              <div class="w-[24px] h-[24px] border-[2px] border-white bg-blue-300 rounded-[999px]" />
+              <div class="w-[24px] h-[24px] border-[2px] border-white bg-green-300 rounded-[999px] ml-[-12px]" />
+              <div class="w-[24px] h-[24px] border-[2px] border-white bg-red-300 rounded-[999px] ml-[-12px]" />
+              <div class="w-[24px] h-[24px] border-[2px] border-white bg-purple-300 rounded-[999px] ml-[-12px]" />
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
     <div class="flex justify-between items-center mt-[12px]">
       <div class="page_number ml-[56px]">
         Page 1 of 10
@@ -202,7 +301,7 @@ onMounted(() => {
 
 <style scoped>
 .status_pill{
-    font-family: 'IBM Plex Sans';
+    font-family: 'Inter';
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
@@ -238,7 +337,7 @@ onMounted(() => {
     line-height: 20px;
     color: #344054;
 }
-.vendor_name{
+.title_name{
     font-family: 'IBM Plex Sans';
     font-style: normal;
     font-weight: 500;
@@ -328,7 +427,7 @@ onMounted(() => {
 }
 .timeframe_button{
     padding: 5px 10px;
-    background: #FFFFFF;
+    /* background: #FFFFFF; */
     align-items: center;
 }
 .grouped_buttons{

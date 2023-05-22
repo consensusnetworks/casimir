@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import Balance from './components/Balance.vue'
-import TotalStaked from './components/TotalStaked.vue'
-import StakingRewards from './components/StakingRewards.vue'
 import Staking from './components/Staking.vue'
 import Announcements from './components/Announcements.vue'
 import StakingAvg from './components/StakingAvg.vue'
-import CrossProviderChart from './components/CrossProviderChart.vue'
-import StakingProvidersTable from './components/StakingProvidersTable.vue'
+import BreakdownChart from './components/BreakdownChart.vue'
+import BreakdownTable from './components/BreakdownTable.vue'
 
 </script>
 
@@ -16,34 +13,20 @@ import StakingProvidersTable from './components/StakingProvidersTable.vue'
       Breakdown
     </h6>
 
-    <div class="flex justify-between items-start gap-[63px] text-white">
-      <div class="w-full">
-        <div class="w-full flex justify-between gap-30 items-start mb-[32px]">
-          <div class="h-[127px] w-full">
-            <Balance />
-          </div>
-          <div class="h-[127px] w-full">
-            <TotalStaked />
-          </div>
-          <div class="h-[127px] w-full">
-            <StakingRewards />
-          </div>
-        </div>
-
-        <div class="w-full h-[447px] mb-[61px]">
-          <CrossProviderChart />
-        </div>
-
-        <div class="w-full h-[805px]">
-          <StakingProvidersTable />
-        </div>
+    <div class="flex justify-between items-start gap-[63px] text-white h-[541px] mb-[47px]">
+      <div class="w-full h-full">
+        <BreakdownChart />
       </div>
-
+      <div class="max-w-[300px] w-full h-full">
+        <Staking />
+      </div>
+    </div>
+    <div class="flex justify-between items-start gap-[63px] text-white">
+      <div class="w-full h-full">
+        <BreakdownTable />
+      </div>
       <div class="max-w-[300px] w-full">
-        <div class="w-full h-[494px]">
-          <Staking />
-        </div>
-        <div class="w-full h-[386px] my-[31px]">
+        <div class="w-full mb-[37px]">
           <StakingAvg /> 
         </div>
         <div class="w-full h-[261px]">

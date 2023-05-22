@@ -11,36 +11,67 @@ onMounted(() => {
 
 <template>
   <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black">
+    <div class="flex gap-[68px] mb-[52px]">
+      <div>
+        <h6 class="blance_title mb-[15px]">
+          Total Staked
+        </h6>
+        <div class="flex items-center gap-[12px]">
+          <h5 class="blance_amount">
+            $150
+          </h5>
+          <span class="blance_exchange">
+            0.00054 ETH
+          </span>
+        </div>
+      </div>
+      <div>
+        <h6 class="blance_title mb-[15px]">
+          Staking Rewards
+        </h6>
+        <div class="flex items-center gap-[12px]">
+          <h5 class="blance_amount">
+            $17.25
+          </h5>
+          <span class="blance_exchange">
+            0.004 ETH
+          </span>
+        </div>
+      </div>
+    </div>
     <div class="flex justify-between items-start">
       <div>
         <h6 class="card_title">
-          Cross Provider
+          Ethereum Balance
         </h6>
         <div class="flex items-center gap-[22px]">
           <div class="flex gap-[10px] items-center">
             <div class="w-[9px] h-[9px] bg-[#2F80ED] rounded-[999px]" />
             <span class="legent_label">
-              Blue line
+              Primary Account
             </span>
           </div>
         </div>
       </div>
       <div class="border border-[#D0D5DD] rounded-[8px] overflow-hidden">
         <button class="timeframe_button rounded-l-[]">
-          12 months
+          1 month
         </button>
         <button class="timeframe_button border-x border-x-[#D0D5DD] bg-[#F3F3F3]">
-          30 days
+          6 months
+        </button>
+        <button class="timeframe_button border-r border-r-[#D0D5DD]">
+          12 months
         </button>
         <button class="timeframe_button">
-          7 days
+          historical
         </button>
       </div>
     </div>
     <hr class="w-full bg-[#EAECF0] mt-[20px] mb-[24px]">
     <div class="flex justify-between items-center gap-[4px]">
       <div class="chart_y_label w-[18px]">
-        Y-axis label
+        Value (USD)
       </div>
       <div
         :id="'line_chart_container_cross_provider_chart'" 
@@ -58,6 +89,30 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.blance_exchange{
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  color: #7D8398;
+}
+.blance_amount{
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 28px;
+  color: #344054;
+}
+.blance_title{
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  color: #667085;
+}
 .chart_y_label{
     font-family: 'IBM Plex Sans';
     font-style: normal;

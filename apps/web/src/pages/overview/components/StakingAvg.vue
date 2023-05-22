@@ -15,7 +15,7 @@ onMounted(() => {
         Avg. Staking Reward
       </h6>
       <div class="flex justify-between items-center gap-[8px] px-[10px] py-[8px] card_input">
-        Per day 
+        Last Week 
 
         <i
           data-feather="chevron-down" 
@@ -24,71 +24,13 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="card_metric flex items-end gap-[3px] mb-[19px]">
+    <div class="card_metric flex items-end gap-[9px]">
       <h6>
-        2,437
+        5.2%
       </h6>
-      <span>
-        units
+      <span class="mb-[3px]">
+        APY
       </span>
-    </div>
-
-    <div class="relative h-[179px] w-full">
-      <div class="my-[7px] flex justify-start items-center relative z-[1]">
-        <span class="card_chart_label">SSV</span>
-        <div class="rounded-[8px] h-[24px] w-[112px] bg-[#9BA4B5] overflow-hidden">
-          <div class="w-[80%] h-full bg-[#4B5059]" />
-        </div>
-      </div>
-      <div class="my-[7px] flex justify-start items-center relative z-[1]">
-        <span class="card_chart_label">KV</span>
-        <div class="rounded-[8px] h-[24px] w-[172px] bg-[#9BA4B5] overflow-hidden">
-          <div class="w-[80%] h-full bg-[#4B5059]" />
-        </div>
-      </div>
-      <div class="my-[7px] flex justify-start items-center relative z-[1]">
-        <span class="card_chart_label">MEP</span>
-        <div class="rounded-[8px] h-[24px] w-[81px] bg-[#9BA4B5] overflow-hidden">
-          <div class="w-[80%] h-full bg-[#4B5059]" />
-        </div>
-      </div>
-      <div class="my-[7px] flex justify-start items-center relative z-[1]">
-        <span class="card_chart_label">ZAP</span>
-        <div class="rounded-[8px] h-[24px] w-[214px] bg-[#9BA4B5] overflow-hidden">
-          <div class="w-[80%] h-full bg-[#4B5059]" />
-        </div>
-      </div>
-      <div
-        v-for="i in 8"
-        :key="i"
-        class="absolute w-[1px] bg-[#EFEFEF] z-[0]"
-        :class="i % 2 === 0? 'top-[-13px]' : 'top-0'"
-        :style="`height: calc(153px); left: calc(${i * 29}px)`"
-      />
-
-      <div
-        v-for="i in 4"
-        :key="i"
-        class="absolute z-[0] bottom-[10px] x_label"
-        :style="`left: calc(${((i-1) * (29 *2)) + 29}px)`"
-      >
-        {{ (i - 1) * 1000 }}
-      </div>
-    </div>
-
-    <div class="flex items-center gap-[26px] mt-[31px]">
-      <div class="flex items-center gap-[12px]">
-        <div class="rounded-[999px] w-[8px] h-[8px] bg-[#4B5059]" />
-        <h6 class="chart_legend_label">
-          Average Gain
-        </h6>
-      </div>
-      <div class="flex items-center gap-[12px]">
-        <div class="rounded-[999px] w-[8px] h-[8px] bg-[#9BA4B5]" />
-        <h6 class="chart_legend_label">
-          Net Loss
-        </h6>
-      </div>
     </div>
   </div>
 </template>
