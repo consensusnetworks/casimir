@@ -1,15 +1,15 @@
 import { BrowserProviders } from './BrowserProviders'
 import { EthersProvider } from './EthersProvider'
-import { MessageInit } from './MessageInit'
+import { MessageRequest } from './MessageRequest'
 import { ReadyOrStakeString } from './ReadyOrStakeString'
-import { TransactionInit } from './TransactionInit'
+import { TransactionRequest } from './TransactionRequest'
 import { User } from './User'
 
 export type {
     BrowserProviders,
     EthersProvider,
-    MessageInit,
+    MessageRequest,
     ReadyOrStakeString,
-    TransactionInit,
+    TransactionRequest,
     User,
 }

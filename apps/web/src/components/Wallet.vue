@@ -6,10 +6,16 @@
         Select MetaMask
       </button>
       <button
+        class="brave-btn"
+        @click="selectProvider('BraveWallet')"
+      >
+        Select Brave Wallet
+      </button>
+      <button
         class="coinbase-btn"
         @click="selectProvider('CoinbaseWallet')"
       >
-        Select CoinbaseWallet
+        Select Coinbase Wallet
       </button>
       <button
         class="ledger-btn"
@@ -18,10 +24,22 @@
         Select Ledger
       </button>
       <button
+        class="okx-btn"
+        @click="selectProvider('OkxWallet')"
+      >
+        Select OKX Wallet
+      </button>
+      <button
         class="trezor-btn"
         @click="selectProvider('Trezor')"
       >
         Select Trezor
+      </button>
+      <button
+        class="trust-btn"
+        @click="selectProvider('TrustWallet')"
+      >
+        Select Trust Wallet
       </button>
       <button
         class="wallet-connect-btn"
@@ -288,8 +306,16 @@ button {
   width: 750px;
 }
 
+.brave-btn {
+  background-color: rgb(228, 169, 123);
+}
+
 .coinbase-btn {
   background-color: blue;
+}
+
+.trust-btn {
+  background-color: rgb(61, 61, 228);
 }
 
 .iopay-btn {
@@ -298,6 +324,10 @@ button {
 
 .ledger-btn {
   background-color: rgb(0, 0, 0);
+}
+
+.okx-btn {
+  background-color: rgb(125, 1, 182);
 }
 
 .trezor-btn {

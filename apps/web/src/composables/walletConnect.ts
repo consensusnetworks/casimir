@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import WalletConnectProvider from '@walletconnect/web3-provider'
-import { MessageInit, TransactionInit } from '@/interfaces/index'
+import { MessageRequest, TransactionRequest } from '@/interfaces/index'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
@@ -59,13 +59,13 @@ export default function useWalletConnect() {
     }
   }
 
-  async function signWalletConnectMessage(messageInit: MessageInit) {
+  async function signWalletConnectMessage(messageRequest: MessageRequest) {
     const signer = await getEthersWalletConnectSigner()
-    return await signer.signMessage(messageInit.message)
+    return await signer.signMessage(messageRequest.message)
   }
 
   async function sendWalletConnectTransaction(
-    { from, to, value }: TransactionInit
+    { from, to, value }: TransactionRequest
   ): Promise<ethers.providers.TransactionResponse> {
     const signer = await getEthersWalletConnectSigner()
     const provider = signer.provider as ethers.providers.Provider

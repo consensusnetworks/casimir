@@ -1,5 +1,5 @@
 import { onMounted, ref } from 'vue'
-import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, Account } from '@casimir/types'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, Account, ExistingUserCheck } from '@casimir/types'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useSSV from '@/composables/ssv'
@@ -29,32 +29,30 @@ export default function useUsers () {
         return { error: false, message: `Account added to user: ${userAccount}`, data: userAccount }
     }
 
-    async function checkIfPrimaryByAddress(address: string): Promise<boolean> {
+    async function checkIfPrimaryUserExists(provider: ProviderString, address: string): Promise<ExistingUserCheck> {
         const requestOptions = {
-            method: 'POST',
+            method: 'GET',
             headers: { 
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ address })
         }
-        const response = await fetch(`${usersBaseURL}/auth/get-user-by-address`, requestOptions)
-        const { userExists } = await response.json()
-        return userExists
+        const response = await fetch(`${usersBaseURL}/auth/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
+        const { sameAddress, sameProvider } = await response.json()
+        return { sameAddress, sameProvider }
     }
 
     async function checkIfSecondaryAddress(address: string) : Promise<Account[]> {
         try {
             const requestOptions = {
-                method: 'POST',
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ address })
+                }
             }
-            const response = await fetch(`${usersBaseURL}/auth/check-secondary-address`, requestOptions)
+            const response = await fetch(`${usersBaseURL}/auth/check-secondary-address/${address}`, requestOptions)
             const json = await response.json()
-            const { accounts } = json
-            return accounts
+            const { users } = json
+            return users
         } catch (error) {
             console.log('Error in checkIfSecondaryAddress in wallet.ts :>> ', error)
             return [] as Account[]
@@ -174,7 +172,7 @@ export default function useUsers () {
         user,
         addAccount,
         checkIfSecondaryAddress,
-        checkIfPrimaryByAddress,
+        checkIfPrimaryUserExists,
         checkUserSessionExists,
         getMessage,
         getUser,

@@ -1,12 +1,12 @@
 import { ref } from 'vue'
-import useLedger from '@/composables/ledger'
-import useTrezor from '@/composables/trezor'
 import useEthers from '@/composables/ethers'
-import useWalletConnect from '@/composables/walletConnect'
+import useLedger from '@/composables/ledger'
 import useSolana from '@/composables/solana'
+import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
-import { Account, CryptoAddress, Currency, ProviderString, LoginCredentials} from '@casimir/types'
-import { MessageInit, TransactionInit } from '@/interfaces/index'
+import useWalletConnect from '@/composables/walletConnect'
+import { Account, CryptoAddress, Currency, ProviderString, LoginCredentials, ExistingUserCheck} from '@casimir/types'
+import { MessageRequest, TransactionRequest } from '@/interfaces/index'
 import * as Session from 'supertokens-web-js/recipe/session'
 import router from './router'
 
@@ -25,7 +25,7 @@ const activeWallets = ref([
   'IoPay',
 ] as ProviderString[])
 const amount = ref<string>('1')
-const amountToStake = ref<string>('0.0')
+const amountToStake = ref<string>('1.2')
 const userAddresses = ref<CryptoAddress[]>([])
 const loadingUserWallets = ref(false)
 const primaryAddress = ref('')
@@ -37,11 +37,11 @@ const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
   const { estimateEIP1559GasFee, ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
-  const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
+  const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
+  const { user, getUser, setUser, addAccount, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, updatePrimaryAddress } = useUsers()
   const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
-  const { user, getUser, setUser, addAccount, checkIfSecondaryAddress, checkIfPrimaryByAddress, removeAccount, updatePrimaryAddress } = useUsers()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
     if (provider === 'Ledger') {
@@ -246,7 +246,7 @@ export default function useWallet() {
   }
 
   async function sendTransaction() {
-    const txInit: TransactionInit = {
+    const txRequest: TransactionRequest = {
       from: selectedAddress.value,
       to: toAddress.value,
       value: amount.value,
@@ -255,18 +255,18 @@ export default function useWallet() {
     }
 
     try {
-      if (txInit.providerString === 'WalletConnect') {
-        await sendWalletConnectTransaction(txInit)
-      } else if (ethersProviderList.includes(txInit.providerString)) {
-        await sendEthersTransaction(txInit)
-      } else if (solanaProviderList.includes(txInit.providerString)) {
-        await sendSolanaTransaction(txInit)
+      if (txRequest.providerString === 'WalletConnect') {
+        await sendWalletConnectTransaction(txRequest)
+      } else if (ethersProviderList.includes(txRequest.providerString)) {
+        await sendEthersTransaction(txRequest)
+      } else if (solanaProviderList.includes(txRequest.providerString)) {
+        await sendSolanaTransaction(txRequest)
       } else if (selectedProvider.value === 'IoPay') {
-        // await sendIoPayTransaction(txInit)
+        // await sendIoPayTransaction(txRequest)
       } else if (selectedProvider.value === 'Ledger') {
-        await sendLedgerTransaction(txInit)
+        await sendLedgerTransaction(txRequest)
       } else if (selectedProvider.value === 'Trezor') {
-        await sendTrezorTransaction(txInit)
+        await sendTrezorTransaction(txRequest)
       } else {
         throw new Error('Provider selected not yet supported')
       }
@@ -281,21 +281,29 @@ export default function useWallet() {
    * @param currency 
    */
   async function selectAddress(address: any, pathIndex?: string) : Promise<void | Account[]> {
-    address = trimAndLowercaseAddress(address)
-    setSelectedAddress(address)
-    
-    if (pathIndex) setSelectedPathIndex(pathIndex)
-    
-    const isPrimaryAddress : boolean = await checkIfPrimaryByAddress(selectedAddress.value)
-    if (isPrimaryAddress) {
-      return await connectWallet() // login
-    }
-    
-    const accountsIfSecondaryAddress : Account[] | void = await checkIfSecondaryAddress(selectedAddress.value)
-    if (accountsIfSecondaryAddress.length) {
-      return accountsIfSecondaryAddress
-    } else {
-      return await connectWallet() // sign up
+    try {
+      address = trimAndLowercaseAddress(address)
+      setSelectedAddress(address)
+      
+      if (pathIndex) setSelectedPathIndex(pathIndex)
+      
+      const { sameAddress, sameProvider } : ExistingUserCheck = await checkIfPrimaryUserExists(selectedProvider.value, selectedAddress.value)
+      if (sameAddress && sameProvider ) {
+        return await connectWallet() // login
+      } else if (sameAddress && !sameProvider) {
+        // TODO: Handle this on front-end: do you want to change your primary provider?
+        throw new Error('Address already exists as a primary address using another provider')
+      }
+      
+      const accountsIfSecondaryAddress : Account[] | void = await checkIfSecondaryAddress(selectedAddress.value)
+      console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
+      if (accountsIfSecondaryAddress.length) {
+        throw new Error(`${selectedAddress.value} already exists as a secondary address on this/these account(s): ${JSON.stringify(accountsIfSecondaryAddress)}`)
+      } else {
+        return await connectWallet() // sign up or add account
+      }
+    } catch (err) {
+      console.error('selectAddress error: ', err)
     }
   }
 
@@ -386,24 +394,24 @@ export default function useWallet() {
   }
 
   async function signMessage(message: string) {
-    const messageInit: MessageInit = {
+    const messageRequest: MessageRequest = {
       message,
       providerString: selectedProvider.value,
       currency: selectedCurrency.value || ''
     }
     try {
-      if (messageInit.providerString === 'WalletConnect') {
-        await signWalletConnectMessage(messageInit)
-      } else if (ethersProviderList.includes(messageInit.providerString)) {
-        await signEthersMessage(messageInit)
-      } else if (solanaProviderList.includes(messageInit.providerString)) {
-        await signSolanaMessage(messageInit)
-      } else if (messageInit.providerString === 'IoPay') {
-        // await signIoPayMessage(messageInit)
-      } else if (messageInit.providerString === 'Ledger') {
-        await signLedgerMessage(messageInit)
-      } else if (messageInit.providerString === 'Trezor') {
-        await signTrezorMessage(messageInit)
+      if (messageRequest.providerString === 'WalletConnect') {
+        await signWalletConnectMessage(messageRequest)
+      } else if (ethersProviderList.includes(messageRequest.providerString)) {
+        await signEthersMessage(messageRequest)
+      } else if (solanaProviderList.includes(messageRequest.providerString)) {
+        await signSolanaMessage(messageRequest)
+      } else if (messageRequest.providerString === 'IoPay') {
+        // await signIoPayMessage(messageRequest)
+      } else if (messageRequest.providerString === 'Ledger') {
+        await signLedgerMessage(messageRequest)
+      } else if (messageRequest.providerString === 'Trezor') {
+        await signTrezorMessage(messageRequest)
       } else {
         console.log('signMessage not yet supported for this wallet provider')
       }

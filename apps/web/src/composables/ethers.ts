@@ -1,6 +1,5 @@
-import { ref } from 'vue'
 import { ethers } from 'ethers'
-import { BrowserProviders, EthersProvider, MessageInit, TransactionInit } from '@/interfaces/index'
+import { BrowserProviders, EthersProvider, MessageRequest, TransactionRequest } from '@/interfaces/index'
 import { GasEstimate, LoginCredentials, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
@@ -8,19 +7,11 @@ import useEnvironment from '@/composables/environment'
 const { createSiweMessage, signInWithEthereum } = useAuth()
 const { ethereumURL } = useEnvironment()
 
-const defaultProviders = {
-  MetaMask: undefined,
-  CoinbaseWallet: undefined,
-}
-
-const ethereum: any = window.ethereum
-const availableProviders = ref<BrowserProviders>(getBrowserProviders(ethereum))
-
 export default function useEthers() {
-  const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
+  const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
 
   async function addEthersNetwork (providerString: ProviderString, network: any) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     try {
       await provider.request({
         method: 'wallet_addEthereumChain',
@@ -101,14 +92,14 @@ export default function useEthers() {
   }
 
   async function getEthersAddress (providerString: ProviderString) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     if (provider) {
       return (await requestEthersAccount(provider as EthersProvider))
     }
   }
 
   async function getEthersAddressWithBalance (providerString: ProviderString) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     if (provider) {
       const address = (await requestEthersAccount(provider as EthersProvider))[0]
       const balance = await getEthersBalance(address)
@@ -135,7 +126,7 @@ export default function useEthers() {
   }
 
   function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     if (provider) {
       return new ethers.providers.Web3Provider(provider as EthersProvider).getSigner()
     }
@@ -143,7 +134,7 @@ export default function useEthers() {
 
   async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
     // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
-    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
+    const browserProvider = getBrowserProvider(providerString)
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const network = await web3Provider.getNetwork()
     // console.log('network.chainId :>> ', network.chainId)
@@ -160,7 +151,7 @@ export default function useEthers() {
 
   async function loginWithEthers(loginCredentials: LoginCredentials) {
     const { provider, address, currency } = loginCredentials
-    const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
+    const browserProvider = getBrowserProvider(provider)
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     try {
       const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
@@ -189,7 +180,7 @@ export default function useEthers() {
   }
 
   async function sendEthersTransaction(
-    { from, to, value, providerString }: TransactionInit
+    { from, to, value, providerString }: TransactionRequest
   ) {
     const signer = getEthersBrowserSigner(providerString) as ethers.Signer
     const weiAmount = ethers.utils.parseEther(value)
@@ -209,9 +200,9 @@ export default function useEthers() {
     return await signer.sendTransaction(tx)
   }
 
-  async function signEthersMessage(messageInit: MessageInit): Promise<string> {
-    const { providerString, message } = messageInit
-    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
+  async function signEthersMessage(messageRequest: MessageRequest): Promise<string> {
+    const { providerString, message } = messageRequest
+    const browserProvider = getBrowserProvider(providerString)
     const web3Provider: ethers.providers.Web3Provider =
       new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const signer = web3Provider.getSigner()
@@ -220,7 +211,7 @@ export default function useEthers() {
   }
 
   async function switchEthersNetwork (providerString: ProviderString, chainId: string) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     const currentChainId = await provider.networkVersion
     if (chainId === '5') {
       chainId = '0x5'
@@ -259,23 +250,46 @@ export default function useEthers() {
     getEthersBrowserProviderSelectedCurrency,
     getGasPriceAndLimit,
     loginWithEthers,
+    requestEthersAccount,
     signEthersMessage,
     sendEthersTransaction,
     switchEthersNetwork
   }
 }
 
-function getBrowserProviders(ethereum: any) {
-  if (!ethereum) return defaultProviders
-  else if (!ethereum.providerMap) {
-    return {
-      MetaMask: ethereum.isMetaMask ? ethereum : undefined,
-      CoinbaseWallet: ethereum.isCoinbaseWallet ? ethereum : undefined,
-    }
+function getBrowserProvider(providerString: ProviderString) {
+  if (providerString === 'MetaMask' || providerString === 'CoinbaseWallet') {
+    return window.ethereum?.providerMap?.get(providerString) || undefined
+  } else if (providerString === 'BraveWallet') {
+    return getBraveWallet()
+  } else if (providerString === 'TrustWallet') {
+    return getTrustWallet()
+  } else if (providerString === 'OkxWallet') {
+    return getOkxWallet()
+  }
+}
+
+function getBraveWallet() {
+  const { ethereum } = window as any
+  if (ethereum?.isBraveWallet) {
+    return ethereum
   } else {
-    return {
-      MetaMask: ethereum.providerMap.get('MetaMask'),
-      CoinbaseWallet: ethereum.providerMap.get('CoinbaseWallet'),
+    window.open('https://brave.com/download/', '_blank')
+  }
+}
+
+function getOkxWallet() {
+  const { okxwallet } = window as any
+  const { okexchain } = window as any
+  return okxwallet || okexchain
+}
+
+function getTrustWallet() {
+  const { ethereum } = window as any
+  const providers = ethereum?.providers
+  if (providers) {
+    for (const provider of providers) {
+      if (provider.isTrustWallet) return provider
     }
   }
 }

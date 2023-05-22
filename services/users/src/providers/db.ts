@@ -1,6 +1,6 @@
 import { Postgres } from '@casimir/data'
 import { camelCase } from '@casimir/helpers'
-import { Account, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
+import { Account, ProviderString, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
 import useEthers from './ethers'
 
 const { generateNonce } = useEthers()
@@ -41,9 +41,9 @@ export default function useDB() {
      * @returns The new user
      */
     async function addUser(user: User, account: Account) : Promise<UserAddedSuccess | undefined> {
-        const { address, createdAt, updatedAt } = user
-        const text = 'INSERT INTO users (address, created_at, updated_at) VALUES ($1, $2, $3) RETURNING *;'
-        const params = [address, createdAt, updatedAt]
+        const { address, createdAt, updatedAt, walletProvider } = user
+        const text = 'INSERT INTO users (address, created_at, updated_at, wallet_provider) VALUES ($1, $2, $3, $4) RETURNING *;'
+        const params = [address, createdAt, updatedAt, walletProvider]
         const rows = await postgres.query(text, params)
         const addedUser = rows[0]
         account.userId = addedUser.id
@@ -103,6 +103,21 @@ export default function useDB() {
         const params = [address]
         const rows = await postgres.query(text, params)
         const user = rows[0]
+        return formatResult(user) as User
+    }
+
+    /**
+     * Get a user by id.
+     * @param id - The user's id
+     * @returns The user if found, otherwise undefined
+     * @throws Error if the user is not found
+     */
+    async function getUserById(id: string) {
+        const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.id = $1 GROUP BY u.id'
+        const params = [id]
+        const rows = await postgres.query(text, params)
+        const user = rows[0]
+        if (!user) throw new Error('User not found')
         return formatResult(user) as User
     }
 
@@ -200,7 +215,8 @@ export default function useDB() {
         addUser, 
         getAccounts,
         getNonce, 
-        getUser, 
+        getUser,
+        getUserById,
         removeAccount, 
         updateUserAddress, 
         upsertNonce 
