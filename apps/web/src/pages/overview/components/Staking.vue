@@ -34,7 +34,7 @@ onMounted(() => {
       />
     </div>
 
-    <h6 class="card_title mb-[11px]">
+    <h6 class="card_title mb-[11px] mt-[22px]">
       Amount
     </h6>
 

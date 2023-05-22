@@ -71,7 +71,7 @@ onMounted(() => {
     <hr class="w-full bg-[#EAECF0] mt-[20px] mb-[24px]">
     <div class="flex justify-between items-center gap-[4px]">
       <div class="chart_y_label w-[18px]">
-        Y-axis label
+        Value (USD)
       </div>
       <div
         :id="'line_chart_container_cross_provider_chart'" 

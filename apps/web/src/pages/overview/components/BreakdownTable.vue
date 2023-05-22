@@ -234,7 +234,7 @@ onMounted(() => {
           class="w-full text-grey_5 text-body border-b border-grey_2  h-[72px]"
         >
           <td class="px-[24px] py-[12px]">
-            <div class="flex gap-[12px] items-center">
+            <div class="flex gap-[12px] items-center underline">
               <button class="checkbox_button mr-[12px]">
                 <i
                   data-feather="check" 

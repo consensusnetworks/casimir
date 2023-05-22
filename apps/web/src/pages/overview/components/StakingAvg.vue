@@ -24,11 +24,11 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="card_metric flex items-end gap-[3px]">
+    <div class="card_metric flex items-end gap-[9px]">
       <h6>
         5.2%
       </h6>
-      <span>
+      <span class="mb-[3px]">
         APY
       </span>
     </div>
