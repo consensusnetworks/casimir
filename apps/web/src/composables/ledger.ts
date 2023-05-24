@@ -1,6 +1,7 @@
 import { BitcoinLedgerSigner, EthersLedgerSigner } from '@casimir/wallets'
 import { ethers } from 'ethers'
-import { MessageRequest, TransactionRequest } from '@/interfaces/index'
+import { MessageRequest } from '@/interfaces/index'
+import { TransactionRequest } from '@casimir/types'
 import { CryptoAddress, LoginCredentials } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'

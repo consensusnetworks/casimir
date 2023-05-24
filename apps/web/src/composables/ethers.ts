@@ -1,5 +1,6 @@
 import { ethers } from 'ethers'
-import { BrowserProviders, EthersProvider, MessageRequest, TransactionRequest } from '@/interfaces/index'
+import { EthersProvider, MessageRequest } from '@/interfaces/index'
+import { TransactionRequest } from '@casimir/types'
 import { GasEstimate, LoginCredentials, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
