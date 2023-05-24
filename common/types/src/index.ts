@@ -11,6 +11,7 @@ import { Event } from './interfaces/Event'
 import { ExistingUserCheck } from './interfaces/ExistingUserCheck'
 import { GasEstimate } from './interfaces/GasEstimate'
 import { LoginCredentials } from './interfaces/LoginCredentials'
+import { MessageRequest } from './interfaces/MessageRequest'
 import { Operator } from './interfaces/Operator'
 import { Pool } from './interfaces/Pool'
 import { ProviderString } from './interfaces/ProviderString'
@@ -35,6 +36,7 @@ export type {
     ExistingUserCheck,
     GasEstimate,
     LoginCredentials,
+    MessageRequest,
     Operator, 
     Pool,
     ProviderString,
