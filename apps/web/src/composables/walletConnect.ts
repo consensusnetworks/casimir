@@ -1,10 +1,9 @@
 import { ethers } from 'ethers'
 import WalletConnectProvider from '@walletconnect/web3-provider'
-import { MessageRequest, TransactionRequest } from '@/interfaces/index'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
-import { LoginCredentials, CryptoAddress } from '@casimir/types'
+import { CryptoAddress, LoginCredentials, MessageRequest, TransactionRequest } from '@casimir/types'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
 

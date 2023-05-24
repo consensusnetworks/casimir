@@ -11,9 +11,11 @@ import { Event } from './interfaces/Event'
 import { ExistingUserCheck } from './interfaces/ExistingUserCheck'
 import { GasEstimate } from './interfaces/GasEstimate'
 import { LoginCredentials } from './interfaces/LoginCredentials'
+import { MessageRequest } from './interfaces/MessageRequest'
 import { Operator } from './interfaces/Operator'
 import { Pool } from './interfaces/Pool'
 import { ProviderString } from './interfaces/ProviderString'
+import { TransactionRequest } from './interfaces/TransactionRequest'
 import { RemoveAccountOptions } from './interfaces/RemoveAccountOptions'
 import { User } from './interfaces/User'
 import { UserWithAccounts } from './interfaces/UserWithAccounts'
@@ -34,9 +36,11 @@ export type {
     ExistingUserCheck,
     GasEstimate,
     LoginCredentials,
+    MessageRequest,
     Operator, 
     Pool,
     ProviderString,
+    TransactionRequest,
     RemoveAccountOptions,
     User,
     UserWithAccounts,

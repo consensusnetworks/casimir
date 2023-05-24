@@ -4,8 +4,7 @@ import Eth, { ledgerService } from '@ledgerhq/hw-app-eth'
 import Transport from '@ledgerhq/hw-transport'
 import { TransportSpeculosHTTP } from '@casimir/speculos'
 import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
-import { TransactionRequest } from '../interfaces/TransactionRequest'
-import { CryptoAddress } from '@casimir/types'
+import { CryptoAddress, TransactionRequest } from '@casimir/types'
 
 const transports = {
     'usb': async function createUSBTransport(): Promise<Transport> {

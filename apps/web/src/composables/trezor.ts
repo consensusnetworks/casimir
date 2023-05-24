@@ -3,8 +3,8 @@ import useAuth from '@/composables/auth'
 import useEthers from '@/composables/ethers'
 import useEnvironment from '@/composables/environment'
 import { ethers } from 'ethers'
-import { MessageRequest, TransactionRequest } from '@/interfaces/index'
-import { LoginCredentials } from '@casimir/types'
+import {  } from '@/interfaces/index'
+import { LoginCredentials, MessageRequest, TransactionRequest } from '@casimir/types'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
 
