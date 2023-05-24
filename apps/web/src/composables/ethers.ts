@@ -100,6 +100,7 @@ export default function useEthers() {
 
   async function getEthersAddressWithBalance (providerString: ProviderString) {
     const provider = getBrowserProvider(providerString)
+    
     if (provider) {
       const address = (await requestEthersAccount(provider as EthersProvider))[0]
       const balance = await getEthersBalance(address)
@@ -259,6 +260,10 @@ export default function useEthers() {
 
 function getBrowserProvider(providerString: ProviderString) {
   if (providerString === 'MetaMask' || providerString === 'CoinbaseWallet') {
+    const { ethereum } = window
+    if (!ethereum.providerMap && ethereum.isMetaMask) {
+      return ethereum
+    }
     return window.ethereum?.providerMap?.get(providerString) || undefined
   } else if (providerString === 'BraveWallet') {
     return getBraveWallet()

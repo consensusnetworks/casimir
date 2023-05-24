@@ -4,7 +4,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import useWallet from '@/composables/wallet'
 
 const  {
-  activeWallets
+  activeWallets,
+  selectAddress,
+  selectProvider,
 } = useWallet()
 
 const show_setting_modal = ref(false)
@@ -174,7 +176,7 @@ onUnmounted(() =>{
     <div
       v-if="openWalletConnect"
       id="connect_wallet_container"
-      class="w-full h-full bg-[#121212]/[0.23] absolute 
+      class="w-full h-full bg-[#121212]/[0.23] fixed 
       z-[20] top-0 left-0 flex items-center justify-center"
     >
       <div 
@@ -188,7 +190,7 @@ onUnmounted(() =>{
           <input
             type="checkbox"
             class="mb-10"
-          > I certify that I have read and accept teh updated 
+          > I certify that I have read and accept the updated 
           <span class="text-primary"> Terms of Use </span> and <span class="text-primary">Privacy Notice</span>.
         </div>
         <div class="flex flex-wrap justify-between gap-[20px]">
@@ -196,6 +198,7 @@ onUnmounted(() =>{
             v-for="wallet in activeWallets"
             :key="wallet"
             class="w-[180px] h-[100px] border flex flex-col justify-center items-center rounded-[8px]"
+            @click="selectProvider(wallet)"
           >
             <img
               :src="`/${wallet.toLowerCase()}.svg`"
