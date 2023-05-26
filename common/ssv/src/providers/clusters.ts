@@ -1,7 +1,19 @@
 import { ethers } from 'ethers'
 import { Cluster } from '@casimir/types'
-import ISSVNetworkJson from '@casimir/ethereum/build/artifacts/src/vendor/interfaces/ISSVNetwork.sol/ISSVNetwork.json'
+import SSVNetworkJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/SSVNetwork.sol/SSVNetwork.json'
 import { ClusterInput } from '../interfaces/ClusterInput'
+
+const DAY = 5400
+const WEEK = DAY * 7
+const MONTH = DAY * 30
+const eventList = [
+    'ClusterDeposited',
+    'ClusterWithdrawn',
+    'ValidatorAdded',
+    'ValidatorRemoved',
+    'ClusterLiquidated',
+    'ClusterReactivated'
+]
 
 /**
  * Get cluster snapshot
@@ -11,28 +23,15 @@ import { ClusterInput } from '../interfaces/ClusterInput'
 export async function getCluster(input: ClusterInput): Promise<Cluster> {
     const { provider, networkAddress, operatorIds, withdrawalAddress } = input
 
-    const ssv = new ethers.Contract(networkAddress, ISSVNetworkJson.abi, provider)
-
-    const DAY = 5400
-    const WEEK = DAY * 7
-    const MONTH = DAY * 30
-    const latestBlockNumber = await provider.getBlockNumber()
-    let step = MONTH
-    let cluster: Cluster | undefined
-    let biggestBlockNumber = 0
-
-    const eventList = [
-        'ClusterDeposited',
-        'ClusterWithdrawn',
-        'ValidatorAdded',
-        'ValidatorRemoved',
-        'ClusterLiquidated',
-        'ClusterReactivated'
-    ]
-
+    const ssv = new ethers.Contract(networkAddress, SSVNetworkJson.abi, provider)
     const eventFilters = eventList.map(event => ssv.filters[event](withdrawalAddress))
+    
+    let step = MONTH
+    const latestBlockNumber = await provider.getBlockNumber()
     let fromBlock = latestBlockNumber - step
     let toBlock = latestBlockNumber
+    let biggestBlockNumber = 0
+    let cluster: Cluster | undefined
 
     while (!cluster && fromBlock > 0) {
         try {

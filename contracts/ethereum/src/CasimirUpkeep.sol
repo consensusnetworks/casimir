@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-// 1. Handle exits, withdrawals, and clusters
-// 2. Pick between Functions, EA, and custom oracle
-
 import "./interfaces/ICasimirUpkeep.sol";
 import "./interfaces/ICasimirManager.sol";
 import {Functions, FunctionsClient} from "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol";
@@ -27,7 +24,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /*************/
 
     /** Oracle heartbeat */
-    uint256 public constant reportHeartbeat = 0; // Will use a ~quarter of a day in production
+    uint256 public constant reportHeartbeat = 1 days;
     /** Pool capacity */
     uint256 public constant poolCapacity = 32 ether;
 
@@ -42,20 +39,38 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /* Dynamic State */
     /********************/
 
-    /** Binary request source code */
-    bytes public requestCBOR;
-    /** Latest request ID */
-    bytes32 public latestRequestId;
-    /** Latest fulfilled request ID */
-    bytes32 public latestFulfilledRequestId;
-    /** Latest response */
-    bytes private latestResponse;
-    /** Latest response timestamp */
-    uint256 private latestResponseTimestamp;
+    /** Current report status */
+    Status private status;
+    /** Current report remaining requests */
+    uint256 remainingRequests;
+    /** Current report period */
+    uint256 currentPeriod;
+    /** Current report pending pool count */
+    uint256 currentPendingPoolCount;
+    /** Current report exiting pool count */
+    uint256 currentExitingPoolCount;
+    /** Current report block */
+    uint256 currentRequestBlock;
+    /** Current report swept balance */
+    uint256 private currentSweptBalance;
+    /** Current report active balance */
+    uint256 private reportedActiveBalance;
+    /** Current report completed deposits */
+    uint256 private reportedDeposits;
+    /** Current report completed exits */
+    uint256 private reportedExits;
+    /** Current report completed slashes */
+    uint256 private reportedSlashes;
+    /** Finalizable completed deposits */
+    uint256 private finalizableDeposits;
+    /** Current report requests */
+    mapping(bytes32 => RequestType) private requests;
+    /** Latest report request timestamp */
+    uint256 private latestReportTimestamp;
     /** Latest error */
     bytes private latestError;
-    /** Latest response count */
-    uint256 private responseCounter;
+    /** Binary request source code */
+    bytes public requestCBOR;
     /** Fulfillment gas limit */
     uint32 fulfillGasLimit;
     /** Functions subscription ID */
@@ -132,95 +147,123 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         public
         view
         override
-        returns (bool upkeepNeeded, bytes memory performData)
+        returns (bool upkeepNeeded, bytes memory)
     {
-        if ((block.timestamp - latestResponseTimestamp) >= reportHeartbeat) {
-            upkeepNeeded = true;
+        if (status == Status.FINALIZED) {
+            bool checkActive = manager.getDepositedPoolCount() > 0;
+            bool heartbeatLapsed = (block.timestamp - latestReportTimestamp) >= reportHeartbeat;
+            upkeepNeeded = checkActive && heartbeatLapsed;
+        } else if (status == Status.PROCESSING) {
+            bool exitsFinalizable = reportedExits == manager.getFinalizableExitedPoolCount();
+            upkeepNeeded = exitsFinalizable;
         }
-
-        int256 requiredWithdrawals = int256(manager.getRequestedWithdrawals() + manager.getPendingWithdrawals()) - int256(manager.getExitingValidatorCount() * 32 ether);
-        if (requiredWithdrawals > 0) {
-            upkeepNeeded = true;
-        }
-        // Todo provide required withdrawals as performData (or some optimial input, maybe validator count)
-
-        if (latestFulfilledRequestId != "" && latestFulfilledRequestId != latestRequestId) {
-            upkeepNeeded = false;
-        }
-
-        performData = abi.encode(requiredWithdrawals);
     }
 
     /**
      * @notice Perform the upkeep
      */
     function performUpkeep(bytes calldata) external override {
-        (bool upkeepNeeded, bytes memory performData) = checkUpkeep("");
+        (bool upkeepNeeded, ) = checkUpkeep("");
         require(upkeepNeeded, "Upkeep not needed");
 
-        int256 requiredWithdrawals = abi.decode(performData, (int256));
+        if (status == Status.FINALIZED) {
+            status = Status.REQUESTING;
 
-        /** Initiate withdrawals and request exits */
-        if (requiredWithdrawals > 0) {
-            // Todo this should bound withdrawals and request exits
-            manager.initiateRequestedWithdrawals(manager.getRequestedWithdrawalQueue().length);
-            manager.completePendingWithdrawals(manager.getPendingWithdrawalQueue().length);
+            latestReportTimestamp = block.timestamp;
+            currentPeriod = manager.getReportPeriod();
+            currentPendingPoolCount = manager.getPendingPoolIds().length;
+            currentExitingPoolCount = manager.getExitingPoolCount();
+            currentSweptBalance = manager.getSweptBalance();
+
+            Functions.Request memory req;
+            for (uint256 i = 1; i < 5; i++) {
+                RequestType requestType = RequestType(i);
+                bool checkBalance = requestType == RequestType.BALANCE;
+                bool checkDeposits = requestType == RequestType.DEPOSITS && currentPendingPoolCount > 0;
+                bool checkExits = requestType == RequestType.EXITS && currentExitingPoolCount > 0;
+                bool checkSlashes = requestType == RequestType.SLASHES;
+                if (checkBalance || checkDeposits || checkExits || checkSlashes) {
+                    bytes32 requestId = sendRequest(req, functionsSubscriptionId, fulfillGasLimit);
+                    requests[requestId] = RequestType(i);
+                    remainingRequests++;
+                }
+            }
+        } else {
+            if (
+                manager.getPendingWithdrawals() > 0 &&
+                manager.getPendingWithdrawalEligibility(0, currentPeriod) &&
+                manager.getPendingWithdrawals() <= manager.getWithdrawableBalance()
+            ) {
+                manager.completePendingWithdrawals(5);
+            }
+            
+            if (finalizableDeposits > 0) {
+                uint256 maxCompletions = finalizableDeposits > 5 ? 5 : finalizableDeposits;
+                finalizableDeposits -= maxCompletions;
+                manager.completePoolDeposits(maxCompletions);
+            }
+            
+            if (!manager.getPendingWithdrawalEligibility(0, currentPeriod) && finalizableDeposits == 0) {
+                status = Status.FINALIZED;
+                
+                manager.rebalanceStake({
+                    activeBalance: reportedActiveBalance,
+                    newSweptRewards: currentSweptBalance - manager.getFinalizableExitedBalance(),
+                    newDeposits: reportedDeposits,
+                    newExits: reportedExits
+                });
+
+                reportedActiveBalance = 0;
+                reportedDeposits = 0;
+                reportedExits = 0;
+                reportedSlashes = 0;
+            }
         }
 
-        /** Placeholder request */
-        Functions.Request memory req;
-
-        /** Request a report */
-        bytes32 requestId = sendRequest(req, functionsSubscriptionId, fulfillGasLimit);
-        latestRequestId = requestId;
-
-        emit UpkeepPerformed(performData);
+        emit UpkeepPerformed(status);
     }
 
     /**
      * @notice Callback that is invoked once the DON has resolved the request or hit an error
      * @param requestId The request ID, returned by sendRequest()
      * @param response Aggregated response from the user code
-     * @param err Aggregated error from the user code or from the sweptStake pipeline
+     * @param _error Aggregated error from the user code or from the sweptStake pipeline
      * Either response or error parameter will be set, but never both
      */
     function fulfillRequest(
         bytes32 requestId,
         bytes memory response,
-        bytes memory err
+        bytes memory _error
     ) internal override {
-        latestFulfilledRequestId = requestId;
-        latestResponseTimestamp = block.timestamp;
-        latestResponse = response;
-        latestError = err;
-        responseCounter = responseCounter + 1;
+        // Todo handle errors
+        latestError = _error;
 
-        if (err.length == 0) {
-            /** Decode report */
-            uint256 report = abi.decode(response, (uint256));
+        if (_error.length == 0) {
+            uint256 value = abi.decode(response, (uint256));
+            RequestType requestType = requests[requestId];
 
-            /** Unpack values */
-            uint256 activeStake = uint256(uint64(report)) * 1 gwei;
-            uint256 sweptRewards = uint256(uint64(report >> 64)) * 1 gwei;
-            uint256 sweptExits = uint256(uint64(report >> 128)) * 1 gwei;
-            uint32 depositCount = uint32(report >> 192);
-            uint32 exitCount = uint32(report >> 224);
+            if (requestType != RequestType.NONE) {
+                delete requests[requestId];
+                remainingRequests--;
 
-            // if (sweptExits < exitCount * poolCapacity) {
-            //     sweptExits = amount recovered from blamed operator collateral
-            // }
+                if (requestType == RequestType.BALANCE) {
+                    reportedActiveBalance = value;
+                } else if (requestType == RequestType.DEPOSITS) {
+                    reportedDeposits = value;
+                    finalizableDeposits = value;
+                } else if (requestType == RequestType.EXITS) {
+                    reportedExits = value;
+                } else {
+                    reportedSlashes = value;
+                }
 
-            /** Rebalance the stake */
-            manager.rebalanceStake(
-                activeStake, 
-                sweptRewards, 
-                sweptExits,
-                depositCount,
-                exitCount
-            );
+                if (remainingRequests == 0) {
+                    status = Status.PROCESSING;
+                }
+            }
         }
 
-        emit OCRResponse(requestId, response, err);
+        emit OCRResponse(requestId, response, _error);
     }
 
     /**

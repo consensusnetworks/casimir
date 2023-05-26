@@ -1,4 +1,4 @@
-# @casimir/validators
+# @casimir/oracle
 
 Casimir validators oracle service
 
@@ -8,7 +8,7 @@ The validator oracle service initiates and reports on validator operations: dist
 
 DKG operations and reports will theoretically have [verifiable](https://docs.obol.tech/docs/next/charon/dkg#dkg-verification) aspects that prove fair DKG ceremonies.
 
-> 🚩 The deployment strategy, including the API security, of this service is a WIP, and will be done in a way that allows for easy upgrades and/or replacement with a contract-native DKG trigger mechanism. Casimir is researching the best approach to trustless operations in collaboration with Chainlink, SSV, and RockX, and the @casimir/validators service will prioritize a combination of security and decentralization as much as possible.
+> 🚩 The deployment strategy, including the API security, of this service is a WIP, and will be done in a way that allows for easy upgrades and/or replacement with a contract-native DKG trigger mechanism. Casimir is researching the best approach to trustless operations in collaboration with Chainlink, SSV, and RockX, and the @casimir/oracle service will prioritize a combination of security and decentralization as much as possible.
 
 ### Future
 

@@ -82,10 +82,10 @@ void async function () {
 
     /** Start local oracle */
     process.env.ETHEREUM_RPC_URL = 'http://localhost:8545'
-    $`npm run dev --workspace @casimir/validators`
+    $`npm run dev --workspace @casimir/oracle`
 
     process.on('SIGINT', () => {
-        const messes = ['validators']
+        const messes = ['oracle']
         if (clean) {
             const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
             console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)

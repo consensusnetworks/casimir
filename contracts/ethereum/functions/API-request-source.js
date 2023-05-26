@@ -1,5 +1,11 @@
 // Arguments can be provided when a request is initated on-chain and used in the request source code as shown below
 
+// const getSweptBalance = ethers.utils.id('getSweptBalance()').slice(0, 10)
+// console.log(getSweptBalance)
+
+// const getDepositedPoolCount = ethers.utils.id('getDepositedPoolCount()').slice(0, 10)
+// console.log(getDepositedPoolCount)
+
 function repeat(str, num) {
     if (str.length === 0 || num <= 1) {
         if (num === 1) {
@@ -33,7 +39,7 @@ const managerAddress = "0x07e05700cb4e946ba50244e27f01805354cd8ef0"
 // We want to get a string (not bytes) array of length of the number of validators
 // See PoR Address List
 
-const getValidatorPublicKeys = "0xeab1442e"
+const getDepositedPoolCount = "0xeab1442e"
 
 const getPublicKeys = await Functions.makeHttpRequest({
     url: 'http://localhost:8545',
@@ -43,7 +49,7 @@ const getPublicKeys = await Functions.makeHttpRequest({
         method: 'eth_call',
         params: [{
             to: managerAddress,
-            data: getValidatorPublicKeys
+            data: getDepositedPoolCount
         }, 'latest'],
         id: 1
     }

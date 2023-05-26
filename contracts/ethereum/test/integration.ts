@@ -1,13 +1,13 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { firstUserDepositFixture, rewardsPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardsPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture, activeBalanceLossFixture, activeBalanceRecoveryFixture } from './fixtures/shared'
+import { firstUserDepositFixture, rewardsPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardsPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture, activeBalanceLossFixture, activeBalanceRecoveryFixture, thirdUserFullWithdrawalFixture } from './fixtures/shared'
 
 describe('Casimir manager', async function () {
 
   it('First user\'s 16.0 stake increases the total stake to 16.0', async function () {
     const { manager } = await loadFixture(firstUserDepositFixture)
-    const stake = await manager.getStake()
+    const stake = await manager.getTotalStake()
     expect(ethers.utils.formatEther(stake)).equal('16.0')
   })
 
@@ -31,7 +31,7 @@ describe('Casimir manager', async function () {
 
   it('Second user\'s 24.0 stake increases the total stake to 40.0', async function () {
     const { manager } = await loadFixture(secondUserDepositFixture)
-    const stake = await manager.getStake()
+    const stake = await manager.getTotalStake()
     expect(ethers.utils.formatEther(stake)).equal('40.0')
   })
 
@@ -43,11 +43,11 @@ describe('Casimir manager', async function () {
 
   it('Functions oracle reports an increase of 0.1 in total after fees', async function () {
     const { manager } = await loadFixture(rewardsPostSecondUserDepositFixture)
-    const stake = await manager.getStake()
+    const stake = await manager.getTotalStake()
     expect(ethers.utils.formatEther(stake)).equal('40.1')
   })
 
-  it('First and second user\'s stake earns them 0.04 and 0.06, respectively, after some time', async function () {
+  it('First and second user\'s stake earns them 0.04 and 0.06', async function () {
     const { manager, firstUser, secondUser } = await loadFixture(rewardsPostSecondUserDepositFixture)
     const firstStake = await manager.getUserStake(firstUser.address)
     const secondStake = await manager.getUserStake(secondUser.address)
@@ -55,10 +55,10 @@ describe('Casimir manager', async function () {
     expect(ethers.utils.formatEther(secondStake)).equal('24.06')
   })
 
-  it('First pool\'s 0.1 is swept and compounded after some time', async function () {
+  it('First pool\'s 0.1 is swept and compounded', async function () {
     const { manager } = await loadFixture(sweepPostSecondUserDepositFixture)
-    const bufferedStake = await manager.getBufferedStake()
-    expect(ethers.utils.formatEther(bufferedStake)).equal('8.1')
+    const bufferedBalance = await manager.getBufferedBalance()
+    expect(ethers.utils.formatEther(bufferedBalance)).equal('8.1')
   })
 
   it('Third user\'s 24.0 stake completes the second pool with 32.0', async function () {
@@ -75,7 +75,7 @@ describe('Casimir manager', async function () {
 
   it('Third user\'s 24.0 stake increases the total stake to 64.1', async function () {
     const { manager } = await loadFixture(thirdUserDepositFixture)
-    const stake = await manager.getStake()
+    const stake = await manager.getTotalStake()
     expect(ethers.utils.formatEther(stake)).equal('64.1')
   })
 
@@ -87,11 +87,11 @@ describe('Casimir manager', async function () {
 
   it('Functions oracle reports an increase of 0.2 in total after fees', async function () {
     const { manager } = await loadFixture(rewardsPostThirdUserDepositFixture)
-    const stake = await manager.getStake()
+    const stake = await manager.getTotalStake()
     expect(ethers.utils.formatEther(stake)).equal('64.3')
   })
 
-  it('First, second, and third user\'s stake earns them ~0.09, ~0.135 and ~0.075, respectively, after some time', async function () {
+  it('First, second, and third user\'s stake earns them ~0.09, ~0.135 and ~0.075', async function () {
     const { manager, firstUser, secondUser, thirdUser } = await loadFixture(rewardsPostThirdUserDepositFixture)
     const firstStake = await manager.getUserStake(firstUser.address)
     const secondStake = await manager.getUserStake(secondUser.address)
@@ -102,9 +102,9 @@ describe('Casimir manager', async function () {
     expect(ethers.utils.formatEther(thirdStake)).equal('24.074882995319812792')
   })
 
-  it('First and second pool\'s 0.2 is swept and compounded after some time', async function () {
+  it('First and second pool\'s 0.2 is swept and compounded', async function () {
     const { manager } = await loadFixture(sweepPostThirdUserDepositFixture)
-    const bufferedStake = await manager.getBufferedStake()
+    const bufferedStake = await manager.getBufferedBalance()
     expect(ethers.utils.formatEther(bufferedStake)).equal('0.3')
   })
 
@@ -139,19 +139,30 @@ describe('Casimir manager', async function () {
 
   it('A loss is reported and brings the active stake below expected', async function () {
     const { manager } = await loadFixture(activeBalanceLossFixture)
-    const activeStake = await manager.getActiveStake()
+    const activeStake = await manager.getLatestActiveBalance()
     expect(ethers.utils.formatEther(activeStake)).equal('126.0')
   })
 
   it('Gains are reported and bring the active stake back to expected', async function () {
     const { manager } = await loadFixture(activeBalanceRecoveryFixture)
-    const activeStake = await manager.getActiveStake()
+    const activeStake = await manager.getLatestActiveBalance()
     expect(ethers.utils.formatEther(activeStake)).equal('128.0')
+  })
+
+  it('Third user full withdrawal is completed on exit report', async function () {
+    const { manager, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(thirdUserFullWithdrawalFixture)
+    console.log('Third user full withdrawal is completed on exit report')
+    const stake = await manager.getTotalStake()
+    const firstStake = await manager.getUserStake(firstUser.address)
+    const secondStake = await manager.getUserStake(secondUser.address)
+    const thirdStake = await manager.getUserStake(thirdUser.address)
+    const fourthStake = await manager.getUserStake(fourthUser.address)
+    console.log(stake.toString(), firstStake.toString(), secondStake.toString(), thirdStake.toString(), fourthStake.toString())
   })
 
   it('Check more rewards and dust', async function () {
     const { manager, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(simulationFixture)
-    const stake = await manager.getStake()
+    const stake = await manager.getTotalStake()
     const firstStake = await manager.getUserStake(firstUser.address)
     const secondStake = await manager.getUserStake(secondUser.address)
     const thirdStake = await manager.getUserStake(thirdUser.address)
@@ -164,7 +175,7 @@ describe('Casimir manager', async function () {
     console.log('👤 Second user stake', ethers.utils.formatEther(secondStake))
     console.log('👤 Third user stake', ethers.utils.formatEther(thirdStake))
     console.log('👤 Fourth user stake', ethers.utils.formatEther(fourthStake))
-    const openDeposits = await manager.getOpenDeposits()
+    const openDeposits = await manager.getPrepoolBalance()
     console.log('📦 Open deposits', ethers.utils.formatEther(openDeposits))
     const dust = stake.sub(firstStake.add(secondStake).add(thirdStake).add(fourthStake))
     if (dust !== ethers.utils.parseEther('0.0')) {

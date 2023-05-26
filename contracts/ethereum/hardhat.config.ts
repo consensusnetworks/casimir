@@ -25,9 +25,9 @@ const forkingChainId = { mainnet: 1, goerli: 5 }[forkingNetwork]
 
 const externalEnv = {
   mainnet: {
+    ORACLE_ADDRESS: '0x0000000000000000000000000000000000000000',
     BEACON_DEPOSIT_ADDRESS: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
-    DKG_ORACLE_ADDRESS: '0x0000000000000000000000000000000000000000',
-    FUNCTIONS_ORACLE_ADDRESS: '0x0000000000000000000000000000000000000000',
+    FUNCTIONS_ADDRESS: '0x0000000000000000000000000000000000000000',
     FUNCTIONS_SUBSCRIPTION_ID: '1',
     LINK_TOKEN_ADDRESS: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
     SSV_NETWORK_ADDRESS: '0x0000000000000000000000000000000000000000',
@@ -37,9 +37,9 @@ const externalEnv = {
     WETH_TOKEN_ADDRESS: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
   },
   goerli: {
+    ORACLE_ADDRESS: '0x0000000000000000000000000000000000000000',
     BEACON_DEPOSIT_ADDRESS: '0x07b39F4fDE4A38bACe212b546dAc87C58DfE3fDC',
-    DKG_ORACLE_ADDRESS: '0x0000000000000000000000000000000000000000',
-    FUNCTIONS_ORACLE_ADDRESS: '0x3de1bE9407645533CD0CbeCf88dFE5297E7125e6',
+    FUNCTIONS_ADDRESS: '0x3de1bE9407645533CD0CbeCf88dFE5297E7125e6',
     FUNCTIONS_SUBSCRIPTION_ID: '1',
     LINK_TOKEN_ADDRESS: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
     SSV_NETWORK_ADDRESS: '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3',
@@ -84,7 +84,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: mnemonic ? { ...hid, accountsBalance: '10000000000000000000000' } : undefined,
+      accounts: mnemonic ? hid : undefined,
       chainId: forkingChainId || 1337,
       forking: forkingUrl ? { url: forkingUrl } : undefined,
       mining: miningInterval ? mining : { auto: true },
@@ -93,19 +93,19 @@ const config: HardhatUserConfig = {
       gasPrice: 'auto'
     },
     ganache: {
-      accounts: mnemonic ? { ...hid } : undefined,
+      accounts: mnemonic ? hid : undefined,
       url: 'http://127.0.0.1:8545',
       allowUnlimitedContractSize: true
     },
     mainnet: {
-      accounts: mnemonic ? { ...hid } : undefined,
+      accounts: mnemonic ? hid : undefined,
       url: hardhatUrl || '',
       allowUnlimitedContractSize: true,
       gas: 'auto',
       gasPrice: 'auto'
     },
     goerli: {
-      accounts: mnemonic ? { ...hid } : undefined,
+      accounts: mnemonic ? hid : undefined,
       url: hardhatUrl || '',
       allowUnlimitedContractSize: true,
       gas: 'auto',

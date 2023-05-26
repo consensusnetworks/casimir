@@ -1,7 +1,7 @@
 {
-    "name": "@casimir/validators",
+    "name": "@casimir/oracle",
     "version": "0.0.1",
-    "description": "Casimir validators oracle service",
+    "description": "Casimir oracle service",
     "main": "dist/index.js",
     "scripts": {
         "build": "tsc",

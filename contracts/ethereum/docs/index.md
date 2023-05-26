@@ -272,7 +272,7 @@ Update the functions oracle address
 ### getStake
 
 ```solidity
-function getStake() public view returns (uint256 stake)
+function getTotalStake() public view returns (uint256 stake)
 ```
 
 Get the manager stake
@@ -443,10 +443,10 @@ Get the pending withdrawal queue
 | ---- | ---- | ----------- |
 | [0] | struct ICasimirManager.Withdrawal[] | pendingWithdrawalQueue The pending withdrawal queue |
 
-### getValidatorPublicKeys
+### getDepositedPoolCount
 
 ```solidity
-function getValidatorPublicKeys() external view returns (bytes[])
+function getDepositedPoolCount() external view returns (bytes[])
 ```
 
 Get validator public keys
@@ -457,10 +457,10 @@ Get validator public keys
 | ---- | ---- | ----------- |
 | [0] | bytes[] | A list of pending and active validator public keys |
 
-### getExitingValidatorCount
+### getExitingPoolCount
 
 ```solidity
-function getExitingValidatorCount() external view returns (uint256)
+function getExitingPoolCount() external view returns (uint256)
 ```
 
 Get the count of exiting validators
@@ -470,20 +470,6 @@ Get the count of exiting validators
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint256 | The count of exiting validators |
-
-### getFilledPoolIds
-
-```solidity
-function getFilledPoolIds() external view returns (uint32[])
-```
-
-Get a list of all filled pool IDs
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32[] | A list of all filled pool IDs |
 
 ### getReadyPoolIds
 
@@ -1015,16 +1001,16 @@ function getLINKFeePercent() external view returns (uint32)
 function getSSVFeePercent() external view returns (uint32)
 ```
 
-### getValidatorPublicKeys
+### getDepositedPoolCount
 
 ```solidity
-function getValidatorPublicKeys() external view returns (bytes[])
+function getDepositedPoolCount() external view returns (bytes[])
 ```
 
-### getExitingValidatorCount
+### getExitingPoolCount
 
 ```solidity
-function getExitingValidatorCount() external view returns (uint256)
+function getExitingPoolCount() external view returns (uint256)
 ```
 
 ### getReadyPoolIds
@@ -1048,7 +1034,7 @@ function getStakedPoolIds() external view returns (uint32[])
 ### getStake
 
 ```solidity
-function getStake() external view returns (uint256)
+function getTotalStake() external view returns (uint256)
 ```
 
 ### getBufferedStake

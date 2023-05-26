@@ -10,7 +10,7 @@ import "hardhat/console.sol";
  */
 contract MockFunctionsOracle {
 
-    uint256 private latestRequestIdNumber = 1;
+    uint256 private latestRequestIdNumber;
     uint64 private subscriptionId;
     bytes private data;
     uint32 private gasLimit;
@@ -41,6 +41,7 @@ contract MockFunctionsOracle {
         subscriptionId = _subscriptionId;
         data = _data;
         gasLimit = _gasLimit;
+        latestRequestIdNumber++;
         requestId = keccak256(abi.encode(latestRequestIdNumber));
     }
 }

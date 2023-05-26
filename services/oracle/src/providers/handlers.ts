@@ -24,21 +24,21 @@ export async function initiatePoolDepositHandler(input: HandlerInput) {
     const {
         depositDataRoot,
         publicKey,
+        signature,
+        withdrawalCredentials,
         operatorIds,
         shares,
-        cluster,
-        signature,
-        withdrawalCredentials
+        cluster
     } = validator
 
     const initiatePoolDeposit = await (manager.connect(signer) as CasimirManager & ethers.Contract).initiatePoolDeposit(
         depositDataRoot,
         publicKey,
+        signature,
+        withdrawalCredentials,
         operatorIds,
         shares,
         cluster,
-        signature,
-        withdrawalCredentials,
         ethers.utils.parseEther('0.1') // Mock fee amount estimate ~ 10 SSV
     )
     await initiatePoolDeposit.wait()

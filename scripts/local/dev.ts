@@ -147,7 +147,7 @@ void async function () {
     $`npm run dev --workspace @casimir/${app}`
 
     process.on('SIGINT', () => {
-        const messes = ['data', 'validators']
+        const messes = ['data', 'oracle']
         if (clean) {
             const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
             console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)

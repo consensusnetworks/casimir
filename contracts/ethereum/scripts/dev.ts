@@ -2,20 +2,21 @@ import { deployContract } from '@casimir/ethereum/helpers/deploy'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 import { CasimirUpkeep, CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { ethers } from 'hardhat'
-import { fulfillFunctionsRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
+import { performReport } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
 import EventEmitter, { on } from 'events'
+import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 
 void async function () {
-    const [, , , , fourthUser, keeper, dkg] = await ethers.getSigners()
+    const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
 
     let config: DeploymentConfig = {
         CasimirManager: {
             address: '',
             args: {
+                oracleAddress: oracle.address || process.env.ORACLE_ADDRESS,
                 beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
-                dkgOracleAddress: dkg.address || process.env.DKG_ORACLE_ADDRESS,
-                functionsOracleAddress: process.env.FUNCTIONS_ORACLE_ADDRESS,
+                functionsAddress: process.env.FUNCTIONS_ADDRESS,
                 functionsSubscriptionId: process.env.FUNCTIONS_SUBSCRIPTION_ID,
                 linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
@@ -67,89 +68,73 @@ void async function () {
 
     /** Stake 160 from the fourth user */
     setTimeout(async () => {
-        const stakeAmount = 160
-        const feePercent = await manager.getFeePercent()
-        const depositAmount = stakeAmount * ((100 + feePercent) / 100)
+        const depositAmount = 160 * ((100 + await manager.getFeePercent()) / 100)
         const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await stake?.wait()
     }, 1000)
 
-    /** Perform upkeep and fulfill dkg answer after each pool is initiated by the local oracle */
-    for await (const event of on(manager as unknown as EventEmitter, 'PoolDepositInitiated')) {
-        const [id, details] = event
-        console.log(`Pool ${id} initiated at block number ${details.blockNumber}`)
-    }
-
     /** Simulate rewards per staked validator */
+    let requestId = 0
     const blocksPerReward = 50
     const rewardPerValidator = 0.105
     let lastRewardBlock = await ethers.provider.getBlockNumber()
     for await (const block of on(ethers.provider as unknown as EventEmitter, 'block')) {
         if (block - blocksPerReward === lastRewardBlock) {
             lastRewardBlock = block
-            const validatorCount = await manager.getValidatorPublicKeys()
-            if (validatorCount?.length) {
-                console.log(`Rewarding ${validatorCount.length} validators ${rewardPerValidator} each`)
-                const rewardAmount = rewardPerValidator * validatorCount.length
-
-                /** Perform upkeep */
-                const ranUpkeepBefore = await runUpkeep({ upkeep, keeper })
-
-                /** Fulfill functions request */
-                if (ranUpkeepBefore) {
-                    const nextActiveBalanceAmount = round(
-                        parseFloat(
-                            ethers.utils.formatEther(
-                                (await manager.getActiveStake()).add((await manager.getPendingPoolIds()).length * 32)
-                            )
-                        ) + rewardAmount
-                    )
-                    const nextSweptRewardsAmount = 0
-                    const nextSweptExitsAmount = 0
-                    const nextDepositedCount = (await manager.getPendingPoolIds()).length
-                    const nextExitedCount = 0
-
-                    console.log('Fulfilling before sweep:')
-                    console.log('nextActiveBalanceAmount', nextActiveBalanceAmount)
-                    console.log('nextSweptRewardsAmount', nextSweptRewardsAmount)
-                    console.log('nextSweptExitsAmount', nextSweptExitsAmount)
-                    console.log('nextDepositedCount', nextDepositedCount)
-                    console.log('nextExitedCount', nextExitedCount)
-
-                    await fulfillFunctionsRequest({ upkeep, keeper, nextActiveBalanceAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
-                }
+            const depositedPoolCount = await manager.getDepositedPoolCount()
+            if (depositedPoolCount) {
+                console.log(`Rewarding ${depositedPoolCount} validators ${rewardPerValidator} each`)
+                await time.increase(time.duration.days(1))
+                const rewardAmount = rewardPerValidator * depositedPoolCount.toNumber()
+                let nextActiveBalanceAmount = round(
+                    parseFloat(
+                        ethers.utils.formatEther(
+                            (await manager.getLatestActiveBalance()).add((await manager.getPendingPoolIds()).length * 32)
+                        )
+                    ) + rewardAmount
+                )
+                let nextCompletedDeposits = (await manager.getPendingPoolIds()).length
+                let nextValues = [
+                    nextActiveBalanceAmount, // activeBalanceAmount
+                    nextCompletedDeposits, // completedDeposits
+                    0, // completedExits
+                    0, // slashedExits
+                ]
+                requestId = await performReport({
+                    manager,
+                    upkeep,
+                    keeper,
+                    values: nextValues,
+                    requestId
+                })
 
                 /** Sweep rewards before next upkeep (balance will increment silently) */
-                const sweep = await keeper.sendTransaction({ to: manager.address, value: ethers.utils.parseEther(rewardAmount.toString()) })
-                await sweep.wait()
+                const currentBalance = await ethers.provider.getBalance(manager.address)
+                const nextBalance = currentBalance.add(ethers.utils.parseEther(rewardAmount.toString()))
+                await setBalance(manager.address, nextBalance)
 
-                /** Perform upkeep */
-                const ranUpkeepAfter = await runUpkeep({ upkeep, keeper })
-
-                /** Fulfill functions request */
-                if (ranUpkeepAfter) {
-                    const nextActiveBalanceAmount = round(
-                        parseFloat(
-                            ethers.utils.formatEther(
-                                (await manager.getActiveStake()).add((await manager.getPendingPoolIds()).length * 32)
-                            )
-                        ) - rewardAmount
-                    )
-                    const nextSweptRewardsAmount = rewardAmount
-                    const nextSweptExitsAmount = 0
-                    const nextDepositedCount = (await manager.getPendingPoolIds()).length
-                    const nextExitedCount = 0
-
-                    console.log('Fulfilling after sweep:')
-                    console.log('nextActiveBalanceAmount', nextActiveBalanceAmount)
-                    console.log('nextSweptRewardsAmount', nextSweptRewardsAmount)
-                    console.log('nextSweptExitsAmount', nextSweptExitsAmount)
-                    console.log('nextDepositedCount', nextDepositedCount)
-                    console.log('nextExitedCount', nextExitedCount)
-
-                    await fulfillFunctionsRequest({ upkeep, keeper, nextActiveBalanceAmount, nextSweptRewardsAmount, nextSweptExitsAmount, nextDepositedCount, nextExitedCount })
-                }
-
+                await time.increase(time.duration.days(1))
+                nextActiveBalanceAmount = round(
+                    parseFloat(
+                        ethers.utils.formatEther(
+                            (await manager.getLatestActiveBalance()).add((await manager.getPendingPoolIds()).length * 32)
+                        )
+                    ) - rewardAmount
+                )
+                nextCompletedDeposits = (await manager.getPendingPoolIds()).length
+                nextValues = [
+                    nextActiveBalanceAmount, // activeBalanceAmount
+                    nextCompletedDeposits, // completedDeposits
+                    0, // completedExits
+                    0, // slashedExits
+                ]
+                requestId = await performReport({
+                    manager,
+                    upkeep,
+                    keeper,
+                    values: nextValues,
+                    requestId
+                })
             }
         }
     }

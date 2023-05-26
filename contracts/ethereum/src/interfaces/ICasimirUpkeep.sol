@@ -4,16 +4,24 @@ pragma solidity 0.8.18;
 import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
 
 interface ICasimirUpkeep is AutomationCompatibleInterface {
-    /***********/
-    /* Structs */
-    /***********/
+    /***************/
+    /* Enumerators */
+    /***************/
 
-    struct OracleReport {
-        uint256 activeStake;
-        uint256 sweptRewards;
-        uint256 sweptExits;
-        // bytes[] exitedValidatorPublicKeys;
-        // uint256[] exitedValidatorIndices;
+    /** Upkeep statuses */
+    enum Status {
+        FINALIZED,
+        REQUESTING,
+        PROCESSING
+    }
+
+    /** Request types */
+    enum RequestType {
+        NONE,
+        BALANCE,
+        DEPOSITS,
+        EXITS,
+        SLASHES
     }
 
     /**********/
@@ -21,7 +29,7 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
     /**********/
     
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
-    event UpkeepPerformed(bytes performData);
+    event UpkeepPerformed(Status status);
 
     /*************/
     /* Functions */
