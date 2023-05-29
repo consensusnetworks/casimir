@@ -151,13 +151,17 @@ describe('Casimir manager', async function () {
 
   it('Third user full withdrawal is completed on exit report', async function () {
     const { manager, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(thirdUserFullWithdrawalFixture)
-    console.log('Third user full withdrawal is completed on exit report')
     const stake = await manager.getTotalStake()
     const firstStake = await manager.getUserStake(firstUser.address)
     const secondStake = await manager.getUserStake(secondUser.address)
     const thirdStake = await manager.getUserStake(thirdUser.address)
     const fourthStake = await manager.getUserStake(fourthUser.address)
-    console.log(stake.toString(), firstStake.toString(), secondStake.toString(), thirdStake.toString(), fourthStake.toString())
+
+    expect(ethers.utils.formatEther(stake)).equal('111.925117004680187208')
+    expect(ethers.utils.formatEther(firstStake)).equal('15.790046801872074882')
+    expect(ethers.utils.formatEther(secondStake)).equal('24.135070202808112324')
+    expect(ethers.utils.formatEther(thirdStake)).equal('0.0')
+    expect(ethers.utils.formatEther(fourthStake)).equal('72.0')
   })
 
   it('Check more rewards and dust', async function () {

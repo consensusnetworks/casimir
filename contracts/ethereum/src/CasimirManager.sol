@@ -340,7 +340,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function requestWithdrawal(uint256 amount) external nonReentrant {
         users[msg.sender].stake0 = getUserStake(msg.sender);
         require(
-            users[msg.sender].stake0 > amount,
+            users[msg.sender].stake0 >= amount,
             "Withdrawing more than user stake"
         );
 
@@ -360,11 +360,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             pendingWithdrawals += amount;
             pendingWithdrawalCount++;
 
-            uint256 coveredExitBalance = exitingPoolCount * poolCapacity;
-            if (
-                pendingWithdrawals > coveredExitBalance
-            ) {
-                uint256 exitsRequired = (pendingWithdrawals - coveredExitBalance) / poolCapacity;
+            uint256 coveredExitBalance = (exitingPoolCount - slashedPoolCount) *
+                poolCapacity;
+            if (pendingWithdrawals > coveredExitBalance) {
+                uint256 exitsRequired = (pendingWithdrawals -
+                    coveredExitBalance) / poolCapacity;
                 if (exitsRequired == 0) {
                     exitsRequired = 1;
                 }
@@ -536,6 +536,32 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Request a given count of pool exit completions
+     * @param count The number of pool exits to complete
+     */
+    function requestPoolExitCompletions(uint256 count) external {
+        require(
+            msg.sender == address(upkeep),
+            "Only upkeep can request pool exit completions"
+        );
+
+        emit PoolExitCompletionsRequested(count);
+    }
+
+    /**
+     * @notice Request a given count of pool slash reports
+     * @param count The number of pool slash reports
+     */
+    function requestPoolSlashReports(uint256 count) external {
+        require(
+            msg.sender == address(upkeep),
+            "Only upkeep can request pool slash reports"
+        );
+
+        emit PoolSlashReportsRequested(count);
+    }
+
+    /**
      * @notice Report a pool slash
      * @param poolId The pool ID
      */
@@ -545,13 +571,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             "Only manager oracle can initiate pools"
         );
         Pool storage pool = pools[poolId];
+        require(!pool.slashed, "Pool is already slashed");
+
+        pool.slashed = true;
+        slashedPoolCount++;
         if (!pool.exiting) {
             pool.exiting = true;
             exitingPoolCount++;
-        }
-        if (!pool.slashed) {
-            pool.slashed = true;
-            slashedPoolCount++;
         }
     }
 
@@ -568,6 +594,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint32[] memory blamePercents,
         ISSVNetworkCore.Cluster memory cluster
     ) external {
+        // Todo start debugging here
+
         require(
             msg.sender == oracleAddress,
             "Only manager oracle can complete pool exits"
@@ -577,15 +605,19 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint32 poolId = stakedPoolIds[poolIndex];
         Pool storage pool = pools[poolId];
 
-        require(pool.exiting, "Pool is not exiting");
-
         uint64[] memory operatorIds = pool.operatorIds;
         bytes memory publicKey = pool.publicKey;
 
         // Todo recover lost funds from collateral using blame percents
 
         depositedPoolCount--;
-        exitingPoolCount--;
+        if (pool.exiting) {
+            exitingPoolCount--;
+        }
+        if (pool.slashed) {
+            slashedPoolCount--;
+        }
+
         finalizableExitedPoolCount++;
         finalizableExitedBalance += finalEffectiveBalance;
 
@@ -724,7 +756,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function getUserStake(
         address userAddress
     ) public view returns (uint256 userStake) {
-        require(users[userAddress].stake0 > 0, "User does not have a stake");
         userStake = Math.mulDiv(
             users[userAddress].stake0,
             stakeRatioSum,
@@ -739,7 +770,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function getTotalStake() public view returns (uint256 totalStake) {
         totalStake =
             getBufferedBalance() +
-            getPendingBalance() +
             latestActiveBalanceAfterFees -
             pendingWithdrawals;
     }

@@ -47,6 +47,8 @@ interface ICasimirManager {
     event PoolReshareRequested(uint32 poolId);
     event PoolReshared(uint32 poolId);
     event PoolExitRequested(uint32 poolId);
+    event PoolSlashReportsRequested(uint256 count);
+    event PoolExitCompletionsRequested(uint256 count);
     event PoolExited(uint32 poolId);
     event StakeDeposited(address sender, uint256 amount);
     event StakeRebalanced(uint256 amount);
@@ -84,6 +86,10 @@ interface ICasimirManager {
     ) external;
 
     function completePoolDeposits(uint256 count) external;
+
+    function requestPoolExitCompletions(uint256 count) external;
+
+    function requestPoolSlashReports(uint256 count) external;
 
     function completePoolExit(
         uint256 poolIndex,

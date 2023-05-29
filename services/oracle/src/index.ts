@@ -19,7 +19,7 @@ const { provider, signer, manager, cliPath, messengerUrl } = config()
 
         const handler = handlers[details.event as keyof typeof handlers]
         if (!handler) throw new Error(`No handler found for event ${details.event}`)
-        await handler({ provider, signer, manager, cliPath, messengerUrl, id })
+        await handler({ provider, signer, manager, cliPath, messengerUrl, args: { poolId: id } })
     }
 })()
 

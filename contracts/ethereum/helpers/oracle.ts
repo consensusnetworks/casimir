@@ -9,7 +9,9 @@ const mockValidators: Validator[] = Object.values(validatorStore)
 
 const mockFee = 0.1
 
-export async function initiatePoolDepositHandler({ manager, signer, id }: { manager: CasimirManager, signer: SignerWithAddress, id: number }) {
+export async function initiatePoolDepositHandler({ manager, signer, args }: { manager: CasimirManager, signer: SignerWithAddress, args: Record<string, any> }) {
+    const { poolId } = args
+
     const {
         depositDataRoot,
         publicKey,
@@ -18,11 +20,11 @@ export async function initiatePoolDepositHandler({ manager, signer, id }: { mana
         operatorIds,
         shares,
         cluster: _cluster
-    } = mockValidators[id]
+    } = mockValidators[poolId - 1]
 
     let cluster
 
-    if (id === 1) {
+    if (poolId === 1) {
         cluster = _cluster
     } else {
         const networkAddress = await manager.getSSVNetworkAddress()
@@ -30,7 +32,7 @@ export async function initiatePoolDepositHandler({ manager, signer, id }: { mana
         cluster = await getCluster({ provider: ethers.provider, networkAddress, operatorIds, withdrawalAddress })
     }
 
-    const initiatePool = await manager.connect(signer).initiatePoolDeposit(
+    const initiatePoolDeposit = await manager.connect(signer).initiatePoolDeposit(
         depositDataRoot,
         publicKey,
         signature,
@@ -40,16 +42,15 @@ export async function initiatePoolDepositHandler({ manager, signer, id }: { mana
         cluster,
         ethers.utils.parseEther(mockFee.toString()) // Mock fee amount estimate ~ 10 SSV
     )
-    await initiatePool.wait()
+    await initiatePoolDeposit.wait()
 }
 
-export async function completePoolExitHandler({ manager, signer, id }: { manager: CasimirManager, signer: SignerWithAddress, id: number }) {
+export async function completePoolExitHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
     const stakedPoolIds = await manager.getStakedPoolIds()
-    const poolIndex = stakedPoolIds.findIndex((poolId: number) => poolId === id)
-    const pool = await manager.getPool(id)
-    const operatorIds = pool.operatorIds.map((operatorId) => operatorId.toNumber())
-
-    // Todo unhardcode
+    const exitedPoolId = stakedPoolIds[0]
+    const exitedPool = await manager.getPool(exitedPoolId)
+    const poolIndex = stakedPoolIds.findIndex((poolId: number) => poolId === exitedPoolId)
+    const operatorIds = exitedPool.operatorIds.map((operatorId) => operatorId.toNumber())
     const finalEffectiveBalance = ethers.utils.parseEther('32')
     const blamePercents = [0, 0, 0, 0]
 
@@ -57,11 +58,11 @@ export async function completePoolExitHandler({ manager, signer, id }: { manager
     const withdrawalAddress = manager.address
     const cluster = await getCluster({ provider: ethers.provider, networkAddress, operatorIds, withdrawalAddress })
 
-    const initiatePool = await manager.connect(signer).completePoolExit(
+    const completePoolExit = await manager.connect(signer).completePoolExit(
         poolIndex,
         finalEffectiveBalance,
         blamePercents,
         cluster
     )
-    await initiatePool.wait()
+    await completePoolExit.wait()
 }

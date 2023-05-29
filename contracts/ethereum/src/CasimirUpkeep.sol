@@ -40,33 +40,33 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /********************/
 
     /** Current report status */
-    Status private status;
-    /** Current report remaining requests */
-    uint256 remainingRequests;
+    Status private reportStatus;
     /** Current report period */
-    uint256 currentPeriod;
+    uint256 reportPeriod;
     /** Current report pending pool count */
-    uint256 currentPendingPoolCount;
+    uint256 reportPendingPoolCount;
     /** Current report exiting pool count */
-    uint256 currentExitingPoolCount;
+    uint256 reportExitingPoolCount;
     /** Current report block */
-    uint256 currentRequestBlock;
+    uint256 reportRequestBlock;
+    /** Current report request timestamp */
+    uint256 private reportTimestamp;
     /** Current report swept balance */
-    uint256 private currentSweptBalance;
+    uint256 private reportSweptBalance;
     /** Current report active balance */
-    uint256 private reportedActiveBalance;
+    uint256 private reportActiveBalance;
     /** Current report completed deposits */
-    uint256 private reportedDeposits;
+    uint256 private reportDeposits;
     /** Current report completed exits */
-    uint256 private reportedExits;
+    uint256 private reportExits;
     /** Current report completed slashes */
-    uint256 private reportedSlashes;
+    uint256 private reportSlashes;
     /** Finalizable completed deposits */
     uint256 private finalizableDeposits;
     /** Current report requests */
-    mapping(bytes32 => RequestType) private requests;
-    /** Latest report request timestamp */
-    uint256 private latestReportTimestamp;
+    mapping(bytes32 => RequestType) private reportRequests;
+    /** Current report remaining requests */
+    uint256 reportRemainingRequests;
     /** Latest error */
     bytes private latestError;
     /** Binary request source code */
@@ -149,12 +149,12 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         override
         returns (bool upkeepNeeded, bytes memory)
     {
-        if (status == Status.FINALIZED) {
+        if (reportStatus == Status.FINALIZED) {
             bool checkActive = manager.getDepositedPoolCount() > 0;
-            bool heartbeatLapsed = (block.timestamp - latestReportTimestamp) >= reportHeartbeat;
+            bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= reportHeartbeat;
             upkeepNeeded = checkActive && heartbeatLapsed;
-        } else if (status == Status.PROCESSING) {
-            bool exitsFinalizable = reportedExits == manager.getFinalizableExitedPoolCount();
+        } else if (reportStatus == Status.PROCESSING) {
+            bool exitsFinalizable = reportExits == manager.getFinalizableExitedPoolCount();
             upkeepNeeded = exitsFinalizable;
         }
     }
@@ -166,61 +166,61 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         (bool upkeepNeeded, ) = checkUpkeep("");
         require(upkeepNeeded, "Upkeep not needed");
 
-        if (status == Status.FINALIZED) {
-            status = Status.REQUESTING;
+        if (reportStatus == Status.FINALIZED) {
+            reportStatus = Status.REQUESTING;
 
-            latestReportTimestamp = block.timestamp;
-            currentPeriod = manager.getReportPeriod();
-            currentPendingPoolCount = manager.getPendingPoolIds().length;
-            currentExitingPoolCount = manager.getExitingPoolCount();
-            currentSweptBalance = manager.getSweptBalance();
+            reportTimestamp = block.timestamp;
+            reportPeriod = manager.getReportPeriod();
+            reportPendingPoolCount = manager.getPendingPoolIds().length;
+            reportExitingPoolCount = manager.getExitingPoolCount();
+            reportSweptBalance = manager.getSweptBalance();
 
             Functions.Request memory req;
             for (uint256 i = 1; i < 5; i++) {
                 RequestType requestType = RequestType(i);
                 bool checkBalance = requestType == RequestType.BALANCE;
-                bool checkDeposits = requestType == RequestType.DEPOSITS && currentPendingPoolCount > 0;
-                bool checkExits = requestType == RequestType.EXITS && currentExitingPoolCount > 0;
+                bool checkDeposits = requestType == RequestType.DEPOSITS && reportPendingPoolCount > 0;
+                bool checkExits = requestType == RequestType.EXITS && reportExitingPoolCount > 0;
                 bool checkSlashes = requestType == RequestType.SLASHES;
                 if (checkBalance || checkDeposits || checkExits || checkSlashes) {
                     bytes32 requestId = sendRequest(req, functionsSubscriptionId, fulfillGasLimit);
-                    requests[requestId] = RequestType(i);
-                    remainingRequests++;
+                    reportRequests[requestId] = RequestType(i);
+                    reportRemainingRequests++;
                 }
             }
         } else {
             if (
                 manager.getPendingWithdrawals() > 0 &&
-                manager.getPendingWithdrawalEligibility(0, currentPeriod) &&
+                manager.getPendingWithdrawalEligibility(0, reportPeriod) &&
                 manager.getPendingWithdrawals() <= manager.getWithdrawableBalance()
             ) {
                 manager.completePendingWithdrawals(5);
             }
-            
+
             if (finalizableDeposits > 0) {
                 uint256 maxCompletions = finalizableDeposits > 5 ? 5 : finalizableDeposits;
                 finalizableDeposits -= maxCompletions;
                 manager.completePoolDeposits(maxCompletions);
             }
             
-            if (!manager.getPendingWithdrawalEligibility(0, currentPeriod) && finalizableDeposits == 0) {
-                status = Status.FINALIZED;
+            if (!manager.getPendingWithdrawalEligibility(0, reportPeriod) && finalizableDeposits == 0) {
+                reportStatus = Status.FINALIZED;
                 
                 manager.rebalanceStake({
-                    activeBalance: reportedActiveBalance,
-                    newSweptRewards: currentSweptBalance - manager.getFinalizableExitedBalance(),
-                    newDeposits: reportedDeposits,
-                    newExits: reportedExits
+                    activeBalance: reportActiveBalance,
+                    newSweptRewards: reportSweptBalance - manager.getFinalizableExitedBalance(),
+                    newDeposits: reportDeposits,
+                    newExits: reportExits
                 });
 
-                reportedActiveBalance = 0;
-                reportedDeposits = 0;
-                reportedExits = 0;
-                reportedSlashes = 0;
+                reportActiveBalance = 0;
+                reportDeposits = 0;
+                reportExits = 0;
+                reportSlashes = 0;
             }
         }
 
-        emit UpkeepPerformed(status);
+        emit UpkeepPerformed(reportStatus);
     }
 
     /**
@@ -240,25 +240,27 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
         if (_error.length == 0) {
             uint256 value = abi.decode(response, (uint256));
-            RequestType requestType = requests[requestId];
+            RequestType requestType = reportRequests[requestId];
 
             if (requestType != RequestType.NONE) {
-                delete requests[requestId];
-                remainingRequests--;
+                delete reportRequests[requestId];
+                reportRemainingRequests--;
 
                 if (requestType == RequestType.BALANCE) {
-                    reportedActiveBalance = value;
+                    reportActiveBalance = value;
                 } else if (requestType == RequestType.DEPOSITS) {
-                    reportedDeposits = value;
+                    reportDeposits = value;
                     finalizableDeposits = value;
                 } else if (requestType == RequestType.EXITS) {
-                    reportedExits = value;
+                    reportExits = value;
+                    manager.requestPoolExitCompletions(value);
                 } else {
-                    reportedSlashes = value;
+                    reportSlashes = value;
+                    manager.requestPoolSlashReports(value);
                 }
 
-                if (remainingRequests == 0) {
-                    status = Status.PROCESSING;
+                if (reportRemainingRequests == 0) {
+                    reportStatus = Status.PROCESSING;
                 }
             }
         }

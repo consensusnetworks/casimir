@@ -86,19 +86,19 @@ void async function () {
                 console.log(`Rewarding ${depositedPoolCount} validators ${rewardPerValidator} each`)
                 await time.increase(time.duration.days(1))
                 const rewardAmount = rewardPerValidator * depositedPoolCount.toNumber()
-                let nextActiveBalanceAmount = round(
+                let nextActiveBalance = round(
                     parseFloat(
                         ethers.utils.formatEther(
                             (await manager.getLatestActiveBalance()).add((await manager.getPendingPoolIds()).length * 32)
                         )
                     ) + rewardAmount
                 )
-                let nextCompletedDeposits = (await manager.getPendingPoolIds()).length
+                let nextDeposits = (await manager.getPendingPoolIds()).length
                 let nextValues = [
-                    nextActiveBalanceAmount, // activeBalanceAmount
-                    nextCompletedDeposits, // completedDeposits
-                    0, // completedExits
-                    0, // slashedExits
+                    nextActiveBalance, // activeBalance
+                    nextDeposits, // deposits
+                    0, // exits
+                    0, // slashes
                 ]
                 requestId = await performReport({
                     manager,
@@ -114,19 +114,19 @@ void async function () {
                 await setBalance(manager.address, nextBalance)
 
                 await time.increase(time.duration.days(1))
-                nextActiveBalanceAmount = round(
+                nextActiveBalance = round(
                     parseFloat(
                         ethers.utils.formatEther(
                             (await manager.getLatestActiveBalance()).add((await manager.getPendingPoolIds()).length * 32)
                         )
                     ) - rewardAmount
                 )
-                nextCompletedDeposits = (await manager.getPendingPoolIds()).length
+                nextDeposits = (await manager.getPendingPoolIds()).length
                 nextValues = [
-                    nextActiveBalanceAmount, // activeBalanceAmount
-                    nextCompletedDeposits, // completedDeposits
-                    0, // completedExits
-                    0, // slashedExits
+                    nextActiveBalance, // activeBalance
+                    nextDeposits, // deposits
+                    0, // exits
+                    0, // slashes
                 ]
                 requestId = await performReport({
                     manager,

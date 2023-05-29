@@ -91,8 +91,7 @@ export async function secondUserDepositFixture() {
     await deposit.wait()
 
     const nextPoolId = 1
-    await initiatePoolDepositHandler({ manager, signer: oracle, id: nextPoolId })
-
+    await initiatePoolDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
     
     await time.increase(time.duration.days(1))    
     let requestId = 0
@@ -177,7 +176,7 @@ export async function thirdUserDepositFixture() {
 
     const readyPools = await manager.getReadyPoolIds()
     const nextPoolId = readyPools[readyPools.length - 1]
-    await initiatePoolDepositHandler({ manager, signer: oracle, id: nextPoolId })
+    await initiatePoolDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
 
     await time.increase(time.duration.days(1))
     let requestId = latestRequestId
@@ -288,7 +287,7 @@ export async function fourthUserDepositFixture() {
     const readyPools = await manager.getReadyPoolIds()
     for (let i = 0; i < 2; i++) {
         const nextPoolId = readyPools[i]
-        await initiatePoolDepositHandler({ manager, signer: oracle, id: nextPoolId })
+        await initiatePoolDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
     }
 
     await time.increase(time.duration.days(1))
@@ -364,16 +363,18 @@ export async function activeBalanceRecoveryFixture() {
 
 /** Fixture to full withdraw ~24.07 */
 export async function thirdUserFullWithdrawalFixture() {
-    const { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(fourthUserDepositFixture)
+    const { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(activeBalanceRecoveryFixture)
 
     const thirdStake = await manager.getUserStake(thirdUser.address)
     const withdraw = await manager.connect(thirdUser).requestWithdrawal(thirdStake)
     await withdraw.wait()
 
-    const exitRequests = await manager.queryFilter(manager.filters.PoolExitRequested(), -1, 'latest')
-    const exitRequest = exitRequests[0]
-    const { poolId } = exitRequest.args
-    await completePoolExitHandler({ manager, signer: oracle, id: poolId })
+    const sweptExitBalance = 32
+    const currentBalance = await ethers.provider.getBalance(manager.address)
+    const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitBalance.toString()))
+    await setBalance(manager.address, nextBalance)
+
+    await completePoolExitHandler({ manager, signer: oracle })
 
     await time.increase(time.duration.days(1))
     let requestId = latestRequestId

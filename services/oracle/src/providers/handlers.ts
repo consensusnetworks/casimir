@@ -1,7 +1,7 @@
+import fs from 'fs'
 import { ethers } from 'ethers'
 import { DKG } from './dkg'
 import { HandlerInput } from '../interfaces/HandlerInput'
-import fs from 'fs'
 import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 
 export async function initiatePoolDepositHandler(input: HandlerInput) {
@@ -45,12 +45,12 @@ export async function initiatePoolDepositHandler(input: HandlerInput) {
 }
 
 export async function initiatePoolReshareHandler(input: HandlerInput) {
-    const { manager, signer, cliPath, messengerUrl, id } = input
-
+    const { manager, signer, cliPath, messengerUrl, args } = input
+    const { poolId } = args
     // Todo reshare event will include the operator to boot
 
     // Get pool to reshare
-    const pool = await manager.getPool(id)
+    const pool = await manager.getPool(poolId)
     const { publicKey, operatorIds } = pool
 
     // Todo old operators and new operators only different by 1 operator
@@ -73,10 +73,11 @@ export async function initiatePoolReshareHandler(input: HandlerInput) {
 }
 
 export async function initiatePoolExitHandler(input: HandlerInput) {
-    const { manager, signer, cliPath, messengerUrl, id } = input
-    
+    const { manager, signer, cliPath, messengerUrl, args } = input
+    const { poolId } = args
+
     // Get pool to exit
-    const pool = await manager.getPool(id)
+    const pool = await manager.getPool(poolId)
     const { publicKey, operatorIds } = pool
 
     // Get operators to sign exit

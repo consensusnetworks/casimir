@@ -12,6 +12,6 @@ export interface HandlerInput {
     cliPath: string
     /** DKG messenger service URL */
     messengerUrl: string
-    /** Pool ID */
-    id: number
+    /** Handler args */
+    args: Record<string, any>
 }
