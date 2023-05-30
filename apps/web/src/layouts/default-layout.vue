@@ -3,12 +3,18 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 import useWallet from '@/composables/wallet'
 
+const selectedAddress = ref(null as string | null)
+
 const  {
-  activeWallets
+  activeWallets,
+  userAddresses,
+  selectAddress,
+  selectProvider,
 } = useWallet()
 
 const show_setting_modal = ref(false)
 const openWalletConnect = ref(false)
+const openSelectAddressInput = ref(false)
 
 const handleOutsideClick = (event: any) => {
   const setting_modal = document.getElementById('setting_modal')
@@ -34,6 +40,21 @@ const handleOutsideClick = (event: any) => {
   }
 }
 
+const convertString = (inputString: string) => {
+  if (inputString.length <= 4) {
+    return inputString
+  }
+
+  var start = inputString.substring(0, 4)
+  var end = inputString.substring(inputString.length - 4)
+  var middle = '*'.repeat(4)
+
+  return start + middle + end
+}
+
+const toggleOpenSelectAddressInput = () => {
+  openSelectAddressInput.value = !openSelectAddressInput.value
+}
 
 
 onMounted(() => {
@@ -50,6 +71,7 @@ onUnmounted(() =>{
     <div>
       <div
         class="px-[60px] pt-[17px] pb-[19px] flex justify-between items-center bg-black relative"
+        :class="openWalletConnect? 'pr-[75px]' : ''"
       >
         <img
           src="/casimir.svg"
@@ -159,7 +181,7 @@ onUnmounted(() =>{
 
       <div
         class="relative text-black"
-        :class="openWalletConnect? 'overflow-hidden h-[90vh]' : 'overflow-auto'"
+        :class="openWalletConnect? 'overflow-hidden h-[90vh] pr-[15px]' : ''"
       >
         <slot style="z-index: 1;" />
         <div
@@ -172,9 +194,9 @@ onUnmounted(() =>{
     </div>
 
     <div
-      v-if="openWalletConnect"
+      v-show="openWalletConnect"
       id="connect_wallet_container"
-      class="w-full h-full bg-[#121212]/[0.23] absolute 
+      class="w-full h-full bg-[#121212]/[0.23] fixed 
       z-[20] top-0 left-0 flex items-center justify-center"
     >
       <div 
@@ -187,15 +209,68 @@ onUnmounted(() =>{
         <div class="my-[20px] nav_items">
           <input
             type="checkbox"
-            class="mb-10"
-          > I certify that I have read and accept teh updated 
+            class=""
+          > I certify that I have read and accept the updated 
           <span class="text-primary"> Terms of Use </span> and <span class="text-primary">Privacy Notice</span>.
+        </div>
+        <div class="mb-[20px]">
+          <div class="card_input text-black cursor-pointer relative">
+            <div
+              class="flex items-center justify-between w-full gap-[8px]"
+              @click="toggleOpenSelectAddressInput"
+            >
+              <h6
+                v-if="!selectedAddress"
+                class="w-full"
+              >
+                Select wallet you want to connect
+              </h6>
+              <h6
+                v-else 
+                class="w-full"
+              >
+                {{ selectedAddress }}
+              </h6>
+              <i
+                data-feather="chevron-down"
+                class="w-[20px] h-min"
+              />
+            </div>
+
+            <div
+              v-show="openSelectAddressInput"
+              class="absolute top-[115%] left-0 card_input max-w-full w-full max-h-[300px] overflow-auto"
+            >
+              <div v-if="userAddresses.length === 0">
+                Please select wallet provider to access list of wallets under your provider.
+              </div>
+              <div
+                v-else
+                class="w-full"
+              >
+                <button
+                  v-for="act in userAddresses"
+                  :key="act.address"
+                  class="w-full border rounded-[8px] px-[10px] py-[15px] flex items-center justify-between"
+                  @click="selectAddress(act.address)"
+                >
+                  <div>
+                    {{ convertString(act.address) }}
+                  </div>
+                  <div>
+                    {{ act.balance }} ETH
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="flex flex-wrap justify-between gap-[20px]">
           <button
             v-for="wallet in activeWallets"
             :key="wallet"
             class="w-[180px] h-[100px] border flex flex-col justify-center items-center rounded-[8px]"
+            @click="selectProvider(wallet, 'ETH')"
           >
             <img
               :src="`/${wallet.toLowerCase()}.svg`"
@@ -244,10 +319,25 @@ onUnmounted(() =>{
   color: #ABABAB;
 }
 
-/* .nav_items:hover{
-  color: #FFFFFF;
-  border-bottom: 1px solid #9BA4B5;
-} */
+.card_input{
+  background: #FFFFFF;
+  border: 1px solid #D0D5DD;
+  box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 10px;
+
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 24px;
+  letter-spacing: -0.01em;
+  color: #101828;
+  margin-bottom: 6px;
+}
 
 .nav_items_active{
   font-family: 'IBM Plex Sans';
