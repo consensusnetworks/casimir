@@ -70,7 +70,17 @@ onUnmounted(() =>{
   <div class="min-w-[360px]">
     <div>
       <div
-        class="px-[60px] pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
+        class="
+      px-[60px]
+      pt-[17px]
+      pb-[19px]
+      flex
+      flex-wrap
+      gap-[20px]
+      justify-between
+      items-center
+      bg-black
+      relative"
         :class="openWalletConnect? 'pr-[75px]' : ''"
       >
         <img
@@ -183,7 +193,7 @@ onUnmounted(() =>{
         class="relative text-black"
         :class="openWalletConnect? 'overflow-hidden h-[80vh] 600s:h-[78vh] pr-[15px]' : ''"
       >
-        <slot style="z-index: 1;" />
+        <slot />
         <div
           class="bg-black h-[207px] w-full absolute top-0 left-0"
           style="z-index: -1;"
