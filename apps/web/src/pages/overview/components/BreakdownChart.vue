@@ -10,8 +10,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black">
-    <div class="flex gap-[68px] mb-[52px]">
+  <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap">
+    <div class="flex flex-wrap gap-[68px] mb-[52px]">
       <div>
         <h6 class="blance_title mb-[15px]">
           Total Staked
@@ -39,7 +39,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <div class="flex justify-between items-start">
+    <div class="flex flex-wrap gap-[20px] justify-between items-start">
       <div>
         <h6 class="card_title">
           Ethereum Balance
