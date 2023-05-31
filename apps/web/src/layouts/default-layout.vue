@@ -67,10 +67,10 @@ onUnmounted(() =>{
 </script>
 
 <template>
-  <div>
+  <div class="min-w-[360px]">
     <div>
       <div
-        class="px-[60px] pt-[17px] pb-[19px] flex justify-between items-center bg-black relative"
+        class="px-[60px] pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
         :class="openWalletConnect? 'pr-[75px]' : ''"
       >
         <img
@@ -79,7 +79,7 @@ onUnmounted(() =>{
           class="w-[21px]"
         >
 
-        <div class="flex items-center gap-50 h-full">
+        <div class="flex flex-wrap items-center gap-50 h-full pr-[50px]">
           <router-link
             to="/"
             class="nav_items_active"
@@ -118,7 +118,7 @@ onUnmounted(() =>{
 
           <div class="connect_wallet_gradient">
             <button
-              class="connect_wallet flex justify-between items-center gap-[8px]"
+              class="connect_wallet flex justify-between items-center gap-[8px] whitespace-nowrap"
               @click="openWalletConnect = true"
             >
               Connect Wallet
