@@ -76,6 +76,19 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Functions subscription ID */
     uint64 private functionsSubscriptionId;
 
+    /*************/
+    /* Modifiers */
+    /*************/
+
+    /**
+     * @dev Verify a request ID
+     * @param requestId The request ID
+     */
+    modifier validateRequestId(bytes32 requestId) {
+        require(requestId == reportRequestId, "Invalid request ID");
+        _;
+    }
+
     /***************/
     /* Constructor */
     /***************/
@@ -225,9 +238,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         bytes32 requestId,
         bytes memory response,
         bytes memory _error
-    ) internal override {
-        require(requestId == reportRequestId, "Invalid request ID");
-
+    ) internal override validateRequestId(requestId) {
         reportResponseError = _error;
         if (_error.length == 0) {
             reportStatus = Status.PROCESSING;

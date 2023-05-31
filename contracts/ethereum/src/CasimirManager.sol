@@ -152,6 +152,55 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** SSV fee percentage */
     uint32 private ssvFeePercent = 1;
 
+    /*************/
+    /* Modifiers */
+    /*************/
+
+    /**
+     * @dev Validate the caller is the manager oracle
+     */
+    modifier onlyOracle() {
+        require(
+            msg.sender == oracleAddress,
+            "Only manager oracle can call this function"
+        );
+        _;
+    }
+
+    /**
+     * @dev Validate the caller is the upkeep contract
+     */
+    modifier onlyUpkeep() {
+        require(
+            msg.sender == address(upkeep),
+            "Only upkeep can call this function"
+        );
+        _;
+    }
+
+    /**
+     * @dev Validate a deposit
+     */
+    modifier validateDeposit() {
+        require(
+            msg.value > 0,
+            "Deposit must be greater than zero"
+        );
+        _;
+    }
+
+    /**
+     * @dev Validate a distribution
+     * @param amount The amount to validate
+     */
+    modifier validDistribution(uint256 amount) {
+        require(
+            amount > 0,
+            "Distribution must be greater than zero"
+        );
+        _;
+    }
+
     /**
      * @notice Constructor
      * @param _oracleAddress The manager oracle address
@@ -205,9 +254,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @notice Deposit user stake
      */
-    function depositStake() external payable nonReentrant {
-        require(msg.value > 0, "Deposit amount must be greater than 0");
-
+    function depositStake() external payable nonReentrant validateDeposit() {
         uint256 depositAfterFees = subtractFees(msg.value);
         reservedFees += msg.value - depositAfterFees;
 
@@ -223,7 +270,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Deposit rewards
+     * @notice Deposit a given amount of rewards
      * @param rewards The amount of rewards to deposit
      */
     function depositRewards(uint256 rewards) private {
@@ -232,6 +279,31 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         distributeStake(rewardsAfterFees);
 
         emit RewardsDeposited(rewardsAfterFees);
+    }
+
+    /**
+     * @dev Distribute a given amount of stake
+     * @param amount The amount of stake to distribute
+     */
+    function distributeStake(uint256 amount) private validDistribution(amount) {
+        while (amount > 0) {
+            uint256 remainingCapacity = poolCapacity - prepoolBalance;
+            if (remainingCapacity > amount) {
+                prepoolBalance += amount;
+                amount = 0;
+            } else {
+                lastPoolId++;
+                uint32 poolId = lastPoolId;
+                Pool storage pool;
+                pool = pools[poolId];
+                prepoolBalance = 0;
+                amount -= remainingCapacity;
+                pool.deposits = poolCapacity;
+                readyPoolIds.push(poolId);
+
+                emit PoolDepositRequested(poolId);
+            }
+        }
     }
 
     /**
@@ -246,12 +318,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint256 sweptBalance,
         uint256 activatedDeposits,
         uint256 withdrawnExits
-    ) external {
-        require(
-            msg.sender == address(upkeep),
-            "Only upkeep can rebalance stake"
-        );
-
+    ) external onlyUpkeep() {
         uint256 activatedBalance = activatedDeposits * poolCapacity;
         uint256 withdrawnBalance = withdrawnExits * poolCapacity;
         int256 surplus = int256(activeBalance + sweptBalance) - (int256(getExpectedEffectiveBalance() + withdrawnBalance));
@@ -305,36 +372,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Distribute stake to open pools
-     * @param amount The amount of stake to distribute
-     */
-    function distributeStake(uint256 amount) private {
-        require(
-            amount >= distributionThreshold,
-            "Stake amount must be greater than or equal to 100 WEI"
-        );
-
-        while (amount > 0) {
-            uint256 remainingCapacity = poolCapacity - prepoolBalance;
-            if (remainingCapacity > amount) {
-                prepoolBalance += amount;
-                amount = 0;
-            } else {
-                lastPoolId++;
-                uint32 poolId = lastPoolId;
-                Pool storage pool;
-                pool = pools[poolId];
-                prepoolBalance = 0;
-                amount -= remainingCapacity;
-                pool.deposits = poolCapacity;
-                readyPoolIds.push(poolId);
-
-                emit PoolDepositRequested(poolId);
-            }
-        }
-    }
-
-    /**
      * @notice Request to withdraw user stake
      * @param amount The amount of stake to withdraw
      */
@@ -380,12 +417,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Complete a given count of pending withdrawals
      * @param count The number of withdrawals to complete
      */
-    function completePendingWithdrawals(uint256 count) external {
-        require(
-            msg.sender == address(upkeep),
-            "Only upkeep can complete withdrawals"
-        );
-
+    function completePendingWithdrawals(uint256 count) external onlyUpkeep() {
         while (count > 0) {
             count--;
 
@@ -447,11 +479,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bytes calldata shares,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount
-    ) external {
-        require(
-            msg.sender == oracleAddress,
-            "Only manager oracle can initiate pools"
-        );
+    ) external onlyOracle() {
         require(readyPoolIds.length > 0, "No ready pools");
         require(reservedFees >= feeAmount, "Not enough reserved fees");
 
@@ -500,11 +528,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Complete a given count of the next pending pools
      * @param count The number of pools to complete
      */
-    function completePoolDeposits(uint256 count) external {
-        require(
-            msg.sender == address(upkeep),
-            "Only upkeep can complete pool deposits"
-        );
+    function completePoolDeposits(uint256 count) external onlyUpkeep() {
         require(pendingPoolIds.length >= count, "Not enough pending pools");
 
         while (count > 0) {
@@ -544,12 +568,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Request a given count of pool unexpected exit reports
      * @param count The number of pool unexpected exit reports
      */
-    function requestPoolUnexpectedExitReports(uint256 count) external {
-        require(
-            msg.sender == address(upkeep),
-            "Only upkeep can request pool unexpected exit reports"
-        );
-
+    function requestPoolUnexpectedExitReports(uint256 count) external onlyUpkeep() {
         requestedPoolUnexpectedExitReports = count;
 
         emit PoolUnexpectedExitReportsRequested(count);
@@ -559,12 +578,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Request a given count of pool slashed exit reports
      * @param count The number of pool slashed exit reports
      */
-    function requestPoolSlashedExitReports(uint256 count) external {
-        require(
-            msg.sender == address(upkeep),
-            "Only upkeep can request pool slash reports"
-        );
-
+    function requestPoolSlashedExitReports(uint256 count) external onlyUpkeep() {
         requestedPoolSlashedExitReports = count;
 
         emit PoolSlashedExitReportsRequested(count);
@@ -574,12 +588,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Request a given count of pool exit completions
      * @param count The number of pool exits to complete
      */
-    function requestPoolWithdrawnExitReports(uint256 count) external {
-        require(
-            msg.sender == address(upkeep),
-            "Only upkeep can request pool exit completions"
-        );
-
+    function requestPoolWithdrawnExitReports(uint256 count) external onlyUpkeep() {
         requestedPoolWithdrawnExitReports = count;
 
         emit PoolWithdrawnExitReportsRequested(count);
@@ -589,11 +598,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Report a pool unexpected exit
      * @param poolId The pool ID
      */
-    function reportPoolUnexpectedExit(uint32 poolId) external {
-        require(
-            msg.sender == oracleAddress,
-            "Only manager oracle can report pool unexpected exits"
-        );
+    function reportPoolUnexpectedExit(uint32 poolId) external onlyOracle() {
         require(
             requestedPoolUnexpectedExitReports > 0, 
             "No requested pool unexpected exit reports"
@@ -610,11 +615,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Report a pool slash
      * @param poolId The pool ID
      */
-    function reportPoolSlash(uint32 poolId) external {
-        require(
-            msg.sender == oracleAddress,
-            "Only manager oracle can report pool slashedExits"
-        );
+    function reportPoolSlash(uint32 poolId) external onlyOracle() {
         require(
             requestedPoolSlashedExitReports > 0, 
             "No requested pool slash reports"
@@ -643,11 +644,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint256 finalEffectiveBalance,
         uint32[] memory blamePercents,
         ISSVNetworkCore.Cluster memory cluster
-    ) external {
-        require(
-            msg.sender == oracleAddress,
-            "Only manager oracle can complete pool exits"
-        );
+    ) external onlyOracle() {
         require(
             requestedPoolWithdrawnExitReports > 0, 
             "No requested pool withdrawn exit reports"
