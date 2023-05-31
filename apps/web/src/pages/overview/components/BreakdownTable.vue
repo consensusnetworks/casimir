@@ -14,7 +14,7 @@ onMounted(() => {
 <template>
   <div class="card_container pt-[42px] pb-[34px] text-black">
     <div class="px-[32px]">
-      <div class="flex justify-between items-start pb-[20px] border-b border-b-[#EAECF0] ">
+      <div class="flex flex-wrap gap-[20px] justify-between items-start pb-[20px] border-b border-b-[#EAECF0] ">
         <div>
           <div class="flex items-center gap-[8px]">
             <h6 class="card_title">
@@ -35,7 +35,7 @@ onMounted(() => {
           </button>
         </div>
       </div>
-      <div class="flex justify-between items-center h-[64px] border-b border-b-[#EAECF0]">
+      <div class="flex flex-wrap gap-[20px] justify-between py-[20px] items-center border-b border-b-[#EAECF0]">
         <div class="grouped_buttons overflow-hidden">
           <button
             class="timeframe_button"

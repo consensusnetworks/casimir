@@ -64,7 +64,7 @@ onMounted(() => {
     width: 29px;
 }
 .card_container{
-    width: 100%;
+    width: 300px;
     height: 100%;
     box-sizing: border-box;
     background: #FFFFFF;

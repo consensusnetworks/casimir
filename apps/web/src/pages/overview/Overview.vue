@@ -13,14 +13,14 @@ import BreakdownTable from './components/BreakdownTable.vue'
       Breakdown
     </h6>
 
-    <div class="flex 1100s:flex-wrap justify-between items-start gap-[63px] text-white h-[541px] 1100s:h-max mb-[47px]">
+    <div class="flex 1200s:flex-wrap justify-between items-start gap-[63px] text-white h-[541px] 1200s:h-max mb-[47px]">
       <div class="h-full w-full">
         <BreakdownChart />
       </div>
       <div class="max-w-[300px] w-full h-full">
         <Staking />
       </div>
-      <div class="max-w-[300px] w-full sr-only 1100s:not-sr-only">
+      <div class="w-[300px] sr-only 1200s:not-sr-only">
         <div class="w-full mb-[37px]">
           <StakingAvg /> 
         </div>
@@ -30,10 +30,10 @@ import BreakdownTable from './components/BreakdownTable.vue'
       </div>
     </div>
     <div class="flex justify-between items-start gap-[63px] text-white">
-      <div class="w-full h-full">
+      <div class="h-full w-full">
         <BreakdownTable />
       </div>
-      <div class="max-w-[300px] w-full 1100s:sr-only not-sr-only">
+      <div class="w-[300px] 1200s:sr-only not-sr-only">
         <div class="w-full mb-[37px]">
           <StakingAvg /> 
         </div>
