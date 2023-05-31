@@ -3,7 +3,8 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { CasimirManager } from '../build/artifacts/types'
 import { validatorStore } from '@casimir/data'
 import { Validator } from '@casimir/types'
-import { getCluster } from '@casimir/ssv'
+import { getClusterDetails } from '@casimir/ssv'
+import { ClusterDetails } from '@casimir/ssv/src/interfaces/ClusterDetails'
 
 const mockValidators: Validator[] = Object.values(validatorStore)
 
@@ -19,18 +20,26 @@ export async function initiatePoolDepositHandler({ manager, signer, args }: { ma
         withdrawalCredentials,
         operatorIds,
         shares,
-        cluster: _cluster
     } = mockValidators[poolId - 1]
 
-    let cluster
+    let clusterDetails: ClusterDetails = {
+        cluster: {
+            validatorCount: 0,
+            networkFeeIndex: 0,
+            index: 0,
+            balance: 0,
+            active: true
+        },
+        requiredFees: ethers.utils.parseEther(mockFee.toString())
+    }
 
-    if (poolId === 1) {
-        cluster = _cluster
-    } else {
+    if (poolId !== 1) {
         const networkAddress = await manager.getSSVNetworkAddress()
         const withdrawalAddress = manager.address
-        cluster = await getCluster({ provider: ethers.provider, networkAddress, operatorIds, withdrawalAddress })
+        clusterDetails = await getClusterDetails({ provider: ethers.provider, networkAddress, operatorIds, withdrawalAddress })
     }
+
+    const { cluster, requiredFees } = clusterDetails
 
     const initiatePoolDeposit = await manager.connect(signer).initiatePoolDeposit(
         depositDataRoot,
@@ -40,7 +49,7 @@ export async function initiatePoolDepositHandler({ manager, signer, args }: { ma
         operatorIds,
         shares,
         cluster,
-        ethers.utils.parseEther(mockFee.toString()) // Mock fee amount estimate ~ 10 SSV
+        requiredFees // Mock fee amount estimate ~ 10 SSV
     )
     await initiatePoolDeposit.wait()
 }
@@ -56,7 +65,8 @@ export async function completePoolExitHandler({ manager, signer }: { manager: Ca
 
     const networkAddress = await manager.getSSVNetworkAddress()
     const withdrawalAddress = manager.address
-    const cluster = await getCluster({ provider: ethers.provider, networkAddress, operatorIds, withdrawalAddress })
+    const clusterDetails = await getClusterDetails({ provider: ethers.provider, networkAddress, operatorIds, withdrawalAddress })
+    const { cluster } = clusterDetails
 
     const completePoolExit = await manager.connect(signer).completePoolExit(
         poolIndex,

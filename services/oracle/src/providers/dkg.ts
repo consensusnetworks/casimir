@@ -9,7 +9,6 @@ import { Validator } from '@casimir/types'
 import { ReshareValidatorInput } from '../interfaces/ReshareValidatorInput'
 import { operatorStore } from '@casimir/data'
 import { DepositDataInput } from '../interfaces/DepositDataInput'
-import { getCluster } from '@casimir/ssv'
 
 export class DKG {
     /** DKG CLI path */
@@ -28,7 +27,7 @@ export class DKG {
      * @returns {Promise<Validator>} Validator with operator key shares and deposit data
      */
     async createValidator(input: CreateValidatorInput): Promise<Validator> {
-        const { provider, manager, operatorIds, withdrawalAddress } = input
+        const { operatorIds, withdrawalAddress } = input
 
         const operators = this.getOperatorUrls(operatorIds)
 
@@ -45,19 +44,12 @@ export class DKG {
         /** Get validator deposit data */
         const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData({ ceremonyId, withdrawalAddress })
 
-        /** Get SSV network address */
-        const networkAddress = await manager.getSSVNetworkAddress()
-
-        /** Get SSV cluster snapshot */
-        const cluster = await getCluster({ networkAddress, operatorIds, provider, withdrawalAddress })
-
         /** Create validator */
         const validator: Validator = {
             depositDataRoot,
             publicKey,
             operatorIds,
             shares,
-            cluster,
             signature,
             withdrawalCredentials
         }
@@ -71,7 +63,7 @@ export class DKG {
      * @returns {Promise<Validator>} Validator with operator key shares and deposit data
      */
     async reshareValidator(input: ReshareValidatorInput): Promise<Validator> {
-        const { provider, manager, operatorIds, publicKey, oldOperatorIds, withdrawalAddress } = input
+        const { operatorIds, publicKey, oldOperatorIds, withdrawalAddress } = input
         const operators = this.getOperatorUrls(operatorIds)
         const oldOperators = this.getOperatorUrls(oldOperatorIds)
 
@@ -85,19 +77,12 @@ export class DKG {
         /** Get validator deposit data */
         const { depositDataRoot, signature, withdrawalCredentials } = await this.getDepositData({ ceremonyId, withdrawalAddress })
 
-        /** Get SSV network address */
-        const networkAddress = await manager.getSSVNetworkAddress()
-
-        /** Get SSV cluster snapshot */
-        const cluster = await getCluster({ networkAddress, operatorIds, provider, withdrawalAddress })
-
         /** Create validator */
         const validator: Validator = {
             depositDataRoot,
             publicKey,
             operatorIds,
             shares,
-            cluster,
             signature,
             withdrawalCredentials
         }

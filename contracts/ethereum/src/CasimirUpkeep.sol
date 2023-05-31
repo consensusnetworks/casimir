@@ -243,7 +243,6 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         if (_error.length == 0) {
             reportStatus = Status.PROCESSING;
             reportRequestId = bytes32(0);
-
             (
                 uint128 activeBalance, 
                 uint32 activatedDeposits,
@@ -251,7 +250,6 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
                 uint32 slashedExits,
                 uint32 withdrawnExits
             ) = abi.decode(response, (uint128, uint32, uint32, uint32, uint32));
-
             reportActiveBalance = uint256(activeBalance) * 1 gwei;
             reportActivatedDeposits = activatedDeposits;
             reportUnexpectedExits = unexpectedExits;

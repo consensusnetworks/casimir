@@ -1,7 +1,8 @@
 import { ethers } from 'ethers'
-import { Cluster } from '@casimir/types'
 import SSVNetworkJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/SSVNetwork.sol/SSVNetwork.json'
-import { ClusterInput } from '../interfaces/ClusterInput'
+import { ClusterDetailsInput } from '../interfaces/ClusterDetailsInput'
+import { ClusterDetails } from '../interfaces/ClusterDetails'
+import { Cluster } from '@casimir/types'
 
 const DAY = 5400
 const WEEK = DAY * 7
@@ -20,7 +21,7 @@ const eventList = [
  * @param {ClusterInput} input - Operator IDs and withdrawal address
  * @returns {Promise<Cluster>} Cluster snapshot
  */
-export async function getCluster(input: ClusterInput): Promise<Cluster> {
+export async function getClusterDetails(input: ClusterDetailsInput): Promise<ClusterDetails> {
     const { provider, networkAddress, operatorIds, withdrawalAddress } = input
 
     const ssv = new ethers.Contract(networkAddress, SSVNetworkJson.abi, provider)
@@ -78,11 +79,14 @@ export async function getCluster(input: ClusterInput): Promise<Cluster> {
         fromBlock = toBlock - step
     }
 
-    return cluster || {
+    cluster = cluster || {
         validatorCount: 0,
         networkFeeIndex: 0,
         index: 0,
         balance: 0,
         active: true
     }
+    const requiredFees = ethers.utils.parseEther('0.1')
+    
+    return { cluster, requiredFees }
 }

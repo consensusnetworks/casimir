@@ -1,3 +1,3 @@
-import { getCluster } from './providers/clusters'
+import { getClusterDetails } from './providers/clusters'
 
-export { getCluster }
+export { getClusterDetails }

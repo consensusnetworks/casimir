@@ -1,8 +1,8 @@
-import fs from 'fs'
 import { ethers } from 'ethers'
 import { DKG } from './dkg'
 import { HandlerInput } from '../interfaces/HandlerInput'
 import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
+import { getClusterDetails } from '@casimir/ssv'
 
 export async function initiatePoolDepositHandler(input: HandlerInput) {
     const { provider, signer, manager, cliPath, messengerUrl } = input
@@ -16,20 +16,23 @@ export async function initiatePoolDepositHandler(input: HandlerInput) {
         withdrawalAddress: manager.address 
     })
     
-    // Save validator for mocks
-    const validators = JSON.parse(fs.readFileSync('./scripts/.out/validators.json', 'utf8'))
-    validators[Date.now()] = validator
-    fs.writeFileSync('./scripts/.out/validators.json', JSON.stringify(validators, null, 4))
-    
     const {
         depositDataRoot,
         publicKey,
         signature,
         withdrawalCredentials,
         operatorIds,
-        shares,
-        cluster
+        shares
     } = validator
+
+    const clusterDetails = await getClusterDetails({ 
+        provider,
+        networkAddress: await manager.getSSVNetworkAddress(),
+        operatorIds,
+        withdrawalAddress: manager.address
+    })
+
+    const { cluster, requiredFees } = clusterDetails
 
     const initiatePoolDeposit = await (manager.connect(signer) as CasimirManager & ethers.Contract).initiatePoolDeposit(
         depositDataRoot,
@@ -39,7 +42,7 @@ export async function initiatePoolDepositHandler(input: HandlerInput) {
         operatorIds,
         shares,
         cluster,
-        ethers.utils.parseEther('0.1') // Mock fee amount estimate ~ 10 SSV
+        requiredFees // Mock fee amount estimate ~ 10 SSV
     )
     await initiatePoolDeposit.wait()
 }

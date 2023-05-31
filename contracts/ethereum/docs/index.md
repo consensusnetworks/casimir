@@ -20,6 +20,44 @@ uint256 finalizableWithdrawnPoolCount
 
 Exited pool count
 
+### onlyOracle
+
+```solidity
+modifier onlyOracle()
+```
+
+_Validate the caller is the manager oracle_
+
+### onlyUpkeep
+
+```solidity
+modifier onlyUpkeep()
+```
+
+_Validate the caller is the upkeep contract_
+
+### validateDeposit
+
+```solidity
+modifier validateDeposit()
+```
+
+_Validate a deposit_
+
+### validDistribution
+
+```solidity
+modifier validDistribution(uint256 amount)
+```
+
+_Validate a distribution_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount | uint256 | The amount to validate |
+
 ### constructor
 
 ```solidity
@@ -716,123 +754,6 @@ Get the upkeep address
 | ---- | ---- | ----------- |
 | upkeepAddress | address | The upkeep address |
 
-## CasimirRegistry
-
-### requiredCollateral
-
-```solidity
-uint256 requiredCollateral
-```
-
-### minimumCollateralDeposit
-
-```solidity
-uint256 minimumCollateralDeposit
-```
-
-### totalCollateral
-
-```solidity
-uint256 totalCollateral
-```
-
-### constructor
-
-```solidity
-constructor(address managerAddress, address ssvNetworkViewsAddress) public
-```
-
-### registerOperator
-
-```solidity
-function registerOperator(uint64 operatorId) external payable
-```
-
-Register an operator with the set
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
-### requestOperatorDeregistration
-
-```solidity
-function requestOperatorDeregistration(uint64 operatorId) external
-```
-
-Request to deregister an operator from the set
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
-### completeOperatorDeregistration
-
-```solidity
-function completeOperatorDeregistration(uint64 operatorId) external
-```
-
-Deregister an operator from the set
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
-### depositCollateral
-
-```solidity
-function depositCollateral(uint64 operatorId) external payable
-```
-
-Deposit collateral for an operator
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
-### setOperatorCollateral
-
-```solidity
-function setOperatorCollateral(uint64 operatorId, int256 collateral) external
-```
-
-Set the collateral for an operator
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-| collateral | int256 | The collateral |
-
-### getOperatorCollateral
-
-```solidity
-function getOperatorCollateral(uint64 operatorId) external view returns (int256)
-```
-
-Get the collateral for an operator
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | int256 | The collateral |
-
 ## CasimirUpkeep
 
 ### reportHeartbeat
@@ -898,6 +819,20 @@ uint32 fulfillGasLimit
 ```
 
 Fulfillment gas limit
+
+### validateRequestId
+
+```solidity
+modifier validateRequestId(bytes32 requestId)
+```
+
+_Verify a request ID_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | bytes32 | The request ID |
 
 ### constructor
 
@@ -1398,73 +1333,6 @@ function getPendingWithdrawals() external view returns (uint256)
 function getPendingWithdrawalCount() external view returns (uint256)
 ```
 
-## ICasimirRegistry
-
-### OperatorRegistered
-
-```solidity
-event OperatorRegistered(uint64 operatorId)
-```
-
-### OperatorDeregistrationRequested
-
-```solidity
-event OperatorDeregistrationRequested(uint64 operatorId)
-```
-
-### OperatorDeregistrationCompleted
-
-```solidity
-event OperatorDeregistrationCompleted(uint64 operatorId)
-```
-
-### Operator
-
-```solidity
-struct Operator {
-  uint64 id;
-  int256 collateral;
-  uint256 poolCount;
-  bool deregistering;
-}
-```
-
-### registerOperator
-
-```solidity
-function registerOperator(uint64 operatorId) external payable
-```
-
-### requestOperatorDeregistration
-
-```solidity
-function requestOperatorDeregistration(uint64 operatorId) external
-```
-
-### completeOperatorDeregistration
-
-```solidity
-function completeOperatorDeregistration(uint64 operatorId) external
-```
-
-### depositCollateral
-
-```solidity
-function depositCollateral(uint64 operatorId) external payable
-```
-
-### setOperatorCollateral
-
-```solidity
-function setOperatorCollateral(uint64 operatorId, int256 collateral) external
-```
-
-### getOperatorCollateral
-
-```solidity
-function getOperatorCollateral(uint64 operatorId) external view returns (int256)
-```
-
 ## ICasimirUpkeep
 
 ### Status
@@ -1620,50 +1488,6 @@ _Send ETH to a user_
 | user | address | The user address |
 | amount | uint256 | The amount of stake to send |
 
-## MockFunctionsOracle
-
-### constructor
-
-```solidity
-constructor() public
-```
-
-### getRegistry
-
-```solidity
-function getRegistry() external view returns (address)
-```
-
-Returns the address of the registry contract
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | address The address of the registry contract |
-
-### sendRequest
-
-```solidity
-function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
-```
-
-Sends a request (encoded as data) using the provided subscriptionId
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
-| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| _gasLimit | uint32 | Gas limit for the fulfillment callback |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | A unique request identifier (unique per DON) |
-
 ## IDepositContract
 
 ### DepositEvent
@@ -1736,6 +1560,234 @@ function withdraw(uint256) external
 ```
 
 Withdraw wrapped ether to get ether
+
+## CasimirRegistry
+
+### requiredCollateral
+
+```solidity
+uint256 requiredCollateral
+```
+
+### minimumCollateralDeposit
+
+```solidity
+uint256 minimumCollateralDeposit
+```
+
+### totalCollateral
+
+```solidity
+uint256 totalCollateral
+```
+
+### constructor
+
+```solidity
+constructor(address managerAddress, address ssvNetworkViewsAddress) public
+```
+
+### registerOperator
+
+```solidity
+function registerOperator(uint64 operatorId) external payable
+```
+
+Register an operator with the set
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+### requestOperatorDeregistration
+
+```solidity
+function requestOperatorDeregistration(uint64 operatorId) external
+```
+
+Request to deregister an operator from the set
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+### completeOperatorDeregistration
+
+```solidity
+function completeOperatorDeregistration(uint64 operatorId) external
+```
+
+Deregister an operator from the set
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+### depositCollateral
+
+```solidity
+function depositCollateral(uint64 operatorId) external payable
+```
+
+Deposit collateral for an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+### setOperatorCollateral
+
+```solidity
+function setOperatorCollateral(uint64 operatorId, int256 collateral) external
+```
+
+Set the collateral for an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+| collateral | int256 | The collateral |
+
+### getOperatorCollateral
+
+```solidity
+function getOperatorCollateral(uint64 operatorId) external view returns (int256)
+```
+
+Get the collateral for an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int256 | The collateral |
+
+## ICasimirRegistry
+
+### OperatorRegistered
+
+```solidity
+event OperatorRegistered(uint64 operatorId)
+```
+
+### OperatorDeregistrationRequested
+
+```solidity
+event OperatorDeregistrationRequested(uint64 operatorId)
+```
+
+### OperatorDeregistrationCompleted
+
+```solidity
+event OperatorDeregistrationCompleted(uint64 operatorId)
+```
+
+### Operator
+
+```solidity
+struct Operator {
+  uint64 id;
+  int256 collateral;
+  uint256 poolCount;
+  bool deregistering;
+}
+```
+
+### registerOperator
+
+```solidity
+function registerOperator(uint64 operatorId) external payable
+```
+
+### requestOperatorDeregistration
+
+```solidity
+function requestOperatorDeregistration(uint64 operatorId) external
+```
+
+### completeOperatorDeregistration
+
+```solidity
+function completeOperatorDeregistration(uint64 operatorId) external
+```
+
+### depositCollateral
+
+```solidity
+function depositCollateral(uint64 operatorId) external payable
+```
+
+### setOperatorCollateral
+
+```solidity
+function setOperatorCollateral(uint64 operatorId, int256 collateral) external
+```
+
+### getOperatorCollateral
+
+```solidity
+function getOperatorCollateral(uint64 operatorId) external view returns (int256)
+```
+
+## MockFunctionsOracle
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### getRegistry
+
+```solidity
+function getRegistry() external view returns (address)
+```
+
+Returns the address of the registry contract
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | address The address of the registry contract |
+
+### sendRequest
+
+```solidity
+function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
+```
+
+Sends a request (encoded as data) using the provided subscriptionId
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
+| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
+| _gasLimit | uint32 | Gas limit for the fulfillment callback |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | bytes32 | A unique request identifier (unique per DON) |
 
 ## CasimirRecipient
 

@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 
-export interface ClusterInput {
+export interface ClusterDetailsInput {
     /** SSV network address */
     networkAddress: string
     /** Operator IDs */
