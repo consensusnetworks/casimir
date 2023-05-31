@@ -15,15 +15,6 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
         PROCESSING
     }
 
-    /** Request types */
-    enum RequestType {
-        NONE,
-        BALANCE,
-        DEPOSITS,
-        EXITS,
-        SLASHES
-    }
-
     /**********/
     /* Events */
     /**********/

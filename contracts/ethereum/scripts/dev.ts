@@ -2,7 +2,7 @@ import { deployContract } from '@casimir/ethereum/helpers/deploy'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 import { CasimirUpkeep, CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { ethers } from 'hardhat'
-import { performReport } from '@casimir/ethereum/helpers/upkeep'
+import { fulfillReportRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
 import EventEmitter, { on } from 'events'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
@@ -85,6 +85,9 @@ void async function () {
             if (depositedPoolCount) {
                 console.log(`Rewarding ${depositedPoolCount} validators ${rewardPerValidator} each`)
                 await time.increase(time.duration.days(1))
+
+                await runUpkeep({ upkeep, keeper })
+                
                 const rewardAmount = rewardPerValidator * depositedPoolCount.toNumber()
                 let nextActiveBalance = round(
                     parseFloat(
@@ -93,27 +96,33 @@ void async function () {
                         )
                     ) + rewardAmount
                 )
-                let nextDeposits = (await manager.getPendingPoolIds()).length
-                let nextValues = [
-                    nextActiveBalance, // activeBalance
-                    nextDeposits, // deposits
-                    0, // exits
-                    0, // slashes
-                ]
-                requestId = await performReport({
-                    manager,
+                
+                let nextActivatedDeposits = (await manager.getPendingPoolIds()).length
+                let nextValues = {
+                    activeBalance: nextActiveBalance,
+                    activatedDeposits: nextActivatedDeposits,
+                    unexpectedExits: 0,
+                    slashedExits: 0,
+                    withdrawnExits: 0
+                }
+
+                requestId = await fulfillReportRequest({
                     upkeep,
                     keeper,
                     values: nextValues,
                     requestId
                 })
 
-                /** Sweep rewards before next upkeep (balance will increment silently) */
+                await runUpkeep({ upkeep, keeper })
+
                 const currentBalance = await ethers.provider.getBalance(manager.address)
                 const nextBalance = currentBalance.add(ethers.utils.parseEther(rewardAmount.toString()))
                 await setBalance(manager.address, nextBalance)
 
                 await time.increase(time.duration.days(1))
+
+                await runUpkeep({ upkeep, keeper })
+
                 nextActiveBalance = round(
                     parseFloat(
                         ethers.utils.formatEther(
@@ -121,20 +130,23 @@ void async function () {
                         )
                     ) - rewardAmount
                 )
-                nextDeposits = (await manager.getPendingPoolIds()).length
-                nextValues = [
-                    nextActiveBalance, // activeBalance
-                    nextDeposits, // deposits
-                    0, // exits
-                    0, // slashes
-                ]
-                requestId = await performReport({
-                    manager,
+                nextActivatedDeposits = (await manager.getPendingPoolIds()).length
+                nextValues = {
+                    activeBalance: nextActiveBalance,
+                    activatedDeposits: nextActivatedDeposits,
+                    unexpectedExits: 0,
+                    slashedExits: 0,
+                    withdrawnExits: 0
+                }
+
+                requestId = await fulfillReportRequest({
                     upkeep,
                     keeper,
                     values: nextValues,
                     requestId
                 })
+
+                await runUpkeep({ upkeep, keeper })
             }
         }
     }

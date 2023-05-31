@@ -2,8 +2,8 @@ import { ethers } from 'hardhat'
 import { loadFixture, time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import { deployContract } from '@casimir/ethereum/helpers/deploy'
 import { CasimirManager, CasimirUpkeep } from '@casimir/ethereum/build/artifacts/types'
-import { performReport } from '@casimir/ethereum/helpers/upkeep'
-import { completePoolExitHandler, initiatePoolDepositHandler } from '@casimir/ethereum/helpers/oracle'
+import { fulfillReportRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
+import { initiatePoolDepositHandler, completePoolExitHandler } from '@casimir/ethereum/helpers/oracle'
 import { round } from '@casimir/ethereum/helpers/math'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
 
@@ -93,22 +93,26 @@ export async function secondUserDepositFixture() {
     const nextPoolId = 1
     await initiatePoolDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
     
-    await time.increase(time.duration.days(1))    
-    let requestId = 0
-    const nextValues = [
-        32, // activeBalance
-        1, // deposits
-        0, // exits
-        0, // slashes
-    ]
+    await time.increase(time.duration.days(1))   
 
-    requestId = await performReport({
-        manager,
+    await runUpkeep({ upkeep, keeper })
+ 
+    let requestId = 0
+    const nextValues = {
+        activeBalance: 32,
+        activatedDeposits: 1,
+        unexpectedExits: 0,
+        slashedExits: 0,
+        withdrawnExits: 0
+    }
+    requestId = await fulfillReportRequest({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
+
+    await runUpkeep({ upkeep, keeper })
 
     return { manager, upkeep, owner, firstUser, secondUser, keeper, oracle, requestId }
 }
@@ -118,21 +122,25 @@ export async function rewardsPostSecondUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(secondUserDepositFixture)
 
     await time.increase(time.duration.days(1))
-    let requestId = latestRequestId
-    const nextValues = [
-        32.105, // activeBalance
-        0, // deposits
-        0, // exits
-        0, // slashes
-    ]
 
-    requestId = await performReport({
-        manager,
+    await runUpkeep({ upkeep, keeper })
+
+    let requestId = latestRequestId
+    const nextValues = {
+        activeBalance: 32.105,
+        activatedDeposits: 0,
+        unexpectedExits: 0,
+        slashedExits: 0,
+        withdrawnExits: 0
+    }
+    requestId = await fulfillReportRequest({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
+
+    await runUpkeep({ upkeep, keeper })
 
     return { manager, upkeep, owner, firstUser, secondUser, keeper, oracle, requestId }
 }
@@ -147,20 +155,25 @@ export async function sweepPostSecondUserDepositFixture() {
     await setBalance(manager.address, nextBalance)
 
     await time.increase(time.duration.days(1))
+
+    await runUpkeep({ upkeep, keeper })
+
     let requestId = latestRequestId
-    const nextValues = [
-        32, // activeBalance
-        0, // deposits
-        0, // exits
-        0, // slashes
-    ]
-    requestId = await performReport({
-        manager,
+    const nextValues = {
+        activeBalance: 32,
+        activatedDeposits: 0,
+        unexpectedExits: 0,
+        slashedExits: 0,
+        withdrawnExits: 0
+    }
+    requestId = await fulfillReportRequest({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
+
+    await runUpkeep({ upkeep, keeper })
 
     return { manager, upkeep, owner, firstUser, secondUser, keeper, oracle, requestId }
 }
@@ -179,20 +192,25 @@ export async function thirdUserDepositFixture() {
     await initiatePoolDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
 
     await time.increase(time.duration.days(1))
+
+    await runUpkeep({ upkeep, keeper })
+
     let requestId = latestRequestId
-    const nextValues = [
-        64, // activeBalance
-        1, // deposits
-        0, // exits
-        0, // slashes
-    ]
-    requestId = await performReport({
-        manager,
+    const nextValues = {
+        activeBalance: 64,
+        activatedDeposits: 1,
+        unexpectedExits: 0,
+        slashedExits: 0,
+        withdrawnExits: 0
+    }
+    requestId = await fulfillReportRequest({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
+
+    await runUpkeep({ upkeep, keeper })
 
     return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, oracle, requestId }
 }
@@ -202,20 +220,25 @@ export async function rewardsPostThirdUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(thirdUserDepositFixture)
 
     await time.increase(time.duration.days(1))
+
+    await runUpkeep({ upkeep, keeper })
+
     let requestId = latestRequestId
-    const nextValues = [
-        64.21, // activeBalance
-        0, // deposits
-        0, // exits
-        0, // slashes
-    ]
-    requestId = await performReport({
-        manager,
+    const nextValues = {
+        activeBalance: 64.21,
+        activatedDeposits: 0,
+        unexpectedExits: 0,
+        slashedExits: 0,
+        withdrawnExits: 0
+    }    
+    requestId = await fulfillReportRequest({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
+
+    await runUpkeep({ upkeep, keeper })
 
     return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, oracle, requestId }
 }
@@ -230,20 +253,25 @@ export async function sweepPostThirdUserDepositFixture() {
     await setBalance(manager.address, nextBalance)
 
     await time.increase(time.duration.days(1))
+
+    await runUpkeep({ upkeep, keeper })
+
     let requestId = latestRequestId
-    const nextValues = [
-        64, // activeBalance
-        0, // deposits
-        0, // exits
-        0, // slashes
-    ]
-    requestId = await performReport({
-        manager,
+    const nextValues = {
+        activeBalance: 64,
+        activatedDeposits: 0,
+        unexpectedExits: 0,
+        slashedExits: 0,
+        withdrawnExits: 0
+    }
+    requestId = await fulfillReportRequest({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
+
+    await runUpkeep({ upkeep, keeper })
 
     return { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, oracle, requestId }
 }
@@ -256,20 +284,25 @@ export async function firstUserPartialWithdrawalFixture() {
     await withdraw.wait()
 
     await time.increase(time.duration.days(1))
+
+    await runUpkeep({ upkeep, keeper })
+
     let requestId = latestRequestId
-    const nextValues = [
-        64, // activeBalance
-        0, // deposits
-        0, // exits
-        0, // slashes
-    ]
-    requestId = await performReport({
-        manager,
+    const nextValues = {
+        activeBalance: 64,
+        activatedDeposits: 0,
+        unexpectedExits: 0,
+        slashedExits: 0,
+        withdrawnExits: 0
+    }
+    requestId = await fulfillReportRequest({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
+
+    await runUpkeep({ upkeep, keeper })
 
     return { manager, upkeep, firstUser, secondUser, thirdUser, keeper, oracle, requestId }
 }
@@ -291,20 +324,25 @@ export async function fourthUserDepositFixture() {
     }
 
     await time.increase(time.duration.days(1))
+
+    await runUpkeep({ upkeep, keeper })
+
     let requestId = latestRequestId
-    const nextValues = [
-        128, // activeBalance
-        2, // deposits
-        0, // exits
-        0, // slashes
-    ]
-    requestId = await performReport({
-        manager,
+    const nextValues = {
+        activeBalance: 128,
+        activatedDeposits: 2,
+        unexpectedExits: 0,
+        slashedExits: 0,
+        withdrawnExits: 0
+    }
+    requestId = await fulfillReportRequest({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
+
+    await runUpkeep({ upkeep, keeper })
 
     return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }
 }
@@ -314,20 +352,27 @@ export async function activeBalanceLossFixture() {
     const { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(fourthUserDepositFixture)
 
     await time.increase(time.duration.days(1))
+
+    await runUpkeep({ upkeep, keeper })
+
     let requestId = latestRequestId
-    const nextValues = [
-        126, // activeBalance
-        0, // deposits
-        0, // exits
-        0, // slashes
-    ]
-    requestId = await performReport({
-        manager,
+
+    const nextValues = {
+        activeBalance: 126,
+        activatedDeposits: 0,
+        unexpectedExits: 0,
+        slashedExits: 0,
+        withdrawnExits: 0
+    }
+
+    requestId = await fulfillReportRequest({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
+
+    await runUpkeep({ upkeep, keeper })
 
     return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }
 }
@@ -336,26 +381,32 @@ export async function activeBalanceLossFixture() {
 export async function activeBalanceRecoveryFixture() {
     const { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(activeBalanceLossFixture)
 
-    /** Simulate two distinct reported gains */
-    let nextActiveBalanceAmount = 127
+    let nextActiveBalance = 127
     let requestId = latestRequestId
+
     for (let i = 0; i < 2; i++) {
         await time.increase(time.duration.days(1))
-        const nextValues = [
-            nextActiveBalanceAmount, // activeBalance
-            0, // deposits
-            0, // exits
-            0, // slashes
-        ]
-        requestId = await performReport({
-            manager,
+
+        await runUpkeep({ upkeep, keeper })
+    
+        const nextValues = {
+            activeBalance: nextActiveBalance,
+            activatedDeposits: 0,
+            unexpectedExits: 0,
+            slashedExits: 0,
+            withdrawnExits: 0
+        }
+
+        requestId = await fulfillReportRequest({
             upkeep,
             keeper,
             values: nextValues,
             requestId
         })
 
-        nextActiveBalanceAmount += 1
+        await runUpkeep({ upkeep, keeper })
+
+        nextActiveBalance += 1
     }
 
     return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }
@@ -374,23 +425,30 @@ export async function thirdUserFullWithdrawalFixture() {
     const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitBalance.toString()))
     await setBalance(manager.address, nextBalance)
 
-    await completePoolExitHandler({ manager, signer: oracle })
-
     await time.increase(time.duration.days(1))
+
+    await runUpkeep({ upkeep, keeper })
+
     let requestId = latestRequestId
-    const nextValues = [
-        128, // activeBalance
-        0, // deposits
-        1, // exits
-        0, // slashes
-    ]
-    requestId = await performReport({
-        manager,
+
+    const nextValues = {
+        activeBalance: 128,
+        activatedDeposits: 0,
+        unexpectedExits: 0,
+        slashedExits: 0,
+        withdrawnExits: 1
+    }
+    
+    requestId = await fulfillReportRequest({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
+
+    await completePoolExitHandler({ manager, signer: oracle })
+
+    await runUpkeep({ upkeep, keeper })
 
     return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }
 }
@@ -400,29 +458,37 @@ export async function simulationFixture() {
     const { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(thirdUserFullWithdrawalFixture)
 
     const rewardsPerValidator = 0.105
-    let nextActiveBalanceAmount = 96
+    let nextActiveBalance = 96
     let totalRewards = 0
     let requestId = latestRequestId
+
     for (let i = 0; i < 5; i++) {
         const depositedPoolCount = await manager.getDepositedPoolCount()
         if (depositedPoolCount) {
             await time.increase(time.duration.days(1))
+
+            await runUpkeep({ upkeep, keeper })
+
             const rewardsAmount = rewardsPerValidator * depositedPoolCount.toNumber()
             totalRewards += round(rewardsAmount, 10)
-            nextActiveBalanceAmount = round(nextActiveBalanceAmount + rewardsAmount, 10)            
-            const nextValues = [
-                nextActiveBalanceAmount, // activeBalance
-                0, // deposits
-                0, // exits
-                0, // slashes
-            ]
-            requestId = await performReport({
-                manager,
+            nextActiveBalance = round(nextActiveBalance + rewardsAmount, 10)            
+            
+            const nextValues = {
+                activeBalance: nextActiveBalance,
+                activatedDeposits: 0,
+                unexpectedExits: 0,
+                slashedExits: 0,
+                withdrawnExits: 0
+            }
+
+            requestId = await fulfillReportRequest({
                 upkeep,
                 keeper,
                 values: nextValues,
                 requestId
             })
+
+            await runUpkeep({ upkeep, keeper })
         }
     }
 
@@ -431,21 +497,26 @@ export async function simulationFixture() {
     const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptRewards.toString()))
     await setBalance(manager.address, nextBalance)
 
-
     await time.increase(time.duration.days(1))
-    const nextValues = [
-        96, // activeBalance
-        0, // deposits
-        0, // exits
-        0, // slashes
-    ]
-    requestId = await performReport({
-        manager,
+
+    await runUpkeep({ upkeep, keeper })
+
+    const nextValues = {
+        activeBalance: 96,
+        activatedDeposits: 0,
+        unexpectedExits: 0,
+        slashedExits: 0,
+        withdrawnExits: 0
+    }
+
+    requestId = await fulfillReportRequest({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
+
+    await runUpkeep({ upkeep, keeper })
 
     return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }
 }

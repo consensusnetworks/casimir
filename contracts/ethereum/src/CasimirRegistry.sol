@@ -15,6 +15,7 @@ contract CasimirRegistry is ICasimirRegistry {
     ISSVNetworkViews private ssvNetworkViews;
     uint256 requiredCollateral = 4 ether;
     uint256 minimumCollateralDeposit = 100000000000000000;
+    uint256 totalCollateral;
     mapping(uint64 => Operator) private operators;
 
     constructor(address managerAddress, address ssvNetworkViewsAddress) {
@@ -31,6 +32,7 @@ contract CasimirRegistry is ICasimirRegistry {
         (address operatorOwner, , , ,) = ssvNetworkViews.getOperatorById(operatorId);
         require(msg.sender == operatorOwner, "Only operator owner can register");
 
+        totalCollateral += msg.value;
         operators[operatorId] = Operator({
             id: operatorId,
             collateral: int256(msg.value),

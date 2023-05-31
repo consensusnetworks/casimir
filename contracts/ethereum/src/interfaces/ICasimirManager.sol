@@ -47,8 +47,9 @@ interface ICasimirManager {
     event PoolReshareRequested(uint32 poolId);
     event PoolReshared(uint32 poolId);
     event PoolExitRequested(uint32 poolId);
-    event PoolSlashReportsRequested(uint256 count);
-    event PoolExitCompletionsRequested(uint256 count);
+    event PoolUnexpectedExitReportsRequested(uint256 count);
+    event PoolSlashedExitReportsRequested(uint256 count);
+    event PoolWithdrawnExitReportsRequested(uint256 count);
     event PoolExited(uint32 poolId);
     event StakeDeposited(address sender, uint256 amount);
     event StakeRebalanced(uint256 amount);
@@ -65,9 +66,9 @@ interface ICasimirManager {
 
     function rebalanceStake(
         uint256 activeBalance, 
-        uint256 newSweptRewards, 
-        uint256 newDeposits,
-        uint256 newExits
+        uint256 sweptBalance, 
+        uint256 activatedDeposits,
+        uint256 withdrawnExits
     ) external;
 
     function requestWithdrawal(uint256 amount) external;
@@ -87,9 +88,11 @@ interface ICasimirManager {
 
     function completePoolDeposits(uint256 count) external;
 
-    function requestPoolExitCompletions(uint256 count) external;
+    function requestPoolUnexpectedExitReports(uint256 count) external;
 
-    function requestPoolSlashReports(uint256 count) external;
+    function requestPoolSlashedExitReports(uint256 count) external;
+
+    function requestPoolWithdrawnExitReports(uint256 count) external;
 
     function completePoolExit(
         uint256 poolIndex,
@@ -134,9 +137,9 @@ interface ICasimirManager {
 
     function getReportPeriod() external view returns (uint32);
 
-    function getFinalizableExitedPoolCount() external view returns (uint256);
+    function getFinalizableWithdrawnPoolCount() external view returns (uint256);
 
-    function getFinalizableExitedBalance() external view returns (uint256);
+    function getReportFinalizableWithdrawnBalance() external view returns (uint256);
 
     function getLatestActiveBalance() external view returns (uint256);
 

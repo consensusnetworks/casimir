@@ -88,15 +88,23 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /********************/
 
     /** Latest active rewards */
-    int256 private latestActiveRewards;
+    int256 private latestRewards;
     /** Latest active balance */
     uint256 private latestActiveBalance;
     /** Latest active balance after fees */
     uint256 private latestActiveBalanceAfterFees;
+    /** Latest expected effective balance */
+    uint256 private latestExpectedEffectiveBalance;
+    /** Requested pool exit reports */
+    uint256 private requestedPoolWithdrawnExitReports;
+    /** Requested pool slash reports */
+    uint256 private requestedPoolSlashedExitReports;
+    /** Requested pool unexpected exit reports */
+    uint256 private requestedPoolUnexpectedExitReports;
     /** Exited balance */
-    uint256 private finalizableExitedBalance;
+    uint256 private reportFinalizableWithdrawnBalance;
     /** Exited pool count */
-    uint256 finalizableExitedPoolCount;
+    uint256 finalizableWithdrawnPoolCount;
     /** Current report period */
     uint32 private reportPeriod;
     /** Last pool ID created */
@@ -228,40 +236,31 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * @notice Rebalance the rewards to stake ratio and redistribute swept rewards
-     * @param activeBalance The active consensus balance
-     * @param newSweptRewards The swept consensus rewards
-     * @param newDeposits The count of new deposits
-     * @param newExits The count of new exits
+     * @param activeBalance The active balance
+     * @param sweptBalance The swept balance
+     * @param activatedDeposits The count of activated deposits
+     * @param withdrawnExits The count of withdrawn exits
      */
     function rebalanceStake(
         uint256 activeBalance,
-        uint256 newSweptRewards,
-        uint256 newDeposits,
-        uint256 newExits
+        uint256 sweptBalance,
+        uint256 activatedDeposits,
+        uint256 withdrawnExits
     ) external {
         require(
             msg.sender == address(upkeep),
             "Only upkeep can rebalance stake"
         );
 
-        int256 previousExpectedEffective = int256(
-            getExpectedEffectiveBalance()
-        );
-        uint256 expectedDeposits = newDeposits * poolCapacity;
-        uint256 expectedExits = newExits * poolCapacity;
-        int256 expectedEffective = previousExpectedEffective +
-            int256(expectedDeposits + expectedExits);
-        int256 previousActiveRewards = int256(latestActiveBalance) -
-            previousExpectedEffective;
-        int256 actualActiveBalance = int256(
-            activeBalance + newSweptRewards + finalizableExitedBalance
-        );
-        int256 actualActiveRewards = actualActiveBalance - expectedEffective;
-        int256 change = actualActiveRewards - previousActiveRewards;
+        uint256 activatedBalance = activatedDeposits * poolCapacity;
+        uint256 withdrawnBalance = withdrawnExits * poolCapacity;
+        int256 surplus = int256(activeBalance + sweptBalance) - (int256(getExpectedEffectiveBalance() + withdrawnBalance));
+        int256 rewards = surplus - int256(reportFinalizableWithdrawnBalance);
+        int256 change = rewards - latestRewards;
 
         if (change > 0) {
             uint256 gain = SafeCast.toUint256(change);
-            if (actualActiveRewards > 0) {
+            if (rewards > 0) {
                 uint256 gainAfterFees = subtractFees(gain);
                 stakeRatioSum += Math.mulDiv(
                     stakeRatioSum,
@@ -289,18 +288,20 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             emit StakeRebalanced(loss);
         }
 
-        latestActiveBalance = activeBalance;
-        latestActiveBalanceAfterFees += expectedDeposits;
-        latestActiveBalanceAfterFees -= finalizableExitedBalance;
-
-        if (newSweptRewards > 0) {
-            latestActiveBalanceAfterFees -= subtractFees(newSweptRewards);
-            depositRewards(newSweptRewards);
+        uint256 sweptRewards = sweptBalance - reportFinalizableWithdrawnBalance;
+        latestRewards = rewards - int256(sweptRewards);
+        if (sweptRewards > 0) {
+            latestActiveBalanceAfterFees -= subtractFees(sweptRewards);
+            depositRewards(sweptRewards);
         }
 
+        latestActiveBalance = activeBalance;
+        latestActiveBalanceAfterFees += activatedBalance;
+        latestActiveBalanceAfterFees -= reportFinalizableWithdrawnBalance;
+
         reportPeriod++;
-        finalizableExitedBalance = 0;
-        finalizableExitedPoolCount = 0;
+        reportFinalizableWithdrawnBalance = 0;
+        finalizableWithdrawnPoolCount = 0;
     }
 
     /**
@@ -387,6 +388,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         while (count > 0) {
             count--;
+
+            if (pendingWithdrawalQueue.length == 0) {
+                break;
+            }
 
             Withdrawal memory withdrawal = pendingWithdrawalQueue[0];
 
@@ -536,29 +541,69 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Request a given count of pool exit completions
-     * @param count The number of pool exits to complete
+     * @notice Request a given count of pool unexpected exit reports
+     * @param count The number of pool unexpected exit reports
      */
-    function requestPoolExitCompletions(uint256 count) external {
+    function requestPoolUnexpectedExitReports(uint256 count) external {
         require(
             msg.sender == address(upkeep),
-            "Only upkeep can request pool exit completions"
+            "Only upkeep can request pool unexpected exit reports"
         );
 
-        emit PoolExitCompletionsRequested(count);
+        requestedPoolUnexpectedExitReports = count;
+
+        emit PoolUnexpectedExitReportsRequested(count);
     }
 
     /**
-     * @notice Request a given count of pool slash reports
-     * @param count The number of pool slash reports
+     * @notice Request a given count of pool slashed exit reports
+     * @param count The number of pool slashed exit reports
      */
-    function requestPoolSlashReports(uint256 count) external {
+    function requestPoolSlashedExitReports(uint256 count) external {
         require(
             msg.sender == address(upkeep),
             "Only upkeep can request pool slash reports"
         );
 
-        emit PoolSlashReportsRequested(count);
+        requestedPoolSlashedExitReports = count;
+
+        emit PoolSlashedExitReportsRequested(count);
+    }
+
+    /**
+     * @notice Request a given count of pool exit completions
+     * @param count The number of pool exits to complete
+     */
+    function requestPoolWithdrawnExitReports(uint256 count) external {
+        require(
+            msg.sender == address(upkeep),
+            "Only upkeep can request pool exit completions"
+        );
+
+        requestedPoolWithdrawnExitReports = count;
+
+        emit PoolWithdrawnExitReportsRequested(count);
+    }
+
+    /**
+     * @notice Report a pool unexpected exit
+     * @param poolId The pool ID
+     */
+    function reportPoolUnexpectedExit(uint32 poolId) external {
+        require(
+            msg.sender == oracleAddress,
+            "Only manager oracle can report pool unexpected exits"
+        );
+        require(
+            requestedPoolUnexpectedExitReports > 0, 
+            "No requested pool unexpected exit reports"
+        );
+        Pool storage pool = pools[poolId];
+        require(!pool.exiting, "Pool is already exiting");
+
+        requestedPoolUnexpectedExitReports -= 1;
+        pool.exiting = true;
+        exitingPoolCount++;
     }
 
     /**
@@ -568,11 +613,16 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function reportPoolSlash(uint32 poolId) external {
         require(
             msg.sender == oracleAddress,
-            "Only manager oracle can initiate pools"
+            "Only manager oracle can report pool slashedExits"
+        );
+        require(
+            requestedPoolSlashedExitReports > 0, 
+            "No requested pool slash reports"
         );
         Pool storage pool = pools[poolId];
         require(!pool.slashed, "Pool is already slashed");
 
+        requestedPoolSlashedExitReports -= 1;
         pool.slashed = true;
         slashedPoolCount++;
         if (!pool.exiting) {
@@ -594,32 +644,32 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint32[] memory blamePercents,
         ISSVNetworkCore.Cluster memory cluster
     ) external {
-        // Todo start debugging here
-
         require(
             msg.sender == oracleAddress,
             "Only manager oracle can complete pool exits"
         );
-        require(exitingPoolCount > 0, "No exiting validators");
+        require(
+            requestedPoolWithdrawnExitReports > 0, 
+            "No requested pool withdrawn exit reports"
+        );
 
+        requestedPoolWithdrawnExitReports -= 1;
         uint32 poolId = stakedPoolIds[poolIndex];
         Pool storage pool = pools[poolId];
-
         uint64[] memory operatorIds = pool.operatorIds;
         bytes memory publicKey = pool.publicKey;
 
         // Todo recover lost funds from collateral using blame percents
 
         depositedPoolCount--;
-        if (pool.exiting) {
-            exitingPoolCount--;
-        }
+        exitingPoolCount--;
         if (pool.slashed) {
             slashedPoolCount--;
         }
 
-        finalizableExitedPoolCount++;
-        finalizableExitedBalance += finalEffectiveBalance;
+        exitedBalance += finalEffectiveBalance;
+        reportFinalizableWithdrawnBalance += finalEffectiveBalance;
+        finalizableWithdrawnPoolCount++;
 
         stakedPoolIds.remove(poolIndex);
         delete pools[poolId];
@@ -851,7 +901,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * @notice Get the latest active balance
-     * @return activeBalance The latest active balance
+     * @return latestActiveBalance The latest active balance
      */
     function getLatestActiveBalance() public view returns (uint256) {
         return latestActiveBalance;
@@ -859,7 +909,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * @notice Get the latest active balance after fees
-     * @return activeBalanceAfterFees The latest active balance after fees
+     * @return latestActiveBalanceAfterFees The latest active balance after fees
      */
     function getLatestActiveBalanceAfterFees() public view returns (uint256) {
         return latestActiveBalanceAfterFees;
@@ -867,26 +917,26 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * @notice Get the latest active rewards
-     * @return activeRewards The latest active rewards
+     * @return latestRewards The latest active rewards
      */
     function getLatestActiveRewards() public view returns (int256) {
-        return latestActiveRewards;
+        return latestRewards;
     }
 
     /**
-     * @notice Get the finalizable exited balance
-     * @return finalizableExitedBalance The finalizable exited balance
+     * @notice Get the finalizable withdrawn balance of the current reporting period
+     * @return reportFinalizableWithdrawnBalance The finalizable withdrawn balance of the current reporting period
      */
-    function getFinalizableExitedBalance() public view returns (uint256) {
-        return finalizableExitedBalance;
+    function getReportFinalizableWithdrawnBalance() public view returns (uint256) {
+        return reportFinalizableWithdrawnBalance;
     }
 
     /**
-     * @notice Get the finalizable exited pool count
-     * @return finalizableExitedPoolCount The finalizable exited pool count
+     * @notice Get the finalizable withdrawn pool count of the current reporting period
+     * @return finalizableWithdrawnPoolCount The finalizable withdrawn pool count of the current reporting period
      */
-    function getFinalizableExitedPoolCount() public view returns (uint256) {
-        return finalizableExitedPoolCount;
+    function getFinalizableWithdrawnPoolCount() public view returns (uint256) {
+        return finalizableWithdrawnPoolCount;
     }
 
     /**

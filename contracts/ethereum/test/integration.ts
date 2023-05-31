@@ -139,14 +139,14 @@ describe('Casimir manager', async function () {
 
   it('A loss is reported and brings the active stake below expected', async function () {
     const { manager } = await loadFixture(activeBalanceLossFixture)
-    const activeStake = await manager.getLatestActiveBalance()
-    expect(ethers.utils.formatEther(activeStake)).equal('126.0')
+    const activeBalance = await manager.getLatestActiveBalance()
+    expect(ethers.utils.formatEther(activeBalance)).equal('126.0')
   })
 
   it('Gains are reported and bring the active stake back to expected', async function () {
     const { manager } = await loadFixture(activeBalanceRecoveryFixture)
-    const activeStake = await manager.getLatestActiveBalance()
-    expect(ethers.utils.formatEther(activeStake)).equal('128.0')
+    const activeBalance = await manager.getLatestActiveBalance()
+    expect(ethers.utils.formatEther(activeBalance)).equal('128.0')
   })
 
   it('Third user full withdrawal is completed on exit report', async function () {

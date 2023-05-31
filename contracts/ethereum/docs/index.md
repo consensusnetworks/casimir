@@ -62,7 +62,7 @@ Deposit user stake
 ### rebalanceStake
 
 ```solidity
-function rebalanceStake(uint256 activeBalance, uint256 newSweptRewards, uint256 newDeposits, uint256 newExits) external
+function rebalanceStake(uint256 activeBalance, uint256 sweptRewards, uint256 depositCount, uint256 exitCount) external
 ```
 
 Rebalance the rewards to stake ratio and redistribute swept rewards
@@ -72,9 +72,9 @@ Rebalance the rewards to stake ratio and redistribute swept rewards
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | activeBalance | uint256 | The active consensus balance |
-| newSweptRewards | uint256 | The swept consensus rewards |
-| newDeposits | uint256 | The count of new deposits |
-| newExits | uint256 | The count of new exits |
+| sweptRewards | uint256 | The swept consensus rewards |
+| depositCount | uint256 | The count of new deposits |
+| exitCount | uint256 | The count of new exits |
 
 ### requestWithdrawal
 
@@ -104,10 +104,10 @@ Complete a given count of pending withdrawals
 | ---- | ---- | ----------- |
 | count | uint256 | The number of withdrawals to complete |
 
-### depositPool
+### initiatePoolDeposit
 
 ```solidity
-function depositPool(bytes32 depositDataRoot, bytes publicKey, bytes signature, bytes withdrawalCredentials, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount) external
+function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, bytes signature, bytes withdrawalCredentials, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount) external
 ```
 
 Initiate the next ready pool
@@ -138,6 +138,34 @@ Complete a given count of the next pending pools
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | count | uint256 | The number of pools to complete |
+
+### requestPoolWithdrawnExitReports
+
+```solidity
+function requestPoolWithdrawnExitReports(uint256 count) external
+```
+
+Request a given count of pool exit completions
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| count | uint256 | The number of pool exits to complete |
+
+### requestPoolSlashedExitReports
+
+```solidity
+function requestPoolSlashedExitReports(uint256 count) external
+```
+
+Request a given count of pool slash reports
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| count | uint256 | The number of pool slash reports |
 
 ### reportPoolSlash
 
@@ -388,10 +416,10 @@ Get the latest active rewards
 | ---- | ---- | ----------- |
 | [0] | int256 | activeRewards The latest active rewards |
 
-### getFinalizableExitedBalance
+### getReportWithdrawnBalance
 
 ```solidity
-function getFinalizableExitedBalance() public view returns (uint256)
+function getReportWithdrawnBalance() public view returns (uint256)
 ```
 
 Get the finalizable exited balance
@@ -400,12 +428,12 @@ Get the finalizable exited balance
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | finalizableExitedBalance The finalizable exited balance |
+| [0] | uint256 | reportFinalizableWithdrawnBalance The finalizable exited balance |
 
-### getFinalizableExitedPoolCount
+### getReportWithdrawnPoolCount
 
 ```solidity
-function getFinalizableExitedPoolCount() public view returns (uint256)
+function getReportWithdrawnPoolCount() public view returns (uint256)
 ```
 
 Get the finalizable exited pool count
@@ -660,125 +688,6 @@ Get the upkeep address
 | ---- | ---- | ----------- |
 | upkeepAddress | address | The upkeep address |
 
-## CasimirRecipient
-
-### receive
-
-```solidity
-receive() external payable
-```
-
-## CasimirRegistry
-
-### requiredCollateral
-
-```solidity
-uint256 requiredCollateral
-```
-
-### minimumCollateralDeposit
-
-```solidity
-uint256 minimumCollateralDeposit
-```
-
-### constructor
-
-```solidity
-constructor(address managerAddress, address ssvNetworkViewsAddress) public
-```
-
-### registerOperator
-
-```solidity
-function registerOperator(uint64 operatorId) external payable
-```
-
-Register an operator with the set
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
-### requestOperatorDeregistration
-
-```solidity
-function requestOperatorDeregistration(uint64 operatorId) external
-```
-
-Request to deregister an operator from the set
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
-### completeOperatorDeregistration
-
-```solidity
-function completeOperatorDeregistration(uint64 operatorId) external
-```
-
-Deregister an operator from the set
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
-### depositCollateral
-
-```solidity
-function depositCollateral(uint64 operatorId) external payable
-```
-
-Deposit collateral for an operator
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
-### setOperatorCollateral
-
-```solidity
-function setOperatorCollateral(uint64 operatorId, int256 collateral) external
-```
-
-Set the collateral for an operator
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-| collateral | int256 | The collateral |
-
-### getOperatorCollateral
-
-```solidity
-function getOperatorCollateral(uint64 operatorId) external view returns (int256)
-```
-
-Get the collateral for an operator
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | int256 | The collateral |
-
 ## CasimirUpkeep
 
 ### reportHeartbeat
@@ -797,45 +706,45 @@ uint256 poolCapacity
 
 Pool capacity
 
-### remainingRequests
+### reportPeriod
 
 ```solidity
-uint256 remainingRequests
-```
-
-Current report remaining requests
-
-### currentPeriod
-
-```solidity
-uint256 currentPeriod
+uint256 reportPeriod
 ```
 
 Current report period
 
-### currentPendingPoolCount
+### reportPendingPoolCount
 
 ```solidity
-uint256 currentPendingPoolCount
+uint256 reportPendingPoolCount
 ```
 
 Current report pending pool count
 
-### currentExitingPoolCount
+### reportExitingPoolCount
 
 ```solidity
-uint256 currentExitingPoolCount
+uint256 reportExitingPoolCount
 ```
 
 Current report exiting pool count
 
-### currentRequestBlock
+### reportRequestBlock
 
 ```solidity
-uint256 currentRequestBlock
+uint256 reportRequestBlock
 ```
 
 Current report block
+
+### reportRemainingRequests
+
+```solidity
+uint256 reportRemainingRequests
+```
+
+Current report remaining requests
 
 ### requestCBOR
 
@@ -1053,6 +962,18 @@ event PoolReshared(uint32 poolId)
 event PoolExitRequested(uint32 poolId)
 ```
 
+### PoolSlashedExitReportsRequested
+
+```solidity
+event PoolSlashedExitReportsRequested(uint256 count)
+```
+
+### PoolWithdrawnExitReportsRequested
+
+```solidity
+event PoolWithdrawnExitReportsRequested(uint256 count)
+```
+
 ### PoolExited
 
 ```solidity
@@ -1104,7 +1025,7 @@ function depositStake() external payable
 ### rebalanceStake
 
 ```solidity
-function rebalanceStake(uint256 activeBalance, uint256 newSweptRewards, uint256 newDeposits, uint256 newExits) external
+function rebalanceStake(uint256 activeBalance, uint256 sweptRewards, uint256 depositCount, uint256 exitCount) external
 ```
 
 ### requestWithdrawal
@@ -1119,16 +1040,28 @@ function requestWithdrawal(uint256 amount) external
 function completePendingWithdrawals(uint256 count) external
 ```
 
-### depositPool
+### initiatePoolDeposit
 
 ```solidity
-function depositPool(bytes32 depositDataRoot, bytes publicKey, bytes signature, bytes withdrawalCredentials, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount) external
+function initiatePoolDeposit(bytes32 depositDataRoot, bytes publicKey, bytes signature, bytes withdrawalCredentials, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount) external
 ```
 
 ### completePoolDeposits
 
 ```solidity
 function completePoolDeposits(uint256 count) external
+```
+
+### requestPoolWithdrawnExitReports
+
+```solidity
+function requestPoolWithdrawnExitReports(uint256 count) external
+```
+
+### requestPoolSlashedExitReports
+
+```solidity
+function requestPoolSlashedExitReports(uint256 count) external
 ```
 
 ### completePoolExit
@@ -1227,16 +1160,16 @@ function getExpectedEffectiveBalance() external view returns (uint256)
 function getReportPeriod() external view returns (uint32)
 ```
 
-### getFinalizableExitedPoolCount
+### getReportWithdrawnPoolCount
 
 ```solidity
-function getFinalizableExitedPoolCount() external view returns (uint256)
+function getReportWithdrawnPoolCount() external view returns (uint256)
 ```
 
-### getFinalizableExitedBalance
+### getReportWithdrawnBalance
 
 ```solidity
-function getFinalizableExitedBalance() external view returns (uint256)
+function getReportWithdrawnBalance() external view returns (uint256)
 ```
 
 ### getLatestActiveBalance
@@ -1297,75 +1230,6 @@ function getPendingWithdrawals() external view returns (uint256)
 
 ```solidity
 function getPendingWithdrawalCount() external view returns (uint256)
-```
-
-## ICasimirRecipient
-
-## ICasimirRegistry
-
-### OperatorRegistered
-
-```solidity
-event OperatorRegistered(uint64 operatorId)
-```
-
-### OperatorDeregistrationRequested
-
-```solidity
-event OperatorDeregistrationRequested(uint64 operatorId)
-```
-
-### OperatorDeregistrationCompleted
-
-```solidity
-event OperatorDeregistrationCompleted(uint64 operatorId)
-```
-
-### Operator
-
-```solidity
-struct Operator {
-  uint64 id;
-  int256 collateral;
-  uint256 poolCount;
-  bool deregistering;
-}
-```
-
-### registerOperator
-
-```solidity
-function registerOperator(uint64 operatorId) external payable
-```
-
-### requestOperatorDeregistration
-
-```solidity
-function requestOperatorDeregistration(uint64 operatorId) external
-```
-
-### completeOperatorDeregistration
-
-```solidity
-function completeOperatorDeregistration(uint64 operatorId) external
-```
-
-### depositCollateral
-
-```solidity
-function depositCollateral(uint64 operatorId) external payable
-```
-
-### setOperatorCollateral
-
-```solidity
-function setOperatorCollateral(uint64 operatorId, int256 collateral) external
-```
-
-### getOperatorCollateral
-
-```solidity
-function getOperatorCollateral(uint64 operatorId) external view returns (int256)
 ```
 
 ## ICasimirUpkeep
@@ -1608,6 +1472,194 @@ function withdraw(uint256) external
 
 Withdraw wrapped ether to get ether
 
+## CasimirRegistry
+
+### requiredCollateral
+
+```solidity
+uint256 requiredCollateral
+```
+
+### minimumCollateralDeposit
+
+```solidity
+uint256 minimumCollateralDeposit
+```
+
+### constructor
+
+```solidity
+constructor(address managerAddress, address ssvNetworkViewsAddress) public
+```
+
+### registerOperator
+
+```solidity
+function registerOperator(uint64 operatorId) external payable
+```
+
+Register an operator with the set
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+### requestOperatorDeregistration
+
+```solidity
+function requestOperatorDeregistration(uint64 operatorId) external
+```
+
+Request to deregister an operator from the set
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+### completeOperatorDeregistration
+
+```solidity
+function completeOperatorDeregistration(uint64 operatorId) external
+```
+
+Deregister an operator from the set
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+### depositCollateral
+
+```solidity
+function depositCollateral(uint64 operatorId) external payable
+```
+
+Deposit collateral for an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+### setOperatorCollateral
+
+```solidity
+function setOperatorCollateral(uint64 operatorId, int256 collateral) external
+```
+
+Set the collateral for an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+| collateral | int256 | The collateral |
+
+### getOperatorCollateral
+
+```solidity
+function getOperatorCollateral(uint64 operatorId) external view returns (int256)
+```
+
+Get the collateral for an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int256 | The collateral |
+
+## ICasimirRegistry
+
+### OperatorRegistered
+
+```solidity
+event OperatorRegistered(uint64 operatorId)
+```
+
+### OperatorDeregistrationRequested
+
+```solidity
+event OperatorDeregistrationRequested(uint64 operatorId)
+```
+
+### OperatorDeregistrationCompleted
+
+```solidity
+event OperatorDeregistrationCompleted(uint64 operatorId)
+```
+
+### Operator
+
+```solidity
+struct Operator {
+  uint64 id;
+  int256 collateral;
+  uint256 poolCount;
+  bool deregistering;
+}
+```
+
+### registerOperator
+
+```solidity
+function registerOperator(uint64 operatorId) external payable
+```
+
+### requestOperatorDeregistration
+
+```solidity
+function requestOperatorDeregistration(uint64 operatorId) external
+```
+
+### completeOperatorDeregistration
+
+```solidity
+function completeOperatorDeregistration(uint64 operatorId) external
+```
+
+### depositCollateral
+
+```solidity
+function depositCollateral(uint64 operatorId) external payable
+```
+
+### setOperatorCollateral
+
+```solidity
+function setOperatorCollateral(uint64 operatorId, int256 collateral) external
+```
+
+### getOperatorCollateral
+
+```solidity
+function getOperatorCollateral(uint64 operatorId) external view returns (int256)
+```
+
+## CasimirRecipient
+
+### receive
+
+```solidity
+receive() external payable
+```
+
+## ICasimirRecipient
+
 ## MockFunctionsOracle
 
 ### constructor
@@ -1651,22 +1703,6 @@ Sends a request (encoded as data) using the provided subscriptionId
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | requestId | bytes32 | A unique request identifier (unique per DON) |
-
-## CasimirOracle
-
-### sayHello
-
-```solidity
-function sayHello() external pure returns (string)
-```
-
-## ICasimirOracle
-
-### sayHello
-
-```solidity
-function sayHello() external view returns (string)
-```
 
 ## CasimirDAO
 

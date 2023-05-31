@@ -55,20 +55,20 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     uint256 private reportSweptBalance;
     /** Current report active balance */
     uint256 private reportActiveBalance;
-    /** Current report completed deposits */
-    uint256 private reportDeposits;
-    /** Current report completed exits */
-    uint256 private reportExits;
-    /** Current report completed slashes */
-    uint256 private reportSlashes;
+    /** Current report deposit activations */
+    uint256 private reportActivatedDeposits;
+    /** Current report unexpected exits */
+    uint256 private reportUnexpectedExits;
+    /** Current report withdrawn exits */
+    uint256 private reportWithdrawnExits;
+    /** Current report slashedExits */
+    uint256 private reportSlashedExits;
     /** Finalizable completed deposits */
-    uint256 private finalizableDeposits;
-    /** Current report requests */
-    mapping(bytes32 => RequestType) private reportRequests;
-    /** Current report remaining requests */
-    uint256 reportRemainingRequests;
-    /** Latest error */
-    bytes private latestError;
+    uint256 private reportFinalizableActivatedDeposits;
+    /** Current report request */
+    bytes32 private reportRequestId;
+    /** Current report response error */
+    bytes private reportResponseError;
     /** Binary request source code */
     bytes public requestCBOR;
     /** Fulfillment gas limit */
@@ -154,8 +154,8 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= reportHeartbeat;
             upkeepNeeded = checkActive && heartbeatLapsed;
         } else if (reportStatus == Status.PROCESSING) {
-            bool exitsFinalizable = reportExits == manager.getFinalizableExitedPoolCount();
-            upkeepNeeded = exitsFinalizable;
+            bool finalizeReport = reportWithdrawnExits == manager.getFinalizableWithdrawnPoolCount();
+            upkeepNeeded = finalizeReport;
         }
     }
 
@@ -169,6 +169,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         if (reportStatus == Status.FINALIZED) {
             reportStatus = Status.REQUESTING;
 
+            reportRequestBlock = block.number;
             reportTimestamp = block.timestamp;
             reportPeriod = manager.getReportPeriod();
             reportPendingPoolCount = manager.getPendingPoolIds().length;
@@ -176,18 +177,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             reportSweptBalance = manager.getSweptBalance();
 
             Functions.Request memory req;
-            for (uint256 i = 1; i < 5; i++) {
-                RequestType requestType = RequestType(i);
-                bool checkBalance = requestType == RequestType.BALANCE;
-                bool checkDeposits = requestType == RequestType.DEPOSITS && reportPendingPoolCount > 0;
-                bool checkExits = requestType == RequestType.EXITS && reportExitingPoolCount > 0;
-                bool checkSlashes = requestType == RequestType.SLASHES;
-                if (checkBalance || checkDeposits || checkExits || checkSlashes) {
-                    bytes32 requestId = sendRequest(req, functionsSubscriptionId, fulfillGasLimit);
-                    reportRequests[requestId] = RequestType(i);
-                    reportRemainingRequests++;
-                }
-            }
+            reportRequestId = sendRequest(req, functionsSubscriptionId, fulfillGasLimit);
         } else {
             if (
                 manager.getPendingWithdrawals() > 0 &&
@@ -197,26 +187,27 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
                 manager.completePendingWithdrawals(5);
             }
 
-            if (finalizableDeposits > 0) {
-                uint256 maxCompletions = finalizableDeposits > 5 ? 5 : finalizableDeposits;
-                finalizableDeposits -= maxCompletions;
-                manager.completePoolDeposits(maxCompletions);
+            if (reportFinalizableActivatedDeposits > 0) {
+                uint256 maxActivatedDeposits = reportFinalizableActivatedDeposits > 5 ? 5 : reportFinalizableActivatedDeposits;
+                reportFinalizableActivatedDeposits -= maxActivatedDeposits;
+                manager.completePoolDeposits(maxActivatedDeposits);
             }
             
-            if (!manager.getPendingWithdrawalEligibility(0, reportPeriod) && finalizableDeposits == 0) {
+            if (!manager.getPendingWithdrawalEligibility(0, reportPeriod) && reportFinalizableActivatedDeposits == 0) {
                 reportStatus = Status.FINALIZED;
-                
+
                 manager.rebalanceStake({
                     activeBalance: reportActiveBalance,
-                    newSweptRewards: reportSweptBalance - manager.getFinalizableExitedBalance(),
-                    newDeposits: reportDeposits,
-                    newExits: reportExits
+                    sweptBalance: reportSweptBalance,
+                    activatedDeposits: reportActivatedDeposits,
+                    withdrawnExits: reportWithdrawnExits
                 });
 
                 reportActiveBalance = 0;
-                reportDeposits = 0;
-                reportExits = 0;
-                reportSlashes = 0;
+                reportActivatedDeposits = 0;
+                reportUnexpectedExits = 0;
+                reportSlashedExits = 0;
+                reportWithdrawnExits = 0;
             }
         }
 
@@ -235,33 +226,39 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         bytes memory response,
         bytes memory _error
     ) internal override {
-        // Todo handle errors
-        latestError = _error;
+        require(requestId == reportRequestId, "Invalid request ID");
 
+        reportResponseError = _error;
         if (_error.length == 0) {
-            uint256 value = abi.decode(response, (uint256));
-            RequestType requestType = reportRequests[requestId];
+            reportStatus = Status.PROCESSING;
+            reportRequestId = bytes32(0);
 
-            if (requestType != RequestType.NONE) {
-                delete reportRequests[requestId];
-                reportRemainingRequests--;
+            (
+                uint128 activeBalance, 
+                uint32 activatedDeposits,
+                uint32 unexpectedExits,
+                uint32 slashedExits,
+                uint32 withdrawnExits
+            ) = abi.decode(response, (uint128, uint32, uint32, uint32, uint32));
 
-                if (requestType == RequestType.BALANCE) {
-                    reportActiveBalance = value;
-                } else if (requestType == RequestType.DEPOSITS) {
-                    reportDeposits = value;
-                    finalizableDeposits = value;
-                } else if (requestType == RequestType.EXITS) {
-                    reportExits = value;
-                    manager.requestPoolExitCompletions(value);
-                } else {
-                    reportSlashes = value;
-                    manager.requestPoolSlashReports(value);
-                }
+            reportActiveBalance = uint256(activeBalance) * 1 gwei;
+            reportActivatedDeposits = activatedDeposits;
+            reportUnexpectedExits = unexpectedExits;
+            reportSlashedExits = slashedExits;
+            reportWithdrawnExits = withdrawnExits;
 
-                if (reportRemainingRequests == 0) {
-                    reportStatus = Status.PROCESSING;
-                }
+            reportFinalizableActivatedDeposits = activatedDeposits;
+
+            if (reportUnexpectedExits > 0) {
+                manager.requestPoolUnexpectedExitReports(reportUnexpectedExits);
+            }
+
+            if (reportSlashedExits > 0) {
+                manager.requestPoolSlashedExitReports(reportSlashedExits);
+            }
+
+            if (reportWithdrawnExits > 0) {
+                manager.requestPoolWithdrawnExitReports(reportWithdrawnExits);
             }
         }
 
@@ -277,6 +274,27 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     }
 
     // Dev-only functions
+
+    /**
+     * @notice Encode the response for testing
+     * @param activeBalance Active balance
+     * @param activatedDeposits Count of new deposits
+     * @param withdrawnExits Count of new exits
+     * @param slashedExits Count of new slashedExits
+     */
+    function encodeResponse(
+        uint128 activeBalance,
+        uint32 activatedDeposits,
+        uint32 withdrawnExits,
+        uint32 slashedExits
+    ) external pure returns (bytes memory) {
+        return abi.encode(
+            activeBalance, 
+            activatedDeposits, 
+            withdrawnExits, 
+            slashedExits
+        );
+    }
 
     /**
      * @notice Fulfill the request for testing
