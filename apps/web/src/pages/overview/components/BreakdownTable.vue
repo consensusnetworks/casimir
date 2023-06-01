@@ -164,7 +164,7 @@ const convertString = (inputString: string) => {
 
     <!-- Table version for big views -->
     <table
-      class="w-full not-sr-only 800s:sr-only"
+      class="w-full not-sr-only 1100s:sr-only"
     >
       <thead>
         <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
@@ -307,7 +307,7 @@ const convertString = (inputString: string) => {
       </tbody>
     </table>
     <!-- Table version for small screens -->
-    <div class="800s:not-sr-only sr-only">
+    <div class="1100s:not-sr-only sr-only">
       <div class="h-[600px] overflow-auto px-[32px] py-[15px]">
         <div
           v-for="item in 7"
