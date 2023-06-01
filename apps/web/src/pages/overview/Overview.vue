@@ -13,7 +13,7 @@ import BreakdownTable from './components/BreakdownTable.vue'
       Breakdown
     </h6>
 
-    <div class="flex 1200s:flex-wrap justify-between items-start gap-[63px] text-white h-[541px] 1200s:h-max mb-[47px]">
+    <div class="flex 1200s:flex-wrap justify-between 800s:justify-around items-start gap-[63px] text-white h-[541px] 1200s:h-max mb-[47px]">
       <div class="h-full w-full">
         <BreakdownChart />
       </div>
