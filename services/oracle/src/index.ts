@@ -3,15 +3,15 @@ import { getEventEmitter } from './providers/events'
 import { initiatePoolDepositHandler, initiatePoolExitHandler, initiatePoolReshareHandler } from './providers/handlers'
 
 const handlers = {
-    PoolDepositRequested: initiatePoolDepositHandler,
-    PoolReshareRequested: initiatePoolReshareHandler,
+    DepositRequested: initiatePoolDepositHandler,
+    ReshareRequested: initiatePoolReshareHandler,
     PoolExitRequested: initiatePoolExitHandler,
-    // PoolUnexpectedExitReportsRequested: reportUnexpectedExitsHandler,
-    // PoolSlashedExitReportsRequested: reportSlashedExitsHandler,
-    // PoolWithdrawnExitReportsRequested: reportWithdrawnExitsHandler
+    // UnexpectedExitReportsRequested: reportUnexpectedExitsHandler,
+    // SlashedExitReportsRequested: reportSlashedExitsHandler,
+    // WithdrawnExitReportsRequested: reportWithdrawnExitsHandler
 }
 
-const { provider, signer, manager, networkAddress, networkViewsAddress, cliPath, messengerUrl } = config()
+const { provider, signer, manager, cliPath, messengerUrl } = config()
 
 ;(async function () {
     const eventEmitter = getEventEmitter({ manager, events: Object.keys(handlers) })    
@@ -23,8 +23,6 @@ const { provider, signer, manager, networkAddress, networkViewsAddress, cliPath,
             provider,
             signer,
             manager,
-            networkAddress,
-            networkViewsAddress,
             cliPath,
             messengerUrl,
             value 

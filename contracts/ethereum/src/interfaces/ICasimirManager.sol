@@ -41,15 +41,15 @@ interface ICasimirManager {
     /* Events */
     /**********/
 
-    event PoolDepositRequested(uint32 poolId);
+    event DepositRequested(uint32 poolId);
     event PoolDepositInitiated(uint32 poolId);
     event PoolDeposited(uint32 poolId);
-    event PoolReshareRequested(uint32 poolId);
+    event ReshareRequested(uint32 poolId);
     event PoolReshared(uint32 poolId);
     event PoolExitRequested(uint32 poolId);
-    event PoolUnexpectedExitReportsRequested(uint256 count);
-    event PoolSlashedExitReportsRequested(uint256 count);
-    event PoolWithdrawnExitReportsRequested(uint256 count);
+    event UnexpectedExitReportsRequested(uint256 count);
+    event SlashedExitReportsRequested(uint256 count);
+    event WithdrawnExitReportsRequested(uint256 count);
     event PoolExited(uint32 poolId);
     event StakeDeposited(address sender, uint256 amount);
     event StakeRebalanced(uint256 amount);

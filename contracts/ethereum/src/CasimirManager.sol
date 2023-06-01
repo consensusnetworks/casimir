@@ -301,7 +301,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 pool.deposits = poolCapacity;
                 readyPoolIds.push(poolId);
 
-                emit PoolDepositRequested(poolId);
+                emit DepositRequested(poolId);
             }
         }
     }
@@ -571,7 +571,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function requestPoolUnexpectedExitReports(uint256 count) external onlyUpkeep() {
         requestedPoolUnexpectedExitReports = count;
 
-        emit PoolUnexpectedExitReportsRequested(count);
+        emit UnexpectedExitReportsRequested(count);
     }
 
     /**
@@ -581,7 +581,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function requestPoolSlashedExitReports(uint256 count) external onlyUpkeep() {
         requestedPoolSlashedExitReports = count;
 
-        emit PoolSlashedExitReportsRequested(count);
+        emit SlashedExitReportsRequested(count);
     }
 
     /**
@@ -591,7 +591,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function requestPoolWithdrawnExitReports(uint256 count) external onlyUpkeep() {
         requestedPoolWithdrawnExitReports = count;
 
-        emit PoolWithdrawnExitReportsRequested(count);
+        emit WithdrawnExitReportsRequested(count);
     }
 
     /**

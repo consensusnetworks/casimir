@@ -726,20 +726,6 @@ Get the SSV fee percentage to charge on each deposit
 | ---- | ---- | ----------- |
 | [0] | uint32 | ssvFeePercent The SSV fee percentage to charge on each deposit |
 
-### getSSVNetworkAddress
-
-```solidity
-function getSSVNetworkAddress() external view returns (address ssvNetworkAddress)
-```
-
-Get the SSV network address
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| ssvNetworkAddress | address | The SSV network address |
-
 ### getUpkeepAddress
 
 ```solidity
@@ -1015,10 +1001,10 @@ struct Withdrawal {
 }
 ```
 
-### PoolDepositRequested
+### DepositRequested
 
 ```solidity
-event PoolDepositRequested(uint32 poolId)
+event DepositRequested(uint32 poolId)
 ```
 
 ### PoolDepositInitiated
@@ -1033,10 +1019,10 @@ event PoolDepositInitiated(uint32 poolId)
 event PoolDeposited(uint32 poolId)
 ```
 
-### PoolReshareRequested
+### ReshareRequested
 
 ```solidity
-event PoolReshareRequested(uint32 poolId)
+event ReshareRequested(uint32 poolId)
 ```
 
 ### PoolReshared
@@ -1051,22 +1037,22 @@ event PoolReshared(uint32 poolId)
 event PoolExitRequested(uint32 poolId)
 ```
 
-### PoolUnexpectedExitReportsRequested
+### UnexpectedExitReportsRequested
 
 ```solidity
-event PoolUnexpectedExitReportsRequested(uint256 count)
+event UnexpectedExitReportsRequested(uint256 count)
 ```
 
-### PoolSlashedExitReportsRequested
+### SlashedExitReportsRequested
 
 ```solidity
-event PoolSlashedExitReportsRequested(uint256 count)
+event SlashedExitReportsRequested(uint256 count)
 ```
 
-### PoolWithdrawnExitReportsRequested
+### WithdrawnExitReportsRequested
 
 ```solidity
-event PoolWithdrawnExitReportsRequested(uint256 count)
+event WithdrawnExitReportsRequested(uint256 count)
 ```
 
 ### PoolExited

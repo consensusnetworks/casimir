@@ -9,8 +9,6 @@ export async function initiatePoolDepositHandler(input: HandlerInput) {
         provider,
         signer,
         manager,
-        networkAddress,
-        networkViewsAddress,
         cliPath,
         messengerUrl,
         value
@@ -38,8 +36,6 @@ export async function initiatePoolDepositHandler(input: HandlerInput) {
 
     const clusterDetails = await getClusterDetails({ 
         provider,
-        networkAddress,
-        networkViewsAddress,
         operatorIds,
         withdrawalAddress: manager.address
     })
@@ -64,8 +60,6 @@ export async function initiatePoolReshareHandler(input: HandlerInput) {
         provider,
         signer,
         manager,
-        networkAddress,
-        networkViewsAddress,
         cliPath,
         messengerUrl,
         value
@@ -103,8 +97,6 @@ export async function initiatePoolExitHandler(input: HandlerInput) {
         provider,
         signer,
         manager,
-        networkAddress,
-        networkViewsAddress,
         cliPath,
         messengerUrl,
         value 
