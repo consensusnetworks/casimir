@@ -19,6 +19,12 @@ export function config() {
     const managerAddress = process.env.MANAGER_ADDRESS
     if (!managerAddress) throw new Error('No manager address provided')
     const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi, provider) as CasimirManager & ethers.Contract
+
+    /** Get network contract addresses */
+    const networkAddress = process.env.NETWORK_ADDRESS
+    if (!networkAddress) throw new Error('No network address provided')
+    const networkViewsAddress = process.env.NETWORK_VIEWS_ADDRESS
+    if (!networkViewsAddress) throw new Error('No network views address provided')
     
     /** Get DKG CLI path */
     const cliPath = process.env.CLI_PATH
@@ -28,5 +34,5 @@ export function config() {
     const messengerUrl = process.env.MESSENGER_SRV_ADDR
     if (!messengerUrl) throw new Error('No messenger url provided')
 
-    return { provider, signer, manager, cliPath, messengerUrl }
+    return { provider, signer, manager, networkAddress, networkViewsAddress, cliPath, messengerUrl }
 }

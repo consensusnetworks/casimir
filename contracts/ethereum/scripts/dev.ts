@@ -48,7 +48,7 @@ void async function () {
 
         /** Link mock external contracts to Casimir */
         if (name === 'CasimirManager') {
-            (config[name as keyof typeof config] as ContractConfig).args.functionsOracleAddress = config.MockFunctionsOracle?.address
+            (config[name as keyof typeof config] as ContractConfig).args.functionsAddress = config.MockFunctionsOracle?.address
         }
 
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
@@ -79,7 +79,8 @@ void async function () {
     const rewardPerValidator = 0.105
     let lastRewardBlock = await ethers.provider.getBlockNumber()
     for await (const block of on(ethers.provider as unknown as EventEmitter, 'block')) {
-        if (block - blocksPerReward === lastRewardBlock) {
+        if (block - blocksPerReward >= lastRewardBlock) {
+            console.log('New reward block')
             lastRewardBlock = block
             const depositedPoolCount = await manager.getDepositedPoolCount()
             if (depositedPoolCount) {

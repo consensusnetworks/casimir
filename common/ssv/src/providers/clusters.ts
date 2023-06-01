@@ -1,5 +1,7 @@
 import { ethers } from 'ethers'
+import { SSVNetwork, SSVNetworkViews } from '@casimir/ethereum/build/artifacts/types'
 import SSVNetworkJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/SSVNetwork.sol/SSVNetwork.json'
+import SSVNetworkJsonViews from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/SSVNetworkViews.sol/SSVNetworkViews.json'
 import { ClusterDetailsInput } from '../interfaces/ClusterDetailsInput'
 import { ClusterDetails } from '../interfaces/ClusterDetails'
 import { Cluster } from '@casimir/types'
@@ -22,10 +24,12 @@ const eventList = [
  * @returns {Promise<Cluster>} Cluster snapshot
  */
 export async function getClusterDetails(input: ClusterDetailsInput): Promise<ClusterDetails> {
-    const { provider, networkAddress, operatorIds, withdrawalAddress } = input
+    const { provider, networkAddress, networkViewsAddress, operatorIds, withdrawalAddress } = input
 
-    const ssv = new ethers.Contract(networkAddress, SSVNetworkJson.abi, provider)
-    const eventFilters = eventList.map(event => ssv.filters[event](withdrawalAddress))
+    const ssvNetwork = new ethers.Contract(networkAddress, SSVNetworkJson.abi, provider) as SSVNetwork & ethers.Contract
+    const ssvNetworkViews = new ethers.Contract(networkViewsAddress, SSVNetworkJsonViews.abi, provider) as SSVNetworkViews & ethers.Contract
+
+    const eventFilters = eventList.map(event => ssvNetwork.filters[event](withdrawalAddress))
     
     let step = MONTH
     const latestBlockNumber = await provider.getBlockNumber()
@@ -38,7 +42,7 @@ export async function getClusterDetails(input: ClusterDetailsInput): Promise<Clu
         try {
             const items = (await Promise.all(
                 eventFilters.map(async eventFilter => {
-                    return await ssv.queryFilter(eventFilter, fromBlock, toBlock)
+                    return await ssvNetwork.queryFilter(eventFilter, fromBlock, toBlock)
                 })
             )).flat()
 
@@ -68,8 +72,8 @@ export async function getClusterDetails(input: ClusterDetailsInput): Promise<Clu
                 }
             }
             toBlock = fromBlock
-        } catch (e) {
-            console.error(e)
+        } catch (error) {
+            console.error(error)
             if (step === MONTH) {
                 step = WEEK
             } else if (step === WEEK) {
@@ -86,6 +90,13 @@ export async function getClusterDetails(input: ClusterDetailsInput): Promise<Clu
         balance: 0,
         active: true
     }
+
+    // let requiredFees
+    // if (cluster.validatorCount) {
+    //     // Can also top off cluster here
+    // }
+    // // Get a minimum runway for the next validator
+
     const requiredFees = ethers.utils.parseEther('0.1')
     
     return { cluster, requiredFees }

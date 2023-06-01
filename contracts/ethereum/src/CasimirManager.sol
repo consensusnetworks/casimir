@@ -1070,18 +1070,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the SSV network address
-     * @return ssvNetworkAddress The SSV network address
-     */
-    function getSSVNetworkAddress()
-        external
-        view
-        returns (address ssvNetworkAddress)
-    {
-        ssvNetworkAddress = address(ssvNetwork);
-    }
-
-    /**
      * @notice Get the upkeep address
      * @return upkeepAddress The upkeep address
      */

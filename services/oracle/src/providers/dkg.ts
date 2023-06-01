@@ -36,7 +36,7 @@ export class DKG {
         console.log(`Started ceremony with ID ${ceremonyId}`)
 
         /** Wait for ceremony to complete */
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise(resolve => setTimeout(resolve, 3000))
 
         /** Get operator key shares */
         const shares = await this.getShares(ceremonyId)
@@ -71,6 +71,9 @@ export class DKG {
         const ceremonyId = await this.startReshare({ operators, publicKey, oldOperators })
         console.log(`Started ceremony with ID ${ceremonyId}`)
 
+        /** Wait for ceremony to complete */
+        await new Promise(resolve => setTimeout(resolve, 3000))
+
         /** Get operator key shares */
         const shares = await this.getShares(ceremonyId)
 
@@ -102,8 +105,6 @@ export class DKG {
         const withdrawalCredentialsFlag = `--withdrawal-credentials ${getWithdrawalCredentials(withdrawalAddress)}`
         const forkVersionFlag = '--fork-version prater'
         const command = `${this.cliPath} keygen ${operatorFlags} ${thresholdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
-
-        console.log('Running command', command)
         const ceremony = await runRetry(`${command}`) as string
         return ceremony.trim().split(' ').pop() as string
     }

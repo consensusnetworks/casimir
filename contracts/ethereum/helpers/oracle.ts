@@ -4,11 +4,12 @@ import { CasimirManager } from '../build/artifacts/types'
 import { validatorStore } from '@casimir/data'
 import { Validator } from '@casimir/types'
 import { getClusterDetails } from '@casimir/ssv'
-import { ClusterDetails } from '@casimir/ssv/src/interfaces/ClusterDetails'
 
 const mockValidators: Validator[] = Object.values(validatorStore)
-
-const mockFee = 0.1
+const networkAddress = process.env.SSV_NETWORK_ADDRESS as string
+if (!networkAddress) throw new Error('No network address provided')
+const networkViewsAddress = process.env.SSV_NETWORK_VIEWS_ADDRESS as string
+if (!networkViewsAddress) throw new Error('No network views address provided')
 
 export async function initiatePoolDepositHandler({ manager, signer, args }: { manager: CasimirManager, signer: SignerWithAddress, args: Record<string, any> }) {
     const { poolId } = args
@@ -22,22 +23,14 @@ export async function initiatePoolDepositHandler({ manager, signer, args }: { ma
         shares,
     } = mockValidators[poolId - 1]
 
-    let clusterDetails: ClusterDetails = {
-        cluster: {
-            validatorCount: 0,
-            networkFeeIndex: 0,
-            index: 0,
-            balance: 0,
-            active: true
-        },
-        requiredFees: ethers.utils.parseEther(mockFee.toString())
-    }
-
-    if (poolId !== 1) {
-        const networkAddress = await manager.getSSVNetworkAddress()
-        const withdrawalAddress = manager.address
-        clusterDetails = await getClusterDetails({ provider: ethers.provider, networkAddress, operatorIds, withdrawalAddress })
-    }
+    const withdrawalAddress = manager.address
+    const clusterDetails = await getClusterDetails({ 
+        provider: ethers.provider,
+        networkAddress,
+        networkViewsAddress,
+        operatorIds,
+        withdrawalAddress 
+    })
 
     const { cluster, requiredFees } = clusterDetails
 
@@ -63,9 +56,14 @@ export async function completePoolExitHandler({ manager, signer }: { manager: Ca
     const finalEffectiveBalance = ethers.utils.parseEther('32')
     const blamePercents = [0, 0, 0, 0]
 
-    const networkAddress = await manager.getSSVNetworkAddress()
     const withdrawalAddress = manager.address
-    const clusterDetails = await getClusterDetails({ provider: ethers.provider, networkAddress, operatorIds, withdrawalAddress })
+    const clusterDetails = await getClusterDetails({ 
+        provider: ethers.provider,
+        networkAddress,
+        networkViewsAddress,
+        operatorIds,
+        withdrawalAddress 
+    })
     const { cluster } = clusterDetails
 
     const completePoolExit = await manager.connect(signer).completePoolExit(

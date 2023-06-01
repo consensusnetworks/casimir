@@ -5,7 +5,18 @@ import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { getClusterDetails } from '@casimir/ssv'
 
 export async function initiatePoolDepositHandler(input: HandlerInput) {
-    const { provider, signer, manager, cliPath, messengerUrl } = input
+    const { 
+        provider,
+        signer,
+        manager,
+        networkAddress,
+        networkViewsAddress,
+        cliPath,
+        messengerUrl,
+        value
+    } = input
+
+    const poolId = value
     const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
     const dkg = new DKG({ cliPath, messengerUrl })
 
@@ -27,7 +38,8 @@ export async function initiatePoolDepositHandler(input: HandlerInput) {
 
     const clusterDetails = await getClusterDetails({ 
         provider,
-        networkAddress: await manager.getSSVNetworkAddress(),
+        networkAddress,
+        networkViewsAddress,
         operatorIds,
         withdrawalAddress: manager.address
     })
@@ -48,8 +60,19 @@ export async function initiatePoolDepositHandler(input: HandlerInput) {
 }
 
 export async function initiatePoolReshareHandler(input: HandlerInput) {
-    const { manager, signer, cliPath, messengerUrl, args } = input
-    const { poolId } = args
+    const {         
+        provider,
+        signer,
+        manager,
+        networkAddress,
+        networkViewsAddress,
+        cliPath,
+        messengerUrl,
+        value
+    } = input
+
+    const poolId = value
+
     // Todo reshare event will include the operator to boot
 
     // Get pool to reshare
@@ -76,8 +99,18 @@ export async function initiatePoolReshareHandler(input: HandlerInput) {
 }
 
 export async function initiatePoolExitHandler(input: HandlerInput) {
-    const { manager, signer, cliPath, messengerUrl, args } = input
-    const { poolId } = args
+    const {
+        provider,
+        signer,
+        manager,
+        networkAddress,
+        networkViewsAddress,
+        cliPath,
+        messengerUrl,
+        value 
+    } = input
+
+    const poolId = value
 
     // Get pool to exit
     const pool = await manager.getPool(poolId)

@@ -8,10 +8,14 @@ export interface HandlerInput {
     signer: ethers.Signer
     /** Manager contract */
     manager: CasimirManager & ethers.Contract
+    /** Network address */
+    networkAddress: string
+    /** Network views address */
+    networkViewsAddress: string
     /** DKG cli path */
     cliPath: string
     /** DKG messenger service URL */
     messengerUrl: string
-    /** Handler args */
-    args: Record<string, any>
+    /** Event value */
+    value: number
 }
