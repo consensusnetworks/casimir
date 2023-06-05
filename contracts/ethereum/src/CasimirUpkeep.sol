@@ -107,9 +107,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         linkSubscriptionId = _linkSubscriptionId;
     }
 
-    function registerAndPredictID(KeeperRegistrarInterface.RegistrationParams memory params) public {
-        // LINK must be approved for transfer - this can be done every time or once
-        // with an infinite approval
+    function registerUpkeep(KeeperRegistrarInterface.RegistrationParams memory params) public {
         linkToken.approve(address(linkRegistrar), params.amount);
         upkeepId = linkRegistrar.registerUpkeep(params);
         if (upkeepId == 0) {
