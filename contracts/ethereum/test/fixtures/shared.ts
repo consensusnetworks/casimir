@@ -17,8 +17,9 @@ export async function deploymentFixture() {
             args: {
                 oracleAddress: oracle.address || process.env.ORACLE_ADDRESS,
                 beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
-                functionsAddress: process.env.FUNCTIONS_ADDRESS,
-                functionsSubscriptionId: process.env.FUNCTIONS_SUBSCRIPTION_ID,
+                linkFunctionsAddress: process.env.LINK_FUNCTIONS_ADDRESS,
+                linkRegistryAddress: process.env.LINK_REGISTRY_ADDRESS,
+                linkSubscriptionId: process.env.LINK_SUBSCRIPTION_ID,
                 linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
                 ssvNetworkViewsAddress: process.env.SSV_NETWORK_VIEWS_ADDRESS,
@@ -50,7 +51,7 @@ export async function deploymentFixture() {
 
         /** Link mock external contracts to Casimir */
         if (name === 'CasimirManager') {
-            (config[name as keyof typeof config] as ContractConfig).args.functionsAddress = config.MockFunctionsOracle?.address
+            (config[name as keyof typeof config] as ContractConfig).args.linkFunctionsAddress = config.MockFunctionsOracle?.address
         }
 
         const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig

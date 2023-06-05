@@ -216,8 +216,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Constructor
      * @param _oracleAddress The manager oracle address
      * @param beaconDepositAddress The Beacon deposit address
-     * @param functionsAddress The Chainlink functions oracle address
-     * @param functionsSubscriptionId The Chainlink functions subscription ID
+     * @param linkFunctionsAddress The Chainlink functions oracle address
+     * @param linkRegistrarAddress The Chainlink keeper registrar address
+     * @param linkSubscriptionId The Chainlink functions subscription ID
      * @param linkTokenAddress The Chainlink token address
      * @param ssvNetworkAddress The SSV network address
      * @param ssvNetworkViewsAddress The SSV network views address
@@ -229,8 +230,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     constructor(
         address _oracleAddress,
         address beaconDepositAddress,
-        address functionsAddress,
-        uint32 functionsSubscriptionId,
+        address linkFunctionsAddress,
+        address linkRegistrarAddress,
+        uint32 linkSubscriptionId,
         address linkTokenAddress,
         address ssvNetworkAddress,
         address ssvNetworkViewsAddress,
@@ -251,7 +253,12 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         tokenAddresses[Token.WETH] = wethTokenAddress;
 
         registry = new CasimirRegistry(ssvNetworkViewsAddress);
-        upkeep = new CasimirUpkeep(functionsAddress, functionsSubscriptionId);        
+        upkeep = new CasimirUpkeep(
+            linkFunctionsAddress,
+            linkRegistrarAddress,
+            linkSubscriptionId,
+            linkTokenAddress
+        );        
     }
 
     /**

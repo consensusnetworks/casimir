@@ -3,7 +3,9 @@ pragma solidity 0.8.18;
 
 import "./interfaces/ICasimirUpkeep.sol";
 import "./interfaces/ICasimirManager.sol";
+import "./vendor/interfaces/KeeperRegistrarInterface.sol";
 import {Functions, FunctionsClient} from "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Dev-only imports
@@ -34,11 +36,17 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
     /** Manager contract */
     ICasimirManager private immutable manager;
+    /** Keeper registrar contract */
+    KeeperRegistrarInterface private immutable linkRegistrar;
+    /** LINK ERC-20 token contract */
+    IERC20 private immutable linkToken;
 
     /********************/
     /* Dynamic State */
     /********************/
 
+    /** Upkeep ID */
+    uint256 private upkeepId;
     /** Current report status */
     ReportStatus private reportStatus;
     /** Current report period */
@@ -74,7 +82,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Fulfillment gas limit */
     uint32 fulfillGasLimit;
     /** Functions subscription ID */
-    uint64 private functionsSubscriptionId;
+    uint64 private linkSubscriptionId;
 
     /***************/
     /* Constructor */
@@ -82,15 +90,31 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
     /**
      * Constructor
-     * @param functionsOracleAddress The functions oracle contract address
-     * @param _functionsSubscriptionId The functions subscription ID
+     * @param linkFunctionsAddress The functions oracle contract address
+     * @param linkRegistrarAddress The keeper registrar address
+     * @param _linkSubscriptionId The functions subscription ID
+     * @param linkTokenAddress The LINK token address
      */
     constructor(
-        address functionsOracleAddress,
-        uint64 _functionsSubscriptionId
-    ) FunctionsClient(functionsOracleAddress) {
+        address linkFunctionsAddress,
+        address linkRegistrarAddress,
+        uint64 _linkSubscriptionId,
+        address linkTokenAddress
+    ) FunctionsClient(linkFunctionsAddress) {
         manager = ICasimirManager(msg.sender);
-        functionsSubscriptionId = _functionsSubscriptionId;
+        linkRegistrar = KeeperRegistrarInterface(linkRegistrarAddress);
+        linkToken = IERC20(linkTokenAddress);
+        linkSubscriptionId = _linkSubscriptionId;
+    }
+
+    function registerAndPredictID(KeeperRegistrarInterface.RegistrationParams memory params) public {
+        // LINK must be approved for transfer - this can be done every time or once
+        // with an infinite approval
+        linkToken.approve(address(linkRegistrar), params.amount);
+        upkeepId = linkRegistrar.registerUpkeep(params);
+        if (upkeepId == 0) {
+            revert("Registration failed");
+        }
     }
 
     /**
@@ -122,16 +146,16 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /**
      * @notice Set the bytes representing the CBOR-encoded Functions.Request
      * @param _fulfillGasLimit Maximum amount of gas used to call the client contract's `handleOracleFulfillment` function
-     * @param _functionsSubscriptionId The functions billing subscription ID used to pay for Functions requests
+     * @param linkSubscriptionId The functions billing subscription ID used to pay for Functions requests
      * @param _requestCBOR Bytes representing the CBOR-encoded Functions.Request
      */
     function setRequest(
         uint32 _fulfillGasLimit,
-        uint64 _functionsSubscriptionId,
+        uint64 linkSubscriptionId,
         bytes calldata _requestCBOR
     ) external onlyOwner {
         fulfillGasLimit = _fulfillGasLimit;
-        functionsSubscriptionId = _functionsSubscriptionId;
+        linkSubscriptionId = linkSubscriptionId;
         requestCBOR = _requestCBOR;
     }
 
@@ -174,7 +198,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             Functions.Request memory req;
             reportRemainingRequests = 2;
             for (uint256 i = 0; i < reportRemainingRequests; i++) {
-                bytes32 requestId = sendRequest(req, functionsSubscriptionId, fulfillGasLimit);
+                bytes32 requestId = sendRequest(req, linkSubscriptionId, fulfillGasLimit);
                 reportRequests[requestId] = RequestType(i + 1);
             }
         } else {

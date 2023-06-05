@@ -1,5 +1,181 @@
 # Solidity API
 
+## CasimirDAO
+
+### owners
+
+```solidity
+address[] owners
+```
+
+### isOwner
+
+```solidity
+mapping(address => bool) isOwner
+```
+
+### numConfirmationsRequired
+
+```solidity
+uint256 numConfirmationsRequired
+```
+
+### isOwnerChangeConfirmed
+
+```solidity
+mapping(uint256 => mapping(address => bool)) isOwnerChangeConfirmed
+```
+
+### isTransactionConfirmed
+
+```solidity
+mapping(uint256 => mapping(address => bool)) isTransactionConfirmed
+```
+
+### ownerChanges
+
+```solidity
+struct ICasimirDAO.OwnerChange[] ownerChanges
+```
+
+### transactions
+
+```solidity
+struct ICasimirDAO.Transaction[] transactions
+```
+
+### onlyOwner
+
+```solidity
+modifier onlyOwner()
+```
+
+### ownerChangeExists
+
+```solidity
+modifier ownerChangeExists(uint256 changeId)
+```
+
+### ownerChangeNotExecuted
+
+```solidity
+modifier ownerChangeNotExecuted(uint256 changeId)
+```
+
+### ownerChangeNotConfirmed
+
+```solidity
+modifier ownerChangeNotConfirmed(uint256 changeId)
+```
+
+### transactionExists
+
+```solidity
+modifier transactionExists(uint256 transactionIndex)
+```
+
+### transactionNotExecuted
+
+```solidity
+modifier transactionNotExecuted(uint256 transactionIndex)
+```
+
+### transactionNotConfirmed
+
+```solidity
+modifier transactionNotConfirmed(uint256 transactionIndex)
+```
+
+### constructor
+
+```solidity
+constructor(address[] _owners, uint256 _numConfirmationsRequired) public
+```
+
+### receive
+
+```solidity
+receive() external payable
+```
+
+### submitOwnerChange
+
+```solidity
+function submitOwnerChange(address owner, bool add) public
+```
+
+### confirmOwnerChange
+
+```solidity
+function confirmOwnerChange(uint256 changeId) public
+```
+
+### executeOwnerChange
+
+```solidity
+function executeOwnerChange(uint256 changeId) public
+```
+
+### revokeOwnerChangeConfirmation
+
+```solidity
+function revokeOwnerChangeConfirmation(uint256 changeId) public
+```
+
+### submitTransaction
+
+```solidity
+function submitTransaction(address to, uint256 value, bytes data) public
+```
+
+### confirmTransaction
+
+```solidity
+function confirmTransaction(uint256 transactionIndex) public
+```
+
+### executeTransaction
+
+```solidity
+function executeTransaction(uint256 transactionIndex) public
+```
+
+### revokeTransactionConfirmation
+
+```solidity
+function revokeTransactionConfirmation(uint256 transactionIndex) public
+```
+
+### getOwners
+
+```solidity
+function getOwners() public view returns (address[])
+```
+
+### getOwnerChangeCount
+
+```solidity
+function getOwnerChangeCount() public view returns (uint256)
+```
+
+### getOwnerChange
+
+```solidity
+function getOwnerChange(uint256 changeId) public view returns (address owner, bool add, bool executed, uint256 numConfirmations)
+```
+
+### getTransactionCount
+
+```solidity
+function getTransactionCount() public view returns (uint256)
+```
+
+### getTransaction
+
+```solidity
+function getTransaction(uint256 transactionIndex) public view returns (address to, uint256 value, bytes data, bool executed, uint256 numConfirmations)
+```
+
 ## CasimirManager
 
 ### finalizableCompletedExits
@@ -866,34 +1042,6 @@ Register an operator with the set
 | ---- | ---- | ----------- |
 | operatorId | uint64 | The operator ID |
 
-### requestOperatorDeregistration
-
-```solidity
-function requestOperatorDeregistration(uint64 operatorId) external
-```
-
-Request to deregister an operator from the set
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
-### deregisterOperator
-
-```solidity
-function deregisterOperator(uint64 operatorId) external
-```
-
-Deregister an operator from the set
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operatorId | uint64 | The operator ID |
-
 ### depositCollateral
 
 ```solidity
@@ -907,6 +1055,21 @@ Deposit collateral for an operator
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | operatorId | uint64 | The operator ID |
+
+### withdrawCollateral
+
+```solidity
+function withdrawCollateral(uint64 operatorId, uint256 amount) external
+```
+
+Withdraw collateral for an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+| amount | uint256 | The amount to withdraw |
 
 ### addActivePool
 
@@ -1165,6 +1328,169 @@ Fulfill the request for testing
 | requestId | bytes32 | The request ID, returned by sendRequest() |
 | response | bytes | Aggregated response from the user code |
 | err | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
+
+## ICasimirDAO
+
+### Deposit
+
+```solidity
+event Deposit(address sender, uint256 amount, uint256 balance)
+```
+
+### SubmitOwnerChange
+
+```solidity
+event SubmitOwnerChange(address owner, uint256 changeId, bool add)
+```
+
+### ConfirmOwnerChange
+
+```solidity
+event ConfirmOwnerChange(address owner, uint256 changeId)
+```
+
+### RevokeOwnerChangeConfirmation
+
+```solidity
+event RevokeOwnerChangeConfirmation(address owner, uint256 changeId)
+```
+
+### ExecuteOwnerChange
+
+```solidity
+event ExecuteOwnerChange(address owner, uint256 changeId)
+```
+
+### SubmitTransaction
+
+```solidity
+event SubmitTransaction(address owner, uint256 txIndex, address to, uint256 value, bytes data)
+```
+
+### ConfirmTransaction
+
+```solidity
+event ConfirmTransaction(address owner, uint256 txIndex)
+```
+
+### RevokeTransactionConfirmation
+
+```solidity
+event RevokeTransactionConfirmation(address owner, uint256 txIndex)
+```
+
+### ExecuteTransaction
+
+```solidity
+event ExecuteTransaction(address owner, uint256 txIndex)
+```
+
+### OwnerChange
+
+```solidity
+struct OwnerChange {
+  address owner;
+  bool add;
+  bool executed;
+  uint256 numConfirmations;
+}
+```
+
+### Transaction
+
+```solidity
+struct Transaction {
+  address to;
+  uint256 value;
+  bytes data;
+  bool executed;
+  uint256 numConfirmations;
+}
+```
+
+### receive
+
+```solidity
+receive() external payable
+```
+
+### submitOwnerChange
+
+```solidity
+function submitOwnerChange(address owner, bool add) external
+```
+
+### confirmOwnerChange
+
+```solidity
+function confirmOwnerChange(uint256 changeId) external
+```
+
+### executeOwnerChange
+
+```solidity
+function executeOwnerChange(uint256 changeId) external
+```
+
+### revokeOwnerChangeConfirmation
+
+```solidity
+function revokeOwnerChangeConfirmation(uint256 changeId) external
+```
+
+### submitTransaction
+
+```solidity
+function submitTransaction(address to, uint256 value, bytes data) external
+```
+
+### confirmTransaction
+
+```solidity
+function confirmTransaction(uint256 transactionIndex) external
+```
+
+### executeTransaction
+
+```solidity
+function executeTransaction(uint256 transactionIndex) external
+```
+
+### revokeTransactionConfirmation
+
+```solidity
+function revokeTransactionConfirmation(uint256 transactionIndex) external
+```
+
+### getOwners
+
+```solidity
+function getOwners() external view returns (address[])
+```
+
+### getOwnerChangeCount
+
+```solidity
+function getOwnerChangeCount() external view returns (uint256)
+```
+
+### getOwnerChange
+
+```solidity
+function getOwnerChange(uint256 changeId) external view returns (address owner, bool add, bool executed, uint256 numConfirmations)
+```
+
+### getTransactionCount
+
+```solidity
+function getTransactionCount() external view returns (uint256)
+```
+
+### getTransaction
+
+```solidity
+function getTransaction(uint256 transactionIndex) external view returns (address to, uint256 value, bytes data, bool executed, uint256 numConfirmations)
+```
 
 ## ICasimirManager
 
@@ -1662,22 +1988,16 @@ struct Operator {
 function registerOperator(uint64 operatorId) external payable
 ```
 
-### requestOperatorDeregistration
-
-```solidity
-function requestOperatorDeregistration(uint64 operatorId) external
-```
-
-### deregisterOperator
-
-```solidity
-function deregisterOperator(uint64 operatorId) external
-```
-
 ### depositCollateral
 
 ```solidity
 function depositCollateral(uint64 operatorId) external payable
+```
+
+### withdrawCollateral
+
+```solidity
+function withdrawCollateral(uint64 operatorId, uint256 amount) external
 ```
 
 ### addActivePool
@@ -2001,206 +2321,4 @@ Sends a request (encoded as data) using the provided subscriptionId
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | requestId | bytes32 | A unique request identifier (unique per DON) |
-
-## CasimirDAO
-
-### owners
-
-```solidity
-address[] owners
-```
-
-### isOwner
-
-```solidity
-mapping(address => bool) isOwner
-```
-
-### numConfirmationsRequired
-
-```solidity
-uint256 numConfirmationsRequired
-```
-
-### isConfirmed
-
-```solidity
-mapping(uint256 => mapping(address => bool)) isConfirmed
-```
-
-### transactions
-
-```solidity
-struct ICasimirDAO.Transaction[] transactions
-```
-
-### onlyOwner
-
-```solidity
-modifier onlyOwner()
-```
-
-### txExists
-
-```solidity
-modifier txExists(uint256 _txIndex)
-```
-
-### notExecuted
-
-```solidity
-modifier notExecuted(uint256 _txIndex)
-```
-
-### notConfirmed
-
-```solidity
-modifier notConfirmed(uint256 _txIndex)
-```
-
-### constructor
-
-```solidity
-constructor(address[] _owners, uint256 _numConfirmationsRequired) public
-```
-
-### receive
-
-```solidity
-receive() external payable
-```
-
-### submitTransaction
-
-```solidity
-function submitTransaction(address _to, uint256 _value, bytes _data) public
-```
-
-### confirmTransaction
-
-```solidity
-function confirmTransaction(uint256 _txIndex) public
-```
-
-### executeTransaction
-
-```solidity
-function executeTransaction(uint256 _txIndex) public
-```
-
-### revokeConfirmation
-
-```solidity
-function revokeConfirmation(uint256 _txIndex) public
-```
-
-### getOwners
-
-```solidity
-function getOwners() public view returns (address[])
-```
-
-### getTransactionCount
-
-```solidity
-function getTransactionCount() public view returns (uint256)
-```
-
-### getTransaction
-
-```solidity
-function getTransaction(uint256 _txIndex) public view returns (address to, uint256 value, bytes data, bool executed, uint256 numConfirmations)
-```
-
-## ICasimirDAO
-
-### Deposit
-
-```solidity
-event Deposit(address sender, uint256 amount, uint256 balance)
-```
-
-### SubmitTransaction
-
-```solidity
-event SubmitTransaction(address owner, uint256 txIndex, address to, uint256 value, bytes data)
-```
-
-### ConfirmTransaction
-
-```solidity
-event ConfirmTransaction(address owner, uint256 txIndex)
-```
-
-### RevokeConfirmation
-
-```solidity
-event RevokeConfirmation(address owner, uint256 txIndex)
-```
-
-### ExecuteTransaction
-
-```solidity
-event ExecuteTransaction(address owner, uint256 txIndex)
-```
-
-### Transaction
-
-```solidity
-struct Transaction {
-  address to;
-  uint256 value;
-  bytes data;
-  bool executed;
-  uint256 numConfirmations;
-}
-```
-
-### receive
-
-```solidity
-receive() external payable
-```
-
-### submitTransaction
-
-```solidity
-function submitTransaction(address _to, uint256 _value, bytes _data) external
-```
-
-### confirmTransaction
-
-```solidity
-function confirmTransaction(uint256 _txIndex) external
-```
-
-### executeTransaction
-
-```solidity
-function executeTransaction(uint256 _txIndex) external
-```
-
-### revokeConfirmation
-
-```solidity
-function revokeConfirmation(uint256 _txIndex) external
-```
-
-### getOwners
-
-```solidity
-function getOwners() external view returns (address[])
-```
-
-### getTransactionCount
-
-```solidity
-function getTransactionCount() external view returns (uint256)
-```
-
-### getTransaction
-
-```solidity
-function getTransaction(uint256 _txIndex) external view returns (address to, uint256 value, bytes data, bool executed, uint256 numConfirmations)
-```
 
