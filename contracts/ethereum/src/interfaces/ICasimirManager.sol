@@ -1,29 +1,31 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
+import './ICasimirPool.sol';
 import "../vendor/interfaces/ISSVNetwork.sol";
 
 interface ICasimirManager {
+    /***************/
+    /* Enumerators */
+    /***************/
+
+    /** Token abbreviation */
+    enum Token {
+        LINK,
+        SSV,
+        WETH
+    }
+
     /***********/
     /* Structs */
     /***********/
 
-    struct ProcessedDeposit {
-        uint256 ethAmount;
-        uint256 linkAmount;
-        uint256 ssvAmount;
-    }
-
-    struct Pool {
-        uint256 deposits;
-        bool exiting;
-        bool slashed;
-        bytes32 depositDataRoot;
+    struct PoolDetails {
+        uint32 id;
+        uint256 balance;
         bytes publicKey;
-        bytes signature;
-        bytes withdrawalCredentials;
         uint64[] operatorIds;
-        bytes shares;
+        ICasimirPool.PoolStatus status;
     }
 
     struct User {
@@ -42,21 +44,22 @@ interface ICasimirManager {
     /**********/
 
     event DepositRequested(uint32 poolId);
-    event PoolDepositInitiated(uint32 poolId);
-    event PoolDeposited(uint32 poolId);
+    event DepositInitiated(uint32 poolId);
+    event DepositActivated(uint32 poolId);
     event ReshareRequested(uint32 poolId);
-    event PoolReshared(uint32 poolId);
-    event PoolExitRequested(uint32 poolId);
-    event UnexpectedExitReportsRequested(uint256 count);
+    event ReshareCompleted(uint32 poolId);
+    event ExitRequested(uint32 poolId);
+    event ForcedExitReportsRequested(uint256 count);
     event SlashedExitReportsRequested(uint256 count);
-    event WithdrawnExitReportsRequested(uint256 count);
-    event PoolExited(uint32 poolId);
+    event CompletedExitReportsRequested(uint256 count);
+    event ExitCompleted(uint32 poolId);
     event StakeDeposited(address sender, uint256 amount);
     event StakeRebalanced(uint256 amount);
     event RewardsDeposited(uint256 amount);
+    event TipsDeposited(uint256 amount);
     event WithdrawalRequested(address sender, uint256 amount);
     event WithdrawalInitiated(address sender, uint256 amount);
-    event WithdrawalCompleted(address sender, uint256 amount);
+    event WithdrawalFulfilled(address sender, uint256 amount);
 
     /*************/
     /* Functions */
@@ -64,18 +67,26 @@ interface ICasimirManager {
 
     function depositStake() external payable;
 
+    function depositRewards() external payable;
+
     function rebalanceStake(
         uint256 activeBalance, 
         uint256 sweptBalance, 
         uint256 activatedDeposits,
-        uint256 withdrawnExits
+        uint256 completedExits
     ) external;
+
+    function compoundRewards(uint32[5] memory poolIds) external;
+
+    function depositExitedBalance(uint32 poolId) external payable;
+
+    function depositRecoveredBalance(uint32 poolId) external payable;
 
     function requestWithdrawal(uint256 amount) external;
 
-    function completePendingWithdrawals(uint256 count) external;
+    function fulfillWithdrawals(uint256 count) external;
 
-    function initiatePoolDeposit(        
+    function initiateDeposit(        
         bytes32 depositDataRoot,
         bytes calldata publicKey,
         bytes calldata signature,
@@ -86,39 +97,28 @@ interface ICasimirManager {
         uint256 feeAmount
     ) external;
 
-    function completePoolDeposits(uint256 count) external;
+    function activateDeposits(uint256 count) external;
 
-    function requestPoolUnexpectedExitReports(uint256 count) external;
+    function requestForcedExitReports(uint256 count) external;
 
-    function requestPoolSlashedExitReports(uint256 count) external;
+    function requestCompletedExitReports(uint256 count) external;
 
-    function requestPoolWithdrawnExitReports(uint256 count) external;
-
-    function completePoolExit(
+    function reportCompletedExit(
         uint256 poolIndex,
-        uint256 finalEffectiveBalance,
         uint32[] memory blamePercents,
         ISSVNetworkCore.Cluster memory cluster
     ) external;
-
-    function setFeePercents(uint32 ethFeePercent, uint32 linkFeePercent, uint32 ssvFeePercent) external;
 
     function setFunctionsAddress(address functionsAddress) external;
 
     function getFeePercent() external view returns (uint32);
 
-    function getETHFeePercent() external view returns (uint32);
-
-    function getLINKFeePercent() external view returns (uint32);
-
-    function getSSVFeePercent() external view returns (uint32);
-
-    function getDepositedPoolCount()
+    function getTotalDeposits()
         external
         view
         returns (uint256);
 
-    function getExitingPoolCount()
+    function getRequestedExits()
         external
         view
         returns (uint256);
@@ -137,9 +137,9 @@ interface ICasimirManager {
 
     function getReportPeriod() external view returns (uint32);
 
-    function getFinalizableWithdrawnPoolCount() external view returns (uint256);
+    function getFinalizableCompletedExits() external view returns (uint256);
 
-    function getReportFinalizableWithdrawnBalance() external view returns (uint256);
+    function getFinalizableExitedBalance() external view returns (uint256);
 
     function getLatestActiveBalance() external view returns (uint256);
 
@@ -155,9 +155,15 @@ interface ICasimirManager {
 
     function getUserStake(address userAddress) external view returns (uint256);
 
-    function getPendingWithdrawalQueue() external view returns (Withdrawal[] memory);
+    function getPendingWithdrawalBalance() external view returns (uint256);
 
     function getPendingWithdrawals() external view returns (uint256);
 
-    function getPendingWithdrawalCount() external view returns (uint256);
+    function getPoolAddress(uint32 poolId) external view returns (address);
+
+    function getPoolDetails(uint32 poolId) external view returns (PoolDetails memory);
+
+    function getRegistryAddress() external view returns (address);
+
+    function getUpkeepAddress() external view returns (address);
 }

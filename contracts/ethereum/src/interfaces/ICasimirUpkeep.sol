@@ -8,8 +8,15 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
     /* Enumerators */
     /***************/
 
-    /** Upkeep statuses */
-    enum Status {
+    /** Request type */
+    enum RequestType {
+        NONE,
+        BALANCES,
+        DETAILS
+    }
+
+    /** Report status */
+    enum ReportStatus {
         FINALIZED,
         REQUESTING,
         PROCESSING
@@ -20,7 +27,7 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
     /**********/
     
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
-    event UpkeepPerformed(Status status);
+    event UpkeepPerformed(ReportStatus status);
 
     /*************/
     /* Functions */

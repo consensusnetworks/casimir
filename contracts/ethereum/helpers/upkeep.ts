@@ -4,13 +4,14 @@ import { CasimirUpkeep } from '../build/artifacts/types'
 
 export interface ReportValues {
     activeBalance: number
+    sweptBalance: number
     activatedDeposits: number
-    unexpectedExits: number
-    slashedExits: number
-    withdrawnExits: number
+    forcedExits: number
+    completedExits: number
+    compoundablePoolIds: number[]
 }
 
-export async function fulfillReportRequest({
+export async function fulfillReport({
     upkeep,
     keeper,
     requestId,
@@ -21,20 +22,34 @@ export async function fulfillReportRequest({
     requestId: number,
     values: ReportValues
 }) {    
+    const { activeBalance, sweptBalance, activatedDeposits, forcedExits, completedExits, compoundablePoolIds } = values
+    
     requestId++
-    const requestIdHash = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [requestId]))
-    const { activeBalance, activatedDeposits, unexpectedExits, slashedExits, withdrawnExits } = values
-    const activeBalanceGwei = ethers.utils.parseUnits(activeBalance.toString(), 'gwei')
-    const responseBytes = ethers.utils.defaultAbiCoder.encode(
-        ['uint128', 'uint32', 'uint32', 'uint32', 'uint32'],
-        [activeBalanceGwei, activatedDeposits, unexpectedExits, slashedExits, withdrawnExits]
+    const balancesRequestIdHash = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [requestId]))
+    const balancesResponseBytes = ethers.utils.defaultAbiCoder.encode(
+        ['uint128', 'uint128'],
+        [ethers.utils.parseEther(activeBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
     )
     await fulfillFunctionsRequest({
         upkeep,
         keeper,
-        requestIdHash,
-        responseBytes
+        requestIdHash: balancesRequestIdHash,
+        responseBytes: balancesResponseBytes
     })
+
+    requestId++
+    const detailsRequestIdHash = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [requestId]))
+    const detailsResponseBytes = ethers.utils.defaultAbiCoder.encode(
+        ['uint32', 'uint32', 'uint32', 'uint32[5]'],
+        [activatedDeposits, forcedExits, completedExits, compoundablePoolIds]
+    )
+    await fulfillFunctionsRequest({
+        upkeep,
+        keeper,
+        requestIdHash: detailsRequestIdHash,
+        responseBytes: detailsResponseBytes
+    })
+
     return requestId
 }
 

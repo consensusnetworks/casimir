@@ -72,7 +72,7 @@ export default function useSSV() {
         console.log('poolIds :>> ', poolIds)
 
         return await Promise.all(poolIds.map(async (poolId: number) => {
-            const { deposits, publicKey, operatorIds } = await manager.connect(provider).getPool(poolId)
+            const { publicKey, operatorIds } = await manager.connect(provider).getPoolDetails(poolId)
             
             // TODO: Decide when/how to get rewards/userRewards
             let pool: Pool = {
@@ -98,12 +98,12 @@ export default function useSSV() {
 
 
                 // TODO: Replace with less hardcoded network call?
-                const operators = await Promise.all(operatorIds.map(async (operatorId: number) => {
+                const operators = await Promise.all(operatorIds.map(async (operatorId) => {
                     const network = 'prater'
                     const response = await fetch(`https://api.ssv.network/api/v3/${network}/operators/${operatorId}`)
                     const { performance } = await response.json()
                     return {
-                        id: operatorId,
+                        id: operatorId.toNumber(),
                         '24HourPerformance': performance['24h'],
                         '30DayPerformance': performance['30d'],
                         url: `https://explorer.ssv.network/operators/${operatorId}`

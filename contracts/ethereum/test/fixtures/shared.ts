@@ -1,11 +1,12 @@
-import { ethers } from 'hardhat'
+import { ethers, network } from 'hardhat'
 import { loadFixture, time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import { deployContract } from '@casimir/ethereum/helpers/deploy'
-import { CasimirManager, CasimirUpkeep } from '@casimir/ethereum/build/artifacts/types'
-import { fulfillReportRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
-import { initiatePoolDepositHandler, completePoolExitHandler } from '@casimir/ethereum/helpers/oracle'
+import { CasimirManager, CasimirRegistry, CasimirUpkeep, ISSVNetworkViews } from '@casimir/ethereum/build/artifacts/types'
+import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
+import { initiateDepositHandler, reportCompletedExitsHandler } from '@casimir/ethereum/helpers/oracle'
 import { round } from '@casimir/ethereum/helpers/math'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
+import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
@@ -20,6 +21,7 @@ export async function deploymentFixture() {
                 functionsSubscriptionId: process.env.FUNCTIONS_SUBSCRIPTION_ID,
                 linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
+                ssvNetworkViewsAddress: process.env.SSV_NETWORK_VIEWS_ADDRESS,
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
                 swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
@@ -64,7 +66,23 @@ export async function deploymentFixture() {
     }
 
     const manager = await ethers.getContractAt('CasimirManager', config.CasimirManager.address as string) as CasimirManager
+    const registry = await ethers.getContractAt('CasimirRegistry', await manager.getRegistryAddress()) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', await manager.getUpkeepAddress()) as CasimirUpkeep
+    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsJson.abi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
+
+    for (const operatorId of [1, 2, 3, 4]) {
+        const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)
+        const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
+        const nextBalance = currentBalance.add(ethers.utils.parseEther('4'))
+        await setBalance(operatorOwnerAddress, nextBalance)
+        await network.provider.request({
+            method: 'hardhat_impersonateAccount',
+            params: [operatorOwnerAddress]
+        })
+        const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
+        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: ethers.utils.parseEther('4') })
+        await result.wait()
+    }
 
     return { manager: manager as CasimirManager, upkeep: upkeep as CasimirUpkeep, owner, keeper, oracle }
 }
@@ -91,7 +109,7 @@ export async function secondUserDepositFixture() {
     await deposit.wait()
 
     const nextPoolId = 1
-    await initiatePoolDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
+    await initiateDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
     
     await time.increase(time.duration.days(1))   
 
@@ -100,12 +118,13 @@ export async function secondUserDepositFixture() {
     let requestId = 0
     const nextValues = {
         activeBalance: 32,
+        sweptBalance: 0,
         activatedDeposits: 1,
-        unexpectedExits: 0,
-        slashedExits: 0,
-        withdrawnExits: 0
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
     }
-    requestId = await fulfillReportRequest({
+    requestId = await fulfillReport({
         upkeep,
         keeper,
         values: nextValues,
@@ -128,12 +147,13 @@ export async function rewardsPostSecondUserDepositFixture() {
     let requestId = latestRequestId
     const nextValues = {
         activeBalance: 32.105,
+        sweptBalance: 0,
         activatedDeposits: 0,
-        unexpectedExits: 0,
-        slashedExits: 0,
-        withdrawnExits: 0
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
     }
-    requestId = await fulfillReportRequest({
+    requestId = await fulfillReport({
         upkeep,
         keeper,
         values: nextValues,
@@ -150,23 +170,33 @@ export async function sweepPostSecondUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(secondUserDepositFixture)
 
     const sweptRewards = 0.105
-    const currentBalance = await ethers.provider.getBalance(manager.address)
-    const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptRewards.toString()))
-    await setBalance(manager.address, nextBalance)
+    const stakedPoolIds = await manager.getStakedPoolIds()
+    for (const poolId of stakedPoolIds) {
+        const poolAddress = await manager.getPoolAddress(poolId)
+        const poolSweptRewards = sweptRewards / stakedPoolIds.length
+        const currentBalance = await ethers.provider.getBalance(poolAddress)
+        const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
+        await setBalance(poolAddress, nextBalance)
+    }
 
     await time.increase(time.duration.days(1))
 
     await runUpkeep({ upkeep, keeper })
 
     let requestId = latestRequestId
+    const compoundablePoolIds = [0, 0, 0, 0, 0]
+    for (let i = 0; i < compoundablePoolIds.length; i++) {
+        if (i < stakedPoolIds.length) compoundablePoolIds[i] = stakedPoolIds[i]
+    }
     const nextValues = {
         activeBalance: 32,
+        sweptBalance: sweptRewards,
         activatedDeposits: 0,
-        unexpectedExits: 0,
-        slashedExits: 0,
-        withdrawnExits: 0
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds
     }
-    requestId = await fulfillReportRequest({
+    requestId = await fulfillReport({
         upkeep,
         keeper,
         values: nextValues,
@@ -189,7 +219,7 @@ export async function thirdUserDepositFixture() {
 
     const readyPools = await manager.getReadyPoolIds()
     const nextPoolId = readyPools[readyPools.length - 1]
-    await initiatePoolDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
+    await initiateDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
 
     await time.increase(time.duration.days(1))
 
@@ -198,12 +228,13 @@ export async function thirdUserDepositFixture() {
     let requestId = latestRequestId
     const nextValues = {
         activeBalance: 64,
+        sweptBalance: 0,
         activatedDeposits: 1,
-        unexpectedExits: 0,
-        slashedExits: 0,
-        withdrawnExits: 0
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
     }
-    requestId = await fulfillReportRequest({
+    requestId = await fulfillReport({
         upkeep,
         keeper,
         values: nextValues,
@@ -226,12 +257,13 @@ export async function rewardsPostThirdUserDepositFixture() {
     let requestId = latestRequestId
     const nextValues = {
         activeBalance: 64.21,
+        sweptBalance: 0,
         activatedDeposits: 0,
-        unexpectedExits: 0,
-        slashedExits: 0,
-        withdrawnExits: 0
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
     }    
-    requestId = await fulfillReportRequest({
+    requestId = await fulfillReport({
         upkeep,
         keeper,
         values: nextValues,
@@ -248,23 +280,33 @@ export async function sweepPostThirdUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, thirdUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(rewardsPostThirdUserDepositFixture)
 
     const sweptRewards = 0.21
-    const currentBalance = await ethers.provider.getBalance(manager.address)
-    const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptRewards.toString()))
-    await setBalance(manager.address, nextBalance)
+    const stakedPoolIds = await manager.getStakedPoolIds()
+    for (const poolId of stakedPoolIds) {
+        const poolAddress = await manager.getPoolAddress(poolId)
+        const poolSweptRewards = sweptRewards / stakedPoolIds.length
+        const currentBalance = await ethers.provider.getBalance(poolAddress)
+        const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
+        await setBalance(poolAddress, nextBalance)
+    }
 
     await time.increase(time.duration.days(1))
 
     await runUpkeep({ upkeep, keeper })
 
     let requestId = latestRequestId
+    const compoundablePoolIds = [0, 0, 0, 0, 0]
+    for (let i = 0; i < compoundablePoolIds.length; i++) {
+        if (i < stakedPoolIds.length) compoundablePoolIds[i] = stakedPoolIds[i]
+    }
     const nextValues = {
         activeBalance: 64,
+        sweptBalance: sweptRewards,
         activatedDeposits: 0,
-        unexpectedExits: 0,
-        slashedExits: 0,
-        withdrawnExits: 0
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds
     }
-    requestId = await fulfillReportRequest({
+    requestId = await fulfillReport({
         upkeep,
         keeper,
         values: nextValues,
@@ -290,12 +332,13 @@ export async function firstUserPartialWithdrawalFixture() {
     let requestId = latestRequestId
     const nextValues = {
         activeBalance: 64,
+        sweptBalance: 0,
         activatedDeposits: 0,
-        unexpectedExits: 0,
-        slashedExits: 0,
-        withdrawnExits: 0
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
     }
-    requestId = await fulfillReportRequest({
+    requestId = await fulfillReport({
         upkeep,
         keeper,
         values: nextValues,
@@ -320,7 +363,7 @@ export async function fourthUserDepositFixture() {
     const readyPools = await manager.getReadyPoolIds()
     for (let i = 0; i < 2; i++) {
         const nextPoolId = readyPools[i]
-        await initiatePoolDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
+        await initiateDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
     }
 
     await time.increase(time.duration.days(1))
@@ -330,12 +373,13 @@ export async function fourthUserDepositFixture() {
     let requestId = latestRequestId
     const nextValues = {
         activeBalance: 128,
+        sweptBalance: 0,
         activatedDeposits: 2,
-        unexpectedExits: 0,
-        slashedExits: 0,
-        withdrawnExits: 0
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
     }
-    requestId = await fulfillReportRequest({
+    requestId = await fulfillReport({
         upkeep,
         keeper,
         values: nextValues,
@@ -359,13 +403,14 @@ export async function activeBalanceLossFixture() {
 
     const nextValues = {
         activeBalance: 126,
+        sweptBalance: 0,
         activatedDeposits: 0,
-        unexpectedExits: 0,
-        slashedExits: 0,
-        withdrawnExits: 0
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
     }
 
-    requestId = await fulfillReportRequest({
+    requestId = await fulfillReport({
         upkeep,
         keeper,
         values: nextValues,
@@ -391,13 +436,14 @@ export async function activeBalanceRecoveryFixture() {
     
         const nextValues = {
             activeBalance: nextActiveBalance,
+            sweptBalance: 0,
             activatedDeposits: 0,
-            unexpectedExits: 0,
-            slashedExits: 0,
-            withdrawnExits: 0
+            forcedExits: 0,
+            completedExits: 0,
+            compoundablePoolIds: [0, 0, 0, 0, 0]
         }
 
-        requestId = await fulfillReportRequest({
+        requestId = await fulfillReport({
             upkeep,
             keeper,
             values: nextValues,
@@ -420,10 +466,12 @@ export async function thirdUserFullWithdrawalFixture() {
     const withdraw = await manager.connect(thirdUser).requestWithdrawal(thirdStake)
     await withdraw.wait()
 
-    const sweptExitBalance = 32
-    const currentBalance = await ethers.provider.getBalance(manager.address)
-    const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitBalance.toString()))
-    await setBalance(manager.address, nextBalance)
+    const sweptExitedBalance = 32
+    const withdrawnPoolId = (await manager.getStakedPoolIds())[0]
+    const withdrawnPoolAddress = await manager.getPoolAddress(withdrawnPoolId)
+    const currentBalance = await ethers.provider.getBalance(withdrawnPoolAddress)
+    const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitedBalance.toString()))
+    await setBalance(withdrawnPoolAddress, nextBalance)
 
     await time.increase(time.duration.days(1))
 
@@ -433,20 +481,21 @@ export async function thirdUserFullWithdrawalFixture() {
 
     const nextValues = {
         activeBalance: 128,
+        sweptBalance: sweptExitedBalance,
         activatedDeposits: 0,
-        unexpectedExits: 0,
-        slashedExits: 0,
-        withdrawnExits: 1
+        forcedExits: 0,
+        completedExits: 1,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
     }
     
-    requestId = await fulfillReportRequest({
+    requestId = await fulfillReport({
         upkeep,
         keeper,
         values: nextValues,
         requestId
     })
 
-    await completePoolExitHandler({ manager, signer: oracle })
+    await reportCompletedExitsHandler({ manager, signer: oracle, args: { count: 1 } })
 
     await runUpkeep({ upkeep, keeper })
 
@@ -463,53 +512,62 @@ export async function simulationFixture() {
     let requestId = latestRequestId
 
     for (let i = 0; i < 5; i++) {
-        const depositedPoolCount = await manager.getDepositedPoolCount()
-        if (depositedPoolCount) {
-            await time.increase(time.duration.days(1))
+        const stakedPoolIds = await manager.getStakedPoolIds()
+        await time.increase(time.duration.days(1))
 
-            await runUpkeep({ upkeep, keeper })
+        await runUpkeep({ upkeep, keeper })
 
-            const rewardsAmount = rewardsPerValidator * depositedPoolCount.toNumber()
-            totalRewards += round(rewardsAmount, 10)
-            nextActiveBalance = round(nextActiveBalance + rewardsAmount, 10)            
-            
-            const nextValues = {
-                activeBalance: nextActiveBalance,
-                activatedDeposits: 0,
-                unexpectedExits: 0,
-                slashedExits: 0,
-                withdrawnExits: 0
-            }
-
-            requestId = await fulfillReportRequest({
-                upkeep,
-                keeper,
-                values: nextValues,
-                requestId
-            })
-
-            await runUpkeep({ upkeep, keeper })
+        const rewardsAmount = rewardsPerValidator * stakedPoolIds.length
+        totalRewards += round(rewardsAmount, 10)
+        nextActiveBalance = round(nextActiveBalance + rewardsAmount, 10)            
+        
+        const nextValues = {
+            activeBalance: nextActiveBalance,
+            sweptBalance: 0,
+            activatedDeposits: 0,
+            forcedExits: 0,
+            completedExits: 0,
+            compoundablePoolIds: [0, 0, 0, 0, 0]
         }
+
+        requestId = await fulfillReport({
+            upkeep,
+            keeper,
+            values: nextValues,
+            requestId
+        })
+
+        await runUpkeep({ upkeep, keeper })
     }
 
     const sweptRewards = totalRewards
-    const currentBalance = await ethers.provider.getBalance(manager.address)
-    const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptRewards.toString()))
-    await setBalance(manager.address, nextBalance)
+    const stakedPoolIds = await manager.getStakedPoolIds()
+    for (const poolId of stakedPoolIds) {
+        const poolAddress = await manager.getPoolAddress(poolId)
+        const poolSweptRewards = sweptRewards / stakedPoolIds.length
+        const currentBalance = await ethers.provider.getBalance(poolAddress)
+        const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
+        await setBalance(poolAddress, nextBalance)
+    }
 
     await time.increase(time.duration.days(1))
 
     await runUpkeep({ upkeep, keeper })
 
+    const compoundablePoolIds = [0, 0, 0, 0, 0]
+    for (let i = 0; i < compoundablePoolIds.length; i++) {
+        if (i < stakedPoolIds.length) compoundablePoolIds[i] = stakedPoolIds[i]
+    }
     const nextValues = {
         activeBalance: 96,
+        sweptBalance: sweptRewards,
         activatedDeposits: 0,
-        unexpectedExits: 0,
-        slashedExits: 0,
-        withdrawnExits: 0
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds
     }
 
-    requestId = await fulfillReportRequest({
+    requestId = await fulfillReport({
         upkeep,
         keeper,
         values: nextValues,

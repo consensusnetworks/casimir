@@ -1,11 +1,11 @@
 import { ethers } from 'ethers'
-import { SSVNetwork, SSVNetworkViews } from '@casimir/ethereum/build/artifacts/types'
-import SSVNetworkJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/SSVNetwork.sol/SSVNetwork.json'
-import SSVNetworkJsonViews from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/SSVNetworkViews.sol/SSVNetworkViews.json'
+import { ISSVNetwork, ISSVNetworkViews } from '@casimir/ethereum/build/artifacts/types'
+import ISSVNetworkJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetwork.sol/ISSVNetwork.json'
+import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
 import { ClusterDetailsInput } from '../interfaces/ClusterDetailsInput'
 import { ClusterDetails } from '../interfaces/ClusterDetails'
 import { Cluster } from '@casimir/types'
-import { getExchangeRate } from './uniswap'
+import { getPrice } from './uniswap'
 
 const networkAddress = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
 const networkViewsAddress = '0x8dB45282d7C4559fd093C26f677B3837a5598914'
@@ -30,12 +30,12 @@ const eventList = [
  * @returns {Promise<Cluster>} Cluster snapshot
  */
 export async function getClusterDetails(input: ClusterDetailsInput): Promise<ClusterDetails> {
-    const { provider, operatorIds, withdrawalAddress } = input
+    const { provider, ownerAddress, operatorIds } = input
 
-    const ssvNetwork = new ethers.Contract(networkAddress, SSVNetworkJson.abi, provider) as SSVNetwork & ethers.Contract
-    const ssvNetworkViews = new ethers.Contract(networkViewsAddress, SSVNetworkJsonViews.abi, provider) as SSVNetworkViews & ethers.Contract
+    const ssvNetwork = new ethers.Contract(networkAddress, ISSVNetworkJson.abi, provider) as ISSVNetwork & ethers.Contract
+    const ssvNetworkViews = new ethers.Contract(networkViewsAddress, ISSVNetworkViewsJson.abi, provider) as ISSVNetworkViews & ethers.Contract
 
-    const eventFilters = eventList.map(event => ssvNetwork.filters[event](withdrawalAddress))
+    const eventFilters = eventList.map(event => ssvNetwork.filters[event](ownerAddress))
     
     let step = MONTH
     const latestBlockNumber = await provider.getBlockNumber()
@@ -97,17 +97,22 @@ export async function getClusterDetails(input: ClusterDetailsInput): Promise<Clu
         active: true
     }
 
-    const exchangeRate = await getExchangeRate({ provider, tokenIn: wethTokenAddress, tokenOut: networkTokenAddress, uniswapFeeTier: 3000 })
-    console.log('EXCHANGE RATE', exchangeRate)
+    const price = await getPrice({ 
+        provider,
+        tokenIn: wethTokenAddress,
+        tokenOut: networkTokenAddress,
+        uniswapFeeTier: 3000 
+    })
 
-    let requiredFees
-    if (cluster.validatorCount) {
-        requiredFees = 0
-        // Can also top off cluster here
+    const feeSum = await ssvNetworkViews.getNetworkFee()
+    for (const operatorId of operatorIds) {
+        const operatorFee = await ssvNetworkViews.getOperatorFee(operatorId)
+        feeSum.add(operatorFee)
     }
-    // Get a minimum runway for the next validator
+    const liquidationThresholdPeriod = await ssvNetworkViews.getLiquidationThresholdPeriod()
+    const ssvBalanceRequiredPerValidator = ethers.utils.formatEther(feeSum.mul(liquidationThresholdPeriod).mul(12))
+    const ethBalanceRequiredPerValidator = (Number(ssvBalanceRequiredPerValidator) * price).toPrecision(9)
+    const requiredBalancePerValidator = ethers.utils.parseEther(ethBalanceRequiredPerValidator)
 
-    requiredFees = ethers.utils.parseEther('0.1')
-    
-    return { cluster, requiredFees }
+    return { cluster, requiredBalancePerValidator }
 }

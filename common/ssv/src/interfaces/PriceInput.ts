@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 
-export interface ExchangeRateInput {
+export interface PriceInput {
     /** JSON RPC node provider */
     provider: ethers.providers.JsonRpcProvider
     /** The input token */

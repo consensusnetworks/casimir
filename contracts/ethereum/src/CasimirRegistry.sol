@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import './interfaces/ICasimirManager.sol';
 import './interfaces/ICasimirRegistry.sol';
+import './interfaces/ICasimirManager.sol';
 import './libraries/Types.sol';
 import './vendor/interfaces/ISSVNetworkViews.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Todo efficiently reshare or exit pools when deregistering
 
-contract CasimirRegistry is ICasimirRegistry {
+contract CasimirRegistry is ICasimirRegistry, Ownable {
     using TypesAddress for address;
 
     ICasimirManager private manager;
@@ -18,8 +19,20 @@ contract CasimirRegistry is ICasimirRegistry {
     uint256 totalCollateral;
     mapping(uint64 => Operator) private operators;
 
-    constructor(address managerAddress, address ssvNetworkViewsAddress) {
-        manager = ICasimirManager(managerAddress);
+    /*************/
+    /* Modifiers */
+    /*************/
+
+    /**
+     * @dev Validate the caller is the authorized pool
+     */
+    modifier onlyPool(uint32 poolId) {
+        require(msg.sender == manager.getPoolAddress(poolId), "Only authorized pool can call this function");
+        _;
+    }
+
+    constructor(address ssvNetworkViewsAddress) {
+        manager = ICasimirManager(msg.sender);
         ssvNetworkViews = ISSVNetworkViews(ssvNetworkViewsAddress);
     }
 
@@ -33,12 +46,9 @@ contract CasimirRegistry is ICasimirRegistry {
         require(msg.sender == operatorOwner, "Only operator owner can register");
 
         totalCollateral += msg.value;
-        operators[operatorId] = Operator({
-            id: operatorId,
-            collateral: int256(msg.value),
-            poolCount: 0,
-            deregistering: false
-        });
+        Operator storage operator = operators[operatorId]; 
+        operator.active = true;
+        operator.collateral = int256(msg.value);
 
         emit OperatorRegistered(operatorId);
     }
@@ -55,16 +65,14 @@ contract CasimirRegistry is ICasimirRegistry {
 
         operator.deregistering = true;
 
-        emit OperatorDeregistrationRequested(operatorId);
-
-        // Now the oracle reshares or exits their pools as needed then deregisters
+        emit DeregistrationRequested(operatorId);
     }
 
     /**
      * @notice Deregister an operator from the set
      * @param operatorId The operator ID
      */
-    function completeOperatorDeregistration(uint64 operatorId) external {
+    function deregisterOperator(uint64 operatorId) external {
         require(msg.sender == address(manager), "Only manager can deregister operators");
         Operator storage operator = operators[operatorId];
         require(operator.collateral >= 0, "Operator owes collateral");
@@ -77,7 +85,7 @@ contract CasimirRegistry is ICasimirRegistry {
             operatorOwner.send(uint256(operator.collateral));
         }
 
-        emit OperatorDeregistrationCompleted(operatorId);
+        emit DeregistrationCompleted(operatorId);
     }
 
     /**
@@ -87,7 +95,6 @@ contract CasimirRegistry is ICasimirRegistry {
     function depositCollateral(uint64 operatorId) external payable {
         require(msg.value > minimumCollateralDeposit, "Insufficient collateral deposit");
         Operator storage operator = operators[operatorId];
-        require(operator.id != 0, "Operator is not registered");
         (address operatorOwner, , , ,) = ssvNetworkViews.getOperatorById(operatorId);
         require(msg.sender == operatorOwner, "Only operator owner can deposit collateral");
 
@@ -95,17 +102,44 @@ contract CasimirRegistry is ICasimirRegistry {
     }
 
     /**
-     * @notice Set the collateral for an operator
+     * @notice Add an active pool to an operator
+     * @param poolId The pool ID
      * @param operatorId The operator ID
-     * @param collateral The collateral
      */
-    function setOperatorCollateral(uint64 operatorId, int256 collateral) external {
-        require(msg.sender == address(manager), "Only manager can set operator collateral");
-        
+    function addActivePool(uint32 poolId, uint64 operatorId) external onlyOwner {
         Operator storage operator = operators[operatorId];
-        operator.collateral = collateral;
+        require(operator.active, "Operator is not active");
+        require(operator.collateral >= 0, "Operator owes collateral");
+        require(!operator.deregistering, "Operator is deregistering");
+        require(!operator.activePools[poolId], "Pool is already active for operator");
+        operator.activePools[poolId] = true;
+        operator.poolCount += 1;
     }
 
+    /**
+     * @notice Remove an active pool from an operator
+     * @param poolId The pool ID
+     * @param operatorId The operator ID
+     * @param blameAmount The amount to recover from collateral
+     */
+    function removeActivePool(uint32 poolId, uint64 operatorId, uint256 blameAmount) external onlyPool(poolId) {
+        Operator storage operator = operators[operatorId];
+        require(operator.activePools[poolId], "Pool is not active for operator");
+
+        operator.activePools[poolId] = false;
+        operator.poolCount -= 1;
+
+        if (blameAmount > 0) {
+            uint256 recoverableCollateral;
+            if (operator.collateral >= int256(blameAmount)) {
+                recoverableCollateral = blameAmount;
+            } else if (operator.collateral > 0) {
+                recoverableCollateral = uint256(operator.collateral);
+            }
+            operator.collateral -= int256(blameAmount);
+            manager.depositRecoveredBalance{value: recoverableCollateral}(poolId);
+        }
+    }
 
     /**
      * @notice Get the collateral for an operator

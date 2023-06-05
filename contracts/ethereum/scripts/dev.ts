@@ -1,11 +1,12 @@
 import { deployContract } from '@casimir/ethereum/helpers/deploy'
 import { ContractConfig, DeploymentConfig } from '@casimir/types'
-import { CasimirUpkeep, CasimirManager } from '@casimir/ethereum/build/artifacts/types'
-import { ethers } from 'hardhat'
-import { fulfillReportRequest, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
+import { CasimirUpkeep, CasimirManager, CasimirRegistry, ISSVNetworkViews } from '@casimir/ethereum/build/artifacts/types'
+import { ethers, network } from 'hardhat'
+import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
 import EventEmitter, { on } from 'events'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
+import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
 
 void async function () {
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
@@ -20,6 +21,7 @@ void async function () {
                 functionsSubscriptionId: process.env.FUNCTIONS_SUBSCRIPTION_ID,
                 linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
+                ssvNetworkViewsAddress: process.env.SSV_NETWORK_VIEWS_ADDRESS,
                 ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
                 swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
                 swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
@@ -64,7 +66,23 @@ void async function () {
     }
 
     const manager = await ethers.getContractAt('CasimirManager', config.CasimirManager.address as string) as CasimirManager
-    const upkeep = await ethers.getContractAt('CasimirUpkeep', await manager.getUpkeepAddress() as string) as CasimirUpkeep
+    const registry = await ethers.getContractAt('CasimirRegistry', await manager.getRegistryAddress()) as CasimirRegistry
+    const upkeep = await ethers.getContractAt('CasimirUpkeep', await manager.getUpkeepAddress()) as CasimirUpkeep
+    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsJson.abi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
+
+    for (const operatorId of [1, 2, 3, 4]) {
+        const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)
+        const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
+        const nextBalance = currentBalance.add(ethers.utils.parseEther('4'))
+        await setBalance(operatorOwnerAddress, nextBalance)
+        await network.provider.request({
+            method: 'hardhat_impersonateAccount',
+            params: [operatorOwnerAddress]
+        })
+        const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
+        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: ethers.utils.parseEther('4') })
+        await result.wait()
+    }
 
     /** Stake 160 from the fourth user */
     setTimeout(async () => {
@@ -82,7 +100,7 @@ void async function () {
         if (block - blocksPerReward >= lastRewardBlock) {
             console.log('New reward block')
             lastRewardBlock = block
-            const depositedPoolCount = await manager.getDepositedPoolCount()
+            const depositedPoolCount = await manager.getTotalDeposits()
             if (depositedPoolCount) {
                 console.log(`Rewarding ${depositedPoolCount} validators ${rewardPerValidator} each`)
                 await time.increase(time.duration.days(1))
@@ -101,13 +119,14 @@ void async function () {
                 let nextActivatedDeposits = (await manager.getPendingPoolIds()).length
                 let nextValues = {
                     activeBalance: nextActiveBalance,
+                    sweptBalance: 0,
                     activatedDeposits: nextActivatedDeposits,
-                    unexpectedExits: 0,
-                    slashedExits: 0,
-                    withdrawnExits: 0
+                    forcedExits: 0,
+                    completedExits: 0,
+                    compoundablePoolIds: [0, 0, 0, 0, 0]
                 }
 
-                requestId = await fulfillReportRequest({
+                requestId = await fulfillReport({
                     upkeep,
                     keeper,
                     values: nextValues,
@@ -134,13 +153,14 @@ void async function () {
                 nextActivatedDeposits = (await manager.getPendingPoolIds()).length
                 nextValues = {
                     activeBalance: nextActiveBalance,
+                    sweptBalance: rewardAmount,
                     activatedDeposits: nextActivatedDeposits,
-                    unexpectedExits: 0,
-                    slashedExits: 0,
-                    withdrawnExits: 0
+                    forcedExits: 0,
+                    completedExits: 0,
+                    compoundablePoolIds: [0, 0, 0, 0, 0]
                 }
 
-                requestId = await fulfillReportRequest({
+                requestId = await fulfillReport({
                     upkeep,
                     keeper,
                     values: nextValues,

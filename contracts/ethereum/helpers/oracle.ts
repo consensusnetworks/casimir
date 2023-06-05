@@ -7,9 +7,8 @@ import { getClusterDetails } from '@casimir/ssv'
 
 const mockValidators: Validator[] = Object.values(validatorStore)
 
-export async function initiatePoolDepositHandler({ manager, signer, args }: { manager: CasimirManager, signer: SignerWithAddress, args: Record<string, any> }) {
+export async function initiateDepositHandler({ manager, signer, args }: { manager: CasimirManager, signer: SignerWithAddress, args: Record<string, any> }) {
     const { poolId } = args
-
     const {
         depositDataRoot,
         publicKey,
@@ -18,17 +17,13 @@ export async function initiatePoolDepositHandler({ manager, signer, args }: { ma
         operatorIds,
         shares,
     } = mockValidators[poolId - 1]
-
-    const withdrawalAddress = manager.address
     const clusterDetails = await getClusterDetails({ 
         provider: ethers.provider,
-        operatorIds,
-        withdrawalAddress 
+        ownerAddress: manager.address,
+        operatorIds
     })
-
-    const { cluster, requiredFees } = clusterDetails
-
-    const initiatePoolDeposit = await manager.connect(signer).initiatePoolDeposit(
+    const { cluster, requiredBalancePerValidator } = clusterDetails
+    const initiateDeposit = await manager.connect(signer).initiateDeposit(
         depositDataRoot,
         publicKey,
         signature,
@@ -36,33 +31,39 @@ export async function initiatePoolDepositHandler({ manager, signer, args }: { ma
         operatorIds,
         shares,
         cluster,
-        requiredFees // Mock fee amount estimate ~ 10 SSV
+        requiredBalancePerValidator // Mock fee amount estimate ~ 10 SSV
     )
-    await initiatePoolDeposit.wait()
+    await initiateDeposit.wait()
 }
 
-export async function completePoolExitHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
+export async function reportCompletedExitsHandler({ manager, signer, args }: { manager: CasimirManager, signer: SignerWithAddress, args: Record<string, any> }) {
+    const { count } = args
+
+    // In production, we get the withdrawn exit order from the Beacon API (sorting by withdrawal epoch)
+    // Here, we're just reporting them in the order they were exited
+    let remaining = count
+    let poolIndex = 0
     const stakedPoolIds = await manager.getStakedPoolIds()
-    const exitedPoolId = stakedPoolIds[0]
-    const exitedPool = await manager.getPool(exitedPoolId)
-    const poolIndex = stakedPoolIds.findIndex((poolId: number) => poolId === exitedPoolId)
-    const operatorIds = exitedPool.operatorIds.map((operatorId) => operatorId.toNumber())
-    const finalEffectiveBalance = ethers.utils.parseEther('32')
-    const blamePercents = [0, 0, 0, 0]
-
-    const withdrawalAddress = manager.address
-    const clusterDetails = await getClusterDetails({ 
-        provider: ethers.provider,
-        operatorIds,
-        withdrawalAddress 
-    })
-    const { cluster } = clusterDetails
-
-    const completePoolExit = await manager.connect(signer).completePoolExit(
-        poolIndex,
-        finalEffectiveBalance,
-        blamePercents,
-        cluster
-    )
-    await completePoolExit.wait()
+    while (remaining > 0) {
+        const poolId = stakedPoolIds[poolIndex]
+        const poolDetails = await manager.getPoolDetails(poolId)
+        if (poolDetails.status === 2 || poolDetails.status === 3) {
+            remaining--
+            const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())
+            const blamePercents = [0, 0, 0, 0]
+            const clusterDetails = await getClusterDetails({ 
+                provider: ethers.provider,
+                ownerAddress: manager.address,
+                operatorIds
+            })
+            const { cluster } = clusterDetails
+            const reportCompletedExit = await manager.connect(signer).reportCompletedExit(
+                poolIndex,
+                blamePercents,
+                cluster
+            )
+            await reportCompletedExit.wait()
+        }
+        poolIndex++
+    }
 }
