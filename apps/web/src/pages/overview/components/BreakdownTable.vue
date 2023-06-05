@@ -138,7 +138,7 @@ const convertString = (inputString: string) => {
           </button>
         </div>
 
-        <div class="flex items-center gap-[12px]">
+        <div class="flex flex-wrap items-center gap-[12px]">
           <div class="flex items-center gap-[8px] search_bar">
             <i
               data-feather="search" 
@@ -161,184 +161,86 @@ const convertString = (inputString: string) => {
         </div>
       </div>
     </div>
-
-    <!-- Table version for big views -->
-    <table
-      class="w-full not-sr-only 1100s:sr-only"
-    >
-      <thead>
-        <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
-          <th
-            v-for="header in tableHeaderOptions[tableView].headers"
-            :key="header"
-            class="table_header"
-          >
-            <div
-              v-if="header.value === 'wallet_provider'"
-              class="flex items-center"
-            >
-              <button class="checkbox_button mr-[12px]">
-                <i
-                  data-feather="minus" 
-                  class="w-[14px] h-min"
-                />
-              </button>
-              Wallet Provider
-              <button class="ml-[4px]">
-                <i
-                  data-feather="arrow-down" 
-                  class="w-[16px] h-min text-[#667085]"
-                />
-              </button>
-            </div>
-            <div
-              v-else-if="header.value === 'tx_hash'"
-              class="flex items-center"
-            >
-              <button class="checkbox_button mr-[12px]">
-                <i
-                  data-feather="minus" 
-                  class="w-[14px] h-min"
-                />
-              </button>
-              Tx Hash
-              <button class="ml-[4px]">
-                <i
-                  data-feather="arrow-down" 
-                  class="w-[16px] h-min text-[#667085]"
-                />
-              </button>
-            </div>
-            <div v-else>
-              {{ header.title }}
-            </div>
-          </th>
-        </tr>
-      </thead>
-      <tbody
-        class="w-full"
-      >
-        <tr
-          v-for="item in 7"
-          :key="item"
-          class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
-        >
-          <td
-            v-for="header in tableHeaderOptions[tableView].headers"
-            :key="header"
-            class="dynamic_padding"
-          >
-            <div
-              v-if="header.value === 'wallet_provider'"
-              class="flex items-center gap-[12px]"
-            >
-              <button class="checkbox_button mr-[12px]">
-                <i
-                  data-feather="check" 
-                  class="w-[14px] h-min"
-                />
-              </button>
-              <img
-                :src="`/${tableMockedItems[tableView][header.value]}.svg`"
-                alt="Avatar "
-                class="w-[20px] h-[20px]"
-              >
-              <h6 class="title_name 800s:w-[20px] truncate">
-                {{ tableMockedItems[tableView][header.value] }}
-              </h6>
-            </div>
-            <div
-              v-else-if="header.value === 'act'"
-              class="flex items-center gap-[12px] underline"
-            >
-              <a href=""> 
-                {{ convertString(tableMockedItems[tableView][header.value]) }}
-              </a>
-            </div>
-            <div
-              v-else-if="header.value === 'tx_hash'"
-              class="flex items-center gap-[12px]"
-            >
-              <button class="checkbox_button mr-[12px]">
-                <i
-                  data-feather="check" 
-                  class="w-[14px] h-min"
-                />
-              </button>
-              <a class="w-[55px] truncate underline">
-                {{ convertString(tableMockedItems[tableView][header.value]) }}
-              </a>
-            </div>
-            <div
-              v-else-if="header.value === 'status'"
-              class="flex items-center gap-[12px]"
+    <div class="w-full overflow-x-scroll">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
+            <th
+              v-for="header in tableHeaderOptions[tableView].headers"
+              :key="header"
+              class="table_header"
             >
               <div
-                v-if="tableMockedItems[tableView][header.value] === 'staked'"
-                class="flex items-center gap-[8px] status_pill bg-[#ECFDF3] text-[#027A48]"
+                v-if="header.value === 'wallet_provider'"
+                class="flex items-center"
               >
-                <div class="bg-[#027A48] rounded-[999px] w-[8px] h-[8px]" />
-                Staked
+                <button class="checkbox_button mr-[12px]">
+                  <i
+                    data-feather="minus" 
+                    class="w-[14px] h-min"
+                  />
+                </button>
+                Wallet Provider
+                <button class="ml-[4px]">
+                  <i
+                    data-feather="arrow-down" 
+                    class="w-[16px] h-min text-[#667085]"
+                  />
+                </button>
               </div>
               <div
-                v-else-if="tableMockedItems[tableView][header.value] === 'pending'" 
-                class="flex items-center gap-[8px] status_pill bg-[#FFFAEB] text-[#B54708]"
+                v-else-if="header.value === 'tx_hash'"
+                class="flex items-center"
               >
-                <div class="bg-[#F79009] rounded-[999px] w-[8px] h-[8px]" />
-                Pending
+                <button class="checkbox_button mr-[12px]">
+                  <i
+                    data-feather="minus" 
+                    class="w-[14px] h-min"
+                  />
+                </button>
+                Tx Hash
+                <button class="ml-[4px]">
+                  <i
+                    data-feather="arrow-down" 
+                    class="w-[16px] h-min text-[#667085]"
+                  />
+                </button>
               </div>
-            </div>
-            <div
-              v-else-if="header.value === 'operators'"
-              class="flex items-center gap-[12px] pl-[20px]"
-            >
-              <div
-                v-for="operator in tableMockedItems[tableView][header.value]"
-                :key="operator"
-                :class="`w-[24px] h-[24px] border-[2px] border-white bg-blue-300 rounded-[999px]`"
-                :style="`margin-left: -20px`"
-              />
-            </div>
-            <div v-else>
-              {{ tableMockedItems[tableView][header.value] }}
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <!-- Table version for small screens -->
-    <div class="1100s:not-sr-only sr-only">
-      <div class="h-[600px] overflow-auto px-[32px] py-[15px]">
-        <div
-          v-for="item in 7"
-          :key="item"
-          class="py-[12px] border-b px-[32px]"
+              <div v-else>
+                {{ header.title }}
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="w-full"
         >
-          <div 
-            v-for="header in tableHeaderOptions[tableView].headers"
-            :key="header"
-            class="flex items-center justify-between"
+          <tr
+            v-for="item in 7"
+            :key="item"
+            class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
           >
-            <div class="table_header">
-              {{ header.title }}
-            </div>
-            <div>
+            <td
+              v-for="header in tableHeaderOptions[tableView].headers"
+              :key="header"
+              class="dynamic_padding"
+            >
               <div
                 v-if="header.value === 'wallet_provider'"
                 class="flex items-center gap-[12px]"
               >
-                <!-- <button class="checkbox_button mr-[12px]">
+                <button class="checkbox_button mr-[12px]">
                   <i
                     data-feather="check" 
                     class="w-[14px] h-min"
                   />
-                </button> -->
+                </button>
                 <img
                   :src="`/${tableMockedItems[tableView][header.value]}.svg`"
                   alt="Avatar "
                   class="w-[20px] h-[20px]"
                 >
-                <h6 class="title_name">
+                <h6 class="title_name 800s:w-[20px] truncate">
                   {{ tableMockedItems[tableView][header.value] }}
                 </h6>
               </div>
@@ -354,12 +256,12 @@ const convertString = (inputString: string) => {
                 v-else-if="header.value === 'tx_hash'"
                 class="flex items-center gap-[12px]"
               >
-                <!-- <button class="checkbox_button mr-[12px]">
+                <button class="checkbox_button mr-[12px]">
                   <i
                     data-feather="check" 
                     class="w-[14px] h-min"
                   />
-                </button> -->
+                </button>
                 <a class="w-[55px] truncate underline">
                   {{ convertString(tableMockedItems[tableView][header.value]) }}
                 </a>
@@ -397,10 +299,10 @@ const convertString = (inputString: string) => {
               <div v-else>
                 {{ tableMockedItems[tableView][header.value] }}
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <div class="flex justify-between items-center mt-[12px]">
       <div class="page_number ml-[56px]">
@@ -424,9 +326,9 @@ const convertString = (inputString: string) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  @media (max-width: 800px) {
+  /* @media (max-width: 800px) {
     padding: 12px 0px 12px 12px;
-  }
+  } */
 }
 .status_pill{
     font-family: 'Inter';
@@ -492,9 +394,9 @@ const convertString = (inputString: string) => {
     line-height: 18px;
     color: #667085;
     text-align: left;
-    @media (max-width: 800px) {
+    /* @media (max-width: 800px) {
       padding: 12px 0px 12px 12px;
-    }
+    } */
 }
 .pagination_button{
     font-family: 'IBM Plex Sans';

@@ -40,7 +40,7 @@ onMounted(() => {
 
 <style scoped>
 .card_container{
-    width: 300px;
+    width: 100%;
     box-sizing: border-box;
     background: #FFFFFF;
     border: 1px solid #D0D5DD;
