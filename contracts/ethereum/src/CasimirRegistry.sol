@@ -83,31 +83,31 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     }
 
     /**
-     * @notice Add an active pool to an operator
-     * @param poolId The pool ID
+     * @notice Add a pool to an operator
      * @param operatorId The operator ID
+     * @param poolId The pool ID
      */
-    function addActivePool(uint32 poolId, uint64 operatorId) external onlyOwner {
+    function addOperatorPool(uint64 operatorId, uint32 poolId) external onlyOwner {
         Operator storage operator = operators[operatorId];
         require(operator.active, "Operator is not active");
         require(operator.collateral >= 0, "Operator owes collateral");
         require(!operator.deregistering, "Operator is deregistering");
-        require(!operator.activePools[poolId], "Pool is already active for operator");
-        operator.activePools[poolId] = true;
+        require(!operator.pools[poolId], "Pool is already active for operator");
+        operator.pools[poolId] = true;
         operator.poolCount += 1;
     }
 
     /**
-     * @notice Remove an active pool from an operator
-     * @param poolId The pool ID
+     * @notice Remove a pool from an operator
      * @param operatorId The operator ID
+     * @param poolId The pool ID
      * @param blameAmount The amount to recover from collateral
      */
-    function removeActivePool(uint32 poolId, uint64 operatorId, uint256 blameAmount) external onlyPool(poolId) {
+    function removeOperatorPool(uint64 operatorId, uint32 poolId, uint256 blameAmount) external onlyPool(poolId) {
         Operator storage operator = operators[operatorId];
-        require(operator.activePools[poolId], "Pool is not active for operator");
+        require(operator.pools[poolId], "Pool is not active for operator");
 
-        operator.activePools[poolId] = false;
+        operator.pools[poolId] = false;
         operator.poolCount -= 1;
 
         if (blameAmount > 0) {

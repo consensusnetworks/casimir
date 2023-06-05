@@ -1038,10 +1038,10 @@ Constructor
 | _linkSubscriptionId | uint64 | The functions subscription ID |
 | linkTokenAddress | address | The LINK token address |
 
-### registerAndPredictID
+### registerUpkeep
 
 ```solidity
-function registerAndPredictID(struct KeeperRegistrarInterface.RegistrationParams params) public
+function registerUpkeep(struct KeeperRegistrarInterface.RegistrationParams params) public
 ```
 
 ### generateRequest

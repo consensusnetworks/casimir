@@ -109,8 +109,7 @@ export async function secondUserDepositFixture() {
     const deposit = await manager.connect(secondUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
-    const nextPoolId = 1
-    await initiateDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
+    await initiateDepositHandler({ manager, signer: oracle })
     
     await time.increase(time.duration.days(1))   
 
@@ -218,9 +217,7 @@ export async function thirdUserDepositFixture() {
     const deposit = await manager.connect(thirdUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
-    const readyPools = await manager.getReadyPoolIds()
-    const nextPoolId = readyPools[readyPools.length - 1]
-    await initiateDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
+    await initiateDepositHandler({ manager, signer: oracle })
 
     await time.increase(time.duration.days(1))
 
@@ -361,10 +358,8 @@ export async function fourthUserDepositFixture() {
     await deposit.wait()
 
     /** Initiate next ready pools (2) */
-    const readyPools = await manager.getReadyPoolIds()
     for (let i = 0; i < 2; i++) {
-        const nextPoolId = readyPools[i]
-        await initiateDepositHandler({ manager, signer: oracle, args: { poolId: nextPoolId } })
+        await initiateDepositHandler({ manager, signer: oracle })
     }
 
     await time.increase(time.duration.days(1))

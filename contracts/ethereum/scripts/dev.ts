@@ -85,9 +85,9 @@ void async function () {
         await result.wait()
     }
 
-    /** Stake 160 from the fourth user */
+    /** Stake 320 from the fourth user */
     setTimeout(async () => {
-        const depositAmount = 160 * ((100 + await manager.getFeePercent()) / 100)
+        const depositAmount = 320 * ((100 + await manager.getFeePercent()) / 100)
         const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await stake?.wait()
     }, 1000)

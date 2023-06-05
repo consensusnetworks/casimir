@@ -55,7 +55,7 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
                 uint256 blamePercent = blamePercents[i];
                 blameAmount = Math.mulDiv(lostBalance, blamePercent, 100);
             }
-            registry.removeActivePool(config.poolId, config.operatorIds[i], blameAmount);
+            registry.removeOperatorPool(config.operatorIds[i], config.poolId, blameAmount);
         }
 
         manager.depositExitedBalance{value: balance}(config.poolId);

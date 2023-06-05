@@ -20,9 +20,8 @@ const { provider, signer, manager, cliPath, messengerUrl } = config()
 ;(async function () {
     const eventEmitter = getEventEmitter({ manager, events: Object.keys(handlers) })    
     for await (const event of eventEmitter) {
-        console.log('Event received', event)
-        
-        const [ value, details ] = event
+        const details = event[event.length - 1]
+        const { args } = details
         const handler = handlers[details.event as keyof typeof handlers]
         if (!handler) throw new Error(`No handler found for event ${details.event}`)
         await handler({ 
@@ -31,7 +30,7 @@ const { provider, signer, manager, cliPath, messengerUrl } = config()
             manager,
             cliPath,
             messengerUrl,
-            value 
+            args 
         })
     }
 })()

@@ -66,26 +66,21 @@ interface ICasimirManager {
     /*************/
 
     function depositStake() external payable;
-
     function depositRewards() external payable;
-
+    function depositExitedBalance(uint32 poolId) external payable;
+    function depositRecoveredBalance(uint32 poolId) external payable;
+    function depositReservedFees() external payable;
+    function depositClusterBalance(ISSVNetworkCore.Cluster memory cluster, uint256 amount) external;
+    function depositUpkeepBalance(uint256 amount) external;
     function rebalanceStake(
         uint256 activeBalance, 
         uint256 sweptBalance, 
         uint256 activatedDeposits,
         uint256 completedExits
     ) external;
-
     function compoundRewards(uint32[5] memory poolIds) external;
-
-    function depositExitedBalance(uint32 poolId) external payable;
-
-    function depositRecoveredBalance(uint32 poolId) external payable;
-
     function requestWithdrawal(uint256 amount) external;
-
     function fulfillWithdrawals(uint256 count) external;
-
     function initiateDeposit(        
         bytes32 depositDataRoot,
         bytes calldata publicKey,
@@ -96,74 +91,38 @@ interface ICasimirManager {
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount
     ) external;
-
     function activateDeposits(uint256 count) external;
-
     function requestForcedExitReports(uint256 count) external;
-
     function requestCompletedExitReports(uint256 count) external;
-
     function reportCompletedExit(
         uint256 poolIndex,
         uint32[] memory blamePercents,
         ISSVNetworkCore.Cluster memory cluster
     ) external;
-
     function setFunctionsAddress(address functionsAddress) external;
-
     function getFeePercent() external view returns (uint32);
-
-    function getTotalDeposits()
-        external
-        view
-        returns (uint256);
-
-    function getRequestedExits()
-        external
-        view
-        returns (uint256);
-
+    function getTotalDeposits() external view returns (uint256);
+    function getRequestedExits() external view returns (uint256);
     function getReadyPoolIds() external view returns (uint32[] memory);
-
     function getPendingPoolIds() external view returns (uint32[] memory);
-
     function getStakedPoolIds() external view returns (uint32[] memory);
-
     function getTotalStake() external view returns (uint256);
-
     function getBufferedBalance() external view returns (uint256);
-
     function getExpectedEffectiveBalance() external view returns (uint256);
-
     function getReportPeriod() external view returns (uint32);
-
     function getFinalizableCompletedExits() external view returns (uint256);
-
     function getFinalizableExitedBalance() external view returns (uint256);
-
     function getLatestActiveBalance() external view returns (uint256);
-
     function getLatestActiveBalanceAfterFees() external view returns (uint256);
-
     function getPendingWithdrawalEligibility(uint256 index, uint256 period) external view returns (bool);
-
     function getWithdrawableBalance() external view returns (uint256);
-
     function getPrepoolBalance() external view returns (uint256);
-
     function getSweptBalance() external view returns (uint256);
-
     function getUserStake(address userAddress) external view returns (uint256);
-
     function getPendingWithdrawalBalance() external view returns (uint256);
-
     function getPendingWithdrawals() external view returns (uint256);
-
     function getPoolAddress(uint32 poolId) external view returns (address);
-
     function getPoolDetails(uint32 poolId) external view returns (PoolDetails memory);
-
     function getRegistryAddress() external view returns (address);
-
     function getUpkeepAddress() external view returns (address);
 }

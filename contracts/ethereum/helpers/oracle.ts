@@ -4,11 +4,19 @@ import { CasimirManager } from '../build/artifacts/types'
 import { validatorStore } from '@casimir/data'
 import { Validator } from '@casimir/types'
 import { getClusterDetails } from '@casimir/ssv'
+import { getWithdrawalCredentials } from '@casimir/helpers'
 
 const mockValidators: Validator[] = Object.values(validatorStore)
 
-export async function initiateDepositHandler({ manager, signer, args }: { manager: CasimirManager, signer: SignerWithAddress, args: Record<string, any> }) {
-    const { poolId } = args
+export async function initiateDepositHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
+    const nonce = await ethers.provider.getTransactionCount(manager.address)
+    const poolAddress = ethers.utils.getContractAddress({
+      from: manager.address,
+      nonce
+    })
+    const poolWithdrawalCredentials = `0x${getWithdrawalCredentials(poolAddress)}`
+    const validator = mockValidators.find((validator) => validator.withdrawalCredentials === poolWithdrawalCredentials)
+    if (!validator) throw new Error(`No validator found for withdrawal credentials ${poolWithdrawalCredentials}`)
     const {
         depositDataRoot,
         publicKey,
@@ -16,7 +24,7 @@ export async function initiateDepositHandler({ manager, signer, args }: { manage
         withdrawalCredentials,
         operatorIds,
         shares,
-    } = mockValidators[poolId - 1]
+    } = validator
     const clusterDetails = await getClusterDetails({ 
         provider: ethers.provider,
         ownerAddress: manager.address,

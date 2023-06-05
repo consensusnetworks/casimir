@@ -328,9 +328,34 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * @notice Deposit recovered balance for a given pool from an operator
+     * @param poolId The pool ID
      */
     function depositRecoveredBalance(uint32 poolId) external payable onlyRegistry {
         recoveredBalances[poolId] += msg.value;
+    }
+
+    /**
+     * @notice Deposit to a cluster balance
+     * @param cluster The cluster
+     * @param amount The amount to deposit
+     */
+    function depositClusterBalance(ISSVNetworkCore.Cluster memory cluster, uint256 amount) external onlyOwner {
+
+    }
+
+    /**
+     * @notice Deposit upkeep balance
+     * @param amount The amount to deposit
+     */
+    function depositUpkeepBalance(uint256 amount) external onlyUpkeep {
+
+    }
+
+    /**
+     * @notice Deposit reserved fees
+     */
+    function depositReservedFees() external payable {
+        reservedFeeBalance += msg.value;
     }
 
     /**
@@ -542,8 +567,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         require(readyPoolIds.length > 0, "No ready pools");
         require(reservedFeeBalance >= feeAmount, "Not enough reserved fees");
 
-        // Todo validate deposit data root
-
         uint32 poolId = readyPoolIds[0];
         readyPoolIds.remove(0);
         pendingPoolIds.push(poolId);
@@ -590,8 +613,12 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount
     ) private {
+        address poolAddress = poolAddresses[poolId];
+        bytes memory computedWithdrawalCredentials = abi.encodePacked(bytes1(uint8(1)), bytes11(0), poolAddress);
+        require (keccak256(computedWithdrawalCredentials) == keccak256(withdrawalCredentials), "Invalid withdrawal credentials");
+
         for (uint256 i = 0; i < operatorIds.length; i++) {            
-            registry.addActivePool(poolId, operatorIds[i]);
+            registry.addOperatorPool(operatorIds[i], poolId);
         }
 
         beaconDeposit.deposit{value: poolCapacity}(

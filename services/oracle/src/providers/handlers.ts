@@ -66,10 +66,10 @@ export async function initiatePoolReshareHandler(input: HandlerInput) {
         manager,
         cliPath,
         messengerUrl,
-        value
+        args
     } = input
 
-    const poolId = value
+    const { poolId } = args
 
     // Todo reshare event will include the operator to boot
 
@@ -102,10 +102,10 @@ export async function initiatePoolExitHandler(input: HandlerInput) {
         manager,
         cliPath,
         messengerUrl,
-        value 
+        args 
     } = input
 
-    const poolId = value
+    const { poolId } = args
 
     // Get pool to exit
     const poolDetails = await manager.getPoolDetails(poolId)
@@ -121,10 +121,10 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
         provider,
         signer,
         manager,
-        value 
+        args 
     } = input
 
-    const count = value
+    const { count } = args
 
     // In production, we get the withdrawn exit order from the Beacon API (sorting by withdrawal epoch)
     // Here, we're just reporting them in the order they were exited
