@@ -18,11 +18,9 @@ interface ICasimirRegistry {
 
     function registerOperator(uint64 operatorId) external payable;
 
-    function requestOperatorDeregistration(uint64 operatorId) external;
-
-    function deregisterOperator(uint64 operatorId) external;
-
     function depositCollateral(uint64 operatorId) external payable;
+
+    function withdrawCollateral(uint64 operatorId, uint256 amount) external;
 
     function addActivePool(uint32 poolId, uint64 operatorId) external;
 

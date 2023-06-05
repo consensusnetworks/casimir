@@ -3,6 +3,14 @@ pragma solidity 0.8.18;
 
 interface ICasimirDAO {
     event Deposit(address indexed sender, uint amount, uint balance);
+    event SubmitOwnerChange(
+        address indexed owner,
+        uint256 changeId,
+        bool add
+    );
+    event ConfirmOwnerChange(address indexed owner, uint256 changeId);
+    event RevokeOwnerChangeConfirmation(address indexed owner, uint256 changeId);
+    event ExecuteOwnerChange(address indexed owner, uint256 changeId);
     event SubmitTransaction(
         address indexed owner,
         uint indexed txIndex,
@@ -11,8 +19,15 @@ interface ICasimirDAO {
         bytes data
     );
     event ConfirmTransaction(address indexed owner, uint indexed txIndex);
-    event RevokeConfirmation(address indexed owner, uint indexed txIndex);
+    event RevokeTransactionConfirmation(address indexed owner, uint indexed txIndex);
     event ExecuteTransaction(address indexed owner, uint indexed txIndex);
+
+    struct OwnerChange {
+        address owner;
+        bool add;
+        bool executed;
+        uint numConfirmations;
+    }
 
     struct Transaction {
         address to;
@@ -24,38 +39,69 @@ interface ICasimirDAO {
 
     receive() external payable;
 
+    function submitOwnerChange(
+        address owner,
+        bool add
+    ) external;
+
+    function confirmOwnerChange(
+        uint256 changeId
+    ) external;
+
+    function executeOwnerChange(
+        uint256 changeId
+    ) external;
+
+    function revokeOwnerChangeConfirmation(
+        uint256 changeId
+    ) external;
+
     function submitTransaction(
-        address _to,
-        uint _value,
-        bytes memory _data
+        address to,
+        uint value,
+        bytes memory data
     ) external;
 
     function confirmTransaction(
-        uint _txIndex
+        uint256 transactionIndex
     ) external;
 
     function executeTransaction(
-        uint _txIndex
+        uint256 transactionIndex
     ) external;
 
-    function revokeConfirmation(
-        uint _txIndex
+    function revokeTransactionConfirmation(
+        uint256 transactionIndex
     ) external;
 
     function getOwners() external view returns (address[] memory);
 
-    function getTransactionCount() external view returns (uint);
+    function getOwnerChangeCount() external view returns (uint256);
+
+    function getOwnerChange(
+        uint256 changeId
+    )
+        external
+        view
+        returns (
+            address owner,
+            bool add,
+            bool executed,
+            uint256 numConfirmations
+        );
+
+    function getTransactionCount() external view returns (uint256);
 
     function getTransaction(
-        uint _txIndex
+        uint256 transactionIndex
     )
         external
         view
         returns (
             address to,
-            uint value,
+            uint256 value,
             bytes memory data,
             bool executed,
-            uint numConfirmations
+            uint256 numConfirmations
         );
 }

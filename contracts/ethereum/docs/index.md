@@ -2,23 +2,21 @@
 
 ## CasimirManager
 
-### Token
+### finalizableCompletedExits
 
 ```solidity
-enum Token {
-  LINK,
-  SSV,
-  WETH
-}
-```
-
-### finalizableWithdrawnPoolCount
-
-```solidity
-uint256 finalizableWithdrawnPoolCount
+uint256 finalizableCompletedExits
 ```
 
 Exited pool count
+
+### onlyPool
+
+```solidity
+modifier onlyPool(uint32 poolId)
+```
+
+_Validate the caller is the authorized pool_
 
 ### onlyOracle
 
@@ -28,6 +26,14 @@ modifier onlyOracle()
 
 _Validate the caller is the manager oracle_
 
+### onlyRegistry
+
+```solidity
+modifier onlyRegistry()
+```
+
+_Validate the caller is the registry_
+
 ### onlyUpkeep
 
 ```solidity
@@ -36,13 +42,21 @@ modifier onlyUpkeep()
 
 _Validate the caller is the upkeep contract_
 
-### validateDeposit
+### validDeposit
 
 ```solidity
-modifier validateDeposit()
+modifier validDeposit()
 ```
 
 _Validate a deposit_
+
+### validWithdrawal
+
+```solidity
+modifier validWithdrawal(uint256 amount)
+```
+
+_Validate a withdrawal_
 
 ### validDistribution
 
@@ -61,7 +75,7 @@ _Validate a distribution_
 ### constructor
 
 ```solidity
-constructor(address _oracleAddress, address beaconDepositAddress, address functionsAddress, uint32 functionsSubscriptionId, address linkTokenAddress, address ssvNetworkAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
+constructor(address _oracleAddress, address beaconDepositAddress, address functionsAddress, uint32 functionsSubscriptionId, address linkTokenAddress, address ssvNetworkAddress, address ssvNetworkViewsAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
 ```
 
 Constructor
@@ -76,6 +90,7 @@ Constructor
 | functionsSubscriptionId | uint32 | The Chainlink functions subscription ID |
 | linkTokenAddress | address | The Chainlink token address |
 | ssvNetworkAddress | address | The SSV network address |
+| ssvNetworkViewsAddress | address | The SSV network views address |
 | ssvTokenAddress | address | The SSV token address |
 | swapFactoryAddress | address | The Uniswap factory address |
 | swapRouterAddress | address | The Uniswap router address |
@@ -87,7 +102,7 @@ Constructor
 receive() external payable
 ```
 
-Redirect users to the deposit function
+Receive and deposit validator tips
 
 ### depositStake
 
@@ -96,6 +111,36 @@ function depositStake() external payable
 ```
 
 Deposit user stake
+
+### depositRewards
+
+```solidity
+function depositRewards() external payable
+```
+
+Deposit a given amount of rewards
+
+### depositExitedBalance
+
+```solidity
+function depositExitedBalance(uint32 poolId) external payable
+```
+
+Deposit exited balance from a given pool ID
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolId | uint32 | The pool ID |
+
+### depositRecoveredBalance
+
+```solidity
+function depositRecoveredBalance(uint32 poolId) external payable
+```
+
+Deposit recovered balance for a given pool from an operator
 
 ### rebalanceStake
 
@@ -113,6 +158,20 @@ Rebalance the rewards to stake ratio and redistribute swept rewards
 | sweptBalance | uint256 | The swept balance |
 | activatedDeposits | uint256 | The count of activated deposits |
 | completedExits | uint256 | The count of withdrawn exits |
+
+### compoundRewards
+
+```solidity
+function compoundRewards(uint32[5] poolIds) external
+```
+
+Compound rewards given a list of pool IDs
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolIds | uint32[5] | The list of pool IDs |
 
 ### requestWithdrawal
 
@@ -134,7 +193,7 @@ Request to withdraw user stake
 function fulfillWithdrawals(uint256 count) external
 ```
 
-Complete a given count of pending withdrawals
+Fulfill a given count of pending withdrawals
 
 #### Parameters
 
@@ -169,13 +228,13 @@ Initiate the next ready pool
 function activateDeposits(uint256 count) external
 ```
 
-Complete a given count of the next pending pools
+Activate a given count of the next pending pools
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| count | uint256 | The number of pools to complete |
+| count | uint256 | The number of pools to activate |
 
 ### requestForcedExitReports
 
@@ -183,27 +242,13 @@ Complete a given count of the next pending pools
 function requestForcedExitReports(uint256 count) external
 ```
 
-Request a given count of pool unexpected exit reports
+Request reports for a given count of pools forced to exit
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| count | uint256 | The number of pool unexpected exit reports |
-
-### requestSlashedExitReports
-
-```solidity
-function requestSlashedExitReports(uint256 count) external
-```
-
-Request a given count of pool slashed exit reports
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| count | uint256 | The number of pool slashed exit reports |
+| count | uint256 | The number of pools forced to exit |
 
 ### requestCompletedExitReports
 
@@ -211,13 +256,13 @@ Request a given count of pool slashed exit reports
 function requestCompletedExitReports(uint256 count) external
 ```
 
-Request a given count of pool exit completions
+Request reports for a given count of completed exits
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| count | uint256 | The number of pool exits to complete |
+| count | uint256 | The number of completed exits |
 
 ### reportForcedExit
 
@@ -233,52 +278,21 @@ Report a pool unexpected exit
 | ---- | ---- | ----------- |
 | poolId | uint32 | The pool ID |
 
-### reportSlashedExit
-
-```solidity
-function reportSlashedExit(uint32 poolId) external
-```
-
-Report a pool slash
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| poolId | uint32 | The pool ID |
-
 ### reportCompletedExit
 
 ```solidity
-function reportCompletedExit(uint256 poolIndex, uint256 finalEffectiveBalance, uint32[] blamePercents, struct ISSVNetworkCore.Cluster cluster) external
+function reportCompletedExit(uint256 poolIndex, uint32[] blamePercents, struct ISSVNetworkCore.Cluster cluster) external
 ```
 
-Complete a pool exit
+Report a completed exit
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | poolIndex | uint256 | The staked pool index |
-| finalEffectiveBalance | uint256 | The final effective balance |
 | blamePercents | uint32[] | The operator blame percents (0 if balance is 32 ether) |
 | cluster | struct ISSVNetworkCore.Cluster | The SSV cluster snapshot |
-
-### setFeePercents
-
-```solidity
-function setFeePercents(uint32 _ethFeePercent, uint32 _linkFeePercent, uint32 _ssvFeePercent) external
-```
-
-_Update fee percentages_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _ethFeePercent | uint32 | The new ETH fee percentage |
-| _linkFeePercent | uint32 | The new LINK fee percentage |
-| _ssvFeePercent | uint32 | The new SSV fee percentage |
 
 ### setFunctionsAddress
 
@@ -390,27 +404,13 @@ Get the withdrawable balanace
 function getReservedFeeBalance() public view returns (uint256)
 ```
 
-Get the reserved fees
+Get the reserved fee balance
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | reservedFees The reserved fees |
-
-### getSweptBalance
-
-```solidity
-function getSweptBalance() public view returns (uint256 balance)
-```
-
-Get the swept balance
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| balance | uint256 | The swept balance |
+| [0] | uint256 | reservedFeeBalance The reserved fee balance |
 
 ### getExpectedEffectiveBalance
 
@@ -474,13 +474,13 @@ Get the latest active balance after fees
 function getLatestActiveRewardBalance() public view returns (int256)
 ```
 
-Get the latest active rewards
+Get the latest active reward balance
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | latestRewards The latest active rewards |
+| [0] | int256 | latestActiveRewardBalance The latest active reward balance |
 
 ### getFinalizableExitedBalance
 
@@ -488,13 +488,13 @@ Get the latest active rewards
 function getFinalizableExitedBalance() public view returns (uint256)
 ```
 
-Get the finalizable withdrawn balance of the current reporting period
+Get the finalizable exited balance of the current reporting period
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | reportFinalizableExitedBalance The finalizable withdrawn balance of the current reporting period |
+| [0] | uint256 | finalizableExitedBalance The finalizable exited balance of the current reporting period |
 
 ### getFinalizableCompletedExits
 
@@ -502,27 +502,13 @@ Get the finalizable withdrawn balance of the current reporting period
 function getFinalizableCompletedExits() public view returns (uint256)
 ```
 
-Get the finalizable withdrawn pool count of the current reporting period
+Get the finalizable completed exit count of the current reporting period
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | finalizableWithdrawnPoolCount The finalizable withdrawn pool count of the current reporting period |
-
-### getPendingWithdrawalQueue
-
-```solidity
-function getPendingWithdrawalQueue() public view returns (struct ICasimirManager.Withdrawal[])
-```
-
-Get the pending withdrawal queue
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct ICasimirManager.Withdrawal[] | requestedWithdrawalQueue The pending withdrawal queue |
+| [0] | uint256 | finalizableCompletedExits The finalizable completed exit count of the current reporting period |
 
 ### getPendingWithdrawalEligibility
 
@@ -544,13 +530,13 @@ Get the eligibility of a pending withdrawal
 function getPendingWithdrawalBalance() public view returns (uint256)
 ```
 
-Get the total pending withdrawals
+Get the total pending user withdrawal amount
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | requestedWithdrawals The total pending withdrawals |
+| [0] | uint256 | requestedWithdrawalBalance The total pending user withdrawal amount |
 
 ### getPendingWithdrawals
 
@@ -564,7 +550,7 @@ Get the total pending withdrawal count
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | pendingWithdrawalCount The total pending withdrawal count |
+| [0] | uint256 | requestedWithdrawals The total pending withdrawal count |
 
 ### getFeePercent
 
@@ -586,13 +572,13 @@ Get the total fee percentage
 function getTotalDeposits() external view returns (uint256)
 ```
 
-Get the count of active pools
+Get the count of deposited pools
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | depositedPoolCount The count of active pools |
+| [0] | uint256 | totalDeposits The count of deposited pools |
 
 ### getRequestedExits
 
@@ -600,13 +586,13 @@ Get the count of active pools
 function getRequestedExits() external view returns (uint256)
 ```
 
-Get the count of exiting pools
+Get the count of pools requested to exit
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | exitingPoolCount The count of exiting pools |
+| [0] | uint256 | requestedExits The count of pools requested to exit |
 
 ### getReadyPoolIds
 
@@ -664,13 +650,13 @@ Get the pre-pool balance
 | ---- | ---- | ----------- |
 | [0] | uint256 | prepoolBalance The pre-pool balance |
 
-### getPool
+### getPoolAddress
 
 ```solidity
-function getPool(uint32 poolId) external view returns (struct ICasimirManager.Pool pool)
+function getPoolAddress(uint32 poolId) external view returns (address)
 ```
 
-Get a pool by ID
+Get a pool's address by ID
 
 #### Parameters
 
@@ -682,49 +668,41 @@ Get a pool by ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | struct ICasimirManager.Pool | The pool details |
+| [0] | address | poolAddress The pool address |
 
-### getETHFeePercent
+### getPoolDetails
 
 ```solidity
-function getETHFeePercent() external view returns (uint32)
+function getPoolDetails(uint32 poolId) external view returns (struct ICasimirManager.PoolDetails poolDetails)
 ```
 
-Get the ETH fee percentage to charge on each deposit
+Get a pool's details by ID
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolId | uint32 | The pool ID |
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint32 | ethFeePercent The ETH fee percentage to charge on each deposit |
+| poolDetails | struct ICasimirManager.PoolDetails | The pool details |
 
-### getLINKFeePercent
+### getRegistryAddress
 
 ```solidity
-function getLINKFeePercent() external view returns (uint32)
+function getRegistryAddress() external view returns (address registryAddress)
 ```
 
-Get the LINK fee percentage to charge on each deposit
+Get the registry address
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint32 | linkFeePercent The LINK fee percentage to charge on each deposit |
-
-### getSSVFeePercent
-
-```solidity
-function getSSVFeePercent() external view returns (uint32)
-```
-
-Get the SSV fee percentage to charge on each deposit
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32 | ssvFeePercent The SSV fee percentage to charge on each deposit |
+| registryAddress | address | The registry address |
 
 ### getUpkeepAddress
 
@@ -739,6 +717,106 @@ Get the upkeep address
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | upkeepAddress | address | The upkeep address |
+
+### getSweptBalance
+
+```solidity
+function getSweptBalance() public view returns (uint256 balance)
+```
+
+Get the swept balance
+
+_Should be called off-chain_
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| balance | uint256 | The swept balance |
+
+### getCompoundablePoolIds
+
+```solidity
+function getCompoundablePoolIds() external view returns (uint32[5] poolIds)
+```
+
+Get the next five compoundable pool IDs
+
+_Should be called off-chain_
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolIds | uint32[5] | The next five compoundable pool IDs |
+
+## CasimirPool
+
+### poolCapacity
+
+```solidity
+uint256 poolCapacity
+```
+
+### constructor
+
+```solidity
+constructor(address registryAddress, uint32 poolId, bytes publicKey, uint64[] operatorIds) public
+```
+
+### depositRewards
+
+```solidity
+function depositRewards() external
+```
+
+### withdrawBalance
+
+```solidity
+function withdrawBalance(uint32[] blamePercents) external
+```
+
+### setOperatorIds
+
+```solidity
+function setOperatorIds(uint64[] operatorIds) external
+```
+
+### setStatus
+
+```solidity
+function setStatus(enum ICasimirPool.PoolStatus status) external
+```
+
+### getBalance
+
+```solidity
+function getBalance() external view returns (uint256)
+```
+
+### getConfig
+
+```solidity
+function getConfig() external view returns (struct ICasimirPool.PoolConfig)
+```
+
+### getOperatorIds
+
+```solidity
+function getOperatorIds() external view returns (uint64[])
+```
+
+### getPublicKey
+
+```solidity
+function getPublicKey() external view returns (bytes)
+```
+
+### getStatus
+
+```solidity
+function getStatus() external view returns (enum ICasimirPool.PoolStatus)
+```
 
 ## CasimirRegistry
 
@@ -760,10 +838,18 @@ uint256 minimumCollateralDeposit
 uint256 totalCollateral
 ```
 
+### onlyPool
+
+```solidity
+modifier onlyPool(uint32 poolId)
+```
+
+_Validate the caller is the authorized pool_
+
 ### constructor
 
 ```solidity
-constructor(address managerAddress, address ssvNetworkViewsAddress) public
+constructor(address ssvNetworkViewsAddress) public
 ```
 
 ### registerOperator
@@ -822,20 +908,36 @@ Deposit collateral for an operator
 | ---- | ---- | ----------- |
 | operatorId | uint64 | The operator ID |
 
-### setOperatorCollateral
+### addActivePool
 
 ```solidity
-function setOperatorCollateral(uint64 operatorId, int256 collateral) external
+function addActivePool(uint32 poolId, uint64 operatorId) external
 ```
 
-Set the collateral for an operator
+Add an active pool to an operator
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| poolId | uint32 | The pool ID |
 | operatorId | uint64 | The operator ID |
-| collateral | int256 | The collateral |
+
+### removeActivePool
+
+```solidity
+function removeActivePool(uint32 poolId, uint64 operatorId, uint256 blameAmount) external
+```
+
+Remove an active pool from an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolId | uint32 | The pool ID |
+| operatorId | uint64 | The operator ID |
+| blameAmount | uint256 | The amount to recover from collateral |
 
 ### getOperatorCollateral
 
@@ -883,21 +985,13 @@ uint256 reportPeriod
 
 Current report period
 
-### reportPendingPoolCount
+### reportRemainingRequests
 
 ```solidity
-uint256 reportPendingPoolCount
+uint256 reportRemainingRequests
 ```
 
-Current report pending pool count
-
-### reportExitingPoolCount
-
-```solidity
-uint256 reportExitingPoolCount
-```
-
-Current report exiting pool count
+Current report remaining request count
 
 ### reportRequestBlock
 
@@ -906,6 +1000,22 @@ uint256 reportRequestBlock
 ```
 
 Current report block
+
+### reportCompoundablePoolIds
+
+```solidity
+uint32[5] reportCompoundablePoolIds
+```
+
+Current report compoundable pools
+
+### finalizableCompoundablePoolIds
+
+```solidity
+uint32[5] finalizableCompoundablePoolIds
+```
+
+Finalizable compoundable pools
 
 ### requestCBOR
 
@@ -923,24 +1033,10 @@ uint32 fulfillGasLimit
 
 Fulfillment gas limit
 
-### validateRequestId
-
-```solidity
-modifier validateRequestId(bytes32 requestId)
-```
-
-_Verify a request ID_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The request ID |
-
 ### constructor
 
 ```solidity
-constructor(address managerAddress, address functionsOracleAddress, uint64 _functionsSubscriptionId) public
+constructor(address functionsOracleAddress, uint64 _functionsSubscriptionId) public
 ```
 
 Constructor
@@ -949,7 +1045,6 @@ Constructor
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| managerAddress | address | The manager contract address |
 | functionsOracleAddress | address | The functions oracle contract address |
 | _functionsSubscriptionId | uint64 | The functions subscription ID |
 
@@ -1073,29 +1168,25 @@ Fulfill the request for testing
 
 ## ICasimirManager
 
-### ProcessedDeposit
+### Token
 
 ```solidity
-struct ProcessedDeposit {
-  uint256 ethAmount;
-  uint256 linkAmount;
-  uint256 ssvAmount;
+enum Token {
+  LINK,
+  SSV,
+  WETH
 }
 ```
 
-### Pool
+### PoolDetails
 
 ```solidity
-struct Pool {
-  uint256 deposits;
-  bool exiting;
-  bool slashed;
-  bytes32 depositDataRoot;
+struct PoolDetails {
+  uint32 id;
+  uint256 balance;
   bytes publicKey;
-  bytes signature;
-  bytes withdrawalCredentials;
   uint64[] operatorIds;
-  bytes shares;
+  enum ICasimirPool.PoolStatus status;
 }
 ```
 
@@ -1196,6 +1287,12 @@ event StakeRebalanced(uint256 amount)
 event RewardsDeposited(uint256 amount)
 ```
 
+### TipsDeposited
+
+```solidity
+event TipsDeposited(uint256 amount)
+```
+
 ### WithdrawalRequested
 
 ```solidity
@@ -1220,10 +1317,34 @@ event WithdrawalFulfilled(address sender, uint256 amount)
 function depositStake() external payable
 ```
 
+### depositRewards
+
+```solidity
+function depositRewards() external payable
+```
+
 ### rebalanceStake
 
 ```solidity
 function rebalanceStake(uint256 activeBalance, uint256 sweptBalance, uint256 activatedDeposits, uint256 completedExits) external
+```
+
+### compoundRewards
+
+```solidity
+function compoundRewards(uint32[5] poolIds) external
+```
+
+### depositExitedBalance
+
+```solidity
+function depositExitedBalance(uint32 poolId) external payable
+```
+
+### depositRecoveredBalance
+
+```solidity
+function depositRecoveredBalance(uint32 poolId) external payable
 ```
 
 ### requestWithdrawal
@@ -1256,12 +1377,6 @@ function activateDeposits(uint256 count) external
 function requestForcedExitReports(uint256 count) external
 ```
 
-### requestSlashedExitReports
-
-```solidity
-function requestSlashedExitReports(uint256 count) external
-```
-
 ### requestCompletedExitReports
 
 ```solidity
@@ -1271,13 +1386,7 @@ function requestCompletedExitReports(uint256 count) external
 ### reportCompletedExit
 
 ```solidity
-function reportCompletedExit(uint256 poolIndex, uint256 finalEffectiveBalance, uint32[] blamePercents, struct ISSVNetworkCore.Cluster cluster) external
-```
-
-### setFeePercents
-
-```solidity
-function setFeePercents(uint32 ethFeePercent, uint32 linkFeePercent, uint32 ssvFeePercent) external
+function reportCompletedExit(uint256 poolIndex, uint32[] blamePercents, struct ISSVNetworkCore.Cluster cluster) external
 ```
 
 ### setFunctionsAddress
@@ -1290,24 +1399,6 @@ function setFunctionsAddress(address functionsAddress) external
 
 ```solidity
 function getFeePercent() external view returns (uint32)
-```
-
-### getETHFeePercent
-
-```solidity
-function getETHFeePercent() external view returns (uint32)
-```
-
-### getLINKFeePercent
-
-```solidity
-function getLINKFeePercent() external view returns (uint32)
-```
-
-### getSSVFeePercent
-
-```solidity
-function getSSVFeePercent() external view returns (uint32)
 ```
 
 ### getTotalDeposits
@@ -1418,12 +1509,6 @@ function getSweptBalance() external view returns (uint256)
 function getUserStake(address userAddress) external view returns (uint256)
 ```
 
-### getPendingWithdrawalQueue
-
-```solidity
-function getPendingWithdrawalQueue() external view returns (struct ICasimirManager.Withdrawal[])
-```
-
 ### getPendingWithdrawalBalance
 
 ```solidity
@@ -1434,6 +1519,109 @@ function getPendingWithdrawalBalance() external view returns (uint256)
 
 ```solidity
 function getPendingWithdrawals() external view returns (uint256)
+```
+
+### getPoolAddress
+
+```solidity
+function getPoolAddress(uint32 poolId) external view returns (address)
+```
+
+### getPoolDetails
+
+```solidity
+function getPoolDetails(uint32 poolId) external view returns (struct ICasimirManager.PoolDetails)
+```
+
+### getRegistryAddress
+
+```solidity
+function getRegistryAddress() external view returns (address)
+```
+
+### getUpkeepAddress
+
+```solidity
+function getUpkeepAddress() external view returns (address)
+```
+
+## ICasimirPool
+
+### PoolConfig
+
+```solidity
+struct PoolConfig {
+  uint32 poolId;
+  bytes publicKey;
+  uint64[] operatorIds;
+  enum ICasimirPool.PoolStatus status;
+}
+```
+
+### PoolStatus
+
+```solidity
+enum PoolStatus {
+  PENDING,
+  ACTIVE,
+  EXITING_FORCED,
+  EXITING_REQUESTED,
+  WITHDRAWN
+}
+```
+
+### depositRewards
+
+```solidity
+function depositRewards() external
+```
+
+### withdrawBalance
+
+```solidity
+function withdrawBalance(uint32[] blamePercents) external
+```
+
+### setOperatorIds
+
+```solidity
+function setOperatorIds(uint64[] operatorIds) external
+```
+
+### setStatus
+
+```solidity
+function setStatus(enum ICasimirPool.PoolStatus status) external
+```
+
+### getBalance
+
+```solidity
+function getBalance() external view returns (uint256)
+```
+
+### getConfig
+
+```solidity
+function getConfig() external view returns (struct ICasimirPool.PoolConfig)
+```
+
+### getOperatorIds
+
+```solidity
+function getOperatorIds() external view returns (uint64[])
+```
+
+### getPublicKey
+
+```solidity
+function getPublicKey() external view returns (bytes)
+```
+
+### getStatus
+
+```solidity
+function getStatus() external view returns (enum ICasimirPool.PoolStatus)
 ```
 
 ## ICasimirRegistry
@@ -1460,9 +1648,10 @@ event DeregistrationCompleted(uint64 operatorId)
 
 ```solidity
 struct Operator {
-  uint64 id;
+  bool active;
   int256 collateral;
   uint256 poolCount;
+  mapping(uint32 => bool) activePools;
   bool deregistering;
 }
 ```
@@ -1491,10 +1680,16 @@ function deregisterOperator(uint64 operatorId) external
 function depositCollateral(uint64 operatorId) external payable
 ```
 
-### setOperatorCollateral
+### addActivePool
 
 ```solidity
-function setOperatorCollateral(uint64 operatorId, int256 collateral) external
+function addActivePool(uint32 poolId, uint64 operatorId) external
+```
+
+### removeActivePool
+
+```solidity
+function removeActivePool(uint32 poolId, uint64 operatorId, uint256 blameAmount) external
 ```
 
 ### getOperatorCollateral
@@ -1505,10 +1700,20 @@ function getOperatorCollateral(uint64 operatorId) external view returns (int256)
 
 ## ICasimirUpkeep
 
-### Status
+### RequestType
 
 ```solidity
-enum Status {
+enum RequestType {
+  NONE,
+  BALANCES,
+  DETAILS
+}
+```
+
+### ReportStatus
+
+```solidity
+enum ReportStatus {
   FINALIZED,
   REQUESTING,
   PROCESSING
@@ -1524,7 +1729,7 @@ event OCRResponse(bytes32 requestId, bytes result, bytes err)
 ### UpkeepPerformed
 
 ```solidity
-event UpkeepPerformed(enum ICasimirUpkeep.Status status)
+event UpkeepPerformed(enum ICasimirUpkeep.ReportStatus status)
 ```
 
 ### checkUpkeep
@@ -1731,6 +1936,28 @@ function withdraw(uint256) external
 
 Withdraw wrapped ether to get ether
 
+## CasimirRecipient
+
+### manager
+
+```solidity
+contract ICasimirManager manager
+```
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### receive
+
+```solidity
+receive() external payable
+```
+
+## ICasimirRecipient
+
 ## MockFunctionsOracle
 
 ### constructor
@@ -1774,16 +2001,6 @@ Sends a request (encoded as data) using the provided subscriptionId
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | requestId | bytes32 | A unique request identifier (unique per DON) |
-
-## CasimirRecipient
-
-### receive
-
-```solidity
-receive() external payable
-```
-
-## ICasimirRecipient
 
 ## CasimirDAO
 

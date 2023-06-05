@@ -54,41 +54,6 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     }
 
     /**
-     * @notice Request to deregister an operator from the set
-     * @param operatorId The operator ID
-     */
-    function requestOperatorDeregistration(uint64 operatorId) external {
-        Operator storage operator = operators[operatorId];
-        require(operator.collateral >= 0, "Operator owes collateral");
-        (address operatorOwner, , , ,) = ssvNetworkViews.getOperatorById(operatorId);
-        require(msg.sender == operatorOwner, "Only operator owner can request deregister");
-
-        operator.deregistering = true;
-
-        emit DeregistrationRequested(operatorId);
-    }
-
-    /**
-     * @notice Deregister an operator from the set
-     * @param operatorId The operator ID
-     */
-    function deregisterOperator(uint64 operatorId) external {
-        require(msg.sender == address(manager), "Only manager can deregister operators");
-        Operator storage operator = operators[operatorId];
-        require(operator.collateral >= 0, "Operator owes collateral");
-
-        (address operatorOwner, , , ,) = ssvNetworkViews.getOperatorById(operatorId);
-
-        delete operators[operatorId];
-
-        if (operator.collateral > 0) {
-            operatorOwner.send(uint256(operator.collateral));
-        }
-
-        emit DeregistrationCompleted(operatorId);
-    }
-
-    /**
      * @notice Deposit collateral for an operator
      * @param operatorId The operator ID
      */
@@ -99,6 +64,22 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
         require(msg.sender == operatorOwner, "Only operator owner can deposit collateral");
 
         operator.collateral += int256(msg.value);
+    }
+
+    /**
+     * @notice Withdraw collateral for an operator
+     * @param operatorId The operator ID
+     * @param amount The amount to withdraw
+     */
+    function withdrawCollateral(uint64 operatorId, uint256 amount) external {
+        Operator storage operator = operators[operatorId];
+        (address operatorOwner, , , ,) = ssvNetworkViews.getOperatorById(operatorId);
+        require(msg.sender == operatorOwner, "Only operator owner can withdraw collateral");
+        require(operator.collateral >= int256(amount), "Insufficient collateral");
+
+        operator.collateral -= int256(amount);
+        totalCollateral -= amount;
+        operatorOwner.send(amount);
     }
 
     /**
