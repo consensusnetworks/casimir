@@ -13,24 +13,40 @@ import BreakdownTable from './components/BreakdownTable.vue'
       Breakdown
     </h6>
 
-    <div class="flex justify-between items-start gap-[63px] text-white h-[541px] mb-[47px]">
-      <div class="w-full h-full">
+    <div class="flex justify-between 1000s:flex-wrap items-start gap-[63px] mb-[47px]">
+      <div class="w-full h-[541px] 800s:h-max">
         <BreakdownChart />
       </div>
-      <div class="max-w-[300px] w-full h-full">
-        <Staking />
+
+      <div class="w-full max-w-[300px] 1000s:max-w-none 1000s:flex 700s:flex-wrap justify-between gap-[63px] items-start">
+        <div class="w-full">
+          <Staking />
+        </div>
+        <div class="w-[0px] 1000s:w-full">
+          <div class="sr-only 1000s:not-sr-only">
+            <div class="w-full mb-[37px]">
+              <StakingAvg /> 
+            </div>
+            <div class="w-full h-[261px]">
+              <Announcements />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="flex justify-between items-start gap-[63px] text-white">
-      <div class="w-full h-full">
+
+    <div class="w-full flex justify-between items-start gap-[63px]">
+      <div class="h-full w-full overflow-auto">
         <BreakdownTable />
       </div>
-      <div class="max-w-[300px] w-full">
-        <div class="w-full mb-[37px]">
-          <StakingAvg /> 
-        </div>
-        <div class="w-full h-[261px]">
-          <Announcements />
+      <div class="1000s:sr-only not-sr-only">
+        <div class="w-[300px]">
+          <div class="w-full mb-[37px]">
+            <StakingAvg /> 
+          </div>
+          <div class="w-full h-[261px]">
+            <Announcements />
+          </div>
         </div>
       </div>
     </div>

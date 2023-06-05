@@ -67,10 +67,20 @@ onUnmounted(() =>{
 </script>
 
 <template>
-  <div>
+  <div class="min-w-[360px]">
     <div>
       <div
-        class="px-[60px] pt-[17px] pb-[19px] flex justify-between items-center bg-black relative"
+        class="
+      px-[60px]
+      pt-[17px]
+      pb-[19px]
+      flex
+      flex-wrap
+      gap-[20px]
+      justify-between
+      items-center
+      bg-black
+      relative"
         :class="openWalletConnect? 'pr-[75px]' : ''"
       >
         <img
@@ -79,7 +89,7 @@ onUnmounted(() =>{
           class="w-[21px]"
         >
 
-        <div class="flex items-center gap-50 h-full">
+        <div class="flex flex-wrap items-center gap-50 h-full pr-[50px]">
           <router-link
             to="/"
             class="nav_items_active"
@@ -118,7 +128,7 @@ onUnmounted(() =>{
 
           <div class="connect_wallet_gradient">
             <button
-              class="connect_wallet flex justify-between items-center gap-[8px]"
+              class="connect_wallet flex justify-between items-center gap-[8px] whitespace-nowrap"
               @click="openWalletConnect = true"
             >
               Connect Wallet
@@ -181,9 +191,9 @@ onUnmounted(() =>{
 
       <div
         class="relative text-black"
-        :class="openWalletConnect? 'overflow-hidden h-[90vh] pr-[15px]' : ''"
+        :class="openWalletConnect? 'overflow-hidden h-[80vh] 600s:h-[78vh] pr-[15px]' : ''"
       >
-        <slot style="z-index: 1;" />
+        <slot />
         <div
           class="bg-black h-[207px] w-full absolute top-0 left-0"
           style="z-index: -1;"
@@ -201,7 +211,7 @@ onUnmounted(() =>{
     >
       <div 
         id="connect_wallet_card"
-        class="bg-white text-black card px-[40px] py-[25px] min-w-[300px] max-w-[500px] h-min"
+        class="bg-white text-black card px-[40px] py-[25px] 600s:max-w-[80%] max-w-[580px] "
       >
         <div class="nav_items">
           Connect Wallet
@@ -265,7 +275,7 @@ onUnmounted(() =>{
             </div>
           </div>
         </div>
-        <div class="flex flex-wrap justify-between gap-[20px]">
+        <div class="flex flex-wrap justify-around gap-[20px] max-h-[400px] overflow-auto">
           <button
             v-for="wallet in activeWallets"
             :key="wallet"
