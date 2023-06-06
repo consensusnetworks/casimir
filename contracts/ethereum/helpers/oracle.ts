@@ -39,7 +39,8 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         operatorIds,
         shares,
         cluster,
-        requiredBalancePerValidator // Mock fee amount estimate ~ 10 SSV
+        requiredBalancePerValidator,
+        false
     )
     await initiateDeposit.wait()
 }

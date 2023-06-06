@@ -19,7 +19,7 @@ void async function () {
                 beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
                 linkFunctionsAddress: process.env.LINK_FUNCTIONS_ADDRESS,
                 linkRegistrarAddress: process.env.LINK_REGISTRAR_ADDRESS,
-                linkSubscriptionId: process.env.LINK_SUBSCRIPTION_ID,
+                linkRegistryAddress: process.env.LINK_REGISTRY_ADDRESS,
                 linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
                 ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
                 ssvNetworkViewsAddress: process.env.SSV_NETWORK_VIEWS_ADDRESS,

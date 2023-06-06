@@ -54,7 +54,8 @@ export async function initiateDepositHandler(input: HandlerInput) {
         operatorIds,
         shares,
         cluster,
-        requiredBalancePerValidator
+        requiredBalancePerValidator,
+        false
     )
     await initiateDeposit.wait()
 }

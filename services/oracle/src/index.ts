@@ -11,7 +11,7 @@ const handlers = {
     DepositRequested: initiateDepositHandler,
     ReshareRequested: initiatePoolReshareHandler,
     ExitRequested: initiatePoolExitHandler,
-    // ForcedExitReportsRequested: reportForcedExitsHandler,
+    // ForcedExitReportsRequested: reportForcedExitssHandler,
     CompletedExitReportsRequested: reportCompletedExitsHandler
 }
 

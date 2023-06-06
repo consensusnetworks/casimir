@@ -3,7 +3,6 @@ pragma solidity 0.8.18;
 
 import "./interfaces/ICasimirUpkeep.sol";
 import "./interfaces/ICasimirManager.sol";
-import "./vendor/interfaces/KeeperRegistrarInterface.sol";
 import {Functions, FunctionsClient} from "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -36,17 +35,11 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
     /** Manager contract */
     ICasimirManager private immutable manager;
-    /** Keeper registrar contract */
-    KeeperRegistrarInterface private immutable linkRegistrar;
-    /** LINK ERC-20 token contract */
-    IERC20 private immutable linkToken;
 
     /********************/
     /* Dynamic State */
     /********************/
 
-    /** Upkeep ID */
-    uint256 private upkeepId;
     /** Current report status */
     ReportStatus private reportStatus;
     /** Current report period */
@@ -64,7 +57,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Current report deposit activations */
     uint256 private reportActivatedDeposits;
     /** Current report unexpected exits */
-    uint256 private reportForcedExits;
+    uint256 private reportForcedExitss;
     /** Current report completed exits */
     uint256 private reportCompletedExits;
     /** Current report compoundable pools */
@@ -81,8 +74,8 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     bytes public requestCBOR;
     /** Fulfillment gas limit */
     uint32 fulfillGasLimit;
-    /** Functions subscription ID */
-    uint64 private linkSubscriptionId;
+    /** Functions subscription ID (Mocked until managed subscriptions are implemented) */
+    uint64 private linkSubscriptionId = 1;
 
     /***************/
     /* Constructor */
@@ -91,28 +84,11 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /**
      * Constructor
      * @param linkFunctionsAddress The functions oracle contract address
-     * @param linkRegistrarAddress The keeper registrar address
-     * @param _linkSubscriptionId The functions subscription ID
-     * @param linkTokenAddress The LINK token address
      */
     constructor(
-        address linkFunctionsAddress,
-        address linkRegistrarAddress,
-        uint64 _linkSubscriptionId,
-        address linkTokenAddress
+        address linkFunctionsAddress
     ) FunctionsClient(linkFunctionsAddress) {
         manager = ICasimirManager(msg.sender);
-        linkRegistrar = KeeperRegistrarInterface(linkRegistrarAddress);
-        linkToken = IERC20(linkTokenAddress);
-        linkSubscriptionId = _linkSubscriptionId;
-    }
-
-    function registerUpkeep(KeeperRegistrarInterface.RegistrationParams memory params) public {
-        linkToken.approve(address(linkRegistrar), params.amount);
-        upkeepId = linkRegistrar.registerUpkeep(params);
-        if (upkeepId == 0) {
-            revert("Registration failed");
-        }
     }
 
     /**
@@ -144,16 +120,16 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /**
      * @notice Set the bytes representing the CBOR-encoded Functions.Request
      * @param _fulfillGasLimit Maximum amount of gas used to call the client contract's `handleOracleFulfillment` function
-     * @param linkSubscriptionId The functions billing subscription ID used to pay for Functions requests
+     * @param _linkSubscriptionId The functions billing subscription ID used to pay for Functions requests
      * @param _requestCBOR Bytes representing the CBOR-encoded Functions.Request
      */
     function setRequest(
         uint32 _fulfillGasLimit,
-        uint64 linkSubscriptionId,
+        uint64 _linkSubscriptionId,
         bytes calldata _requestCBOR
     ) external onlyOwner {
         fulfillGasLimit = _fulfillGasLimit;
-        linkSubscriptionId = linkSubscriptionId;
+        linkSubscriptionId = _linkSubscriptionId;
         requestCBOR = _requestCBOR;
     }
 
@@ -228,7 +204,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
                 reportActiveBalance = 0;
                 reportActivatedDeposits = 0;
-                reportForcedExits = 0;
+                reportForcedExitss = 0;
                 reportCompletedExits = 0;
                 reportCompoundablePoolIds = [0, 0, 0, 0, 0];
             }
@@ -276,7 +252,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
                 ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
                 
                 reportActivatedDeposits = activatedDeposits;
-                reportForcedExits = unexpectedExits;
+                reportForcedExitss = unexpectedExits;
                 reportCompletedExits = completedExits;
                 reportCompoundablePoolIds = compoundablePools;
 
@@ -287,8 +263,8 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             if (reportRemainingRequests == 0) {
                 reportStatus = ReportStatus.PROCESSING;
 
-                if (reportForcedExits > 0) {
-                    manager.requestForcedExitReports(reportForcedExits);
+                if (reportForcedExitss > 0) {
+                    manager.requestForcedExitReports(reportForcedExitss);
                 }
 
                 if (reportCompletedExits > 0) {

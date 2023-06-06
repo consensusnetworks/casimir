@@ -20,5 +20,5 @@ void async function () {
 
     await run('npm run build --workspace @casimir/ethereum')
 
-    run('npx mocha --require hardhat/register --recursive --exit --extension ts --timeout 60000 > test.log')
+    run('npx mocha --require hardhat/register --recursive --exit --extension ts --timeout 60000')
 }()

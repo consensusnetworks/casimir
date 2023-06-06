@@ -1,11 +1,7 @@
-// SPDX-License-Identifier: Apache
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
 interface KeeperRegistrarInterface {
-    /***********/
-    /* Structs */
-    /***********/
-
     struct RegistrationParams {
         string name;
         bytes encryptedEmail;
@@ -16,10 +12,6 @@ interface KeeperRegistrarInterface {
         bytes offchainConfig;
         uint96 amount;
     }
-
-    /*************/
-    /* Functions */
-    /*************/
 
     function registerUpkeep(
         RegistrationParams calldata requestParams

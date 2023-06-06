@@ -24,10 +24,14 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     /*************/
 
     /**
-     * @dev Validate the caller is the authorized pool
+     * @dev Validate the caller is owner or the authorized pool
      */
-    modifier onlyPool(uint32 poolId) {
-        require(msg.sender == manager.getPoolAddress(poolId), "Only authorized pool can call this function");
+    modifier onlyOwnerOrPool(uint32 poolId) {
+        require(
+            msg.sender == owner() ||
+            msg.sender == manager.getPoolAddress(poolId),
+            "Only owner or the authorized pool can call this function"
+        );
         _;
     }
 
@@ -103,7 +107,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      * @param poolId The pool ID
      * @param blameAmount The amount to recover from collateral
      */
-    function removeOperatorPool(uint64 operatorId, uint32 poolId, uint256 blameAmount) external onlyPool(poolId) {
+    function removeOperatorPool(uint64 operatorId, uint32 poolId, uint256 blameAmount) external onlyOwnerOrPool(poolId) {
         Operator storage operator = operators[operatorId];
         require(operator.pools[poolId], "Pool is not active for operator");
 

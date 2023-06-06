@@ -143,6 +143,49 @@ function depositRecoveredBalance(uint32 poolId) external payable
 
 Deposit recovered balance for a given pool from an operator
 
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolId | uint32 | The pool ID |
+
+### depositClusterBalance
+
+```solidity
+function depositClusterBalance(struct ISSVNetworkCore.Cluster cluster, uint256 amount) external
+```
+
+Deposit to a cluster balance
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| cluster | struct ISSVNetworkCore.Cluster | The cluster |
+| amount | uint256 | The amount to deposit |
+
+### depositUpkeepBalance
+
+```solidity
+function depositUpkeepBalance(uint256 amount) external
+```
+
+Deposit upkeep balance
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount | uint256 | The amount to deposit |
+
+### depositReservedFees
+
+```solidity
+function depositReservedFees() external payable
+```
+
+Deposit reserved fees
+
 ### rebalanceStake
 
 ```solidity
@@ -265,10 +308,10 @@ Request reports for a given count of completed exits
 | ---- | ---- | ----------- |
 | count | uint256 | The number of completed exits |
 
-### reportForcedExit
+### reportForcedExits
 
 ```solidity
-function reportForcedExit(uint32 poolId) external
+function reportForcedExits(uint32 poolId) external
 ```
 
 Report a pool unexpected exit
@@ -896,35 +939,35 @@ Withdraw collateral for an operator
 | operatorId | uint64 | The operator ID |
 | amount | uint256 | The amount to withdraw |
 
-### addActivePool
+### addOperatorPool
 
 ```solidity
-function addActivePool(uint32 poolId, uint64 operatorId) external
+function addOperatorPool(uint64 operatorId, uint32 poolId) external
 ```
 
-Add an active pool to an operator
+Add a pool to an operator
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| poolId | uint32 | The pool ID |
 | operatorId | uint64 | The operator ID |
+| poolId | uint32 | The pool ID |
 
-### removeActivePool
+### removeOperatorPool
 
 ```solidity
-function removeActivePool(uint32 poolId, uint64 operatorId, uint256 blameAmount) external
+function removeOperatorPool(uint64 operatorId, uint32 poolId, uint256 blameAmount) external
 ```
 
-Remove an active pool from an operator
+Remove a pool from an operator
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| poolId | uint32 | The pool ID |
 | operatorId | uint64 | The operator ID |
+| poolId | uint32 | The pool ID |
 | blameAmount | uint256 | The amount to recover from collateral |
 
 ### getOperatorCollateral
@@ -1319,18 +1362,6 @@ function depositStake() external payable
 function depositRewards() external payable
 ```
 
-### rebalanceStake
-
-```solidity
-function rebalanceStake(uint256 activeBalance, uint256 sweptBalance, uint256 activatedDeposits, uint256 completedExits) external
-```
-
-### compoundRewards
-
-```solidity
-function compoundRewards(uint32[5] poolIds) external
-```
-
 ### depositExitedBalance
 
 ```solidity
@@ -1341,6 +1372,36 @@ function depositExitedBalance(uint32 poolId) external payable
 
 ```solidity
 function depositRecoveredBalance(uint32 poolId) external payable
+```
+
+### depositReservedFees
+
+```solidity
+function depositReservedFees() external payable
+```
+
+### depositClusterBalance
+
+```solidity
+function depositClusterBalance(struct ISSVNetworkCore.Cluster cluster, uint256 amount) external
+```
+
+### depositUpkeepBalance
+
+```solidity
+function depositUpkeepBalance(uint256 amount) external
+```
+
+### rebalanceStake
+
+```solidity
+function rebalanceStake(uint256 activeBalance, uint256 sweptBalance, uint256 activatedDeposits, uint256 completedExits) external
+```
+
+### compoundRewards
+
+```solidity
+function compoundRewards(uint32[5] poolIds) external
 ```
 
 ### requestWithdrawal
@@ -1647,7 +1708,7 @@ struct Operator {
   bool active;
   int256 collateral;
   uint256 poolCount;
-  mapping(uint32 => bool) activePools;
+  mapping(uint32 => bool) pools;
   bool deregistering;
 }
 ```
@@ -1670,16 +1731,16 @@ function depositCollateral(uint64 operatorId) external payable
 function withdrawCollateral(uint64 operatorId, uint256 amount) external
 ```
 
-### addActivePool
+### addOperatorPool
 
 ```solidity
-function addActivePool(uint32 poolId, uint64 operatorId) external
+function addOperatorPool(uint64 operatorId, uint32 poolId) external
 ```
 
-### removeActivePool
+### removeOperatorPool
 
 ```solidity
-function removeActivePool(uint32 poolId, uint64 operatorId, uint256 blameAmount) external
+function removeOperatorPool(uint64 operatorId, uint32 poolId, uint256 blameAmount) external
 ```
 
 ### getOperatorCollateral

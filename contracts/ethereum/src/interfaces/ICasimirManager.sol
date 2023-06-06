@@ -70,8 +70,16 @@ interface ICasimirManager {
     function depositExitedBalance(uint32 poolId) external payable;
     function depositRecoveredBalance(uint32 poolId) external payable;
     function depositReservedFees() external payable;
-    function depositClusterBalance(ISSVNetworkCore.Cluster memory cluster, uint256 amount) external;
-    function depositUpkeepBalance(uint256 amount) external;
+    function depositClusterBalance(
+        uint64[] memory operatorIds,
+        ISSVNetworkCore.Cluster memory cluster,
+        uint256 feeAmount,
+        bool processed
+    ) external;
+    function depositUpkeepBalance(
+        uint256 feeAmount,
+        bool processed
+    ) external;
     function rebalanceStake(
         uint256 activeBalance, 
         uint256 sweptBalance, 
@@ -89,7 +97,8 @@ interface ICasimirManager {
         uint64[] memory operatorIds,
         bytes calldata shares,
         ISSVNetworkCore.Cluster memory cluster,
-        uint256 feeAmount
+        uint256 feeAmount,
+        bool processed
     ) external;
     function activateDeposits(uint256 count) external;
     function requestForcedExitReports(uint256 count) external;
@@ -99,6 +108,20 @@ interface ICasimirManager {
         uint32[] memory blamePercents,
         ISSVNetworkCore.Cluster memory cluster
     ) external;
+    function reportReshare(
+        uint32 poolId,
+        uint64[] memory operatorIds,
+        uint64[] memory oldOperatorIds,
+        uint64 newOperatorId,
+        uint64 oldOperatorId,
+        bytes memory shares,
+        ISSVNetworkCore.Cluster memory cluster,
+        ISSVNetworkCore.Cluster memory oldCluster,
+        uint256 feeAmount,
+        bool processed
+    ) external;
+    function withdrawLINKBalance(uint256 amount) external;
+    function withdrawSSVBalance(uint256 amount) external;
     function setFunctionsAddress(address functionsAddress) external;
     function getFeePercent() external view returns (uint32);
     function getTotalDeposits() external view returns (uint256);
@@ -124,5 +147,7 @@ interface ICasimirManager {
     function getPoolAddress(uint32 poolId) external view returns (address);
     function getPoolDetails(uint32 poolId) external view returns (PoolDetails memory);
     function getRegistryAddress() external view returns (address);
+    function getUpkeepId() external view returns (uint256);
     function getUpkeepAddress() external view returns (address);
+    function getUpkeepBalance() external view returns (uint256 upkeepBalance);
 }
