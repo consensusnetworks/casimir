@@ -105,10 +105,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint256 private latestActiveBalanceAfterFees;
     /** Latest active rewards */
     int256 private latestActiveRewardBalance;
-    /** Requested pool exit reports */
-    uint256 private requestedCompletedExitReports;
-    /** Requested pool unexpected exit reports */
-    uint256 private requestedForcedExitReports;
     /** Exited balance */
     uint256 private finalizableExitedBalance;
     /** Exited pool count */
@@ -160,10 +156,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @dev Validate the caller is the authorized pool
      */
     modifier onlyPool(uint32 poolId) {
-        require(
-            msg.sender == poolAddresses[poolId],
-            "Not pool"
-        );
+        require(msg.sender == poolAddresses[poolId], "Not pool");
         _;
     }
 
@@ -171,9 +164,17 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @dev Validate the caller is the manager oracle
      */
     modifier onlyOracle() {
+        require(msg.sender == oracleAddress, "Not oracle");
+        _;
+    }
+
+    /**
+     * @dev Validate the caller is the oracle or registry
+     */
+    modifier onlyOracleOrRegistry() {
         require(
-            msg.sender == oracleAddress,
-            "Not oracle"
+            msg.sender == oracleAddress || msg.sender == address(registry),
+            "Not owner or registry"
         );
         _;
     }
@@ -193,10 +194,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @dev Validate the caller is the registry
      */
     modifier onlyRegistry() {
-        require(
-            msg.sender == address(registry),
-            "Not registry"
-        );
+        require(msg.sender == address(registry), "Not registry");
         _;
     }
 
@@ -204,10 +202,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @dev Validate the caller is the upkeep contract
      */
     modifier onlyUpkeep() {
-        require(
-            msg.sender == address(upkeep),
-            "Not upkeep"
-        );
+        require(msg.sender == address(upkeep), "Not upkeep");
         _;
     }
 
@@ -215,10 +210,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @dev Validate a deposit
      */
     modifier validDeposit() {
-        require(
-            msg.value >= stakeMinimum,
-            "Deposit less than minimum"
-        );
+        require(msg.value >= stakeMinimum, "Deposit less than minimum");
         _;
     }
 
@@ -226,10 +218,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @dev Validate a withdrawal
      */
     modifier validWithdrawal(uint256 amount) {
-        require(
-            amount >= stakeMinimum,
-            "Withdrawal less than minimum"
-        );
+        require(amount >= stakeMinimum, "Withdrawal less than minimum");
         _;
     }
 
@@ -241,7 +230,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         require(amount > 0, "Distribution amount is zero");
         _;
     }
-        
+
     /**
      * @notice Constructor
      * @param _oracleAddress The manager oracle address
@@ -380,7 +369,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint256 feeAmount,
         bool processed
     ) external onlyOracle {
-        uint256 ssvAmount = retrieveFees(feeAmount, tokenAddresses[Token.SSV], processed);
+        uint256 ssvAmount = retrieveFees(
+            feeAmount,
+            tokenAddresses[Token.SSV],
+            processed
+        );
         ssvToken.approve(address(ssvNetwork), ssvAmount);
         ssvNetwork.deposit(address(this), operatorIds, ssvAmount, cluster);
     }
@@ -394,7 +387,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint256 feeAmount,
         bool processed
     ) external onlyOracleOrUpkeep {
-        uint256 linkAmount = retrieveFees(feeAmount, tokenAddresses[Token.LINK], processed);
+        uint256 linkAmount = retrieveFees(
+            feeAmount,
+            tokenAddresses[Token.LINK],
+            processed
+        );
         linkToken.approve(address(linkRegistrar), linkAmount);
         if (upkeepId == 0) {
             if (linkAmount < upkeepRegistrationMinimum) {
@@ -433,10 +430,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The amount of fees to withdraw
      */
     function withdrawReservedFees(uint256 amount) external onlyOwner {
-        require(
-            amount <= reservedFeeBalance,
-            "Withdrawing more than reserved"
-        );
+        require(amount <= reservedFeeBalance, "Withdrawing more than reserved");
         reservedFeeBalance -= amount;
         owner().send(amount);
     }
@@ -550,10 +544,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         setActionCount(msg.sender);
         User storage user = users[msg.sender];
         user.stake0 = getUserStake(msg.sender);
-        require(
-            user.stake0 >= amount,
-            "Withdrawing more than user stake"
-        );
+        require(user.stake0 >= amount, "Withdrawing more than user stake");
 
         user.stakeRatioSum0 = stakeRatioSum;
         user.stake0 -= amount;
@@ -642,8 +633,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         User storage user = users[userAddress];
         require(
             user.actionPeriodTimestamp == 0 ||
-            user.actionCount < maxActionsPerPeriod ||
-            block.timestamp >= user.actionPeriodTimestamp + actionPeriod,
+                user.actionCount < maxActionsPerPeriod ||
+                block.timestamp >= user.actionPeriodTimestamp + actionPeriod,
             "User action period maximum reached"
         );
         if (block.timestamp >= user.actionPeriodTimestamp + actionPeriod) {
@@ -726,7 +717,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
         require(
             keccak256(computedWithdrawalCredentials) ==
-            keccak256(withdrawalCredentials),
+                keccak256(withdrawalCredentials),
             "Invalid withdrawal credentials"
         );
     }
@@ -754,7 +745,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             depositDataRoot
         );
 
-        uint256 ssvAmount = retrieveFees(feeAmount, tokenAddresses[Token.SSV], processed);
+        uint256 ssvAmount = retrieveFees(
+            feeAmount,
+            tokenAddresses[Token.SSV],
+            processed
+        );
         ssvToken.approve(address(ssvNetwork), ssvAmount);
         ssvNetwork.registerValidator(
             publicKey,
@@ -810,12 +805,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Request reports for a given count of pools forced to exit
-     * @param count The number of pools forced to exit
+     * @notice Request reports a given count of forced exits
+     * @param count The number of forced exits
      */
     function requestForcedExitReports(uint256 count) external onlyUpkeep {
-        requestedForcedExitReports = count;
-
         emit ForcedExitReportsRequested(count);
     }
 
@@ -824,9 +817,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param count The number of completed exits
      */
     function requestCompletedExitReports(uint256 count) external onlyUpkeep {
-        requestedCompletedExitReports = count;
-
         emit CompletedExitReportsRequested(count);
+    }
+
+    /**
+     * @notice Request reshares for an operator
+     * @param operatorId The operator ID
+     */
+    function requestReshares(uint64 operatorId) external onlyOracleOrRegistry {
+        emit ResharesRequested(operatorId);
     }
 
     /**
@@ -835,11 +834,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function reportForcedExits(uint32[] memory poolIds) external onlyOracle {
         for (uint256 i = 0; i < poolIds.length; i++) {
-            require(
-                requestedForcedExitReports > 0,
-                "No requested forced exits"
-            );
-
             uint32 poolId = poolIds[i];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
             ICasimirPool.PoolStatus poolStatus = pool.getStatus();
@@ -848,7 +842,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 "Forced exit already reported"
             );
 
-            requestedForcedExitReports -= 1;
             forcedExits++;
             if (poolStatus == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
                 requestedExits--;
@@ -868,10 +861,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint32[] memory blamePercents,
         ISSVNetworkCore.Cluster memory cluster
     ) external onlyOracle {
-        require(
-            requestedCompletedExitReports > 0,
-            "No requested pool withdrawn exit reports"
-        );
         uint32 poolId = stakedPoolIds[poolIndex];
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
         ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
@@ -881,7 +870,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             "Pool not exiting"
         );
 
-        requestedCompletedExitReports -= 1;
         stakedPoolIds.remove(poolIndex);
         uint64[] memory operatorIds = poolConfig.operatorIds;
         bytes memory publicKey = poolConfig.publicKey;
@@ -931,20 +919,21 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
         require(
             poolConfig.status == ICasimirPool.PoolStatus.PENDING ||
-            poolConfig.status == ICasimirPool.PoolStatus.ACTIVE,
+                poolConfig.status == ICasimirPool.PoolStatus.ACTIVE,
             "Pool not active"
         );
-        require(
-            poolConfig.reshares < 2,
-            "Pool already reshared twice"
-        );
+        require(poolConfig.reshares < 2, "Pool already reshared twice");
 
         pool.setReshares(poolConfig.reshares + 1);
 
         registry.removeOperatorPool(oldOperatorId, poolId, 0);
         registry.addOperatorPool(newOperatorId, poolId);
 
-        uint256 ssvAmount = retrieveFees(feeAmount, tokenAddresses[Token.SSV], processed);
+        uint256 ssvAmount = retrieveFees(
+            feeAmount,
+            tokenAddresses[Token.SSV],
+            processed
+        );
         ssvToken.approve(address(ssvNetwork), ssvAmount);
 
         ssvNetwork.removeValidator(
@@ -960,6 +949,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             ssvAmount,
             cluster
         );
+
+        emit ReshareCompleted(poolId);
     }
 
     /**
@@ -1190,7 +1181,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param period The period to check
      * @return pendingWithdrawalEligibility The eligibility of a pending withdrawal
      */
-    function getPendingWithdrawalEligibility(uint256 index, uint256 period) public view returns (bool) {
+    function getPendingWithdrawalEligibility(
+        uint256 index,
+        uint256 period
+    ) public view returns (bool) {
         if (requestedWithdrawals > index) {
             return requestedWithdrawalQueue[index].period <= period;
         }

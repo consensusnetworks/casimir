@@ -48,7 +48,7 @@ interface ICasimirManager {
     event DepositRequested(uint32 poolId);
     event DepositInitiated(uint32 poolId);
     event DepositActivated(uint32 poolId);
-    event ReshareRequested(uint32 poolId);
+    event ResharesRequested(uint64 operatorId);
     event ReshareCompleted(uint32 poolId);
     event ExitRequested(uint32 poolId);
     event ForcedExitReportsRequested(uint256 count);
@@ -105,6 +105,8 @@ interface ICasimirManager {
     function activateDeposits(uint256 count) external;
     function requestForcedExitReports(uint256 count) external;
     function requestCompletedExitReports(uint256 count) external;
+    function requestReshares(uint64 operatorId) external;
+    function reportForcedExits(uint32[] memory poolIds) external;
     function reportCompletedExit(
         uint256 poolIndex,
         uint32[] memory blamePercents,

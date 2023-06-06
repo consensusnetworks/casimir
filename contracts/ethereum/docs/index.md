@@ -2,22 +2,6 @@
 
 ## CasimirManager
 
-### actionPeriod
-
-```solidity
-uint256 actionPeriod
-```
-
-User action period
-
-### maxActionsPerPeriod
-
-```solidity
-uint256 maxActionsPerPeriod
-```
-
-Max user actions per period
-
 ### upkeepRegistrationMinimum
 
 ```solidity
@@ -73,14 +57,6 @@ modifier onlyUpkeep()
 ```
 
 _Validate the caller is the upkeep contract_
-
-### validAction
-
-```solidity
-modifier validAction()
-```
-
-_Validate a user action_
 
 ### validDeposit
 
@@ -858,52 +834,6 @@ Get the upkeep balance
 | ---- | ---- | ----------- |
 | upkeepBalance | uint256 | The upkeep balance |
 
-### getSweptBalance
-
-```solidity
-function getSweptBalance(uint256 startIndex, uint256 endIndex) public view returns (uint256 balance)
-```
-
-Get the swept balance
-
-_Should be called off-chain_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The start index |
-| endIndex | uint256 | The end index |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| balance | uint256 | The swept balance |
-
-### getCompoundablePoolIds
-
-```solidity
-function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5] poolIds)
-```
-
-Get the next five compoundable pool IDs
-
-_Should be called off-chain_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The start index |
-| endIndex | uint256 | The end index |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| poolIds | uint32[5] | The next five compoundable pool IDs |
-
 ## CasimirPool
 
 ### poolCapacity
@@ -1311,6 +1241,60 @@ Fulfill the request for testing
 | requestId | bytes32 | The request ID, returned by sendRequest() |
 | response | bytes | Aggregated response from the user code |
 | err | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
+
+## CasimirViews
+
+### constructor
+
+```solidity
+constructor(address managerAddress) public
+```
+
+### getCompoundablePoolIds
+
+```solidity
+function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5] poolIds)
+```
+
+Get the next five compoundable pool IDs
+
+_Should be called off-chain_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolIds | uint32[5] | The next five compoundable pool IDs |
+
+### getSweptBalance
+
+```solidity
+function getSweptBalance(uint256 startIndex, uint256 endIndex) public view returns (uint256 balance)
+```
+
+Get the swept balance
+
+_Should be called off-chain_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| balance | uint256 | The swept balance |
 
 ## ICasimirManager
 
@@ -1723,18 +1707,6 @@ function getUpkeepAddress() external view returns (address)
 function getUpkeepBalance() external view returns (uint256 upkeepBalance)
 ```
 
-### getSweptBalance
-
-```solidity
-function getSweptBalance(uint256 startIndex, uint256 endIndex) external view returns (uint256)
-```
-
-### getCompoundablePoolIds
-
-```solidity
-function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5])
-```
-
 ## ICasimirPool
 
 ### PoolConfig
@@ -1984,6 +1956,20 @@ function setOracleAddress(address oracleAddress) external
 
 ```solidity
 function mockFulfillRequest(bytes32 requestId, bytes result, bytes err) external
+```
+
+## ICasimirViews
+
+### getCompoundablePoolIds
+
+```solidity
+function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5])
+```
+
+### getSweptBalance
+
+```solidity
+function getSweptBalance(uint256 startIndex, uint256 endIndex) external view returns (uint256)
 ```
 
 ## Types32Array

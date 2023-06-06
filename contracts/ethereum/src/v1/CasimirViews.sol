@@ -3,6 +3,7 @@ pragma solidity 0.8.18;
 
 import './interfaces/ICasimirViews.sol';
 import './interfaces/ICasimirManager.sol';
+import './interfaces/ICasimirRegistry.sol';
 
 contract CasimirViews is ICasimirViews {
     /*************/
@@ -18,9 +19,12 @@ contract CasimirViews is ICasimirViews {
 
     /** Manager contract */
     ICasimirManager private immutable manager;
+    /** Registry contract */
+    ICasimirRegistry private immutable registry;
 
-    constructor(address managerAddress) {
+    constructor(address managerAddress, address registryAddress) {
         manager = ICasimirManager(managerAddress);
+        registry = ICasimirRegistry(registryAddress);
     }
 
     /**
@@ -45,6 +49,27 @@ contract CasimirViews is ICasimirViews {
                 if (count == 5) {
                     break;
                 }
+            }
+        }
+    }
+
+    /**
+     * @notice Get the active operator IDs
+     * @param startIndex The start index
+     * @param endIndex The end index 
+     * @return activeOperatorIds The active operator IDs
+     */
+    function getEligibleOperatorIds(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (uint64[] memory activeOperatorIds) {
+        uint64[] memory operatorIds = registry.getOperatorIds();
+        uint256 count = 0;
+        for (uint256 i = startIndex; i <= endIndex; i++) {
+            uint64 operatorId = operatorIds[i];
+            if (registry.getOperatorCollateral(operatorId) > 0 && registry.getOperatorEligibility(operatorId)) {
+                activeOperatorIds[count] = operatorId;
+                count++;
             }
         }
     }
