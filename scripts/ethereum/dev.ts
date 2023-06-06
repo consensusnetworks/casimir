@@ -7,7 +7,6 @@ import minimist from 'minimist'
  * 
  * Arguments:
  *      --clean: whether to clean build directory (override default true)
- *      --execution: hardhat or gananche (override default hardhat)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
  *      --mock: whether to use mock contracts (override default true)
  * 
@@ -30,9 +29,6 @@ void async function () {
 
     /** Default to clean services and data */
     const clean = argv.clean !== 'false' || argv.clean !== false
-
-    /** Set execution environment */
-    const execution = argv.execution === 'ganache' ? 'ganache' : 'hardhat'
 
     /** Set fork rpc if requested, default fork to goerli if set vaguely or unset */
     const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
@@ -66,19 +62,11 @@ void async function () {
     /** Set mock */
     process.env.MOCK_EXTERNAL_CONTRACTS = `${mock}`
 
-    if (execution === 'ganache') {
-        $`npm run node:ganache --workspace @casimir/ethereum`
-        // Wait for ganache to start
-        const ganacheWaitTime = 5000
-        await new Promise(resolve => setTimeout(resolve, ganacheWaitTime))
-        $`npm run dev --workspace @casimir/ethereum -- --network ganache`
-    } else {
-        $`npm run node --workspace @casimir/ethereum`
-        // Wait for hardhat to start
-        const hardhatWaitTime = 2500
-        await new Promise(resolve => setTimeout(resolve, hardhatWaitTime))
-        $`npm run dev --workspace @casimir/ethereum -- --network localhost`
-    }
+    $`npm run node --workspace @casimir/ethereum`
+    // Wait for hardhat to start
+    const hardhatWaitTime = 2500
+    await new Promise(resolve => setTimeout(resolve, hardhatWaitTime))
+    $`npm run dev --workspace @casimir/ethereum -- --network localhost`
 
     /** Start local oracle */
     process.env.ETHEREUM_RPC_URL = 'http://localhost:8545'

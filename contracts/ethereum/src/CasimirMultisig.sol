@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import './interfaces/ICasimirDAO.sol';
+import './interfaces/ICasimirMultisig.sol';
 
-contract CasimirDAO is ICasimirDAO {
+contract CasimirMultisig is ICasimirMultisig {
     address[] public owners;
     mapping(address => bool) public isOwner;
-    uint public numConfirmationsRequired;
+    uint public confirmationsRequired;
 
     mapping(uint => mapping(address => bool)) public isOwnerChangeConfirmed;
     mapping(uint => mapping(address => bool)) public isTransactionConfirmed;
@@ -64,13 +64,8 @@ contract CasimirDAO is ICasimirDAO {
         _;
     }
 
-    constructor(address[] memory _owners, uint256 _numConfirmationsRequired) {
+    constructor(address[] memory _owners) {
         require(_owners.length > 0, "Owners required");
-        require(
-            _numConfirmationsRequired > 0 &&
-                _numConfirmationsRequired <= _owners.length,
-            "Invalid number of required confirmations"
-        );
 
         for (uint256 i = 0; i < _owners.length; i++) {
             address owner = _owners[i];
@@ -82,7 +77,7 @@ contract CasimirDAO is ICasimirDAO {
             owners.push(owner);
         }
 
-        numConfirmationsRequired = _numConfirmationsRequired;
+        adjustConfirmationsRequired();
     }
 
     receive() external payable {
@@ -97,7 +92,7 @@ contract CasimirDAO is ICasimirDAO {
                 owner: owner,
                 add: add,
                 executed: false,
-                numConfirmations: 0
+                confirmations: 0
             })
         );
 
@@ -114,7 +109,7 @@ contract CasimirDAO is ICasimirDAO {
         ownerChangeNotConfirmed(changeId)
     {
         OwnerChange storage ownerChange = ownerChanges[changeId];
-        ownerChange.numConfirmations += 1;
+        ownerChange.confirmations += 1;
         isOwnerChangeConfirmed[changeId][msg.sender] = true;
 
         emit ConfirmOwnerChange(msg.sender, changeId);
@@ -131,7 +126,7 @@ contract CasimirDAO is ICasimirDAO {
         OwnerChange storage ownerChange = ownerChanges[changeId];
 
         require(
-            ownerChange.numConfirmations >= numConfirmationsRequired,
+            ownerChange.confirmations >= confirmationsRequired,
             "Cannot execute owner change"
         );
 
@@ -152,6 +147,8 @@ contract CasimirDAO is ICasimirDAO {
             owners.pop();
         }
 
+        adjustConfirmationsRequired();
+
         emit ExecuteOwnerChange(msg.sender, changeId);
     }
 
@@ -170,7 +167,7 @@ contract CasimirDAO is ICasimirDAO {
             "Owner change not confirmed"
         );
 
-        ownerChange.numConfirmations -= 1;
+        ownerChange.confirmations -= 1;
         isOwnerChangeConfirmed[changeId][msg.sender] = false;
 
         emit RevokeOwnerChangeConfirmation(msg.sender, changeId);
@@ -189,7 +186,7 @@ contract CasimirDAO is ICasimirDAO {
                 value: value,
                 data: data,
                 executed: false,
-                numConfirmations: 0
+                confirmations: 0
             })
         );
 
@@ -206,7 +203,7 @@ contract CasimirDAO is ICasimirDAO {
         transactionNotConfirmed(transactionIndex)
     {
         Transaction storage transaction = transactions[transactionIndex];
-        transaction.numConfirmations += 1;
+        transaction.confirmations += 1;
         isTransactionConfirmed[transactionIndex][msg.sender] = true;
 
         emit ConfirmTransaction(msg.sender, transactionIndex);
@@ -223,7 +220,7 @@ contract CasimirDAO is ICasimirDAO {
         Transaction storage transaction = transactions[transactionIndex];
 
         require(
-            transaction.numConfirmations >= numConfirmationsRequired,
+            transaction.confirmations >= confirmationsRequired,
             "Cannot execute Transaction"
         );
 
@@ -252,10 +249,21 @@ contract CasimirDAO is ICasimirDAO {
             "Transaction not confirmed"
         );
 
-        transaction.numConfirmations -= 1;
+        transaction.confirmations -= 1;
         isTransactionConfirmed[transactionIndex][msg.sender] = false;
 
         emit RevokeTransactionConfirmation(msg.sender, transactionIndex);
+    }
+
+    function adjustConfirmationsRequired() internal {
+        uint ownerCount = owners.length;
+        if (ownerCount == 1 || ownerCount == 2) {
+            confirmationsRequired = 1;
+        } else if (ownerCount == 3) {
+            confirmationsRequired = 2;
+        } else {
+            confirmationsRequired = (ownerCount * 2) / 3;
+        }
     }
 
     function getOwners() public view returns (address[] memory) {
@@ -275,7 +283,7 @@ contract CasimirDAO is ICasimirDAO {
             address owner,
             bool add,
             bool executed,
-            uint256 numConfirmations
+            uint256 confirmations
         )
     {
         OwnerChange storage ownerChange = ownerChanges[changeId];
@@ -283,7 +291,7 @@ contract CasimirDAO is ICasimirDAO {
             ownerChange.owner,
             ownerChange.add,
             ownerChange.executed,
-            ownerChange.numConfirmations
+            ownerChange.confirmations
         );
     }
 
@@ -301,7 +309,7 @@ contract CasimirDAO is ICasimirDAO {
             uint256 value,
             bytes memory data,
             bool executed,
-            uint256 numConfirmations
+            uint256 confirmations
         )
     {
         Transaction storage transaction = transactions[transactionIndex];
@@ -310,7 +318,7 @@ contract CasimirDAO is ICasimirDAO {
             transaction.value,
             transaction.data,
             transaction.executed,
-            transaction.numConfirmations
+            transaction.confirmations
         );
     }
 }

@@ -31,6 +31,8 @@ interface ICasimirManager {
     struct User {
         uint256 stake0;
         uint256 stakeRatioSum0;
+        uint256 actionPeriodTimestamp;
+        uint256 actionCount;
     }
 
     struct Withdrawal {

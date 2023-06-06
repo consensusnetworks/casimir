@@ -2,7 +2,6 @@
     "name": "@casimir/ethereum",
     "scripts": {
         "node": "npx hardhat node",
-        "node:ganache": "npx esno scripts/ganache.ts",
         "dev": "npx hardhat run scripts/dev.ts",
         "docgen": "npx hardhat docgen",
         "test": "npx esno scripts/test.ts --clean \"$npm_config_clean\"",
@@ -29,7 +28,6 @@
         "@types/node": "^17.0.45",
         "chai": "^4.3.6",
         "esno": "^0.16.3",
-        "ganache": "^7.8.0",
         "hardhat": "^2.12.2",
         "localtunnel": "^2.0.2",
         "minimist": "^1.2.8",

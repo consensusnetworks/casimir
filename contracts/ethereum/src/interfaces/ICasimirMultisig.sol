@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-interface ICasimirDAO {
+interface ICasimirMultisig {
     event Deposit(address indexed sender, uint amount, uint balance);
     event SubmitOwnerChange(
         address indexed owner,
@@ -26,7 +26,7 @@ interface ICasimirDAO {
         address owner;
         bool add;
         bool executed;
-        uint numConfirmations;
+        uint confirmations;
     }
 
     struct Transaction {
@@ -34,7 +34,7 @@ interface ICasimirDAO {
         uint value;
         bytes data;
         bool executed;
-        uint numConfirmations;
+        uint confirmations;
     }
 
     receive() external payable;
@@ -87,7 +87,7 @@ interface ICasimirDAO {
             address owner,
             bool add,
             bool executed,
-            uint256 numConfirmations
+            uint256 confirmations
         );
 
     function getTransactionCount() external view returns (uint256);
@@ -102,6 +102,6 @@ interface ICasimirDAO {
             uint256 value,
             bytes memory data,
             bool executed,
-            uint256 numConfirmations
+            uint256 confirmations
         );
 }

@@ -947,6 +947,12 @@ function withdrawBalance(uint32[] blamePercents) external
 function setOperatorIds(uint64[] operatorIds) external
 ```
 
+### setReshares
+
+```solidity
+function setReshares(uint256 reshares) external
+```
+
 ### setStatus
 
 ```solidity
@@ -1753,6 +1759,7 @@ struct PoolConfig {
   uint32 poolId;
   bytes publicKey;
   uint64[] operatorIds;
+  uint256 reshares;
   enum ICasimirPool.PoolStatus status;
 }
 ```
@@ -1785,6 +1792,12 @@ function withdrawBalance(uint32[] blamePercents) external
 
 ```solidity
 function setOperatorIds(uint64[] operatorIds) external
+```
+
+### setReshares
+
+```solidity
+function setReshares(uint256 reshares) external
 ```
 
 ### setStatus
@@ -2152,7 +2165,7 @@ struct RegistrationParams {
 function registerUpkeep(struct KeeperRegistrarInterface.RegistrationParams requestParams) external returns (uint256)
 ```
 
-## CasimirDAO
+## CasimirMultisig
 
 ### owners
 
@@ -2187,13 +2200,13 @@ mapping(uint256 => mapping(address => bool)) isTransactionConfirmed
 ### ownerChanges
 
 ```solidity
-struct ICasimirDAO.OwnerChange[] ownerChanges
+struct ICasimirMultisig.OwnerChange[] ownerChanges
 ```
 
 ### transactions
 
 ```solidity
-struct ICasimirDAO.Transaction[] transactions
+struct ICasimirMultisig.Transaction[] transactions
 ```
 
 ### onlyOwner
@@ -2328,7 +2341,7 @@ function getTransactionCount() public view returns (uint256)
 function getTransaction(uint256 transactionIndex) public view returns (address to, uint256 value, bytes data, bool executed, uint256 numConfirmations)
 ```
 
-## ICasimirDAO
+## ICasimirMultisig
 
 ### Deposit
 
@@ -2490,28 +2503,6 @@ function getTransactionCount() external view returns (uint256)
 ```solidity
 function getTransaction(uint256 transactionIndex) external view returns (address to, uint256 value, bytes data, bool executed, uint256 numConfirmations)
 ```
-
-## CasimirRecipient
-
-### manager
-
-```solidity
-contract ICasimirManager manager
-```
-
-### constructor
-
-```solidity
-constructor() public
-```
-
-### receive
-
-```solidity
-receive() external payable
-```
-
-## ICasimirRecipient
 
 ## MockFunctionsOracle
 

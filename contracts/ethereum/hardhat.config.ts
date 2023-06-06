@@ -97,11 +97,6 @@ const config: HardhatUserConfig = {
       gas: 'auto',
       gasPrice: 'auto'
     },
-    ganache: {
-      accounts: mnemonic ? hid : undefined,
-      url: 'http://127.0.0.1:8545',
-      allowUnlimitedContractSize: true
-    },
     mainnet: {
       accounts: mnemonic ? hid : undefined,
       url: hardhatUrl || '',

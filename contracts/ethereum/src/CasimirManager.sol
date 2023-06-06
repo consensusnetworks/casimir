@@ -46,6 +46,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /* Constants */
     /*************/
 
+    /** User action period */
+    uint256 public constant actionPeriod = 1 days;
+    /** Max user actions per period */
+    uint256 public constant maxActionsPerPeriod = 5;
     /** Compound minimum (0.1 ETH) */
     uint256 private constant compoundMinimum = 100000000 gwei;
     /** Minimum balance for upkeep registration (0.1 LINK) */
@@ -209,6 +213,20 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @dev Validate a user action
+     */
+    modifier validAction() {
+        User storage user = users[msg.sender];
+        require(
+            user.actionPeriodTimestamp == 0 ||
+            user.actionCount < maxActionsPerPeriod ||
+            block.timestamp >= user.actionPeriodTimestamp + actionPeriod,
+            "User action period not elapsed"
+        );
+        _;
+    }
+
+    /**
      * @dev Validate a deposit
      */
     modifier validDeposit() {
@@ -298,15 +316,23 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @notice Deposit user stake
      */
-    function depositStake() external payable nonReentrant validDeposit {
+    function depositStake() external payable nonReentrant validAction validDeposit {
+        User storage user = users[msg.sender];
+        if (block.timestamp >= user.actionPeriodTimestamp + actionPeriod) {
+            user.actionPeriodTimestamp = block.timestamp;
+            user.actionCount = 1;
+        } else {
+            user.actionCount++;
+        }
+
         uint256 depositAfterFees = subtractFees(msg.value);
         reservedFeeBalance += msg.value - depositAfterFees;
 
-        if (users[msg.sender].stake0 > 0) {
-            users[msg.sender].stake0 = getUserStake(msg.sender);
+        if (user.stake0 > 0) {
+            user.stake0 = getUserStake(msg.sender);
         }
-        users[msg.sender].stakeRatioSum0 = stakeRatioSum;
-        users[msg.sender].stake0 += depositAfterFees;
+        user.stakeRatioSum0 = stakeRatioSum;
+        user.stake0 += depositAfterFees;
 
         distributeStake(depositAfterFees);
 
@@ -541,15 +567,22 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function requestWithdrawal(
         uint256 amount
-    ) external nonReentrant validWithdrawal(amount) {
-        users[msg.sender].stake0 = getUserStake(msg.sender);
+    ) external nonReentrant validAction validWithdrawal(amount) {
+        User storage user = users[msg.sender];
+        if (block.timestamp >= user.actionPeriodTimestamp + actionPeriod) {
+            user.actionPeriodTimestamp = block.timestamp;
+            user.actionCount = 1;
+        } else {
+            user.actionCount++;
+        }
+        user.stake0 = getUserStake(msg.sender);
         require(
-            users[msg.sender].stake0 >= amount,
+            user.stake0 >= amount,
             "Withdrawing more than user stake"
         );
 
-        users[msg.sender].stakeRatioSum0 = stakeRatioSum;
-        users[msg.sender].stake0 -= amount;
+        user.stakeRatioSum0 = stakeRatioSum;
+        user.stake0 -= amount;
 
         if (amount <= getWithdrawableBalance()) {
             fulfillWithdrawal(msg.sender, amount);
