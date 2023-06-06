@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
-import { abi } from '@casimir/ethereum/build/artifacts/src/CasimirManager.sol/CasimirManager.json'
+import { abi } from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
 import useEnvironment from './environment'
 import useUsers from './users'
 import useEthers from './ethers'

@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/CasimirManager.sol/CasimirManager.json'
+import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
 import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 
 export function config() {
