@@ -65,6 +65,10 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
         config.operatorIds = operatorIds;
     }
 
+    function setReshares(uint256 reshares) external onlyOwner {
+        config.reshares = reshares;
+    }
+
     function setStatus(PoolStatus status) external onlyOwner {
         config.status = status;        
     }

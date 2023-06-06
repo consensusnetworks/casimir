@@ -902,12 +902,17 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     ) external onlyOracle {
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
         ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
-
         require(
             poolConfig.status == ICasimirPool.PoolStatus.PENDING ||
             poolConfig.status == ICasimirPool.PoolStatus.ACTIVE,
             "Pool not active"
         );
+        require(
+            poolConfig.reshares < 2,
+            "Pool already reshared twice"
+        );
+
+        pool.setReshares(poolConfig.reshares + 1);
 
         registry.removeOperatorPool(oldOperatorId, poolId, 0);
         registry.addOperatorPool(newOperatorId, poolId);

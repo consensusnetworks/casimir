@@ -11,6 +11,7 @@ interface ICasimirPool {
         uint32 poolId;
         bytes publicKey;
         uint64[] operatorIds;
+        uint256 reshares;
         PoolStatus status;
     }
 
@@ -33,6 +34,8 @@ interface ICasimirPool {
 
     function setOperatorIds(uint64[] memory operatorIds) external;
     
+    function setReshares(uint256 reshares) external;
+
     function setStatus(PoolStatus status) external;
 
     function getBalance() external view returns (uint256);

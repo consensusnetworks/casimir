@@ -2,6 +2,14 @@
 
 ## CasimirManager
 
+### upkeepRegistrationMinimum
+
+```solidity
+uint256 upkeepRegistrationMinimum
+```
+
+Minimum balance for upkeep registration (0.1 LINK)
+
 ### finalizableCompletedExits
 
 ```solidity
@@ -25,6 +33,14 @@ modifier onlyOracle()
 ```
 
 _Validate the caller is the manager oracle_
+
+### onlyOracleOrUpkeep
+
+```solidity
+modifier onlyOracleOrUpkeep()
+```
+
+_Validate the caller is the oracle or upkeep_
 
 ### onlyRegistry
 
@@ -75,7 +91,7 @@ _Validate a distribution_
 ### constructor
 
 ```solidity
-constructor(address _oracleAddress, address beaconDepositAddress, address linkFunctionsAddress, address linkRegistrarAddress, uint32 linkSubscriptionId, address linkTokenAddress, address ssvNetworkAddress, address ssvNetworkViewsAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
+constructor(address _oracleAddress, address beaconDepositAddress, address linkFunctionsAddress, address linkRegistrarAddress, address linkRegistryAddress, address linkTokenAddress, address ssvNetworkAddress, address ssvNetworkViewsAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
 ```
 
 Constructor
@@ -88,7 +104,7 @@ Constructor
 | beaconDepositAddress | address | The Beacon deposit address |
 | linkFunctionsAddress | address | The Chainlink functions oracle address |
 | linkRegistrarAddress | address | The Chainlink keeper registrar address |
-| linkSubscriptionId | uint32 | The Chainlink functions subscription ID |
+| linkRegistryAddress | address | The Chainlink keeper registry address |
 | linkTokenAddress | address | The Chainlink token address |
 | ssvNetworkAddress | address | The SSV network address |
 | ssvNetworkViewsAddress | address | The SSV network views address |
@@ -152,7 +168,7 @@ Deposit recovered balance for a given pool from an operator
 ### depositClusterBalance
 
 ```solidity
-function depositClusterBalance(struct ISSVNetworkCore.Cluster cluster, uint256 amount) external
+function depositClusterBalance(uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount, bool processed) external
 ```
 
 Deposit to a cluster balance
@@ -161,22 +177,25 @@ Deposit to a cluster balance
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| cluster | struct ISSVNetworkCore.Cluster | The cluster |
-| amount | uint256 | The amount to deposit |
+| operatorIds | uint64[] | The operator IDs |
+| cluster | struct ISSVNetworkCore.Cluster | The SSV cluster snapshot |
+| feeAmount | uint256 | The fee amount to deposit |
+| processed | bool | Whether the fee amount is already processed |
 
 ### depositUpkeepBalance
 
 ```solidity
-function depositUpkeepBalance(uint256 amount) external
+function depositUpkeepBalance(uint256 feeAmount, bool processed) external
 ```
 
-Deposit upkeep balance
+Deposit to the upkeep balance
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amount | uint256 | The amount to deposit |
+| feeAmount | uint256 | The fee amount to deposit |
+| processed | bool | Whether the fee amount is already processed |
 
 ### depositReservedFees
 
@@ -185,6 +204,20 @@ function depositReservedFees() external payable
 ```
 
 Deposit reserved fees
+
+### withdrawReservedFees
+
+```solidity
+function withdrawReservedFees(uint256 amount) external
+```
+
+Withdraw a given amount of reserved fees
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount | uint256 | The amount of fees to withdraw |
 
 ### rebalanceStake
 
@@ -248,7 +281,7 @@ Fulfill a given count of pending withdrawals
 ### initiateDeposit
 
 ```solidity
-function initiateDeposit(bytes32 depositDataRoot, bytes publicKey, bytes signature, bytes withdrawalCredentials, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount) external
+function initiateDeposit(bytes32 depositDataRoot, bytes publicKey, bytes signature, bytes withdrawalCredentials, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount, bool processed) external
 ```
 
 Initiate the next ready pool
@@ -263,8 +296,9 @@ Initiate the next ready pool
 | withdrawalCredentials | bytes | The withdrawal credentials |
 | operatorIds | uint64[] | The operator IDs |
 | shares | bytes | The operator shares |
-| cluster | struct ISSVNetworkCore.Cluster |  |
-| feeAmount | uint256 | The fee amount |
+| cluster | struct ISSVNetworkCore.Cluster | The SSV cluster snapshot |
+| feeAmount | uint256 | The fee amount to deposit |
+| processed | bool |  |
 
 ### activateDeposits
 
@@ -311,16 +345,16 @@ Request reports for a given count of completed exits
 ### reportForcedExits
 
 ```solidity
-function reportForcedExits(uint32 poolId) external
+function reportForcedExits(uint32[] poolIds) external
 ```
 
-Report a pool unexpected exit
+Report pool forced (unrequested) exits
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| poolId | uint32 | The pool ID |
+| poolIds | uint32[] | The pool IDs |
 
 ### reportCompletedExit
 
@@ -337,6 +371,65 @@ Report a completed exit
 | poolIndex | uint256 | The staked pool index |
 | blamePercents | uint32[] | The operator blame percents (0 if balance is 32 ether) |
 | cluster | struct ISSVNetworkCore.Cluster | The SSV cluster snapshot |
+
+### reportReshare
+
+```solidity
+function reportReshare(uint32 poolId, uint64[] operatorIds, uint64[] oldOperatorIds, uint64 newOperatorId, uint64 oldOperatorId, bytes shares, struct ISSVNetworkCore.Cluster cluster, struct ISSVNetworkCore.Cluster oldCluster, uint256 feeAmount, bool processed) external
+```
+
+Report a reshare
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolId | uint32 | The pool ID |
+| operatorIds | uint64[] | The operator IDs |
+| oldOperatorIds | uint64[] | The old operator IDs |
+| newOperatorId | uint64 | The new operator ID |
+| oldOperatorId | uint64 | The old operator ID |
+| shares | bytes | The operator shares |
+| cluster | struct ISSVNetworkCore.Cluster | The SSV cluster snapshot |
+| oldCluster | struct ISSVNetworkCore.Cluster | The old SSV cluster snapshot |
+| feeAmount | uint256 | The fee amount to deposit |
+| processed | bool | Whether the fee amount is already processed |
+
+### withdrawUpkeepBalance
+
+```solidity
+function withdrawUpkeepBalance() external
+```
+
+Cancel upkeep and withdraw the upkeep balance
+
+### withdrawLINKBalance
+
+```solidity
+function withdrawLINKBalance(uint256 amount) external
+```
+
+Withdraw a given amount from the LINK balance
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount | uint256 | The amount to withdraw |
+
+### withdrawSSVBalance
+
+```solidity
+function withdrawSSVBalance(uint256 amount) external
+```
+
+Withdraw a given amount from the SSV balance
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount | uint256 | The amount to withdraw |
 
 ### setFunctionsAddress
 
@@ -748,6 +841,20 @@ Get the registry address
 | ---- | ---- | ----------- |
 | registryAddress | address | The registry address |
 
+### getUpkeepId
+
+```solidity
+function getUpkeepId() external view returns (uint256)
+```
+
+Get the upkeep ID
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | upkeepId The upkeep ID |
+
 ### getUpkeepAddress
 
 ```solidity
@@ -761,6 +868,20 @@ Get the upkeep address
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | upkeepAddress | address | The upkeep address |
+
+### getUpkeepBalance
+
+```solidity
+function getUpkeepBalance() external view returns (uint256 upkeepBalance)
+```
+
+Get the upkeep balance
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| upkeepBalance | uint256 | The upkeep balance |
 
 ### getSweptBalance
 
@@ -882,13 +1003,13 @@ uint256 minimumCollateralDeposit
 uint256 totalCollateral
 ```
 
-### onlyPool
+### onlyOwnerOrPool
 
 ```solidity
-modifier onlyPool(uint32 poolId)
+modifier onlyOwnerOrPool(uint32 poolId)
 ```
 
-_Validate the caller is the authorized pool_
+_Validate the caller is owner or the authorized pool_
 
 ### constructor
 
@@ -1067,7 +1188,7 @@ Fulfillment gas limit
 ### constructor
 
 ```solidity
-constructor(address linkFunctionsAddress, address linkRegistrarAddress, uint64 _linkSubscriptionId, address linkTokenAddress) public
+constructor(address linkFunctionsAddress) public
 ```
 
 Constructor
@@ -1077,15 +1198,6 @@ Constructor
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | linkFunctionsAddress | address | The functions oracle contract address |
-| linkRegistrarAddress | address | The keeper registrar address |
-| _linkSubscriptionId | uint64 | The functions subscription ID |
-| linkTokenAddress | address | The LINK token address |
-
-### registerUpkeep
-
-```solidity
-function registerUpkeep(struct KeeperRegistrarInterface.RegistrationParams params) public
-```
 
 ### generateRequest
 
@@ -1106,7 +1218,7 @@ Generate a new Functions.Request(off-chain, saving gas)
 ### setRequest
 
 ```solidity
-function setRequest(uint32 _fulfillGasLimit, uint64 linkSubscriptionId, bytes _requestCBOR) external
+function setRequest(uint32 _fulfillGasLimit, uint64 _linkSubscriptionId, bytes _requestCBOR) external
 ```
 
 Set the bytes representing the CBOR-encoded Functions.Request
@@ -1116,7 +1228,7 @@ Set the bytes representing the CBOR-encoded Functions.Request
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _fulfillGasLimit | uint32 | Maximum amount of gas used to call the client contract's `handleOracleFulfillment` function |
-| linkSubscriptionId | uint64 | The functions billing subscription ID used to pay for Functions requests |
+| _linkSubscriptionId | uint64 | The functions billing subscription ID used to pay for Functions requests |
 | _requestCBOR | bytes | Bytes representing the CBOR-encoded Functions.Request |
 
 ### checkUpkeep
@@ -1383,13 +1495,13 @@ function depositReservedFees() external payable
 ### depositClusterBalance
 
 ```solidity
-function depositClusterBalance(struct ISSVNetworkCore.Cluster cluster, uint256 amount) external
+function depositClusterBalance(uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount, bool processed) external
 ```
 
 ### depositUpkeepBalance
 
 ```solidity
-function depositUpkeepBalance(uint256 amount) external
+function depositUpkeepBalance(uint256 feeAmount, bool processed) external
 ```
 
 ### rebalanceStake
@@ -1419,7 +1531,7 @@ function fulfillWithdrawals(uint256 count) external
 ### initiateDeposit
 
 ```solidity
-function initiateDeposit(bytes32 depositDataRoot, bytes publicKey, bytes signature, bytes withdrawalCredentials, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount) external
+function initiateDeposit(bytes32 depositDataRoot, bytes publicKey, bytes signature, bytes withdrawalCredentials, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount, bool processed) external
 ```
 
 ### activateDeposits
@@ -1444,6 +1556,24 @@ function requestCompletedExitReports(uint256 count) external
 
 ```solidity
 function reportCompletedExit(uint256 poolIndex, uint32[] blamePercents, struct ISSVNetworkCore.Cluster cluster) external
+```
+
+### reportReshare
+
+```solidity
+function reportReshare(uint32 poolId, uint64[] operatorIds, uint64[] oldOperatorIds, uint64 newOperatorId, uint64 oldOperatorId, bytes shares, struct ISSVNetworkCore.Cluster cluster, struct ISSVNetworkCore.Cluster oldCluster, uint256 feeAmount, bool processed) external
+```
+
+### withdrawLINKBalance
+
+```solidity
+function withdrawLINKBalance(uint256 amount) external
+```
+
+### withdrawSSVBalance
+
+```solidity
+function withdrawSSVBalance(uint256 amount) external
 ```
 
 ### setFunctionsAddress
@@ -1596,10 +1726,22 @@ function getPoolDetails(uint32 poolId) external view returns (struct ICasimirMan
 function getRegistryAddress() external view returns (address)
 ```
 
+### getUpkeepId
+
+```solidity
+function getUpkeepId() external view returns (uint256)
+```
+
 ### getUpkeepAddress
 
 ```solidity
 function getUpkeepAddress() external view returns (address)
+```
+
+### getUpkeepBalance
+
+```solidity
+function getUpkeepBalance() external view returns (uint256 upkeepBalance)
 ```
 
 ## ICasimirPool
