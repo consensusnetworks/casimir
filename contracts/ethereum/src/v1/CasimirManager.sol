@@ -15,7 +15,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
@@ -47,9 +46,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /*************/
 
     /** User action period */
-    uint256 public constant actionPeriod = 1 days;
+    uint256 private constant actionPeriod = 1 days;
     /** Max user actions per period */
-    uint256 public constant maxActionsPerPeriod = 5;
+    uint256 private constant maxActionsPerPeriod = 5;
     /** Compound minimum (0.1 ETH) */
     uint256 private constant compoundMinimum = 100000000 gwei;
     /** Minimum balance for upkeep registration (0.1 LINK) */
@@ -163,7 +162,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     modifier onlyPool(uint32 poolId) {
         require(
             msg.sender == poolAddresses[poolId],
-            "Only authorized pool can call this function"
+            "Not pool"
         );
         _;
     }
@@ -174,7 +173,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     modifier onlyOracle() {
         require(
             msg.sender == oracleAddress,
-            "Only manager oracle can call this function"
+            "Not oracle"
         );
         _;
     }
@@ -185,7 +184,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     modifier onlyOracleOrUpkeep() {
         require(
             msg.sender == oracleAddress || msg.sender == address(upkeep),
-            "Only manager oracle or upkeep can call this function"
+            "Not oracle or upkeep"
         );
         _;
     }
@@ -196,7 +195,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     modifier onlyRegistry() {
         require(
             msg.sender == address(registry),
-            "Only registry can call this function"
+            "Not registry"
         );
         _;
     }
@@ -207,21 +206,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     modifier onlyUpkeep() {
         require(
             msg.sender == address(upkeep),
-            "Only upkeep can call this function"
-        );
-        _;
-    }
-
-    /**
-     * @dev Validate a user action
-     */
-    modifier validAction() {
-        User storage user = users[msg.sender];
-        require(
-            user.actionPeriodTimestamp == 0 ||
-            user.actionCount < maxActionsPerPeriod ||
-            block.timestamp >= user.actionPeriodTimestamp + actionPeriod,
-            "User action period not elapsed"
+            "Not upkeep"
         );
         _;
     }
@@ -232,7 +217,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     modifier validDeposit() {
         require(
             msg.value >= stakeMinimum,
-            "Deposit must be greater than minimum"
+            "Deposit less than minimum"
         );
         _;
     }
@@ -243,7 +228,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     modifier validWithdrawal(uint256 amount) {
         require(
             amount >= stakeMinimum,
-            "Withdrawal must be greater than minimum"
+            "Withdrawal less than minimum"
         );
         _;
     }
@@ -253,7 +238,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The amount to validate
      */
     modifier validDistribution(uint256 amount) {
-        require(amount > 0, "Distribution must be greater than zero");
+        require(amount > 0, "Distribution amount is zero");
         _;
     }
         
@@ -316,15 +301,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @notice Deposit user stake
      */
-    function depositStake() external payable nonReentrant validAction validDeposit {
+    function depositStake() external payable nonReentrant validDeposit {
+        setActionCount(msg.sender);
         User storage user = users[msg.sender];
-        if (block.timestamp >= user.actionPeriodTimestamp + actionPeriod) {
-            user.actionPeriodTimestamp = block.timestamp;
-            user.actionCount = 1;
-        } else {
-            user.actionCount++;
-        }
-
         uint256 depositAfterFees = subtractFees(msg.value);
         reservedFeeBalance += msg.value - depositAfterFees;
 
@@ -456,7 +435,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function withdrawReservedFees(uint256 amount) external onlyOwner {
         require(
             amount <= reservedFeeBalance,
-            "Withdrawing more than reserved fees"
+            "Withdrawing more than reserved"
         );
         reservedFeeBalance -= amount;
         owner().send(amount);
@@ -505,7 +484,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         int256 change = rewards - latestActiveRewardBalance;
 
         if (change > 0) {
-            uint256 gain = SafeCast.toUint256(change);
+            uint256 gain = uint256(change);
             if (rewards > 0) {
                 uint256 gainAfterFees = subtractFees(gain);
                 stakeRatioSum += Math.mulDiv(
@@ -527,7 +506,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 emit StakeRebalanced(gain);
             }
         } else if (change < 0) {
-            uint256 loss = SafeCast.toUint256(-change);
+            uint256 loss = uint256(-change);
             stakeRatioSum -= Math.mulDiv(stakeRatioSum, loss, getTotalStake());
             latestActiveBalanceAfterFees -= loss;
 
@@ -567,14 +546,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function requestWithdrawal(
         uint256 amount
-    ) external nonReentrant validAction validWithdrawal(amount) {
+    ) external nonReentrant validWithdrawal(amount) {
+        setActionCount(msg.sender);
         User storage user = users[msg.sender];
-        if (block.timestamp >= user.actionPeriodTimestamp + actionPeriod) {
-            user.actionPeriodTimestamp = block.timestamp;
-            user.actionCount = 1;
-        } else {
-            user.actionCount++;
-        }
         user.stake0 = getUserStake(msg.sender);
         require(
             user.stake0 >= amount,
@@ -658,6 +632,26 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         sender.send(amount);
 
         emit WithdrawalFulfilled(sender, amount);
+    }
+
+    /**
+     * Check and set a user's action count
+     * @param userAddress The user address to check
+     */
+    function setActionCount(address userAddress) private {
+        User storage user = users[userAddress];
+        require(
+            user.actionPeriodTimestamp == 0 ||
+            user.actionCount < maxActionsPerPeriod ||
+            block.timestamp >= user.actionPeriodTimestamp + actionPeriod,
+            "User action period maximum reached"
+        );
+        if (block.timestamp >= user.actionPeriodTimestamp + actionPeriod) {
+            user.actionPeriodTimestamp = block.timestamp;
+            user.actionCount = 1;
+        } else {
+            user.actionCount++;
+        }
     }
 
     /**
@@ -1331,48 +1325,5 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getUpkeepBalance() external view returns (uint256 upkeepBalance) {
         upkeepBalance = linkRegistry.getUpkeep(upkeepId).balance;
-    }
-
-    /**
-     * @notice Get the swept balance
-     * @dev Should be called off-chain
-     * @param startIndex The start index
-     * @param endIndex The end index
-     * @return balance The swept balance
-     */
-    function getSweptBalance(
-        uint256 startIndex,
-        uint256 endIndex
-    ) public view returns (uint256 balance) {
-        for (uint256 i = startIndex; i <= endIndex; i++) {
-            uint32 poolId = stakedPoolIds[i];
-            ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            balance += pool.getBalance();
-        }
-    }
-
-    /**
-     * @notice Get the next five compoundable pool IDs
-     * @dev Should be called off-chain
-     * @param startIndex The start index
-     * @param endIndex The end index
-     * @return poolIds The next five compoundable pool IDs
-     */
-    function getCompoundablePoolIds(
-        uint256 startIndex,
-        uint256 endIndex
-    ) external view returns (uint32[5] memory poolIds) {
-        uint256 count = 0;
-        for (uint256 i = startIndex; i <= endIndex; i++) {
-            uint32 poolId = stakedPoolIds[i];
-            ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            if (pool.getBalance() >= compoundMinimum) {
-                poolIds[count] = poolId;
-                count++;
-                if (count == 5) {
-                    break;
-                }
-            }
-        }
     }
 }

@@ -149,13 +149,4 @@ interface ICasimirManager {
     function getUpkeepId() external view returns (uint256);
     function getUpkeepAddress() external view returns (address);
     function getUpkeepBalance() external view returns (uint256 upkeepBalance);
-    function getSweptBalance(
-        uint256 startIndex,
-        uint256 endIndex
-    ) external view returns (uint256);
-    function getCompoundablePoolIds(
-        uint256 startIndex,
-        uint256 endIndex
-    ) external view returns (uint32[5] memory);
-
 }

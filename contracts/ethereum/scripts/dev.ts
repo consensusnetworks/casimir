@@ -30,6 +30,14 @@ void async function () {
             },
             options: {},
             proxy: false
+        },
+        CasimirViews: {
+            address: '',
+            args: {
+                managerAddress: ''
+            },
+            options: {},
+            proxy: false
         }
     }
 
@@ -47,9 +55,6 @@ void async function () {
     }
 
     for (const name in config) {
-        console.log(`Deploying ${name} contract...`)
-
-        /** Link mock external contracts to Casimir */
         if (name === 'CasimirManager') {
             (config[name as keyof typeof config] as ContractConfig).args.linkFunctionsAddress = config.MockFunctionsOracle?.address
         }
@@ -59,11 +64,9 @@ void async function () {
         const contract = await deployContract(name, proxy, args, options)
         const { address } = contract
 
-        // Semi-colon needed
-        console.log(`${name} contract deployed to ${address}`);
+        console.log(`${name} contract deployed to ${address}`)
 
-        // Save contract address for next loop
-        (config[name as keyof DeploymentConfig] as ContractConfig).address = address
+        ;(config[name as keyof DeploymentConfig] as ContractConfig).address = address
     }
 
     const manager = await ethers.getContractAt('CasimirManager', config.CasimirManager.address as string) as CasimirManager

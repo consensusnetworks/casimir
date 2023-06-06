@@ -531,20 +531,6 @@ Get the ready balance
 | ---- | ---- | ----------- |
 | readyBalance | uint256 | The ready balance |
 
-### getPendingBalance
-
-```solidity
-function getPendingBalance() public view returns (uint256 pendingBalance)
-```
-
-Get the pending balance
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| pendingBalance | uint256 | The pending balance |
-
 ### getWithdrawableBalance
 
 ```solidity
@@ -587,20 +573,6 @@ Get the expected effective balance
 | ---- | ---- | ----------- |
 | expectedEffectiveBalance | uint256 | The expected effective balance |
 
-### getReportPeriod
-
-```solidity
-function getReportPeriod() public view returns (uint32)
-```
-
-Get the report period
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32 | reportPeriod The report period |
-
 ### getLatestActiveBalance
 
 ```solidity
@@ -629,34 +601,6 @@ Get the latest active balance after fees
 | ---- | ---- | ----------- |
 | [0] | uint256 | latestActiveBalanceAfterFees The latest active balance after fees |
 
-### getLatestActiveRewardBalance
-
-```solidity
-function getLatestActiveRewardBalance() public view returns (int256)
-```
-
-Get the latest active reward balance
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | int256 | latestActiveRewardBalance The latest active reward balance |
-
-### getFinalizableExitedBalance
-
-```solidity
-function getFinalizableExitedBalance() public view returns (uint256)
-```
-
-Get the finalizable exited balance of the current reporting period
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | finalizableExitedBalance The finalizable exited balance of the current reporting period |
-
 ### getFinalizableCompletedExits
 
 ```solidity
@@ -671,6 +615,20 @@ Get the finalizable completed exit count of the current reporting period
 | ---- | ---- | ----------- |
 | [0] | uint256 | finalizableCompletedExits The finalizable completed exit count of the current reporting period |
 
+### getReportPeriod
+
+```solidity
+function getReportPeriod() public view returns (uint256)
+```
+
+Get the report period
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | reportPeriod The report period |
+
 ### getPendingWithdrawalEligibility
 
 ```solidity
@@ -678,6 +636,13 @@ function getPendingWithdrawalEligibility(uint256 index, uint256 period) public v
 ```
 
 Get the eligibility of a pending withdrawal
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| index | uint256 | The index of the pending withdrawal |
+| period | uint256 | The period to check |
 
 #### Return Values
 
@@ -726,20 +691,6 @@ Get the total fee percentage
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint32 | feePercent The total fee percentage |
-
-### getTotalDeposits
-
-```solidity
-function getTotalDeposits() external view returns (uint256)
-```
-
-Get the count of deposited pools
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | totalDeposits The count of deposited pools |
 
 ### getRequestedExits
 
@@ -910,12 +861,19 @@ Get the upkeep balance
 ### getSweptBalance
 
 ```solidity
-function getSweptBalance() public view returns (uint256 balance)
+function getSweptBalance(uint256 startIndex, uint256 endIndex) public view returns (uint256 balance)
 ```
 
 Get the swept balance
 
 _Should be called off-chain_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
 
 #### Return Values
 
@@ -926,200 +884,25 @@ _Should be called off-chain_
 ### getCompoundablePoolIds
 
 ```solidity
-function getCompoundablePoolIds() external view returns (uint32[5] poolIds)
+function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5] poolIds)
 ```
 
 Get the next five compoundable pool IDs
 
 _Should be called off-chain_
 
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | poolIds | uint32[5] | The next five compoundable pool IDs |
-
-## CasimirMultisig
-
-### owners
-
-```solidity
-address[] owners
-```
-
-### isOwner
-
-```solidity
-mapping(address => bool) isOwner
-```
-
-### confirmationsRequired
-
-```solidity
-uint256 confirmationsRequired
-```
-
-### isOwnerChangeConfirmed
-
-```solidity
-mapping(uint256 => mapping(address => bool)) isOwnerChangeConfirmed
-```
-
-### isTransactionConfirmed
-
-```solidity
-mapping(uint256 => mapping(address => bool)) isTransactionConfirmed
-```
-
-### ownerChanges
-
-```solidity
-struct ICasimirMultisig.OwnerChange[] ownerChanges
-```
-
-### transactions
-
-```solidity
-struct ICasimirMultisig.Transaction[] transactions
-```
-
-### onlyOwner
-
-```solidity
-modifier onlyOwner()
-```
-
-### ownerChangeExists
-
-```solidity
-modifier ownerChangeExists(uint256 changeId)
-```
-
-### ownerChangeNotExecuted
-
-```solidity
-modifier ownerChangeNotExecuted(uint256 changeId)
-```
-
-### ownerChangeNotConfirmed
-
-```solidity
-modifier ownerChangeNotConfirmed(uint256 changeId)
-```
-
-### transactionExists
-
-```solidity
-modifier transactionExists(uint256 transactionIndex)
-```
-
-### transactionNotExecuted
-
-```solidity
-modifier transactionNotExecuted(uint256 transactionIndex)
-```
-
-### transactionNotConfirmed
-
-```solidity
-modifier transactionNotConfirmed(uint256 transactionIndex)
-```
-
-### constructor
-
-```solidity
-constructor(address[] _owners) public
-```
-
-### receive
-
-```solidity
-receive() external payable
-```
-
-### submitOwnerChange
-
-```solidity
-function submitOwnerChange(address owner, bool add) public
-```
-
-### confirmOwnerChange
-
-```solidity
-function confirmOwnerChange(uint256 changeId) public
-```
-
-### executeOwnerChange
-
-```solidity
-function executeOwnerChange(uint256 changeId) public
-```
-
-### revokeOwnerChangeConfirmation
-
-```solidity
-function revokeOwnerChangeConfirmation(uint256 changeId) public
-```
-
-### submitTransaction
-
-```solidity
-function submitTransaction(address to, uint256 value, bytes data) public
-```
-
-### confirmTransaction
-
-```solidity
-function confirmTransaction(uint256 transactionIndex) public
-```
-
-### executeTransaction
-
-```solidity
-function executeTransaction(uint256 transactionIndex) public
-```
-
-### revokeTransactionConfirmation
-
-```solidity
-function revokeTransactionConfirmation(uint256 transactionIndex) public
-```
-
-### adjustConfirmationsRequired
-
-```solidity
-function adjustConfirmationsRequired() internal
-```
-
-### getOwners
-
-```solidity
-function getOwners() public view returns (address[])
-```
-
-### getOwnerChangeCount
-
-```solidity
-function getOwnerChangeCount() public view returns (uint256)
-```
-
-### getOwnerChange
-
-```solidity
-function getOwnerChange(uint256 changeId) public view returns (address owner, bool add, bool executed, uint256 confirmations)
-```
-
-### getTransactionCount
-
-```solidity
-function getTransactionCount() public view returns (uint256)
-```
-
-### getTransaction
-
-```solidity
-function getTransaction(uint256 transactionIndex) public view returns (address to, uint256 value, bytes data, bool executed, uint256 confirmations)
-```
 
 ## CasimirPool
 
@@ -1802,12 +1585,6 @@ function setFunctionsAddress(address functionsAddress) external
 function getFeePercent() external view returns (uint32)
 ```
 
-### getTotalDeposits
-
-```solidity
-function getTotalDeposits() external view returns (uint256)
-```
-
 ### getRequestedExits
 
 ```solidity
@@ -1850,22 +1627,10 @@ function getBufferedBalance() external view returns (uint256)
 function getExpectedEffectiveBalance() external view returns (uint256)
 ```
 
-### getReportPeriod
-
-```solidity
-function getReportPeriod() external view returns (uint32)
-```
-
 ### getFinalizableCompletedExits
 
 ```solidity
 function getFinalizableCompletedExits() external view returns (uint256)
-```
-
-### getFinalizableExitedBalance
-
-```solidity
-function getFinalizableExitedBalance() external view returns (uint256)
 ```
 
 ### getLatestActiveBalance
@@ -1878,6 +1643,12 @@ function getLatestActiveBalance() external view returns (uint256)
 
 ```solidity
 function getLatestActiveBalanceAfterFees() external view returns (uint256)
+```
+
+### getReportPeriod
+
+```solidity
+function getReportPeriod() external view returns (uint256)
 ```
 
 ### getPendingWithdrawalEligibility
@@ -1896,12 +1667,6 @@ function getWithdrawableBalance() external view returns (uint256)
 
 ```solidity
 function getPrepoolBalance() external view returns (uint256)
-```
-
-### getSweptBalance
-
-```solidity
-function getSweptBalance() external view returns (uint256)
 ```
 
 ### getUserStake
@@ -1958,167 +1723,16 @@ function getUpkeepAddress() external view returns (address)
 function getUpkeepBalance() external view returns (uint256 upkeepBalance)
 ```
 
-## ICasimirMultisig
-
-### Deposit
+### getSweptBalance
 
 ```solidity
-event Deposit(address sender, uint256 amount, uint256 balance)
+function getSweptBalance(uint256 startIndex, uint256 endIndex) external view returns (uint256)
 ```
 
-### SubmitOwnerChange
+### getCompoundablePoolIds
 
 ```solidity
-event SubmitOwnerChange(address owner, uint256 changeId, bool add)
-```
-
-### ConfirmOwnerChange
-
-```solidity
-event ConfirmOwnerChange(address owner, uint256 changeId)
-```
-
-### RevokeOwnerChangeConfirmation
-
-```solidity
-event RevokeOwnerChangeConfirmation(address owner, uint256 changeId)
-```
-
-### ExecuteOwnerChange
-
-```solidity
-event ExecuteOwnerChange(address owner, uint256 changeId)
-```
-
-### SubmitTransaction
-
-```solidity
-event SubmitTransaction(address owner, uint256 txIndex, address to, uint256 value, bytes data)
-```
-
-### ConfirmTransaction
-
-```solidity
-event ConfirmTransaction(address owner, uint256 txIndex)
-```
-
-### RevokeTransactionConfirmation
-
-```solidity
-event RevokeTransactionConfirmation(address owner, uint256 txIndex)
-```
-
-### ExecuteTransaction
-
-```solidity
-event ExecuteTransaction(address owner, uint256 txIndex)
-```
-
-### OwnerChange
-
-```solidity
-struct OwnerChange {
-  address owner;
-  bool add;
-  bool executed;
-  uint256 confirmations;
-}
-```
-
-### Transaction
-
-```solidity
-struct Transaction {
-  address to;
-  uint256 value;
-  bytes data;
-  bool executed;
-  uint256 confirmations;
-}
-```
-
-### receive
-
-```solidity
-receive() external payable
-```
-
-### submitOwnerChange
-
-```solidity
-function submitOwnerChange(address owner, bool add) external
-```
-
-### confirmOwnerChange
-
-```solidity
-function confirmOwnerChange(uint256 changeId) external
-```
-
-### executeOwnerChange
-
-```solidity
-function executeOwnerChange(uint256 changeId) external
-```
-
-### revokeOwnerChangeConfirmation
-
-```solidity
-function revokeOwnerChangeConfirmation(uint256 changeId) external
-```
-
-### submitTransaction
-
-```solidity
-function submitTransaction(address to, uint256 value, bytes data) external
-```
-
-### confirmTransaction
-
-```solidity
-function confirmTransaction(uint256 transactionIndex) external
-```
-
-### executeTransaction
-
-```solidity
-function executeTransaction(uint256 transactionIndex) external
-```
-
-### revokeTransactionConfirmation
-
-```solidity
-function revokeTransactionConfirmation(uint256 transactionIndex) external
-```
-
-### getOwners
-
-```solidity
-function getOwners() external view returns (address[])
-```
-
-### getOwnerChangeCount
-
-```solidity
-function getOwnerChangeCount() external view returns (uint256)
-```
-
-### getOwnerChange
-
-```solidity
-function getOwnerChange(uint256 changeId) external view returns (address owner, bool add, bool executed, uint256 confirmations)
-```
-
-### getTransactionCount
-
-```solidity
-function getTransactionCount() external view returns (uint256)
-```
-
-### getTransaction
-
-```solidity
-function getTransaction(uint256 transactionIndex) external view returns (address to, uint256 value, bytes data, bool executed, uint256 confirmations)
+function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5])
 ```
 
 ## ICasimirPool
@@ -2440,50 +2054,6 @@ _Send ETH to a user_
 | user | address | The user address |
 | amount | uint256 | The amount of stake to send |
 
-## MockFunctionsOracle
-
-### constructor
-
-```solidity
-constructor() public
-```
-
-### getRegistry
-
-```solidity
-function getRegistry() external view returns (address)
-```
-
-Returns the address of the registry contract
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | address The address of the registry contract |
-
-### sendRequest
-
-```solidity
-function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
-```
-
-Sends a request (encoded as data) using the provided subscriptionId
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
-| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| _gasLimit | uint32 | Gas limit for the fulfillment callback |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | A unique request identifier (unique per DON) |
-
 ## IDepositContract
 
 ### DepositEvent
@@ -2579,6 +2149,395 @@ struct RegistrationParams {
 ```solidity
 function registerUpkeep(struct KeeperRegistrarInterface.RegistrationParams requestParams) external returns (uint256)
 ```
+
+## CasimirMultisig
+
+### owners
+
+```solidity
+address[] owners
+```
+
+### isOwner
+
+```solidity
+mapping(address => bool) isOwner
+```
+
+### confirmationsRequired
+
+```solidity
+uint256 confirmationsRequired
+```
+
+### isOwnerChangeConfirmed
+
+```solidity
+mapping(uint256 => mapping(address => bool)) isOwnerChangeConfirmed
+```
+
+### isTransactionConfirmed
+
+```solidity
+mapping(uint256 => mapping(address => bool)) isTransactionConfirmed
+```
+
+### ownerChanges
+
+```solidity
+struct ICasimirMultisig.OwnerChange[] ownerChanges
+```
+
+### transactions
+
+```solidity
+struct ICasimirMultisig.Transaction[] transactions
+```
+
+### onlyOwner
+
+```solidity
+modifier onlyOwner()
+```
+
+### ownerChangeExists
+
+```solidity
+modifier ownerChangeExists(uint256 changeId)
+```
+
+### ownerChangeNotExecuted
+
+```solidity
+modifier ownerChangeNotExecuted(uint256 changeId)
+```
+
+### ownerChangeNotConfirmed
+
+```solidity
+modifier ownerChangeNotConfirmed(uint256 changeId)
+```
+
+### transactionExists
+
+```solidity
+modifier transactionExists(uint256 transactionIndex)
+```
+
+### transactionNotExecuted
+
+```solidity
+modifier transactionNotExecuted(uint256 transactionIndex)
+```
+
+### transactionNotConfirmed
+
+```solidity
+modifier transactionNotConfirmed(uint256 transactionIndex)
+```
+
+### constructor
+
+```solidity
+constructor(address[] _owners) public
+```
+
+### receive
+
+```solidity
+receive() external payable
+```
+
+### submitOwnerChange
+
+```solidity
+function submitOwnerChange(address owner, bool add) public
+```
+
+### confirmOwnerChange
+
+```solidity
+function confirmOwnerChange(uint256 changeId) public
+```
+
+### executeOwnerChange
+
+```solidity
+function executeOwnerChange(uint256 changeId) public
+```
+
+### revokeOwnerChangeConfirmation
+
+```solidity
+function revokeOwnerChangeConfirmation(uint256 changeId) public
+```
+
+### submitTransaction
+
+```solidity
+function submitTransaction(address to, uint256 value, bytes data) public
+```
+
+### confirmTransaction
+
+```solidity
+function confirmTransaction(uint256 transactionIndex) public
+```
+
+### executeTransaction
+
+```solidity
+function executeTransaction(uint256 transactionIndex) public
+```
+
+### revokeTransactionConfirmation
+
+```solidity
+function revokeTransactionConfirmation(uint256 transactionIndex) public
+```
+
+### adjustConfirmationsRequired
+
+```solidity
+function adjustConfirmationsRequired() internal
+```
+
+### getOwners
+
+```solidity
+function getOwners() public view returns (address[])
+```
+
+### getOwnerChangeCount
+
+```solidity
+function getOwnerChangeCount() public view returns (uint256)
+```
+
+### getOwnerChange
+
+```solidity
+function getOwnerChange(uint256 changeId) public view returns (address owner, bool add, bool executed, uint256 confirmations)
+```
+
+### getTransactionCount
+
+```solidity
+function getTransactionCount() public view returns (uint256)
+```
+
+### getTransaction
+
+```solidity
+function getTransaction(uint256 transactionIndex) public view returns (address to, uint256 value, bytes data, bool executed, uint256 confirmations)
+```
+
+## ICasimirMultisig
+
+### Deposit
+
+```solidity
+event Deposit(address sender, uint256 amount, uint256 balance)
+```
+
+### SubmitOwnerChange
+
+```solidity
+event SubmitOwnerChange(address owner, uint256 changeId, bool add)
+```
+
+### ConfirmOwnerChange
+
+```solidity
+event ConfirmOwnerChange(address owner, uint256 changeId)
+```
+
+### RevokeOwnerChangeConfirmation
+
+```solidity
+event RevokeOwnerChangeConfirmation(address owner, uint256 changeId)
+```
+
+### ExecuteOwnerChange
+
+```solidity
+event ExecuteOwnerChange(address owner, uint256 changeId)
+```
+
+### SubmitTransaction
+
+```solidity
+event SubmitTransaction(address owner, uint256 txIndex, address to, uint256 value, bytes data)
+```
+
+### ConfirmTransaction
+
+```solidity
+event ConfirmTransaction(address owner, uint256 txIndex)
+```
+
+### RevokeTransactionConfirmation
+
+```solidity
+event RevokeTransactionConfirmation(address owner, uint256 txIndex)
+```
+
+### ExecuteTransaction
+
+```solidity
+event ExecuteTransaction(address owner, uint256 txIndex)
+```
+
+### OwnerChange
+
+```solidity
+struct OwnerChange {
+  address owner;
+  bool add;
+  bool executed;
+  uint256 confirmations;
+}
+```
+
+### Transaction
+
+```solidity
+struct Transaction {
+  address to;
+  uint256 value;
+  bytes data;
+  bool executed;
+  uint256 confirmations;
+}
+```
+
+### receive
+
+```solidity
+receive() external payable
+```
+
+### submitOwnerChange
+
+```solidity
+function submitOwnerChange(address owner, bool add) external
+```
+
+### confirmOwnerChange
+
+```solidity
+function confirmOwnerChange(uint256 changeId) external
+```
+
+### executeOwnerChange
+
+```solidity
+function executeOwnerChange(uint256 changeId) external
+```
+
+### revokeOwnerChangeConfirmation
+
+```solidity
+function revokeOwnerChangeConfirmation(uint256 changeId) external
+```
+
+### submitTransaction
+
+```solidity
+function submitTransaction(address to, uint256 value, bytes data) external
+```
+
+### confirmTransaction
+
+```solidity
+function confirmTransaction(uint256 transactionIndex) external
+```
+
+### executeTransaction
+
+```solidity
+function executeTransaction(uint256 transactionIndex) external
+```
+
+### revokeTransactionConfirmation
+
+```solidity
+function revokeTransactionConfirmation(uint256 transactionIndex) external
+```
+
+### getOwners
+
+```solidity
+function getOwners() external view returns (address[])
+```
+
+### getOwnerChangeCount
+
+```solidity
+function getOwnerChangeCount() external view returns (uint256)
+```
+
+### getOwnerChange
+
+```solidity
+function getOwnerChange(uint256 changeId) external view returns (address owner, bool add, bool executed, uint256 confirmations)
+```
+
+### getTransactionCount
+
+```solidity
+function getTransactionCount() external view returns (uint256)
+```
+
+### getTransaction
+
+```solidity
+function getTransaction(uint256 transactionIndex) external view returns (address to, uint256 value, bytes data, bool executed, uint256 confirmations)
+```
+
+## MockFunctionsOracle
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### getRegistry
+
+```solidity
+function getRegistry() external view returns (address)
+```
+
+Returns the address of the registry contract
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | address The address of the registry contract |
+
+### sendRequest
+
+```solidity
+function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
+```
+
+Sends a request (encoded as data) using the provided subscriptionId
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
+| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
+| _gasLimit | uint32 | Gas limit for the fulfillment callback |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | bytes32 | A unique request identifier (unique per DON) |
 
 ## CasimirDAO
 
