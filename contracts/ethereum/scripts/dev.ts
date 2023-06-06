@@ -101,14 +101,14 @@ void async function () {
         if (block - blocksPerReward >= lastRewardBlock) {
             console.log('New reward block')
             lastRewardBlock = block
-            const depositedPoolCount = await manager.getTotalDeposits()
-            if (depositedPoolCount) {
-                console.log(`Rewarding ${depositedPoolCount} validators ${rewardPerValidator} each`)
+            const stakedPoolCount = (await manager.getStakedPoolIds()).length
+            if (stakedPoolCount) {
+                console.log(`Rewarding ${stakedPoolCount} validators ${rewardPerValidator} each`)
                 await time.increase(time.duration.days(1))
 
                 await runUpkeep({ upkeep, keeper })
                 
-                const rewardAmount = rewardPerValidator * depositedPoolCount.toNumber()
+                const rewardAmount = rewardPerValidator * stakedPoolCount
                 let nextActiveBalance = round(
                     parseFloat(
                         ethers.utils.formatEther(

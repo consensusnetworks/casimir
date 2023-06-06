@@ -146,7 +146,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         returns (bool upkeepNeeded, bytes memory)
     {
         if (reportStatus == ReportStatus.FINALIZED) {
-            bool checkActive = manager.getTotalDeposits() > 0;
+            bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
             bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= reportHeartbeat;
             upkeepNeeded = checkActive && heartbeatLapsed;
         } else if (reportStatus == ReportStatus.PROCESSING) {

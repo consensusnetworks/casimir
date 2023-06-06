@@ -126,7 +126,6 @@ interface ICasimirManager {
     function withdrawSSVBalance(uint256 amount) external;
     function setFunctionsAddress(address functionsAddress) external;
     function getFeePercent() external view returns (uint32);
-    function getTotalDeposits() external view returns (uint256);
     function getRequestedExits() external view returns (uint256);
     function getReadyPoolIds() external view returns (uint32[] memory);
     function getPendingPoolIds() external view returns (uint32[] memory);
@@ -134,15 +133,13 @@ interface ICasimirManager {
     function getTotalStake() external view returns (uint256);
     function getBufferedBalance() external view returns (uint256);
     function getExpectedEffectiveBalance() external view returns (uint256);
-    function getReportPeriod() external view returns (uint32);
     function getFinalizableCompletedExits() external view returns (uint256);
-    function getFinalizableExitedBalance() external view returns (uint256);
     function getLatestActiveBalance() external view returns (uint256);
     function getLatestActiveBalanceAfterFees() external view returns (uint256);
+    function getReportPeriod() external view returns (uint256);
     function getPendingWithdrawalEligibility(uint256 index, uint256 period) external view returns (bool);
     function getWithdrawableBalance() external view returns (uint256);
     function getPrepoolBalance() external view returns (uint256);
-    function getSweptBalance() external view returns (uint256);
     function getUserStake(address userAddress) external view returns (uint256);
     function getPendingWithdrawalBalance() external view returns (uint256);
     function getPendingWithdrawals() external view returns (uint256);
@@ -152,4 +149,13 @@ interface ICasimirManager {
     function getUpkeepId() external view returns (uint256);
     function getUpkeepAddress() external view returns (address);
     function getUpkeepBalance() external view returns (uint256 upkeepBalance);
+    function getSweptBalance(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (uint256);
+    function getCompoundablePoolIds(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (uint32[5] memory);
+
 }

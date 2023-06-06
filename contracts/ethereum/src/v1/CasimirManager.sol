@@ -423,7 +423,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             }
             upkeepId = linkRegistrar.registerUpkeep(
                 KeeperRegistrarInterface.RegistrationParams({
-                    name: string("CasimirUpkeep"),
+                    name: string("CasimirV1Upkeep"),
                     encryptedEmail: new bytes(0),
                     upkeepContract: address(this),
                     gasLimit: 0,
@@ -1131,14 +1131,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the pending balance
-     * @return pendingBalance The pending balance
-     */
-    function getPendingBalance() public view returns (uint256 pendingBalance) {
-        pendingBalance = pendingPoolIds.length * poolCapacity;
-    }
-
-    /**
      * @notice Get the withdrawable balanace
      * @return withdrawableBalance The withdrawable balanace
      */
@@ -1167,14 +1159,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the report period
-     * @return reportPeriod The report period
-     */
-    function getReportPeriod() public view returns (uint32) {
-        return reportPeriod;
-    }
-
-    /**
      * @notice Get the latest active balance
      * @return latestActiveBalance The latest active balance
      */
@@ -1191,22 +1175,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the latest active reward balance
-     * @return latestActiveRewardBalance The latest active reward balance
-     */
-    function getLatestActiveRewardBalance() public view returns (int256) {
-        return latestActiveRewardBalance;
-    }
-
-    /**
-     * @notice Get the finalizable exited balance of the current reporting period
-     * @return finalizableExitedBalance The finalizable exited balance of the current reporting period
-     */
-    function getFinalizableExitedBalance() public view returns (uint256) {
-        return finalizableExitedBalance;
-    }
-
-    /**
      * @notice Get the finalizable completed exit count of the current reporting period
      * @return finalizableCompletedExits The finalizable completed exit count of the current reporting period
      */
@@ -1215,13 +1183,20 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Get the report period
+     * @return reportPeriod The report period
+     */
+    function getReportPeriod() public view returns (uint256) {
+        return reportPeriod;
+    }
+
+    /**
      * @notice Get the eligibility of a pending withdrawal
+     * @param index The index of the pending withdrawal
+     * @param period The period to check
      * @return pendingWithdrawalEligibility The eligibility of a pending withdrawal
      */
-    function getPendingWithdrawalEligibility(
-        uint256 index,
-        uint256 period
-    ) public view returns (bool) {
+    function getPendingWithdrawalEligibility(uint256 index, uint256 period) public view returns (bool) {
         if (requestedWithdrawals > index) {
             return requestedWithdrawalQueue[index].period <= period;
         }
@@ -1250,14 +1225,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getFeePercent() public view returns (uint32) {
         return feePercent;
-    }
-
-    /**
-     * @notice Get the count of deposited pools
-     * @return totalDeposits The count of deposited pools
-     */
-    function getTotalDeposits() external view returns (uint256) {
-        return totalDeposits;
     }
 
     /**
@@ -1369,15 +1336,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @notice Get the swept balance
      * @dev Should be called off-chain
+     * @param startIndex The start index
+     * @param endIndex The end index
      * @return balance The swept balance
      */
-    function getSweptBalance() public view returns (uint256 balance) {
-        for (uint256 i = 0; i < pendingPoolIds.length; i++) {
-            uint32 poolId = pendingPoolIds[i];
-            ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            balance += pool.getBalance();
-        }
-        for (uint256 i = 0; i < stakedPoolIds.length; i++) {
+    function getSweptBalance(
+        uint256 startIndex,
+        uint256 endIndex
+    ) public view returns (uint256 balance) {
+        for (uint256 i = startIndex; i <= endIndex; i++) {
             uint32 poolId = stakedPoolIds[i];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
             balance += pool.getBalance();
@@ -1387,15 +1354,16 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @notice Get the next five compoundable pool IDs
      * @dev Should be called off-chain
+     * @param startIndex The start index
+     * @param endIndex The end index
      * @return poolIds The next five compoundable pool IDs
      */
-    function getCompoundablePoolIds()
-        external
-        view
-        returns (uint32[5] memory poolIds)
-    {
+    function getCompoundablePoolIds(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (uint32[5] memory poolIds) {
         uint256 count = 0;
-        for (uint256 i = 0; i < stakedPoolIds.length; i++) {
+        for (uint256 i = startIndex; i <= endIndex; i++) {
             uint32 poolId = stakedPoolIds[i];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
             if (pool.getBalance() >= compoundMinimum) {
