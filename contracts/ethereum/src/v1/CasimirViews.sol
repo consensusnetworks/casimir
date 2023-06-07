@@ -78,6 +78,54 @@ contract CasimirViews is ICasimirViews {
     }
 
     /**
+     * @notice Get the pending validator public keys
+     * @param startIndex The start index
+     * @param endIndex The end index
+     * @return validatorPublicKeys The pending validator public keys
+     */
+    function getPendingValidatorPublicKeys(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (bytes[] memory) {
+        bytes[] memory validatorPublicKeys = new bytes[](endIndex - startIndex);
+        uint32[] memory pendingPoolIds = manager.getPendingPoolIds();
+        uint256 count = 0;
+        for (uint256 i = startIndex; i < endIndex; i++) {
+            uint32 poolId = pendingPoolIds[i];
+            address poolAddress = manager.getPoolAddress(poolId);
+            ICasimirPool pool = ICasimirPool(poolAddress);
+            ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
+            validatorPublicKeys[count] = poolConfig.publicKey;
+            count++;
+        }
+        return validatorPublicKeys;
+    }
+
+    /**
+     * @notice Get the staked validator public keys
+     * @param startIndex The start index
+     * @param endIndex The end index
+     * @return validatorPublicKeys The staked validator public keys
+     */
+    function getStakedValidatorPublicKeys(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (bytes[] memory) {
+        bytes[] memory validatorPublicKeys = new bytes[](endIndex - startIndex);
+        uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
+        uint256 count = 0;
+        for (uint256 i = startIndex; i < endIndex; i++) {
+            uint32 poolId = stakedPoolIds[i];
+            address poolAddress = manager.getPoolAddress(poolId);
+            ICasimirPool pool = ICasimirPool(poolAddress);
+            ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
+            validatorPublicKeys[count] = poolConfig.publicKey;
+            count++;
+        }
+        return validatorPublicKeys;
+    }
+
+    /**
      * @notice Get a pool's details by ID
      * @param poolId The pool ID
      * @return poolDetails The pool details

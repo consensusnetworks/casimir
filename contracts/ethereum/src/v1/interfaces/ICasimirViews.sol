@@ -31,6 +31,14 @@ interface ICasimirViews {
     function getPoolDetails(
         uint32 poolId
     ) external view returns (PoolDetails memory);
+        function getPendingValidatorPublicKeys(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (bytes[] memory);
+    function getStakedValidatorPublicKeys(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (bytes[] memory);
     function getSweptBalance(
         uint256 startIndex,
         uint256 endIndex
