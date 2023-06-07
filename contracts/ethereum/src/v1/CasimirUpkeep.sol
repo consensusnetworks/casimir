@@ -43,7 +43,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Current report status */
     ReportStatus private reportStatus;
     /** Current report period */
-    uint256 reportPeriod;
+    uint32 reportPeriod;
     /** Current report remaining request count */
     uint256 reportRemainingRequests;
     /** Current report block */
@@ -150,7 +150,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= reportHeartbeat;
             upkeepNeeded = checkActive && heartbeatLapsed;
         } else if (reportStatus == ReportStatus.PROCESSING) {
-            bool finalizeReport = reportCompletedExits == manager.getFinalizableCompletedExits();
+            bool finalizeReport = reportCompletedExits == manager.finalizableCompletedExits();
             upkeepNeeded = finalizeReport;
         }
     }
@@ -167,7 +167,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
             reportRequestBlock = block.number;
             reportTimestamp = block.timestamp;
-            reportPeriod = manager.getReportPeriod();
+            reportPeriod = manager.reportPeriod();
 
             Functions.Request memory req;
             reportRemainingRequests = 2;
@@ -177,9 +177,9 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             }
         } else {
             if (
-                manager.getPendingWithdrawalBalance() > 0 &&
+                manager.requestedWithdrawalBalance() > 0 &&
                 manager.getPendingWithdrawalEligibility(0, reportPeriod) &&
-                manager.getPendingWithdrawalBalance() <= manager.getWithdrawableBalance()
+                manager.requestedWithdrawalBalance() <= manager.getWithdrawableBalance()
             ) {
                 manager.fulfillWithdrawals(5);
             }

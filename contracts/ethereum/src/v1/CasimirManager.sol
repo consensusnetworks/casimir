@@ -89,38 +89,40 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Uniswap router contract  */
     ISwapRouter private immutable swapRouter;
 
-    /********************/
-    /* Dynamic State */
-    /********************/
+    /*********/
+    /* State */
+    /*********/
 
-    /** Upkeep ID */
-    uint256 private upkeepId;
-    /** Current report period */
-    uint32 private reportPeriod;
+    /** Total fee percentage */
+    uint32 public feePercent = 5;
     /** Last pool ID created */
     uint32 private lastPoolId;
+    /** Current report period */
+    uint32 public reportPeriod;
+    /** Upkeep ID */
+    uint256 public upkeepId;
     /** Latest active balance */
-    uint256 private latestActiveBalance;
+    uint256 public latestActiveBalance;
     /** Latest active balance after fees */
-    uint256 private latestActiveBalanceAfterFees;
+    uint256 public latestActiveBalanceAfterFees;
     /** Latest active rewards */
     int256 private latestActiveRewardBalance;
+    /** Exited pool count */
+    uint256 public finalizableCompletedExits;
     /** Exited balance */
     uint256 private finalizableExitedBalance;
-    /** Exited pool count */
-    uint256 finalizableCompletedExits;
     /** Token addresses */
     mapping(Token => address) private tokenAddresses;
     /** All users */
     mapping(address => User) private users;
     /** Sum of scaled rewards to balance ratios (intial value required) */
     uint256 private stakeRatioSum = 1000 ether;
+    /** Total pending withdrawals count */
+    uint256 public requestedWithdrawals;
+    /** Total pending withdrawal amount */
+    uint256 public requestedWithdrawalBalance;
     /** Pending withdrawals */
     Withdrawal[] private requestedWithdrawalQueue;
-    /** Total pending withdrawal amount */
-    uint256 private requestedWithdrawalBalance;
-    /** Total pending withdrawals count */
-    uint256 private requestedWithdrawals;
     /** All pool addresses */
     mapping(uint32 => address) private poolAddresses;
     /** Validator tip balance */
@@ -128,10 +130,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Pool recovered balances */
     mapping(uint32 => uint256) private recoveredBalances;
     /** Total deposits not yet in pools */
-    uint256 private prepoolBalance;
+    uint256 public prepoolBalance;
     /** Total exited deposits */
     uint256 private exitedBalance;
-    /** Total reserved (execution) fees */
+    /** Total reserved fees */
     uint256 private reservedFeeBalance;
     /** IDs of pools ready for initiation */
     uint32[] private readyPoolIds;
@@ -141,12 +143,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint32[] private stakedPoolIds;
     /** Active pool count */
     uint256 private totalDeposits;
+    /** Exiting pool count */
+    uint256 public requestedExits;
     /** Slashed pool count */
     uint256 private forcedExits;
-    /** Exiting pool count */
-    uint256 private requestedExits;
-    /** Total fee percentage */
-    uint32 private feePercent = 5;
 
     /*************/
     /* Modifiers */
@@ -1144,38 +1144,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the latest active balance
-     * @return latestActiveBalance The latest active balance
-     */
-    function getLatestActiveBalance() public view returns (uint256) {
-        return latestActiveBalance;
-    }
-
-    /**
-     * @notice Get the latest active balance after fees
-     * @return latestActiveBalanceAfterFees The latest active balance after fees
-     */
-    function getLatestActiveBalanceAfterFees() public view returns (uint256) {
-        return latestActiveBalanceAfterFees;
-    }
-
-    /**
-     * @notice Get the finalizable completed exit count of the current reporting period
-     * @return finalizableCompletedExits The finalizable completed exit count of the current reporting period
-     */
-    function getFinalizableCompletedExits() public view returns (uint256) {
-        return finalizableCompletedExits;
-    }
-
-    /**
-     * @notice Get the report period
-     * @return reportPeriod The report period
-     */
-    function getReportPeriod() public view returns (uint256) {
-        return reportPeriod;
-    }
-
-    /**
      * @notice Get the eligibility of a pending withdrawal
      * @param index The index of the pending withdrawal
      * @param period The period to check
@@ -1189,38 +1157,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             return requestedWithdrawalQueue[index].period <= period;
         }
         return false;
-    }
-
-    /**
-     * @notice Get the total pending user withdrawal amount
-     * @return requestedWithdrawalBalance The total pending user withdrawal amount
-     */
-    function getPendingWithdrawalBalance() public view returns (uint256) {
-        return requestedWithdrawalBalance;
-    }
-
-    /**
-     * @notice Get the total pending withdrawal count
-     * @return requestedWithdrawals The total pending withdrawal count
-     */
-    function getPendingWithdrawals() public view returns (uint256) {
-        return requestedWithdrawals;
-    }
-
-    /**
-     * @notice Get the total fee percentage
-     * @return feePercent The total fee percentage
-     */
-    function getFeePercent() public view returns (uint32) {
-        return feePercent;
-    }
-
-    /**
-     * @notice Get the count of pools requested to exit
-     * @return requestedExits The count of pools requested to exit
-     */
-    function getRequestedExits() external view returns (uint256) {
-        return requestedExits;
     }
 
     /**
@@ -1245,14 +1181,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getStakedPoolIds() external view returns (uint32[] memory) {
         return stakedPoolIds;
-    }
-
-    /**
-     * @notice Get the pre-pool balance
-     * @return prepoolBalance The pre-pool balance
-     */
-    function getPrepoolBalance() external view returns (uint256) {
-        return prepoolBalance;
     }
 
     /**
@@ -1295,14 +1223,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         returns (address registryAddress)
     {
         registryAddress = address(registry);
-    }
-
-    /**
-     * @notice Get the upkeep ID
-     * @return upkeepId The upkeep ID
-     */
-    function getUpkeepId() external view returns (uint256) {
-        return upkeepId;
     }
 
     /**

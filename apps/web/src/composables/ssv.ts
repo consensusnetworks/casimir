@@ -46,7 +46,7 @@ export default function useSSV() {
         let signer = signerCreator(walletProvider)
         if (isWalletConnectSigner(signer)) signer = await signer
         const managerSigner = manager.connect(signer as ethers.Signer)
-        const fees = await managerSigner.getFeePercent()
+        const fees = await managerSigner.feePercent()
         const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
         const value = ethers.utils.parseEther(depositAmount.toString())
         const result = await managerSigner.depositStake({ value, type: 0 })
@@ -55,7 +55,7 @@ export default function useSSV() {
 
     async function getDepositFees() {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-        const fees = await manager.connect(provider).getFeePercent()
+        const fees = await manager.connect(provider).feePercent()
         const feesRounded = Math.round(fees * 100) / 100
         return feesRounded
     }
@@ -64,7 +64,7 @@ export default function useSSV() {
         const { user } = useUsers()
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)        
         const userStake = await manager.connect(provider).getUserStake(address) // to get user's stake balance
-        const poolStake = await manager.connect(provider).getTotalStake() // to get total stake balance
+        const poolStake = await manager.connect(provider).totalStake() // to get total stake balance
         const poolIds = readyOrStake === 'ready' ? await manager.connect(provider).getReadyPoolIds() : await manager.connect(provider).getStakedPoolIds() // to get ready (open) pool IDs OR to get staked (active) pool IDs
 
         console.log('userStake :>> ', ethers.utils.formatEther(userStake))

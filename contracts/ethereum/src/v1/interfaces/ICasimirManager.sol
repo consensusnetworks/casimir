@@ -9,7 +9,6 @@ interface ICasimirManager {
     /* Enumerators */
     /***************/
 
-    /** Token abbreviation */
     enum Token {
         LINK,
         SSV,
@@ -64,7 +63,7 @@ interface ICasimirManager {
     event WithdrawalFulfilled(address sender, uint256 amount);
 
     /*************/
-    /* Functions */
+    /* Mutations */
     /*************/
 
     function depositStake() external payable;
@@ -127,28 +126,38 @@ interface ICasimirManager {
     function withdrawLINKBalance(uint256 amount) external;
     function withdrawSSVBalance(uint256 amount) external;
     function setFunctionsAddress(address functionsAddress) external;
-    function getFeePercent() external view returns (uint32);
-    function getRequestedExits() external view returns (uint256);
+
+    /*************/
+    /* Variables */
+    /*************/
+
+    function upkeepId() external view returns (uint256);    
+    function latestActiveBalance() external view returns (uint256);
+    function latestActiveBalanceAfterFees() external view returns (uint256);
+    function feePercent() external view returns (uint32);
+    function requestedExits() external view returns (uint256);
+    function requestedWithdrawals() external view returns (uint256);
+    function requestedWithdrawalBalance() external view returns (uint256);
+    function finalizableCompletedExits() external view returns (uint256);
+    function reportPeriod() external view returns (uint32);
+    function prepoolBalance() external view returns (uint256);
+
+    /***********/
+    /* Getters */
+    /***********/
+
+    function getTotalStake() external view returns (uint256);
     function getReadyPoolIds() external view returns (uint32[] memory);
     function getPendingPoolIds() external view returns (uint32[] memory);
     function getStakedPoolIds() external view returns (uint32[] memory);
-    function getTotalStake() external view returns (uint256);
     function getBufferedBalance() external view returns (uint256);
     function getExpectedEffectiveBalance() external view returns (uint256);
-    function getFinalizableCompletedExits() external view returns (uint256);
-    function getLatestActiveBalance() external view returns (uint256);
-    function getLatestActiveBalanceAfterFees() external view returns (uint256);
-    function getReportPeriod() external view returns (uint256);
     function getPendingWithdrawalEligibility(uint256 index, uint256 period) external view returns (bool);
     function getWithdrawableBalance() external view returns (uint256);
-    function getPrepoolBalance() external view returns (uint256);
     function getUserStake(address userAddress) external view returns (uint256);
-    function getPendingWithdrawalBalance() external view returns (uint256);
-    function getPendingWithdrawals() external view returns (uint256);
     function getPoolAddress(uint32 poolId) external view returns (address);
     function getPoolDetails(uint32 poolId) external view returns (PoolDetails memory);
     function getRegistryAddress() external view returns (address);
-    function getUpkeepId() external view returns (uint256);
     function getUpkeepAddress() external view returns (address);
     function getUpkeepBalance() external view returns (uint256 upkeepBalance);
 }

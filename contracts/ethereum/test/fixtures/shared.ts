@@ -74,7 +74,7 @@ export async function firstUserDepositFixture() {
     const { manager, upkeep, owner, keeper, oracle } = await loadFixture(deploymentFixture)
     const [, firstUser] = await ethers.getSigners()
 
-    const depositAmount = round(16 * ((100 + await manager.getFeePercent()) / 100), 10)
+    const depositAmount = round(16 * ((100 + await manager.feePercent()) / 100), 10)
     const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
@@ -86,7 +86,7 @@ export async function secondUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, keeper, oracle } = await loadFixture(firstUserDepositFixture)
     const [, , secondUser] = await ethers.getSigners()
 
-    const depositAmount = round(24 * ((100 + await manager.getFeePercent()) / 100), 10)
+    const depositAmount = round(24 * ((100 + await manager.feePercent()) / 100), 10)
     const deposit = await manager.connect(secondUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
@@ -194,7 +194,7 @@ export async function thirdUserDepositFixture() {
     const { manager, upkeep, owner, firstUser, secondUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(sweepPostSecondUserDepositFixture)
     const [, , , thirdUser] = await ethers.getSigners()
 
-    const depositAmount = round(24 * ((100 + await manager.getFeePercent()) / 100), 10)
+    const depositAmount = round(24 * ((100 + await manager.feePercent()) / 100), 10)
     const deposit = await manager.connect(thirdUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
@@ -300,7 +300,7 @@ export async function sweepPostThirdUserDepositFixture() {
 /** Fixture to partial withdraw 0.3 to the first user */
 export async function firstUserPartialWithdrawalFixture() {
     const { manager, upkeep, firstUser, secondUser, thirdUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(sweepPostThirdUserDepositFixture)
-    const prepoolBalance = await manager.getPrepoolBalance()
+    const prepoolBalance = await manager.prepoolBalance()
     const withdraw = await manager.connect(firstUser).requestWithdrawal(prepoolBalance)
     await withdraw.wait()
 
@@ -334,7 +334,7 @@ export async function fourthUserDepositFixture() {
     const { manager, upkeep, firstUser, secondUser, thirdUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(firstUserPartialWithdrawalFixture)
     const [, , , , fourthUser] = await ethers.getSigners()
 
-    const depositAmount = round(72 * ((100 + await manager.getFeePercent()) / 100), 10)
+    const depositAmount = round(72 * ((100 + await manager.feePercent()) / 100), 10)
     const deposit = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 

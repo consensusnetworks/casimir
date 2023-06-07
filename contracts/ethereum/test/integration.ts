@@ -135,13 +135,13 @@ describe('Casimir manager', async function () {
 
   it('A loss is reported and brings the active stake below expected', async function () {
     const { manager } = await loadFixture(activeBalanceLossFixture)
-    const activeBalance = await manager.getLatestActiveBalance()
+    const activeBalance = await manager.latestActiveBalance()
     expect(ethers.utils.formatEther(activeBalance)).equal('126.0')
   })
 
   it('Gains are reported and bring the active stake back to expected', async function () {
     const { manager } = await loadFixture(activeBalanceRecoveryFixture)
-    const activeBalance = await manager.getLatestActiveBalance()
+    const activeBalance = await manager.latestActiveBalance()
     expect(ethers.utils.formatEther(activeBalance)).equal('128.0')
   })
 
@@ -175,7 +175,7 @@ describe('Casimir manager', async function () {
     console.log('👤 Second user stake', ethers.utils.formatEther(secondStake))
     console.log('👤 Third user stake', ethers.utils.formatEther(thirdStake))
     console.log('👤 Fourth user stake', ethers.utils.formatEther(fourthStake))
-    const openDeposits = await manager.getPrepoolBalance()
+    const openDeposits = await manager.prepoolBalance()
     console.log('📦 Open deposits', ethers.utils.formatEther(openDeposits))
     const dust = stake.sub(firstStake.add(secondStake).add(thirdStake).add(fourthStake))
     if (dust !== ethers.utils.parseEther('0.0')) {

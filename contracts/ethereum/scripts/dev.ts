@@ -67,7 +67,7 @@ void async function () {
 
     /** Stake 320 from the fourth user */
     setTimeout(async () => {
-        const depositAmount = 320 * ((100 + await manager.getFeePercent()) / 100)
+        const depositAmount = 320 * ((100 + await manager.feePercent()) / 100)
         const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await stake?.wait()
     }, 1000)
@@ -92,7 +92,7 @@ void async function () {
                 let nextActiveBalance = round(
                     parseFloat(
                         ethers.utils.formatEther(
-                            (await manager.getLatestActiveBalance()).add((await manager.getPendingPoolIds()).length * 32)
+                            (await manager.latestActiveBalance()).add((await manager.getPendingPoolIds()).length * 32)
                         )
                     ) + rewardAmount
                 )
@@ -127,7 +127,7 @@ void async function () {
                 nextActiveBalance = round(
                     parseFloat(
                         ethers.utils.formatEther(
-                            (await manager.getLatestActiveBalance()).add((await manager.getPendingPoolIds()).length * 32)
+                            (await manager.latestActiveBalance()).add((await manager.getPendingPoolIds()).length * 32)
                         )
                     ) - rewardAmount
                 )
