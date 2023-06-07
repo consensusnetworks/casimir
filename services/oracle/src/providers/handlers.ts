@@ -46,6 +46,8 @@ export async function initiateDepositHandler(input: HandlerInput) {
 
     const { cluster, requiredBalancePerValidator } = clusterDetails
 
+    console.log('Initiating deposit')
+
     const initiateDeposit = await (manager.connect(signer) as CasimirManager & ethers.Contract).initiateDeposit(
         depositDataRoot,
         publicKey,
@@ -58,6 +60,8 @@ export async function initiateDepositHandler(input: HandlerInput) {
         false
     )
     await initiateDeposit.wait()
+
+    console.log('Deposit initiated')
 }
 
 export async function initiatePoolReshareHandler(input: HandlerInput) {

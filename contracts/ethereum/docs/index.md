@@ -50,6 +50,14 @@ uint256 latestActiveBalanceAfterFees
 
 Latest active balance after fees
 
+### latestActiveRewardBalance
+
+```solidity
+int256 latestActiveRewardBalance
+```
+
+Latest active rewards
+
 ### finalizableCompletedExits
 
 ```solidity
@@ -1226,81 +1234,6 @@ Fulfill the request for testing
 | response | bytes | Aggregated response from the user code |
 | err | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
 
-## CasimirViews
-
-### constructor
-
-```solidity
-constructor(address managerAddress, address registryAddress) public
-```
-
-### getCompoundablePoolIds
-
-```solidity
-function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5] poolIds)
-```
-
-Get the next five compoundable pool IDs
-
-_Should be called off-chain_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The start index |
-| endIndex | uint256 | The end index |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| poolIds | uint32[5] | The next five compoundable pool IDs |
-
-### getEligibleOperatorIds
-
-```solidity
-function getEligibleOperatorIds(uint256 startIndex, uint256 endIndex) external view returns (uint64[] activeOperatorIds)
-```
-
-Get the active operator IDs
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The start index |
-| endIndex | uint256 | The end index |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| activeOperatorIds | uint64[] | The active operator IDs |
-
-### getSweptBalance
-
-```solidity
-function getSweptBalance(uint256 startIndex, uint256 endIndex) public view returns (uint256 balance)
-```
-
-Get the swept balance
-
-_Should be called off-chain_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The start index |
-| endIndex | uint256 | The end index |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| balance | uint256 | The swept balance |
-
 ## ICasimirManager
 
 ### Token
@@ -1596,6 +1529,12 @@ function latestActiveBalance() external view returns (uint256)
 
 ```solidity
 function latestActiveBalanceAfterFees() external view returns (uint256)
+```
+
+### latestActiveRewardBalance
+
+```solidity
+function latestActiveRewardBalance() external view returns (int256)
 ```
 
 ### feePercent
@@ -1987,20 +1926,6 @@ function setOracleAddress(address oracleAddress) external
 function mockFulfillRequest(bytes32 requestId, bytes result, bytes err) external
 ```
 
-## ICasimirViews
-
-### getCompoundablePoolIds
-
-```solidity
-function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5])
-```
-
-### getSweptBalance
-
-```solidity
-function getSweptBalance(uint256 startIndex, uint256 endIndex) external view returns (uint256)
-```
-
 ## Types32Array
 
 ### remove
@@ -2163,6 +2088,95 @@ struct RegistrationParams {
 
 ```solidity
 function registerUpkeep(struct KeeperRegistrarInterface.RegistrationParams requestParams) external returns (uint256)
+```
+
+## CasimirViews
+
+### constructor
+
+```solidity
+constructor(address managerAddress, address registryAddress) public
+```
+
+### getCompoundablePoolIds
+
+```solidity
+function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5] poolIds)
+```
+
+Get the next five compoundable pool IDs
+
+_Should be called off-chain_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolIds | uint32[5] | The next five compoundable pool IDs |
+
+### getEligibleOperatorIds
+
+```solidity
+function getEligibleOperatorIds(uint256 startIndex, uint256 endIndex) external view returns (uint64[] activeOperatorIds)
+```
+
+Get the active operator IDs
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| activeOperatorIds | uint64[] | The active operator IDs |
+
+### getSweptBalance
+
+```solidity
+function getSweptBalance(uint256 startIndex, uint256 endIndex) public view returns (uint256 balance)
+```
+
+Get the swept balance
+
+_Should be called off-chain_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| balance | uint256 | The swept balance |
+
+## ICasimirViews
+
+### getCompoundablePoolIds
+
+```solidity
+function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5])
+```
+
+### getSweptBalance
+
+```solidity
+function getSweptBalance(uint256 startIndex, uint256 endIndex) external view returns (uint256)
 ```
 
 ## CasimirMultisig

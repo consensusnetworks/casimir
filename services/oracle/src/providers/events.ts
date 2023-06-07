@@ -1,16 +1,34 @@
 import { ethers } from 'ethers'
-import { on, EventEmitter } from 'events'
-import { mergeAsyncIterables } from './iterables'
 
-export function getEventEmitter({ manager, events }: { manager: ethers.Contract, events: string[] }) {
-    const iterables = []
-    for (const event of events) {
-        const iterable = getEvent({ manager, event })
-        iterables.push(iterable)
-    }
-    return mergeAsyncIterables(iterables)
+export function getEventsIterable({ manager, events }: { manager: ethers.Contract, events: string[] }) {
+    return (async function*() {
+        for (const event of events) {
+            yield* getEvent({ manager, event })
+        }
+    })()
 }
 
-function getEvent({ manager, event }: { manager: ethers.Contract, event: string }) {
-    return on(manager as ethers.Contract & EventEmitter, event)
+async function* getEvent({ manager, event }: { manager: ethers.Contract, event: string }) {
+    const queue: any[][] = []
+    const listener = (...args: any[]) => queue.push(args)
+    
+    manager.on(event, listener)
+    
+    try {
+        while (true) {
+            if (queue.length === 0) {
+                await new Promise<void>(resolve => {
+                    const waitListener = () => {
+                        manager.off(event, waitListener)
+                        resolve()
+                    }
+                    manager.on(event, waitListener)
+                })
+            } else {
+                yield queue.shift()
+            }
+        }
+    } finally {
+        manager.off(event, listener)
+    }
 }

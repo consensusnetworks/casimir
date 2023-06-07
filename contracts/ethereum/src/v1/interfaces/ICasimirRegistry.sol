@@ -16,6 +16,13 @@ interface ICasimirRegistry {
         mapping(uint32 => bool active) pools;
     }
 
+    struct OperatorDetails {
+        bool active;
+        bool resharing;
+        int256 collateral;
+        uint256 poolCount;
+    }
+
     function registerOperator(uint64 operatorId) external payable;
     function depositCollateral(uint64 operatorId) external payable;
     function withdrawCollateral(uint64 operatorId, uint256 amount) external;

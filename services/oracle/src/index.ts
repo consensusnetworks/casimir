@@ -1,5 +1,5 @@
 import { config } from './providers/config'
-import { getEventEmitter } from './providers/events'
+import { getEventsIterable } from './providers/events'
 import { 
     initiateDepositHandler, 
     initiatePoolExitHandler, 
@@ -18,9 +18,12 @@ const handlers = {
 const { provider, signer, manager, cliPath, messengerUrl } = config()
 
 ;(async function () {
-    const eventEmitter = getEventEmitter({ manager, events: Object.keys(handlers) })    
-    for await (const event of eventEmitter) {
-        const details = event[event.length - 1]
+    const eventsIterable = getEventsIterable({ manager, events: Object.keys(handlers) })
+    
+    console.log('Listening for events', eventsIterable)
+
+    for await (const event of eventsIterable) {
+        const details = event?.[event.length - 1]
         const { args } = details
         const handler = handlers[details.event as keyof typeof handlers]
         if (!handler) throw new Error(`No handler found for event ${details.event}`)
@@ -34,4 +37,5 @@ const { provider, signer, manager, cliPath, messengerUrl } = config()
         })
     }
 })()
+
 
