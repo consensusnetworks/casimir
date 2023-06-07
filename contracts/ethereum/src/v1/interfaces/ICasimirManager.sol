@@ -134,6 +134,7 @@ interface ICasimirManager {
     function upkeepId() external view returns (uint256);    
     function latestActiveBalance() external view returns (uint256);
     function latestActiveBalanceAfterFees() external view returns (uint256);
+    function latestActiveRewardBalance() external view returns (int256);
     function feePercent() external view returns (uint32);
     function requestedExits() external view returns (uint256);
     function requestedWithdrawals() external view returns (uint256);

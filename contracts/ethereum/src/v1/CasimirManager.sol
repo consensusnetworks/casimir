@@ -106,7 +106,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Latest active balance after fees */
     uint256 public latestActiveBalanceAfterFees;
     /** Latest active rewards */
-    int256 private latestActiveRewardBalance;
+    int256 public latestActiveRewardBalance;
     /** Exited pool count */
     uint256 public finalizableCompletedExits;
     /** Exited balance */
@@ -141,8 +141,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint32[] private pendingPoolIds;
     /** IDs of pools staked */
     uint32[] private stakedPoolIds;
-    /** Active pool count */
-    uint256 private totalDeposits;
     /** Exiting pool count */
     uint256 public requestedExits;
     /** Slashed pool count */
@@ -343,6 +341,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         exitedBalance += balance;
         finalizableExitedBalance += balance;
+
         finalizableCompletedExits++;
     }
 
@@ -472,11 +471,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     ) external onlyUpkeep {
         uint256 expectedActivatedBalance = activatedDeposits * poolCapacity;
         uint256 expectedExitedBalance = completedExits * poolCapacity;
-        int256 surplus = int256(activeBalance + sweptBalance) -
-            (int256(getExpectedEffectiveBalance() + expectedExitedBalance));
-        int256 rewards = surplus - int256(finalizableExitedBalance);
+        int256 rewards = int256(activeBalance + sweptBalance - expectedExitedBalance) - int256(getExpectedEffectiveBalance());
         int256 change = rewards - latestActiveRewardBalance;
-
         if (change > 0) {
             uint256 gain = uint256(change);
             if (rewards > 0) {
@@ -672,7 +668,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint32 poolId = readyPoolIds[0];
         readyPoolIds.remove(0);
         pendingPoolIds.push(poolId);
-        totalDeposits++;
 
         poolAddresses[poolId] = deployPool(
             poolId,
@@ -866,7 +861,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
         require(
             poolConfig.status == ICasimirPool.PoolStatus.EXITING_FORCED ||
-                poolConfig.status == ICasimirPool.PoolStatus.EXITING_REQUESTED,
+            poolConfig.status == ICasimirPool.PoolStatus.EXITING_REQUESTED,
             "Pool not exiting"
         );
 
@@ -874,7 +869,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint64[] memory operatorIds = poolConfig.operatorIds;
         bytes memory publicKey = poolConfig.publicKey;
 
-        totalDeposits--;
         if (poolConfig.status == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
             requestedExits--;
         } else if (
@@ -882,6 +876,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ) {
             forcedExits--;
         }
+
         pool.setStatus(ICasimirPool.PoolStatus.WITHDRAWN);
         pool.withdrawBalance(blamePercents);
 

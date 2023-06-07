@@ -13,7 +13,6 @@ export async function deploymentFixture() {
     const mockFunctionsOracleFactory = await ethers.getContractFactory('MockFunctionsOracle')
     const mockFunctionsOracle = await mockFunctionsOracleFactory.deploy()
     await mockFunctionsOracle.deployed()
-    console.log(`MockFunctionsOracle contract deployed to ${mockFunctionsOracle.address}`)
 
     const managerArgs = {
         oracleAddress: oracle.address,
@@ -32,13 +31,10 @@ export async function deploymentFixture() {
     const managerFactory = await ethers.getContractFactory('CasimirManager')
     const manager = await managerFactory.deploy(...Object.values(managerArgs)) as CasimirManager
     await manager.deployed()
-    console.log(`CasimirManager contract deployed to ${manager.address}`)
 
     const registryAddress = await manager.getRegistryAddress()
-    console.log(`CasimirRegistry contract deployed to ${registryAddress}`)
 
     const upkeepAddress = await manager.getUpkeepAddress()
-    console.log(`CasimirUpkeep contract deployed to ${upkeepAddress}`)
 
     const viewsArgs = {
         managerAddress: manager.address,
@@ -46,7 +42,6 @@ export async function deploymentFixture() {
     }
     const viewsFactory = await ethers.getContractFactory('CasimirViews')
     const views = await viewsFactory.deploy(...Object.values(viewsArgs)) as CasimirViews
-    console.log(`CasimirViews contract deployed to ${views.address}`)
 
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
@@ -66,7 +61,7 @@ export async function deploymentFixture() {
         await result.wait()
     }
 
-    return { manager, upkeep, owner, keeper, oracle }
+    return { manager, registry, upkeep, views, owner, keeper, oracle }
 }
 
 /** Fixture to stake 16 for the first user */
@@ -457,7 +452,7 @@ export async function thirdUserFullWithdrawalFixture() {
     let requestId = latestRequestId
 
     const nextValues = {
-        activeBalance: 128,
+        activeBalance: 96,
         sweptBalance: sweptExitedBalance,
         activatedDeposits: 0,
         forcedExits: 0,
@@ -479,7 +474,7 @@ export async function thirdUserFullWithdrawalFixture() {
     return { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }
 }
 
-/** Fixture to simulate stakes and rewards */
+/** Fixture to simulate rewards */
 export async function simulationFixture() {
     const { manager, upkeep, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(thirdUserFullWithdrawalFixture)
 
@@ -489,11 +484,11 @@ export async function simulationFixture() {
     let requestId = latestRequestId
 
     for (let i = 0; i < 5; i++) {
-        const stakedPoolIds = await manager.getStakedPoolIds()
         await time.increase(time.duration.days(1))
-
+        
         await runUpkeep({ upkeep, keeper })
-
+        
+        const stakedPoolIds = await manager.getStakedPoolIds()
         const rewardsAmount = rewardsPerValidator * stakedPoolIds.length
         totalRewards += round(rewardsAmount, 10)
         nextActiveBalance = round(nextActiveBalance + rewardsAmount, 10)            

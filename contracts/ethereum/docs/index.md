@@ -1,350 +1,5 @@
 # Solidity API
 
-## CasimirMultisig
-
-### owners
-
-```solidity
-address[] owners
-```
-
-### isOwner
-
-```solidity
-mapping(address => bool) isOwner
-```
-
-### confirmationsRequired
-
-```solidity
-uint256 confirmationsRequired
-```
-
-### isOwnerChangeConfirmed
-
-```solidity
-mapping(uint256 => mapping(address => bool)) isOwnerChangeConfirmed
-```
-
-### isTransactionConfirmed
-
-```solidity
-mapping(uint256 => mapping(address => bool)) isTransactionConfirmed
-```
-
-### ownerChanges
-
-```solidity
-struct ICasimirMultisig.OwnerChange[] ownerChanges
-```
-
-### transactions
-
-```solidity
-struct ICasimirMultisig.Transaction[] transactions
-```
-
-### onlyOwner
-
-```solidity
-modifier onlyOwner()
-```
-
-### ownerChangeExists
-
-```solidity
-modifier ownerChangeExists(uint256 changeId)
-```
-
-### ownerChangeNotExecuted
-
-```solidity
-modifier ownerChangeNotExecuted(uint256 changeId)
-```
-
-### ownerChangeNotConfirmed
-
-```solidity
-modifier ownerChangeNotConfirmed(uint256 changeId)
-```
-
-### transactionExists
-
-```solidity
-modifier transactionExists(uint256 transactionIndex)
-```
-
-### transactionNotExecuted
-
-```solidity
-modifier transactionNotExecuted(uint256 transactionIndex)
-```
-
-### transactionNotConfirmed
-
-```solidity
-modifier transactionNotConfirmed(uint256 transactionIndex)
-```
-
-### constructor
-
-```solidity
-constructor(address[] _owners) public
-```
-
-### receive
-
-```solidity
-receive() external payable
-```
-
-### submitOwnerChange
-
-```solidity
-function submitOwnerChange(address owner, bool add) public
-```
-
-### confirmOwnerChange
-
-```solidity
-function confirmOwnerChange(uint256 changeId) public
-```
-
-### executeOwnerChange
-
-```solidity
-function executeOwnerChange(uint256 changeId) public
-```
-
-### revokeOwnerChangeConfirmation
-
-```solidity
-function revokeOwnerChangeConfirmation(uint256 changeId) public
-```
-
-### submitTransaction
-
-```solidity
-function submitTransaction(address to, uint256 value, bytes data) public returns (uint256 transactionIndex)
-```
-
-### confirmTransaction
-
-```solidity
-function confirmTransaction(uint256 transactionIndex) public
-```
-
-### executeTransaction
-
-```solidity
-function executeTransaction(uint256 transactionIndex) public
-```
-
-### revokeTransactionConfirmation
-
-```solidity
-function revokeTransactionConfirmation(uint256 transactionIndex) public
-```
-
-### adjustConfirmationsRequired
-
-```solidity
-function adjustConfirmationsRequired() internal
-```
-
-### getOwners
-
-```solidity
-function getOwners() public view returns (address[])
-```
-
-### getOwnerChangeCount
-
-```solidity
-function getOwnerChangeCount() public view returns (uint256)
-```
-
-### getOwnerChange
-
-```solidity
-function getOwnerChange(uint256 changeId) public view returns (address owner, bool add, bool executed, uint256 confirmations)
-```
-
-### getTransactionCount
-
-```solidity
-function getTransactionCount() public view returns (uint256)
-```
-
-### getTransaction
-
-```solidity
-function getTransaction(uint256 transactionIndex) public view returns (address to, uint256 value, bytes data, bool executed, uint256 confirmations)
-```
-
-## ICasimirMultisig
-
-### Deposit
-
-```solidity
-event Deposit(address sender, uint256 amount, uint256 balance)
-```
-
-### SubmitOwnerChange
-
-```solidity
-event SubmitOwnerChange(address owner, uint256 changeId, bool add)
-```
-
-### ConfirmOwnerChange
-
-```solidity
-event ConfirmOwnerChange(address owner, uint256 changeId)
-```
-
-### RevokeOwnerChangeConfirmation
-
-```solidity
-event RevokeOwnerChangeConfirmation(address owner, uint256 changeId)
-```
-
-### ExecuteOwnerChange
-
-```solidity
-event ExecuteOwnerChange(address owner, uint256 changeId)
-```
-
-### SubmitTransaction
-
-```solidity
-event SubmitTransaction(address owner, uint256 txIndex, address to, uint256 value, bytes data)
-```
-
-### ConfirmTransaction
-
-```solidity
-event ConfirmTransaction(address owner, uint256 txIndex)
-```
-
-### RevokeTransactionConfirmation
-
-```solidity
-event RevokeTransactionConfirmation(address owner, uint256 txIndex)
-```
-
-### ExecuteTransaction
-
-```solidity
-event ExecuteTransaction(address owner, uint256 txIndex)
-```
-
-### OwnerChange
-
-```solidity
-struct OwnerChange {
-  address owner;
-  bool add;
-  bool executed;
-  uint256 confirmations;
-}
-```
-
-### Transaction
-
-```solidity
-struct Transaction {
-  address to;
-  uint256 value;
-  bytes data;
-  bool executed;
-  uint256 confirmations;
-}
-```
-
-### receive
-
-```solidity
-receive() external payable
-```
-
-### submitOwnerChange
-
-```solidity
-function submitOwnerChange(address owner, bool add) external
-```
-
-### confirmOwnerChange
-
-```solidity
-function confirmOwnerChange(uint256 changeId) external
-```
-
-### executeOwnerChange
-
-```solidity
-function executeOwnerChange(uint256 changeId) external
-```
-
-### revokeOwnerChangeConfirmation
-
-```solidity
-function revokeOwnerChangeConfirmation(uint256 changeId) external
-```
-
-### submitTransaction
-
-```solidity
-function submitTransaction(address to, uint256 value, bytes data) external returns (uint256 transactionIndex)
-```
-
-### confirmTransaction
-
-```solidity
-function confirmTransaction(uint256 transactionIndex) external
-```
-
-### executeTransaction
-
-```solidity
-function executeTransaction(uint256 transactionIndex) external
-```
-
-### revokeTransactionConfirmation
-
-```solidity
-function revokeTransactionConfirmation(uint256 transactionIndex) external
-```
-
-### getOwners
-
-```solidity
-function getOwners() external view returns (address[])
-```
-
-### getOwnerChangeCount
-
-```solidity
-function getOwnerChangeCount() external view returns (uint256)
-```
-
-### getOwnerChange
-
-```solidity
-function getOwnerChange(uint256 changeId) external view returns (address owner, bool add, bool executed, uint256 confirmations)
-```
-
-### getTransactionCount
-
-```solidity
-function getTransactionCount() external view returns (uint256)
-```
-
-### getTransaction
-
-```solidity
-function getTransaction(uint256 transactionIndex) external view returns (address to, uint256 value, bytes data, bool executed, uint256 confirmations)
-```
-
 ## CasimirManager
 
 ### upkeepRegistrationMinimum
@@ -355,6 +10,46 @@ uint256 upkeepRegistrationMinimum
 
 Minimum balance for upkeep registration (0.1 LINK)
 
+### feePercent
+
+```solidity
+uint32 feePercent
+```
+
+Total fee percentage
+
+### reportPeriod
+
+```solidity
+uint32 reportPeriod
+```
+
+Current report period
+
+### upkeepId
+
+```solidity
+uint256 upkeepId
+```
+
+Upkeep ID
+
+### latestActiveBalance
+
+```solidity
+uint256 latestActiveBalance
+```
+
+Latest active balance
+
+### latestActiveBalanceAfterFees
+
+```solidity
+uint256 latestActiveBalanceAfterFees
+```
+
+Latest active balance after fees
+
 ### finalizableCompletedExits
 
 ```solidity
@@ -362,6 +57,38 @@ uint256 finalizableCompletedExits
 ```
 
 Exited pool count
+
+### requestedWithdrawals
+
+```solidity
+uint256 requestedWithdrawals
+```
+
+Total pending withdrawals count
+
+### requestedWithdrawalBalance
+
+```solidity
+uint256 requestedWithdrawalBalance
+```
+
+Total pending withdrawal amount
+
+### prepoolBalance
+
+```solidity
+uint256 prepoolBalance
+```
+
+Total deposits not yet in pools
+
+### requestedExits
+
+```solidity
+uint256 requestedExits
+```
+
+Exiting pool count
 
 ### onlyPool
 
@@ -832,10 +559,10 @@ Get the total user stake for a given user address
 | ---- | ---- | ----------- |
 | userStake | uint256 | The total user stake |
 
-### totalStake
+### getTotalStake
 
 ```solidity
-function totalStake() public view returns (uint256 totalStake)
+function getTotalStake() public view returns (uint256 totalStake)
 ```
 
 Get the total stake
@@ -916,62 +643,6 @@ Get the expected effective balance
 | ---- | ---- | ----------- |
 | expectedEffectiveBalance | uint256 | The expected effective balance |
 
-### latestActiveBalance
-
-```solidity
-function latestActiveBalance() public view returns (uint256)
-```
-
-Get the latest active balance
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | latestActiveBalance The latest active balance |
-
-### latestActiveBalanceAfterFees
-
-```solidity
-function latestActiveBalanceAfterFees() public view returns (uint256)
-```
-
-Get the latest active balance after fees
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | latestActiveBalanceAfterFees The latest active balance after fees |
-
-### finalizableCompletedExits
-
-```solidity
-function finalizableCompletedExits() public view returns (uint256)
-```
-
-Get the finalizable completed exit count of the current reporting period
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | finalizableCompletedExits The finalizable completed exit count of the current reporting period |
-
-### reportPeriod
-
-```solidity
-function reportPeriod() public view returns (uint256)
-```
-
-Get the report period
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | reportPeriod The report period |
-
 ### getPendingWithdrawalEligibility
 
 ```solidity
@@ -992,62 +663,6 @@ Get the eligibility of a pending withdrawal
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | bool | pendingWithdrawalEligibility The eligibility of a pending withdrawal |
-
-### requestedWithdrawalBalance
-
-```solidity
-function requestedWithdrawalBalance() public view returns (uint256)
-```
-
-Get the total pending user withdrawal amount
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | requestedWithdrawalBalance The total pending user withdrawal amount |
-
-### requestedWithdrawals
-
-```solidity
-function requestedWithdrawals() public view returns (uint256)
-```
-
-Get the total pending withdrawal count
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | requestedWithdrawals The total pending withdrawal count |
-
-### feePercent
-
-```solidity
-function feePercent() public view returns (uint32)
-```
-
-Get the total fee percentage
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32 | feePercent The total fee percentage |
-
-### requestedExits
-
-```solidity
-function requestedExits() external view returns (uint256)
-```
-
-Get the count of pools requested to exit
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | requestedExits The count of pools requested to exit |
 
 ### getReadyPoolIds
 
@@ -1090,20 +705,6 @@ Get the staked pool IDs
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint32[] | stakedPoolIds The staked pool IDs |
-
-### prepoolBalance
-
-```solidity
-function prepoolBalance() external view returns (uint256)
-```
-
-Get the pre-pool balance
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | prepoolBalance The pre-pool balance |
 
 ### getPoolAddress
 
@@ -1158,20 +759,6 @@ Get the registry address
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | registryAddress | address | The registry address |
-
-### getUpkeepId
-
-```solidity
-function getUpkeepId() external view returns (uint256)
-```
-
-Get the upkeep ID
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | upkeepId The upkeep ID |
 
 ### getUpkeepAddress
 
@@ -1454,7 +1041,7 @@ Pool capacity
 ### reportPeriod
 
 ```solidity
-uint256 reportPeriod
+uint32 reportPeriod
 ```
 
 Current report period
@@ -1993,6 +1580,24 @@ function withdrawSSVBalance(uint256 amount) external
 function setFunctionsAddress(address functionsAddress) external
 ```
 
+### upkeepId
+
+```solidity
+function upkeepId() external view returns (uint256)
+```
+
+### latestActiveBalance
+
+```solidity
+function latestActiveBalance() external view returns (uint256)
+```
+
+### latestActiveBalanceAfterFees
+
+```solidity
+function latestActiveBalanceAfterFees() external view returns (uint256)
+```
+
 ### feePercent
 
 ```solidity
@@ -2003,6 +1608,42 @@ function feePercent() external view returns (uint32)
 
 ```solidity
 function requestedExits() external view returns (uint256)
+```
+
+### requestedWithdrawals
+
+```solidity
+function requestedWithdrawals() external view returns (uint256)
+```
+
+### requestedWithdrawalBalance
+
+```solidity
+function requestedWithdrawalBalance() external view returns (uint256)
+```
+
+### finalizableCompletedExits
+
+```solidity
+function finalizableCompletedExits() external view returns (uint256)
+```
+
+### reportPeriod
+
+```solidity
+function reportPeriod() external view returns (uint32)
+```
+
+### prepoolBalance
+
+```solidity
+function prepoolBalance() external view returns (uint256)
+```
+
+### getTotalStake
+
+```solidity
+function getTotalStake() external view returns (uint256)
 ```
 
 ### getReadyPoolIds
@@ -2023,12 +1664,6 @@ function getPendingPoolIds() external view returns (uint32[])
 function getStakedPoolIds() external view returns (uint32[])
 ```
 
-### totalStake
-
-```solidity
-function totalStake() external view returns (uint256)
-```
-
 ### getBufferedBalance
 
 ```solidity
@@ -2039,30 +1674,6 @@ function getBufferedBalance() external view returns (uint256)
 
 ```solidity
 function getExpectedEffectiveBalance() external view returns (uint256)
-```
-
-### finalizableCompletedExits
-
-```solidity
-function finalizableCompletedExits() external view returns (uint256)
-```
-
-### latestActiveBalance
-
-```solidity
-function latestActiveBalance() external view returns (uint256)
-```
-
-### latestActiveBalanceAfterFees
-
-```solidity
-function latestActiveBalanceAfterFees() external view returns (uint256)
-```
-
-### reportPeriod
-
-```solidity
-function reportPeriod() external view returns (uint256)
 ```
 
 ### getPendingWithdrawalEligibility
@@ -2077,28 +1688,10 @@ function getPendingWithdrawalEligibility(uint256 index, uint256 period) external
 function getWithdrawableBalance() external view returns (uint256)
 ```
 
-### prepoolBalance
-
-```solidity
-function prepoolBalance() external view returns (uint256)
-```
-
 ### getUserStake
 
 ```solidity
 function getUserStake(address userAddress) external view returns (uint256)
-```
-
-### requestedWithdrawalBalance
-
-```solidity
-function requestedWithdrawalBalance() external view returns (uint256)
-```
-
-### requestedWithdrawals
-
-```solidity
-function requestedWithdrawals() external view returns (uint256)
 ```
 
 ### getPoolAddress
@@ -2117,12 +1710,6 @@ function getPoolDetails(uint32 poolId) external view returns (struct ICasimirMan
 
 ```solidity
 function getRegistryAddress() external view returns (address)
-```
-
-### getUpkeepId
-
-```solidity
-function getUpkeepId() external view returns (uint256)
 ```
 
 ### getUpkeepAddress
@@ -2576,6 +2163,351 @@ struct RegistrationParams {
 
 ```solidity
 function registerUpkeep(struct KeeperRegistrarInterface.RegistrationParams requestParams) external returns (uint256)
+```
+
+## CasimirMultisig
+
+### owners
+
+```solidity
+address[] owners
+```
+
+### isOwner
+
+```solidity
+mapping(address => bool) isOwner
+```
+
+### confirmationsRequired
+
+```solidity
+uint256 confirmationsRequired
+```
+
+### isOwnerChangeConfirmed
+
+```solidity
+mapping(uint256 => mapping(address => bool)) isOwnerChangeConfirmed
+```
+
+### isTransactionConfirmed
+
+```solidity
+mapping(uint256 => mapping(address => bool)) isTransactionConfirmed
+```
+
+### ownerChanges
+
+```solidity
+struct ICasimirMultisig.OwnerChange[] ownerChanges
+```
+
+### transactions
+
+```solidity
+struct ICasimirMultisig.Transaction[] transactions
+```
+
+### onlyOwner
+
+```solidity
+modifier onlyOwner()
+```
+
+### ownerChangeExists
+
+```solidity
+modifier ownerChangeExists(uint256 changeId)
+```
+
+### ownerChangeNotExecuted
+
+```solidity
+modifier ownerChangeNotExecuted(uint256 changeId)
+```
+
+### ownerChangeNotConfirmed
+
+```solidity
+modifier ownerChangeNotConfirmed(uint256 changeId)
+```
+
+### transactionExists
+
+```solidity
+modifier transactionExists(uint256 transactionIndex)
+```
+
+### transactionNotExecuted
+
+```solidity
+modifier transactionNotExecuted(uint256 transactionIndex)
+```
+
+### transactionNotConfirmed
+
+```solidity
+modifier transactionNotConfirmed(uint256 transactionIndex)
+```
+
+### constructor
+
+```solidity
+constructor(address[] _owners) public
+```
+
+### receive
+
+```solidity
+receive() external payable
+```
+
+### submitOwnerChange
+
+```solidity
+function submitOwnerChange(address owner, bool add) public
+```
+
+### confirmOwnerChange
+
+```solidity
+function confirmOwnerChange(uint256 changeId) public
+```
+
+### executeOwnerChange
+
+```solidity
+function executeOwnerChange(uint256 changeId) public
+```
+
+### revokeOwnerChangeConfirmation
+
+```solidity
+function revokeOwnerChangeConfirmation(uint256 changeId) public
+```
+
+### submitTransaction
+
+```solidity
+function submitTransaction(address to, uint256 value, bytes data) public returns (uint256 transactionIndex)
+```
+
+### confirmTransaction
+
+```solidity
+function confirmTransaction(uint256 transactionIndex) public
+```
+
+### executeTransaction
+
+```solidity
+function executeTransaction(uint256 transactionIndex) public
+```
+
+### revokeTransactionConfirmation
+
+```solidity
+function revokeTransactionConfirmation(uint256 transactionIndex) public
+```
+
+### adjustConfirmationsRequired
+
+```solidity
+function adjustConfirmationsRequired() internal
+```
+
+### getOwners
+
+```solidity
+function getOwners() public view returns (address[])
+```
+
+### getOwnerChangeCount
+
+```solidity
+function getOwnerChangeCount() public view returns (uint256)
+```
+
+### getOwnerChange
+
+```solidity
+function getOwnerChange(uint256 changeId) public view returns (address owner, bool add, bool executed, uint256 confirmations)
+```
+
+### getTransactionCount
+
+```solidity
+function getTransactionCount() public view returns (uint256)
+```
+
+### getTransaction
+
+```solidity
+function getTransaction(uint256 transactionIndex) public view returns (address to, uint256 value, bytes data, bool executed, uint256 confirmations)
+```
+
+## ICasimirMultisig
+
+### Deposit
+
+```solidity
+event Deposit(address sender, uint256 amount, uint256 balance)
+```
+
+### SubmitOwnerChange
+
+```solidity
+event SubmitOwnerChange(address owner, uint256 changeId, bool add)
+```
+
+### ConfirmOwnerChange
+
+```solidity
+event ConfirmOwnerChange(address owner, uint256 changeId)
+```
+
+### RevokeOwnerChangeConfirmation
+
+```solidity
+event RevokeOwnerChangeConfirmation(address owner, uint256 changeId)
+```
+
+### ExecuteOwnerChange
+
+```solidity
+event ExecuteOwnerChange(address owner, uint256 changeId)
+```
+
+### SubmitTransaction
+
+```solidity
+event SubmitTransaction(address owner, uint256 txIndex, address to, uint256 value, bytes data)
+```
+
+### ConfirmTransaction
+
+```solidity
+event ConfirmTransaction(address owner, uint256 txIndex)
+```
+
+### RevokeTransactionConfirmation
+
+```solidity
+event RevokeTransactionConfirmation(address owner, uint256 txIndex)
+```
+
+### ExecuteTransaction
+
+```solidity
+event ExecuteTransaction(address owner, uint256 txIndex)
+```
+
+### OwnerChange
+
+```solidity
+struct OwnerChange {
+  address owner;
+  bool add;
+  bool executed;
+  uint256 confirmations;
+}
+```
+
+### Transaction
+
+```solidity
+struct Transaction {
+  address to;
+  uint256 value;
+  bytes data;
+  bool executed;
+  uint256 confirmations;
+}
+```
+
+### receive
+
+```solidity
+receive() external payable
+```
+
+### submitOwnerChange
+
+```solidity
+function submitOwnerChange(address owner, bool add) external
+```
+
+### confirmOwnerChange
+
+```solidity
+function confirmOwnerChange(uint256 changeId) external
+```
+
+### executeOwnerChange
+
+```solidity
+function executeOwnerChange(uint256 changeId) external
+```
+
+### revokeOwnerChangeConfirmation
+
+```solidity
+function revokeOwnerChangeConfirmation(uint256 changeId) external
+```
+
+### submitTransaction
+
+```solidity
+function submitTransaction(address to, uint256 value, bytes data) external returns (uint256 transactionIndex)
+```
+
+### confirmTransaction
+
+```solidity
+function confirmTransaction(uint256 transactionIndex) external
+```
+
+### executeTransaction
+
+```solidity
+function executeTransaction(uint256 transactionIndex) external
+```
+
+### revokeTransactionConfirmation
+
+```solidity
+function revokeTransactionConfirmation(uint256 transactionIndex) external
+```
+
+### getOwners
+
+```solidity
+function getOwners() external view returns (address[])
+```
+
+### getOwnerChangeCount
+
+```solidity
+function getOwnerChangeCount() external view returns (uint256)
+```
+
+### getOwnerChange
+
+```solidity
+function getOwnerChange(uint256 changeId) external view returns (address owner, bool add, bool executed, uint256 confirmations)
+```
+
+### getTransactionCount
+
+```solidity
+function getTransactionCount() external view returns (uint256)
+```
+
+### getTransaction
+
+```solidity
+function getTransaction(uint256 transactionIndex) external view returns (address to, uint256 value, bytes data, bool executed, uint256 confirmations)
 ```
 
 ## MockFunctionsOracle
@@ -3050,10 +2982,10 @@ Get the manager active (consensus) deposits
 | ---- | ---- | ----------- |
 | activeDeposits | uint256 | The manager active (consensus) deposits |
 
-### latestActiveBalance
+### getLatestActiveBalance
 
 ```solidity
-function latestActiveBalance() public view returns (uint256)
+function getLatestActiveBalance() public view returns (uint256)
 ```
 
 Get the latest manager active (consensus) balance
@@ -3064,10 +2996,10 @@ Get the latest manager active (consensus) balance
 | ---- | ---- | ----------- |
 | [0] | uint256 | activeBalance The latest manager active (consensus) balance |
 
-### latestActiveBalanceAfterFees
+### getLatestActiveBalanceAfterFees
 
 ```solidity
-function latestActiveBalanceAfterFees() public view returns (uint256)
+function getLatestActiveBalanceAfterFees() public view returns (uint256)
 ```
 
 Get the manager latest active (consensus) balance after fees
@@ -3078,10 +3010,10 @@ Get the manager latest active (consensus) balance after fees
 | ---- | ---- | ----------- |
 | [0] | uint256 | activeBalanceAfterFees The manager latest active (consensus) balance after fees |
 
-### requestedWithdrawals
+### getPendingWithdrawals
 
 ```solidity
-function requestedWithdrawals() public view returns (uint256)
+function getPendingWithdrawals() public view returns (uint256)
 ```
 
 Get the total pending withdrawals
@@ -3106,10 +3038,10 @@ Get the pending withdrawal queue
 | ---- | ---- | ----------- |
 | [0] | struct ICasimirManager.Withdrawal[] | pendingWithdrawalQueue The pending withdrawal queue |
 
-### feePercent
+### getFeePercent
 
 ```solidity
-function feePercent() public view returns (uint32)
+function getFeePercent() public view returns (uint32)
 ```
 
 Get the total fee percentage
@@ -3856,10 +3788,10 @@ function setFeePercents(uint32 ethFeePercent, uint32 linkFeePercent, uint32 ssvF
 function setFunctionsAddress(address functionsAddress) external
 ```
 
-### feePercent
+### getFeePercent
 
 ```solidity
-function feePercent() external view returns (uint32)
+function getFeePercent() external view returns (uint32)
 ```
 
 ### getETHFeePercent
@@ -3928,16 +3860,16 @@ function getBufferedBalance() external view returns (uint256)
 function getActiveDeposits() external view returns (uint256)
 ```
 
-### latestActiveBalance
+### getLatestActiveBalance
 
 ```solidity
-function latestActiveBalance() external view returns (uint256)
+function getLatestActiveBalance() external view returns (uint256)
 ```
 
-### latestActiveBalanceAfterFees
+### getLatestActiveBalanceAfterFees
 
 ```solidity
-function latestActiveBalanceAfterFees() external view returns (uint256)
+function getLatestActiveBalanceAfterFees() external view returns (uint256)
 ```
 
 ### getExitedBalance
@@ -3964,10 +3896,10 @@ function getSweptBalance() external view returns (uint256)
 function getUserStake(address userAddress) external view returns (uint256)
 ```
 
-### requestedWithdrawals
+### getPendingWithdrawals
 
 ```solidity
-function requestedWithdrawals() external view returns (uint256)
+function getPendingWithdrawals() external view returns (uint256)
 ```
 
 ### getPendingWithdrawalQueue

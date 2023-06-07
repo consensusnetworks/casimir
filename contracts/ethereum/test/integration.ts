@@ -3,7 +3,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { firstUserDepositFixture, rewardsPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardsPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture, activeBalanceLossFixture, activeBalanceRecoveryFixture, thirdUserFullWithdrawalFixture } from './fixtures/shared'
 
-describe('Casimir manager', async function () {
+describe('Integration', async function () {
 
   it('First user\'s 16.0 stake increases the total stake to 16.0', async function () {
     const { manager } = await loadFixture(firstUserDepositFixture)

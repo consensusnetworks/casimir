@@ -57,7 +57,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Current report deposit activations */
     uint256 private reportActivatedDeposits;
     /** Current report unexpected exits */
-    uint256 private reportForcedExitss;
+    uint256 private reportForcedExits;
     /** Current report completed exits */
     uint256 private reportCompletedExits;
     /** Current report compoundable pools */
@@ -204,7 +204,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
                 reportActiveBalance = 0;
                 reportActivatedDeposits = 0;
-                reportForcedExitss = 0;
+                reportForcedExits = 0;
                 reportCompletedExits = 0;
                 reportCompoundablePoolIds = [0, 0, 0, 0, 0];
             }
@@ -252,7 +252,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
                 ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
                 
                 reportActivatedDeposits = activatedDeposits;
-                reportForcedExitss = unexpectedExits;
+                reportForcedExits = unexpectedExits;
                 reportCompletedExits = completedExits;
                 reportCompoundablePoolIds = compoundablePools;
 
@@ -263,8 +263,8 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             if (reportRemainingRequests == 0) {
                 reportStatus = ReportStatus.PROCESSING;
 
-                if (reportForcedExitss > 0) {
-                    manager.requestForcedExitReports(reportForcedExitss);
+                if (reportForcedExits > 0) {
+                    manager.requestForcedExitReports(reportForcedExits);
                 }
 
                 if (reportCompletedExits > 0) {
