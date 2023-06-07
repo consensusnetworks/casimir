@@ -1,6 +1,4 @@
-import { deployContract } from '@casimir/ethereum/helpers/deploy'
-import { ContractConfig, DeploymentConfig } from '@casimir/types'
-import { CasimirUpkeep, CasimirManager, CasimirRegistry, ISSVNetworkViews } from '@casimir/ethereum/build/artifacts/types'
+import { CasimirManager, CasimirRegistry, ISSVNetworkViews, CasimirViews, CasimirUpkeep } from '@casimir/ethereum/build/artifacts/types'
 import { ethers, network } from 'hardhat'
 import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
@@ -11,67 +9,46 @@ import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/reso
 void async function () {
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
 
-    let config: DeploymentConfig = {
-        CasimirManager: {
-            address: '',
-            args: {
-                oracleAddress: oracle.address || process.env.ORACLE_ADDRESS,
-                beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
-                linkFunctionsAddress: process.env.LINK_FUNCTIONS_ADDRESS,
-                linkRegistrarAddress: process.env.LINK_REGISTRAR_ADDRESS,
-                linkRegistryAddress: process.env.LINK_REGISTRY_ADDRESS,
-                linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
-                ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
-                ssvNetworkViewsAddress: process.env.SSV_NETWORK_VIEWS_ADDRESS,
-                ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
-                swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
-                swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
-                wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
-            },
-            options: {},
-            proxy: false
-        },
-        CasimirViews: {
-            address: '',
-            args: {
-                managerAddress: ''
-            },
-            options: {},
-            proxy: false
-        }
+    const mockFunctionsOracleFactory = await ethers.getContractFactory('MockFunctionsOracle')
+    const mockFunctionsOracle = await mockFunctionsOracleFactory.deploy()
+    await mockFunctionsOracle.deployed()
+    console.log(`MockFunctionsOracle contract deployed to ${mockFunctionsOracle.address}`)
+
+    const managerArgs = {
+        oracleAddress: oracle.address,
+        beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
+        linkFunctionsAddress: mockFunctionsOracle.address,
+        linkRegistrarAddress: process.env.LINK_REGISTRAR_ADDRESS,
+        linkRegistryAddress: process.env.LINK_REGISTRY_ADDRESS,
+        linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
+        ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
+        ssvNetworkViewsAddress: process.env.SSV_NETWORK_VIEWS_ADDRESS,
+        ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
+        swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
+        swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
+        wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
     }
+    const managerFactory = await ethers.getContractFactory('CasimirManager')
+    const manager = await managerFactory.deploy(...Object.values(managerArgs)) as CasimirManager
+    await manager.deployed()
+    console.log(`CasimirManager contract deployed to ${manager.address}`)
 
-    /** Insert any mock external contracts first */
-    if (process.env.MOCK_EXTERNAL_CONTRACTS === 'true') {
-        config = {
-            MockFunctionsOracle: {
-                address: '',
-                args: {},
-                options: {},
-                proxy: false
-            },
-            ...config
-        }
+    const registryAddress = await manager.getRegistryAddress()
+    console.log(`CasimirRegistry contract deployed to ${registryAddress}`)
+
+    const upkeepAddress = await manager.getUpkeepAddress()
+    console.log(`CasimirUpkeep contract deployed to ${upkeepAddress}`)
+
+    const viewsArgs = {
+        managerAddress: manager.address,
+        registryAddress
     }
+    const viewsFactory = await ethers.getContractFactory('CasimirViews')
+    const views = await viewsFactory.deploy(...Object.values(viewsArgs)) as CasimirViews
+    console.log(`CasimirViews contract deployed to ${views.address}`)
 
-    for (const name in config) {
-        if (name === 'CasimirManager') {
-            (config[name as keyof typeof config] as ContractConfig).args.linkFunctionsAddress = config.MockFunctionsOracle?.address
-        }
-
-        const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
-
-        const contract = await deployContract(name, proxy, args, options)
-        const { address } = contract
-
-        console.log(`${name} contract deployed to ${address}`)
-
-        ;(config[name as keyof DeploymentConfig] as ContractConfig).address = address
-    }
-
-    const manager = await ethers.getContractAt('CasimirManager', config.CasimirManager.address as string) as CasimirManager
-    const registry = await ethers.getContractAt('CasimirRegistry', await manager.getRegistryAddress()) as CasimirRegistry
-    const upkeep = await ethers.getContractAt('CasimirUpkeep', await manager.getUpkeepAddress()) as CasimirUpkeep
+    const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
+    const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
     const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsJson.abi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
     for (const operatorId of [1, 2, 3, 4]) {

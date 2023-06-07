@@ -34,6 +34,14 @@ modifier onlyOracle()
 
 _Validate the caller is the manager oracle_
 
+### onlyOracleOrRegistry
+
+```solidity
+modifier onlyOracleOrRegistry()
+```
+
+_Validate the caller is the oracle or registry_
+
 ### onlyOracleOrUpkeep
 
 ```solidity
@@ -320,13 +328,13 @@ Activate a given count of the next pending pools
 function requestForcedExitReports(uint256 count) external
 ```
 
-Request reports for a given count of pools forced to exit
+Request reports a given count of forced exits
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| count | uint256 | The number of pools forced to exit |
+| count | uint256 | The number of forced exits |
 
 ### requestCompletedExitReports
 
@@ -341,6 +349,20 @@ Request reports for a given count of completed exits
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | count | uint256 | The number of completed exits |
+
+### requestReshares
+
+```solidity
+function requestReshares(uint64 operatorId) external
+```
+
+Request reshares for an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
 
 ### reportForcedExits
 
@@ -910,24 +932,6 @@ function getStatus() external view returns (enum ICasimirPool.PoolStatus)
 
 ## CasimirRegistry
 
-### requiredCollateral
-
-```solidity
-uint256 requiredCollateral
-```
-
-### minimumCollateralDeposit
-
-```solidity
-uint256 minimumCollateralDeposit
-```
-
-### totalCollateral
-
-```solidity
-uint256 totalCollateral
-```
-
 ### onlyOwnerOrPool
 
 ```solidity
@@ -1016,13 +1020,27 @@ Remove a pool from an operator
 | poolId | uint32 | The pool ID |
 | blameAmount | uint256 | The amount to recover from collateral |
 
+### requestDeregistration
+
+```solidity
+function requestDeregistration(uint64 operatorId) external
+```
+
+Request deregistration for an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
 ### getOperatorCollateral
 
 ```solidity
-function getOperatorCollateral(uint64 operatorId) external view returns (int256)
+function getOperatorCollateral(uint64 operatorId) external view returns (int256 collateral)
 ```
 
-Get the collateral for an operator
+Get the collateral of an operator
 
 #### Parameters
 
@@ -1034,7 +1052,41 @@ Get the collateral for an operator
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The collateral |
+| collateral | int256 | The collateral |
+
+### getOperatorEligibility
+
+```solidity
+function getOperatorEligibility(uint64 operatorId) external view returns (bool eligibility)
+```
+
+Get the eligibility of an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| eligibility | bool | The eligibility |
+
+### getOperatorIds
+
+```solidity
+function getOperatorIds() external view returns (uint64[])
+```
+
+Get the operator IDs
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint64[] | operatorIds The operator IDs |
 
 ## CasimirUpkeep
 
@@ -1247,7 +1299,7 @@ Fulfill the request for testing
 ### constructor
 
 ```solidity
-constructor(address managerAddress) public
+constructor(address managerAddress, address registryAddress) public
 ```
 
 ### getCompoundablePoolIds
@@ -1272,6 +1324,27 @@ _Should be called off-chain_
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | poolIds | uint32[5] | The next five compoundable pool IDs |
+
+### getEligibleOperatorIds
+
+```solidity
+function getEligibleOperatorIds(uint256 startIndex, uint256 endIndex) external view returns (uint64[] activeOperatorIds)
+```
+
+Get the active operator IDs
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| activeOperatorIds | uint64[] | The active operator IDs |
 
 ### getSweptBalance
 
@@ -1359,10 +1432,10 @@ event DepositInitiated(uint32 poolId)
 event DepositActivated(uint32 poolId)
 ```
 
-### ReshareRequested
+### ResharesRequested
 
 ```solidity
-event ReshareRequested(uint32 poolId)
+event ResharesRequested(uint64 operatorId)
 ```
 
 ### ReshareCompleted
@@ -1531,6 +1604,18 @@ function requestForcedExitReports(uint256 count) external
 
 ```solidity
 function requestCompletedExitReports(uint256 count) external
+```
+
+### requestReshares
+
+```solidity
+function requestReshares(uint64 operatorId) external
+```
+
+### reportForcedExits
+
+```solidity
+function reportForcedExits(uint32[] poolIds) external
 ```
 
 ### reportCompletedExit
@@ -1818,10 +1903,10 @@ event DeregistrationCompleted(uint64 operatorId)
 ```solidity
 struct Operator {
   bool active;
+  bool resharing;
   int256 collateral;
   uint256 poolCount;
   mapping(uint32 => bool) pools;
-  bool deregistering;
 }
 ```
 
@@ -1859,6 +1944,18 @@ function removeOperatorPool(uint64 operatorId, uint32 poolId, uint256 blameAmoun
 
 ```solidity
 function getOperatorCollateral(uint64 operatorId) external view returns (int256)
+```
+
+### getOperatorEligibility
+
+```solidity
+function getOperatorEligibility(uint64 operatorId) external view returns (bool eligibility)
+```
+
+### getOperatorIds
+
+```solidity
+function getOperatorIds() external view returns (uint64[])
 ```
 
 ## ICasimirUpkeep

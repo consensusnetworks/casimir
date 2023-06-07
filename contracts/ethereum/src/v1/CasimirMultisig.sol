@@ -177,8 +177,8 @@ contract CasimirMultisig is ICasimirMultisig {
         address to,
         uint256 value,
         bytes memory data
-    ) public onlyOwner {
-        uint256 transactionIndex = transactions.length;
+    ) public onlyOwner returns (uint256 transactionIndex) {
+        transactionIndex = transactions.length;
 
         transactions.push(
             Transaction({

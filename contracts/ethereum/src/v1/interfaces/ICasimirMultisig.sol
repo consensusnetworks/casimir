@@ -60,7 +60,7 @@ interface ICasimirMultisig {
         address to,
         uint value,
         bytes memory data
-    ) external;
+    ) external returns (uint256 transactionIndex);
 
     function confirmTransaction(
         uint256 transactionIndex
