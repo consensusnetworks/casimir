@@ -5,12 +5,9 @@ import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/reso
 import { ClusterDetailsInput } from '../interfaces/ClusterDetailsInput'
 import { ClusterDetails } from '../interfaces/ClusterDetails'
 import { Cluster } from '@casimir/types'
-import { getPrice } from '@casimir/uniswap'
 
 const networkAddress = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
 const networkViewsAddress = '0x8dB45282d7C4559fd093C26f677B3837a5598914'
-const networkTokenAddress = '0x3a9f01091C446bdE031E39ea8354647AFef091E7'
-const wethTokenAddress = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
 
 const DAY = 5400
 const WEEK = DAY * 7
@@ -97,22 +94,13 @@ export async function getClusterDetails(input: ClusterDetailsInput): Promise<Clu
         active: true
     }
 
-    const price = await getPrice({ 
-        provider,
-        tokenIn: wethTokenAddress,
-        tokenOut: networkTokenAddress,
-        uniswapFeeTier: 3000 
-    })
-
     const feeSum = await ssvNetworkViews.getNetworkFee()
     for (const operatorId of operatorIds) {
         const operatorFee = await ssvNetworkViews.getOperatorFee(operatorId)
         feeSum.add(operatorFee)
     }
     const liquidationThresholdPeriod = await ssvNetworkViews.getLiquidationThresholdPeriod()
-    const ssvBalanceRequiredPerValidator = ethers.utils.formatEther(feeSum.mul(liquidationThresholdPeriod).mul(12))
-    const ethBalanceRequiredPerValidator = (Number(ssvBalanceRequiredPerValidator) * price).toPrecision(9)
-    const requiredBalancePerValidator = ethers.utils.parseEther(ethBalanceRequiredPerValidator)
+    const requiredBalancePerValidator = feeSum.mul(liquidationThresholdPeriod).mul(12)
 
     return { cluster, requiredBalancePerValidator }
 }

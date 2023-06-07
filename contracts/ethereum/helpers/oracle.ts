@@ -5,6 +5,11 @@ import { validatorStore } from '@casimir/data'
 import { Validator } from '@casimir/types'
 import { getClusterDetails } from '@casimir/ssv'
 import { getWithdrawalCredentials } from '@casimir/helpers'
+import { getPrice } from '@casimir/uniswap'
+
+const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS as string
+const ssvTokenAddress = process.env.SSV_TOKEN_ADDRESS as string
+const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS as string
 
 const mockValidators: Validator[] = Object.values(validatorStore)
 
@@ -31,6 +36,16 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         operatorIds
     })
     const { cluster, requiredBalancePerValidator } = clusterDetails
+
+    const processed = false
+    const price = await getPrice({ 
+        provider: ethers.provider,
+        tokenIn: wethTokenAddress,
+        tokenOut: ssvTokenAddress,
+        uniswapFeeTier: 3000
+    })
+    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerValidator)) * Number(price)).toPrecision(9))
+
     const initiateDeposit = await manager.connect(signer).initiateDeposit(
         depositDataRoot,
         publicKey,
@@ -39,10 +54,28 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         operatorIds,
         shares,
         cluster,
-        requiredBalancePerValidator,
-        false
+        feeAmount,
+        processed
     )
     await initiateDeposit.wait()
+}
+
+export async function depositUpkeepBalanceHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
+    const processed = false
+    const requiredBalancePerUpkeep = ethers.utils.parseEther('0.2') // Double the Chainlink minimum
+    const price = await getPrice({ 
+        provider: ethers.provider,
+        tokenIn: wethTokenAddress,
+        tokenOut: linkTokenAddress,
+        uniswapFeeTier: 3000
+    })
+    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerUpkeep)) * Number(price)).toPrecision(9))
+
+    const depositUpkeepBalance = await manager.connect(signer).depositUpkeepBalance(
+        feeAmount,
+        processed
+    )
+    await depositUpkeepBalance.wait()
 }
 
 export async function reportCompletedExitsHandler({ manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }) {

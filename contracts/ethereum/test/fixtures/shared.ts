@@ -2,7 +2,7 @@ import { ethers, network } from 'hardhat'
 import { loadFixture, time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, ISSVNetworkViews } from '@casimir/ethereum/build/artifacts/types'
 import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
-import { initiateDepositHandler, reportCompletedExitsHandler } from '@casimir/ethereum/helpers/oracle'
+import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '@casimir/ethereum/helpers/oracle'
 import { round } from '@casimir/ethereum/helpers/math'
 import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
 
@@ -84,6 +84,10 @@ export async function secondUserDepositFixture() {
     const depositAmount = round(24 * ((100 + await manager.feePercent()) / 100), 10)
     const deposit = await manager.connect(secondUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
+
+    if ((await manager.upkeepId()).toNumber() === 0) {
+        await depositUpkeepBalanceHandler({ manager, signer: oracle })
+    }
 
     await initiateDepositHandler({ manager, signer: oracle })
     

@@ -1,5 +1,5 @@
 import { ethers, network } from 'hardhat'
-import { loadFixture, setBalance } from '@nomicfoundation/hardhat-network-helpers'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { deploymentFixture } from './fixtures/shared'
 import { ICasimirRegistry } from '../build/artifacts/types'

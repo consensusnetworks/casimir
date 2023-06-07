@@ -400,8 +400,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 KeeperRegistrarInterface.RegistrationParams({
                     name: string("CasimirV1Upkeep"),
                     encryptedEmail: new bytes(0),
-                    upkeepContract: address(this),
-                    gasLimit: 0,
+                    upkeepContract: address(upkeep),
+                    gasLimit: 5000000,
                     adminAddress: address(this),
                     checkData: new bytes(0),
                     offchainConfig: new bytes(0),

@@ -4,7 +4,6 @@
         "node": "npx hardhat node",
         "dev": "npx hardhat run scripts/dev.ts",
         "deploy": "npx hardhat run scripts/deploy.ts",
-        "deploy:multisig": "npx hardhat run scripts/multisig.ts",
         "docgen": "npx hardhat docgen",
         "test": "npx esno scripts/test.ts --clean \"$npm_config_clean\"",
         "clean": "npx hardhat clean",
