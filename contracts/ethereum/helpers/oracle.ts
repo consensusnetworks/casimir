@@ -92,7 +92,14 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
         if (poolDetails.status === 2 || poolDetails.status === 3) {
             remaining--
             const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())
-            const blamePercents = [0, 0, 0, 0]
+            
+            // Hardcoded blame to the first operator if less than 32 ETH
+            // In production, we use the SSV performance data to determine blame
+            let blamePercents = [0, 0, 0, 0]
+            if (poolDetails.balance.lt(ethers.utils.parseEther('32'))) {
+                blamePercents = [100, 0, 0, 0]
+            }
+
             const clusterDetails = await getClusterDetails({ 
                 provider: ethers.provider,
                 ownerAddress: manager.address,

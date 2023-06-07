@@ -5,6 +5,7 @@ import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
 import 'solidity-docgen'
 import '@openzeppelin/hardhat-upgrades'
+import '@nomicfoundation/hardhat-toolbox'
 
 // Seed is provided
 const mnemonic = process.env.BIP39_SEED as string

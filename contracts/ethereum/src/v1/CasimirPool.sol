@@ -19,19 +19,24 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     uint256 poolCapacity = 32 ether;
     ICasimirManager private immutable manager;
     ICasimirRegistry private immutable registry;
-    PoolConfig private config;
+    uint32 public immutable id;
+    bytes public publicKey;
+    uint64[] private operatorIds;
+    uint256 public reshares;
+    PoolStatus public status;
+
 
     constructor(
         address registryAddress,
-        uint32 poolId,
-        bytes memory publicKey,
-        uint64[] memory operatorIds
+        uint32 _id,
+        bytes memory _publicKey,
+        uint64[] memory _operatorIds
     ) {
         manager = ICasimirManager(msg.sender);
         registry = ICasimirRegistry(registryAddress);
-        config.poolId = poolId;
-        config.publicKey = publicKey;
-        config.operatorIds = operatorIds;
+        id = _id;
+        publicKey = _publicKey;
+        operatorIds = _operatorIds;
     }
 
     function depositRewards() external onlyOwner {
@@ -40,56 +45,53 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     }
 
     function withdrawBalance(uint32[] memory blamePercents) external onlyOwner {
-        require(config.status == PoolStatus.WITHDRAWN, "Pool must be withdrawn");
+        require(status == PoolStatus.WITHDRAWN, "Pool must be withdrawn");
 
         uint256 balance = address(this).balance;
-        uint256 rewards = poolCapacity - balance;
+        int256 rewards = int256(balance) - int256(poolCapacity);
         if (rewards > 0) {
-            manager.depositRewards{value: rewards}();
+            manager.depositRewards{value: uint256(rewards)}();
         }
-        uint256 exitedBalance = balance - rewards;
-        uint256 lostBalance = poolCapacity - exitedBalance;
         for (uint256 i = 0; i < blamePercents.length; i++) {
             uint256 blameAmount;
-            if (lostBalance > 0) {
+            if (rewards < 0) {
                 uint256 blamePercent = blamePercents[i];
-                blameAmount = Math.mulDiv(lostBalance, blamePercent, 100);
+                blameAmount = Math.mulDiv(uint256(-rewards), blamePercent, 100);
             }
-            registry.removeOperatorPool(config.operatorIds[i], config.poolId, blameAmount);
+            registry.removeOperatorPool(operatorIds[i], id, blameAmount);
         }
 
-        manager.depositExitedBalance{value: balance}(config.poolId);
+        manager.depositExitedBalance{value: balance}(id);
     }
 
-    function setOperatorIds(uint64[] memory operatorIds) external onlyOwner {
-        config.operatorIds = operatorIds;
+    function setOperatorIds(uint64[] memory _operatorIds) external onlyOwner {
+        operatorIds = _operatorIds;
     }
 
-    function setReshares(uint256 reshares) external onlyOwner {
-        config.reshares = reshares;
+    function setReshares(uint256 _reshares) external onlyOwner {
+        reshares = _reshares;
     }
 
-    function setStatus(PoolStatus status) external onlyOwner {
-        config.status = status;        
+    function setStatus(PoolStatus _status) external onlyOwner {
+        status = _status;        
+    }
+
+    function getDetails() external view returns (PoolDetails memory) {
+        return PoolDetails({
+            id: id,
+            balance: address(this).balance,
+            publicKey: publicKey,
+            operatorIds: operatorIds,
+            reshares: reshares,
+            status: status
+        });
     }
 
     function getBalance() external view returns (uint256) {
         return address(this).balance;
     }
 
-    function getConfig() external view override returns (PoolConfig memory) {
-        return config;
-    }
-
     function getOperatorIds() external view returns (uint64[] memory) {
-        return config.operatorIds;
-    }
-
-    function getPublicKey() external view returns (bytes memory) {
-        return config.publicKey;
-    }
-
-    function getStatus() external view returns (PoolStatus) {
-        return config.status;
+        return operatorIds;
     }
 }

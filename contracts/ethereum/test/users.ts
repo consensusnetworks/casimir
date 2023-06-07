@@ -7,7 +7,7 @@ import { initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/
 import { fulfillReport, runUpkeep } from '../helpers/upkeep'
 
 describe('Users', async function () {
-    it('User 16.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
+    it('User\'s 16.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
         const { manager } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
@@ -34,7 +34,7 @@ describe('Users', async function () {
         expect(ethers.utils.formatEther(userBalanceAfter.sub(userBalanceBefore))).contains('7.9')
     })
 
-    it('User 64.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
+    it('User\'s 64.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
         const { manager, upkeep, views, keeper, oracle } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
@@ -133,5 +133,22 @@ describe('Users', async function () {
         expect(ethers.utils.formatEther(stake)).equal('32.0')
         expect(ethers.utils.formatEther(userStake)).equal('32.0')
         expect(ethers.utils.formatEther(userBalanceAfter.sub(userBalanceBefore))).contains('31.9')
-    })    
+    })
+
+    it('User\'s 16.0 stake and five withdrawal requests fails on the 6th daily action', async function () {
+        const { manager } = await loadFixture(deploymentFixture)
+        const [, user] = await ethers.getSigners()
+
+        const depositAmount = round(16 * ((100 + await manager.feePercent()) / 100), 10)
+        const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        await deposit.wait()
+
+        for (let i = 0; i < 4; i++) {
+            const withdrawalRequest = await manager.connect(user).requestWithdrawal(ethers.utils.parseEther('2.0'))
+            await withdrawalRequest.wait()
+        }
+
+        const failedWithdrawalRequest = manager.connect(user).requestWithdrawal(ethers.utils.parseEther('2.0'))
+        await expect(failedWithdrawalRequest).to.be.rejectedWith('Action period maximum reached')
+    })
 })

@@ -6,16 +6,15 @@ interface ICasimirPool {
     /* Structs */
     /***********/
 
-    /** Pool config */
-    struct PoolConfig {
-        uint32 poolId;
+    struct PoolDetails {
+        uint32 id;
+        uint256 balance;
         bytes publicKey;
         uint64[] operatorIds;
         uint256 reshares;
-        PoolStatus status;
+        ICasimirPool.PoolStatus status;
     }
 
-    /** Pool status */
     enum PoolStatus {
         PENDING,
         ACTIVE,
@@ -25,7 +24,7 @@ interface ICasimirPool {
     }
 
     /*************/
-    /* Functions */
+    /* Mutations */
     /*************/
 
     function depositRewards() external;
@@ -38,13 +37,25 @@ interface ICasimirPool {
 
     function setStatus(PoolStatus status) external;
 
+    /*************/
+    /* Variables */
+    /*************/
+
+    function id() external view returns (uint32);
+
+    function publicKey() external view returns (bytes memory);
+
+    function reshares() external view returns (uint256);
+
+    function status() external view returns (PoolStatus);
+
+    /***********/
+    /* Getters */
+    /***********/
+
+    function getDetails() external view returns (PoolDetails memory);
+
     function getBalance() external view returns (uint256);
 
-    function getConfig() external view returns (PoolConfig memory);
-
     function getOperatorIds() external view returns (uint64[] memory);
-
-    function getPublicKey() external view returns (bytes memory);   
-
-    function getStatus() external view returns (PoolStatus);
 }

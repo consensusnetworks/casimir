@@ -94,8 +94,7 @@ contract CasimirViews is ICasimirViews {
             uint32 poolId = pendingPoolIds[i];
             address poolAddress = manager.getPoolAddress(poolId);
             ICasimirPool pool = ICasimirPool(poolAddress);
-            ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
-            validatorPublicKeys[count] = poolConfig.publicKey;
+            validatorPublicKeys[count] = pool.publicKey();
             count++;
         }
         return validatorPublicKeys;
@@ -118,8 +117,7 @@ contract CasimirViews is ICasimirViews {
             uint32 poolId = stakedPoolIds[i];
             address poolAddress = manager.getPoolAddress(poolId);
             ICasimirPool pool = ICasimirPool(poolAddress);
-            ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
-            validatorPublicKeys[count] = poolConfig.publicKey;
+            validatorPublicKeys[count] = pool.publicKey();
             count++;
         }
         return validatorPublicKeys;
@@ -130,20 +128,11 @@ contract CasimirViews is ICasimirViews {
      * @param poolId The pool ID
      * @return poolDetails The pool details
      */
-    function getPoolDetails(
-        uint32 poolId
-    ) external view returns (PoolDetails memory poolDetails) {
+    function getPoolDetails(uint32 poolId) external view returns (ICasimirPool.PoolDetails memory poolDetails) {
         address poolAddress = manager.getPoolAddress(poolId);
         if (poolAddress != address(0)) {
             ICasimirPool pool = ICasimirPool(poolAddress);
-            ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
-            poolDetails = PoolDetails({
-                id: poolId,
-                balance: pool.getBalance(),
-                publicKey: poolConfig.publicKey,
-                operatorIds: poolConfig.operatorIds,
-                status: poolConfig.status
-            });
+            poolDetails = pool.getDetails();
         }
     }
 

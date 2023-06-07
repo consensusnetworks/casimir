@@ -64,7 +64,7 @@ export default function useSSV() {
         const { user } = useUsers()
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)        
         const userStake = await manager.connect(provider).getUserStake(address) // to get user's stake balance
-        const poolStake = await manager.connect(provider).totalStake() // to get total stake balance
+        const poolStake = await manager.connect(provider).getTotalStake() // to get total stake balance
         const poolIds = readyOrStake === 'ready' ? await manager.connect(provider).getReadyPoolIds() : await manager.connect(provider).getStakedPoolIds() // to get ready (open) pool IDs OR to get staked (active) pool IDs
 
         console.log('userStake :>> ', ethers.utils.formatEther(userStake))

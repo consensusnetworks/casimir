@@ -109,8 +109,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     int256 private latestActiveRewardBalance;
     /** Exited pool count */
     uint256 public finalizableCompletedExits;
-    /** Exited balance */
+    /** Report finalizable exited balance */
     uint256 private finalizableExitedBalance;
+    /** Report finalizable recovered balance */
+    uint256 private finalizableRecoveredBalance;
     /** Token addresses */
     mapping(Token => address) private tokenAddresses;
     /** All users */
@@ -338,10 +340,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         delete poolAddresses[poolId];
         uint256 balance = msg.value + recoveredBalances[poolId];
         delete recoveredBalances[poolId];
-
         exitedBalance += balance;
         finalizableExitedBalance += balance;
-
         finalizableCompletedExits++;
     }
 
@@ -353,6 +353,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint32 poolId
     ) external payable onlyRegistry {
         recoveredBalances[poolId] += msg.value;
+        finalizableRecoveredBalance += msg.value;
     }
 
     /**
@@ -471,7 +472,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     ) external onlyUpkeep {
         uint256 expectedActivatedBalance = activatedDeposits * poolCapacity;
         uint256 expectedExitedBalance = completedExits * poolCapacity;
-        int256 rewards = int256(activeBalance + sweptBalance - expectedExitedBalance) - int256(getExpectedEffectiveBalance());
+        int256 rewards = int256(activeBalance + sweptBalance + finalizableRecoveredBalance) - int256(getExpectedEffectiveBalance() + expectedExitedBalance);
         int256 change = rewards - latestActiveRewardBalance;
         if (change > 0) {
             uint256 gain = uint256(change);
@@ -503,15 +504,18 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             emit StakeRebalanced(loss);
         }
 
-        uint256 sweptRewards = sweptBalance - finalizableExitedBalance;
-        latestActiveRewardBalance = rewards - int256(sweptRewards);
         latestActiveBalance = activeBalance;
+        int256 sweptRewards = int256(sweptBalance + finalizableRecoveredBalance) - int256(finalizableExitedBalance);
+        if (sweptRewards > 0) {
+            latestActiveBalanceAfterFees -= subtractFees(uint256(sweptRewards));
+        }
         latestActiveBalanceAfterFees += expectedActivatedBalance;
-        latestActiveBalanceAfterFees -= subtractFees(sweptRewards);
         latestActiveBalanceAfterFees -= finalizableExitedBalance;
+        latestActiveRewardBalance = rewards - sweptRewards;
 
         reportPeriod++;
         finalizableExitedBalance = 0;
+        finalizableRecoveredBalance = 0;
         finalizableCompletedExits = 0;
     }
 
@@ -631,7 +635,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             user.actionPeriodTimestamp == 0 ||
                 user.actionCount < maxActionsPerPeriod ||
                 block.timestamp >= user.actionPeriodTimestamp + actionPeriod,
-            "User action period maximum reached"
+            "Action period maximum reached"
         );
         if (block.timestamp >= user.actionPeriodTimestamp + actionPeriod) {
             user.actionPeriodTimestamp = block.timestamp;
@@ -783,7 +787,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             uint32 poolId = stakedPoolIds[index];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
 
-            ICasimirPool.PoolStatus poolStatus = pool.getStatus();
+            ICasimirPool.PoolStatus poolStatus = pool.status();
             if (
                 poolStatus == ICasimirPool.PoolStatus.PENDING ||
                 poolStatus == ICasimirPool.PoolStatus.ACTIVE
@@ -831,7 +835,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < poolIds.length; i++) {
             uint32 poolId = poolIds[i];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            ICasimirPool.PoolStatus poolStatus = pool.getStatus();
+            ICasimirPool.PoolStatus poolStatus = pool.status();
             require(
                 poolStatus != ICasimirPool.PoolStatus.EXITING_FORCED,
                 "Forced exit already reported"
@@ -858,28 +862,27 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     ) external onlyOracle {
         uint32 poolId = stakedPoolIds[poolIndex];
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-        ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
+        ICasimirPool.PoolStatus poolStatus = pool.status();
         require(
-            poolConfig.status == ICasimirPool.PoolStatus.EXITING_FORCED ||
-            poolConfig.status == ICasimirPool.PoolStatus.EXITING_REQUESTED,
+            poolStatus == ICasimirPool.PoolStatus.EXITING_FORCED ||
+            poolStatus == ICasimirPool.PoolStatus.EXITING_REQUESTED,
             "Pool not exiting"
         );
 
         stakedPoolIds.remove(poolIndex);
-        uint64[] memory operatorIds = poolConfig.operatorIds;
-        bytes memory publicKey = poolConfig.publicKey;
+        uint64[] memory operatorIds = pool.getOperatorIds();
+        bytes memory publicKey = pool.publicKey();
 
-        if (poolConfig.status == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
+        if (poolStatus == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
             requestedExits--;
         } else if (
-            poolConfig.status == ICasimirPool.PoolStatus.EXITING_FORCED
+            poolStatus == ICasimirPool.PoolStatus.EXITING_FORCED
         ) {
             forcedExits--;
         }
 
         pool.setStatus(ICasimirPool.PoolStatus.WITHDRAWN);
         pool.withdrawBalance(blamePercents);
-
         ssvNetwork.removeValidator(publicKey, operatorIds, cluster);
 
         emit ExitCompleted(poolId);
@@ -911,15 +914,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bool processed
     ) external onlyOracle {
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-        ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
+        ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
         require(
-            poolConfig.status == ICasimirPool.PoolStatus.PENDING ||
-                poolConfig.status == ICasimirPool.PoolStatus.ACTIVE,
+            poolDetails.status == ICasimirPool.PoolStatus.PENDING ||
+            poolDetails.status == ICasimirPool.PoolStatus.ACTIVE,
             "Pool not active"
         );
-        require(poolConfig.reshares < 2, "Pool already reshared twice");
+        require(poolDetails.reshares < 2, "Pool already reshared twice");
 
-        pool.setReshares(poolConfig.reshares + 1);
+        pool.setReshares(poolDetails.reshares + 1);
 
         registry.removeOperatorPool(oldOperatorId, poolId, 0);
         registry.addOperatorPool(newOperatorId, poolId);
@@ -932,13 +935,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ssvToken.approve(address(ssvNetwork), ssvAmount);
 
         ssvNetwork.removeValidator(
-            poolConfig.publicKey,
+            poolDetails.publicKey,
             oldOperatorIds,
             oldCluster
         );
 
         ssvNetwork.registerValidator(
-            poolConfig.publicKey,
+            poolDetails.publicKey,
             operatorIds,
             shares,
             ssvAmount,

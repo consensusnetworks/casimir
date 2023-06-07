@@ -22,9 +22,9 @@ const eventList = [
 ]
 
 /**
- * Get cluster snapshot
+ * Get cluster details
  * @param {ClusterInput} input - Operator IDs and withdrawal address
- * @returns {Promise<Cluster>} Cluster snapshot
+ * @returns {Promise<ClusterDetails>} Cluster snapshot and required balance per validator
  */
 export async function getClusterDetails(input: ClusterDetailsInput): Promise<ClusterDetails> {
     const { provider, ownerAddress, operatorIds } = input

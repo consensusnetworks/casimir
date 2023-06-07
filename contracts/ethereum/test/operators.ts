@@ -1,10 +1,11 @@
 import { ethers, network } from 'hardhat'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { loadFixture, setBalance, time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { deploymentFixture } from './fixtures/shared'
+import { deploymentFixture, secondUserDepositFixture } from './fixtures/shared'
 import { ICasimirRegistry } from '../build/artifacts/types'
 import { round } from '../helpers/math'
-import { initiateDepositHandler } from '../helpers/oracle'
+import { initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
+import { fulfillReport, runUpkeep } from '../helpers/upkeep'
 
 describe('Operators', async function () {
     it('Registration of operators 1 through 4 creates 4 eligible operators', async function () {
@@ -100,5 +101,53 @@ describe('Operators', async function () {
         
         expect(deregisteredOperator.collateral.toString()).equal('0')
         expect(ethers.utils.formatEther(operatorOwnerBalanceAfter.sub(operatorOwnerBalanceBefore).toString())).contains('3.9')
+    })
+
+    it('Pool exits with 31.0 and recovers from the blamed operator', async function () {
+        const { manager, registry, upkeep, views, secondUser, keeper, oracle, requestId } = await loadFixture(secondUserDepositFixture)
+
+        const secondStake = await manager.getUserStake(secondUser.address)
+        const withdraw = await manager.connect(secondUser).requestWithdrawal(secondStake)
+        await withdraw.wait()
+
+        const sweptExitedBalance = 31
+        const withdrawnPoolId = (await manager.getStakedPoolIds())[0]
+        const withdrawnPoolAddress = await manager.getPoolAddress(withdrawnPoolId)
+        const currentBalance = await ethers.provider.getBalance(withdrawnPoolAddress)
+        const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitedBalance.toString()))
+        await setBalance(withdrawnPoolAddress, nextBalance)
+    
+        await time.increase(time.duration.days(1))
+    
+        await runUpkeep({ upkeep, keeper })
+        
+        const nextValues = {
+            activeBalance: 0,
+            sweptBalance: sweptExitedBalance,
+            activatedDeposits: 0,
+            forcedExits: 0,
+            completedExits: 1,
+            compoundablePoolIds: [0, 0, 0, 0, 0]
+        }
+        
+        await fulfillReport({
+            upkeep,
+            keeper,
+            values: nextValues,
+            requestId
+        })
+    
+        await reportCompletedExitsHandler({ manager, views, signer: oracle, args: { count: 1 } })
+    
+        await runUpkeep({ upkeep, keeper })
+
+        const stake = await manager.getTotalStake()
+        const userStake = await manager.getUserStake(secondUser.address)
+        const blamedOperatorId = 1 // Hardcoded the first operator
+        const blamedOperator = await registry.getOperator(blamedOperatorId)
+
+        expect(ethers.utils.formatEther(stake)).equal('16.0')
+        expect(ethers.utils.formatEther(userStake)).equal('0.0')
+        expect(blamedOperator.collateral.toString()).equal(ethers.utils.parseEther('3.0').toString())
     })
 })
