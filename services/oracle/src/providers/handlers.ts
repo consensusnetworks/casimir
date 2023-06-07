@@ -19,7 +19,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
       nonce
     })
 
-    const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
+    const newOperatorIds = [5, 6, 7, 8] // Todo get new group here
     const dkg = new DKG({ cliPath, messengerUrl })
 
     const validator = await dkg.createValidator({
@@ -46,8 +46,6 @@ export async function initiateDepositHandler(input: HandlerInput) {
 
     const { cluster, requiredBalancePerValidator } = clusterDetails
 
-    console.log('Initiating deposit')
-
     const initiateDeposit = await (manager.connect(signer) as CasimirManager & ethers.Contract).initiateDeposit(
         depositDataRoot,
         publicKey,
@@ -60,8 +58,6 @@ export async function initiateDepositHandler(input: HandlerInput) {
         false
     )
     await initiateDeposit.wait()
-
-    console.log('Deposit initiated')
 }
 
 export async function initiatePoolReshareHandler(input: HandlerInput) {
@@ -69,6 +65,7 @@ export async function initiatePoolReshareHandler(input: HandlerInput) {
         provider,
         signer,
         manager,
+        views,
         cliPath,
         messengerUrl,
         args
@@ -79,7 +76,7 @@ export async function initiatePoolReshareHandler(input: HandlerInput) {
     // Todo reshare event will include the operator to boot
 
     // Get pool to reshare
-    const poolDetails = await manager.getPoolDetails(poolId)
+    const poolDetails = await views.getPoolDetails(poolId)
 
     // Todo old operators and new operators only different by 1 operator
     const newOperatorGroup = [1, 2, 3, 4]
@@ -105,6 +102,7 @@ export async function initiatePoolExitHandler(input: HandlerInput) {
         provider,
         signer,
         manager,
+        views,
         cliPath,
         messengerUrl,
         args 
@@ -113,7 +111,7 @@ export async function initiatePoolExitHandler(input: HandlerInput) {
     const { poolId } = args
 
     // Get pool to exit
-    const poolDetails = await manager.getPoolDetails(poolId)
+    const poolDetails = await views.getPoolDetails(poolId)
     // Get operators to sign exit
     const dkg = new DKG({ cliPath, messengerUrl })
 
@@ -126,6 +124,7 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
         provider,
         signer,
         manager,
+        views,
         args 
     } = input
 
@@ -138,7 +137,7 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
     const stakedPoolIds = await manager.getStakedPoolIds()
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
-        const poolDetails = await manager.getPoolDetails(poolId)
+        const poolDetails = await views.getPoolDetails(poolId)
         if (poolDetails.status === 2 || poolDetails.status === 3) {
             remaining--
             const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())

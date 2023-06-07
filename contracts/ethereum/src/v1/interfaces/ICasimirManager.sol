@@ -19,14 +19,6 @@ interface ICasimirManager {
     /* Structs */
     /***********/
 
-    struct PoolDetails {
-        uint32 id;
-        uint256 balance;
-        bytes publicKey;
-        uint64[] operatorIds;
-        ICasimirPool.PoolStatus status;
-    }
-
     struct User {
         uint256 stake0;
         uint256 stakeRatioSum0;
@@ -133,15 +125,10 @@ interface ICasimirManager {
 
     function upkeepId() external view returns (uint256);    
     function latestActiveBalance() external view returns (uint256);
-    function latestActiveBalanceAfterFees() external view returns (uint256);
-    function latestActiveRewardBalance() external view returns (int256);
     function feePercent() external view returns (uint32);
-    function requestedExits() external view returns (uint256);
-    function requestedWithdrawals() external view returns (uint256);
     function requestedWithdrawalBalance() external view returns (uint256);
     function finalizableCompletedExits() external view returns (uint256);
     function reportPeriod() external view returns (uint32);
-    function prepoolBalance() external view returns (uint256);
 
     /***********/
     /* Getters */
@@ -157,7 +144,6 @@ interface ICasimirManager {
     function getWithdrawableBalance() external view returns (uint256);
     function getUserStake(address userAddress) external view returns (uint256);
     function getPoolAddress(uint32 poolId) external view returns (address);
-    function getPoolDetails(uint32 poolId) external view returns (PoolDetails memory);
     function getRegistryAddress() external view returns (address);
     function getUpkeepAddress() external view returns (address);
     function getUpkeepBalance() external view returns (uint256 upkeepBalance);

@@ -5,7 +5,7 @@ import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/reso
 import { ClusterDetailsInput } from '../interfaces/ClusterDetailsInput'
 import { ClusterDetails } from '../interfaces/ClusterDetails'
 import { Cluster } from '@casimir/types'
-import { getPrice } from './uniswap'
+import { getPrice } from '@casimir/uniswap'
 
 const networkAddress = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
 const networkViewsAddress = '0x8dB45282d7C4559fd093C26f677B3837a5598914'

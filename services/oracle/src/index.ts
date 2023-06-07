@@ -15,13 +15,10 @@ const handlers = {
     CompletedExitReportsRequested: reportCompletedExitsHandler
 }
 
-const { provider, signer, manager, cliPath, messengerUrl } = config()
+const { provider, signer, manager, views, cliPath, messengerUrl } = config()
 
 ;(async function () {
     const eventsIterable = getEventsIterable({ manager, events: Object.keys(handlers) })
-    
-    console.log('Listening for events', eventsIterable)
-
     for await (const event of eventsIterable) {
         const details = event?.[event.length - 1]
         const { args } = details
@@ -31,6 +28,7 @@ const { provider, signer, manager, cliPath, messengerUrl } = config()
             provider,
             signer,
             manager,
+            views,
             cliPath,
             messengerUrl,
             args 

@@ -5,6 +5,9 @@ import './interfaces/ICasimirViews.sol';
 import './interfaces/ICasimirManager.sol';
 import './interfaces/ICasimirRegistry.sol';
 
+// Dev-only imports
+import "hardhat/console.sol";
+
 contract CasimirViews is ICasimirViews {
     /*************/
     /* Constants */
@@ -40,7 +43,7 @@ contract CasimirViews is ICasimirViews {
     ) external view returns (uint32[5] memory poolIds) {
         uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
         uint256 count = 0;
-        for (uint256 i = startIndex; i <= endIndex; i++) {
+        for (uint256 i = startIndex; i < endIndex; i++) {
             uint32 poolId = stakedPoolIds[i];
             ICasimirPool pool = ICasimirPool(manager.getPoolAddress(poolId));
             if (pool.getBalance() >= compoundMinimum) {
@@ -54,23 +57,45 @@ contract CasimirViews is ICasimirViews {
     }
 
     /**
-     * @notice Get the active operator IDs
+     * @notice Get operators
      * @param startIndex The start index
      * @param endIndex The end index 
-     * @return activeOperatorIds The active operator IDs
+     * @return operators The operators
      */
-    function getEligibleOperatorIds(
+    function getOperators(
         uint256 startIndex,
         uint256 endIndex
-    ) external view returns (uint64[] memory activeOperatorIds) {
+    ) external view returns (ICasimirRegistry.Operator[] memory) {
+        ICasimirRegistry.Operator[] memory operators = new ICasimirRegistry.Operator[](endIndex - startIndex);
         uint64[] memory operatorIds = registry.getOperatorIds();
         uint256 count = 0;
-        for (uint256 i = startIndex; i <= endIndex; i++) {
+        for (uint256 i = startIndex; i < endIndex; i++) {
             uint64 operatorId = operatorIds[i];
-            if (registry.getOperatorCollateral(operatorId) > 0 && registry.getOperatorEligibility(operatorId)) {
-                activeOperatorIds[count] = operatorId;
-                count++;
-            }
+            operators[count] = registry.getOperator(operatorId);
+            count++;
+        }
+        return operators;
+    }
+
+    /**
+     * @notice Get a pool's details by ID
+     * @param poolId The pool ID
+     * @return poolDetails The pool details
+     */
+    function getPoolDetails(
+        uint32 poolId
+    ) external view returns (PoolDetails memory poolDetails) {
+        address poolAddress = manager.getPoolAddress(poolId);
+        if (poolAddress != address(0)) {
+            ICasimirPool pool = ICasimirPool(poolAddress);
+            ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
+            poolDetails = PoolDetails({
+                id: poolId,
+                balance: pool.getBalance(),
+                publicKey: poolConfig.publicKey,
+                operatorIds: poolConfig.operatorIds,
+                status: poolConfig.status
+            });
         }
     }
 

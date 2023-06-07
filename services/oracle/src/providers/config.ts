@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
 import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
-import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
+import CasimirViewsJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirViews.sol/CasimirViews.json'
+import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/artifacts/types'
 
 export function config() {
     /** Get JSON RPC node provider */
@@ -20,6 +21,11 @@ export function config() {
     if (!managerAddress) throw new Error('No manager address provided')
     const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi, provider) as CasimirManager & ethers.Contract
     
+    /** Get views contract */
+    const viewsAddress = process.env.VIEWS_ADDRESS
+    if (!viewsAddress) throw new Error('No views address provided')
+    const views = new ethers.Contract(viewsAddress, CasimirViewsJson.abi, provider) as CasimirViews & ethers.Contract
+
     /** Get DKG CLI path */
     const cliPath = process.env.CLI_PATH
     if (!cliPath) throw new Error('No cli path provided')
@@ -28,5 +34,5 @@ export function config() {
     const messengerUrl = process.env.MESSENGER_SRV_ADDR
     if (!messengerUrl) throw new Error('No messenger url provided')
 
-    return { provider, signer, manager, cliPath, messengerUrl }
+    return { provider, signer, manager, views, cliPath, messengerUrl }
 }

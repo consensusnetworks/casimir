@@ -45,6 +45,13 @@ void async function () {
         const managerAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
         process.env.PUBLIC_MANAGER_ADDRESS = `${managerAddress}`
     }
+    if (!process.env.PUBLIC_VIEWS_ADDRESS) {
+        const wallet = getWallet(seed)
+        const nonce = nonces[fork]
+        const viewsIndex = 2 // We deploy a mock oracle before the manager
+        const viewsAddress = await getFutureContractAddress({ wallet, nonce, index: viewsIndex })
+        process.env.PUBLIC_VIEWS_ADDRESS = `${viewsAddress}`
+    }
     process.env.BIP39_SEED = seed
 
     echo(chalk.bgBlackBright('Your mnemonic seed is ') + chalk.bgBlue(seed))

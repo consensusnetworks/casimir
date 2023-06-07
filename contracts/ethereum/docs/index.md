@@ -1781,6 +1781,17 @@ struct Operator {
 }
 ```
 
+### OperatorDetails
+
+```solidity
+struct OperatorDetails {
+  bool active;
+  bool resharing;
+  int256 collateral;
+  uint256 poolCount;
+}
+```
+
 ### registerOperator
 
 ```solidity

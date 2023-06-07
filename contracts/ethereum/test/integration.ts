@@ -18,12 +18,12 @@ describe('Integration', async function () {
   })
 
   it('Second user\'s 24.0 stake completes the first pool with 32.0', async function () {
-    const { manager } = await loadFixture(secondUserDepositFixture)
+    const { manager, views } = await loadFixture(secondUserDepositFixture)
     const stakedPoolIds = await manager.getStakedPoolIds()
     expect(stakedPoolIds.length).equal(1)
     
     const firstPoolId = stakedPoolIds[0]
-    const poolDetails = await manager.getPoolDetails(firstPoolId)
+    const poolDetails = await views.getPoolDetails(firstPoolId)
     expect(poolDetails.publicKey).not.equal('0x')
     expect(poolDetails.operatorIds.length).equal(4)
   })
@@ -61,12 +61,12 @@ describe('Integration', async function () {
   })
 
   it('Third user\'s 24.0 stake completes the second pool with 32.0', async function () {
-    const { manager } = await loadFixture(thirdUserDepositFixture)
+    const { manager, views } = await loadFixture(thirdUserDepositFixture)
     const stakedPools = await manager.getStakedPoolIds()
     expect(stakedPools.length).equal(2)
     
     const secondPoolId = stakedPools[1]
-    const poolDetails = await manager.getPoolDetails(secondPoolId)
+    const poolDetails = await views.getPoolDetails(secondPoolId)
     expect(poolDetails.publicKey).not.equal('0x')
     expect(poolDetails.operatorIds.length).equal(4)
   })
@@ -118,17 +118,17 @@ describe('Integration', async function () {
   })
 
   it('Fourth user\'s 72 stake completes the third and fourth pool with 72', async function () {
-    const { manager } = await loadFixture(fourthUserDepositFixture)
+    const { manager, views } = await loadFixture(fourthUserDepositFixture)
     const stakedPools = await manager.getStakedPoolIds()
     expect(stakedPools.length).equal(4)
     
     const thirdPoolId = stakedPools[2]
-    const thirdPoolDetails = await manager.getPoolDetails(thirdPoolId)
+    const thirdPoolDetails = await views.getPoolDetails(thirdPoolId)
     expect(thirdPoolDetails.publicKey).not.equal('0x')
     expect(thirdPoolDetails.operatorIds.length).equal(4)
 
     const fourthPoolId = stakedPools[3]
-    const fourthPoolDetails = await manager.getPoolDetails(fourthPoolId)
+    const fourthPoolDetails = await views.getPoolDetails(fourthPoolId)
     expect(fourthPoolDetails.publicKey).not.equal('0x')
     expect(fourthPoolDetails.operatorIds.length).equal(4)
   })
@@ -175,8 +175,8 @@ describe('Integration', async function () {
     console.log('👤 Second user stake', ethers.utils.formatEther(secondStake))
     console.log('👤 Third user stake', ethers.utils.formatEther(thirdStake))
     console.log('👤 Fourth user stake', ethers.utils.formatEther(fourthStake))
-    const openDeposits = await manager.prepoolBalance()
-    console.log('📦 Open deposits', ethers.utils.formatEther(openDeposits))
+    const bufferedBalance = await manager.getBufferedBalance()
+    console.log('📦 Buffered balance', ethers.utils.formatEther(bufferedBalance))
     const dust = stake.sub(firstStake.add(secondStake).add(thirdStake).add(fourthStake))
     if (dust !== ethers.utils.parseEther('0.0')) {
       console.log('🧹 Dust', ethers.utils.formatEther(dust))

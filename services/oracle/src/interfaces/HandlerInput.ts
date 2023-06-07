@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
+import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/artifacts/types'
 
 export interface HandlerInput {
     /** JSON RPC node provider */
@@ -8,6 +8,8 @@ export interface HandlerInput {
     signer: ethers.Signer
     /** Manager contract */
     manager: CasimirManager & ethers.Contract
+    /** Views contract */
+    views: CasimirViews & ethers.Contract
     /** DKG cli path */
     cliPath: string
     /** DKG messenger service URL */

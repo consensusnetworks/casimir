@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { CasimirManager } from '../build/artifacts/types'
+import { CasimirManager, CasimirViews } from '../build/artifacts/types'
 import { validatorStore } from '@casimir/data'
 import { Validator } from '@casimir/types'
 import { getClusterDetails } from '@casimir/ssv'
@@ -45,7 +45,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
     await initiateDeposit.wait()
 }
 
-export async function reportCompletedExitsHandler({ manager, signer, args }: { manager: CasimirManager, signer: SignerWithAddress, args: Record<string, any> }) {
+export async function reportCompletedExitsHandler({ manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }) {
     const { count } = args
 
     // In production, we get the withdrawn exit order from the Beacon API (sorting by withdrawal epoch)
@@ -55,7 +55,7 @@ export async function reportCompletedExitsHandler({ manager, signer, args }: { m
     const stakedPoolIds = await manager.getStakedPoolIds()
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
-        const poolDetails = await manager.getPoolDetails(poolId)
+        const poolDetails = await views.getPoolDetails(poolId)
         if (poolDetails.status === 2 || poolDetails.status === 3) {
             remaining--
             const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())

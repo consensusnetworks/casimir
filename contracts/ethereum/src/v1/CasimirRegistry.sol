@@ -7,7 +7,8 @@ import './libraries/Types.sol';
 import './vendor/interfaces/ISSVNetworkViews.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-// Todo efficiently reshare or exit pools when deregistering
+// Dev-only imports
+import "hardhat/console.sol";
 
 contract CasimirRegistry is ICasimirRegistry, Ownable {
     using TypesAddress for address;
@@ -17,6 +18,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     uint256 private requiredCollateral = 4 ether;
     uint256 private minimumCollateralDeposit = 100000000000000000;
     mapping(uint64 => Operator) private operators;
+    mapping(uint64 => mapping (uint32 => bool)) private operatorPools;
     uint64[] private operatorIds;
 
     /*************/
@@ -57,7 +59,9 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
             "Only operator owner can register"
         );
 
+        operatorIds.push(operatorId);
         Operator storage operator = operators[operatorId];
+        operator.id = operatorId;
         operator.active = true;
         operator.collateral = int256(msg.value);
 
@@ -90,7 +94,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     }
 
     /**
-     * @notice Withdraw collateral for an operator
+     * @notice Withdraw collateral from an operator
      * @param operatorId The operator ID
      * @param amount The amount to withdraw
      */
@@ -102,13 +106,37 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
             "Not operator owner"
         );
         require(
-            !operator.active && !operator.resharing ||
+            !operator.active &&
+            !operator.resharing &&
+            operator.collateral >= int256(amount) ||
             operator.collateral >= int256(requiredCollateral),
-            "Active or resharing"
+            "Not allowed to withdraw amount"
         );
 
         operator.collateral -= int256(amount);
         operatorOwner.send(amount);
+    }
+
+    /**
+     * @notice Request deregistration for an operator
+     * @param operatorId The operator ID
+     */
+    function requestDeregistration(uint64 operatorId) external {
+        Operator storage operator = operators[operatorId];
+        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(operatorId);
+        require(
+            msg.sender == operatorOwner,
+            "Not operator owner"
+        );
+        require(operator.active, "Operator is not active");
+        require(!operator.resharing, "Operator is resharing");
+
+        if (operator.poolCount == 0) {
+            operator.active = false;
+        } else {
+            operator.resharing = true;
+            manager.requestReshares(operatorId);
+        }
     }
 
     /**
@@ -124,8 +152,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
         require(operator.active, "Operator not active");
         require(!operator.resharing, "Operator resharing");
         require(operator.collateral >= 0, "Operator owes collateral");
-        require(!operator.pools[poolId], "Pool already active");
-        operator.pools[poolId] = true;
+        require(!operatorPools[operatorId][poolId], "Pool already active");
+        operatorPools[operatorId][poolId] = true;
         operator.poolCount += 1;
     }
 
@@ -141,9 +169,9 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
         uint256 blameAmount
     ) external onlyOwnerOrPool(poolId) {
         Operator storage operator = operators[operatorId];
-        require(operator.pools[poolId], "Pool is not active for operator");
+        require(operatorPools[operatorId][poolId], "Pool is not active for operator");
 
-        operator.pools[poolId] = false;
+        operatorPools[operatorId][poolId] = false;
         operator.poolCount -= 1;
 
         if (operator.poolCount == 0 && operator.resharing) {
@@ -170,37 +198,14 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     }
 
     /**
-     * @notice Request deregistration for an operator
+     * @notice Get an operator by ID
      * @param operatorId The operator ID
+     * @return operator The operator
      */
-    function requestDeregistration(uint64 operatorId) external onlyOwner {
-        Operator storage operator = operators[operatorId];
-        require(operator.active, "Operator is not active");
-        require(!operator.resharing, "Operator is resharing");
-        operator.resharing = true;
-        manager.requestReshares(operatorId);
-    }
-
-    /**
-     * @notice Get the collateral of an operator
-     * @param operatorId The operator ID
-     * @return collateral The collateral
-     */
-    function getOperatorCollateral(
+    function getOperator(
         uint64 operatorId
-    ) external view returns (int256 collateral) {
-        return operators[operatorId].collateral;
-    }
-
-    /**
-     * @notice Get the eligibility of an operator
-     * @param operatorId The operator ID
-     * @return eligibility The eligibility
-     */
-    function getOperatorEligibility(
-        uint64 operatorId
-    ) external view returns (bool eligibility) {
-        return operators[operatorId].active && !operators[operatorId].resharing;
+    ) external view returns (Operator memory operator) {
+        return operators[operatorId];
     }
 
     /**

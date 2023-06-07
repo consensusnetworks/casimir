@@ -9,14 +9,7 @@ interface ICasimirRegistry {
     event DeregistrationCompleted(uint64 operatorId);
 
     struct Operator {
-        bool active;
-        bool resharing;
-        int256 collateral;
-        uint256 poolCount;
-        mapping(uint32 => bool active) pools;
-    }
-
-    struct OperatorDetails {
+        uint64 id;
         bool active;
         bool resharing;
         int256 collateral;
@@ -26,9 +19,9 @@ interface ICasimirRegistry {
     function registerOperator(uint64 operatorId) external payable;
     function depositCollateral(uint64 operatorId) external payable;
     function withdrawCollateral(uint64 operatorId, uint256 amount) external;
+    function requestDeregistration(uint64 operatorId) external;
     function addOperatorPool(uint64 operatorId, uint32 poolId) external;
     function removeOperatorPool(uint64 operatorId, uint32 poolId, uint256 blameAmount) external;
-    function getOperatorCollateral(uint64 operatorId) external view returns (int256);
-    function getOperatorEligibility(uint64 operatorId) external view returns (bool eligibility);
+    function getOperator(uint64 operatorId) external view returns (Operator memory);
     function getOperatorIds() external view returns (uint64[] memory);
 }

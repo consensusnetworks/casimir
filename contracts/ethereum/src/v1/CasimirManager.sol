@@ -104,9 +104,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Latest active balance */
     uint256 public latestActiveBalance;
     /** Latest active balance after fees */
-    uint256 public latestActiveBalanceAfterFees;
+    uint256 private latestActiveBalanceAfterFees;
     /** Latest active rewards */
-    int256 public latestActiveRewardBalance;
+    int256 private latestActiveRewardBalance;
     /** Exited pool count */
     uint256 public finalizableCompletedExits;
     /** Exited balance */
@@ -118,7 +118,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Sum of scaled rewards to balance ratios (intial value required) */
     uint256 private stakeRatioSum = 1000 ether;
     /** Total pending withdrawals count */
-    uint256 public requestedWithdrawals;
+    uint256 private requestedWithdrawals;
     /** Total pending withdrawal amount */
     uint256 public requestedWithdrawalBalance;
     /** Pending withdrawals */
@@ -130,7 +130,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Pool recovered balances */
     mapping(uint32 => uint256) private recoveredBalances;
     /** Total deposits not yet in pools */
-    uint256 public prepoolBalance;
+    uint256 private prepoolBalance;
     /** Total exited deposits */
     uint256 private exitedBalance;
     /** Total reserved fees */
@@ -142,7 +142,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** IDs of pools staked */
     uint32[] private stakedPoolIds;
     /** Exiting pool count */
-    uint256 public requestedExits;
+    uint256 private requestedExits;
     /** Slashed pool count */
     uint256 private forcedExits;
 
@@ -1185,27 +1185,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getPoolAddress(uint32 poolId) external view returns (address) {
         return poolAddresses[poolId];
-    }
-
-    /**
-     * @notice Get a pool's details by ID
-     * @param poolId The pool ID
-     * @return poolDetails The pool details
-     */
-    function getPoolDetails(
-        uint32 poolId
-    ) external view returns (PoolDetails memory poolDetails) {
-        if (poolAddresses[poolId] != address(0)) {
-            ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            ICasimirPool.PoolConfig memory poolConfig = pool.getConfig();
-            poolDetails = PoolDetails({
-                id: poolId,
-                balance: pool.getBalance(),
-                publicKey: poolConfig.publicKey,
-                operatorIds: poolConfig.operatorIds,
-                status: poolConfig.status
-            });
-        }
     }
 
     /**

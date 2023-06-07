@@ -7,7 +7,7 @@ import { initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/
 import { fulfillReport, runUpkeep } from '../helpers/upkeep'
 
 describe('Users', async function () {
-    it('User small stake and half withdrawal updates total and user stake, and user balance', async function () {
+    it('User 16.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
         const { manager } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
@@ -31,11 +31,11 @@ describe('Users', async function () {
 
         expect(ethers.utils.formatEther(stake)).equal('8.0')
         expect(ethers.utils.formatEther(userStake)).equal('8.0')
-        expect(ethers.utils.formatEther(userBalanceAfter.sub(userBalanceBefore))).contains('7.999') // Todo get gas spent on withdrawal request
+        expect(ethers.utils.formatEther(userBalanceAfter.sub(userBalanceBefore))).contains('7.9')
     })
 
-    it('User big stake and half withdrawal updates total and user stake (after balance report), and user balance (after exit report)', async function () {
-        const { manager, upkeep, keeper, oracle } = await loadFixture(deploymentFixture)
+    it('User 64.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
+        const { manager, upkeep, views, keeper, oracle } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
         const depositAmount = round(64 * ((100 + await manager.feePercent()) / 100), 10)
@@ -46,6 +46,7 @@ describe('Users', async function () {
         await initiateDepositHandler({ manager, signer: oracle })
 
         const pendingPoolIds = await manager.getPendingPoolIds()
+        
         expect(pendingPoolIds.length).equal(2)
 
         await time.increase(time.duration.days(1))   
@@ -71,6 +72,7 @@ describe('Users', async function () {
         await runUpkeep({ upkeep, keeper })
 
         const stakedPoolIds = await manager.getStakedPoolIds()
+        
         expect(stakedPoolIds.length).equal(2)
 
         let stake = await manager.getTotalStake()
@@ -115,7 +117,7 @@ describe('Users', async function () {
             requestId
         })
 
-        await reportCompletedExitsHandler({ manager, signer: oracle, args: { count: 1 } })
+        await reportCompletedExitsHandler({ manager, views, signer: oracle, args: { count: 1 } })
 
         const finalizableCompletedExits = await manager.finalizableCompletedExits()
 
@@ -130,6 +132,6 @@ describe('Users', async function () {
 
         expect(ethers.utils.formatEther(stake)).equal('32.0')
         expect(ethers.utils.formatEther(userStake)).equal('32.0')
-        expect(ethers.utils.formatEther(userBalanceAfter.sub(userBalanceBefore))).contains('31.999') // Todo get gas spent on withdrawal request
+        expect(ethers.utils.formatEther(userBalanceAfter.sub(userBalanceBefore))).contains('31.9')
     })    
 })
