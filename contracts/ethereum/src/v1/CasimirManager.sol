@@ -144,7 +144,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** IDs of pools staked */
     uint32[] private stakedPoolIds;
     /** Exiting pool count */
-    uint256 private requestedExits;
+    uint256 public requestedExits;
     /** Slashed pool count */
     uint256 private forcedExits;
 

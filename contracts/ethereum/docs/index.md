@@ -72,7 +72,7 @@ _Validate the caller is the authorized pool_
 modifier onlyOracle()
 ```
 
-_Validate the caller is the manager oracle_
+_Validate the caller is the oracle_
 
 ### onlyOracleOrRegistry
 
@@ -105,36 +105,6 @@ modifier onlyUpkeep()
 ```
 
 _Validate the caller is the upkeep contract_
-
-### validDeposit
-
-```solidity
-modifier validDeposit()
-```
-
-_Validate a deposit_
-
-### validWithdrawal
-
-```solidity
-modifier validWithdrawal(uint256 amount)
-```
-
-_Validate a withdrawal_
-
-### validDistribution
-
-```solidity
-modifier validDistribution(uint256 amount)
-```
-
-_Validate a distribution_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| amount | uint256 | The amount to validate |
 
 ### constructor
 
@@ -614,7 +584,7 @@ Get the expected effective balance
 ### getPendingWithdrawalEligibility
 
 ```solidity
-function getPendingWithdrawalEligibility(uint256 index, uint256 period) public view returns (bool)
+function getPendingWithdrawalEligibility(uint256 index, uint256 period) public view returns (bool pendingWithdrawalEligibility)
 ```
 
 Get the eligibility of a pending withdrawal
@@ -630,7 +600,7 @@ Get the eligibility of a pending withdrawal
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool | pendingWithdrawalEligibility The eligibility of a pending withdrawal |
+| pendingWithdrawalEligibility | bool | The eligibility of a pending withdrawal |
 
 ### getReadyPoolIds
 
@@ -744,11 +714,15 @@ Get the upkeep balance
 uint256 poolCapacity
 ```
 
+Pool capacity
+
 ### id
 
 ```solidity
 uint32 id
 ```
+
+Pool ID
 
 ### publicKey
 
@@ -756,11 +730,15 @@ uint32 id
 bytes publicKey
 ```
 
+Validator public key
+
 ### reshares
 
 ```solidity
 uint256 reshares
 ```
+
+Reshares
 
 ### status
 
@@ -768,11 +746,24 @@ uint256 reshares
 enum ICasimirPool.PoolStatus status
 ```
 
+Status
+
 ### constructor
 
 ```solidity
 constructor(address registryAddress, uint32 _id, bytes _publicKey, uint64[] _operatorIds) public
 ```
+
+Constructor
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| registryAddress | address | The registry address |
+| _id | uint32 | The pool ID |
+| _publicKey | bytes | The validator public key |
+| _operatorIds | uint64[] | The operator IDs |
 
 ### depositRewards
 
@@ -780,11 +771,21 @@ constructor(address registryAddress, uint32 _id, bytes _publicKey, uint64[] _ope
 function depositRewards() external
 ```
 
+Deposit rewards from a pool to the manager
+
 ### withdrawBalance
 
 ```solidity
 function withdrawBalance(uint32[] blamePercents) external
 ```
+
+Withdraw balance from a pool to the manager
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| blamePercents | uint32[] | The operator loss blame percents |
 
 ### setOperatorIds
 
@@ -792,11 +793,27 @@ function withdrawBalance(uint32[] blamePercents) external
 function setOperatorIds(uint64[] _operatorIds) external
 ```
 
+Set the operator IDs
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _operatorIds | uint64[] | The operator IDs |
+
 ### setReshares
 
 ```solidity
 function setReshares(uint256 _reshares) external
 ```
+
+Set the reshare count
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _reshares | uint256 | The reshare count |
 
 ### setStatus
 
@@ -804,11 +821,27 @@ function setReshares(uint256 _reshares) external
 function setStatus(enum ICasimirPool.PoolStatus _status) external
 ```
 
+Set the pool status
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _status | enum ICasimirPool.PoolStatus | The pool status |
+
 ### getDetails
 
 ```solidity
-function getDetails() external view returns (struct ICasimirPool.PoolDetails)
+function getDetails() external view returns (struct ICasimirPool.PoolDetails poolDetails)
 ```
+
+Get the pool details
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolDetails | struct ICasimirPool.PoolDetails | The pool details |
 
 ### getBalance
 
@@ -816,11 +849,27 @@ function getDetails() external view returns (struct ICasimirPool.PoolDetails)
 function getBalance() external view returns (uint256)
 ```
 
+Get the pool balance
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | balance The pool balance |
+
 ### getOperatorIds
 
 ```solidity
 function getOperatorIds() external view returns (uint64[])
 ```
+
+Get the operator IDs
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint64[] | operatorIds The operator IDs |
 
 ## CasimirRegistry
 
@@ -837,6 +886,14 @@ _Validate the caller is owner or the authorized pool_
 ```solidity
 constructor(address ssvNetworkViewsAddress) public
 ```
+
+Constructor
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| ssvNetworkViewsAddress | address | The SSV network views address |
 
 ### registerOperator
 
@@ -866,13 +923,13 @@ Deposit collateral for an operator
 | ---- | ---- | ----------- |
 | operatorId | uint64 | The operator ID |
 
-### withdrawCollateral
+### requestWithdrawal
 
 ```solidity
-function withdrawCollateral(uint64 operatorId, uint256 amount) external
+function requestWithdrawal(uint64 operatorId, uint256 amount) external
 ```
 
-Withdraw collateral from an operator
+Request to withdraw collateral from an operator
 
 #### Parameters
 
@@ -1132,23 +1189,6 @@ Update the functions oracle address
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newOracleAddress | address | New oracle address |
-
-### encodeResponse
-
-```solidity
-function encodeResponse(uint128 activeBalance, uint32 activatedDeposits, uint32 completedExits, uint32 slashedExits) external pure returns (bytes)
-```
-
-Encode the response for testing
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| activeBalance | uint128 | Active balance |
-| activatedDeposits | uint32 | Count of new deposits |
-| completedExits | uint32 | Count of new exits |
-| slashedExits | uint32 | Count of new slashedExits |
 
 ### mockFulfillRequest
 
@@ -1549,6 +1589,18 @@ function getUpkeepBalance() external view returns (uint256 upkeepBalance)
 
 ## ICasimirPool
 
+### PoolStatus
+
+```solidity
+enum PoolStatus {
+  PENDING,
+  ACTIVE,
+  EXITING_FORCED,
+  EXITING_REQUESTED,
+  WITHDRAWN
+}
+```
+
 ### PoolDetails
 
 ```solidity
@@ -1559,18 +1611,6 @@ struct PoolDetails {
   uint64[] operatorIds;
   uint256 reshares;
   enum ICasimirPool.PoolStatus status;
-}
-```
-
-### PoolStatus
-
-```solidity
-enum PoolStatus {
-  PENDING,
-  ACTIVE,
-  EXITING_FORCED,
-  EXITING_REQUESTED,
-  WITHDRAWN
 }
 ```
 
@@ -1648,6 +1688,18 @@ function getOperatorIds() external view returns (uint64[])
 
 ## ICasimirRegistry
 
+### Operator
+
+```solidity
+struct Operator {
+  uint64 id;
+  bool active;
+  bool resharing;
+  int256 collateral;
+  uint256 poolCount;
+}
+```
+
 ### OperatorRegistered
 
 ```solidity
@@ -1666,18 +1718,6 @@ event DeregistrationRequested(uint64 operatorId)
 event DeregistrationCompleted(uint64 operatorId)
 ```
 
-### Operator
-
-```solidity
-struct Operator {
-  uint64 id;
-  bool active;
-  bool resharing;
-  int256 collateral;
-  uint256 poolCount;
-}
-```
-
 ### registerOperator
 
 ```solidity
@@ -1690,10 +1730,10 @@ function registerOperator(uint64 operatorId) external payable
 function depositCollateral(uint64 operatorId) external payable
 ```
 
-### withdrawCollateral
+### requestWithdrawal
 
 ```solidity
-function withdrawCollateral(uint64 operatorId, uint256 amount) external
+function requestWithdrawal(uint64 operatorId, uint256 amount) external
 ```
 
 ### requestDeregistration
@@ -1760,33 +1800,6 @@ event OCRResponse(bytes32 requestId, bytes result, bytes err)
 event UpkeepPerformed(enum ICasimirUpkeep.ReportStatus status)
 ```
 
-### checkUpkeep
-
-```solidity
-function checkUpkeep(bytes checkData) external returns (bool upkeepNeeded, bytes performData)
-```
-
-method that is simulated by the keepers to see if any work actually
-needs to be performed. This method does does not actually need to be
-executable, and since it is only ever simulated it can consume lots of gas.
-
-_To ensure that it is never called, you may want to add the
-cannotExecute modifier from KeeperBase to your implementation of this
-method._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| checkData | bytes | specified in the upkeep registration so it is always the same for a registered upkeep. This can easily be broken down into specific arguments using `abi.decode`, so multiple upkeeps can be registered on the same contract and easily differentiated by the contract. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| upkeepNeeded | bool | boolean to indicate whether the keeper should call performUpkeep or not. |
-| performData | bytes | bytes that the keeper should call performUpkeep with, if upkeep is needed. If you would like to encode data to decode later, try `abi.encode`. |
-
 ### performUpkeep
 
 ```solidity
@@ -1822,6 +1835,33 @@ function setOracleAddress(address oracleAddress) external
 ```solidity
 function mockFulfillRequest(bytes32 requestId, bytes result, bytes err) external
 ```
+
+### checkUpkeep
+
+```solidity
+function checkUpkeep(bytes checkData) external returns (bool upkeepNeeded, bytes performData)
+```
+
+method that is simulated by the keepers to see if any work actually
+needs to be performed. This method does does not actually need to be
+executable, and since it is only ever simulated it can consume lots of gas.
+
+_To ensure that it is never called, you may want to add the
+cannotExecute modifier from KeeperBase to your implementation of this
+method._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| checkData | bytes | specified in the upkeep registration so it is always the same for a registered upkeep. This can easily be broken down into specific arguments using `abi.decode`, so multiple upkeeps can be registered on the same contract and easily differentiated by the contract. |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| upkeepNeeded | bool | boolean to indicate whether the keeper should call performUpkeep or not. |
+| performData | bytes | bytes that the keeper should call performUpkeep with, if upkeep is needed. If you would like to encode data to decode later, try `abi.encode`. |
 
 ## Types32Array
 
@@ -1994,6 +2034,15 @@ function registerUpkeep(struct KeeperRegistrarInterface.RegistrationParams reque
 ```solidity
 constructor(address managerAddress, address registryAddress) public
 ```
+
+Constructor
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| managerAddress | address | The manager address |
+| registryAddress | address | The registry address |
 
 ### getCompoundablePoolIds
 

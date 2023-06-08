@@ -4,7 +4,8 @@ import {
     initiateDepositHandler, 
     initiatePoolExitHandler, 
     initiatePoolReshareHandler, 
-    reportCompletedExitsHandler 
+    reportCompletedExitsHandler, 
+    reportForcedExitsHandler
 } from './providers/handlers'
 
 const handlers = {

@@ -3,17 +3,18 @@
 Solidity contracts for decentralized staking on Ethereum
 
 ## 📝 Overview
-Current Ethereum staking implementations either require a user to have 32 Ethereum or utilize a centralized 3rd party implementation that introduces additional counterparty risk to their staked assets. We propose a methodology to decentralize the Ethereum staking process that will not only improve Ethereum staking decentralization but improve the staking User Experience and create a more equitable staking experience for smaller stakers.
 
-The Casimir contracts seamlessly connect stakers with any amount of ETH directly to high-performing Ethereum validators. Casimir proposes an approach that minimizes counterparty risk for users and improves decentralization in Ethereum staking:
+Currlently stakers either need to solo-stake (and have least 32 Ether), or they need to pool their assets in a liquid staking protocol (LSD). While the former choice is a secure choice for Ether holders, the latter, LSDs, are more or less designed for Ether traders with higher risk-tolerance. Today's LSDs present an inherent counterparty risk to the user, and they rely on centralized control of staking node operators (see [The Risks of LSD](https://notes.ethereum.org/@djrtwo/risks-of-lsd)).
 
-- Validators duties are performed by registered (collateralized) operators running distributed validator technology (DVT) (Initially we are using SSV as a first implementation)
-- Keys are trustlessly managed using distributed key generation (DKG) (current implementation uses RockX's)
-- Automated actions (like compounding stake or handling a slash) are carried out by a decentralized oracle network (DON) (current implementation uses Chainlink)
+Casimir is designed to offer users the experience and security of solo-staking while pooling their assets. The Casimir contracts seamlessly connect stakers with any amount of Ether to a permissionless registry of high-performing node operators. Casimir aims to minimize counterparty risk for users and improve decentralization in Ethereum staking:
+
+- Validators duties are performed by registered (collateralized) operators running distributed validator technology (DVT)
+- Keys are created and reshared using distributed key generation (DKG)
+- Automated balance and status reports are carried out by a decentralized oracle network (DON)
 
 ### Architecture
 
-Casimir distributes user deposits to Ethereum validators operated by SSV. Validator keys are shared with zero-coordination distributed key generation. Chainlink nodes report from the Beacon chain and SSV to sync rewards, manage slashing, and automate validator creation and exiting.
+Casimir distributes user deposits to Ethereum validators operated by SSV. Validator keys are shared with zero-coordination distributed key generation. Chainlink nodes report from the Beacon chain and SSV to sync balances and rewards, manage collateral recovery, and automate validator creation and exits.
 
 ```mermaid
 graph LR
@@ -22,7 +23,7 @@ graph LR
         B(Manager Contract)
         C(Beacon Deposit Contract)
         D(SSV Contract)
-        G(PoR Contract)
+        G(Oracle Contract)
         H(Functions Contract)
         I(Automation Contract)
     end
@@ -46,7 +47,7 @@ graph LR
         E2 --> F21(SSV Operator 5)
         E2 --> F22(SSV Operator 6)
         E2 --> F23(SSV Operator 7)
-        E2 --> F24(SSV Operator 8)
+        E2 --> F24(SSV Operator n)
     end
 
     G <--> I
@@ -57,7 +58,7 @@ graph LR
         J1(Chainlink Node 1)
         J2(Chainlink Node 2)
         J3(Chainlink Node 3)
-        J4(Chainlink Node 4)
+        J4(Chainlink Node n)
     end
 
     J1 --> G
