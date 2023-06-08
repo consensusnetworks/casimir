@@ -95,15 +95,28 @@ Core internal contracts and interfaces are located in the root of the [src/v1](.
 | [CasimirRegistry](./src/v1/CasimirRegistry.sol) | Manages operator registration | [docs/index.md#casimirregistry](./docs/index.md#casimirregistry) |
 | [CasimirUpkeep](./src/v1/CasimirUpkeep.sol) | Automates and handles reports | [docs/index.md#CasimirUpkeep](./docs/index.md#CasimirUpkeep) |
 | [CasimirViews](./src/v1/CasimirViews.sol) | Provides read-only access to state | [docs/index.md#casimirviews](./docs/index.md#casimirviews) |
+| [Types](./src/v1/libraries/Types.sol) | Defines internal types | [docs/index.md#types](./docs/index.md#types) |
 
 **Vendor Contracts:**
 
-Vendor contracts and interfaces are located in the [src/v1/vendor](./src/v1/vendor) directory.
+Vendor contracts and interfaces are located in the [src/v1/vendor](./src/v1/vendor) directory, or they are imported directly from installed libraries.
 
 | Contract | Description | Docs |
 | --- | --- | --- |
+| [AutomationRegistry](../../node_modules/@chainlink/contracts/src/v0.8/interfaces/AutomationRegistryInterface2_0.sol) | Subscribes and funds upkeeps | – |
 | [DepositContract](./src/v1/vendor/interfaces/IDepositContract.sol) | Accepts Beacon deposits | – |
-| [SSVNetwork](./src/v1/vendor/interfaces/ISSVNetwork.sol) | Connects distributed validators | – |
+| [ERC20](../../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol) | Standardizes tokens | – |
+| [FunctionsClient](../../node_modules/@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol) | Calls Chainlink Functions | – |
+| [KeeperRegistrar](./src/v1/vendor/interfaces/KeeperRegistryInterface.sol) | Allows upkeep subscription registration | – |
+| [Math](../../node_modules/@openzeppelin/contracts/utils/math/Math.sol) | Provides math helpers | – |
+| [Ownable](../../node_modules/@openzeppelin/contracts/access/Ownable.sol) | Provides ownable access control | – |
+| [ReentrancyGuard](../../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol) | Secures against reentrancy | – |
+| [SSVNetwork](./src/v1/vendor/interfaces/ISSVNetwork.sol) | Registers SSV validators | – |
+| [SSVNetworkCore](./src/v1/vendor/interfaces/ISSVNetworkCore.sol) | Provides base SSV logic and types | – |
+| [SSVNetworkViews](./src/v1/vendor/interfaces/ISSVNetworkViews.sol) | Provides read-only access to SSV network state | – |
+| [SwapRouter](../../node_modules/@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol)
+| [UniswapV3Factory](../../node_modules/@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol)
+| [UniswapV3PoolState](../../node_modules/@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol)
 | [WETH](./src/v1/vendor/interfaces/IWETH.sol) | Wraps ETH for swapping | – |
 
 **Mock Contracts:**
@@ -112,7 +125,7 @@ Mock (development-only) contracts and interfaces are located in the [src/mock](.
 
 | Contract | Description | Docs |
 | --- | --- | --- |
-| [MockFunctionsOracle](./src/v1/mock/MockFunctionsOracle.sol) | Mock Chainlink Functions | [docs/index.md#mockfunctionsoracle](./docs/index.md#mockfunctionsoracle) |
+| [MockFunctionsOracle](./src/v1/mock/MockFunctionsOracle.sol) | Mocks Chainlink Functions responses | [docs/index.md#mockfunctionsoracle](./docs/index.md#mockfunctionsoracle) |
 
 ### Distributed Key Generation
 
