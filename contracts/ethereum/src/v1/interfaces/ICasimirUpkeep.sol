@@ -8,14 +8,11 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
     /* Enumerators */
     /***************/
 
-    /** Request type */
     enum RequestType {
         NONE,
         BALANCES,
         DETAILS
     }
-
-    /** Report status */
     enum ReportStatus {
         FINALIZED,
         REQUESTING,
@@ -30,20 +27,25 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
     event UpkeepPerformed(ReportStatus status);
 
     /*************/
-    /* Functions */
+    /* Mutations */
     /*************/
 
-    function checkUpkeep(
-        bytes calldata checkData
-    ) external returns (bool upkeepNeeded, bytes memory performData);
-
     function performUpkeep(bytes calldata performData) external;
-
     function setOracleAddress(address oracleAddress) external;
-
     function mockFulfillRequest(
         bytes32 requestId,
         bytes memory result,
         bytes memory err
     ) external;
+
+    /***********/
+    /* Getters */
+    /***********/
+
+    function checkUpkeep(
+        bytes calldata checkData
+    ) external returns (bool upkeepNeeded, bytes memory performData);
+
+
+
 }

@@ -744,10 +744,34 @@ Get the upkeep balance
 uint256 poolCapacity
 ```
 
+### id
+
+```solidity
+uint32 id
+```
+
+### publicKey
+
+```solidity
+bytes publicKey
+```
+
+### reshares
+
+```solidity
+uint256 reshares
+```
+
+### status
+
+```solidity
+enum ICasimirPool.PoolStatus status
+```
+
 ### constructor
 
 ```solidity
-constructor(address registryAddress, uint32 poolId, bytes publicKey, uint64[] operatorIds) public
+constructor(address registryAddress, uint32 _id, bytes _publicKey, uint64[] _operatorIds) public
 ```
 
 ### depositRewards
@@ -765,19 +789,25 @@ function withdrawBalance(uint32[] blamePercents) external
 ### setOperatorIds
 
 ```solidity
-function setOperatorIds(uint64[] operatorIds) external
+function setOperatorIds(uint64[] _operatorIds) external
 ```
 
 ### setReshares
 
 ```solidity
-function setReshares(uint256 reshares) external
+function setReshares(uint256 _reshares) external
 ```
 
 ### setStatus
 
 ```solidity
-function setStatus(enum ICasimirPool.PoolStatus status) external
+function setStatus(enum ICasimirPool.PoolStatus _status) external
+```
+
+### getDetails
+
+```solidity
+function getDetails() external view returns (struct ICasimirPool.PoolDetails)
 ```
 
 ### getBalance
@@ -786,28 +816,10 @@ function setStatus(enum ICasimirPool.PoolStatus status) external
 function getBalance() external view returns (uint256)
 ```
 
-### getConfig
-
-```solidity
-function getConfig() external view returns (struct ICasimirPool.PoolConfig)
-```
-
 ### getOperatorIds
 
 ```solidity
 function getOperatorIds() external view returns (uint64[])
-```
-
-### getPublicKey
-
-```solidity
-function getPublicKey() external view returns (bytes)
-```
-
-### getStatus
-
-```solidity
-function getStatus() external view returns (enum ICasimirPool.PoolStatus)
 ```
 
 ## CasimirRegistry
@@ -1537,11 +1549,12 @@ function getUpkeepBalance() external view returns (uint256 upkeepBalance)
 
 ## ICasimirPool
 
-### PoolConfig
+### PoolDetails
 
 ```solidity
-struct PoolConfig {
-  uint32 poolId;
+struct PoolDetails {
+  uint32 id;
+  uint256 balance;
   bytes publicKey;
   uint64[] operatorIds;
   uint256 reshares;
@@ -1591,34 +1604,46 @@ function setReshares(uint256 reshares) external
 function setStatus(enum ICasimirPool.PoolStatus status) external
 ```
 
+### id
+
+```solidity
+function id() external view returns (uint32)
+```
+
+### publicKey
+
+```solidity
+function publicKey() external view returns (bytes)
+```
+
+### reshares
+
+```solidity
+function reshares() external view returns (uint256)
+```
+
+### status
+
+```solidity
+function status() external view returns (enum ICasimirPool.PoolStatus)
+```
+
+### getDetails
+
+```solidity
+function getDetails() external view returns (struct ICasimirPool.PoolDetails)
+```
+
 ### getBalance
 
 ```solidity
 function getBalance() external view returns (uint256)
 ```
 
-### getConfig
-
-```solidity
-function getConfig() external view returns (struct ICasimirPool.PoolConfig)
-```
-
 ### getOperatorIds
 
 ```solidity
 function getOperatorIds() external view returns (uint64[])
-```
-
-### getPublicKey
-
-```solidity
-function getPublicKey() external view returns (bytes)
-```
-
-### getStatus
-
-```solidity
-function getStatus() external view returns (enum ICasimirPool.PoolStatus)
 ```
 
 ## ICasimirRegistry
@@ -2059,7 +2084,7 @@ Get the staked validator public keys
 ### getPoolDetails
 
 ```solidity
-function getPoolDetails(uint32 poolId) external view returns (struct ICasimirViews.PoolDetails poolDetails)
+function getPoolDetails(uint32 poolId) external view returns (struct ICasimirPool.PoolDetails poolDetails)
 ```
 
 Get a pool's details by ID
@@ -2074,7 +2099,7 @@ Get a pool's details by ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| poolDetails | struct ICasimirViews.PoolDetails | The pool details |
+| poolDetails | struct ICasimirPool.PoolDetails | The pool details |
 
 ### getSweptBalance
 
@@ -2101,18 +2126,6 @@ _Should be called off-chain_
 
 ## ICasimirViews
 
-### PoolDetails
-
-```solidity
-struct PoolDetails {
-  uint32 id;
-  uint256 balance;
-  bytes publicKey;
-  uint64[] operatorIds;
-  enum ICasimirPool.PoolStatus status;
-}
-```
-
 ### getCompoundablePoolIds
 
 ```solidity
@@ -2128,7 +2141,7 @@ function getOperators(uint256 startIndex, uint256 endIndex) external view return
 ### getPoolDetails
 
 ```solidity
-function getPoolDetails(uint32 poolId) external view returns (struct ICasimirViews.PoolDetails)
+function getPoolDetails(uint32 poolId) external view returns (struct ICasimirPool.PoolDetails)
 ```
 
 ### getPendingValidatorPublicKeys

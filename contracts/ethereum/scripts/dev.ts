@@ -5,6 +5,7 @@ import { round } from '@casimir/ethereum/helpers/math'
 import EventEmitter, { on } from 'events'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
+import { depositUpkeepBalanceHandler } from '../helpers/oracle'
 
 void async function () {
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
@@ -65,14 +66,12 @@ void async function () {
         await result.wait()
     }
 
-    /** Stake 320 from the fourth user */
-    setTimeout(async () => {
-        const depositAmount = 320 * ((100 + await manager.feePercent()) / 100)
-        const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
-        await stake?.wait()
-    }, 1000)
+    const depositAmount = 320 * ((100 + await manager.feePercent()) / 100)
+    const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+    await stake?.wait()
 
-    /** Simulate rewards per staked validator */
+    await depositUpkeepBalanceHandler({ manager, signer: oracle })
+
     let requestId = 0
     const blocksPerReward = 50
     const rewardPerValidator = 0.105

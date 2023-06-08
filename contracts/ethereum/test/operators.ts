@@ -94,8 +94,8 @@ describe('Operators', async function () {
         expect(resharesRequestedEvents.length).equal(0)
 
         const operatorOwnerBalanceBefore = await ethers.provider.getBalance(operatorOwnerAddress)
-        const withdrawCollateral = await registry.connect(operatorOwnerSigner).withdrawCollateral(deregisteringOperatorId, ethers.utils.parseEther('4'))
-        await withdrawCollateral.wait()
+        const requestWithdrawal = await registry.connect(operatorOwnerSigner).requestWithdrawal(deregisteringOperatorId, ethers.utils.parseEther('4'))
+        await requestWithdrawal.wait()
         const operatorOwnerBalanceAfter = await ethers.provider.getBalance(operatorOwnerAddress)
         const deregisteredOperator = await registry.getOperator(deregisteringOperatorId)
         

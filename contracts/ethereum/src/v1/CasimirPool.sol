@@ -15,17 +15,44 @@ import "hardhat/console.sol";
  * @title Pool contract that accepts deposits and stakes a validator
  */
 contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
+    /*************/
+    /* Constants */
+    /*************/
 
+    /** Pool capacity */
     uint256 poolCapacity = 32 ether;
+
+    /*************/
+    /* Immutable */
+    /*************/
+
+    /** Manager contract */
     ICasimirManager private immutable manager;
+    /** Registry contract */
     ICasimirRegistry private immutable registry;
-    uint32 public immutable id;
+
+    /*********/
+    /* State */
+    /*********/
+
+    /** Pool ID */
+    uint32 public id;
+    /** Validator public key */
     bytes public publicKey;
+    /** Operator IDs */
     uint64[] private operatorIds;
+    /** Reshares */
     uint256 public reshares;
+    /** Status */
     PoolStatus public status;
 
-
+    /**
+     * @notice Constructor
+     * @param registryAddress The registry address
+     * @param _id The pool ID 
+     * @param _publicKey The validator public key
+     * @param _operatorIds The operator IDs
+     */
     constructor(
         address registryAddress,
         uint32 _id,
@@ -39,11 +66,18 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
         operatorIds = _operatorIds;
     }
 
+    /**
+     * @notice Deposit rewards from a pool to the manager
+     */
     function depositRewards() external onlyOwner {
         uint256 balance = address(this).balance;
         manager.depositRewards{value: balance}();
     }
 
+    /**
+     * @notice Withdraw balance from a pool to the manager
+     * @param blamePercents The operator loss blame percents
+     */
     function withdrawBalance(uint32[] memory blamePercents) external onlyOwner {
         require(status == PoolStatus.WITHDRAWN, "Pool must be withdrawn");
 
@@ -60,24 +94,39 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
             }
             registry.removeOperatorPool(operatorIds[i], id, blameAmount);
         }
-
         manager.depositExitedBalance{value: balance}(id);
     }
 
+    /**
+     * @notice Set the operator IDs
+     * @param _operatorIds The operator IDs
+     */
     function setOperatorIds(uint64[] memory _operatorIds) external onlyOwner {
         operatorIds = _operatorIds;
     }
 
+    /**
+     * @notice Set the reshare count
+     * @param _reshares The reshare count
+     */
     function setReshares(uint256 _reshares) external onlyOwner {
         reshares = _reshares;
     }
 
+    /**
+     * @notice Set the pool status
+     * @param _status The pool status
+     */
     function setStatus(PoolStatus _status) external onlyOwner {
         status = _status;        
     }
 
-    function getDetails() external view returns (PoolDetails memory) {
-        return PoolDetails({
+    /**
+     * @notice Get the pool details
+     * @return poolDetails The pool details
+     */
+    function getDetails() external view returns (PoolDetails memory poolDetails) {
+        poolDetails = PoolDetails({
             id: id,
             balance: address(this).balance,
             publicKey: publicKey,
@@ -87,10 +136,18 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
         });
     }
 
+    /**
+     * @notice Get the pool balance
+     * @return balance The pool balance
+     */
     function getBalance() external view returns (uint256) {
         return address(this).balance;
     }
 
+    /**
+     * @notice Get the operator IDs
+     * @return operatorIds The operator IDs
+     */
     function getOperatorIds() external view returns (uint64[] memory) {
         return operatorIds;
     }

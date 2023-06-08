@@ -10,16 +10,45 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 // Dev-only imports
 import "hardhat/console.sol";
 
+/**
+ * @title Registry contract that manages operators
+ */
 contract CasimirRegistry is ICasimirRegistry, Ownable {
+    /*************/
+    /* Libraries */
+    /*************/
+
+    /** Use internal type for address */
     using TypesAddress for address;
 
-    ICasimirManager private manager;
-    ISSVNetworkViews private ssvNetworkViews;
+    /*************/
+    /* Constants */
+    /*************/
+
+    /** Required collateral */
     uint256 private requiredCollateral = 4 ether;
-    uint256 private minimumCollateralDeposit = 100000000000000000;
-    mapping(uint64 => Operator) private operators;
-    mapping(uint64 => mapping (uint32 => bool)) private operatorPools;
+    /** Minimum collateral deposit (0.1 ETH) */
+    uint256 private minimumCollateralDeposit = 100000000 gwei;
+
+    /*************/
+    /* Immutable */
+    /*************/
+
+    /** Manager contract */
+    ICasimirManager private immutable manager;
+    /** SSV network views contract */
+    ISSVNetworkViews private immutable ssvNetworkViews;
+
+    /*********/
+    /* State */
+    /*********/
+
+    /** Operator IDs */
     uint64[] private operatorIds;
+    /** Operators */
+    mapping(uint64 => Operator) private operators;
+    /** Operator pools */
+    mapping(uint64 => mapping (uint32 => bool)) private operatorPools;
 
     /*************/
     /* Modifiers */
@@ -37,6 +66,10 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
         _;
     }
 
+    /**
+     * @notice Constructor
+     * @param ssvNetworkViewsAddress The SSV network views address
+     */
     constructor(address ssvNetworkViewsAddress) {
         manager = ICasimirManager(msg.sender);
         ssvNetworkViews = ISSVNetworkViews(ssvNetworkViewsAddress);
@@ -51,9 +84,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
             msg.value >= requiredCollateral,
             "Insufficient registration collateral"
         );
-        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(
-            operatorId
-        );
+        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(operatorId);
         require(
             msg.sender == operatorOwner,
             "Only operator owner can register"
@@ -94,11 +125,11 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     }
 
     /**
-     * @notice Withdraw collateral from an operator
+     * @notice Request to withdraw collateral from an operator
      * @param operatorId The operator ID
      * @param amount The amount to withdraw
      */
-    function withdrawCollateral(uint64 operatorId, uint256 amount) external {
+    function requestWithdrawal(uint64 operatorId, uint256 amount) external {
         Operator storage operator = operators[operatorId];
         (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(operatorId);
         require(

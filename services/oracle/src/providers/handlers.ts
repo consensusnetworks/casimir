@@ -114,9 +114,34 @@ export async function initiatePoolExitHandler(input: HandlerInput) {
     const poolDetails = await views.getPoolDetails(poolId)
     // Get operators to sign exit
     const dkg = new DKG({ cliPath, messengerUrl })
+}
 
-    // Broadcast exit signature
+export async function reportForcedExitsHandler(input: HandlerInput) {
+    const {
+        provider,
+        signer,
+        manager,
+        views,
+        args 
+    } = input
 
+    const { count } = args
+
+    const stakedPoolIds = await manager.getStakedPoolIds()
+    let poolIndex = 0
+    let remaining = count
+    while (remaining > 0) {
+        const poolId = stakedPoolIds[poolIndex]
+        const poolDetails = await views.getPoolDetails(poolId)
+        if (poolDetails.status === 1) {
+            remaining--
+            const reportForcedExit = await manager.connect(signer).reportForcedExit(
+                poolIndex
+            )
+            await reportForcedExit.wait()
+        }
+        poolIndex++
+    }
 }
 
 export async function reportCompletedExitsHandler(input: HandlerInput) {
@@ -130,11 +155,15 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
 
     const { count } = args
 
-    // In production, we get the withdrawn exit order from the Beacon API (sorting by withdrawal epoch)
-    // Here, we're just reporting them in the order they were exited
+    /**
+     * In production, we get the completed exit order from the Beacon API (sorting by withdrawn epoch)
+     * We check all validators using:
+     * const stakedPublicKeys = await views.getStakedPublicKeys(startIndex, endIndex)
+     * Here, we're just grabbing a random active pool for each forced exit
+     */
+    const stakedPoolIds = await manager.getStakedPoolIds()
     let remaining = count
     let poolIndex = 0
-    const stakedPoolIds = await manager.getStakedPoolIds()
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
         const poolDetails = await views.getPoolDetails(poolId)

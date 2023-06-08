@@ -61,16 +61,21 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
 }
 
 export async function depositUpkeepBalanceHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
+    
+    /**
+     * In production, we check the upkeep balance before reporting
+     * We can set processed to true if the manager has enough SSV tokens
+     * Here, we're just depositing double the Chainlink registration minimum
+     */
     const processed = false
-    const requiredBalancePerUpkeep = ethers.utils.parseEther('0.2') // Double the Chainlink minimum
+    const requiredBalance = ethers.utils.parseEther('0.2')
     const price = await getPrice({ 
         provider: ethers.provider,
         tokenIn: wethTokenAddress,
         tokenOut: linkTokenAddress,
         uniswapFeeTier: 3000
     })
-    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerUpkeep)) * Number(price)).toPrecision(9))
-
+    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalance)) * Number(price)).toPrecision(9))
     const depositUpkeepBalance = await manager.connect(signer).depositUpkeepBalance(
         feeAmount,
         processed
@@ -81,25 +86,32 @@ export async function depositUpkeepBalanceHandler({ manager, signer }: { manager
 export async function reportCompletedExitsHandler({ manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }) {
     const { count } = args
 
-    // In production, we get the withdrawn exit order from the Beacon API (sorting by withdrawal epoch)
-    // Here, we're just reporting them in the order they were exited
+    /**
+     * In production, we get the completed exit order from the Beacon API (sorting by withdrawn epoch)
+     * We check all validators using:
+     * const stakedPublicKeys = await views.getStakedPublicKeys(startIndex, endIndex)
+     * Here, we're just grabbing the next exiting pool for each completed exit
+     */
+    const stakedPoolIds = await manager.getStakedPoolIds()
     let remaining = count
     let poolIndex = 0
-    const stakedPoolIds = await manager.getStakedPoolIds()
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
         const poolDetails = await views.getPoolDetails(poolId)
         if (poolDetails.status === 2 || poolDetails.status === 3) {
             remaining--
-            const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())
             
-            // Hardcoded blame to the first operator if less than 32 ETH
-            // In production, we use the SSV performance data to determine blame
+            /**
+             * In production, we use the SSV performance data to determine blame
+             * We check all validators using:
+             * const stakedPublicKeys = await views.getStakedPublicKeys(startIndex, endIndex)
+             * Here, we're just hardcoding blame to the first operator if less than 32 ETH
+             */
+            const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())
             let blamePercents = [0, 0, 0, 0]
             if (poolDetails.balance.lt(ethers.utils.parseEther('32'))) {
                 blamePercents = [100, 0, 0, 0]
             }
-
             const clusterDetails = await getClusterDetails({ 
                 provider: ethers.provider,
                 ownerAddress: manager.address,

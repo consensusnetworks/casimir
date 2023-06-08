@@ -25,7 +25,6 @@ interface ICasimirManager {
         uint256 actionPeriodTimestamp;
         uint256 actionCount;
     }
-
     struct Withdrawal {
         address user;
         uint256 amount;
@@ -119,9 +118,9 @@ interface ICasimirManager {
     function withdrawSSVBalance(uint256 amount) external;
     function setFunctionsAddress(address functionsAddress) external;
 
-    /*************/
-    /* Variables */
-    /*************/
+    /***********/
+    /* Getters */
+    /***********/
 
     function upkeepId() external view returns (uint256);    
     function latestActiveBalance() external view returns (uint256);
@@ -129,11 +128,6 @@ interface ICasimirManager {
     function requestedWithdrawalBalance() external view returns (uint256);
     function finalizableCompletedExits() external view returns (uint256);
     function reportPeriod() external view returns (uint32);
-
-    /***********/
-    /* Getters */
-    /***********/
-
     function getTotalStake() external view returns (uint256);
     function getReadyPoolIds() external view returns (uint32[] memory);
     function getPendingPoolIds() external view returns (uint32[] memory);

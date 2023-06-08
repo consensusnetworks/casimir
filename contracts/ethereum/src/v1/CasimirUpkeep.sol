@@ -11,13 +11,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 
 /**
- * @title Oracle contract that triggers and handles actions
+ * @title Upkeep contract that automates and handles reports
  */
 contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /*************/
     /* Libraries */
     /*************/
 
+    /** Use Chainlink Functions */
     using Functions for Functions.Request;
 
     /*************/
@@ -36,9 +37,9 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Manager contract */
     ICasimirManager private immutable manager;
 
-    /********************/
-    /* Dynamic State */
-    /********************/
+    /*********/
+    /* State */
+    /*********/
 
     /** Current report status */
     ReportStatus private reportStatus;
@@ -164,11 +165,9 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
         if (reportStatus == ReportStatus.FINALIZED) {
             reportStatus = ReportStatus.REQUESTING;
-
             reportRequestBlock = block.number;
             reportTimestamp = block.timestamp;
             reportPeriod = manager.reportPeriod();
-
             Functions.Request memory req;
             reportRemainingRequests = 2;
             for (uint256 i = 0; i < reportRemainingRequests; i++) {
@@ -183,25 +182,20 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             ) {
                 manager.fulfillWithdrawals(5);
             }
-
             if (finalizableActivatedDeposits > 0) {
                 uint256 maxActivatedDeposits = finalizableActivatedDeposits > 5 ? 5 : finalizableActivatedDeposits;
                 finalizableActivatedDeposits -= maxActivatedDeposits;
                 manager.activateDeposits(maxActivatedDeposits);
             }
-            
             if (!manager.getPendingWithdrawalEligibility(0, reportPeriod) && finalizableActivatedDeposits == 0) {
                 reportStatus = ReportStatus.FINALIZED;
-
                 manager.rebalanceStake({
                     activeBalance: reportActiveBalance,
                     sweptBalance: reportSweptBalance,
                     activatedDeposits: reportActivatedDeposits,
                     completedExits: reportCompletedExits
                 });
-
                 manager.compoundRewards(reportCompoundablePoolIds);
-
                 reportActiveBalance = 0;
                 reportActivatedDeposits = 0;
                 reportForcedExits = 0;
@@ -228,19 +222,15 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         RequestType requestType = reportRequests[requestId];
         require(requestType != RequestType.NONE, "Invalid request ID");
 
-        reportResponseError = _error; // TODO: Handle error
-
+        reportResponseError = _error;
         if (_error.length == 0) {
-
             delete reportRequests[requestId];
             reportRemainingRequests--;
-
             if (requestType == RequestType.BALANCES) {
                 (
                     uint128 activeBalance,
                     uint128 sweptBalance
                 ) = abi.decode(response, (uint128, uint128));
-                
                 reportActiveBalance = uint256(activeBalance);
                 reportSweptBalance = uint256(sweptBalance);
             } else {
@@ -250,28 +240,22 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
                     uint32 completedExits,
                     uint32[5] memory compoundablePools 
                 ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
-                
                 reportActivatedDeposits = activatedDeposits;
                 reportForcedExits = unexpectedExits;
                 reportCompletedExits = completedExits;
                 reportCompoundablePoolIds = compoundablePools;
-
                 finalizableActivatedDeposits = activatedDeposits;
                 finalizableCompoundablePoolIds = compoundablePools;
             }
-
             if (reportRemainingRequests == 0) {
                 reportStatus = ReportStatus.PROCESSING;
-
                 if (reportForcedExits > 0) {
                     manager.requestForcedExitReports(reportForcedExits);
                 }
-
                 if (reportCompletedExits > 0) {
                     manager.requestCompletedExitReports(reportCompletedExits);
                 }
             }
-
         }
 
         emit OCRResponse(requestId, response, _error);
@@ -286,27 +270,6 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     }
 
     // Dev-only functions
-
-    /**
-     * @notice Encode the response for testing
-     * @param activeBalance Active balance
-     * @param activatedDeposits Count of new deposits
-     * @param completedExits Count of new exits
-     * @param slashedExits Count of new slashedExits
-     */
-    function encodeResponse(
-        uint128 activeBalance,
-        uint32 activatedDeposits,
-        uint32 completedExits,
-        uint32 slashedExits
-    ) external pure returns (bytes memory) {
-        return abi.encode(
-            activeBalance, 
-            activatedDeposits, 
-            completedExits, 
-            slashedExits
-        );
-    }
 
     /**
      * @notice Fulfill the request for testing

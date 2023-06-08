@@ -8,6 +8,9 @@ import './interfaces/ICasimirRegistry.sol';
 // Dev-only imports
 import "hardhat/console.sol";
 
+/**
+ * @title Views contract that provides read-only access to the state
+ */
 contract CasimirViews is ICasimirViews {
     /*************/
     /* Constants */
@@ -25,6 +28,11 @@ contract CasimirViews is ICasimirViews {
     /** Registry contract */
     ICasimirRegistry private immutable registry;
 
+    /**
+     * @notice Constructor
+     * @param managerAddress The manager address
+     * @param registryAddress The registry address
+     */
     constructor(address managerAddress, address registryAddress) {
         manager = ICasimirManager(managerAddress);
         registry = ICasimirRegistry(registryAddress);

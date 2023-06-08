@@ -161,7 +161,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Validate the caller is the manager oracle
+     * @dev Validate the caller is the oracle
      */
     modifier onlyOracle() {
         require(msg.sender == oracleAddress, "Not oracle");
@@ -203,31 +203,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     modifier onlyUpkeep() {
         require(msg.sender == address(upkeep), "Not upkeep");
-        _;
-    }
-
-    /**
-     * @dev Validate a deposit
-     */
-    modifier validDeposit() {
-        require(msg.value >= stakeMinimum, "Deposit less than minimum");
-        _;
-    }
-
-    /**
-     * @dev Validate a withdrawal
-     */
-    modifier validWithdrawal(uint256 amount) {
-        require(amount >= stakeMinimum, "Withdrawal less than minimum");
-        _;
-    }
-
-    /**
-     * @dev Validate a distribution
-     * @param amount The amount to validate
-     */
-    modifier validDistribution(uint256 amount) {
-        require(amount > 0, "Distribution amount is zero");
         _;
     }
 
@@ -290,18 +265,18 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @notice Deposit user stake
      */
-    function depositStake() external payable nonReentrant validDeposit {
+    function depositStake() external payable nonReentrant {
+        require(msg.value >= stakeMinimum, "Stake less than minimum");
+
         setActionCount(msg.sender);
         User storage user = users[msg.sender];
         uint256 depositAfterFees = subtractFees(msg.value);
         reservedFeeBalance += msg.value - depositAfterFees;
-
         if (user.stake0 > 0) {
             user.stake0 = getUserStake(msg.sender);
         }
         user.stakeRatioSum0 = stakeRatioSum;
         user.stake0 += depositAfterFees;
-
         distributeStake(depositAfterFees);
 
         emit StakeDeposited(msg.sender, depositAfterFees);
@@ -337,9 +312,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function depositExitedBalance(
         uint32 poolId
     ) external payable onlyPool(poolId) {
-        delete poolAddresses[poolId];
         uint256 balance = msg.value + recoveredBalances[poolId];
         delete recoveredBalances[poolId];
+        delete poolAddresses[poolId];
         exitedBalance += balance;
         finalizableExitedBalance += balance;
         finalizableCompletedExits++;
@@ -412,7 +387,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         } else {
             linkRegistry.addFunds(upkeepId, uint96(linkAmount));
         }
-
         if (upkeepId == 0) {
             revert("Upkeep not registered");
         }
@@ -431,6 +405,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function withdrawReservedFees(uint256 amount) external onlyOwner {
         require(amount <= reservedFeeBalance, "Withdrawing more than reserved");
+
         reservedFeeBalance -= amount;
         owner().send(amount);
     }
@@ -439,7 +414,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @dev Distribute a given amount of stake
      * @param amount The amount of stake to distribute
      */
-    function distributeStake(uint256 amount) private validDistribution(amount) {
+    function distributeStake(uint256 amount) private {
         while (amount > 0) {
             uint256 remainingCapacity = poolCapacity - prepoolBalance;
             if (remainingCapacity > amount) {
@@ -470,6 +445,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint256 activatedDeposits,
         uint256 completedExits
     ) external onlyUpkeep {
+        reportPeriod++;
         uint256 expectedActivatedBalance = activatedDeposits * poolCapacity;
         uint256 expectedExitedBalance = completedExits * poolCapacity;
         int256 rewards = int256(activeBalance + sweptBalance + finalizableRecoveredBalance) - int256(getExpectedEffectiveBalance() + expectedExitedBalance);
@@ -503,17 +479,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
             emit StakeRebalanced(loss);
         }
-
-        latestActiveBalance = activeBalance;
         int256 sweptRewards = int256(sweptBalance + finalizableRecoveredBalance) - int256(finalizableExitedBalance);
         if (sweptRewards > 0) {
             latestActiveBalanceAfterFees -= subtractFees(uint256(sweptRewards));
         }
-        latestActiveBalanceAfterFees += expectedActivatedBalance;
         latestActiveBalanceAfterFees -= finalizableExitedBalance;
+        latestActiveBalanceAfterFees += expectedActivatedBalance;
         latestActiveRewardBalance = rewards - sweptRewards;
-
-        reportPeriod++;
+        latestActiveBalance = activeBalance;
         finalizableExitedBalance = 0;
         finalizableRecoveredBalance = 0;
         finalizableCompletedExits = 0;
@@ -540,7 +513,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function requestWithdrawal(
         uint256 amount
-    ) external nonReentrant validWithdrawal(amount) {
+    ) external nonReentrant {
+        require(amount > stakeMinimum, "Withdrawing less than minimum");
         setActionCount(msg.sender);
         User storage user = users[msg.sender];
         user.stake0 = getUserStake(msg.sender);
@@ -587,17 +561,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function fulfillWithdrawals(uint256 count) external onlyUpkeep {
         while (count > 0) {
             count--;
-
             if (requestedWithdrawalQueue.length == 0) {
                 break;
             }
-
             Withdrawal memory withdrawal = requestedWithdrawalQueue[0];
-
             if (withdrawal.period > reportPeriod) {
                 break;
             }
-
             requestedWithdrawalQueue.remove(0);
             requestedWithdrawalBalance -= withdrawal.amount;
             requestedWithdrawals--;
@@ -619,7 +589,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             exitedBalance = 0;
             prepoolBalance -= remainder;
         }
-
         sender.send(amount);
 
         emit WithdrawalFulfilled(sender, amount);
@@ -673,11 +642,25 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         readyPoolIds.remove(0);
         pendingPoolIds.push(poolId);
 
-        poolAddresses[poolId] = deployPool(
-            poolId,
-            publicKey,
-            withdrawalCredentials,
-            operatorIds
+        poolAddresses[poolId] = address(
+            new CasimirPool(
+                address(registry),
+                poolId,
+                publicKey,
+                operatorIds
+            )
+        );
+
+        bytes memory computedWithdrawalCredentials = abi.encodePacked(
+            bytes1(uint8(1)),
+            bytes11(0),
+            poolAddresses[poolId]
+        );
+
+        require(
+            keccak256(computedWithdrawalCredentials) ==
+                keccak256(withdrawalCredentials),
+            "Invalid withdrawal credentials"
         );
 
         registerPool(
@@ -694,31 +677,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
 
         emit DepositInitiated(poolId);
-    }
-
-    function deployPool(
-        uint32 poolId,
-        bytes memory publicKey,
-        bytes memory withdrawalCredentials,
-        uint64[] memory operatorIds
-    ) private returns (address poolAddress) {
-        ICasimirPool pool = new CasimirPool(
-            address(registry),
-            poolId,
-            publicKey,
-            operatorIds
-        );
-        poolAddress = address(pool);
-        bytes memory computedWithdrawalCredentials = abi.encodePacked(
-            bytes1(uint8(1)),
-            bytes11(0),
-            poolAddress
-        );
-        require(
-            keccak256(computedWithdrawalCredentials) ==
-                keccak256(withdrawalCredentials),
-            "Invalid withdrawal credentials"
-        );
     }
 
     function registerPool(
@@ -750,6 +708,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             processed
         );
         ssvToken.approve(address(ssvNetwork), ssvAmount);
+
         ssvNetwork.registerValidator(
             publicKey,
             operatorIds,
@@ -862,28 +821,26 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     ) external onlyOracle {
         uint32 poolId = stakedPoolIds[poolIndex];
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-        ICasimirPool.PoolStatus poolStatus = pool.status();
+        ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
         require(
-            poolStatus == ICasimirPool.PoolStatus.EXITING_FORCED ||
-            poolStatus == ICasimirPool.PoolStatus.EXITING_REQUESTED,
+            poolDetails.status == ICasimirPool.PoolStatus.EXITING_FORCED ||
+            poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED,
             "Pool not exiting"
         );
 
         stakedPoolIds.remove(poolIndex);
-        uint64[] memory operatorIds = pool.getOperatorIds();
-        bytes memory publicKey = pool.publicKey();
 
-        if (poolStatus == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
+        if (poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
             requestedExits--;
         } else if (
-            poolStatus == ICasimirPool.PoolStatus.EXITING_FORCED
+            poolDetails.status == ICasimirPool.PoolStatus.EXITING_FORCED
         ) {
             forcedExits--;
         }
 
         pool.setStatus(ICasimirPool.PoolStatus.WITHDRAWN);
         pool.withdrawBalance(blamePercents);
-        ssvNetwork.removeValidator(publicKey, operatorIds, cluster);
+        ssvNetwork.removeValidator(poolDetails.publicKey, poolDetails.operatorIds, cluster);
 
         emit ExitCompleted(poolId);
     }
@@ -1005,8 +962,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 uniswapFeeTier
             )
         );
-        uint256 liquidity = swapPool.liquidity();
-        require(liquidity >= amount, "Not enough liquidity");
+        require(swapPool.liquidity() >= amount, "Not enough liquidity");
 
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
             .ExactInputSingleParams({
@@ -1150,11 +1106,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function getPendingWithdrawalEligibility(
         uint256 index,
         uint256 period
-    ) public view returns (bool) {
+    ) public view returns (bool pendingWithdrawalEligibility) {
         if (requestedWithdrawals > index) {
-            return requestedWithdrawalQueue[index].period <= period;
+            pendingWithdrawalEligibility = requestedWithdrawalQueue[index].period <= period;
         }
-        return false;
     }
 
     /**
