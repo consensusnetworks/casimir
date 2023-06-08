@@ -50,9 +50,7 @@ describe('Users', async function () {
         expect(pendingPoolIds.length).equal(2)
 
         await time.increase(time.duration.days(1))   
-    
         await runUpkeep({ upkeep, keeper })
-     
         let requestId = 0
         const firstReportValues = {
             activeBalance: 64,
@@ -68,7 +66,6 @@ describe('Users', async function () {
             values: firstReportValues,
             requestId
         })
-
         await runUpkeep({ upkeep, keeper })
 
         const stakedPoolIds = await manager.getStakedPoolIds()
@@ -91,17 +88,9 @@ describe('Users', async function () {
         expect(ethers.utils.formatEther(stake)).equal('32.0')
         expect(ethers.utils.formatEther(userStake)).equal('32.0')
 
-        const sweptExitedBalance = 32
-        const exitedPoolId = (await manager.getStakedPoolIds())[0]
-        const exitedPoolAddress = await manager.getPoolAddress(exitedPoolId)
-        const currentBalance = await ethers.provider.getBalance(exitedPoolAddress)
-        const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitedBalance.toString()))
-        await setBalance(exitedPoolAddress, nextBalance)
-
         await time.increase(time.duration.days(1))   
-    
         await runUpkeep({ upkeep, keeper })
-     
+        const sweptExitedBalance = 32
         const secondReportValues = {
             activeBalance: 32,
             sweptBalance: sweptExitedBalance,
@@ -116,13 +105,14 @@ describe('Users', async function () {
             values: secondReportValues,
             requestId
         })
-
+        const exitedPoolId = (await manager.getStakedPoolIds())[0]
+        const exitedPoolAddress = await manager.getPoolAddress(exitedPoolId)
+        const currentBalance = await ethers.provider.getBalance(exitedPoolAddress)
+        const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitedBalance.toString()))
+        await setBalance(exitedPoolAddress, nextBalance)
         await reportCompletedExitsHandler({ manager, views, signer: oracle, args: { count: 1 } })
-
         const finalizableCompletedExits = await manager.finalizableCompletedExits()
-
         expect(finalizableCompletedExits.toNumber()).equal(1)
-
         await runUpkeep({ upkeep, keeper })
 
         stake = await manager.getTotalStake()

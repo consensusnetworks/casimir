@@ -118,9 +118,7 @@ describe('Operators', async function () {
         await setBalance(withdrawnPoolAddress, nextBalance)
     
         await time.increase(time.duration.days(1))
-    
         await runUpkeep({ upkeep, keeper })
-        
         const nextValues = {
             activeBalance: 0,
             sweptBalance: sweptExitedBalance,
@@ -129,16 +127,13 @@ describe('Operators', async function () {
             completedExits: 1,
             compoundablePoolIds: [0, 0, 0, 0, 0]
         }
-        
         await fulfillReport({
             upkeep,
             keeper,
             values: nextValues,
             requestId
         })
-    
         await reportCompletedExitsHandler({ manager, views, signer: oracle, args: { count: 1 } })
-    
         await runUpkeep({ upkeep, keeper })
 
         const stake = await manager.getTotalStake()
