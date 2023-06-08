@@ -8,9 +8,6 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-// Dev-only imports
-import "hardhat/console.sol";
-
 /**
  * @title Pool contract that accepts deposits and stakes a validator
  */

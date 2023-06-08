@@ -7,9 +7,6 @@ import './libraries/Types.sol';
 import './vendor/interfaces/ISSVNetworkViews.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-// Dev-only imports
-import "hardhat/console.sol";
-
 /**
  * @title Registry contract that manages operators
  */

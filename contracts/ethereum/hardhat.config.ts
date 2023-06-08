@@ -4,7 +4,6 @@ import { HardhatUserConfig } from 'hardhat/config'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
 import 'solidity-docgen'
-import '@openzeppelin/hardhat-upgrades'
 import '@nomicfoundation/hardhat-toolbox'
 
 // Seed is provided

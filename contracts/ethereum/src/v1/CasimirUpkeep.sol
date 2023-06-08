@@ -7,9 +7,6 @@ import {Functions, FunctionsClient} from "@chainlink/contracts/src/v0.8/dev/func
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-// Dev-only imports
-import "hardhat/console.sol";
-
 /**
  * @title Upkeep contract that automates and handles reports
  */

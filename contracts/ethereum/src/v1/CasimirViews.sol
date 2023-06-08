@@ -5,9 +5,6 @@ import './interfaces/ICasimirViews.sol';
 import './interfaces/ICasimirManager.sol';
 import './interfaces/ICasimirRegistry.sol';
 
-// Dev-only imports
-import "hardhat/console.sol";
-
 /**
  * @title Views contract that provides read-only access to the state
  */

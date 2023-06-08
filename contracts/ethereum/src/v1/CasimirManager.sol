@@ -19,9 +19,6 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
-// Dev-only imports
-import "hardhat/console.sol";
-
 /**
  * @title Manager contract that accepts and distributes deposits
  */
