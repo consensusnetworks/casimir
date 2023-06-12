@@ -85,7 +85,7 @@ onMounted(() => {
     })
 })
 
-watch(props, (newVal, oldVal)=> {
+watch(props, ()=> {
     if(line_chart.data !== props.data){
         line_chart.data = props.data
 
@@ -95,7 +95,7 @@ watch(props, (newVal, oldVal)=> {
                 if(line_chart.data.datasets[i].backgroundColor){
                     let gradient = ctx? ctx.createLinearGradient(0, 0, 0, 400): 'black'
                     let rgb = hexToRGB(line_chart.data.datasets[i].backgroundColor)
-                    console.log(rgb)
+
                     gradient.addColorStop(0, `rgba(${rgb?.r},${rgb?.g},${rgb?.b}, 0.28)`) 
                     gradient.addColorStop(1, 'rgba(0, 0, 0,0)') 
 
