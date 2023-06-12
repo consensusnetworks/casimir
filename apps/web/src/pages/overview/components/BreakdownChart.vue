@@ -1,12 +1,109 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { onMounted } from 'vue'
+import { onMounted, ref, watch} from 'vue'
+
+const chardId = ref('cross_provider_chart')
+const selectedTimeframe = ref('1 month')
+
+const data = ref({} as any)
+
+const totalStaked = ref({
+  usd: '$150',
+  exchange: '0.00054 ETH'
+})
+
+const stakingRewards = ref({
+  usd: '$17.25',
+  exchange: '0.004 ETH'
+})
+
+const setMockData = () => {
+  let labels  = [] as string[]
+  let today = new Date()
+  let daysInCurrenMonth = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate()
+  let monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  let monthDayIndex: number
+  switch (selectedTimeframe.value) {
+    
+    case '1 month':
+    monthDayIndex = 0
+      labels = Array.from({length: daysInCurrenMonth - (daysInCurrenMonth - today.getDate()) }, () => {
+        monthDayIndex++
+        return today.getMonth() + '/' + monthDayIndex
+      })
+      break
+    case '6 months':
+      monthDayIndex = 6
+      labels = Array.from({length: 6}, () => {
+        monthDayIndex--
+        let month = new Date(today.getFullYear(), today.getMonth() - monthDayIndex, 1)
+        return monthNames[month.getMonth()]
+      })
+      break
+    case '12 months':
+      monthDayIndex = 12
+      labels = Array.from({length: 12}, () => {
+        monthDayIndex--
+        let month = new Date(today.getFullYear(), today.getMonth() - monthDayIndex, 1)
+        return monthNames[month.getMonth()] + ' ' + month.getFullYear().toLocaleString()[3]+ month.getFullYear().toLocaleString()[4]
+      })
+      break
+    case 'historical':
+      // Right now historical is just set to be the last 12 months due to me not knowing how it will look
+      monthDayIndex = 12
+      labels = Array.from({length: 12}, () => {
+        monthDayIndex--
+        let month = new Date(today.getFullYear(), today.getMonth() - monthDayIndex, 1)
+        return monthNames[month.getMonth()] + ' ' + month.getFullYear().toLocaleString()[3]+ month.getFullYear().toLocaleString()[4]
+      })
+      break
+    
+    default:
+      break
+  }
+
+  data.value = {
+    labels : labels,
+    datasets : [
+        {
+            data : Array.from({length: labels.length}, () => Math.floor(Math.random() * (250 - 200 + 1) + 200)),
+            label : 'Primary Account',
+            borderColor : '#2F80ED',
+            fill: true,
+            backgroundColor: '#2F80ED',
+            pointRadius: 0,
+            tension: 0.1
+        },
+        {
+            data : Array.from({length: labels.length}, () => Math.floor(Math.random() * (150 - 100 + 1) + 100)),
+            label : 'Secondary Account',
+            borderColor : '#A8C8F3',
+            fill: false,
+            // backgroundColor: null,
+            pointRadius: 0,
+            tension: 0.1
+        },
+        {
+            data : Array.from({length: labels.length}, () => Math.floor(Math.random() * (50 - 0 + 1) + 50)),
+            label : '3rd Account',
+            borderColor : '#53389E',
+            fill: false,
+            // backgroundColor: null,
+            pointRadius: 0,
+            tension: 0.1
+        }
+    ]
+  }
+}
 
 onMounted(() => {
-    // Needed for new Icon Library
-    // eslint-disable-next-line no-undef
-    feather.replace()
+  setMockData()
 })
+
+watch(selectedTimeframe, () => {
+  setMockData()
+})
+
 </script>
 
 <template>
@@ -18,10 +115,10 @@ onMounted(() => {
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="blance_amount">
-            $150
+            {{ totalStaked.usd }}
           </h5>
           <span class="blance_exchange">
-            0.00054 ETH
+            {{ totalStaked.exchange }}
           </span>
         </div>
       </div>
@@ -31,10 +128,10 @@ onMounted(() => {
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="blance_amount">
-            $17.25
+            {{ stakingRewards.usd }}
           </h5>
           <span class="blance_exchange">
-            0.004 ETH
+            {{ stakingRewards.exchange }}
           </span>
         </div>
       </div>
@@ -45,25 +142,48 @@ onMounted(() => {
           Ethereum Balance
         </h6>
         <div class="flex items-center gap-[22px]">
-          <div class="flex gap-[10px] items-center">
-            <div class="w-[9px] h-[9px] bg-[#2F80ED] rounded-[999px]" />
+          <div
+            v-for="item in data.datasets"
+            :key="item"
+            class="flex gap-[10px] items-center"
+          >
+            <div
+              class="w-[9px] h-[9px] rounded-[999px]"
+              :style="`background: ${item.borderColor};`"
+            />
             <span class="legent_label">
-              Primary Account
+              {{ item.label }} 
             </span>
           </div>
         </div>
       </div>
       <div class="border border-[#D0D5DD] rounded-[8px] overflow-hidden">
-        <button class="timeframe_button rounded-l-[]">
+        <button
+          class="timeframe_button"
+          :class="selectedTimeframe === '1 month'? 'bg-[#F3F3F3]' : ''"
+          @click="selectedTimeframe = '1 month'"
+        >
           1 month
         </button>
-        <button class="timeframe_button border-x border-x-[#D0D5DD] bg-[#F3F3F3]">
+        <button
+          class="timeframe_button border-x border-x-[#D0D5DD]"
+          :class="selectedTimeframe === '6 months'? 'bg-[#F3F3F3]' : ''"
+          @click="selectedTimeframe = '6 months'"
+        >
           6 months
         </button>
-        <button class="timeframe_button border-r border-r-[#D0D5DD]">
+        <button
+          class="timeframe_button border-r border-r-[#D0D5DD]"
+          :class="selectedTimeframe === '12 months'? 'bg-[#F3F3F3]' : ''"
+          @click="selectedTimeframe = '12 months'"
+        >
           12 months
         </button>
-        <button class="timeframe_button">
+        <button
+          class="timeframe_button"
+          :class="selectedTimeframe === 'historical'? 'bg-[#F3F3F3]' : ''"
+          @click="selectedTimeframe = 'historical'"
+        >
           historical
         </button>
       </div>
@@ -78,10 +198,12 @@ onMounted(() => {
         class="w-full h-[240px]"
       >
         <LineChartJS
-          :id="'cross_provider_chart'"
+          :id="chardId"
           :legend="false"
           :x-grid-lines="false"
           :y-grid-lines="true"
+          :data="data"
+          :gradient="true"
         />
       </div>
     </div>

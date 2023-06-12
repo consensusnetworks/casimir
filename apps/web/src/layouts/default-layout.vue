@@ -2,13 +2,12 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import Carousel from '@/components/Carousel.vue'
 import Slide from '@/components/Slide.vue'
-import LoadingRing from '@/components/LoadingRing.vue'
 
 import useWallet from '@/composables/wallet'
 
 const authFlowCardNumber = ref(1)
-const selectedAddress = ref(null as string | null)
 const selectedProivder = ref(null as null | string)
+const termsCheckbox = ref(true)
 
 const  {
   activeWallets,
@@ -19,7 +18,6 @@ const  {
 
 const show_setting_modal = ref(false)
 const openWalletConnect = ref(false)
-const openSelectAddressInput = ref(false)
 
 const handleOutsideClick = (event: any) => {
   const setting_modal = document.getElementById('setting_modal')
@@ -41,6 +39,7 @@ const handleOutsideClick = (event: any) => {
   if(connect_wallet_container && connect_wallet_card){
     if(openWalletConnect.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
       openWalletConnect.value = false
+      authFlowCardNumber.value = 1
     }
   }
 }
@@ -57,11 +56,6 @@ const convertString = (inputString: string) => {
   return start + middle + end
 }
 
-const toggleOpenSelectAddressInput = () => {
-  openSelectAddressInput.value = !openSelectAddressInput.value
-}
-
-
 onMounted(() => {
   window.addEventListener('click', handleOutsideClick)
 })
@@ -77,17 +71,7 @@ onUnmounted(() =>{
   <div class="min-w-[360px]">
     <div>
       <div
-        class="
-      px-[60px]
-      pt-[17px]
-      pb-[19px]
-      flex
-      flex-wrap
-      gap-[20px]
-      justify-between
-      items-center
-      bg-black
-      relative"
+        class=" px-[60px] pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
         :class="openWalletConnect? 'pr-[75px]' : ''"
       >
         <img
@@ -276,6 +260,14 @@ onUnmounted(() =>{
                 </h6>
               </div>
               <div v-else>
+                <div class="my-[20px] nav_items">
+                  <input
+                    v-model="termsCheckbox"
+                    type="checkbox"
+                    class=""
+                  > By connecting my address, I certify that I have read and accept the updated 
+                  <span class="text-primary"> Terms of Use </span> and <span class="text-primary">Privacy Notice</span>.
+                </div> 
                 <button
                   v-for="act in userAddresses"
                   :key="act.address"
