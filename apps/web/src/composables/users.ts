@@ -2,7 +2,7 @@ import { onMounted, ref } from 'vue'
 import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, Account, ExistingUserCheck } from '@casimir/types'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
-import useSSV from '@/composables/ssv'
+import useContracts from '@/composables/contracts'
 import useWallet from '@/composables/wallet'
 import * as Session from 'supertokens-web-js/recipe/session'
 

@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
-import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
-import { abi } from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
+import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/artifacts/types'
+import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
+import CasimirViewsJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
 import useEnvironment from './environment'
 import useUsers from './users'
 import useEthers from './ethers'
@@ -11,28 +12,19 @@ import { Account, Pool, ProviderString } from '@casimir/types'
 import { ReadyOrStakeString } from '@/interfaces/ReadyOrStakeString'
 
 /** Manager contract */
-let manager: CasimirManager
+const managerAddress = import.meta.env.PUBLIC_MANAGER_ADDRESS
+const manager: CasimirManager = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager
 
-export default function useSSV() {
+/** Views contract */
+const viewsAddress = import.meta.env.PUBLIC_VIEWS_ADDRESS
+const views: CasimirViews = new ethers.Contract(viewsAddress, CasimirViewsJson.abi) as CasimirViews
+
+export default function useContracts() {
     const { ethereumURL } = useEnvironment()
     const { ethersProviderList, getEthersBrowserSigner } = useEthers()
     const { getEthersLedgerSigner } = useLedger()
     const { getEthersTrezorSigner } = useTrezor()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
-
-    if (!manager) {
-        manager = (() => {
-            const address = import.meta.env.PUBLIC_MANAGER_ADDRESS
-            if (!address) console.log(
-                `
-                The PUBLIC_MANAGER_ADDRESS environment variable is empty.\n
-                If you are on mainnet or testnet, the contract does not exist yet.\n
-                If you are on the local network, check your terminal logs for a contract address or errors.
-                `
-            )
-            return new ethers.Contract(address, abi) as CasimirManager
-        })()
-    }
 
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         const signerCreators = {
@@ -72,7 +64,7 @@ export default function useSSV() {
         console.log('poolIds :>> ', poolIds)
 
         return await Promise.all(poolIds.map(async (poolId: number) => {
-            const { publicKey, operatorIds } = await manager.connect(provider).getPoolDetails(poolId)
+            const { publicKey, operatorIds } = await views.connect(provider).getPoolDetails(poolId)
             
             // TODO: Decide when/how to get rewards/userRewards
             let pool: Pool = {
