@@ -26,6 +26,14 @@ export function config() {
     if (!viewsAddress) throw new Error('No views address provided')
     const views = new ethers.Contract(viewsAddress, CasimirViewsJson.abi, provider) as CasimirViews & ethers.Contract
 
+    /** Get token addresses */
+    const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS
+    if (!linkTokenAddress) throw new Error('No link token address provided')
+    const ssvTokenAddress = process.env.SSV_TOKEN_ADDRESS
+    if (!ssvTokenAddress) throw new Error('No ssv token address provided')
+    const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS
+    if (!wethTokenAddress) throw new Error('No weth token address provided')
+
     /** Get DKG CLI path */
     const cliPath = process.env.CLI_PATH
     if (!cliPath) throw new Error('No cli path provided')
@@ -34,5 +42,15 @@ export function config() {
     const messengerUrl = process.env.MESSENGER_SRV_ADDR
     if (!messengerUrl) throw new Error('No messenger url provided')
 
-    return { provider, signer, manager, views, cliPath, messengerUrl }
+    return { 
+        provider,
+        signer,
+        manager,
+        views,
+        linkTokenAddress,
+        ssvTokenAddress,
+        wethTokenAddress,
+        cliPath,
+        messengerUrl
+    }
 }

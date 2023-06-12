@@ -98,8 +98,7 @@ void async function () {
 
         } else if (fork) {
 
-            process.env.ETHEREUM_RPC_URL = 'http://localhost:8545'
-
+            /** Chain fork nonces */
             const nonces = {
                 ethereum: {
                     mainnet: 0,
@@ -107,14 +106,21 @@ void async function () {
                 }
             }
 
-            /** Get manager addresses based on shared seed nonce */
+            const ethereumRpcUrl = 'http://localhost:8545'
+            process.env.ETHEREUM_RPC_URL = ethereumRpcUrl
+
             const seed = await getSecret('consensus-networks-bip39-seed')
             const wallet = getWallet(seed)
             const nonce = nonces[chain][fork]
-            const managerIndex = 1 // We deploy a mock oracle before the manager
-            const managerAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
-            
-            process.env.PUBLIC_MANAGER_ADDRESS = `${managerAddress}`
+            const managerIndex = 1 // We deploy a mock functions oracle before the manager
+            if (!process.env.PUBLIC_MANAGER_ADDRESS) {
+                const managerAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
+                process.env.PUBLIC_MANAGER_ADDRESS = `${managerAddress}`
+            }
+            if (!process.env.PUBLIC_VIEWS_ADDRESS) {
+                const viewsAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
+                process.env.PUBLIC_VIEWS_ADDRESS = `${viewsAddress}`
+            }
             process.env.BIP39_SEED = seed
 
             const chainFork = forks[chain][fork]
@@ -146,13 +152,15 @@ void async function () {
     /** Run app */
     $`npm run dev --workspace @casimir/${app}`
 
-    process.on('SIGINT', () => {
-        const messes = ['data', 'oracle']
-        if (clean) {
-            const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
-            console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)
-            runSync(`${cleaners}`)
-        }
-        process.exit()
-    })
+    if (mock) {
+        process.on('SIGINT', () => {
+            const messes = ['data', 'oracle']
+            if (clean) {
+                const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
+                console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)
+                runSync(`${cleaners}`)
+            }
+            process.exit()
+        })
+    }
 }()

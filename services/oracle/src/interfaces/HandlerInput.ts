@@ -10,6 +10,12 @@ export interface HandlerInput {
     manager: CasimirManager & ethers.Contract
     /** Views contract */
     views: CasimirViews & ethers.Contract
+    /** Link token address */
+    linkTokenAddress: string
+    /** SSV token address */
+    ssvTokenAddress: string
+    /** WETH token address */
+    wethTokenAddress: string
     /** DKG cli path */
     cliPath: string
     /** DKG messenger service URL */

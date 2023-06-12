@@ -8,7 +8,7 @@ import minimist from 'minimist'
  * Arguments:
  *      --clean: whether to clean build directory (override default true)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
- *      --mock: whether to use mock contracts (override default true)
+ *      --mock: whether to use mock services (override default true)
  * 
  * For more info see:
  *      - https://hardhat.org/hardhat-network/docs/overview
@@ -39,19 +39,19 @@ void async function () {
     process.env.MOCK_ORACLE = `${mock}`
     process.env.MINING_INTERVAL = '12'
 
+    const ethereumRpcUrl = 'http://localhost:8545'
+    process.env.ETHEREUM_RPC_URL = ethereumRpcUrl
+
     const seed = await getSecret('consensus-networks-bip39-seed')
+    const wallet = getWallet(seed)
+    const nonce = nonces[fork]
+    const managerIndex = 1 // We deploy a mock functions oracle before the manager
     if (!process.env.PUBLIC_MANAGER_ADDRESS) {
-        const wallet = getWallet(seed)
-        const nonce = nonces[fork]
-        const managerIndex = 1 // We deploy a mock oracle before the manager
         const managerAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
         process.env.PUBLIC_MANAGER_ADDRESS = `${managerAddress}`
     }
     if (!process.env.PUBLIC_VIEWS_ADDRESS) {
-        const wallet = getWallet(seed)
-        const nonce = nonces[fork]
-        const viewsIndex = 2 // We deploy a mock oracle before the manager
-        const viewsAddress = await getFutureContractAddress({ wallet, nonce, index: viewsIndex })
+        const viewsAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
         process.env.PUBLIC_VIEWS_ADDRESS = `${viewsAddress}`
     }
     process.env.BIP39_SEED = seed
@@ -69,8 +69,7 @@ void async function () {
     await new Promise(resolve => setTimeout(resolve, hardhatWaitTime))
     $`npm run dev --workspace @casimir/ethereum -- --network localhost`
 
-    if (!mock) {
-        process.env.ETHEREUM_RPC_URL = 'http://localhost:8545'
+    if (mock) {
         $`npm run dev --workspace @casimir/oracle`
         process.on('SIGINT', () => {
             const messes = ['oracle']

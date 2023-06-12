@@ -3,12 +3,15 @@ import { DKG } from './dkg'
 import { HandlerInput } from '../interfaces/HandlerInput'
 import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { getClusterDetails } from '@casimir/ssv'
+import { getPrice } from '@casimir/uniswap'
 
 export async function initiateDepositHandler(input: HandlerInput) {
     const { 
         provider,
         signer,
         manager,
+        ssvTokenAddress,
+        wethTokenAddress,
         cliPath,
         messengerUrl
     } = input
@@ -19,7 +22,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
       nonce
     })
 
-    const newOperatorIds = [5, 6, 7, 8] // Todo get new group here
+    const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
     const dkg = new DKG({ cliPath, messengerUrl })
 
     const validator = await dkg.createValidator({
@@ -46,6 +49,15 @@ export async function initiateDepositHandler(input: HandlerInput) {
 
     const { cluster, requiredBalancePerValidator } = clusterDetails
 
+    const processed = false
+    const price = await getPrice({ 
+        provider,
+        tokenIn: wethTokenAddress,
+        tokenOut: ssvTokenAddress,
+        uniswapFeeTier: 3000
+    })
+    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerValidator)) * Number(price)).toPrecision(9))
+
     const initiateDeposit = await (manager.connect(signer) as CasimirManager & ethers.Contract).initiateDeposit(
         depositDataRoot,
         publicKey,
@@ -54,8 +66,8 @@ export async function initiateDepositHandler(input: HandlerInput) {
         operatorIds,
         shares,
         cluster,
-        requiredBalancePerValidator,
-        false
+        feeAmount,
+        processed
     )
     await initiateDeposit.wait()
 }

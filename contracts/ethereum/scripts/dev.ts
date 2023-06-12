@@ -7,6 +7,7 @@ import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
 import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
 import { getEventsIterable } from '@casimir/oracle/src/providers/events'
+import { fetchRetry } from '@casimir/helpers'
 
 void async function () {
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
@@ -131,16 +132,22 @@ void async function () {
     })
 
     setTimeout(async () => {
+        if (process.env.MOCK_ORACLE) {
+            const ping = await fetchRetry('http://localhost:3000/ping')
+            const { message } = await ping.json()
+            if (message !== 'pong') throw new Error('DKG service is not running')
+        }
         const depositAmount = 32 * ((100 + await manager.feePercent()) / 100)
         const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await stake?.wait()
-        if (process.env.MOCK_ORACLE) await depositUpkeepBalanceHandler({ manager, signer: oracle })
+        // Todo handle in oracle and only run here if (!process.env.MOCK_ORACLE)
+        await depositUpkeepBalanceHandler({ manager, signer: oracle })
     }, 2500)
 
     /**
      * We are simulating the DAO oracle (@casimir/oracle) using the oracle helper
      */
-    if (process.env.MOCK_ORACLE) {
+    if (!process.env.MOCK_ORACLE) {
         const handlers = {
             DepositRequested: initiateDepositHandler,
             /**

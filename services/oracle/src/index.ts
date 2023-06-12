@@ -16,7 +16,17 @@ const handlers = {
     CompletedExitReportsRequested: reportCompletedExitsHandler
 }
 
-const { provider, signer, manager, views, cliPath, messengerUrl } = config()
+const { 
+    provider,
+    signer,
+    manager,
+    views,
+    linkTokenAddress,
+    ssvTokenAddress,
+    wethTokenAddress,
+    cliPath,
+    messengerUrl
+} = config()
 
 ;(async function () {
     const eventsIterable = getEventsIterable({ manager, events: Object.keys(handlers) })
@@ -30,6 +40,9 @@ const { provider, signer, manager, views, cliPath, messengerUrl } = config()
             signer,
             manager,
             views,
+            linkTokenAddress,
+            ssvTokenAddress,
+            wethTokenAddress,
             cliPath,
             messengerUrl,
             args 
