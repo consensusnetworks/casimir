@@ -171,7 +171,7 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
      * In production, we get the completed exit order from the Beacon API (sorting by withdrawn epoch)
      * We check all validators using:
      * const stakedPublicKeys = await views.getStakedPublicKeys(startIndex, endIndex)
-     * Here, we're just grabbing a random active pool for each forced exit
+     * Here, we're just grabbing the next exiting pool for each completed exit
      */
     const stakedPoolIds = await manager.getStakedPoolIds()
     let remaining = count
@@ -181,10 +181,20 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
         const poolDetails = await views.getPoolDetails(poolId)
         if (poolDetails.status === 2 || poolDetails.status === 3) {
             remaining--
+            
+            /**
+             * In production, we use the SSV performance data to determine blame
+             * We check all validators using:
+             * const stakedPublicKeys = await views.getStakedPublicKeys(startIndex, endIndex)
+             * Here, we're just hardcoding blame to the first operator if less than 32 ETH
+             */
             const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())
-            const blamePercents = [0, 0, 0, 0]
+            let blamePercents = [0, 0, 0, 0]
+            if (poolDetails.balance.lt(ethers.utils.parseEther('32'))) {
+                blamePercents = [100, 0, 0, 0]
+            }
             const clusterDetails = await getClusterDetails({ 
-                provider: provider,
+                provider,
                 ownerAddress: manager.address,
                 operatorIds
             })
