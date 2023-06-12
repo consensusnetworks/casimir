@@ -1,102 +1,120 @@
-import { ref } from 'vue'
 import { ethers } from 'ethers'
-import { BrowserProviders, Currency, EthersProvider, MessageInit, ProviderString, TransactionInit } from '@casimir/types'
+import { EthersProvider } from '@/interfaces/index'
+import { TransactionRequest } from '@casimir/types'
+import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
+import useEnvironment from '@/composables/environment'
 
-const { getMessage, login } = useAuth()
-
-const defaultProviders = {
-  MetaMask: undefined,
-  CoinbaseWallet: undefined,
-}
-
-const ethereum: any = window.ethereum
-const availableProviders = ref<BrowserProviders>(getBrowserProviders(ethereum))
+const { createSiweMessage, signInWithEthereum } = useAuth()
+const { ethereumURL } = useEnvironment()
 
 export default function useEthers() {
-  const ethersProviderList = ['MetaMask', 'CoinbaseWallet']
+  const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
 
-  async function requestEthersAccount(provider: EthersProvider) {
-    if (provider?.request) {
-      return await provider.request({
-        method: 'eth_requestAccounts',
+  async function addEthersNetwork (providerString: ProviderString, network: any) {
+    const provider = getBrowserProvider(providerString)
+    try {
+      await provider.request({
+        method: 'wallet_addEthereumChain',
+        params: [network]
       })
+    } catch(error: any) {
+      console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
     }
   }
 
-  // TODO: Identify the difference beteween the two functions below (requestEthersBalance and getEthersBalance)
-  async function requestEthersBalance(provider: EthersProvider, address: string) {
-    if (provider?.request) {
-      return await provider.request({
-        method: 'eth_getBalance',
-        params: [address, 'latest'],
-      })
+  /**
+   * Estimate gas fee using EIP 1559 methodology
+   * @returns string in ETH
+   */
+  async function estimateEIP1559GasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) : Promise<GasEstimate> {
+    try {
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+      const gasPrice = await provider.getFeeData() as ethers.providers.FeeData
+      const { maxFeePerGas, maxPriorityFeePerGas } = gasPrice
+      const maxFeePerGasInWei = maxFeePerGas ? ethers.utils.parseEther(maxFeePerGas.toString()) : '0'
+      const maxPriorityFeePerGasInWei = maxPriorityFeePerGas ? ethers.utils.parseEther(maxPriorityFeePerGas.toString()) : '0'
+      if (maxFeePerGasInWei === '0') throw new Error('maxFeePerGasInWei is zero')
+      if (maxPriorityFeePerGasInWei === '0') throw new Error('maxPriorityFeePerGasInWei is zero')
+
+      const { to, from, value } = unsignedTransaction
+      const tx = {
+        from,
+        to,
+        value,
+        type: 2, // TODO: 2 is for EIP 1559, 0 is for legacy; make this dynamic
+        maxFeePerGas: maxFeePerGasInWei,
+        maxPriorityFeePerGas: maxPriorityFeePerGasInWei
+      }
+      const gasEstimate = await provider.estimateGas(tx)
+      // TODO: What is the way to get gas estimate in human readable format?
+      // const gasEstimateInEth = ethers.utils.formatEther(gasEstimate)
+      const fee = maxPriorityFeePerGasInWei?.mul(gasEstimate).add(maxFeePerGasInWei)
+      const feeInWei = ethers.utils.formatEther(fee)
+      const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
+      return {
+        gasLimit: gasEstimate.toString(),
+        fee: feeInEth
+      }
+    } catch (err) {
+      console.error('There was an error in estimateGasFee :>> ', err)
+      return {
+        gasLimit: '0',
+        fee: '0'
+      }
     }
   }
 
-  async function getEthersBalance(providerString: ProviderString, address: string, ) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
-    if (provider) {
-      const balance = await requestEthersBalance(provider as EthersProvider, address)
-      console.log('balance :>> ', balance)
-      return ethers.utils.formatEther(balance)
-    }
-  }
-
-  function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
-    if (provider) {
-      return new ethers.providers.Web3Provider(provider as EthersProvider).getSigner()
+  /**
+   * Estimate gas fee using legacy methodology
+   * @returns string in ETH
+   * @deprecated
+   * @see estimateEIP1559GasFee
+  */
+  async function estimateLegacyGasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) : Promise<GasEstimate> {
+    try {
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+      const gasPrice = await provider.getGasPrice()
+      const gasEstimate = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+      const fee = gasPrice.mul(gasEstimate)
+      const feeInWei = ethers.utils.formatEther(fee)
+      const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
+      return {
+        gasLimit: gasEstimate.toString(),
+        fee: feeInEth
+      }
+    } catch (err) {
+      console.error('There was an error in estimateGasFee :>> ', err)
+      return {
+        gasLimit: '0',
+        fee: '0'
+      }
     }
   }
 
   async function getEthersAddress (providerString: ProviderString) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     if (provider) {
-      return (await requestEthersAccount(provider as EthersProvider))[0]
+      return (await requestEthersAccount(provider as EthersProvider))
     }
   }
 
-  async function getBalance (providerString: ProviderString) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
-    try {
-      if (provider?.request) {
-        const balance = await provider.request({
-          method: 'eth_getBalance',
-          params: [await getEthersAddress(providerString), 'latest'],
-        })
-        return ethers.utils.formatEther(balance)
-      }
-    } catch (err) {
-      console.log('Error getting balance: ', err)
+  async function getEthersAddressWithBalance (providerString: ProviderString) {
+    const provider = getBrowserProvider(providerString)
+    
+    if (provider) {
+      const address = (await requestEthersAccount(provider as EthersProvider))[0]
+      const balance = await getEthersBalance(address)
+      return [{ address, balance }]
+    } else {
+      throw new Error('Provider not yet connected to this dapp. Please connect and try again.')
     }
   }
 
-  async function sendEthersTransaction(
-    { to, value, providerString }: TransactionInit
-  ) {
-    const browserProvider =
-      availableProviders.value[providerString as keyof BrowserProviders]
-    const web3Provider: ethers.providers.Web3Provider =
-      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    const signer = web3Provider.getSigner()
-    const etherAmount = ethers.utils.parseEther(value)
-    const tx = {
-      to,
-      value: etherAmount
-    }
-    console.log('tx :>> ', tx)
-    return await signer.sendTransaction(tx)
-  }
-
-  async function signEthersMessage(messageInit: MessageInit): Promise<string> {
-    const { providerString, message } = messageInit
-    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
-    const web3Provider: ethers.providers.Web3Provider =
-      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    const signer = web3Provider.getSigner()
-    const signature = await signer.signMessage(message)
-    return signature
+  async function getEthersBalance(address: string, ) {
+    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    const balance = await provider.getBalance(address)
+    return ethers.utils.formatEther(balance)
   }
 
   async function getGasPriceAndLimit(
@@ -109,19 +127,44 @@ export default function useEthers() {
     return { gasPrice, gasLimit }
   }
 
-  async function loginWithEthers(provider: ProviderString, address: string, currency: Currency) {
-    const browserProvider = availableProviders.value[provider as keyof BrowserProviders]
+  function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
+    const provider = getBrowserProvider(providerString)
+    if (provider) {
+      return new ethers.providers.Web3Provider(provider as EthersProvider).getSigner()
+    }
+  }
+
+  async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
+    // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
+    const browserProvider = getBrowserProvider(providerString)
+    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const network = await web3Provider.getNetwork()
+    // console.log('network.chainId :>> ', network.chainId)
+    const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
+    return currency
+  }
+
+  async function getMaxETHAfterFees(rpcUrl: string, unsignedTx: ethers.utils.Deferrable<ethers.providers.TransactionRequest>, totalAmount: string) {
+    const { fee } = await estimateEIP1559GasFee(rpcUrl, unsignedTx)
+    const total = parseInt(totalAmount) - parseInt(fee)
+    const maxAfterFees = ethers.utils.formatEther(total).toString()
+    return maxAfterFees
+  }
+
+  async function loginWithEthers(loginCredentials: LoginCredentials) {
+    const { provider, address, currency } = loginCredentials
+    const browserProvider = getBrowserProvider(provider)
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     try {
-      const { message } = await (await getMessage(provider, address)).json()
+      const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signer = web3Provider.getSigner()
-      const signature = await signer.signMessage(message)
-      const ethersLoginResponse = await login({ 
+      const signedMessage = await signer.signMessage(message)
+      const ethersLoginResponse = await signInWithEthereum({ 
+        address,
+        currency,
+        message, 
         provider, 
-        address, 
-        message: message.toString(), 
-        signedMessage: signature,
-        currency
+        signedMessage
       })
       return await ethersLoginResponse.json()
     } catch (err) {
@@ -130,30 +173,47 @@ export default function useEthers() {
     }
   }
 
-  async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
-    // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
-    const browserProvider = availableProviders.value[providerString as keyof BrowserProviders]
-    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    const network = await web3Provider.getNetwork()
-    // console.log('network.chainId :>> ', network.chainId)
-    const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
-    return currency
-  }
-
-  async function addEthersNetwork (providerString: ProviderString, network: any) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
-    try {
-      await provider.request({
-        method: 'wallet_addEthereumChain',
-        params: [network]
+  async function requestEthersAccount(provider: EthersProvider) {
+    if (provider?.request) {
+      return await provider.request({
+        method: 'eth_requestAccounts',
       })
-    } catch(err: any){
-      console.log(`Error occurred while adding network ${network.chainName}, Message: ${err.message} Code: ${err.code}`)
     }
   }
 
+  async function sendEthersTransaction(
+    { from, to, value, providerString }: TransactionRequest
+  ) {
+    const signer = getEthersBrowserSigner(providerString) as ethers.Signer
+    const weiAmount = ethers.utils.parseEther(value)
+    const tx = {
+      from,
+      to,
+      value: weiAmount
+    }
+    const ethFees = await estimateEIP1559GasFee(ethereumURL, tx)
+    const { fee, gasLimit } = ethFees
+    const requiredBalance = parseInt(value) + parseInt(fee)
+    const balance = await getEthersBalance(from)
+    if (parseInt(balance) < requiredBalance) {
+      throw new Error('Insufficient balance')
+    }
+    console.log(`Sending ${value} ETH to ${to} with estimated ${fee} ETH in fees using ~${gasLimit.toString()} in gas.`)
+    return await signer.sendTransaction(tx)
+  }
+
+  async function signEthersMessage(messageRequest: MessageRequest): Promise<string> {
+    const { providerString, message } = messageRequest
+    const browserProvider = getBrowserProvider(providerString)
+    const web3Provider: ethers.providers.Web3Provider =
+      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const signer = web3Provider.getSigner()
+    const signature = await signer.signMessage(message)
+    return signature
+  }
+
   async function switchEthersNetwork (providerString: ProviderString, chainId: string) {
-    const provider = availableProviders.value[providerString as keyof BrowserProviders]
+    const provider = getBrowserProvider(providerString)
     const currentChainId = await provider.networkVersion
     if (chainId === '5') {
       chainId = '0x5'
@@ -180,31 +240,62 @@ export default function useEthers() {
   }
 
   return { 
-    ethersProviderList, 
-    getEthersBrowserSigner, 
+    addEthersNetwork,
+    estimateEIP1559GasFee,
+    estimateLegacyGasFee,
+    ethersProviderList,
+    getMaxETHAfterFees,
     getEthersAddress,
+    getEthersAddressWithBalance,
     getEthersBalance,
-    sendEthersTransaction,
-    signEthersMessage,
+    getEthersBrowserSigner,
+    getEthersBrowserProviderSelectedCurrency,
     getGasPriceAndLimit,
     loginWithEthers,
-    getEthersBrowserProviderSelectedCurrency,
-    addEthersNetwork,
-    switchEthersNetwork 
+    requestEthersAccount,
+    signEthersMessage,
+    sendEthersTransaction,
+    switchEthersNetwork
   }
 }
 
-function getBrowserProviders(ethereum: any) {
-  if (!ethereum) return defaultProviders
-  else if (!ethereum.providerMap) {
-    return {
-      MetaMask: ethereum.isMetaMask ? ethereum : undefined,
-      CoinbaseWallet: ethereum.isCoinbaseWallet ? ethereum : undefined,
+function getBrowserProvider(providerString: ProviderString) {
+  if (providerString === 'MetaMask' || providerString === 'CoinbaseWallet') {
+    const { ethereum } = window
+    if (!ethereum.providerMap && ethereum.isMetaMask) {
+      return ethereum
     }
+    return window.ethereum?.providerMap?.get(providerString) || undefined
+  } else if (providerString === 'BraveWallet') {
+    return getBraveWallet()
+  } else if (providerString === 'TrustWallet') {
+    return getTrustWallet()
+  } else if (providerString === 'OkxWallet') {
+    return getOkxWallet()
+  }
+}
+
+function getBraveWallet() {
+  const { ethereum } = window as any
+  if (ethereum?.isBraveWallet) {
+    return ethereum
   } else {
-    return {
-      MetaMask: ethereum.providerMap.get('MetaMask'),
-      CoinbaseWallet: ethereum.providerMap.get('CoinbaseWallet'),
+    window.open('https://brave.com/download/', '_blank')
+  }
+}
+
+function getOkxWallet() {
+  const { okxwallet } = window as any
+  const { okexchain } = window as any
+  return okxwallet || okexchain
+}
+
+function getTrustWallet() {
+  const { ethereum } = window as any
+  const providers = ethereum?.providers
+  if (providers) {
+    for (const provider of providers) {
+      if (provider.isTrustWallet) return provider
     }
   }
 }
@@ -259,6 +350,7 @@ const currenciesByChainId = {
     currency: 'IOTX',
   },
 }
+
 const iotexNetwork = {
   chainId: ethers.utils.hexlify(4690),
   chainName: 'IoTeX',

@@ -1,25 +1,39 @@
 import useEnvironment from '@/composables/environment'
 import { LoginCredentials } from '@casimir/types'
-import { ProviderString } from '@casimir/types'
 
-const { usersBaseURL } = useEnvironment()
+const { domain, origin, usersBaseURL } = useEnvironment()
 
 export default function useAuth() {
+
     /**
-     * Gets a message from the server to sign
+     * Creates the message from the server to sign, which includes getting the nonce from auth server
      * 
-     * @param {ProviderString} provider - The provider the user is using to sign in
-     * @param {string} address - The user's address
+     * @param {ProviderString} address - The address the user is using to sign in
+     * @param {string} statement - The statement the user is signing
      * @returns {Promise<Response>} - The response from the message request
      */ 
-    async function getMessage(provider: ProviderString, address: string) {
+    async function createSiweMessage(address: string, statement: string) {
         const requestOptions = {
-            method: 'GET',
+            method: 'POST',
             headers: { 
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({
+                address
+            })
         }
-        return await fetch(`${usersBaseURL}/auth/message/${provider}/${address}`, requestOptions)
+        const res = await fetch(`${usersBaseURL}/auth/nonce`, requestOptions)
+        const { nonce } = (await res.json())
+        const message = {
+            domain,
+            address,
+            statement,
+            uri: origin,
+            version: '1',
+            chainId: 5,
+            nonce
+        }
+        return prepareMessage(message)
     }
 
     /**
@@ -29,7 +43,7 @@ export default function useAuth() {
      * @param {LoginCredentials} loginCredentials - The user's address, provider, currency, message, and signed message 
      * @returns {Promise<Response>} - The response from the login request
      */
-    async function login(loginCredentials: LoginCredentials) {
+    async function signInWithEthereum(loginCredentials: LoginCredentials) {
         const requestOptions = {
             method: 'POST',
             headers: { 
@@ -41,7 +55,24 @@ export default function useAuth() {
     }
 
     return {
-        login,
-        getMessage
+        createSiweMessage,
+        signInWithEthereum
     }
+}
+
+function prepareMessage(obj: any) {
+    const {
+      domain,
+      address,
+      statement,
+      uri,
+      version,
+      chainId,
+      nonce,
+    } = obj
+  
+    const issuedAt = new Date().toISOString()
+    const message = `${domain} wants you to sign in with your Ethereum account:\n${address}\n\n${statement}\n\nURI: ${uri}\nVersion: ${version}\nChain ID: ${chainId}\nNonce: ${nonce}\nIssued At: ${issuedAt}`
+  
+    return message
 }

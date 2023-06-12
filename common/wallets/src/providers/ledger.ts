@@ -4,7 +4,7 @@ import Eth, { ledgerService } from '@ledgerhq/hw-app-eth'
 import Transport from '@ledgerhq/hw-transport'
 import { TransportSpeculosHTTP } from '@casimir/speculos'
 import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
-import { TransactionInit } from '../interfaces/TransactionInit'
+import { CryptoAddress, TransactionRequest } from '@casimir/types'
 
 const transports = {
     'usb': async function createUSBTransport(): Promise<Transport> {
@@ -101,7 +101,7 @@ export class BitcoinLedgerSigner {
     // async signTransaction(path: string, transaction: any) {
     // }
 
-    async sendTransaction({ from, to, value }: TransactionInit): Promise<string> {
+    async sendTransaction({ from, to, value }: TransactionRequest): Promise<string> {
         // Build the transaction object using splitTransaction to then pass into getTrustedInput
         // Create a transaction hex string
         const transactionHex = 'f85f49b51366f7150d2adea6544bc256743707a38e2bdfbf839349ba1ff2875c'
@@ -132,7 +132,7 @@ export class EthersLedgerSigner extends ethers.Signer {
     constructor(options: LedgerSignerOptions) {
         super()
 
-        if (options.type) this.type
+        if (options.type) this.type = options.type
         if (options.path) this.path = options.path        
         this.baseURL = options.baseURL
 
@@ -180,9 +180,25 @@ export class EthersLedgerSigner extends ethers.Signer {
         })
     }
 
+    async getAddresses(): Promise<Array<CryptoAddress> | null> {
+        const ledgerAddresses = []
+        
+        for (let i = 0; i < 5; i++) {
+            // m/coin_type'/account_index'/external_chain_index'/address_index/change_index
+            const path = `m/44'/60'/${i}'/0/0`
+            const { address } = await this.retry((eth) => eth.getAddress(path))
+            // TODO: Replace with our own provider depending on environment
+            const provider = new ethers.providers.JsonRpcProvider('https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7')
+            const balance = await provider.getBalance(address)
+            const ethBalance = ethers.utils.formatEther(balance)
+            if (parseFloat(ethBalance) > 0) ledgerAddresses.push({ address, balance: ethBalance, pathIndex: i.toString() })
+        }
+        return ledgerAddresses.length ? ledgerAddresses : null
+    }
+
     async getAddress(): Promise<string> {
         const { address } = await this.retry((eth) => eth.getAddress(this.path))
-        return ethers.utils.getAddress(address)
+        return address
     }
 
     async signMessage(message: ethers.utils.Bytes | string): Promise<string> {
@@ -190,10 +206,25 @@ export class EthersLedgerSigner extends ethers.Signer {
             message = ethers.utils.toUtf8Bytes(message)
         }
         const messageHex = ethers.utils.hexlify(message).substring(2)
-
-        const signature = await this.retry((eth) => eth.signPersonalMessage(this.path, messageHex))
+        const testPath = 'm/44\'/60\'/1\'/0/0'
+        const signature = await this.retry((eth) => eth.signPersonalMessage(testPath, messageHex))
         signature.r = '0x' + signature.r
         signature.s = '0x' + signature.s
+        return ethers.utils.joinSignature(signature)
+    }
+    
+    async signMessageWithIndex(message: ethers.utils.Bytes | string, index: string): Promise<string> {
+        if (typeof (message) === 'string') {
+            console.log('message :>> ', message)
+            message = ethers.utils.toUtf8Bytes(message)
+        }
+        const messageHex = ethers.utils.hexlify(message).substring(2)
+        const path = `m/44'/60'/${index}'/0/0`
+        const signature = await this.retry((eth) => eth.signPersonalMessage(path, messageHex))
+        console.log('signature :>> ', signature)
+        signature.r = '0x' + signature.r
+        signature.s = '0x' + signature.s
+        console.log('signature :>> ', signature)
         return ethers.utils.joinSignature(signature)
     }
 

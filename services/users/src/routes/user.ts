@@ -4,10 +4,10 @@ import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
 
 const router = express.Router()
-const { addAccount, getUser, removeAccount } = useDB()
+const { addAccount, getUser, updateUserAddress, removeAccount } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
-    const address = req.session?.getUserId() as string
+    const address = req.session?.getUserId().toLowerCase() as string
     const user = await getUser(address)
     const message = user ? 'User found' : 'User not found'
     const error = user ? false : true
@@ -25,7 +25,7 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
         console.log('ADDING ACCOUNT!')
         const { account } = req.body
         const { ownerAddress } = account
-        const userSessionsAddress = req.session?.getUserId()
+        const userSessionsAddress = req.session?.getUserId().toLowerCase()
         const validatedAddress = validateAddress(userSessionsAddress, ownerAddress)
         if (!validatedAddress) {    
             res.setHeader('Content-Type', 'application/json')
@@ -103,16 +103,13 @@ router.post('/remove-sub-account', verifySession(), async (req: SessionRequest, 
 })
 
 // TODO: Think through handling changing primary address with SuperTokens Sessions.
-router.put('/update-primary-account', async (req: express.Request, res: express.Response) => {
-    let { primaryAddress, updatedProvider, updatedAddress } = req.body
-    primaryAddress = primaryAddress.toLowerCase()
-    updatedProvider = updatedProvider.toLowerCase()
+router.put('/update-primary-account', verifySession(), async (req: SessionRequest, res: express.Response) => {
+    const { userId } = req.body
+    let { updatedAddress } = req.body
     updatedAddress = updatedAddress.toLowerCase()
 
-    // TODO: Invoke updatePrimaryAccount function from here
-
-    // eslint-disable-next-line no-constant-condition
-    if (false) {
+    const user = await updateUserAddress(userId, updatedAddress)
+    if (!user) {
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
@@ -120,14 +117,13 @@ router.put('/update-primary-account', async (req: express.Request, res: express.
             error: true,
             data: null 
         })
-        return
     } else {
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
             message: 'Primary account updated',
             error: false,
-            data: {}
+            data: user
         })
     }
 })

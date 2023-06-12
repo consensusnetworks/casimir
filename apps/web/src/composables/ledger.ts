@@ -1,11 +1,12 @@
 import { BitcoinLedgerSigner, EthersLedgerSigner } from '@casimir/wallets'
 import { ethers } from 'ethers'
-import { Currency, MessageInit, ProviderString, TransactionInit } from '@casimir/types'
+import { MessageRequest, TransactionRequest } from '@casimir/types'
+import { CryptoAddress, LoginCredentials } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useAuth from '@/composables/auth'
 
-const { getMessage, login } = useAuth()
+const { createSiweMessage, signInWithEthereum } = useAuth()
 
 export default function useLedger() {
   const { ethereumURL, ledgerType, speculosURL } = useEnvironment()
@@ -28,27 +29,61 @@ export default function useLedger() {
     return new EthersLedgerSigner(options)
   }
 
+  const getLedgerAddress = {
+    'BTC': getBitcoinLedgerAddress,
+    'ETH': getEthersLedgerAddresses,
+    'IOTX': () => {
+      return new Promise((resolve, reject) => {
+        console.log('IOTX is not yet supported on Ledger')
+        resolve('IOTX is not yet supported on Ledger')
+      }) as Promise<string>
+    },
+    'SOL': () => {
+      return new Promise((resolve, reject) => {
+        console.log('SOL is not yet supported on Ledger')
+        resolve('SOL is not yet supported on Ledger')
+      }) as Promise<string>
+    },
+    '': () => {
+      return new Promise((resolve, reject) => {
+        console.log('No currency selected')
+        resolve('No currency selected')
+      }) as Promise<string>
+    },
+    'USD': () => {
+      return new Promise((resolve, reject) => {
+        console.log('USD is not yet supported on Ledger')
+        resolve('USD is not yet supported on Ledger')
+      }) as Promise<string>
+    }
+  }
+
   async function getBitcoinLedgerAddress() {
     const signer = getBitcoinLedgerSigner()
     return await signer.getAddress()
   }
 
-  async function getEthersLedgerAddress() {
+  async function getEthersLedgerAddresses(): Promise<Array<CryptoAddress>> {
     const signer = getEthersLedgerSigner()
-    return await signer.getAddress()
+    return await signer.getAddresses() as Array<CryptoAddress>
   }
 
-  async function loginWithLedger(provider: ProviderString, address: string, currency: Currency) {
+  async function loginWithLedger(loginCredentials: LoginCredentials, pathIndex: string) {
+    // ETH Mainnet: 0x8222ef172a2117d1c4739e35234e097630d94376
+    // ETH Goerli 1: 0x8222Ef172A2117D1C4739E35234E097630D94376
+    // ETH Goerli 2: 0x8ed535c94DC22218D74A77593228cbb1B7FF6D13
+    // Derivation path m/44\'/60\'/0\'/0/1: 0x1a16ae0F5cf84CaE346a1D586d00366bBA69bccc
+    const { provider, address, currency } = loginCredentials
     try {
-      const { message } = await (await getMessage(provider, address)).json()
+      const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signer = getEthersLedgerSigner()
-      const signature = await signer.signMessage(message)
-      const loginResponse = await login({ 
-        provider, 
+      const signedMessage = await signer.signMessageWithIndex(message, pathIndex)
+      const loginResponse = await signInWithEthereum({ 
         address, 
-        message: message.toString(), 
-        signedMessage: signature,
-        currency
+        currency,
+        message, 
+        provider, 
+        signedMessage
       })
       return await loginResponse.json()
     } catch (err) {
@@ -57,7 +92,7 @@ export default function useLedger() {
     }
   }
 
-  async function sendLedgerTransaction({ from, to, value, currency }: TransactionInit) {
+  async function sendLedgerTransaction({ from, to, value, currency }: TransactionRequest) {
     if (currency === 'ETH') {
       const signer = getEthersLedgerSigner()
       const provider = signer.provider as ethers.providers.Provider
@@ -80,13 +115,13 @@ export default function useLedger() {
     }
   }
 
-  async function signLedgerMessage(messageInit: MessageInit): Promise<string> {
-    if (messageInit.currency === 'ETH') {
-      const { message } = messageInit
+  async function signLedgerMessage(messageRequest: MessageRequest): Promise<string> {
+    if (messageRequest.currency === 'ETH') {
+      const { message } = messageRequest
       const signer = getEthersLedgerSigner()
       return await signer.signMessage(message)
-    } else if ( messageInit.currency === 'BTC') {
-      const { message } = messageInit
+    } else if ( messageRequest.currency === 'BTC') {
+      const { message } = messageRequest
       const signer = getBitcoinLedgerSigner()
       return await signer.signMessage(message)
     } else {
@@ -95,10 +130,9 @@ export default function useLedger() {
   }
 
   return {
-    getBitcoinLedgerAddress,
     getBitcoinLedgerSigner,
-    getEthersLedgerAddress,
     getEthersLedgerSigner,
+    getLedgerAddress,
     loginWithLedger,
     signLedgerMessage,
     sendLedgerTransaction,

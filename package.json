@@ -81,6 +81,7 @@
     }
   },
   "dependencies": {
-    "chart.js": "^4.2.1"
+    "chart.js": "^4.2.1",
+    "feather-icons": "^4.29.0"
   }
 }

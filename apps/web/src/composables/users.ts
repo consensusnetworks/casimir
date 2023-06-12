@@ -1,5 +1,5 @@
-import { ref } from 'vue'
-import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts } from '@casimir/types'
+import { onMounted, ref } from 'vue'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, Account, ExistingUserCheck } from '@casimir/types'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useSSV from '@/composables/ssv'
@@ -11,72 +11,6 @@ const { usersBaseURL, ethereumURL } = useEnvironment()
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const session = ref<boolean>(false)
 const user = ref<UserWithAccounts>()
-// const user = ref(
-//     {
-//         address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
-//         accounts: [
-//             {
-//                 address: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'.toLowerCase(),
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'MetaMask'
-//             },
-//             {
-//                 address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'CoinbaseWallet'
-//             },
-//             {
-//                 address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'CoinbaseWallet'
-//             },
-//             {
-//                 address: '0x1dc336d94890b10e1a47b6e34cdee1009ee7b942'.toLowerCase(),
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'CoinbaseWallet'
-//             },
-//             {
-//                 address: '0x8222Ef172A2117D1C4739E35234E097630D94376'.toLowerCase(),
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'Ledger'
-//             },
-//             {
-//                 address: '0x8222Ef172A2117D1C4739E35234E097630D94377'.toLowerCase(), // Fake address
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'Trezor'
-//             },
-//             {
-//                 address: '0x8222Ef172A2117D1C4739E35234E097630D94378'.toLowerCase(), // Fake address
-//                 currency: 'ETH',
-//                 balance: '1000000000000000000',
-//                 balanceSnapshots: [{ date: '2023-02-06', balance: '1000000000000000000' }, { date: '2023-02-05', balance: '100000000000000000' }],
-//                 roi: 0.25,
-//                 walletProvider: 'WalletConnect'
-//             },
-//         ],
-//         nonce: '1234567890',
-//         pools: []
-//     }
-// )
-const { manager, getPools } = useSSV()
 
 export default function useUsers () {
 
@@ -94,6 +28,36 @@ export default function useUsers () {
         return { error: false, message: `Account added to user: ${userAccount}`, data: userAccount }
     }
 
+    async function checkIfPrimaryUserExists(provider: ProviderString, address: string): Promise<ExistingUserCheck> {
+        const requestOptions = {
+            method: 'GET',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+        }
+        const response = await fetch(`${usersBaseURL}/auth/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
+        const { sameAddress, sameProvider } = await response.json()
+        return { sameAddress, sameProvider }
+    }
+
+    async function checkIfSecondaryAddress(address: string) : Promise<Account[]> {
+        try {
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+            const response = await fetch(`${usersBaseURL}/auth/check-secondary-address/${address}`, requestOptions)
+            const json = await response.json()
+            const { users } = json
+            return users
+        } catch (error) {
+            console.log('Error in checkIfSecondaryAddress in wallet.ts :>> ', error)
+            return [] as Account[]
+        }
+    }
+
     /**
      * Checks if session exists and, if so: 
      * Gets the user's account via the API
@@ -105,7 +69,6 @@ export default function useUsers () {
             if (session.value) {
                 const user = await getUser()
                 if (user) {
-                    console.log('user in checkUserSessionExists :>> ', user)
                     setUser(user)
                     return true
                 } else {
@@ -170,42 +133,24 @@ export default function useUsers () {
         user.value = newUser
     }
 
-    // Todo filter for events for user addresses
-    function subscribeToUserEvents() {
-        const { getUserBalance } = useWallet()
-        const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-    
-        const validatorInitFilter = {
-          address: manager.address,
-          topics: [
-            // ethers.utils.id('ManagerDistribution(address,uint256,uint256,uint256)'), // TODO: Make sure to query for past events on page load (Fetch and then subscribe),
-            ethers.utils.id('DepositInitiated(uint32)'),
-          ]
-        }
-        manager.connect(provider).on(validatorInitFilter, async () => {
-          console.log('ValidatorInit event... updating pools')
-          user.value.balance = await getUserBalance()
-          user.value.pools = await getPools(user.value.id)
-          user.value.stake = user.value.pools?.reduce((a, c) => a + parseFloat(c.userStake), 0).toString()
-          user.value.rewards = user.value.pools?.reduce((a, c) => a + parseFloat(c.userRewards), 0).toString()
-        })
-    }
-
-    async function updatePrimaryAddress(primaryAddress: string, updatedProvider: ProviderString, updatedAddress: string) {
+    async function updatePrimaryAddress(updatedAddress: string) {
+        const userId = user?.value?.id
         const requestOptions = {
             method: 'PUT',
             headers: { 
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ primaryAddress, updatedProvider, updatedAddress })
+            body: JSON.stringify({ userId, updatedAddress })
         }
-        return await fetch(`${usersBaseURL}/users/update-primary-account`, requestOptions)
+        return await fetch(`${usersBaseURL}/user/update-primary-account`, requestOptions)
     }
 
     return {
         session,
         user,
         addAccount,
+        checkIfSecondaryAddress,
+        checkIfPrimaryUserExists,
         checkUserSessionExists,
         getMessage,
         getUser,

@@ -5,7 +5,8 @@ import {
   SystemProgram,
   PublicKey
 } from '@solana/web3.js'
-import { BrowserProviders, MessageInit, ProviderString, TransactionInit } from '@casimir/types'
+import { BrowserProviders } from '@/interfaces/index'
+import { MessageRequest, ProviderString, TransactionRequest } from '@casimir/types'
 
 export default function useSolana() {
   const solanaProviderList = ['Phantom']
@@ -26,7 +27,7 @@ export default function useSolana() {
     return address
   }
 
-  async function sendSolanaTransaction({ from, to, value, providerString }: TransactionInit) {
+  async function sendSolanaTransaction({ from, to, value, providerString }: TransactionRequest) {
     const network = 'https://api.devnet.solana.com'
     const connection = new Connection(network)
     const { blockhash } = await connection.getLatestBlockhash('finalized')
@@ -48,9 +49,9 @@ export default function useSolana() {
     return signatureStatus
   }
 
-  async function signSolanaMessage(messageInit: MessageInit): Promise<string> {    
-    const provider = await availableProviders.value[messageInit.providerString as keyof BrowserProviders]
-    const encodedMessage = new TextEncoder().encode(messageInit.message)
+  async function signSolanaMessage(messageRequest: MessageRequest): Promise<string> {    
+    const provider = await availableProviders.value[messageRequest.providerString as keyof BrowserProviders]
+    const encodedMessage = new TextEncoder().encode(messageRequest.message)
     const signedMessage = await provider.signMessage(encodedMessage, 'utf8')
     return signedMessage
   }
