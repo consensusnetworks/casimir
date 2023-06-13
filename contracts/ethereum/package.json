@@ -7,8 +7,7 @@
         "docgen": "npx hardhat docgen",
         "test": "npx esno scripts/test.ts --clean \"$npm_config_clean\"",
         "clean": "npx hardhat clean",
-        "build": "npx hardhat compile --show-stack-traces",
-        "prepare": "npm run build"
+        "build": "npx hardhat compile --show-stack-traces"
     },
     "dependencies": {
         "@chainlink/contracts": "^0.6.1",
