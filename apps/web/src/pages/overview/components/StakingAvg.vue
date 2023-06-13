@@ -1,11 +1,19 @@
 <script lang="ts" setup>
-import { onMounted } from 'vue'
+import { ref } from 'vue'
 
-onMounted(() => {
-    // Needed for new Icon Library
-    // eslint-disable-next-line no-undef
-    feather.replace()
-})
+const avgAPY = ref('5.2%')
+const openTimeFrameOptions = ref(false)
+const selectedTimeframe = ref('Last Week')
+
+const timeframeOptions = ref(
+  [
+    'Last Week',
+    '1 Month',
+    '6 Months',
+    '12 Months',
+    'Historical'
+  ]
+)
 </script>
 
 <template>
@@ -14,19 +22,39 @@ onMounted(() => {
       <h6 class="card_title">
         Avg. Staking Reward
       </h6>
-      <div class="flex justify-between items-center gap-[8px] px-[10px] py-[8px] card_input">
-        Last Week 
+      <div
+        class="whitespace-nowrap relative w-[120px]"
+      >
+        <button
+          class="flex justify-between items-center gap-[8px] px-[10px] py-[8px] card_input w-[120px] outline-none"
+          @click="openTimeFrameOptions = !openTimeFrameOptions"
+        >
+          {{ selectedTimeframe }}
 
-        <i
-          data-feather="chevron-down" 
-          class="w-[20px] h-min text-[#667085]"
-        />
+          <i
+            data-feather="chevron-down" 
+            class="w-[20px] h-min text-[#667085]"
+          />
+        </button>
+        <div
+          v-show="openTimeFrameOptions"
+          class="absolute w-full top-[110%] left-0 rounded-[8px] px-[10px] py-[14px] bg-white border h-max flex flex-wrap"
+        >
+          <button
+            v-for="item in timeframeOptions"
+            :key="item"
+            class="w-full border text-center rounded-[8px] py-[4px] text-[14px] my-[5px] hover:bg-grey_1"
+            @click="selectedTimeframe = item, openTimeFrameOptions = false"
+          >
+            {{ item }}
+          </button>
+        </div>
       </div>
     </div>
 
     <div class="card_metric flex items-end gap-[9px]">
       <h6>
-        5.2%
+        {{ avgAPY }}
       </h6>
       <span class="mb-[3px]">
         APY

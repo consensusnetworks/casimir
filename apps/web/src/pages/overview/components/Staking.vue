@@ -76,7 +76,6 @@ const handleOutsideClick = (event: any) => {
       if(!termsOfServiceCard.contains(event.target)){
         if(!termsOfServiceButton.contains(event.target)){
           openTermsOfService.value = false
-          console.log('reached', openTermsOfService.value)
         }
       }
     }
