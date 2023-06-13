@@ -15,7 +15,7 @@
     "deploy:cdk": "npx esno -r dotenv/config scripts/cdk/deploy.ts",
     "dev": "npx esno -r dotenv/config scripts/local/dev.ts --app \"$npm_config_app\" --clean \"$npm_config_clean\" --emulate \"$npm_config_emulate\" --fork \"$npm_config_fork\" --mock \"$npm_config_mock\" --network \"$npm_config_network\"",
     "dev:crawler": "scripts/crawler/dev -c \"$npm_config_chains\" -f \"$npm_config_fork\" -n \"$npm_config_network\" -u \"$npm_config_upload\"",
-    "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --clean \"$npm_config_clean\" --fork \"$npm_config_fork\"",
+    "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts --clean \"$npm_config_clean\" --fork \"$npm_config_fork\" --mock \"$npm_config_mock\"",
     "dev:landing": "npm run dev --workspace @casimir/landing",
     "dev:ssv": "scripts/ssv/dev -n \"$npm_config_nodes\"",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
