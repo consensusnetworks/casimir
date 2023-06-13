@@ -27,11 +27,15 @@ Get started contributing to Casimir's codebase.
 
 Make sure your development environment has these prerequisites.
 
-1. [Node.js (v18.x)](https://nodejs.org/en/download/) – we use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
+1. [AWS CLI (v2.x)](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
 
 2. [Docker (v4.x)](https://docs.docker.com/engine/install/) - make sure your Docker runs on startup.
 
-3. [AWS CLI (v2.x)](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
+3. [Git (v2.x)](https://git-scm.com/downloads) – we use [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to manage shared code.
+
+4. [Go (v1.18.x)](https://golang.org/doc/install) – we use [Go modules](https://blog.golang.org/using-go-modules) to manage Go dependencies.
+
+5. [Node.js (v18.x)](https://nodejs.org/en/download/) – we use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
 
 > 🚩 You also need to make sure to have at least one SSH authentication key on your GitHub account (for the git cloning of submodules in various scripts). See [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
@@ -46,7 +50,7 @@ git checkout -b feature/stake-button develop
 npm install
 ```
 
-> 🚩 'All workspace dependencies' includes `package.json` dependencies listed in the project root and any workspace subdirectories. See [Scripts and dependencies](#-scripts-and-dependencies).
+> 🚩 'All workspace dependencies' includes `package.json` dependencies listed in the project root and any workspace subdirectories. See [Scripts and dependencies](#scripts-and-dependencies).
 
 ### Serve
 
