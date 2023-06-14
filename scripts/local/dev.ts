@@ -1,5 +1,5 @@
 import { $, argv, chalk, echo } from 'zx'
-import { loadCredentials, getSecret, run } from '@casimir/helpers'
+import { loadCredentials, getSecret, getFutureContractAddress, getWallet, run, runSync } from '@casimir/helpers'
 
 /**
  * Run a Casimir dev server.
@@ -29,13 +29,6 @@ void async function () {
             mainnet: 'mainnet',
             testnet: 'goerli'
         }
-    }
-
-    /** Casimir addresses */
-    const addresses = {
-        mainnet: '',
-        testnet: '0xaaf5751d370d2fD5F1D5642C2f88bbFa67a29301',
-        local: '0x07E05700CB4E946BA50244e27f01805354cD8eF0'
     }
 
     /** Load AWS credentials for configuration */
@@ -68,14 +61,8 @@ void async function () {
     const { chains, services, tables } = apps[app as keyof typeof apps]
 
     if (mock) {
-
-        if (clean) {
-            /** Clean postgres database */
-            await $`npm run clean --workspace @casimir/data`
-        }
-
         /** Mock postgres database */
-        $`npm run watch --tables=${tables.join(',')} --workspace @casimir/data`
+        run(`npm run watch --tables=${tables.join(',')} --workspace @casimir/data`)
 
         /** Mock services */
         let port = 4000
@@ -86,7 +73,7 @@ void async function () {
 
             try {
                 if (await run(`lsof -ti:${port}`)) {
-                    await run(`npx --yes kill-port ${port}`)
+                    await run(`kill -9 $(lsof -ti:${port})`)
                 }
             } catch {
                 console.log(`Port ${port} is available.`)
@@ -97,25 +84,44 @@ void async function () {
     }
 
     for (const chain of chains) {
+
         if (network) {
-
-            /** Use ${network} manager address */
-            process.env.PUBLIC_CASIMIR_MANAGER = addresses[network]
-
             const key = await getSecret(`consensus-networks-${chain}-${network}`)
             const currency = chain.slice(0, 3)
             const url = `https://${currency}-${network}.g.alchemy.com/v2/${key}`
             process.env.ETHEREUM_RPC_URL = url
             echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(network) + chalk.bgBlackBright(` ${chain} network at ${url}`))
+
+            // Todo - add deployed addresses
+            // process.env.BIP39_SEED = seed
+            // process.env.PUBLIC_MANAGER_ADDRESS = `${managerAddress}`
+
         } else if (fork) {
 
-            if (mock) {
-                /** Use local manager address */
-                process.env.PUBLIC_CASIMIR_MANAGER = addresses['local']
-            } else {
-                /** Use ${fork} manager address */
-                process.env.PUBLIC_CASIMIR_MANAGER = addresses[fork]
+            /** Chain fork nonces */
+            const nonces = {
+                ethereum: {
+                    mainnet: 0,
+                    testnet: 12
+                }
             }
+
+            const ethereumRpcUrl = 'http://localhost:8545'
+            process.env.ETHEREUM_RPC_URL = ethereumRpcUrl
+
+            const seed = await getSecret('consensus-networks-bip39-seed')
+            const wallet = getWallet(seed)
+            const nonce = nonces[chain][fork]
+            const managerIndex = 1 // We deploy a mock functions oracle before the manager
+            if (!process.env.PUBLIC_MANAGER_ADDRESS) {
+                const managerAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
+                process.env.PUBLIC_MANAGER_ADDRESS = `${managerAddress}`
+            }
+            if (!process.env.PUBLIC_VIEWS_ADDRESS) {
+                const viewsAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
+                process.env.PUBLIC_VIEWS_ADDRESS = `${viewsAddress}`
+            }
+            process.env.BIP39_SEED = seed
 
             const chainFork = forks[chain][fork]
             $`npm run dev:${chain} --clean=${clean} --mock=${mock} --fork=${chainFork}`
@@ -128,7 +134,7 @@ void async function () {
         const port = 5001
         try { 
             if (await run(`lsof -ti:${port}`)) {
-                await run(`npx --yes kill-port ${port}`)
+                await run(`kill -9 $(lsof -ti:${port})`)
             }
         } catch { 
             console.log(`Port ${port} is available.`) 
@@ -137,10 +143,7 @@ void async function () {
         process.env.PUBLIC_SPECULOS_PORT = `${port}`
         process.env.PUBLIC_LEDGER_APP = emulate
         $`scripts/ledger/emulate -a ${emulate}`
-        /** Wait to push proxy announcement later in terminal run */
-        setTimeout(() => {
-            $`npx esno scripts/ledger/proxy.ts`
-        }, 5000)
+        $`npx esno scripts/ledger/proxy.ts`
 
         /** Emulate Trezor */
         $`scripts/trezor/emulate`
@@ -148,4 +151,16 @@ void async function () {
 
     /** Run app */
     $`npm run dev --workspace @casimir/${app}`
+
+    if (mock) {
+        process.on('SIGINT', () => {
+            const messes = ['data', 'oracle']
+            if (clean) {
+                const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
+                console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)
+                runSync(`${cleaners}`)
+            }
+            process.exit()
+        })
+    }
 }()

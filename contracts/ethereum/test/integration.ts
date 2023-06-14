@@ -1,167 +1,185 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { addValidatorsFixture, firstUserDepositFixture, rewardPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture } from './fixtures/shared'
+import { firstUserDepositFixture, rewardsPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardsPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture, activeBalanceLossFixture, activeBalanceRecoveryFixture, thirdUserFullWithdrawalFixture } from './fixtures/shared'
 
-describe('Casimir manager', async function () {
-
-  it('Registration adds 2 validators with 4 operators each', async function () {
-    const { validators } = await loadFixture(addValidatorsFixture)
-    expect(validators.length).equal(2)
-    
-    const operators = validators.map((v) => v.operatorIds).flat()
-    expect(operators.length).equal(4 * validators.length)
-  })
-
-  it('First user\'s 16.0 stake opens the first pool with 16.0', async function () {
-    const { casimirManager, owner } = await loadFixture(firstUserDepositFixture)
-    const ssvOwnerAddress = await casimirManager.signer.getAddress()
-    expect(ssvOwnerAddress).equal(owner.address)
-
-    const openPools = await casimirManager.getOpenPoolIds()
-    expect(openPools.length).equal(1)
-
-    const firstPoolId = openPools[0]
-    const pool = await casimirManager.getPoolDetails(firstPoolId)
-    expect(ethers.utils.formatEther(pool.deposits)).equal('16.0')
-  })
+describe('Integration', async function () {
 
   it('First user\'s 16.0 stake increases the total stake to 16.0', async function () {
-    const { casimirManager } = await loadFixture(firstUserDepositFixture)
-    const stake = await casimirManager.getStake()
+    const { manager } = await loadFixture(firstUserDepositFixture)
+    const stake = await manager.getTotalStake()
     expect(ethers.utils.formatEther(stake)).equal('16.0')
   })
 
   it('First user\'s 16.0 stake increases their stake to 16.0', async function () {
-    const { casimirManager, firstUser } = await loadFixture(firstUserDepositFixture)
-    const stake = await casimirManager.getUserStake(firstUser.address)
+    const { manager, firstUser } = await loadFixture(firstUserDepositFixture)
+    const stake = await manager.getUserStake(firstUser.address)
     expect(ethers.utils.formatEther(stake)).equal('16.0')
   })
 
   it('Second user\'s 24.0 stake completes the first pool with 32.0', async function () {
-    const { casimirManager } = await loadFixture(secondUserDepositFixture)
-    const stakedPools = await casimirManager.getStakedPoolIds()
-    expect(stakedPools.length).equal(1)
+    const { manager, views } = await loadFixture(secondUserDepositFixture)
+    const stakedPoolIds = await manager.getStakedPoolIds()
+    expect(stakedPoolIds.length).equal(1)
     
-    const firstPoolId = stakedPools[0]
-    const pool = await casimirManager.getPoolDetails(firstPoolId)
-    expect(ethers.utils.formatEther(pool.deposits)).equal('32.0')
-    expect(pool.publicKey).not.equal('0x')
-    expect(pool.operatorIds.length).equal(4)
-  })
-
-  it('Second user\'s 24.0 stake opens a second pool with 8.0', async function () {
-    const { casimirManager } = await loadFixture(secondUserDepositFixture)
-    const openPools = await casimirManager.getOpenPoolIds()
-    expect(openPools.length).equal(1)
-    
-    const secondPoolId = openPools[0]
-    const pool = await casimirManager.getPoolDetails(secondPoolId)
-    expect(ethers.utils.formatEther(pool.deposits)).equal('8.0')
+    const firstPoolId = stakedPoolIds[0]
+    const poolDetails = await views.getPoolDetails(firstPoolId)
+    expect(poolDetails.publicKey).not.equal('0x')
+    expect(poolDetails.operatorIds.length).equal(4)
   })
 
   it('Second user\'s 24.0 stake increases the total stake to 40.0', async function () {
-    const { casimirManager } = await loadFixture(secondUserDepositFixture)
-    const stake = await casimirManager.getStake()
+    const { manager } = await loadFixture(secondUserDepositFixture)
+    const stake = await manager.getTotalStake()
     expect(ethers.utils.formatEther(stake)).equal('40.0')
   })
 
   it('Second user\'s 24.0 stake increases their stake to 24.0', async function () {
-    const { casimirManager, secondUser } = await loadFixture(secondUserDepositFixture)
-    const stake = await casimirManager.getUserStake(secondUser.address)
+    const { manager, secondUser } = await loadFixture(secondUserDepositFixture)
+    const stake = await manager.getUserStake(secondUser.address)
     expect(ethers.utils.formatEther(stake)).equal('24.0')
   })
 
-  it('First and second user\'s stake earns 0.1 total after some time', async function () {
-    const { casimirManager } = await loadFixture(rewardPostSecondUserDepositFixture)
-    const stake = await casimirManager.getStake()
+  it('Functions oracle reports an increase of 0.1 in total after fees', async function () {
+    const { manager } = await loadFixture(rewardsPostSecondUserDepositFixture)
+    const stake = await manager.getTotalStake()
     expect(ethers.utils.formatEther(stake)).equal('40.1')
   })
 
-  it('First and second user\'s stake earns them 0.04 and 0.06, respectively, in rewards after some time', async function () {
-    const { casimirManager, firstUser, secondUser } = await loadFixture(rewardPostSecondUserDepositFixture)
-    const firstStake = await casimirManager.getUserStake(firstUser.address)
-    const secondStake = await casimirManager.getUserStake(secondUser.address)
+  it('First and second user\'s stake earns them 0.04 and 0.06', async function () {
+    const { manager, firstUser, secondUser } = await loadFixture(rewardsPostSecondUserDepositFixture)
+    const firstStake = await manager.getUserStake(firstUser.address)
+    const secondStake = await manager.getUserStake(secondUser.address)
     expect(ethers.utils.formatEther(firstStake)).equal('16.04')
     expect(ethers.utils.formatEther(secondStake)).equal('24.06')
   })
 
+  it('First pool\'s 0.1 is swept and compounded', async function () {
+    const { manager } = await loadFixture(sweepPostSecondUserDepositFixture)
+    const bufferedBalance = await manager.getBufferedBalance()
+    expect(ethers.utils.formatEther(bufferedBalance)).equal('8.1')
+  })
+
   it('Third user\'s 24.0 stake completes the second pool with 32.0', async function () {
-    const { casimirManager } = await loadFixture(thirdUserDepositFixture)
-    const stakedPools = await casimirManager.getStakedPoolIds()
+    const { manager, views } = await loadFixture(thirdUserDepositFixture)
+    const stakedPools = await manager.getStakedPoolIds()
     expect(stakedPools.length).equal(2)
     
     const secondPoolId = stakedPools[1]
-    const pool = await casimirManager.getPoolDetails(secondPoolId)
-    expect(ethers.utils.formatEther(pool.deposits)).equal('32.0')
-    expect(pool.publicKey).not.equal('0x')
-    expect(pool.operatorIds.length).equal(4)
-  })
-
-  it('Third user\'s 24.0 stake opens a third pool', async function () {
-    const { casimirManager } = await loadFixture(thirdUserDepositFixture)
-    const openPools = await casimirManager.getOpenPoolIds()
-    expect(openPools.length).equal(1)
+    const poolDetails = await views.getPoolDetails(secondPoolId)
+    expect(poolDetails.publicKey).not.equal('0x')
+    expect(poolDetails.operatorIds.length).equal(4)
   })
 
   it('Third user\'s 24.0 stake increases the total stake to 64.1', async function () {
-    const { casimirManager } = await loadFixture(thirdUserDepositFixture)
-    const stake = await casimirManager.getStake()
+    const { manager } = await loadFixture(thirdUserDepositFixture)
+    const stake = await manager.getTotalStake()
     expect(ethers.utils.formatEther(stake)).equal('64.1')
   })
 
   it('Third user\'s 24.0 stake increases their stake to 24.0', async function () {
-    const { casimirManager, thirdUser } = await loadFixture(thirdUserDepositFixture)
-    const stake = await casimirManager.getUserStake(thirdUser.address)
+    const { manager, thirdUser } = await loadFixture(thirdUserDepositFixture)
+    const stake = await manager.getUserStake(thirdUser.address)
     expect(ethers.utils.formatEther(stake)).equal('24.0')
   })
 
-  it('First, second, and third user\'s stake earns them 0.3 total in rewards after some more time (or 0.0 with compound)', async function () {
-    const { casimirManager } = await loadFixture(rewardPostThirdUserDepositFixture)
-    const stake = await casimirManager.getStake()
+  it('Functions oracle reports an increase of 0.2 in total after fees', async function () {
+    const { manager } = await loadFixture(rewardsPostThirdUserDepositFixture)
+    const stake = await manager.getTotalStake()
     expect(ethers.utils.formatEther(stake)).equal('64.3')
   })
 
-  it('First, second, and third user\'s stake earns them ~0.09, ~0.135 and ~0.075, respectively, after some time', async function () {
-    const { casimirManager, firstUser, secondUser, thirdUser } = await loadFixture(rewardPostThirdUserDepositFixture)
-    const firstStake = await casimirManager.getUserStake(firstUser.address)
-    const secondStake = await casimirManager.getUserStake(secondUser.address)
-    const thirdStake = await casimirManager.getUserStake(thirdUser.address)
+  it('First, second, and third user\'s stake earns them ~0.09, ~0.135 and ~0.075', async function () {
+    const { manager, firstUser, secondUser, thirdUser } = await loadFixture(rewardsPostThirdUserDepositFixture)
+    const firstStake = await manager.getUserStake(firstUser.address)
+    const secondStake = await manager.getUserStake(secondUser.address)
+    const thirdStake = await manager.getUserStake(thirdUser.address)
 
     expect(ethers.utils.formatEther(firstStake)).equal('16.090046801872074882')
     expect(ethers.utils.formatEther(secondStake)).equal('24.135070202808112324')
     expect(ethers.utils.formatEther(thirdStake)).equal('24.074882995319812792')
   })
 
+  it('First and second pool\'s 0.2 is swept and compounded', async function () {
+    const { manager } = await loadFixture(sweepPostThirdUserDepositFixture)
+    const bufferedStake = await manager.getBufferedBalance()
+    expect(ethers.utils.formatEther(bufferedStake)).equal('0.3')
+  })
+
   it('First user\'s 0.3 withdrawal decreases their stake to ~15.79', async function () {
-    const { casimirManager, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
-    const firstStake = await casimirManager.getUserStake(firstUser.address)
-    const secondStake = await casimirManager.getUserStake(secondUser.address)
-    const thirdStake = await casimirManager.getUserStake(thirdUser.address)
+    const { manager, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
+    const firstStake = await manager.getUserStake(firstUser.address)
+    const secondStake = await manager.getUserStake(secondUser.address)
+    const thirdStake = await manager.getUserStake(thirdUser.address)
 
     expect(ethers.utils.formatEther(firstStake)).equal('15.790046801872074882')
     expect(ethers.utils.formatEther(secondStake)).equal('24.135070202808112324')
     expect(ethers.utils.formatEther(thirdStake)).equal('24.074882995319812792')
   })
 
-  it('Check more rewards and dust', async function () {
-    const { casimirManager, firstUser, secondUser, thirdUser } = await loadFixture(simulationFixture)
-    const stake = await casimirManager.getStake()
-    const firstStake = await casimirManager.getUserStake(firstUser.address)
-    const secondStake = await casimirManager.getUserStake(secondUser.address)
-    const thirdStake = await casimirManager.getUserStake(thirdUser.address)
+  it('Fourth user\'s 72 stake completes the third and fourth pool with 72', async function () {
+    const { manager, views } = await loadFixture(fourthUserDepositFixture)
+    const stakedPools = await manager.getStakedPoolIds()
+    expect(stakedPools.length).equal(4)
     
+    const thirdPoolId = stakedPools[2]
+    const thirdPoolDetails = await views.getPoolDetails(thirdPoolId)
+    expect(thirdPoolDetails.publicKey).not.equal('0x')
+    expect(thirdPoolDetails.operatorIds.length).equal(4)
+
+    const fourthPoolId = stakedPools[3]
+    const fourthPoolDetails = await views.getPoolDetails(fourthPoolId)
+    expect(fourthPoolDetails.publicKey).not.equal('0x')
+    expect(fourthPoolDetails.operatorIds.length).equal(4)
+  })
+
+  it('A loss is reported and brings the active stake below expected', async function () {
+    const { manager } = await loadFixture(activeBalanceLossFixture)
+    const activeBalance = await manager.latestActiveBalance()
+    expect(ethers.utils.formatEther(activeBalance)).equal('126.0')
+  })
+
+  it('Gains are reported and bring the active stake back to expected', async function () {
+    const { manager } = await loadFixture(activeBalanceRecoveryFixture)
+    const activeBalance = await manager.latestActiveBalance()
+    expect(ethers.utils.formatEther(activeBalance)).equal('128.0')
+  })
+
+  it('Third user full withdrawal is completed on exit report', async function () {
+    const { manager, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(thirdUserFullWithdrawalFixture)
+    const stake = await manager.getTotalStake()
+    const firstStake = await manager.getUserStake(firstUser.address)
+    const secondStake = await manager.getUserStake(secondUser.address)
+    const thirdStake = await manager.getUserStake(thirdUser.address)
+    const fourthStake = await manager.getUserStake(fourthUser.address)
+
+    expect(ethers.utils.formatEther(stake)).equal('111.925117004680187208')
+    expect(ethers.utils.formatEther(firstStake)).equal('15.790046801872074882')
+    expect(ethers.utils.formatEther(secondStake)).equal('24.135070202808112324')
+    expect(ethers.utils.formatEther(thirdStake)).equal('0.0')
+    expect(ethers.utils.formatEther(fourthStake)).equal('72.0')
+  })
+
+  it('Check more rewards and dust', async function () {
+    const { manager, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(simulationFixture)
+    const stake = await manager.getTotalStake()
+    const firstStake = await manager.getUserStake(firstUser.address)
+    const secondStake = await manager.getUserStake(secondUser.address)
+    const thirdStake = await manager.getUserStake(thirdUser.address)
+    const fourthStake = await manager.getUserStake(fourthUser.address)
+
     const line = '----------------------------------------'
-    console.log(`${line}\n💿 Post testing simulation results\n${line}`)
-    console.log('🏦 Manager updated balance', ethers.utils.formatEther(stake))
-    console.log('👤 First user updated balance', ethers.utils.formatEther(firstStake))
-    console.log('👤 Second user updated balance', ethers.utils.formatEther(secondStake))
-    console.log('👤 Third user updated balance', ethers.utils.formatEther(thirdStake))
-    const openDeposits = await casimirManager.getOpenDeposits()
-    console.log('📦 Open deposits', ethers.utils.formatEther(openDeposits))
-    const dust = stake.sub(firstStake.add(secondStake).add(thirdStake))
+    console.log(`${line}\n💿 Simulation results\n${line}`)
+    console.log('🏦 Manager stake', ethers.utils.formatEther(stake))
+    console.log('👤 First user stake', ethers.utils.formatEther(firstStake))
+    console.log('👤 Second user stake', ethers.utils.formatEther(secondStake))
+    console.log('👤 Third user stake', ethers.utils.formatEther(thirdStake))
+    console.log('👤 Fourth user stake', ethers.utils.formatEther(fourthStake))
+    const bufferedBalance = await manager.getBufferedBalance()
+    console.log('📦 Buffered balance', ethers.utils.formatEther(bufferedBalance))
+    const dust = stake.sub(firstStake.add(secondStake).add(thirdStake).add(fourthStake))
     if (dust !== ethers.utils.parseEther('0.0')) {
-        console.log('🧹 Dust', ethers.utils.formatEther(dust))
+      console.log('🧹 Dust', ethers.utils.formatEther(dust))
     }
     console.log(line)
   })

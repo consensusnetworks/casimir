@@ -1,5 +1,5 @@
-import { Currency } from '@casimir/types'
-import { ProviderString } from '@casimir/types'
+import { Currency } from './Currency'
+import { ProviderString } from './ProviderString'
 
 export interface LoginCredentials {
     address: string

@@ -14,7 +14,11 @@ void async function () {
     process.env.AWS_ACCOUNT = process.env.AWS_ACCOUNT || '000000000000'
     process.env.NODES_IP = process.env.NODES_IP || '123.456.789.012'
 
-    /** Test the CDK app */
+    /** Prepare CDK resources */
+    await $`npm run build --workspace @casimir/landing`
+    await $`npm run build --workspace @casimir/users`
+
+    /** Test CDK app */
     echo('🚀 Testing CDK app')
     $`npm run test --workspace @casimir/cdk`
 }()

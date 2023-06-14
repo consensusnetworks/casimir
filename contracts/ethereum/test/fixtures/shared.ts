@@ -1,281 +1,497 @@
-import { ethers } from 'hardhat'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { deployContract } from '@casimir/hardhat'
-import { CasimirManager, CasimirAutomation, MockAggregator } from '../../build/artifacts/types'
-import { ContractConfig, DeploymentConfig, Validator } from '@casimir/types'
-import { validatorStore } from '@casimir/data'
-
-/** Simulation amount of reward to distribute per staked validator */
-const rewardPerValidator = 0.1
+import { ethers, network } from 'hardhat'
+import { loadFixture, time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
+import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, ISSVNetworkViews } from '@casimir/ethereum/build/artifacts/types'
+import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
+import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '@casimir/ethereum/helpers/oracle'
+import { round } from '@casimir/ethereum/helpers/math'
+import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
-    let casimirManager: CasimirManager | undefined
-    let mockAggregator: MockAggregator | undefined
-    const [owner, , , , distributor] = await ethers.getSigners()
-    let config: DeploymentConfig = {
-        CasimirManager: {
-            address: '',
-            args: {
-                beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
-                linkFeedAddress: process.env.LINK_FEED_ADDRESS,
-                linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
-                ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
-                ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
-                swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
-                swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
-                wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
-            },
-            options: {},
-            proxy: false
-        }
+    const [owner, , , , , keeper, oracle] = await ethers.getSigners()
+
+    const mockFunctionsOracleFactory = await ethers.getContractFactory('MockFunctionsOracle')
+    const mockFunctionsOracle = await mockFunctionsOracleFactory.deploy()
+    await mockFunctionsOracle.deployed()
+
+    const managerArgs = {
+        oracleAddress: oracle.address,
+        beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
+        linkFunctionsAddress: mockFunctionsOracle.address,
+        linkRegistrarAddress: process.env.LINK_REGISTRAR_ADDRESS,
+        linkRegistryAddress: process.env.LINK_REGISTRY_ADDRESS,
+        linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
+        ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
+        ssvNetworkViewsAddress: process.env.SSV_NETWORK_VIEWS_ADDRESS,
+        ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
+        swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
+        swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
+        wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
+    }
+    const managerFactory = await ethers.getContractFactory('CasimirManager')
+    const manager = await managerFactory.deploy(...Object.values(managerArgs)) as CasimirManager
+    await manager.deployed()
+
+    const registryAddress = await manager.getRegistryAddress()
+
+    const upkeepAddress = await manager.getUpkeepAddress()
+
+    const viewsArgs = {
+        managerAddress: manager.address,
+        registryAddress
+    }
+    const viewsFactory = await ethers.getContractFactory('CasimirViews')
+    const views = await viewsFactory.deploy(...Object.values(viewsArgs)) as CasimirViews
+
+    const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
+    const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
+    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsJson.abi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
+
+    for (const operatorId of [1, 2, 3, 4]) {
+        const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)
+        const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
+        const nextBalance = currentBalance.add(ethers.utils.parseEther('4'))
+        await setBalance(operatorOwnerAddress, nextBalance)
+        await network.provider.request({
+            method: 'hardhat_impersonateAccount',
+            params: [operatorOwnerAddress]
+        })
+        const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
+        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: ethers.utils.parseEther('4') })
+        await result.wait()
     }
 
-    /** Insert any mock external contracts first */
-    if (process.env.MOCK_EXTERNAL_CONTRACTS === 'true') {
-        config = {
-            MockAggregator: {
-                address: '',
-                args: {
-                    decimals: 18,
-                    initialAnswer: 0
-                },
-                options: {},
-                proxy: false
-            },
-            MockKeeperRegistry: {
-                address: '',
-                args: {},
-                options: {},
-                proxy: false
-            },
-            ...config
-        }
-    }
-
-    for (const name in config) {
-        console.log(`Deploying ${name} contract...`)
-
-        /** Link mock external contracts to Casimir */
-        if (name === 'CasimirManager') {
-            (config[name as keyof typeof config] as ContractConfig).args.linkFeedAddress = config.MockAggregator?.address
-        }
-
-        const { args, options, proxy } = config[name as keyof typeof config] as ContractConfig
-
-        const contract = await deployContract(name, proxy, args, options)
-        const { address } = contract
-
-        // Semi-colon needed
-        console.log(`${name} contract deployed to ${address}`);
-
-        // Save contract address for next loop
-        (config[name as keyof DeploymentConfig] as ContractConfig).address = address
-
-        // Save SSV manager for export
-        if (name === 'CasimirManager') casimirManager = contract as CasimirManager
-
-        // Save mock aggregator for export
-        if (name === 'MockAggregator') mockAggregator = contract as MockAggregator
-    }
-
-    const automationAddress = await casimirManager?.getAutomationAddress() as string
-    const casimirAutomation = await ethers.getContractAt('CasimirAutomation', automationAddress) as CasimirAutomation
-
-    return { casimirManager: casimirManager as CasimirManager, casimirAutomation: casimirAutomation as CasimirAutomation, mockAggregator, owner, distributor }
+    return { manager, registry, upkeep, views, ssvNetworkViews, owner, keeper, oracle }
 }
 
-/** Fixture to add validators */
-export async function addValidatorsFixture() {
-    const { casimirManager, casimirAutomation, mockAggregator, owner, distributor } = await loadFixture(deploymentFixture)
-
-    const validators = Object.keys(validatorStore).map((key) => validatorStore[key]).slice(0, 2) as Validator[]
-    for (const validator of validators) {
-        const {
-            depositDataRoot,
-            publicKey,
-            operatorIds,
-            sharesEncrypted,
-            sharesPublicKeys,
-            signature,
-            withdrawalCredentials
-        } = validator
-        const registration = await casimirManager.addValidator(
-            depositDataRoot,
-            publicKey,
-            operatorIds,
-            sharesEncrypted,
-            sharesPublicKeys,
-            signature,
-            withdrawalCredentials
-        )
-        await registration.wait()
-    }
-    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, validators }
-}
-
-/** Fixture to stake 16 ETH for the first user */
+/** Fixture to stake 16 for the first user */
 export async function firstUserDepositFixture() {
-    const { casimirManager, casimirAutomation, mockAggregator, owner, distributor } = await loadFixture(addValidatorsFixture)
+    const { manager, registry, upkeep, views, owner, keeper, oracle } = await loadFixture(deploymentFixture)
     const [, firstUser] = await ethers.getSigners()
-    const stakeAmount = 16.0
-    const fees = { ...await casimirManager.getFees() }
-    const feePercent = fees.LINK + fees.SSV
-    const depositAmount = stakeAmount * ((100 + feePercent) / 100)
-    const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await casimirManager.connect(firstUser).deposit({ value })
+
+    const depositAmount = round(16 * ((100 + await manager.feePercent()) / 100), 10)
+    const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
-    /** Perform upkeep (todo add bounds to check data) */
-    const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-    const { ...check } = await casimirAutomation.checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await casimirAutomation.performUpkeep(performData)
-        await performUpkeep.wait()
-    }
-
-    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser}
+    return { manager, registry, upkeep, views, owner, firstUser, keeper, oracle }
 }
 
-/** Fixture to stake 24 ETH for the second user */
+/** Fixture to stake 24 for the second user */
 export async function secondUserDepositFixture() {
-    const { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser } = await loadFixture(firstUserDepositFixture)
+    const { manager, registry, upkeep, views, owner, firstUser, keeper, oracle } = await loadFixture(firstUserDepositFixture)
     const [, , secondUser] = await ethers.getSigners()
-    const stakeAmount = 24.0
-    const fees = { ...await casimirManager.getFees() }
-    const feePercent = fees.LINK + fees.SSV
-    const depositAmount = stakeAmount * ((100 + feePercent) / 100)
-    const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await casimirManager.connect(secondUser).deposit({ value })
+
+    const depositAmount = round(24 * ((100 + await manager.feePercent()) / 100), 10)
+    const deposit = await manager.connect(secondUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
-
-    /** Perform upkeep (todo add bounds to check data) */
-    const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-    const { ...check } = await casimirAutomation.checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await casimirAutomation.performUpkeep(performData)
-        await performUpkeep.wait()
+    if ((await manager.upkeepId()).toNumber() === 0) {
+        await depositUpkeepBalanceHandler({ manager, signer: oracle })
     }
-
-    /** Increase PoR mock aggregator answer */
-    if (mockAggregator) {
-        const { ...feed } = await mockAggregator.latestRoundData()
-        const { answer } = feed
-        const consensusStakeIncrease = ethers.utils.parseEther('32')
-        const newAnswer = answer.add(consensusStakeIncrease)
-        const update = await mockAggregator.updateAnswer(newAnswer)
-        await update.wait()
+    await initiateDepositHandler({ manager, signer: oracle })
+    
+    let requestId = 0
+    await time.increase(time.duration.days(1))   
+    await runUpkeep({ upkeep, keeper }) 
+    const nextValues = {
+        activeBalance: 32,
+        sweptBalance: 0,
+        activatedDeposits: 1,
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
     }
+    requestId = await fulfillReport({
+        upkeep,
+        keeper,
+        values: nextValues,
+        requestId
+    })
+    await runUpkeep({ upkeep, keeper })
 
-    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser }
+    return { manager, registry, upkeep, views, owner, firstUser, secondUser, keeper, oracle, requestId }
 }
 
-/** Fixture to reward ${rewardPerValidator} * ${stakedValidatorCount} to the first and second user */
-export async function rewardPostSecondUserDepositFixture() {
-    const { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
-    const stakedValidatorCount = (await casimirManager?.getStakedValidatorPublicKeys())?.length
-    if (stakedValidatorCount) {
-        const rewardAmount = (rewardPerValidator * stakedValidatorCount).toString()
-        const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-        await reward.wait()
+/** Fixture to report increase of 0.105 in total rewards before fees */
+export async function rewardsPostSecondUserDepositFixture() {
+    const { manager, registry, upkeep, views, owner, firstUser, secondUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(secondUserDepositFixture)
 
-        /** Perform upkeep (todo add bounds to check data) */
-        const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-        const { ...check } = await casimirAutomation.checkUpkeep(checkData)
-        const { upkeepNeeded, performData } = check
-        if (upkeepNeeded) {
-            const performUpkeep = await casimirAutomation.performUpkeep(performData)
-            await performUpkeep.wait()
-        }
+    let requestId = latestRequestId
+    await time.increase(time.duration.days(1))
+    await runUpkeep({ upkeep, keeper })
+    const nextValues = {
+        activeBalance: 32.105,
+        sweptBalance: 0,
+        activatedDeposits: 0,
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
     }
-    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser }
+    requestId = await fulfillReport({
+        upkeep,
+        keeper,
+        values: nextValues,
+        requestId
+    })
+    await runUpkeep({ upkeep, keeper })
+
+    return { manager, registry, upkeep, views, owner, firstUser, secondUser, keeper, oracle, requestId }
 }
 
-/** Fixture to stake 24 ETH for the third user */
+/** Fixture to sweep 0.105 to the manager */
+export async function sweepPostSecondUserDepositFixture() {
+    const { manager, registry, upkeep, views, owner, firstUser, secondUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(secondUserDepositFixture)
+
+    let requestId = latestRequestId
+    await time.increase(time.duration.days(1))
+    await runUpkeep({ upkeep, keeper })
+    const sweptRewards = 0.105
+    const stakedPoolIds = await manager.getStakedPoolIds()
+    const compoundablePoolIds = [0, 0, 0, 0, 0]
+    for (let i = 0; i < compoundablePoolIds.length; i++) {
+        if (i < stakedPoolIds.length) compoundablePoolIds[i] = stakedPoolIds[i]
+    }
+    const nextValues = {
+        activeBalance: 32,
+        sweptBalance: sweptRewards,
+        activatedDeposits: 0,
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds
+    }
+    requestId = await fulfillReport({
+        upkeep,
+        keeper,
+        values: nextValues,
+        requestId
+    })
+    for (const poolId of stakedPoolIds) {
+        const poolAddress = await manager.getPoolAddress(poolId)
+        const poolSweptRewards = sweptRewards / stakedPoolIds.length
+        const currentBalance = await ethers.provider.getBalance(poolAddress)
+        const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
+        await setBalance(poolAddress, nextBalance)
+    }
+    await runUpkeep({ upkeep, keeper })
+
+    return { manager, registry, upkeep, views, owner, firstUser, secondUser, keeper, oracle, requestId }
+}
+
+/** Fixture to stake 24 for the third user */
 export async function thirdUserDepositFixture() {
-    const { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser } = await loadFixture(rewardPostSecondUserDepositFixture)
+    const { manager, registry, upkeep, views, owner, firstUser, secondUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(sweepPostSecondUserDepositFixture)
     const [, , , thirdUser] = await ethers.getSigners()
-    const stakeAmount = 24.0
-    const fees = { ...await casimirManager.getFees() }
-    const feePercent = fees.LINK + fees.SSV
-    const depositAmount = stakeAmount * ((100 + feePercent) / 100)
-    const value = ethers.utils.parseEther(depositAmount.toString())
-    const deposit = await casimirManager.connect(thirdUser).deposit({ value })
+
+    const depositAmount = round(24 * ((100 + await manager.feePercent()) / 100), 10)
+    const deposit = await manager.connect(thirdUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
-    /** Perform upkeep (todo add bounds to check data) */
-    const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-    const { ...check } = await casimirAutomation.checkUpkeep(checkData)
-    const { upkeepNeeded, performData } = check
-    if (upkeepNeeded) {
-        const performUpkeep = await casimirAutomation.performUpkeep(performData)
-        await performUpkeep.wait()
-    }
+    await initiateDepositHandler({ manager, signer: oracle })
 
-    /** Increase PoR mock aggregator answer */
-    if (mockAggregator) {
-        const { ...feed } = await mockAggregator.latestRoundData()
-        const { answer } = feed
-        const consensusStakeIncrease = ethers.utils.parseEther('32')
-        const newAnswer = answer.add(consensusStakeIncrease)
-        const update = await mockAggregator.updateAnswer(newAnswer)
-        await update.wait()
+    let requestId = latestRequestId
+    await time.increase(time.duration.days(1))
+    await runUpkeep({ upkeep, keeper })
+    const nextValues = {
+        activeBalance: 64,
+        sweptBalance: 0,
+        activatedDeposits: 1,
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
     }
+    requestId = await fulfillReport({
+        upkeep,
+        keeper,
+        values: nextValues,
+        requestId
+    })
+    await runUpkeep({ upkeep, keeper })
 
-    return { casimirManager, casimirAutomation, mockAggregator, owner, distributor, firstUser, secondUser, thirdUser }
+    return { manager, registry, upkeep, views, owner, firstUser, secondUser, thirdUser, keeper, oracle, requestId }
 }
 
-/** Fixture to reward ${rewardPerValidator} * ${stakedValidatorCount} to the first, second, and third user */
-export async function rewardPostThirdUserDepositFixture() {
-    const { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser } = await loadFixture(thirdUserDepositFixture)
-    const stakedValidatorCount = (await casimirManager?.getStakedValidatorPublicKeys())?.length
-    if (stakedValidatorCount) {
-        const rewardAmount = (rewardPerValidator * stakedValidatorCount).toString()
-        const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-        await reward.wait()
+/** Fixture to report increase of 0.21 in total rewards before fees */
+export async function rewardsPostThirdUserDepositFixture() {
+    const { manager, registry, upkeep, views, owner, firstUser, secondUser, thirdUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(thirdUserDepositFixture)
 
-        /** Perform upkeep (todo add bounds to check data) */
-        const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-        const { ...check } = await casimirAutomation.checkUpkeep(checkData)
-        const { upkeepNeeded, performData } = check
-        if (upkeepNeeded) {
-            const performUpkeep = await casimirAutomation.performUpkeep(performData)
-            await performUpkeep.wait()
-        }
-    }
-    return { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser }
+    let requestId = latestRequestId
+    await time.increase(time.duration.days(1))
+    await runUpkeep({ upkeep, keeper })
+    const nextValues = {
+        activeBalance: 64.21,
+        sweptBalance: 0,
+        activatedDeposits: 0,
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
+    }    
+    requestId = await fulfillReport({
+        upkeep,
+        keeper,
+        values: nextValues,
+        requestId
+    })
+    await runUpkeep({ upkeep, keeper })
+
+    return { manager, registry, upkeep, views, owner, firstUser, secondUser, thirdUser, keeper, oracle, requestId }
 }
 
-/** Fixture to withdraw ${readyDeposits} amount to fulfill ${firstUser} partial withdrawal */
+/** Fixture to sweep 0.21 to the manager */
+export async function sweepPostThirdUserDepositFixture() {
+    const { manager, registry, upkeep, views, owner, firstUser, secondUser, thirdUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(rewardsPostThirdUserDepositFixture)
+
+    let requestId = latestRequestId
+    await time.increase(time.duration.days(1))
+    await runUpkeep({ upkeep, keeper })
+    const sweptRewards = 0.21
+    const stakedPoolIds = await manager.getStakedPoolIds()
+    const compoundablePoolIds = [0, 0, 0, 0, 0]
+    for (let i = 0; i < compoundablePoolIds.length; i++) {
+        if (i < stakedPoolIds.length) compoundablePoolIds[i] = stakedPoolIds[i]
+    }
+    const nextValues = {
+        activeBalance: 64,
+        sweptBalance: sweptRewards,
+        activatedDeposits: 0,
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds
+    }
+    requestId = await fulfillReport({
+        upkeep,
+        keeper,
+        values: nextValues,
+        requestId
+    })
+    for (const poolId of stakedPoolIds) {
+        const poolAddress = await manager.getPoolAddress(poolId)
+        const poolSweptRewards = sweptRewards / stakedPoolIds.length
+        const currentBalance = await ethers.provider.getBalance(poolAddress)
+        const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
+        await setBalance(poolAddress, nextBalance)
+    }
+    await runUpkeep({ upkeep, keeper })
+
+    return { manager, registry, upkeep, views, owner, firstUser, secondUser, thirdUser, keeper, oracle, requestId }
+}
+
+/** Fixture to partial withdraw 0.3 to the first user */
 export async function firstUserPartialWithdrawalFixture() {
-    const { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser } = await loadFixture(rewardPostThirdUserDepositFixture)
-    const readyDeposits = await casimirManager?.getOpenDeposits()
-    const withdrawal = await casimirManager.connect(firstUser).withdraw(readyDeposits)
-    await withdrawal.wait()
-    return { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser }
+    const { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(sweepPostThirdUserDepositFixture)
+    const withdrawableBalance = await manager.getWithdrawableBalance()
+    const withdraw = await manager.connect(firstUser).requestWithdrawal(withdrawableBalance)
+    await withdraw.wait()
+
+    let requestId = latestRequestId
+    await time.increase(time.duration.days(1))
+    await runUpkeep({ upkeep, keeper })
+    const nextValues = {
+        activeBalance: 64,
+        sweptBalance: 0,
+        activatedDeposits: 0,
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
+    }
+    requestId = await fulfillReport({
+        upkeep,
+        keeper,
+        values: nextValues,
+        requestId
+    })
+    await runUpkeep({ upkeep, keeper })
+
+    return { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, keeper, oracle, requestId }
 }
 
-/** Fixture to simulate stakes and rewards */
-export async function simulationFixture() {
-    const { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
-    for (let i = 0; i < 5; i++) {
-        const stakedValidatorCount = (await casimirManager?.getStakedValidatorPublicKeys())?.length
-        if (stakedValidatorCount) {
-            const rewardAmount = (rewardPerValidator * stakedValidatorCount).toString()
-            const reward = await distributor.sendTransaction({ to: casimirManager?.address, value: ethers.utils.parseEther(rewardAmount) })
-            await reward.wait()
-            
-            /** Perform upkeep (todo add bounds to check data) */
-            const checkData = ethers.utils.defaultAbiCoder.encode(['string'], [''])
-            const { ...check } = await casimirAutomation.checkUpkeep(checkData)
-            const { upkeepNeeded, performData } = check
-            if (upkeepNeeded) {
-                const performUpkeep = await casimirAutomation.performUpkeep(performData)
-                await performUpkeep.wait()
-            }
-        }
+/** Fixture to stake 72 for the fourth user */
+export async function fourthUserDepositFixture() {
+    const { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(firstUserPartialWithdrawalFixture)
+    const [, , , , fourthUser] = await ethers.getSigners()
+
+    const depositAmount = round(72 * ((100 + await manager.feePercent()) / 100), 10)
+    const deposit = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+    await deposit.wait()
+    for (let i = 0; i < 2; i++) {
+        await initiateDepositHandler({ manager, signer: oracle })
     }
-    return { casimirManager, casimirAutomation, mockAggregator, distributor, firstUser, secondUser, thirdUser }
+
+    let requestId = latestRequestId
+    await time.increase(time.duration.days(1))
+    await runUpkeep({ upkeep, keeper })
+    const nextValues = {
+        activeBalance: 128,
+        sweptBalance: 0,
+        activatedDeposits: 2,
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
+    }
+    requestId = await fulfillReport({
+        upkeep,
+        keeper,
+        values: nextValues,
+        requestId
+    })
+    await runUpkeep({ upkeep, keeper })
+
+    return { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }
+}
+
+/** Fixture to simulate a validator stake penalty that decreases the active balance */
+export async function activeBalanceLossFixture() {
+    const { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(fourthUserDepositFixture)
+
+    let requestId = latestRequestId
+    await time.increase(time.duration.days(1))
+    await runUpkeep({ upkeep, keeper })
+    const nextValues = {
+        activeBalance: 126,
+        sweptBalance: 0,
+        activatedDeposits: 0,
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
+    }
+    requestId = await fulfillReport({
+        upkeep,
+        keeper,
+        values: nextValues,
+        requestId
+    })
+    await runUpkeep({ upkeep, keeper })
+
+    return { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }
+}
+
+/** Fixture to simulate a validator reward that brings the active balance back to expected */
+export async function activeBalanceRecoveryFixture() {
+    const { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(activeBalanceLossFixture)
+
+    let nextActiveBalance = 127
+    let requestId = latestRequestId
+    for (let i = 0; i < 2; i++) {
+        await time.increase(time.duration.days(1))
+        await runUpkeep({ upkeep, keeper })
+        const nextValues = {
+            activeBalance: nextActiveBalance,
+            sweptBalance: 0,
+            activatedDeposits: 0,
+            forcedExits: 0,
+            completedExits: 0,
+            compoundablePoolIds: [0, 0, 0, 0, 0]
+        }
+        requestId = await fulfillReport({
+            upkeep,
+            keeper,
+            values: nextValues,
+            requestId
+        })
+        await runUpkeep({ upkeep, keeper })
+        nextActiveBalance += 1
+    }
+
+    return { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }
+}
+
+/** Fixture to full withdraw ~24.07 */
+export async function thirdUserFullWithdrawalFixture() {
+    const { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(activeBalanceRecoveryFixture)
+
+    const thirdStake = await manager.getUserStake(thirdUser.address)
+    const withdraw = await manager.connect(thirdUser).requestWithdrawal(thirdStake)
+    await withdraw.wait()
+    
+    let requestId = latestRequestId
+    await time.increase(time.duration.days(1))
+    await runUpkeep({ upkeep, keeper })
+    const sweptExitedBalance = 32
+    const nextValues = {
+        activeBalance: 96,
+        sweptBalance: sweptExitedBalance,
+        activatedDeposits: 0,
+        forcedExits: 0,
+        completedExits: 1,
+        compoundablePoolIds: [0, 0, 0, 0, 0]
+    }
+    requestId = await fulfillReport({
+        upkeep,
+        keeper,
+        values: nextValues,
+        requestId
+    })
+    const exitedPoolId = (await manager.getStakedPoolIds())[0]
+    const exitedPoolAddress = await manager.getPoolAddress(exitedPoolId)
+    const currentBalance = await ethers.provider.getBalance(exitedPoolAddress)
+    const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitedBalance.toString()))
+    await setBalance(exitedPoolAddress, nextBalance)
+    await reportCompletedExitsHandler({ manager, views, signer: oracle, args: { count: 1 } })
+    await runUpkeep({ upkeep, keeper })
+
+    return { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }
+}
+
+/** Fixture to simulate rewards */
+export async function simulationFixture() {
+    const { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId: latestRequestId } = await loadFixture(thirdUserFullWithdrawalFixture)
+
+    const rewardsPerValidator = 0.105
+    let nextActiveBalance = 96
+    let totalRewards = 0
+    let requestId = latestRequestId
+    for (let i = 0; i < 5; i++) {
+        await time.increase(time.duration.days(1))
+        await runUpkeep({ upkeep, keeper })
+        const stakedPoolIds = await manager.getStakedPoolIds()
+        const rewardsAmount = rewardsPerValidator * stakedPoolIds.length
+        totalRewards += round(rewardsAmount, 10)
+        nextActiveBalance = round(nextActiveBalance + rewardsAmount, 10)            
+        const nextValues = {
+            activeBalance: nextActiveBalance,
+            sweptBalance: 0,
+            activatedDeposits: 0,
+            forcedExits: 0,
+            completedExits: 0,
+            compoundablePoolIds: [0, 0, 0, 0, 0]
+        }
+        requestId = await fulfillReport({
+            upkeep,
+            keeper,
+            values: nextValues,
+            requestId
+        })
+        await runUpkeep({ upkeep, keeper })
+    }
+
+    const sweptRewards = totalRewards
+    const stakedPoolIds = await manager.getStakedPoolIds()
+    await time.increase(time.duration.days(1))
+    await runUpkeep({ upkeep, keeper })
+    const compoundablePoolIds = [0, 0, 0, 0, 0]
+    for (let i = 0; i < compoundablePoolIds.length; i++) {
+        if (i < stakedPoolIds.length) compoundablePoolIds[i] = stakedPoolIds[i]
+    }
+    const nextValues = {
+        activeBalance: 96,
+        sweptBalance: sweptRewards,
+        activatedDeposits: 0,
+        forcedExits: 0,
+        completedExits: 0,
+        compoundablePoolIds
+    }
+    requestId = await fulfillReport({
+        upkeep,
+        keeper,
+        values: nextValues,
+        requestId
+    })
+    for (const poolId of stakedPoolIds) {
+        const poolAddress = await manager.getPoolAddress(poolId)
+        const poolSweptRewards = sweptRewards / stakedPoolIds.length
+        const currentBalance = await ethers.provider.getBalance(poolAddress)
+        const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
+        await setBalance(poolAddress, nextBalance)
+    }
+    await runUpkeep({ upkeep, keeper })
+
+    return { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }
 }

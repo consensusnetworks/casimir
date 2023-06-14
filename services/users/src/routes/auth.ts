@@ -5,7 +5,7 @@ import useEthers from '../providers/ethers'
 import { Account, User } from '@casimir/types'
 
 const { verifyMessageSignature } = useEthers()
-const { addUser, getNonce, getUser, upsertNonce } = useDB()
+const { addUser, getAccounts, getNonce, getUser, getUserById, upsertNonce } = useDB()
 const router = express.Router()
 
 router.post('/nonce', async (req: express.Request, res: express.Response) => {
@@ -56,6 +56,7 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
                     address,
                     createdAt: now,
                     updatedAt: now,
+                    walletProvider: provider,
                 } as User
                 const account = {
                     address,
@@ -98,6 +99,63 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         console.log('CAUGHT ERROR IN /siwe: ', e)
     }
 })
+
+router.get('/check-secondary-address/:address', async (req: express.Request, res: express.Response) => {
+    try {
+        const { params } = req
+        const { address } = params
+        const accounts = await getAccounts(address)
+        const users = await Promise.all(accounts.map(async account => {
+            const { userId } = account
+            const user = await getUserById(userId)
+            const { address, walletProvider } = user
+            return { 
+                address: maskAddress(address),
+                walletProvider,
+            }
+        }))
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            error: false,
+            users
+        })
+    } catch (error) {
+        res.setHeader('Content-Type', 'application/json')
+        res.status(500)
+        res.json({
+            error: true,
+            message: 'Problem checking secondary address'
+        })
+    }
+})
+
+router.get('/check-if-primary-address-exists/:provider/:address', async (req: express.Request, res: express.Response) => {
+    try {
+        const { params } = req
+        const { address, provider } = params
+        const user = await getUser(address)
+        const userAddress = user?.address
+        const userProvider = user?.walletProvider
+        const sameAddress = userAddress === address
+        const sameProvider = userProvider === provider
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            error: false,
+            sameAddress,
+            sameProvider
+        })
+    } catch (error) {
+        console.log('error in /get-user-by-address :>> ', error)
+        res.status(500)
+        res.send()
+    }
+})
+
+function maskAddress(address: string) {
+    return address.slice(0, 6) + '...' + address.slice(-4)
+}
 
 function parseDomain(msg: string) {
     const uri = msg.split('URI:')[1].split('Version:')[0].trim()

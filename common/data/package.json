@@ -6,8 +6,8 @@
         "build": "echo '@casimir/data build not specified. Disregard this warning and any listed errors above if @casimir/types is not needed for the current project build.' && exit 0",
         "clean": "ts-node --transpile-only scripts/clean.ts",
         "configure:python": "poetry install && poetry run ipython kernel install --user --name=casimir-data",
-        "dev": "ts-node --transpile-only scripts/postgres.ts --tables \"$npm_config_tables\"",
-        "watch": "ts-node-dev --watch src --respawn --transpile-only scripts/postgres.ts --tables \"$npm_config_tables\"",
+        "dev": "ts-node --transpile-only scripts/dev.ts --tables \"$npm_config_tables\"",
+        "watch": "ts-node-dev --watch src --respawn --transpile-only scripts/dev.ts --tables \"$npm_config_tables\"",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {

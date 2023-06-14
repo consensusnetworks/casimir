@@ -19,12 +19,17 @@
         "updated_at": {
             "type": "string",
             "description": "The account last update date in ISO 8601 format"
+        },
+        "wallet_provider": {
+            "type": "string",
+            "description": "The wallet provider used set a primary user account"
         }
     },
     "required": [
         "address",
         "created_at",
         "id",
-        "updated_at"
+        "updated_at",
+        "wallet_provider"
     ]
 }

@@ -1,4 +1,4 @@
-import { spawn } from 'child_process'
+import { exec, execSync } from 'child_process'
 import { fromIni } from '@aws-sdk/credential-providers'
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager'
 import { ethers } from 'ethers'
@@ -43,8 +43,8 @@ export async function loadCredentials() {
  * @param string - The input string
  * @returns A camelCase string from the input string
  */
-export function camelCase(string: string, delimiter: string): string {
-    const words = string.split(delimiter).map(word => {
+export function camelCase(string: string): string {
+    const words = string.split(/[\s_-]+/).map(word => {
         return word.replace(/\w+/g, (word) => {
             return word[0].toUpperCase() + word.slice(1).toLowerCase()
         })
@@ -61,7 +61,7 @@ export function camelCase(string: string, delimiter: string): string {
  *
  */
 export function pascalCase(string: string): string {
-    const words = string.split('_').map(word => {
+    const words = string.split(/[\s_-]+/).map(word => {
         return word.replace(/\w+/g, (word) => {
             return word[0].toUpperCase() + word.slice(1).toLowerCase()
         })
@@ -95,22 +95,50 @@ export function kebabCase(string: string): string {
 }
 
 /**
- * Run any shell command with a spawned child process and return a promise.
- * @param fullCommand - The full command to run
+ * Run any shell command in a child process and return a promise
+ * @param command - The full command to run
  * @returns A promise that resolves when the command exits
  */
-export async function run(fullCommand: string) {
-    const [command, ...args] = fullCommand.split(' ')
-    const child = spawn(command, args)
+export async function run(command: string) {
+    const child = exec(command)
     let data = ''
     return new Promise((resolve, reject) => {
         child.on('error', reject)
-        child.stdout.on('data', chunk => {
+        child.stdout?.on('data', chunk => {
             process.stdout.write(chunk.toString())
             data += chunk.toString()
         })
         child.on('exit', () => resolve(data))
     })
+}
+
+/**
+ * Retry run any shell command in a child process and return a promise
+ * @param command - The full command to run
+ * @param retriesLeft - Number of retries left (default: 5)
+ * @returns A promise that resolves when the command exits
+ */
+export async function runRetry(command: string, retriesLeft: number | undefined = 25): Promise<unknown> {
+    if (retriesLeft === 0) {
+        throw new Error('Command failed after maximum retries')
+    }
+
+    try {
+        return await run(command)
+    } catch (error) {
+        await new Promise(resolve => setTimeout(resolve, 5000))
+        console.log('Retrying command', command)
+        return await runRetry(command, retriesLeft - 1)
+    }
+}
+
+/**
+ * Run any shell command synchronously in a child process
+ * @param command - The full command to run
+ * @returns The output of the command
+ */
+export function runSync(command: string) {
+    return execSync(command).toString()
 }
 
 /**
@@ -120,25 +148,25 @@ export async function run(fullCommand: string) {
  * @param {number | undefined} retriesLeft - Number of retries left (default: 5)
  * @returns {Promise<Response>} Response
  * @example
- * const response = await retry('https://example.com')
+ * const response = await fetchRetry('https://example.com')
  */
-export async function retry(info: RequestInfo, init?: RequestInit, retriesLeft: number | undefined = 25): Promise<Response> {
+export async function fetchRetry(info: RequestInfo, init?: RequestInit, retriesLeft: number | undefined = 25): Promise<Response> {
     if (retriesLeft === 0) {
         throw new Error('API request failed after maximum retries')
     }
 
     try {
-        const response = await fetch(info, init)
+        const response = await fetch(info, init)        
         if (response.status !== 200) {
             await new Promise(resolve => setTimeout(resolve, 5000))
             console.log('Retrying fetch request to', info, init)
-            return await retry(info, init || {}, retriesLeft - 1)
+            return await fetchRetry(info, init || {}, retriesLeft - 1)
         }
         return response
     } catch (error) {
         await new Promise(resolve => setTimeout(resolve, 5000))
         console.log('Retrying fetch request to', info, init)
-        return await retry(info, init || {}, retriesLeft - 1)
+        return await fetchRetry(info, init || {}, retriesLeft - 1)
     }
 }
 
@@ -168,9 +196,29 @@ export async function getWalletKeystore(mnemonic?: string) {
  * @param mnemonic - The wallet mnemonic (optional)
  * @returns The wallet
  */
-export function getWallet(mnemonic?: string) {
+export function getWallet(mnemonic?: string): ethers.Wallet {
     if (mnemonic) {
         return ethers.Wallet.fromMnemonic(mnemonic)
     }
     return ethers.Wallet.createRandom()
+}
+
+/**
+ * Get withdrawal credentials from withdrawal address
+ * @param {string} withdrawalAddress - Withdrawal address
+ * @returns {string} Withdrawal credentials
+ */
+export function getWithdrawalCredentials(withdrawalAddress: string): string {
+    return '01' + '0'.repeat(22) + withdrawalAddress.split('0x')[1]
+}
+
+export async function getFutureContractAddress({ wallet, nonce, index }: { 
+    wallet: ethers.Wallet,
+    nonce: number, 
+    index?: number 
+}): Promise<string> {
+    return ethers.utils.getContractAddress({ 
+        from: wallet.address, 
+        nonce: nonce + (index || 0) 
+    })
 }

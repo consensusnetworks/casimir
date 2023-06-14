@@ -1,4 +1,4 @@
-import { BrowserProviders } from '@/interfaces/index'
+import { BrowserProviders } from './BrowserProviders'
 export type ProviderString =
   | keyof BrowserProviders
   | 'IoPay'

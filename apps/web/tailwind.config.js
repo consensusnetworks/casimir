@@ -101,6 +101,7 @@ module.exports = {
             '600s': {'min': '0px', 'max': '600px'},
             '700s': {'min': '0px', 'max': '700px'},
             '800s': {'min': '0px', 'max': '800px'},
+            '900s': {'min': '0px', 'max': '900px'},
             '1000s': {'min': '0px', 'max': '1000px'},
             '1100s': {'min': '0px', 'max': '1100px'},
             '1200s': {'min': '0px', 'max': '1200px'},

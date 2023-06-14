@@ -24,19 +24,45 @@ const props = defineProps({
 
 const chart = ref(null as any)
 onMounted(() => {
+    // TD: make this gradient dynamic with the data and it's colors
+    var ctx = document.getElementById(props.id)?.getContext('2d')
+    var gradient = ctx? ctx.createLinearGradient(0, 0, 0, 400): 'black'
+        gradient.addColorStop(0, 'rgba(86, 138, 217,0.28)')   
+        gradient.addColorStop(1, 'rgba(86, 138, 217,0)') 
     chart.value = new Chart(document.getElementById(props.id) as ChartItem , {
         type : 'line',
 		data : {
 			labels : [ 'Jan 22', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
              'Sep', 'Oct', 'Nov', 'Dec', 'Jan 23', 'Feb', 'Mar' ],
 			datasets : [
-					{
-						data : [ 186, 205, 1321, 1516, 2107, 5478, 186, 205,
-								2191, 3133, 3221, 4783, 5478, 186, 205 ],
-						label : 'Net Value',
-						borderColor : '#C1D3F8',
-                        fill: false,
-					}]
+                {
+                    data : Array.from({length: 15}, () => Math.floor(Math.random() * (250 - 200 + 1) + 200)),
+                    label : 'Primary Account',
+                    borderColor : '#2F80ED',
+                    fill: true,
+                    backgroundColor: gradient,
+                    pointRadius: 0,
+                    tension: 0.1
+                },
+                {
+                    data : Array.from({length: 15}, () => Math.floor(Math.random() * (150 - 100 + 1) + 100)),
+                    label : '-',
+                    borderColor : '#A8C8F3',
+                    fill: false,
+                    // backgroundColor: gradient,
+                    pointRadius: 0,
+                    tension: 0.1
+                },
+                {
+                    data : Array.from({length: 15}, () => Math.floor(Math.random() * (50 - 0 + 1) + 50)),
+                    label : '-',
+                    borderColor : '#53389E',
+                    fill: false,
+                    // backgroundColor: gradient,
+                    pointRadius: 0,
+                    tension: 0.1
+                }
+            ]
 		},
 		options : {
             responsive: false,
@@ -96,7 +122,7 @@ onMounted(() => {
 
 <template>
   <div 
-    class="h-full w-full px-10"
+    class="h-full w-full"
   >
     <canvas
       :id="props.id"

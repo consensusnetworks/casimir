@@ -8,7 +8,6 @@ import minimist from 'minimist'
  * Arguments:
  *      --clean: whether to clean build directory (override default false)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
- *      --mock: whether to use mock contracts (override default true)
  * 
  * For more info see:
  *      - https://hardhat.org/hardhat-network/docs/overview
@@ -26,9 +25,6 @@ void async function () {
     /** Set fork rpc if requested, default fork to goerli if set vaguely */
     const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
 
-    /** Default to mock external contracts */
-    const mock = argv.mock !== 'false' && argv.mock !== false
-
     /** Get shared seed */
     const seed = await getSecret('consensus-networks-bip39-seed')
 
@@ -41,9 +37,6 @@ void async function () {
         process.env.ETHEREUM_FORKING_URL = url
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' fork at ') + chalk.bgBlue(url))
     }
-
-    /** Set mock */
-    process.env.MOCK_EXTERNAL_CONTRACTS = `${mock}`
 
     $`npm run test --clean=${clean} --workspace @casimir/ethereum`
 }()

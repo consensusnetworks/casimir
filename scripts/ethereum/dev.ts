@@ -1,5 +1,5 @@
 import { $, echo, chalk } from 'zx'
-import { loadCredentials, getSecret } from '@casimir/helpers'
+import { loadCredentials, getSecret, getFutureContractAddress, getWallet, runSync } from '@casimir/helpers'
 import minimist from 'minimist'
 
 /**
@@ -7,35 +7,53 @@ import minimist from 'minimist'
  * 
  * Arguments:
  *      --clean: whether to clean build directory (override default true)
- *      --execution: hardhat or gananche (override default hardhat)
  *      --fork: mainnet, goerli, true, or false (override default goerli)
- *      --mock: whether to use mock contracts (override default true)
+ *      --mock: whether to use mock services (override default true)
  * 
  * For more info see:
  *      - https://hardhat.org/hardhat-network/docs/overview
  */
 void async function () {
+
+    /** Chain fork nonces */
+    const nonces = {
+        mainnet: 0,
+        goerli: 12
+    }
+
     /** Load AWS credentials for configuration */
     await loadCredentials()
     
     /** Parse command line arguments */
     const argv = minimist(process.argv.slice(2))
 
-    /** Default to no clean */
-    const clean = argv.clean === 'true' || argv.clean === true
-
-    /** Set execution environment */
-    const execution = argv.execution === 'ganache' ? 'ganache' : 'hardhat'
+    /** Default to clean services and data */
+    const clean = argv.clean !== 'false' || argv.clean !== false
 
     /** Set fork rpc if requested, default fork to goerli if set vaguely or unset */
     const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
 
-    /** Default to mock external contracts */
+    /** Default to mock external services */
     const mock = argv.mock !== 'false' && argv.mock !== false
 
-    /** Get shared seed */
-    const seed = await getSecret('consensus-networks-bip39-seed')
+    process.env.MOCK_ORACLE = `${mock}`
+    process.env.MINING_INTERVAL = '12'
 
+    const ethereumRpcUrl = 'http://localhost:8545'
+    process.env.ETHEREUM_RPC_URL = ethereumRpcUrl
+
+    const seed = await getSecret('consensus-networks-bip39-seed')
+    const wallet = getWallet(seed)
+    const nonce = nonces[fork]
+    const managerIndex = 1 // We deploy a mock functions oracle before the manager
+    if (!process.env.PUBLIC_MANAGER_ADDRESS) {
+        const managerAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
+        process.env.PUBLIC_MANAGER_ADDRESS = `${managerAddress}`
+    }
+    if (!process.env.PUBLIC_VIEWS_ADDRESS) {
+        const viewsAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
+        process.env.PUBLIC_VIEWS_ADDRESS = `${viewsAddress}`
+    }
     process.env.BIP39_SEED = seed
     echo(chalk.bgBlackBright('Your mnemonic seed is ') + chalk.bgBlue(seed))
 
@@ -46,28 +64,21 @@ void async function () {
         echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' ethereum fork at ') + chalk.bgBlue(url))
     }
 
-    if (clean) {
-        await $`npm run clean --workspace @casimir/ethereum`
+    $`npm run node --workspace @casimir/ethereum`
+    const hardhatWaitTime = 2500
+    await new Promise(resolve => setTimeout(resolve, hardhatWaitTime))
+    $`npm run dev --workspace @casimir/ethereum -- --network localhost`
+
+    if (mock) {
+        $`npm run dev --workspace @casimir/oracle`
+        process.on('SIGINT', () => {
+            const messes = ['oracle']
+            if (clean) {
+                const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
+                console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)
+                runSync(`${cleaners}`)
+            }
+            process.exit()
+        })
     }
-    
-    /** Set 12-second interval mining for dev networks */
-    process.env.MINING_INTERVAL = '12'
-
-    /** Set mock */
-    process.env.MOCK_EXTERNAL_CONTRACTS = `${mock}`
-
-    if (execution === 'ganache') {
-        $`npm run node:ganache --workspace @casimir/ethereum`
-        // Wait for ganache to start
-        const ganacheWaitTime = 5000
-        await new Promise(resolve => setTimeout(resolve, ganacheWaitTime))
-        $`npm run dev --workspace @casimir/ethereum -- --network ganache`
-    } else {
-        $`npm run node --workspace @casimir/ethereum`
-        // Wait for hardhat to start
-        const hardhatWaitTime = 2500
-        await new Promise(resolve => setTimeout(resolve, hardhatWaitTime))
-        $`npm run dev --workspace @casimir/ethereum -- --network localhost`
-    }
-
 }()

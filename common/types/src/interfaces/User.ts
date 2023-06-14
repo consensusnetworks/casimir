@@ -1,3 +1,5 @@
+import { ProviderString } from '@casimir/types'
+
 export interface User {
     /** Unique ID (and essential for auth verification) */
     address: string
@@ -7,4 +9,6 @@ export interface User {
     id: number
     /* ISO Timestamp of when user was last updated */
     updatedAt?: string
+    /** Wallet provider (e.g. metamask) */
+    walletProvider: ProviderString
 }
