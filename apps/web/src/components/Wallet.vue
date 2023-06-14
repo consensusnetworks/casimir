@@ -146,7 +146,7 @@
 
 <script setup lang="ts">
 import { ref, watchEffect, onMounted } from 'vue'
-import useSSV from '@/composables/ssv'
+import useContracts from '@/composables/contracts'
 // import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
 
@@ -185,7 +185,7 @@ const {
   switchNetwork
 } = useWallet()
 
-const { deposit, getPools, withdraw } = useSSV()
+const { deposit, getPools, withdraw } = useContracts()
 
 watchEffect(() => {
   if (selectedProvider.value === 'MetaMask') {

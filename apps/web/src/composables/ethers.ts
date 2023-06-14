@@ -18,8 +18,8 @@ export default function useEthers() {
         method: 'wallet_addEthereumChain',
         params: [network]
       })
-    } catch(err){
-      console.log(`Error occurred while adding network ${network.chainName}, Message: ${err.message} Code: ${err.code}`)
+    } catch(error: any) {
+      console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
     }
   }
 
@@ -53,13 +53,13 @@ export default function useEthers() {
       const feeInWei = ethers.utils.formatEther(fee)
       const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
       return {
-        gasEstimate,
+        gasLimit: gasEstimate.toString(),
         fee: feeInEth
       }
     } catch (err) {
       console.error('There was an error in estimateGasFee :>> ', err)
       return {
-        gasEstimate: '0',
+        gasLimit: '0',
         fee: '0'
       }
     }
@@ -75,12 +75,12 @@ export default function useEthers() {
     try {
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
       const gasPrice = await provider.getGasPrice()
-      const gasLimit = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
-      const fee = gasPrice.mul(gasLimit)
+      const gasEstimate = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+      const fee = gasPrice.mul(gasEstimate)
       const feeInWei = ethers.utils.formatEther(fee)
       const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
       return {
-        gasLimit,
+        gasLimit: gasEstimate.toString(),
         fee: feeInEth
       }
     } catch (err) {
@@ -192,13 +192,13 @@ export default function useEthers() {
       value: weiAmount
     }
     const ethFees = await estimateEIP1559GasFee(ethereumURL, tx)
-    const { fee, gasEstimate } = ethFees
+    const { fee, gasLimit } = ethFees
     const requiredBalance = parseInt(value) + parseInt(fee)
     const balance = await getEthersBalance(from)
     if (parseInt(balance) < requiredBalance) {
       throw new Error('Insufficient balance')
     }
-    console.log(`Sending ${value} ETH to ${to} with estimated ${fee} ETH in fees using ~${gasEstimate} in gas.`)
+    console.log(`Sending ${value} ETH to ${to} with estimated ${fee} ETH in fees using ~${gasLimit.toString()} in gas.`)
     return await signer.sendTransaction(tx)
   }
 

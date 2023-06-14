@@ -2,14 +2,13 @@ import localtunnel from 'localtunnel'
 import os from 'os'
 import { HardhatUserConfig } from 'hardhat/config'
 import '@typechain/hardhat'
-import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
 import 'solidity-docgen'
-import '@openzeppelin/hardhat-upgrades'
+import '@nomicfoundation/hardhat-toolbox'
 
 // Seed is provided
 const mnemonic = process.env.BIP39_SEED as string
-const hid = { mnemonic, count: 5 }
+const hid = { mnemonic, count: 10 }
 
 // Mining interval is provided
 const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
@@ -26,20 +25,29 @@ const forkingChainId = { mainnet: 1, goerli: 5 }[forkingNetwork]
 
 const externalEnv = {
   mainnet: {
+    ORACLE_ADDRESS: '0x0000000000000000000000000000000000000000',
     BEACON_DEPOSIT_ADDRESS: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
-    LINK_FEED_ADDRESS: '',
+    LINK_FUNCTIONS_ADDRESS: '0x0000000000000000000000000000000000000000',
+    LINK_REGISTRAR_ADDRESS: '	0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d',
+    LINK_REGISTRY_ADDRESS: '0x02777053d6764996e594c3E88AF1D58D5363a2e6',
+    LINK_SUBSCRIPTION_ID: '1',
     LINK_TOKEN_ADDRESS: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-    SSV_NETWORK_ADDRESS: '',
+    SSV_NETWORK_ADDRESS: '0x0000000000000000000000000000000000000000',
+    SSV_NETWORK_VIEWS_ADDRESS: '0x0000000000000000000000000000000000000000',
     SSV_TOKEN_ADDRESS: '0x9D65fF81a3c488d585bBfb0Bfe3c7707c7917f54',
     SWAP_FACTORY_ADDRESS: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
     SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
     WETH_TOKEN_ADDRESS: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
   },
   goerli: {
+    ORACLE_ADDRESS: '0x0000000000000000000000000000000000000000',
     BEACON_DEPOSIT_ADDRESS: '0x07b39F4fDE4A38bACe212b546dAc87C58DfE3fDC',
-    LINK_FEED_ADDRESS: '0x3de1bE9407645533CD0CbeCf88dFE5297E7125e6',
+    LINK_FUNCTIONS_ADDRESS: '0x0000000000000000000000000000000000000000',
+    LINK_REGISTRAR_ADDRESS: '0x57A4a13b35d25EE78e084168aBaC5ad360252467',
+    LINK_REGISTRY_ADDRESS: '0xE16Df59B887e3Caa439E0b29B42bA2e7976FD8b2',
     LINK_TOKEN_ADDRESS: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
-    SSV_NETWORK_ADDRESS: '0xb9e155e65B5c4D66df28Da8E9a0957f06F11Bc04',
+    SSV_NETWORK_ADDRESS: '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3',
+    SSV_NETWORK_VIEWS_ADDRESS: '0x8dB45282d7C4559fd093C26f677B3837a5598914',
     SSV_TOKEN_ADDRESS: '0x3a9f01091C446bdE031E39ea8354647AFef091E7',
     SWAP_FACTORY_ADDRESS: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
     SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
@@ -61,7 +69,7 @@ const compilerSettings = {
     runs: 1
   }
 }
-const compilerVersions = ['0.8.16']
+const compilerVersions = ['0.8.18']
 const externalCompilerVersions = ['0.4.22', '0.4.24', '0.6.6', '0.6.11', '0.8.4']
 const compilers = [...compilerVersions, ...externalCompilerVersions].map(version => ({ version, settings: compilerSettings }))
 
@@ -81,7 +89,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: mnemonic ? { ...hid, accountsBalance: '96000000000000000000' } : undefined,
+      accounts: mnemonic ? hid : undefined,
       chainId: forkingChainId || 1337,
       forking: forkingUrl ? { url: forkingUrl } : undefined,
       mining: miningInterval ? mining : { auto: true },
@@ -89,22 +97,15 @@ const config: HardhatUserConfig = {
       gas: 'auto',
       gasPrice: 'auto'
     },
-    ganache: {
-      accounts: mnemonic ? { ...hid } : undefined,
-      url: 'http://127.0.0.1:8545',
-      allowUnlimitedContractSize: true,
-      gas: 'auto',
-      gasPrice: 'auto'
-    },
     mainnet: {
-      accounts: mnemonic ? { ...hid } : undefined,
+      accounts: mnemonic ? hid : undefined,
       url: hardhatUrl || '',
       allowUnlimitedContractSize: true,
       gas: 'auto',
       gasPrice: 'auto'
     },
     goerli: {
-      accounts: mnemonic ? { ...hid } : undefined,
+      accounts: mnemonic ? hid : undefined,
       url: hardhatUrl || '',
       allowUnlimitedContractSize: true,
       gas: 'auto',
@@ -129,7 +130,6 @@ if (process.env.LOCAL_TUNNEL) {
       }
       process.on('SIGINT', () => {
         tunnel.close()
-        process.exit(0)
       })
     }
   )

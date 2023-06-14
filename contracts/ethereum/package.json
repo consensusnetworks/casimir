@@ -2,27 +2,23 @@
     "name": "@casimir/ethereum",
     "scripts": {
         "node": "npx hardhat node",
-        "node:ganache": "npx esno scripts/ganache.ts",
         "dev": "npx hardhat run scripts/dev.ts",
+        "deploy": "npx hardhat run scripts/deploy.ts",
         "docgen": "npx hardhat docgen",
         "test": "npx esno scripts/test.ts --clean \"$npm_config_clean\"",
         "clean": "npx hardhat clean",
-        "build": "npx hardhat compile --show-stack-traces",
-        "prepare": "npm run build"
+        "build": "npx hardhat compile --show-stack-traces"
     },
     "dependencies": {
-        "@chainlink/contracts": "^0.5.1",
+        "@chainlink/contracts": "^0.6.1",
         "@openzeppelin/contracts": "^4.8.0",
-        "@openzeppelin/contracts-upgradeable": "^4.8.0",
         "@uniswap/v3-core": "1.0.1",
         "@uniswap/v3-periphery": "^1.4.3"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
-        "@nomicfoundation/hardhat-toolbox": "^2.0.0",
+        "@nomicfoundation/hardhat-toolbox": "^2.0.2",
         "@nomiclabs/hardhat-ethers": "^2.0.6",
-        "@nomiclabs/hardhat-waffle": "^2.0.3",
-        "@openzeppelin/hardhat-upgrades": "^1.21.0",
         "@typechain/ethers-v5": "^10.1.0",
         "@typechain/hardhat": "^6.1.2",
         "@types/chai": "^4.3.1",
@@ -31,7 +27,6 @@
         "@types/node": "^17.0.45",
         "chai": "^4.3.6",
         "esno": "^0.16.3",
-        "ganache": "^7.7.1",
         "hardhat": "^2.12.2",
         "localtunnel": "^2.0.2",
         "minimist": "^1.2.8",

@@ -7,7 +7,6 @@ import useUsers from '@/composables/users'
 import useWalletConnect from '@/composables/walletConnect'
 import { Account, CryptoAddress, Currency, ExistingUserCheck, LoginCredentials, MessageRequest, ProviderString, TransactionRequest } from '@casimir/types'
 import * as Session from 'supertokens-web-js/recipe/session'
-import router from './router'
 
 // Test ethereum send from address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 // Test ethereum send to address : 0xD4e5faa8aD7d499Aa03BDDE2a3116E66bc8F8203
@@ -301,8 +300,9 @@ export default function useWallet() {
       } else {
         return await connectWallet() // sign up or add account
       }
-    } catch (err) {
-      console.error('selectAddress error: ', err)
+    } catch (error: any) {
+      console.error('selectAddress error: ', error)
+      throw new Error(error)
     }
   }
 
@@ -332,7 +332,7 @@ export default function useWallet() {
         const trezorAddresses = await getTrezorAddress[currency]() as CryptoAddress[]
         setUserAddresses(trezorAddresses)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('There was an error in selectProvider :>> ', error)
       if (error.name === 'TransportStatusError') alert('Please enter your PIN and open the Ethereum application on your device.')
     }

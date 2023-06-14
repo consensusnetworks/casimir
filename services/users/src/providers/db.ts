@@ -179,34 +179,23 @@ export default function useDB() {
     }
 
     /**
-     * Format data from a database result (snake_case to camelCase).
+     * Format data from a database result object (convert to camelCase).
      * @param rows - The result date
      * @returns The formatted data
      */
-    function formatResult(row: any) : any {
-        if (Array.isArray(row)) {
-            return row.map((item) => formatResult(item)) 
-        }
-        if (row) {
-            for (const key in row) {
-                /** Convert snake_case to camelCase */
-                if (key.includes('_')) {
-                    row[camelCase(key, '_')] = row[key]
-                    delete row[key]
-                }
-                /* Convert kebab-case to camelCase */
-                if (key.includes('-')) {
-                    row[camelCase(key, '-')] = row[key]
-                    delete row[key]
+    function formatResult(result: any) {
+        if (result) {
+            for (const key in result) {
+                result[camelCase(key)] = result[key]
+                delete result[key]
+
+                if (result[camelCase(key)].isArray()) {
+                    result[camelCase(key)] = result[camelCase(key)].map((result: any) => {
+                        return formatResult(result)
+                    })
                 }
             }
-            /** Format accounts as well */
-            if (row.accounts) {
-                row.accounts = row.accounts.map((account: any) => {
-                    return formatResult(account)
-                })
-            }
-            return row
+            return result
         }
     }
 

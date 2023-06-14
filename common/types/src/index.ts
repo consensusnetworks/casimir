@@ -2,11 +2,14 @@ import { Account } from './interfaces/Account'
 import { AccountWithStakingInfo } from './interfaces/AccountWithStakingInfo'
 import { AddAccountOptions } from './interfaces/AddAccountOptions'
 import { BalanceSnapshot } from './interfaces/BalanceSnapshot'
+import { BrowserProviders } from './interfaces/BrowserProviders'
+import { Cluster } from './interfaces/Cluster'
 import { ContractArgs } from './interfaces/ContractArgs'
 import { ContractConfig } from './interfaces/ContractConfig'
 import { CryptoAddress } from './interfaces/CryptoAddress'
 import { Currency } from './interfaces/Currency'
 import { DeploymentConfig } from './interfaces/DeploymentConfig'
+import { EthersProvider } from './interfaces/EthersProvider'
 import { Event } from './interfaces/Event'
 import { ExistingUserCheck } from './interfaces/ExistingUserCheck'
 import { GasEstimate } from './interfaces/GasEstimate'
@@ -18,8 +21,8 @@ import { ProviderString } from './interfaces/ProviderString'
 import { TransactionRequest } from './interfaces/TransactionRequest'
 import { RemoveAccountOptions } from './interfaces/RemoveAccountOptions'
 import { User } from './interfaces/User'
-import { UserWithAccounts } from './interfaces/UserWithAccounts'
 import { UserAddedSuccess } from './interfaces/UserAddedSuccess'
+import { UserWithAccounts } from './interfaces/UserWithAccounts'
 import { Validator } from './interfaces/Validator'
 
 export type {
@@ -27,11 +30,14 @@ export type {
     AccountWithStakingInfo,
     AddAccountOptions,
     BalanceSnapshot,
+    BrowserProviders,
+    Cluster,
     ContractArgs,
     ContractConfig, 
     CryptoAddress,
     Currency,
     DeploymentConfig,
+    EthersProvider,
     Event,
     ExistingUserCheck,
     GasEstimate,
@@ -43,7 +49,7 @@ export type {
     TransactionRequest,
     RemoveAccountOptions,
     User,
-    UserWithAccounts,
     UserAddedSuccess,
+    UserWithAccounts,
     Validator,
 }

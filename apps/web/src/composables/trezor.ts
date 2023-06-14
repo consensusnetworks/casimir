@@ -3,7 +3,6 @@ import useAuth from '@/composables/auth'
 import useEthers from '@/composables/ethers'
 import useEnvironment from '@/composables/environment'
 import { ethers } from 'ethers'
-import {  } from '@/interfaces/index'
 import { LoginCredentials, MessageRequest, TransactionRequest } from '@casimir/types'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
@@ -84,9 +83,9 @@ export default function useTrezor() {
                 signedMessage
             })
             return await loginResponse.json()
-        } catch (err) {
-            console.log(err)
-            throw new Error(err)
+        } catch (error: any) {
+            console.log(error)
+            throw new Error(error)
         }
     }
 

@@ -1,4 +1,7 @@
-import { BalanceSnapshot, Currency, Pool, ProviderString } from '@casimir/types'
+import { BalanceSnapshot } from './BalanceSnapshot'
+import { ProviderString } from './ProviderString'
+import { Currency } from './Currency'
+import { Pool } from './Pool'
 
 export interface Account {
     /** The address of the current account */

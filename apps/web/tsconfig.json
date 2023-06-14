@@ -21,5 +21,5 @@
       "./node_modules/@types"
     ]
   },
-  "include": ["./src/**/*.ts", "./src/**/*.vue"]
+  "include": ["./src/**/*.ts", "./src/**/*.vue", "../../common/types/src/interfaces/BrowserProviders.ts", "../../common/types/src/interfaces/EthersProvider.ts", "../../common/types/src/interfaces/MessageInit.ts", "../../common/types/src/interfaces/TransactionInit.ts", "../../common/types/src/interfaces/UserWithProviders.ts"]
 }

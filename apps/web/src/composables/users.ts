@@ -2,7 +2,7 @@ import { onMounted, ref } from 'vue'
 import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, Account, ExistingUserCheck } from '@casimir/types'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
-import useSSV from '@/composables/ssv'
+import useContracts from '@/composables/contracts'
 import useWallet from '@/composables/wallet'
 import * as Session from 'supertokens-web-js/recipe/session'
 
@@ -11,7 +11,6 @@ const { usersBaseURL, ethereumURL } = useEnvironment()
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const session = ref<boolean>(false)
 const user = ref<UserWithAccounts>()
-const { casimirManager, getPools } = useSSV()
 
 export default function useUsers () {
 
@@ -132,27 +131,6 @@ export default function useUsers () {
 
     function setUser(newUser?: UserWithAccounts) {
         user.value = newUser
-    }
-
-    // Todo filter for events for user addresses
-    function subscribeToUserEvents() {
-        const { getUserBalance } = useWallet()
-        const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-    
-        const validatorInitFilter = {
-          address: casimirManager.address,
-          topics: [
-            // ethers.utils.id('ManagerDistribution(address,uint256,uint256,uint256)'), // TODO: Make sure to query for past events on page load (Fetch and then subscribe),
-            ethers.utils.id('PoolStaked(uint32)'),
-          ]
-        }
-        casimirManager.connect(provider).on(validatorInitFilter, async () => {
-          console.log('ValidatorInit event... updating pools')
-          user.value.balance = await getUserBalance()
-          user.value.pools = await getPools(user.value.id)
-          user.value.stake = user.value.pools?.reduce((a, c) => a + parseFloat(c.userStake), 0).toString()
-          user.value.rewards = user.value.pools?.reduce((a, c) => a + parseFloat(c.userRewards), 0).toString()
-        })
     }
 
     async function updatePrimaryAddress(updatedAddress: string) {

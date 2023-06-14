@@ -1,13 +1,13 @@
 import vue from '@vitejs/plugin-vue'
-import { UserConfig } from 'vite'
+import { defineConfig } from 'vite'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
 import NodeGlobalsPolyfillPlugin from '@esbuild-plugins/node-globals-polyfill'
 import inject from '@rollup/plugin-inject'
 import nodePolyFills from 'rollup-plugin-node-polyfills'
 
-const config: UserConfig = {
-  server: { port: 3000 },
+export default defineConfig({
+  server: { port: 3001 },
   plugins: [
     vue({ include: [/\.vue$/] }),
     nodePolyFills(),
@@ -53,6 +53,4 @@ const config: UserConfig = {
     ]
   },
   envPrefix: 'PUBLIC_'
-} as UserConfig
-
-export default config
+})

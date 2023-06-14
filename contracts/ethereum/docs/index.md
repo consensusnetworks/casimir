@@ -1,146 +1,123 @@
 # Solidity API
 
-## CasimirAutomation
-
-### constructor
-
-```solidity
-constructor(address casimirManagerAddress) public
-```
-
-Constructor
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| casimirManagerAddress | address | The manager contract address |
-
-### checkUpkeep
-
-```solidity
-function checkUpkeep(bytes checkData) external view returns (bool upkeepNeeded, bytes performData)
-```
-
-Check if the upkeep is needed
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| checkData | bytes | The data to check the upkeep |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| upkeepNeeded | bool | True if the upkeep is needed |
-| performData | bytes | The data to perform the upkeep |
-
-### performUpkeep
-
-```solidity
-function performUpkeep(bytes performData) external
-```
-
-Perform the upkeep
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| performData | bytes | The data to perform the upkeep |
-
-### getStake
-
-```solidity
-function getStake() external view returns (uint256)
-```
-
-Get the total manager stake
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | The total manager stake |
-
-### getExecutionSwept
-
-```solidity
-function getExecutionSwept() public view returns (int256)
-```
-
-Get the total manager execution swept amount
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | int256 | The total manager execution swept amount |
-
-### getExpectedConsensusStake
-
-```solidity
-function getExpectedConsensusStake() external view returns (int256)
-```
-
-Get the total manager expected consensus stake
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | int256 | The total manager expected consensus stake |
-
 ## CasimirManager
 
-### Token
+### upkeepRegistrationMinimum
 
 ```solidity
-enum Token {
-  LINK,
-  SSV,
-  WETH
-}
+uint256 upkeepRegistrationMinimum
 ```
 
-### lastPoolId
+Minimum balance for upkeep registration (0.1 LINK)
+
+### feePercent
 
 ```solidity
-struct Counters.Counter lastPoolId
+uint32 feePercent
 ```
 
-Last pool ID generated for a new pool
+Total fee percentage
 
-### distributionSum
+### reportPeriod
 
 ```solidity
-uint256 distributionSum
+uint32 reportPeriod
 ```
 
-Sum of scaled reward to stake ratios (intial value required)
+Current report period
 
-### linkFee
+### upkeepId
 
 ```solidity
-uint32 linkFee
+uint256 upkeepId
 ```
 
-LINK fee percentage (intial value required)
+Upkeep ID
 
-### ssvFee
+### latestActiveBalance
 
 ```solidity
-uint32 ssvFee
+uint256 latestActiveBalance
 ```
 
-SSV fee percentage (intial value required)
+Latest active balance
+
+### finalizableCompletedExits
+
+```solidity
+uint256 finalizableCompletedExits
+```
+
+Exited pool count
+
+### requestedWithdrawalBalance
+
+```solidity
+uint256 requestedWithdrawalBalance
+```
+
+Total pending withdrawal amount
+
+### requestedExits
+
+```solidity
+uint256 requestedExits
+```
+
+Exiting pool count
+
+### onlyPool
+
+```solidity
+modifier onlyPool(uint32 poolId)
+```
+
+_Validate the caller is the authorized pool_
+
+### onlyOracle
+
+```solidity
+modifier onlyOracle()
+```
+
+_Validate the caller is the oracle_
+
+### onlyOracleOrRegistry
+
+```solidity
+modifier onlyOracleOrRegistry()
+```
+
+_Validate the caller is the oracle or registry_
+
+### onlyOracleOrUpkeep
+
+```solidity
+modifier onlyOracleOrUpkeep()
+```
+
+_Validate the caller is the oracle or upkeep_
+
+### onlyRegistry
+
+```solidity
+modifier onlyRegistry()
+```
+
+_Validate the caller is the registry_
+
+### onlyUpkeep
+
+```solidity
+modifier onlyUpkeep()
+```
+
+_Validate the caller is the upkeep contract_
 
 ### constructor
 
 ```solidity
-constructor(address beaconDepositAddress, address linkFeedAddress, address linkTokenAddress, address ssvNetworkAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
+constructor(address _oracleAddress, address beaconDepositAddress, address linkFunctionsAddress, address linkRegistrarAddress, address linkRegistryAddress, address linkTokenAddress, address ssvNetworkAddress, address ssvNetworkViewsAddress, address ssvTokenAddress, address swapFactoryAddress, address swapRouterAddress, address wethTokenAddress) public
 ```
 
 Constructor
@@ -149,10 +126,14 @@ Constructor
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| _oracleAddress | address | The manager oracle address |
 | beaconDepositAddress | address | The Beacon deposit address |
-| linkFeedAddress | address | The Chainlink data feed address |
+| linkFunctionsAddress | address | The Chainlink functions oracle address |
+| linkRegistrarAddress | address | The Chainlink keeper registrar address |
+| linkRegistryAddress | address | The Chainlink keeper registry address |
 | linkTokenAddress | address | The Chainlink token address |
 | ssvNetworkAddress | address | The SSV network address |
+| ssvNetworkViewsAddress | address | The SSV network views address |
 | ssvTokenAddress | address | The SSV token address |
 | swapFactoryAddress | address | The Uniswap factory address |
 | swapRouterAddress | address | The Uniswap router address |
@@ -164,93 +145,31 @@ Constructor
 receive() external payable
 ```
 
-_Used for mocking sweeps from Beacon to the manager_
+Receive and deposit validator tips
 
-### reward
-
-```solidity
-function reward(uint256 amount) public
-```
-
-_Distribute ETH rewards_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| amount | uint256 | The amount of ETH to reward |
-
-### deposit
+### depositStake
 
 ```solidity
-function deposit() external payable
+function depositStake() external payable
 ```
 
-Deposit user stake to the pool manager
+Deposit user stake
 
-### withdraw
+### depositRewards
 
 ```solidity
-function withdraw(uint256 amount) external
+function depositRewards() external payable
 ```
 
-Withdraw user stake from the pool manager
+Deposit a given amount of rewards
 
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| amount | uint256 | The amount of ETH to withdraw |
-
-### getFees
+### depositExitedBalance
 
 ```solidity
-function getFees() public view returns (struct ICasimirManager.Fees)
+function depositExitedBalance(uint32 poolId) external payable
 ```
 
-Get the current token fees as percentages
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct ICasimirManager.Fees | The current token fees as percentages |
-
-### getLINKFee
-
-```solidity
-function getLINKFee() public view returns (uint32)
-```
-
-Get the LINK fee percentage to charge on each deposit
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32 | The LINK fee percentage to charge on each deposit |
-
-### getSSVFee
-
-```solidity
-function getSSVFee() public view returns (uint32)
-```
-
-Get the SSV fee percentage to charge on each deposit
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32 | The SSV fee percentage to charge on each deposit |
-
-### stakePool
-
-```solidity
-function stakePool(uint32 poolId) external
-```
-
-_Stake a pool validator and register with SSV_
+Deposit exited balance from a given pool ID
 
 #### Parameters
 
@@ -258,13 +177,13 @@ _Stake a pool validator and register with SSV_
 | ---- | ---- | ----------- |
 | poolId | uint32 | The pool ID |
 
-### removePool
+### depositRecoveredBalance
 
 ```solidity
-function removePool(uint32 poolId) external
+function depositRecoveredBalance(uint32 poolId) external payable
 ```
 
-_Remove a pool_
+Deposit recovered balance for a given pool from an operator
 
 #### Parameters
 
@@ -272,13 +191,126 @@ _Remove a pool_
 | ---- | ---- | ----------- |
 | poolId | uint32 | The pool ID |
 
-### addValidator
+### depositClusterBalance
 
 ```solidity
-function addValidator(bytes32 depositDataRoot, bytes publicKey, uint32[] operatorIds, bytes[] sharesEncrypted, bytes[] sharesPublicKeys, bytes signature, bytes withdrawalCredentials) external
+function depositClusterBalance(uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount, bool processed) external
 ```
 
-_Add a validator to the pool manager_
+Deposit to a cluster balance
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorIds | uint64[] | The operator IDs |
+| cluster | struct ISSVNetworkCore.Cluster | The SSV cluster snapshot |
+| feeAmount | uint256 | The fee amount to deposit |
+| processed | bool | Whether the fee amount is already processed |
+
+### depositUpkeepBalance
+
+```solidity
+function depositUpkeepBalance(uint256 feeAmount, bool processed) external
+```
+
+Deposit to the upkeep balance
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| feeAmount | uint256 | The fee amount to deposit |
+| processed | bool | Whether the fee amount is already processed |
+
+### depositReservedFees
+
+```solidity
+function depositReservedFees() external payable
+```
+
+Deposit reserved fees
+
+### withdrawReservedFees
+
+```solidity
+function withdrawReservedFees(uint256 amount) external
+```
+
+Withdraw a given amount of reserved fees
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount | uint256 | The amount of fees to withdraw |
+
+### rebalanceStake
+
+```solidity
+function rebalanceStake(uint256 activeBalance, uint256 sweptBalance, uint256 activatedDeposits, uint256 completedExits) external
+```
+
+Rebalance the rewards to stake ratio and redistribute swept rewards
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| activeBalance | uint256 | The active balance |
+| sweptBalance | uint256 | The swept balance |
+| activatedDeposits | uint256 | The count of activated deposits |
+| completedExits | uint256 | The count of withdrawn exits |
+
+### compoundRewards
+
+```solidity
+function compoundRewards(uint32[5] poolIds) external
+```
+
+Compound rewards given a list of pool IDs
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolIds | uint32[5] | The list of pool IDs |
+
+### requestWithdrawal
+
+```solidity
+function requestWithdrawal(uint256 amount) external
+```
+
+Request to withdraw user stake
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount | uint256 | The amount of stake to withdraw |
+
+### fulfillWithdrawals
+
+```solidity
+function fulfillWithdrawals(uint256 count) external
+```
+
+Fulfill a given count of pending withdrawals
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| count | uint256 | The number of withdrawals to complete |
+
+### initiateDeposit
+
+```solidity
+function initiateDeposit(bytes32 depositDataRoot, bytes publicKey, bytes signature, bytes withdrawalCredentials, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount, bool processed) external
+```
+
+Initiate the next ready pool
 
 #### Parameters
 
@@ -286,178 +318,177 @@ _Add a validator to the pool manager_
 | ---- | ---- | ----------- |
 | depositDataRoot | bytes32 | The deposit data root |
 | publicKey | bytes | The validator public key |
-| operatorIds | uint32[] | The operator IDs |
-| sharesEncrypted | bytes[] | The encrypted shares |
-| sharesPublicKeys | bytes[] | The public keys of the shares |
 | signature | bytes | The signature |
 | withdrawalCredentials | bytes | The withdrawal credentials |
+| operatorIds | uint64[] | The operator IDs |
+| shares | bytes | The operator shares |
+| cluster | struct ISSVNetworkCore.Cluster | The SSV cluster snapshot |
+| feeAmount | uint256 | The fee amount to deposit |
+| processed | bool |  |
 
-### exitValidator
+### activateDeposits
 
 ```solidity
-function exitValidator(uint256 index) external
+function activateDeposits(uint256 count) external
 ```
 
-### getStakedValidatorPublicKeys
+Activate a given count of the next pending pools
 
-```solidity
-function getStakedValidatorPublicKeys() external view returns (bytes[])
-```
-
-Get staked validator public keys
-
-#### Return Values
+#### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes[] | A list of active validator public keys |
+| count | uint256 | The number of pools to activate |
 
-### getReadyValidatorPublicKeys
+### requestForcedExitReports
 
 ```solidity
-function getReadyValidatorPublicKeys() external view returns (bytes[])
+function requestForcedExitReports(uint256 count) external
 ```
 
-Get ready validator public keys
+Request reports a given count of forced exits
 
-#### Return Values
+#### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes[] | A list of inactive validator public keys |
+| count | uint256 | The number of forced exits |
 
-### getOpenPoolIds
+### requestCompletedExitReports
 
 ```solidity
-function getOpenPoolIds() external view returns (uint32[])
+function requestCompletedExitReports(uint256 count) external
 ```
 
-Get a list of all open pool IDs
+Request reports for a given count of completed exits
 
-#### Return Values
+#### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint32[] | A list of all open pool IDs |
+| count | uint256 | The number of completed exits |
 
-### getReadyPoolIds
+### requestReshares
 
 ```solidity
-function getReadyPoolIds() public view returns (uint32[])
+function requestReshares(uint64 operatorId) external
 ```
 
-Get a list of all ready pool IDs
+Request reshares for an operator
 
-#### Return Values
+#### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint32[] | A list of all ready pool IDs |
+| operatorId | uint64 | The operator ID |
 
-### getStakedPoolIds
+### reportForcedExits
 
 ```solidity
-function getStakedPoolIds() public view returns (uint32[])
+function reportForcedExits(uint32[] poolIds) external
 ```
 
-Get a list of all staked pool IDs
+Report pool forced (unrequested) exits
 
-#### Return Values
+#### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint32[] | A list of all staked pool IDs |
+| poolIds | uint32[] | The pool IDs |
 
-### getStake
+### reportCompletedExit
 
 ```solidity
-function getStake() public view returns (uint256)
+function reportCompletedExit(uint256 poolIndex, uint32[] blamePercents, struct ISSVNetworkCore.Cluster cluster) external
 ```
 
-Get the total manager stake
+Report a completed exit
 
-#### Return Values
+#### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The total manager stake |
+| poolIndex | uint256 | The staked pool index |
+| blamePercents | uint32[] | The operator blame percents (0 if balance is 32 ether) |
+| cluster | struct ISSVNetworkCore.Cluster | The SSV cluster snapshot |
 
-### getExecutionStake
+### reportReshare
 
 ```solidity
-function getExecutionStake() public view returns (int256)
+function reportReshare(uint32 poolId, uint64[] operatorIds, uint64[] oldOperatorIds, uint64 newOperatorId, uint64 oldOperatorId, bytes shares, struct ISSVNetworkCore.Cluster cluster, struct ISSVNetworkCore.Cluster oldCluster, uint256 feeAmount, bool processed) external
 ```
 
-Get the total manager execution stake
+Report a reshare
 
-#### Return Values
+#### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The total manager execution stake |
+| poolId | uint32 | The pool ID |
+| operatorIds | uint64[] | The operator IDs |
+| oldOperatorIds | uint64[] | The old operator IDs |
+| newOperatorId | uint64 | The new operator ID |
+| oldOperatorId | uint64 | The old operator ID |
+| shares | bytes | The operator shares |
+| cluster | struct ISSVNetworkCore.Cluster | The SSV cluster snapshot |
+| oldCluster | struct ISSVNetworkCore.Cluster | The old SSV cluster snapshot |
+| feeAmount | uint256 | The fee amount to deposit |
+| processed | bool | Whether the fee amount is already processed |
 
-### getExecutionSwept
+### withdrawUpkeepBalance
 
 ```solidity
-function getExecutionSwept() public view returns (int256)
+function withdrawUpkeepBalance() external
 ```
 
-Get the total manager execution swept amount
+Cancel upkeep and withdraw the upkeep balance
 
-#### Return Values
+### withdrawLINKBalance
+
+```solidity
+function withdrawLINKBalance(uint256 amount) external
+```
+
+Withdraw a given amount from the LINK balance
+
+#### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The total manager execution swept amount |
+| amount | uint256 | The amount to withdraw |
 
-### getConsensusStake
+### withdrawSSVBalance
 
 ```solidity
-function getConsensusStake() public view returns (int256)
+function withdrawSSVBalance(uint256 amount) external
 ```
 
-Get the total manager consensus stake
+Withdraw a given amount from the SSV balance
 
-#### Return Values
+#### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The latest total manager consensus stake |
+| amount | uint256 | The amount to withdraw |
 
-### getExpectedConsensusStake
+### setFunctionsAddress
 
 ```solidity
-function getExpectedConsensusStake() public view returns (int256)
+function setFunctionsAddress(address functionsAddress) external
 ```
 
-Get the total manager expected consensus stake
+Update the functions oracle address
 
-_The expected stake will be honored with slashing recovery in place_
-
-#### Return Values
+#### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The the total manager expected consensus stake |
-
-### getOpenDeposits
-
-```solidity
-function getOpenDeposits() public view returns (uint256)
-```
-
-Get the total manager open deposits
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | The total manager open deposits |
+| functionsAddress | address | New functions oracle address |
 
 ### getUserStake
 
 ```solidity
-function getUserStake(address userAddress) public view returns (uint256)
+function getUserStake(address userAddress) public view returns (uint256 userStake)
 ```
 
 Get the total user stake for a given user address
@@ -472,15 +503,162 @@ Get the total user stake for a given user address
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The total user stake |
+| userStake | uint256 | The total user stake |
 
-### getPoolDetails
+### getTotalStake
 
 ```solidity
-function getPoolDetails(uint32 poolId) external view returns (struct ICasimirManager.PoolDetails)
+function getTotalStake() public view returns (uint256 totalStake)
 ```
 
-Get the pool details for a given pool ID
+Get the total stake
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| totalStake | uint256 | The total stake |
+
+### getBufferedBalance
+
+```solidity
+function getBufferedBalance() public view returns (uint256 bufferedBalance)
+```
+
+Get the buffered balance
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| bufferedBalance | uint256 | The buffered balance |
+
+### getReadyBalance
+
+```solidity
+function getReadyBalance() public view returns (uint256 readyBalance)
+```
+
+Get the ready balance
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| readyBalance | uint256 | The ready balance |
+
+### getWithdrawableBalance
+
+```solidity
+function getWithdrawableBalance() public view returns (uint256)
+```
+
+Get the withdrawable balanace
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | withdrawableBalance The withdrawable balanace |
+
+### getReservedFeeBalance
+
+```solidity
+function getReservedFeeBalance() public view returns (uint256)
+```
+
+Get the reserved fee balance
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | reservedFeeBalance The reserved fee balance |
+
+### getExpectedEffectiveBalance
+
+```solidity
+function getExpectedEffectiveBalance() public view returns (uint256 expectedEffectiveBalance)
+```
+
+Get the expected effective balance
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| expectedEffectiveBalance | uint256 | The expected effective balance |
+
+### getPendingWithdrawalEligibility
+
+```solidity
+function getPendingWithdrawalEligibility(uint256 index, uint256 period) public view returns (bool pendingWithdrawalEligibility)
+```
+
+Get the eligibility of a pending withdrawal
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| index | uint256 | The index of the pending withdrawal |
+| period | uint256 | The period to check |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pendingWithdrawalEligibility | bool | The eligibility of a pending withdrawal |
+
+### getReadyPoolIds
+
+```solidity
+function getReadyPoolIds() external view returns (uint32[])
+```
+
+Get the ready pool IDs
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint32[] | readyPoolIds The ready pool IDs |
+
+### getPendingPoolIds
+
+```solidity
+function getPendingPoolIds() external view returns (uint32[])
+```
+
+Get the pending pool IDs
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint32[] | pendingPoolIds The pending pool IDs |
+
+### getStakedPoolIds
+
+```solidity
+function getStakedPoolIds() external view returns (uint32[])
+```
+
+Get the staked pool IDs
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint32[] | stakedPoolIds The staked pool IDs |
+
+### getPoolAddress
+
+```solidity
+function getPoolAddress(uint32 poolId) external view returns (address)
+```
+
+Get a pool's address by ID
 
 #### Parameters
 
@@ -492,42 +670,96 @@ Get the pool details for a given pool ID
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | struct ICasimirManager.PoolDetails | The pool details |
+| [0] | address | poolAddress The pool address |
 
-### getAutomationAddress
+### getRegistryAddress
 
 ```solidity
-function getAutomationAddress() public view returns (address)
+function getRegistryAddress() external view returns (address registryAddress)
 ```
 
-Get the automation address
+Get the registry address
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address | The automation address |
+| registryAddress | address | The registry address |
 
-### getPoRAddress
+### getUpkeepAddress
 
 ```solidity
-function getPoRAddress() public view returns (address)
+function getUpkeepAddress() external view returns (address upkeepAddress)
 ```
 
-Get the PoR address
+Get the upkeep address
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address | The PoR address |
+| upkeepAddress | address | The upkeep address |
 
-## CasimirPoR
+### getUpkeepBalance
+
+```solidity
+function getUpkeepBalance() external view returns (uint256 upkeepBalance)
+```
+
+Get the upkeep balance
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| upkeepBalance | uint256 | The upkeep balance |
+
+## CasimirPool
+
+### poolCapacity
+
+```solidity
+uint256 poolCapacity
+```
+
+Pool capacity
+
+### id
+
+```solidity
+uint32 id
+```
+
+Pool ID
+
+### publicKey
+
+```solidity
+bytes publicKey
+```
+
+Validator public key
+
+### reshares
+
+```solidity
+uint256 reshares
+```
+
+Reshares
+
+### status
+
+```solidity
+enum ICasimirPool.PoolStatus status
+```
+
+Status
 
 ### constructor
 
 ```solidity
-constructor(address casimirManagerAddress, address linkFeedAddress) public
+constructor(address registryAddress, uint32 _id, bytes _publicKey, uint64[] _operatorIds) public
 ```
 
 Constructor
@@ -536,30 +768,478 @@ Constructor
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| casimirManagerAddress | address | The manager contract address |
-| linkFeedAddress | address | The chainlink feed contract address |
+| registryAddress | address | The registry address |
+| _id | uint32 | The pool ID |
+| _publicKey | bytes | The validator public key |
+| _operatorIds | uint64[] | The operator IDs |
 
-### getPoRAddressListLength
+### depositRewards
 
 ```solidity
-function getPoRAddressListLength() external view returns (uint256)
+function depositRewards() external
 ```
 
-Get the PoR address list length
+Deposit rewards from a pool to the manager
+
+### withdrawBalance
+
+```solidity
+function withdrawBalance(uint32[] blamePercents) external
+```
+
+Withdraw balance from a pool to the manager
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| blamePercents | uint32[] | The operator loss blame percents |
+
+### setOperatorIds
+
+```solidity
+function setOperatorIds(uint64[] _operatorIds) external
+```
+
+Set the operator IDs
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _operatorIds | uint64[] | The operator IDs |
+
+### setReshares
+
+```solidity
+function setReshares(uint256 _reshares) external
+```
+
+Set the reshare count
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _reshares | uint256 | The reshare count |
+
+### setStatus
+
+```solidity
+function setStatus(enum ICasimirPool.PoolStatus _status) external
+```
+
+Set the pool status
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _status | enum ICasimirPool.PoolStatus | The pool status |
+
+### getDetails
+
+```solidity
+function getDetails() external view returns (struct ICasimirPool.PoolDetails poolDetails)
+```
+
+Get the pool details
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The PoR address list length |
+| poolDetails | struct ICasimirPool.PoolDetails | The pool details |
 
-### getPoRAddressList
+### getBalance
 
 ```solidity
-function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
+function getBalance() external view returns (uint256)
 ```
 
-Get the PoR address list given a start and end index
+Get the pool balance
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | balance The pool balance |
+
+### getOperatorIds
+
+```solidity
+function getOperatorIds() external view returns (uint64[])
+```
+
+Get the operator IDs
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint64[] | operatorIds The operator IDs |
+
+## CasimirRegistry
+
+### onlyOwnerOrPool
+
+```solidity
+modifier onlyOwnerOrPool(uint32 poolId)
+```
+
+_Validate the caller is owner or the authorized pool_
+
+### constructor
+
+```solidity
+constructor(address ssvNetworkViewsAddress) public
+```
+
+Constructor
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| ssvNetworkViewsAddress | address | The SSV network views address |
+
+### registerOperator
+
+```solidity
+function registerOperator(uint64 operatorId) external payable
+```
+
+Register an operator with the set
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+### depositCollateral
+
+```solidity
+function depositCollateral(uint64 operatorId) external payable
+```
+
+Deposit collateral for an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+### requestWithdrawal
+
+```solidity
+function requestWithdrawal(uint64 operatorId, uint256 amount) external
+```
+
+Request to withdraw collateral from an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+| amount | uint256 | The amount to withdraw |
+
+### requestDeregistration
+
+```solidity
+function requestDeregistration(uint64 operatorId) external
+```
+
+Request deregistration for an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+### addOperatorPool
+
+```solidity
+function addOperatorPool(uint64 operatorId, uint32 poolId) external
+```
+
+Add a pool to an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+| poolId | uint32 | The pool ID |
+
+### removeOperatorPool
+
+```solidity
+function removeOperatorPool(uint64 operatorId, uint32 poolId, uint256 blameAmount) external
+```
+
+Remove a pool from an operator
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+| poolId | uint32 | The pool ID |
+| blameAmount | uint256 | The amount to recover from collateral |
+
+### getOperator
+
+```solidity
+function getOperator(uint64 operatorId) external view returns (struct ICasimirRegistry.Operator operator)
+```
+
+Get an operator by ID
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operatorId | uint64 | The operator ID |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | struct ICasimirRegistry.Operator | The operator |
+
+### getOperatorIds
+
+```solidity
+function getOperatorIds() external view returns (uint64[])
+```
+
+Get the operator IDs
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint64[] | operatorIds The operator IDs |
+
+## CasimirUpkeep
+
+### reportHeartbeat
+
+```solidity
+uint256 reportHeartbeat
+```
+
+Oracle heartbeat
+
+### poolCapacity
+
+```solidity
+uint256 poolCapacity
+```
+
+Pool capacity
+
+### reportPeriod
+
+```solidity
+uint32 reportPeriod
+```
+
+Current report period
+
+### reportRemainingRequests
+
+```solidity
+uint256 reportRemainingRequests
+```
+
+Current report remaining request count
+
+### reportRequestBlock
+
+```solidity
+uint256 reportRequestBlock
+```
+
+Current report block
+
+### reportCompoundablePoolIds
+
+```solidity
+uint32[5] reportCompoundablePoolIds
+```
+
+Current report compoundable pools
+
+### finalizableCompoundablePoolIds
+
+```solidity
+uint32[5] finalizableCompoundablePoolIds
+```
+
+Finalizable compoundable pools
+
+### requestCBOR
+
+```solidity
+bytes requestCBOR
+```
+
+Binary request source code
+
+### fulfillGasLimit
+
+```solidity
+uint32 fulfillGasLimit
+```
+
+Fulfillment gas limit
+
+### constructor
+
+```solidity
+constructor(address linkFunctionsAddress) public
+```
+
+Constructor
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| linkFunctionsAddress | address | The functions oracle contract address |
+
+### generateRequest
+
+```solidity
+function generateRequest(string source, bytes secrets, string[] args) public pure returns (bytes)
+```
+
+Generate a new Functions.Request(off-chain, saving gas)
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| source | string | JavaScript source code |
+| secrets | bytes | Encrypted secrets payload |
+| args | string[] | List of arguments accessible from within the source code |
+
+### setRequest
+
+```solidity
+function setRequest(uint32 _fulfillGasLimit, uint64 _linkSubscriptionId, bytes _requestCBOR) external
+```
+
+Set the bytes representing the CBOR-encoded Functions.Request
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _fulfillGasLimit | uint32 | Maximum amount of gas used to call the client contract's `handleOracleFulfillment` function |
+| _linkSubscriptionId | uint64 | The functions billing subscription ID used to pay for Functions requests |
+| _requestCBOR | bytes | Bytes representing the CBOR-encoded Functions.Request |
+
+### checkUpkeep
+
+```solidity
+function checkUpkeep(bytes) public view returns (bool upkeepNeeded, bytes)
+```
+
+Check if the upkeep is needed
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| upkeepNeeded | bool | True if the upkeep is needed |
+| [1] | bytes |  |
+
+### performUpkeep
+
+```solidity
+function performUpkeep(bytes) external
+```
+
+Perform the upkeep
+
+### fulfillRequest
+
+```solidity
+function fulfillRequest(bytes32 requestId, bytes response, bytes _error) internal
+```
+
+Callback that is invoked once the DON has resolved the request or hit an error
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | bytes32 | The request ID, returned by sendRequest() |
+| response | bytes | Aggregated response from the user code |
+| _error | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
+
+### setOracleAddress
+
+```solidity
+function setOracleAddress(address newOracleAddress) external
+```
+
+Update the functions oracle address
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newOracleAddress | address | New oracle address |
+
+### mockFulfillRequest
+
+```solidity
+function mockFulfillRequest(bytes32 requestId, bytes response, bytes err) external
+```
+
+Fulfill the request for testing
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | bytes32 | The request ID, returned by sendRequest() |
+| response | bytes | Aggregated response from the user code |
+| err | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
+
+## CasimirViews
+
+### constructor
+
+```solidity
+constructor(address managerAddress, address registryAddress) public
+```
+
+Constructor
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| managerAddress | address | The manager address |
+| registryAddress | address | The registry address |
+
+### getCompoundablePoolIds
+
+```solidity
+function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5] poolIds)
+```
+
+Get the next five compoundable pool IDs
+
+_Should be called off-chain_
 
 #### Parameters
 
@@ -572,23 +1252,749 @@ Get the PoR address list given a start and end index
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | string[] | The PoR address list |
+| poolIds | uint32[5] | The next five compoundable pool IDs |
 
-### getConsensusStake
+### getOperators
 
 ```solidity
-function getConsensusStake() external view returns (int256)
+function getOperators(uint256 startIndex, uint256 endIndex) external view returns (struct ICasimirRegistry.Operator[])
 ```
 
-Get the total manager consensus stake
+Get operators
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | int256 | The latest total manager consensus stake |
+| [0] | struct ICasimirRegistry.Operator[] | operators The operators |
 
-## ICasimirAutomation
+### getPendingValidatorPublicKeys
+
+```solidity
+function getPendingValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
+```
+
+Get the pending validator public keys
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes[] | validatorPublicKeys The pending validator public keys |
+
+### getStakedValidatorPublicKeys
+
+```solidity
+function getStakedValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
+```
+
+Get the staked validator public keys
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes[] | validatorPublicKeys The staked validator public keys |
+
+### getPoolDetails
+
+```solidity
+function getPoolDetails(uint32 poolId) external view returns (struct ICasimirPool.PoolDetails poolDetails)
+```
+
+Get a pool's details by ID
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolId | uint32 | The pool ID |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolDetails | struct ICasimirPool.PoolDetails | The pool details |
+
+### getSweptBalance
+
+```solidity
+function getSweptBalance(uint256 startIndex, uint256 endIndex) public view returns (uint256 balance)
+```
+
+Get the swept balance
+
+_Should be called off-chain_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| balance | uint256 | The swept balance |
+
+## ICasimirManager
+
+### Token
+
+```solidity
+enum Token {
+  LINK,
+  SSV,
+  WETH
+}
+```
+
+### User
+
+```solidity
+struct User {
+  uint256 stake0;
+  uint256 stakeRatioSum0;
+  uint256 actionPeriodTimestamp;
+  uint256 actionCount;
+}
+```
+
+### Withdrawal
+
+```solidity
+struct Withdrawal {
+  address user;
+  uint256 amount;
+  uint256 period;
+}
+```
+
+### DepositRequested
+
+```solidity
+event DepositRequested(uint32 poolId)
+```
+
+### DepositInitiated
+
+```solidity
+event DepositInitiated(uint32 poolId)
+```
+
+### DepositActivated
+
+```solidity
+event DepositActivated(uint32 poolId)
+```
+
+### ResharesRequested
+
+```solidity
+event ResharesRequested(uint64 operatorId)
+```
+
+### ReshareCompleted
+
+```solidity
+event ReshareCompleted(uint32 poolId)
+```
+
+### ExitRequested
+
+```solidity
+event ExitRequested(uint32 poolId)
+```
+
+### ForcedExitReportsRequested
+
+```solidity
+event ForcedExitReportsRequested(uint256 count)
+```
+
+### SlashedExitReportsRequested
+
+```solidity
+event SlashedExitReportsRequested(uint256 count)
+```
+
+### CompletedExitReportsRequested
+
+```solidity
+event CompletedExitReportsRequested(uint256 count)
+```
+
+### ExitCompleted
+
+```solidity
+event ExitCompleted(uint32 poolId)
+```
+
+### StakeDeposited
+
+```solidity
+event StakeDeposited(address sender, uint256 amount)
+```
+
+### StakeRebalanced
+
+```solidity
+event StakeRebalanced(uint256 amount)
+```
+
+### RewardsDeposited
+
+```solidity
+event RewardsDeposited(uint256 amount)
+```
+
+### TipsDeposited
+
+```solidity
+event TipsDeposited(uint256 amount)
+```
+
+### WithdrawalRequested
+
+```solidity
+event WithdrawalRequested(address sender, uint256 amount)
+```
+
+### WithdrawalInitiated
+
+```solidity
+event WithdrawalInitiated(address sender, uint256 amount)
+```
+
+### WithdrawalFulfilled
+
+```solidity
+event WithdrawalFulfilled(address sender, uint256 amount)
+```
+
+### depositStake
+
+```solidity
+function depositStake() external payable
+```
+
+### depositRewards
+
+```solidity
+function depositRewards() external payable
+```
+
+### depositExitedBalance
+
+```solidity
+function depositExitedBalance(uint32 poolId) external payable
+```
+
+### depositRecoveredBalance
+
+```solidity
+function depositRecoveredBalance(uint32 poolId) external payable
+```
+
+### depositReservedFees
+
+```solidity
+function depositReservedFees() external payable
+```
+
+### depositClusterBalance
+
+```solidity
+function depositClusterBalance(uint64[] operatorIds, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount, bool processed) external
+```
+
+### depositUpkeepBalance
+
+```solidity
+function depositUpkeepBalance(uint256 feeAmount, bool processed) external
+```
+
+### rebalanceStake
+
+```solidity
+function rebalanceStake(uint256 activeBalance, uint256 sweptBalance, uint256 activatedDeposits, uint256 completedExits) external
+```
+
+### compoundRewards
+
+```solidity
+function compoundRewards(uint32[5] poolIds) external
+```
+
+### requestWithdrawal
+
+```solidity
+function requestWithdrawal(uint256 amount) external
+```
+
+### fulfillWithdrawals
+
+```solidity
+function fulfillWithdrawals(uint256 count) external
+```
+
+### initiateDeposit
+
+```solidity
+function initiateDeposit(bytes32 depositDataRoot, bytes publicKey, bytes signature, bytes withdrawalCredentials, uint64[] operatorIds, bytes shares, struct ISSVNetworkCore.Cluster cluster, uint256 feeAmount, bool processed) external
+```
+
+### activateDeposits
+
+```solidity
+function activateDeposits(uint256 count) external
+```
+
+### requestForcedExitReports
+
+```solidity
+function requestForcedExitReports(uint256 count) external
+```
+
+### requestCompletedExitReports
+
+```solidity
+function requestCompletedExitReports(uint256 count) external
+```
+
+### requestReshares
+
+```solidity
+function requestReshares(uint64 operatorId) external
+```
+
+### reportForcedExits
+
+```solidity
+function reportForcedExits(uint32[] poolIds) external
+```
+
+### reportCompletedExit
+
+```solidity
+function reportCompletedExit(uint256 poolIndex, uint32[] blamePercents, struct ISSVNetworkCore.Cluster cluster) external
+```
+
+### reportReshare
+
+```solidity
+function reportReshare(uint32 poolId, uint64[] operatorIds, uint64[] oldOperatorIds, uint64 newOperatorId, uint64 oldOperatorId, bytes shares, struct ISSVNetworkCore.Cluster cluster, struct ISSVNetworkCore.Cluster oldCluster, uint256 feeAmount, bool processed) external
+```
+
+### withdrawLINKBalance
+
+```solidity
+function withdrawLINKBalance(uint256 amount) external
+```
+
+### withdrawSSVBalance
+
+```solidity
+function withdrawSSVBalance(uint256 amount) external
+```
+
+### setFunctionsAddress
+
+```solidity
+function setFunctionsAddress(address functionsAddress) external
+```
+
+### upkeepId
+
+```solidity
+function upkeepId() external view returns (uint256)
+```
+
+### latestActiveBalance
+
+```solidity
+function latestActiveBalance() external view returns (uint256)
+```
+
+### feePercent
+
+```solidity
+function feePercent() external view returns (uint32)
+```
+
+### requestedWithdrawalBalance
+
+```solidity
+function requestedWithdrawalBalance() external view returns (uint256)
+```
+
+### requestedExits
+
+```solidity
+function requestedExits() external view returns (uint256)
+```
+
+### finalizableCompletedExits
+
+```solidity
+function finalizableCompletedExits() external view returns (uint256)
+```
+
+### reportPeriod
+
+```solidity
+function reportPeriod() external view returns (uint32)
+```
+
+### getTotalStake
+
+```solidity
+function getTotalStake() external view returns (uint256)
+```
+
+### getReadyPoolIds
+
+```solidity
+function getReadyPoolIds() external view returns (uint32[])
+```
+
+### getPendingPoolIds
+
+```solidity
+function getPendingPoolIds() external view returns (uint32[])
+```
+
+### getStakedPoolIds
+
+```solidity
+function getStakedPoolIds() external view returns (uint32[])
+```
+
+### getBufferedBalance
+
+```solidity
+function getBufferedBalance() external view returns (uint256)
+```
+
+### getExpectedEffectiveBalance
+
+```solidity
+function getExpectedEffectiveBalance() external view returns (uint256)
+```
+
+### getPendingWithdrawalEligibility
+
+```solidity
+function getPendingWithdrawalEligibility(uint256 index, uint256 period) external view returns (bool)
+```
+
+### getWithdrawableBalance
+
+```solidity
+function getWithdrawableBalance() external view returns (uint256)
+```
+
+### getUserStake
+
+```solidity
+function getUserStake(address userAddress) external view returns (uint256)
+```
+
+### getPoolAddress
+
+```solidity
+function getPoolAddress(uint32 poolId) external view returns (address)
+```
+
+### getRegistryAddress
+
+```solidity
+function getRegistryAddress() external view returns (address)
+```
+
+### getUpkeepAddress
+
+```solidity
+function getUpkeepAddress() external view returns (address)
+```
+
+### getUpkeepBalance
+
+```solidity
+function getUpkeepBalance() external view returns (uint256 upkeepBalance)
+```
+
+## ICasimirPool
+
+### PoolStatus
+
+```solidity
+enum PoolStatus {
+  PENDING,
+  ACTIVE,
+  EXITING_FORCED,
+  EXITING_REQUESTED,
+  WITHDRAWN
+}
+```
+
+### PoolDetails
+
+```solidity
+struct PoolDetails {
+  uint32 id;
+  uint256 balance;
+  bytes publicKey;
+  uint64[] operatorIds;
+  uint256 reshares;
+  enum ICasimirPool.PoolStatus status;
+}
+```
+
+### depositRewards
+
+```solidity
+function depositRewards() external
+```
+
+### withdrawBalance
+
+```solidity
+function withdrawBalance(uint32[] blamePercents) external
+```
+
+### setOperatorIds
+
+```solidity
+function setOperatorIds(uint64[] operatorIds) external
+```
+
+### setReshares
+
+```solidity
+function setReshares(uint256 reshares) external
+```
+
+### setStatus
+
+```solidity
+function setStatus(enum ICasimirPool.PoolStatus status) external
+```
+
+### id
+
+```solidity
+function id() external view returns (uint32)
+```
+
+### publicKey
+
+```solidity
+function publicKey() external view returns (bytes)
+```
+
+### reshares
+
+```solidity
+function reshares() external view returns (uint256)
+```
+
+### status
+
+```solidity
+function status() external view returns (enum ICasimirPool.PoolStatus)
+```
+
+### getDetails
+
+```solidity
+function getDetails() external view returns (struct ICasimirPool.PoolDetails)
+```
+
+### getBalance
+
+```solidity
+function getBalance() external view returns (uint256)
+```
+
+### getOperatorIds
+
+```solidity
+function getOperatorIds() external view returns (uint64[])
+```
+
+## ICasimirRegistry
+
+### Operator
+
+```solidity
+struct Operator {
+  uint64 id;
+  bool active;
+  bool resharing;
+  int256 collateral;
+  uint256 poolCount;
+}
+```
+
+### OperatorRegistered
+
+```solidity
+event OperatorRegistered(uint64 operatorId)
+```
+
+### DeregistrationRequested
+
+```solidity
+event DeregistrationRequested(uint64 operatorId)
+```
+
+### DeregistrationCompleted
+
+```solidity
+event DeregistrationCompleted(uint64 operatorId)
+```
+
+### registerOperator
+
+```solidity
+function registerOperator(uint64 operatorId) external payable
+```
+
+### depositCollateral
+
+```solidity
+function depositCollateral(uint64 operatorId) external payable
+```
+
+### requestWithdrawal
+
+```solidity
+function requestWithdrawal(uint64 operatorId, uint256 amount) external
+```
+
+### requestDeregistration
+
+```solidity
+function requestDeregistration(uint64 operatorId) external
+```
+
+### addOperatorPool
+
+```solidity
+function addOperatorPool(uint64 operatorId, uint32 poolId) external
+```
+
+### removeOperatorPool
+
+```solidity
+function removeOperatorPool(uint64 operatorId, uint32 poolId, uint256 blameAmount) external
+```
+
+### getOperator
+
+```solidity
+function getOperator(uint64 operatorId) external view returns (struct ICasimirRegistry.Operator)
+```
+
+### getOperatorIds
+
+```solidity
+function getOperatorIds() external view returns (uint64[])
+```
+
+## ICasimirUpkeep
+
+### RequestType
+
+```solidity
+enum RequestType {
+  NONE,
+  BALANCES,
+  DETAILS
+}
+```
+
+### ReportStatus
+
+```solidity
+enum ReportStatus {
+  FINALIZED,
+  REQUESTING,
+  PROCESSING
+}
+```
+
+### OCRResponse
+
+```solidity
+event OCRResponse(bytes32 requestId, bytes result, bytes err)
+```
+
+### UpkeepPerformed
+
+```solidity
+event UpkeepPerformed(enum ICasimirUpkeep.ReportStatus status)
+```
+
+### performUpkeep
+
+```solidity
+function performUpkeep(bytes performData) external
+```
+
+method that is actually executed by the keepers, via the registry.
+The data returned by the checkUpkeep simulation will be passed into
+this method to actually be executed.
+
+_The input to this method should not be trusted, and the caller of the
+method should not even be restricted to any single registry. Anyone should
+be able call it, and the input should be validated, there is no guarantee
+that the data passed in is the performData returned from checkUpkeep. This
+could happen due to malicious keepers, racing keepers, or simply a state
+change while the performUpkeep transaction is waiting for confirmation.
+Always validate the data passed in._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| performData | bytes | is the data which was passed back from the checkData simulation. If it is encoded, it can easily be decoded into other types by calling `abi.decode`. This data should not be trusted, and should be validated against the contract's current state. |
+
+### setOracleAddress
+
+```solidity
+function setOracleAddress(address oracleAddress) external
+```
+
+### mockFulfillRequest
+
+```solidity
+function mockFulfillRequest(bytes32 requestId, bytes result, bytes err) external
+```
 
 ### checkUpkeep
 
@@ -617,288 +2023,42 @@ method._
 | upkeepNeeded | bool | boolean to indicate whether the keeper should call performUpkeep or not. |
 | performData | bytes | bytes that the keeper should call performUpkeep with, if upkeep is needed. If you would like to encode data to decode later, try `abi.encode`. |
 
-### performUpkeep
+## ICasimirViews
+
+### getCompoundablePoolIds
 
 ```solidity
-function performUpkeep(bytes performData) external
+function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5])
 ```
 
-method that is actually executed by the keepers, via the registry.
-The data returned by the checkUpkeep simulation will be passed into
-this method to actually be executed.
-
-_The input to this method should not be trusted, and the caller of the
-method should not even be restricted to any single registry. Anyone should
-be able call it, and the input should be validated, there is no guarantee
-that the data passed in is the performData returned from checkUpkeep. This
-could happen due to malicious keepers, racing keepers, or simply a state
-change while the performUpkeep transaction is waiting for confirmation.
-Always validate the data passed in._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| performData | bytes | is the data which was passed back from the checkData simulation. If it is encoded, it can easily be decoded into other types by calling `abi.decode`. This data should not be trusted, and should be validated against the contract's current state. |
-
-## ICasimirManager
-
-### ProcessedDeposit
+### getOperators
 
 ```solidity
-struct ProcessedDeposit {
-  uint256 ethAmount;
-  uint256 linkAmount;
-  uint256 ssvAmount;
-}
+function getOperators(uint256 startIndex, uint256 endIndex) external view returns (struct ICasimirRegistry.Operator[])
 ```
 
-### Fees
+### getPoolDetails
 
 ```solidity
-struct Fees {
-  uint32 LINK;
-  uint32 SSV;
-}
+function getPoolDetails(uint32 poolId) external view returns (struct ICasimirPool.PoolDetails)
 ```
 
-### Pool
+### getPendingValidatorPublicKeys
 
 ```solidity
-struct Pool {
-  uint256 deposits;
-  uint256 validatorIndex;
-}
-```
-
-### PoolDetails
-
-```solidity
-struct PoolDetails {
-  uint256 deposits;
-  bytes publicKey;
-  uint32[] operatorIds;
-}
-```
-
-### User
-
-```solidity
-struct User {
-  uint256 stake0;
-  uint256 distributionSum0;
-}
-```
-
-### Validator
-
-```solidity
-struct Validator {
-  bytes32 depositDataRoot;
-  uint32[] operatorIds;
-  bytes[] sharesEncrypted;
-  bytes[] sharesPublicKeys;
-  bytes signature;
-  bytes withdrawalCredentials;
-}
-```
-
-### ManagerDistribution
-
-```solidity
-event ManagerDistribution(address sender, uint256 ethAmount, uint256 linkAmount, uint256 ssvAmount)
-```
-
-### PoolDeposit
-
-```solidity
-event PoolDeposit(address sender, uint32 poolId, uint256 amount)
-```
-
-### PoolStaked
-
-```solidity
-event PoolStaked(uint32 poolId)
-```
-
-### PoolRemoved
-
-```solidity
-event PoolRemoved(uint32 poolId)
-```
-
-### ValidatorAdded
-
-```solidity
-event ValidatorAdded(bytes publicKey)
-```
-
-### ValidatorExited
-
-```solidity
-event ValidatorExited(bytes publicKey)
-```
-
-### ValidatorRemoved
-
-```solidity
-event ValidatorRemoved(bytes publicKey)
-```
-
-### UserWithdrawed
-
-```solidity
-event UserWithdrawed(address sender, uint256 ethAmount)
-```
-
-### deposit
-
-```solidity
-function deposit() external payable
-```
-
-### reward
-
-```solidity
-function reward(uint256 amount) external
-```
-
-### withdraw
-
-```solidity
-function withdraw(uint256 amount) external
-```
-
-### stakePool
-
-```solidity
-function stakePool(uint32 poolId) external
-```
-
-### getFees
-
-```solidity
-function getFees() external view returns (struct ICasimirManager.Fees)
-```
-
-### getLINKFee
-
-```solidity
-function getLINKFee() external view returns (uint32)
-```
-
-### getSSVFee
-
-```solidity
-function getSSVFee() external view returns (uint32)
+function getPendingValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
 ```
 
 ### getStakedValidatorPublicKeys
 
 ```solidity
-function getStakedValidatorPublicKeys() external view returns (bytes[])
+function getStakedValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
 ```
 
-### getReadyValidatorPublicKeys
+### getSweptBalance
 
 ```solidity
-function getReadyValidatorPublicKeys() external view returns (bytes[])
-```
-
-### getReadyPoolIds
-
-```solidity
-function getReadyPoolIds() external view returns (uint32[])
-```
-
-### getStakedPoolIds
-
-```solidity
-function getStakedPoolIds() external view returns (uint32[])
-```
-
-### getStake
-
-```solidity
-function getStake() external view returns (uint256)
-```
-
-### getExecutionStake
-
-```solidity
-function getExecutionStake() external view returns (int256)
-```
-
-### getExecutionSwept
-
-```solidity
-function getExecutionSwept() external view returns (int256)
-```
-
-### getConsensusStake
-
-```solidity
-function getConsensusStake() external view returns (int256)
-```
-
-### getExpectedConsensusStake
-
-```solidity
-function getExpectedConsensusStake() external view returns (int256)
-```
-
-### getOpenDeposits
-
-```solidity
-function getOpenDeposits() external view returns (uint256)
-```
-
-### getUserStake
-
-```solidity
-function getUserStake(address userAddress) external view returns (uint256)
-```
-
-## ICasimirPoR
-
-### getPoRAddressListLength
-
-```solidity
-function getPoRAddressListLength() external view returns (uint256)
-```
-
-Get total number of addresses in the list.
-
-### getPoRAddressList
-
-```solidity
-function getPoRAddressList(uint256 startIndex, uint256 endIndex) external view returns (string[])
-```
-
-Get a batch of human-readable addresses from the address list. The requested batch size can be greater
-than the actual address list size, in which the full address list will be returned.
-
-_Due to limitations of gas usage in off-chain calls, we need to support fetching the addresses in batches.
-EVM addresses need to be converted to human-readable strings. The address strings need to be in the same format
-that would be used when querying the balance of that address._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The index of the first address in the batch. |
-| endIndex | uint256 | The index of the last address in the batch. If `endIndex > getPoRAddressListLength()-1`, endIndex need to default to `getPoRAddressListLength()-1`. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | string[] | Array of addresses as strings. |
-
-### getConsensusStake
-
-```solidity
-function getConsensusStake() external view returns (int256)
+function getSweptBalance(uint256 startIndex, uint256 endIndex) external view returns (uint256)
 ```
 
 ## Types32Array
@@ -906,844 +2066,68 @@ function getConsensusStake() external view returns (int256)
 ### remove
 
 ```solidity
-function remove(uint32[] arr, uint256 index) internal
+function remove(uint32[] uint32Array, uint256 index) internal
 ```
+
+_Remove a uint32 element from the array_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| uint32Array | uint32[] | The array of uint32 |
+| index | uint256 |  |
 
 ## TypesBytesArray
 
 ### remove
 
 ```solidity
-function remove(bytes[] arr, uint256 index) internal
+function remove(bytes[] bytesArray, uint256 index) internal
 ```
 
-## MockAggregator
-
-### version
-
-```solidity
-uint256 version
-```
-
-### description
-
-```solidity
-string description
-```
-
-### decimals
-
-```solidity
-uint8 decimals
-```
-
-### latestAnswer
-
-```solidity
-int256 latestAnswer
-```
-
-### latestTimestamp
-
-```solidity
-uint256 latestTimestamp
-```
-
-### latestRound
-
-```solidity
-uint256 latestRound
-```
-
-### getAnswer
-
-```solidity
-mapping(uint256 => int256) getAnswer
-```
-
-### getTimestamp
-
-```solidity
-mapping(uint256 => uint256) getTimestamp
-```
-
-### constructor
-
-```solidity
-constructor(uint8 _decimals, int256 _initialAnswer) public
-```
-
-### updateAnswer
-
-```solidity
-function updateAnswer(int256 _answer) public
-```
-
-### updateRoundData
-
-```solidity
-function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt) public
-```
-
-### getRoundData
-
-```solidity
-function getRoundData(uint80 _roundId) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
-```
-
-### latestRoundData
-
-```solidity
-function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
-```
-
-## MockKeeperRegistry
-
-### registerUpkeep
-
-```solidity
-function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external view returns (uint256 id)
-```
-
-### getState
-
-```solidity
-function getState() external pure returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
-```
-
-## Functions
-
-### DEFAULT_BUFFER_SIZE
-
-```solidity
-uint256 DEFAULT_BUFFER_SIZE
-```
-
-### Location
-
-```solidity
-enum Location {
-  Inline,
-  Remote
-}
-```
-
-### CodeLanguage
-
-```solidity
-enum CodeLanguage {
-  JavaScript
-}
-```
-
-### Request
-
-```solidity
-struct Request {
-  enum Functions.Location codeLocation;
-  enum Functions.Location secretsLocation;
-  enum Functions.CodeLanguage language;
-  string source;
-  bytes secrets;
-  string[] args;
-}
-```
-
-### EmptySource
-
-```solidity
-error EmptySource()
-```
-
-### EmptyUrl
-
-```solidity
-error EmptyUrl()
-```
-
-### EmptySecrets
-
-```solidity
-error EmptySecrets()
-```
-
-### EmptyArgs
-
-```solidity
-error EmptyArgs()
-```
-
-### NoInlineSecrets
-
-```solidity
-error NoInlineSecrets()
-```
-
-### encodeCBOR
-
-```solidity
-function encodeCBOR(struct Functions.Request self) internal pure returns (bytes)
-```
-
-Encodes a Request to CBOR encoded bytes
+_Remove a bytes element from the array_
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| self | struct Functions.Request | The request to encode |
+| bytesArray | bytes[] | The array of bytes |
+| index | uint256 | The index of the element to remove |
 
-#### Return Values
+## TypesWithdrawalArray
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | CBOR encoded bytes |
-
-### initializeRequest
+### remove
 
 ```solidity
-function initializeRequest(struct Functions.Request self, enum Functions.Location location, enum Functions.CodeLanguage language, string source) internal pure
+function remove(struct ICasimirManager.Withdrawal[] withdrawals, uint256 index) internal
 ```
 
-Initializes a Chainlink Functions Request
-
-_Sets the codeLocation and code on the request_
+_Remove a withdrawal from the array_
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| self | struct Functions.Request | The uninitialized request |
-| location | enum Functions.Location | The user provided source code location |
-| language | enum Functions.CodeLanguage | The programming language of the user code |
-| source | string | The user provided source code or a url |
+| withdrawals | struct ICasimirManager.Withdrawal[] | The array of withdrawals |
+| index | uint256 | The index of the withdrawal to remove |
 
-### initializeRequestForInlineJavaScript
+## TypesAddress
+
+### send
 
 ```solidity
-function initializeRequestForInlineJavaScript(struct Functions.Request self, string javaScriptSource) internal pure
+function send(address user, uint256 amount) internal
 ```
 
-Initializes a Chainlink Functions Request
-
-_Simplified version of initializeRequest for PoC_
+_Send ETH to a user_
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| self | struct Functions.Request | The uninitialized request |
-| javaScriptSource | string | The user provided JS code (must not be empty) |
-
-### addRemoteSecrets
-
-```solidity
-function addRemoteSecrets(struct Functions.Request self, bytes encryptedSecretsURLs) internal pure
-```
-
-Adds Remote user encrypted secrets to a Request
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| self | struct Functions.Request | The initialized request |
-| encryptedSecretsURLs | bytes | Encrypted comma-separated string of URLs pointing to off-chain secrets |
-
-### addArgs
-
-```solidity
-function addArgs(struct Functions.Request self, string[] args) internal pure
-```
-
-Adds args for the user run function
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| self | struct Functions.Request | The initialized request |
-| args | string[] | The array of args (must not be empty) |
-
-## FunctionsClient
-
-Contract writers can inherit this contract in order to create Chainlink Functions requests
-
-### s_oracle
-
-```solidity
-contract FunctionsOracleInterface s_oracle
-```
-
-### s_pendingRequests
-
-```solidity
-mapping(bytes32 => address) s_pendingRequests
-```
-
-### RequestSent
-
-```solidity
-event RequestSent(bytes32 id)
-```
-
-### RequestFulfilled
-
-```solidity
-event RequestFulfilled(bytes32 id)
-```
-
-### SenderIsNotRegistry
-
-```solidity
-error SenderIsNotRegistry()
-```
-
-### RequestIsAlreadyPending
-
-```solidity
-error RequestIsAlreadyPending()
-```
-
-### RequestIsNotPending
-
-```solidity
-error RequestIsNotPending()
-```
-
-### constructor
-
-```solidity
-constructor(address oracle) internal
-```
-
-### getDONPublicKey
-
-```solidity
-function getDONPublicKey() external view returns (bytes)
-```
-
-Returns the DON's secp256k1 public key used to encrypt secrets
-
-_All Oracles nodes have the corresponding private key
-needed to decrypt the secrets encrypted with the public key_
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | publicKey DON's public key |
-
-### estimateCost
-
-```solidity
-function estimateCost(struct Functions.Request req, uint64 subscriptionId, uint32 gasLimit, uint256 gasPrice) public view returns (uint96)
-```
-
-Estimate the total cost that will be charged to a subscription to make a request: gas re-imbursement, plus DON fee, plus Registry fee
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| req | struct Functions.Request | The initialized Functions.Request |
-| subscriptionId | uint64 | The subscription ID |
-| gasLimit | uint32 | gas limit for the fulfillment callback |
-| gasPrice | uint256 |  |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint96 | billedCost Cost in Juels (1e18) of LINK |
-
-### sendRequest
-
-```solidity
-function sendRequest(struct Functions.Request req, uint64 subscriptionId, uint32 gasLimit) internal returns (bytes32)
-```
-
-Sends a Chainlink Functions request to the stored oracle address
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| req | struct Functions.Request | The initialized Functions.Request |
-| subscriptionId | uint64 | The subscription ID |
-| gasLimit | uint32 | gas limit for the fulfillment callback |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes32 | requestId The generated request ID |
-
-### fulfillRequest
-
-```solidity
-function fulfillRequest(bytes32 requestId, bytes response, bytes err) internal virtual
-```
-
-User defined function to handle a response
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The request ID, returned by sendRequest() |
-| response | bytes | Aggregated response from the user code |
-| err | bytes | Aggregated error from the user code or from the execution pipeline Either response or error parameter will be set, but never both |
-
-### handleOracleFulfillment
-
-```solidity
-function handleOracleFulfillment(bytes32 requestId, bytes response, bytes err) external
-```
-
-Chainlink Functions response handler called by the designated transmitter node in an OCR round.
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The requestId returned by FunctionsClient.sendRequest(). |
-| response | bytes | Aggregated response from the user code. |
-| err | bytes | Aggregated error either from the user code or from the execution pipeline. Either response or error parameter will be set, but never both. |
-
-### setOracle
-
-```solidity
-function setOracle(address oracle) internal
-```
-
-Sets the stored Oracle address
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| oracle | address | The address of Functions Oracle contract |
-
-### getChainlinkOracleAddress
-
-```solidity
-function getChainlinkOracleAddress() internal view returns (address)
-```
-
-Gets the stored address of the oracle contract
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | The address of the oracle contract |
-
-### addExternalRequest
-
-```solidity
-function addExternalRequest(address oracleAddress, bytes32 requestId) internal
-```
-
-Allows for a request which was created on another contract to be fulfilled
-on this contract
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| oracleAddress | address | The address of the oracle contract that will fulfill the request |
-| requestId | bytes32 | The request ID used for the response |
-
-### recordChainlinkFulfillment
-
-```solidity
-modifier recordChainlinkFulfillment(bytes32 requestId)
-```
-
-_Reverts if the sender is not the oracle that serviced the request.
-Emits RequestFulfilled event._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The request ID for fulfillment |
-
-### notPendingRequest
-
-```solidity
-modifier notPendingRequest(bytes32 requestId)
-```
-
-_Reverts if the request is already pending_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The request ID for fulfillment |
-
-## FunctionsBillingRegistryInterface
-
-### RequestBilling
-
-```solidity
-struct RequestBilling {
-  uint64 subscriptionId;
-  address client;
-  uint32 gasLimit;
-  uint256 gasPrice;
-}
-```
-
-### FulfillResult
-
-```solidity
-enum FulfillResult {
-  USER_SUCCESS,
-  USER_ERROR,
-  INVALID_REQUEST_ID
-}
-```
-
-### getRequestConfig
-
-```solidity
-function getRequestConfig() external view returns (uint32, address[])
-```
-
-Get configuration relevant for making requests
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32 | uint32 global max for request gas limit |
-| [1] | address[] | address[] list of registered DONs |
-
-### getRequiredFee
-
-```solidity
-function getRequiredFee(bytes data, struct FunctionsBillingRegistryInterface.RequestBilling billing) external view returns (uint96)
-```
-
-Determine the charged fee that will be paid to the Registry owner
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| billing | struct FunctionsBillingRegistryInterface.RequestBilling | The request's billing configuration |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint96 | fee Cost in Juels (1e18) of LINK |
-
-### estimateCost
-
-```solidity
-function estimateCost(uint32 gasLimit, uint256 gasPrice, uint96 donFee, uint96 registryFee) external view returns (uint96)
-```
-
-Estimate the total cost to make a request: gas re-imbursement, plus DON fee, plus Registry fee
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| gasLimit | uint32 | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| gasPrice | uint256 | The request's billing configuration |
-| donFee | uint96 | Fee charged by the DON that is paid to Oracle Node |
-| registryFee | uint96 | Fee charged by the DON that is paid to Oracle Node |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint96 | costEstimate Cost in Juels (1e18) of LINK |
-
-### startBilling
-
-```solidity
-function startBilling(bytes data, struct FunctionsBillingRegistryInterface.RequestBilling billing) external returns (bytes32)
-```
-
-Initiate the billing process for an Functions request
-
-_Only callable by a node that has been approved on the Registry_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| billing | struct FunctionsBillingRegistryInterface.RequestBilling | Billing configuration for the request |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes32 | requestId - A unique identifier of the request. Can be used to match a request to a response in fulfillRequest. |
-
-### fulfillAndBill
-
-```solidity
-function fulfillAndBill(bytes32 requestId, bytes response, bytes err, address transmitter, address[31] signers, uint8 signerCount, uint256 reportValidationGas, uint256 initialGas) external returns (enum FunctionsBillingRegistryInterface.FulfillResult)
-```
-
-Finalize billing process for an Functions request by sending a callback to the Client contract and then charging the subscription
-
-_Only callable by a node that has been approved on the Registry
-simulated offchain to determine if sufficient balance is present to fulfill the request_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | identifier for the request that was generated by the Registry in the beginBilling commitment |
-| response | bytes | response data from DON consensus |
-| err | bytes | error from DON consensus |
-| transmitter | address | the Oracle who sent the report |
-| signers | address[31] | the Oracles who had a part in generating the report |
-| signerCount | uint8 | the number of signers on the report |
-| reportValidationGas | uint256 | the amount of gas used for the report validation. Cost is split by all fulfillments on the report. |
-| initialGas | uint256 | the initial amount of gas that should be used as a baseline to charge the single fulfillment for execution cost |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | enum FunctionsBillingRegistryInterface.FulfillResult | result fulfillment result |
-
-### getSubscriptionOwner
-
-```solidity
-function getSubscriptionOwner(uint64 subscriptionId) external view returns (address owner)
-```
-
-Gets subscription owner.
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| subscriptionId | uint64 | - ID of the subscription |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| owner | address | - owner of the subscription. |
-
-## FunctionsClientInterface
-
-### getDONPublicKey
-
-```solidity
-function getDONPublicKey() external view returns (bytes)
-```
-
-Returns the DON's secp256k1 public key used to encrypt secrets
-
-_All Oracles nodes have the corresponding private key
-needed to decrypt the secrets encrypted with the public key_
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | publicKey DON's public key |
-
-### handleOracleFulfillment
-
-```solidity
-function handleOracleFulfillment(bytes32 requestId, bytes response, bytes err) external
-```
-
-Chainlink Functions response handler called by the designated transmitter node in an OCR round.
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | The requestId returned by FunctionsClient.sendRequest(). |
-| response | bytes | Aggregated response from the user code. |
-| err | bytes | Aggregated error either from the user code or from the execution pipeline. Either response or error parameter will be set, but never both. |
-
-## FunctionsOracleInterface
-
-### getRegistry
-
-```solidity
-function getRegistry() external view returns (address)
-```
-
-Gets the stored billing registry address
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | registryAddress The address of Chainlink Functions billing registry contract |
-
-### setRegistry
-
-```solidity
-function setRegistry(address registryAddress) external
-```
-
-Sets the stored billing registry address
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| registryAddress | address | The new address of Chainlink Functions billing registry contract |
-
-### getDONPublicKey
-
-```solidity
-function getDONPublicKey() external view returns (bytes)
-```
-
-Returns the DON's secp256k1 public key that is used to encrypt secrets
-
-_All nodes on the DON have the corresponding private key
-needed to decrypt the secrets encrypted with the public key_
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | publicKey the DON's public key |
-
-### setDONPublicKey
-
-```solidity
-function setDONPublicKey(bytes donPublicKey) external
-```
-
-Sets DON's secp256k1 public key used to encrypt secrets
-
-_Used to rotate the key_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| donPublicKey | bytes | The new public key |
-
-### setNodePublicKey
-
-```solidity
-function setNodePublicKey(address node, bytes publicKey) external
-```
-
-Sets a per-node secp256k1 public key used to encrypt secrets for that node
-
-_Callable only by contract owner and DON members_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| node | address | node's address |
-| publicKey | bytes | node's public key |
-
-### deleteNodePublicKey
-
-```solidity
-function deleteNodePublicKey(address node) external
-```
-
-Deletes node's public key
-
-_Callable only by contract owner or the node itself_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| node | address | node's address |
-
-### getAllNodePublicKeys
-
-```solidity
-function getAllNodePublicKeys() external view returns (address[], bytes[])
-```
-
-Return two arrays of equal size containing DON members' addresses and their corresponding
-public keys (or empty byte arrays if per-node key is not defined)
-
-### getRequiredFee
-
-```solidity
-function getRequiredFee(bytes data, struct FunctionsBillingRegistryInterface.RequestBilling billing) external view returns (uint96)
-```
-
-Determine the fee charged by the DON that will be split between signing Node Operators for servicing the request
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| billing | struct FunctionsBillingRegistryInterface.RequestBilling | The request's billing configuration |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint96 | fee Cost in Juels (1e18) of LINK |
-
-### estimateCost
-
-```solidity
-function estimateCost(uint64 subscriptionId, bytes data, uint32 gasLimit, uint256 gasPrice) external view returns (uint96)
-```
-
-Estimate the total cost that will be charged to a subscription to make a request: gas re-imbursement, plus DON fee, plus Registry fee
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
-| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| gasLimit | uint32 | Gas limit for the fulfillment callback |
-| gasPrice | uint256 |  |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint96 | billedCost Cost in Juels (1e18) of LINK |
-
-### sendRequest
-
-```solidity
-function sendRequest(uint64 subscriptionId, bytes data, uint32 gasLimit) external returns (bytes32)
-```
-
-Sends a request (encoded as data) using the provided subscriptionId
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
-| data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| gasLimit | uint32 | Gas limit for the fulfillment callback |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes32 | requestId A unique request identifier (unique per DON) |
+| user | address | The user address |
+| amount | uint256 | The amount of stake to send |
 
 ## IDepositContract
 
@@ -1800,197 +2184,6 @@ Query the current deposit count.
 | ---- | ---- | ----------- |
 | [0] | bytes | The deposit count encoded as a little endian 64-bit number. |
 
-## OnchainConfig
-
-```solidity
-struct OnchainConfig {
-  uint32 paymentPremiumPPB;
-  uint32 flatFeeMicroLink;
-  uint32 checkGasLimit;
-  uint24 stalenessSeconds;
-  uint16 gasCeilingMultiplier;
-  uint96 minUpkeepSpend;
-  uint32 maxPerformGas;
-  uint32 maxCheckDataSize;
-  uint32 maxPerformDataSize;
-  uint256 fallbackGasPrice;
-  uint256 fallbackLinkPrice;
-  address transcoder;
-  address registrar;
-}
-```
-
-## State
-
-```solidity
-struct State {
-  uint32 nonce;
-  uint96 ownerLinkBalance;
-  uint256 expectedLinkBalance;
-  uint96 totalPremium;
-  uint256 numUpkeeps;
-  uint32 configCount;
-  uint32 latestConfigBlockNumber;
-  bytes32 latestConfigDigest;
-  uint32 latestEpoch;
-  bool paused;
-}
-```
-
-## UpkeepInfo
-
-```solidity
-struct UpkeepInfo {
-  address target;
-  uint32 executeGas;
-  bytes checkData;
-  uint96 balance;
-  address admin;
-  uint64 maxValidBlocknumber;
-  uint32 lastPerformBlockNumber;
-  uint96 amountSpent;
-  bool paused;
-  bytes offchainConfig;
-}
-```
-
-## UpkeepFailureReason
-
-```solidity
-enum UpkeepFailureReason {
-  NONE,
-  UPKEEP_CANCELLED,
-  UPKEEP_PAUSED,
-  TARGET_CHECK_REVERTED,
-  UPKEEP_NOT_NEEDED,
-  PERFORM_DATA_EXCEEDS_LIMIT,
-  INSUFFICIENT_BALANCE
-}
-```
-
-## KeeperRegistryBaseInterface
-
-### registerUpkeep
-
-```solidity
-function registerUpkeep(address target, uint32 gasLimit, address admin, bytes checkData, bytes offchainConfig) external returns (uint256 id)
-```
-
-### cancelUpkeep
-
-```solidity
-function cancelUpkeep(uint256 id) external
-```
-
-### pauseUpkeep
-
-```solidity
-function pauseUpkeep(uint256 id) external
-```
-
-### unpauseUpkeep
-
-```solidity
-function unpauseUpkeep(uint256 id) external
-```
-
-### transferUpkeepAdmin
-
-```solidity
-function transferUpkeepAdmin(uint256 id, address proposed) external
-```
-
-### acceptUpkeepAdmin
-
-```solidity
-function acceptUpkeepAdmin(uint256 id) external
-```
-
-### updateCheckData
-
-```solidity
-function updateCheckData(uint256 id, bytes newCheckData) external
-```
-
-### addFunds
-
-```solidity
-function addFunds(uint256 id, uint96 amount) external
-```
-
-### setUpkeepGasLimit
-
-```solidity
-function setUpkeepGasLimit(uint256 id, uint32 gasLimit) external
-```
-
-### setUpkeepOffchainConfig
-
-```solidity
-function setUpkeepOffchainConfig(uint256 id, bytes config) external
-```
-
-### getUpkeep
-
-```solidity
-function getUpkeep(uint256 id) external view returns (struct UpkeepInfo upkeepInfo)
-```
-
-### getActiveUpkeepIDs
-
-```solidity
-function getActiveUpkeepIDs(uint256 startIndex, uint256 maxCount) external view returns (uint256[])
-```
-
-### getTransmitterInfo
-
-```solidity
-function getTransmitterInfo(address query) external view returns (bool active, uint8 index, uint96 balance, uint96 lastCollected, address payee)
-```
-
-### getState
-
-```solidity
-function getState() external view returns (struct State state, struct OnchainConfig config, address[] signers, address[] transmitters, uint8 f)
-```
-
-## IKeeperRegistry
-
-_The view methods are not actually marked as view in the implementation
-but we want them to be easily queried off-chain. Solidity will not compile
-if we actually inherit from this interface, so we document it here._
-
-### checkUpkeep
-
-```solidity
-function checkUpkeep(uint256 upkeepId) external view returns (bool upkeepNeeded, bytes performData, enum UpkeepFailureReason upkeepFailureReason, uint256 gasUsed, uint256 fastGasWei, uint256 linkNative)
-```
-
-## KeeperRegistryExecutableInterface
-
-### checkUpkeep
-
-```solidity
-function checkUpkeep(uint256 upkeepId) external returns (bool upkeepNeeded, bytes performData, enum UpkeepFailureReason upkeepFailureReason, uint256 gasUsed, uint256 fastGasWei, uint256 linkNative)
-```
-
-## ISSVToken
-
-### mint
-
-```solidity
-function mint(address to, uint256 amount) external
-```
-
-Mint tokens
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| to | address | The target address |
-| amount | uint256 | The amount of token to mint |
-
 ## IWETH9
 
 ### deposit
@@ -2009,401 +2202,70 @@ function withdraw(uint256) external
 
 Withdraw wrapped ether to get ether
 
-## Buffer
+## KeeperRegistrarInterface
 
-_A library for working with mutable byte buffers in Solidity.
-
-Byte buffers are mutable and expandable, and provide a variety of primitives
-for appending to them. At any time you can fetch a bytes object containing the
-current contents of the buffer. The bytes object should not be stored between
-operations, as it may change due to resizing of the buffer._
-
-### buffer
+### RegistrationParams
 
 ```solidity
-struct buffer {
-  bytes buf;
-  uint256 capacity;
+struct RegistrationParams {
+  string name;
+  bytes encryptedEmail;
+  address upkeepContract;
+  uint32 gasLimit;
+  address adminAddress;
+  bytes checkData;
+  bytes offchainConfig;
+  uint96 amount;
 }
 ```
 
-### init
+### registerUpkeep
 
 ```solidity
-function init(struct Buffer.buffer buf, uint256 capacity) internal pure returns (struct Buffer.buffer)
+function registerUpkeep(struct KeeperRegistrarInterface.RegistrationParams requestParams) external returns (uint256)
 ```
 
-_Initializes a buffer with an initial capacity._
+## MockFunctionsOracle
 
-#### Parameters
+### constructor
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to initialize. |
-| capacity | uint256 | The number of bytes of space to allocate the buffer. |
+```solidity
+constructor() public
+```
+
+### getRegistry
+
+```solidity
+function getRegistry() external view returns (address)
+```
+
+Returns the address of the registry contract
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The buffer, for chaining. |
+| [0] | address | address The address of the registry contract |
 
-### fromBytes
+### sendRequest
 
 ```solidity
-function fromBytes(bytes b) internal pure returns (struct Buffer.buffer)
+function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
 ```
 
-_Initializes a new buffer from an existing bytes object.
-     Changes to the buffer may mutate the original value._
+Sends a request (encoded as data) using the provided subscriptionId
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| b | bytes | The bytes object to initialize the buffer with. |
+| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
+| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
+| _gasLimit | uint32 | Gas limit for the fulfillment callback |
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | A new buffer. |
-
-### truncate
-
-```solidity
-function truncate(struct Buffer.buffer buf) internal pure returns (struct Buffer.buffer)
-```
-
-_Sets buffer length to 0._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to truncate. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chaining.. |
-
-### append
-
-```solidity
-function append(struct Buffer.buffer buf, bytes data, uint256 len) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends len bytes of a byte string to a buffer. Resizes if doing so would exceed
-     the capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | bytes | The data to append. |
-| len | uint256 | The number of bytes to copy. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chaining. |
-
-### append
-
-```solidity
-function append(struct Buffer.buffer buf, bytes data) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends a byte string to a buffer. Resizes if doing so would exceed
-     the capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | bytes | The data to append. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chaining. |
-
-### appendUint8
-
-```solidity
-function appendUint8(struct Buffer.buffer buf, uint8 data) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends a byte to the buffer. Resizes if doing so would exceed the
-     capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | uint8 | The data to append. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chaining. |
-
-### appendBytes20
-
-```solidity
-function appendBytes20(struct Buffer.buffer buf, bytes20 data) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends a bytes20 to the buffer. Resizes if doing so would exceed
-     the capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | bytes20 | The data to append. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chhaining. |
-
-### appendBytes32
-
-```solidity
-function appendBytes32(struct Buffer.buffer buf, bytes32 data) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends a bytes32 to the buffer. Resizes if doing so would exceed
-     the capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | bytes32 | The data to append. |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer, for chaining. |
-
-### appendInt
-
-```solidity
-function appendInt(struct Buffer.buffer buf, uint256 data, uint256 len) internal pure returns (struct Buffer.buffer)
-```
-
-_Appends a byte to the end of the buffer. Resizes if doing so would
-     exceed the capacity of the buffer._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| buf | struct Buffer.buffer | The buffer to append to. |
-| data | uint256 | The data to append. |
-| len | uint256 | The number of bytes to write (right-aligned). |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | struct Buffer.buffer | The original buffer. |
-
-## CBOR
-
-_A library for populating CBOR encoded payload in Solidity.
-
-https://datatracker.ietf.org/doc/html/rfc7049
-
-The library offers various write* and start* methods to encode values of different types.
-The resulted buffer can be obtained with data() method.
-Encoding of primitive types is staightforward, whereas encoding of sequences can result
-in an invalid CBOR if start/write/end flow is violated.
-For the purpose of gas saving, the library does not verify start/write/end flow internally,
-except for nested start/end pairs._
-
-### CBORBuffer
-
-```solidity
-struct CBORBuffer {
-  struct Buffer.buffer buf;
-  uint256 depth;
-}
-```
-
-### create
-
-```solidity
-function create(uint256 capacity) internal pure returns (struct CBOR.CBORBuffer cbor)
-```
-
-### data
-
-```solidity
-function data(struct CBOR.CBORBuffer buf) internal pure returns (bytes)
-```
-
-### writeUInt256
-
-```solidity
-function writeUInt256(struct CBOR.CBORBuffer buf, uint256 value) internal pure
-```
-
-### writeInt256
-
-```solidity
-function writeInt256(struct CBOR.CBORBuffer buf, int256 value) internal pure
-```
-
-### writeUInt64
-
-```solidity
-function writeUInt64(struct CBOR.CBORBuffer buf, uint64 value) internal pure
-```
-
-### writeInt64
-
-```solidity
-function writeInt64(struct CBOR.CBORBuffer buf, int64 value) internal pure
-```
-
-### writeBytes
-
-```solidity
-function writeBytes(struct CBOR.CBORBuffer buf, bytes value) internal pure
-```
-
-### writeString
-
-```solidity
-function writeString(struct CBOR.CBORBuffer buf, string value) internal pure
-```
-
-### writeBool
-
-```solidity
-function writeBool(struct CBOR.CBORBuffer buf, bool value) internal pure
-```
-
-### writeNull
-
-```solidity
-function writeNull(struct CBOR.CBORBuffer buf) internal pure
-```
-
-### writeUndefined
-
-```solidity
-function writeUndefined(struct CBOR.CBORBuffer buf) internal pure
-```
-
-### startArray
-
-```solidity
-function startArray(struct CBOR.CBORBuffer buf) internal pure
-```
-
-### startFixedArray
-
-```solidity
-function startFixedArray(struct CBOR.CBORBuffer buf, uint64 length) internal pure
-```
-
-### startMap
-
-```solidity
-function startMap(struct CBOR.CBORBuffer buf) internal pure
-```
-
-### startFixedMap
-
-```solidity
-function startFixedMap(struct CBOR.CBORBuffer buf, uint64 length) internal pure
-```
-
-### endSequence
-
-```solidity
-function endSequence(struct CBOR.CBORBuffer buf) internal pure
-```
-
-### writeKVString
-
-```solidity
-function writeKVString(struct CBOR.CBORBuffer buf, string key, string value) internal pure
-```
-
-### writeKVBytes
-
-```solidity
-function writeKVBytes(struct CBOR.CBORBuffer buf, string key, bytes value) internal pure
-```
-
-### writeKVUInt256
-
-```solidity
-function writeKVUInt256(struct CBOR.CBORBuffer buf, string key, uint256 value) internal pure
-```
-
-### writeKVInt256
-
-```solidity
-function writeKVInt256(struct CBOR.CBORBuffer buf, string key, int256 value) internal pure
-```
-
-### writeKVUInt64
-
-```solidity
-function writeKVUInt64(struct CBOR.CBORBuffer buf, string key, uint64 value) internal pure
-```
-
-### writeKVInt64
-
-```solidity
-function writeKVInt64(struct CBOR.CBORBuffer buf, string key, int64 value) internal pure
-```
-
-### writeKVBool
-
-```solidity
-function writeKVBool(struct CBOR.CBORBuffer buf, string key, bool value) internal pure
-```
-
-### writeKVNull
-
-```solidity
-function writeKVNull(struct CBOR.CBORBuffer buf, string key) internal pure
-```
-
-### writeKVUndefined
-
-```solidity
-function writeKVUndefined(struct CBOR.CBORBuffer buf, string key) internal pure
-```
-
-### writeKVMap
-
-```solidity
-function writeKVMap(struct CBOR.CBORBuffer buf, string key) internal pure
-```
-
-### writeKVArray
-
-```solidity
-function writeKVArray(struct CBOR.CBORBuffer buf, string key) internal pure
-```
+| requestId | bytes32 | A unique request identifier (unique per DON) |
 
