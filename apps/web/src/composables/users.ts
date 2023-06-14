@@ -1,12 +1,9 @@
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, Account, ExistingUserCheck } from '@casimir/types'
-import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
-import useContracts from '@/composables/contracts'
-import useWallet from '@/composables/wallet'
 import * as Session from 'supertokens-web-js/recipe/session'
 
-const { usersBaseURL, ethereumURL } = useEnvironment()
+const { usersBaseURL } = useEnvironment()
 
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const session = ref<boolean>(false)
@@ -100,14 +97,6 @@ export default function useUsers () {
         const { user } = await response.json()
         return user
     }
-
-    // onMounted(async () => {
-    //     const { getUserBalance } = useWallet()
-    //     // Just get pools for primary account for demo
-    //     user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
-    //     user.value.pools = await getPools(user.value.id)
-    //     subscribeToUserEvents()
-    // })
 
     async function removeAccount({ address, currency, ownerAddress, walletProvider }: RemoveAccountOptions) {
         address = address.toLowerCase()

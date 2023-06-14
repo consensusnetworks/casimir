@@ -18,7 +18,7 @@ export default function useEthers() {
         method: 'wallet_addEthereumChain',
         params: [network]
       })
-    } catch(error: any) {
+    } catch(error) {
       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
     }
   }
@@ -205,8 +205,7 @@ export default function useEthers() {
   async function signEthersMessage(messageRequest: MessageRequest): Promise<string> {
     const { providerString, message } = messageRequest
     const browserProvider = getBrowserProvider(providerString)
-    const web3Provider: ethers.providers.Web3Provider =
-      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const signer = web3Provider.getSigner()
     const signature = await signer.signMessage(message)
     return signature
@@ -226,7 +225,7 @@ export default function useEthers() {
             method:'wallet_switchEthereumChain',
             params: [{chainId: chainId}]
           })
-        } catch(err: any){
+        } catch (err) {
             console.log(`Error occurred while switching chain to chainId ${chainId}, err: ${err.message} code: ${err.code}`)
             if (err.code === 4902){
               if (chainId === '5') {

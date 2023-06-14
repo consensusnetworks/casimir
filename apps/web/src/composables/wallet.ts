@@ -64,7 +64,7 @@ export default function useWallet() {
    * @param currency 
    * @returns 
   */
-  async function connectWallet() {
+  async function connectWallet(): Promise<void> {
     try { // Sign Up or Login
       if (!user?.value?.address) {
         await login()
@@ -99,7 +99,7 @@ export default function useWallet() {
       }
       await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
-      return user.value
+      return
     } catch (error) {
       console.error('There was an error in connectWallet :>> ', error)
     }
@@ -300,7 +300,7 @@ export default function useWallet() {
       } else {
         return await connectWallet() // sign up or add account
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('selectAddress error: ', error)
       throw new Error(error)
     }
@@ -332,7 +332,7 @@ export default function useWallet() {
         const trezorAddresses = await getTrezorAddress[currency]() as CryptoAddress[]
         setUserAddresses(trezorAddresses)
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('There was an error in selectProvider :>> ', error)
       if (error.name === 'TransportStatusError') alert('Please enter your PIN and open the Ethereum application on your device.')
     }
@@ -419,13 +419,18 @@ export default function useWallet() {
     }
   }
 
-  async function switchNetwork(chainId: string) {
-    if (selectedProvider.value === 'MetaMask') {
-      switchEthersNetwork('MetaMask', chainId)
-    } else if (selectedProvider.value === 'CoinbaseWallet') {
-      switchEthersNetwork('CoinbaseWallet', chainId)
-    } else {
-      alert('Switching networks is only supported for MetaMask and Coinbase Wallet')
+  async function switchNetwork(chainId: string): Promise<void> {
+    try {
+      if (selectedProvider.value === 'MetaMask') {
+        switchEthersNetwork('MetaMask', chainId)
+      } else if (selectedProvider.value === 'CoinbaseWallet') {
+        switchEthersNetwork('CoinbaseWallet', chainId)
+      } else {
+        alert('Switching networks is only supported for MetaMask and Coinbase Wallet')
+      }
+    } catch (error) {
+      console.error(error)
+      return new Promise((resolve, reject) => reject(error))
     }
   }
 

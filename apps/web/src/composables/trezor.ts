@@ -83,7 +83,7 @@ export default function useTrezor() {
                 signedMessage
             })
             return await loginResponse.json()
-        } catch (error: any) {
+        } catch (error) {
             console.log(error)
             throw new Error(error)
         }
