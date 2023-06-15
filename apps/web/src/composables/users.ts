@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, Account, ExistingUserCheck } from '@casimir/types'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, Account, ExistingUserCheck, ErrorSuccessInterface } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import * as Session from 'supertokens-web-js/recipe/session'
 
@@ -11,18 +11,23 @@ const user = ref<UserWithAccounts>()
 
 export default function useUsers () {
 
-    async function addAccount(account: AddAccountOptions): Promise<{ error: boolean, message: string, data: UserWithAccounts | null }> {
-        const requestOptions = {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ account })
+    async function addAccount(account: AddAccountOptions): Promise<ErrorSuccessInterface> {
+        try {
+            const requestOptions = {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ account })
+            }
+            const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
+            const { error, message, data: userAccount } = await response.json()
+            user.value = userAccount
+            return { error, message, data: userAccount }
+        } catch (error) {
+            console.log('Error in addAccount in wallet.ts :>> ', error)
+            return { error: true, message: 'Error adding account', data: null }
         }
-        const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
-        const { data: userAccount } = await response.json()
-        user.value = userAccount
-        return { error: false, message: `Account added to user: ${userAccount}`, data: userAccount }
     }
 
     async function checkIfPrimaryUserExists(provider: ProviderString, address: string): Promise<ExistingUserCheck> {
@@ -64,7 +69,7 @@ export default function useUsers () {
         try {
             session.value = await Session.doesSessionExist()
             if (session.value) {
-                const user = await getUser()
+                const { data: user } = await getUser()
                 if (user) {
                     setUser(user)
                     return true
@@ -86,16 +91,25 @@ export default function useUsers () {
         return message
     }
 
-    async function getUser() {
-        const requestOptions = {
-            method: 'GET',
-            headers: { 
-                'Content-Type': 'application/json'
+    async function getUser() : Promise<ErrorSuccessInterface> {
+        try {
+            const requestOptions = {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json'
+                }
             }
+            const response = await fetch(`${usersBaseURL}/user`, requestOptions)
+            const { user, error, message } = await response.json()
+            return {
+                error,
+                message,
+                data: user
+            }
+        } catch (error) {
+            console.log('Error in getUser in wallet.ts :>> ', error)
+            throw new Error('Error getting user from API')
         }
-        const response = await fetch(`${usersBaseURL}/user`, requestOptions)
-        const { user } = await response.json()
-        return user
     }
 
     async function removeAccount({ address, currency, ownerAddress, walletProvider }: RemoveAccountOptions) {

@@ -151,7 +151,7 @@ export default function useEthers() {
     return maxAfterFees
   }
 
-  async function loginWithEthers(loginCredentials: LoginCredentials) {
+  async function loginWithEthers(loginCredentials: LoginCredentials){
     const { provider, address, currency } = loginCredentials
     const browserProvider = getBrowserProvider(provider)
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)

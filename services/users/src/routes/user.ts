@@ -7,17 +7,27 @@ const router = express.Router()
 const { addAccount, getUser, updateUserAddress, removeAccount } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
-    const address = req.session?.getUserId().toLowerCase() as string
-    const user = await getUser(address)
-    const message = user ? 'User found' : 'User not found'
-    const error = user ? false : true
-    res.setHeader('Content-Type', 'application/json')
-    res.status(200)
-    res.json({
-        message,
-        error,
-        user
-    })
+    try {
+        const address = req.session?.getUserId().toLowerCase() as string
+        const user = await getUser(address)
+        const message = user ? 'User found' : 'User not found'
+        const error = user ? false : true
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            message,
+            error,
+            user
+        })
+    } catch (err) {
+        console.log('Error in / route of user.ts :>> ', err)
+        res.status(500)
+        res.json({
+            message: 'Error getting user',
+            error: true,
+            user: null
+        })
+    }
 })
 
 router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res: express.Response) => {
@@ -47,11 +57,12 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
             data: user
         })
     } catch (err) {
-        console.log('err :>> ', err)
+        console.log('Error in /add-sub-account route of user.ts :>> ', err)
         res.status(500)
         res.json({
             message: 'Error adding account',
-            error: true
+            error: true,
+            data: null
         })
     }
 })

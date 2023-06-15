@@ -10,6 +10,7 @@ import { CryptoAddress } from './interfaces/CryptoAddress'
 import { Currency } from './interfaces/Currency'
 import { DeploymentConfig } from './interfaces/DeploymentConfig'
 import { EthersProvider } from './interfaces/EthersProvider'
+import { ErrorSuccessInterface } from './interfaces/ErrorSuccessInterface'
 import { Event } from './interfaces/Event'
 import { ExistingUserCheck } from './interfaces/ExistingUserCheck'
 import { GasEstimate } from './interfaces/GasEstimate'
@@ -38,6 +39,7 @@ export type {
     Currency,
     DeploymentConfig,
     EthersProvider,
+    ErrorSuccessInterface,
     Event,
     ExistingUserCheck,
     GasEstimate,

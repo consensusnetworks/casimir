@@ -1,6 +1,6 @@
 import { Postgres } from '@casimir/data'
 import { camelCase } from '@casimir/helpers'
-import { Account, ProviderString, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
+import { Account, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
 import useEthers from './ethers'
 
 const { generateNonce } = useEthers()

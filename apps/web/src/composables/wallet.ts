@@ -5,7 +5,7 @@ import useSolana from '@/composables/solana'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
 import useWalletConnect from '@/composables/walletConnect'
-import { Account, CryptoAddress, Currency, ExistingUserCheck, LoginCredentials, MessageRequest, ProviderString, TransactionRequest } from '@casimir/types'
+import { Account, CryptoAddress, Currency, ExistingUserCheck, LoginCredentials, MessageRequest, ProviderString, TransactionRequest, ErrorSuccessInterface } from '@casimir/types'
 import * as Session from 'supertokens-web-js/recipe/session'
 
 // Test ethereum send from address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
@@ -64,17 +64,16 @@ export default function useWallet() {
    * @param currency 
    * @returns 
   */
-  async function connectWallet(): Promise<void> {
+  async function connectWallet(): Promise<ErrorSuccessInterface> {
     try { // Sign Up or Login
       if (!user?.value?.address) {
         await login()
-        const userResponse = await getUser()
-        if (!userResponse?.error) {
-          setUser(userResponse)
+        const getUserResponse = await getUser()
+        if (!getUserResponse?.error) {
+          setUser(getUserResponse.data)
           setPrimaryAddress(user?.value?.address as string)
         }
         loadingUserWallets.value = false
-        // router.push('/')
       } else { // Add account if it doesn't already exist
         const userAccountExists = user.value?.accounts?.some((account: Account | any) => account?.address === selectedAddress.value && account?.walletProvider === selectedProvider.value && account?.currency === selectedCurrency.value)
         if (userAccountExists) {
@@ -90,18 +89,28 @@ export default function useWallet() {
           }
           const addAccountResponse = await addAccount(account)
           if (!addAccountResponse?.error) {
-            const userResponse = await getUser()
-            setUser(userResponse)
+            const getUserResponse = await getUser()
+            setUser(getUserResponse.data)
             setPrimaryAddress(user?.value?.address as string)
-            // router.push('/')
+          } else {
+            console.error('There was an error adding the account :>> ', addAccountResponse.message)
+            throw new Error(addAccountResponse.message)
           }
         }
       }
       await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
-      return
+      return {
+        error: false,
+        message: 'Successfully connected wallet',
+        data: user.value
+      }
     } catch (error) {
       console.error('There was an error in connectWallet :>> ', error)
+      return {
+        error: true,
+        message: `There was an error connecting your wallet: ${error}`
+      }
     }
   }
 
@@ -186,22 +195,27 @@ export default function useWallet() {
    * @returns 
    */
   async function login() {
-    const loginCredentials = {
-      provider: selectedProvider.value,
-      address: selectedAddress.value,
-      currency: selectedCurrency.value || 'ETH'
-    } as LoginCredentials
-    if (ethersProviderList.includes(selectedProvider.value)) {
-      return await loginWithEthers(loginCredentials)
-    } else if (selectedProvider.value === 'Ledger') {
-      return await loginWithLedger(loginCredentials, selectedPathIndex.value)
-    } else if (selectedProvider.value === 'Trezor') {
-      return await loginWithTrezor(loginCredentials, selectedPathIndex.value)
-    } else if (selectedProvider.value === 'WalletConnect'){
-      return await loginWithWalletConnect(loginCredentials)
-    } else {
-      // TODO: Implement this for other providers
-      console.log('Sign up not yet supported for this wallet provider')
+    try {
+      const loginCredentials = {
+        provider: selectedProvider.value,
+        address: selectedAddress.value,
+        currency: selectedCurrency.value || 'ETH'
+      } as LoginCredentials
+      if (ethersProviderList.includes(selectedProvider.value)) {
+        return await loginWithEthers(loginCredentials)
+      } else if (selectedProvider.value === 'Ledger') {
+        return await loginWithLedger(loginCredentials, selectedPathIndex.value)
+      } else if (selectedProvider.value === 'Trezor') {
+        return await loginWithTrezor(loginCredentials, selectedPathIndex.value)
+      } else if (selectedProvider.value === 'WalletConnect'){
+        return await loginWithWalletConnect(loginCredentials)
+      } else {
+        // TODO: Implement this for other providers
+        console.log('Sign up not yet supported for this wallet provider')
+      }
+    } catch (error) {
+      console.error('There was an error in login :>> ', error)
+      throw new Error('There was an error logging in: ' + error)
     }
   }
 
@@ -278,7 +292,7 @@ export default function useWallet() {
    * @param provider 
    * @param currency 
    */
-  async function selectAddress(address: any, pathIndex?: string) : Promise<void | Account[]> {
+  async function selectAddress(address: any, pathIndex?: string) : Promise<ErrorSuccessInterface> {
     try {
       address = trimAndLowercaseAddress(address)
       setSelectedAddress(address)
@@ -287,7 +301,11 @@ export default function useWallet() {
       
       const { sameAddress, sameProvider } : ExistingUserCheck = await checkIfPrimaryUserExists(selectedProvider.value, selectedAddress.value)
       if (sameAddress && sameProvider ) {
-        return await connectWallet() // login
+        await connectWallet() // login
+        return {
+          error: false,
+          message: 'Address already exists as a primary address using this provider',
+        }
       } else if (sameAddress && !sameProvider) {
         // TODO: Handle this on front-end: do you want to change your primary provider?
         throw new Error('Address already exists as a primary address using another provider')
@@ -298,21 +316,27 @@ export default function useWallet() {
       if (accountsIfSecondaryAddress.length) {
         throw new Error(`${selectedAddress.value} already exists as a secondary address on this/these account(s): ${JSON.stringify(accountsIfSecondaryAddress)}`)
       } else {
-        return await connectWallet() // sign up or add account
+        await connectWallet() // sign up or add account
+        return {
+          error: false,
+          message: 'Address does not exist as a primary address using this provider',
+        }
       }
     } catch (error) {
       console.error('selectAddress error: ', error)
-      throw new Error(error)
+      return {
+        error: true,
+        message: error.message
+      }
     }
   }
 
-  // TODO: Check if we can find a way to scroll through addresses on MetaMask and CoinbaseWallet
   /**
    * Sets the selected provider and returns the set of addresses available for the selected provider
    * @param provider 
    * @param currency 
    */
-  async function selectProvider(provider: ProviderString, currency: Currency = 'ETH') {
+  async function selectProvider(provider: ProviderString, currency: Currency = 'ETH'): Promise<ErrorSuccessInterface> {
     console.clear()
     try {
       if (provider === 'WalletConnect') {
@@ -332,9 +356,17 @@ export default function useWallet() {
         const trezorAddresses = await getTrezorAddress[currency]() as CryptoAddress[]
         setUserAddresses(trezorAddresses)
       }
+      return {
+        error: false,
+        message: 'Successfully selected provider'
+      }
     } catch (error) {
-      console.error('There was an error in selectProvider :>> ', error)
-      if (error.name === 'TransportStatusError') alert('Please enter your PIN and open the Ethereum application on your device.')
+      console.error('selectProvider error: ', error)
+      return {
+        error: true,
+        message: error.message as string || 'Error selecting provider',
+        data: error.name as string || null
+      }
     }
   }
 
@@ -374,17 +406,22 @@ export default function useWallet() {
   }
 
   async function setUserAccountBalances() {
-    if (user?.value?.accounts) {
-      const accounts = user.value.accounts
-      const accountsWithBalances = await Promise.all(accounts.map(async (account: Account) => {
-        const balance = await getAccountBalance(account)
-        return {
-          ...account,
-          balance
-        }
-      }))
-      user.value.accounts = accountsWithBalances
-      setUser(user.value)
+    try {
+      if (user?.value?.accounts) {
+        const accounts = user.value.accounts
+        const accountsWithBalances = await Promise.all(accounts.map(async (account: Account) => {
+          const balance = await getAccountBalance(account)
+          return {
+            ...account,
+            balance
+          }
+        }))
+        user.value.accounts = accountsWithBalances
+        setUser(user.value)
+      }
+    } catch (error) {
+      console.error('setUserAccountBalances error: ', error)
+      throw new Error('Error setting user account balances')
     }
   }
 
@@ -456,7 +493,6 @@ export default function useWallet() {
     selectedProvider,
     sendTransaction,
     setPrimaryWalletAccount,
-    setUserAccountBalances,
     signMessage,
     switchNetwork,
     toAddress,
