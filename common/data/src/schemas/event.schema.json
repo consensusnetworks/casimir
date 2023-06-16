@@ -59,6 +59,10 @@
         "price": {
             "type": "string",
             "description": "The exchange price of the coin at the time of the event"
+        },
+        "gas_fee": {
+            "type": "string",
+            "description": "The gas fee paid for the transaction"
         }
     }
 }

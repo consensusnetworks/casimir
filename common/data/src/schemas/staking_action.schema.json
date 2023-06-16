@@ -1,0 +1,32 @@
+{
+    "$id": "https://casimir.co/agg.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Staking Action",
+    "type": "object",
+    "properties": {
+        "wallet_address": {
+            "type": "string",
+            "description": "The wallet address of the staker"
+        },
+        "stake_deposit": {
+            "type": "integer",
+            "description": "The amount of stake deposited"
+        },
+        "created_at": {
+            "type": "string",
+            "description": "The date and time of the staking action"
+        },
+        "stake_rebalance": {
+            "type": "integer",
+            "description": "The amount of stake rebalanced"
+        },
+        "withdrawal_amount": {
+            "type": "integer",
+            "description": "The amount of stake withdrawn"
+        },
+        "distribute_reward": {
+            "type": "integer",
+            "description": "The amount of reward distributed"
+        }
+    }
+}
