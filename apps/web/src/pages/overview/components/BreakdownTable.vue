@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { ref } from 'vue'
+import * as XLSX from 'xlsx'
+
+const searchInput = ref('')
 
 const tableView = ref('Wallets')
 
@@ -83,6 +86,49 @@ const tableMockedItems = ref({
     operators: ['op 1', 'op 2', 'op 3', 'op 4', 'op 5']
   },
 })
+
+const filteredData = () => {
+  if (searchInput.value === '') {
+    console.log('table', tableMockedItems.value[tableView.value])
+    return tableMockedItems.value[tableView.value]
+  } else {
+    const searchTerm = searchInput.value.toLowerCase()
+    return tableMockedItems.value[tableView.value].filter(item => {
+      return (
+        //     // Might need to modify to match types each variable
+        item.wallet_provider.toLowerCase().includes(searchTerm) ||
+        item.act.toLowerCase().includes(searchTerm) ||
+        item.bal.toLowerCase().includes(searchTerm) ||
+        item.stk_amt.toLowerCase().includes(searchTerm) ||
+        item.stk_rwd.toLowerCase().includes(searchTerm) ||
+        item.tx_hash.toLowerCase().includes(searchTerm) ||
+        item.date.toLowerCase().includes(searchTerm) ||
+        item.apy.toLowerCase().includes(searchTerm) ||
+        item.status.toLowerCase().includes(searchTerm) ||
+        item.operators.toLowerCase().includes(searchTerm) 
+      )
+    })
+    // return tableMockedItems.value[tableView.value].filter(item => {
+    //   if(
+    //     // Might need to modify to match types each variable
+    //     item.wallet_provider.toLowerCase().includes(searchTerm) ||
+    //     item.act.toLowerCase().includes(searchTerm) ||
+    //     item.bal.toLowerCase().includes(searchTerm) ||
+    //     item.stk_amt.toLowerCase().includes(searchTerm) ||
+    //     item.stk_rwd.toLowerCase().includes(searchTerm) ||
+    //     item.tx_hash.toLowerCase().includes(searchTerm) ||
+    //     item.date.toLowerCase().includes(searchTerm) ||
+    //     item.apy.toLowerCase().includes(searchTerm) ||
+    //     item.status.toLowerCase().includes(searchTerm) ||
+    //     item.operators.toLowerCase().includes(searchTerm) 
+    //   ){
+    //     return true
+    //   }
+    // })
+  }
+}
+
+
 const convertString = (inputString: string) => {
   if (inputString.length <= 4) {
     return inputString
@@ -93,6 +139,78 @@ const convertString = (inputString: string) => {
   var middle = '*'.repeat(4)
 
   return start + middle + end
+}
+
+const convertJsonToCsv = (jsonData) => {
+  const separator = ','
+  const csvRows = []
+
+  if (!Array.isArray(jsonData)) {
+    console.error('jsonData is not an array')
+    return ''
+  }
+
+  if (jsonData.length === 0) {
+    console.warn('jsonData is an empty array')
+    return ''
+  }
+
+  const keys = Object.keys(jsonData[0])
+
+  // Add headers
+  csvRows.push(keys.join(separator))
+
+  // Convert JSON data to CSV rows
+  jsonData.forEach(obj => {
+    const values = keys.map(key => obj[key])
+    csvRows.push(values.join(separator))
+  })
+
+  return csvRows.join('\n')
+}
+
+const convertJsonToExcelBuffer = (jsonData) => {
+  const worksheet = XLSX.utils.json_to_sheet(jsonData)
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
+  const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
+
+  return excelBuffer
+}
+
+const downloadFile = (content: any, filename: string, mimeType: any) => {
+  const blob = new Blob([content], { type: mimeType })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+
+  // Cleanup
+  URL.revokeObjectURL(url)
+}
+
+const exportFile = () => {
+
+  const jsonData = 
+    [{
+      wallet_provider: 'MetaMask',
+      act: '12345678910asdfghjkl;qwertyuiopzxcvbnm',
+      bal: '1.5 ETH',
+      stk_amt: '0.5 ETH',
+      stk_rwd: '0.034 ETH'
+    }]
+
+  const isMac = navigator.userAgent.indexOf('Mac') !== -1
+  const fileExtension = isMac ? 'csv' : 'xlsx'
+
+  if (fileExtension === 'csv') {
+    const csvContent = convertJsonToCsv(jsonData)
+    downloadFile(csvContent, `${tableView.value}.csv`, 'text/csv')
+  } else {
+    const excelBuffer = convertJsonToExcelBuffer(jsonData)
+    downloadFile(excelBuffer, `${tableView.value}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  }
 }
 </script>
 
@@ -111,7 +229,10 @@ const convertString = (inputString: string) => {
           </div>
         </div>
         <div class="flex items-start gap-[12px]">
-          <button class="flex items-center gap-[8px] export_button">
+          <button
+            class="flex items-center gap-[8px] export_button"
+            @click="exportFile()"
+          >
             <i
               data-feather="upload-cloud" 
               class="w-[17px] h-min"
@@ -145,6 +266,7 @@ const convertString = (inputString: string) => {
               class="w-[20px] h-min text-[#667085]"
             />
             <input
+              v-model="searchInput"
               type="text"
               class="w-full outline-none"
               placeholder="Search"
@@ -216,11 +338,15 @@ const convertString = (inputString: string) => {
           class="w-full"
         >
           <tr
-            v-for="item in 7"
+            v-for="item in filteredData()"
             :key="item"
             class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
           >
-            <td
+            <td>
+              {{ item }}
+            </td>
+            
+            <!-- <td
               v-for="header in tableHeaderOptions[tableView].headers"
               :key="header"
               class="dynamic_padding"
@@ -299,7 +425,7 @@ const convertString = (inputString: string) => {
               <div v-else>
                 {{ tableMockedItems[tableView][header.value] }}
               </div>
-            </td>
+            </td> -->
           </tr>
         </tbody>
       </table>

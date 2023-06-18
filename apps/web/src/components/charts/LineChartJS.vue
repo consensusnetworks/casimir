@@ -27,6 +27,10 @@ const props = defineProps({
     gradient: {
         type: Boolean,
         default: false
+    },
+    height: {
+        type: Number,
+        default: 400
     }
 })
 
@@ -39,6 +43,10 @@ const hexToRGB = (hex: string) => {
         b: parseInt(result[3], 16)
     } : {r: 0, g: 0, b: 0}
 }
+
+const WIDTH = ref(0)
+// const HEIGHT = ref(0)
+
 let ctx: any
 let line_chart: Chart<any, any[], unknown>
 onMounted(() => {
@@ -83,6 +91,23 @@ onMounted(() => {
             }
         }
     })
+
+    const line_chart_container_el = document.getElementById('line_chart_container_' + props.id)
+    let WIDTH = 0
+    let HEIGHT =  0
+
+     // watches for size changes... 
+    const outputsize = () => {
+        if(line_chart_container_el){
+            WIDTH = line_chart_container_el.offsetWidth
+            HEIGHT.value = line_chart_container_el.offsetHeight
+        }
+        // console.log(WIDTH, HEIGHT)
+        line_chart.resize(WIDTH , HEIGHT)
+    }
+    if(line_chart_container_el){
+        new ResizeObserver(outputsize).observe(line_chart_container_el)   
+    }
 })
 
 watch(props, ()=> {
@@ -112,7 +137,7 @@ watch(props, ()=> {
 
 <template>
   <div 
-    class="h-full w-full"
+    class="w-full h-full"
   >
     <canvas
       :id="props.id"

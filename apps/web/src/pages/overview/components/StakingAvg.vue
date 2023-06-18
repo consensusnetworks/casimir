@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 const avgAPY = ref('5.2%')
 const openTimeFrameOptions = ref(false)
@@ -14,6 +14,38 @@ const timeframeOptions = ref(
     'Historical'
   ]
 )
+
+// eslint-disable-next-line no-undef
+const props = defineProps({
+  viewId: {
+      type: String,
+      required: true,
+  }
+})
+
+const handleOutsideClick = (event: any) => {
+  const staking_avg_timeframe_button = document.getElementById(`${props.viewId}_staking_avg_timeframe_button`)
+  const staking_avg_timeframe_options = document.getElementById(`${props.viewId}_staking_avg_timeframe_options`)
+
+  if(staking_avg_timeframe_options && staking_avg_timeframe_button){
+    if(openTimeFrameOptions.value) {
+      if(!staking_avg_timeframe_options.contains(event.target)){
+        if(!staking_avg_timeframe_button.contains(event.target)){
+          openTimeFrameOptions.value = false
+        }
+      }
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', handleOutsideClick)
+})
+
+onUnmounted(() =>{
+  window.removeEventListener('click', handleOutsideClick)
+})
+
 </script>
 
 <template>
@@ -26,6 +58,7 @@ const timeframeOptions = ref(
         class="whitespace-nowrap relative w-[120px]"
       >
         <button
+          :id="`${props.viewId}_staking_avg_timeframe_button`"
           class="flex justify-between items-center gap-[8px] px-[10px] py-[8px] card_input w-[120px] outline-none"
           @click="openTimeFrameOptions = !openTimeFrameOptions"
         >
@@ -38,7 +71,8 @@ const timeframeOptions = ref(
         </button>
         <div
           v-show="openTimeFrameOptions"
-          class="absolute w-full top-[110%] left-0 rounded-[8px] px-[10px] py-[14px] bg-white border h-max flex flex-wrap"
+          :id="`${props.viewId}_staking_avg_timeframe_options`"
+          class="absolute z-[20] w-full top-[110%] left-0 rounded-[8px] px-[10px] py-[14px] bg-white border h-max flex flex-wrap"
         >
           <button
             v-for="item in timeframeOptions"
