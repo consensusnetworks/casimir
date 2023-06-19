@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import * as XLSX from 'xlsx'
 
 const searchInput = ref('')
-
 const tableView = ref('Wallets')
 
 const tableHeaderOptions = ref(
@@ -69,64 +68,57 @@ const tableHeaderOptions = ref(
 )
 
 const tableMockedItems = ref({
-  Wallets: {
-    wallet_provider: 'MetaMask',
-    act: '12345678910asdfghjkl;qwertyuiopzxcvbnm',
-    bal: '1.5 ETH',
-    stk_amt: '0.5 ETH',
-    stk_rwd: '0.034 ETH'
-  },
-  Transactions: {
-    tx_hash: '1234567890qwertyuiopasdfghjklzxcvbnm',
-    stk_amt: '1.5 ETH',
-    stk_rwd: '0.045 ETH',
-    date: '01/01/2023',
-    apy: '2.1 %',
-    status: 'pending',
-    operators: ['op 1', 'op 2', 'op 3', 'op 4', 'op 5']
-  },
+  Wallets: [
+    {
+      wallet_provider: 'MetaMask',
+      act: '12345678910asdfghjkl;qwertyuiopzxcvbnm',
+      bal: '1.5 ETH',
+      stk_amt: '0.5 ETH',
+      stk_rwd: '0.034 ETH'
+    }
+  ],
+  Transactions: [
+    {
+      tx_hash: '1234567890qwertyuiopasdfghjklzxcvbnm',
+      stk_amt: '1.5 ETH',
+      stk_rwd: '0.045 ETH',
+      date: '01/01/2023',
+      apy: '2.1 %',
+      status: 'pending',
+      operators: ['op 1', 'op 2', 'op 3', 'op 4', 'op 5']
+    }
+  ],
 })
 
-const filteredData = () => {
+const filteredData = ref(tableMockedItems.value[tableView.value])
+
+const filterData = () => {
   if (searchInput.value === '') {
-    console.log('table', tableMockedItems.value[tableView.value])
-    return tableMockedItems.value[tableView.value]
+    filteredData.value = tableMockedItems.value[tableView.value]
   } else {
-    const searchTerm = searchInput.value.toLowerCase()
-    return tableMockedItems.value[tableView.value].filter(item => {
+    const searchTerm = searchInput.value
+    const filteredDataArray =  tableMockedItems.value[tableView.value].filter(item => {
       return (
-        //     // Might need to modify to match types each variable
-        item.wallet_provider.toLowerCase().includes(searchTerm) ||
-        item.act.toLowerCase().includes(searchTerm) ||
-        item.bal.toLowerCase().includes(searchTerm) ||
-        item.stk_amt.toLowerCase().includes(searchTerm) ||
-        item.stk_rwd.toLowerCase().includes(searchTerm) ||
-        item.tx_hash.toLowerCase().includes(searchTerm) ||
-        item.date.toLowerCase().includes(searchTerm) ||
-        item.apy.toLowerCase().includes(searchTerm) ||
-        item.status.toLowerCase().includes(searchTerm) ||
-        item.operators.toLowerCase().includes(searchTerm) 
+        // Might need to modify to match types each variable
+        item.wallet_provider?.toLowerCase().includes(searchTerm) ||
+        item.act?.toLowerCase().includes(searchTerm) ||
+        item.bal?.toLowerCase().includes(searchTerm) ||
+        item.stk_amt?.toLowerCase().includes(searchTerm) ||
+        item.stk_rwd?.toLowerCase().includes(searchTerm) ||
+        item.tx_hash?.toLowerCase().includes(searchTerm) ||
+        item.date?.toLowerCase().includes(searchTerm) ||
+        item.apy?.toLowerCase().includes(searchTerm) ||
+        item.status?.toLowerCase().includes(searchTerm) // ||
+        // item.operators?.toLowerCase().includes(searchTerm) 
       )
     })
-    // return tableMockedItems.value[tableView.value].filter(item => {
-    //   if(
-    //     // Might need to modify to match types each variable
-    //     item.wallet_provider.toLowerCase().includes(searchTerm) ||
-    //     item.act.toLowerCase().includes(searchTerm) ||
-    //     item.bal.toLowerCase().includes(searchTerm) ||
-    //     item.stk_amt.toLowerCase().includes(searchTerm) ||
-    //     item.stk_rwd.toLowerCase().includes(searchTerm) ||
-    //     item.tx_hash.toLowerCase().includes(searchTerm) ||
-    //     item.date.toLowerCase().includes(searchTerm) ||
-    //     item.apy.toLowerCase().includes(searchTerm) ||
-    //     item.status.toLowerCase().includes(searchTerm) ||
-    //     item.operators.toLowerCase().includes(searchTerm) 
-    //   ){
-    //     return true
-    //   }
-    // })
+    filteredData.value = filteredDataArray
   }
 }
+
+watch([searchInput, tableView], ()=>{
+  filterData()
+})
 
 
 const convertString = (inputString: string) => {
@@ -258,7 +250,7 @@ const exportFile = () => {
             Transactions
           </button>
         </div>
-
+        {{ searchInput }}
         <div class="flex flex-wrap items-center gap-[12px]">
           <div class="flex items-center gap-[8px] search_bar">
             <i
@@ -338,15 +330,11 @@ const exportFile = () => {
           class="w-full"
         >
           <tr
-            v-for="item in filteredData()"
+            v-for="item in filteredData"
             :key="item"
             class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
           >
-            <td>
-              {{ item }}
-            </td>
-            
-            <!-- <td
+            <td
               v-for="header in tableHeaderOptions[tableView].headers"
               :key="header"
               class="dynamic_padding"
@@ -362,12 +350,12 @@ const exportFile = () => {
                   />
                 </button>
                 <img
-                  :src="`/${tableMockedItems[tableView][header.value]}.svg`"
+                  :src="`/${item[header.value]}.svg`"
                   alt="Avatar "
                   class="w-[20px] h-[20px]"
                 >
                 <h6 class="title_name 800s:w-[20px] truncate">
-                  {{ tableMockedItems[tableView][header.value] }}
+                  {{ item[header.value] }}
                 </h6>
               </div>
               <div
@@ -375,7 +363,7 @@ const exportFile = () => {
                 class="flex items-center gap-[12px] underline"
               >
                 <a href=""> 
-                  {{ convertString(tableMockedItems[tableView][header.value]) }}
+                  {{ convertString(item[header.value]) }}
                 </a>
               </div>
               <div
@@ -389,7 +377,7 @@ const exportFile = () => {
                   />
                 </button>
                 <a class="w-[55px] truncate underline">
-                  {{ convertString(tableMockedItems[tableView][header.value]) }}
+                  {{ convertString(item[header.value]) }}
                 </a>
               </div>
               <div
@@ -397,14 +385,14 @@ const exportFile = () => {
                 class="flex items-center gap-[12px]"
               >
                 <div
-                  v-if="tableMockedItems[tableView][header.value] === 'staked'"
+                  v-if="item[header.value] === 'staked'"
                   class="flex items-center gap-[8px] status_pill bg-[#ECFDF3] text-[#027A48]"
                 >
                   <div class="bg-[#027A48] rounded-[999px] w-[8px] h-[8px]" />
                   Staked
                 </div>
                 <div
-                  v-else-if="tableMockedItems[tableView][header.value] === 'pending'" 
+                  v-else-if="item[header.value] === 'pending'" 
                   class="flex items-center gap-[8px] status_pill bg-[#FFFAEB] text-[#B54708]"
                 >
                   <div class="bg-[#F79009] rounded-[999px] w-[8px] h-[8px]" />
@@ -416,21 +404,22 @@ const exportFile = () => {
                 class="flex items-center gap-[12px] pl-[20px]"
               >
                 <div
-                  v-for="operator in tableMockedItems[tableView][header.value]"
+                  v-for="operator in item[header.value]"
                   :key="operator"
                   :class="`w-[24px] h-[24px] border-[2px] border-white bg-blue-300 rounded-[999px]`"
                   :style="`margin-left: -20px`"
                 />
               </div>
               <div v-else>
-                {{ tableMockedItems[tableView][header.value] }}
+                {{ item[header.value] }}
               </div>
-            </td> -->
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="flex justify-between items-center mt-[12px]">
+    <!-- Waiting on a bigger data set to do this.. for now will comment out -->
+    <!-- <div class="flex justify-between items-center mt-[12px]">
       <div class="page_number ml-[56px]">
         Page 1 of 10
       </div>
@@ -442,7 +431,7 @@ const exportFile = () => {
           Next
         </button>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
