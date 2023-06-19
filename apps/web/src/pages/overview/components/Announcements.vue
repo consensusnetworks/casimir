@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import VueFeather from 'vue-feather'
 
 const message = ref('We\'ve just announced our series A!')
 const openReadUpdate = ref(false)
@@ -34,16 +35,19 @@ onUnmounted(() =>{
 <template>
   <div class="card_container px-[26px] pt-[24px] pb-[21px] text-black">
     <div class="flex justify-end items-center mb-[1px]">
-      <i
-        data-feather="x" 
-        class="w-[10px] h-min text-[#667085]"
-      /> 
+      <!-- TD: figure out how the X function works -->
+      <!-- <vue-feather
+        type="x"
+        size="36"
+        class="icon w-[10px] h-min text-[#667085]"
+      /> -->
     </div>
     <div class="w-min card_alert mb-[12px]">
-      <i
-        data-feather="alert-circle" 
-        class="w-[20px] h-min text-[#475467]"
-      /> 
+      <vue-feather
+        type="alert-circle"
+        size="36"
+        class="icon w-[20px] h-min text-[#475467]"
+      />
     </div>
     <div class="mb-[14px]">
       <p class="card_announcement">

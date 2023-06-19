@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import VueFeather from 'vue-feather'
 
 const avgAPY = ref('5.2%')
 const openTimeFrameOptions = ref(false)
@@ -63,10 +64,10 @@ onUnmounted(() =>{
           @click="openTimeFrameOptions = !openTimeFrameOptions"
         >
           {{ selectedTimeframe }}
-
-          <i
-            data-feather="chevron-down" 
-            class="w-[20px] h-min text-[#667085]"
+          <vue-feather
+            :type="openTimeFrameOptions? 'chevron-up' : 'chevron-down'" 
+            size="36"
+            class="icon w-[20px] h-min text-[#667085]"
           />
         </button>
         <div

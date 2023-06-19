@@ -2,9 +2,13 @@
 import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { ref, watch } from 'vue'
 import * as XLSX from 'xlsx'
+import VueFeather from 'vue-feather'
 
 const searchInput = ref('')
 const tableView = ref('Wallets')
+
+const selectedHeader = ref('')
+const selectedOrientation = ref('ascending')
 
 const tableHeaderOptions = ref(
   {
@@ -75,6 +79,13 @@ const tableMockedItems = ref({
       bal: '1.5 ETH',
       stk_amt: '0.5 ETH',
       stk_rwd: '0.034 ETH'
+    },
+    {
+      wallet_provider: 'CoinbaseWallet',
+      act: '12345678910asdfghjkl;qwertyuiopzxcvbnm',
+      bal: '1.5 ETH',
+      stk_amt: '0.5 ETH',
+      stk_rwd: '0.034 ETH'
     }
   ],
   Transactions: [
@@ -86,18 +97,28 @@ const tableMockedItems = ref({
       apy: '2.1 %',
       status: 'pending',
       operators: ['op 1', 'op 2', 'op 3', 'op 4', 'op 5']
-    }
+    },
+    {
+      tx_hash: '1234567890qwertyuiopasdfghjklzxcvbnm',
+      stk_amt: '1.5 ETH',
+      stk_rwd: '0.045 ETH',
+      date: '01/01/2023',
+      apy: '2.1 %',
+      status: 'pending',
+      operators: ['op 1', 'op 2', 'op 3', 'op 4', 'op 5']
+    },
   ],
 })
 
 const filteredData = ref(tableMockedItems.value[tableView.value])
 
 const filterData = () => {
+  let filteredDataArray
   if (searchInput.value === '') {
-    filteredData.value = tableMockedItems.value[tableView.value]
+    filteredDataArray = tableMockedItems.value[tableView.value]
   } else {
     const searchTerm = searchInput.value
-    const filteredDataArray =  tableMockedItems.value[tableView.value].filter(item => {
+    let filteredDataArray =  tableMockedItems.value[tableView.value].filter(item => {
       return (
         // Might need to modify to match types each variable
         item.wallet_provider?.toLowerCase().includes(searchTerm) ||
@@ -112,17 +133,31 @@ const filterData = () => {
         // item.operators?.toLowerCase().includes(searchTerm) 
       )
     })
-    filteredData.value = filteredDataArray
   }
+
+  if(selectedHeader.value !== '' && selectedOrientation.value !== '') {
+    filteredDataArray = filteredDataArray.sort((a, b) => {
+      const valA = a[selectedHeader.value]
+      const valB = b[selectedHeader.value]
+
+      if (selectedOrientation.value === 'ascending') {
+        return valA < valB ? -1 : valA > valB ? 1 : 0
+      } else if (selectedOrientation.value === 'descending') {
+        return valA > valB ? -1 : valA < valB ? 1 : 0
+      }
+    })
+  }
+
+  filteredData.value = filteredDataArray
 }
 
-watch([searchInput, tableView], ()=>{
+watch([searchInput, tableView, selectedHeader, selectedOrientation], ()=>{
   filterData()
 })
 
 
 const convertString = (inputString: string) => {
-  if (inputString.length <= 4) {
+  if (inputString.length && inputString.length <= 4) {
     return inputString
   }
 
@@ -225,9 +260,10 @@ const exportFile = () => {
             class="flex items-center gap-[8px] export_button"
             @click="exportFile()"
           >
-            <i
-              data-feather="upload-cloud" 
-              class="w-[17px] h-min"
+            <vue-feather
+              type="upload-cloud"
+              size="36"
+              class="icon w-[17px] h-min"
             />
             Export
           </button>
@@ -238,24 +274,24 @@ const exportFile = () => {
           <button
             class="timeframe_button"
             :class="tableView === 'Wallets'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Wallets'"
+            @click="tableView = 'Wallets', selectedHeader = ''"
           >
             Wallets
           </button>
           <button
             class="timeframe_button border-l border-l-[#D0D5DD] " 
             :class="tableView === 'Transactions'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Transactions'"
+            @click="tableView = 'Transactions', selectedHeader = ''"
           >
             Transactions
           </button>
         </div>
-        {{ searchInput }}
         <div class="flex flex-wrap items-center gap-[12px]">
           <div class="flex items-center gap-[8px] search_bar">
-            <i
-              data-feather="search" 
-              class="w-[20px] h-min text-[#667085]"
+            <vue-feather
+              type="search"
+              size="36"
+              class="icon w-[20px] h-min text-[#667085]"
             />
             <input
               v-model="searchInput"
@@ -266,9 +302,10 @@ const exportFile = () => {
           </div>
 
           <button class="filters_button">
-            <i
-              data-feather="search" 
-              class="w-[20px] h-min"
+            <vue-feather
+              type="filter"
+              size="20"
+              class="icon w-[20px] h-min"
             />
             Filters
           </button>
@@ -282,46 +319,56 @@ const exportFile = () => {
             <th
               v-for="header in tableHeaderOptions[tableView].headers"
               :key="header"
-              class="table_header"
+              class="table_header "
             >
-              <div
-                v-if="header.value === 'wallet_provider'"
-                class="flex items-center"
-              >
-                <button class="checkbox_button mr-[12px]">
-                  <i
-                    data-feather="minus" 
-                    class="w-[14px] h-min"
+              <div class="flex items-center gap-[5px]">
+                <div
+                  v-if="header.value === 'wallet_provider'"
+                  class="flex items-center"
+                >
+                  <button class="checkbox_button mr-[12px]">
+                    <vue-feather
+                      type="minus"
+                      size="20"
+                      class="icon w-[14px] h-min"
+                    />
+                  </button>
+                  Wallet Provider
+                </div>
+                <div
+                  v-else-if="header.value === 'tx_hash'"
+                  class="flex items-center"
+                >
+                  <button class="checkbox_button mr-[12px]">
+                    <vue-feather
+                      type="minus"
+                      size="20"
+                      class="icon w-[14px] h-min"
+                    />
+                  </button>
+                  Tx Hash
+                </div>
+                <div v-else>
+                  {{ header.title }}
+                </div>
+                <button 
+                  class="ml-[4px] flex flex-col items-center justify-between"
+                  :class="selectedHeader === header.value? 'opacity-100' : 'opacity-25'"
+                  @click="selectedHeader = header.value, selectedOrientation === 'ascending'? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
+                >
+                  <vue-feather
+                    type="arrow-up"
+                    size="20"
+                    class="icon h-min "
+                    :class="selectedOrientation === 'ascending'? 'w-[10px]' : 'w-[8px] opacity-50'"
+                  />
+                  <vue-feather
+                    type="arrow-down"
+                    size="20"
+                    class="icon h-min"
+                    :class="selectedOrientation === 'descending'? 'w-[10px]' : 'w-[8px] opacity-50'"
                   />
                 </button>
-                Wallet Provider
-                <button class="ml-[4px]">
-                  <i
-                    data-feather="arrow-down" 
-                    class="w-[16px] h-min text-[#667085]"
-                  />
-                </button>
-              </div>
-              <div
-                v-else-if="header.value === 'tx_hash'"
-                class="flex items-center"
-              >
-                <button class="checkbox_button mr-[12px]">
-                  <i
-                    data-feather="minus" 
-                    class="w-[14px] h-min"
-                  />
-                </button>
-                Tx Hash
-                <button class="ml-[4px]">
-                  <i
-                    data-feather="arrow-down" 
-                    class="w-[16px] h-min text-[#667085]"
-                  />
-                </button>
-              </div>
-              <div v-else>
-                {{ header.title }}
               </div>
             </th>
           </tr>
@@ -343,10 +390,11 @@ const exportFile = () => {
                 v-if="header.value === 'wallet_provider'"
                 class="flex items-center gap-[12px]"
               >
-                <button class="checkbox_button mr-[12px]">
-                  <i
-                    data-feather="check" 
-                    class="w-[14px] h-min"
+                <button class="checkbox_button">
+                  <vue-feather
+                    type="check"
+                    size="20"
+                    class="icon w-[14px] h-min"
                   />
                 </button>
                 <img
@@ -354,7 +402,7 @@ const exportFile = () => {
                   alt="Avatar "
                   class="w-[20px] h-[20px]"
                 >
-                <h6 class="title_name 800s:w-[20px] truncate">
+                <h6 class="title_name 800s:w-[20px] w-[50px] truncate">
                   {{ item[header.value] }}
                 </h6>
               </div>
@@ -371,9 +419,10 @@ const exportFile = () => {
                 class="flex items-center gap-[12px]"
               >
                 <button class="checkbox_button mr-[12px]">
-                  <i
-                    data-feather="check" 
-                    class="w-[14px] h-min"
+                  <vue-feather
+                    type="check"
+                    size="20"
+                    class="icon w-[14px] h-min"
                   />
                 </button>
                 <a class="w-[55px] truncate underline">

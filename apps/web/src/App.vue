@@ -6,13 +6,7 @@
 
   // Need this to fix initilizing bug between user.ts and ssv.ts
   const { user } = useUsers()
-
-  onMounted(() => {
-    // Needed for new Icon Library
-
-    // eslint-disable-next-line no-undef
-    feather.replace()
-  })
+  
 </script>
   
 <template>

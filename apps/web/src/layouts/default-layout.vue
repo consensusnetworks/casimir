@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import Carousel from '@/components/Carousel.vue'
 import Slide from '@/components/Slide.vue'
 
+import VueFeather from 'vue-feather'
 import useWallet from '@/composables/wallet'
 
 const authFlowCardNumber = ref(1)
@@ -111,9 +112,10 @@ onUnmounted(() =>{
           <button
             id="setting_modal_button"
           >
-            <i
-              data-feather="settings"
-              class="w-[19px] h-min"
+            <vue-feather
+              type="settings"
+              size="36"
+              class="icon w-[19px] h-min"
             />
           </button>
 
@@ -133,45 +135,51 @@ onUnmounted(() =>{
           class="absolute right-[60px] bg-white top-[100%] w-[200px] setting_modal"
         >
           <button class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <i
-              data-feather="user"
-              class="w-[17px] h-min"
+            <vue-feather
+              type="user"
+              size="36"
+              class="icon w-[17px] h-min"
             />
+            
             <span>
               Account
             </span>
           </button>
           <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <i
-              data-feather="layers"
-              class="w-[17px] h-min"
+            <vue-feather
+              type="layers"
+              size="36"
+              class="icon w-[17px] h-min"
             />
             <span>
               Chanelog
             </span>
           </button>
           <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <i
-              data-feather="help-circle"
-              class="w-[17px] h-min"
+            <vue-feather
+              type="help-circle"
+              size="36"
+              class="icon w-[17px] h-min"
             />
             <span>
               Support
             </span>
           </button>
           <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <i
-              data-feather="code"
-              class="w-[17px] h-min"
+            <vue-feather
+              type="code"
+              size="36"
+              class="icon w-[17px] h-min"
             />
             <span>
               API
             </span>
           </button>
           <button class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <i
-              data-feather="log-out"
-              class="w-[17px] h-min"
+            <vue-feather
+              type="log-out"
+              size="36"
+              class="icon w-[17px] h-min"
             />
             <span>
               Log out
@@ -244,9 +252,10 @@ onUnmounted(() =>{
             >
               <h6 class="nav_items flex items-center mb-[20px]">
                 <button @click="authFlowCardNumber = 1, selectedProivder = null">
-                  <i
-                    data-feather="chevron-left"
-                    class="text-primary hover:text-blue_3 mr-[10px]"
+                  <vue-feather
+                    type="chevron-left"
+                    size="36"
+                    class="icon text-primary hover:text-blue_3 mr-[10px]"
                   />
                 </button>
                 Select Address

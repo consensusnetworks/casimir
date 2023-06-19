@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
+import VueFeather from 'vue-feather'
 
 const selectedWallet = ref(null as null | string)
 const formattedAmountToStake = ref(null as null | string )
@@ -134,10 +135,10 @@ onUnmounted(() =>{
         <h6>
           {{ selectedWallet? convertString(selectedWallet) : 'Select wallet' }}
         </h6>
-
-        <i
-          :data-feather="openSelectWalletInput? 'chevron-up' : 'chevron-down'" 
-          class="w-[20px]"
+        <vue-feather
+          :type="openSelectWalletInput? 'chevron-up' : 'chevron-down'" 
+          size="36"
+          class="icon w-[20px]"
         />
       </button>
       <div
@@ -168,9 +169,10 @@ onUnmounted(() =>{
             @click="selectedWallet = wallet, openSelectWalletInput = false"
           >
             {{ convertString(wallet) }}
-            <i
-              data-feather="chevron-right" 
-              class="w-[20px]"
+            <vue-feather
+              type="chevron-right" 
+              size="36"
+              class="icon w-[20px]"
             />
           </button>
         </div>
@@ -207,10 +209,6 @@ onUnmounted(() =>{
         <h6 style="font-weight: 400;">
           USD
         </h6>
-        <!-- <i
-          data-feather="chevron-down" 
-          class="w-[20px]"
-        /> -->
       </div>
     </div>
 

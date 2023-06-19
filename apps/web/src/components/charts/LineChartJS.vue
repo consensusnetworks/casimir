@@ -44,9 +44,6 @@ const hexToRGB = (hex: string) => {
     } : {r: 0, g: 0, b: 0}
 }
 
-const WIDTH = ref(0)
-// const HEIGHT = ref(0)
-
 let ctx: any
 let line_chart: Chart<any, any[], unknown>
 onMounted(() => {
@@ -100,10 +97,9 @@ onMounted(() => {
     const outputsize = () => {
         if(line_chart_container_el){
             WIDTH = line_chart_container_el.offsetWidth
-            HEIGHT.value = line_chart_container_el.offsetHeight
+            HEIGHT = line_chart_container_el.offsetHeight
         }
-        // console.log(WIDTH, HEIGHT)
-        line_chart.resize(WIDTH , HEIGHT)
+        line_chart.resize(WIDTH , HEIGHT )
     }
     if(line_chart_container_el){
         new ResizeObserver(outputsize).observe(line_chart_container_el)   
