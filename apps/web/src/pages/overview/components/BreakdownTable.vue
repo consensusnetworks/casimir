@@ -118,7 +118,7 @@ const filterData = () => {
     filteredDataArray = tableMockedItems.value[tableView.value]
   } else {
     const searchTerm = searchInput.value
-    let filteredDataArray =  tableMockedItems.value[tableView.value].filter(item => {
+    filteredDataArray =  tableMockedItems.value[tableView.value].filter(item => {
       return (
         // Might need to modify to match types each variable
         item.wallet_provider?.toLowerCase().includes(searchTerm) ||
@@ -326,26 +326,26 @@ const exportFile = () => {
                   v-if="header.value === 'wallet_provider'"
                   class="flex items-center"
                 >
-                  <button class="checkbox_button mr-[12px]">
+                  <!-- <button class="checkbox_button mr-[12px]">
                     <vue-feather
                       type="minus"
                       size="20"
                       class="icon w-[14px] h-min"
                     />
-                  </button>
+                  </button> -->
                   Wallet Provider
                 </div>
                 <div
                   v-else-if="header.value === 'tx_hash'"
                   class="flex items-center"
                 >
-                  <button class="checkbox_button mr-[12px]">
+                  <!-- <button class="checkbox_button mr-[12px]">
                     <vue-feather
                       type="minus"
                       size="20"
                       class="icon w-[14px] h-min"
                     />
-                  </button>
+                  </button> -->
                   Tx Hash
                 </div>
                 <div v-else>
@@ -390,13 +390,13 @@ const exportFile = () => {
                 v-if="header.value === 'wallet_provider'"
                 class="flex items-center gap-[12px]"
               >
-                <button class="checkbox_button">
+                <!-- <button class="checkbox_button">
                   <vue-feather
                     type="check"
                     size="20"
                     class="icon w-[14px] h-min"
                   />
-                </button>
+                </button> -->
                 <img
                   :src="`/${item[header.value]}.svg`"
                   alt="Avatar "
@@ -418,13 +418,13 @@ const exportFile = () => {
                 v-else-if="header.value === 'tx_hash'"
                 class="flex items-center gap-[12px]"
               >
-                <button class="checkbox_button mr-[12px]">
+                <!-- <button class="checkbox_button mr-[12px]">
                   <vue-feather
                     type="check"
                     size="20"
                     class="icon w-[14px] h-min"
                   />
-                </button>
+                </button> -->
                 <a class="w-[55px] truncate underline">
                   {{ convertString(item[header.value]) }}
                 </a>
