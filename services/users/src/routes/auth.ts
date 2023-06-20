@@ -27,11 +27,11 @@ router.post('/nonce', async (req: express.Request, res: express.Response) => {
                 message: 'Error getting nonce'
             })
         }
-    } catch (error) {
+    } catch (error: any) {
         res.status(500)
         res.json({
             error: true,
-            message: 'Error getting nonce'
+            message: error.message || 'Error getting nonce'
         })
     }
 })

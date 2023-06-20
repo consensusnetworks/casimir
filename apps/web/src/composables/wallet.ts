@@ -106,11 +106,7 @@ export default function useWallet() {
         data: user.value
       }
     } catch (error) {
-      console.error('There was an error in connectWallet :>> ', error)
-      return {
-        error: true,
-        message: `There was an error connecting your wallet: ${error}`
-      }
+      throw new Error(error.message || 'There was an error connecting the wallet')
     }
   }
 
@@ -181,8 +177,7 @@ export default function useWallet() {
         console.log('Sign up not yet supported for this wallet provider')
       }
     } catch (error) {
-      console.error('There was an error in login :>> ', error)
-      throw new Error('There was an error logging in: ' + error)
+      throw new Error(error.message || 'There was an error logging in')
     }
   }
 

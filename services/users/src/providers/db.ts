@@ -184,8 +184,7 @@ export default function useDB() {
             await postgres.query(text, params)
             return nonce
         } catch (error) {
-            console.error('There was an error adding or updating the nonce in upsertNonce.', error)
-            return error as Error
+            throw new Error('There was an error upserting nonce in the database')
         }
     }
 

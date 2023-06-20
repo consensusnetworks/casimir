@@ -13,27 +13,32 @@ export default function useAuth() {
      * @returns {Promise<Response>} - The response from the message request
      */ 
     async function createSiweMessage(address: string, statement: string) {
-        const requestOptions = {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                address
-            })
+        try {
+            const requestOptions = {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    address
+                })
+            }
+            const res = await fetch(`${usersBaseURL}/auth/nonce`, requestOptions)
+            const { error, message: resMessage, data: nonce } = (await res.json())
+            if (error) throw new Error(resMessage)
+            const message = {
+                domain,
+                address,
+                statement,
+                uri: origin,
+                version: '1',
+                chainId: 5,
+                nonce
+            }
+            return prepareMessage(message)
+        } catch (error) {
+            throw new Error(error.message || 'Error creating SIWE message')
         }
-        const res = await fetch(`${usersBaseURL}/auth/nonce`, requestOptions)
-        const { data: nonce } = (await res.json())
-        const message = {
-            domain,
-            address,
-            statement,
-            uri: origin,
-            version: '1',
-            chainId: 5,
-            nonce
-        }
-        return prepareMessage(message)
     }
 
     /**

@@ -161,8 +161,7 @@ export default function useEthers() {
       })
       return await ethersLoginResponse.json()
     } catch (err) {
-      console.log('Error logging in: ', err)
-      return err
+      throw new Error(err.message)
     }
   }
 
