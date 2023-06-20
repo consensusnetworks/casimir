@@ -36,7 +36,7 @@ const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 export default function useWallet() {
   const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
-  const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
+  const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { user, getUser, setUser, addAccount, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, updatePrimaryAddress } = useUsers()
   const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
