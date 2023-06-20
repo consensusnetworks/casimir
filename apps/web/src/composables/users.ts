@@ -111,8 +111,7 @@ export default function useUsers () {
                 data: user
             }
         } catch (error) {
-            console.log('Error in getUser in wallet.ts :>> ', error)
-            throw new Error('Error getting user from API')
+            throw new Error('Error getting user from API route')
         }
     }
 

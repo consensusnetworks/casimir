@@ -206,7 +206,6 @@ export default function useDB() {
                     result[camelCase(key)] = result[key]
                     delete result[key]
                     if (Array.isArray(result[camelCase(key)])) {
-                        console.log('result[camelCase(key)] :>> ', result[camelCase(key)])
                         result[camelCase(key)] = result[camelCase(key)].map((result: any) => {
                             return formatResult(result)
                         })

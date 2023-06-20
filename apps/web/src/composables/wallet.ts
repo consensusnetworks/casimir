@@ -68,10 +68,12 @@ export default function useWallet() {
     try { // Sign Up or Login
       if (!user?.value?.address) {
         await login()
-        const getUserResponse = await getUser()
-        if (!getUserResponse?.error) {
-          setUser(getUserResponse.data)
+        const { error, message, data: retrievedUser} = await getUser()
+        if (!error) {
+          setUser(retrievedUser)
           setPrimaryAddress(user?.value?.address as string)
+        } else {
+          throw new Error(message || 'There was an error getting the user')
         }
         loadingUserWallets.value = false
       } else { // Add account if it doesn't already exist
@@ -106,6 +108,7 @@ export default function useWallet() {
         data: user.value
       }
     } catch (error) {
+      loadingUserWallets.value = false
       throw new Error(error.message || 'There was an error connecting the wallet')
     }
   }

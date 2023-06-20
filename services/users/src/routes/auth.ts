@@ -42,7 +42,6 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         const loginCredentials = body
         const { provider, address, currency, message, signedMessage } = loginCredentials
         const { parsedDomain, parsedNonce } = parseMessage(message)
-        console.log('00---------------------------------------00')
         const verifyDomain = parsedDomain ? verifyMessageDomain(parsedDomain) : false        
         const verifyNonce = parsedNonce ? await verifyMessageNonce(address, parsedNonce) : false
         const verifySignature = verifyMessageSignature(loginCredentials)
