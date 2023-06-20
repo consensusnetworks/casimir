@@ -82,6 +82,8 @@
   },
   "dependencies": {
     "chart.js": "^4.2.1",
-    "feather-icons": "^4.29.0"
+    "feather-icons": "^4.29.0",
+    "vue-feather": "^2.0.0",
+    "xlsx": "^0.18.5"
   }
 }

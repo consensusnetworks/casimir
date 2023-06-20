@@ -1,9 +1,14 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import Carousel from '@/components/Carousel.vue'
+import Slide from '@/components/Slide.vue'
 
+import VueFeather from 'vue-feather'
 import useWallet from '@/composables/wallet'
 
-const selectedAddress = ref(null as string | null)
+const authFlowCardNumber = ref(1)
+const selectedProivder = ref(null as null | string)
+const termsCheckbox = ref(true)
 
 const  {
   activeWallets,
@@ -14,7 +19,6 @@ const  {
 
 const show_setting_modal = ref(false)
 const openWalletConnect = ref(false)
-const openSelectAddressInput = ref(false)
 
 const handleOutsideClick = (event: any) => {
   const setting_modal = document.getElementById('setting_modal')
@@ -36,6 +40,7 @@ const handleOutsideClick = (event: any) => {
   if(connect_wallet_container && connect_wallet_card){
     if(openWalletConnect.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
       openWalletConnect.value = false
+      authFlowCardNumber.value = 1
     }
   }
 }
@@ -52,11 +57,6 @@ const convertString = (inputString: string) => {
   return start + middle + end
 }
 
-const toggleOpenSelectAddressInput = () => {
-  openSelectAddressInput.value = !openSelectAddressInput.value
-}
-
-
 onMounted(() => {
   window.addEventListener('click', handleOutsideClick)
 })
@@ -64,23 +64,15 @@ onMounted(() => {
 onUnmounted(() =>{
   window.removeEventListener('click', handleOutsideClick)
 })
+
+
 </script>
 
 <template>
   <div class="min-w-[360px]">
     <div>
       <div
-        class="
-      px-[60px]
-      pt-[17px]
-      pb-[19px]
-      flex
-      flex-wrap
-      gap-[20px]
-      justify-between
-      items-center
-      bg-black
-      relative"
+        class=" px-[60px] pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
         :class="openWalletConnect? 'pr-[75px]' : ''"
       >
         <img
@@ -120,9 +112,10 @@ onUnmounted(() =>{
           <button
             id="setting_modal_button"
           >
-            <i
-              data-feather="settings"
-              class="w-[19px] h-min"
+            <vue-feather
+              type="settings"
+              size="36"
+              class="icon w-[19px] h-min"
             />
           </button>
 
@@ -142,45 +135,51 @@ onUnmounted(() =>{
           class="absolute right-[60px] bg-white top-[100%] w-[200px] setting_modal"
         >
           <button class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <i
-              data-feather="user"
-              class="w-[17px] h-min"
+            <vue-feather
+              type="user"
+              size="36"
+              class="icon w-[17px] h-min"
             />
+            
             <span>
               Account
             </span>
           </button>
           <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <i
-              data-feather="layers"
-              class="w-[17px] h-min"
+            <vue-feather
+              type="layers"
+              size="36"
+              class="icon w-[17px] h-min"
             />
             <span>
               Chanelog
             </span>
           </button>
           <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <i
-              data-feather="help-circle"
-              class="w-[17px] h-min"
+            <vue-feather
+              type="help-circle"
+              size="36"
+              class="icon w-[17px] h-min"
             />
             <span>
               Support
             </span>
           </button>
           <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <i
-              data-feather="code"
-              class="w-[17px] h-min"
+            <vue-feather
+              type="code"
+              size="36"
+              class="icon w-[17px] h-min"
             />
             <span>
               API
             </span>
           </button>
           <button class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <i
-              data-feather="log-out"
-              class="w-[17px] h-min"
+            <vue-feather
+              type="log-out"
+              size="36"
+              class="icon w-[17px] h-min"
             />
             <span>
               Log out
@@ -191,7 +190,8 @@ onUnmounted(() =>{
 
       <div
         class="relative text-black"
-        :class="openWalletConnect? 'overflow-hidden h-[80vh] 600s:h-[78vh] pr-[15px]' : ''"
+        :class="openWalletConnect? 'overflow-hidden pr-[15px]' : ''"
+        :style="openWalletConnect? 'height: calc(100vh - 250px);' : ''"
       >
         <slot />
         <div
@@ -211,58 +211,77 @@ onUnmounted(() =>{
     >
       <div 
         id="connect_wallet_card"
-        class="bg-white text-black card px-[40px] py-[25px] 600s:max-w-[80%] max-w-[580px] "
+        class="800s:max-w-[80%] max-w-[580px] w-full flex max-h-[450px] h-full overflow-hidden"
       >
-        <div class="nav_items">
-          Connect Wallet
-        </div>
-        <div class="my-[20px] nav_items">
-          <input
-            type="checkbox"
-            class=""
-          > I certify that I have read and accept the updated 
-          <span class="text-primary"> Terms of Use </span> and <span class="text-primary">Privacy Notice</span>.
-        </div>
-        <div class="mb-[20px]">
-          <div class="card_input text-black cursor-pointer relative">
+        <Carousel
+          v-slot="{currentSlide}"
+          :current-slide="authFlowCardNumber"
+          class="w-full h-full relative overflow-hidden"
+        >
+          <Slide class="w-full h-full ">
             <div
-              class="flex items-center justify-between w-full gap-[8px]"
-              @click="toggleOpenSelectAddressInput"
+              v-show="currentSlide === 1"
+              class="absolute top-0 left-0 w-full h-full bg-white card px-[50px] py-[25px]"
             >
-              <h6
-                v-if="!selectedAddress"
-                class="w-full"
-              >
-                Select wallet you want to connect
+              <h6 class="nav_items">
+                Select Provider
               </h6>
-              <h6
-                v-else 
-                class="w-full"
-              >
-                {{ selectedAddress }}
-              </h6>
-              <i
-                data-feather="chevron-down"
-                class="w-[20px] h-min"
-              />
+              <div class="flex flex-wrap justify-around gap-[20px] w-full mt-[20px]">
+                <button
+                  v-for="wallet in activeWallets"
+                  :key="wallet"
+                  class="w-[140px] h-[100px] border flex flex-col justify-center items-center rounded-[8px]"
+                  @click="selectProvider(wallet, 'ETH'), authFlowCardNumber = 2, selectedProivder = wallet"
+                >
+                  <img
+                    :src="`/${wallet.toLowerCase()}.svg`"
+                    :alt="`${wallet} logo`"
+                    class="w-[32px] h-[32px] rounded-[999px] mb-[10px]"
+                  >
+                  <h6>
+                    {{ wallet }}
+                  </h6>
+                </button>
+              </div> 
             </div>
-
+          </Slide>
+          <Slide class="w-full h-full ">
             <div
-              v-show="openSelectAddressInput"
-              class="absolute top-[115%] left-0 card_input max-w-full w-full max-h-[300px] overflow-auto"
+              v-show="currentSlide === 2"
+              class="absolute top-0 left-0 w-full h-full bg-white card px-[50px] py-[25px]"
             >
-              <div v-if="userAddresses.length === 0">
-                Please select wallet provider to access list of wallets under your provider.
-              </div>
+              <h6 class="nav_items flex items-center mb-[20px]">
+                <button @click="authFlowCardNumber = 1, selectedProivder = null">
+                  <vue-feather
+                    type="chevron-left"
+                    size=""
+                    class="icon w-[20px] h-min text-primary hover:text-blue_3 mr-[10px] mt-[5px]"
+                  />
+                </button>
+                Select Address
+              </h6>
               <div
-                v-else
-                class="w-full"
+                v-if="!userAddresses"
+                class="flex items-center justify-center h-[90%]"
               >
+                <h6 class="nav_items">
+                  Waiting on {{ selectedProivder }}...
+                </h6>
+              </div>
+              <div v-else>
+                <div class="my-[20px] px-[10px] nav_items">
+                  <input
+                    v-model="termsCheckbox"
+                    type="checkbox"
+                    class="mr-[5px]"
+                  > By connecting my address, I certify that I have read and accept the updated 
+                  <span class="text-primary"> Terms of Use </span> and <span class="text-primary">Privacy Notice</span>.
+                </div> 
                 <button
                   v-for="act in userAddresses"
                   :key="act.address"
-                  class="w-full border rounded-[8px] px-[10px] py-[15px] flex items-center justify-between"
-                  @click="selectAddress(act.address)"
+                  class="w-full border rounded-[8px] px-[10px] py-[15px] flex items-center justify-between hover:border-blue_3"
+                  @click="selectAddress(act.address), openWalletConnect = false"
                 >
                   <div>
                     {{ convertString(act.address) }}
@@ -273,25 +292,8 @@ onUnmounted(() =>{
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-        <div class="flex flex-wrap justify-around gap-[20px] max-h-[400px] overflow-auto">
-          <button
-            v-for="wallet in activeWallets"
-            :key="wallet"
-            class="w-[180px] h-[100px] border flex flex-col justify-center items-center rounded-[8px]"
-            @click="selectProvider(wallet, 'ETH')"
-          >
-            <img
-              :src="`/${wallet.toLowerCase()}.svg`"
-              :alt="`${wallet} logo`"
-              class="w-[32px] h-[32px] rounded-[999px] mb-[10px]"
-            >
-            <h6>
-              {{ wallet }}
-            </h6>
-          </button>
-        </div>
+          </Slide>
+        </Carousel>
       </div>
     </div>
   </div>
@@ -324,8 +326,6 @@ onUnmounted(() =>{
   font-size: 13px;
   line-height: 17px;
   letter-spacing: -0.01em;
-  height: 100%;
-
   color: #ABABAB;
 }
 
@@ -346,7 +346,6 @@ onUnmounted(() =>{
   line-height: 24px;
   letter-spacing: -0.01em;
   color: #101828;
-  margin-bottom: 6px;
 }
 
 .nav_items_active{

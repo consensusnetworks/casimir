@@ -1,60 +1,214 @@
 <script lang="ts" setup>
-import { onMounted } from 'vue'
-// eslint-disable-next-line no-undef
-onMounted(() => {
-    // Needed for new Icon Library
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import VueFeather from 'vue-feather'
 
-    // eslint-disable-next-line no-undef
-    feather.replace()
+const selectedWallet = ref(null as null | string)
+const formattedAmountToStake = ref(null as null | string )
+const account_balance = ref(null as null | string)
+
+const openSelectWalletInput = ref(false)
+
+const openTermsOfService = ref(false)
+
+const errorMessage = ref(null as null | string)
+
+const termsOfServiceCheckbox = ref(false)
+
+const handleInputOnAmountToStake = (event: any) => {
+  const value = event.target.value.replace(/[^\d.]/g, '')
+  const parts = value.split('.')
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+
+  // Limit to two decimal places
+  if (parts[1] && parts[1].length > 2) {
+    parts[1] = parts[1].slice(0, 2)
+  }
+
+  // Update the model value
+  formattedAmountToStake.value = parts.join('.')
+}
+
+const formattedWalletOptions = ref(
+  [
+    {
+      provider: 'MetaMask',
+      connectedAccounts: [
+      '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
+      '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
+      '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
+      ]
+    }
+  ]
+)
+
+const convertString = (inputString: string) => {
+  if (inputString.length <= 4) {
+    return inputString
+  }
+
+  var start = inputString.substring(0, 4)
+  var end = inputString.substring(inputString.length - 4)
+  var middle = '*'.repeat(4)
+
+  return start + middle + end
+}
+
+const handleOutsideClick = (event: any) => {
+  const selectWalletInputContainer = document.getElementById('selectWalletInputContainer')
+  const selectWalletOptionsCard = document.getElementById('selectWalletOptionsCard')
+  const selectWalletInputButton = document.getElementById('selectWalletInputButton')
+  if(selectWalletInputContainer && selectWalletOptionsCard && selectWalletInputButton){
+    if(openSelectWalletInput.value) {
+      if(!selectWalletInputContainer.contains(event.target)){
+        if(!selectWalletInputButton.contains(event.target)){
+          openSelectWalletInput.value = false
+        }
+      }
+    }
+  }
+
+  const termsOfServiceContainer = document.getElementById('termsOfServiceContainer')
+  const termsOfServiceCard = document.getElementById('termsOfServiceCard')
+  const termsOfServiceButton = document.getElementById('termsOfServiceButton')
+
+  
+  if(termsOfServiceCard && termsOfServiceButton && termsOfServiceContainer){
+    if(openTermsOfService.value) {
+      if(!termsOfServiceCard.contains(event.target)){
+        if(!termsOfServiceButton.contains(event.target)){
+          openTermsOfService.value = false
+        }
+      }
+    }
+  }
+}
+
+watch(selectedWallet, () => {
+  selectedWallet.value? account_balance.value = '$1,234.56' : account_balance.value = '- - -'
 })
+
+watch(formattedAmountToStake, () => {
+  if(formattedAmountToStake.value){
+    const floatAmount = parseFloat(formattedAmountToStake.value?.replace(/,/g, ''))
+    // TD: Get max value here from selected wallet
+
+    const maxAmount = 2000.25
+    if(floatAmount > maxAmount){
+      errorMessage.value = 'Insufficient Funds'
+    } else {
+      errorMessage.value = null
+    }
+  }
+  
+})
+
+onMounted(() => {
+  window.addEventListener('click', handleOutsideClick)
+})
+
+onUnmounted(() =>{
+  window.removeEventListener('click', handleOutsideClick)
+})
+
+
 </script>
 
 <template>
-  <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black h-full">
-    <h6 class="account_blance mb-[12px]">
+  <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black h-full relative">
+    <h6 class="account_balance mb-[12px]">
       Account Balance
     </h6>
     <h5 class="account_balance_amount mb-[27px]">
-      $2,740
+      {{ account_balance? account_balance : '- - -' }}
     </h5>
+
     <h6 class="card_title mb-[11px]">
       Wallet
     </h6>
-
-    <div class="card_input text-black mb-[22px]">
-      <div class="flex items-center gap-[8px]">
+    <div class="card_input text-black mb-[22px] relative">
+      <button
+        id="selectWalletInputButton"
+        class="flex items-center justify-between gap-[8px] w-full h-full px-[10px] py-[14px]"
+        :class="selectedWallet? 'text-black' : 'text-grey_4'"
+        @click="openSelectWalletInput = !openSelectWalletInput"
+      >
         <h6>
-          0x834...7C4621976578
+          {{ selectedWallet? convertString(selectedWallet) : 'Select wallet' }}
         </h6>
+        <vue-feather
+          :type="openSelectWalletInput? 'chevron-up' : 'chevron-down'" 
+          size="36"
+          class="icon w-[20px]"
+        />
+      </button>
+      <div
+        v-show="openSelectWalletInput"
+        id="selectWalletInputContainer"
+        class="absolute top-[110%] w-full bg-white rounded-[8px] border border-[#D0D5DD] px-[10px] py-[14px] max-h-[250px] overflow-auto"
+      >
+        <div
+          v-for="item in formattedWalletOptions"
+          id="selectWalletOptionsCard"
+          :key="item.provider"
+        >
+          <div class="w-full text-[12px] text-grey_6 flex items-center gap-[8px] mb-[10px]">
+            <img
+              :src="`${item.provider.toLocaleLowerCase()}.svg`"
+              :alt="`${item.provider.toLocaleLowerCase()} Icon`"
+              class="w-[16px] h-[16px]"
+            >
+            {{ item.provider }}
+          </div>
+          
+
+          <button
+            v-for="wallet in item.connectedAccounts"
+            :key="wallet"
+            class="w-full text-left rounded-[8px] py-[10px] px-[14px] 
+            hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
+            @click="selectedWallet = wallet, openSelectWalletInput = false"
+          >
+            {{ convertString(wallet) }}
+            <vue-feather
+              type="chevron-right" 
+              size="36"
+              class="icon w-[20px]"
+            />
+          </button>
+        </div>
       </div>
-      
-      <i
-        data-feather="chevron-down" 
-        class="w-[20px]"
-      />
     </div>
 
-    <h6 class="card_title mb-[11px] mt-[22px]">
-      Amount
-    </h6>
+    <div class="flex justify-between items-center gap-[8px] mb-[11px] mt-[22px]">
+      <h6 class="card_title">
+        Amount
+      </h6>
 
-    <div class="card_input text-black">
+      <span class="text-[12px] font-[600] leading-[20px] text-h text-red-500">
+        {{ errorMessage }}
+      </span>
+    </div>
+    
+
+    <div class="card_input text-black px-[10px] py-[14px]">
       <div class="flex items-center gap-[8px]">
         <h6 class="text-[#667085]">
           $
         </h6>
-        <h6>
-          1,000.00
-        </h6>
+        <input
+          id="amount"
+          v-model="formattedAmountToStake"
+          type="text"
+          pattern="^\d{1,3}(,\d{3})*(\.\d+)?$"
+          placeholder="0.00"
+          class=" outline-none"
+          @input="handleInputOnAmountToStake"
+        >
       </div>
       <div class="flex items-center gap-[4px]">
         <h6 style="font-weight: 400;">
           USD
         </h6>
-        <i
-          data-feather="chevron-down" 
-          class="w-[20px]"
-        />
       </div>
     </div>
 
@@ -95,20 +249,38 @@ onMounted(() => {
 
     <div class="flex items-center gap-[18px] mb-[27px]">
       <input
+        v-model="termsOfServiceCheckbox"
         type="checkbox"
         class="card_checkbox"
       > 
-      <p class="card_checkbox_text">
+      <button
+        id="termsOfServiceButton"
+        class="card_checkbox_text"
+        @click="openTermsOfService = !openTermsOfService"
+      >
         I agree to the terms of service
-      </p>
+      </button>
     </div>
 
     <button
       class="card_button h-[37px] w-full "
-      disabled
+      :disabled="!(termsOfServiceCheckbox && selectedWallet && formattedAmountToStake && !errorMessage)"
     >
       Stake
     </button>
+
+    <div
+      v-show="openTermsOfService"
+      id="termsOfServiceContainer"
+      class="bg-black/[0.28] w-full h-full absolute top-0 left-0 flex items-center justify-center rounded-[3px] "
+    >
+      <div
+        id="termsOfServiceCard"
+        class="bg-white rounded-[8px] px-[14px] py-[10px] max-h-[400px] w-[80%] overflow-auto shadow-sm card_title"
+      >
+        Terms of Service
+      </div>
+    </div>
   </div>
 </template>
 
@@ -121,7 +293,7 @@ onMounted(() => {
   letter-spacing: -0.01em;
   color: #344054;
 }
-.account_blance{
+.account_balance{
   font-style: normal;
   font-weight: 400;
   font-size: 12px;
@@ -158,8 +330,6 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 10px;
-
     font-family: 'IBM Plex Sans';
     font-style: normal;
     font-weight: 500;
