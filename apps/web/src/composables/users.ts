@@ -40,13 +40,10 @@ export default function useUsers () {
             }
             const response = await fetch(`${usersBaseURL}/auth/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
             const { error, message, data } = await response.json()
-            if (!error) {
-                return await data
-            } else {
-                throw new Error(message)
-            }
+            if (error) throw new Error(message)
+            return data
         } catch (error) {
-            throw new Error(error.message)
+            throw new Error(error.message || 'Error checking if primary user exists')
         }
     }
 
@@ -59,12 +56,11 @@ export default function useUsers () {
                 }
             }
             const response = await fetch(`${usersBaseURL}/auth/check-secondary-address/${address}`, requestOptions)
-            const json = await response.json()
-            const { users } = json
+            const { error, message, data: users } = await response.json()
+            if (error) throw new Error(message)
             return users
         } catch (error) {
-            console.log('Error in checkIfSecondaryAddress in wallet.ts :>> ', error)
-            return [] as Account[]
+            throw new Error(error.message || 'Error checking if secondary address')
         }
     }
 

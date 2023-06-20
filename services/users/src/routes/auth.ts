@@ -124,14 +124,15 @@ router.get('/check-secondary-address/:address', async (req: express.Request, res
         res.status(200)
         res.json({
             error: false,
-            users
+            message: 'Successfully checked secondary address',
+            data: users
         })
-    } catch (error) {
+    } catch (error: any) {
         res.setHeader('Content-Type', 'application/json')
         res.status(500)
         res.json({
             error: true,
-            message: 'Problem checking secondary address'
+            message: error.message || 'Problem checking secondary address'
         })
     }
 })

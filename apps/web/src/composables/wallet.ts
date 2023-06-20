@@ -290,7 +290,7 @@ export default function useWallet() {
       }
     } catch (error) {
       // TODO: @shanejearley - What do we want to do here?
-      console.error('selectAddress error: ', error.message)
+      console.error('Error in selectAddress: ', error.message)
       return {
         error: true,
         message: error.message

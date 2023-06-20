@@ -74,10 +74,14 @@ export default function useDB() {
      * @returns The account if found, otherwise undefined
      */
     async function getAccounts(address: string): Promise<Account[]> {
-        const text = 'SELECT * FROM accounts WHERE address = $1;'
-        const params = [address.toLowerCase()]
-        const rows = await postgres.query(text, params)
-        return formatResult(rows) as Account[]
+        try {
+            const text = 'SELECT * FROM accounts WHERE address = $1;'
+            const params = [address.toLowerCase()]
+            const rows = await postgres.query(text, params)
+            return formatResult(rows) as Account[]
+        } catch (error) {
+            throw new Error('There was an error getting accounts from the database')
+        }
     }
 
     /**
@@ -117,12 +121,15 @@ export default function useDB() {
      * @throws Error if the user is not found
      */
     async function getUserById(id: string) {
-        const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.id = $1 GROUP BY u.id'
-        const params = [id]
-        const rows = await postgres.query(text, params)
-        const user = rows[0]
-        if (!user) throw new Error('User not found')
-        return formatResult(user) as User
+        try {
+            const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.id = $1 GROUP BY u.id'
+            const params = [id]
+            const rows = await postgres.query(text, params)
+            const user = rows[0]
+            return formatResult(user) as User
+        } catch (err) {
+            throw new Error('There was an error getting user by id from the database')
+        }
     }
 
     /**
