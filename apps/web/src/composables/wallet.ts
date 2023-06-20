@@ -34,7 +34,7 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
-  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddress, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
+  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { solanaProviderList, getSolanaAddress, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
@@ -138,39 +138,6 @@ export default function useWallet() {
       return balance
     } catch (err) {
       console.error('There was an error in getAccountBalance :>> ', err)
-    }
-  }
-
-  /**
-   * Retrieve the address from the selected provider
-   * @param provider - MetaMask, CoinbaseWallet, Ledger, Trezor, WalletConnect, etc.
-   * @param currency - ETH, BTC, IOTX, SOL, etc.
-   * @returns 
-   */
-  async function getConnectedAddressFromProvider(provider: ProviderString, currency?: Currency) {
-    try {
-      let address
-      setSelectedProvider(provider)
-      if (provider === 'WalletConnect') {
-        address = await getWalletConnectAddress()
-      } else if (ethersProviderList.includes(provider)) {
-        address = await getEthersAddress(provider)
-      } else if (solanaProviderList.includes(provider)) {
-        address = await getSolanaAddress(provider)
-      } else if (provider === 'IoPay') {
-        // address = await getIoPayAddress()
-      } else if (provider === 'Ledger') {
-        setSelectedCurrency(currency as Currency)
-        // Ask user to select an account
-        address = await getColdStorageAddress(provider, currency as Currency)
-      } else if (provider === 'Trezor') {
-        address = await getColdStorageAddress(provider, currency as Currency)
-      } else {
-        throw new Error('No provider selected')
-      }
-      return trimAndLowercaseAddress(address) as string
-    } catch (error) {
-      console.error(error)
     }
   }
 

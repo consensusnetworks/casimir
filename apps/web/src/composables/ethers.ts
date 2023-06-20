@@ -92,13 +92,6 @@ export default function useEthers() {
     }
   }
 
-  async function getEthersAddress (providerString: ProviderString) {
-    const provider = getBrowserProvider(providerString)
-    if (provider) {
-      return (await requestEthersAccount(provider as EthersProvider))
-    }
-  }
-
   async function getEthersAddressWithBalance (providerString: ProviderString) {
     const provider = getBrowserProvider(providerString)
     
@@ -244,7 +237,6 @@ export default function useEthers() {
     estimateLegacyGasFee,
     ethersProviderList,
     getMaxETHAfterFees,
-    getEthersAddress,
     getEthersAddressWithBalance,
     getEthersBalance,
     getEthersBrowserSigner,
