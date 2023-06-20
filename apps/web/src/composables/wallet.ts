@@ -135,7 +135,7 @@ export default function useWallet() {
       const balance = await getEthersBalance(account.address)
       return balance
     } catch (err) {
-      console.error('There was an error in getAccountBalance :>> ', err)
+      throw new Error(err.message || 'There was an error getting the account balance')
     }
   }
 
@@ -384,7 +384,6 @@ export default function useWallet() {
         setUser(user.value)
       }
     } catch (error) {
-      console.error('setUserAccountBalances error: ', error)
       throw new Error('Error setting user account balances')
     }
   }
