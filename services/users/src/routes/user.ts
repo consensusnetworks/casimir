@@ -8,7 +8,6 @@ const { addAccount, getUser, updateUserAddress, removeAccount } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
-        console.log('go to / in user.ts')
         const address = req.session?.getUserId().toLowerCase() as string
         const user = await getUser(address)
         const message = user ? 'User found' : 'User not found'
@@ -21,7 +20,6 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
             user
         })
     } catch (err) {
-        console.log('Error in / route of user.ts :>> ', err)
         res.status(500)
         res.json({
             message: 'Error getting user',

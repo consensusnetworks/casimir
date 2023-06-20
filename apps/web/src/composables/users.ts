@@ -25,8 +25,7 @@ export default function useUsers () {
             user.value = userAccount
             return { error, message, data: userAccount }
         } catch (error) {
-            console.log('Error in addAccount in wallet.ts :>> ', error)
-            return { error: true, message: 'Error adding account', data: null }
+            throw new Error(error.message || 'Error adding account')
         }
     }
 

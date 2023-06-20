@@ -89,15 +89,14 @@ export default function useWallet() {
             ownerAddress: user?.value?.address.toLowerCase() as string,
             walletProvider: selectedProvider.value
           }
-          const addAccountResponse = await addAccount(account)
-          if (!addAccountResponse?.error) {
-            const getUserResponse = await getUser()
-            setUser(getUserResponse.data)
-            setPrimaryAddress(user?.value?.address as string)
-          } else {
-            console.error('There was an error adding the account :>> ', addAccountResponse.message)
-            throw new Error(addAccountResponse.message)
-          }
+          const { error: addAccountError, message: addAccountMessage } = await addAccount(account)
+          if (addAccountError) throw new Error(addAccountMessage || 'There was an error adding the account')
+          
+          const { error: getUserError, message: getUserMessage, data: getUserData } = await getUser()
+          if (getUserError) throw new Error(getUserMessage || 'There was an error getting the user')
+
+          setUser(getUserData)
+          setPrimaryAddress(user?.value?.address as string) 
         }
       }
       await setUserAccountBalances()
