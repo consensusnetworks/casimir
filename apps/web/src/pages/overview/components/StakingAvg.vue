@@ -53,7 +53,7 @@ onUnmounted(() =>{
   <div class="card_container px-[22px] pt-[22px] pb-[23px] text-black">
     <div class="flex justify-between items-start mb-[13px]">
       <h6 class="card_title">
-        Avg. Staking Reward
+        Estimated Staking Rewards
       </h6>
       <div
         class="whitespace-nowrap relative w-[120px]"
@@ -140,7 +140,7 @@ onUnmounted(() =>{
     font-family: 'IBM Plex Sans';
     font-style: normal;
     font-weight: 500;
-    font-size: 18px;
+    font-size: 12px;
     line-height: 23px;
     letter-spacing: -0.01em;
     color: #000000;

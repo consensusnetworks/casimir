@@ -7,12 +7,17 @@ const selectedTimeframe = ref('1 month')
 
 const data = ref({} as any)
 
-const totalStaked = ref({
+const currentStaked = ref({
   usd: '$150',
   exchange: '0.00054 ETH'
 })
 
 const stakingRewards = ref({
+  usd: '$17.25',
+  exchange: '0.004 ETH'
+})
+
+const totalDeposited = ref({
   usd: '$17.25',
   exchange: '0.004 ETH'
 })
@@ -111,14 +116,14 @@ watch(selectedTimeframe, () => {
     <div class="flex flex-wrap gap-[68px] mb-[52px]">
       <div>
         <h6 class="blance_title mb-[15px]">
-          Total Staked
+          Current Staked
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="blance_amount">
-            {{ totalStaked.usd }}
+            {{ currentStaked.usd }}
           </h5>
           <span class="blance_exchange">
-            {{ totalStaked.exchange }}
+            {{ currentStaked.exchange }}
           </span>
         </div>
       </div>
@@ -132,6 +137,19 @@ watch(selectedTimeframe, () => {
           </h5>
           <span class="blance_exchange">
             {{ stakingRewards.exchange }}
+          </span>
+        </div>
+      </div>
+      <div>
+        <h6 class="blance_title mb-[15px]">
+          Total Deposited
+        </h6>
+        <div class="flex items-center gap-[12px]">
+          <h5 class="blance_amount">
+            {{ totalDeposited.usd }}
+          </h5>
+          <span class="blance_exchange">
+            {{ totalDeposited.exchange }}
           </span>
         </div>
       </div>

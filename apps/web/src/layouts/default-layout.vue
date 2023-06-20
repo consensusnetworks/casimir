@@ -221,16 +221,16 @@ onUnmounted(() =>{
           <Slide class="w-full h-full ">
             <div
               v-show="currentSlide === 1"
-              class="absolute top-0 left-0 w-full h-full bg-white card px-[25px] py-[12px]"
+              class="absolute top-0 left-0 w-full h-full bg-white card px-[50px] py-[25px]"
             >
               <h6 class="nav_items">
-                Select Wallet Provider
+                Select Provider
               </h6>
-              <div class="flex flex-wrap justify-between gap-[20px] w-full mt-[20px]">
+              <div class="flex flex-wrap justify-around gap-[20px] w-full mt-[20px]">
                 <button
                   v-for="wallet in activeWallets"
                   :key="wallet"
-                  class="w-[180px] h-[100px] border flex flex-col justify-center items-center rounded-[8px]"
+                  class="w-[140px] h-[100px] border flex flex-col justify-center items-center rounded-[8px]"
                   @click="selectProvider(wallet, 'ETH'), authFlowCardNumber = 2, selectedProivder = wallet"
                 >
                   <img
@@ -248,14 +248,14 @@ onUnmounted(() =>{
           <Slide class="w-full h-full ">
             <div
               v-show="currentSlide === 2"
-              class="absolute top-0 left-0 w-full h-full bg-white card px-[25px] py-[12px]"
+              class="absolute top-0 left-0 w-full h-full bg-white card px-[50px] py-[25px]"
             >
               <h6 class="nav_items flex items-center mb-[20px]">
                 <button @click="authFlowCardNumber = 1, selectedProivder = null">
                   <vue-feather
                     type="chevron-left"
-                    size="36"
-                    class="icon text-primary hover:text-blue_3 mr-[10px]"
+                    size=""
+                    class="icon w-[20px] h-min text-primary hover:text-blue_3 mr-[10px] mt-[5px]"
                   />
                 </button>
                 Select Address
@@ -269,11 +269,11 @@ onUnmounted(() =>{
                 </h6>
               </div>
               <div v-else>
-                <div class="my-[20px] nav_items">
+                <div class="my-[20px] px-[10px] nav_items">
                   <input
                     v-model="termsCheckbox"
                     type="checkbox"
-                    class=""
+                    class="mr-[5px]"
                   > By connecting my address, I certify that I have read and accept the updated 
                   <span class="text-primary"> Terms of Use </span> and <span class="text-primary">Privacy Notice</span>.
                 </div> 
