@@ -23,7 +23,7 @@ export default function useAuth() {
             })
         }
         const res = await fetch(`${usersBaseURL}/auth/nonce`, requestOptions)
-        const { nonce } = (await res.json())
+        const { data: nonce } = (await res.json())
         const message = {
             domain,
             address,

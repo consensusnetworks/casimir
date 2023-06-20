@@ -265,7 +265,6 @@ export default function useWallet() {
       setSelectedAddress(address)
       
       if (pathIndex) setSelectedPathIndex(pathIndex)
-      
       const { sameAddress, sameProvider } : ExistingUserCheck = await checkIfPrimaryUserExists(selectedProvider.value, selectedAddress.value)
       if (sameAddress && sameProvider ) {
         await connectWallet() // login
@@ -290,7 +289,8 @@ export default function useWallet() {
         }
       }
     } catch (error) {
-      console.error('selectAddress error: ', error)
+      // TODO: @shanejearley - What do we want to do here?
+      console.error('selectAddress error: ', error.message)
       return {
         error: true,
         message: error.message

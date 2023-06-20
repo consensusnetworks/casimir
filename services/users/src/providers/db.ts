@@ -99,11 +99,15 @@ export default function useDB() {
      * @returns The user if found, otherwise undefined
      */
     async function getUser(address: string) {
-        const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.address = $1 GROUP BY u.id'
-        const params = [address]
-        const rows = await postgres.query(text, params)
-        const user = rows[0]
-        return formatResult(user) as User
+        try {
+            const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.address = $1 GROUP BY u.id'
+            const params = [address]
+            const rows = await postgres.query(text, params)
+            const user = rows[0]
+            return formatResult(user) as User
+        } catch (error) {
+            throw new Error('There was an error getting user from the database')
+        }
     }
 
     /**

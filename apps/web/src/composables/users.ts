@@ -31,15 +31,23 @@ export default function useUsers () {
     }
 
     async function checkIfPrimaryUserExists(provider: ProviderString, address: string): Promise<ExistingUserCheck> {
-        const requestOptions = {
-            method: 'GET',
-            headers: { 
-                'Content-Type': 'application/json'
-            },
+        try {
+            const requestOptions = {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json'
+                }
+            }
+            const response = await fetch(`${usersBaseURL}/auth/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
+            const { error, message, data } = await response.json()
+            if (!error) {
+                return await data
+            } else {
+                throw new Error(message)
+            }
+        } catch (error) {
+            throw new Error(error.message)
         }
-        const response = await fetch(`${usersBaseURL}/auth/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
-        const { sameAddress, sameProvider } = await response.json()
-        return { sameAddress, sameProvider }
     }
 
     async function checkIfSecondaryAddress(address: string) : Promise<Account[]> {

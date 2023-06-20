@@ -17,16 +17,22 @@ router.post('/nonce', async (req: express.Request, res: express.Response) => {
             res.status(200)
             res.json({
                 error: false,
-                nonce
+                message: 'Nonce retrieved',
+                data: nonce
             })
         } else {
             res.status(404)
-            res.send()
+            res.json({
+                error: true,
+                message: 'Error getting nonce'
+            })
         }
     } catch (error) {
-        console.log('error in /nonce :>> ', error)
         res.status(500)
-        res.send()
+        res.json({
+            error: true,
+            message: 'Error getting nonce'
+        })
     }
 })
 
@@ -143,13 +149,20 @@ router.get('/check-if-primary-address-exists/:provider/:address', async (req: ex
         res.status(200)
         res.json({
             error: false,
-            sameAddress,
-            sameProvider
+            message: 'Successfully checked if primary address exists',
+            data: {
+                sameAddress,
+                sameProvider
+            }
         })
-    } catch (error) {
-        console.log('error in /get-user-by-address :>> ', error)
+    } catch (error: any) {
+        const { message } = error
+        res.setHeader('Content-Type', 'application/json')
         res.status(500)
-        res.send()
+        res.json({
+            error: true,
+            message: message || 'Problem checking if primary address exists'
+        })
     }
 })
 
