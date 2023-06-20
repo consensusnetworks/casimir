@@ -41,8 +41,8 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         const { body } = req
         const loginCredentials = body
         const { provider, address, currency, message, signedMessage } = loginCredentials
-
         const { parsedDomain, parsedNonce } = parseMessage(message)
+        console.log('00---------------------------------------00')
         const verifyDomain = parsedDomain ? verifyMessageDomain(parsedDomain) : false        
         const verifyNonce = parsedNonce ? await verifyMessageNonce(address, parsedNonce) : false
         const verifySignature = verifyMessageSignature(loginCredentials)
@@ -101,8 +101,12 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
                 })
             }
         }
-    } catch (e) {
-        console.log('CAUGHT ERROR IN /siwe: ', e)
+    } catch (error: any) {
+        res.status(500)
+        res.json({
+            error: true,
+            message: error.message || 'Error logging in'
+        })
     }
 })
 
@@ -191,15 +195,19 @@ function parseNonce(msg: string) {
 function verifyMessageDomain(domain: string): boolean {
     const stage = process.env.STAGE
     if (stage === 'dev') {
-        return domain === 'localhost:3000'
+        return domain === 'localhost:3001'
     } else {
         return false
     }
 }
 
 async function verifyMessageNonce(address: string, msgNonce: string) : Promise<boolean> {
-    const dbNonce = await getNonce(address)
-    return msgNonce === dbNonce
+    try {
+        const dbNonce = await getNonce(address)
+        return msgNonce === dbNonce
+    } catch (error) {
+        throw new Error('Problem verifying message nonce')
+    }
 }
 
 export default router

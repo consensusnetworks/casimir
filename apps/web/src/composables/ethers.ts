@@ -144,7 +144,7 @@ export default function useEthers() {
     return maxAfterFees
   }
 
-  async function loginWithEthers(loginCredentials: LoginCredentials){
+  async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
     const { provider, address, currency } = loginCredentials
     const browserProvider = getBrowserProvider(provider)
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
@@ -152,14 +152,13 @@ export default function useEthers() {
       const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signer = web3Provider.getSigner()
       const signedMessage = await signer.signMessage(message)
-      const ethersLoginResponse = await signInWithEthereum({ 
+      await signInWithEthereum({ 
         address,
         currency,
         message, 
         provider, 
         signedMessage
       })
-      return await ethersLoginResponse.json()
     } catch (err) {
       throw new Error(err.message)
     }

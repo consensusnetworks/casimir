@@ -50,7 +50,7 @@ export default function useDB() {
         
         const accountAdded = await addAccount(account, createdAt)
         addedUser.accounts = [accountAdded]
-
+        
         return formatResult(addedUser)
     }
 
@@ -90,11 +90,15 @@ export default function useDB() {
      * @returns - The nonce if address is a pk on the table or undefined
      */
     async function getNonce(address:string) {
-        const text = 'SELECT nonce FROM nonces WHERE address = $1;'
-        const params = [address]
-        const rows = await postgres.query(text, params)
-        const { nonce } = rows[0]
-        return formatResult(nonce)
+        try {
+            const text = 'SELECT nonce FROM nonces WHERE address = $1;'
+            const params = [address]
+            const rows = await postgres.query(text, params)
+            const { nonce } = rows[0]
+            return formatResult(nonce)
+        } catch (error) {
+            throw new Error('There was an error getting nonce from the database')
+        }
     }
 
     /**
@@ -194,18 +198,24 @@ export default function useDB() {
      * @returns The formatted data
      */
     function formatResult(result: any) {
-        if (result) {
-            for (const key in result) {
-                result[camelCase(key)] = result[key]
-                delete result[key]
-
-                if (result[camelCase(key)].isArray()) {
-                    result[camelCase(key)] = result[camelCase(key)].map((result: any) => {
-                        return formatResult(result)
-                    })
+        try {
+            if (typeof result === 'string') return result
+            if (result) {
+                for (const key in result) {
+                    if (key === camelCase(key)) continue
+                    result[camelCase(key)] = result[key]
+                    delete result[key]
+                    if (Array.isArray(result[camelCase(key)])) {
+                        console.log('result[camelCase(key)] :>> ', result[camelCase(key)])
+                        result[camelCase(key)] = result[camelCase(key)].map((result: any) => {
+                            return formatResult(result)
+                        })
+                    }
                 }
+                return result
             }
-            return result
+        } catch (error) {
+            throw new Error('There was an error formatting the result')
         }
     }
 

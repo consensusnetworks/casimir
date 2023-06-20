@@ -1,5 +1,5 @@
 import useEnvironment from '@/composables/environment'
-import { LoginCredentials } from '@casimir/types'
+import { LoginCredentials, ErrorSuccessInterface } from '@casimir/types'
 
 const { domain, origin, usersBaseURL } = useEnvironment()
 
@@ -48,15 +48,21 @@ export default function useAuth() {
      * @param {LoginCredentials} loginCredentials - The user's address, provider, currency, message, and signed message 
      * @returns {Promise<Response>} - The response from the login request
      */
-    async function signInWithEthereum(loginCredentials: LoginCredentials) {
-        const requestOptions = {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(loginCredentials)
+    async function signInWithEthereum(loginCredentials: LoginCredentials): Promise<void> {
+        try {
+            const requestOptions = {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(loginCredentials)
+            }
+            const response = await fetch(`${usersBaseURL}/auth/login`, requestOptions)
+            const { error, message } = await response.json()
+            if (error) throw new Error(message)
+        } catch (error) {
+            throw new Error(error.message || 'Error signing in with Ethereum')
         }
-        return await fetch(`${usersBaseURL}/auth/login`, requestOptions)
     }
 
     return {
