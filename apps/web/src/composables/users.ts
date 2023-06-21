@@ -37,7 +37,7 @@ export default function useUsers () {
                     'Content-Type': 'application/json'
                 }
             }
-            const response = await fetch(`${usersBaseURL}/auth/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
+            const response = await fetch(`${usersBaseURL}/user/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
             const { error, message, data } = await response.json()
             if (error) throw new Error(message)
             return { error, message, data }
@@ -54,7 +54,7 @@ export default function useUsers () {
                     'Content-Type': 'application/json'
                 }
             }
-            const response = await fetch(`${usersBaseURL}/auth/check-secondary-address/${address}`, requestOptions)
+            const response = await fetch(`${usersBaseURL}/user/check-secondary-address/${address}`, requestOptions)
             const { error, message, data } = await response.json()
             if (error) throw new Error(message)
             return { error, message, data }

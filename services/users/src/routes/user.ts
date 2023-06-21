@@ -4,7 +4,7 @@ import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
 
 const router = express.Router()
-const { addAccount, getUser, updateUserAddress, removeAccount } = useDB()
+const { addAccount, getAccounts, getUser, getUserById, updateUserAddress, removeAccount } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
@@ -25,6 +25,67 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
             message: 'Error getting user',
             error: true,
             user: null
+        })
+    }
+})
+
+router.get('/check-if-primary-address-exists/:provider/:address', async (req: express.Request, res: express.Response) => {
+    try {
+        const { params } = req
+        const { address, provider } = params
+        const user = await getUser(address)
+        const userAddress = user?.address
+        const userProvider = user?.walletProvider
+        const sameAddress = userAddress === address
+        const sameProvider = userProvider === provider
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            error: false,
+            message: 'Successfully checked if primary address exists',
+            data: {
+                sameAddress,
+                sameProvider
+            }
+        })
+    } catch (error: any) {
+        const { message } = error
+        res.setHeader('Content-Type', 'application/json')
+        res.status(500)
+        res.json({
+            error: true,
+            message: message || 'Problem checking if primary address exists'
+        })
+    }
+})
+
+router.get('/check-secondary-address/:address', async (req: express.Request, res: express.Response) => {
+    try {
+        const { params } = req
+        const { address } = params
+        const accounts = await getAccounts(address)
+        const users = await Promise.all(accounts.map(async account => {
+            const { userId } = account
+            const user = await getUserById(userId)
+            const { address, walletProvider } = user
+            return { 
+                address: maskAddress(address),
+                walletProvider,
+            }
+        }))
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            error: false,
+            message: 'Successfully checked secondary address',
+            data: users
+        })
+    } catch (error: any) {
+        res.setHeader('Content-Type', 'application/json')
+        res.status(500)
+        res.json({
+            error: true,
+            message: error.message || 'Problem checking secondary address'
         })
     }
 })
@@ -135,6 +196,10 @@ router.put('/update-primary-account', verifySession(), async (req: SessionReques
         })
     }
 })
+
+function maskAddress(address: string) {
+    return address.slice(0, 6) + '...' + address.slice(-4)
+}
 
 function validateAddress(userSessionsAddress:string | undefined, address:string) {
     return userSessionsAddress === address
