@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, Account, ExistingUserCheck, ErrorSuccessInterface } from '@casimir/types'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ExistingUserCheck, ApiResponse } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import * as Session from 'supertokens-web-js/recipe/session'
 
@@ -11,7 +11,7 @@ const user = ref<UserWithAccounts>()
 
 export default function useUsers () {
 
-    async function addAccount(account: AddAccountOptions): Promise<ErrorSuccessInterface> {
+    async function addAccount(account: AddAccountOptions): Promise<ApiResponse> {
         try {
             const requestOptions = {
                 method: 'POST',
@@ -29,7 +29,7 @@ export default function useUsers () {
         }
     }
 
-    async function checkIfPrimaryUserExists(provider: ProviderString, address: string): Promise<ExistingUserCheck> {
+    async function checkIfPrimaryUserExists(provider: ProviderString, address: string): Promise<ApiResponse> {
         try {
             const requestOptions = {
                 method: 'GET',
@@ -40,13 +40,13 @@ export default function useUsers () {
             const response = await fetch(`${usersBaseURL}/auth/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
             const { error, message, data } = await response.json()
             if (error) throw new Error(message)
-            return data
+            return { error, message, data }
         } catch (error) {
             throw new Error(error.message || 'Error checking if primary user exists')
         }
     }
 
-    async function checkIfSecondaryAddress(address: string) : Promise<Account[]> {
+    async function checkIfSecondaryAddress(address: string) : Promise<ApiResponse> {
         try {
             const requestOptions = {
                 method: 'GET',
@@ -55,9 +55,9 @@ export default function useUsers () {
                 }
             }
             const response = await fetch(`${usersBaseURL}/auth/check-secondary-address/${address}`, requestOptions)
-            const { error, message, data: users } = await response.json()
+            const { error, message, data } = await response.json()
             if (error) throw new Error(message)
-            return users
+            return { error, message, data }
         } catch (error) {
             throw new Error(error.message || 'Error checking if secondary address')
         }
@@ -94,7 +94,7 @@ export default function useUsers () {
         return message
     }
 
-    async function getUser() : Promise<ErrorSuccessInterface> {
+    async function getUser() : Promise<ApiResponse> {
         try {
             const requestOptions = {
                 method: 'GET',

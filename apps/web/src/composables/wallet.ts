@@ -5,7 +5,7 @@ import useSolana from '@/composables/solana'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
 import useWalletConnect from '@/composables/walletConnect'
-import { Account, CryptoAddress, Currency, ExistingUserCheck, LoginCredentials, MessageRequest, ProviderString, TransactionRequest, ErrorSuccessInterface } from '@casimir/types'
+import { Account, CryptoAddress, Currency, LoginCredentials, MessageRequest, ProviderString, TransactionRequest } from '@casimir/types'
 import * as Session from 'supertokens-web-js/recipe/session'
 
 // Test ethereum send from address : 0xd557a5745d4560B24D36A68b52351ffF9c86A212
@@ -64,7 +64,7 @@ export default function useWallet() {
    * @param currency 
    * @returns 
   */
-  async function connectWallet(): Promise<ErrorSuccessInterface> {
+  async function connectWallet(): Promise<void> {
     try { // Sign Up or Login
       if (!user?.value?.address) {
         await login()
@@ -103,11 +103,6 @@ export default function useWallet() {
       }
       await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
-      return {
-        error: false,
-        message: 'Successfully connected wallet',
-        data: user.value
-      }
     } catch (error) {
       loadingUserWallets.value = false
       throw new Error(error.message || 'There was an error connecting the wallet')
@@ -258,14 +253,14 @@ export default function useWallet() {
    * @param provider 
    * @param currency 
    */
-  async function selectAddress(address: any, pathIndex?: string) : Promise<ErrorSuccessInterface> {
+  async function selectAddress(address: any, pathIndex?: string) : Promise<void> {
     try {
       address = trimAndLowercaseAddress(address)
       setSelectedAddress(address)
       setSelectedCurrency('ETH') // TODO: Implement this for other currencies when supported.
       
       if (pathIndex) setSelectedPathIndex(pathIndex)
-      const { sameAddress, sameProvider } : ExistingUserCheck = await checkIfPrimaryUserExists(selectedProvider.value, selectedAddress.value)
+      const { data: { sameAddress, sameProvider } } = await checkIfPrimaryUserExists(selectedProvider.value, selectedAddress.value)
       if (sameAddress && sameProvider ) {
         await connectWallet() // login
         return {
@@ -277,24 +272,12 @@ export default function useWallet() {
         throw new Error('Address already exists as a primary address using another provider')
       }
       
-      const accountsIfSecondaryAddress : Account[] | void = await checkIfSecondaryAddress(selectedAddress.value)
-      console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
-      if (accountsIfSecondaryAddress.length) {
-        throw new Error(`${selectedAddress.value} already exists as a secondary address on this/these account(s): ${JSON.stringify(accountsIfSecondaryAddress)}`)
-      } else {
-        await connectWallet() // sign up or add account
-        return {
-          error: false,
-          message: 'Address does not exist as a primary address using this provider',
-        }
-      }
+      const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(selectedAddress.value)
+      if (accountsIfSecondaryAddress.length) throw new Error(`${selectedAddress.value} already exists as a secondary address on this/these account(s): ${JSON.stringify(accountsIfSecondaryAddress)}`)
+      await connectWallet() // sign up or add account
     } catch (error) {
       // TODO: @shanejearley - What do we want to do here?
-      console.error('Error in selectAddress: ', error.message)
-      return {
-        error: true,
-        message: error.message
-      }
+      throw new Error(error.message || 'There was an error selecting address')
     }
   }
 
@@ -303,7 +286,7 @@ export default function useWallet() {
    * @param provider 
    * @param currency 
    */
-  async function selectProvider(provider: ProviderString, currency: Currency = 'ETH'): Promise<ErrorSuccessInterface> {
+  async function selectProvider(provider: ProviderString, currency: Currency = 'ETH'): Promise<void> {
     console.clear()
     try {
       if (provider === 'WalletConnect') {
@@ -323,17 +306,8 @@ export default function useWallet() {
         const trezorAddresses = await getTrezorAddress[currency]() as CryptoAddress[]
         setUserAddresses(trezorAddresses)
       }
-      return {
-        error: false,
-        message: 'Successfully selected provider'
-      }
     } catch (error) {
-      console.error('selectProvider error: ', error)
-      return {
-        error: true,
-        message: error.message as string || 'Error selecting provider',
-        data: error.name as string || null
-      }
+      throw new Error(`Error selecting provider: ${error.message}`)
     }
   }
 
