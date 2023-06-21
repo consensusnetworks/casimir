@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 import useWallet from '@/composables/wallet'
+import useUser from '@/composables/users'
 
 const selectedAddress = ref(null as string | null)
 
@@ -11,6 +12,8 @@ const  {
   selectAddress,
   selectProvider,
 } = useWallet()
+
+const { user } = useUser()
 
 const show_setting_modal = ref(false)
 const openWalletConnect = ref(false)

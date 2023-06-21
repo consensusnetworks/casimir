@@ -69,6 +69,7 @@ export default function useWallet() {
       if (!user?.value?.address) {
         await login()
         const { error, message, data: retrievedUser} = await getUser()
+        console.log('retrievedUser :>> ', retrievedUser)
         if (!error) {
           setUser(retrievedUser)
           setPrimaryAddress(user?.value?.address as string)
@@ -79,7 +80,7 @@ export default function useWallet() {
       } else { // Add account if it doesn't already exist
         const userAccountExists = user.value?.accounts?.some((account: Account | any) => account?.address === selectedAddress.value && account?.walletProvider === selectedProvider.value && account?.currency === selectedCurrency.value)
         if (userAccountExists) {
-          alert('A user account already exists; setting provider, address, and currency')
+          throw new Error('Account already exists on user.')
         } else {
           console.log('adding sub account')
           const account = {
@@ -89,6 +90,7 @@ export default function useWallet() {
             ownerAddress: user?.value?.address.toLowerCase() as string,
             walletProvider: selectedProvider.value
           }
+
           const { error: addAccountError, message: addAccountMessage } = await addAccount(account)
           if (addAccountError) throw new Error(addAccountMessage || 'There was an error adding the account')
           
@@ -260,6 +262,7 @@ export default function useWallet() {
     try {
       address = trimAndLowercaseAddress(address)
       setSelectedAddress(address)
+      setSelectedCurrency('ETH') // TODO: Implement this for other currencies when supported.
       
       if (pathIndex) setSelectedPathIndex(pathIndex)
       const { sameAddress, sameProvider } : ExistingUserCheck = await checkIfPrimaryUserExists(selectedProvider.value, selectedAddress.value)

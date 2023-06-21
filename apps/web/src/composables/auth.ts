@@ -1,5 +1,5 @@
 import useEnvironment from '@/composables/environment'
-import { LoginCredentials, ErrorSuccessInterface } from '@casimir/types'
+import { LoginCredentials } from '@casimir/types'
 
 const { domain, origin, usersBaseURL } = useEnvironment()
 

@@ -23,15 +23,19 @@ export default function useDB() {
      * @returns The new account
      */
     async function addAccount(account: Account, createdAt?: string) : Promise<Account> {
-        if (!createdAt) createdAt = new Date().toISOString()
-        const { address, currency, userId, walletProvider } = account
-        const text = 'INSERT INTO accounts (address, currency, user_id, wallet_provider, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;'
-        const params = [address, currency, userId, walletProvider, createdAt]
-        const rows = await postgres.query(text, params)
-        const accountAdded = rows[0]
-        const accountId = accountAdded.id
-        await addUserAccount(parseInt(userId), accountId)
-        return accountAdded as Account
+        try {
+            if (!createdAt) createdAt = new Date().toISOString()
+            const { address, currency, userId, walletProvider } = account
+            const text = 'INSERT INTO accounts (address, currency, user_id, wallet_provider, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;'
+            const params = [address, currency, userId, walletProvider, createdAt]
+            const rows = await postgres.query(text, params)
+            const accountAdded = rows[0]
+            const accountId = accountAdded.id
+            await addUserAccount(parseInt(userId), accountId)
+            return accountAdded as Account
+        } catch (error) {
+            throw new Error('There was an error adding the account to the database')
+        }
     }
 
     /**
@@ -197,26 +201,39 @@ export default function useDB() {
      * @param rows - The result date
      * @returns The formatted data
      */
-    function formatResult(result: any) {
-        try {
-            if (typeof result === 'string') return result
-            if (result) {
-                for (const key in result) {
-                    if (key === camelCase(key)) continue
-                    result[camelCase(key)] = result[key]
-                    delete result[key]
-                    if (Array.isArray(result[camelCase(key)])) {
-                        result[camelCase(key)] = result[camelCase(key)].map((result: any) => {
-                            return formatResult(result)
-                        })
-                    }
-                }
-                return result
-            }
-        } catch (error) {
-            throw new Error('There was an error formatting the result')
+    function formatResult(obj: any) : any {
+        if (typeof obj !== 'object' || obj === null) {
+          // Return non-object values as is
+          return obj
         }
-    }
+      
+        if (Array.isArray(obj)) {
+          // If obj is an array, map over each item and recursively call the function
+          return obj.map(item => formatResult(item))
+        }
+      
+        const convertedObj: any = {}
+      
+        for (const key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            const camelCaseKey = camelCase(key)
+            const value = obj[key]
+      
+            if (typeof value === 'object' && value !== null) {
+              // Recursively convert nested objects
+              convertedObj[camelCaseKey] = formatResult(value)
+            } else {
+              // Convert key to camel case and assign the value
+              convertedObj[camelCaseKey] = value
+            }
+          }
+        }
+      
+        return convertedObj
+      }
+      
+      
+      
 
     return { 
         addAccount, 

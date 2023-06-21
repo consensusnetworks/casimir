@@ -36,7 +36,7 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
         const { ownerAddress } = account
         const userSessionsAddress = req.session?.getUserId().toLowerCase()
         const validatedAddress = validateAddress(userSessionsAddress, ownerAddress)
-        if (!validatedAddress) {    
+        if (!validatedAddress) {
             res.setHeader('Content-Type', 'application/json')
             res.status(200)
             res.json({
@@ -44,7 +44,6 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
                 error: true,
                 data: null
             })
-            return
         }
         await addAccount(account)
         const user = await getUser(ownerAddress)
@@ -56,7 +55,6 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
             data: user
         })
     } catch (err) {
-        console.log('Error in /add-sub-account route of user.ts :>> ', err)
         res.status(500)
         res.json({
             message: 'Error adding account',
