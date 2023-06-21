@@ -1,5 +1,6 @@
 import { pascalCase } from '@casimir/helpers'
 import { ProjectConfig } from '../interfaces/ProjectConfig'
+import { version } from '@casimir/data/package.json'
 
 /**
  * CDK app config
@@ -11,6 +12,7 @@ export class Config implements ProjectConfig {
     public readonly rootDomain
     public readonly subdomains
     public readonly nodesIp
+    public readonly dataVersion
 
     /** List of required environment variables */
     public readonly requiredEnvVars = ['PROJECT', 'STAGE', 'AWS_ACCOUNT', 'AWS_REGION']
@@ -31,6 +33,7 @@ export class Config implements ProjectConfig {
             wildcard: '*'
         }
         this.nodesIp = process.env.NODES_IP as string
+        this.dataVersion = version.split('.')[0]
     }
 
     /**
@@ -64,6 +67,7 @@ export class Config implements ProjectConfig {
      * Get stack resource name with project prefix and stage suffix
      * @param stackName Stack name
      * @param resourceName Resource name
+     * @param version Optional resource version
      * @returns Resource name
      * @example
      * ```typescript
@@ -71,8 +75,8 @@ export class Config implements ProjectConfig {
      * console.log(resourceName) // EtlEventBucketDev
      * ```
      */
-    getFullStackResourceName(stackName: string, resourceName: string): string {
-        return this.project + pascalCase(stackName) + pascalCase(resourceName) + this.stage
+    getFullStackResourceName(stackName: string, resourceName: string, version?: string): string {
+        // CasimirEtlEventBucketDev1
+        return this.project + pascalCase(stackName) + pascalCase(resourceName) + this.stage + version
     }
-
 }

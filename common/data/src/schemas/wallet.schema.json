@@ -5,28 +5,36 @@
     "type": "object",
     "properties": {
         "wallet_address": {
-            "type": "string"
+            "type": "string",
+            "description": "The wallet address"
         },
         "wallet_balance": {
-            "type": "string"
+            "type": "string",
+            "description": "The wallet balance"
         },
         "tx_direction": {
-            "type": "string"
+            "type": "string",
+            "description": "Ingoing or outgoing transaction"
         },
         "tx_id": {
-            "type": "string"
+            "type": "string",
+            "description": "The transaction id"
         },
         "received_at": {
-            "type": "string"
+            "type": "string",
+            "description": "The time the transaction was received"
         },
         "amount": {
-            "type": "string"
+            "type": "string",
+            "description": "The amount of the transaction"
         },
         "price": {
-            "type": "string"
+            "type": "string",
+            "description": "The exchnage price at the time of the transaction"
         },
         "gas_fee": {
-            "type": "string"
+            "type": "string",
+            "description": "The gas fee of the transaction"
         }
     }
 }

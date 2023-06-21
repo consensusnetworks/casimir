@@ -30,12 +30,21 @@ export class EtlStack extends cdk.Stack {
         })
 
         /** Create S3 buckets */
-        const eventBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'event-bucket'))
-        const walletBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'wallet-bucket'))
-        const stakingActionBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'staking-action-bucket'))
+        const eventBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'event-bucket', config.dataVersion), {
+            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'event-bucket', config.dataVersion)),
+        })
 
+        const walletBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'wallet-bucket', config.dataVersion), {
+            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'wallet-bucket', config.dataVersion)),
+        })
 
-        new s3.Bucket(this, config.getFullStackResourceName(this.name, 'output-bucket'))
+        const stakingActionBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'staking-action-bucket', config.dataVersion), {
+            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'staking-action-bucket', config.dataVersion)),
+        })
+
+        new s3.Bucket(this, config.getFullStackResourceName(this.name, 'output-bucket'), {
+            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'output-bucket')),
+        })
 
         /** Create Glue tables */
         new glue.Table(this, config.getFullStackResourceName(this.name, 'event-table'), {
@@ -53,6 +62,7 @@ export class EtlStack extends cdk.Stack {
             columns: walletColumns,
             dataFormat: glue.DataFormat.JSON,
         })
+
         new glue.Table(this, config.getFullStackResourceName(this.name, 'staking-action-table'), {
             database: database,
             tableName: snakeCase(config.getFullStackResourceName(this.name, 'staking-action-table')),
