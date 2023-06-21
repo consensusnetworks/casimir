@@ -9,11 +9,11 @@ import { DnsStack } from './providers/dns'
 
 /** Create CDK app and stacks */
 const config = new Config()
-const { env } = config
+const { env, stage } = config
 const app = new cdk.App()
 const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName('dns'), { env })
 const { cluster } = new NetworkStack(app, config.getFullStackName('network'), { env })
-if (process.env.STAGE !== 'prod') {
+if (stage !== 'prod') {
     /** Create development-only stacks */
     new AnalyticsStack(app, config.getFullStackName('analytics'), { env })
     new UsersStack(app, config.getFullStackName('users'), { env, hostedZone, cluster, certificate })

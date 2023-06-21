@@ -19,13 +19,13 @@ export class Config implements ProjectConfig {
 
     constructor() {
         this.checkEnvVars()
-        this.project = pascalCase(process.env.PROJECT as string)
-        this.stage = pascalCase(process.env.STAGE as string)
+        this.project = process.env.PROJECT as string
+        this.stage = process.env.STAGE as string
         this.env = {
             account: process.env.AWS_ACCOUNT as string,
             region: process.env.AWS_REGION as string
         }
-        this.rootDomain = `${this.stage === 'Prod' ? '' : `${this.stage.toLowerCase()}.`}casimir.co`
+        this.rootDomain = `${this.stage === 'prod' ? '' : `${this.stage}.`}casimir.co`
         this.subdomains = {
             nodes: 'nodes',
             landing: 'www',
@@ -60,7 +60,7 @@ export class Config implements ProjectConfig {
      * ```
      */
     getFullStackName(stackName: string): string {
-        return this.project + pascalCase(stackName) + this.stage
+        return pascalCase(this.project) + pascalCase(stackName) + pascalCase(this.stage)
     }
 
     /**
@@ -76,7 +76,7 @@ export class Config implements ProjectConfig {
      * ```
      */
     getFullStackResourceName(stackName: string, resourceName: string, version?: number): string {
-        const name = this.project + pascalCase(stackName) + pascalCase(resourceName) + this.stage
+        const name = pascalCase(this.project) + pascalCase(stackName) + pascalCase(resourceName) + pascalCase(this.stage)
         if (version) {
             return name + version
         }
