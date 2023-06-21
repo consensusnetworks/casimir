@@ -36,5 +36,19 @@ app.use('/seed', seed)
 /** Returns 401 to the client in the case of session related errors */
 app.use(errorHandler())
 
+/* Handle 500 errors */
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // Log the error stack trace
+    console.error(`Error stack trace in middleware: ${err.stack}`)
+    console.error(`Error message in middleware: ${err.message}`)
+    
+    // Check if headers have already been sent to the client
+    if (res.headersSent) {
+        return next(err)
+    }
+    console.log('res.statusMessage :>> ', res.statusMessage)
+    res.status(500).send('Server error.')
+})
+
 app.listen(port)
 console.log(`Users server listening on port ${port}`)
