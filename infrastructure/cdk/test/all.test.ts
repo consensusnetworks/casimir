@@ -3,7 +3,7 @@ import * as assertions from 'aws-cdk-lib/assertions'
 import { Config } from '../src/providers/config'
 import { UsersStack } from '../src/providers/users'
 import { NetworkStack } from '../src/providers/network'
-import { EtlStack } from '../src/providers/etl'
+import { AnalyticsStack } from '../src/providers/analytics'
 import { LandingStack } from '../src/providers/landing'
 import { NodesStack } from '../src/providers/nodes'
 import { DnsStack } from '../src/providers/dns'
@@ -15,13 +15,13 @@ test('All stacks created', () => {
 
   const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName('dns'), { env })
   const { cluster } = new NetworkStack(app, config.getFullStackName('network'), { env })
-  const etlStack = new EtlStack(app, config.getFullStackName('etl'), { env })
+  const analyticsStack = new AnalyticsStack(app, config.getFullStackName('analytics'), { env })
   const usersStack = new UsersStack(app, config.getFullStackName('users'), { env, hostedZone, cluster, certificate })
   const nodesStack = new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone })
   const landingStack = new LandingStack(app, config.getFullStackName('landing'), { env, hostedZone, certificate })
 
-  const etlTemplate = assertions.Template.fromStack(etlStack)
-  Object.keys(etlTemplate.findOutputs('*')).forEach(output => {
+  const analyticsTemplate = assertions.Template.fromStack(analyticsStack)
+  Object.keys(analyticsTemplate.findOutputs('*')).forEach(output => {
     expect(output).toBeDefined()
   })
   

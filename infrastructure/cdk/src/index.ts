@@ -2,7 +2,7 @@ import * as cdk from 'aws-cdk-lib'
 import { Config } from './providers/config'
 import { UsersStack } from './providers/users'
 import { NetworkStack } from './providers/network'
-import { EtlStack } from './providers/etl'
+import { AnalyticsStack } from './providers/analytics'
 import { LandingStack } from './providers/landing'
 import { NodesStack } from './providers/nodes'
 import { DnsStack } from './providers/dns'
@@ -15,7 +15,7 @@ const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName('d
 const { cluster } = new NetworkStack(app, config.getFullStackName('network'), { env })
 if (process.env.STAGE !== 'prod') {
     /** Create development-only stacks */
-    new EtlStack(app, config.getFullStackName('etl'), { env })
+    new AnalyticsStack(app, config.getFullStackName('analytics'), { env })
     new UsersStack(app, config.getFullStackName('users'), { env, hostedZone, cluster, certificate })
 } else {
     /** Create production-only stacks */

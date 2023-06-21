@@ -1,18 +1,18 @@
 import * as cdk from 'aws-cdk-lib'
 import * as assertions from 'aws-cdk-lib/assertions'
 import { Config } from '../src/providers/config'
-import { EtlStack } from '../src/providers/etl'
+import { AnalyticsStack } from '../src/providers/analytics'
 import { Schema, eventSchema, walletSchema, stakingActionSchema } from '@casimir/data'
 
-test('ETL stack created', () => {
+test('Analytics stack created', () => {
   const config = new Config()
   const { env } = config
   const app = new cdk.App()
-  const etlStack = new EtlStack(app, config.getFullStackName('etl'), { env })
+  const analyticsStack = new AnalyticsStack(app, config.getFullStackName('analytics'), { env })
 
-  const etlTemplate = assertions.Template.fromStack(etlStack)
+  const analyticsTemplate = assertions.Template.fromStack(analyticsStack)
 
-  const resource = etlTemplate.findResources('AWS::Glue::Table')
+  const resource = analyticsTemplate.findResources('AWS::Glue::Table')
 
   const eventTable = Object.keys(resource).filter(key => key.includes('EventTable'))
   const eventColumns = resource[eventTable[0]].Properties.TableInput.StorageDescriptor.Columns
@@ -54,7 +54,7 @@ test('ETL stack created', () => {
     expect(columnName).toEqual(name)
   }
 
-  Object.keys(etlTemplate.findOutputs('*')).forEach(output => {
+  Object.keys(analyticsTemplate.findOutputs('*')).forEach(output => {
     expect(output).toBeDefined()
   })
 })

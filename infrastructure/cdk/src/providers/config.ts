@@ -1,6 +1,6 @@
 import { pascalCase } from '@casimir/helpers'
 import { ProjectConfig } from '../interfaces/ProjectConfig'
-import { version } from '@casimir/data/package.json'
+import dataPackage from '@casimir/data/package.json'
 
 /**
  * CDK app config
@@ -33,7 +33,7 @@ export class Config implements ProjectConfig {
             wildcard: '*'
         }
         this.nodesIp = process.env.NODES_IP as string
-        this.dataVersion = version.split('.')[0]
+        this.dataVersion = Number(dataPackage.version.split('.')[0])
     }
 
     /**
@@ -72,11 +72,14 @@ export class Config implements ProjectConfig {
      * @example
      * ```typescript
      * const resourceName = config.getFullStackResourceName('etl', 'event-bucket')
-     * console.log(resourceName) // EtlEventBucketDev
+     * console.log(resourceName) // CasimirEtlEventBucketDev
      * ```
      */
-    getFullStackResourceName(stackName: string, resourceName: string, version?: string): string {
-        // CasimirEtlEventBucketDev1
-        return this.project + pascalCase(stackName) + pascalCase(resourceName) + this.stage + version
+    getFullStackResourceName(stackName: string, resourceName: string, version?: number): string {
+        const name = this.project + pascalCase(stackName) + pascalCase(resourceName) + this.stage
+        if (version) {
+            return name + version
+        }
+        return name
     }
 }
