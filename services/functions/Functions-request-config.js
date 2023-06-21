@@ -39,11 +39,11 @@ const requestConfig = {
   walletPrivateKey: process.env["PRIVATE_KEY"],
   // Args (string only array) can be accessed within the source code with `args[index]` (ie: args[0]).
   args: [
-    "9204622", // previousReportBlock
-    "9211748", // reportBlock
-    "1", // requestType
+    "9210000", // previousReportBlock
+    "9217338", // reportBlock
+    "2", // requestType
     "0x6b34d231b467fccebdc766187f7251795281dc26", // viewsAddress
-    "0x8fa448ce", // getCompoundablePoolIds()
+    "0x0812a9fe", // getCompoundablePoolIds(uint256,uint256)
     "0x5d1e0780", // getDepositedPoolCount()
     "0x12c3456b", // getSweptBalance(uint256,uint256)
     "0xf6647134" // getValidatorPublicKeys(uint256,uint256)

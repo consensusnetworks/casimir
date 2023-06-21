@@ -1,6 +1,6 @@
 // Functions: Handle requests for validator balances (total active balance and total swept balance) and pool validator details (activated deposits, forced exits, completed exits, and compoundable pool IDs)
 // Config: Expose a combination of preset and dynamic Functions config:
-//     - Preset args: CasimirViews contract address (obtained after initial deployment), method signatures (`getDepositedPoolCount()`, `getPoolPublicKeys(uint256 startIndex, uint256 endIndex)`, `getSweptBalance(uint256 startIndex, uint256 endIndex)`, and `getCompoundablePoolIds()`)
+//     - Preset args: CasimirViews contract address (obtained after initial deployment), method signatures (`getCompoundablePoolIds(uint256 startIndex, uint256 endIndex)`, `getDepositedPoolCount()`, `getSweptBalance(uint256 startIndex, uint256 endIndex)`, and `getValidatorPublicKeys(uint256 startIndex, uint256 endIndex)`)
 //     - Dynamic args: previous report block number, report block number, request type (balances or details)
 //     - Secrets: complete archive node (execution and consensus) provider URLs (preferably split evenly across DON)
 // Balances handler: report validator total active balance and total swept balance
@@ -31,10 +31,10 @@ const previousReportBlock = '0x' + parseInt(args[0]).toString(16)
 const reportBlock = '0x' + parseInt(args[1]).toString(16)
 const requestType = args[2]
 const viewsAddress = args[3]
-const getCompoundablePoolIds = args[4]
-const getDepositedPoolCount = args[5]
-const getSweptBalance = args[6]
-const getValidatorPublicKeys = args[7]
+const getCompoundablePoolIdsSignature = args[4]
+const getDepositedPoolCountSignature = args[5]
+const getSweptBalanceSignature = args[6]
+const getValidatorPublicKeysSignature = args[7]
 
 const url = secrets.ethereumApiUrl
 
@@ -44,111 +44,29 @@ switch (requestType) {
 	case '2':
 		return await detailsHandler()
 	default:
-		return Buffer.from('Invalid request type')
+		throw new Error('Invalid request type')
 }
 
 async function balancesHandler() {
-	const depositedPoolCountRequest = await Functions.makeHttpRequest({
-		url: 'http://localhost:8545',
-		method: 'POST',
-		data: {
-			id: 1,
-			jsonrpc: '2.0',
-			method: 'eth_call',
-			params: [
-				{
-					to: viewsAddress,
-					// The signature of 'getDepositedPoolCount()'
-					data: getDepositedPoolCount
-				},
-				{ blockNumber: reportBlock }
-			]
-		}
-	})
-
-	if (depositedPoolCountRequest.error) {
-		return depositedPoolCountRequest.error
-	}
+	const depositedPoolCount = await getDepositedPoolCount()
 	
-	const depositedPoolCount = Number(depositedPoolCountRequest.data.result)
+	console.log('depositedPoolCount', depositedPoolCount)
 
 	const startIndex = BigInt(0).toString(16).padStart(64, '0')
 	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
+	
 	console.log('startIndex', startIndex)
 	console.log('endIndex', endIndex)
 
-	const validatorPublicKeysRequest = await Functions.makeHttpRequest({
-		url: 'http://localhost:8545',
-		method: 'POST',
-		data: {
-			id: 1,
-			jsonrpc: '2.0',
-			method: 'eth_call',
-			params: [
-				{
-					to: viewsAddress,
-					// The signature of 'getValidatorPublicKeys(uint256,uint256)' with startIndex = 0 and endIndex = depositedPoolCount
-					data: getValidatorPublicKeys + startIndex + endIndex
-				},
-				{ blockNumber: reportBlock }
-			]
-		}
-	})
+	const validatorPublicKeys = await getValidatorPublicKeys(startIndex, endIndex)
+	const validators = await getValidators(validatorPublicKeys)
 
-	if (validatorPublicKeysRequest.error) {
-		return validatorPublicKeysRequest.error
-	}
+	const activeBalance = validators.reduce((accumulator, { balance }) => {
+		accumulator += parseFloat(balance)
+		return accumulator
+	}, 0)
 
-	const validatorPublicKeysResponse = validatorPublicKeysRequest.data.result.slice(2)
-	let offset = parseInt(validatorPublicKeysResponse.slice(128, 192), 16) * 2
-	let length = parseInt(validatorPublicKeysResponse.slice(192, 256), 16) * 2
-	const validatorPublicKeys = []
-	for (let i = 0; i < length; i++) {
-		let start = offset + i * 96
-		let end = start + 96
-		let publicKey = '0x' + validatorPublicKeysResponse.slice(start, end)
-		validatorPublicKeys.push(publicKey)
-	}
-
-	console.log('validatorPublicKeys', validatorPublicKeys)
-
-	const validatorsRequest = await Functions.makeHttpRequest({
-		url: `${url}/eth/v1/beacon/states/finalized/validators?id=${validatorPublicKeys.join(',')}`
-	})
-
-	if (validatorsRequest.error) {
-		return validatorsRequest.error
-	}
-
-	let activeBalance = 0
-	for (const { balance } of validatorsRequest.data.data) {
-		activeBalance += parseFloat(balance)
-	}
-
-	const sweptBalanceRequest = await Functions.makeHttpRequest({
-		url: 'http://localhost:8545',
-		method: 'POST',
-		data: {
-			id: 1,
-			jsonrpc: '2.0',
-			method: 'eth_call',
-			params: [
-				{
-					to: viewsAddress,
-					// The signature of 'getSweptBalance(uint256,uint256)' with startIndex = 0 and endIndex = depositedPoolCountRequest
-					data: getSweptBalance + '0'.repeat(24) + Functions.encodeUint256(0).slice(2) + Functions.encodeUint256(depositedPoolCountRequest.data).slice(2)
-				},
-				{ blockNumber: reportBlock }
-			]
-		}
-	})
-
-	if (sweptBalanceRequest.error) {
-		return sweptBalanceRequest.error
-	}
-
-	console.log('sweptBalanceRequest.data', sweptBalanceRequest.data)
-	const sweptBalance = parseFloat(sweptBalanceRequest.data.slice(0, -9))
+	const sweptBalance = await getSweptBalance(startIndex, endIndex)
 
 	const response = Buffer.concat([
 		encodeUint128(activeBalance),
@@ -159,110 +77,36 @@ async function balancesHandler() {
 }
 
 async function detailsHandler() {
-	const depositedPoolCountRequest = await Functions.makeHttpRequest({
-		url: 'http://localhost:8545',
-		method: 'POST',
-		data: {
-			id: 1,
-			jsonrpc: '2.0',
-			method: 'eth_call',
-			params: [
-				{
-					to: viewsAddress,
-					// The signature of 'getDepositedPoolCount()'
-					data: getDepositedPoolCount
-				},
-				{ blockNumber: reportBlock }
-			]
-		}
-	})
+	const depositedPoolCount = await getDepositedPoolCount()
+	
+	const startIndex = BigInt(0).toString(16).padStart(64, '0')
+	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
+	
+	const validatorPublicKeys = await getValidatorPublicKeys(startIndex, endIndex)
+	const validators = await getValidators(validatorPublicKeys)
 
-	if (depositedPoolCountRequest.error) {
-		return depositedPoolCountRequest.error
-	}
-
-	const validatorPublicKeysRequest = await Functions.makeHttpRequest({
-		url: 'http://localhost:8545',
-		method: 'POST',
-		data: {
-			id: 1,
-			jsonrpc: '2.0',
-			method: 'eth_call',
-			params: [
-				{
-					to: viewsAddress,
-					// The signature of 'getValidatorPublicKeys(uint256,uint256)' with startIndex = 0 and endIndex = depositedPoolCountRequest.data
-					data: getValidatorPublicKeys + '0'.repeat(24) + Functions.encodeUint256(0).slice(2) + Functions.encodeUint256(depositedPoolCountRequest.data).slice(2)
-				},
-				{ blockNumber: reportBlock }
-			]
-		}
-	})
-
-	if (validatorPublicKeysRequest.error) {
-		return validatorPublicKeysRequest.error
-	}
-
-	const validatorsRequest = await Functions.makeHttpRequest({
-		url: `${url}/eth/v1/beacon/states/finalized/validators?id=${validatorPublicKeysRequest.data.join(',')}`
-	})
-
-	if (validatorsRequest.error) {
-		return validatorsRequest.error
-	}
-
-	const activatedDeposits = validatorsRequest.data.data.reduce((accumulator, { activation_epoch, status }) => {
+	const activatedDeposits = validators.reduce((accumulator, { activation_epoch, status }) => {
 		if (status.includes('active') && activation_epoch >= previousReportBlock && activation_epoch < reportBlock) {
 			accumulator += 1
 		}
 		return accumulator
 	}, 0)
 
-	const forcedExits = validatorsRequest.data.data.reduce((accumulator, { exit_epoch, status }) => {
+	const forcedExits = validators.reduce((accumulator, { exit_epoch, status }) => {
 		if (status.includes('exiting') && exit_epoch >= previousReportBlock && exit_epoch < reportBlock) {
 			accumulator += 1
 		}
 		return accumulator
 	}, 0)
 
-	if (forcedExits.error) {
-		return forcedExits.error
-	}
-
-	const completedExits = validatorsRequest.data.data.reduce((accumulator, { exit_epoch, status }) => {
+	const completedExits = validators.reduce((accumulator, { exit_epoch, status }) => {
 		if (status === 'withdrawal_done' && exit_epoch >= previousReportBlock && exit_epoch < reportBlock) {
 			accumulator += 1
 		}
 		return accumulator
 	}, 0)
 
-	if (completedExits.error) {
-		return completedExits.error
-	}
-
-	const compoundablePoolIdsRequest = await Functions.makeHttpRequest({
-		url: 'http://localhost:8545',
-		method: 'POST',
-		data: {
-			id: 1,
-			jsonrpc: '2.0',
-			method: 'eth_call',
-			params: [
-				{
-					to: viewsAddress,
-					// The signature of 'getCompoundablePoolIds()'
-					data: getCompoundablePoolIds // + '0'.repeat(24)
-				},
-				{ blockNumber: reportBlock }
-			]
-		}
-	})
-
-	if (compoundablePoolIdsRequest.error) {
-		return compoundablePoolIdsRequest.error
-	}
-
-	const compoundablePoolIds = compoundablePoolIdsRequest.data
+	const compoundablePoolIds = await getCompoundablePoolIds(startIndex, endIndex)
 
 	const response = Buffer.concat([
 		encodeUint32(activatedDeposits),
@@ -272,6 +116,117 @@ async function detailsHandler() {
 	])
 
 	return response
+}
+
+async function getCompoundablePoolIds(startIndex, endIndex) {
+	const request = await Functions.makeHttpRequest({
+		url: 'http://localhost:8545',
+		method: 'POST',
+		data: {
+			id: 1,
+			jsonrpc: '2.0',
+			method: 'eth_call',
+			params: [
+				{
+					to: viewsAddress,
+					data: getCompoundablePoolIdsSignature + '0'.repeat(24) + startIndex + endIndex
+				},
+				{ blockNumber: reportBlock }
+			]
+		}
+	})
+	if (request.error) throw new Error('Failed to get compoundable pool IDs')
+	const rawPoolIds = request.data.result.slice(2);
+	let poolIds = [];
+	for (let i = 0; i < 5; i++) {
+		let start = i * 8
+		let end = start + 8
+		let poolId = parseInt(rawPoolIds.slice(start, end), 16)
+		poolIds.push(poolId)
+	}
+	return poolIds
+}
+
+async function getDepositedPoolCount() {
+	const request = await Functions.makeHttpRequest({
+		url: 'http://localhost:8545',
+		method: 'POST',
+		data: {
+			id: 1,
+			jsonrpc: '2.0',
+			method: 'eth_call',
+			params: [
+				{
+					to: viewsAddress,
+					data: getDepositedPoolCountSignature
+				},
+				{ blockNumber: reportBlock }
+			]
+		}
+	})
+	if (request.error) throw new Error('Failed to get deposited pool count')
+	return Number(request.data.result)
+}
+
+async function getSweptBalance(startIndex, endIndex) {
+	const request = await Functions.makeHttpRequest({
+		url: 'http://localhost:8545',
+		method: 'POST',
+		data: {
+			id: 1,
+			jsonrpc: '2.0',
+			method: 'eth_call',
+			params: [
+				{
+					to: viewsAddress,
+					data: getSweptBalanceSignature + '0'.repeat(24) + startIndex + endIndex
+				},
+				{ blockNumber: reportBlock }
+			]
+		}
+	})
+	if (request.error) throw new Error('Failed to get swept balance')
+	return parseFloat(request.data.result.slice(0, -9))
+}
+
+async function getValidatorPublicKeys(startIndex, endIndex) {
+	const request = await Functions.makeHttpRequest({
+		url: 'http://localhost:8545',
+		method: 'POST',
+		data: {
+			id: 1,
+			jsonrpc: '2.0',
+			method: 'eth_call',
+			params: [
+				{
+					to: viewsAddress,
+					data: getValidatorPublicKeysSignature + startIndex + endIndex
+				},
+				{ blockNumber: reportBlock }
+			]
+		}
+	})
+	if (request.error) throw new Error('Failed to get validator public keys')
+	const rawPublicKeys = request.data.result.slice(2)
+	const numKeys = parseInt(rawPublicKeys.slice(64, 128), 16)
+	const publicKeys = []
+	for (let i = 0; i < numKeys; i++) {
+		let offset = 64 * 3 + i * 96
+		let length = parseInt(rawPublicKeys.slice(offset, offset + 64), 16) * 2
+		let publicKeyStart = offset + 64
+		let publicKeyEnd = publicKeyStart + length
+		let publicKey = '0x' + rawPublicKeys.slice(publicKeyStart, publicKeyEnd)
+		publicKeys.push(publicKey)
+	}
+	return publicKeys
+}
+
+async function getValidators(validatorPublicKeys) {
+	const request = await Functions.makeHttpRequest({
+		url: `${url}/eth/v1/beacon/states/finalized/validators?id=${validatorPublicKeys.join(',')}`
+	})
+	if (request.error) throw new Error('Failed to get validators')
+	return request.data.data
 }
 
 function encodeUint128(value) {

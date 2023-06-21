@@ -5,6 +5,8 @@ import './interfaces/ICasimirViews.sol';
 import './interfaces/ICasimirManager.sol';
 import './interfaces/ICasimirRegistry.sol';
 
+import 'hardhat/console.sol';
+
 /**
  * @title Views contract that provides read-only access to the state
  */
@@ -146,6 +148,8 @@ contract CasimirViews is ICasimirViews {
             address poolAddress = manager.getPoolAddress(poolId);
             ICasimirPool pool = ICasimirPool(poolAddress);
             validatorPublicKeys[count] = pool.publicKey();
+            console.log('validatorPublicKeys[count]');
+            console.logBytes(validatorPublicKeys[count]);
             count++;
         }
         return validatorPublicKeys;
