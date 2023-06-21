@@ -2,7 +2,7 @@ import * as cdk from 'aws-cdk-lib'
 import * as assertions from 'aws-cdk-lib/assertions'
 import { Config } from '../src/providers/config'
 import { EtlStack } from '../src/providers/etl'
-import { eventSchema, aggSchema, Schema } from '@casimir/data'
+import { Schema, eventSchema, walletSchema, stakingActionSchema } from '@casimir/data'
 
 test('ETL stack created', () => {
   const config = new Config()
@@ -16,11 +16,7 @@ test('ETL stack created', () => {
 
   const eventTable = Object.keys(resource).filter(key => key.includes('EventTable'))
   const eventColumns = resource[eventTable[0]].Properties.TableInput.StorageDescriptor.Columns
-
-
-  /** Get Glue Columns from JSON Schema for each table */
   const eventGlueSchema = new Schema(eventSchema).getGlueColumns()
-  const aggGlueSchema = new Schema(aggSchema).getGlueColumns()
 
   for (const column of eventColumns) {
     const { Name: name, Type: type } = column
@@ -31,13 +27,28 @@ test('ETL stack created', () => {
     expect(columnName).toEqual(name)
   }
 
-  const aggTable = Object.keys(resource).filter(key => key.includes('AggTable'))[0]
-  const aggColumns = resource[aggTable].Properties.TableInput.StorageDescriptor.Columns
+  const walletTable = Object.keys(resource).filter(key => key.includes('WalletTable'))[0]
+  const walletColumns = resource[walletTable].Properties.TableInput.StorageDescriptor.Columns
+  const walletGlueSchema = new Schema(walletSchema).getGlueColumns()
 
-  for (const column of aggColumns) {
+
+  for (const column of walletColumns) {
     const { Name: name, Type: type } = column
-    const columnName = Object.keys(aggSchema.properties).filter(key => key === name)[0]
-    const columnType = aggGlueSchema.filter(key => key.name === name)[0].type.inputString
+    const columnName = Object.keys(walletSchema.properties).filter(key => key === name)[0]
+    const columnType = walletGlueSchema.filter(key => key.name === name)[0].type.inputString
+
+    expect(columnType).toEqual(type)
+    expect(columnName).toEqual(name)
+  }
+
+  const stakingActionTable = Object.keys(resource).filter(key => key.includes('StakingActionTable'))[0]
+  const stakingActionColumns = resource[stakingActionTable].Properties.TableInput.StorageDescriptor.Columns
+  const stakingActionGlueSchema = new Schema(stakingActionSchema).getGlueColumns()
+
+  for (const column of stakingActionColumns) {
+    const { Name: name, Type: type } = column
+    const columnName = Object.keys(stakingActionSchema.properties).filter(key => key === name)[0]
+    const columnType = stakingActionGlueSchema.filter(key => key.name === name)[0].type.inputString
 
     expect(columnType).toEqual(type)
     expect(columnName).toEqual(name)
