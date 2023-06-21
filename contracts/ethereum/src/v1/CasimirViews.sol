@@ -62,6 +62,14 @@ contract CasimirViews is ICasimirViews {
     }
 
     /**
+     * @notice Get the deposited pool count
+     * @return depositedPoolCount The deposited pool count
+     */
+    function getDepositedPoolCount() external view returns (uint256 depositedPoolCount) {
+        return manager.getPendingPoolIds().length + manager.getStakedPoolIds().length;
+    }
+
+    /**
      * @notice Get operators
      * @param startIndex The start index
      * @param endIndex The end index 
@@ -83,52 +91,6 @@ contract CasimirViews is ICasimirViews {
     }
 
     /**
-     * @notice Get the pending validator public keys
-     * @param startIndex The start index
-     * @param endIndex The end index
-     * @return validatorPublicKeys The pending validator public keys
-     */
-    function getPendingValidatorPublicKeys(
-        uint256 startIndex,
-        uint256 endIndex
-    ) external view returns (bytes[] memory) {
-        bytes[] memory validatorPublicKeys = new bytes[](endIndex - startIndex);
-        uint32[] memory pendingPoolIds = manager.getPendingPoolIds();
-        uint256 count = 0;
-        for (uint256 i = startIndex; i < endIndex; i++) {
-            uint32 poolId = pendingPoolIds[i];
-            address poolAddress = manager.getPoolAddress(poolId);
-            ICasimirPool pool = ICasimirPool(poolAddress);
-            validatorPublicKeys[count] = pool.publicKey();
-            count++;
-        }
-        return validatorPublicKeys;
-    }
-
-    /**
-     * @notice Get the staked validator public keys
-     * @param startIndex The start index
-     * @param endIndex The end index
-     * @return validatorPublicKeys The staked validator public keys
-     */
-    function getStakedValidatorPublicKeys(
-        uint256 startIndex,
-        uint256 endIndex
-    ) external view returns (bytes[] memory) {
-        bytes[] memory validatorPublicKeys = new bytes[](endIndex - startIndex);
-        uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
-        uint256 count = 0;
-        for (uint256 i = startIndex; i < endIndex; i++) {
-            uint32 poolId = stakedPoolIds[i];
-            address poolAddress = manager.getPoolAddress(poolId);
-            ICasimirPool pool = ICasimirPool(poolAddress);
-            validatorPublicKeys[count] = pool.publicKey();
-            count++;
-        }
-        return validatorPublicKeys;
-    }
-
-    /**
      * @notice Get a pool's details by ID
      * @param poolId The pool ID
      * @return poolDetails The pool details
@@ -146,17 +108,46 @@ contract CasimirViews is ICasimirViews {
      * @dev Should be called off-chain
      * @param startIndex The start index
      * @param endIndex The end index
-     * @return balance The swept balance
+     * @return sweptBalance The swept balance
      */
     function getSweptBalance(
         uint256 startIndex,
         uint256 endIndex
-    ) public view returns (uint256 balance) {
+    ) public view returns (uint128 sweptBalance) {
         for (uint256 i = startIndex; i <= endIndex; i++) {
             uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
             uint32 poolId = stakedPoolIds[i];
             ICasimirPool pool = ICasimirPool(manager.getPoolAddress(poolId));
-            balance += pool.getBalance();
+            sweptBalance += uint128(pool.getBalance() / 1 gwei);
         }
+    }
+
+    /**
+     * @notice Get the validator public keys
+     * @param startIndex The start index
+     * @param endIndex The end index
+     * @return validatorPublicKeys The validator public keys
+     */
+    function getValidatorPublicKeys(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (bytes[] memory) {
+        bytes[] memory validatorPublicKeys = new bytes[](endIndex - startIndex);
+        uint32[] memory pendingPoolIds = manager.getPendingPoolIds();
+        uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
+        uint256 count = 0;
+        for (uint256 i = startIndex; i < endIndex; i++) {
+            uint32 poolId;
+            if (i < pendingPoolIds.length) {
+                poolId = pendingPoolIds[i];
+            } else {
+                poolId = stakedPoolIds[i - pendingPoolIds.length];
+            }
+            address poolAddress = manager.getPoolAddress(poolId);
+            ICasimirPool pool = ICasimirPool(poolAddress);
+            validatorPublicKeys[count] = pool.publicKey();
+            count++;
+        }
+        return validatorPublicKeys;
     }
 }
