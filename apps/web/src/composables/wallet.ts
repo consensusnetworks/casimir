@@ -69,13 +69,9 @@ export default function useWallet() {
       if (!user?.value?.address) {
         await login()
         const { error, message, data: retrievedUser} = await getUser()
-        console.log('retrievedUser :>> ', retrievedUser)
-        if (!error) {
-          setUser(retrievedUser)
-          setPrimaryAddress(user?.value?.address as string)
-        } else {
-          throw new Error(message || 'There was an error getting the user')
-        }
+        if (error) throw new Error(message || 'There was an error getting the user')
+        setUser(retrievedUser)
+        setPrimaryAddress(user?.value?.address as string)
         loadingUserWallets.value = false
       } else { // Add account if it doesn't already exist
         const userAccountExists = user.value?.accounts?.some((account: Account | any) => account?.address === selectedAddress.value && account?.walletProvider === selectedProvider.value && account?.currency === selectedCurrency.value)
