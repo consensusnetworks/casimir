@@ -104,10 +104,10 @@ export default function useEthers() {
     }
   }
 
-  async function getEthersBalance(address: string) : Promise<string> {
+  async function getEthersBalance(address: string) : Promise<GLfloat> {
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     const balance = await provider.getBalance(address)
-    return ethers.utils.formatEther(balance)
+    return parseFloat(ethers.utils.formatEther(balance))
   }
 
   async function getGasPriceAndLimit(

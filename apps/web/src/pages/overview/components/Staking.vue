@@ -3,9 +3,11 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { FormattedWalletOption } from '@casimir/types'
 import VueFeather from 'vue-feather'
 import useEthers from '@/composables/ethers'
+import usePrice from '@/composables/price'
 import useUsers from '@/composables/users'
 
 const { getEthersBalance } = useEthers()
+const { getCurrentPrice } = usePrice()
 const { user } = useUsers()
 
 const selectedWallet = ref(null as null | string)
@@ -96,7 +98,8 @@ const aggregateAddressesByProvider = () => {
 }
 
 watch(selectedWallet, async () => {
-  selectedWallet.value ? address_balance.value = await getEthersBalance(selectedWallet.value) : address_balance.value = '- - -'
+  const currentEthPrice = await getCurrentPrice({coin: 'ETH', currency: 'USD'})
+  address_balance.value = selectedWallet.value ? '$' + Math.round(currentEthPrice * await getEthersBalance(selectedWallet.value) * 100) / 100 : '- - -'
 })
 
 watch(formattedAmountToStake, () => {
