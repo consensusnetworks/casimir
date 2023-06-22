@@ -104,7 +104,7 @@ export default function useEthers() {
     }
   }
 
-  async function getEthersBalance(address: string, ) {
+  async function getEthersBalance(address: string) : Promise<string> {
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     const balance = await provider.getBalance(address)
     return ethers.utils.formatEther(balance)

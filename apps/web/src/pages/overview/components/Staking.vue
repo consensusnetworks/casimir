@@ -2,13 +2,15 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { FormattedWalletOption } from '@casimir/types'
 import VueFeather from 'vue-feather'
+import useEthers from '@/composables/ethers'
 import useUsers from '@/composables/users'
 
+const { getEthersBalance } = useEthers()
 const { user } = useUsers()
 
 const selectedWallet = ref(null as null | string)
 const formattedAmountToStake = ref(null as null | string )
-const account_balance = ref(null as null | string)
+const address_balance = ref(null as null | string)
 
 const openSelectWalletInput = ref(false)
 
@@ -93,8 +95,8 @@ const aggregateAddressesByProvider = () => {
   }
 }
 
-watch(selectedWallet, () => {
-  selectedWallet.value? account_balance.value = '$1,234.56' : account_balance.value = '- - -'
+watch(selectedWallet, async () => {
+  selectedWallet.value ? address_balance.value = await getEthersBalance(selectedWallet.value) : address_balance.value = '- - -'
 })
 
 watch(formattedAmountToStake, () => {
@@ -129,11 +131,11 @@ onUnmounted(() =>{
 
 <template>
   <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black h-full relative">
-    <h6 class="account_balance mb-[12px]">
+    <h6 class="address_balance mb-[12px]">
       Account Balance
     </h6>
-    <h5 class="account_balance_amount mb-[27px]">
-      {{ account_balance? account_balance : '- - -' }}
+    <h5 class="address_balance_amount mb-[27px]">
+      {{ address_balance? address_balance : '- - -' }}
     </h5>
 
     <h6 class="card_title mb-[11px]">
@@ -299,7 +301,7 @@ onUnmounted(() =>{
 </template>
 
 <style scoped>
-.account_balance_amount{
+.address_balance_amount{
   font-style: normal;
   font-weight: 500;
   font-size: 28px;
@@ -307,7 +309,7 @@ onUnmounted(() =>{
   letter-spacing: -0.01em;
   color: #344054;
 }
-.account_balance{
+.address_balance{
   font-style: normal;
   font-weight: 400;
   font-size: 12px;
