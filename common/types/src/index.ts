@@ -3,6 +3,7 @@ import { AccountWithStakingInfo } from './interfaces/AccountWithStakingInfo'
 import { AddAccountOptions } from './interfaces/AddAccountOptions'
 import { ApiResponse } from './interfaces/ApiResponse'
 import { BalanceSnapshot } from './interfaces/BalanceSnapshot'
+import { BreakdownAmount } from './interfaces/BreakdownAmount'
 import { BrowserProviders } from './interfaces/BrowserProviders'
 import { Cluster } from './interfaces/Cluster'
 import { ContractArgs } from './interfaces/ContractArgs'
@@ -33,6 +34,7 @@ export type {
     ApiResponse,
     AddAccountOptions,
     BalanceSnapshot,
+    BreakdownAmount,
     BrowserProviders,
     Cluster,
     ContractArgs,
