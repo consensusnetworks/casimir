@@ -34,7 +34,9 @@ export default function useContracts() {
             'WalletConnect': getEthersWalletConnectSigner
         }
         const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
+        console.log('signerType :>> ', signerType)
         const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
+        console.log('signerCreator :>> ', signerCreator)
         let signer = signerCreator(walletProvider)
         if (isWalletConnectSigner(signer)) signer = await signer
         const managerSigner = manager.connect(signer as ethers.Signer)
@@ -42,6 +44,8 @@ export default function useContracts() {
         const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
         const value = ethers.utils.parseEther(depositAmount.toString())
         const result = await managerSigner.depositStake({ value, type: 0 })
+        const userStake = await managerSigner.getUserStake('0xa6e38Ed550776EbF69aE7b8946157c48e2B510a6')
+        console.log('userStake :>> ', userStake)
         return await result.wait()
     }
 
