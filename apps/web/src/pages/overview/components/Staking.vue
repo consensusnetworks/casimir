@@ -1,17 +1,20 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { FormattedWalletOption } from '@casimir/types'
+import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
 import useEthers from '@/composables/ethers'
 import usePrice from '@/composables/price'
 import useUsers from '@/composables/users'
+import useContracts from '@/composables/contracts'
 
 const { getEthersBalance } = useEthers()
 const { getCurrentPrice } = usePrice()
 const { user } = useUsers()
+const { deposit } = useContracts()
 
+const selectedProvider = ref<ProviderString>('')
 const selectedWallet = ref(null as null | string)
-const formattedAmountToStake = ref(null as null | string )
+const formattedAmountToStake = ref<string>('0')
 const address_balance = ref(null as null | string)
 
 const openSelectWalletInput = ref(false)
@@ -128,8 +131,6 @@ onMounted(() => {
 onUnmounted(() =>{
   window.removeEventListener('click', handleOutsideClick)
 })
-
-
 </script>
 
 <template>
@@ -185,7 +186,7 @@ onUnmounted(() =>{
             :key="wallet"
             class="w-full text-left rounded-[8px] py-[10px] px-[14px] 
             hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
-            @click="selectedWallet = wallet, openSelectWalletInput = false"
+            @click="selectedWallet = wallet, openSelectWalletInput = false, selectedProvider = item.provider"
           >
             {{ convertString(wallet) }}
             <vue-feather
@@ -284,6 +285,7 @@ onUnmounted(() =>{
     <button
       class="card_button h-[37px] w-full "
       :disabled="!(termsOfServiceCheckbox && selectedWallet && formattedAmountToStake && !errorMessage)"
+      @click="deposit({ amount: formattedAmountToStake, walletProvider: selectedProvider })"
     >
       Stake
     </button>
