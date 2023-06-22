@@ -5,6 +5,7 @@ import Slide from '@/components/Slide.vue'
 
 import VueFeather from 'vue-feather'
 import useWallet from '@/composables/wallet'
+import useUser from '@/composables/users'
 
 const authFlowCardNumber = ref(1)
 const selectedProivder = ref(null as null | string)
@@ -16,6 +17,8 @@ const  {
   selectAddress,
   selectProvider,
 } = useWallet()
+
+const { user } = useUser()
 
 const show_setting_modal = ref(false)
 const openWalletConnect = ref(false)

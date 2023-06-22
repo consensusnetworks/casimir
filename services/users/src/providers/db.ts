@@ -1,6 +1,6 @@
 import { Postgres } from '@casimir/data'
 import { camelCase } from '@casimir/helpers'
-import { Account, ProviderString, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
+import { Account, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
 import useEthers from './ethers'
 
 const { generateNonce } = useEthers()
@@ -23,15 +23,19 @@ export default function useDB() {
      * @returns The new account
      */
     async function addAccount(account: Account, createdAt?: string) : Promise<Account> {
-        if (!createdAt) createdAt = new Date().toISOString()
-        const { address, currency, userId, walletProvider } = account
-        const text = 'INSERT INTO accounts (address, currency, user_id, wallet_provider, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;'
-        const params = [address, currency, userId, walletProvider, createdAt]
-        const rows = await postgres.query(text, params)
-        const accountAdded = rows[0]
-        const accountId = accountAdded.id
-        await addUserAccount(parseInt(userId), accountId)
-        return accountAdded as Account
+        try {
+            if (!createdAt) createdAt = new Date().toISOString()
+            const { address, currency, userId, walletProvider } = account
+            const text = 'INSERT INTO accounts (address, currency, user_id, wallet_provider, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;'
+            const params = [address, currency, userId, walletProvider, createdAt]
+            const rows = await postgres.query(text, params)
+            const accountAdded = rows[0]
+            const accountId = accountAdded.id
+            await addUserAccount(parseInt(userId), accountId)
+            return accountAdded as Account
+        } catch (error) {
+            throw new Error('There was an error adding the account to the database')
+        }
     }
 
     /**
@@ -50,7 +54,7 @@ export default function useDB() {
         
         const accountAdded = await addAccount(account, createdAt)
         addedUser.accounts = [accountAdded]
-
+        
         return formatResult(addedUser)
     }
 
@@ -74,10 +78,14 @@ export default function useDB() {
      * @returns The account if found, otherwise undefined
      */
     async function getAccounts(address: string): Promise<Account[]> {
-        const text = 'SELECT * FROM accounts WHERE address = $1;'
-        const params = [address.toLowerCase()]
-        const rows = await postgres.query(text, params)
-        return formatResult(rows) as Account[]
+        try {
+            const text = 'SELECT * FROM accounts WHERE address = $1;'
+            const params = [address.toLowerCase()]
+            const rows = await postgres.query(text, params)
+            return formatResult(rows) as Account[]
+        } catch (error) {
+            throw new Error('There was an error getting accounts from the database')
+        }
     }
 
     /**
@@ -86,11 +94,15 @@ export default function useDB() {
      * @returns - The nonce if address is a pk on the table or undefined
      */
     async function getNonce(address:string) {
-        const text = 'SELECT nonce FROM nonces WHERE address = $1;'
-        const params = [address]
-        const rows = await postgres.query(text, params)
-        const { nonce } = rows[0]
-        return formatResult(nonce)
+        try {
+            const text = 'SELECT nonce FROM nonces WHERE address = $1;'
+            const params = [address]
+            const rows = await postgres.query(text, params)
+            const { nonce } = rows[0]
+            return formatResult(nonce)
+        } catch (error) {
+            throw new Error('There was an error getting nonce from the database')
+        }
     }
 
     /**
@@ -99,11 +111,15 @@ export default function useDB() {
      * @returns The user if found, otherwise undefined
      */
     async function getUser(address: string) {
-        const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.address = $1 GROUP BY u.id'
-        const params = [address]
-        const rows = await postgres.query(text, params)
-        const user = rows[0]
-        return formatResult(user) as User
+        try {
+            const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.address = $1 GROUP BY u.id'
+            const params = [address]
+            const rows = await postgres.query(text, params)
+            const user = rows[0]
+            return formatResult(user) as User
+        } catch (error) {
+            throw new Error('There was an error getting user from the database')
+        }
     }
 
     /**
@@ -113,12 +129,15 @@ export default function useDB() {
      * @throws Error if the user is not found
      */
     async function getUserById(id: string) {
-        const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.id = $1 GROUP BY u.id'
-        const params = [id]
-        const rows = await postgres.query(text, params)
-        const user = rows[0]
-        if (!user) throw new Error('User not found')
-        return formatResult(user) as User
+        try {
+            const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.id = $1 GROUP BY u.id'
+            const params = [id]
+            const rows = await postgres.query(text, params)
+            const user = rows[0]
+            return formatResult(user) as User
+        } catch (err) {
+            throw new Error('There was an error getting user by id from the database')
+        }
     }
 
     /**
@@ -173,8 +192,7 @@ export default function useDB() {
             await postgres.query(text, params)
             return nonce
         } catch (error) {
-            console.error('There was an error adding or updating the nonce in upsertNonce.', error)
-            return error as Error
+            throw new Error('There was an error upserting nonce in the database')
         }
     }
 
@@ -183,21 +201,39 @@ export default function useDB() {
      * @param rows - The result date
      * @returns The formatted data
      */
-    function formatResult(result: any) {
-        if (result) {
-            for (const key in result) {
-                result[camelCase(key)] = result[key]
-                delete result[key]
-
-                if (result[camelCase(key)].isArray()) {
-                    result[camelCase(key)] = result[camelCase(key)].map((result: any) => {
-                        return formatResult(result)
-                    })
-                }
-            }
-            return result
+    function formatResult(obj: any) : any {
+        if (typeof obj !== 'object' || obj === null) {
+          // Return non-object values as is
+          return obj
         }
-    }
+      
+        if (Array.isArray(obj)) {
+          // If obj is an array, map over each item and recursively call the function
+          return obj.map(item => formatResult(item))
+        }
+      
+        const convertedObj: any = {}
+      
+        for (const key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            const camelCaseKey = camelCase(key)
+            const value = obj[key]
+      
+            if (typeof value === 'object' && value !== null) {
+              // Recursively convert nested objects
+              convertedObj[camelCaseKey] = formatResult(value)
+            } else {
+              // Convert key to camel case and assign the value
+              convertedObj[camelCaseKey] = value
+            }
+          }
+        }
+      
+        return convertedObj
+      }
+      
+      
+      
 
     return { 
         addAccount, 

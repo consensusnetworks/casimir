@@ -1,12 +1,9 @@
-import { onMounted, ref } from 'vue'
-import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, Account, ExistingUserCheck } from '@casimir/types'
-import { ethers } from 'ethers'
+import { ref } from 'vue'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ExistingUserCheck, ApiResponse } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
-import useContracts from '@/composables/contracts'
-import useWallet from '@/composables/wallet'
 import * as Session from 'supertokens-web-js/recipe/session'
 
-const { usersBaseURL, ethereumURL } = useEnvironment()
+const { usersBaseURL } = useEnvironment()
 
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const session = ref<boolean>(false)
@@ -14,33 +11,42 @@ const user = ref<UserWithAccounts>()
 
 export default function useUsers () {
 
-    async function addAccount(account: AddAccountOptions): Promise<{ error: boolean, message: string, data: UserWithAccounts | null }> {
-        const requestOptions = {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ account })
+    async function addAccount(account: AddAccountOptions): Promise<ApiResponse> {
+        try {
+            const requestOptions = {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ account })
+            }
+            const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
+            const { error, message, data: userAccount } = await response.json()
+            user.value = userAccount
+            return { error, message, data: userAccount }
+        } catch (error: any) {
+            throw new Error(error.message || 'Error adding account')
         }
-        const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
-        const { data: userAccount } = await response.json()
-        user.value = userAccount
-        return { error: false, message: `Account added to user: ${userAccount}`, data: userAccount }
     }
 
-    async function checkIfPrimaryUserExists(provider: ProviderString, address: string): Promise<ExistingUserCheck> {
-        const requestOptions = {
-            method: 'GET',
-            headers: { 
-                'Content-Type': 'application/json'
-            },
+    async function checkIfPrimaryUserExists(provider: ProviderString, address: string): Promise<ApiResponse> {
+        try {
+            const requestOptions = {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json'
+                }
+            }
+            const response = await fetch(`${usersBaseURL}/user/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
+            const { error, message, data } = await response.json()
+            if (error) throw new Error(message)
+            return { error, message, data }
+        } catch (error: any) {
+            throw new Error(error.message || 'Error checking if primary user exists')
         }
-        const response = await fetch(`${usersBaseURL}/auth/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
-        const { sameAddress, sameProvider } = await response.json()
-        return { sameAddress, sameProvider }
     }
 
-    async function checkIfSecondaryAddress(address: string) : Promise<Account[]> {
+    async function checkIfSecondaryAddress(address: string) : Promise<ApiResponse> {
         try {
             const requestOptions = {
                 method: 'GET',
@@ -48,13 +54,12 @@ export default function useUsers () {
                     'Content-Type': 'application/json'
                 }
             }
-            const response = await fetch(`${usersBaseURL}/auth/check-secondary-address/${address}`, requestOptions)
-            const json = await response.json()
-            const { users } = json
-            return users
-        } catch (error) {
-            console.log('Error in checkIfSecondaryAddress in wallet.ts :>> ', error)
-            return [] as Account[]
+            const response = await fetch(`${usersBaseURL}/user/check-secondary-address/${address}`, requestOptions)
+            const { error, message, data } = await response.json()
+            if (error) throw new Error(message)
+            return { error, message, data }
+        } catch (error: any) {
+            throw new Error(error.message || 'Error checking if secondary address')
         }
     }
 
@@ -67,7 +72,7 @@ export default function useUsers () {
         try {
             session.value = await Session.doesSessionExist()
             if (session.value) {
-                const user = await getUser()
+                const { data: user } = await getUser()
                 if (user) {
                     setUser(user)
                     return true
@@ -76,7 +81,7 @@ export default function useUsers () {
                 }
             }
             return false
-        } catch (error) {
+        } catch (error: any) {
             console.log('Error in checkUserSessionExists in wallet.ts :>> ', error)
             return false
         }
@@ -89,25 +94,25 @@ export default function useUsers () {
         return message
     }
 
-    async function getUser() {
-        const requestOptions = {
-            method: 'GET',
-            headers: { 
-                'Content-Type': 'application/json'
+    async function getUser() : Promise<ApiResponse> {
+        try {
+            const requestOptions = {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json'
+                }
             }
+            const response = await fetch(`${usersBaseURL}/user`, requestOptions)
+            const { user, error, message } = await response.json()
+            return {
+                error,
+                message,
+                data: user
+            }
+        } catch (error: any) {
+            throw new Error('Error getting user from API route')
         }
-        const response = await fetch(`${usersBaseURL}/user`, requestOptions)
-        const { user } = await response.json()
-        return user
     }
-
-    // onMounted(async () => {
-    //     const { getUserBalance } = useWallet()
-    //     // Just get pools for primary account for demo
-    //     user.value.balance = ethers.utils.formatEther(await getUserBalance(user.value.id))
-    //     user.value.pools = await getPools(user.value.id)
-    //     subscribeToUserEvents()
-    // })
 
     async function removeAccount({ address, currency, ownerAddress, walletProvider }: RemoveAccountOptions) {
         address = address.toLowerCase()

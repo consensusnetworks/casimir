@@ -18,7 +18,7 @@ export default function useEthers() {
         method: 'wallet_addEthereumChain',
         params: [network]
       })
-    } catch(error: any) {
+    } catch(error) {
       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
     }
   }
@@ -92,13 +92,6 @@ export default function useEthers() {
     }
   }
 
-  async function getEthersAddress (providerString: ProviderString) {
-    const provider = getBrowserProvider(providerString)
-    if (provider) {
-      return (await requestEthersAccount(provider as EthersProvider))
-    }
-  }
-
   async function getEthersAddressWithBalance (providerString: ProviderString) {
     const provider = getBrowserProvider(providerString)
     
@@ -151,7 +144,7 @@ export default function useEthers() {
     return maxAfterFees
   }
 
-  async function loginWithEthers(loginCredentials: LoginCredentials) {
+  async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
     const { provider, address, currency } = loginCredentials
     const browserProvider = getBrowserProvider(provider)
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
@@ -159,17 +152,15 @@ export default function useEthers() {
       const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signer = web3Provider.getSigner()
       const signedMessage = await signer.signMessage(message)
-      const ethersLoginResponse = await signInWithEthereum({ 
+      await signInWithEthereum({ 
         address,
         currency,
         message, 
         provider, 
         signedMessage
       })
-      return await ethersLoginResponse.json()
     } catch (err) {
-      console.log('Error logging in: ', err)
-      return err
+      throw new Error(err.message)
     }
   }
 
@@ -205,8 +196,7 @@ export default function useEthers() {
   async function signEthersMessage(messageRequest: MessageRequest): Promise<string> {
     const { providerString, message } = messageRequest
     const browserProvider = getBrowserProvider(providerString)
-    const web3Provider: ethers.providers.Web3Provider =
-      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const signer = web3Provider.getSigner()
     const signature = await signer.signMessage(message)
     return signature
@@ -226,7 +216,7 @@ export default function useEthers() {
             method:'wallet_switchEthereumChain',
             params: [{chainId: chainId}]
           })
-        } catch(err: any){
+        } catch (err) {
             console.log(`Error occurred while switching chain to chainId ${chainId}, err: ${err.message} code: ${err.code}`)
             if (err.code === 4902){
               if (chainId === '5') {
@@ -245,7 +235,6 @@ export default function useEthers() {
     estimateLegacyGasFee,
     ethersProviderList,
     getMaxETHAfterFees,
-    getEthersAddress,
     getEthersAddressWithBalance,
     getEthersBalance,
     getEthersBrowserSigner,

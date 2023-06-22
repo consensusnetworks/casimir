@@ -5,7 +5,7 @@ import useEthers from '../providers/ethers'
 import { Account, User } from '@casimir/types'
 
 const { verifyMessageSignature } = useEthers()
-const { addUser, getAccounts, getNonce, getUser, getUserById, upsertNonce } = useDB()
+const { addUser, getNonce, getUser, upsertNonce } = useDB()
 const router = express.Router()
 
 router.post('/nonce', async (req: express.Request, res: express.Response) => {
@@ -17,16 +17,16 @@ router.post('/nonce', async (req: express.Request, res: express.Response) => {
             res.status(200)
             res.json({
                 error: false,
-                nonce
+                message: 'Nonce retrieved',
+                data: nonce
             })
-        } else {
-            res.status(404)
-            res.send()
         }
-    } catch (error) {
-        console.log('error in /nonce :>> ', error)
+    } catch (error: any) {
         res.status(500)
-        res.send()
+        res.json({
+            error: true,
+            message: error.message || 'Error getting nonce'
+        })
     }
 })
 
@@ -35,7 +35,6 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         const { body } = req
         const loginCredentials = body
         const { provider, address, currency, message, signedMessage } = loginCredentials
-
         const { parsedDomain, parsedNonce } = parseMessage(message)
         const verifyDomain = parsedDomain ? verifyMessageDomain(parsedDomain) : false        
         const verifyNonce = parsedNonce ? await verifyMessageNonce(address, parsedNonce) : false
@@ -95,67 +94,14 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
                 })
             }
         }
-    } catch (e) {
-        console.log('CAUGHT ERROR IN /siwe: ', e)
-    }
-})
-
-router.get('/check-secondary-address/:address', async (req: express.Request, res: express.Response) => {
-    try {
-        const { params } = req
-        const { address } = params
-        const accounts = await getAccounts(address)
-        const users = await Promise.all(accounts.map(async account => {
-            const { userId } = account
-            const user = await getUserById(userId)
-            const { address, walletProvider } = user
-            return { 
-                address: maskAddress(address),
-                walletProvider,
-            }
-        }))
-        res.setHeader('Content-Type', 'application/json')
-        res.status(200)
-        res.json({
-            error: false,
-            users
-        })
-    } catch (error) {
-        res.setHeader('Content-Type', 'application/json')
+    } catch (error: any) {
         res.status(500)
         res.json({
             error: true,
-            message: 'Problem checking secondary address'
+            message: error.message || 'Error logging in'
         })
     }
 })
-
-router.get('/check-if-primary-address-exists/:provider/:address', async (req: express.Request, res: express.Response) => {
-    try {
-        const { params } = req
-        const { address, provider } = params
-        const user = await getUser(address)
-        const userAddress = user?.address
-        const userProvider = user?.walletProvider
-        const sameAddress = userAddress === address
-        const sameProvider = userProvider === provider
-        res.setHeader('Content-Type', 'application/json')
-        res.status(200)
-        res.json({
-            error: false,
-            sameAddress,
-            sameProvider
-        })
-    } catch (error) {
-        console.log('error in /get-user-by-address :>> ', error)
-        res.status(500)
-        res.send()
-    }
-})
-
-function maskAddress(address: string) {
-    return address.slice(0, 6) + '...' + address.slice(-4)
-}
 
 function parseDomain(msg: string) {
     const uri = msg.split('URI:')[1].split('Version:')[0].trim()
@@ -177,15 +123,19 @@ function parseNonce(msg: string) {
 function verifyMessageDomain(domain: string): boolean {
     const stage = process.env.STAGE
     if (stage === 'dev') {
-        return domain === 'localhost:3000'
+        return domain === 'localhost:3001'
     } else {
         return false
     }
 }
 
 async function verifyMessageNonce(address: string, msgNonce: string) : Promise<boolean> {
-    const dbNonce = await getNonce(address)
-    return msgNonce === dbNonce
+    try {
+        const dbNonce = await getNonce(address)
+        return msgNonce === dbNonce
+    } catch (error) {
+        throw new Error('Problem verifying message nonce')
+    }
 }
 
 export default router
