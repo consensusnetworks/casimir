@@ -20,12 +20,6 @@ router.post('/nonce', async (req: express.Request, res: express.Response) => {
                 message: 'Nonce retrieved',
                 data: nonce
             })
-        } else {
-            res.status(404)
-            res.json({
-                error: true,
-                message: 'Error getting nonce'
-            })
         }
     } catch (error: any) {
         res.status(500)
