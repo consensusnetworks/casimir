@@ -251,7 +251,8 @@ export default function useWallet() {
    * @param provider 
    * @param currency 
    */
-  async function selectAddress(address: any, pathIndex?: string) : Promise<void> {
+  async function selectAddress(address: any, pathIndex?: string) : Promise<boolean> {
+    loadingUserWallets.value = true
     try {
       address = trimAndLowercaseAddress(address)
       setSelectedAddress(address)
@@ -261,10 +262,7 @@ export default function useWallet() {
       const { data: { sameAddress, sameProvider } } = await checkIfPrimaryUserExists(selectedProvider.value, selectedAddress.value)
       if (sameAddress && sameProvider ) {
         await connectWallet() // login
-        return {
-          error: false,
-          message: 'Address already exists as a primary address using this provider',
-        }
+        return true
       } else if (sameAddress && !sameProvider) {
         // TODO: Handle this on front-end: do you want to change your primary provider?
         throw new Error('Address already exists as a primary address using another provider')
@@ -273,9 +271,11 @@ export default function useWallet() {
       const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(selectedAddress.value)
       if (accountsIfSecondaryAddress.length) throw new Error(`${selectedAddress.value} already exists as a secondary address on this/these account(s): ${JSON.stringify(accountsIfSecondaryAddress)}`)
       await connectWallet() // sign up or add account
-    } catch (error) {
-      // TODO: @shanejearley - What do we want to do here?
-      throw new Error(error.message || 'There was an error selecting address')
+      loadingUserWallets.value = false
+      return true
+    } catch (error: any) {
+      loadingUserWallets.value = false
+      return false
     }
   }
 
