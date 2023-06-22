@@ -30,6 +30,7 @@ export class Config implements ProjectConfig {
             nodes: 'nodes',
             landing: 'www',
             users: 'users',
+            web: 'app',
             wildcard: '*'
         }
         this.nodesIp = process.env.NODES_IP as string

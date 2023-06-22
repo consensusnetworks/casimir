@@ -2129,50 +2129,6 @@ _Send ETH to a user_
 | user | address | The user address |
 | amount | uint256 | The amount of stake to send |
 
-## MockFunctionsOracle
-
-### constructor
-
-```solidity
-constructor() public
-```
-
-### getRegistry
-
-```solidity
-function getRegistry() external view returns (address)
-```
-
-Returns the address of the registry contract
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | address The address of the registry contract |
-
-### sendRequest
-
-```solidity
-function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
-```
-
-Sends a request (encoded as data) using the provided subscriptionId
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
-| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| _gasLimit | uint32 | Gas limit for the fulfillment callback |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | A unique request identifier (unique per DON) |
-
 ## IDepositContract
 
 ### DepositEvent
@@ -2268,4 +2224,48 @@ struct RegistrationParams {
 ```solidity
 function registerUpkeep(struct KeeperRegistrarInterface.RegistrationParams requestParams) external returns (uint256)
 ```
+
+## MockFunctionsOracle
+
+### constructor
+
+```solidity
+constructor() public
+```
+
+### getRegistry
+
+```solidity
+function getRegistry() external view returns (address)
+```
+
+Returns the address of the registry contract
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | address The address of the registry contract |
+
+### sendRequest
+
+```solidity
+function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
+```
+
+Sends a request (encoded as data) using the provided subscriptionId
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
+| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
+| _gasLimit | uint32 | Gas limit for the fulfillment callback |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | bytes32 | A unique request identifier (unique per DON) |
 

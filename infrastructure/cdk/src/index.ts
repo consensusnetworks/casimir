@@ -6,6 +6,7 @@ import { AnalyticsStack } from './providers/analytics'
 import { LandingStack } from './providers/landing'
 import { NodesStack } from './providers/nodes'
 import { DnsStack } from './providers/dns'
+import { WebStack } from './providers/web'
 
 /** Create CDK app and stacks */
 const config = new Config()
@@ -23,3 +24,4 @@ if (stage !== 'prod') {
 }
 /** Create remaining stacks */
 new LandingStack(app, config.getFullStackName('landing'), { env, hostedZone, certificate })
+new WebStack(app, config.getFullStackName('web'), { env, hostedZone, certificate })

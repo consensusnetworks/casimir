@@ -7,6 +7,7 @@ import { AnalyticsStack } from '../src/providers/analytics'
 import { LandingStack } from '../src/providers/landing'
 import { NodesStack } from '../src/providers/nodes'
 import { DnsStack } from '../src/providers/dns'
+import { WebStack } from '../src/providers/web'
 
 test('All stacks created', () => {
   const config = new Config()
@@ -19,6 +20,7 @@ test('All stacks created', () => {
   const usersStack = new UsersStack(app, config.getFullStackName('users'), { env, hostedZone, cluster, certificate })
   const nodesStack = new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone })
   const landingStack = new LandingStack(app, config.getFullStackName('landing'), { env, hostedZone, certificate })
+  const webStack = new WebStack(app, config.getFullStackName('web'), { env, hostedZone, certificate })
 
   const analyticsTemplate = assertions.Template.fromStack(analyticsStack)
   Object.keys(analyticsTemplate.findOutputs('*')).forEach(output => {
@@ -37,6 +39,11 @@ test('All stacks created', () => {
 
   const landingTemplate = assertions.Template.fromStack(landingStack)
   Object.keys(landingTemplate.findOutputs('*')).forEach(output => {
+    expect(output).toBeDefined()
+  })
+
+  const webTemplate = assertions.Template.fromStack(webStack)
+  Object.keys(webTemplate.findOutputs('*')).forEach(output => {
     expect(output).toBeDefined()
   })
 })

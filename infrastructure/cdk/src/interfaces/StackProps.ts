@@ -14,6 +14,13 @@ export interface LandingStackProps extends cdk.StackProps {
     certificate?: certmgr.Certificate
 }
 
+export interface WebStackProps extends cdk.StackProps {
+    /** Project-wide route53 hosted zone */
+    hostedZone: route53.HostedZone
+    /** Stage-specific certificate */
+    certificate?: certmgr.Certificate
+}
+
 export interface NodesStackProps extends cdk.StackProps {
     /** Project-wide route53 hosted zone */
     hostedZone: route53.HostedZone
