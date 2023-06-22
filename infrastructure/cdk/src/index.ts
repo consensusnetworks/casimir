@@ -18,10 +18,10 @@ if (stage !== 'prod') {
     /** Create development-only stacks */
     new AnalyticsStack(app, config.getFullStackName('analytics'), { env })
     new UsersStack(app, config.getFullStackName('users'), { env, certificate, cluster, hostedZone, vpc })
+    new WebStack(app, config.getFullStackName('web'), { env, certificate, hostedZone })
 } else {
     /** Create production-only stacks */
     new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone })
 }
 /** Create remaining stacks */
 new LandingStack(app, config.getFullStackName('landing'), { env, certificate, hostedZone })
-new WebStack(app, config.getFullStackName('web'), { env, certificate, hostedZone })
