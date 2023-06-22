@@ -46,8 +46,11 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     if (res.headersSent) {
         return next(err)
     }
-    console.log('res.statusMessage :>> ', res.statusMessage)
-    res.status(500).send('Server error.')
+
+    res.status(500).json({
+        error: true,
+        message: 'Server error.'
+    })
 })
 
 app.listen(port)
