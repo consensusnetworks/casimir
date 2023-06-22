@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { FormattedWalletOption } from '@casimir/types'
 import VueFeather from 'vue-feather'
+import useUsers from '@/composables/users'
+
+const { user } = useUsers()
 
 const selectedWallet = ref(null as null | string)
 const formattedAmountToStake = ref(null as null | string )
@@ -28,18 +32,7 @@ const handleInputOnAmountToStake = (event: any) => {
   formattedAmountToStake.value = parts.join('.')
 }
 
-const formattedWalletOptions = ref(
-  [
-    {
-      provider: 'MetaMask',
-      connectedAccounts: [
-      '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
-      '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
-      '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
-      ]
-    }
-  ]
-)
+const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
 
 const convertString = (inputString: string) => {
   if (inputString.length <= 4) {
@@ -83,6 +76,23 @@ const handleOutsideClick = (event: any) => {
   }
 }
 
+const aggregateAddressesByProvider = () => {
+  formattedWalletOptions.value = []
+  // Iterate over user.value.accounts and aggregate addresses by provider
+  if(user.value){
+    const accounts = user.value.accounts
+    const providers = accounts.map((account) => account.walletProvider)
+    const uniqueProviders = [...new Set(providers)]
+    uniqueProviders.forEach((provider) => {
+      const addresses = accounts.filter((account) => account.walletProvider === provider).map((account) => account.address)
+      formattedWalletOptions.value.push({
+        provider,
+        addresses
+      })
+    })
+  }
+}
+
 watch(selectedWallet, () => {
   selectedWallet.value? account_balance.value = '$1,234.56' : account_balance.value = '- - -'
 })
@@ -99,11 +109,15 @@ watch(formattedAmountToStake, () => {
       errorMessage.value = null
     }
   }
-  
+})
+
+watch(user, () => {
+  aggregateAddressesByProvider()
 })
 
 onMounted(() => {
   window.addEventListener('click', handleOutsideClick)
+  aggregateAddressesByProvider()
 })
 
 onUnmounted(() =>{
@@ -162,7 +176,7 @@ onUnmounted(() =>{
           
 
           <button
-            v-for="wallet in item.connectedAccounts"
+            v-for="wallet in item.addresses"
             :key="wallet"
             class="w-full text-left rounded-[8px] py-[10px] px-[14px] 
             hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
