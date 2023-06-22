@@ -15,12 +15,12 @@ test('All stacks created', () => {
   const app = new cdk.App()
 
   const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName('dns'), { env })
-  const { cluster } = new NetworkStack(app, config.getFullStackName('network'), { env })
+  const { cluster, vpc } = new NetworkStack(app, config.getFullStackName('network'), { env })
   const analyticsStack = new AnalyticsStack(app, config.getFullStackName('analytics'), { env })
-  const usersStack = new UsersStack(app, config.getFullStackName('users'), { env, hostedZone, cluster, certificate })
+  const usersStack = new UsersStack(app, config.getFullStackName('users'), { env, certificate, cluster, hostedZone, vpc })
   const nodesStack = new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone })
-  const landingStack = new LandingStack(app, config.getFullStackName('landing'), { env, hostedZone, certificate })
-  const webStack = new WebStack(app, config.getFullStackName('web'), { env, hostedZone, certificate })
+  const landingStack = new LandingStack(app, config.getFullStackName('landing'), { env, certificate, hostedZone })
+  const webStack = new WebStack(app, config.getFullStackName('web'), { env, certificate, hostedZone })
 
   const analyticsTemplate = assertions.Template.fromStack(analyticsStack)
   Object.keys(analyticsTemplate.findOutputs('*')).forEach(output => {
