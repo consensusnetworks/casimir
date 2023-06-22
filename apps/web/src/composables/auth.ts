@@ -36,7 +36,7 @@ export default function useAuth() {
                 nonce
             }
             return prepareMessage(message)
-        } catch (error) {
+        } catch (error: any) {
             throw new Error(error.message || 'Error creating SIWE message')
         }
     }
@@ -60,7 +60,7 @@ export default function useAuth() {
             const response = await fetch(`${usersBaseURL}/auth/login`, requestOptions)
             const { error, message } = await response.json()
             if (error) throw new Error(message)
-        } catch (error) {
+        } catch (error: any) {
             throw new Error(error.message || 'Error signing in with Ethereum')
         }
     }

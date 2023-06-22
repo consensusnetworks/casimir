@@ -24,7 +24,7 @@ export default function useUsers () {
             const { error, message, data: userAccount } = await response.json()
             user.value = userAccount
             return { error, message, data: userAccount }
-        } catch (error) {
+        } catch (error: any) {
             throw new Error(error.message || 'Error adding account')
         }
     }
@@ -41,7 +41,7 @@ export default function useUsers () {
             const { error, message, data } = await response.json()
             if (error) throw new Error(message)
             return { error, message, data }
-        } catch (error) {
+        } catch (error: any) {
             throw new Error(error.message || 'Error checking if primary user exists')
         }
     }
@@ -58,7 +58,7 @@ export default function useUsers () {
             const { error, message, data } = await response.json()
             if (error) throw new Error(message)
             return { error, message, data }
-        } catch (error) {
+        } catch (error: any) {
             throw new Error(error.message || 'Error checking if secondary address')
         }
     }
@@ -81,7 +81,7 @@ export default function useUsers () {
                 }
             }
             return false
-        } catch (error) {
+        } catch (error: any) {
             console.log('Error in checkUserSessionExists in wallet.ts :>> ', error)
             return false
         }
@@ -109,7 +109,7 @@ export default function useUsers () {
                 message,
                 data: user
             }
-        } catch (error) {
+        } catch (error: any) {
             throw new Error('Error getting user from API route')
         }
     }
