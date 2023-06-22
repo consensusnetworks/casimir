@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ExistingUserCheck, ApiResponse } from '@casimir/types'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import * as Session from 'supertokens-web-js/recipe/session'
 
@@ -7,7 +7,7 @@ const { usersBaseURL } = useEnvironment()
 
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const session = ref<boolean>(false)
-const user = ref<UserWithAccounts>()
+const user = ref<UserWithAccounts | null>(null)
 
 export default function useUsers () {
 

@@ -14,6 +14,7 @@ const termsCheckbox = ref(true)
 const  {
   activeWallets,
   userAddresses,
+  logout,
   selectAddress,
   selectProvider,
 } = useWallet()
@@ -178,7 +179,11 @@ onUnmounted(() =>{
               API
             </span>
           </button>
-          <button class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full">
+          <button
+            class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full"
+            :disabled="!user"
+            @click="logout"
+          >
             <vue-feather
               type="log-out"
               size="36"

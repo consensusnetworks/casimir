@@ -171,20 +171,22 @@ export default function useWallet() {
         // TODO: Implement this for other providers
         console.log('Sign up not yet supported for this wallet provider')
       }
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(error.message || 'There was an error logging in')
     }
   }
 
   async function logout() {
+    console.log('clicked log out')
     loadingUserWallets.value = true
     await Session.signOut()
     setSelectedAddress('')
     setSelectedProvider('')
     setSelectedCurrency('')
-    setUser(undefined)
+    setUser(null)
     setPrimaryAddress('')
     loadingUserWallets.value = false
+    console.log('user.value :>> ', user.value)
     // router.push('/auth')
   }
 
