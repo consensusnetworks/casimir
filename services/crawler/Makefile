@@ -1,18 +1,26 @@
-,PHONY: build clean dep test
+,PHONY: build clean
 
-name=processor
-bin = ./build/$(name)
+name=crawler
+bin = ./bin/$(name)
 os = $(shell go env GOOS)
 arch = $(shell go env GOARCH)
 
 test:
-	go test -v ./...
+	go test -v ./... -count=1
+
+test-coverage:
+	rm -rf ./coverage.out
+	go test -v ./... -count=1 -coverprofile=coverage.out
+	go tool cover -html=coverage.out
 
 build:
-	GOOS=$(os) GOARCH=$(arch) go build -o $(bin)
+	GOOS=$(os) GOARCH=$(arch) CGO_ENABLED=1 go build -o $(bin) .
 	chmod +x $(bin)
 
 clean:
-	rm -rf ./build
-	rm -rf ./logs
+	rm -rf ./bin ./data ./logs
 	go clean
+
+dep:
+	go mod tidy
+
