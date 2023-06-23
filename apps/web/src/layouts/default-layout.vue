@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import Carousel from '@/components/Carousel.vue'
 import Slide from '@/components/Slide.vue'
-
+import router from '@/composables/router'
 import VueFeather from 'vue-feather'
 import useWallet from '@/composables/wallet'
 import useUser from '@/composables/users'
@@ -74,7 +74,7 @@ onUnmounted(() =>{
 
 <template>
   <div class="min-w-[360px]">
-    <div>
+    <div :class="openWalletConnect? 'flex flex-col h-screen' : ''">
       <div
         class=" px-[60px] pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
         :class="openWalletConnect? 'pr-[75px]' : ''"
@@ -88,25 +88,29 @@ onUnmounted(() =>{
         <div class="flex flex-wrap items-center gap-50 h-full pr-[50px]">
           <router-link
             to="/"
-            class="nav_items_active"
+            class="nav_items"
+            :class="router.currentRoute.value.fullPath === '/'? 'nav_items_active' : ''"
           >
             Overview
           </router-link>
           <router-link
-            to="/"
+            to="/staking"
             class="nav_items"
+            :class="router.currentRoute.value.fullPath === '/staking'? 'nav_items_active' : ''"
           >
             Staking
           </router-link>
           <router-link
-            to="/"
+            to="/exports"
             class="nav_items"
+            :class="router.currentRoute.value.fullPath === '/exports'? 'nav_items_active' : ''"
           >
             Exports
           </router-link>
           <router-link
-            to="/"
+            to="/resources"
             class="nav_items"
+            :class="router.currentRoute.value.fullPath === '/resources'? 'nav_items_active' : ''"
           >
             Resources
           </router-link>
@@ -335,8 +339,12 @@ onUnmounted(() =>{
   line-height: 17px;
   letter-spacing: -0.01em;
   color: #ABABAB;
+}:hover{
+  color:white;
 }
-
+.nav_items_active{
+  color: #FFFFFF;
+}
 .card_input{
   background: #FFFFFF;
   border: 1px solid #D0D5DD;
@@ -356,18 +364,7 @@ onUnmounted(() =>{
   color: #101828;
 }
 
-.nav_items_active{
-  font-family: 'IBM Plex Sans';
-  font-style: normal;
-  font-weight: 500;
-  font-size: 13px;
-  line-height: 17px;
-  letter-spacing: -0.01em;
-  height: 100%;
 
-  color: #FFFFFF;
-  /* border-bottom: 1px solid #9BA4B5; */
-}
 .connect_wallet_gradient{
   background: linear-gradient(101.44deg, rgba(23, 22, 22, 0.2) 9.24%, rgba(0, 0, 0, 0) 65.23%),
               linear-gradient(0deg, #484848, #484848),
