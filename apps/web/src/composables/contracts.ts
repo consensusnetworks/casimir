@@ -14,7 +14,7 @@ import { ReadyOrStakeString } from '@/interfaces/ReadyOrStakeString'
 
 /** Manager contract */
 const managerAddress = import.meta.env.PUBLIC_MANAGER_ADDRESS
-const manager: CasimirManager = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager
+const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager & ethers.Contract
 
 /** Views contract */
 const viewsAddress = import.meta.env.PUBLIC_VIEWS_ADDRESS
@@ -128,7 +128,6 @@ export default function useContracts() {
     async function getUserStakeBalance(address: string) : Promise<number> {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
         const userStake = await manager.connect(provider).getUserStake(address)
-        // Convert to usd
         const userStakeUSD = parseFloat(ethers.utils.formatEther(userStake)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
         return userStakeUSD
     }
@@ -150,5 +149,23 @@ export default function useContracts() {
         return await result.wait()
     }
 
-    return { manager, deposit, getDepositFees, getPools, getUserStakeBalance, withdraw }
+    async function getUserContractEvents(address: string) {
+        const eventList = [
+            'StakeDeposited',
+            'WithdrawalInitiated',
+        ]
+        const eventFilters = eventList.map(event => manager.filters[event](address))
+        console.log('eventFilters :>> ', eventFilters)
+        const items = (await Promise.all(
+            eventFilters.map(async eventFilter => {
+                return await manager.queryFilter(eventFilter, 0, 'latest')
+            })
+        )).flat()
+        console.log('items :>> ', items)
+        // Items should have an args property with the amounts
+    }
+
+    // TODO: Add listener / subscription "StakeRebalanced(uint256 amount)" (to composable somewhere)
+
+    return { manager, deposit, getDepositFees, getPools, getUserContractEvents, getUserStakeBalance, withdraw }
 }

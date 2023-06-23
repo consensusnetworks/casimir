@@ -1,4 +1,4 @@
 export interface BreakdownAmount {
-    usd: number;
-    exchange: number;
+    usd: string;
+    exchange: string;
 }
