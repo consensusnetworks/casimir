@@ -252,6 +252,7 @@ export default function useWallet() {
    * @param currency 
    */
   async function selectAddress(address: any, pathIndex?: string) : Promise<boolean> {
+    userAddresses.value = []
     loadingUserWallets.value = true
     try {
       address = trimAndLowercaseAddress(address)
