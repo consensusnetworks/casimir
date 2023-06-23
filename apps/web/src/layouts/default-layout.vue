@@ -94,21 +94,21 @@ onUnmounted(() =>{
             Overview
           </router-link>
           <router-link
-            to="/staking"
+            to="/"
             class="nav_items"
             :class="router.currentRoute.value.fullPath === '/staking'? 'nav_items_active' : ''"
           >
             Staking
           </router-link>
           <router-link
-            to="/exports"
+            to="/"
             class="nav_items"
             :class="router.currentRoute.value.fullPath === '/exports'? 'nav_items_active' : ''"
           >
             Exports
           </router-link>
           <router-link
-            to="/resources"
+            to="/"
             class="nav_items"
             :class="router.currentRoute.value.fullPath === '/resources'? 'nav_items_active' : ''"
           >
@@ -203,7 +203,6 @@ onUnmounted(() =>{
       <div
         class="relative text-black"
         :class="openWalletConnect? 'overflow-hidden pr-[15px]' : ''"
-        :style="openWalletConnect? 'height: calc(100vh - 250px);' : ''"
       >
         <slot />
         <div
@@ -339,8 +338,6 @@ onUnmounted(() =>{
   line-height: 17px;
   letter-spacing: -0.01em;
   color: #ABABAB;
-}:hover{
-  color:white;
 }
 .nav_items_active{
   color: #FFFFFF;
