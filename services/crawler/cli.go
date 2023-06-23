@@ -94,6 +94,12 @@ func RootCmd(c *cli.Context) error {
 		return err
 	}
 
+	err = crawler.Crawl()
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

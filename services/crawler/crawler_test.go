@@ -27,9 +27,13 @@ func TestEtheruemCrawler_Introspect(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = crawler.Introspect()
+	tt, err := crawler.Introspect()
 
 	if err != nil {
 		t.Error(err)
+	}
+
+	if len(tt) == 0 {
+		t.Error("introspection returned no tables, expected at least 3")
 	}
 }

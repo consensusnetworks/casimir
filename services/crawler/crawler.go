@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/url"
 	"os"
 	"strconv"
@@ -35,12 +36,13 @@ type EtheruemCrawler struct {
 	EtheruemClient
 	Logger
 	Mutex          *sync.Mutex
-	Sema           chan struct{}
-	EventsConsumed int
 	Begin          time.Time
 	Elapsed        time.Duration
-	Head           uint64
 	Glue           *GlueClient
+	S3             *S3Client
+	Sema           chan struct{}
+	Head           uint64
+	EventsConsumed int
 	Version        int
 }
 
@@ -87,24 +89,85 @@ func NewCrawler() (*EtheruemCrawler, error) {
 		return nil, err
 	}
 
+	s3c, err := NewS3Client()
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &EtheruemCrawler{
 		EtheruemClient: *client,
 		Logger:         NewStdoutLogger(),
 		Mutex:          &sync.Mutex{},
 		Sema:           make(chan struct{}, concurrencyLimit),
 		Glue:           glue,
+		S3:             s3c,
 		Head:           head,
 		Begin:          time.Now(),
 	}, nil
 }
 
 func (c *EtheruemCrawler) Crawl() error {
-	// l := c.Logger
+	l := c.Logger
 	_, err := c.Introspect()
 
 	if err != nil {
 		return nil
 	}
+
+	diff := c.Head - 0 + 1
+
+	l.Info("crawling %d blocks...\n", diff)
+
+	wg := sync.WaitGroup{}
+
+	step := uint64(1000)
+
+	for i := uint64(0); i < c.Head; i += step {
+		c.Sema <- struct{}{}
+		wg.Add(1)
+
+		start := i
+		end := i + 100 - 1
+
+		if end > c.Head {
+			end = c.Head
+		}
+
+		go func(start, end uint64) {
+			defer func() {
+				<-c.Sema
+				wg.Done()
+			}()
+			l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
+
+			for j := start; j <= end; j++ {
+				l.Info("block=%d\n", j)
+			}
+		}(start, end)
+	}
+
+	wg.Wait()
+	c.Elapsed = time.Since(c.Begin)
+	return nil
+}
+
+func (c *EtheruemCrawler) ProcessBlock(height int) error {
+	l := c.Logger
+
+	// get block
+	block, err := c.Client.BlockByNumber(context.Background(), big.NewInt(int64(height)))
+
+	if err != nil {
+		return err
+	}
+
+	l.Info("processing block=%d\n", block.Number().Uint64())
+
+	// get transactions
+	// get receipts
+	// get l
+
 	return nil
 }
 
