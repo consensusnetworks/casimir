@@ -76,24 +76,20 @@ export class UsersStack extends cdk.Stack {
         dbCredentials.grantRead(usersService.taskDefinition.taskRole)
 
         /** Create a DB cluster */
-        new rds.DatabaseCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
+        new rds.ServerlessCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
             engine: rds.DatabaseClusterEngine.auroraPostgres({
                 version: rds.AuroraPostgresEngineVersion.VER_15_2
             }),
-            instances: 1,
-            serverlessV2MinCapacity: 0.5,
-            serverlessV2MaxCapacity: 1,
-            instanceProps: {
-                vpc: vpc,
-                instanceType: new ec2.InstanceType('serverless'),
-                autoMinorVersionUpgrade: true,
-                publiclyAccessible: false,
-                securityGroups: [usersService.service.connections.securityGroups[0]],
-                vpcSubnets: vpc.selectSubnets({
-                    subnetType: ec2.SubnetType.PUBLIC
-                })
+            scaling: {
+                autoPause: cdk.Duration.minutes(30),
+                minCapacity: rds.AuroraCapacityUnit.ACU_1,
+                maxCapacity: rds.AuroraCapacityUnit.ACU_8
             },
-            port: 5432,
+            securityGroups: [usersService.service.connections.securityGroups[0]],
+            vpc,
+            vpcSubnets: vpc.selectSubnets({
+                subnetType: ec2.SubnetType.PUBLIC
+            }),
             credentials: rds.Credentials.fromSecret(dbCredentials)
         })
     }
