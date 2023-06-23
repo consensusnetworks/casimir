@@ -5,8 +5,10 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2'
 import * as ecs from 'aws-cdk-lib/aws-ecs'
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns'
 import * as rds from 'aws-cdk-lib/aws-rds'
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
 import { UsersStackProps } from '../interfaces/StackProps'
 import { Config } from './config'
+import { kebabCase } from '@casimir/helpers'
 
 /**
  * Users API stack
@@ -25,50 +27,6 @@ export class UsersStack extends cdk.Stack {
         const config = new Config()
         const { project, stage, rootDomain, subdomains } = config
         const { certificate, cluster, hostedZone, vpc } = props
-
-        /** Create a security group for Aurora DB */
-        const dbSecurityGroup = new ec2.SecurityGroup(this, config.getFullStackResourceName(this.name, 'db-group'), {
-            vpc: vpc,
-            allowAllOutbound: true
-        })
-
-        /** Allow inbound traffic from anywhere to the DB */
-        dbSecurityGroup.addIngressRule(
-            ec2.Peer.anyIpv4(),
-            ec2.Port.tcp(5432),
-            'Allow inbound traffic from anywhere to the DB on port 5432'
-        )
-
-        /** Create a DB cluster */
-        const dbCluster = new rds.DatabaseCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
-            engine: rds.DatabaseClusterEngine.auroraPostgres({
-                version: rds.AuroraPostgresEngineVersion.VER_13_6,
-            }),
-            instances: 1,
-            instanceProps: {
-                vpc: vpc,
-                instanceType: new ec2.InstanceType('serverless'),
-                autoMinorVersionUpgrade: true,
-                publiclyAccessible: true,
-                securityGroups: [dbSecurityGroup],
-                vpcSubnets: vpc.selectSubnets({
-                    subnetType: ec2.SubnetType.PUBLIC
-                })
-            },
-            port: 5432
-        })
-
-        /** Add capacity to the DB cluster to enable scaling */
-        cdk.Aspects.of(dbCluster).add({
-            visit(node) {
-                if (node instanceof rds.CfnDBCluster) {
-                    node.serverlessV2ScalingConfiguration = {
-                        minCapacity: 0.5,
-                        maxCapacity: 1
-                    }
-                }
-            },
-        })
 
         /** Build users service image */
         const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
@@ -90,8 +48,7 @@ export class UsersStack extends cdk.Stack {
                 image: ecs.ContainerImage.fromDockerImageAsset(imageAsset),
                 environment: {
                     PROJECT: project,
-                    STAGE: stage,
-                    DB_SECRET_ARN: dbCluster.secret?.secretArn || ''
+                    STAGE: stage
                 }
             }
         })
@@ -99,6 +56,45 @@ export class UsersStack extends cdk.Stack {
         /** Override the default health check path */
         usersService.targetGroup.configureHealthCheck({
             path: '/health'
+        })
+
+        /** Create DB credentials */
+        const dbCredentials = new secretsmanager.Secret(this, config.getFullStackResourceName(this.name, 'db-credentials'), {
+            secretName: kebabCase(config.getFullStackResourceName(this.name, 'db-credentials')),
+            generateSecretString: {
+                secretStringTemplate: JSON.stringify({
+                    username: this.name,
+                    dbname: config.getFullStackResourceName(this.name, 'db'),
+                }),
+                generateStringKey: 'password',
+                passwordLength: 30,
+                excludePunctuation: true
+            }
+        })
+
+        /** Grant users service access to DB credentials */
+        dbCredentials.grantRead(usersService.taskDefinition.taskRole)
+
+        /** Create a DB cluster */
+        new rds.DatabaseCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
+            engine: rds.DatabaseClusterEngine.auroraPostgres({
+                version: rds.AuroraPostgresEngineVersion.VER_15_2
+            }),
+            instances: 1,
+            serverlessV2MinCapacity: 0.5,
+            serverlessV2MaxCapacity: 1,
+            instanceProps: {
+                vpc: vpc,
+                instanceType: new ec2.InstanceType('serverless'),
+                autoMinorVersionUpgrade: true,
+                publiclyAccessible: false,
+                securityGroups: [usersService.service.connections.securityGroups[0]],
+                vpcSubnets: vpc.selectSubnets({
+                    subnetType: ec2.SubnetType.PUBLIC
+                })
+            },
+            port: 5432,
+            credentials: rds.Credentials.fromSecret(dbCredentials)
         })
     }
 }
