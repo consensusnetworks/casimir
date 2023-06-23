@@ -88,7 +88,7 @@ func RootCmd(c *cli.Context) error {
 		return err
 	}
 
-	err = crawler.Introspect()
+	_, err = crawler.Introspect()
 
 	if err != nil {
 		return err
