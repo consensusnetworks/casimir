@@ -53,7 +53,21 @@ func (s *S3Client) Upload(bucket string, key string, fpath string) error {
 	return nil
 }
 
-// just use upload for now
+func (s *S3Client) UploadBytes(bucket string, key string, data []byte) error {
+	opt := &s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   bytes.NewReader(data),
+	}
+
+	_, err := s.Client.PutObject(context.Background(), opt)
+
+	if err != nil {
+		return fmt.Errorf("failed to put object: %v", err)
+	}
+	return nil
+}
+
 func (s *S3Client) MultipartUpload(bucket, key, fpath string) error {
 	return s.Upload(bucket, key, fpath)
 }

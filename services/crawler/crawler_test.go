@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-func TestNewEtheruemCrawler(t *testing.T) {
+func TestNewEthereumCrawler(t *testing.T) {
 	var err error
-	crawler, err := NewCrawler()
+	crawler, err := NewEthereumCrawler()
 
 	if err != nil {
 		t.Error(err)
@@ -20,8 +20,8 @@ func TestNewEtheruemCrawler(t *testing.T) {
 	}
 }
 
-func TestEtheruemCrawler_Introspect(t *testing.T) {
-	crawler, err := NewCrawler()
+func TestEthereumCrawler_Introspect(t *testing.T) {
+	crawler, err := NewEthereumCrawler()
 
 	if err != nil {
 		t.Error(err)

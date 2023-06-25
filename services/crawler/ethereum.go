@@ -10,26 +10,24 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-type ChainType int
-type NetworkType int
-type ProviderType int
-type EventType int
+type ChainType string
+type NetworkType string
+type ProviderType string
+type EventType string
 
 const (
-	Ethereum ChainType = iota
-	Bitcoin
-	Iotex
+	Ethereum ChainType = "ethereum"
+	Bitcoin  ChainType = "bitcoin"
+	Iotex    ChainType = "iotex"
 
-	EtheruemMainnet NetworkType = iota
-	EtheruemGoerli
+	EtheruemMainnet NetworkType = "mainnet"
+	EtheruemGoerli  NetworkType = "goerli"
 
-	Casimir ProviderType = iota
-	Alchemy
+	Casimir ProviderType = "casimir"
 
-	Block EventType = iota
-	Transaction
-	Log
-	Contract
+	Block       EventType = "block"
+	Transaction EventType = "transaction"
+	Contract    EventType = "contract"
 )
 
 type EtheruemClient struct {
@@ -100,32 +98,6 @@ func (c NetworkType) String() string {
 		return "mainnet"
 	case EtheruemGoerli:
 		return "goerli"
-	default:
-		return ""
-	}
-}
-
-func (c ProviderType) String() string {
-	switch c {
-	case Casimir:
-		return "casimir"
-	case Alchemy:
-		return "alchemy"
-	default:
-		return ""
-	}
-}
-
-func (c EventType) String() string {
-	switch c {
-	case Block:
-		return "block"
-	case Transaction:
-		return "transaction"
-	case Log:
-		return "log"
-	case Contract:
-		return "contract"
 	default:
 		return ""
 	}

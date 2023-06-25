@@ -34,42 +34,6 @@ func Start(args []string) error {
 		Usage:   "Crawl and stream blockchain events",
 		Version: "0.0.1",
 		Action:  RootCmd,
-		Commands: []*cli.Command{
-			{
-				Name:  "crawl",
-				Usage: "crawl historical blockchain events (blocks, transactions, logs)",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:  "verbose",
-						Usage: "verbose logging",
-						Value: true,
-					},
-					&cli.Int64Flag{
-						Name:  "start",
-						Usage: "the block to start from",
-						Value: 0,
-					},
-					&cli.Int64Flag{
-						Name:  "end",
-						Usage: "the block to end at",
-						Value: 100,
-					},
-				},
-				Action: CrawlCmd,
-			},
-			{
-				Name:   "stream",
-				Usage:  "stream blockchain events to a storage backend",
-				Action: StreamCmd,
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:  "verbose",
-						Usage: "verbose logging",
-						Value: true,
-					},
-				},
-			},
-		},
 	}
 
 	err := app.Run(args)
@@ -82,7 +46,13 @@ func Start(args []string) error {
 }
 
 func RootCmd(c *cli.Context) error {
-	crawler, err := NewCrawler()
+	streamer, err := NewEtheruemStreamer()
+
+	if err != nil {
+		return err
+	}
+
+	crawler, err := NewEthereumCrawler()
 
 	if err != nil {
 		return err
@@ -94,22 +64,36 @@ func RootCmd(c *cli.Context) error {
 		return err
 	}
 
-	err = crawler.Crawl()
+	// err = crawler.Crawl()
 
-	if err != nil {
-		return err
-	}
+	// if err != nil {
+	// 	return err
+	// }
+
+	fmt.Println("streamer head:", streamer.Head)
+	fmt.Println("crawler head:", crawler.Head)
 
 	return nil
 }
 
-func CrawlCmd(c *cli.Context) error {
-	l := NewStdoutLogger()
-	l.Info("crawl command\n")
-	return nil
-}
+// func RootCmd(c *cli.Context) error {
+// 	crawler, err := NewCrawler()
 
-func StreamCmd(c *cli.Context) error {
-	fmt.Println("streaming")
-	return nil
-}
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	_, err = crawler.Introspect()
+
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	err = crawler.Crawl()
+
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }

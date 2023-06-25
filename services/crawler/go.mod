@@ -10,6 +10,7 @@ require (
 	github.com/ethereum/go-ethereum v1.12.0
 	github.com/fatih/color v1.15.0
 	github.com/joho/godotenv v1.5.1
+	github.com/schollz/progressbar v1.0.0
 	github.com/urfave/cli/v2 v2.25.7
 )
 
