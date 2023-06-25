@@ -14,7 +14,8 @@ import { ReadyOrStakeString } from '@/interfaces/ReadyOrStakeString'
 
 /** Manager contract */
 const managerAddress = import.meta.env.PUBLIC_MANAGER_ADDRESS
-const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager & ethers.Contract
+const provider = new ethers.providers.JsonRpcProvider(import.meta.env.VITE_RPC_URL)
+const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi, provider) as CasimirManager & ethers.Contract
 
 /** Views contract */
 const viewsAddress = import.meta.env.PUBLIC_VIEWS_ADDRESS
@@ -152,17 +153,29 @@ export default function useContracts() {
     async function getUserContractEvents(address: string) {
         const eventList = [
             'StakeDeposited',
+            'StakeRebalanced',
             'WithdrawalInitiated',
         ]
         const eventFilters = eventList.map(event => manager.filters[event](address))
-        console.log('eventFilters :>> ', eventFilters)
         const items = (await Promise.all(
             eventFilters.map(async eventFilter => {
                 return await manager.queryFilter(eventFilter, 0, 'latest')
             })
-        )).flat()
+        ))
+        
         console.log('items :>> ', items)
-        // Items should have an args property with the amounts
+
+        for (const item of items) {
+            for (const action of item) {
+                // Items should have an args property with the amounts
+                const { args, event } = action
+                const { amount } = args
+                // Now we want to add up the amounts for each event
+                console.log('amount :>> ', amount)
+                console.log('args :>> ', args)
+                console.log('event :>> ', event)
+            }
+        }
     }
 
     // TODO: Add listener / subscription "StakeRebalanced(uint256 amount)" (to composable somewhere)
