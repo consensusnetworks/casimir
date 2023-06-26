@@ -30,14 +30,14 @@ const (
 	Contract    EventType = "contract"
 )
 
-type EtheruemClient struct {
+type EthereumClient struct {
 	Client   *ethclient.Client
-	Netowrk  NetworkType
+	Network  NetworkType
 	Provider ProviderType
 	Url      url.URL
 }
 
-func NewEthereumClient(Provider ProviderType, url url.URL) (*EtheruemClient, error) {
+func NewEthereumClient(Provider ProviderType, url url.URL) (*EthereumClient, error) {
 	if url.String() == "" {
 		return nil, errors.New("etheruem rpc url is empty")
 	}
@@ -71,9 +71,9 @@ func NewEthereumClient(Provider ProviderType, url url.URL) (*EtheruemClient, err
 		return nil, fmt.Errorf("unsupported network id: %d", id.Int64())
 	}
 
-	return &EtheruemClient{
+	return &EthereumClient{
 		Client:   client,
-		Netowrk:  net,
+		Network:  net,
 		Provider: Casimir,
 		Url:      url,
 	}, nil

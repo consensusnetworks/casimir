@@ -15,7 +15,7 @@ import (
 )
 
 type EthereumStreamer struct {
-	EtheruemClient
+	EthereumClient
 	Logger
 	Mutex   *sync.Mutex
 	Begin   time.Time
@@ -30,7 +30,7 @@ type EthereumStreamer struct {
 	Progress       *progressbar.ProgressBar
 }
 
-func NewEtheruemStreamer() (*EthereumStreamer, error) {
+func NewEthereumStreamer() (*EthereumStreamer, error) {
 	err := LoadEnv()
 
 	if err != nil {
@@ -62,7 +62,7 @@ func NewEtheruemStreamer() (*EthereumStreamer, error) {
 	}
 
 	return &EthereumStreamer{
-		EtheruemClient: *client,
+		EthereumClient: *client,
 		Logger:         NewStdoutLogger(),
 		Mutex:          &sync.Mutex{},
 		Head:           head,
@@ -139,7 +139,7 @@ func (s *EthereumStreamer) ProcessBlock() ([]*Event, error) {
 
 	ctx := context.Background()
 
-	block, err := s.EtheruemClient.Client.BlockByNumber(ctx, new(big.Int).SetUint64(s.CurrentHead))
+	block, err := s.EthereumClient.Client.BlockByNumber(ctx, new(big.Int).SetUint64(s.CurrentHead))
 
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (s *EthereumStreamer) ProcessBlock() ([]*Event, error) {
 func (c *EthereumStreamer) BlockEvent(b *types.Block) (*Event, error) {
 	event := Event{
 		Chain:    Ethereum,
-		Network:  c.Netowrk,
+		Network:  c.Network,
 		Provider: Casimir,
 		Type:     Block,
 		Height:   int64(b.Number().Uint64()),
@@ -192,7 +192,7 @@ func (c *EthereumStreamer) TransactionEvent(b *types.Block, tx *types.Receipt) (
 	for index, tx := range b.Transactions() {
 		txEvent := Event{
 			Chain:    Ethereum,
-			Network:  c.Netowrk,
+			Network:  c.Network,
 			Provider: Casimir,
 			Type:     Transaction,
 			Height:   int64(b.Number().Uint64()),

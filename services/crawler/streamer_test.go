@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewEthereumStreamer(t *testing.T) {
-	streamer, err := NewEtheruemStreamer()
+	streamer, err := NewEthereumStreamer()
 
 	if err != nil {
 		t.Error(err)

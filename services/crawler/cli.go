@@ -70,7 +70,7 @@ func RootCmd(c *cli.Context) error {
 
 	defer crawler.Close()
 
-	streamer, err := NewEtheruemStreamer()
+	streamer, err := NewEthereumStreamer()
 
 	if err != nil {
 		return err

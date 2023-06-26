@@ -87,8 +87,8 @@ type Crawler interface {
 	Close() error
 }
 
-type EtheruemCrawler struct {
-	EtheruemClient
+type EthereumCrawler struct {
+	EthereumClient
 	Logger
 	Mutex          *sync.Mutex
 	Begin          time.Time
@@ -103,7 +103,7 @@ type EtheruemCrawler struct {
 	Progress       *progressbar.ProgressBar
 }
 
-func NewEthereumCrawler() (*EtheruemCrawler, error) {
+func NewEthereumCrawler() (*EthereumCrawler, error) {
 	err := LoadEnv()
 
 	if err != nil {
@@ -152,8 +152,8 @@ func NewEthereumCrawler() (*EtheruemCrawler, error) {
 		return nil, err
 	}
 
-	return &EtheruemCrawler{
-		EtheruemClient: *client,
+	return &EthereumCrawler{
+		EthereumClient: *client,
 		Logger:         NewStdoutLogger(),
 		Mutex:          &sync.Mutex{},
 		Sema:           make(chan struct{}, concurrencyLimit),
@@ -165,7 +165,7 @@ func NewEthereumCrawler() (*EtheruemCrawler, error) {
 	}, nil
 }
 
-func (c *EtheruemCrawler) Crawl() error {
+func (c *EthereumCrawler) Crawl() error {
 	l := c.Logger
 
 	_, err := c.Introspect()
@@ -215,7 +215,7 @@ func (c *EtheruemCrawler) Crawl() error {
 	return nil
 }
 
-func (c *EtheruemCrawler) Introspect() (map[string]Table, error) {
+func (c *EthereumCrawler) Introspect() (map[string]Table, error) {
 	l := c.Logger
 	err := c.Glue.LoadDatabases()
 
@@ -317,7 +317,7 @@ func (t Table) String() string {
 	return fmt.Sprintf("table=%s version=%s database=%s bucket=%s serde=%s", t.Name, t.Version, t.Database, t.Bucket, t.SerDe)
 }
 
-func (c *EtheruemCrawler) Close() {
+func (c *EthereumCrawler) Close() {
 	c.Wg.Wait()
 	c.Elapsed = time.Since(c.Begin)
 	c.Client.Close()
@@ -350,7 +350,7 @@ func EncodeToNDJSONBytes(events []*Event) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (c *EtheruemCrawler) ProcessBlock(height int) ([]*Event, error) {
+func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, error) {
 	l := c.Logger
 
 	var events []*Event
@@ -390,7 +390,7 @@ func (c *EtheruemCrawler) ProcessBlock(height int) ([]*Event, error) {
 	return events, nil
 }
 
-func (c *EtheruemCrawler) TransactionEvent(b *types.Block, tx *types.Receipt) ([]*Event, error) {
+func (c *EthereumCrawler) TransactionEvent(b *types.Block, tx *types.Receipt) ([]*Event, error) {
 	var events []*Event
 
 	for index, tx := range b.Transactions() {
@@ -402,7 +402,7 @@ func (c *EtheruemCrawler) TransactionEvent(b *types.Block, tx *types.Receipt) ([
 
 		txEvent := Event{
 			Chain:       Ethereum,
-			Network:     c.Netowrk,
+			Network:     c.Network,
 			Provider:    Casimir,
 			Type:        Transaction,
 			Height:      int64(b.Number().Uint64()),
@@ -446,10 +446,10 @@ func (c *EtheruemCrawler) TransactionEvent(b *types.Block, tx *types.Receipt) ([
 	return events, nil
 }
 
-func (c *EtheruemCrawler) BlockEvent(b *types.Block) (*Event, error) {
+func (c *EthereumCrawler) BlockEvent(b *types.Block) (*Event, error) {
 	event := Event{
 		Chain:    Ethereum,
-		Network:  c.Netowrk,
+		Network:  c.Network,
 		Provider: Casimir,
 		Type:     Block,
 		Height:   int64(b.Number().Uint64()),
