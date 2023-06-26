@@ -70,43 +70,21 @@ func RootCmd(c *cli.Context) error {
 
 	defer crawler.Close()
 
-	return nil
+	streamer, err := NewEtheruemStreamer()
 
-	// streamer, err := NewEtheruemStreamer()
-
-	// if err != nil {
-	// 	return err
-	// }
+	if err != nil {
+		return err
+	}
 
 	// for now use crawler's introspect and s3 client rather than recreating them
-	// streamer.Glue = crawler.Glue
-	// streamer.S3 = crawler.S3
+	streamer.Glue = crawler.Glue
+	streamer.S3 = crawler.S3
 
-	// err = streamer.Stream()
+	err = streamer.Stream()
 
-	// if err != nil {
-	// 	return err
-	// }
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
-
-// func RootCmd(c *cli.Context) error {
-// 	crawler, err := NewCrawler()
-
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	_, err = crawler.Introspect()
-
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	err = crawler.Crawl()
-
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
