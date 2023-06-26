@@ -278,7 +278,7 @@ func (c *EtheruemCrawler) Introspect() (map[string]Table, error) {
 }
 
 func ResourceVersion() (int, error) {
-	f, err := os.ReadFile("../../common/data/package.json")
+	f, err := os.ReadFile("common/data/package.json")
 
 	if err != nil {
 		return 0, err
