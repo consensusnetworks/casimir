@@ -6,6 +6,7 @@ import useEnvironment from './environment'
 import useUsers from './users'
 import useEthers from './ethers'
 import useLedger from './ledger'
+import usePrice from '@/composables/price'
 import useTrezor from './trezor'
 import useWalletConnect from './walletConnect'
 import { Account, Pool, ProviderString } from '@casimir/types'
@@ -13,11 +14,13 @@ import { ReadyOrStakeString } from '@/interfaces/ReadyOrStakeString'
 
 /** Manager contract */
 const managerAddress = import.meta.env.PUBLIC_MANAGER_ADDRESS
-const manager: CasimirManager = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager
+const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager & ethers.Contract
 
 /** Views contract */
 const viewsAddress = import.meta.env.PUBLIC_VIEWS_ADDRESS
 const views: CasimirViews = new ethers.Contract(viewsAddress, CasimirViewsJson.abi) as CasimirViews
+
+const { getCurrentPrice } = usePrice()
 
 export default function useContracts() {
     const { ethereumURL } = useEnvironment()
@@ -27,6 +30,7 @@ export default function useContracts() {
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
 
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
+        const ethAmount = (parseInt(amount) / (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))).toString()
         const signerCreators = {
             'Browser': getEthersBrowserSigner,
             'Ledger': getEthersLedgerSigner,
@@ -39,7 +43,7 @@ export default function useContracts() {
         if (isWalletConnectSigner(signer)) signer = await signer
         const managerSigner = manager.connect(signer as ethers.Signer)
         const fees = await managerSigner.feePercent()
-        const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
+        const depositAmount = parseFloat(ethAmount) * ((100 + fees) / 100)
         const value = ethers.utils.parseEther(depositAmount.toString())
         const result = await managerSigner.depositStake({ value, type: 0 })
         return await result.wait()
@@ -121,6 +125,13 @@ export default function useContracts() {
         }))
     }
 
+    async function getUserStakeBalance(address: string) : Promise<number> {
+        const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+        const userStake = await manager.connect(provider).getUserStake(address)
+        const userStakeUSD = parseFloat(ethers.utils.formatEther(userStake)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        return userStakeUSD
+    }
+
     async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         const signerCreators = {
             'Browser': getEthersBrowserSigner,
@@ -138,5 +149,23 @@ export default function useContracts() {
         return await result.wait()
     }
 
-    return { manager, deposit, getDepositFees, getPools, withdraw }
+    async function getUserContractEvents(address: string) {
+        const eventList = [
+            'StakeDeposited',
+            'WithdrawalInitiated',
+        ]
+        const eventFilters = eventList.map(event => manager.filters[event](address))
+        console.log('eventFilters :>> ', eventFilters)
+        const items = (await Promise.all(
+            eventFilters.map(async eventFilter => {
+                return await manager.queryFilter(eventFilter, 0, 'latest')
+            })
+        )).flat()
+        console.log('items :>> ', items)
+        // Items should have an args property with the amounts
+    }
+
+    // TODO: Add listener / subscription "StakeRebalanced(uint256 amount)" (to composable somewhere)
+
+    return { manager, deposit, getDepositFees, getPools, getUserContractEvents, getUserStakeBalance, withdraw }
 }

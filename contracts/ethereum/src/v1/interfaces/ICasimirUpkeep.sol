@@ -24,7 +24,7 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
     /**********/
     
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
-    event UpkeepPerformed(ReportStatus status);
+    event UpkeepPerformed(ReportStatus indexed status);
 
     /*************/
     /* Mutations */
