@@ -4,7 +4,7 @@
 <template>
   <div class="">
     <h5 class="title">
-      User Agreement
+      Terms Of Service
     </h5>
     <hr class="my-[5px]">
     <p class="body_text">

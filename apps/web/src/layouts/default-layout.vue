@@ -286,7 +286,9 @@ onUnmounted(() =>{
                     type="checkbox"
                     class="mr-[5px]"
                   > By connecting my address, I certify that I have read and accept the updated 
-                  <span class="text-primary"> Terms of Use </span> and <span class="text-primary">Privacy Notice</span>.
+                  <button class="text-primary hover:text-blue_3">
+                    Terms of Service
+                  </button>.
                 </div> 
                 <button
                   v-for="act in userAddresses"
