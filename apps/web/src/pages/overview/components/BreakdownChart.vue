@@ -1,36 +1,14 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { onMounted, ref, watch} from 'vue'
-import { BreakdownAmount } from '@casimir/types'
 import useContracts from '@/composables/contracts'
-import useEthers from '@/composables/ethers'
-import usePrice from '@/composables/price'
-import useUsers from '@/composables/users'
 
-const { user } = useUsers()
-const { getUserContractEventsTotals, getUserStakeBalance } = useContracts()
-const { listenForTransactions } = useEthers()
-const { getCurrentPrice } = usePrice()
+const { currentStaked, stakingRewards, totalDeposited } = useContracts()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('1 month')
 
 const data = ref({} as any)
-
-const currentStaked = ref<BreakdownAmount>({
-  usd: '$0.00',
-  exchange: '0.00 ETH'
-})
-
-const stakingRewards = ref({
-  usd: '$17.25',
-  exchange: '0.004 ETH'
-})
-
-const totalDeposited = ref({
-  usd: '$17.25',
-  exchange: '0.004 ETH'
-})
 
 const setMockData = () => {
   let labels  = [] as string[]
@@ -117,25 +95,6 @@ onMounted(() => {
 
 watch(selectedTimeframe, () => {
   setMockData()
-})
-
-watch(user, async () => {
-  const promises = [] as any[]
-  const accounts = user.value?.accounts
-  accounts?.forEach(account => {
-    promises.push(getUserStakeBalance(account.address))
-  })
-  const promisesResults = await Promise.all(promises)
-  const totalUSD = Math.round(promisesResults.reduce((a, b) => a + b, 0) * 100) / 100
-  const currentEthPrice = await getCurrentPrice({coin: 'ETH', currency: 'USD'})
-  const totalETH = (Math.round((totalUSD / currentEthPrice)*100) / 100).toString()
-  currentStaked.value = {
-    usd: '$' + totalUSD,
-    exchange: totalETH + ' ETH'
-  }
-  const addresses = user.value?.accounts.map((account) => account.address)
-  listenForTransactions(addresses as string[])
-  await getUserContractEventsTotals(user.value?.accounts[0].address as string)
 })
 
 </script>
