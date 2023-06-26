@@ -272,7 +272,7 @@ onUnmounted(() =>{
                 Select Address
               </h6>
               <div
-                v-if="!userAddresses"
+                v-if="userAddresses.length === 0"
                 class="flex items-center justify-center h-[90%]"
               >
                 <h6 class="nav_items">
@@ -286,13 +286,15 @@ onUnmounted(() =>{
                     type="checkbox"
                     class="mr-[5px]"
                   > By connecting my address, I certify that I have read and accept the updated 
-                  <span class="text-primary"> Terms of Use </span> and <span class="text-primary">Privacy Notice</span>.
+                  <button class="text-primary hover:text-blue_3">
+                    Terms of Service
+                  </button>.
                 </div> 
                 <button
                   v-for="act in userAddresses"
                   :key="act.address"
                   class="w-full border rounded-[8px] px-[10px] py-[15px] flex items-center justify-between hover:border-blue_3"
-                  @click="selectAddress(act.address), openWalletConnect = false"
+                  @click="selectAddress(act.address), openWalletConnect = false, authFlowCardNumber = 1"
                 >
                   <div>
                     {{ convertString(act.address) }}
