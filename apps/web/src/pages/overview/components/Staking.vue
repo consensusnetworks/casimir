@@ -7,6 +7,8 @@ import usePrice from '@/composables/price'
 import useUsers from '@/composables/users'
 import useContracts from '@/composables/contracts'
 
+import TermsOfService from '@/components/TermsOfService.vue'
+
 const { getEthersBalance } = useEthers()
 const { getCurrentPrice } = usePrice()
 const { user } = useUsers()
@@ -14,7 +16,7 @@ const { deposit } = useContracts()
 
 const selectedProvider = ref<ProviderString>('')
 const selectedWallet = ref(null as null | string)
-const formattedAmountToStake = ref<string>('0')
+const formattedAmountToStake = ref<string>('')
 const address_balance = ref(null as null | string)
 
 const openSelectWalletInput = ref(false)
@@ -101,16 +103,21 @@ const aggregateAddressesByProvider = () => {
 }
 
 watch(selectedWallet, async () => {
-  const currentEthPrice = await getCurrentPrice({coin: 'ETH', currency: 'USD'})
-  address_balance.value = selectedWallet.value ? '$' + Math.round(currentEthPrice * await getEthersBalance(selectedWallet.value) * 100) / 100 : '- - -'
+  // const currentEthPrice = await getCurrentPrice({coin: 'ETH', currency: 'USD'})
+  address_balance.value = selectedWallet.value ?  (Math.round( await getEthersBalance(selectedWallet.value) * 100) / 100 ) + ' ETH': '- - -'
 })
 
-watch(formattedAmountToStake, () => {
+watch(formattedAmountToStake, async () => {
   if(formattedAmountToStake.value){
     const floatAmount = parseFloat(formattedAmountToStake.value?.replace(/,/g, ''))
-    // TD: Get max value here from selected wallet
+    let maxAmount
 
-    const maxAmount = 2000.25
+    if(selectedWallet.value){
+      maxAmount = await getEthersBalance(selectedWallet.value)
+    }else{
+      maxAmount = 0
+    }
+    
     if(floatAmount > maxAmount){
       errorMessage.value = 'Insufficient Funds'
     } else {
@@ -167,6 +174,12 @@ onUnmounted(() =>{
         class="absolute top-[110%] w-full bg-white rounded-[8px] border border-[#D0D5DD] px-[10px] py-[14px] max-h-[250px] overflow-auto"
       >
         <div
+          v-if="formattedWalletOptions.length === 0"
+          class="flex justify-center items-center text-grey_4 py-[10px]"
+        >
+          No wallets connected
+        </div>
+        <div
           v-for="item in formattedWalletOptions"
           id="selectWalletOptionsCard"
           :key="item.provider"
@@ -212,9 +225,9 @@ onUnmounted(() =>{
 
     <div class="card_input text-black px-[10px] py-[14px]">
       <div class="flex items-center gap-[8px]">
-        <h6 class="text-[#667085]">
+        <!-- <h6 class="text-[#667085]">
           $
-        </h6>
+        </h6> -->
         <input
           id="amount"
           v-model="formattedAmountToStake"
@@ -227,7 +240,7 @@ onUnmounted(() =>{
       </div>
       <div class="flex items-center gap-[4px]">
         <h6 style="font-weight: 400;">
-          USD
+          ETH
         </h6>
       </div>
     </div>
@@ -299,7 +312,7 @@ onUnmounted(() =>{
         id="termsOfServiceCard"
         class="bg-white rounded-[8px] px-[14px] py-[10px] max-h-[400px] w-[80%] overflow-auto shadow-sm card_title"
       >
-        Terms of Service
+        <TermsOfService />
       </div>
     </div>
   </div>
