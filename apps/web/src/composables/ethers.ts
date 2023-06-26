@@ -144,6 +144,19 @@ export default function useEthers() {
     return maxAfterFees
   }
 
+  function listenForTransactions(addresses: Array<string>) {
+    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    provider.on('block', async (blockNumber: number) => {
+      const block = await provider.getBlockWithTransactions(blockNumber)
+      const transactions = block.transactions
+      transactions.forEach((tx) => {
+        if (addresses.includes(tx.from)) {
+          console.log('tx :>> ', tx)
+        }
+      })
+    })
+  }
+
   async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
     const { provider, address, currency } = loginCredentials
     const browserProvider = getBrowserProvider(provider)
@@ -240,6 +253,7 @@ export default function useEthers() {
     getEthersBrowserSigner,
     getEthersBrowserProviderSelectedCurrency,
     getGasPriceAndLimit,
+    listenForTransactions,
     loginWithEthers,
     requestEthersAccount,
     signEthersMessage,
