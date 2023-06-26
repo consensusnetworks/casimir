@@ -84,6 +84,7 @@ type Table struct {
 
 type Crawler interface {
 	Crawl() error
+	Close() error
 }
 
 type EtheruemCrawler struct {
@@ -393,23 +394,26 @@ func (c *EtheruemCrawler) TransactionEvent(b *types.Block, tx *types.Receipt) ([
 	var events []*Event
 
 	for index, tx := range b.Transactions() {
+		receipt, err := c.Client.TransactionReceipt(context.Background(), tx.Hash())
+
+		if err != nil {
+			return nil, err
+		}
+
 		txEvent := Event{
-			Chain:    Ethereum,
-			Network:  c.Netowrk,
-			Provider: Casimir,
-			Type:     Transaction,
-			Height:   int64(b.Number().Uint64()),
+			Chain:       Ethereum,
+			Network:     c.Netowrk,
+			Provider:    Casimir,
+			Type:        Transaction,
+			Height:      int64(b.Number().Uint64()),
+			Transaction: tx.Hash().Hex(),
 		}
+		// gas fee = gas price * gas used
+		txEvent.GasFee = new(big.Int).Mul(tx.GasPrice(), big.NewInt(int64(receipt.GasUsed))).String()
 
-		if tx.Hash().Hex() != "" {
-			txEvent.Transaction = tx.Hash().Hex()
-		}
-
-		// recipient
 		if tx.To().Hex() != "" {
 			txEvent.Recipient = tx.To().Hex()
 
-			// get receipt balance
 			recipientBalance, err := c.Client.BalanceAt(context.Background(), *tx.To(), b.Number())
 
 			if err != nil {
@@ -418,7 +422,6 @@ func (c *EtheruemCrawler) TransactionEvent(b *types.Block, tx *types.Receipt) ([
 			txEvent.RecipientBalance = recipientBalance.String()
 		}
 
-		// amount
 		if tx.Value().String() != "" {
 			txEvent.Amount = tx.Value().String()
 		}
@@ -429,7 +432,6 @@ func (c *EtheruemCrawler) TransactionEvent(b *types.Block, tx *types.Receipt) ([
 			return nil, err
 		}
 
-		// sender
 		if sender.Hex() != "" {
 			txEvent.Sender = sender.Hex()
 
