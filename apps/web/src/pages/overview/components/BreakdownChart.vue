@@ -3,11 +3,13 @@ import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { onMounted, ref, watch} from 'vue'
 import { BreakdownAmount } from '@casimir/types'
 import useContracts from '@/composables/contracts'
+import useEthers from '@/composables/ethers'
 import usePrice from '@/composables/price'
 import useUsers from '@/composables/users'
 
 const { user } = useUsers()
-const { getUserContractEvents, getUserStakeBalance } = useContracts()
+const { getUserContractEventsTotals, getUserStakeBalance } = useContracts()
+const { listenForTransactions } = useEthers()
 const { getCurrentPrice } = usePrice()
 
 const chardId = ref('cross_provider_chart')
@@ -131,7 +133,9 @@ watch(user, async () => {
     usd: '$' + totalUSD,
     exchange: totalETH + ' ETH'
   }
-  await getUserContractEvents(user.value?.accounts[0].address as string)
+  const addresses = user.value?.accounts.map((account) => account.address)
+  listenForTransactions(addresses as string[])
+  await getUserContractEventsTotals(user.value?.accounts[0].address as string)
 })
 
 </script>

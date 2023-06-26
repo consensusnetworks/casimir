@@ -150,35 +150,36 @@ export default function useContracts() {
         return await result.wait()
     }
 
-    async function getUserContractEvents(address: string) {
+    async function getUserContractEventsTotals(address: string) {
         const eventList = [
             'StakeDeposited',
             'StakeRebalanced',
             'WithdrawalInitiated',
         ]
-        const eventFilters = eventList.map(event => manager.filters[event](address))
-        const items = (await Promise.all(
-            eventFilters.map(async eventFilter => {
-                return await manager.queryFilter(eventFilter, 0, 'latest')
-            })
-        ))
-        
-        console.log('items :>> ', items)
+        const eventFilters = eventList.map(event => {
+            if (event === 'StakeRebalanced') return manager.filters[event]() // TODO: @shanejearley - is there a better way to handle this?
+            return manager.filters[event](address)
+        })
+        const items = (await Promise.all(eventFilters.map(async eventFilter => await manager.queryFilter(eventFilter, 0, 'latest'))))
+
+        const userEventTotals = eventList.reduce((acc, event) => {
+            acc[event] = 0
+            return acc
+        }, {} as { [key: string]: number })
 
         for (const item of items) {
             for (const action of item) {
-                // Items should have an args property with the amounts
                 const { args, event } = action
                 const { amount } = args
-                // Now we want to add up the amounts for each event
-                console.log('amount :>> ', amount)
-                console.log('args :>> ', args)
-                console.log('event :>> ', event)
+                const amountInEth = parseFloat(ethers.utils.formatEther(amount))
+                userEventTotals[event as string] += amountInEth
             }
         }
+
+        return userEventTotals
     }
 
     // TODO: Add listener / subscription "StakeRebalanced(uint256 amount)" (to composable somewhere)
 
-    return { manager, deposit, getDepositFees, getPools, getUserContractEvents, getUserStakeBalance, withdraw }
+    return { manager, deposit, getDepositFees, getPools, getUserContractEventsTotals, getUserStakeBalance, withdraw }
 }
