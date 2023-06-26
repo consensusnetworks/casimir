@@ -1,12 +1,16 @@
 import { ethers } from 'ethers'
 import { EthersProvider } from '@/interfaces/index'
-import { TransactionRequest } from '@casimir/types'
+import { Account, TransactionRequest } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
+import useContracts from '@/composables/contracts'
 import useEnvironment from '@/composables/environment'
+import useUsers from '@/composables/users'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
 const { ethereumURL } = useEnvironment()
+const { getUserContractEventsTotals } = useContracts()
+const { user } = useUsers()
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
@@ -144,18 +148,31 @@ export default function useEthers() {
     return maxAfterFees
   }
 
-  function listenForTransactions(addresses: Array<string>) {
+  async function listenForTransactions() {
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     provider.on('block', async (blockNumber: number) => {
+      const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
       const block = await provider.getBlockWithTransactions(blockNumber)
       const transactions = block.transactions
-      transactions.forEach((tx) => {
+      console.log('addresses :>> ', addresses)
+      console.log('transactions :>> ', transactions)
+      const promises = [] as Array<Promise<void>>
+      transactions.forEach(async (tx) => {
+        console.log('tx :>> ', tx)
         if (addresses.includes(tx.from)) {
           console.log('tx :>> ', tx)
+          promises.push(getUserContractEventsTotals(tx.from as string))
         }
       })
+      const result = await Promise.all(promises)
+      console.log('result :>> ', result)
+    })
+    await new Promise(() => {
+      // Wait indefinitely using a Promise that never resolves
+      console.log('listening for blocks')
     })
   }
+
 
   async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
     const { provider, address, currency } = loginCredentials

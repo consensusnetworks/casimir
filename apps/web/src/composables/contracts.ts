@@ -48,24 +48,22 @@ export default function useContracts() {
         exchange: '0 ETH'
     })
     
-    watch(user, async () => {
-        const promises = [] as any[]
-        const accounts = user.value?.accounts
-        accounts?.forEach(account => {
-            promises.push(getUserStakeBalance(account.address))
-        })
-        const promisesResults = await Promise.all(promises)
-        const totalUSD = Math.round(promisesResults.reduce((a, b) => a + b, 0) * 100) / 100
-        const currentEthPrice = await getCurrentPrice({coin: 'ETH', currency: 'USD'})
-        const totalETH = (Math.round((totalUSD / currentEthPrice)*100) / 100).toString()
-        currentStaked.value = {
-            usd: '$' + totalUSD,
-            exchange: totalETH + ' ETH'
-        }
-        const addresses = user.value?.accounts.map((account) => account.address)
-        listenForTransactions(addresses as string[])
-        await getUserContractEventsTotals(user.value?.accounts[0].address as string)
-    })
+    // watch(user, async () => {
+    //     const promises = [] as any[]
+    //     const accounts = user.value?.accounts
+    //     accounts?.forEach(account => {
+    //         promises.push(getUserStakeBalance(account.address))
+    //     })
+    //     const promisesResults = await Promise.all(promises)
+    //     const totalUSD = Math.round(promisesResults.reduce((a, b) => a + b, 0) * 100) / 100
+    //     const currentEthPrice = await getCurrentPrice({coin: 'ETH', currency: 'USD'})
+    //     const totalETH = (Math.round((totalUSD / currentEthPrice)*100) / 100).toString()
+    //     currentStaked.value = {
+    //         usd: '$' + totalUSD,
+    //         exchange: totalETH + ' ETH'
+    //     }
+    //     await getUserContractEventsTotals(user.value?.accounts[0].address as string)
+    // })
 
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         // const ethAmount = (parseInt(amount) / (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))).toString()
@@ -163,10 +161,22 @@ export default function useContracts() {
         }))
     }
 
-    async function getUserStakeBalance(address: string) : Promise<number> {
+    async function getUserStakeBalance(addresses: Array<string>) : Promise<number> {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-        const userStake = await manager.connect(provider).getUserStake(address)
-        const userStakeUSD = parseFloat(ethers.utils.formatEther(userStake)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        const promises = [] as Array<Promise<ethers.BigNumber>>
+        addresses.forEach((address) => {
+            promises.push(manager.connect(provider).getUserStake(address))
+        })
+        const resolvedPromises = await Promise.all(promises)
+        console.log('resolvedPromises in getUserStakeBalance :>> ', resolvedPromises)
+        const totalStake = resolvedPromises.reduce((a, b) => a.add(b))
+        const userStakeUSD = parseFloat(ethers.utils.formatEther(totalStake)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        console.log('totalStake :>> ', totalStake)
+        console.log('userStakeUSD :>> ', userStakeUSD)
+        currentStaked.value = {
+            exchange: '$ ' + ethers.utils.formatEther(totalStake),
+            usd: '$ ' + userStakeUSD
+        }
         return userStakeUSD
     }
 
@@ -213,7 +223,9 @@ export default function useContracts() {
             }
         }
 
-        return userEventTotals
+        currentStaked.value.exchange = '$ ' + (userEventTotals.StakeDeposited - userEventTotals.WithdrawalInitiated).toString()
+        currentStaked.value.usd = '$ ' + parseInt(currentStaked.value.exchange) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        console.log('currentStaked in getUserContractEventsTotals :>> ', currentStaked)
     }
 
     // TODO: Add listener / subscription "StakeRebalanced(uint256 amount)" (to composable somewhere)
