@@ -23,9 +23,10 @@ type TxDirection string
 type OperationType string
 
 const (
-	Outgoing         TxDirection = "outgoing"
-	Incoming         TxDirection = "incoming"
-	concurrencyLimit             = 200
+	Outgoing            TxDirection = "outgoing"
+	Incoming            TxDirection = "incoming"
+	ConcurrencyLimit                = 200
+	AWSAthenaTimeFormat             = "2006-01-02T15:04:05.000Z"
 )
 
 type Chain struct {
@@ -51,24 +52,24 @@ type Event struct {
 	GasFee           string       `json:"gas_fee"`
 }
 
-type Wallet struct {
-	Id         string      `json:"id" parquet:"name=id, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	Address    string      `json:"address" parquet:"name=address, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	Balance    string      `json:"balance" parquet:"name=balance, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	ReceivedAt string      `json:"received_at" parquet:"name=received_at, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	Amount     string      `json:"amount" parquet:"name=amount, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	Price      float64     `json:"price" parquet:"name=price, type=DOUBLE"`
-	GasFee     string      `json:"gas_fee" parquet:"name=gas_fee, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	Direction  TxDirection `json:"direction" parquet:"name=direction, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
+type WalletEvent struct {
+	WalletAddress string      `json:"wallet_address"`
+	Balance       string      `json:"wallet_balance"`
+	Direction     TxDirection `json:"tx_direction"`
+	TxId          string      `json:"tx_id"`
+	ReceivedAt    string      `json:"received_at"`
+	Amount        string      `json:"amount"`
+	Price         float64     `json:"price"`
+	GasFee        string      `json:"gas_fee"`
 }
 
-type StakingAction struct {
-	WalletAddress    string `json:"wallet_address" parquet:"name=wallet_address, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	StakeDeposit     int64  `json:"stake_deposit" parquet:"name=stake_deposit, type=INT64"`
-	CreatedAt        string `json:"created_at" parquet:"name=created_at, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	StakeRebalance   int64  `json:"stake_rebalance" parquet:"name=stake_rebalance, type=INT64"`
-	WithdrawalAmount int64  `json:"withdrawal_amount" parquet:"name=withdrawal_amount, type=INT64"`
-	DistributeReward int64  `json:"distribute_reward" parquet:"name=distribute_reward, type=INT64"`
+type StakingActionEvent struct {
+	WalletAddress    string `json:"wallet_address"`
+	StakeDeposit     int64  `json:"stake_deposit"`
+	CreatedAt        string `json:"created_at"`
+	StakeRebalance   int64  `json:"stake_rebalance"`
+	WithdrawalAmount int64  `json:"withdrawal_amount"`
+	DistributeReward int64  `json:"distribute_reward"`
 }
 type Pkg struct {
 	Version string `json:"version"`
@@ -156,7 +157,7 @@ func NewEthereumCrawler() (*EthereumCrawler, error) {
 		EthereumClient: *client,
 		Logger:         NewStdoutLogger(),
 		Mutex:          &sync.Mutex{},
-		Sema:           make(chan struct{}, concurrencyLimit),
+		Sema:           make(chan struct{}, ConcurrencyLimit),
 		Glue:           glue,
 		S3:             s3c,
 		Head:           head,
@@ -188,29 +189,26 @@ func (c *EthereumCrawler) Crawl() error {
 
 		l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
 
-		// go func(start, end int) {
-		// 	defer func() {
-		// 		c.Wg.Done()
-		// 		<-c.Sema
-		// 	}()
+		c.Wg.Add(1)
 
-		// 	l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
+		go func(start, end int) {
+			defer func() {
+				c.Wg.Done()
+				<-c.Sema
+			}()
 
-		// 	for j := start; j >= end; j-- {
-		// 		events, err := c.ProcessBlock(int(j))
+			l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
 
-		// 		if err != nil {
-		// 			l.Error("error processing block=%d err=%s\n", j, err)
-		// 		}
+			for j := start; j >= end; j-- {
+				events, walletEvents, err := c.ProcessBlock(int(j))
 
-		// 		l.Info("captured %d events", len(events))
-		// 		// ndjson, err := EncodeToNDJSONBytes(events)
+				if err != nil {
+					l.Error("error processing block=%d err=%s\n", j, err)
+				}
 
-		// 		// if err != nil {
-		// 		// 	l.Error("error encoding events to ndjson err=%s\n", err)
-		// 		// }
-		// 	}
-		// }(start, end)
+				l.Info("transaction events = %d wallet events = %d\n", len(events), len(walletEvents))
+			}
+		}(start, end)
 	}
 	return nil
 }
@@ -252,7 +250,7 @@ func (c *EthereumCrawler) Introspect() (map[string]Table, error) {
 
 		// we expect table version to match resource version otherwise the resoure is not ready yet wait
 		if tableVersion != resourceVersion {
-			l.Error(fmt.Sprintf("database=%s %s table=%s resourceVersion=%s \n", AnalyticsDatabaseDev, table.String(), *t.Name, strconv.Itoa(resourceVersion)))
+			l.Error(fmt.Sprintf("database=%s %s table=%s resource_version=%s \n", AnalyticsDatabaseDev, table.String(), *t.Name, strconv.Itoa(resourceVersion)))
 			return nil, errors.New("resource version does not match table version")
 		}
 
@@ -350,56 +348,56 @@ func EncodeToNDJSONBytes(events []*Event) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, error) {
+func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, error) {
 	l := c.Logger
 
 	var events []*Event
+	var walletEvents []*WalletEvent
 
 	block, err := c.Client.BlockByNumber(context.Background(), big.NewInt(int64(height)))
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	blockEvent, err := c.BlockEvent(block)
+	blockEvent, err := c.EventFromBlock(block)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	events = append(events, blockEvent)
 
-	l.Info("processingBlock=%d\n", blockEvent.Height)
+	l.Info("processing block=%d\n", blockEvent.Height)
 
 	if block.Transactions().Len() > 0 {
 		for _, tx := range block.Transactions() {
-			tx, err := c.Client.TransactionReceipt(context.Background(), tx.Hash())
+			receipt, err := c.Client.TransactionReceipt(context.Background(), tx.Hash())
 
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 
-			txEvent, err := c.TransactionEvent(block, tx)
+			// this includes transaction events and wallet events
+			txEvents, walletEvent, err := c.WalletAndEventFromTransaction(block, receipt)
 
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			events = append(events, txEvent...)
+
+			events = append(events, txEvents...)
+			walletEvents = append(walletEvents, walletEvent...)
 		}
 	}
-	return events, nil
+	return events, walletEvents, nil
 }
 
-func (c *EthereumCrawler) TransactionEvent(b *types.Block, tx *types.Receipt) ([]*Event, error) {
+func (c *EthereumCrawler) WalletAndEventFromTransaction(b *types.Block, receipt *types.Receipt) ([]*Event, []*WalletEvent, error) {
 	var events []*Event
 
+	var walletEvents []*WalletEvent
+
 	for index, tx := range b.Transactions() {
-		receipt, err := c.Client.TransactionReceipt(context.Background(), tx.Hash())
-
-		if err != nil {
-			return nil, err
-		}
-
 		txEvent := Event{
 			Chain:       Ethereum,
 			Network:     c.Network,
@@ -407,29 +405,31 @@ func (c *EthereumCrawler) TransactionEvent(b *types.Block, tx *types.Receipt) ([
 			Type:        Transaction,
 			Height:      int64(b.Number().Uint64()),
 			Transaction: tx.Hash().Hex(),
+			ReceivedAt:  time.Now().Format(AWSAthenaTimeFormat),
 		}
+
+		if tx.Value() != nil {
+			txEvent.Amount = tx.Value().String()
+		}
+
 		// gas fee = gas price * gas used
 		txEvent.GasFee = new(big.Int).Mul(tx.GasPrice(), big.NewInt(int64(receipt.GasUsed))).String()
 
-		if tx.To().Hex() != "" {
+		if tx.To() != nil {
 			txEvent.Recipient = tx.To().Hex()
-
-			recipientBalance, err := c.Client.BalanceAt(context.Background(), *tx.To(), b.Number())
+			recipeintBalance, err := c.Client.BalanceAt(context.Background(), *tx.To(), b.Number())
 
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			txEvent.RecipientBalance = recipientBalance.String()
-		}
 
-		if tx.Value().String() != "" {
-			txEvent.Amount = tx.Value().String()
+			txEvent.RecipientBalance = recipeintBalance.String()
 		}
 
 		sender, err := c.Client.TransactionSender(context.Background(), tx, b.Hash(), uint(index))
 
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		if sender.Hex() != "" {
@@ -438,30 +438,53 @@ func (c *EthereumCrawler) TransactionEvent(b *types.Block, tx *types.Receipt) ([
 			senderBalance, err := c.Client.BalanceAt(context.Background(), sender, b.Number())
 
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
+
 			txEvent.SenderBalance = senderBalance.String()
 		}
+
+		senderWalletEvent := WalletEvent{
+			WalletAddress: txEvent.Sender,
+			Balance:       txEvent.SenderBalance,
+			Direction:     Outgoing,
+			TxId:          txEvent.Transaction,
+			ReceivedAt:    txEvent.ReceivedAt,
+			Amount:        txEvent.Amount,
+			Price:         txEvent.Price,
+			GasFee:        txEvent.GasFee,
+		}
+
+		walletEvents = append(walletEvents, &senderWalletEvent)
+
+		receiptWalletEvent := WalletEvent{
+			WalletAddress: txEvent.Recipient,
+			Balance:       txEvent.RecipientBalance,
+			Direction:     Incoming,
+			TxId:          txEvent.Transaction,
+			ReceivedAt:    txEvent.ReceivedAt,
+			Amount:        txEvent.Amount,
+			Price:         txEvent.Price,
+			GasFee:        txEvent.GasFee,
+		}
+
+		walletEvents = append(walletEvents, &receiptWalletEvent)
+
+		// TODO: handle contract events
 	}
-	return events, nil
+
+	return events, walletEvents, nil
 }
 
-func (c *EthereumCrawler) BlockEvent(b *types.Block) (*Event, error) {
+func (c *EthereumCrawler) EventFromBlock(b *types.Block) (*Event, error) {
 	event := Event{
-		Chain:    Ethereum,
-		Network:  c.Network,
-		Provider: Casimir,
-		Type:     Block,
-		Height:   int64(b.Number().Uint64()),
+		Chain:      Ethereum,
+		Network:    c.Network,
+		Provider:   Casimir,
+		Type:       Block,
+		Height:     int64(b.Number().Uint64()),
+		Block:      b.Hash().Hex(),
+		ReceivedAt: time.Now().Format(AWSAthenaTimeFormat),
 	}
-
-	if b.Hash().Hex() != "" {
-		event.Block = b.Hash().Hex()
-	}
-
-	if b.Time() != 0 {
-		event.ReceivedAt = time.Unix(int64(b.Time()), 0).Format("2006-01-02 15:04:05.999999999")
-	}
-
 	return &event, nil
 }
