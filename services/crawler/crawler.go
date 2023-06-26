@@ -75,9 +75,11 @@ type Pkg struct {
 }
 
 type Table struct {
-	Name    string
-	Version string
-	Bucket  string
+	Name     string
+	Database string
+	Version  string
+	Bucket   string
+	SerDe    string
 }
 
 type Crawler interface {
@@ -164,90 +166,201 @@ func NewEthereumCrawler() (*EtheruemCrawler, error) {
 
 func (c *EtheruemCrawler) Crawl() error {
 	l := c.Logger
+
 	_, err := c.Introspect()
 
 	if err != nil {
 		return nil
 	}
 
-	defer func() {
-		c.Close()
-	}()
+	l.Info("crawling %d blocks...\n", c.Head+1)
 
-	diff := c.Head - 0 + 1
+	step := 500000
 
-	l.Info("crawling %d blocks...\n", diff)
-
-	err = os.Mkdir("data", 0755)
-
-	if err != nil {
-		return err
-	}
-
-	step := uint64(200)
-
-	// for i := uint64(0); i < c.Head; i += step {
-	for i := uint64(0); i < 1000; i += step {
-		c.Sema <- struct{}{}
-		c.Wg.Add(1)
-
+	for i := int(c.Head); i >= 0; i -= step {
 		start := i
-		end := i + 100 - 1
+		end := i - step + 1
 
-		if end > c.Head {
-			end = c.Head
+		if end < 0 {
+			end = 0
 		}
 
-		go func(start, end uint64) {
+		go func(start, end int) {
 			defer func() {
-				<-c.Sema
 				c.Wg.Done()
+				<-c.Sema
 			}()
+
 			l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
 
-			for j := start; j <= end; j++ {
+			for j := start; j >= end; j-- {
 				events, err := c.ProcessBlock(int(j))
 
 				if err != nil {
 					l.Error("error processing block=%d err=%s\n", j, err)
-					continue
 				}
 
-				ndjson, err := EncodeToNDJSONBytes(events)
+				l.Info("captured %d events", len(events))
+				// ndjson, err := EncodeToNDJSONBytes(events)
 
-				if err != nil {
-					l.Error("error encoding events to ndjson err=%s\n", err)
-					continue
-				}
-
-				// bucketPath := fmt.Sprintf("blocks/%d.ndjson", j)
-				// tables := c.Glue.Tables
-				// err = c.S3.UploadBytes(s)
-
-				// save to local file
-				fpath := fmt.Sprintf("data/%d-%d.ndjson", start, end)
-
-				f, err := os.OpenFile(fpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
-				if err != nil {
-					l.Error("error opening file=%s err=%s\n", fpath, err)
-					continue
-				}
-
-				_, err = f.Write(ndjson)
-
-				if err != nil {
-					l.Error("error writing to file=%s err=%s\n", fpath, err)
-					continue
-				}
-
-				c.Mutex.Lock()
-				c.EventsConsumed++
-				c.Mutex.Unlock()
+				// if err != nil {
+				// 	l.Error("error encoding events to ndjson err=%s\n", err)
+				// }
 			}
 		}(start, end)
 	}
 	return nil
+
+	// go func(start, end uint64) {
+	// 	defer func() {
+	// 		<-c.Sema
+	// 		c.Wg.Done()
+	// 	}()
+	// 	l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
+
+	// 	for j := start; j <= end; j++ {
+	// 		events, err := c.ProcessBlock(int(j))
+
+	// 		if err != nil {
+	// 			l.Error("error processing block=%d err=%s\n", j, err)
+	// 			continue
+	// 		}
+
+	// 		ndjson, err := EncodeToNDJSONBytes(events)
+
+	// 		if err != nil {
+	// 			l.Error("error encoding events to ndjson err=%s\n", err)
+	// 			continue
+	// 		}
+
+	// 		// bucketPath := fmt.Sprintf("blocks/%d.ndjson", j)
+	// 		// tables := c.Glue.Tables
+	// 		// err = c.S3.UploadBytes(s)
+
+	// 		// save to local file
+	// 		fpath := fmt.Sprintf("data/%d-%d.ndjson", start, end)
+
+	// 		f, err := os.OpenFile(fpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	// 		if err != nil {
+	// 			l.Error("error opening file=%s err=%s\n", fpath, err)
+	// 			continue
+	// 		}
+
+	// 		_, err = f.Write(ndjson)
+
+	// 		if err != nil {
+	// 			l.Error("error writing to file=%s err=%s\n", fpath, err)
+	// 			continue
+	// 		}
+
+	// 		c.Mutex.Lock()
+	// 		c.EventsConsumed++
+	// 		c.Mutex.Unlock()
+	// 	}
+	// }(start, end)
+}
+
+func (c *EtheruemCrawler) Introspect() (map[string]Table, error) {
+	l := c.Logger
+	err := c.Glue.LoadDatabases()
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.Glue.LoadTables(AnalyticsDatabaseDev)
+
+	if err != nil {
+		return nil, err
+	}
+
+	tables := make(map[string]Table, 3)
+
+	for _, t := range c.Glue.Tables {
+		tableVersion, err := strconv.Atoi(string([]rune(*t.Name)[len(*t.Name)-1]))
+
+		if err != nil {
+			return nil, err
+		}
+
+		table := Table{
+			Database: *t.DatabaseName,
+			Name:     *t.Name,
+			Version:  strconv.Itoa(tableVersion),
+		}
+
+		resourceVersion, err := ResourceVersion()
+
+		if err != nil {
+			return nil, err
+		}
+
+		// we expect table version to match resource version otherwise the resoure is not ready yet wait
+		if tableVersion != resourceVersion {
+			l.Error(fmt.Sprintf("database=%s %s table=%s resourceVersion=%s \n", AnalyticsDatabaseDev, table.String(), *t.Name, strconv.Itoa(resourceVersion)))
+			return nil, errors.New("resource version does not match table version")
+		}
+
+		if t.StorageDescriptor.Location != nil {
+			table.Bucket = *t.StorageDescriptor.Location
+		}
+
+		if t.StorageDescriptor.SerdeInfo.Name == nil {
+			serde := t.StorageDescriptor.SerdeInfo.SerializationLibrary
+			table.SerDe = strings.Split(*serde, ".")[3]
+		} else {
+			table.SerDe = *t.StorageDescriptor.SerdeInfo.Name
+		}
+
+		if strings.Contains(*t.Name, "_event_") {
+			tables["events"] = table
+		} else if strings.Contains(*t.Name, "staking_action") {
+			tables["staking"] = table
+		} else if strings.Contains(*t.Name, "_wallet_") {
+			tables["wallet"] = table
+		}
+	}
+	return tables, nil
+}
+
+func ResourceVersion() (int, error) {
+	f, err := os.ReadFile("../../common/data/package.json")
+
+	if err != nil {
+		return 0, err
+	}
+
+	var pkgJson Pkg
+
+	err = json.Unmarshal(f, &pkgJson)
+
+	if err != nil {
+		return 0, err
+	}
+
+	var major int
+
+	semver := strings.Split(pkgJson.Version, ".")
+
+	if len(semver) < 3 {
+		return 0, errors.New("invalid semver")
+	}
+
+	major, err = strconv.Atoi(semver[0])
+
+	if err != nil {
+		return 0, err
+	}
+
+	if major < 1 {
+		return 0, errors.New("major version must be greater than 0")
+	}
+	return major, nil
+}
+
+func (t Table) String() string {
+	return fmt.Sprintf("table=%s version=%s database=%s bucket=%s serde=%s", t.Name, t.Version, t.Database, t.Bucket, t.SerDe)
 }
 
 func (c *EtheruemCrawler) Close() {
@@ -385,7 +498,6 @@ func (c *EtheruemCrawler) BlockEvent(b *types.Block) (*Event, error) {
 		Provider: Casimir,
 		Type:     Block,
 		Height:   int64(b.Number().Uint64()),
-		// GasFee:  b.s
 	}
 
 	if b.Hash().Hex() != "" {
@@ -397,101 +509,4 @@ func (c *EtheruemCrawler) BlockEvent(b *types.Block) (*Event, error) {
 	}
 
 	return &event, nil
-}
-
-func (c *EtheruemCrawler) Introspect() ([]Table, error) {
-	l := c.Logger
-
-	// l.Info("introspecting...\n")
-
-	err := c.Glue.LoadDatabases()
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.Glue.LoadTables(AnalyticsDatabaseDev)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var tables []Table
-
-	for _, t := range c.Glue.Tables {
-		var table Table
-
-		table.Name = *t.Name
-		tableVersion, err := strconv.Atoi(string([]rune(*t.Name)[len(*t.Name)-1]))
-
-		if err != nil {
-			return nil, err
-		}
-
-		table.Version = strconv.Itoa(tableVersion)
-
-		resourceVersion, err := ResourceVersion()
-
-		if err != nil {
-			return nil, err
-		}
-
-		// we expect table version to match resource version otherwise the resoure is not ready yet wait
-		if tableVersion != resourceVersion {
-			l.Error(fmt.Sprintf("database=%s %s table=%s resourceVersion=%s \n", AnalyticsDatabaseDev, table.String(), *t.Name, strconv.Itoa(resourceVersion)))
-			return nil, errors.New("resource version does not match table version")
-		}
-
-		table.Version = strconv.Itoa(tableVersion)
-		tables = append(tables, table)
-
-		bucket := *t.StorageDescriptor.Location
-
-		if bucket == "" {
-			return nil, errors.New("an external table must have a s3 bucket")
-		}
-
-		table.Bucket = bucket
-		// l.Info(fmt.Sprintf("database=%s %s table=%s \n", AnalyticsDatabaseDev, table.String(), *t.Name))
-	}
-	return tables, nil
-}
-
-func ResourceVersion() (int, error) {
-	f, err := os.ReadFile("../../common/data/package.json")
-
-	if err != nil {
-		return 0, err
-	}
-
-	var pkgJson Pkg
-
-	err = json.Unmarshal(f, &pkgJson)
-
-	if err != nil {
-		return 0, err
-	}
-
-	var major int
-
-	semver := strings.Split(pkgJson.Version, ".")
-
-	if len(semver) < 3 {
-		return 0, errors.New("invalid semver")
-	}
-
-	major, err = strconv.Atoi(semver[0])
-
-	if err != nil {
-		return 0, err
-	}
-
-	if major < 1 {
-		return 0, errors.New("major version must be greater than 0")
-	}
-	return major, nil
-}
-
-func (t Table) String() string {
-	return fmt.Sprintf("table=%s version=%s bucket=%s", t.Name, t.Version, t.Bucket)
 }

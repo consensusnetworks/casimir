@@ -27,13 +27,18 @@ func TestEthereumCrawler_Introspect(t *testing.T) {
 		t.Error(err)
 	}
 
-	tt, err := crawler.Introspect()
+	tables, err := crawler.Introspect()
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(tt) == 0 {
+	if len(crawler.Glue.Tables) == 0 {
 		t.Error("introspection returned no tables, expected at least 3")
 	}
+
+	if len(tables) != 3 {
+		t.Error("introspection returned", len(tables), "tables, expected 3")
+	}
+
 }

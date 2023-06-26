@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/url"
 	"os"
 	"sync"
@@ -60,30 +61,10 @@ func NewEtheruemStreamer() (*EthereumStreamer, error) {
 		return nil, err
 	}
 
-	config, err := LoadDefaultAWSConfig()
-
-	if err != nil {
-		return nil, err
-	}
-
-	glue, err := NewGlueClient(config)
-
-	if err != nil {
-		return nil, err
-	}
-
-	s3c, err := NewS3Client()
-
-	if err != nil {
-		return nil, err
-	}
-
 	return &EthereumStreamer{
 		EtheruemClient: *client,
 		Logger:         NewStdoutLogger(),
 		Mutex:          &sync.Mutex{},
-		Glue:           glue,
-		S3:             s3c,
 		Head:           head,
 		Begin:          time.Now(),
 	}, nil
@@ -135,7 +116,127 @@ func (s *EthereumStreamer) Stream() error {
 		case <-ctx.Done():
 			return nil
 		case h := <-head:
-			l.Info(fmt.Sprintf("head: %d\n", h.Number.Int64()))
+			s.Mutex.Lock()
+			s.CurrentHead = h.Number.Uint64()
+			l.Info(fmt.Sprintf("currentHead=%d\n", s.CurrentHead))
+			s.Mutex.Unlock()
+
+			_, err := s.ProcessBlock()
+
+			if err != nil {
+				l.Error(err.Error())
+				return err
+			}
+
 		}
 	}
+}
+
+func (s *EthereumStreamer) ProcessBlock() ([]*Event, error) {
+	l := s.Logger
+
+	l.Info("processingBlock=%d\n", s.CurrentHead)
+
+	ctx := context.Background()
+
+	block, err := s.EtheruemClient.Client.BlockByNumber(ctx, new(big.Int).SetUint64(s.CurrentHead))
+
+	if err != nil {
+		return nil, err
+	}
+
+	var events []*Event
+
+	blockEvent, err := s.BlockEvent(block)
+
+	if err != nil {
+		return nil, err
+	}
+
+	events = append(events, blockEvent)
+
+	// for _, tx := range block.Transactions() {
+	// 	txEvent, err := s.TransactionEvent(tx)
+
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+
+	// }
+	return events, nil
+}
+
+func (c *EthereumStreamer) BlockEvent(b *types.Block) (*Event, error) {
+	event := Event{
+		Chain:    Ethereum,
+		Network:  c.Netowrk,
+		Provider: Casimir,
+		Type:     Block,
+		Height:   int64(b.Number().Uint64()),
+	}
+
+	if b.Hash().Hex() != "" {
+		event.Block = b.Hash().Hex()
+	}
+
+	if b.Time() != 0 {
+		event.ReceivedAt = time.Unix(int64(b.Time()), 0).Format("2006-01-02 15:04:05.999999999")
+	}
+
+	return &event, nil
+}
+
+func (c *EthereumStreamer) TransactionEvent(b *types.Block, tx *types.Receipt) ([]*Event, error) {
+	var events []*Event
+
+	for index, tx := range b.Transactions() {
+		txEvent := Event{
+			Chain:    Ethereum,
+			Network:  c.Netowrk,
+			Provider: Casimir,
+			Type:     Transaction,
+			Height:   int64(b.Number().Uint64()),
+		}
+
+		if tx.Hash().Hex() != "" {
+			txEvent.Transaction = tx.Hash().Hex()
+		}
+
+		// recipient
+		if tx.To().Hex() != "" {
+			txEvent.Recipient = tx.To().Hex()
+
+			// get receipt balance
+			recipientBalance, err := c.Client.BalanceAt(context.Background(), *tx.To(), b.Number())
+
+			if err != nil {
+				return nil, err
+			}
+			txEvent.RecipientBalance = recipientBalance.String()
+		}
+
+		// amount
+		if tx.Value().String() != "" {
+			txEvent.Amount = tx.Value().String()
+		}
+
+		sender, err := c.Client.TransactionSender(context.Background(), tx, b.Hash(), uint(index))
+
+		if err != nil {
+			return nil, err
+		}
+
+		// sender
+		if sender.Hex() != "" {
+			txEvent.Sender = sender.Hex()
+
+			senderBalance, err := c.Client.BalanceAt(context.Background(), sender, b.Number())
+
+			if err != nil {
+				return nil, err
+			}
+			txEvent.SenderBalance = senderBalance.String()
+		}
+	}
+	return events, nil
 }

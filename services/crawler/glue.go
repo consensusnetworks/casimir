@@ -76,7 +76,11 @@ func (g *GlueClient) LoadTables(databaseName string) error {
 
 	if req.NextToken != nil {
 		input.NextToken = req.NextToken
-		g.LoadTables(databaseName)
+		err = g.LoadTables(databaseName)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
