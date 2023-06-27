@@ -67,6 +67,6 @@ import BreakdownTable from './components/BreakdownTable.vue'
   width: calc(100% - 363px);
   @media (max-width: 1000px) {
       width: 100%
-  } ;
+  };
 }
 </style>
