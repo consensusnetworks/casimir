@@ -158,11 +158,25 @@ export default function useEthers() {
       const promises = [] as Array<Promise<any>>
       transactions.map((tx) => {
         if (addresses.includes(tx.from.toLowerCase())) {
-          promises.push(getUserContractEventsTotals(tx.from as string))
+          // TODO: Replace this with a method called RefreshUserContractTotals
+          user.value?.accounts?.forEach((account: Account) => {
+            const { address } = account
+            promises.push(getUserContractEventsTotals(address))
+          })
         }
       })
-      const userEventTotals = await Promise.all(promises)
-      if (userEventTotals.length > 0) await setUserContractTotals(userEventTotals[0])
+      const userEventTotals = (await Promise.all(promises)).reduce((acc, curr) => {
+        return {
+          StakeDeposited: acc.StakeDeposited + curr.StakeDeposited,
+          StakeRebalanced: acc.StakeRebalanced + curr.StakeRebalanced,
+          WithdrawalInitiated: acc.WithdrawalInitiated + curr.WithdrawalInitiated,
+        }
+      }, {
+        StakeDeposited: 0,
+        StakeRebalanced: 0,
+        WithdrawalInitiated: 0,
+      })
+      await setUserContractTotals(userEventTotals)
     })
     await new Promise(() => {
       // Wait indefinitely using a Promise that never resolves

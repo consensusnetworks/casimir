@@ -224,14 +224,21 @@ export default function useContracts() {
     }
 
     async function setUserContractTotals(eventTotals: any) {
-        const exchangeCurrentStaked = eventTotals.StakeDeposited - eventTotals.WithdrawalInitiated
-        const usdCurrentStaked = exchangeCurrentStaked * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-        const exchangeCurrentStakedRounded = Math.round(exchangeCurrentStaked * 100) / 100
-        const usdCurrentStakedRounded = Math.round(usdCurrentStaked * 100) / 100
-        currentStaked.value = {
-            exchange: exchangeCurrentStakedRounded.toString() + ' ETH',
-            usd: '$ ' + usdCurrentStakedRounded
+        /* CurrentStaked */
+        if (eventTotals.StakeDeposited > 0) {
+            const exchangeCurrentStaked = eventTotals.StakeDeposited - eventTotals.WithdrawalInitiated
+            const usdCurrentStaked = exchangeCurrentStaked * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+            const exchangeCurrentStakedRounded = Math.round(exchangeCurrentStaked * 100) / 100
+            const usdCurrentStakedRounded = Math.round(usdCurrentStaked * 100) / 100
+            currentStaked.value = {
+                exchange: exchangeCurrentStakedRounded.toString() + ' ETH',
+                usd: '$ ' + usdCurrentStakedRounded
+            }
         }
+
+        /* Staking Rewards */
+        
+        /* TotalDeposited */
     }
 
     // TODO: Add listener / subscription "StakeRebalanced(uint256 amount)" (to composable somewhere)
