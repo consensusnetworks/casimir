@@ -9,7 +9,8 @@ import (
 )
 
 func main() {
-	err := LoadEnv()
+	err := LoadEnv(".env")
+
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -20,8 +21,8 @@ func main() {
 	}
 }
 
-func LoadEnv() error {
-	err := godotenv.Load("services/crawler/.env")
+func LoadEnv(path string) error {
+	err := godotenv.Load(path)
 	if err != nil {
 		return err
 	}

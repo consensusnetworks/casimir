@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -105,12 +103,6 @@ type EthereumCrawler struct {
 }
 
 func NewEthereumCrawler() (*EthereumCrawler, error) {
-	err := LoadEnv()
-
-	if err != nil {
-		return nil, err
-	}
-
 	raw := os.Getenv("ETHEREUM_RPC")
 
 	if raw == "" {
@@ -164,53 +156,6 @@ func NewEthereumCrawler() (*EthereumCrawler, error) {
 		Wg:             &sync.WaitGroup{},
 		Begin:          time.Now(),
 	}, nil
-}
-
-func (c *EthereumCrawler) Crawl() error {
-	l := c.Logger
-
-	_, err := c.Introspect()
-
-	if err != nil {
-		return nil
-	}
-
-	l.Info("crawling %d blocks...\n", c.Head+1)
-
-	step := 250000
-
-	for i := int(c.Head); i >= 0; i -= step {
-		start := i
-		end := i - step + 1
-
-		if end < 0 {
-			end = 0
-		}
-
-		l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
-
-		c.Wg.Add(1)
-
-		go func(start, end int) {
-			defer func() {
-				c.Wg.Done()
-				<-c.Sema
-			}()
-
-			l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
-
-			for j := start; j >= end; j-- {
-				events, walletEvents, err := c.ProcessBlock(int(j))
-
-				if err != nil {
-					l.Error("error processing block=%d err=%s\n", j, err)
-				}
-
-				l.Info("transaction events = %d wallet events = %d\n", len(events), len(walletEvents))
-			}
-		}(start, end)
-	}
-	return nil
 }
 
 func (c *EthereumCrawler) Introspect() (map[string]Table, error) {
@@ -277,7 +222,7 @@ func (c *EthereumCrawler) Introspect() (map[string]Table, error) {
 }
 
 func ResourceVersion() (int, error) {
-	f, err := os.ReadFile("common/data/package.json")
+	f, err := os.ReadFile("../../common/data/package.json")
 
 	if err != nil {
 		return 0, err
@@ -311,8 +256,53 @@ func ResourceVersion() (int, error) {
 	return major, nil
 }
 
-func (t Table) String() string {
-	return fmt.Sprintf("table=%s version=%s database=%s bucket=%s serde=%s", t.Name, t.Version, t.Database, t.Bucket, t.SerDe)
+func (c *EthereumCrawler) Crawl() error {
+	l := c.Logger
+
+	_, err := c.Introspect()
+
+	if err != nil {
+		return nil
+	}
+
+	l.Info("crawling %d blocks...\n", c.Head+1)
+
+	step := 250000
+
+	for i := int(c.Head); i >= 0; i -= step {
+		start := i
+		end := i - step + 1
+
+		if end < 0 {
+			end = 0
+		}
+
+		l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
+
+		c.Wg.Add(1)
+
+		go func(start, end int) {
+			defer func() {
+				c.Wg.Done()
+				<-c.Sema
+			}()
+
+			l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
+
+			for j := start; j >= end; j-- {
+				// events, walletEvents, err := c.ProcessBlock(int(j))
+
+				l.Info("block=%d\n", j)
+
+				// if err != nil {
+				// l.Error("error processing block=%d err=%s\n", j, err)
+				// }
+
+				// l.Info("transaction events = %d wallet events = %d\n", len(events), len(walletEvents))
+			}
+		}(start, end)
+	}
+	return nil
 }
 
 func (c *EthereumCrawler) Close() {
@@ -320,32 +310,28 @@ func (c *EthereumCrawler) Close() {
 	c.Elapsed = time.Since(c.Begin)
 	c.Client.Close()
 	close(c.Sema)
-	c.Logger.Info("eventsConsumed=%d\n", c.EventsConsumed)
-	c.Logger.Info("timeElapsed=%s\n", c.Elapsed.Round(time.Millisecond))
+	c.Logger.Info("events_consumed=%d\n", c.EventsConsumed)
+	c.Logger.Info("time_elapsed=%s\n", c.Elapsed.Round(time.Millisecond))
 }
 
-func EncodeToNDJSONBytes(events []*Event) ([]byte, error) {
-	if len(events) == 0 {
-		return nil, nil
-	}
+func (e *Event) MarshalNDJSON() ([]byte, error) {
+	b, err := json.Marshal(e)
 
-	var buf bytes.Buffer
-	writer := bufio.NewWriter(&buf)
-
-	enc := json.NewEncoder(writer)
-	enc.SetEscapeHTML(false)
-
-	for _, event := range events {
-		if err := enc.Encode(event); err != nil {
-			return nil, err
-		}
-	}
-
-	if err := writer.Flush(); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
-	return buf.Bytes(), nil
+	return append(b, '\n'), nil
+}
+
+func (e *WalletEvent) MarshalNDJSON() ([]byte, error) {
+	b, err := json.Marshal(e)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return append(b, '\n'), nil
 }
 
 func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, error) {
@@ -379,7 +365,7 @@ func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, er
 			}
 
 			// this includes transaction events and wallet events
-			txEvents, walletEvent, err := c.WalletAndEventFromTransaction(block, receipt)
+			txEvents, walletEvent, err := c.EventsFromTransaction(block, receipt)
 
 			if err != nil {
 				return nil, nil, err
@@ -392,7 +378,7 @@ func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, er
 	return events, walletEvents, nil
 }
 
-func (c *EthereumCrawler) WalletAndEventFromTransaction(b *types.Block, receipt *types.Receipt) ([]*Event, []*WalletEvent, error) {
+func (c *EthereumCrawler) EventsFromTransaction(b *types.Block, receipt *types.Receipt) ([]*Event, []*WalletEvent, error) {
 	var events []*Event
 
 	var walletEvents []*WalletEvent
@@ -487,4 +473,8 @@ func (c *EthereumCrawler) EventFromBlock(b *types.Block) (*Event, error) {
 		ReceivedAt: time.Now().Format(AWSAthenaTimeFormat),
 	}
 	return &event, nil
+}
+
+func (t Table) String() string {
+	return fmt.Sprintf("table=%s version=%s database=%s bucket=%s serde=%s", t.Name, t.Version, t.Database, t.Bucket, t.SerDe)
 }

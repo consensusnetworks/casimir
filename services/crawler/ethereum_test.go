@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewEtheruemClient(t *testing.T) {
-	err := LoadEnv()
+	err := LoadEnv(".env")
 
 	if err != nil {
 		t.Fatal(err)

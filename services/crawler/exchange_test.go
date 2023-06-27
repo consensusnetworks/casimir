@@ -6,10 +6,7 @@ import (
 )
 
 func TestCurrentPrice(t *testing.T) {
-
-	var err error
-
-	err = LoadEnv()
+	err := LoadEnv(".env")
 
 	if err != nil {
 		t.Error(err)
