@@ -117,29 +117,12 @@ watch(selectedTimeframe, () => {
   setMockData()
 })
 
-watch(user, async () => {
-  // const promises = [] as any[]
-  // const accounts = user.value?.accounts
-  // accounts?.forEach(account => {
-  //   promises.push(getUserStakeBalance(account.address))
-  // })
-  // const promisesResults = await Promise.all(promises)
-  // const totalUSD = Math.round(promisesResults.reduce((a, b) => a + b, 0) * 100) / 100
-  // const currentEthPrice = await getCurrentPrice({coin: 'ETH', currency: 'USD'})
-  // const totalETH = (Math.round((totalUSD / currentEthPrice)*100) / 100).toString()
-  // currentStaked.value = {
-  //   usd: '$' + totalUSD,
-  //   exchange: totalETH + ' ETH'
-  // }
-  // await getUserContractEvents(user.value?.accounts[0].address as string)
-})
-
 </script>
 
 <template>
   <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap">
-    <div class="flex flex-wrap gap-[68px] mb-[52px]">
-      <div>
+    <div class="flex flex-wrap justify-between mb-[52px]">
+      <div class="">
         <h6 class="blance_title mb-[15px]">
           Current Staked
         </h6>
@@ -261,6 +244,12 @@ watch(user, async () => {
   font-size: 16px;
   letter-spacing: -0.01em;
   color: #7D8398;
+  @media (max-width: 1210px) {
+    font-size: 14px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 12px;
+  };
 }
 .blance_amount{
   font-family: 'IBM Plex Sans';
@@ -268,6 +257,12 @@ watch(user, async () => {
   font-weight: 500;
   font-size: 28px;
   color: #344054;
+  @media (max-width: 1210px) {
+    font-size: 24px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 22px;
+  };
 }
 .blance_title{
   font-family: 'IBM Plex Sans';
@@ -277,6 +272,14 @@ watch(user, async () => {
   line-height: 20px;
   letter-spacing: -0.01em;
   color: #667085;
+  @media (max-width: 1210px) {
+    font-size: 12px;
+    line-height: 18px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 10px;
+    line-height: 16px;
+  };
 }
 .chart_y_label{
     font-family: 'IBM Plex Sans';
@@ -323,5 +326,8 @@ watch(user, async () => {
     font-size: 18px;
     line-height: 28px;
     color: #101828;
+    @media (max-width: 1200px) {
+      font-size: 14px;
+    };
 }
 </style>
