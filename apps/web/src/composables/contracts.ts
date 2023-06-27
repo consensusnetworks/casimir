@@ -1,10 +1,9 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { ethers } from 'ethers'
 import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/artifacts/types'
 import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
 import CasimirViewsJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
 import useEnvironment from './environment'
-import useUsers from './users'
 import useEthers from './ethers'
 import useLedger from './ledger'
 import usePrice from '@/composables/price'
@@ -12,8 +11,6 @@ import useTrezor from './trezor'
 import useWalletConnect from './walletConnect'
 import { Account, BreakdownAmount, Pool, ProviderString } from '@casimir/types'
 import { ReadyOrStakeString } from '@/interfaces/ReadyOrStakeString'
-
-const { user } = useUsers()
 
 /** Manager contract */
 const managerAddress = import.meta.env.PUBLIC_MANAGER_ADDRESS
@@ -26,27 +23,27 @@ const views: CasimirViews = new ethers.Contract(viewsAddress, CasimirViewsJson.a
 
 const { getCurrentPrice } = usePrice()
 
+const currentStaked = ref<BreakdownAmount>({
+    usd: '$0.00',
+    exchange: '0 ETH'
+})
+
+const stakingRewards = ref({
+    usd: '$0.00',
+    exchange: '0 ETH'
+})
+
+const totalDeposited = ref({
+    usd: '$0.00',
+    exchange: '0 ETH'
+})
+
 export default function useContracts() {
     const { ethereumURL } = useEnvironment()
-    const { ethersProviderList, getEthersBrowserSigner, listenForTransactions } = useEthers()
+    const { ethersProviderList, getEthersBrowserSigner } = useEthers()
     const { getEthersLedgerSigner } = useLedger()
     const { getEthersTrezorSigner } = useTrezor()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
-
-    const currentStaked = ref<BreakdownAmount>({
-        usd: '$0.00',
-        exchange: '0 ETH'
-    })
-    
-    const stakingRewards = ref({
-        usd: '$0.00',
-        exchange: '0 ETH'
-    })
-    
-    const totalDeposited = ref({
-        usd: '$0.00',
-        exchange: '0 ETH'
-    })
     
     // watch(user, async () => {
     //     const promises = [] as any[]
@@ -223,12 +220,33 @@ export default function useContracts() {
             }
         }
 
-        currentStaked.value.exchange = '$ ' + (userEventTotals.StakeDeposited - userEventTotals.WithdrawalInitiated).toString()
-        currentStaked.value.usd = '$ ' + parseInt(currentStaked.value.exchange) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-        console.log('currentStaked in getUserContractEventsTotals :>> ', currentStaked)
+        return userEventTotals
+    }
+
+    async function setUserContractTotals(eventTotals: any) {
+        const exchangeCurrentStaked = eventTotals.StakeDeposited - eventTotals.WithdrawalInitiated
+        const usdCurrentStaked = exchangeCurrentStaked * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        const exchangeCurrentStakedRounded = Math.round(exchangeCurrentStaked * 100) / 100
+        const usdCurrentStakedRounded = Math.round(usdCurrentStaked * 100) / 100
+        currentStaked.value = {
+            exchange: exchangeCurrentStakedRounded.toString() + ' ETH',
+            usd: '$ ' + usdCurrentStakedRounded
+        }
     }
 
     // TODO: Add listener / subscription "StakeRebalanced(uint256 amount)" (to composable somewhere)
 
-    return { currentStaked, stakingRewards, totalDeposited, manager, deposit, getDepositFees, getPools, getUserContractEventsTotals, getUserStakeBalance, withdraw }
+    return { 
+        currentStaked, 
+        manager, 
+        stakingRewards, 
+        totalDeposited, 
+        deposit, 
+        getDepositFees, 
+        getPools, 
+        getUserContractEventsTotals, 
+        getUserStakeBalance, 
+        setUserContractTotals, 
+        withdraw 
+    }
 }

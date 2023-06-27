@@ -9,7 +9,7 @@ import useUsers from '@/composables/users'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
 const { ethereumURL } = useEnvironment()
-const { getUserContractEventsTotals } = useContracts()
+const { getUserContractEventsTotals, setUserContractTotals } = useContracts()
 const { user } = useUsers()
 
 export default function useEthers() {
@@ -151,28 +151,23 @@ export default function useEthers() {
   async function listenForTransactions() {
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     provider.on('block', async (blockNumber: number) => {
+      console.log('blockNumber :>> ', blockNumber)
       const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
       const block = await provider.getBlockWithTransactions(blockNumber)
       const transactions = block.transactions
-      console.log('addresses :>> ', addresses)
-      console.log('transactions :>> ', transactions)
-      const promises = [] as Array<Promise<void>>
-      transactions.forEach(async (tx) => {
-        console.log('tx :>> ', tx)
-        if (addresses.includes(tx.from)) {
-          console.log('tx :>> ', tx)
+      const promises = [] as Array<Promise<any>>
+      transactions.map((tx) => {
+        if (addresses.includes(tx.from.toLowerCase())) {
           promises.push(getUserContractEventsTotals(tx.from as string))
         }
       })
-      const result = await Promise.all(promises)
-      console.log('result :>> ', result)
+      const userEventTotals = await Promise.all(promises)
+      if (userEventTotals.length > 0) await setUserContractTotals(userEventTotals[0])
     })
     await new Promise(() => {
       // Wait indefinitely using a Promise that never resolves
-      console.log('listening for blocks')
     })
   }
-
 
   async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
     const { provider, address, currency } = loginCredentials
