@@ -35,7 +35,7 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
-  const { getUserStakeBalance } = useContracts()
+  const { getUserStakeBalance, getUserContractEventsTotals, setUserContractTotals } = useContracts()
   const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
@@ -74,6 +74,7 @@ export default function useWallet() {
         if (error) throw new Error(message || 'There was an error getting the user')
         setUser(retrievedUser)
         setPrimaryAddress(user?.value?.address as string)
+        listenForTransactions()
         loadingUserWallets.value = false
       } else { // Add account if it doesn't already exist
         const userAccountExists = user.value?.accounts?.some((account: Account | any) => account?.address === selectedAddress.value && account?.walletProvider === selectedProvider.value && account?.currency === selectedCurrency.value)
@@ -100,14 +101,33 @@ export default function useWallet() {
         }
       }
       await setUserAccountBalances()
-      // TODO: Initialize Listener for new transactions
       console.log('user.value after connecting wallet :>> ', user.value)
-      // await getUserStakeBalance(userAddresses.value)
-      listenForTransactions()
+      await initializeBreakdown()
     } catch (error: any) {
       loadingUserWallets.value = false
       throw new Error(error.message || 'There was an error connecting the wallet')
     }
+  }
+
+  async function initializeBreakdown() {
+    const promises = [] as Array<Promise<any>>
+    user.value?.accounts?.forEach((account: Account) => {
+      const { address } = account
+      promises.push(getUserContractEventsTotals(address))
+    })
+    const results = await Promise.all(promises)
+    const totals = results.reduce((acc: any, curr: any) => {
+      acc.StakeDeposited += curr.StakeDeposited
+      acc.WithdrawalInitiated += curr.WithdrawalInitiated
+      acc.StakeRebalanced += curr.StakeRebalanced
+      return acc
+    }
+    , {
+      StakeDeposited: 0,
+      WithdrawalInitiated: 0,
+      StakeRebalanced: 0,
+    })
+    await setUserContractTotals(totals)
   }
 
   /**
