@@ -111,7 +111,8 @@ watch(formattedAmountToStake, async () => {
   if(formattedAmountToStake.value){
     const floatAmount = parseFloat(formattedAmountToStake.value?.replace(/,/g, ''))
     let maxAmount
-
+    // minAmount is 0.0001 ETH 
+    let minAmount = 0.0001
     if(selectedWallet.value){
       maxAmount = await getEthersBalance(selectedWallet.value)
     }else{
@@ -120,9 +121,13 @@ watch(formattedAmountToStake, async () => {
     
     if(floatAmount > maxAmount){
       errorMessage.value = 'Insufficient Funds'
-    } else {
+    } else if(floatAmount < minAmount){
+      errorMessage.value = 'Minimun Staking is 0.0001 ETH'
+    }else {
       errorMessage.value = null
     }
+  }else{
+    errorMessage.value = null
   }
 })
 
