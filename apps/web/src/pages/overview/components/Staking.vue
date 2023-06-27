@@ -3,16 +3,14 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
 import useEthers from '@/composables/ethers'
-import usePrice from '@/composables/price'
 import useUsers from '@/composables/users'
 import useContracts from '@/composables/contracts'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
 const { getEthersBalance } = useEthers()
-const { getCurrentPrice } = usePrice()
 const { user } = useUsers()
-const { deposit } = useContracts()
+const { deposit, withdraw } = useContracts()
 
 const selectedProvider = ref<ProviderString>('')
 const selectedWallet = ref(null as null | string)
@@ -301,6 +299,13 @@ onUnmounted(() =>{
       @click="deposit({ amount: formattedAmountToStake, walletProvider: selectedProvider })"
     >
       Stake
+    </button>
+    <button
+      class="card_button h-[37px] w-full mt-8"
+      :disabled="!(selectedWallet && formattedAmountToStake && !errorMessage)"
+      @click="withdraw({ amount: formattedAmountToStake, walletProvider: selectedProvider })"
+    >
+      Withdraw
     </button>
 
     <div

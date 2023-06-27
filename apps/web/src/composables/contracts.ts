@@ -211,6 +211,8 @@ export default function useContracts() {
             return acc
         }, {} as { [key: string]: number })
 
+        console.log('userEventTotals :>> ', userEventTotals)
+
         for (const item of items) {
             for (const action of item) {
                 const { args, event } = action

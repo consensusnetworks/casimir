@@ -36,7 +36,7 @@ const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
   const { getUserStakeBalance, getUserContractEventsTotals, setUserContractTotals } = useContracts()
-  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
+  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForContractEvents, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
@@ -74,6 +74,7 @@ export default function useWallet() {
         if (error) throw new Error(message || 'There was an error getting the user')
         setUser(retrievedUser)
         setPrimaryAddress(user?.value?.address as string)
+        listenForContractEvents()
         listenForTransactions()
         loadingUserWallets.value = false
       } else { // Add account if it doesn't already exist

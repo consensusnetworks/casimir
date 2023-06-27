@@ -9,7 +9,7 @@ import useUsers from '@/composables/users'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
 const { ethereumURL } = useEnvironment()
-const { getUserContractEventsTotals, setUserContractTotals } = useContracts()
+const { manager, getUserContractEventsTotals, setUserContractTotals } = useContracts()
 const { user } = useUsers()
 
 export default function useEthers() {
@@ -183,6 +183,16 @@ export default function useEthers() {
     })
   }
 
+  async function listenForContractEvents() {
+    manager.on('StakeDeposited', async (event: any) => {
+      console.log('got to StakeDeposited!')
+    })
+    
+    manager.on('StakeRebalanced', async (event: any) => {
+      console.log('got to StakeRebalanced!')
+    })
+  }
+
   async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
     const { provider, address, currency } = loginCredentials
     const browserProvider = getBrowserProvider(provider)
@@ -279,6 +289,7 @@ export default function useEthers() {
     getEthersBrowserSigner,
     getEthersBrowserProviderSelectedCurrency,
     getGasPriceAndLimit,
+    listenForContractEvents,
     listenForTransactions,
     loginWithEthers,
     requestEthersAccount,
