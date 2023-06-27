@@ -122,8 +122,7 @@ export default function useWallet() {
       acc.WithdrawalInitiated += curr.WithdrawalInitiated
       acc.StakeRebalanced += curr.StakeRebalanced
       return acc
-    }
-    , {
+    }, {
       StakeDeposited: 0,
       WithdrawalInitiated: 0,
       StakeRebalanced: 0,

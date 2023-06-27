@@ -199,6 +199,7 @@ export default function useContracts() {
             'StakeDeposited',
             'StakeRebalanced',
             'WithdrawalInitiated',
+            'WithdrawalFulfilled'
         ]
         const eventFilters = eventList.map(event => {
             if (event === 'StakeRebalanced') return manager.filters[event]() // TODO: @shanejearley - is there a better way to handle this?
@@ -210,8 +211,6 @@ export default function useContracts() {
             acc[event] = 0
             return acc
         }, {} as { [key: string]: number })
-
-        console.log('userEventTotals :>> ', userEventTotals)
 
         for (const item of items) {
             for (const action of item) {
@@ -226,19 +225,29 @@ export default function useContracts() {
     }
 
     async function setUserContractTotals(eventTotals: any) {
-        /* CurrentStaked */
+        /* CurrentStaked (eventTotals.StakeDeposited) */
         if (eventTotals.StakeDeposited > 0) {
             const exchangeCurrentStaked = eventTotals.StakeDeposited - eventTotals.WithdrawalInitiated
             const usdCurrentStaked = exchangeCurrentStaked * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
             const exchangeCurrentStakedRounded = Math.round(exchangeCurrentStaked * 100) / 100
             const usdCurrentStakedRounded = Math.round(usdCurrentStaked * 100) / 100
             currentStaked.value = {
-                exchange: exchangeCurrentStakedRounded.toString() + ' ETH',
+                exchange: exchangeCurrentStakedRounded + ' ETH',
                 usd: '$ ' + usdCurrentStakedRounded
             }
         }
 
-        /* Staking Rewards */
+        /* Staking Rewards (eventTotals.StakeRebalanced) */
+        if (eventTotals.StakeRebalanced > 0) {
+            const exchangeStakingRewards = eventTotals.StakeRebalanced
+            const usdStakingRewards = exchangeStakingRewards * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+            const exchangeStakingRewardsRounded = Math.round(exchangeStakingRewards * 100) / 100
+            const usdStakingRewardsRounded = Math.round(usdStakingRewards * 100) / 100
+            stakingRewards.value = {
+                exchange: exchangeStakingRewardsRounded + ' ETH',
+                usd: '$ ' + usdStakingRewardsRounded
+            }
+        }
         
         /* TotalDeposited */
     }
