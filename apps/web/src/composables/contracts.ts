@@ -250,6 +250,15 @@ export default function useContracts() {
         }
         
         /* TotalDeposited */
+        const exchangeTotalDeposited = parseFloat(currentStaked.value.exchange.replace(' ETH', '')) + parseFloat(stakingRewards.value.exchange.replace(' ETH', ''))
+        const usdTotalDeposited = parseFloat(currentStaked.value.usd.replace('$ ', '')) + parseFloat(stakingRewards.value.usd.replace('$ ', ''))
+        const exchangeTotalDepositedRounded = Math.round(exchangeTotalDeposited * 100) / 100
+        const usdTotalDepositedRounded = Math.round(usdTotalDeposited * 100) / 100
+        totalDeposited.value = {
+            usd: '$ ' + usdTotalDepositedRounded,
+            exchange: exchangeTotalDepositedRounded + ' ETH'
+        }
+        
     }
 
     // TODO: Add listener / subscription "StakeRebalanced(uint256 amount)" (to composable somewhere)
