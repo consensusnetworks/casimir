@@ -1,34 +1,14 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { onMounted, ref, watch} from 'vue'
-import { BreakdownAmount } from '@casimir/types'
 import useContracts from '@/composables/contracts'
-import usePrice from '@/composables/price'
-import useUsers from '@/composables/users'
 
-const { user } = useUsers()
-const { getUserContractEvents, getUserStakeBalance } = useContracts()
-const { getCurrentPrice } = usePrice()
+const { currentStaked, stakingRewards, totalDeposited } = useContracts()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('1 month')
 
 const data = ref({} as any)
-
-const currentStaked = ref<BreakdownAmount>({
-  usd: '$0.00',
-  exchange: '0.00 ETH'
-})
-
-const stakingRewards = ref({
-  usd: '$17.25',
-  exchange: '0.004 ETH'
-})
-
-const totalDeposited = ref({
-  usd: '$17.25',
-  exchange: '0.004 ETH'
-})
 
 const setMockData = () => {
   let labels  = [] as string[]
@@ -117,29 +97,12 @@ watch(selectedTimeframe, () => {
   setMockData()
 })
 
-watch(user, async () => {
-  // const promises = [] as any[]
-  // const accounts = user.value?.accounts
-  // accounts?.forEach(account => {
-  //   promises.push(getUserStakeBalance(account.address))
-  // })
-  // const promisesResults = await Promise.all(promises)
-  // const totalUSD = Math.round(promisesResults.reduce((a, b) => a + b, 0) * 100) / 100
-  // const currentEthPrice = await getCurrentPrice({coin: 'ETH', currency: 'USD'})
-  // const totalETH = (Math.round((totalUSD / currentEthPrice)*100) / 100).toString()
-  // currentStaked.value = {
-  //   usd: '$' + totalUSD,
-  //   exchange: totalETH + ' ETH'
-  // }
-  // await getUserContractEvents(user.value?.accounts[0].address as string)
-})
-
 </script>
 
 <template>
   <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap">
-    <div class="flex flex-wrap gap-[68px] mb-[52px]">
-      <div>
+    <div class="flex flex-wrap justify-between mb-[52px]">
+      <div class="">
         <h6 class="blance_title mb-[15px]">
           Current Staked
         </h6>
@@ -261,6 +224,12 @@ watch(user, async () => {
   font-size: 16px;
   letter-spacing: -0.01em;
   color: #7D8398;
+  @media (max-width: 1210px) {
+    font-size: 14px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 12px;
+  };
 }
 .blance_amount{
   font-family: 'IBM Plex Sans';
@@ -268,6 +237,12 @@ watch(user, async () => {
   font-weight: 500;
   font-size: 28px;
   color: #344054;
+  @media (max-width: 1210px) {
+    font-size: 24px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 22px;
+  };
 }
 .blance_title{
   font-family: 'IBM Plex Sans';
@@ -277,6 +252,14 @@ watch(user, async () => {
   line-height: 20px;
   letter-spacing: -0.01em;
   color: #667085;
+  @media (max-width: 1210px) {
+    font-size: 12px;
+    line-height: 18px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 10px;
+    line-height: 16px;
+  };
 }
 .chart_y_label{
     font-family: 'IBM Plex Sans';
@@ -323,5 +306,8 @@ watch(user, async () => {
     font-size: 18px;
     line-height: 28px;
     color: #101828;
+    @media (max-width: 1200px) {
+      font-size: 14px;
+    };
 }
 </style>

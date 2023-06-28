@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse } from '@casimir/types'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse, User } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import * as Session from 'supertokens-web-js/recipe/session'
 
@@ -11,6 +11,8 @@ const user = ref<UserWithAccounts | null>(null)
 
 export default function useUsers () {
 
+    const userAddresses = ref<Array<string>>([])
+
     async function addAccount(account: AddAccountOptions): Promise<ApiResponse> {
         try {
             const requestOptions = {
@@ -21,9 +23,9 @@ export default function useUsers () {
                 body: JSON.stringify({ account })
             }
             const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
-            const { error, message, data: userAccount } = await response.json()
-            user.value = userAccount
-            return { error, message, data: userAccount }
+            const { error, message, data: user } = await response.json()
+            setUser(user)
+            return { error, message, data: user }
         } catch (error: any) {
             throw new Error(error.message || 'Error adding account')
         }
@@ -135,7 +137,8 @@ export default function useUsers () {
     }
 
     function setUser(newUser?: UserWithAccounts) {
-        user.value = newUser
+        user.value = newUser as UserWithAccounts
+        userAddresses.value = newUser?.accounts.map(account => account.address) as Array<string>
     }
 
     async function updatePrimaryAddress(updatedAddress: string) {
@@ -153,6 +156,7 @@ export default function useUsers () {
     return {
         session,
         user,
+        userAddresses,
         addAccount,
         checkIfSecondaryAddress,
         checkIfPrimaryUserExists,

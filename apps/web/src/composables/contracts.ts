@@ -1,26 +1,44 @@
+import { ref } from 'vue'
 import { ethers } from 'ethers'
 import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/artifacts/types'
 import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
 import CasimirViewsJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
 import useEnvironment from './environment'
-import useUsers from './users'
-import useEthers from './ethers'
-import useLedger from './ledger'
+import useEthers from '@/composables/ethers'
+import useLedger from '@/composables/ledger'
 import usePrice from '@/composables/price'
-import useTrezor from './trezor'
+import useTrezor from '@/composables/trezor'
+import useUsers from '@/composables/users'
 import useWalletConnect from './walletConnect'
-import { Account, Pool, ProviderString } from '@casimir/types'
+import { Account, BreakdownAmount, BreakdownString, Pool, ProviderString } from '@casimir/types'
 import { ReadyOrStakeString } from '@/interfaces/ReadyOrStakeString'
 
 /** Manager contract */
 const managerAddress = import.meta.env.PUBLIC_MANAGER_ADDRESS
-const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager & ethers.Contract
+const provider = new ethers.providers.JsonRpcProvider(import.meta.env.VITE_RPC_URL)
+const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi, provider) as CasimirManager & ethers.Contract
 
 /** Views contract */
 const viewsAddress = import.meta.env.PUBLIC_VIEWS_ADDRESS
 const views: CasimirViews = new ethers.Contract(viewsAddress, CasimirViewsJson.abi) as CasimirViews
 
+const { user } = useUsers()
 const { getCurrentPrice } = usePrice()
+
+const currentStaked = ref<BreakdownAmount>({
+    usd: '$0.00',
+    exchange: '0 ETH'
+})
+
+const stakingRewards = ref<BreakdownAmount>({
+    usd: '$0.00',
+    exchange: '0 ETH'
+})
+
+const totalDeposited = ref<BreakdownAmount>({
+    usd: '$0.00',
+    exchange: '0 ETH'
+})
 
 export default function useContracts() {
     const { ethereumURL } = useEnvironment()
@@ -28,9 +46,9 @@ export default function useContracts() {
     const { getEthersLedgerSigner } = useLedger()
     const { getEthersTrezorSigner } = useTrezor()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
-
+    
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
-        const ethAmount = (parseInt(amount) / (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))).toString()
+        // const ethAmount = (parseInt(amount) / (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))).toString()
         const signerCreators = {
             'Browser': getEthersBrowserSigner,
             'Ledger': getEthersLedgerSigner,
@@ -43,10 +61,23 @@ export default function useContracts() {
         if (isWalletConnectSigner(signer)) signer = await signer
         const managerSigner = manager.connect(signer as ethers.Signer)
         const fees = await managerSigner.feePercent()
-        const depositAmount = parseFloat(ethAmount) * ((100 + fees) / 100)
+        const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
         const value = ethers.utils.parseEther(depositAmount.toString())
         const result = await managerSigner.depositStake({ value, type: 0 })
         return await result.wait()
+    }
+
+    async function getCurrentStaked() : Promise<BreakdownAmount> {
+        const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
+        const promises = [] as Array<Promise<ethers.BigNumber>>
+        addresses.forEach((address) => {promises.push(manager.connect(provider).getUserStake(address))})
+        const currentStaked = (await Promise.all(promises)).reduce((a, b) => a.add(b))
+        const currentStakedUSD = parseFloat(ethers.utils.formatEther(currentStaked)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        const currentStakedETH = parseFloat(ethers.utils.formatEther(currentStaked))
+        return {
+            exchange: currentStakedETH.toFixed(2) + ' ETH',
+            usd: '$ ' + currentStakedUSD.toFixed(2)
+        }
     }
 
     async function getDepositFees() {
@@ -125,11 +156,95 @@ export default function useContracts() {
         }))
     }
 
-    async function getUserStakeBalance(address: string) : Promise<number> {
-        const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
-        const userStake = await manager.connect(provider).getUserStake(address)
-        const userStakeUSD = parseFloat(ethers.utils.formatEther(userStake)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-        return userStakeUSD
+    async function getStakingRewards() : Promise<BreakdownAmount> {
+        const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
+        const promises = [] as Array<Promise<ethers.BigNumber>>
+        addresses.forEach((address) => {promises.push(manager.connect(provider).getUserRewards(address))})
+        const stakingRewards = (await Promise.all(promises)).reduce((a, b) => a.add(b))
+        const stakingRewardsUSD = parseFloat(ethers.utils.formatEther(stakingRewards)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        const stakingRewardsETH = parseFloat(ethers.utils.formatEther(stakingRewards))
+        return {
+            exchange: stakingRewardsETH.toFixed(2) + ' ETH',
+            usd: '$ ' + stakingRewardsUSD.toFixed(2)
+        }
+    }
+
+    async function getTotalDeposited() : Promise<BreakdownAmount> {
+        const promises = [] as Array<Promise<any>>
+        const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
+        addresses.forEach((address) => { promises.push(getUserContractEventsTotals(address)) })
+        const totalDeposited = (await Promise.all(promises)).reduce((acc, curr) => acc + curr.StakeDeposited, 0)
+        const totalDepositedUSD = totalDeposited * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        return {
+            exchange: totalDeposited.toFixed(2) + ' ETH',
+            usd: '$ ' + totalDepositedUSD.toFixed(2)
+        }
+    }
+
+    async function getUserContractEventsTotals(address: string) {
+        const eventList = [
+            'StakeDeposited',
+            'StakeRebalanced',
+            'WithdrawalInitiated',
+            'WithdrawalFulfilled'
+        ]
+        const eventFilters = eventList.map(event => {
+            if (event === 'StakeRebalanced') return manager.filters[event]() // TODO: @shanejearley - is there a better way to handle this?
+            return manager.filters[event](address)
+        })
+        const items = (await Promise.all(eventFilters.map(async eventFilter => await manager.queryFilter(eventFilter, 0, 'latest'))))
+
+        const userEventTotals = eventList.reduce((acc, event) => {
+            acc[event] = 0
+            return acc
+        }, {} as { [key: string]: number })
+
+        for (const item of items) {
+            for (const action of item) {
+                const { args, event } = action
+                const { amount } = args
+                const amountInEth = parseFloat(ethers.utils.formatEther(amount))
+                userEventTotals[event as string] += amountInEth
+            }
+        }
+
+        return userEventTotals
+    }
+
+    async function listenForContractEvents() {
+        manager.on('StakeDeposited', async (event: any) => await refreshBreakdown())
+        manager.on('StakeRebalanced', async (event: any) => await refreshBreakdown())
+        manager.on('WithdrawalInitiated', async (event: any) => await refreshBreakdown())
+        manager.on('WithdrawalFulfilled', async (event: any) => await refreshBreakdown())
+    }
+
+    async function refreshBreakdown() {
+        setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
+        // setBreakdownValue({ name: 'totalDeposited', ...await getTotalDeposited() })
+        // setBreakdownValue({ name: 'stakingRewards', ...await getStakingRewards() })
+    }
+
+    function setBreakdownValue({ name, exchange, usd }: { name: BreakdownString, exchange: string, usd: string}) {
+        switch (name) {
+            case 'currentStaked':
+                currentStaked.value = {
+                    exchange,
+                    usd
+                }
+            break
+            case 'totalDeposited':
+                totalDeposited.value = {
+                    exchange,
+                    usd
+                }
+            break
+            case 'stakingRewards':
+                stakingRewards.value = {
+                    exchange,
+                    usd
+                }
+            break
+        }
     }
 
     async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
@@ -145,27 +260,22 @@ export default function useContracts() {
         if (isWalletConnectSigner(signer)) signer = await signer
         const managerSigner = manager.connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
+        // const withdrawableBalance = await manager.getWithdrawableBalance()
         const result = await managerSigner.requestWithdrawal(value)
         return await result.wait()
     }
 
-    async function getUserContractEvents(address: string) {
-        const eventList = [
-            'StakeDeposited',
-            'WithdrawalInitiated',
-        ]
-        const eventFilters = eventList.map(event => manager.filters[event](address))
-        console.log('eventFilters :>> ', eventFilters)
-        const items = (await Promise.all(
-            eventFilters.map(async eventFilter => {
-                return await manager.queryFilter(eventFilter, 0, 'latest')
-            })
-        )).flat()
-        console.log('items :>> ', items)
-        // Items should have an args property with the amounts
+    return { 
+        currentStaked, 
+        manager, 
+        stakingRewards, 
+        totalDeposited, 
+        deposit, 
+        getCurrentStaked,
+        getDepositFees, 
+        getPools, 
+        listenForContractEvents,
+        refreshBreakdown,
+        withdraw 
     }
-
-    // TODO: Add listener / subscription "StakeRebalanced(uint256 amount)" (to composable somewhere)
-
-    return { manager, deposit, getDepositFees, getPools, getUserContractEvents, getUserStakeBalance, withdraw }
 }
