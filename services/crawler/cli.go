@@ -3,13 +3,15 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 )
 
 func main() {
-	err := LoadEnv(".env")
+	err := LoadEnv()
 
 	if err != nil {
 		fmt.Println(err)
@@ -21,11 +23,26 @@ func main() {
 	}
 }
 
-func LoadEnv(path string) error {
-	err := godotenv.Load(path)
+func LoadEnv() error {
+	wd, err := os.Getwd()
+
 	if err != nil {
 		return err
 	}
+
+	envPath := path.Join(wd, ".env")
+	currentDir := strings.Split(wd, "/")
+
+	if currentDir[len(currentDir)-1] == "casimir" {
+		envPath = path.Join(wd, "services", "crawler", ".env")
+	}
+
+	err = godotenv.Load(envPath)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -37,13 +54,19 @@ func Start(args []string) error {
 		Action:  RootCmd,
 	}
 
-	err := app.Run(args)
+	err := LoadEnv()
 
 	if err != nil {
 		return err
 	}
 
-	return nil
+	err = app.Run(args)
+
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 func RootCmd(c *cli.Context) error {

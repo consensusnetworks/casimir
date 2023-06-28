@@ -24,7 +24,7 @@ const (
 	Outgoing            TxDirection = "outgoing"
 	Incoming            TxDirection = "incoming"
 	ConcurrencyLimit                = 200
-	AWSAthenaTimeFormat             = "2006-01-02T15:04:05.000Z"
+	AWSAthenaTimeFormat             = "2008-09-15 03:04:05.324"
 )
 
 type Chain struct {
@@ -69,7 +69,7 @@ type StakingActionEvent struct {
 	WithdrawalAmount int64  `json:"withdrawal_amount"`
 	DistributeReward int64  `json:"distribute_reward"`
 }
-type Pkg struct {
+type PkgJSON struct {
 	Version string `json:"version"`
 }
 
@@ -106,7 +106,7 @@ func NewEthereumCrawler() (*EthereumCrawler, error) {
 	raw := os.Getenv("ETHEREUM_RPC")
 
 	if raw == "" {
-		return nil, errors.New("ETHERUEM_RPC env variable is not set")
+		return nil, errors.New("ETHEREUM_RPC env variable is not set")
 	}
 
 	url, err := url.Parse(raw)
@@ -222,15 +222,15 @@ func (c *EthereumCrawler) Introspect() (map[string]Table, error) {
 }
 
 func ResourceVersion() (int, error) {
-	f, err := os.ReadFile("../../common/data/package.json")
+	f, err := os.ReadFile("common/data/package.json")
 
 	if err != nil {
 		return 0, err
 	}
 
-	var pkgJson Pkg
+	var pkg PkgJSON
 
-	err = json.Unmarshal(f, &pkgJson)
+	err = json.Unmarshal(f, &pkg)
 
 	if err != nil {
 		return 0, err
@@ -238,7 +238,7 @@ func ResourceVersion() (int, error) {
 
 	var major int
 
-	semver := strings.Split(pkgJson.Version, ".")
+	semver := strings.Split(pkg.Version, ".")
 
 	if len(semver) < 3 {
 		return 0, errors.New("invalid semver")
@@ -280,20 +280,18 @@ func (c *EthereumCrawler) Crawl() error {
 		l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
 
 		c.Wg.Add(1)
-
 		go func(start, end int) {
 			defer func() {
 				c.Wg.Done()
 				<-c.Sema
+				l.Info("completed batch=%d start=%d end=%d\n", i/step, start, end)
 			}()
 
-			l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
+			l.Info("started batch=%d start=%d end=%d\n", i/step, start, end)
 
 			for j := start; j >= end; j-- {
 				// events, walletEvents, err := c.ProcessBlock(int(j))
-
-				l.Info("block=%d\n", j)
-
+				// l.Info("block=%d\n", j)
 				// if err != nil {
 				// l.Error("error processing block=%d err=%s\n", j, err)
 				// }
@@ -456,7 +454,7 @@ func (c *EthereumCrawler) EventsFromTransaction(b *types.Block, receipt *types.R
 
 		walletEvents = append(walletEvents, &receiptWalletEvent)
 
-		// TODO: handle contract events
+		// TODO: handle contract events (staking action)
 	}
 
 	return events, walletEvents, nil

@@ -31,7 +31,7 @@ type EthereumStreamer struct {
 }
 
 func NewEthereumStreamer() (*EthereumStreamer, error) {
-	err := LoadEnv(".env")
+	err := LoadEnv()
 
 	if err != nil {
 		return nil, err
