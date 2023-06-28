@@ -260,17 +260,8 @@ export default function useContracts() {
         if (isWalletConnectSigner(signer)) signer = await signer
         const managerSigner = manager.connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
-        const withdrawableBalance = await manager.getWithdrawableBalance()
-        console.log('withdrawableBalance :>> ', withdrawableBalance)
+        // const withdrawableBalance = await manager.getWithdrawableBalance()
         const result = await managerSigner.requestWithdrawal(value)
-
-        // Get user stake and print to console
-        const promises = [] as any[]
-        const accounts = user.value?.accounts
-        const addresses = accounts?.map(account => account.address)
-        promises.push(getCurrentStaked(addresses as string[]))
-        const promisesResults = await Promise.all(promises)
-        console.log('promisesResults in withdraw :>> ', promisesResults)
         return await result.wait()
     }
 
