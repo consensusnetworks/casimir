@@ -5,13 +5,11 @@ import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@
 import useAuth from '@/composables/auth'
 import useContracts from '@/composables/contracts'
 import useEnvironment from '@/composables/environment'
-import usePrice from '@/composables/price'
 import useUsers from '@/composables/users'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
+const { manager, getCurrentStaked, refreshBreakdown } = useContracts()
 const { ethereumURL } = useEnvironment()
-const { manager, getCurrentStaked, getUserContractEventsTotals, refreshBreakdown, setUserContractTotals } = useContracts()
-const { getCurrentPrice } = usePrice()
 const { user } = useUsers()
 
 export default function useEthers() {
@@ -150,36 +148,6 @@ export default function useEthers() {
     return maxAfterFees
   }
 
-  function getUserEventPromises() {
-    const promises = [] as Array<Promise<any>>
-    user.value?.accounts?.forEach((account: Account) => {
-      const { address } = account
-      promises.push(getUserContractEventsTotals(address))
-    })
-    return promises
-  }
-
-  async function refreshUserEventsTotals(promises: Array<Promise<any>>) {
-    try {
-      const userEventTotals = (await Promise.all(promises)).reduce((acc, curr) => {
-        return {
-          StakeDeposited: acc.StakeDeposited + curr.StakeDeposited,
-          StakeRebalanced: acc.StakeRebalanced + curr.StakeRebalanced,
-          WithdrawalInitiated: acc.WithdrawalInitiated + curr.WithdrawalInitiated,
-          WithdrawalFulfilled: acc.WithdrawalFulfilled += curr.WithdrawalFulfilled
-        }
-      }, {
-        StakeDeposited: 0,
-        StakeRebalanced: 0,
-        WithdrawalInitiated: 0,
-        WithdrawalFulfilled: 0
-      })
-      await setUserContractTotals(userEventTotals)
-    } catch (err) {
-      console.error('There was an error in refreshUserEventsTotals :>> ', err)
-    }
-  }
-
   async function listenForTransactions() {
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     provider.on('block', async (blockNumber: number) => {
@@ -187,7 +155,6 @@ export default function useEthers() {
       const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
       const block = await provider.getBlockWithTransactions(blockNumber)
       const transactions = block.transactions
-      const promises = [] as Array<Promise<any>>
       transactions.map(async (tx) => {
         if (addresses.includes(tx.from.toLowerCase())) {
           console.log('tx :>> ', tx)
@@ -195,10 +162,8 @@ export default function useEthers() {
           console.log('response :>> ', response)
           await refreshBreakdown()
           await getCurrentStaked()
-          // promises.push(...getUserEventPromises())
         }
       })
-      // await refreshUserEventsTotals(promises)
     })
     await new Promise(() => {
       // Wait indefinitely using a Promise that never resolves

@@ -47,23 +47,6 @@ export default function useContracts() {
     const { getEthersTrezorSigner } = useTrezor()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
     
-    // watch(user, async () => {
-    //     const promises = [] as any[]
-    //     const accounts = user.value?.accounts
-    //     accounts?.forEach(account => {
-    //         promises.push(getCurrentStaked(account.address))
-    //     })
-    //     const promisesResults = await Promise.all(promises)
-    //     const totalUSD = Math.round(promisesResults.reduce((a, b) => a + b, 0) * 100) / 100
-    //     const currentEthPrice = await getCurrentPrice({coin: 'ETH', currency: 'USD'})
-    //     const totalETH = (Math.round((totalUSD / currentEthPrice)*100) / 100).toString()
-    //     currentStaked.value = {
-    //         usd: '$' + totalUSD,
-    //         exchange: totalETH + ' ETH'
-    //     }
-    //     await getUserContractEventsTotals(user.value?.accounts[0].address as string)
-    // })
-
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         // const ethAmount = (parseInt(amount) / (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))).toString()
         const signerCreators = {
@@ -160,12 +143,6 @@ export default function useContracts() {
         }))
     }
 
-    // async function initializeBreakdown() {
-    //     setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
-    //     setBreakdownValue({ name: 'totalDeposited', ...await getTotalDeposited() })
-    //     setBreakdownValue({ name: 'stakingRewards', ...await getStakingRewards() })
-    // }
-
     async function refreshBreakdown() {
         setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
         // setBreakdownValue({ name: 'totalDeposited', ...await getTotalDeposited() })
@@ -234,25 +211,10 @@ export default function useContracts() {
     }
 
     async function listenForContractEvents() {
-        manager.on('StakeDeposited', async (event: any) => {
-          console.log('got to StakeDeposited!')
-        })
-        
-        manager.on('StakeRebalanced', async (event: any) => {
-          console.log('got to StakeRebalanced!')
-          await refreshBreakdown()
-        })
-    
-        manager.on('WithdrawalInitiated', async (event: any) => {
-          console.log('got to WithdrawalInitiated!')
-        })
-    
-        manager.on('WithdrawalFulfilled', async (event: any) => {
-          console.log('got to WithdrawalFulfilled!')
-          // const promises = [] as Array<Promise<any>>
-          // promises.push(...getUserEventPromises())
-          // await refreshUserEventsTotals(promises)
-        })
+        manager.on('StakeDeposited', async (event: any) => await refreshBreakdown())
+        manager.on('StakeRebalanced', async (event: any) => await refreshBreakdown())
+        manager.on('WithdrawalInitiated', async (event: any) => await refreshBreakdown())
+        manager.on('WithdrawalFulfilled', async (event: any) => await refreshBreakdown())
       }
 
     async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
@@ -312,45 +274,6 @@ export default function useContracts() {
         return userEventTotals
     }
 
-    async function setUserContractTotals(eventTotals: any) {
-        // console.log('eventTotals.WithdrawalInitiated :>> ', eventTotals.WithdrawalInitiated)
-        // console.log('eventTotals.WithdrawalFulfilled :>> ', eventTotals.WithdrawalFulfilled)
-
-        /* CurrentStaked (eventTotals.StakeDeposited) */
-        if (eventTotals.StakeDeposited > 0) {
-            const exchangeCurrentStaked = eventTotals.StakeDeposited - eventTotals.WithdrawalInitiated
-            const usdCurrentStaked = exchangeCurrentStaked * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-            const exchangeCurrentStakedRounded = Math.round(exchangeCurrentStaked * 100) / 100
-            const usdCurrentStakedRounded = Math.round(usdCurrentStaked * 100) / 100
-            currentStaked.value = {
-                exchange: exchangeCurrentStakedRounded + ' ETH',
-                usd: '$ ' + usdCurrentStakedRounded
-            }
-        }
-
-        /* Staking Rewards (eventTotals.StakeRebalanced) */
-        if (eventTotals.StakeRebalanced > 0) {
-            const exchangeStakingRewards = eventTotals.StakeRebalanced
-            const usdStakingRewards = exchangeStakingRewards * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-            const exchangeStakingRewardsRounded = Math.round(exchangeStakingRewards * 100) / 100
-            const usdStakingRewardsRounded = Math.round(usdStakingRewards * 100) / 100
-            stakingRewards.value = {
-                exchange: exchangeStakingRewardsRounded + ' ETH',
-                usd: '$ ' + usdStakingRewardsRounded
-            }
-        }
-        
-        /* TotalDeposited */
-        const exchangeTotalDeposited = parseFloat(currentStaked.value.exchange.replace(' ETH', '')) + parseFloat(stakingRewards.value.exchange.replace(' ETH', ''))
-        const usdTotalDeposited = parseFloat(currentStaked.value.usd.replace('$ ', '')) + parseFloat(stakingRewards.value.usd.replace('$ ', ''))
-        const exchangeTotalDepositedRounded = Math.round(exchangeTotalDeposited * 100) / 100
-        const usdTotalDepositedRounded = Math.round(usdTotalDeposited * 100) / 100
-        totalDeposited.value = {
-            usd: '$ ' + usdTotalDepositedRounded,
-            exchange: exchangeTotalDepositedRounded + ' ETH'
-        }
-    }
-
     return { 
         currentStaked, 
         manager, 
@@ -359,12 +282,9 @@ export default function useContracts() {
         deposit, 
         getDepositFees, 
         getPools, 
-        getUserContractEventsTotals, 
         getCurrentStaked,
         listenForContractEvents,
-        // initializeBreakdown,
         refreshBreakdown,
-        setUserContractTotals, 
         withdraw 
     }
 }
