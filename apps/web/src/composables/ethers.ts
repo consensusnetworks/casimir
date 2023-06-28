@@ -114,14 +114,14 @@ export default function useEthers() {
     return parseFloat(ethers.utils.formatEther(balance))
   }
 
-  async function getGasPriceAndLimit(
-    rpcUrl: string,
-    unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
-  ) {
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
-    const gasPrice = await provider.getGasPrice()
-    const gasLimit = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
-    return { gasPrice, gasLimit }
+  async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
+    // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
+    const browserProvider = getBrowserProvider(providerString)
+    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const network = await web3Provider.getNetwork()
+    // console.log('network.chainId :>> ', network.chainId)
+    const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
+    return currency
   }
 
   function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
@@ -131,14 +131,14 @@ export default function useEthers() {
     }
   }
 
-  async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
-    // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
-    const browserProvider = getBrowserProvider(providerString)
-    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-    const network = await web3Provider.getNetwork()
-    // console.log('network.chainId :>> ', network.chainId)
-    const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
-    return currency
+  async function getGasPriceAndLimit(
+    rpcUrl: string,
+    unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+  ) {
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+    const gasPrice = await provider.getGasPrice()
+    const gasLimit = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    return { gasPrice, gasLimit }
   }
 
   async function getMaxETHAfterFees(rpcUrl: string, unsignedTx: ethers.utils.Deferrable<ethers.providers.TransactionRequest>, totalAmount: string) {
@@ -260,17 +260,17 @@ export default function useEthers() {
     estimateEIP1559GasFee,
     estimateLegacyGasFee,
     ethersProviderList,
-    getMaxETHAfterFees,
     getEthersAddressWithBalance,
     getEthersBalance,
-    getEthersBrowserSigner,
     getEthersBrowserProviderSelectedCurrency,
+    getEthersBrowserSigner,
     getGasPriceAndLimit,
+    getMaxETHAfterFees,
     listenForTransactions,
     loginWithEthers,
     requestEthersAccount,
-    signEthersMessage,
     sendEthersTransaction,
+    signEthersMessage,
     switchEthersNetwork
   }
 }
