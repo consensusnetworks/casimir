@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -24,7 +25,7 @@ const (
 	Outgoing            TxDirection = "outgoing"
 	Incoming            TxDirection = "incoming"
 	ConcurrencyLimit                = 200
-	AWSAthenaTimeFormat             = "2008-09-15 03:04:05.324"
+	AWSAthenaTimeFormat             = "2006-01-02 15:04:05.999999999"
 )
 
 type Chain struct {
@@ -94,12 +95,17 @@ type EthereumCrawler struct {
 	Elapsed        time.Duration
 	Glue           *GlueClient
 	S3             *S3Client
+	Exchange       Exchange
 	Sema           chan struct{}
 	Wg             *sync.WaitGroup
 	Head           uint64
 	EventsConsumed int
 	Version        int
 	Progress       *progressbar.ProgressBar
+	// block and tx events
+	txBucket      string
+	walletBucket  string
+	stakingBucket string
 }
 
 func NewEthereumCrawler() (*EthereumCrawler, error) {
@@ -145,6 +151,24 @@ func NewEthereumCrawler() (*EthereumCrawler, error) {
 		return nil, err
 	}
 
+	key := os.Getenv("CRYPTOCOMPARE_API_KEY")
+
+	if key == "" {
+		return nil, errors.New("CRYPTOCOMPARE_API_KEY env variable is not set")
+	}
+
+	exchange, err := NewCryptoCompareExchange(key)
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = exchange.CurrentPrice(Ethereum, USD)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &EthereumCrawler{
 		EthereumClient: *client,
 		Logger:         NewStdoutLogger(),
@@ -158,27 +182,25 @@ func NewEthereumCrawler() (*EthereumCrawler, error) {
 	}, nil
 }
 
-func (c *EthereumCrawler) Introspect() (map[string]Table, error) {
+func (c *EthereumCrawler) Introspect() error {
 	l := c.Logger
 	err := c.Glue.LoadDatabases()
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = c.Glue.LoadTables(AnalyticsDatabaseDev)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	tables := make(map[string]Table, 3)
 
 	for _, t := range c.Glue.Tables {
 		tableVersion, err := strconv.Atoi(string([]rune(*t.Name)[len(*t.Name)-1]))
 
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		table := Table{
@@ -190,13 +212,13 @@ func (c *EthereumCrawler) Introspect() (map[string]Table, error) {
 		resourceVersion, err := ResourceVersion()
 
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// we expect table version to match resource version otherwise the resoure is not ready yet wait
 		if tableVersion != resourceVersion {
 			l.Error(fmt.Sprintf("database=%s %s table=%s resource_version=%s \n", AnalyticsDatabaseDev, table.String(), *t.Name, strconv.Itoa(resourceVersion)))
-			return nil, errors.New("resource version does not match table version")
+			return errors.New("resource version does not match table version")
 		}
 
 		if t.StorageDescriptor.Location != nil {
@@ -211,14 +233,23 @@ func (c *EthereumCrawler) Introspect() (map[string]Table, error) {
 		}
 
 		if strings.Contains(*t.Name, "event") {
-			tables["events"] = table
-		} else if strings.Contains(*t.Name, "staking_action") {
-			tables["staking"] = table
+			c.txBucket = table.Bucket
+		} else if strings.Contains(*t.Name, "staking") {
+			c.stakingBucket = table.Bucket
 		} else if strings.Contains(*t.Name, "wallet") {
-			tables["wallet"] = table
+			c.walletBucket = table.Bucket
 		}
 	}
-	return tables, nil
+
+	if strings.HasPrefix(c.txBucket, "s3://") {
+		c.txBucket = strings.TrimPrefix(c.txBucket, "s3://")
+	}
+
+	if strings.HasPrefix(c.walletBucket, "s3://") {
+		c.walletBucket = strings.TrimPrefix(c.walletBucket, "s3://")
+	}
+
+	return nil
 }
 
 func ResourceVersion() (int, error) {
@@ -259,7 +290,7 @@ func ResourceVersion() (int, error) {
 func (c *EthereumCrawler) Crawl() error {
 	l := c.Logger
 
-	_, err := c.Introspect()
+	err := c.Introspect()
 
 	if err != nil {
 		return nil
@@ -267,7 +298,7 @@ func (c *EthereumCrawler) Crawl() error {
 
 	l.Info("crawling %d blocks...\n", c.Head+1)
 
-	step := 250000
+	step := 250_000
 
 	for i := int(c.Head); i >= 0; i -= step {
 		start := i
@@ -276,8 +307,6 @@ func (c *EthereumCrawler) Crawl() error {
 		if end < 0 {
 			end = 0
 		}
-
-		l.Info("batch=%d start=%d end=%d\n", i/step, start, end)
 
 		c.Wg.Add(1)
 		go func(start, end int) {
@@ -288,48 +317,115 @@ func (c *EthereumCrawler) Crawl() error {
 			}()
 
 			l.Info("started batch=%d start=%d end=%d\n", i/step, start, end)
-
 			for j := start; j >= end; j-- {
-				// events, walletEvents, err := c.ProcessBlock(int(j))
-				// l.Info("block=%d\n", j)
-				// if err != nil {
-				// l.Error("error processing block=%d err=%s\n", j, err)
-				// }
+				txEvents, walletEvents, err := c.ProcessBlock(int(j))
 
-				// l.Info("transaction events = %d wallet events = %d\n", len(events), len(walletEvents))
+				if err != nil {
+					l.Error("block=%d error=%s\n", j, err.Error())
+					continue
+				}
+
+				if len(txEvents) != 0 {
+					err = c.SaveTxEvents(int(j), txEvents)
+
+					if err != nil {
+						l.Error("block=%d error=%s\n", j, err.Error())
+						continue
+					}
+				}
+
+				if len(walletEvents) != 0 {
+					err = c.SaveWalletEvents(int(j), walletEvents)
+
+					if err != nil {
+						l.Error("block=%d error=%s\n", j, err.Error())
+						continue
+					}
+				}
+				// c.Mutex.Lock()
+				// c.EventsConsumed += len(txEvents) + len(walletEvents)
+				// c.Mutex.Unlock()
 			}
 		}(start, end)
 	}
 	return nil
 }
 
+func (c *EthereumCrawler) SaveTxEvents(block int, tx []*Event) error {
+	var txEvents bytes.Buffer
+
+	if len(tx) == 0 {
+		return errors.New("events are empty")
+	}
+
+	for _, e := range tx {
+		b, err := json.Marshal(e)
+
+		if err != nil {
+			return err
+		}
+
+		txEvents.Write(b)
+		txEvents.WriteByte('\n')
+
+	}
+
+	if c.txBucket[len(c.txBucket)-1] == '/' {
+		c.txBucket = c.txBucket[:len(c.txBucket)-1]
+	}
+
+	dest := fmt.Sprintf("%s/%s/block=%d.ndjson", Ethereum.String(), c.Network.String(), block)
+
+	err := c.S3.UploadBytes(c.txBucket, dest, &txEvents)
+
+	if err != nil {
+		return err
+	}
+
+	c.Logger.Info("uploaded %d tx events to %s\n", len(tx), dest)
+	return nil
+}
+
+func (c *EthereumCrawler) SaveWalletEvents(block int, wallet []*WalletEvent) error {
+	if len(wallet) == 0 {
+		return errors.New("events are empty")
+	}
+
+	var walletEvents bytes.Buffer
+
+	for _, e := range wallet {
+		b, err := json.Marshal(e)
+
+		if err != nil {
+			return err
+		}
+
+		walletEvents.Write(b)
+		walletEvents.WriteByte('\n')
+	}
+
+	if c.walletBucket[len(c.walletBucket)-1] == '/' {
+		c.walletBucket = c.walletBucket[:len(c.walletBucket)-1]
+	}
+
+	dest := fmt.Sprintf("%s/%s/block=%d.ndjson", Ethereum.String(), c.Network.String(), block)
+
+	err := c.S3.UploadBytes(c.walletBucket, dest, &walletEvents)
+
+	if err != nil {
+		return err
+	}
+
+	c.Logger.Info("uploaded %d wallet events to %s\n", len(wallet), dest)
+	return nil
+}
 func (c *EthereumCrawler) Close() {
 	c.Wg.Wait()
 	c.Elapsed = time.Since(c.Begin)
 	c.Client.Close()
 	close(c.Sema)
-	c.Logger.Info("events_consumed=%d\n", c.EventsConsumed)
-	c.Logger.Info("time_elapsed=%s\n", c.Elapsed.Round(time.Millisecond))
-}
-
-func (e *Event) MarshalNDJSON() ([]byte, error) {
-	b, err := json.Marshal(e)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return append(b, '\n'), nil
-}
-
-func (e *WalletEvent) MarshalNDJSON() ([]byte, error) {
-	b, err := json.Marshal(e)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return append(b, '\n'), nil
+	c.Logger.Info("events consumed=%d\n", c.EventsConsumed)
+	c.Logger.Info("time elapsed=%s\n", c.Elapsed.Round(time.Millisecond))
 }
 
 func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, error) {
@@ -344,6 +440,8 @@ func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, er
 		return nil, nil, err
 	}
 
+	l.Info("processing_block=%d\n", block.Number().Int64())
+
 	blockEvent, err := c.EventFromBlock(block)
 
 	if err != nil {
@@ -352,17 +450,16 @@ func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, er
 
 	events = append(events, blockEvent)
 
-	l.Info("processing block=%d\n", blockEvent.Height)
-
 	if block.Transactions().Len() > 0 {
-		for _, tx := range block.Transactions() {
+		for i, tx := range block.Transactions() {
+			l.Info("processing tx %d of %d\n", i+1, block.Transactions().Len())
+
 			receipt, err := c.Client.TransactionReceipt(context.Background(), tx.Hash())
 
 			if err != nil {
 				return nil, nil, err
 			}
 
-			// this includes transaction events and wallet events
 			txEvents, walletEvent, err := c.EventsFromTransaction(block, receipt)
 
 			if err != nil {
@@ -377,9 +474,10 @@ func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, er
 }
 
 func (c *EthereumCrawler) EventsFromTransaction(b *types.Block, receipt *types.Receipt) ([]*Event, []*WalletEvent, error) {
-	var events []*Event
-
+	var txEvents []*Event
 	var walletEvents []*WalletEvent
+
+	l := c.Logger
 
 	for index, tx := range b.Transactions() {
 		txEvent := Event{
@@ -389,7 +487,7 @@ func (c *EthereumCrawler) EventsFromTransaction(b *types.Block, receipt *types.R
 			Type:        Transaction,
 			Height:      int64(b.Number().Uint64()),
 			Transaction: tx.Hash().Hex(),
-			ReceivedAt:  time.Now().Format(AWSAthenaTimeFormat),
+			ReceivedAt:  time.Unix(int64(b.Time()), 0).Format(AWSAthenaTimeFormat),
 		}
 
 		if tx.Value() != nil {
@@ -428,6 +526,8 @@ func (c *EthereumCrawler) EventsFromTransaction(b *types.Block, receipt *types.R
 			txEvent.SenderBalance = senderBalance.String()
 		}
 
+		txEvents = append(txEvents, &txEvent)
+
 		senderWalletEvent := WalletEvent{
 			WalletAddress: txEvent.Sender,
 			Balance:       txEvent.SenderBalance,
@@ -451,13 +551,15 @@ func (c *EthereumCrawler) EventsFromTransaction(b *types.Block, receipt *types.R
 			Price:         txEvent.Price,
 			GasFee:        txEvent.GasFee,
 		}
-
 		walletEvents = append(walletEvents, &receiptWalletEvent)
-
 		// TODO: handle contract events (staking action)
 	}
 
-	return events, walletEvents, nil
+	if len(walletEvents) == 0 || len(walletEvents) != len(txEvents)*2 {
+		l.Error("wallet events and tx events mismatch, wallet events=%d tx events=%d", len(walletEvents), len(txEvents))
+	}
+
+	return txEvents, walletEvents, nil
 }
 
 func (c *EthereumCrawler) EventFromBlock(b *types.Block) (*Event, error) {
@@ -468,7 +570,7 @@ func (c *EthereumCrawler) EventFromBlock(b *types.Block) (*Event, error) {
 		Type:       Block,
 		Height:     int64(b.Number().Uint64()),
 		Block:      b.Hash().Hex(),
-		ReceivedAt: time.Now().Format(AWSAthenaTimeFormat),
+		ReceivedAt: time.Unix(int64(b.Time()), 0).Format(AWSAthenaTimeFormat),
 	}
 	return &event, nil
 }

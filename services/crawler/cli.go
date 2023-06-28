@@ -80,7 +80,7 @@ func RootCmd(c *cli.Context) error {
 
 	l.Info("introspecting...\n")
 
-	_, err = crawler.Introspect()
+	err = crawler.Introspect()
 
 	if err != nil {
 		return err
@@ -104,11 +104,11 @@ func RootCmd(c *cli.Context) error {
 	streamer.Glue = crawler.Glue
 	streamer.S3 = crawler.S3
 
-	err = streamer.Stream()
+	// err = streamer.Stream()
 
-	if err != nil {
-		return err
-	}
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

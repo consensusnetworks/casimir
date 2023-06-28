@@ -53,11 +53,11 @@ func (s *S3Client) Upload(bucket string, key string, fpath string) error {
 	return nil
 }
 
-func (s *S3Client) UploadBytes(bucket string, key string, data []byte) error {
+func (s *S3Client) UploadBytes(bucket string, key string, data *bytes.Buffer) error {
 	opt := &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
-		Body:   bytes.NewReader(data),
+		Body:   bytes.NewReader(data.Bytes()),
 	}
 
 	_, err := s.Client.PutObject(context.Background(), opt)

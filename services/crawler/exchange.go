@@ -164,7 +164,6 @@ func NewHttpClientWithTimeout(time time.Duration) (*http.Client, error) {
 }
 
 func NewCryptoCompareExchange(apiKey string) (Exchange, error) {
-
 	if apiKey == "" {
 		return nil, errors.New("api key is required")
 	}

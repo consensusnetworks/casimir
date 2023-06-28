@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/big"
 	"net/url"
 	"os"
@@ -17,17 +16,18 @@ import (
 type EthereumStreamer struct {
 	EthereumClient
 	Logger
-	Mutex   *sync.Mutex
-	Begin   time.Time
-	Elapsed time.Duration
-	Glue    *GlueClient
-	S3      *S3Client
-	Head    uint64
+	Mutex    *sync.Mutex
+	Begin    time.Time
+	Elapsed  time.Duration
+	Glue     *GlueClient
+	S3       *S3Client
+	Exchange Exchange
+	Head     uint64
 	// the ever increasing curren block number of the chain
-	CurrentHead    uint64
-	EventsConsumed int
-	Version        int
-	Progress       *progressbar.ProgressBar
+	ProcessingBlock uint64
+	EventsConsumed  int
+	Version         int
+	Progress        *progressbar.ProgressBar
 }
 
 func NewEthereumStreamer() (*EthereumStreamer, error) {
@@ -61,16 +61,28 @@ func NewEthereumStreamer() (*EthereumStreamer, error) {
 		return nil, err
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
+	key := os.Getenv("CRYPTOCOMPARE_API_KEY")
+
+	exchange, err := NewCryptoCompareExchange(key)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &EthereumStreamer{
 		EthereumClient: *client,
 		Logger:         NewStdoutLogger(),
 		Mutex:          &sync.Mutex{},
 		Head:           head,
+		Exchange:       exchange,
 		Begin:          time.Now(),
 	}, nil
 }
 
-// SubscribeToHead returns a channel for consumers to read the head
 func (s *EthereumStreamer) Subscribe(ctx context.Context) <-chan *types.Header {
 	l := s.Logger
 
@@ -117,9 +129,8 @@ func (s *EthereumStreamer) Stream() error {
 			return nil
 		case h := <-head:
 			s.Mutex.Lock()
-			s.CurrentHead = h.Number.Uint64()
-			l.Info(fmt.Sprintf("currentHead=%d\n", s.CurrentHead))
-			s.Mutex.Unlock()
+			defer s.Mutex.Unlock()
+			s.ProcessingBlock = h.Number.Uint64()
 
 			_, err := s.ProcessBlock()
 
@@ -128,6 +139,12 @@ func (s *EthereumStreamer) Stream() error {
 				return err
 			}
 
+			// price, err := s.Exchange.CurrentPrice(Ethereum, USD)
+
+			// if err != nil {
+			// l.Error(err.Error())
+			// return err
+			// }
 		}
 	}
 }
@@ -135,11 +152,11 @@ func (s *EthereumStreamer) Stream() error {
 func (s *EthereumStreamer) ProcessBlock() ([]*Event, error) {
 	l := s.Logger
 
-	l.Info("processingBlock=%d\n", s.CurrentHead)
+	l.Info("streaming block=%d\n", s.ProcessingBlock)
 
 	ctx := context.Background()
 
-	block, err := s.EthereumClient.Client.BlockByNumber(ctx, new(big.Int).SetUint64(s.CurrentHead))
+	block, err := s.EthereumClient.Client.BlockByNumber(ctx, new(big.Int).SetUint64(s.ProcessingBlock))
 
 	if err != nil {
 		return nil, err
@@ -147,7 +164,7 @@ func (s *EthereumStreamer) ProcessBlock() ([]*Event, error) {
 
 	var events []*Event
 
-	blockEvent, err := s.BlockEvent(block)
+	blockEvent, err := s.EventFromBlock(block)
 
 	if err != nil {
 		return nil, err
@@ -166,7 +183,7 @@ func (s *EthereumStreamer) ProcessBlock() ([]*Event, error) {
 	return events, nil
 }
 
-func (c *EthereumStreamer) BlockEvent(b *types.Block) (*Event, error) {
+func (c *EthereumStreamer) EventFromBlock(b *types.Block) (*Event, error) {
 	event := Event{
 		Chain:    Ethereum,
 		Network:  c.Network,
