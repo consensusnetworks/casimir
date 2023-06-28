@@ -6,7 +6,7 @@
     "build": "node build.js",
     "clean": "ts-node --transpile-only scripts/clean.ts",
     "dev": "ts-node --transpile-only scripts/dev.ts",
-    "watch": "ts-node-dev --watch src --respawn --transpile-only scripts/dev.ts",
+    "watch": "ts-node-dev --watch ../../common/data/src --respawn --transpile-only scripts/dev.ts",
     "seed": "ts-node --transpile-only scripts/seed.ts --resource \"$npm_config_resource\"",
     "test": "echo \"Warning: no test specified\" && exit 0"
   },

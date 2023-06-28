@@ -20,6 +20,7 @@
     "dev:ssv": "scripts/ssv/dev -n \"$npm_config_nodes\"",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
+    "migrate:users": "npm run migrate --workspace @casimir/users",
     "postinstall": "npm run build --workspace @casimir/ethereum",
     "preinstall": "git submodule update --init --recursive && git submodule foreach --recursive git checkout .",
     "prepare": "husky install",

@@ -1,5 +1,4 @@
 import fs from 'fs'
-import path from 'path'
 import { run } from '@casimir/helpers'
 import { JsonSchema, Schema, accountSchema, nonceSchema, userSchema, userAccountSchema } from '@casimir/data'
 

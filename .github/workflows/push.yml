@@ -38,6 +38,9 @@ jobs:
       - name: Deploy cdk infrastructure
         run: npm run deploy:cdk
 
+      - name: Migrate users database
+        run: npm run migrate:users
+
       - name: Slack the team
         if: ${{ success() || failure() }}
         uses: slackapi/slack-github-action@v1.23.0
