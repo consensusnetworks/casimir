@@ -4,6 +4,7 @@ import { AddAccountOptions } from './interfaces/AddAccountOptions'
 import { ApiResponse } from './interfaces/ApiResponse'
 import { BalanceSnapshot } from './interfaces/BalanceSnapshot'
 import { BreakdownAmount } from './interfaces/BreakdownAmount'
+import { BreakdownString } from './interfaces/BreakdownString'
 import { BrowserProviders } from './interfaces/BrowserProviders'
 import { Cluster } from './interfaces/Cluster'
 import { ContractArgs } from './interfaces/ContractArgs'
@@ -35,6 +36,7 @@ export type {
     AddAccountOptions,
     BalanceSnapshot,
     BreakdownAmount,
+    BreakdownString,
     BrowserProviders,
     Cluster,
     ContractArgs,

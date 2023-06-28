@@ -35,8 +35,8 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
-  const { getUserStakeBalance, getUserContractEventsTotals, setUserContractTotals } = useContracts()
-  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForContractEvents, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
+  const { getUserContractEventsTotals, listenForContractEvents, refreshBreakdown, setUserContractTotals } = useContracts()
+  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
@@ -103,31 +103,11 @@ export default function useWallet() {
       }
       await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
-      await initializeBreakdown()
+      await refreshBreakdown()
     } catch (error: any) {
       loadingUserWallets.value = false
       throw new Error(error.message || 'There was an error connecting the wallet')
     }
-  }
-
-  async function initializeBreakdown() {
-    const promises = [] as Array<Promise<any>>
-    user.value?.accounts?.forEach((account: Account) => {
-      const { address } = account
-      promises.push(getUserContractEventsTotals(address))
-    })
-    const results = await Promise.all(promises)
-    const totals = results.reduce((acc: any, curr: any) => {
-      acc.StakeDeposited += curr.StakeDeposited
-      acc.WithdrawalInitiated += curr.WithdrawalInitiated
-      acc.StakeRebalanced += curr.StakeRebalanced
-      return acc
-    }, {
-      StakeDeposited: 0,
-      WithdrawalInitiated: 0,
-      StakeRebalanced: 0,
-    })
-    await setUserContractTotals(totals)
   }
 
   /**

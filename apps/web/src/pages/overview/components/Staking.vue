@@ -357,8 +357,7 @@ const handleDeposit = () => {
       </div>
     </button>
     <button
-      class="card_button h-[37px] w-full mt-8"
-      :disabled="!(selectedWallet && formattedAmountToStake && !errorMessage)"
+      class="h-[37px] w-full mt-8"
       @click="withdraw({ amount: formattedAmountToStake, walletProvider: selectedProvider })"
     >
       Withdraw

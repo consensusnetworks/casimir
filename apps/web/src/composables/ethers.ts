@@ -10,7 +10,7 @@ import useUsers from '@/composables/users'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
 const { ethereumURL } = useEnvironment()
-const { manager, stakingRewards, getUserContractEventsTotals, setUserContractTotals } = useContracts()
+const { manager, getCurrentStaked, getUserContractEventsTotals, refreshBreakdown, setUserContractTotals } = useContracts()
 const { getCurrentPrice } = usePrice()
 const { user } = useUsers()
 
@@ -166,11 +166,13 @@ export default function useEthers() {
           StakeDeposited: acc.StakeDeposited + curr.StakeDeposited,
           StakeRebalanced: acc.StakeRebalanced + curr.StakeRebalanced,
           WithdrawalInitiated: acc.WithdrawalInitiated + curr.WithdrawalInitiated,
+          WithdrawalFulfilled: acc.WithdrawalFulfilled += curr.WithdrawalFulfilled
         }
       }, {
         StakeDeposited: 0,
         StakeRebalanced: 0,
         WithdrawalInitiated: 0,
+        WithdrawalFulfilled: 0
       })
       await setUserContractTotals(userEventTotals)
     } catch (err) {
@@ -186,28 +188,20 @@ export default function useEthers() {
       const block = await provider.getBlockWithTransactions(blockNumber)
       const transactions = block.transactions
       const promises = [] as Array<Promise<any>>
-      transactions.map((tx) => {
+      transactions.map(async (tx) => {
         if (addresses.includes(tx.from.toLowerCase())) {
-          promises.push(...getUserEventPromises())
+          console.log('tx :>> ', tx)
+          const response = manager.interface.parseTransaction({ data: tx.data })
+          console.log('response :>> ', response)
+          await refreshBreakdown()
+          await getCurrentStaked()
+          // promises.push(...getUserEventPromises())
         }
       })
-      await refreshUserEventsTotals(promises)
+      // await refreshUserEventsTotals(promises)
     })
     await new Promise(() => {
       // Wait indefinitely using a Promise that never resolves
-    })
-  }
-
-  async function listenForContractEvents() {
-    manager.on('StakeDeposited', async (event: any) => {
-      console.log('got to StakeDeposited!')
-    })
-    
-    manager.on('StakeRebalanced', async (event: any) => {
-      console.log('got to StakeRebalanced!')
-      const promises = [] as Array<Promise<any>>
-      promises.push(...getUserEventPromises())
-      await refreshUserEventsTotals(promises)
     })
   }
 
@@ -307,7 +301,6 @@ export default function useEthers() {
     getEthersBrowserSigner,
     getEthersBrowserProviderSelectedCurrency,
     getGasPriceAndLimit,
-    listenForContractEvents,
     listenForTransactions,
     loginWithEthers,
     requestEthersAccount,
