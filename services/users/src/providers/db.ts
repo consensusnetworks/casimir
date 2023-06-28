@@ -9,9 +9,9 @@ const postgres = new Postgres({
     // These will become environment variables
     host: 'localhost',
     port: 5432,
-    database: 'postgres',
-    user: 'postgres',
-    password: 'postgres'
+    database: 'users',
+    user: 'admin',
+    password: 'password'
 })
 
 export default function useDB() {

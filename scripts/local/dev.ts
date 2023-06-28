@@ -18,8 +18,7 @@ void async function () {
     const apps = {
         web: {
             chains: ['ethereum'],
-            services: ['users'],
-            tables: ['accounts', 'nonces', 'users', 'user_accounts'],
+            services: ['users']
         }
     }
 
@@ -58,18 +57,13 @@ void async function () {
     /** Default to no network or testnet if set vaguely */
     const network = argv.network === 'true' ? 'testnet' : argv.network === 'false' ? false : argv.network
 
-    const { chains, services, tables } = apps[app as keyof typeof apps]
+    const { chains, services } = apps[app as keyof typeof apps]
 
     if (mock) {
-        /** Mock postgres database */
-        run(`npm run watch --tables=${tables.join(',')} --workspace @casimir/data`)
-
         /** Mock services */
         let port = 4000
         for (const service of services) {
             process.env[`PUBLIC_${service.toUpperCase()}_PORT`] = `${port}`
-
-            $`npm run dev --workspace @casimir/${service}`
 
             try {
                 if (await run(`lsof -ti:${port}`)) {
@@ -78,6 +72,8 @@ void async function () {
             } catch {
                 console.log(`Port ${port} is available.`)
             }
+
+            $`npm run watch --workspace @casimir/${service}`
 
             ++port
         }
@@ -154,7 +150,7 @@ void async function () {
 
     if (mock) {
         process.on('SIGINT', () => {
-            const messes = ['data', 'oracle']
+            const messes = ['oracle', 'users']
             if (clean) {
                 const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
                 console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)

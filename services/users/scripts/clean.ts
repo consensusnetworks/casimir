@@ -4,7 +4,7 @@ import { run } from '@casimir/helpers'
 const resourcePath = './scripts'
 
 /** Compose stack name */
-const stackName = 'casimir-data'
+const stackName = 'casimir-users-db'
 
 /**
  * Clean up resources
