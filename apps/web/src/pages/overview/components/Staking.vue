@@ -146,37 +146,31 @@ const loading = ref(false)
 const success = ref(false)
 const failure = ref(false)
 const stakeButtonText = ref('Stake')
-const handleDeposit = () => {
-  deposit({ amount: formattedAmountToStake.value, walletProvider: selectedProvider.value })
 
-  const isSuccess = Math.random() < 0.5 // Replace with your actual logic
-
+const handleDeposit = async () => {
   loading.value = true
+  const isSuccess = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedProvider.value })
+  loading.value = false
+  if (isSuccess) {
+    success.value = true
+    stakeButtonText.value = 'Transaction Successfully Submitted'
+  } else {
+    failure.value = true
+    stakeButtonText.value = 'Transaction Failed'
+  }
 
   setTimeout(() => {
+    success.value = false
+    failure.value = false
+    stakeButtonText.value = 'Stake'
 
-    loading.value = false
-    if (isSuccess) {
-      success.value = true
-      stakeButtonText.value = 'Success'
-    } else {
-      failure.value = true
-      stakeButtonText.value = 'Transaction Failed'
-    }
-
-    setTimeout(() => {
-      success.value = false
-      failure.value = false
-      stakeButtonText.value = 'Stake'
-
-      // empty out staking comp
-      selectedProvider.value = ''
-      selectedWallet.value = null
-      formattedAmountToStake.value = ''
-      address_balance.value = null
-      
-    }, 3000)
-  }, 2000)
+    // empty out staking comp
+    selectedProvider.value = ''
+    selectedWallet.value = null
+    formattedAmountToStake.value = ''
+    address_balance.value = null
+    
+  }, 3000)
   
 
   
