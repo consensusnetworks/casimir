@@ -1,273 +1,286 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"log"
-	"net/http"
+	"errors"
+	"math/big"
+	"net/url"
+	"os"
+	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/xitongsys/parquet-go/writer"
+	"github.com/schollz/progressbar"
 )
 
 type EthereumStreamer struct {
-	BaseConfig
-	EthClient     *ethclient.Client
-	S3Client      *s3.S3
-	HttpClient    *http.Client
-	ParquetWriter *writer.ParquetWriter
+	EthereumClient
+	Logger
+	Mutex    *sync.Mutex
+	Begin    time.Time
+	Elapsed  time.Duration
+	Glue     *GlueClient
+	S3       *S3Client
+	Exchange Exchange
+	Head     uint64
+	// the ever increasing curren block number of the chain
+	ProcessingBlock uint64
+	EventsConsumed  int
+	Version         int
+	Progress        *progressbar.ProgressBar
 }
 
-func NewEthereumStreamer(config BaseConfig) (*EthereumStreamer, error) {
-	s := &EthereumStreamer{
-		BaseConfig: config,
-	}
-
-	ethClient, err := NewEthereumClient(config.Url)
+func NewEthereumStreamer() (*EthereumStreamer, error) {
+	err := LoadEnv()
 
 	if err != nil {
 		return nil, err
 	}
 
-	s.EthClient = ethClient
+	raw := os.Getenv("ETHEREUM_WS")
 
-	s3Client, err := NewS3Client()
+	if raw == "" {
+		return nil, errors.New("ETHERUEM_WS env variable is not set")
+	}
+
+	url, err := url.Parse(raw)
 
 	if err != nil {
 		return nil, err
 	}
 
-	s.S3Client = s3Client
-
-	httpClient, err := NewHTTPClient()
+	client, err := NewEthereumClient(Casimir, *url)
 
 	if err != nil {
 		return nil, err
 	}
 
-	s.HttpClient = httpClient
-	return s, nil
+	head, err := client.Client.BlockNumber(context.Background())
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	key := os.Getenv("CRYPTOCOMPARE_API_KEY")
+
+	exchange, err := NewCryptoCompareExchange(key)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &EthereumStreamer{
+		EthereumClient: *client,
+		Logger:         NewStdoutLogger(),
+		Mutex:          &sync.Mutex{},
+		Head:           head,
+		Exchange:       exchange,
+		Begin:          time.Now(),
+	}, nil
 }
 
-func (e *EthereumStreamer) Stream() error {
-	fmt.Println("streaming ethereum blocks...")
+func (s *EthereumStreamer) Subscribe(ctx context.Context) <-chan *types.Header {
+	l := s.Logger
 
 	header := make(chan *types.Header)
 
-	sub, err := e.EthClient.SubscribeNewHead(context.Background(), header)
+	producer, err := s.Client.SubscribeNewHead(ctx, header)
 
 	if err != nil {
-		return err
+		l.Error(err.Error())
+		close(header)
+		return header
 	}
 
-	defer sub.Unsubscribe()
+	go func() {
+		defer close(header)
+		defer producer.Unsubscribe()
 
-	if err != nil {
-		return err
-	}
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case err := <-producer.Err():
+				l.Error(err.Error())
+				close(header)
+				return
+			}
+		}
+	}()
+	return header
+}
+
+func (s *EthereumStreamer) Stream() error {
+	l := s.Logger
+
+	l.Info("starting streamer\n")
+
+	ctx := context.Background()
+
+	head := s.Subscribe(ctx)
 
 	for {
 		select {
-		case err := <-sub.Err():
-			return err
-		case h := <-header:
-
-			fmt.Printf("block: %d", h.Number.Int64())
-
-			var events []Event
-
-			block, err := e.EthClient.BlockByHash(context.Background(), h.Hash())
+		case <-ctx.Done():
+			return nil
+		case h := <-head:
+			_, _, err := s.ProcessBlock(int(h.Number.Uint64()))
 
 			if err != nil {
+				l.Error(err.Error())
 				return err
 			}
-
-			blockEvent, err := NewBlockEvent(block)
-
-			if err != nil {
-				return err
-			}
-
-			price, err := e.CurrentPrice("USD", Ethereum)
-
-			if err != nil {
-				return err
-			}
-
-			blockEvent.Price = price.Value
-
-			events = append(events, blockEvent)
-
-			if len(block.Transactions()) > 0 {
-				for _, t := range block.Transactions() {
-					tx, pending, err := e.EthClient.TransactionByHash(context.Background(), t.Hash())
-
-					if err != nil {
-						return err
-					}
-
-					if pending {
-						fmt.Printf("skipping pending transaction: %s", tx.Hash().String())
-						continue
-					}
-
-					if err != nil {
-						return err
-					}
-
-					if tx.To() == nil {
-						fmt.Printf("skipping contract transaction: %s", tx.Hash().String())
-						continue
-					}
-
-					chainID, err := e.EthClient.NetworkID(context.Background())
-
-					if err != nil {
-						return err
-					}
-
-					txMsg, err := tx.AsMessage(types.NewEIP155Signer(chainID), nil)
-
-					if err != nil {
-						return err
-					}
-
-					from := txMsg.From()
-					to := txMsg.To()
-
-					txEvent := NewTxEvent(block, tx)
-
-					fromBalance, err := e.EthClient.BalanceAt(context.Background(), from, nil)
-
-					if err != nil {
-						return err
-					}
-
-					toBalance, err := e.EthClient.BalanceAt(context.Background(), *to, nil)
-
-					if err != nil {
-						return nil
-					}
-
-					txEvent.Sender = from.Hex()
-					txEvent.SenderBalance = fromBalance.Int64()
-
-					txEvent.Recipient = to.Hex()
-					txEvent.RecipientBalance = toBalance.Int64()
-					txEvent.Price = price.Value
-
-					events = append(events, txEvent)
-				}
-			}
-
-			if err != nil {
-				return err
-			}
-
-			key := fmt.Sprintf("%d.json", blockEvent.Height)
-
-			ev, err := NDJSON(&events)
-
-			if err != nil {
-				return err
-			}
-
-			err = e.Save(key, []byte(ev))
-
-			if err != nil {
-				return err
-			}
-
-			fmt.Printf("\t saved %d events \n", len(events))
 		}
 	}
 }
 
-func (e *EthereumStreamer) CurrentPrice(currency string, coin ChainType) (Price, error) {
-	if currency == "" {
-		currency = "USD"
-	}
+func (s *EthereumStreamer) ProcessBlock(height int) ([]*Event, []*WalletEvent, error) {
+	l := s.Logger
 
-	if len(currency) != 3 {
-		return Price{}, fmt.Errorf("invalid currency")
-	}
+	var events []*Event
+	var walletEvents []*WalletEvent
 
-	var price Price
-	var m map[string]interface{}
-
-	url := fmt.Sprintf("https://min-api.cryptocompare.com/data/price?fsym=%s&tsyms=%s", coin.Short(), currency)
-
-	price.Coin = coin.Short()
-	price.Currency = currency
-	price.Time = time.Now().UTC()
-
-	req, err := e.HttpClient.Get(url)
+	block, err := s.Client.BlockByNumber(context.Background(), big.NewInt(int64(height)))
 
 	if err != nil {
-		return price, err
+		return nil, nil, err
 	}
 
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
+	l.Info("processing block=%d\n", block.Number().Int64())
+
+	blockEvent, err := s.EventFromBlock(block)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	events = append(events, blockEvent)
+
+	if block.Transactions().Len() > 0 {
+		for i, tx := range block.Transactions() {
+			l.Info("processing tx %d of %d in block %d\n", i+1, block.Transactions().Len(), block.Number().Int64())
+
+			receipt, err := s.Client.TransactionReceipt(context.Background(), tx.Hash())
+
+			if err != nil {
+				return nil, nil, err
+			}
+
+			txEvents, walletEvent, err := s.EventsFromTransaction(block, receipt)
+
+			if err != nil {
+				return nil, nil, err
+			}
+
+			events = append(events, txEvents...)
+			walletEvents = append(walletEvents, walletEvent...)
+		}
+	}
+	return events, walletEvents, nil
+}
+
+func (s *EthereumStreamer) EventsFromTransaction(b *types.Block, receipt *types.Receipt) ([]*Event, []*WalletEvent, error) {
+	var txEvents []*Event
+	var walletEvents []*WalletEvent
+
+	l := s.Logger
+
+	for index, tx := range b.Transactions() {
+		txEvent := Event{
+			Chain:       Ethereum,
+			Network:     s.Network,
+			Provider:    Casimir,
+			Block:       b.Hash().Hex(),
+			Type:        Transaction,
+			Height:      int64(b.Number().Uint64()),
+			Transaction: tx.Hash().Hex(),
+			ReceivedAt:  time.Unix(int64(b.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
+		}
+
+		if tx.Value() != nil {
+			txEvent.Amount = tx.Value().String()
+		}
+
+		txEvent.GasFee = new(big.Int).Mul(tx.GasPrice(), big.NewInt(int64(receipt.GasUsed))).String()
+
+		if tx.To() != nil {
+			txEvent.Recipient = tx.To().Hex()
+			recipeintBalance, err := s.Client.BalanceAt(context.Background(), *tx.To(), b.Number())
+
+			if err != nil {
+				return nil, nil, err
+			}
+
+			txEvent.RecipientBalance = recipeintBalance.String()
+		}
+
+		sender, err := s.Client.TransactionSender(context.Background(), tx, b.Hash(), uint(index))
+
 		if err != nil {
-			log.Fatal(err)
+			return nil, nil, err
 		}
-	}(req.Body)
 
-	res, err := io.ReadAll(req.Body)
+		if sender.Hex() != "" {
+			txEvent.Sender = sender.Hex()
 
-	if err != nil {
-		return price, err
+			senderBalance, err := s.Client.BalanceAt(context.Background(), sender, b.Number())
+
+			if err != nil {
+				return nil, nil, err
+			}
+
+			txEvent.SenderBalance = senderBalance.String()
+		}
+
+		txEvents = append(txEvents, &txEvent)
+
+		senderWalletEvent := WalletEvent{
+			WalletAddress: txEvent.Sender,
+			Balance:       txEvent.SenderBalance,
+			Direction:     Outgoing,
+			TxId:          txEvent.Transaction,
+			ReceivedAt:    txEvent.ReceivedAt,
+			Amount:        txEvent.Amount,
+			Price:         txEvent.Price,
+			GasFee:        txEvent.GasFee,
+		}
+
+		walletEvents = append(walletEvents, &senderWalletEvent)
+
+		receiptWalletEvent := WalletEvent{
+			WalletAddress: txEvent.Recipient,
+			Balance:       txEvent.RecipientBalance,
+			Direction:     Incoming,
+			TxId:          txEvent.Transaction,
+			ReceivedAt:    txEvent.ReceivedAt,
+			Amount:        txEvent.Amount,
+			Price:         txEvent.Price,
+			GasFee:        txEvent.GasFee,
+		}
+		walletEvents = append(walletEvents, &receiptWalletEvent)
+		// TODO: handle contract events (staking action)
 	}
 
-	body := bytes.NewReader(res)
-
-	err = json.NewDecoder(body).Decode(&m)
-
-	if err != nil {
-		return price, err
+	if len(walletEvents) == 0 || len(walletEvents) != len(txEvents)*2 {
+		l.Error("wallet events and tx events mismatch, wallet events=%d tx events=%d", len(walletEvents), len(txEvents))
 	}
 
-	v, ok := m["USD"]
-
-	if !ok {
-		return price, fmt.Errorf("invalid response")
-	}
-
-	price.Value = v.(float64)
-
-	return price, nil
+	return txEvents, walletEvents, nil
 }
 
-func (e *EthereumStreamer) Save(dest string, data []byte) error {
-	b := "casimir-etl-event-bucket-dev"
-
-	input := &s3.PutObjectInput{
-		Body:   bytes.NewReader(data),
-		Bucket: aws.String(b),
-		Key:    aws.String(dest),
+func (s *EthereumStreamer) EventFromBlock(b *types.Block) (*Event, error) {
+	event := Event{
+		Chain:      Ethereum,
+		Network:    s.Network,
+		Provider:   Casimir,
+		Type:       Block,
+		Height:     int64(b.Number().Uint64()),
+		Block:      b.Hash().Hex(),
+		ReceivedAt: time.Unix(int64(b.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
 	}
-
-	_, err := e.S3Client.PutObject(input)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (e Event) String() string {
-	b, err := json.Marshal(e)
-	if err != nil {
-		return ""
-	}
-	return string(b)
+	return &event, nil
 }
