@@ -238,7 +238,6 @@ export default function useContracts() {
     }
 
     async function refreshBreakdown() {
-        console.log('got to refreshBreakdown')
         setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
         // setBreakdownValue({ name: 'totalDeposited', ...await getTotalDeposited() })
         // setBreakdownValue({ name: 'stakingRewards', ...await getStakingRewards() })
