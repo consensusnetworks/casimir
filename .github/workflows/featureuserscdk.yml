@@ -38,5 +38,5 @@ jobs:
       - name: Deploy cdk infrastructure
         run: npm run deploy:cdk
 
-      # - name: Migrate users database
-      #   run: npm run migrations:users
+      - name: Migrate users database
+        run: npm run migrations:users
