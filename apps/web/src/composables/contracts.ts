@@ -73,18 +73,31 @@ export default function useContracts() {
         }
     }
 
-    async function getCurrentStaked() : Promise<BreakdownAmount> {
+    async function getCurrentStaked(): Promise<BreakdownAmount> {
         const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
-        const promises = [] as Array<Promise<ethers.BigNumber>>
-        addresses.forEach((address) => {promises.push(manager.connect(provider).getUserStake(address))})
-        const currentStaked = (await Promise.all(promises)).reduce((a, b) => a.add(b))
-        const currentStakedUSD = parseFloat(ethers.utils.formatEther(currentStaked)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-        const currentStakedETH = parseFloat(ethers.utils.formatEther(currentStaked))
-        return {
-            exchange: currentStakedETH.toFixed(2) + ' ETH',
-            usd: '$ ' + currentStakedUSD.toFixed(2)
+        const promises = addresses.map((address) => manager.connect(provider).getUserStake(address))
+        try {
+            const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
+            const currentStaked = settledPromises
+                .filter((result) => result.status === 'fulfilled')
+                .map((result) => result.value)
+    
+            const totalStaked = currentStaked.reduce((accumulator, currentValue) => accumulator.add(currentValue), ethers.BigNumber.from(0))
+            const totalStakedUSD = parseFloat(ethers.utils.formatEther(totalStaked)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+            const totalStakedETH = parseFloat(ethers.utils.formatEther(totalStaked))
+            return {
+                exchange: totalStakedETH.toFixed(2) + ' ETH',
+                usd: '$ ' + totalStakedUSD.toFixed(2)
+            }
+        } catch (error) {
+            console.log('Error occurred while fetching stake:', error)
+            return {
+                exchange: '0 ETH',
+                usd: '$ 0.00'
+            }
         }
     }
+    
 
     async function getDepositFees() {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
@@ -225,6 +238,7 @@ export default function useContracts() {
     }
 
     async function refreshBreakdown() {
+        console.log('got to refreshBreakdown')
         setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
         // setBreakdownValue({ name: 'totalDeposited', ...await getTotalDeposited() })
         // setBreakdownValue({ name: 'stakingRewards', ...await getStakingRewards() })

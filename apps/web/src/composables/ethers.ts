@@ -161,7 +161,6 @@ export default function useEthers() {
           const response = manager.interface.parseTransaction({ data: tx.data })
           console.log('response :>> ', response)
           await refreshBreakdown()
-          await getCurrentStaked()
         }
       })
     })
