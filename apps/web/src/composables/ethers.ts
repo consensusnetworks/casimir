@@ -8,7 +8,7 @@ import useEnvironment from '@/composables/environment'
 import useUsers from '@/composables/users'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
-const { manager, getCurrentStaked, refreshBreakdown } = useContracts()
+const { manager, refreshBreakdown } = useContracts()
 const { ethereumURL } = useEnvironment()
 const { user } = useUsers()
 
