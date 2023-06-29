@@ -2,20 +2,23 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
+import usePrice from '@/composables/price'
 import useEthers from '@/composables/ethers'
 import useUsers from '@/composables/users'
 import useContracts from '@/composables/contracts'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
-const { getEthersBalance } = useEthers()
-const { user } = useUsers()
 const { deposit, withdraw } = useContracts()
+const { getEthersBalance } = useEthers()
+const { getCurrentPrice } = usePrice()
+const { user } = useUsers()
 
 const selectedProvider = ref<ProviderString>('')
 const selectedWallet = ref(null as null | string)
 const formattedAmountToStake = ref<string>('')
 const address_balance = ref(null as null | string)
+const currentEthPrice = ref<number>(0)
 
 const openSelectWalletInput = ref(false)
 
@@ -101,7 +104,6 @@ const aggregateAddressesByProvider = () => {
 }
 
 watch(selectedWallet, async () => {
-  // const currentEthPrice = await getCurrentPrice({coin: 'ETH', currency: 'USD'})
   address_balance.value = selectedWallet.value ?  (Math.round( await getEthersBalance(selectedWallet.value) * 100) / 100 ) + ' ETH': '- - -'
 })
 
@@ -133,9 +135,10 @@ watch(user, () => {
   aggregateAddressesByProvider()
 })
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('click', handleOutsideClick)
   aggregateAddressesByProvider()
+  currentEthPrice.value = Math.round((await getCurrentPrice({coin: 'ETH', currency: 'USD'})) * 100) / 100
 })
 
 onUnmounted(() =>{
@@ -299,11 +302,11 @@ const handleDeposit = async () => {
     <div class="flex justify-between items-center my-[10px]">
       <div class="flex items-center gap-[12px]">
         <h6 class="card_analytics_label">
-          Exchange Price
+          Exchange Rate
         </h6>
       </div>
       <h6 class="card_analytics_amount">
-        1 USD - 0.000ETH
+        ${{ currentEthPrice }}/ETH
       </h6>
     </div>
     <div class="flex justify-between items-center mb-[39px]">
