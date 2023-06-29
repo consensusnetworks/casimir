@@ -48,23 +48,29 @@ export default function useContracts() {
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
     
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
-        // const ethAmount = (parseInt(amount) / (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))).toString()
-        const signerCreators = {
-            'Browser': getEthersBrowserSigner,
-            'Ledger': getEthersLedgerSigner,
-            'Trezor': getEthersTrezorSigner,
-            'WalletConnect': getEthersWalletConnectSigner
+        try {
+            // const ethAmount = (parseInt(amount) / (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))).toString()
+            const signerCreators = {
+                'Browser': getEthersBrowserSigner,
+                'Ledger': getEthersLedgerSigner,
+                'Trezor': getEthersTrezorSigner,
+                'WalletConnect': getEthersWalletConnectSigner
+            }
+            const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
+            const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
+            let signer = signerCreator(walletProvider)
+            if (isWalletConnectSigner(signer)) signer = await signer
+            const managerSigner = manager.connect(signer as ethers.Signer)
+            const fees = await managerSigner.feePercent()
+            const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
+            const value = ethers.utils.parseEther(depositAmount.toString())
+            const result = await managerSigner.depositStake({ value, type: 0 })
+            await result.wait()
+            return true
+        } catch (err) {
+            console.error(`There was an error in despoit function: ${err}`)
+            return false
         }
-        const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
-        const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
-        let signer = signerCreator(walletProvider)
-        if (isWalletConnectSigner(signer)) signer = await signer
-        const managerSigner = manager.connect(signer as ethers.Signer)
-        const fees = await managerSigner.feePercent()
-        const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
-        const value = ethers.utils.parseEther(depositAmount.toString())
-        const result = await managerSigner.depositStake({ value, type: 0 })
-        return await result.wait()
     }
 
     async function getCurrentStaked() : Promise<BreakdownAmount> {

@@ -2,20 +2,24 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
+import usePrice from '@/composables/price'
 import useEthers from '@/composables/ethers'
 import useUsers from '@/composables/users'
 import useContracts from '@/composables/contracts'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
+const { deposit, getDepositFees } = useContracts()
 const { getEthersBalance } = useEthers()
 const { user, getUserAnalytics } = useUsers()
-const { deposit, withdraw } = useContracts()
+const { getCurrentPrice } = usePrice()
 
 const selectedProvider = ref<ProviderString>('')
 const selectedWallet = ref(null as null | string)
 const formattedAmountToStake = ref<string>('')
 const address_balance = ref(null as null | string)
+const currentEthPrice = ref<number>(0)
+const estimatedFees = ref<number|string>('-')
 
 const openSelectWalletInput = ref(false)
 
@@ -101,7 +105,6 @@ const aggregateAddressesByProvider = () => {
 }
 
 watch(selectedWallet, async () => {
-  // const currentEthPrice = await getCurrentPrice({coin: 'ETH', currency: 'USD'})
   address_balance.value = selectedWallet.value ?  (Math.round( await getEthersBalance(selectedWallet.value) * 100) / 100 ) + ' ETH': '- - -'
 })
 
@@ -124,7 +127,7 @@ watch(formattedAmountToStake, async () => {
     }else {
       errorMessage.value = null
     }
-  }else{
+  } else{
     errorMessage.value = null
   }
 })
@@ -133,10 +136,13 @@ watch(user, () => {
   aggregateAddressesByProvider()
 })
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('click', handleOutsideClick)
   aggregateAddressesByProvider()
+  currentEthPrice.value = Math.round((await getCurrentPrice({coin: 'ETH', currency: 'USD'})) * 100) / 100
+  estimatedFees.value = await getDepositFees()
 })
+
 
 onUnmounted(() =>{
   window.removeEventListener('click', handleOutsideClick)
@@ -146,37 +152,31 @@ const loading = ref(false)
 const success = ref(false)
 const failure = ref(false)
 const stakeButtonText = ref('Stake')
-const handleDeposit = () => {
-  deposit({ amount: formattedAmountToStake.value, walletProvider: selectedProvider.value })
 
-  const isSuccess = Math.random() < 0.5 // Replace with your actual logic
-
+const handleDeposit = async () => {
   loading.value = true
+  const isSuccess = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedProvider.value })
+  loading.value = false
+  if (isSuccess) {
+    success.value = true
+    stakeButtonText.value = 'Transaction Successfully Submitted'
+  } else {
+    failure.value = true
+    stakeButtonText.value = 'Transaction Failed'
+  }
 
   setTimeout(() => {
+    success.value = false
+    failure.value = false
+    stakeButtonText.value = 'Stake'
 
-    loading.value = false
-    if (isSuccess) {
-      success.value = true
-      stakeButtonText.value = 'Success'
-    } else {
-      failure.value = true
-      stakeButtonText.value = 'Transaction Failed'
-    }
-
-    setTimeout(() => {
-      success.value = false
-      failure.value = false
-      stakeButtonText.value = 'Stake'
-
-      // empty out staking comp
-      selectedProvider.value = ''
-      selectedWallet.value = null
-      formattedAmountToStake.value = ''
-      address_balance.value = null
-      
-    }, 3000)
-  }, 2000)
+    // empty out staking comp
+    selectedProvider.value = ''
+    selectedWallet.value = null
+    formattedAmountToStake.value = ''
+    address_balance.value = null
+    
+  }, 3000)
   
 
   
@@ -305,17 +305,17 @@ const handleDeposit = () => {
         </h6>
       </div>
       <h6 class="card_analytics_amount">
-        0.0002 ETH
+        {{ estimatedFees }}.00%
       </h6>
     </div>
     <div class="flex justify-between items-center my-[10px]">
       <div class="flex items-center gap-[12px]">
         <h6 class="card_analytics_label">
-          Exchange Price
+          Exchange Rate
         </h6>
       </div>
       <h6 class="card_analytics_amount">
-        1 USD - 0.000ETH
+        ${{ currentEthPrice }}/ETH
       </h6>
     </div>
     <div class="flex justify-between items-center mb-[39px]">
@@ -362,13 +362,6 @@ const handleDeposit = () => {
         {{ stakeButtonText }}
       </div>
     </button>
-    <button
-      class="h-[37px] w-full mt-8"
-      @click="withdraw({ amount: formattedAmountToStake, walletProvider: selectedProvider })"
-    >
-      Withdraw
-    </button>
-
     <div
       v-show="openTermsOfService"
       id="termsOfServiceContainer"
