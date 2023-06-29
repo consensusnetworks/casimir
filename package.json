@@ -17,7 +17,7 @@
     "dev:landing": "npm run dev --workspace @casimir/landing",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
-    "migrate:users": "npm run migrations --workspace @casimir/users",
+    "migrations:users": "npx esno -r dotenv/config scripts/migrations/users.ts",
     "postinstall": "npm run build --workspace @casimir/ethereum",
     "preinstall": "git submodule update --init --recursive && git submodule foreach --recursive git checkout .",
     "prepare": "husky install",
