@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import useEthers from '@/composables/ethers'
+import useContracts from '@/composables/contracts'
 import useLedger from '@/composables/ledger'
 import useSolana from '@/composables/solana'
 import useTrezor from '@/composables/trezor'
@@ -24,7 +25,7 @@ const activeWallets = ref([
 ] as ProviderString[])
 const amount = ref<string>('1')
 const amountToStake = ref<string>('1.2')
-const userAddresses = ref<CryptoAddress[]>([])
+const walletProviderAddresses = ref<CryptoAddress[]>([])
 const loadingUserWallets = ref(false)
 const primaryAddress = ref('')
 const selectedProvider = ref<ProviderString>('')
@@ -34,7 +35,8 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
-  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
+  const { listenForContractEvents, refreshBreakdown } = useContracts()
+  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
@@ -72,6 +74,8 @@ export default function useWallet() {
         if (error) throw new Error(message || 'There was an error getting the user')
         setUser(retrievedUser)
         setPrimaryAddress(user?.value?.address as string)
+        listenForContractEvents()
+        listenForTransactions()
         loadingUserWallets.value = false
       } else { // Add account if it doesn't already exist
         const userAccountExists = user.value?.accounts?.some((account: Account | any) => account?.address === selectedAddress.value && account?.walletProvider === selectedProvider.value && account?.currency === selectedCurrency.value)
@@ -99,7 +103,8 @@ export default function useWallet() {
       }
       await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
-    } catch (error) {
+      await refreshBreakdown()
+    } catch (error: any) {
       loadingUserWallets.value = false
       throw new Error(error.message || 'There was an error connecting the wallet')
     }
@@ -127,7 +132,7 @@ export default function useWallet() {
     try {
       const balance = await getEthersBalance(account.address)
       return balance
-    } catch (err) {
+    } catch (err: any) {
       throw new Error(err.message || 'There was an error getting the account balance')
     }
   }
@@ -171,20 +176,22 @@ export default function useWallet() {
         // TODO: Implement this for other providers
         console.log('Sign up not yet supported for this wallet provider')
       }
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(error.message || 'There was an error logging in')
     }
   }
 
   async function logout() {
+    console.log('clicked log out')
     loadingUserWallets.value = true
     await Session.signOut()
     setSelectedAddress('')
     setSelectedProvider('')
     setSelectedCurrency('')
-    setUser(undefined)
+    setUser(null)
     setPrimaryAddress('')
     loadingUserWallets.value = false
+    console.log('user.value :>> ', user.value)
     // router.push('/auth')
   }
 
@@ -249,7 +256,9 @@ export default function useWallet() {
    * @param provider 
    * @param currency 
    */
-  async function selectAddress(address: any, pathIndex?: string) : Promise<void> {
+  async function selectAddress(address: any, pathIndex?: string) : Promise<boolean> {
+    walletProviderAddresses.value = []
+    loadingUserWallets.value = true
     try {
       address = trimAndLowercaseAddress(address)
       setSelectedAddress(address)
@@ -259,10 +268,7 @@ export default function useWallet() {
       const { data: { sameAddress, sameProvider } } = await checkIfPrimaryUserExists(selectedProvider.value, selectedAddress.value)
       if (sameAddress && sameProvider ) {
         await connectWallet() // login
-        return {
-          error: false,
-          message: 'Address already exists as a primary address using this provider',
-        }
+        return true
       } else if (sameAddress && !sameProvider) {
         // TODO: Handle this on front-end: do you want to change your primary provider?
         throw new Error('Address already exists as a primary address using another provider')
@@ -271,9 +277,11 @@ export default function useWallet() {
       const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(selectedAddress.value)
       if (accountsIfSecondaryAddress.length) throw new Error(`${selectedAddress.value} already exists as a secondary address on this/these account(s): ${JSON.stringify(accountsIfSecondaryAddress)}`)
       await connectWallet() // sign up or add account
-    } catch (error) {
-      // TODO: @shanejearley - What do we want to do here?
-      throw new Error(error.message || 'There was an error selecting address')
+      loadingUserWallets.value = false
+      return true
+    } catch (error: any) {
+      loadingUserWallets.value = false
+      return false
     }
   }
 
@@ -288,19 +296,19 @@ export default function useWallet() {
       if (provider === 'WalletConnect') {
         setSelectedProvider(provider)
         const walletConnectAddresses = await getWalletConnectAddress()
-        setUserAddresses(walletConnectAddresses)
+        setWalletProviderAddresses(walletConnectAddresses)
       } else if (ethersProviderList.includes(provider)) {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
-        setUserAddresses(ethersAddresses)
+        setWalletProviderAddresses(ethersAddresses)
       } else if (provider === 'Ledger') {
         setSelectedProvider(provider)
         const ledgerAddresses = await getLedgerAddress[currency]() as CryptoAddress[]
-        setUserAddresses(ledgerAddresses)
+        setWalletProviderAddresses(ledgerAddresses)
       } else if (provider === 'Trezor') {
         setSelectedProvider(provider)
         const trezorAddresses = await getTrezorAddress[currency]() as CryptoAddress[]
-        setUserAddresses(trezorAddresses)
+        setWalletProviderAddresses(trezorAddresses)
       }
     } catch (error) {
       throw new Error(`Error selecting provider: ${error.message}`)
@@ -361,8 +369,8 @@ export default function useWallet() {
     }
   }
 
-  function setUserAddresses(addresses: CryptoAddress[]) {
-    userAddresses.value = addresses
+  function setWalletProviderAddresses(addresses: CryptoAddress[]) {
+    walletProviderAddresses.value = addresses
   }
 
   async function signMessage(message: string) {
@@ -432,6 +440,6 @@ export default function useWallet() {
     signMessage,
     switchNetwork,
     toAddress,
-    userAddresses
+    walletProviderAddresses
   }
 }

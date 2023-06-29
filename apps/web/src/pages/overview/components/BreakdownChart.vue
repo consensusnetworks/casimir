@@ -1,26 +1,14 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { onMounted, ref, watch} from 'vue'
+import useContracts from '@/composables/contracts'
+
+const { currentStaked, stakingRewards, totalDeposited } = useContracts()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('1 month')
 
 const data = ref({} as any)
-
-const currentStaked = ref({
-  usd: '$150',
-  exchange: '0.00054 ETH'
-})
-
-const stakingRewards = ref({
-  usd: '$17.25',
-  exchange: '0.004 ETH'
-})
-
-const totalDeposited = ref({
-  usd: '$17.25',
-  exchange: '0.004 ETH'
-})
 
 const setMockData = () => {
   let labels  = [] as string[]
@@ -113,8 +101,8 @@ watch(selectedTimeframe, () => {
 
 <template>
   <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap">
-    <div class="flex flex-wrap gap-[68px] mb-[52px]">
-      <div>
+    <div class="flex flex-wrap justify-between mb-[52px]">
+      <div class="">
         <h6 class="blance_title mb-[15px]">
           Current Staked
         </h6>
@@ -236,6 +224,12 @@ watch(selectedTimeframe, () => {
   font-size: 16px;
   letter-spacing: -0.01em;
   color: #7D8398;
+  @media (max-width: 1210px) {
+    font-size: 14px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 12px;
+  };
 }
 .blance_amount{
   font-family: 'IBM Plex Sans';
@@ -243,6 +237,12 @@ watch(selectedTimeframe, () => {
   font-weight: 500;
   font-size: 28px;
   color: #344054;
+  @media (max-width: 1210px) {
+    font-size: 24px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 22px;
+  };
 }
 .blance_title{
   font-family: 'IBM Plex Sans';
@@ -252,6 +252,14 @@ watch(selectedTimeframe, () => {
   line-height: 20px;
   letter-spacing: -0.01em;
   color: #667085;
+  @media (max-width: 1210px) {
+    font-size: 12px;
+    line-height: 18px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 10px;
+    line-height: 16px;
+  };
 }
 .chart_y_label{
     font-family: 'IBM Plex Sans';
@@ -298,5 +306,8 @@ watch(selectedTimeframe, () => {
     font-size: 18px;
     line-height: 28px;
     color: #101828;
+    @media (max-width: 1200px) {
+      font-size: 14px;
+    };
 }
 </style>
