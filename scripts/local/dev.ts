@@ -1,29 +1,16 @@
-import { $, argv, chalk, echo } from 'zx'
+import { $, chalk, echo } from 'zx'
 import { loadCredentials, getSecret, getFutureContractAddress, getWallet, run, runSync } from '@casimir/helpers'
 
 /**
- * Run a Casimir dev server.
- * 
- * Arguments:
- *      --app: app name (optional, i.e., --app=web)
- *      --clean: rebuild codegen and delete existing data before run (optional, i.e., --clean)
- *      --emulate: emulate hardware wallet services (optional, i.e., --emulate=ethereum)
- *      --fork: fork name (optional, i.e., --fork=goerli)
- *      --mock: mock backend services and external contracts (optional, i.e., --mock=false)
- *      --network: network name (optional, i.e., --network=goerli)
+ * Run a Casimir dev server
  */
 void async function () {
 
-    /** Local apps and configuration */
-    const apps = {
-        web: {
-            chains: ['ethereum'],
-            services: ['users']
-        }
-    }
+    /** Backend services */
+    const services = ['users']
 
     /** Chain forks */
-    const forks = {
+    const chains = {
         ethereum: {
             mainnet: 'mainnet',
             testnet: 'goerli'
@@ -36,30 +23,32 @@ void async function () {
     /** Set project-wide variables */
     process.env.PROJECT = process.env.PROJECT || 'casimir'
     process.env.STAGE = process.env.STAGE || 'dev'
-    process.env.PUBLIC_STAGE = process.env.STAGE // Pass stage to client apps
-    process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
 
-    /** Default to the web app */
-    const app = argv.app || 'web'
+    /** Pass stage to web app */
+    process.env.PUBLIC_STAGE = process.env.STAGE
+
+    /** Get exchange price API key */
+    process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
     
     /** Default to clean services and data */
-    const clean = argv.clean !== 'false' || argv.clean !== false
+    process.env.CLEAN = process.env.CLEAN || 'true'
 
-    /** Default to no hardware wallet emulators or ethereum if set vaguely */
-    const emulate = (argv.emulate === 'true' || argv.emulate === true) ? 'ethereum' : argv.emulators === 'false' ? false : argv.emulate
+    /** Default to no hardware wallet emulators */
+    process.env.EMULATE = process.env.EMULATE || 'false'
 
-    /** Default to no fork or testnet if set vaguely */
-    const fork = argv.fork === 'true' || argv.fork === true ? 'testnet' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'testnet'
+    /** Default to testnet */
+    process.env.FORK = process.env.FORK || 'testnet'
 
-    /** Default to local mock */
-    const mock = argv.mock !== 'false' || argv.mock !== false
+    /** Default to stubbed oracle service handlers */
+    process.env.MOCK_ORACLE = process.env.MOCK_ORACLE || 'false'
 
-    /** Default to no network or testnet if set vaguely */
-    const network = argv.network === 'true' ? 'testnet' : argv.network === 'false' ? false : argv.network
+    /** Default to mock backend services */
+    process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
 
-    const { chains, services } = apps[app as keyof typeof apps]
+    /** Default to no live network */
+    process.env.NETWORK = process.env.NETWORK || ''
 
-    if (mock) {
+    if (process.env.MOCK_SERVICES === 'true') {
         /** Mock services */
         let port = 4000
         for (const service of services) {
@@ -79,20 +68,20 @@ void async function () {
         }
     }
 
-    for (const chain of chains) {
+    for (const chain of Object.keys(chains)) {
 
-        if (network) {
-            const key = await getSecret(`consensus-networks-${chain}-${network}`)
+        if (process.env.NETWORK) {
+            const key = await getSecret(`consensus-networks-${chain}-${process.env.NETWORK}`)
             const currency = chain.slice(0, 3)
-            const url = `https://${currency}-${network}.g.alchemy.com/v2/${key}`
+            const url = `https://${currency}-${process.env.NETWORK}.g.alchemy.com/v2/${key}`
             process.env.ETHEREUM_RPC_URL = url
-            echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(network) + chalk.bgBlackBright(` ${chain} network at ${url}`))
+            echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(process.env.NETWORK) + chalk.bgBlackBright(` ${chain} network at ${url}`))
 
             // Todo - add deployed addresses
             // process.env.BIP39_SEED = seed
             // process.env.PUBLIC_MANAGER_ADDRESS = `${managerAddress}`
 
-        } else if (fork) {
+        } else if (process.env.FORK) {
 
             /** Chain fork nonces */
             const nonces = {
@@ -107,7 +96,7 @@ void async function () {
 
             const seed = await getSecret('consensus-networks-bip39-seed')
             const wallet = getWallet(seed)
-            const nonce = nonces[chain][fork]
+            const nonce = nonces[chain][process.env.FORK]
             const managerIndex = 1 // We deploy a mock functions oracle before the manager
             if (!process.env.PUBLIC_MANAGER_ADDRESS) {
                 const managerAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
@@ -119,12 +108,11 @@ void async function () {
             }
             process.env.BIP39_SEED = seed
 
-            const chainFork = forks[chain][fork]
-            $`npm run dev:${chain} --clean=${clean} --mock=${mock} --fork=${chainFork}`
+            $`npm run dev:${chain}`
         }
     }
 
-    if (emulate) {
+    if (process.env.EMULATE === 'true') {
 
         /** Emulate Ledger */
         const port = 5001
@@ -137,23 +125,30 @@ void async function () {
         }
 
         process.env.PUBLIC_SPECULOS_PORT = `${port}`
-        process.env.PUBLIC_LEDGER_APP = emulate
-        $`scripts/ledger/emulate -a ${emulate}`
+        process.env.LEDGER_APP = process.env.LEDGER_APP || 'ethereum'
+
+        /** Pass ledger app to web app */
+        process.env.PUBLIC_LEDGER_APP = process.env.LEDGER_APP
+
+        /** Emulate Ledger */
+        $`scripts/ledger/emulate -a ${process.env.LEDGER_APP}`
         $`npx esno scripts/ledger/proxy.ts`
 
         /** Emulate Trezor */
         $`scripts/trezor/emulate`
     }
 
-    /** Run app */
-    $`npm run dev --workspace @casimir/${app}`
+    /** Run web app */
+    $`npm run dev --workspace @casimir/web`
 
-    if (mock) {
+    if (process.env.MOCK_ORACLE === 'true' || process.env.MOCK_SERVICES === 'true') {
         process.on('SIGINT', () => {
-            const messes = ['oracle', 'users']
-            if (clean) {
-                const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
-                console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)
+            const mocked: string[] = []
+            if (process.env.MOCK_ORACLE === 'true') mocked.push('oracle')
+            if (process.env.MOCK_SERVICES === 'true') mocked.push(...services)
+            if (process.env.CLEAN === 'true') {
+                const cleaners = mocked.map(mock => `npm run clean --workspace @casimir/${mock}`).join(' & ')
+                console.log(`\n🧹 Cleaning up: ${mocked.map(mock => `@casimir/${mock}`).join(', ')}`)
                 runSync(`${cleaners}`)
             }
             process.exit()

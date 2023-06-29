@@ -5,7 +5,9 @@ const resourcePath = 'scripts/resources/rockx-dkg-cli'
 void async function () {
     process.env.BIP39_PATH_INDEX = '6'
     process.env.MANAGER_ADDRESS = process.env.PUBLIC_MANAGER_ADDRESS
+    console.log(`🔑 Manager address: ${process.env.MANAGER_ADDRESS}`)
     process.env.VIEWS_ADDRESS = process.env.PUBLIC_VIEWS_ADDRESS
+    console.log(`🔑 Views address: ${process.env.VIEWS_ADDRESS}`)
     process.env.LINK_TOKEN_ADDRESS = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
     process.env.SSV_TOKEN_ADDRESS = '0x3a9f01091C446bdE031E39ea8354647AFef091E7'
     process.env.WETH_TOKEN_ADDRESS = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'

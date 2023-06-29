@@ -39,7 +39,7 @@ jobs:
         run: npm run deploy:cdk
 
       - name: Migrate users database
-        run: npm run migrate:users
+        run: npm run migrations:users
 
       - name: Slack the team
         if: ${{ success() || failure() }}

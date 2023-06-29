@@ -1,29 +1,27 @@
 import { $, chalk, echo } from 'zx'
 import { loadCredentials, getSecret } from '@casimir/helpers'
-import minimist from 'minimist'
 
 /**
  * Test Ethereum contracts
- * 
- * Arguments:
- *      --clean: whether to clean build directory (override default false)
- *      --fork: mainnet, goerli, true, or false (override default goerli)
  * 
  * For more info see:
  *      - https://hardhat.org/hardhat-network/docs/overview
  */
 void async function () {
+
+    const forks = {
+        mainnet: 'mainnet',
+        testnet: 'goerli'
+    }
+
     /** Load AWS credentials for configuration */
     await loadCredentials()
-    
-    /** Parse command line arguments */
-    const argv = minimist(process.argv.slice(2))
 
     /** Default to no clean */
-    const clean = argv.clean === 'true' || argv.clean === true
+    process.env.CLEAN = process.env.CLEAN || 'false'
 
-    /** Set fork rpc if requested, default fork to goerli if set vaguely */
-    const fork = argv.fork === 'true' ? 'goerli' : argv.fork === 'false' ? false : argv.fork ? argv.fork : 'goerli'
+    /** Default to testnet */
+    process.env.FORK = process.env.FORK || 'testnet'
 
     /** Get shared seed */
     const seed = await getSecret('consensus-networks-bip39-seed')
@@ -31,12 +29,16 @@ void async function () {
     process.env.BIP39_SEED = seed
     echo(chalk.bgBlackBright('Your mnemonic is ') + chalk.bgBlue(seed))
 
-    if (fork) {
-        const key = await getSecret(`consensus-networks-ethereum-${fork}`)
-        const url = `https://eth-${fork}.g.alchemy.com/v2/${key}`
+    if (forks[process.env.FORK]) {
+        const key = await getSecret(`consensus-networks-ethereum-${forks[process.env.FORK]}`)
+        const url = `https://eth-${forks[process.env.FORK]}.g.alchemy.com/v2/${key}`
         process.env.ETHEREUM_FORKING_URL = url
-        echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(fork) + chalk.bgBlackBright(' fork at ') + chalk.bgBlue(url))
+        echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(forks[process.env.FORK]) + chalk.bgBlackBright(' fork at ') + chalk.bgBlue(url))
     }
 
-    $`npm run test --clean=${clean} --workspace @casimir/ethereum`
+    if (process.env.CLEAN === 'true') {
+        $`npm run clean --workspace @casimir/ethereum`
+    }
+
+    $`npm run test --workspace @casimir/ethereum`
 }()

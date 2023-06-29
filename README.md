@@ -56,48 +56,13 @@ npm install
 
 You can get up and running without configuration. You can also mock local backend changes and customize your environment.
 
-For frontend changes – run the development server and use the `dev` stage backend services.
+For frontend changes – run the web app development server, local Ethereum network, and mock backend services.
 
 ```zsh
 npm run dev
 ```
 
 > 🚩 This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set AWS_PROFILE="some-other-name" in a [.env](.env) if you want to override).
-
-**All options:**
-
-| Flag | Description | Default | Example |
-| --- | --- | --- | --- |
-| `--app` | Which app to run | web | --app=landing |
-| `--clean` | Whether to clean the local database | true | --clean=false |
-| `--emulate` | Whether to use local wallet emulators | false | --emulate=ethereum |
-| `--fork` | Which live Ethereum network to fork locally | goerli | --fork=mainnet |
-| `--mock` | Whether to mock backend services and external contracts | true | --mock=false |
-| `--network` | Which live Ethereum network to use | goerli | --network=mainnet |
-
-**Example commands:**
-
-For fullstack changes – run the development server and mock the local backend services.
-
-```zsh
-npm run dev --mock
-```
-
-Emulate a Ledger hardware wallet. The default application is ethereum, and we also currently have support for the bitcoin and solana applications.
-
-```zsh
-npm run dev --ledger # or specify --ledger=ethereum, --ledger=bitcoin, or --ledger=solana
-```
-
-> 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
-
-Emulate a Trezor hardware wallet. You also need to make sure to add [these prerequisites](https://github.com/trezor/trezor-user-env#prerequisites).
-
-```zsh
-npm run dev --trezor
-```
-
-The commands above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
 
 ```zsh
 # @casimir/web
@@ -130,45 +95,40 @@ Deploy a contract, specifically [contracts/ethereum/src/CasimirManager.sol](cont
 npm run deploy:ssv --workspace @casimir/ethereum
 ```
 
-### Local Nodes
+### Local Ethereum network
 
-Run local cryptonodes for fast and flexible development.
-
-Run a local Ethereum node without archived data.
+Run a local Ethereum network with archived data from Goerli testnet.
 
 ```zsh
 npm run dev:ethereum
 ```
 
-Run a local Ethereum node with archived data from mainnet.
-
-```zsh
-npm run dev:ethereum --fork=mainnet
-```
-
-Run a local Ethereum node with archived data from Goerli testnet.
-
-```zsh
-npm run dev:ethereum --fork=goerli
-```
-
 > 🚩 Note, while the fork starts with the same state as the specified network, it lives as a local development network independent of the live network.
+
+### Emulators
+
+We can emulate Ledger and Trezor hardware wallet wallets by setting the environment variable `EMULATE` to `true`. For Ledger, the default app is `ethereum`, but the app can be specified by setting the environment variable `LEDGER_APP`. For Trezor, we also need to make sure to add [these prerequisites](https://github.com/trezor/trezor-user-env#prerequisites).
+
+> 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
 
 ### Environment
 
 Optionally customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for any supported variables.
-
-```zsh
-AWS_PROFILE="some-other-aws-name"
-STAGE="sandbox"
-```
 
 #### Supported Variables
 
 | Name | Description | Default |
 | --- | --- | --- |
 | `AWS_PROFILE` | AWS profile name | `"consensus-networks-dev"` |
+| `PROJECT` | Project name | `"casimir"` |
 | `STAGE` | Environment stage name | `"dev"` |
+| `NETWORK` | Set live network (defaults to local fork network) | `""` |
+| `FORK` | Local fork network | `"testnet"` |
+| `EMULATE` | Whether to emulate wallets | `"false"` |
+| `MOCK_ORACLE` | Whether to mock oracle | `"true"` |
+| `MOCK_SERVICES` | Whether to mock backend services | `"true"` |
+| `CLEAN` | Whether to clean all built resources | `"true"` |
+| `LEDGER_APP` | Ledger app name | `"ethereum"` |
 
 ### Scripts and dependencies
 

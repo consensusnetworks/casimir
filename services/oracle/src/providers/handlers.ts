@@ -72,7 +72,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
     await initiateDeposit.wait()
 }
 
-export async function initiatePoolReshareHandler(input: HandlerInput) {
+export async function initiateResharesHandler(input: HandlerInput) {
     const {         
         provider,
         signer,
@@ -109,7 +109,7 @@ export async function initiatePoolReshareHandler(input: HandlerInput) {
 
 }
 
-export async function initiatePoolExitHandler(input: HandlerInput) {
+export async function initiateExitsHandler(input: HandlerInput) {
     const {
         provider,
         signer,
