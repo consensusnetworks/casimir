@@ -9,7 +9,7 @@ import useContracts from '@/composables/contracts'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
-const { deposit, withdraw } = useContracts()
+const { deposit, getDepositFees, withdraw } = useContracts()
 const { getEthersBalance } = useEthers()
 const { getCurrentPrice } = usePrice()
 const { user } = useUsers()
@@ -19,6 +19,7 @@ const selectedWallet = ref(null as null | string)
 const formattedAmountToStake = ref<string>('')
 const address_balance = ref(null as null | string)
 const currentEthPrice = ref<number>(0)
+const estimatedFees = ref<number|string>('-')
 
 const openSelectWalletInput = ref(false)
 
@@ -126,7 +127,7 @@ watch(formattedAmountToStake, async () => {
     }else {
       errorMessage.value = null
     }
-  }else{
+  } else{
     errorMessage.value = null
   }
 })
@@ -139,7 +140,9 @@ onMounted(async () => {
   window.addEventListener('click', handleOutsideClick)
   aggregateAddressesByProvider()
   currentEthPrice.value = Math.round((await getCurrentPrice({coin: 'ETH', currency: 'USD'})) * 100) / 100
+  estimatedFees.value = await getDepositFees()
 })
+
 
 onUnmounted(() =>{
   window.removeEventListener('click', handleOutsideClick)
@@ -296,7 +299,7 @@ const handleDeposit = async () => {
         </h6>
       </div>
       <h6 class="card_analytics_amount">
-        0.0002 ETH
+        {{ estimatedFees }}.00%
       </h6>
     </div>
     <div class="flex justify-between items-center my-[10px]">
@@ -353,13 +356,6 @@ const handleDeposit = async () => {
         {{ stakeButtonText }}
       </div>
     </button>
-    <button
-      class="h-[37px] w-full mt-8"
-      @click="withdraw({ amount: formattedAmountToStake, walletProvider: selectedProvider })"
-    >
-      Withdraw
-    </button>
-
     <div
       v-show="openTermsOfService"
       id="termsOfServiceContainer"
