@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse, User } from '@casimir/types'
+import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import * as Session from 'supertokens-web-js/recipe/session'
 
@@ -89,6 +89,27 @@ export default function useUsers () {
         }
     }
 
+    async function getUserAnalytics() {
+        try {
+            const userId = user.value?.id
+            const requestOptions = {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json'
+                }
+            }
+            const response = await fetch(`${usersBaseURL}/analytics/${userId}`, requestOptions)
+            const { error, message, data } = await response.json()
+            console.log('error :>> ', error)
+            console.log('message :>> ', message)
+            console.log('data :>> ', data)
+            if (error) throw new Error(message)
+            return { error, message, data }
+        } catch (error: any) {
+            throw new Error(error.message || 'Error getting user analytics')
+        }
+    }
+
     async function getMessage(address: string) {
         const response = await fetch(`${usersBaseURL}/auth/${address}`)
         const json = await response.json()
@@ -163,6 +184,7 @@ export default function useUsers () {
         checkUserSessionExists,
         getMessage,
         getUser,
+        getUserAnalytics,
         removeAccount,
         setUser,
         updatePrimaryAddress

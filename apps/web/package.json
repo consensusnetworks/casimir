@@ -8,6 +8,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-athena": "^3.362.0",
+    "@aws-sdk/credential-providers": "^3.362.0",
     "@heroicons/vue": "^1.0.6",
     "@solana/web3.js": "^1.63.1",
     "@walletconnect/web3-provider": "^1.8.0",

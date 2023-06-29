@@ -3,6 +3,7 @@ import cors from 'cors'
 import supertokens from 'supertokens-node'
 import { middleware, errorHandler } from 'supertokens-node/framework/express'
 import { SuperTokensBackendConfig } from './sessions.config'
+import analytics from './routes/analytics'
 import auth from './routes/auth'
 import user from './routes/user'
 import health from './routes/health'
@@ -32,6 +33,7 @@ app.use('/auth', auth)
 app.use('/user', user)
 app.use('/health', health)
 app.use('/seed', seed)
+app.use('/analytics', analytics)
 
 /** Returns 401 to the client in the case of session related errors */
 app.use(errorHandler())
