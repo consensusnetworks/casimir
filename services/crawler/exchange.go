@@ -231,9 +231,16 @@ func (c CryptoCompareExchange) HistoricalPrice(coin ChainType, currency Currency
 
 	path := "index/cc/v1/historical/minutes"
 
-	// to_ts (timestamp) returns historical data before this unix timestamp
-	// use limit=2000 and keep going back in time using the to_ts param.
-	url := fmt.Sprintf("%s/%s?market=ccix&instruments=%s-%s&limit=20&to_ts=%d", c.BaseUrl, path, coin.Short(), currency.String(), received.Unix())
+	limit := 20
+
+	fmt.Println(received)
+	// conver the time.Time to unix timestamp
+	unixTime := received.UTC().Unix()
+
+	url := fmt.Sprintf("%s/%s?market=ccix&instrument=%s-%s&limit=%d&to_ts=%d", c.BaseUrl, path, coin.Short(), currency.String(), limit, unixTime)
+
+	fmt.Println(unixTime)
+	fmt.Println(url)
 
 	req, err := httpClient.Get(url)
 
@@ -265,11 +272,10 @@ func (c ChainType) Short() string {
 	switch c {
 	case Ethereum:
 		return "ETH"
-	case Iotex:
-		return "IOTX"
-
+	case Bitcoin:
+		return "BTC"
 	default:
-		panic("invalid chain type")
+		return ""
 	}
 }
 

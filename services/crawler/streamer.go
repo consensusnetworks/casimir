@@ -128,132 +128,159 @@ func (s *EthereumStreamer) Stream() error {
 		case <-ctx.Done():
 			return nil
 		case h := <-head:
-			s.Mutex.Lock()
-			defer s.Mutex.Unlock()
-			s.ProcessingBlock = h.Number.Uint64()
-
-			_, err := s.ProcessBlock()
+			_, _, err := s.ProcessBlock(int(h.Number.Uint64()))
 
 			if err != nil {
 				l.Error(err.Error())
 				return err
 			}
-
-			// price, err := s.Exchange.CurrentPrice(Ethereum, USD)
-
-			// if err != nil {
-			// l.Error(err.Error())
-			// return err
-			// }
 		}
 	}
 }
 
-func (s *EthereumStreamer) ProcessBlock() ([]*Event, error) {
+func (s *EthereumStreamer) ProcessBlock(height int) ([]*Event, []*WalletEvent, error) {
 	l := s.Logger
 
-	l.Info("streaming block=%d\n", s.ProcessingBlock)
+	var events []*Event
+	var walletEvents []*WalletEvent
 
-	ctx := context.Background()
-
-	block, err := s.EthereumClient.Client.BlockByNumber(ctx, new(big.Int).SetUint64(s.ProcessingBlock))
+	block, err := s.Client.BlockByNumber(context.Background(), big.NewInt(int64(height)))
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	var events []*Event
+	l.Info("processing block=%d\n", block.Number().Int64())
 
 	blockEvent, err := s.EventFromBlock(block)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	events = append(events, blockEvent)
 
-	// for _, tx := range block.Transactions() {
-	// 	txEvent, err := s.TransactionEvent(tx)
+	if block.Transactions().Len() > 0 {
+		for i, tx := range block.Transactions() {
+			l.Info("processing tx %d of %d in block %d\n", i+1, block.Transactions().Len(), block.Number().Int64())
 
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
+			receipt, err := s.Client.TransactionReceipt(context.Background(), tx.Hash())
 
-	// }
-	return events, nil
+			if err != nil {
+				return nil, nil, err
+			}
+
+			txEvents, walletEvent, err := s.EventsFromTransaction(block, receipt)
+
+			if err != nil {
+				return nil, nil, err
+			}
+
+			events = append(events, txEvents...)
+			walletEvents = append(walletEvents, walletEvent...)
+		}
+	}
+	return events, walletEvents, nil
 }
 
-func (c *EthereumStreamer) EventFromBlock(b *types.Block) (*Event, error) {
-	event := Event{
-		Chain:    Ethereum,
-		Network:  c.Network,
-		Provider: Casimir,
-		Type:     Block,
-		Height:   int64(b.Number().Uint64()),
-	}
+func (s *EthereumStreamer) EventsFromTransaction(b *types.Block, receipt *types.Receipt) ([]*Event, []*WalletEvent, error) {
+	var txEvents []*Event
+	var walletEvents []*WalletEvent
 
-	if b.Hash().Hex() != "" {
-		event.Block = b.Hash().Hex()
-	}
-
-	if b.Time() != 0 {
-		event.ReceivedAt = time.Unix(int64(b.Time()), 0).Format("2006-01-02 15:04:05.999999999")
-	}
-
-	return &event, nil
-}
-
-func (c *EthereumStreamer) TransactionEvent(b *types.Block, tx *types.Receipt) ([]*Event, error) {
-	var events []*Event
+	l := s.Logger
 
 	for index, tx := range b.Transactions() {
 		txEvent := Event{
-			Chain:    Ethereum,
-			Network:  c.Network,
-			Provider: Casimir,
-			Type:     Transaction,
-			Height:   int64(b.Number().Uint64()),
+			Chain:       Ethereum,
+			Network:     s.Network,
+			Provider:    Casimir,
+			Block:       b.Hash().Hex(),
+			Type:        Transaction,
+			Height:      int64(b.Number().Uint64()),
+			Transaction: tx.Hash().Hex(),
+			ReceivedAt:  time.Unix(int64(b.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
 		}
 
-		if tx.Hash().Hex() != "" {
-			txEvent.Transaction = tx.Hash().Hex()
-		}
-
-		// recipient
-		if tx.To().Hex() != "" {
-			txEvent.Recipient = tx.To().Hex()
-
-			// get receipt balance
-			recipientBalance, err := c.Client.BalanceAt(context.Background(), *tx.To(), b.Number())
-
-			if err != nil {
-				return nil, err
-			}
-			txEvent.RecipientBalance = recipientBalance.String()
-		}
-
-		// amount
-		if tx.Value().String() != "" {
+		if tx.Value() != nil {
 			txEvent.Amount = tx.Value().String()
 		}
 
-		sender, err := c.Client.TransactionSender(context.Background(), tx, b.Hash(), uint(index))
+		txEvent.GasFee = new(big.Int).Mul(tx.GasPrice(), big.NewInt(int64(receipt.GasUsed))).String()
 
-		if err != nil {
-			return nil, err
+		if tx.To() != nil {
+			txEvent.Recipient = tx.To().Hex()
+			recipeintBalance, err := s.Client.BalanceAt(context.Background(), *tx.To(), b.Number())
+
+			if err != nil {
+				return nil, nil, err
+			}
+
+			txEvent.RecipientBalance = recipeintBalance.String()
 		}
 
-		// sender
+		sender, err := s.Client.TransactionSender(context.Background(), tx, b.Hash(), uint(index))
+
+		if err != nil {
+			return nil, nil, err
+		}
+
 		if sender.Hex() != "" {
 			txEvent.Sender = sender.Hex()
 
-			senderBalance, err := c.Client.BalanceAt(context.Background(), sender, b.Number())
+			senderBalance, err := s.Client.BalanceAt(context.Background(), sender, b.Number())
 
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
+
 			txEvent.SenderBalance = senderBalance.String()
 		}
+
+		txEvents = append(txEvents, &txEvent)
+
+		senderWalletEvent := WalletEvent{
+			WalletAddress: txEvent.Sender,
+			Balance:       txEvent.SenderBalance,
+			Direction:     Outgoing,
+			TxId:          txEvent.Transaction,
+			ReceivedAt:    txEvent.ReceivedAt,
+			Amount:        txEvent.Amount,
+			Price:         txEvent.Price,
+			GasFee:        txEvent.GasFee,
+		}
+
+		walletEvents = append(walletEvents, &senderWalletEvent)
+
+		receiptWalletEvent := WalletEvent{
+			WalletAddress: txEvent.Recipient,
+			Balance:       txEvent.RecipientBalance,
+			Direction:     Incoming,
+			TxId:          txEvent.Transaction,
+			ReceivedAt:    txEvent.ReceivedAt,
+			Amount:        txEvent.Amount,
+			Price:         txEvent.Price,
+			GasFee:        txEvent.GasFee,
+		}
+		walletEvents = append(walletEvents, &receiptWalletEvent)
+		// TODO: handle contract events (staking action)
 	}
-	return events, nil
+
+	if len(walletEvents) == 0 || len(walletEvents) != len(txEvents)*2 {
+		l.Error("wallet events and tx events mismatch, wallet events=%d tx events=%d", len(walletEvents), len(txEvents))
+	}
+
+	return txEvents, walletEvents, nil
+}
+
+func (s *EthereumStreamer) EventFromBlock(b *types.Block) (*Event, error) {
+	event := Event{
+		Chain:      Ethereum,
+		Network:    s.Network,
+		Provider:   Casimir,
+		Type:       Block,
+		Height:     int64(b.Number().Uint64()),
+		Block:      b.Hash().Hex(),
+		ReceivedAt: time.Unix(int64(b.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
+	}
+	return &event, nil
 }

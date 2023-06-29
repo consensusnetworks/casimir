@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/url"
 	"os"
 	"testing"
@@ -27,7 +28,11 @@ func TestNewEtheruemClient(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if client == nil {
-		t.Fatal("client is nil")
+	head, err := client.Client.HeaderByNumber(context.Background(), nil)
+
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	t.Log(head.Number.String())
 }

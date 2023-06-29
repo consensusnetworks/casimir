@@ -182,111 +182,6 @@ func NewEthereumCrawler() (*EthereumCrawler, error) {
 	}, nil
 }
 
-func (c *EthereumCrawler) Introspect() error {
-	l := c.Logger
-	err := c.Glue.LoadDatabases()
-
-	if err != nil {
-		return err
-	}
-
-	err = c.Glue.LoadTables(AnalyticsDatabaseDev)
-
-	if err != nil {
-		return err
-	}
-
-	for _, t := range c.Glue.Tables {
-		tableVersion, err := strconv.Atoi(string([]rune(*t.Name)[len(*t.Name)-1]))
-
-		if err != nil {
-			return err
-		}
-
-		table := Table{
-			Database: *t.DatabaseName,
-			Name:     *t.Name,
-			Version:  strconv.Itoa(tableVersion),
-		}
-
-		resourceVersion, err := ResourceVersion()
-
-		if err != nil {
-			return err
-		}
-
-		// we expect table version to match resource version otherwise the resoure is not ready yet wait
-		if tableVersion != resourceVersion {
-			l.Error(fmt.Sprintf("database=%s %s table=%s resource_version=%s \n", AnalyticsDatabaseDev, table.String(), *t.Name, strconv.Itoa(resourceVersion)))
-			return errors.New("resource version does not match table version")
-		}
-
-		if t.StorageDescriptor.Location != nil {
-			table.Bucket = *t.StorageDescriptor.Location
-		}
-
-		if t.StorageDescriptor.SerdeInfo.Name == nil {
-			serde := t.StorageDescriptor.SerdeInfo.SerializationLibrary
-			table.SerDe = strings.Split(*serde, ".")[3]
-		} else {
-			table.SerDe = *t.StorageDescriptor.SerdeInfo.Name
-		}
-
-		if strings.Contains(*t.Name, "event") {
-			c.txBucket = table.Bucket
-		} else if strings.Contains(*t.Name, "staking") {
-			c.stakingBucket = table.Bucket
-		} else if strings.Contains(*t.Name, "wallet") {
-			c.walletBucket = table.Bucket
-		}
-	}
-
-	if strings.HasPrefix(c.txBucket, "s3://") {
-		c.txBucket = strings.TrimPrefix(c.txBucket, "s3://")
-	}
-
-	if strings.HasPrefix(c.walletBucket, "s3://") {
-		c.walletBucket = strings.TrimPrefix(c.walletBucket, "s3://")
-	}
-
-	return nil
-}
-
-func ResourceVersion() (int, error) {
-	f, err := os.ReadFile("common/data/package.json")
-
-	if err != nil {
-		return 0, err
-	}
-
-	var pkg PkgJSON
-
-	err = json.Unmarshal(f, &pkg)
-
-	if err != nil {
-		return 0, err
-	}
-
-	var major int
-
-	semver := strings.Split(pkg.Version, ".")
-
-	if len(semver) < 3 {
-		return 0, errors.New("invalid semver")
-	}
-
-	major, err = strconv.Atoi(semver[0])
-
-	if err != nil {
-		return 0, err
-	}
-
-	if major < 1 {
-		return 0, errors.New("major version must be greater than 0")
-	}
-	return major, nil
-}
-
 func (c *EthereumCrawler) Crawl() error {
 	l := c.Logger
 
@@ -416,9 +311,10 @@ func (c *EthereumCrawler) SaveWalletEvents(block int, wallet []*WalletEvent) err
 		return err
 	}
 
-	c.Logger.Info("uploaded %d wallet events to %s\n", len(wallet), dest)
+	c.Logger.Info("uploaded block %d to %s\n", block, dest)
 	return nil
 }
+
 func (c *EthereumCrawler) Close() {
 	c.Wg.Wait()
 	c.Elapsed = time.Since(c.Begin)
@@ -440,7 +336,7 @@ func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, er
 		return nil, nil, err
 	}
 
-	l.Info("processing_block=%d\n", block.Number().Int64())
+	l.Info("processing block=%d\n", block.Number().Int64())
 
 	blockEvent, err := c.EventFromBlock(block)
 
@@ -452,7 +348,7 @@ func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, er
 
 	if block.Transactions().Len() > 0 {
 		for i, tx := range block.Transactions() {
-			l.Info("processing tx %d of %d\n", i+1, block.Transactions().Len())
+			l.Info("processing tx %d of %d in block %d\n", i+1, block.Transactions().Len(), block.Number().Int64())
 
 			receipt, err := c.Client.TransactionReceipt(context.Background(), tx.Hash())
 
@@ -484,17 +380,17 @@ func (c *EthereumCrawler) EventsFromTransaction(b *types.Block, receipt *types.R
 			Chain:       Ethereum,
 			Network:     c.Network,
 			Provider:    Casimir,
+			Block:       b.Hash().Hex(),
 			Type:        Transaction,
 			Height:      int64(b.Number().Uint64()),
 			Transaction: tx.Hash().Hex(),
-			ReceivedAt:  time.Unix(int64(b.Time()), 0).Format(AWSAthenaTimeFormat),
+			ReceivedAt:  time.Unix(int64(b.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
 		}
 
 		if tx.Value() != nil {
 			txEvent.Amount = tx.Value().String()
 		}
 
-		// gas fee = gas price * gas used
 		txEvent.GasFee = new(big.Int).Mul(tx.GasPrice(), big.NewInt(int64(receipt.GasUsed))).String()
 
 		if tx.To() != nil {
@@ -570,9 +466,117 @@ func (c *EthereumCrawler) EventFromBlock(b *types.Block) (*Event, error) {
 		Type:       Block,
 		Height:     int64(b.Number().Uint64()),
 		Block:      b.Hash().Hex(),
-		ReceivedAt: time.Unix(int64(b.Time()), 0).Format(AWSAthenaTimeFormat),
+		ReceivedAt: time.Unix(int64(b.Time()), 0).Format("2006-01-02 15:04:05.999999999"),
 	}
 	return &event, nil
+}
+
+func (c *EthereumCrawler) Introspect() error {
+	l := c.Logger
+
+	l.Info("introspecting...\n")
+
+	err := c.Glue.LoadDatabases()
+
+	if err != nil {
+		return err
+	}
+
+	err = c.Glue.LoadTables(AnalyticsDatabaseDev)
+
+	if err != nil {
+		return err
+	}
+
+	for _, t := range c.Glue.Tables {
+		tableVersion, err := strconv.Atoi(string([]rune(*t.Name)[len(*t.Name)-1]))
+
+		if err != nil {
+			return err
+		}
+
+		table := Table{
+			Database: *t.DatabaseName,
+			Name:     *t.Name,
+			Version:  strconv.Itoa(tableVersion),
+		}
+
+		resourceVersion, err := ResourceVersion()
+
+		if err != nil {
+			return err
+		}
+
+		// we expect table version to match resource version otherwise the resoure is not ready yet wait
+		if tableVersion != resourceVersion {
+			l.Error(fmt.Sprintf("database=%s %s table=%s resource_version=%s \n", AnalyticsDatabaseDev, table.String(), *t.Name, strconv.Itoa(resourceVersion)))
+			return errors.New("resource version does not match table version")
+		}
+
+		if t.StorageDescriptor.Location != nil {
+			table.Bucket = *t.StorageDescriptor.Location
+		}
+
+		if t.StorageDescriptor.SerdeInfo.Name == nil {
+			serde := t.StorageDescriptor.SerdeInfo.SerializationLibrary
+			table.SerDe = strings.Split(*serde, ".")[3]
+		} else {
+			table.SerDe = *t.StorageDescriptor.SerdeInfo.Name
+		}
+
+		if strings.Contains(*t.Name, "event") {
+			c.txBucket = table.Bucket
+		} else if strings.Contains(*t.Name, "staking") {
+			c.stakingBucket = table.Bucket
+		} else if strings.Contains(*t.Name, "wallet") {
+			c.walletBucket = table.Bucket
+		}
+	}
+
+	if strings.HasPrefix(c.txBucket, "s3://") {
+		c.txBucket = strings.TrimPrefix(c.txBucket, "s3://")
+	}
+
+	if strings.HasPrefix(c.walletBucket, "s3://") {
+		c.walletBucket = strings.TrimPrefix(c.walletBucket, "s3://")
+	}
+
+	return nil
+}
+
+func ResourceVersion() (int, error) {
+	f, err := os.ReadFile("common/data/package.json")
+
+	if err != nil {
+		return 0, err
+	}
+
+	var pkg PkgJSON
+
+	err = json.Unmarshal(f, &pkg)
+
+	if err != nil {
+		return 0, err
+	}
+
+	var major int
+
+	semver := strings.Split(pkg.Version, ".")
+
+	if len(semver) < 3 {
+		return 0, errors.New("invalid semver")
+	}
+
+	major, err = strconv.Atoi(semver[0])
+
+	if err != nil {
+		return 0, err
+	}
+
+	if major < 1 {
+		return 0, errors.New("major version must be greater than 0")
+	}
+	return major, nil
 }
 
 func (t Table) String() string {
