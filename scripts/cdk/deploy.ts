@@ -14,6 +14,7 @@ void async function () {
     process.env.NODES_IP = await getSecret('casimir-nodes-ip')
 
     /** Prepare CDK resources */
+    await $`npm run build --workspace @casimir/web`
     await $`npm run build --workspace @casimir/landing`
     await $`npm run build --workspace @casimir/users`
 

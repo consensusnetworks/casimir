@@ -15,6 +15,7 @@ void async function () {
     process.env.NODES_IP = process.env.NODES_IP || '123.456.789.012'
 
     /** Prepare CDK resources */
+    await $`npm run build --workspace @casimir/web`
     await $`npm run build --workspace @casimir/landing`
     await $`npm run build --workspace @casimir/users`
 
