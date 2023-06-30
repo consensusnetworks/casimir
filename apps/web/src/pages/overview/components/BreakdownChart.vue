@@ -147,7 +147,7 @@ watch(selectedTimeframe, () => {
         <h6 class="card_title">
           Ethereum Balance
         </h6>
-        <div class="flex items-center gap-[22px]">
+        <div class="flex flex-wrap items-center gap-[22px]">
           <div
             v-for="item in data.datasets"
             :key="item"
