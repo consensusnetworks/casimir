@@ -61,14 +61,14 @@ export default function useContracts() {
             let signer = signerCreator(walletProvider)
             if (isWalletConnectSigner(signer)) signer = await signer
             const managerSigner = manager.connect(signer as ethers.Signer)
-            const fees = await managerSigner.feePercent()
+            const fees = await getDepositFees()
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
             const value = ethers.utils.parseEther(depositAmount.toString())
             const result = await managerSigner.depositStake({ value, type: 0 })
             await result.wait()
             return true
         } catch (err) {
-            console.error(`There was an error in despoit function: ${err}`)
+            console.error(`There was an error in despoit function: ${JSON.stringify(err)}`)
             return false
         }
     }
