@@ -101,10 +101,10 @@ export default function useWallet() {
           setPrimaryAddress(user?.value?.address as string) 
         }
       }
-      await setUserAccountBalances()
+      // TODO: Uncomment / re-enable this
+      // await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
       await refreshBreakdown()
-      const { error, message, data: userAnalytics } = await getUserAnalytics()
     } catch (error: any) {
       loadingUserWallets.value = false
       throw new Error(error.message || 'There was an error connecting the wallet')

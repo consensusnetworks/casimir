@@ -4,7 +4,7 @@ import { query } from 'athena-query'
 
 const router = express.Router()
 
-const { getUserById } = useDB()
+const { formatResult, getUserById } = useDB()
 
 router.get('/:userId', async (req: express.Request, res: express.Response) => {
     try {
@@ -32,18 +32,24 @@ router.get('/:userId', async (req: express.Request, res: express.Response) => {
          * price
          * gas_fee
          */
+        // const stmt = `
+        //     SELECT * FROM casimir_analytics_database_dev.casimir_analytics_wallet_table_dev1
+        //     WHERE wallet_address IN (${addresses.map((address) => `'${address}'`).join(',')})
+        //     ORDER BY received_at DESC
+        //     LIMIT 100
+        // `
+        // Get all transactions from table
         const stmt = `
             SELECT * FROM casimir_analytics_database_dev.casimir_analytics_wallet_table_dev1
-            WHERE wallet_address IN (${addresses.map((address) => `'${address}'`).join(',')})
             ORDER BY received_at DESC
-            LIMIT 100
+            LIMIT 50
         `
         const [, rows] = await query(stmt, opt)
-        console.log('rows :>> ', rows)
+        const data = formatResult(rows)
         res.status(200).json({
             error: false,
             message: 'analytics',
-            data: rows
+            data
         })
     } catch (err) {
         console.error('err :>> ', err)

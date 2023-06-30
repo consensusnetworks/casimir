@@ -1,17 +1,38 @@
-import { ref } from 'vue'
+import { ref, onMounted, readonly, watch } from 'vue'
 import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import * as Session from 'supertokens-web-js/recipe/session'
+import txData from '../mockData/mock_transaction_data.json'
 
 const { usersBaseURL } = useEnvironment()
 
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
+const initialized = ref<boolean>(false)
 const session = ref<boolean>(false)
 const user = ref<UserWithAccounts | null>(null)
+const userAnalytics = ref<any>({
+    oneMonth: {
+        labels: [],
+        data: []
+    },
+    sixMonth: {
+        labels: [],
+        data: []
+    },
+    oneYear: {
+        labels: [],
+        data: []
+    },
+    historical: {
+        labels: [],
+        data: []
+    }
+})
+const rawUserAnalytics = ref<any>(null)
+const userAddresses = ref<Array<string>>([])
 
 export default function useUsers () {
 
-    const userAddresses = ref<Array<string>>([])
 
     async function addAccount(account: AddAccountOptions): Promise<ApiResponse> {
         try {
@@ -89,7 +110,57 @@ export default function useUsers () {
         }
     }
 
+    async function setUserAnalytics() {
+        rawUserAnalytics.value = txData
+        setData('historical')
+    }
+
+    function setData(timeline: 'oneMonth' | 'sixMonth' | 'oneYear' | 'historical') {
+        const result = userAnalytics.value
+        const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
+            new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
+        })
+
+        let earliest: any = null
+        let latest: any = null
+
+        sortedTransactions.forEach((tx: any) => {
+            const receivedAt = new Date(tx.receivedAt)
+            if (!earliest) earliest = receivedAt.getTime()
+            if (!latest) latest = receivedAt.getTime()
+            if (receivedAt.getTime() < earliest) earliest = receivedAt.getTime()
+            if (receivedAt.getTime() > latest) latest = receivedAt.getTime()
+        })
+
+        const interval = (latest - earliest) / 12
+
+        sortedTransactions.forEach((tx: any) => {
+            const { receivedAt, walletAddress, walletBalance } = tx
+            // If historical data array does not have an object with the walletAddress, add it
+            if (!result.historical.data.find((obj: any) => obj.walletAddress === walletAddress)) {
+                result.historical.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
+                // Determine which interval the receivedAt falls into
+                const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / interval)
+                // Set the value of the intervalIndex to the walletBalance
+                result.historical.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+            } else {
+                // Determine which interval the receivedAt falls into
+                const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / interval)
+                // Set the value of the intervalIndex to the walletBalance
+                result.historical.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+            }
+        })
+
+        // Set the historical labels array to the interval labels
+        result.historical.labels = Array(12).fill(0).map((_, i) => {
+            const date = new Date(earliest + (interval * i))
+            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+        })
+        userAnalytics.value = result
+    }
+
     async function getUserAnalytics() {
+        console.log('got to user analytics')
         try {
             const userId = user.value?.id
             const requestOptions = {
@@ -98,10 +169,13 @@ export default function useUsers () {
                     'Content-Type': 'application/json'
                 }
             }
-            const response = await fetch(`${usersBaseURL}/analytics/${userId}`, requestOptions)
-            const { error, message, data } = await response.json()
-            if (error) throw new Error(message)
-            return { error, message, data }
+            // TODO: Uncomment this when the API / data is ready
+            // const response = await fetch(`${usersBaseURL}/analytics/${userId}`, requestOptions)
+            // const { error, message, data } = await response.json()
+            // if (error) throw new Error(message)
+            // rawUserAnalytics.value = data
+            setUserAnalytics()
+            // return { error, message, data }
         } catch (error: any) {
             throw new Error(error.message || 'Error getting user analytics')
         }
@@ -171,10 +245,22 @@ export default function useUsers () {
         return await fetch(`${usersBaseURL}/user/update-primary-account`, requestOptions)
     }
 
+    watch(user, async () => {
+        if (user.value?.id) await getUserAnalytics()
+    })
+
+    onMounted(async () => {
+        if (!initialized.value && user.value?.id) {
+            await getUserAnalytics()
+            initialized.value = true
+        }
+    })
+
     return {
         session,
-        user,
+        user: readonly(user),
         userAddresses,
+        userAnalytics,
         addAccount,
         checkIfSecondaryAddress,
         checkIfPrimaryUserExists,
