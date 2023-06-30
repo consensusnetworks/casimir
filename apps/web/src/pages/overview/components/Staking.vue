@@ -359,8 +359,23 @@ const handleDeposit = async () => {
         <div class="dot" />
         <div class="dot" />
       </div>
-      <div v-else>
+      <div
+        v-else
+        class="flex items-center justify-center gap-[5px]"
+      >
         {{ stakeButtonText }}
+        <vue-feather
+          v-if="success"
+          type="check"
+          size="36"
+          class="icon w-[20px]"
+        />
+        <vue-feather
+          v-if="failure"
+          type="x"
+          size="36"
+          class="icon w-[20px]"
+        />
       </div>
     </button>
     <div
