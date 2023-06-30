@@ -165,7 +165,7 @@ const handleDeposit = async () => {
   loading.value = false
   if (isSuccess) {
     success.value = true
-    stakeButtonText.value = 'Transaction Successfully Submitted'
+    stakeButtonText.value = 'Transaction Submitted'
   } else {
     failure.value = true
     stakeButtonText.value = 'Transaction Failed'
@@ -346,8 +346,8 @@ const handleDeposit = async () => {
     </div>
 
     <button
-      class="card_button bg-primary h-[37px] w-full "
-      :class="success? 'bg-approve' : 'bg-primary' && failure? 'bg-decline' : 'bg-primary'"
+      class="card_button  h-[37px] w-full "
+      :class="success? 'bg-approve' : failure? 'bg-decline' : 'bg-primary'"
       :disabled="!(termsOfServiceCheckbox && selectedWallet && formattedAmountToStake && !errorMessage)"
       @click="handleDeposit()"
     >
