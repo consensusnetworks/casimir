@@ -101,6 +101,12 @@ const aggregateAddressesByProvider = () => {
         addresses
       })
     })
+  } else {
+    // empty out staking comp
+    selectedProvider.value = ''
+    selectedWallet.value = null
+    formattedAmountToStake.value = ''
+    address_balance.value = null
   }
 }
 
