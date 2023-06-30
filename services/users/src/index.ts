@@ -10,8 +10,6 @@ import seed from './routes/seed'
 
 supertokens.init(SuperTokensBackendConfig)
 
-const port = process.env.PUBLIC_USERS_PORT || 4000
-
 const app = express()
 app.use(express.json())
 
@@ -53,5 +51,5 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     })
 })
 
-app.listen(port)
-console.log(`Users server listening on port ${port}`)
+app.listen(4000)
+console.log('Users server listening on port 4000')

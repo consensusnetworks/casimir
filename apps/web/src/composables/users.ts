@@ -3,7 +3,7 @@ import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccoun
 import useEnvironment from '@/composables/environment'
 import * as Session from 'supertokens-web-js/recipe/session'
 
-const { usersBaseURL } = useEnvironment()
+const { usersUrl } = useEnvironment()
 
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const session = ref<boolean>(false)
@@ -20,7 +20,7 @@ export default function useUsers () {
                 },
                 body: JSON.stringify({ account })
             }
-            const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
+            const response = await fetch(`${usersUrl}/user/add-sub-account`, requestOptions)
             const { error, message, data: userAccount } = await response.json()
             user.value = userAccount
             return { error, message, data: userAccount }
@@ -37,7 +37,7 @@ export default function useUsers () {
                     'Content-Type': 'application/json'
                 }
             }
-            const response = await fetch(`${usersBaseURL}/user/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
+            const response = await fetch(`${usersUrl}/user/check-if-primary-address-exists/${provider}/${address}`, requestOptions)
             const { error, message, data } = await response.json()
             if (error) throw new Error(message)
             return { error, message, data }
@@ -54,7 +54,7 @@ export default function useUsers () {
                     'Content-Type': 'application/json'
                 }
             }
-            const response = await fetch(`${usersBaseURL}/user/check-secondary-address/${address}`, requestOptions)
+            const response = await fetch(`${usersUrl}/user/check-secondary-address/${address}`, requestOptions)
             const { error, message, data } = await response.json()
             if (error) throw new Error(message)
             return { error, message, data }
@@ -88,7 +88,7 @@ export default function useUsers () {
     }
 
     async function getMessage(address: string) {
-        const response = await fetch(`${usersBaseURL}/auth/${address}`)
+        const response = await fetch(`${usersUrl}/auth/${address}`)
         const json = await response.json()
         const { message } = json
         return message
@@ -102,7 +102,7 @@ export default function useUsers () {
                     'Content-Type': 'application/json'
                 }
             }
-            const response = await fetch(`${usersBaseURL}/user`, requestOptions)
+            const response = await fetch(`${usersUrl}/user`, requestOptions)
             const { user, error, message } = await response.json()
             return {
                 error,
@@ -128,7 +128,7 @@ export default function useUsers () {
                 walletProvider,
             })
         }
-        const response = await fetch(`${usersBaseURL}/user/remove-sub-account`, requestOptions)
+        const response = await fetch(`${usersUrl}/user/remove-sub-account`, requestOptions)
         const { data: userAccount } = await response.json()
         user.value = userAccount
         return { error: false, message: `Account removed from user: ${userAccount}`, data: userAccount }
@@ -147,7 +147,7 @@ export default function useUsers () {
             },
             body: JSON.stringify({ userId, updatedAddress })
         }
-        return await fetch(`${usersBaseURL}/user/update-primary-account`, requestOptions)
+        return await fetch(`${usersUrl}/user/update-primary-account`, requestOptions)
     }
 
     return {

@@ -119,16 +119,16 @@ Optionally customize and override the defaults for your *local development envir
 
 | Name | Description | Default |
 | --- | --- | --- |
-| `AWS_PROFILE` | AWS profile name | `"consensus-networks-dev"` |
-| `PROJECT` | Project name | `"casimir"` |
-| `STAGE` | Environment stage name | `"dev"` |
-| `NETWORK` | Set live network (defaults to local fork network) | `""` |
-| `FORK` | Local fork network | `"testnet"` |
-| `EMULATE` | Whether to emulate wallets | `"false"` |
-| `MOCK_ORACLE` | Whether to mock oracle | `"true"` |
-| `MOCK_SERVICES` | Whether to mock backend services | `"true"` |
-| `CLEAN` | Whether to clean all built resources | `"true"` |
-| `LEDGER_APP` | Ledger app name | `"ethereum"` |
+| `AWS_PROFILE` | AWS profile name | `consensus-networks-dev` |
+| `PROJECT` | Project name | `casimir` |
+| `STAGE` | Environment stage name | `dev` |
+| `NETWORK` | Set live network (defaults to local fork network) | `` |
+| `FORK` | Local fork network | `testnet` |
+| `EMULATE` | Whether to emulate wallets | `false` |
+| `LEDGER_APP` | Ledger app name | `ethereum` |
+| `MOCK_ORACLE` | Whether to mock oracle | `false` |
+| `MOCK_SERVICES` | Whether to mock backend services | `true` |
+| `BUILD_PREVIEW` | Whether to preview web app production build | `false` |
 
 ### Scripts and dependencies
 

@@ -7,7 +7,11 @@ import { loadCredentials, getSecret, getFutureContractAddress, getWallet, run, r
 void async function () {
 
     /** Backend services */
-    const services = ['users']
+    const services = {
+        users: {
+            port: 4000
+        }
+    }
 
     /** Chain forks */
     const chains = {
@@ -29,9 +33,6 @@ void async function () {
 
     /** Get exchange price API key */
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
-    
-    /** Default to clean services and data */
-    process.env.CLEAN = process.env.CLEAN || 'true'
 
     /** Default to no hardware wallet emulators */
     process.env.EMULATE = process.env.EMULATE || 'false'
@@ -45,26 +46,26 @@ void async function () {
     /** Default to mock backend services */
     process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
 
+    /** Default to no build preview */
+    process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
+
     /** Default to no live network */
     process.env.NETWORK = process.env.NETWORK || ''
 
     if (process.env.MOCK_SERVICES === 'true') {
         /** Mock services */
-        let port = 4000
-        for (const service of services) {
-            process.env[`PUBLIC_${service.toUpperCase()}_PORT`] = `${port}`
+        for (const service of Object.keys(services)) {
+            process.env[`PUBLIC_${service.toUpperCase()}_PORT`] = `${services[service].port}`
 
             try {
-                if (await run(`lsof -ti:${port}`)) {
-                    await run(`kill -9 $(lsof -ti:${port})`)
+                if (await run(`lsof -ti:${services[service].port}`)) {
+                    await run(`kill -9 $(lsof -ti:${services[service].port})`)
                 }
             } catch {
-                console.log(`Port ${port} is available.`)
+                console.log(`Port ${services[service].port} is available.`)
             }
 
             $`npm run watch --workspace @casimir/${service}`
-
-            ++port
         }
     }
 
@@ -91,8 +92,7 @@ void async function () {
                 }
             }
 
-            const ethereumRpcUrl = 'http://localhost:8545'
-            process.env.ETHEREUM_RPC_URL = ethereumRpcUrl
+            process.env.ETHEREUM_RPC_URL = 'http://localhost:8545'
 
             const seed = await getSecret('consensus-networks-bip39-seed')
             const wallet = getWallet(seed)
@@ -124,14 +124,15 @@ void async function () {
             console.log(`Port ${port} is available.`) 
         }
 
-        process.env.PUBLIC_SPECULOS_PORT = `${port}`
         process.env.LEDGER_APP = process.env.LEDGER_APP || 'ethereum'
-
+        
         /** Pass ledger app to web app */
         process.env.PUBLIC_LEDGER_APP = process.env.LEDGER_APP
 
         /** Emulate Ledger */
         $`scripts/ledger/emulate -a ${process.env.LEDGER_APP}`
+
+        process.env.PUBLIC_SPECULOS_URL = `http://localhost:${port}`
         $`npx esno scripts/ledger/proxy.ts`
 
         /** Emulate Trezor */
@@ -139,15 +140,20 @@ void async function () {
     }
 
     /** Run web app */
-    $`npm run dev --workspace @casimir/web`
+    if (process.env.BUILD_PREVIEW === 'true') {
+        $`npm run build --workspace @casimir/web`
+        $`npm run preview --workspace @casimir/web`
+    } else {
+        $`npm run dev --workspace @casimir/web`
+    }
 
     if (process.env.MOCK_ORACLE === 'true' || process.env.MOCK_SERVICES === 'true') {
         process.on('SIGINT', () => {
             const mocked: string[] = []
             if (process.env.MOCK_ORACLE === 'true') mocked.push('oracle')
-            if (process.env.MOCK_SERVICES === 'true') mocked.push(...services)
-            if (process.env.CLEAN === 'true') {
-                const cleaners = mocked.map(mock => `npm run clean --workspace @casimir/${mock}`).join(' & ')
+            if (process.env.MOCK_SERVICES === 'true') mocked.push(...Object.keys(services))
+            const cleaners = mocked.map(mock => `npm run clean --workspace @casimir/${mock}`).join(' & ')
+            if (cleaners.length) {
                 console.log(`\n🧹 Cleaning up: ${mocked.map(mock => `@casimir/${mock}`).join(', ')}`)
                 runSync(`${cleaners}`)
             }

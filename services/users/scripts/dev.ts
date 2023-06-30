@@ -35,10 +35,10 @@ void async function () {
     /** Start or sync database with latest schema */
     const stackName = 'casimir-users-db'
     await run(`docker compose -p ${stackName} -f ${resourcePath}/docker-compose.yaml up -d`)
-    let ready = false
-    while (!ready) {
+    let dbReady = false
+    while (!dbReady) {
         const health = await run('docker inspect --format=\'{{lower .State.Health.Status}}\' postgres') as string
-        ready = health.trim() === 'healthy'
+        dbReady = health.trim() === 'healthy'
         await new Promise(resolve => setTimeout(resolve, 2500))
     }
     const atlasCli = await run('which atlas')
@@ -46,8 +46,8 @@ void async function () {
     await run(`atlas schema apply --url "postgres://admin:password@localhost:5432/users?sslmode=disable" --to "file://${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`)
     
     /** Start users service */
-    const usersPort = process.env.PUBLIC_USERS_PORT || 4000
-    if (!(await run(`lsof -i :${usersPort}`))) {
+    const usersReady = !(await fetch(`${process.env.PUBLIC_USERS_URL}/health`).catch(() => false))
+    if (usersReady) {
         await run('ts-node-dev --watch ./src --respawn --transpile-only src/index.ts')
     }
 }()

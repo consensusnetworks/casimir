@@ -1,8 +1,4 @@
 import { createWebHistory, createRouter } from 'vue-router'
-// import useWallet from '@/composables/wallet'
-// import useUsers from '@/composables/users'
-
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import Overview from '@/pages/overview/Overview.vue'
 import Test from '@/pages/test/Test.vue'
 
@@ -11,17 +7,21 @@ const routes = [
         path: '/', 
         name: Overview,
         component: Overview,
-    },
-    { 
+    }
+]
+
+if (import.meta.env.DEV) {
+    routes.push({ 
         path: '/test', 
         name: Test, 
         component: Test,
-    },
-]
-
+    })
+}
 
 const router = createRouter({
     history: createWebHistory(),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     routes
 })
 

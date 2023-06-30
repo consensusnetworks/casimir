@@ -72,11 +72,8 @@
     </div>
     <h5>Staking</h5>
     <div class="staking-container">
-      <button @click="getPools(selectedAddress, 'ready')">
-        Get ready user pools
-      </button>
-      <button @click="getPools(selectedAddress, 'stake')">
-        Get staked user pools
+      <button @click="getPools(selectedAddress)">
+        Get pending and staked user pools
       </button>
       <input
         v-model="amountToStake"

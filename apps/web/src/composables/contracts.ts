@@ -9,23 +9,18 @@ import useLedger from './ledger'
 import useTrezor from './trezor'
 import useWalletConnect from './walletConnect'
 import { Account, Pool, ProviderString } from '@casimir/types'
-import { ReadyOrStakeString } from '@/interfaces/ReadyOrStakeString'
-
-/** Manager contract */
-const managerAddress = import.meta.env.PUBLIC_MANAGER_ADDRESS
-const manager: CasimirManager = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager
-
-/** Views contract */
-const viewsAddress = import.meta.env.PUBLIC_VIEWS_ADDRESS
-const views: CasimirViews = new ethers.Contract(viewsAddress, CasimirViewsJson.abi) as CasimirViews
 
 export default function useContracts() {
-    const { ethereumURL } = useEnvironment()
+    
+    const { ethereumUrl, managerAddress, viewsAddress } = useEnvironment()
     const { ethersProviderList, getEthersBrowserSigner } = useEthers()
     const { getEthersLedgerSigner } = useLedger()
     const { getEthersTrezorSigner } = useTrezor()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
 
+    const manager: CasimirManager = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager
+    const views: CasimirViews = new ethers.Contract(viewsAddress, CasimirViewsJson.abi) as CasimirViews
+    
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         const signerCreators = {
             'Browser': getEthersBrowserSigner,
@@ -46,18 +41,21 @@ export default function useContracts() {
     }
 
     async function getDepositFees() {
-        const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+        const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
         const fees = await manager.connect(provider).feePercent()
         const feesRounded = Math.round(fees * 100) / 100
         return feesRounded
     }
 
-    async function getPools(address: string, readyOrStake: ReadyOrStakeString): Promise<Pool[]> {
+    async function getPools(address: string): Promise<Pool[]> {
         const { user } = useUsers()
-        const provider = new ethers.providers.JsonRpcProvider(ethereumURL)        
+        const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)        
         const userStake = await manager.connect(provider).getUserStake(address) // to get user's stake balance
         const poolStake = await manager.connect(provider).getTotalStake() // to get total stake balance
-        const poolIds = readyOrStake === 'ready' ? await manager.connect(provider).getReadyPoolIds() : await manager.connect(provider).getStakedPoolIds() // to get ready (open) pool IDs OR to get staked (active) pool IDs
+        const poolIds = [
+            ...await manager.connect(provider).getPendingPoolIds(),
+            ...await manager.connect(provider).getStakedPoolIds()
+        ]
 
         console.log('userStake :>> ', ethers.utils.formatEther(userStake))
         console.log('poolStake :>> ', ethers.utils.formatEther(poolStake))
@@ -109,13 +107,13 @@ export default function useContracts() {
                 }
             }
             
-            if (readyOrStake === 'stake') {
-                user.value?.accounts.forEach((account: Account) => {
-                    if (account.address === address) {
-                        account.pools ? account.pools.push(pool) : account.pools = [pool]
-                    }
-                })
-            }
+            user.value?.accounts.forEach((account: Account) => {
+                if (account.address === address) {
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    account.pools ? account.pools.push(pool) : account.pools = [pool]
+                }
+            })
             
             return pool
         }))

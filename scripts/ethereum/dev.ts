@@ -23,9 +23,6 @@ void async function () {
     /** Load AWS credentials for configuration */
     await loadCredentials()
 
-    /** Default to clean services and data */
-    process.env.CLEAN = process.env.CLEAN || 'true'
-
     /** Default to testnet */
     process.env.FORK = process.env.FORK || 'testnet'
 
@@ -65,8 +62,8 @@ void async function () {
         $`npm run dev --workspace @casimir/oracle`
         process.on('SIGINT', () => {
             const messes = ['oracle']
-            if (process.env.CLEAN === 'true') {
-                const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
+            const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
+            if (cleaners.length) {
                 console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)
                 runSync(`${cleaners}`)
             }

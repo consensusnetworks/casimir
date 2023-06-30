@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
-import useSolana from '@/composables/solana'
+// import useSolana from '@/composables/solana'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
 import useWalletConnect from '@/composables/walletConnect'
@@ -36,7 +36,7 @@ const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 export default function useWallet() {
   const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
-  const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
+  // const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { user, getUser, setUser, addAccount, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, updatePrimaryAddress } = useUsers()
   const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
@@ -99,7 +99,7 @@ export default function useWallet() {
       }
       await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
-    } catch (error) {
+    } catch (error: any) {
       loadingUserWallets.value = false
       throw new Error(error.message || 'There was an error connecting the wallet')
     }
@@ -127,7 +127,7 @@ export default function useWallet() {
     try {
       const balance = await getEthersBalance(account.address)
       return balance
-    } catch (err) {
+    } catch (err: any) {
       throw new Error(err.message || 'There was an error getting the account balance')
     }
   }
@@ -171,7 +171,7 @@ export default function useWallet() {
         // TODO: Implement this for other providers
         console.log('Sign up not yet supported for this wallet provider')
       }
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(error.message || 'There was an error logging in')
     }
   }
@@ -228,9 +228,9 @@ export default function useWallet() {
         await sendWalletConnectTransaction(txRequest)
       } else if (ethersProviderList.includes(txRequest.providerString)) {
         await sendEthersTransaction(txRequest)
-      } else if (solanaProviderList.includes(txRequest.providerString)) {
+      }/* else if (solanaProviderList.includes(txRequest.providerString)) {
         await sendSolanaTransaction(txRequest)
-      } else if (selectedProvider.value === 'IoPay') {
+      }*/ else if (selectedProvider.value === 'IoPay') {
         // await sendIoPayTransaction(txRequest)
       } else if (selectedProvider.value === 'Ledger') {
         await sendLedgerTransaction(txRequest)
@@ -259,10 +259,6 @@ export default function useWallet() {
       const { data: { sameAddress, sameProvider } } = await checkIfPrimaryUserExists(selectedProvider.value, selectedAddress.value)
       if (sameAddress && sameProvider ) {
         await connectWallet() // login
-        return {
-          error: false,
-          message: 'Address already exists as a primary address using this provider',
-        }
       } else if (sameAddress && !sameProvider) {
         // TODO: Handle this on front-end: do you want to change your primary provider?
         throw new Error('Address already exists as a primary address using another provider')
@@ -271,7 +267,7 @@ export default function useWallet() {
       const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(selectedAddress.value)
       if (accountsIfSecondaryAddress.length) throw new Error(`${selectedAddress.value} already exists as a secondary address on this/these account(s): ${JSON.stringify(accountsIfSecondaryAddress)}`)
       await connectWallet() // sign up or add account
-    } catch (error) {
+    } catch (error: any) {
       // TODO: @shanejearley - What do we want to do here?
       throw new Error(error.message || 'There was an error selecting address')
     }
@@ -302,7 +298,7 @@ export default function useWallet() {
         const trezorAddresses = await getTrezorAddress[currency]() as CryptoAddress[]
         setUserAddresses(trezorAddresses)
       }
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error selecting provider: ${error.message}`)
     }
   }
@@ -376,9 +372,9 @@ export default function useWallet() {
         await signWalletConnectMessage(messageRequest)
       } else if (ethersProviderList.includes(messageRequest.providerString)) {
         await signEthersMessage(messageRequest)
-      } else if (solanaProviderList.includes(messageRequest.providerString)) {
+      }/* else if (solanaProviderList.includes(messageRequest.providerString)) {
         await signSolanaMessage(messageRequest)
-      } else if (messageRequest.providerString === 'IoPay') {
+      }*/ else if (messageRequest.providerString === 'IoPay') {
         // await signIoPayMessage(messageRequest)
       } else if (messageRequest.providerString === 'Ledger') {
         await signLedgerMessage(messageRequest)

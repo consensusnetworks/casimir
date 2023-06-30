@@ -1,12 +1,17 @@
 import { ethers } from 'ethers'
-import { EthersProvider } from '@/interfaces/index'
+import { EthersProvider } from '@casimir/types'
 import { TransactionRequest } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
 
+interface ethereumWindow extends Window {
+  ethereum: any;
+}
+declare const window: ethereumWindow
+
 const { createSiweMessage, signInWithEthereum } = useAuth()
-const { ethereumURL } = useEnvironment()
+const { ethereumUrl } = useEnvironment()
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
@@ -18,7 +23,7 @@ export default function useEthers() {
         method: 'wallet_addEthereumChain',
         params: [network]
       })
-    } catch(error) {
+    } catch(error: any) {
       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
     }
   }
@@ -105,7 +110,7 @@ export default function useEthers() {
   }
 
   async function getEthersBalance(address: string, ) {
-    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
     const balance = await provider.getBalance(address)
     return ethers.utils.formatEther(balance)
   }
@@ -159,7 +164,7 @@ export default function useEthers() {
         provider, 
         signedMessage
       })
-    } catch (err) {
+    } catch (err: any) {
       throw new Error(err.message)
     }
   }
@@ -182,7 +187,7 @@ export default function useEthers() {
       to,
       value: weiAmount
     }
-    const ethFees = await estimateEIP1559GasFee(ethereumURL, tx)
+    const ethFees = await estimateEIP1559GasFee(ethereumUrl, tx)
     const { fee, gasLimit } = ethFees
     const requiredBalance = parseInt(value) + parseInt(fee)
     const balance = await getEthersBalance(from)
@@ -216,7 +221,7 @@ export default function useEthers() {
             method:'wallet_switchEthereumChain',
             params: [{chainId: chainId}]
           })
-        } catch (err) {
+        } catch (err: any) {
             console.log(`Error occurred while switching chain to chainId ${chainId}, err: ${err.message} code: ${err.code}`)
             if (err.code === 4902){
               if (chainId === '5') {
@@ -254,7 +259,7 @@ function getBrowserProvider(providerString: ProviderString) {
     if (!ethereum.providerMap && ethereum.isMetaMask) {
       return ethereum
     }
-    return window.ethereum?.providerMap?.get(providerString) || undefined
+    return ethereum?.providerMap?.get(providerString) || undefined
   } else if (providerString === 'BraveWallet') {
     return getBraveWallet()
   } else if (providerString === 'TrustWallet') {

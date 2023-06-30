@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { ref, watch } from 'vue'
 import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
@@ -110,15 +109,15 @@ const tableMockedItems = ref({
   ],
 })
 
-const filteredData = ref(tableMockedItems.value[tableView.value])
+const filteredData = ref(tableMockedItems.value[tableView.value as keyof typeof tableMockedItems.value])
 
 const filterData = () => {
   let filteredDataArray
   if (searchInput.value === '') {
-    filteredDataArray = tableMockedItems.value[tableView.value]
+    filteredDataArray = tableMockedItems.value[tableView.value as keyof typeof tableMockedItems.value]
   } else {
     const searchTerm = searchInput.value
-    filteredDataArray =  tableMockedItems.value[tableView.value].filter(item => {
+    filteredDataArray = (tableMockedItems.value[tableView.value as keyof typeof tableMockedItems.value] as Array<any>).filter(item => {
       return (
         // Might need to modify to match types each variable
         item.wallet_provider?.toLowerCase().includes(searchTerm) ||
@@ -142,7 +141,7 @@ const filterData = () => {
 
       if (selectedOrientation.value === 'ascending') {
         return valA < valB ? -1 : valA > valB ? 1 : 0
-      } else if (selectedOrientation.value === 'descending') {
+      } else {
         return valA > valB ? -1 : valA < valB ? 1 : 0
       }
     })
@@ -168,7 +167,7 @@ const convertString = (inputString: string) => {
   return start + middle + end
 }
 
-const convertJsonToCsv = (jsonData) => {
+const convertJsonToCsv = (jsonData: any[]) => {
   const separator = ','
   const csvRows = []
 
@@ -196,7 +195,7 @@ const convertJsonToCsv = (jsonData) => {
   return csvRows.join('\n')
 }
 
-const convertJsonToExcelBuffer = (jsonData) => {
+const convertJsonToExcelBuffer = (jsonData: unknown[]) => {
   const worksheet = XLSX.utils.json_to_sheet(jsonData)
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
@@ -317,8 +316,8 @@ const exportFile = () => {
         <thead>
           <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
             <th
-              v-for="header in tableHeaderOptions[tableView].headers"
-              :key="header"
+              v-for="header in tableHeaderOptions[tableView as keyof typeof tableHeaderOptions].headers"
+              :key="header.title"
               class="table_header "
             >
               <div class="flex items-center gap-[5px]">
@@ -378,12 +377,12 @@ const exportFile = () => {
         >
           <tr
             v-for="item in filteredData"
-            :key="item"
+            :key="(item as any).act || (item as any).tx_hash"
             class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
           >
             <td
-              v-for="header in tableHeaderOptions[tableView].headers"
-              :key="header"
+              v-for="header in tableHeaderOptions[tableView as keyof typeof tableHeaderOptions].headers"
+              :key="header.title"
               class="dynamic_padding"
             >
               <div
@@ -398,12 +397,12 @@ const exportFile = () => {
                   />
                 </button> -->
                 <img
-                  :src="`/${item[header.value]}.svg`"
+                  :src="`/${item[header.value as keyof typeof item]}.svg`"
                   alt="Avatar "
                   class="w-[20px] h-[20px]"
                 >
                 <h6 class="title_name 800s:w-[20px] w-[50px] truncate">
-                  {{ item[header.value] }}
+                  {{ item[header.value as keyof typeof item] }}
                 </h6>
               </div>
               <div
@@ -411,7 +410,7 @@ const exportFile = () => {
                 class="flex items-center gap-[12px] underline"
               >
                 <a href=""> 
-                  {{ convertString(item[header.value]) }}
+                  {{ convertString(item[header.value as keyof typeof item]) }}
                 </a>
               </div>
               <div
@@ -426,7 +425,7 @@ const exportFile = () => {
                   />
                 </button> -->
                 <a class="w-[55px] truncate underline">
-                  {{ convertString(item[header.value]) }}
+                  {{ convertString(item[header.value as keyof typeof item]) }}
                 </a>
               </div>
               <div
@@ -434,14 +433,14 @@ const exportFile = () => {
                 class="flex items-center gap-[12px]"
               >
                 <div
-                  v-if="item[header.value] === 'staked'"
+                  v-if="item[header.value as keyof typeof item] === 'staked'"
                   class="flex items-center gap-[8px] status_pill bg-[#ECFDF3] text-[#027A48]"
                 >
                   <div class="bg-[#027A48] rounded-[999px] w-[8px] h-[8px]" />
                   Staked
                 </div>
                 <div
-                  v-else-if="item[header.value] === 'pending'" 
+                  v-else-if="item[header.value as keyof typeof item] === 'pending'" 
                   class="flex items-center gap-[8px] status_pill bg-[#FFFAEB] text-[#B54708]"
                 >
                   <div class="bg-[#F79009] rounded-[999px] w-[8px] h-[8px]" />
@@ -453,14 +452,14 @@ const exportFile = () => {
                 class="flex items-center gap-[12px] pl-[20px]"
               >
                 <div
-                  v-for="operator in item[header.value]"
+                  v-for="operator in item[header.value as keyof typeof item]"
                   :key="operator"
                   :class="`w-[24px] h-[24px] border-[2px] border-white bg-blue-300 rounded-[999px]`"
                   :style="`margin-left: -20px`"
                 />
               </div>
               <div v-else>
-                {{ item[header.value] }}
+                {{ item[header.value as keyof typeof item] }}
               </div>
             </td>
           </tr>
