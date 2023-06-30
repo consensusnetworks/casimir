@@ -232,6 +232,7 @@ const handleDeposit = async () => {
           v-for="item in formattedWalletOptions"
           id="selectWalletOptionsCard"
           :key="item.provider"
+          class="mt-[5px] mb-[10px]"
         >
           <div class="w-full text-[12px] text-grey_6 flex items-center gap-[8px] mb-[10px]">
             <img
