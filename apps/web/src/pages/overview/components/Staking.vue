@@ -11,7 +11,7 @@ import TermsOfService from '@/components/TermsOfService.vue'
 
 const { deposit, getDepositFees } = useContracts()
 const { getEthersBalance } = useEthers()
-const { user, getUserAnalytics } = useUsers()
+const { user } = useUsers()
 const { getCurrentPrice } = usePrice()
 
 const selectedProvider = ref<ProviderString>('')
@@ -185,12 +185,6 @@ const handleDeposit = async () => {
 
 <template>
   <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black h-full relative">
-    <button
-      class="border black"
-      @click="getUserAnalytics()"
-    >
-      GET USER ANALYTICS
-    </button>
     <h6 class="address_balance mb-[12px]">
       Account Balance
     </h6>
