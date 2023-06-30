@@ -100,9 +100,6 @@ export default function useUsers () {
             }
             const response = await fetch(`${usersBaseURL}/analytics/${userId}`, requestOptions)
             const { error, message, data } = await response.json()
-            console.log('error :>> ', error)
-            console.log('message :>> ', message)
-            console.log('data :>> ', data)
             if (error) throw new Error(message)
             return { error, message, data }
         } catch (error: any) {
