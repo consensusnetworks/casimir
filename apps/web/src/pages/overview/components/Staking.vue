@@ -154,12 +154,15 @@ onUnmounted(() =>{
   window.removeEventListener('click', handleOutsideClick)
 })
 
+const stakingActionLoader = ref(false)
 const loading = ref(false)
 const success = ref(false)
 const failure = ref(false)
 const stakeButtonText = ref('Stake')
 
 const handleDeposit = async () => {
+  stakingActionLoader.value = true
+  
   loading.value = true
   const isSuccess = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedProvider.value })
   loading.value = false
@@ -184,13 +187,19 @@ const handleDeposit = async () => {
     
   }, 3000)
   
-
+  setTimeout(() => {
+    stakingActionLoader.value = false
+  }, 3500)
   
 }
 </script>
 
 <template>
   <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black h-full relative">
+    <div
+      v-if="stakingActionLoader"
+      class="absolute w-full h-full bg-black/[.1] top-0 left-0 rounded-[3px] z-[10] "
+    />
     <h6 class="address_balance mb-[12px]">
       Account Balance
     </h6>
