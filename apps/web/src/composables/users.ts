@@ -110,12 +110,8 @@ export default function useUsers () {
         }
     }
 
-    async function setUserAnalytics() {
+    function setUserAnalytics() {
         rawUserAnalytics.value = txData
-        setData()
-    }
-
-    function setData() {
         const result = userAnalytics.value
         const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
             new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
@@ -303,10 +299,15 @@ export default function useUsers () {
     }
 
     watch(user, async () => {
-        if (user.value?.id) await getUserAnalytics()
+        console.log('user updated')
+        if (user.value?.id) {
+            console.log('user.id exists so will getUserAnalytics')
+            await getUserAnalytics()
+        }
     })
 
     onMounted(async () => {
+        console.log('onMounted in users.ts invoked')
         if (!initialized.value && user.value?.id) {
             await getUserAnalytics()
             initialized.value = true
