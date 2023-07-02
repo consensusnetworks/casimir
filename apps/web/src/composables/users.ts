@@ -112,48 +112,105 @@ export default function useUsers () {
 
     async function setUserAnalytics() {
         rawUserAnalytics.value = txData
-        setData('historical')
+        setData()
     }
 
-    function setData(timeline: 'oneMonth' | 'sixMonth' | 'oneYear' | 'historical') {
+    function setData() {
         const result = userAnalytics.value
         const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
             new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
         })
 
         let earliest: any = null
-        let latest: any = null
-
+        const latest: any = new Date().getTime()
+        const oneYear = new Date().getTime() - 31536000000
+        const oneYearInterval = (latest - oneYear) / 12
+        const sixMonths = new Date().getTime() - 15768000000
+        const sixMonthInterval = (latest - sixMonths) / 12
+        const oneMonth = new Date().getTime() - 2628000000
+        const oneMonthInterval = (latest - oneMonth) / 12
         sortedTransactions.forEach((tx: any) => {
             const receivedAt = new Date(tx.receivedAt)
             if (!earliest) earliest = receivedAt.getTime()
-            if (!latest) latest = receivedAt.getTime()
             if (receivedAt.getTime() < earliest) earliest = receivedAt.getTime()
-            if (receivedAt.getTime() > latest) latest = receivedAt.getTime()
         })
-
-        const interval = (latest - earliest) / 12
-
+        const historicalInterval = (latest - earliest) / 12
+        
+        
         sortedTransactions.forEach((tx: any) => {
             const { receivedAt, walletAddress, walletBalance } = tx
-            // If historical data array does not have an object with the walletAddress, add it
+            /* Historical */
             if (!result.historical.data.find((obj: any) => obj.walletAddress === walletAddress)) {
                 result.historical.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
                 // Determine which interval the receivedAt falls into
-                const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / interval)
+                const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / historicalInterval)
                 // Set the value of the intervalIndex to the walletBalance
                 result.historical.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
             } else {
                 // Determine which interval the receivedAt falls into
-                const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / interval)
+                const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / historicalInterval)
                 // Set the value of the intervalIndex to the walletBalance
                 result.historical.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+            }
+
+            /* One Year */
+            if (new Date(receivedAt).getTime() > oneYear) {
+                if (!result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress)) {
+                    result.oneYear.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
+                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneYear) / oneYearInterval)
+                    result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+                } else {
+                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneYear) / oneYearInterval)
+                    result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+                }
+            }
+
+            /* Six Months */
+            if (new Date(receivedAt).getTime() > sixMonths) {
+                if (!result.sixMonth.data.find((obj: any) => obj.walletAddress === walletAddress)) {
+                    result.sixMonth.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
+                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - sixMonths) / sixMonthInterval)
+                    result.sixMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+                } else {
+                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - sixMonths) / sixMonthInterval)
+                    result.sixMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+                }
+            }
+
+            /* One Month */
+            if (new Date(receivedAt).getTime() > oneMonth) {
+                if (!result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress)) {
+                    result.oneMonth.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
+                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneMonth) / oneMonthInterval)
+                    result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+                } else {
+                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneMonth) / oneMonthInterval)
+                    result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+                }
             }
         })
 
         // Set the historical labels array to the interval labels
         result.historical.labels = Array(12).fill(0).map((_, i) => {
-            const date = new Date(earliest + (interval * i))
+            const date = new Date(earliest + (historicalInterval * i))
+            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+        })
+
+        // Set the oneYear labels array to the interval labels
+        result.oneYear.labels = Array(12).fill(0).map((_, i) => {
+            const date = new Date(oneYear + (oneYearInterval * i))
+            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+        })
+
+        // Set the sixMonth labels array to the interval labels
+        result.sixMonth.labels = Array(12).fill(0).map((_, i) => {
+            const date = new Date(sixMonths + (sixMonthInterval * i))
+            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+        })
+
+        // Set the oneMonth labels array to the interval labels
+        result.oneMonth.labels = Array(12).fill(0).map((_, i) => {
+            const date = new Date(oneMonth + (oneMonthInterval * i))
             return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
         })
         userAnalytics.value = result

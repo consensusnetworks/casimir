@@ -17,10 +17,16 @@ const setMockData = () => {
   let data = []
   switch (selectedTimeframe.value) {
     case '1 month':
+      labels = userAnalytics.value.oneMonth.labels
+      data = userAnalytics.value.oneMonth.data
       break
     case '6 months':
+      labels = userAnalytics.value.sixMonth.labels
+      data = userAnalytics.value.sixMonth.data
       break
     case '12 months':
+      labels = userAnalytics.value.oneYear.labels
+      data = userAnalytics.value.oneYear.data
       break
     case 'historical':
       labels = userAnalytics.value.historical.labels
@@ -34,6 +40,7 @@ const setMockData = () => {
   chartData.value = {
     labels : labels,
     datasets : data.map((item: any) => {
+      console.log('userAnalytics.value :>> ', userAnalytics)
       return {
         data : item.walletBalance,
         label : item.walletAddress,
