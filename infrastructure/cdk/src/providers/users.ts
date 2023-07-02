@@ -77,9 +77,7 @@ export class UsersStack extends cdk.Stack {
 
         /** Create a DB cluster */
         new rds.ServerlessCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
-            engine: rds.DatabaseClusterEngine.auroraPostgres({
-                version: rds.AuroraPostgresEngineVersion.VER_15_2
-            }),
+            engine: rds.DatabaseClusterEngine.AURORA_POSTGRESQL,
             scaling: {
                 autoPause: cdk.Duration.minutes(30),
                 minCapacity: rds.AuroraCapacityUnit.ACU_1,
