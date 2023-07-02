@@ -5,7 +5,7 @@ import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 
 const { currentStaked, stakingRewards, totalDeposited } = useContracts()
-const { userAnalytics } = useUsers()
+const { user, getUserAnalytics, userAnalytics } = useUsers()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('historical')
@@ -40,7 +40,6 @@ const setMockData = () => {
   chartData.value = {
     labels : labels,
     datasets : data.map((item: any) => {
-      console.log('userAnalytics.value :>> ', userAnalytics)
       return {
         data : item.walletBalance,
         label : item.walletAddress,
@@ -83,12 +82,15 @@ const setMockData = () => {
   }
 }
 
-onMounted(() => {
-  setMockData()
-})
+// onMounted(() => {
+//   setMockData()
+// })
 
-watch(userAnalytics, () => {
-  setMockData()
+watch(user, async () => {
+    if (user.value?.id) {
+      await getUserAnalytics()
+      setMockData()
+    }
 })
 
 watch(selectedTimeframe, () => {

@@ -8,9 +8,7 @@ import useEnvironment from '@/composables/environment'
 import useUsers from '@/composables/users'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
-const { manager, refreshBreakdown } = useContracts()
 const { ethereumURL } = useEnvironment()
-const { user } = useUsers()
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
@@ -149,6 +147,8 @@ export default function useEthers() {
   }
 
   async function listenForTransactions() {
+    const { manager, refreshBreakdown } = useContracts()
+    const { user } = useUsers()
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     provider.on('block', async (blockNumber: number) => {
       console.log('blockNumber :>> ', blockNumber)

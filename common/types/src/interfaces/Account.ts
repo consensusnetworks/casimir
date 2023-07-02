@@ -7,7 +7,7 @@ export interface Account {
     /** The address of the current account */
     address: string
     /** The current balance */
-    balance?: string
+    balance?: number
     /** See Currency below */
     currency: Currency
     /** ISO Timestamp of when user was created */

@@ -22,9 +22,6 @@ const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi, prov
 const viewsAddress = import.meta.env.PUBLIC_VIEWS_ADDRESS
 const views: CasimirViews = new ethers.Contract(viewsAddress, CasimirViewsJson.abi) as CasimirViews
 
-const { user } = useUsers()
-const { getCurrentPrice } = usePrice()
-
 const currentStaked = ref<BreakdownAmount>({
     usd: '$0.00',
     exchange: '0 ETH'
@@ -44,7 +41,9 @@ export default function useContracts() {
     const { ethereumURL } = useEnvironment()
     const { ethersProviderList, getEthersBrowserSigner } = useEthers()
     const { getEthersLedgerSigner } = useLedger()
+    const { getCurrentPrice } = usePrice()
     const { getEthersTrezorSigner } = useTrezor()
+    const { user } = useUsers()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
     
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {

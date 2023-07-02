@@ -1,13 +1,13 @@
-import { ref, onMounted, readonly, watch } from 'vue'
-import { AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse } from '@casimir/types'
+import { ref, readonly } from 'vue'
+import { Account, AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
+import useEthers from './ethers'
 import * as Session from 'supertokens-web-js/recipe/session'
 import txData from '../mockData/mock_transaction_data.json'
 
 const { usersBaseURL } = useEnvironment()
 
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
-const initialized = ref<boolean>(false)
 const session = ref<boolean>(false)
 const user = ref<UserWithAccounts | null>(null)
 const userAnalytics = ref<any>({
@@ -32,8 +32,6 @@ const rawUserAnalytics = ref<any>(null)
 const userAddresses = ref<Array<string>>([])
 
 export default function useUsers () {
-
-
     async function addAccount(account: AddAccountOptions): Promise<ApiResponse> {
         try {
             const requestOptions = {
@@ -107,6 +105,15 @@ export default function useUsers () {
         } catch (error: any) {
             console.log('Error in checkUserSessionExists in wallet.ts :>> ', error)
             return false
+        }
+    }
+
+    async function getAccountBalance(account: Account) {
+        const { getEthersBalance } = useEthers()
+        try {
+            return await getEthersBalance(account.address)
+        } catch (err: any) {
+            throw new Error(err.message || 'There was an error getting the account balance')
         }
     }
 
@@ -213,7 +220,6 @@ export default function useUsers () {
     }
 
     async function getUserAnalytics() {
-        console.log('got to user analytics')
         try {
             const userId = user.value?.id
             const requestOptions = {
@@ -286,6 +292,26 @@ export default function useUsers () {
         userAddresses.value = newUser?.accounts.map(account => account.address) as Array<string>
     }
 
+    async function setUserAccountBalances() {
+        try {
+          if (user?.value?.accounts) {
+            const { accounts } = user.value
+            const accountsWithBalances = await Promise.all(accounts.map(async (account: Account) => {
+              const balance = await getAccountBalance(account)
+              return {
+                ...account,
+                balance
+              }
+            }))
+            
+            user.value.accounts = accountsWithBalances
+            setUser(user.value)
+          }
+        } catch (error) {
+          throw new Error('Error setting user account balances')
+        }
+    }
+
     async function updatePrimaryAddress(updatedAddress: string) {
         const userId = user?.value?.id
         const requestOptions = {
@@ -297,22 +323,6 @@ export default function useUsers () {
         }
         return await fetch(`${usersBaseURL}/user/update-primary-account`, requestOptions)
     }
-
-    watch(user, async () => {
-        console.log('user updated')
-        if (user.value?.id) {
-            console.log('user.id exists so will getUserAnalytics')
-            await getUserAnalytics()
-        }
-    })
-
-    onMounted(async () => {
-        console.log('onMounted in users.ts invoked')
-        if (!initialized.value && user.value?.id) {
-            await getUserAnalytics()
-            initialized.value = true
-        }
-    })
 
     return {
         session,
@@ -328,6 +338,7 @@ export default function useUsers () {
         getUserAnalytics,
         removeAccount,
         setUser,
+        setUserAccountBalances,
         updatePrimaryAddress
     }
 }
