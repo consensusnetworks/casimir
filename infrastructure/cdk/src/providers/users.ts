@@ -78,7 +78,7 @@ export class UsersStack extends cdk.Stack {
         /** Create a DB cluster */
         new rds.ServerlessCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
             engine: rds.DatabaseClusterEngine.AURORA_POSTGRESQL,
-            parameterGroup: rds.ParameterGroup.fromParameterGroupName(this,  config.getFullStackResourceName(this.name, 'parameter-group'), 'default.aurora-postgresql10'),
+            parameterGroup: rds.ParameterGroup.fromParameterGroupName(this,  config.getFullStackResourceName(this.name, 'parameter-group'), 'default.aurora-postgresql15'),
             securityGroups: [usersService.service.connections.securityGroups[0]],
             vpc,
             vpcSubnets: vpc.selectSubnets({
