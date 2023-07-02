@@ -10,7 +10,7 @@ import usePrice from '@/composables/price'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
 import useWalletConnect from './walletConnect'
-import { Account, BreakdownAmount, BreakdownString, Pool, ProviderString } from '@casimir/types'
+import { Account, BreakdownAmount, BreakdownString, Pool, ProviderString, UserWithAccounts } from '@casimir/types'
 import { ReadyOrStakeString } from '@/interfaces/ReadyOrStakeString'
 
 /** Manager contract */
@@ -73,7 +73,7 @@ export default function useContracts() {
     }
 
     async function getCurrentStaked(): Promise<BreakdownAmount> {
-        const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
+        const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
         const promises = addresses.map((address) => manager.connect(provider).getUserStake(address))
         try {
             const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
@@ -175,7 +175,7 @@ export default function useContracts() {
     }
 
     async function getStakingRewards() : Promise<BreakdownAmount> {
-        const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
+        const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
         const promises = [] as Array<Promise<ethers.BigNumber>>
         addresses.forEach((address) => {promises.push(manager.connect(provider).getUserRewards(address))})
         const stakingRewards = (await Promise.all(promises)).reduce((a, b) => a.add(b))
@@ -189,7 +189,7 @@ export default function useContracts() {
 
     async function getTotalDeposited() : Promise<BreakdownAmount> {
         const promises = [] as Array<Promise<any>>
-        const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
+        const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
         addresses.forEach((address) => { promises.push(getUserContractEventsTotals(address)) })
         const totalDeposited = (await Promise.all(promises)).reduce((acc, curr) => acc + curr.StakeDeposited, 0)
         const totalDepositedUSD = totalDeposited * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))

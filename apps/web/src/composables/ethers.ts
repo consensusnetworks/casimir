@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { EthersProvider } from '@/interfaces/index'
-import { Account, TransactionRequest } from '@casimir/types'
+import { Account, TransactionRequest, UserWithAccounts } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useContracts from '@/composables/contracts'
@@ -152,7 +152,7 @@ export default function useEthers() {
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     provider.on('block', async (blockNumber: number) => {
       console.log('blockNumber :>> ', blockNumber)
-      const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
+      const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
       const block = await provider.getBlockWithTransactions(blockNumber)
       const transactions = block.transactions
       transactions.map(async (tx) => {
