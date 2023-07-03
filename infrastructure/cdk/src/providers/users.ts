@@ -63,8 +63,8 @@ export class UsersStack extends cdk.Stack {
             secretName: kebabCase(config.getFullStackResourceName(this.name, 'db-credentials')),
             generateSecretString: {
                 secretStringTemplate: JSON.stringify({
-                    username: this.name,
-                    dbname: snakeCase(config.getFullStackResourceName(this.name, 'db')),
+                    username: 'postgres',
+                    dbname: this.name,
                 }),
                 generateStringKey: 'password',
                 passwordLength: 30,
