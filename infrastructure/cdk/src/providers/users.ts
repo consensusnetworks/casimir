@@ -8,7 +8,7 @@ import * as rds from 'aws-cdk-lib/aws-rds'
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
 import { UsersStackProps } from '../interfaces/StackProps'
 import { Config } from './config'
-import { kebabCase } from '@casimir/helpers'
+import { kebabCase, snakeCase } from '@casimir/helpers'
 
 /**
  * Users API stack
@@ -64,7 +64,7 @@ export class UsersStack extends cdk.Stack {
             generateSecretString: {
                 secretStringTemplate: JSON.stringify({
                     username: this.name,
-                    dbname: config.getFullStackResourceName(this.name, 'db'),
+                    dbname: snakeCase(config.getFullStackResourceName(this.name, 'db')),
                 }),
                 generateStringKey: 'password',
                 passwordLength: 30,
@@ -78,7 +78,6 @@ export class UsersStack extends cdk.Stack {
         /** Create a DB cluster */
         new rds.ServerlessCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
             engine: rds.DatabaseClusterEngine.AURORA_POSTGRESQL,
-            parameterGroup: rds.ParameterGroup.fromParameterGroupName(this,  config.getFullStackResourceName(this.name, 'parameter-group'), 'default.aurora-postgresql15'),
             securityGroups: [usersService.service.connections.securityGroups[0]],
             vpc,
             vpcSubnets: vpc.selectSubnets({
