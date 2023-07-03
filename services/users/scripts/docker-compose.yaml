@@ -13,7 +13,7 @@ services:
       - 5432:5432
     environment:
       POSTGRES_DB: users
-      POSTGRES_USER: admin
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     volumes:
       - ./.out/pgdata:/var/lib/postgresql/data

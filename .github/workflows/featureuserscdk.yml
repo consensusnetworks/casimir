@@ -23,6 +23,10 @@ jobs:
         with:
           submodules: 'recursive'
 
+      - name: Install action dependencies
+        run: |
+          curl -sSf https://atlasgo.sh | sh
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
