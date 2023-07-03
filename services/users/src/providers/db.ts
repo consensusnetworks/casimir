@@ -1,4 +1,4 @@
-import { Postgres } from '@casimir/data'
+import { Postgres } from './postgres'
 import { camelCase } from '@casimir/helpers'
 import { Account, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
 import useEthers from './ethers'

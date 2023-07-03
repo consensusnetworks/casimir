@@ -17,7 +17,6 @@ export class Postgres {
      */
     constructor(config?: PoolConfig) {
         this.pool = new Pool(config)
-        process.on('SIGINT', () => this.close())
     }
 
     /**
@@ -35,8 +34,8 @@ export class Postgres {
     async query(text: string, params: any[] = []) { // Todo - use union of stricter @casimir/types for params
         const client = await this.pool.connect()
         const res = await client.query(text, params)
-        const { rows } = res
         client.release()
+        const { rows } = res
         return rows
     }
 
