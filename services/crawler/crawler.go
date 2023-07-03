@@ -102,17 +102,18 @@ type EthereumCrawler struct {
 	EventsConsumed int
 	Version        int
 	Progress       *progressbar.ProgressBar
-	// block and tx events
-	txBucket      string
-	walletBucket  string
-	stakingBucket string
+	// block and tx events included
+	EventBucket    string
+	WalletBucket   string
+	StakingBucket  string
+	AlreadyCrawled *[]int64
 }
 
 func NewEthereumCrawler() (*EthereumCrawler, error) {
-	raw := os.Getenv("ETHEREUM_RPC")
+	raw := os.Getenv("ETHEREUM_RPC_URL")
 
 	if raw == "" {
-		return nil, errors.New("ETHEREUM_RPC env variable is not set")
+		return nil, errors.New("ETHEREUM_RPC_URL environment variable is not set")
 	}
 
 	url, err := url.Parse(raw)
@@ -185,12 +186,6 @@ func NewEthereumCrawler() (*EthereumCrawler, error) {
 func (c *EthereumCrawler) Crawl() error {
 	l := c.Logger
 
-	err := c.Introspect()
-
-	if err != nil {
-		return nil
-	}
-
 	l.Info("crawling %d blocks...\n", c.Head+1)
 
 	step := 250_000
@@ -213,6 +208,12 @@ func (c *EthereumCrawler) Crawl() error {
 
 			l.Info("started batch=%d start=%d end=%d\n", i/step, start, end)
 			for j := start; j >= end; j-- {
+
+				if c.BlockAlreadyConsumed(int64(j)) {
+					l.Warn("skip block=%d because it was already consumed\n", j)
+					continue
+				}
+
 				txEvents, walletEvents, err := c.ProcessBlock(int(j))
 
 				if err != nil {
@@ -265,13 +266,13 @@ func (c *EthereumCrawler) SaveTxEvents(block int, tx []*Event) error {
 
 	}
 
-	if c.txBucket[len(c.txBucket)-1] == '/' {
-		c.txBucket = c.txBucket[:len(c.txBucket)-1]
+	if c.EventBucket[len(c.EventBucket)-1] == '/' {
+		c.EventBucket = c.EventBucket[:len(c.EventBucket)-1]
 	}
 
 	dest := fmt.Sprintf("%s/%s/block=%d.ndjson", Ethereum.String(), c.Network.String(), block)
 
-	err := c.S3.UploadBytes(c.txBucket, dest, &txEvents)
+	err := c.S3.UploadBytes(c.EventBucket, dest, &txEvents)
 
 	if err != nil {
 		return err
@@ -299,13 +300,13 @@ func (c *EthereumCrawler) SaveWalletEvents(block int, wallet []*WalletEvent) err
 		walletEvents.WriteByte('\n')
 	}
 
-	if c.walletBucket[len(c.walletBucket)-1] == '/' {
-		c.walletBucket = c.walletBucket[:len(c.walletBucket)-1]
+	if c.WalletBucket[len(c.WalletBucket)-1] == '/' {
+		c.WalletBucket = c.WalletBucket[:len(c.WalletBucket)-1]
 	}
 
 	dest := fmt.Sprintf("%s/%s/block=%d.ndjson", Ethereum.String(), c.Network.String(), block)
 
-	err := c.S3.UploadBytes(c.walletBucket, dest, &walletEvents)
+	err := c.S3.UploadBytes(c.WalletBucket, dest, &walletEvents)
 
 	if err != nil {
 		return err
@@ -474,7 +475,7 @@ func (c *EthereumCrawler) EventFromBlock(b *types.Block) (*Event, error) {
 func (c *EthereumCrawler) Introspect() error {
 	l := c.Logger
 
-	l.Info("introspecting...\n")
+	l.Info("introspecting ethereum chain=%s network=%s\n", Ethereum, c.Network)
 
 	err := c.Glue.LoadDatabases()
 
@@ -525,23 +526,46 @@ func (c *EthereumCrawler) Introspect() error {
 		}
 
 		if strings.Contains(*t.Name, "event") {
-			c.txBucket = table.Bucket
+			c.EventBucket = table.Bucket
+			c.EventBucket = strings.TrimPrefix(c.EventBucket, "s3://")
+			c.EventBucket = strings.TrimSuffix(c.EventBucket, "/")
+
 		} else if strings.Contains(*t.Name, "staking") {
-			c.stakingBucket = table.Bucket
+			c.StakingBucket = table.Bucket
+			c.StakingBucket = strings.TrimPrefix(c.StakingBucket, "s3://")
+			c.StakingBucket = strings.TrimSuffix(c.StakingBucket, "/")
 		} else if strings.Contains(*t.Name, "wallet") {
-			c.walletBucket = table.Bucket
+			c.WalletBucket = table.Bucket
+			c.WalletBucket = strings.TrimPrefix(c.WalletBucket, "s3://")
+			c.WalletBucket = strings.TrimSuffix(c.WalletBucket, "/")
 		}
 	}
 
-	if strings.HasPrefix(c.txBucket, "s3://") {
-		c.txBucket = strings.TrimPrefix(c.txBucket, "s3://")
+	consumedEventsBucket, err := c.S3.AlreadyConsumed(c.EventBucket, fmt.Sprintf("ethereum/%s", c.Network))
+
+	if err != nil {
+		return err
 	}
 
-	if strings.HasPrefix(c.walletBucket, "s3://") {
-		c.walletBucket = strings.TrimPrefix(c.walletBucket, "s3://")
+	if len(*consumedEventsBucket) == 0 {
+		l.Warn(fmt.Sprintf("no events consumed for chain=%s network=%s\n", Ethereum, c.Network))
+		l.Warn("starting from  ==== GENSIS ====")
+	} else {
+		l.Warn(fmt.Sprintf("chain=%s network=%s already consumed=%d blocks\n", Ethereum, c.Network, len(*consumedEventsBucket)))
 	}
+
+	c.AlreadyCrawled = consumedEventsBucket
 
 	return nil
+}
+
+func (c *EthereumCrawler) BlockAlreadyConsumed(block int64) bool {
+	for _, b := range *c.AlreadyCrawled {
+		if b == block {
+			return true
+		}
+	}
+	return false
 }
 
 func ResourceVersion() (int, error) {

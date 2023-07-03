@@ -18,9 +18,20 @@ func main() {
 	}
 
 	err = Start(os.Args)
+
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+const (
+	ETHERUEM_RPC_URL = "ETHEREUM_RPC_URL"
+	// PUBLIC_CRYPTO_COMPARE_API_KEY = "PUBLIC_CRYPTO_COMPARE_API_KEY"
+)
+
+var EnvVars = map[string]string{
+	ETHERUEM_RPC_URL: "http://localhost:8545",
+	// PUBLIC_CRYPTO_COMPARE_API_KEY: "",
 }
 
 func LoadEnv() error {
@@ -42,6 +53,16 @@ func LoadEnv() error {
 	if err != nil {
 		return err
 	}
+
+	// for key, value := range EnvVars {
+	// 	if os.Getenv(key) == "" {
+	// 		os.Setenv(key, value)
+	// 	}
+
+	// 	if os.Getenv(key) == "" {
+	// 		return fmt.Errorf("env variable %s is not set", key)
+	// 	}
+	// }
 
 	return nil
 }
@@ -74,6 +95,12 @@ func RootCmd(c *cli.Context) error {
 
 	if err != nil {
 		return err
+	}
+
+	err = crawler.Introspect()
+
+	if err != nil {
+		panic(err)
 	}
 
 	err = crawler.Crawl()

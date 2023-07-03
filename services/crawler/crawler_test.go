@@ -33,15 +33,15 @@ func TestEthereumCrawler_Introspect(t *testing.T) {
 		t.Error(err)
 	}
 
-	if crawler.txBucket == "" {
+	if crawler.EventBucket == "" {
 		t.Error("introspection returned no tables, expected events table")
 	}
 
-	if crawler.walletBucket == "" {
+	if crawler.WalletBucket == "" {
 		t.Error("introspection returned no tables, expected wallets table")
 	}
 
-	if crawler.stakingBucket == "" {
+	if crawler.StakingBucket == "" {
 		t.Error("introspection returned no tables, expected staking action table")
 	}
 }

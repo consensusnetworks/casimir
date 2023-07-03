@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/schollz/progressbar"
 )
 
 type EthereumStreamer struct {
@@ -27,7 +26,7 @@ type EthereumStreamer struct {
 	ProcessingBlock uint64
 	EventsConsumed  int
 	Version         int
-	Progress        *progressbar.ProgressBar
+	ContractAddress string
 }
 
 func NewEthereumStreamer() (*EthereumStreamer, error) {
