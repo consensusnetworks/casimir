@@ -5,7 +5,7 @@ services:
     image: postgres:13.9
     container_name: postgres
     healthcheck:
-      test: pg_isready -U admin -d users
+      test: pg_isready -U postgres -d users
       interval: 10s
       timeout: 5s
       retries: 5
