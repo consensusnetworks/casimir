@@ -13,7 +13,6 @@ import (
 const (
 	ETHERUEM_RPC_URL       = "ETHEREUM_RPC_URL"
 	PUBLIC_MANAGER_ADDRESS = "PUBLIC_MANAGER_ADDRESS"
-	CRYPTOCOMPARE_API_KEY  = "CRYPTOCOMPARE_API_KEY"
 )
 
 func LoadEnv() error {
@@ -85,8 +84,23 @@ func Start(args []string) error {
 }
 
 func RootCmd(c *cli.Context) error {
+
+	// Run the crawler first even if we're streaming locally
+	// because we use the crawler's introspect for the streamer
+	crawler, err := NewEthereumCrawler()
+
+	if err != nil {
+		return err
+	}
+
+	err = crawler.Introspect()
+
+	if err != nil {
+		return err
+	}
+
 	if c.Bool("local") {
-		localStreamer, err := NewEthereumStreamer()
+		localStreamer, err := NewEthereumStreamer(true)
 
 		if err != nil {
 			return err
@@ -101,18 +115,6 @@ func RootCmd(c *cli.Context) error {
 		return nil
 	}
 
-	crawler, err := NewEthereumCrawler()
-
-	if err != nil {
-		return err
-	}
-
-	err = crawler.Introspect()
-
-	if err != nil {
-		panic(err)
-	}
-
 	err = crawler.Crawl()
 
 	if err != nil {
@@ -121,21 +123,26 @@ func RootCmd(c *cli.Context) error {
 
 	defer crawler.Close()
 
-	// streamer, err := NewEthereumStreamer()
+	streamer, err := NewEthereumStreamer(false)
 
-	// if err != nil {
-	// 	return err
-	// }
+	if err != nil {
+		return err
+	}
 
-	// // for now use crawler's introspect and s3 client rather than recreating them
-	// streamer.Glue = crawler.Glue
-	// streamer.S3 = crawler.S3
+	// for now use crawler's introspect
+	streamer.Glue = crawler.Glue
+	streamer.S3 = crawler.S3
 
-	// err = streamer.Stream()
+	streamer.EventBucket = crawler.EventBucket
+	streamer.StakingBucket = crawler.StakingBucket
+	streamer.WalletBucket = crawler.WalletBucket
 
-	// if err != nil {
-	// 	return err
-	// }
+	// the streamer can start head + 1 because the crawler is inclusive
+	err = streamer.Stream()
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

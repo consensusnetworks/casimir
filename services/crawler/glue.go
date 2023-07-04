@@ -20,6 +20,14 @@ type GlueClient struct {
 	Tables    []types.Table
 }
 
+type Table struct {
+	Name     string
+	Database string
+	Version  string
+	Bucket   string
+	SerDe    string
+}
+
 func LoadDefaultAWSConfig() (*aws.Config, error) {
 	region := "us-east-2"
 	config, err := config.LoadDefaultConfig(context.TODO(),
