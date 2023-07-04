@@ -12,11 +12,12 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
+	"go.uber.org/zap"
 )
 
 type EthereumStreamer struct {
 	*EthereumClient
-	Logger
+	Logger          *zap.Logger
 	Mutex           *sync.Mutex
 	Begin           time.Time
 	Elapsed         time.Duration
@@ -214,7 +215,7 @@ func (s *EthereumStreamer) Stream() error {
 }
 
 func (s *EthereumStreamer) ProcessBlock(height int) ([]*Event, []*WalletEvent, error) {
-	l := s.Logger
+	l := s.Logger.Sugar()
 
 	var events []*Event
 	var walletEvents []*WalletEvent
@@ -225,7 +226,7 @@ func (s *EthereumStreamer) ProcessBlock(height int) ([]*Event, []*WalletEvent, e
 		return nil, nil, err
 	}
 
-	l.Info("processing block=%d\n", block.Number().Int64())
+	l.Infof("processing block=%d\n", block.Number().Int64())
 
 	blockEvent, err := s.EventFromBlock(block)
 
@@ -262,7 +263,7 @@ func (s *EthereumStreamer) EventsFromTransaction(b *types.Block, receipt *types.
 	var txEvents []*Event
 	var walletEvents []*WalletEvent
 
-	l := s.Logger
+	l := s.Logger.Sugar()
 
 	for index, tx := range b.Transactions() {
 		txEvent := Event{
@@ -341,7 +342,7 @@ func (s *EthereumStreamer) EventsFromTransaction(b *types.Block, receipt *types.
 	}
 
 	if len(walletEvents) == 0 || len(walletEvents) != len(txEvents)*2 {
-		l.Error("wallet events and tx events mismatch, wallet events=%d tx events=%d", len(walletEvents), len(txEvents))
+		l.Errorf("wallet events and tx events mismatch, wallet events=%d tx events=%d", len(walletEvents), len(txEvents))
 	}
 
 	return txEvents, walletEvents, nil

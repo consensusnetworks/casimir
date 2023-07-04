@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/schollz/progressbar"
+	"go.uber.org/zap"
 )
 
 type TxDirection string
@@ -81,14 +81,9 @@ type Table struct {
 	SerDe    string
 }
 
-type Crawler interface {
-	Crawl() error
-	Close() error
-}
-
 type EthereumCrawler struct {
+	Logger *zap.Logger
 	EthereumClient
-	Logger
 	Mutex          *sync.Mutex
 	Begin          time.Time
 	Elapsed        time.Duration
@@ -100,7 +95,6 @@ type EthereumCrawler struct {
 	Head           uint64
 	EventsConsumed int
 	Version        int
-	Progress       *progressbar.ProgressBar
 	// block and tx events included
 	EventBucket    string
 	WalletBucket   string
@@ -145,9 +139,16 @@ func NewEthereumCrawler() (*EthereumCrawler, error) {
 		return nil, err
 	}
 
+	logger, err := zap.NewProduction()
+
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Sugar().Infof("created etheruem crawler for chain=%s network=%s head=%d", Ethereum, EtheruemMainnet, head)
+
 	return &EthereumCrawler{
 		EthereumClient: *client,
-		Logger:         NewStdoutLogger(),
 		Mutex:          &sync.Mutex{},
 		Sema:           make(chan struct{}, ConcurrencyLimit),
 		Glue:           glue,
@@ -155,13 +156,14 @@ func NewEthereumCrawler() (*EthereumCrawler, error) {
 		Head:           head,
 		Wg:             &sync.WaitGroup{},
 		Begin:          time.Now(),
+		Logger:         logger,
 	}, nil
 }
 
 func (c *EthereumCrawler) Crawl() error {
-	l := c.Logger
+	l := c.Logger.Sugar()
 
-	l.Info("crawling %d blocks...\n", c.Head+1)
+	l.Infof("crawling %d blocks...", c.Head+1)
 
 	step := 250_000
 
@@ -174,25 +176,26 @@ func (c *EthereumCrawler) Crawl() error {
 		}
 
 		c.Wg.Add(1)
-		go func(start, end int) {
+		go func(start, end int, i int) {
 			defer func() {
 				c.Wg.Done()
 				<-c.Sema
-				l.Info("completed batch=%d start=%d end=%d\n", i/step, start, end)
+				l.Infof("completed batch=%d start=%d end=%d", i/step, start, end)
 			}()
 
-			l.Info("started batch=%d start=%d end=%d\n", i/step, start, end)
+			l.Infof("started batch=%d start=%d end=%d", i/step, start, end)
+
 			for j := start; j >= end; j-- {
 
 				if c.BlockAlreadyConsumed(int64(j)) {
-					l.Warn("skip block=%d because it was already consumed\n", j)
+					l.Warnf("skip block=%d because it was already consumed", j)
 					continue
 				}
 
 				txEvents, walletEvents, err := c.ProcessBlock(int(j))
 
 				if err != nil {
-					l.Error("block=%d error=%s\n", j, err.Error())
+					l.Errorf("block=%d error=%s", j, err.Error())
 					continue
 				}
 
@@ -200,7 +203,7 @@ func (c *EthereumCrawler) Crawl() error {
 					err = c.SaveTxEvents(int(j), txEvents)
 
 					if err != nil {
-						l.Error("block=%d error=%s\n", j, err.Error())
+						l.Errorf("block=%d error=%s", j, err.Error())
 						continue
 					}
 				}
@@ -209,15 +212,17 @@ func (c *EthereumCrawler) Crawl() error {
 					err = c.SaveWalletEvents(int(j), walletEvents)
 
 					if err != nil {
-						l.Error("block=%d error=%s\n", j, err.Error())
+						l.Errorf("block=%d error=%s", j, err.Error())
 						continue
 					}
 				}
-				// c.Mutex.Lock()
-				// c.EventsConsumed += len(txEvents) + len(walletEvents)
-				// c.Mutex.Unlock()
+
+				c.Mutex.Lock()
+				c.EventsConsumed += len(txEvents) + len(walletEvents)
+				l.Infof("processed block=%d tx_events=%d wallet_events=%d", j, len(txEvents), len(walletEvents))
+				c.Mutex.Unlock()
 			}
-		}(start, end)
+		}(start, end, i)
 	}
 	return nil
 }
@@ -253,7 +258,6 @@ func (c *EthereumCrawler) SaveTxEvents(block int, tx []*Event) error {
 		return err
 	}
 
-	c.Logger.Info("uploaded %d tx events to %s\n", len(tx), dest)
 	return nil
 }
 
@@ -287,7 +291,6 @@ func (c *EthereumCrawler) SaveWalletEvents(block int, wallet []*WalletEvent) err
 		return err
 	}
 
-	c.Logger.Info("uploaded block %d to %s\n", block, dest)
 	return nil
 }
 
@@ -296,12 +299,16 @@ func (c *EthereumCrawler) Close() {
 	c.Elapsed = time.Since(c.Begin)
 	c.Client.Close()
 	close(c.Sema)
-	c.Logger.Info("events consumed=%d\n", c.EventsConsumed)
-	c.Logger.Info("time elapsed=%s\n", c.Elapsed.Round(time.Millisecond))
+
+	l := c.Logger.Sugar()
+	l.Infof("events consumed=%d", c.EventsConsumed)
+	l.Infof("time elapsed=%s", c.Elapsed.Round(time.Millisecond))
+
+	c.Logger.Sync()
 }
 
 func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, error) {
-	l := c.Logger
+	l := c.Logger.Sugar()
 
 	var events []*Event
 	var walletEvents []*WalletEvent
@@ -312,7 +319,7 @@ func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, er
 		return nil, nil, err
 	}
 
-	l.Info("processing block=%d\n", block.Number().Int64())
+	l.Infof("processing block=%d", block.Number().Int64())
 
 	blockEvent, err := c.EventFromBlock(block)
 
@@ -323,8 +330,8 @@ func (c *EthereumCrawler) ProcessBlock(height int) ([]*Event, []*WalletEvent, er
 	events = append(events, blockEvent)
 
 	if block.Transactions().Len() > 0 {
-		for i, tx := range block.Transactions() {
-			l.Info("processing tx %d of %d in block %d\n", i+1, block.Transactions().Len(), block.Number().Int64())
+		for _, tx := range block.Transactions() {
+			// l.Infof("processing tx %d of %d in block %d\n", i+1, block.Transactions().Len(), block.Number().Int64())
 
 			receipt, err := c.Client.TransactionReceipt(context.Background(), tx.Hash())
 
@@ -349,7 +356,7 @@ func (c *EthereumCrawler) EventsFromTransaction(b *types.Block, receipt *types.R
 	var txEvents []*Event
 	var walletEvents []*WalletEvent
 
-	l := c.Logger
+	l := c.Logger.Sugar()
 
 	for index, tx := range b.Transactions() {
 		txEvent := Event{
@@ -428,7 +435,7 @@ func (c *EthereumCrawler) EventsFromTransaction(b *types.Block, receipt *types.R
 	}
 
 	if len(walletEvents) == 0 || len(walletEvents) != len(txEvents)*2 {
-		l.Error("wallet events and tx events mismatch, wallet events=%d tx events=%d", len(walletEvents), len(txEvents))
+		l.Errorf("wallet events and tx events mismatch, wallet events=%d tx events=%d", len(walletEvents), len(txEvents))
 	}
 
 	return txEvents, walletEvents, nil
@@ -448,9 +455,9 @@ func (c *EthereumCrawler) EventFromBlock(b *types.Block) (*Event, error) {
 }
 
 func (c *EthereumCrawler) Introspect() error {
-	l := c.Logger
+	l := c.Logger.Sugar()
 
-	l.Info("introspecting ethereum chain=%s network=%s\n", Ethereum, c.Network)
+	l.Infof("introspecting ethereum chain=%s network=%s", Ethereum, c.Network)
 
 	err := c.Glue.LoadDatabases()
 
@@ -485,7 +492,7 @@ func (c *EthereumCrawler) Introspect() error {
 
 		// we expect table version to match resource version otherwise the resoure is not ready yet wait
 		if tableVersion != resourceVersion {
-			l.Error(fmt.Sprintf("database=%s %s table=%s resource_version=%s \n", AnalyticsDatabaseDev, table.String(), *t.Name, strconv.Itoa(resourceVersion)))
+			l.Errorf("database=%s %s table=%s resource_version=%s", AnalyticsDatabaseDev, table.String(), *t.Name, strconv.Itoa(resourceVersion))
 			return errors.New("resource version does not match table version")
 		}
 
@@ -514,6 +521,8 @@ func (c *EthereumCrawler) Introspect() error {
 			c.WalletBucket = strings.TrimPrefix(c.WalletBucket, "s3://")
 			c.WalletBucket = strings.TrimSuffix(c.WalletBucket, "/")
 		}
+
+		l.Infof("event bucket=%s staking bucket=%s wallet bucket=%s", c.EventBucket, c.StakingBucket, c.WalletBucket)
 	}
 
 	consumedEventsBucket, err := c.S3.AlreadyConsumed(c.EventBucket, fmt.Sprintf("ethereum/%s", c.Network))
@@ -523,10 +532,10 @@ func (c *EthereumCrawler) Introspect() error {
 	}
 
 	if len(*consumedEventsBucket) == 0 {
-		l.Warn(fmt.Sprintf("no events consumed for chain=%s network=%s\n", Ethereum, c.Network))
+		l.Warn(fmt.Sprintf("no events consumed for chain=%s network=%s", Ethereum, c.Network))
 		l.Warn("starting from  ==== GENSIS ====")
 	} else {
-		l.Warn(fmt.Sprintf("chain=%s network=%s already consumed=%d blocks\n", Ethereum, c.Network, len(*consumedEventsBucket)))
+		l.Warn(fmt.Sprintf("chain=%s network=%s already consumed=%d blocks", Ethereum, c.Network, len(*consumedEventsBucket)))
 	}
 
 	c.AlreadyCrawled = consumedEventsBucket
