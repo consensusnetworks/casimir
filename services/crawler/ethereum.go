@@ -17,8 +17,6 @@ type EventType string
 
 const (
 	Ethereum ChainType = "ethereum"
-	Bitcoin  ChainType = "bitcoin"
-	Iotex    ChainType = "iotex"
 
 	EtheruemMainnet NetworkType = "mainnet"
 	EtheruemGoerli  NetworkType = "goerli"
@@ -37,9 +35,58 @@ type EthereumClient struct {
 	Url      url.URL
 }
 
-func NewEthereumClient(Provider ProviderType, url url.URL) (*EthereumClient, error) {
-	if url.String() == "" {
-		return nil, errors.New("etheruem rpc url is empty")
+func NewEthereumClient(raw string) (*EthereumClient, error) {
+	if raw == "" {
+		return nil, errors.New("empty url")
+	}
+
+	url, err := url.Parse(raw)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
+
+	defer cancel()
+
+	client, err := ethclient.DialContext(ctx, url.String())
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer cancel()
+
+	var net NetworkType
+
+	id, err := client.NetworkID(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch id.Int64() {
+	case 1:
+		net = EtheruemMainnet
+	case 5:
+		net = EtheruemGoerli
+	default:
+		return nil, fmt.Errorf("unsupported network id: %d", id.Int64())
+	}
+
+	return &EthereumClient{
+		Client:   client,
+		Network:  net,
+		Provider: Casimir,
+		Url:      *url,
+	}, nil
+}
+
+func NewLocalEthereumClient() (*EthereumClient, error) {
+	url := url.URL{
+		Scheme: "http",
+		Host:   "localhost:8545",
 	}
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
@@ -83,10 +130,6 @@ func (c ChainType) String() string {
 	switch c {
 	case Ethereum:
 		return "ethereum"
-	case Bitcoin:
-		return "bitcoin"
-	case Iotex:
-		return "iotex"
 	default:
 		return ""
 	}

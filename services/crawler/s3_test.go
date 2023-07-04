@@ -8,7 +8,13 @@ import (
 )
 
 func TestNewS3Client(t *testing.T) {
-	s3c, err := NewS3Client()
+	config, err := LoadDefaultAWSConfig()
+
+	if err != nil {
+		t.Errorf("failed to load default aws config: %v", err)
+	}
+
+	s3c, err := NewS3Client(config)
 
 	if err != nil {
 		t.Errorf("failed to create new s3 client: %v", err)
@@ -20,7 +26,9 @@ func TestNewS3Client(t *testing.T) {
 }
 
 func TestAlreadyConsumed(t *testing.T) {
-	s3c, err := NewS3Client()
+	config, err := LoadDefaultAWSConfig()
+
+	s3c, err := NewS3Client(config)
 
 	if err != nil {
 		t.Errorf("failed to create new s3 client: %v", err)

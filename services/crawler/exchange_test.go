@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/big"
-	"net/url"
 	"os"
 	"testing"
 )
@@ -40,19 +39,13 @@ func TestHistoricalPrice(t *testing.T) {
 		t.Error(err)
 	}
 
-	raw := os.Getenv("ETHEREUM_RPC")
+	url := os.Getenv("ETHEREUM_RPC_URL")
 
-	fmt.Println(raw)
-
-	url, err := url.Parse(raw)
-
-	if err != nil {
-		t.Fatal(err)
+	if url == "" {
+		t.Fatal("ETHEREUM_RPC_URL is not set")
 	}
 
-	client, err := NewEthereumClient(Casimir, *url)
-
-	fmt.Println(client)
+	client, err := NewEthereumClient(url)
 
 	if err != nil {
 		t.Fatal(err)

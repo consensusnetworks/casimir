@@ -16,18 +16,12 @@ type S3Client struct {
 	Client *s3.Client
 }
 
-func NewS3Client() (*S3Client, error) {
-	s3c := &S3Client{}
+func NewS3Client(config *aws.Config) (*S3Client, error) {
+	client := s3.NewFromConfig(*config)
 
-	cfg, err := LoadDefaultAWSConfig()
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to load default config for s3 client: %v", err)
-	}
-
-	s3c.Client = s3.NewFromConfig(*cfg)
-
-	return s3c, nil
+	return &S3Client{
+		Client: client,
+	}, nil
 }
 
 func (s *S3Client) Upload(bucket string, key string, fpath string) error {

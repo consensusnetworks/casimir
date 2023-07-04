@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -110,19 +109,13 @@ type EthereumCrawler struct {
 }
 
 func NewEthereumCrawler() (*EthereumCrawler, error) {
-	raw := os.Getenv("ETHEREUM_RPC_URL")
+	url := os.Getenv("ETHEREUM_RPC_URL")
 
-	if raw == "" {
-		return nil, errors.New("ETHEREUM_RPC_URL environment variable is not set")
+	if url == "" {
+		return nil, errors.New("ETHEREUM_RPC_URL env variable is not set")
 	}
 
-	url, err := url.Parse(raw)
-
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := NewEthereumClient(Casimir, *url)
+	client, err := NewEthereumClient(url)
 
 	if err != nil {
 		return nil, err
@@ -146,25 +139,7 @@ func NewEthereumCrawler() (*EthereumCrawler, error) {
 		return nil, err
 	}
 
-	s3c, err := NewS3Client()
-
-	if err != nil {
-		return nil, err
-	}
-
-	key := os.Getenv("CRYPTOCOMPARE_API_KEY")
-
-	if key == "" {
-		return nil, errors.New("CRYPTOCOMPARE_API_KEY env variable is not set")
-	}
-
-	exchange, err := NewCryptoCompareExchange(key)
-
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = exchange.CurrentPrice(Ethereum, USD)
+	s3c, err := NewS3Client(config)
 
 	if err != nil {
 		return nil, err

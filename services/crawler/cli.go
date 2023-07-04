@@ -10,29 +10,11 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func main() {
-	err := LoadEnv()
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	err = Start(os.Args)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
 const (
-	ETHERUEM_RPC_URL = "ETHEREUM_RPC_URL"
-	// PUBLIC_CRYPTO_COMPARE_API_KEY = "PUBLIC_CRYPTO_COMPARE_API_KEY"
+	ETHERUEM_RPC_URL       = "ETHEREUM_RPC_URL"
+	PUBLIC_MANAGER_ADDRESS = "PUBLIC_MANAGER_ADDRESS"
+	CRYPTOCOMPARE_API_KEY  = "CRYPTOCOMPARE_API_KEY"
 )
-
-var EnvVars = map[string]string{
-	ETHERUEM_RPC_URL: "http://localhost:8545",
-	// PUBLIC_CRYPTO_COMPARE_API_KEY: "",
-}
 
 func LoadEnv() error {
 	wd, err := os.Getwd()
@@ -54,17 +36,21 @@ func LoadEnv() error {
 		return err
 	}
 
-	// for key, value := range EnvVars {
-	// 	if os.Getenv(key) == "" {
-	// 		os.Setenv(key, value)
-	// 	}
-
-	// 	if os.Getenv(key) == "" {
-	// 		return fmt.Errorf("env variable %s is not set", key)
-	// 	}
-	// }
-
 	return nil
+}
+
+func main() {
+	err := LoadEnv()
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = Start(os.Args)
+
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func Start(args []string) error {
@@ -72,7 +58,15 @@ func Start(args []string) error {
 		Name:    "crawler",
 		Usage:   "Crawl and stream blockchain events",
 		Version: "0.0.1",
-		Action:  RootCmd,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "local",
+				Aliases: []string{"l"},
+				Usage:   "Stream from a local hardhat network",
+				Value:   false,
+			},
+		},
+		Action: RootCmd,
 	}
 
 	err := LoadEnv()
@@ -91,6 +85,20 @@ func Start(args []string) error {
 }
 
 func RootCmd(c *cli.Context) error {
+	if c.Bool("local") {
+		localStreamer, err := NewEthereumStreamer()
+
+		if err != nil {
+			return err
+		}
+
+		err = localStreamer.Stream()
+
+		if err != nil {
+			return err
+		}
+	}
+
 	crawler, err := NewEthereumCrawler()
 
 	if err != nil {
@@ -111,21 +119,21 @@ func RootCmd(c *cli.Context) error {
 
 	defer crawler.Close()
 
-	// streamer, err := NewEthereumStreamer()
+	streamer, err := NewEthereumStreamer()
 
-	// if err != nil {
-	// return err
-	// }
+	if err != nil {
+		return err
+	}
 
 	// for now use crawler's introspect and s3 client rather than recreating them
-	// streamer.Glue = crawler.Glue
-	// streamer.S3 = crawler.S3
+	streamer.Glue = crawler.Glue
+	streamer.S3 = crawler.S3
 
-	// err = streamer.Stream()
+	err = streamer.Stream()
 
-	// if err != nil {
-	// 	return err
-	// }
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

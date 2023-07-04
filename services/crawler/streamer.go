@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/big"
+	"net"
 	"net/url"
 	"os"
 	"sync"
@@ -13,73 +15,147 @@ import (
 )
 
 type EthereumStreamer struct {
-	EthereumClient
+	*EthereumClient
 	Logger
-	Mutex    *sync.Mutex
-	Begin    time.Time
-	Elapsed  time.Duration
-	Glue     *GlueClient
-	S3       *S3Client
-	Exchange Exchange
-	Head     uint64
-	// the ever increasing curren block number of the chain
+	Mutex           *sync.Mutex
+	Begin           time.Time
+	Elapsed         time.Duration
+	Glue            *GlueClient
+	S3              *S3Client
+	Exchange        Exchange
+	Head            uint64
 	ProcessingBlock uint64
 	EventsConsumed  int
 	Version         int
 	ContractAddress string
+	ContractABI     []byte
 }
 
 func NewEthereumStreamer() (*EthereumStreamer, error) {
-	err := LoadEnv()
+	config, err := LoadDefaultAWSConfig()
 
 	if err != nil {
 		return nil, err
 	}
 
-	raw := os.Getenv("ETHEREUM_WS")
+	glue, err := NewGlueClient(config)
+
+	if err != nil {
+		return nil, err
+	}
+
+	s3, err := NewS3Client(config)
+
+	if err != nil {
+		return nil, err
+	}
+
+	streamer := &EthereumStreamer{
+		Glue:    glue,
+		S3:      s3,
+		Mutex:   &sync.Mutex{},
+		Begin:   time.Now(),
+		Elapsed: 0,
+	}
+
+	raw := os.Getenv(ETHERUEM_RPC_URL)
 
 	if raw == "" {
-		return nil, errors.New("ETHERUEM_WS env variable is not set")
+		return nil, errors.New("ETHERUEM_RPC_URL is not set")
 	}
 
-	url, err := url.Parse(raw)
+	urlParsed, err := url.Parse(raw)
 
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := NewEthereumClient(Casimir, *url)
-
-	if err != nil {
-		return nil, err
+	if urlParsed.Scheme == "https" {
+		urlParsed.Scheme = "wss"
 	}
 
-	head, err := client.Client.BlockNumber(context.Background())
-
-	if err != nil {
-		return nil, err
+	if urlParsed.Scheme == "http" {
+		urlParsed.Scheme = "ws"
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	key := os.Getenv("CRYPTOCOMPARE_API_KEY")
+	if urlParsed.Host == "localhost" {
 
-	exchange, err := NewCryptoCompareExchange(key)
+		port := "8545"
+
+		address := fmt.Sprintf("localhost:%s", port)
+
+		conn, err := net.Dial("tcp", address)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to connect to the local hardhat network: %s", err)
+		}
+
+		defer conn.Close()
+
+		client, err := NewLocalEthereumClient()
+
+		if err != nil {
+			return nil, err
+		}
+		streamer.EthereumClient = client
+
+		return streamer, nil
+	}
+
+	client, err := NewEthereumClient(urlParsed.String())
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &EthereumStreamer{
-		EthereumClient: *client,
-		Logger:         NewStdoutLogger(),
-		Mutex:          &sync.Mutex{},
-		Head:           head,
-		Exchange:       exchange,
-		Begin:          time.Now(),
-	}, nil
+	streamer.EthereumClient = client
+
+	return streamer, nil
+}
+
+func (s *EthereumStreamer) Introspect() error {
+
+	head, err := s.Client.HeaderByNumber(context.Background(), nil)
+
+	if err != nil {
+		return err
+	}
+
+	s.Head = head.Number.Uint64()
+
+	if s.EthereumClient.Url.Host == "localhost" {
+		contractAddress := os.Getenv("CONTRACT_ADDRESS")
+
+		if contractAddress == "" {
+			return errors.New("CONTRACT_ADDRESS is not set")
+		}
+
+		s.ContractAddress = contractAddress
+
+		buildPath := "contracts/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json"
+
+		if _, err := os.Stat(buildPath); os.IsNotExist(err) {
+			return fmt.Errorf("contract build file does not exist: %v", err)
+		}
+
+		abiJson, err := os.ReadFile(buildPath)
+
+		if err != nil {
+			return err
+		}
+
+		if len(abiJson) == 0 {
+			return errors.New("abi json is empty")
+		}
+
+		s.ContractABI = abiJson
+	}
+
+	return nil
 }
 
 func (s *EthereumStreamer) Subscribe(ctx context.Context) <-chan *types.Header {
