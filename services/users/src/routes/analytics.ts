@@ -13,7 +13,7 @@ router.get('/:userId', async (req: express.Request, res: express.Response) => {
         const { accounts } = user
         const addresses = accounts.map((account) => account.address)
         const opt = {
-            profile: 'consensus-networks-dev',
+            profile: process.env.AWS_PROFILE as string,
             database: 'casimir_analytics_database_dev',
             output: 's3://casimir-analytics-wallet-bucket-dev1/',
             workgroup: 'primary',
@@ -22,7 +22,7 @@ router.get('/:userId', async (req: express.Request, res: express.Response) => {
             region: 'us-east-2',
         }
         /**
-         * Looks like we can query the following properties:
+         * Can query the following properties:
          * wallet_address
          * wallet_balance
          * tx_direction
@@ -32,23 +32,22 @@ router.get('/:userId', async (req: express.Request, res: express.Response) => {
          * price
          * gas_fee
          */
-        // const stmt = `
-        //     SELECT * FROM casimir_analytics_database_dev.casimir_analytics_wallet_table_dev1
-        //     WHERE wallet_address IN (${addresses.map((address) => `'${address}'`).join(',')})
-        //     ORDER BY received_at DESC
-        //     LIMIT 100
-        // `
-        // Get all transactions from table
         const stmt = `
             SELECT * FROM casimir_analytics_database_dev.casimir_analytics_wallet_table_dev1
+            WHERE wallet_address IN (${addresses.map((address) => `'${address}'`).join(',')})
             ORDER BY received_at DESC
-            LIMIT 50
+            LIMIT 100
         `
+        // const stmt = `
+        //     SELECT * FROM casimir_analytics_database_dev.casimir_analytics_wallet_table_dev1
+        //     ORDER BY received_at DESC
+        //     LIMIT 50
+        // `
         const [, rows] = await query(stmt, opt)
         const data = formatResult(rows)
         res.status(200).json({
             error: false,
-            message: 'analytics',
+            message: 'Analytics data successfully fetched.',
             data
         })
     } catch (err) {

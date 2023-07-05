@@ -118,7 +118,6 @@ export default function useUsers () {
     }
 
     function setUserAnalytics() {
-        rawUserAnalytics.value = txData
         const result = userAnalytics.value
         const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
             new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
@@ -228,13 +227,16 @@ export default function useUsers () {
                     'Content-Type': 'application/json'
                 }
             }
-            // TODO: Uncomment this when the API / data is ready
-            // const response = await fetch(`${usersBaseURL}/analytics/${userId}`, requestOptions)
-            // const { error, message, data } = await response.json()
-            // if (error) throw new Error(message)
+            const response = await fetch(`${usersBaseURL}/analytics/${userId}`, requestOptions)
+            const { error, message, data } = await response.json()
+            if (error) throw new Error(message)
+            
+            // TODO: Swap this when the API / data is ready
             // rawUserAnalytics.value = data
+            rawUserAnalytics.value = txData
+            
             setUserAnalytics()
-            // return { error, message, data }
+            return { error, message, data }
         } catch (error: any) {
             throw new Error(error.message || 'Error getting user analytics')
         }
