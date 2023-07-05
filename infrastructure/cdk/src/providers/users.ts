@@ -51,7 +51,7 @@ export class UsersStack extends cdk.Stack {
         dbSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(5432))
 
         /** Create a DB cluster */
-        new rds.DatabaseCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
+        const dbCluster = new rds.DatabaseCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
             engine: rds.DatabaseClusterEngine.auroraPostgres({
                 version: rds.AuroraPostgresEngineVersion.VER_15_2
             }),
@@ -67,9 +67,19 @@ export class UsersStack extends cdk.Stack {
                     subnetType: ec2.SubnetType.PUBLIC
                 }
             },
-            port: 5432,
-            serverlessV2MinCapacity: 0.5,
-            serverlessV2MaxCapacity: 1
+            port: 5432
+        })
+
+        /** Add serverless V2 scaling configuration to DB cluster */
+        cdk.Aspects.of(dbCluster).add({
+            visit(node) {
+                if (node instanceof rds.CfnDBCluster) {
+                    node.serverlessV2ScalingConfiguration = {
+                        minCapacity: 0.5, // min capacity is 0.5 vCPU
+                        maxCapacity: 1 // max capacity is 1 vCPU (default)
+                    }
+                }
+            },
         })
 
         /** Create an ECS cluster */
