@@ -13,11 +13,11 @@ const config = new Config()
 const { env, stage } = config
 const app = new cdk.App()
 const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName('dns'), { env })
-const { cluster, vpc } = new NetworkStack(app, config.getFullStackName('network'), { env })
+const { vpc } = new NetworkStack(app, config.getFullStackName('network'), { env })
 if (stage !== 'prod') {
     /** Create development-only stacks */
     new AnalyticsStack(app, config.getFullStackName('analytics'), { env })
-    new UsersStack(app, config.getFullStackName('users'), { env, certificate, cluster, hostedZone, vpc })
+    new UsersStack(app, config.getFullStackName('users'), { env, certificate, hostedZone, vpc })
     new WebStack(app, config.getFullStackName('web'), { env, certificate, hostedZone })
 } else {
     /** Create production-only stacks */

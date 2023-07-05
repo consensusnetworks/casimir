@@ -15,9 +15,9 @@ test('All stacks created', () => {
   const app = new cdk.App()
 
   const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName('dns'), { env })
-  const { cluster, vpc } = new NetworkStack(app, config.getFullStackName('network'), { env })
+  const { vpc } = new NetworkStack(app, config.getFullStackName('network'), { env })
   const analyticsStack = new AnalyticsStack(app, config.getFullStackName('analytics'), { env })
-  const usersStack = new UsersStack(app, config.getFullStackName('users'), { env, certificate, cluster, hostedZone, vpc })
+  const usersStack = new UsersStack(app, config.getFullStackName('users'), { env, certificate, hostedZone, vpc })
   const nodesStack = new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone })
   const landingStack = new LandingStack(app, config.getFullStackName('landing'), { env, certificate, hostedZone })
   const webStack = new WebStack(app, config.getFullStackName('web'), { env, certificate, hostedZone })

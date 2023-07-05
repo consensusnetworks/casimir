@@ -2,7 +2,7 @@ version: '3'
 
 services:
   postgres:
-    image: postgres:13.9
+    image: postgres:latest
     container_name: postgres
     healthcheck:
       test: pg_isready -U postgres -d users

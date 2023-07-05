@@ -8,7 +8,7 @@ import * as rds from 'aws-cdk-lib/aws-rds'
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
 import { UsersStackProps } from '../interfaces/StackProps'
 import { Config } from './config'
-import { kebabCase, snakeCase } from '@casimir/helpers'
+import { kebabCase } from '@casimir/helpers'
 
 /**
  * Users API stack
@@ -26,7 +26,7 @@ export class UsersStack extends cdk.Stack {
 
         const config = new Config()
         const { project, stage, rootDomain, subdomains } = config
-        const { certificate, cluster, hostedZone, vpc } = props
+        const { certificate, hostedZone, vpc } = props
 
         /** Build users service image */
         const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
@@ -34,6 +34,11 @@ export class UsersStack extends cdk.Stack {
             file: this.assetPath,
             platform: ecrAssets.Platform.LINUX_AMD64,
             ignoreMode: cdk.IgnoreMode.GIT
+        })
+
+        /** Create a stage-specific ECS cluster */
+        const cluster = new ecs.Cluster(this, config.getFullStackResourceName(this.name, 'cluster'), {
+            vpc
         })
 
         /** Create a load-balanced users service */
@@ -75,18 +80,42 @@ export class UsersStack extends cdk.Stack {
         /** Grant users service access to DB credentials */
         dbCredentials.grantRead(usersService.taskDefinition.taskRole)
 
+        /** Create a DB security group */
+        const dbSecurityGroup = new ec2.SecurityGroup(this, config.getFullStackResourceName(this.name, 'db-security-group'), {
+            vpc,
+            allowAllOutbound: true
+        })
+
+        /** Allow inbound traffic to DB security group */
+        dbSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(5432))
+
         /** Create a DB cluster */
-        new rds.ServerlessCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
-            enableDataApi: true,
+        const dbCluster = new rds.DatabaseCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
             engine: rds.DatabaseClusterEngine.auroraPostgres({
-                version: rds.AuroraPostgresEngineVersion.VER_13_9
+                version: rds.AuroraPostgresEngineVersion.VER_15_2
             }),
             credentials: rds.Credentials.fromSecret(dbCredentials),
-            securityGroups: [usersService.service.connections.securityGroups[0]],
-            vpc,
-            vpcSubnets: vpc.selectSubnets({
-                subnetType: ec2.SubnetType.PUBLIC
-            })
+            instances: 1,
+            instanceProps: {
+                instanceType: new ec2.InstanceType('serverless'),
+                publiclyAccessible: true,
+                vpc,
+                vpcSubnets: {
+                    subnetType: ec2.SubnetType.PUBLIC
+                }
+            }
+        })
+
+        /** Add DB cluster autoscaling */
+        cdk.Aspects.of(dbCluster).add({
+            visit(node) {
+                if (node instanceof rds.CfnDBCluster) {
+                    node.serverlessV2ScalingConfiguration = {
+                        minCapacity: 0.5,
+                        maxCapacity: 1
+                    }
+                }
+            }
         })
     }
 }

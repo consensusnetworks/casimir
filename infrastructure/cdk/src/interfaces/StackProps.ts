@@ -30,8 +30,6 @@ export interface NodesStackProps extends cdk.StackProps {
 export interface UsersStackProps extends cdk.StackProps {
     /** Stage-specific certificate */
     certificate?: certmgr.Certificate
-    /** Stage-specific ECS cluster */
-    cluster: ecs.Cluster
     /** Project-wide route53 hosted zone */
     hostedZone: route53.HostedZone
     /** Stage-specific VPC */
