@@ -105,19 +105,9 @@ export class UsersStack extends cdk.Stack {
                     subnetType: ec2.SubnetType.PUBLIC
                 }
             },
-            port: 5432
-        })
-
-        /** Add DB cluster autoscaling */
-        cdk.Aspects.of(dbCluster).add({
-            visit(node) {
-                if (node instanceof rds.CfnDBCluster) {
-                    node.serverlessV2ScalingConfiguration = {
-                        minCapacity: 0.5,
-                        maxCapacity: 1
-                    }
-                }
-            }
+            port: 5432,
+            serverlessV2MinCapacity: 0.5,
+            serverlessV2MaxCapacity: 1
         })
     }
 }
