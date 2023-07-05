@@ -99,6 +99,7 @@ export class UsersStack extends cdk.Stack {
             instanceProps: {
                 instanceType: new ec2.InstanceType('serverless'),
                 publiclyAccessible: true,
+                securityGroups: [dbSecurityGroup],
                 vpc,
                 vpcSubnets: {
                     subnetType: ec2.SubnetType.PUBLIC
