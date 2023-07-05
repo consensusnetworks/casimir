@@ -1,11 +1,14 @@
+# Reset to the latest commit on the develop branch before merging
+# Clean up your `Casimir${Stack}${Stage}` stacks from the AWS CloudFormation console
+# If you want to use a different branch or stage name (not sandbox), edit line 7 or 11 accordingly
 name: Push
 on:
   push:
-    branches: [feature/users-cdk]
+    branches: [feature/users-web-cdk] # Replace with your branch name
 
 env:
   PROJECT: casimir
-  STAGE: featureuserscdk
+  STAGE: sandbox # Replace with your stage name
   AWS_REGION: us-east-2
 
 jobs:
@@ -33,7 +36,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-          
+
       - name: Install and build all package dependencies
         run: npm ci
         env:

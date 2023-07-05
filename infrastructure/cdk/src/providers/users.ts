@@ -85,8 +85,24 @@ export class UsersStack extends cdk.Stack {
             ignoreMode: cdk.IgnoreMode.GIT
         })
 
-        /** Get the sessions credentials */
-        const sessionsCredentials = secretsmanager.Secret.fromSecretNameV2(this, config.getFullStackResourceName(this.name, 'sessions-credentials'), kebabCase(config.getFullStackResourceName(this.name, 'sessions-credentials')))
+        /** Get the required secrets */
+        const requiredSecrets = {
+            DB_HOST: ecs.Secret.fromSecretsManager(dbCredentials, 'host'),
+            DB_PORT: ecs.Secret.fromSecretsManager(dbCredentials, 'port'),
+            DB_NAME: ecs.Secret.fromSecretsManager(dbCredentials, 'dbname'),
+            DB_USER: ecs.Secret.fromSecretsManager(dbCredentials, 'username'),
+            DB_PASSWORD: ecs.Secret.fromSecretsManager(dbCredentials, 'password')
+        }
+
+        /** Define optional secrets */
+        const optionalSecrets: { SESSIONS_HOST?: ecs.Secret, SESSIONS_KEY?: ecs.Secret } = {}
+
+        if (config.stage === 'prod' || config.stage === 'dev') {
+            /** Get the sessions credentials */
+            const sessionsCredentials = secretsmanager.Secret.fromSecretNameV2(this, config.getFullStackResourceName(this.name, 'sessions-credentials'), kebabCase(config.getFullStackResourceName(this.name, 'sessions-credentials')))
+            optionalSecrets.SESSIONS_HOST = ecs.Secret.fromSecretsManager(sessionsCredentials, 'host')
+            optionalSecrets.SESSIONS_KEY = ecs.Secret.fromSecretsManager(sessionsCredentials, 'key')
+        }
 
         /** Create a load-balanced users service */
         const fargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, config.getFullStackResourceName(this.name, 'fargate'), {
@@ -104,15 +120,7 @@ export class UsersStack extends cdk.Stack {
                     USERS_URL: `https://${subdomains.users}.${rootDomain}`,
                     WEB_URL: `https://${subdomains.web}.${rootDomain}`
                 },
-                secrets: {
-                    DB_HOST: ecs.Secret.fromSecretsManager(dbCredentials, 'host'),
-                    DB_PORT: ecs.Secret.fromSecretsManager(dbCredentials, 'port'),
-                    DB_NAME: ecs.Secret.fromSecretsManager(dbCredentials, 'dbname'),
-                    DB_USER: ecs.Secret.fromSecretsManager(dbCredentials, 'username'),
-                    DB_PASSWORD: ecs.Secret.fromSecretsManager(dbCredentials, 'password'),
-                    SESSIONS_HOST: ecs.Secret.fromSecretsManager(sessionsCredentials, 'host'),
-                    SESSIONS_KEY: ecs.Secret.fromSecretsManager(sessionsCredentials, 'key')
-                }
+                secrets: { ...requiredSecrets, ...optionalSecrets }
             }
         })
 
