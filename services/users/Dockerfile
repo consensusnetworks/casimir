@@ -12,6 +12,12 @@ WORKDIR /tmp
 # Copy all files to /tmp
 COPY . .
 
+# Install dependencies
+RUN npm install
+
+# Build the users service
+RUN npm run build --workspace @casimir/users
+
 # Copy the users service build assets to /app
 COPY ./services/users/dist /app
 
