@@ -103,7 +103,8 @@ export class UsersStack extends cdk.Stack {
                 vpcSubnets: {
                     subnetType: ec2.SubnetType.PUBLIC
                 }
-            }
+            },
+            port: 5432
         })
 
         /** Add DB cluster autoscaling */
