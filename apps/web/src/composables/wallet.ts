@@ -40,7 +40,7 @@ export default function useWallet() {
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
-  const { user, getUser, setUser, addAccount, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, updatePrimaryAddress } = useUsers()
+  const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
   const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
@@ -127,16 +127,6 @@ export default function useWallet() {
     }
   }
 
-  async function getAccountBalance(account: Account) {
-    // TODO: Find where api endpoint is configured for ethers.
-    try {
-      const balance = await getEthersBalance(account.address)
-      return balance
-    } catch (err: any) {
-      throw new Error(err.message || 'There was an error getting the account balance')
-    }
-  }
-
   // Do we need balance of active address only? 
   // Or do we need balance of all addresses in accounts associated with user? 
   // Is this calculated on front end or back end or both?
@@ -188,7 +178,7 @@ export default function useWallet() {
     setSelectedAddress('')
     setSelectedProvider('')
     setSelectedCurrency('')
-    setUser(null)
+    setUser(undefined)
     setPrimaryAddress('')
     loadingUserWallets.value = false
     console.log('user.value :>> ', user.value)
@@ -348,25 +338,6 @@ export default function useWallet() {
 
   function setSelectedProvider (provider: ProviderString) {
     selectedProvider.value = provider
-  }
-
-  async function setUserAccountBalances() {
-    try {
-      if (user?.value?.accounts) {
-        const accounts = user.value.accounts
-        const accountsWithBalances = await Promise.all(accounts.map(async (account: Account) => {
-          const balance = await getAccountBalance(account)
-          return {
-            ...account,
-            balance
-          }
-        }))
-        user.value.accounts = accountsWithBalances
-        setUser(user.value)
-      }
-    } catch (error) {
-      throw new Error('Error setting user account balances')
-    }
   }
 
   function setWalletProviderAddresses(addresses: CryptoAddress[]) {

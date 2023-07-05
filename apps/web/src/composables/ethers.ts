@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { EthersProvider } from '@/interfaces/index'
-import { Account, TransactionRequest } from '@casimir/types'
+import { Account, TransactionRequest, UserWithAccounts } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useContracts from '@/composables/contracts'
@@ -8,9 +8,7 @@ import useEnvironment from '@/composables/environment'
 import useUsers from '@/composables/users'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
-const { manager, getCurrentStaked, refreshBreakdown } = useContracts()
 const { ethereumURL } = useEnvironment()
-const { user } = useUsers()
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
@@ -149,10 +147,12 @@ export default function useEthers() {
   }
 
   async function listenForTransactions() {
+    const { manager, refreshBreakdown } = useContracts()
+    const { user } = useUsers()
     const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
     provider.on('block', async (blockNumber: number) => {
       console.log('blockNumber :>> ', blockNumber)
-      const addresses = user.value?.accounts.map((account: Account) => account.address) as Array<string>
+      const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
       const block = await provider.getBlockWithTransactions(blockNumber)
       const transactions = block.transactions
       transactions.map(async (tx) => {
@@ -161,7 +161,6 @@ export default function useEthers() {
           const response = manager.interface.parseTransaction({ data: tx.data })
           console.log('response :>> ', response)
           await refreshBreakdown()
-          await getCurrentStaked()
         }
       })
     })

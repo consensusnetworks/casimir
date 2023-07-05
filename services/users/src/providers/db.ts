@@ -237,7 +237,8 @@ export default function useDB() {
 
     return { 
         addAccount, 
-        addUser, 
+        addUser,
+        formatResult,
         getAccounts,
         getNonce, 
         getUser,
