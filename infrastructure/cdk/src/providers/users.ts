@@ -10,8 +10,6 @@ import { UsersStackProps } from '../interfaces/StackProps'
 import { Config } from './config'
 import { kebabCase } from '@casimir/helpers'
 
-// Todo add supertokens core or use their managed service (probably the latter for now)
-
 /**
  * Users API stack
  */

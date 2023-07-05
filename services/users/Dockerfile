@@ -13,7 +13,7 @@ WORKDIR /tmp
 COPY . .
 
 # Install and build all workspaces (including the users service)
-RUN npm install
+RUN npm ci
 
 # Copy the users service build assets to /app
 COPY ./services/users/dist /app
