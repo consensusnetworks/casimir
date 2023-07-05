@@ -20,6 +20,4 @@ export interface ProjectConfig {
         web: string
         wildcard: string
     }
-    /** Nodes IP address */
-    nodesIp: string
 }

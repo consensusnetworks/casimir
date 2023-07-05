@@ -121,12 +121,8 @@ function parseNonce(msg: string) {
 }
 
 function verifyMessageDomain(domain: string): boolean {
-    const stage = process.env.STAGE
-    if (stage === 'dev') {
-        return domain === 'localhost:3001'
-    } else {
-        return false
-    }
+    if (process.env.WEB_URL) return domain === process.env.WEB_URL
+    return domain === 'localhost:3001'
 }
 
 async function verifyMessageNonce(address: string, msgNonce: string) : Promise<boolean> {
