@@ -10,6 +10,8 @@ import { UsersStackProps } from '../interfaces/StackProps'
 import { Config } from './config'
 import { kebabCase } from '@casimir/helpers'
 
+// Todo add supertokens core or use their managed service (probably the latter for now)
+
 /**
  * Users API stack
  */
@@ -28,42 +30,7 @@ export class UsersStack extends cdk.Stack {
         const { project, stage, rootDomain, subdomains } = config
         const { certificate, hostedZone, vpc } = props
 
-        /** Build users service image */
-        const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
-            directory: this.contextPath,
-            file: this.assetPath,
-            platform: ecrAssets.Platform.LINUX_AMD64,
-            ignoreMode: cdk.IgnoreMode.GIT
-        })
-
-        /** Create a stage-specific ECS cluster */
-        const cluster = new ecs.Cluster(this, config.getFullStackResourceName(this.name, 'cluster'), {
-            vpc
-        })
-
-        /** Create a load-balanced users service */
-        const usersService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, config.getFullStackResourceName(this.name, 'fargate'), {
-            assignPublicIp: true,
-            certificate,
-            cluster,
-            domainName: `${subdomains.users}.${rootDomain}`, // e.g. users.casimir.co or users.dev.casimir.co
-            domainZone: hostedZone,
-            taskImageOptions: {
-                containerPort: 4000,
-                image: ecs.ContainerImage.fromDockerImageAsset(imageAsset),
-                environment: {
-                    PROJECT: project,
-                    STAGE: stage
-                }
-            }
-        })
-
-        /** Override the default health check path */
-        usersService.targetGroup.configureHealthCheck({
-            path: '/health'
-        })
-
-        /** Create DB credentials */
+        /** Create the users DB credentials */
         const dbCredentials = new secretsmanager.Secret(this, config.getFullStackResourceName(this.name, 'db-credentials'), {
             secretName: kebabCase(config.getFullStackResourceName(this.name, 'db-credentials')),
             generateSecretString: {
@@ -76,9 +43,6 @@ export class UsersStack extends cdk.Stack {
             }
         })
 
-        /** Grant users service access to DB credentials */
-        dbCredentials.grantRead(usersService.taskDefinition.taskRole)
-
         /** Create a DB security group */
         const dbSecurityGroup = new ec2.SecurityGroup(this, config.getFullStackResourceName(this.name, 'db-security-group'), {
             vpc,
@@ -89,7 +53,7 @@ export class UsersStack extends cdk.Stack {
         dbSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(5432))
 
         /** Create a DB cluster */
-        const dbCluster = new rds.DatabaseCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
+        new rds.DatabaseCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
             engine: rds.DatabaseClusterEngine.auroraPostgres({
                 version: rds.AuroraPostgresEngineVersion.VER_15_2
             }),
@@ -108,6 +72,55 @@ export class UsersStack extends cdk.Stack {
             port: 5432,
             serverlessV2MinCapacity: 0.5,
             serverlessV2MaxCapacity: 1
+        })
+
+        /** Create an ECS cluster */
+        const ecsCluster = new ecs.Cluster(this, config.getFullStackResourceName(this.name, 'cluster'), {
+            vpc
+        })
+
+        /** Build the users service image */
+        const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
+            directory: this.contextPath,
+            file: this.assetPath,
+            platform: ecrAssets.Platform.LINUX_AMD64,
+            ignoreMode: cdk.IgnoreMode.GIT
+        })
+
+        /** Get the sessions credentials */
+        const sessionsCredentials = secretsmanager.Secret.fromSecretNameV2(this, config.getFullStackResourceName(this.name, 'sessions-credentials'), kebabCase(config.getFullStackResourceName(this.name, 'sessions-credentials')))
+
+        /** Create a load-balanced users service */
+        const fargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, config.getFullStackResourceName(this.name, 'fargate'), {
+            assignPublicIp: true,
+            certificate,
+            cluster: ecsCluster,
+            domainName: `${subdomains.users}.${rootDomain}`, // e.g. users.casimir.co or users.dev.casimir.co
+            domainZone: hostedZone,
+            taskImageOptions: {
+                containerPort: 4000,
+                image: ecs.ContainerImage.fromDockerImageAsset(imageAsset),
+                environment: {
+                    PROJECT: project,
+                    STAGE: stage,
+                    USERS_URL: `https://${subdomains.users}.${rootDomain}`,
+                    WEB_URL: `https://${subdomains.web}.${rootDomain}`
+                },
+                secrets: {
+                    DB_HOST: ecs.Secret.fromSecretsManager(dbCredentials, 'host'),
+                    DB_PORT: ecs.Secret.fromSecretsManager(dbCredentials, 'port'),
+                    DB_NAME: ecs.Secret.fromSecretsManager(dbCredentials, 'dbname'),
+                    DB_USER: ecs.Secret.fromSecretsManager(dbCredentials, 'username'),
+                    DB_PASSWORD: ecs.Secret.fromSecretsManager(dbCredentials, 'password'),
+                    SESSIONS_HOST: ecs.Secret.fromSecretsManager(sessionsCredentials, 'host'),
+                    SESSIONS_KEY: ecs.Secret.fromSecretsManager(sessionsCredentials, 'key')
+                }
+            }
+        })
+
+        /** Override the default health check path */
+        fargateService.targetGroup.configureHealthCheck({
+            path: '/health'
         })
     }
 }

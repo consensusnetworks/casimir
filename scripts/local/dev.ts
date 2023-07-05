@@ -26,7 +26,7 @@ void async function () {
 
     /** Set project-wide variables */
     process.env.PROJECT = process.env.PROJECT || 'casimir'
-    process.env.STAGE = process.env.STAGE || 'dev'
+    process.env.STAGE = process.env.STAGE || 'local'
 
     /** Pass stage to web app */
     process.env.PUBLIC_STAGE = process.env.STAGE

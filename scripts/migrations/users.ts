@@ -6,15 +6,14 @@ import { getSecret, run } from '@casimir/helpers'
 void async function () {
     const project = process.env.PROJECT || 'casimir'
     const stage = process.env.STAGE || 'dev'
-    const service = 'users'
+    const dbName = 'users'
 
     /** Load DB credentials */
-    const dbCredentials = await getSecret(`${project}-${service}-db-credentials-${stage}`)
-    console.log('dbCredentials', dbCredentials)
+    const dbCredentials = await getSecret(`${project}-${dbName}-db-credentials-${stage}`)
 
     /** Parse DB credentials */
-    const { dbname, port, host, username, password } = JSON.parse(dbCredentials as string)
-    const pgUrl = `postgres://${username}:${password}@${host}:${port}/${dbname}`
+    const { port, host, username, password } = JSON.parse(dbCredentials as string)
+    const pgUrl = `postgres://${username}:${password}@${host}:${port}/${dbName}`
 
     /** Resource path from package caller */
     const resourcePath = './scripts'
@@ -43,12 +42,8 @@ void async function () {
     fs.writeFileSync(`${sqlDir}/schema.sql`, sqlSchema)
 
     const atlasCli = await run('which atlas')
-    if (!atlasCli) {
-        if (os.platform() === 'darwin') {
-            await run('echo y | brew install atlas')
-        } else {
-            await run('curl -sSf https://atlasgo.sh | sh')
-        }
+    if (!atlasCli && os.platform() === 'darwin') {
+        await run('echo y | brew install atlas')
     }
     await run(`atlas schema apply --url "${pgUrl}?sslmode=disable" --to "file://${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`)
 }()

@@ -6,12 +6,11 @@ import useEthers from './ethers'
 const { generateNonce } = useEthers()
 
 const postgres = new Postgres({
-    // These will become environment variables
-    host: 'localhost',
-    port: 5432,
-    database: 'users',
-    user: 'admin',
-    password: 'password'
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT as string) || 5432,
+    database: process.env.DB_NAME || 'users',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'password'
 })
 
 export default function useDB() {

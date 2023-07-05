@@ -1,12 +1,29 @@
 import fs from 'fs'
 import os from 'os'
-import { run } from '@casimir/helpers'
+import { run, getSecret, loadCredentials } from '@casimir/helpers'
 import { JsonSchema, Schema, accountSchema, nonceSchema, userSchema, userAccountSchema } from '@casimir/data'
 
 /**
  * Run a local users database and service
  */
 void async function () {
+
+    /** Load credentials and get secrets for non-local config */
+    if (process.env.STAGE !== 'local') {
+        await loadCredentials()
+        const dbCredentials = await getSecret(`${process.env.PROJECT}-users-db-credentials-${process.env.STAGE}`)
+        const { port: dbPort, host: dbHost, dbname: dbName, username: dbUser, password: dbPassword } = JSON.parse(dbCredentials as string)
+        process.env.DB_HOST = dbHost
+        process.env.DB_PORT = dbPort
+        process.env.DB_NAME = dbName
+        process.env.DB_USER = dbUser
+        process.env.DB_PASSWORD = dbPassword
+        const sessionsCredentials = await getSecret(`${process.env.PROJECT}-sessions-credentials-${process.env.STAGE}`)
+        const { host: sessionsHost, key: sessionsKey } = JSON.parse(sessionsCredentials as string)
+        process.env.SESSIONS_HOST = sessionsHost
+        process.env.SESSIONS_KEY = sessionsKey
+    }
+
     /** Resource path from package caller */
     const resourcePath = './scripts'
 
@@ -43,12 +60,8 @@ void async function () {
         await new Promise(resolve => setTimeout(resolve, 2500))
     }
     const atlasCli = await run('which atlas')
-    if (!atlasCli) {
-        if (os.platform() === 'darwin') {
-            await run('echo y | brew install atlas')
-        } else {
-            await run('curl -sSf https://atlasgo.sh | sh')
-        }
+    if (!atlasCli && os.platform() === 'darwin') {
+        await run('echo y | brew install atlas')
     }
     await run(`atlas schema apply --url "postgres://postgres:password@localhost:5432/users?sslmode=disable" --to "file://${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`)
     

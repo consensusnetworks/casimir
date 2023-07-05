@@ -9,14 +9,9 @@ export class Postgres {
 
     /**
      * Create a new Postgres database provider
-     * @param {PoolConfig} config - Postgres connection pool config
-     * @example
-     * ```ts
-     * const postgres = new Postgres()
-     * ```
      */
-    constructor(config?: PoolConfig) {
-        this.pool = new Pool(config)
+    constructor(poolConfig: PoolConfig) {
+        this.pool = new Pool(poolConfig)
     }
 
     /**
@@ -31,18 +26,11 @@ export class Postgres {
      * if (rows.length) console.log(rows[0].text) // Hello world!
      * ```
      */
-    async query(text: string, params: any[] = []) { // Todo - use union of stricter @casimir/types for params
+    async query(text: string, params: any[] = []) {
         const client = await this.pool.connect()
         const res = await client.query(text, params)
         client.release()
         const { rows } = res
         return rows
-    }
-
-    /**
-     * Close the connection pool (when the server exits)
-     */
-    async close() {
-        await this.pool.end()
     }
 }

@@ -16,7 +16,7 @@ app.use(express.json())
 /** CORS needs explicit origin (no *) with credentials:true */
 app.use(
     cors({
-        origin: 'http://localhost:3001',
+        origin: process.env.WEB_URL || 'http://localhost:3001',
         allowedHeaders: ['content-type', ...supertokens.getAllCORSHeaders()],
         methods: ['GET', 'PUT', 'POST', 'DELETE'],
         credentials: true
