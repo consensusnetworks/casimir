@@ -101,6 +101,12 @@ const aggregateAddressesByProvider = () => {
         addresses
       })
     })
+  } else {
+    // empty out staking comp
+    selectedProvider.value = ''
+    selectedWallet.value = null
+    formattedAmountToStake.value = ''
+    address_balance.value = null
   }
 }
 
@@ -148,18 +154,21 @@ onUnmounted(() =>{
   window.removeEventListener('click', handleOutsideClick)
 })
 
+const stakingActionLoader = ref(false)
 const loading = ref(false)
 const success = ref(false)
 const failure = ref(false)
 const stakeButtonText = ref('Stake')
 
 const handleDeposit = async () => {
+  stakingActionLoader.value = true
+  
   loading.value = true
   const isSuccess = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedProvider.value })
   loading.value = false
   if (isSuccess) {
     success.value = true
-    stakeButtonText.value = 'Transaction Successfully Submitted'
+    stakeButtonText.value = 'Transaction Submitted'
   } else {
     failure.value = true
     stakeButtonText.value = 'Transaction Failed'
@@ -178,13 +187,19 @@ const handleDeposit = async () => {
     
   }, 3000)
   
-
+  setTimeout(() => {
+    stakingActionLoader.value = false
+  }, 3500)
   
 }
 </script>
 
 <template>
   <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black h-full relative">
+    <div
+      v-if="stakingActionLoader"
+      class="absolute w-full h-full bg-black/[.1] top-0 left-0 rounded-[3px] z-[10] "
+    />
     <h6 class="address_balance mb-[12px]">
       Account Balance
     </h6>
@@ -226,6 +241,7 @@ const handleDeposit = async () => {
           v-for="item in formattedWalletOptions"
           id="selectWalletOptionsCard"
           :key="item.provider"
+          class="mt-[5px] mb-[10px]"
         >
           <div class="w-full text-[12px] text-grey_6 flex items-center gap-[8px] mb-[10px]">
             <img
@@ -339,8 +355,8 @@ const handleDeposit = async () => {
     </div>
 
     <button
-      class="card_button bg-primary h-[37px] w-full "
-      :class="success? 'bg-approve' : 'bg-primary' && failure? 'bg-decline' : 'bg-primary'"
+      class="card_button  h-[37px] w-full "
+      :class="success? 'bg-approve' : failure? 'bg-decline' : 'bg-primary'"
       :disabled="!(termsOfServiceCheckbox && selectedWallet && formattedAmountToStake && !errorMessage)"
       @click="handleDeposit()"
     >
@@ -352,8 +368,23 @@ const handleDeposit = async () => {
         <div class="dot" />
         <div class="dot" />
       </div>
-      <div v-else>
+      <div
+        v-else
+        class="flex items-center justify-center gap-[5px]"
+      >
         {{ stakeButtonText }}
+        <vue-feather
+          v-if="success"
+          type="check"
+          size="36"
+          class="icon w-[20px]"
+        />
+        <vue-feather
+          v-if="failure"
+          type="x"
+          size="36"
+          class="icon w-[20px]"
+        />
       </div>
     </button>
     <div

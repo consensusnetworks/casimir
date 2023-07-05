@@ -1,49 +1,5 @@
 # Solidity API
 
-## MockFunctionsOracle
-
-### constructor
-
-```solidity
-constructor() public
-```
-
-### getRegistry
-
-```solidity
-function getRegistry() external view returns (address)
-```
-
-Returns the address of the registry contract
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | address The address of the registry contract |
-
-### sendRequest
-
-```solidity
-function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
-```
-
-Sends a request (encoded as data) using the provided subscriptionId
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
-| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
-| _gasLimit | uint32 | Gas limit for the fulfillment callback |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | bytes32 | A unique request identifier (unique per DON) |
-
 ## CasimirManager
 
 ### upkeepRegistrationMinimum
@@ -1258,6 +1214,152 @@ Fulfill the request for testing
 | response | bytes | Aggregated response from the user code |
 | err | bytes | Aggregated error from the user code or from the sweptStake pipeline Either response or error parameter will be set, but never both |
 
+## CasimirViews
+
+### constructor
+
+```solidity
+constructor(address managerAddress, address registryAddress) public
+```
+
+Constructor
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| managerAddress | address | The manager address |
+| registryAddress | address | The registry address |
+
+### getCompoundablePoolIds
+
+```solidity
+function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5] poolIds)
+```
+
+Get the next five compoundable pool IDs
+
+_Should be called off-chain_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolIds | uint32[5] | The next five compoundable pool IDs |
+
+### getOperators
+
+```solidity
+function getOperators(uint256 startIndex, uint256 endIndex) external view returns (struct ICasimirRegistry.Operator[])
+```
+
+Get operators
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | struct ICasimirRegistry.Operator[] | operators The operators |
+
+### getPendingValidatorPublicKeys
+
+```solidity
+function getPendingValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
+```
+
+Get the pending validator public keys
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes[] | validatorPublicKeys The pending validator public keys |
+
+### getStakedValidatorPublicKeys
+
+```solidity
+function getStakedValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
+```
+
+Get the staked validator public keys
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes[] | validatorPublicKeys The staked validator public keys |
+
+### getPoolDetails
+
+```solidity
+function getPoolDetails(uint32 poolId) external view returns (struct ICasimirPool.PoolDetails poolDetails)
+```
+
+Get a pool's details by ID
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolId | uint32 | The pool ID |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| poolDetails | struct ICasimirPool.PoolDetails | The pool details |
+
+### getSweptBalance
+
+```solidity
+function getSweptBalance(uint256 startIndex, uint256 endIndex) public view returns (uint256 balance)
+```
+
+Get the swept balance
+
+_Should be called off-chain_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| startIndex | uint256 | The start index |
+| endIndex | uint256 | The end index |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| balance | uint256 | The swept balance |
+
 ## ICasimirManager
 
 ### Token
@@ -1921,6 +2023,44 @@ method._
 | upkeepNeeded | bool | boolean to indicate whether the keeper should call performUpkeep or not. |
 | performData | bytes | bytes that the keeper should call performUpkeep with, if upkeep is needed. If you would like to encode data to decode later, try `abi.encode`. |
 
+## ICasimirViews
+
+### getCompoundablePoolIds
+
+```solidity
+function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5])
+```
+
+### getOperators
+
+```solidity
+function getOperators(uint256 startIndex, uint256 endIndex) external view returns (struct ICasimirRegistry.Operator[])
+```
+
+### getPoolDetails
+
+```solidity
+function getPoolDetails(uint32 poolId) external view returns (struct ICasimirPool.PoolDetails)
+```
+
+### getPendingValidatorPublicKeys
+
+```solidity
+function getPendingValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
+```
+
+### getStakedValidatorPublicKeys
+
+```solidity
+function getStakedValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
+```
+
+### getSweptBalance
+
+```solidity
+function getSweptBalance(uint256 startIndex, uint256 endIndex) external view returns (uint256)
+```
+
 ## Types32Array
 
 ### remove
@@ -2085,187 +2225,47 @@ struct RegistrationParams {
 function registerUpkeep(struct KeeperRegistrarInterface.RegistrationParams requestParams) external returns (uint256)
 ```
 
-## CasimirViews
+## MockFunctionsOracle
 
 ### constructor
 
 ```solidity
-constructor(address managerAddress, address registryAddress) public
+constructor() public
 ```
 
-Constructor
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| managerAddress | address | The manager address |
-| registryAddress | address | The registry address |
-
-### getCompoundablePoolIds
+### getRegistry
 
 ```solidity
-function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5] poolIds)
+function getRegistry() external view returns (address)
 ```
 
-Get the next five compoundable pool IDs
-
-_Should be called off-chain_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The start index |
-| endIndex | uint256 | The end index |
+Returns the address of the registry contract
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| poolIds | uint32[5] | The next five compoundable pool IDs |
+| [0] | address | address The address of the registry contract |
 
-### getOperators
+### sendRequest
 
 ```solidity
-function getOperators(uint256 startIndex, uint256 endIndex) external view returns (struct ICasimirRegistry.Operator[])
+function sendRequest(uint64 _subscriptionId, bytes _data, uint32 _gasLimit) external returns (bytes32 requestId)
 ```
 
-Get operators
+Sends a request (encoded as data) using the provided subscriptionId
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| startIndex | uint256 | The start index |
-| endIndex | uint256 | The end index |
+| _subscriptionId | uint64 | A unique subscription ID allocated by billing system, a client can make requests from different contracts referencing the same subscription |
+| _data | bytes | Encoded Chainlink Functions request data, use FunctionsClient API to encode a request |
+| _gasLimit | uint32 | Gas limit for the fulfillment callback |
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | struct ICasimirRegistry.Operator[] | operators The operators |
-
-### getPendingValidatorPublicKeys
-
-```solidity
-function getPendingValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
-```
-
-Get the pending validator public keys
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The start index |
-| endIndex | uint256 | The end index |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes[] | validatorPublicKeys The pending validator public keys |
-
-### getStakedValidatorPublicKeys
-
-```solidity
-function getStakedValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
-```
-
-Get the staked validator public keys
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The start index |
-| endIndex | uint256 | The end index |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes[] | validatorPublicKeys The staked validator public keys |
-
-### getPoolDetails
-
-```solidity
-function getPoolDetails(uint32 poolId) external view returns (struct ICasimirPool.PoolDetails poolDetails)
-```
-
-Get a pool's details by ID
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| poolId | uint32 | The pool ID |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| poolDetails | struct ICasimirPool.PoolDetails | The pool details |
-
-### getSweptBalance
-
-```solidity
-function getSweptBalance(uint256 startIndex, uint256 endIndex) public view returns (uint256 balance)
-```
-
-Get the swept balance
-
-_Should be called off-chain_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| startIndex | uint256 | The start index |
-| endIndex | uint256 | The end index |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| balance | uint256 | The swept balance |
-
-## ICasimirViews
-
-### getCompoundablePoolIds
-
-```solidity
-function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5])
-```
-
-### getOperators
-
-```solidity
-function getOperators(uint256 startIndex, uint256 endIndex) external view returns (struct ICasimirRegistry.Operator[])
-```
-
-### getPoolDetails
-
-```solidity
-function getPoolDetails(uint32 poolId) external view returns (struct ICasimirPool.PoolDetails)
-```
-
-### getPendingValidatorPublicKeys
-
-```solidity
-function getPendingValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
-```
-
-### getStakedValidatorPublicKeys
-
-```solidity
-function getStakedValidatorPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[])
-```
-
-### getSweptBalance
-
-```solidity
-function getSweptBalance(uint256 startIndex, uint256 endIndex) external view returns (uint256)
-```
+| requestId | bytes32 | A unique request identifier (unique per DON) |
 
