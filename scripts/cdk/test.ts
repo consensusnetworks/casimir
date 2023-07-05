@@ -23,6 +23,7 @@ void async function () {
 
     /** Prepare CDK resources */
     await $`npm run build --workspace @casimir/landing`
+    await $`npm run build --workspace @casimir/users`
     await $`npm run build --workspace @casimir/web`
 
     /** Test CDK app */

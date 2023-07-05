@@ -1,5 +1,5 @@
-# Reset to the latest commit on the develop branch before merging
-# Clean up your `Casimir${Stack}${Stage}` stacks from the AWS CloudFormation console
+# Reset to the latest file code in the develop branch before merging to develop
+# Clean up your `Casimir${Stack}${Stage}` stacks from the AWS CloudFormation console after use
 # If you want to use a different branch or stage name (not sandbox), edit line 7 or 11 accordingly
 name: Push
 on:
