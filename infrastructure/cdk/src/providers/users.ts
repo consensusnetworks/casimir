@@ -68,8 +68,7 @@ export class UsersStack extends cdk.Stack {
             secretName: kebabCase(config.getFullStackResourceName(this.name, 'db-credentials')),
             generateSecretString: {
                 secretStringTemplate: JSON.stringify({
-                    username: 'postgres',
-                    dbname: this.name,
+                    username: 'postgres'
                 }),
                 generateStringKey: 'password',
                 passwordLength: 30,
@@ -95,6 +94,7 @@ export class UsersStack extends cdk.Stack {
                 version: rds.AuroraPostgresEngineVersion.VER_15_2
             }),
             credentials: rds.Credentials.fromSecret(dbCredentials),
+            defaultDatabaseName: this.name,
             instances: 1,
             instanceProps: {
                 instanceType: new ec2.InstanceType('serverless'),
