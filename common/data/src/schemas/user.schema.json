@@ -20,6 +20,11 @@
             "type": "string",
             "description": "The account last update date in ISO 8601 format"
         },
+        "agreedToTermsOfService": {
+            "type": "boolean",
+            "description": "The user aggreement status",
+            "default": false
+        },
         "wallet_provider": {
             "type": "string",
             "description": "The wallet provider used set a primary user account"
@@ -30,6 +35,7 @@
         "created_at",
         "id",
         "updated_at",
+        "user_aggreement",
         "wallet_provider"
     ]
 }
