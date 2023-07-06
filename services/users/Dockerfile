@@ -18,8 +18,8 @@ RUN npm install
 # Build the users service
 RUN npm run build --workspace @casimir/users
 
-# List the users service assets
-RUN ls services/users
+# List the users service dist assets
+RUN ls services/users/dist
 
 # Copy the users service build assets to /app
 COPY services/users/dist /app
