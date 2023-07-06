@@ -326,6 +326,17 @@ export default function useUsers () {
         return await fetch(`${usersBaseURL}/user/update-primary-account`, requestOptions)
     }
 
+    async function updateUserAgreement(agreed: boolean) {
+        const requestOptions = {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ agreed })
+        }
+        return await fetch(`${usersBaseURL}/user/update-user-agreement/${user.value?.id}`, requestOptions)
+    }
+
     return {
         session,
         user: readonly(user),
@@ -341,6 +352,7 @@ export default function useUsers () {
         removeAccount,
         setUser,
         setUserAccountBalances,
-        updatePrimaryAddress
+        updatePrimaryAddress,
+        updateUserAgreement
     }
 }

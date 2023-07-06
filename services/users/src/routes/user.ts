@@ -4,7 +4,7 @@ import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
 
 const router = express.Router()
-const { addAccount, getAccounts, getUser, getUserById, updateUserAddress, removeAccount } = useDB()
+const { addAccount, getAccounts, getUser, getUserById, updateUserAddress, updateUserAgreedToTermsOfService, removeAccount } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
@@ -119,6 +119,29 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
         res.status(500)
         res.json({
             message: 'Error adding account',
+            error: true,
+            data: null
+        })
+    }
+})
+
+router.put('/update-user-agreement/:userId', verifySession(), async (req: SessionRequest, res: express.Response) => {
+    try {
+        const { agreed } = req.body
+        const { userId } = req.params
+        const userID = parseInt(userId)
+        const user = await updateUserAgreedToTermsOfService(userID, agreed)
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            message: 'User agreement updated',
+            error: false,
+            data: user
+        })
+    } catch (err) {
+        res.status(500)
+        res.json({
+            message: 'Error updating user agreement',
             error: true,
             data: null
         })

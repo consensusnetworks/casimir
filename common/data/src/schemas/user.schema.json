@@ -20,7 +20,7 @@
             "type": "string",
             "description": "The account last update date in ISO 8601 format"
         },
-        "agreedToTermsOfService": {
+        "agreed_to_terms_of_service": {
             "type": "boolean",
             "description": "The user aggreement status",
             "default": false

@@ -11,7 +11,7 @@ import TermsOfService from '@/components/TermsOfService.vue'
 
 const { deposit, getDepositFees } = useContracts()
 const { getEthersBalance } = useEthers()
-const { user } = useUsers()
+const { user, updateUserAgreement } = useUsers()
 const { getCurrentPrice } = usePrice()
 
 const selectedProvider = ref<ProviderString>('')
@@ -140,6 +140,8 @@ watch(formattedAmountToStake, async () => {
 
 watch(user, () => {
   aggregateAddressesByProvider()
+  termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
+  console.log('user.value.agreedToTermsOfService :>> ', user.value?.agreedToTermsOfService)
 })
 
 onMounted(async () => {
@@ -344,6 +346,7 @@ const handleDeposit = async () => {
         v-model="termsOfServiceCheckbox"
         type="checkbox"
         class="card_checkbox"
+        @change="updateUserAgreement(termsOfServiceCheckbox)"
       > 
       <button
         id="termsOfServiceButton"
