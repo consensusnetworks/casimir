@@ -18,8 +18,11 @@ RUN npm install
 # Build the users service
 RUN npm run build --workspace @casimir/users
 
+# List the users service assets
+RUN ls services/users
+
 # Copy the users service build assets to /app
-COPY ./services/users/dist /app
+COPY services/users/dist /app
 
 # Set the working directory to /app
 WORKDIR /app
