@@ -39,7 +39,7 @@ const totalWalletBalance = ref<BreakdownAmount>({
 
 export default function useContracts() {
     const { ethereumURL } = useEnvironment()
-    const { ethersProviderList, getEthersBrowserSigner } = useEthers()
+    const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
     const { getEthersLedgerSigner } = useLedger()
     const { getCurrentPrice } = usePrice()
     const { getEthersTrezorSigner } = useTrezor()
@@ -189,8 +189,8 @@ export default function useContracts() {
     async function getTotalWalletBalance() : Promise<BreakdownAmount> {
         const promises = [] as Array<Promise<any>>
         const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
-        addresses.forEach((address) => { promises.push(getUserContractEventsTotals(address)) })
-        const totalWalletBalance = (await Promise.all(promises)).reduce((acc, curr) => acc + curr.StakeDeposited, 0)
+        addresses.forEach((address) => { promises.push(getEthersBalance(address)) })
+        const totalWalletBalance = (await Promise.all(promises)).reduce((acc, curr) => acc + curr, 0)
         const totalWalletBalanceUSD = totalWalletBalance * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
         return {
             exchange: totalWalletBalance.toFixed(2) + ' ETH',
@@ -237,7 +237,7 @@ export default function useContracts() {
 
     async function refreshBreakdown() {
         setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
-        // setBreakdownValue({ name: 'totalWalletBalance', ...await getTotalWalletBalance() })
+        setBreakdownValue({ name: 'totalWalletBalance', ...await getTotalWalletBalance() })
         // setBreakdownValue({ name: 'stakingRewards', ...await getStakingRewards() })
     }
 

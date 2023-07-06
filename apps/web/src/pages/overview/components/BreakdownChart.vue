@@ -99,7 +99,7 @@ watch(selectedTimeframe, () => {
     <div class="flex flex-wrap justify-between mb-[52px]">
       <div>
         <h6 class="blance_title mb-[15px]">
-          Connected Wallets Balance
+          Total Balance Across Connected Wallets
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="blance_amount">
