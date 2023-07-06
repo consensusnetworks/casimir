@@ -6,9 +6,6 @@ FROM node:18-alpine
 # Install git
 RUN apk add --no-cache git
 
-# Set the working directory to /tmp
-WORKDIR /tmp
-
 # Copy all files to /tmp
 COPY . .
 
@@ -18,11 +15,8 @@ RUN npm install
 # Build the users service
 RUN npm run build --workspace @casimir/users
 
-# List the users service dist assets
-RUN ls services/users/dist
-
-# Copy the users service build assets to /app
-COPY services/users/dist /app
+# Move the users service build assets to /app
+RUN mv services/users/dist /app
 
 # Set the working directory to /app
 WORKDIR /app
