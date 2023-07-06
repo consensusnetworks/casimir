@@ -29,6 +29,41 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
     }
 })
 
+router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res: express.Response) => {
+    try {
+        console.log('ADDING ACCOUNT!')
+        const { account } = req.body
+        const { ownerAddress } = account
+        const userSessionsAddress = req.session?.getUserId().toLowerCase()
+        const validatedAddress = validateAddress(userSessionsAddress, ownerAddress)
+        if (!validatedAddress) {
+            res.setHeader('Content-Type', 'application/json')
+            res.status(200)
+            res.json({
+                message: 'Address does not match session',
+                error: true,
+                data: null
+            })
+        }
+        await addAccount(account)
+        const user = await getUser(ownerAddress)
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            message: 'Account added',
+            error: false,
+            data: user
+        })
+    } catch (err) {
+        res.status(500)
+        res.json({
+            message: 'Error adding account',
+            error: true,
+            data: null
+        })
+    }
+})
+
 router.get('/check-if-primary-address-exists/:provider/:address', async (req: express.Request, res: express.Response) => {
     try {
         const { params } = req
@@ -86,64 +121,6 @@ router.get('/check-secondary-address/:address', async (req: express.Request, res
         res.json({
             error: true,
             message: error.message || 'Problem checking secondary address'
-        })
-    }
-})
-
-router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res: express.Response) => {
-    try {
-        console.log('ADDING ACCOUNT!')
-        const { account } = req.body
-        const { ownerAddress } = account
-        const userSessionsAddress = req.session?.getUserId().toLowerCase()
-        const validatedAddress = validateAddress(userSessionsAddress, ownerAddress)
-        if (!validatedAddress) {
-            res.setHeader('Content-Type', 'application/json')
-            res.status(200)
-            res.json({
-                message: 'Address does not match session',
-                error: true,
-                data: null
-            })
-        }
-        await addAccount(account)
-        const user = await getUser(ownerAddress)
-        res.setHeader('Content-Type', 'application/json')
-        res.status(200)
-        res.json({
-            message: 'Account added',
-            error: false,
-            data: user
-        })
-    } catch (err) {
-        res.status(500)
-        res.json({
-            message: 'Error adding account',
-            error: true,
-            data: null
-        })
-    }
-})
-
-router.put('/update-user-agreement/:userId', verifySession(), async (req: SessionRequest, res: express.Response) => {
-    try {
-        const { agreed } = req.body
-        const { userId } = req.params
-        const userID = parseInt(userId)
-        const user = await updateUserAgreedToTermsOfService(userID, agreed)
-        res.setHeader('Content-Type', 'application/json')
-        res.status(200)
-        res.json({
-            message: 'User agreement updated',
-            error: false,
-            data: user
-        })
-    } catch (err) {
-        res.status(500)
-        res.json({
-            message: 'Error updating user agreement',
-            error: true,
-            data: null
         })
     }
 })
@@ -216,6 +193,29 @@ router.put('/update-primary-account', verifySession(), async (req: SessionReques
             message: 'Primary account updated',
             error: false,
             data: user
+        })
+    }
+})
+
+router.put('/update-user-agreement/:userId', verifySession(), async (req: SessionRequest, res: express.Response) => {
+    try {
+        const { agreed } = req.body
+        const { userId } = req.params
+        const userID = parseInt(userId)
+        const user = await updateUserAgreedToTermsOfService(userID, agreed)
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            message: 'User agreement updated',
+            error: false,
+            data: user
+        })
+    } catch (err) {
+        res.status(500)
+        res.json({
+            message: 'Error updating user agreement',
+            error: true,
+            data: null
         })
     }
 })
