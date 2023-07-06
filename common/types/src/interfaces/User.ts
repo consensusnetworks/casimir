@@ -12,6 +12,8 @@ export interface User {
     id: number
     /* ISO Timestamp of when user was last updated */
     updatedAt?: string
+    /* Did user agree to terms of service? */
+    agreedToTermsOfService: boolean
     /* Wallet provider (e.g. metamask) */
     walletProvider: ProviderString
 }
