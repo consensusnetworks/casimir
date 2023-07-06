@@ -32,7 +32,7 @@ const stakingRewards = ref<BreakdownAmount>({
     exchange: '0 ETH'
 })
 
-const totalDeposited = ref<BreakdownAmount>({
+const totalWalletBalance = ref<BreakdownAmount>({
     usd: '$0.00',
     exchange: '0 ETH'
 })
@@ -97,7 +97,6 @@ export default function useContracts() {
         }
     }
     
-
     async function getDepositFees() {
         const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
         const fees = await manager.connect(provider).feePercent()
@@ -187,15 +186,15 @@ export default function useContracts() {
         }
     }
 
-    async function getTotalDeposited() : Promise<BreakdownAmount> {
+    async function getTotalWalletBalance() : Promise<BreakdownAmount> {
         const promises = [] as Array<Promise<any>>
         const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
         addresses.forEach((address) => { promises.push(getUserContractEventsTotals(address)) })
-        const totalDeposited = (await Promise.all(promises)).reduce((acc, curr) => acc + curr.StakeDeposited, 0)
-        const totalDepositedUSD = totalDeposited * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        const totalWalletBalance = (await Promise.all(promises)).reduce((acc, curr) => acc + curr.StakeDeposited, 0)
+        const totalWalletBalanceUSD = totalWalletBalance * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
         return {
-            exchange: totalDeposited.toFixed(2) + ' ETH',
-            usd: '$ ' + totalDepositedUSD.toFixed(2)
+            exchange: totalWalletBalance.toFixed(2) + ' ETH',
+            usd: '$ ' + totalWalletBalanceUSD.toFixed(2)
         }
     }
 
@@ -238,7 +237,7 @@ export default function useContracts() {
 
     async function refreshBreakdown() {
         setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
-        // setBreakdownValue({ name: 'totalDeposited', ...await getTotalDeposited() })
+        // setBreakdownValue({ name: 'totalWalletBalance', ...await getTotalWalletBalance() })
         // setBreakdownValue({ name: 'stakingRewards', ...await getStakingRewards() })
     }
 
@@ -250,13 +249,13 @@ export default function useContracts() {
                     usd
                 }
             break
-            case 'totalDeposited':
-                totalDeposited.value = {
+            case 'totalWalletBalance':
+                totalWalletBalance.value = {
                     exchange,
                     usd
                 }
             break
-            case 'stakingRewards':
+            case 'stakingRewardsEarned':
                 stakingRewards.value = {
                     exchange,
                     usd
@@ -287,7 +286,7 @@ export default function useContracts() {
         currentStaked, 
         manager, 
         stakingRewards, 
-        totalDeposited, 
+        totalWalletBalance, 
         deposit, 
         getCurrentStaked,
         getDepositFees, 
