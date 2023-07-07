@@ -39,12 +39,12 @@ export default function useUsers () {
                 headers: { 
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ account })
+                body: JSON.stringify({ account, id: user?.value?.id })
             }
             const response = await fetch(`${usersBaseURL}/user/add-sub-account`, requestOptions)
-            const { error, message, data: user } = await response.json()
-            setUser(user)
-            return { error, message, data: user }
+            const { error, message, data: updatedUser } = await response.json()
+            setUser(updatedUser)
+            return { error, message, data: updatedUser }
         } catch (error: any) {
             throw new Error(error.message || 'Error adding account')
         }
@@ -279,6 +279,7 @@ export default function useUsers () {
             body: JSON.stringify({
                 address,
                 currency,
+                id: user?.value?.id,
                 ownerAddress,
                 walletProvider,
             })
