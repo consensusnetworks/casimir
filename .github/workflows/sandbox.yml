@@ -4,7 +4,7 @@
 name: Push
 on:
   push:
-    branches: [feature/users-web-cdk] # Replace with your branch name
+    branches: [sandbox] # Replace with your branch name
 
 env:
   PROJECT: casimir
