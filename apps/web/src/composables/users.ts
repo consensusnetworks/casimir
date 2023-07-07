@@ -126,11 +126,11 @@ export default function useUsers () {
         let earliest: any = null
         const latest: any = new Date().getTime()
         const oneYear = new Date().getTime() - 31536000000
-        const oneYearInterval = (latest - oneYear) / 12
+        const oneYearInterval = (latest - oneYear) / 11
         const sixMonths = new Date().getTime() - 15768000000
-        const sixMonthInterval = (latest - sixMonths) / 12
+        const sixMonthInterval = (latest - sixMonths) / 11
         const oneMonth = new Date().getTime() - 2628000000
-        const oneMonthInterval = (latest - oneMonth) / 12
+        const oneMonthInterval = (latest - oneMonth) / 11
         sortedTransactions.forEach((tx: any) => {
             const receivedAt = new Date(tx.receivedAt)
             if (!earliest) earliest = receivedAt.getTime()
@@ -213,7 +213,7 @@ export default function useUsers () {
         // Set the oneYear labels array to the interval labels
         result.oneYear.labels = Array(12).fill(0).map((_, i) => {
             const date = new Date(oneYear + (oneYearInterval * i))
-            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+            return date.getMonth() === 0 ? `${date.getFullYear()} ${months[date.getMonth()]} ${date.getDate()}` : `${months[date.getMonth()]} ${date.getDate()}`
         })
 
         // Set the sixMonth labels array to the interval labels
