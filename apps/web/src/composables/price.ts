@@ -17,6 +17,21 @@ type PriceEntry = {
 export default function usePrice() {
     const { cryptoCompareApiKey } = useEnvironment()
 
+    function convertToWholeUnits (currency: Currency | string, amount: number) {
+        switch (currency) {
+            case 'BTC':
+                return amount / 100000000
+                break
+
+            case 'ETH':
+                return amount / 1000000000000000000
+                break
+        
+            default:
+                break
+        }
+    }
+    
     async function getExchangeRate(amount: string) {
 
         if (amount === '0.0') {
@@ -43,56 +58,42 @@ export default function usePrice() {
         return data[to]
     }
 
-    function convertToWholeUnits (currency: Currency | string, amount: number) {
-        switch (currency) {
-            case 'BTC':
-                return amount / 100000000
-                break
-
-            case 'ETH':
-                return amount / 1000000000000000000
-                break
-        
-            default:
-                break
+    async function getCurrentPrice({ coin, currency }: { coin: 'ETH' | 'BTC'; currency: 'USD' }) {
+        const opt = {
+            method: 'GET'
+        }
+    
+        const now = Math.floor(Date.now() / 1000)
+    
+        const url = `https://min-api.cryptocompare.com/data/v2/histominute?fsym=${coin}&tsym=${currency}&toTs=${now}&limit=1`
+    
+        try {
+            const response = await fetch(url, opt)
+    
+            const data = await response.json()
+    
+            if (data.Response.toLowerCase() !== 'success') {
+                throw new Error(data.Message)
+            }
+    
+            if (data.Data.Data.length === 0) {
+                throw new Error('Empty response from API')
+            }
+    
+            const first = data.Data.Data[0] as PriceEntry
+            const mid = (first.high + first.low) / 2
+    
+            return mid
+        } catch (e) {
+            console.log(e)
+            return 0
         }
     }
 
     return {
+        convertToWholeUnits,
+        getCurrentPrice,
         getExchangeRate,
         getConversionRateByDate,
-        convertToWholeUnits
-    }
-}
-
-async function getCurrentPrice({ coin, currency }: { coin: 'ETH' | 'BTC'; currency: 'USD' }) {
-    const opt = {
-        method: 'GET'
-    }
-
-    const now = Math.floor(Date.now() / 1000)
-
-    const url = `https://min-api.cryptocompare.com/data/v2/histominute?fsym=${coin}&tsym=${currency}&toTs=${now}&limit=1`
-
-    try {
-        const response = await fetch(url, opt)
-
-        const data = await response.json()
-
-        if (data.Response.toLowerCase() !== 'success') {
-            throw new Error(data.Message)
-        }
-
-        if (data.Data.Data.length === 0) {
-            throw new Error('Empty response from API')
-        }
-
-        const first = data.Data.Data[0] as PriceEntry
-        const mid = (first.high + first.low) / 2
-
-        return mid
-    } catch (e) {
-        console.log(e)
-        return 0
     }
 }

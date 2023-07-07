@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { $, echo, chalk } from 'zx'
-import { loadCredentials, getSecret, getFutureContractAddress, getWallet, runSync } from '@casimir/helpers'
+import { loadCredentials, getSecret, getFutureContractAddress, getWallet, runSync, run } from '@casimir/helpers'
 
 /**
  * Run local a local Ethereum node and deploy contracts
@@ -68,6 +68,11 @@ void async function () {
     }
     if (!process.env.VIEWS_ADDRESS) {
         process.env.VIEWS_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
+    }
+
+    if (process.env.MOCK_ORACLE === 'false') {
+        /** Generate mock validators as needed */
+        await run('npm run generate --workspace @casimir/oracle')
     }
 
     $`npm run node --workspace @casimir/ethereum`

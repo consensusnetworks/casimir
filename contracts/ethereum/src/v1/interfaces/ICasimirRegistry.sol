@@ -21,9 +21,9 @@ interface ICasimirRegistry {
     /* Events */
     /**********/
 
-    event OperatorRegistered(uint64 operatorId);
-    event DeregistrationRequested(uint64 operatorId);
-    event DeregistrationCompleted(uint64 operatorId);
+    event OperatorRegistered(uint64 indexed operatorId);
+    event DeregistrationRequested(uint64 indexed operatorId);
+    event DeregistrationCompleted(uint64 indexed operatorId);
 
     /*************/
     /* Mutations */

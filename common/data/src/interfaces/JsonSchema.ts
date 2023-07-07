@@ -6,7 +6,8 @@ export interface JsonSchema {
     properties: {
         [key: string]: {
             type: string,
-            description: string
+            description: string,
+            default: string | number | boolean | null
         }
     },
     uniqueFields?: string[],

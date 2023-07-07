@@ -1,9 +1,11 @@
 import { ethers } from 'ethers'
-import { EthersProvider } from '@casimir/types'
-import { TransactionRequest } from '@casimir/types'
+import { EthersProvider } from '@/interfaces/index'
+import { Account, TransactionRequest, UserWithAccounts } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
+import useContracts from '@/composables/contracts'
 import useEnvironment from '@/composables/environment'
+import useUsers from '@/composables/users'
 
 interface ethereumWindow extends Window {
   ethereum: any;
@@ -109,27 +111,10 @@ export default function useEthers() {
     }
   }
 
-  async function getEthersBalance(address: string, ) {
+  async function getEthersBalance(address: string) : Promise<GLfloat> {
     const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
     const balance = await provider.getBalance(address)
-    return ethers.utils.formatEther(balance)
-  }
-
-  async function getGasPriceAndLimit(
-    rpcUrl: string,
-    unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
-  ) {
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
-    const gasPrice = await provider.getGasPrice()
-    const gasLimit = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
-    return { gasPrice, gasLimit }
-  }
-
-  function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
-    const provider = getBrowserProvider(providerString)
-    if (provider) {
-      return new ethers.providers.Web3Provider(provider as EthersProvider).getSigner()
-    }
+    return parseFloat(ethers.utils.formatEther(balance))
   }
 
   async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
@@ -142,11 +127,51 @@ export default function useEthers() {
     return currency
   }
 
+  function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
+    const provider = getBrowserProvider(providerString)
+    if (provider) {
+      return new ethers.providers.Web3Provider(provider as EthersProvider).getSigner()
+    }
+  }
+
+  async function getGasPriceAndLimit(
+    rpcUrl: string,
+    unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+  ) {
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+    const gasPrice = await provider.getGasPrice()
+    const gasLimit = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    return { gasPrice, gasLimit }
+  }
+
   async function getMaxETHAfterFees(rpcUrl: string, unsignedTx: ethers.utils.Deferrable<ethers.providers.TransactionRequest>, totalAmount: string) {
     const { fee } = await estimateEIP1559GasFee(rpcUrl, unsignedTx)
     const total = parseInt(totalAmount) - parseInt(fee)
     const maxAfterFees = ethers.utils.formatEther(total).toString()
     return maxAfterFees
+  }
+
+  async function listenForTransactions() {
+    const { manager, refreshBreakdown } = useContracts()
+    const { user } = useUsers()
+    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    provider.on('block', async (blockNumber: number) => {
+      console.log('blockNumber :>> ', blockNumber)
+      const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
+      const block = await provider.getBlockWithTransactions(blockNumber)
+      const transactions = block.transactions
+      transactions.map(async (tx) => {
+        if (addresses.includes(tx.from.toLowerCase())) {
+          console.log('tx :>> ', tx)
+          const response = manager.interface.parseTransaction({ data: tx.data })
+          console.log('response :>> ', response)
+          await refreshBreakdown()
+        }
+      })
+    })
+    await new Promise(() => {
+      // Wait indefinitely using a Promise that never resolves
+    })
   }
 
   async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
@@ -239,16 +264,17 @@ export default function useEthers() {
     estimateEIP1559GasFee,
     estimateLegacyGasFee,
     ethersProviderList,
-    getMaxETHAfterFees,
     getEthersAddressWithBalance,
     getEthersBalance,
-    getEthersBrowserSigner,
     getEthersBrowserProviderSelectedCurrency,
+    getEthersBrowserSigner,
     getGasPriceAndLimit,
+    getMaxETHAfterFees,
+    listenForTransactions,
     loginWithEthers,
     requestEthersAccount,
-    signEthersMessage,
     sendEthersTransaction,
+    signEthersMessage,
     switchEthersNetwork
   }
 }

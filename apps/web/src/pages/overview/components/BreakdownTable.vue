@@ -9,6 +9,8 @@ const tableView = ref('Wallets')
 const selectedHeader = ref('')
 const selectedOrientation = ref('ascending')
 
+const checkedItems = ref([] as any)
+
 const tableHeaderOptions = ref(
   {
     Wallets: {
@@ -218,14 +220,7 @@ const downloadFile = (content: any, filename: string, mimeType: any) => {
 
 const exportFile = () => {
 
-  const jsonData = 
-    [{
-      wallet_provider: 'MetaMask',
-      act: '12345678910asdfghjkl;qwertyuiopzxcvbnm',
-      bal: '1.5 ETH',
-      stk_amt: '0.5 ETH',
-      stk_rwd: '0.034 ETH'
-    }]
+  const jsonData = checkedItems.value.length > 0? checkedItems.value : filteredData.value
 
   const isMac = navigator.userAgent.indexOf('Mac') !== -1
   const fileExtension = isMac ? 'csv' : 'xlsx'
@@ -236,6 +231,13 @@ const exportFile = () => {
   } else {
     const excelBuffer = convertJsonToExcelBuffer(jsonData)
     downloadFile(excelBuffer, `${tableView.value}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  }
+}
+
+const removeItemFromCheckedList = (item:any) => {
+  const index = checkedItems.value.indexOf(item)
+  if (index > -1) {
+    checkedItems.value.splice(index, 1)
   }
 }
 </script>
@@ -273,14 +275,14 @@ const exportFile = () => {
           <button
             class="timeframe_button"
             :class="tableView === 'Wallets'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Wallets', selectedHeader = ''"
+            @click="tableView = 'Wallets', selectedHeader = '', checkedItems = []"
           >
             Wallets
           </button>
           <button
             class="timeframe_button border-l border-l-[#D0D5DD] " 
             :class="tableView === 'Transactions'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Transactions', selectedHeader = ''"
+            @click="tableView = 'Transactions', selectedHeader = '', checkedItems = []"
           >
             Transactions
           </button>
@@ -300,14 +302,14 @@ const exportFile = () => {
             >
           </div>
 
-          <button class="filters_button">
+          <!-- <button class="filters_button">
             <vue-feather
               type="filter"
               size="20"
               class="icon w-[20px] h-min"
             />
             Filters
-          </button>
+          </button> -->
         </div>
       </div>
     </div>
@@ -389,13 +391,17 @@ const exportFile = () => {
                 v-if="header.value === 'wallet_provider'"
                 class="flex items-center gap-[12px]"
               >
-                <!-- <button class="checkbox_button">
+                <button
+                  class="checkbox_button"
+                  @click="checkedItems.includes(item)? removeItemFromCheckedList(item) : checkedItems.push(item)"
+                >
                   <vue-feather
+                    v-show="checkedItems.includes(item)"
                     type="check"
                     size="20"
                     class="icon w-[14px] h-min"
                   />
-                </button> -->
+                </button>
                 <img
                   :src="`/${item[header.value as keyof typeof item]}.svg`"
                   alt="Avatar "
@@ -417,14 +423,18 @@ const exportFile = () => {
                 v-else-if="header.value === 'tx_hash'"
                 class="flex items-center gap-[12px]"
               >
-                <!-- <button class="checkbox_button mr-[12px]">
+                <button
+                  class="checkbox_button"
+                  @click="checkedItems.includes(item)? removeItemFromCheckedList(item) : checkedItems.push(item)"
+                >
                   <vue-feather
+                    v-show="checkedItems.includes(item)"
                     type="check"
                     size="20"
                     class="icon w-[14px] h-min"
                   />
-                </button> -->
-                <a class="w-[55px] truncate underline">
+                </button>
+                <a class="">
                   {{ convertString(item[header.value as keyof typeof item]) }}
                 </a>
               </div>

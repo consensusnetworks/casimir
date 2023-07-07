@@ -26,35 +26,42 @@ export class DKG {
      * @param {CreateValidatorInput} input - Input for creating a validator
      * @returns {Promise<Validator>} Validator with operator key shares and deposit data
      */
-    async createValidator(input: CreateValidatorInput): Promise<Validator> {
-        const { operatorIds, withdrawalAddress } = input
-
-        const operators = this.getOperatorUrls(operatorIds)
-
-        /** Start a key generation ceremony with the given operators */
-        const ceremonyId = await this.startKeygen({ operators, withdrawalAddress })
-        console.log(`Started ceremony with ID ${ceremonyId}`)
-
-        /** Wait for ceremony to complete */
-        await new Promise(resolve => setTimeout(resolve, 2000))
-
-        /** Get operator key shares */
-        const shares = await this.getShares(ceremonyId)
-
-        /** Get validator deposit data */
-        const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData({ ceremonyId, withdrawalAddress })
-
-        /** Create validator */
-        const validator: Validator = {
-            depositDataRoot,
-            publicKey,
-            operatorIds,
-            shares,
-            signature,
-            withdrawalCredentials
+    async createValidator(input: CreateValidatorInput, retriesLeft: number | undefined = 25): Promise<Validator> {
+        try {
+            const { operatorIds, withdrawalAddress } = input
+    
+            const operators = this.getOperatorUrls(operatorIds)
+    
+            /** Start a key generation ceremony with the given operators */
+            const ceremonyId = await this.startKeygen({ operators, withdrawalAddress })
+            console.log(`Started ceremony with ID ${ceremonyId}`)
+    
+            /** Wait for ceremony to complete */
+            await new Promise(resolve => setTimeout(resolve, 2000))
+    
+            /** Get operator key shares */
+            const shares = await this.getShares(ceremonyId)
+    
+            /** Get validator deposit data */
+            const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData({ ceremonyId, withdrawalAddress })
+    
+            /** Create validator */
+            const validator: Validator = {
+                depositDataRoot,
+                publicKey,
+                operatorIds,
+                shares,
+                signature,
+                withdrawalCredentials
+            }
+    
+            return validator
+        } catch (error) {
+            console.log(error)
+            await new Promise(resolve => setTimeout(resolve, 2500))
+            console.log('Retrying create validator request')
+            return await this.createValidator(input, retriesLeft - 1)
         }
-
-        return validator
     }
 
     /** 
@@ -62,35 +69,42 @@ export class DKG {
      * @param {ReshareValidatorInput} input - Input for resharing a validator
      * @returns {Promise<Validator>} Validator with operator key shares and deposit data
      */
-    async reshareValidator(input: ReshareValidatorInput): Promise<Validator> {
-        const { operatorIds, publicKey, oldOperatorIds, withdrawalAddress } = input
-        const operators = this.getOperatorUrls(operatorIds)
-        const oldOperators = this.getOperatorUrls(oldOperatorIds)
-
-        /** Start a key generation ceremony with the given operators */
-        const ceremonyId = await this.startReshare({ operators, publicKey, oldOperators })
-        console.log(`Started ceremony with ID ${ceremonyId}`)
-
-        /** Wait for ceremony to complete */
-        await new Promise(resolve => setTimeout(resolve, 3000))
-
-        /** Get operator key shares */
-        const shares = await this.getShares(ceremonyId)
-
-        /** Get validator deposit data */
-        const { depositDataRoot, signature, withdrawalCredentials } = await this.getDepositData({ ceremonyId, withdrawalAddress })
-
-        /** Create validator */
-        const validator: Validator = {
-            depositDataRoot,
-            publicKey,
-            operatorIds,
-            shares,
-            signature,
-            withdrawalCredentials
+    async reshareValidator(input: ReshareValidatorInput, retriesLeft: number | undefined = 25): Promise<Validator> {
+        try {
+            const { operatorIds, publicKey, oldOperatorIds, withdrawalAddress } = input
+            const operators = this.getOperatorUrls(operatorIds)
+            const oldOperators = this.getOperatorUrls(oldOperatorIds)
+    
+            /** Start a key generation ceremony with the given operators */
+            const ceremonyId = await this.startReshare({ operators, publicKey, oldOperators })
+            console.log(`Started ceremony with ID ${ceremonyId}`)
+    
+            /** Wait for ceremony to complete */
+            await new Promise(resolve => setTimeout(resolve, 10000))
+    
+            /** Get operator key shares */
+            const shares = await this.getShares(ceremonyId)
+    
+            /** Get validator deposit data */
+            const { depositDataRoot, signature, withdrawalCredentials } = await this.getDepositData({ ceremonyId, withdrawalAddress })
+    
+            /** Create validator */
+            const validator: Validator = {
+                depositDataRoot,
+                publicKey,
+                operatorIds,
+                shares,
+                signature,
+                withdrawalCredentials
+            }
+    
+            return validator
+        } catch (error) {
+            console.log(error)
+            await new Promise(resolve => setTimeout(resolve, 2500))
+            console.log('Retrying reshare validator request')
+            return await this.reshareValidator(input, retriesLeft - 1)
         }
-
-        return validator
     }
 
     /**

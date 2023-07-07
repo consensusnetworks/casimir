@@ -179,6 +179,29 @@ export default function useDB() {
     }
 
     /**
+     * Update user's agreedToTermsOfService based on userId.
+     * @param userId - The user's id
+     * @param agreedToTermsOfService - The user's new agreedToTermsOfService
+     * @returns A promise that resolves when the user's agreedToTermsOfService is updated
+     * @throws Error if the user is not found
+     * 
+     */
+    async function updateUserAgreedToTermsOfService(userId: number, agreedToTermsOfService: boolean): Promise<User> {
+        try {
+            const updated_at = new Date().toISOString()
+            const text = 'UPDATE users SET agreed_to_terms_of_service = $1, updated_at = $2 WHERE id = $3 RETURNING *;'
+            const params = [agreedToTermsOfService, updated_at, userId]
+            const rows = await postgres.query(text, params)
+            const user = rows[0]
+            if (!user) throw new Error('User not found.')
+            return user
+        } catch (error) {
+            console.error('There was an error updating the user agreedToTermsOfService in updateUserAgreedToTermsOfService.', error)
+            throw error
+        }
+    }
+
+    /**
      * Add or update nonce for an address.
      * @param address - The address
      * @returns A promise that resolves when the nonce is added or updated
@@ -236,13 +259,15 @@ export default function useDB() {
 
     return { 
         addAccount, 
-        addUser, 
+        addUser,
+        formatResult,
         getAccounts,
         getNonce, 
         getUser,
         getUserById,
         removeAccount, 
         updateUserAddress, 
+        updateUserAgreedToTermsOfService,
         upsertNonce 
     }
 }

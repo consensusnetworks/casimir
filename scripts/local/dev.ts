@@ -54,9 +54,6 @@ void async function () {
 
     /** Default to no build preview */
     process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
-
-    /** Default to no live network */
-    process.env.NETWORK = process.env.NETWORK || ''
     
     /** Mock services if specified */
     if (process.env.MOCK_SERVICES === 'true') {
@@ -75,7 +72,7 @@ void async function () {
 
     for (const chain of Object.keys(chains)) {
 
-        /** Use remote ethereum url */
+        /** Use remote ethereum url if provided */
         if (process.env.NETWORK) {
 
             if (process.env.USE_SECRETS !== 'false') {
@@ -113,9 +110,8 @@ void async function () {
             if (process.env.USE_SECRETS !== 'false') {
                 const key = await getSecret(`consensus-networks-${chain}-${process.env.FORK}`)
                 const currency = chain.slice(0, 3)
-                const url = `https://${currency}-${process.env.FORK}.g.alchemy.com/v2/${key}`
+                const url = `https://${currency}-${chains[chain].forks[process.env.FORK]}.g.alchemy.com/v2/${key}`
                 process.env.ETHEREUM_FORK_RPC_URL = process.env.ETHEREUM_FORK_RPC_URL || url
-                echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(process.env.FORK) + chalk.bgBlackBright(` ${chain} network at ${url}`))
             }
 
             /** Check for fork url availability */
@@ -127,7 +123,7 @@ void async function () {
             process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
 
             const wallet = getWallet(process.env.BIP39_SEED)
-            const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL)
+            const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
             const nonce = await provider.getTransactionCount(wallet.address)
             const managerIndex = 1 // We deploy a mock functions oracle before the manager
             if (!process.env.MANAGER_ADDRESS) {
