@@ -1,4 +1,5 @@
 import { fetchRetry, run } from '@casimir/helpers'
+import path from 'path'
 
 const resourcePath = 'scripts/resources/rockx-dkg-cli'
 
@@ -17,7 +18,7 @@ void async function () {
     process.env.USE_HARDCODED_OPERATORS = 'true'
 
     /** Build and check if the CLI is available */
-    await run(`make -C ${resourcePath} build`)
+    await run(`make -C ${path.resolve(resourcePath)} build`)
     const cli = await run(`which ${process.env.CLI_PATH}`)
     if (!cli) throw new Error('DKG CLI not found')
 
