@@ -220,14 +220,13 @@ export default function useUsers () {
 
     async function getUserAnalytics() {
         try {
-            const userId = user.value?.id
             const requestOptions = {
                 method: 'GET',
                 headers: { 
                     'Content-Type': 'application/json'
                 }
             }
-            const response = await fetch(`${usersBaseURL}/analytics/${userId}`, requestOptions)
+            const response = await fetch(`${usersBaseURL}/analytics`, requestOptions)
             const { error, message, data } = await response.json()
             if (error) throw new Error(message)
             

@@ -1,4 +1,6 @@
 import express from 'express'
+import { verifySession } from 'supertokens-node/recipe/session/framework/express'
+import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
 import { query } from 'athena-query'
 
@@ -6,9 +8,10 @@ const router = express.Router()
 
 const { formatResult, getUserById } = useDB()
 
-router.get('/:userId', async (req: express.Request, res: express.Response) => {
+router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
-        const { userId } = req.params
+        const id = req.session?.getUserId() as string
+        const userId = id.toString()
         const user = await getUserById(userId)
         const { accounts } = user
         const addresses = accounts.map((account) => account.address)
