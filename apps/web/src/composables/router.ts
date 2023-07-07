@@ -1,6 +1,4 @@
 import { createWebHistory, createRouter } from 'vue-router'
-// import useWallet from '@/composables/wallet'
-import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 
 /* eslint-disable @typescript-eslint/ban-ts-comment */
