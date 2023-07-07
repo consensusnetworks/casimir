@@ -1,6 +1,6 @@
 import { Postgres } from './postgres'
 import { camelCase } from '@casimir/helpers'
-import { Account, RemoveAccountOptions, User, UserAddedSuccess } from '@casimir/types'
+import { Account, RemoveAccountOptions, User, UserAddedSuccess, UserWithAccounts } from '@casimir/types'
 import useEthers from './ethers'
 
 const { generateNonce } = useEthers()
@@ -117,6 +117,7 @@ export default function useDB() {
             const user = rows[0]
             return formatResult(user) as User
         } catch (error) {
+            console.log('ERROR in DB')
             throw new Error('There was an error getting user from the database')
         }
     }
@@ -133,7 +134,7 @@ export default function useDB() {
             const params = [id]
             const rows = await postgres.query(text, params)
             const user = rows[0]
-            return formatResult(user) as User
+            return formatResult(user) as UserWithAccounts
         } catch (err) {
             throw new Error('There was an error getting user by id from the database')
         }

@@ -7,10 +7,8 @@ import analytics from './routes/analytics'
 import auth from './routes/auth'
 import user from './routes/user'
 import health from './routes/health'
-import seed from './routes/seed'
 
 supertokens.init(SuperTokensBackendConfig)
-
 const app = express()
 app.use(express.json())
 
@@ -30,7 +28,6 @@ app.use(middleware())
 app.use('/auth', auth)
 app.use('/user', user)
 app.use('/health', health)
-app.use('/seed', seed)
 app.use('/analytics', analytics)
 
 /** Returns 401 to the client in the case of session related errors */

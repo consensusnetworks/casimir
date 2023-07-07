@@ -185,6 +185,7 @@ export default function useContracts() {
     }
 
     async function getUserContractEventsTotals(address: string) {
+        const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
         const eventList = [
             'StakeDeposited',
             'StakeRebalanced',
@@ -194,7 +195,7 @@ export default function useContracts() {
             if (event === 'StakeRebalanced') return manager.filters[event]()
             return manager.filters[event](address)
         })
-        const items = (await Promise.all(eventFilters.map(async eventFilter => await manager.queryFilter(eventFilter, 0, 'latest'))))
+        const items = (await Promise.all(eventFilters.map(async eventFilter => await manager.connect(provider).queryFilter(eventFilter, 0, 'latest'))))
 
         const userEventTotals = eventList.reduce((acc, event) => {
             acc[event] = 0

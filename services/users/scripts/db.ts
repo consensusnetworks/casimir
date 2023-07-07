@@ -64,10 +64,4 @@ void async function () {
         await run('echo y | brew install atlas')
     }
     await run(`atlas schema apply --url "postgres://postgres:password@localhost:5432/users?sslmode=disable" --to "file://${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`)
-    
-    /** Start users service */
-    const usersReady = !(await fetch(`${process.env.PUBLIC_USERS_URL}/health`).catch(() => false))
-    if (usersReady) {
-        await run('ts-node-dev --watch ./src --respawn --transpile-only src/index.ts')
-    }
 }()

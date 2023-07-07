@@ -55,6 +55,13 @@ void async function () {
     /** Default to no build preview */
     process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
     
+    /** Set web app url */
+    if (process.env.BUILD_PREVIEW === 'true') {
+        process.env.WEB_URL = process.env.WEB_URL || 'http://localhost:4173'
+    } else {
+        process.env.WEB_URL = process.env.WEB_URL || 'http://localhost:3001'
+    }
+
     /** Mock services if specified */
     if (process.env.MOCK_SERVICES === 'true') {
         for (const service of Object.keys(services)) {
@@ -66,7 +73,9 @@ void async function () {
                 console.log(`Port ${services[service].port} is available.`)
             }
 
-            $`npm run watch --workspace @casimir/${service}`
+            process.env[`${service.toUpperCase()}_URL`] = `http://localhost:${services[service].port}`
+
+            $`npm run dev --workspace @casimir/${service}`
         }
     }
 

@@ -17,11 +17,13 @@ void async function () {
     await loadCredentials()
     process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')
 
+    /** Set private environment variables */
+    process.env.ETHEREUM_RPC_URL = 'https://nodes.casimir.co/eth/hardhat'
+    process.env.USERS_URL = `https://users.${process.env.STAGE}.casimir.co`
+
     /** Set public environment variables */
-    if (process.env.STAGE === 'sandbox') { // Todo switch to dev before merging
-        process.env.PUBLIC_ETHEREUM_RPC_URL = 'https://nodes.casimir.co/eth/hardhat'
-    }
-    process.env.PUBLIC_USERS_URL = `https://users.${process.env.STAGE}.casimir.co`
+    process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
+    process.env.PUBLIC_USERS_URL = process.env.USERS_URL
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
 
     /** Prepare CDK resources */

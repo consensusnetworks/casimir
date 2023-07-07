@@ -43,7 +43,7 @@ router.get('/:userId', async (req: express.Request, res: express.Response) => {
         //     ORDER BY received_at DESC
         //     LIMIT 50
         // `
-        const [, rows] = await query(stmt, opt)
+        const { rows } = await query(stmt, opt)
         const data = formatResult(rows)
         res.status(200).json({
             error: false,

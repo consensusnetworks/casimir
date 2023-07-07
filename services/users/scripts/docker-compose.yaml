@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  postgres:
+  db:
     image: postgres:latest
     container_name: postgres
     healthcheck:
@@ -12,8 +12,8 @@ services:
     ports:
       - 5432:5432
     environment:
-      POSTGRES_DB: users
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
+      POSTGRES_DB: users
     volumes:
       - ./.out/pgdata:/var/lib/postgresql/data
