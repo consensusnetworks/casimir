@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { onMounted, ref, watch} from 'vue'
+import { ref, watch} from 'vue'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 
 import { ProviderString } from '@casimir/types'
 
-const { currentStaked, stakingRewards, totalDeposited } = useContracts()
+const { currentStaked, stakingRewards, totalWalletBalance } = useContracts()
 const { user, getUserAnalytics, userAnalytics } = useUsers()
 
 const chardId = ref('cross_provider_chart')
@@ -75,10 +75,6 @@ const setMockData = () => {
   }
 }
 
-// onMounted(() => {
-//   setMockData()
-// })
-
 watch(user, async () => {
     if (user.value?.id) {
       await getUserAnalytics()
@@ -94,9 +90,22 @@ watch(selectedTimeframe, () => {
 <template>
   <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap">
     <div class="flex flex-wrap justify-between mb-[52px]">
+      <div>
+        <h6 class="blance_title mb-[15px]">
+          Total Balance Across Connected Wallets
+        </h6>
+        <div class="flex items-center gap-[12px]">
+          <h5 class="blance_amount">
+            {{ totalWalletBalance.usd }}
+          </h5>
+          <span class="blance_exchange">
+            {{ totalWalletBalance.exchange }}
+          </span>
+        </div>
+      </div>
       <div class="">
         <h6 class="blance_title mb-[15px]">
-          Current Staked
+          Currently Staked
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="blance_amount">
@@ -109,7 +118,7 @@ watch(selectedTimeframe, () => {
       </div>
       <div>
         <h6 class="blance_title mb-[15px]">
-          Staking Rewards
+          All Time Staking Rewards Earned
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="blance_amount">
@@ -117,19 +126,6 @@ watch(selectedTimeframe, () => {
           </h5>
           <span class="blance_exchange">
             {{ stakingRewards.exchange }}
-          </span>
-        </div>
-      </div>
-      <div>
-        <h6 class="blance_title mb-[15px]">
-          Total Deposited
-        </h6>
-        <div class="flex items-center gap-[12px]">
-          <h5 class="blance_amount">
-            {{ totalDeposited.usd }}
-          </h5>
-          <span class="blance_exchange">
-            {{ totalDeposited.exchange }}
           </span>
         </div>
       </div>
