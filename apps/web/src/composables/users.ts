@@ -1,4 +1,4 @@
-import { ref, readonly } from 'vue'
+import { ref, readonly, onMounted, watch } from 'vue'
 import { Account, AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from './ethers'
@@ -136,8 +136,7 @@ export default function useUsers () {
             if (!earliest) earliest = receivedAt.getTime()
             if (receivedAt.getTime() < earliest) earliest = receivedAt.getTime()
         })
-        const historicalInterval = (latest - earliest) / 12
-        
+        const historicalInterval = (latest - earliest) / 11
         
         sortedTransactions.forEach((tx: any) => {
             const { receivedAt, walletAddress, walletBalance } = tx
@@ -192,10 +191,23 @@ export default function useUsers () {
             }
         })
 
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
         // Set the historical labels array to the interval labels
+        let previousMonth: any = null
         result.historical.labels = Array(12).fill(0).map((_, i) => {
             const date = new Date(earliest + (historicalInterval * i))
-            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+            const currentMonth = date.getMonth()
+            if (!previousMonth) {
+                previousMonth = currentMonth
+                return date.getMonth() === 0 ? `${date.getFullYear()} ${months[date.getMonth()]} ${date.getDate()}` : `${months[date.getMonth()]} ${date.getDate()}`
+            } else if (currentMonth < previousMonth) {
+                previousMonth = currentMonth
+                return `${date.getFullYear()} ${months[date.getMonth()]} ${date.getDate()}`
+            } else {
+                previousMonth = currentMonth
+                return `${months[date.getMonth()]} ${date.getDate()}`
+            }
         })
 
         // Set the oneYear labels array to the interval labels

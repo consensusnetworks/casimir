@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { ref, watch} from 'vue'
+import { onMounted, ref, watch} from 'vue'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 
 import { ProviderString } from '@casimir/types'
 
-const { currentStaked, stakingRewards, totalWalletBalance } = useContracts()
+const { currentStaked, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
 const { user, getUserAnalytics, userAnalytics } = useUsers()
 
 const chardId = ref('cross_provider_chart')
@@ -34,7 +34,7 @@ const getAccountColor = (address: string) => {
     
 }
 
-const setMockData = () => {
+const setChartData = () => {
   let labels
   let data = []
   switch (selectedTimeframe.value) {
@@ -66,7 +66,7 @@ const setMockData = () => {
         data : item.walletBalance,
         label : item.walletAddress,
         borderColor : getAccountColor(item.walletAddress),
-        fill: true,
+        fill: item.walletAddress === user.value?.address,
         backgroundColor: item.walletAddress === user.value?.address? getAccountColor(item.walletAddress) : null,
         pointRadius: 0,
         tension: 0.1
@@ -75,15 +75,23 @@ const setMockData = () => {
   }
 }
 
+onMounted(async () => {
+  if (user.value?.id) {
+    await getUserAnalytics()
+    setChartData()
+    await refreshBreakdown()
+  }
+})
+
 watch(user, async () => {
     if (user.value?.id) {
       await getUserAnalytics()
-      setMockData()
+      setChartData()
     }
 })
 
 watch(selectedTimeframe, () => {
-  setMockData()
+  setChartData()
 })
 </script>
 
