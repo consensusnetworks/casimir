@@ -84,9 +84,11 @@ export default function useContracts() {
             const totalStaked = currentStaked.reduce((accumulator, currentValue) => accumulator.add(currentValue), ethers.BigNumber.from(0))
             const totalStakedUSD = parseFloat(ethers.utils.formatEther(totalStaked)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
             const totalStakedETH = parseFloat(ethers.utils.formatEther(totalStaked))
+            const formattedTotalStakedUSD = formatNumber(totalStakedUSD)
+            const formattedTotalStakedETH = formatNumber(totalStakedETH)
             return {
-                exchange: totalStakedETH.toFixed(2) + ' ETH',
-                usd: '$ ' + totalStakedUSD.toFixed(2)
+                exchange: formattedTotalStakedUSD + ' ETH',
+                usd: '$ ' + formattedTotalStakedETH
             }
         } catch (error) {
             console.log('Error occurred while fetching stake:', error)
@@ -193,9 +195,11 @@ export default function useContracts() {
         addresses.forEach((address) => { promises.push(getEthersBalance(address)) })
         const totalWalletBalance = (await Promise.all(promises)).reduce((acc, curr) => acc + curr, 0)
         const totalWalletBalanceUSD = totalWalletBalance * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        const formattedTotalWalletBalance = formatNumber(totalWalletBalance)
+        const formattedTotalWalletBalanceUSD = formatNumber(totalWalletBalanceUSD)
         return {
-            exchange: totalWalletBalance.toFixed(2) + ' ETH',
-            usd: '$ ' + totalWalletBalanceUSD.toFixed(2)
+            exchange: formattedTotalWalletBalance + ' ETH',
+            usd: '$ ' + formattedTotalWalletBalanceUSD
         }
     }
 
@@ -296,4 +300,8 @@ export default function useContracts() {
         refreshBreakdown,
         withdraw 
     }
+}
+
+function formatNumber(number: number) {
+    return number.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')
 }
