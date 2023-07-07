@@ -6,7 +6,7 @@ import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
 import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
 import { getEventsIterable } from '@casimir/oracle/src/providers/events'
-import { fetchRetry } from '@casimir/helpers'
+import { fetchRetry, run } from '@casimir/helpers'
 
 void async function () {
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
@@ -78,7 +78,6 @@ void async function () {
     let lastReportBlock = await ethers.provider.getBlockNumber()
 
     void function () {
-        console.log('STARTING REPORTER')
 
         ethers.provider.on('block', async (block) => {
             if (block - blocksPerReport >= lastReportBlock) {
@@ -148,14 +147,14 @@ void async function () {
         await depositUpkeepBalanceHandler({ manager, signer: oracle })
     }, 2500)
 
-    console.log('STARTING KEEPER')
-
     /**
-     * We are simulating the DAO oracle (@casimir/oracle) using the oracle helper
+     * We are either running or simulating (using the oracle helper) the DAO oracle (@casimir/oracle)
      */
-    if (process.env.MOCK_ORACLE === 'false') {
+    if (process.env.MOCK_ORACLE === 'true') {
 
-        console.log('STARTING ORACLE')
+        run('npm run dev --workspace @casimir/oracle')
+
+    } else {
 
         const handlers = {
             DepositRequested: initiateDepositHandler,
@@ -168,12 +167,8 @@ void async function () {
             CompletedExitReportsRequested: reportCompletedExitsHandler
         }
 
-        console.log('GOT HANDLERS', handlers)
-
         const eventsIterable = getEventsIterable({ manager, events: Object.keys(handlers) })
-        
-        console.log('GOT EVENTS ITERABLE', eventsIterable)
-        
+                
         for await (const event of eventsIterable) {
             const details = event?.[event.length - 1]
             const { args } = details

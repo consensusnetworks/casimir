@@ -17,6 +17,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
     } = input
 
     const nonce = await provider.getTransactionCount(manager.address)
+
     const poolAddress = ethers.utils.getContractAddress({
       from: manager.address,
       nonce
@@ -26,8 +27,6 @@ export async function initiateDepositHandler(input: HandlerInput) {
     const dkg = new DKG({ cliPath, messengerUrl })
 
     const validator = await dkg.createValidator({
-        provider,
-        manager,
         operatorIds: newOperatorIds, 
         withdrawalAddress: poolAddress
     })
@@ -58,7 +57,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
     })
     const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerValidator)) * Number(price)).toPrecision(9))
 
-    const initiateDeposit = await (manager.connect(signer) as CasimirManager & ethers.Contract).initiateDeposit(
+    const initiateDeposit = await (manager.connect(signer) as ethers.Contract & CasimirManager).initiateDeposit(
         depositDataRoot,
         publicKey,
         signature,

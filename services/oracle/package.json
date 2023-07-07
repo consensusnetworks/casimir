@@ -8,6 +8,7 @@
         "clean": "npx esno -r dotenv/config scripts/clean.ts",
         "start": "node dist/index.js",
         "dev": "npx esno -r dotenv/config scripts/dev.ts",
+        "generate": "npx esno -r dotenv/config scripts/generate.ts",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {

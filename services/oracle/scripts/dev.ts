@@ -3,10 +3,11 @@ import { fetchRetry, run } from '@casimir/helpers'
 const resourcePath = 'scripts/resources/rockx-dkg-cli'
 
 void async function () {
-    process.env.BIP39_PATH_INDEX = '6'
-    process.env.MANAGER_ADDRESS = process.env.PUBLIC_MANAGER_ADDRESS
+    process.env.BIP39_SEED = process.env.BIP39_SEED || 'test test test test test test test test test test test junk'
+    process.env.BIP39_PATH_INDEX = process.env.BIP39_PATH_INDEX || '6'
+    if (!process.env.MANAGER_ADDRESS) throw new Error('Manager address not found')
     console.log(`🔑 Manager address: ${process.env.MANAGER_ADDRESS}`)
-    process.env.VIEWS_ADDRESS = process.env.PUBLIC_VIEWS_ADDRESS
+    if (!process.env.VIEWS_ADDRESS) throw new Error('Views address not found')
     console.log(`🔑 Views address: ${process.env.VIEWS_ADDRESS}`)
     process.env.LINK_TOKEN_ADDRESS = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
     process.env.SSV_TOKEN_ADDRESS = '0x3a9f01091C446bdE031E39ea8354647AFef091E7'

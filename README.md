@@ -119,16 +119,23 @@ Optionally customize and override the defaults for your *local development envir
 
 | Name | Description | Default |
 | --- | --- | --- |
-| `AWS_PROFILE` | AWS profile name | `consensus-networks-dev` |
+| `USE_SECRETS` | Whether to use AWS Secrets Manager | `true` |
+| `AWS_PROFILE` | AWS profile name for accessing secrets | `consensus-networks-dev` |
 | `PROJECT` | Project name | `casimir` |
 | `STAGE` | Environment stage name | `dev` |
+| `ETHEREUM_RPC_URL` | Ethereum RPC URL | `http://127.0.0.1:8545` |
 | `NETWORK` | Set live network (defaults to local fork network) | `` |
 | `FORK` | Local fork network | `testnet` |
+| `MANAGER_ADDRESS` | Manager contract address | `` |
+| `VIEWS_ADDRESS` | Views contract address | `` |
+| `CRYPTO_COMPARE_API_KEY` | CryptoCompare API key | `` |
+| `TUNNEL` | Whether to tunnel local network RPC URLs (for remote wallets) | `false` |
 | `EMULATE` | Whether to emulate wallets | `false` |
 | `LEDGER_APP` | Ledger app name | `ethereum` |
-| `MOCK_ORACLE` | Whether to mock oracle | `false` |
+| `MOCK_ORACLE` | Whether to mock oracle | `true` |
 | `MOCK_SERVICES` | Whether to mock backend services | `true` |
 | `BUILD_PREVIEW` | Whether to preview web app production build | `false` |
+| `VALIDATOR_COUNT` | Number of validators to generate for tests | `4` |
 
 ### Scripts and dependencies
 

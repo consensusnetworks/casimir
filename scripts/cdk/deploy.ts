@@ -18,6 +18,9 @@ void async function () {
     process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')
 
     /** Set public environment variables */
+    if (process.env.STAGE === 'dev') {
+        process.env.PUBLIC_ETHEREUM_RPC_URL = 'https://nodes.casimir.co/eth/hardhat'
+    }
     process.env.PUBLIC_USERS_URL = `https://users.${process.env.STAGE}.casimir.co`
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
 

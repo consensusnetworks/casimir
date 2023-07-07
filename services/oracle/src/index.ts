@@ -9,7 +9,6 @@ import {
 } from './providers/handlers'
 
 void async function () {
-    console.log('STARTING ORACLE')
 
     const handlers = {
         DepositRequested: initiateDepositHandler,
@@ -21,8 +20,6 @@ void async function () {
          */
         CompletedExitReportsRequested: reportCompletedExitsHandler
     }
-
-    console.log('GOT HANDLERS', handlers)
     
     const { 
         provider,
@@ -35,12 +32,8 @@ void async function () {
         cliPath,
         messengerUrl
     } = config()
-
-    console.log('GOT CONFIG', config)
     
     const eventsIterable = getEventsIterable({ manager, events: Object.keys(handlers) })
-
-    console.log('GOT EVENTS ITERABLE', eventsIterable)
 
     for await (const event of eventsIterable) {
         const details = event?.[event.length - 1]

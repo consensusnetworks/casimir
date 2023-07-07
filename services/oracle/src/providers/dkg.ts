@@ -3,7 +3,7 @@ import { KeygenInput } from '../interfaces/KeygenInput'
 import { DepositData } from '../interfaces/DepositData'
 import { DKGOptions } from '../interfaces/DKGOptions'
 import { ReshareInput } from '../interfaces/ReshareInput'
-import { getWithdrawalCredentials, runRetry } from '@casimir/helpers'
+import { getWithdrawalCredentials, run, runRetry } from '@casimir/helpers'
 import { CreateValidatorInput } from '../interfaces/CreateValidatorInput'
 import { Validator } from '@casimir/types'
 import { ReshareValidatorInput } from '../interfaces/ReshareValidatorInput'
@@ -36,7 +36,7 @@ export class DKG {
         console.log(`Started ceremony with ID ${ceremonyId}`)
 
         /** Wait for ceremony to complete */
-        await new Promise(resolve => setTimeout(resolve, 3000))
+        await new Promise(resolve => setTimeout(resolve, 2000))
 
         /** Get operator key shares */
         const shares = await this.getShares(ceremonyId)
@@ -105,7 +105,7 @@ export class DKG {
         const withdrawalCredentialsFlag = `--withdrawal-credentials ${getWithdrawalCredentials(withdrawalAddress)}`
         const forkVersionFlag = '--fork-version prater'
         const command = `${this.cliPath} keygen ${operatorFlags} ${thresholdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
-        const ceremony = await runRetry(`${command}`) as string
+        const ceremony = await run(`${command}`) as string
         return ceremony.trim().split(' ').pop() as string
     }
 

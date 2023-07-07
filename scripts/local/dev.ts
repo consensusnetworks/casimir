@@ -1,3 +1,4 @@
+import { ethers } from 'ethers'
 import { $, chalk, echo } from 'zx'
 import { loadCredentials, getSecret, getFutureContractAddress, getWallet, run, runSync } from '@casimir/helpers'
 
@@ -13,26 +14,31 @@ void async function () {
         }
     }
 
-    /** Chain forks */
+    /** Chain configs */
     const chains = {
         ethereum: {
-            mainnet: 'mainnet',
-            testnet: 'goerli'
+            forks: {
+                mainnet: 'mainnet',
+                testnet: 'goerli',
+                local: 'hardhat'
+            }
         }
     }
 
-    /** Load AWS credentials for configuration */
-    await loadCredentials()
+    /** Load AWS credentials for getting secrets */
+    if (process.env.USE_SECRETS !== 'false') {
+        await loadCredentials()
+    }
 
     /** Set project-wide variables */
     process.env.PROJECT = process.env.PROJECT || 'casimir'
     process.env.STAGE = process.env.STAGE || 'local'
 
-    /** Pass stage to web app */
-    process.env.PUBLIC_STAGE = process.env.STAGE
+    /** Get wallet seed */
+    process.env.BIP39_SEED = process.env.USE_SECRETS !== 'false' ? process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') : process.env.BIP39_SEED || 'test test test test test test test test test test test junk'
 
     /** Get exchange price API key */
-    process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
+    process.env.CRYPTO_COMPARE_API_KEY = process.env.USE_SECRETS !== 'false' ? process.env.CRYPTO_COMPARE_API_KEY || await getSecret('casimir-crypto-compare-api-key') : process.env.CRYPTO_COMPARE_API_KEY || ''
 
     /** Default to no hardware wallet emulators */
     process.env.EMULATE = process.env.EMULATE || 'false'
@@ -41,7 +47,7 @@ void async function () {
     process.env.FORK = process.env.FORK || 'testnet'
 
     /** Default to stubbed oracle service handlers */
-    process.env.MOCK_ORACLE = process.env.MOCK_ORACLE || 'false'
+    process.env.MOCK_ORACLE = process.env.MOCK_ORACLE || 'true'
 
     /** Default to mock backend services */
     process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
@@ -51,12 +57,10 @@ void async function () {
 
     /** Default to no live network */
     process.env.NETWORK = process.env.NETWORK || ''
-
+    
+    /** Mock services if specified */
     if (process.env.MOCK_SERVICES === 'true') {
-        /** Mock services */
         for (const service of Object.keys(services)) {
-            process.env[`PUBLIC_${service.toUpperCase()}_PORT`] = `${services[service].port}`
-
             try {
                 if (await run(`lsof -ti:${services[service].port}`)) {
                     await run(`kill -9 $(lsof -ti:${services[service].port})`)
@@ -71,42 +75,69 @@ void async function () {
 
     for (const chain of Object.keys(chains)) {
 
+        /** Use remote ethereum url */
         if (process.env.NETWORK) {
-            const key = await getSecret(`consensus-networks-${chain}-${process.env.NETWORK}`)
-            const currency = chain.slice(0, 3)
-            const url = `https://${currency}-${process.env.NETWORK}.g.alchemy.com/v2/${key}`
-            process.env.ETHEREUM_RPC_URL = url
-            echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(process.env.NETWORK) + chalk.bgBlackBright(` ${chain} network at ${url}`))
 
-            // Todo - add deployed addresses
-            // process.env.BIP39_SEED = seed
-            // process.env.PUBLIC_MANAGER_ADDRESS = `${managerAddress}`
-
-        } else if (process.env.FORK) {
-
-            /** Chain fork nonces */
-            const nonces = {
-                ethereum: {
-                    mainnet: 0,
-                    testnet: 12
-                }
+            if (process.env.USE_SECRETS !== 'false') {
+                const key = await getSecret(`consensus-networks-${chain}-${process.env.NETWORK}`)
+                const currency = chain.slice(0, 3)
+                const url = `https://${currency}-${process.env.NETWORK}.g.alchemy.com/v2/${key}`
+                process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || url
+                echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(process.env.NETWORK) + chalk.bgBlackBright(` ${chain} network at ${url}`))
+            } 
+            
+            /** Check for network url availability */
+            if (!process.env.ETHEREUM_RPC_URL) {
+                throw new Error(`No ETHEREUM_RPC_URL set for ${process.env.NETWORK} ${chain} network.`)
             }
 
-            process.env.ETHEREUM_RPC_URL = 'http://localhost:8545'
+            /** Require preconfigured manager address */
+            if (!process.env.MANAGER_ADDRESS) {
+                throw new Error(`No MANAGER_ADDRESS set for ${process.env.NETWORK} ${chain} network.`)
+            }
 
-            const seed = await getSecret('consensus-networks-bip39-seed')
-            const wallet = getWallet(seed)
-            const nonce = nonces[chain][process.env.FORK]
+            /** Require preconfigured views address */
+            if (!process.env.VIEWS_ADDRESS) {
+                throw new Error(`No VIEWS_ADDRESS set for ${process.env.NETWORK} ${chain} network.`)
+            }
+
+        /** Use local ethereum url */
+        } else {
+
+            /** Require fork to be supported */
+            if (!chains[chain].forks[process.env.FORK]) {
+                throw new Error(`No fork ${process.env.FORK} supported.`)
+            }
+
+            /** Get local ethereum fork RPC url */
+            if (process.env.USE_SECRETS !== 'false') {
+                const key = await getSecret(`consensus-networks-${chain}-${process.env.FORK}`)
+                const currency = chain.slice(0, 3)
+                const url = `https://${currency}-${process.env.FORK}.g.alchemy.com/v2/${key}`
+                process.env.ETHEREUM_FORK_RPC_URL = process.env.ETHEREUM_FORK_RPC_URL || url
+                echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(process.env.FORK) + chalk.bgBlackBright(` ${chain} network at ${url}`))
+            }
+
+            /** Check for fork url availability */
+            if (!process.env.ETHEREUM_FORK_RPC_URL) {
+                throw new Error(`No ETHEREUM_FORK_RPC_URL set for ${process.env.FORK} ${chain} network.`)
+            }
+
+            /** Set local ethereum RPC url */
+            process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
+
+            const wallet = getWallet(process.env.BIP39_SEED)
+            const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL)
+            const nonce = await provider.getTransactionCount(wallet.address)
             const managerIndex = 1 // We deploy a mock functions oracle before the manager
-            if (!process.env.PUBLIC_MANAGER_ADDRESS) {
+            if (!process.env.MANAGER_ADDRESS) {
                 const managerAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
-                process.env.PUBLIC_MANAGER_ADDRESS = `${managerAddress}`
+                process.env.MANAGER_ADDRESS = `${managerAddress}`
             }
-            if (!process.env.PUBLIC_VIEWS_ADDRESS) {
+            if (!process.env.VIEWS_ADDRESS) {
                 const viewsAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
-                process.env.PUBLIC_VIEWS_ADDRESS = `${viewsAddress}`
+                process.env.VIEWS_ADDRESS = `${viewsAddress}`
             }
-            process.env.BIP39_SEED = seed
 
             $`npm run dev:${chain}`
         }
@@ -124,20 +155,28 @@ void async function () {
             console.log(`Port ${port} is available.`) 
         }
 
+        /** Default ledger to Ethereum app */
         process.env.LEDGER_APP = process.env.LEDGER_APP || 'ethereum'
-        
-        /** Pass ledger app to web app */
-        process.env.PUBLIC_LEDGER_APP = process.env.LEDGER_APP
 
         /** Emulate Ledger */
         $`scripts/ledger/emulate -a ${process.env.LEDGER_APP}`
 
-        process.env.PUBLIC_SPECULOS_URL = `http://localhost:${port}`
+        process.env.SPECULOS_URL = `http://localhost:${port}`
         $`npx esno scripts/ledger/proxy.ts`
 
         /** Emulate Trezor */
         $`scripts/trezor/emulate`
     }
+
+    /** Pass variables to web app */
+    process.env.PUBLIC_STAGE = process.env.STAGE
+    process.env.PUBLIC_USERS_URL = process.env.USERS_URL
+    process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
+    process.env.PUBLIC_MANAGER_ADDRESS = process.env.MANAGER_ADDRESS
+    process.env.PUBLIC_VIEWS_ADDRESS = process.env.VIEWS_ADDRESS
+    process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
+    process.env.PUBLIC_LEDGER_APP = process.env.LEDGER_APP
+    process.env.PUBLIC_SPECULOS_URL = process.env.SPECULOS_URL
 
     /** Run web app */
     if (process.env.BUILD_PREVIEW === 'true') {
