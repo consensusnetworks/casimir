@@ -213,7 +213,7 @@ export default function useUsers () {
         // Set the oneYear labels array to the interval labels
         result.oneYear.labels = Array(12).fill(0).map((_, i) => {
             const date = new Date(oneYear + (oneYearInterval * i))
-            return date.getMonth() === 0 ? `${date.getFullYear()} ${months[date.getMonth()]} ${date.getDate()}` : `${months[date.getMonth()]} ${date.getDate()}`
+            return date.getMonth() === 0 ? `${date.getFullYear()} ${months[date.getMonth()]}` : `${months[date.getMonth()]}`
         })
 
         // Set the sixMonth labels array to the interval labels
