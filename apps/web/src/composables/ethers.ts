@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { EthersProvider } from '@/interfaces/index'
+import { EthersProvider } from '@casimir/types'
 import { Account, TransactionRequest, UserWithAccounts } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
@@ -104,7 +104,7 @@ export default function useEthers() {
     
     if (provider) {
       const address = (await requestEthersAccount(provider as EthersProvider))[0]
-      const balance = await getEthersBalance(address)
+      const balance = (await getEthersBalance(address)).toString()
       return [{ address, balance }]
     } else {
       throw new Error('Provider not yet connected to this dapp. Please connect and try again.')
@@ -154,7 +154,7 @@ export default function useEthers() {
   async function listenForTransactions() {
     const { manager, refreshBreakdown } = useContracts()
     const { user } = useUsers()
-    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
     provider.on('block', async (blockNumber: number) => {
       console.log('blockNumber :>> ', blockNumber)
       const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
@@ -216,7 +216,7 @@ export default function useEthers() {
     const { fee, gasLimit } = ethFees
     const requiredBalance = parseInt(value) + parseInt(fee)
     const balance = await getEthersBalance(from)
-    if (parseInt(balance) < requiredBalance) {
+    if (balance < requiredBalance) {
       throw new Error('Insufficient balance')
     }
     console.log(`Sending ${value} ETH to ${to} with estimated ${fee} ETH in fees using ~${gasLimit.toString()} in gas.`)

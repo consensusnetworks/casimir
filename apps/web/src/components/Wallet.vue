@@ -49,7 +49,7 @@
       </button>
     </div>
     <button
-      v-for="address in userAddresses"
+      v-for="address in user?.accounts"
       :key="address.address"
       @click="selectAddress(address.address, address.pathIndex)"
     >
@@ -142,14 +142,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, onMounted } from 'vue'
+import { ref, watchEffect } from 'vue'
 import useContracts from '@/composables/contracts'
-// import useUsers from '@/composables/users'
+import useUsers from '@/composables/users'
 import useWallet from '@/composables/wallet'
 
 const message = ref('')
 const signedMessage = ref('hi')
-// const { checkUserSessionExists } = useUsers()
 
 const metamaskButtonText = ref<string>('Connect Metamask')
 const metamaskAccountsResult = ref<string>('Address Not Active')
@@ -163,6 +162,8 @@ const trezorButtonText = ref<string>('Connect Trezor')
 const trezorAccountsResult = ref<string>('Address Not Active')
 const walletConnectButtonText = ref<string>('Connect WalletConnect')
 const walletConnectAccountsResult = ref<string>('Address Not Active')
+
+const { user } = useUsers()
 
 const {
   selectedProvider,
@@ -178,7 +179,6 @@ const {
   sendTransaction,
   signMessage,
   removeConnectedAccount,
-  userAddresses,
   switchNetwork
 } = useWallet()
 

@@ -31,7 +31,7 @@ const userAnalytics = ref<any>({
 const rawUserAnalytics = ref<any>(null)
 const userAddresses = ref<Array<string>>([])
 
-export default function useUsers () {
+export default function useUsers() {
     async function addAccount(account: AddAccountOptions): Promise<ApiResponse> {
         try {
             const requestOptions = {
