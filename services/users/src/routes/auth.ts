@@ -40,7 +40,6 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         const verifyNonce = parsedNonce ? await verifyMessageNonce(address, parsedNonce) : false
         const verifySignature = verifyMessageSignature(loginCredentials)
         const verificationError = !verifyDomain ? 'domain' : !verifyNonce ? 'nonce' : !verifySignature ? 'signature' : false
-
         if (verificationError) {
             return res.status(422).json({
                 error: true,
@@ -121,12 +120,9 @@ function parseNonce(msg: string) {
 }
 
 function verifyMessageDomain(domain: string): boolean {
-    const stage = process.env.STAGE
-    if (stage === 'dev') {
-        return domain === 'localhost:3001'
-    } else {
-        return false
-    }
+    const url = domain.includes('localhost') ? `http://${domain}` : `https://${domain}`
+    if (process.env.WEB_URL) return url === process.env.WEB_URL
+    return url === 'http://localhost:3001'
 }
 
 async function verifyMessageNonce(address: string, msgNonce: string) : Promise<boolean> {

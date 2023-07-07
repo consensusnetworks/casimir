@@ -108,7 +108,9 @@ export async function run(command: string) {
             process.stdout.write(chunk.toString())
             data += chunk.toString()
         })
-        child.on('exit', () => resolve(data))
+        child.on('exit', () => {
+            resolve(data)
+        })
     })
 }
 

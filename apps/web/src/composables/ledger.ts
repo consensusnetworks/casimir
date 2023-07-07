@@ -1,4 +1,4 @@
-import { BitcoinLedgerSigner, EthersLedgerSigner } from '@casimir/wallets'
+import { /*BitcoinLedgerSigner, */EthersLedgerSigner } from '@casimir/wallets'
 import { ethers } from 'ethers'
 import { MessageRequest, TransactionRequest } from '@casimir/types'
 import { CryptoAddress, LoginCredentials } from '@casimir/types'
@@ -9,28 +9,28 @@ import useAuth from '@/composables/auth'
 const { createSiweMessage, signInWithEthereum } = useAuth()
 
 export default function useLedger() {
-  const { ethereumURL, ledgerType, speculosURL } = useEnvironment()
+  const { ethereumUrl, ledgerType, speculosUrl } = useEnvironment()
   const { getGasPriceAndLimit } = useEthers()
 
-  function getBitcoinLedgerSigner() {
-    const options = {
-      type: ledgerType,
-      baseURL: speculosURL
-    }
-    return new BitcoinLedgerSigner(options)
-  }
+  // function getBitcoinLedgerSigner() {
+  //   const options = {
+  //     type: ledgerType,
+  //     baseURL: speculosUrl
+  //   }
+  //   return new BitcoinLedgerSigner(options)
+  // }
 
   function getEthersLedgerSigner() {
     const options = {
-      provider: new ethers.providers.JsonRpcProvider(ethereumURL),
+      provider: new ethers.providers.JsonRpcProvider(ethereumUrl),
       type: ledgerType,
-      baseURL: speculosURL
+      baseURL: speculosUrl
     }
     return new EthersLedgerSigner(options)
   }
 
   const getLedgerAddress = {
-    'BTC': getBitcoinLedgerAddress,
+    // 'BTC': getBitcoinLedgerAddress,
     'ETH': getEthersLedgerAddresses,
     'IOTX': () => {
       return new Promise((resolve, reject) => {
@@ -58,10 +58,10 @@ export default function useLedger() {
     }
   }
 
-  async function getBitcoinLedgerAddress() {
-    const signer = getBitcoinLedgerSigner()
-    return await signer.getAddress()
-  }
+  // async function getBitcoinLedgerAddress() {
+  //   const signer = getBitcoinLedgerSigner()
+  //   return await signer.getAddress()
+  // }
 
   async function getEthersLedgerAddresses(): Promise<Array<CryptoAddress>> {
     const signer = getEthersLedgerSigner()
@@ -78,14 +78,13 @@ export default function useLedger() {
       const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signer = getEthersLedgerSigner()
       const signedMessage = await signer.signMessageWithIndex(message, pathIndex)
-      const loginResponse = await signInWithEthereum({ 
+      await signInWithEthereum({ 
         address, 
         currency,
         message, 
         provider, 
         signedMessage
       })
-      return await loginResponse.json()
     } catch (err) {
       console.log('Error logging in: ', err)
       return err
@@ -103,16 +102,16 @@ export default function useLedger() {
       } as ethers.UnsignedTransaction
       
       // Todo check before click (user can +/- gas limit accordingly)
-      const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumURL, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+      const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumUrl, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
       const balance = await provider.getBalance(from)
       const required = gasPrice.mul(gasLimit).add(ethers.utils.parseEther(value))
       console.log('Balance', ethers.utils.formatEther(balance))
       console.log('Required', ethers.utils.formatEther(required))
   
       return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
-    } else if (currency === 'BTC') {
+    }/* else if (currency === 'BTC') {
       alert('Send transaction not yet implemented for BTC')
-    }
+    }*/
   }
 
   async function signLedgerMessage(messageRequest: MessageRequest): Promise<string> {
@@ -120,17 +119,17 @@ export default function useLedger() {
       const { message } = messageRequest
       const signer = getEthersLedgerSigner()
       return await signer.signMessage(message)
-    } else if ( messageRequest.currency === 'BTC') {
+    } /*else if ( messageRequest.currency === 'BTC') {
       const { message } = messageRequest
       const signer = getBitcoinLedgerSigner()
       return await signer.signMessage(message)
-    } else {
+    } */else {
       return ''
     }
   }
 
   return {
-    getBitcoinLedgerSigner,
+    // getBitcoinLedgerSigner,
     getEthersLedgerSigner,
     getLedgerAddress,
     loginWithLedger,

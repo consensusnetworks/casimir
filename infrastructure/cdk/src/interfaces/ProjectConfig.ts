@@ -17,8 +17,7 @@ export interface ProjectConfig {
         landing: string
         nodes: string
         users: string
+        web: string
         wildcard: string
     }
-    /** Nodes IP address */
-    nodesIp: string
 }

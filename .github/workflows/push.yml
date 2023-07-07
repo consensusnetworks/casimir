@@ -22,6 +22,10 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: 'recursive'
+      
+      - name: Install action dependencies
+        run: |
+          curl -sSf https://atlasgo.sh | sh
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -37,6 +41,9 @@ jobs:
 
       - name: Deploy cdk infrastructure
         run: npm run deploy:cdk
+
+      - name: Migrate users database
+        run: npm run migrations:users
 
       - name: Slack the team
         if: ${{ success() || failure() }}

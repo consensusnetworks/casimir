@@ -1,7 +1,7 @@
 import useEnvironment from '@/composables/environment'
 import { LoginCredentials } from '@casimir/types'
 
-const { domain, origin, usersBaseURL } = useEnvironment()
+const { domain, origin, usersUrl } = useEnvironment()
 
 export default function useAuth() {
 
@@ -23,7 +23,7 @@ export default function useAuth() {
                     address
                 })
             }
-            const res = await fetch(`${usersBaseURL}/auth/nonce`, requestOptions)
+            const res = await fetch(`${usersUrl}/auth/nonce`, requestOptions)
             const { error, message: resMessage, data: nonce } = (await res.json())
             if (error) throw new Error(resMessage)
             const message = {
@@ -57,7 +57,7 @@ export default function useAuth() {
                 },
                 body: JSON.stringify(loginCredentials)
             }
-            const response = await fetch(`${usersBaseURL}/auth/login`, requestOptions)
+            const response = await fetch(`${usersUrl}/auth/login`, requestOptions)
             const { error, message } = await response.json()
             if (error) throw new Error(message)
         } catch (error: any) {

@@ -11,7 +11,6 @@ export class Config implements ProjectConfig {
     public readonly env
     public readonly rootDomain
     public readonly subdomains
-    public readonly nodesIp
     public readonly dataVersion
 
     /** List of required environment variables */
@@ -30,9 +29,9 @@ export class Config implements ProjectConfig {
             nodes: 'nodes',
             landing: 'www',
             users: 'users',
+            web: 'app',
             wildcard: '*'
         }
-        this.nodesIp = process.env.NODES_IP as string
         this.dataVersion = Number(dataPackage.version.split('.')[0])
     }
 
