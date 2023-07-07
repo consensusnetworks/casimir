@@ -4,6 +4,8 @@ import { onMounted, ref, watch} from 'vue'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 
+import { ProviderString } from '@casimir/types'
+
 const { currentStaked, stakingRewards, totalDeposited } = useContracts()
 const { user, getUserAnalytics, userAnalytics } = useUsers()
 
@@ -11,6 +13,26 @@ const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('historical')
 
 const chartData = ref({} as any)
+
+const getAccountColor = (address: string) => {
+  const walletProvider = user.value?.accounts.find( item =>  item.address === address)?.walletProvider as ProviderString
+
+  switch (walletProvider){
+    case 'MetaMask':
+      return '#F6851B'
+    case 'CoinbaseWallet':
+      return '#3773F5'
+    case 'WalletConnect':
+      return '#3396FF'
+    case 'Trezor':
+      return '#00854D'
+    case 'Ledger':
+      return '#D4A0FF'
+    case 'IoPay':
+      return '#00D7C7'
+  }
+    
+}
 
 const setMockData = () => {
   let labels
@@ -43,42 +65,13 @@ const setMockData = () => {
       return {
         data : item.walletBalance,
         label : item.walletAddress,
-        borderColor : '#2F80ED',
+        borderColor : getAccountColor(item.walletAddress),
         fill: true,
-        backgroundColor: '#2F80ED',
+        backgroundColor: item.walletAddress === user.value?.address? getAccountColor(item.walletAddress) : null,
         pointRadius: 0,
         tension: 0.1
       }
     })
-    // [
-    //     {
-    //         data : Array.from({length: labels.length}, () => Math.floor(Math.random() * (250 - 200 + 1) + 200)),
-    //         label : 'Primary Account',
-    //         borderColor : '#2F80ED',
-    //         fill: true,
-    //         backgroundColor: '#2F80ED',
-    //         pointRadius: 0,
-    //         tension: 0.1
-    //     },
-    //     {
-    //         data : Array.from({length: labels.length}, () => Math.floor(Math.random() * (150 - 100 + 1) + 100)),
-    //         label : 'Secondary Account',
-    //         borderColor : '#A8C8F3',
-    //         fill: false,
-    //         // backgroundColor: null,
-    //         pointRadius: 0,
-    //         tension: 0.1
-    //     },
-    //     {
-    //         data : Array.from({length: labels.length}, () => Math.floor(Math.random() * (50 - 0 + 1) + 50)),
-    //         label : '3rd Account',
-    //         borderColor : '#53389E',
-    //         fill: false,
-    //         // backgroundColor: null,
-    //         pointRadius: 0,
-    //         tension: 0.1
-    //     }
-    // ]
   }
 }
 
