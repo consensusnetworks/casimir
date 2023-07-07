@@ -19,7 +19,7 @@ void async function () {
 
     /** Set public environment variables */
     if (process.env.STAGE === 'sandbox') { // Todo switch to dev before merging
-        process.env.PUBLIC_ETHEREUM_RPC_URL = 'https://nodes.casimir.co/eth/hardhat'
+        process.env.PUBLIC_ETHEREUM_RPC_URL = 'http://nodes.casimir.co/eth/hardhat'
     }
     process.env.PUBLIC_USERS_URL = `https://users.${process.env.STAGE}.casimir.co`
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')

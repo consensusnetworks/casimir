@@ -52,7 +52,7 @@ npm install
 
 > 🚩 'All workspace dependencies' includes `package.json` dependencies listed in the project root and any workspace subdirectories. See [Scripts and dependencies](#scripts-and-dependencies).
 
-### Serve
+### Apps
 
 You can get up and running without configuration. You can also mock local backend changes and customize your environment.
 
