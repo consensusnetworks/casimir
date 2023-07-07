@@ -75,7 +75,11 @@ npm install -D some-dev-dependency --workspace @casimir/workspace-name
 
 ### Environment
 
-Optionally customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for any supported variables. Variable usage is explained more as needed in the sections below.
+Customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for any supported variables. Variable usage is explained more as needed in the sections below.
+
+**If you are on the Consensus Networks team**, make sure your AWS CLI and profile are configured correctly. By default, the scripts look for the `consensus-networks-dev` named profile, but you can override the `AWS_PROFILE` name to be used in the [.env](.env) file. Regardless, the profile must have access to the `consensus-networks-dev` account resources.
+
+**If you are outside of the Consensus Networks team**, make sure to set `USE_SECRETS` to `false` and provide a valid `ETHEREUM_FORK_RPC_URL`.
 
 #### Supported Variables
 
@@ -102,17 +106,15 @@ Optionally customize and override the defaults for your *local development envir
 
 ### Apps
 
-**If you are on the Consensus Networks team**, make sure your AWS CLI and profile are configured correctly. You can override the `AWS_PROFILE` name to be used in the [.env](.env) file, but the profile must have access to the `consensus-networks-dev` account resources.
+The apps packages provide a vite server, and the accompanying scripts set up the chain networks, backend services, and deployed contracts as needed.
 
-**If you are outside of the Consensus Networks team**, make sure to set `USE_SECRETS` to `false` and provide a valid `ETHEREUM_FORK_RPC_URL`.
-
-Once the environment is configured, you can run the web app with mocked backend services.
+Run the web app (with accompanying scripts) from the root directory.
 
 ```zsh
 npm run dev
 ```
 
-You can also serve the landing (page) app from the root directory.
+Run the landing (page) app from the root directory.
 
 ```zsh
 npm run dev:landing
@@ -129,10 +131,6 @@ npm run dev:landing
 - Set `VALIDATOR_COUNT` to the number of validators to generate for tests (defaults to `4`).
 
 ### Contracts
-
-**If you are on the Consensus Networks team**, make sure your AWS CLI and profile are configured correctly. You can override the `AWS_PROFILE` name to be used in the [.env](.env) file, but the profile must have access to the `consensus-networks-dev` account resources.
-
-**If you are outside of the Consensus Networks team**, make sure to set `USE_SECRETS` to `false` and provide a valid `ETHEREUM_FORK_RPC_URL`.
 
 Ethereum contracts are configured with a Hardhat development environment in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file. Read more about `@casimir/ethereum` staking [here](contracts/ethereum/README.md). Below are some helpful commands for developing on or with the contracts.
 
