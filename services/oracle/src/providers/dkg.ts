@@ -37,7 +37,7 @@ export class DKG {
             console.log(`Started ceremony with ID ${ceremonyId}`)
     
             /** Wait for ceremony to complete */
-            await new Promise(resolve => setTimeout(resolve, 2000))
+            await new Promise(resolve => setTimeout(resolve, 2500))
     
             /** Get operator key shares */
             const shares = await this.getShares(ceremonyId)
@@ -80,7 +80,7 @@ export class DKG {
             console.log(`Started ceremony with ID ${ceremonyId}`)
     
             /** Wait for ceremony to complete */
-            await new Promise(resolve => setTimeout(resolve, 10000))
+            await new Promise(resolve => setTimeout(resolve, 2500))
     
             /** Get operator key shares */
             const shares = await this.getShares(ceremonyId)
