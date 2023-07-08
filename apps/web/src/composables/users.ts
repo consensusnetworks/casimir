@@ -1,4 +1,4 @@
-import { ref, readonly, onMounted, watch } from 'vue'
+import { ref, readonly } from 'vue'
 import { Account, AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from './ethers'
@@ -126,7 +126,6 @@ export default function useUsers () {
         let earliest: any = null
         const latest: any = new Date().getTime()
         const oneYear = new Date().getTime() - 31536000000
-        const oneYearInterval = (latest - oneYear) / 11
         const sixMonths = new Date().getTime() - 15768000000
         const oneMonth = new Date().getTime() - 2628000000
         sortedTransactions.forEach((tx: any) => {
