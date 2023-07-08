@@ -29,7 +29,6 @@ void async function () {
     const ping = await fetchRetry(`${process.env.MESSENGER_SRV_ADDR}/ping`)
     const { message } = await ping.json()
     if (message !== 'pong') throw new Error('DKG service is not running')
-    await new Promise(resolve => setTimeout(resolve, 2500))
 
     run('npx esno -r dotenv/config src/index.ts')
 }()

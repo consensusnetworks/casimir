@@ -44,63 +44,52 @@ void async function () {
     /** Check if the oracle has enough validators */
     if (!validators[oracleAddress] || Object.keys(validators[oracleAddress]).length < validatorCount) {
         
-        try {
-            /** Build and check if the CLI is available */
-            await run(`make -C ${resourcePath} build`)
-            const cli = await run(`which ${process.env.CLI_PATH}`)
-            if (!cli) throw new Error('DKG CLI not found')
-    
-            /** Start the DKG service */
-            await run(`docker compose -f ${resourcePath}/docker-compose.yaml up -d`)
-            console.log('🔑 DKG service started')
-    
-            /** Ping the DGK service for a pong */
-            const ping = await fetchRetry(`${process.env.MESSENGER_SRV_ADDR}/ping`)
-            const { message } = await ping.json()
-            if (message !== 'pong') throw new Error('DKG service is not running')
-    
-            await new Promise(resolve => setTimeout(resolve, 2500))
+        /** Build and check if the CLI is available */
+        await run(`make -C ${resourcePath} build`)
+        const cli = await run(`which ${process.env.CLI_PATH}`)
+        if (!cli) throw new Error('DKG CLI not found')
 
-            /** Manager nonce for first validator starts at 3 after registry and upkeep */
-            let nonce = 3
-    
-            /** Create requested count of validators */
-            const newValidators: Validator[] = []
-    
-            for (let i = 0; i < validatorCount; i++) {
-    
-                const poolAddress = ethers.utils.getContractAddress({
-                    from: process.env.MANAGER_ADDRESS,
-                    nonce
-                })
-    
-                const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
-                const dkg = new DKG({ cliPath: process.env.CLI_PATH, messengerUrl: process.env.MESSENGER_SRV_ADDR })
-    
-                const validator = await dkg.createValidator({
-                    operatorIds: newOperatorIds,
-                    withdrawalAddress: poolAddress
-                })
-    
-                newValidators.push(validator)
-    
-                nonce++
-            }
-    
-            validators[oracleAddress] = newValidators
-    
-            /** Write new validators to file */
-            fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify(validators, null, 4))
-    
-            /** Stop the DKG service */
-            await run('npm run clean --workspace @casimir/oracle')
-        } catch (error) {
+        /** Start the DKG service */
+        await run(`docker compose -f ${resourcePath}/docker-compose.yaml up -d`)
+        console.log('🔑 DKG service started')
 
-            /** Log the error for user-knowledge */
-            console.log('⛔️ Error generating validators', error)
+        /** Ping the DGK service for a pong */
+        const ping = await fetchRetry(`${process.env.MESSENGER_SRV_ADDR}/ping`)
+        const { message } = await ping.json()
+        if (message !== 'pong') throw new Error('DKG service is not running')
 
-            /** Stop the DKG service */
-            await run('npm run clean --workspace @casimir/oracle')
+        /** Manager nonce for first validator starts at 3 after registry and upkeep */
+        let nonce = 3
+
+        /** Create requested count of validators */
+        const newValidators: Validator[] = []
+
+        for (let i = 0; i < validatorCount; i++) {
+
+            const poolAddress = ethers.utils.getContractAddress({
+                from: process.env.MANAGER_ADDRESS,
+                nonce
+            })
+
+            const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
+            const dkg = new DKG({ cliPath: process.env.CLI_PATH, messengerUrl: process.env.MESSENGER_SRV_ADDR })
+
+            const validator = await dkg.createValidator({
+                operatorIds: newOperatorIds,
+                withdrawalAddress: poolAddress
+            })
+
+            newValidators.push(validator)
+
+            nonce++
         }
+
+        validators[oracleAddress] = newValidators
+
+        /** Write new validators to file */
+        fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify(validators, null, 4))
+
+        /** Stop the DKG service */
+        await run('npm run clean --workspace @casimir/oracle')
     }
 }()

@@ -100,7 +100,7 @@ export function kebabCase(string: string): string {
  * @returns A promise that resolves when the command exits
  */
 export async function run(command: string) {
-    const child = exec(command)
+    const child = exec(command, { maxBuffer: 1024 * 5000 })
     let data = ''
     return new Promise((resolve, reject) => {
         child.on('error', reject)
@@ -124,7 +124,6 @@ export async function runRetry(command: string, retriesLeft: number | undefined 
     if (retriesLeft === 0) {
         throw new Error('Command failed after maximum retries')
     }
-
     try {
         return await run(command)
     } catch (error) {
