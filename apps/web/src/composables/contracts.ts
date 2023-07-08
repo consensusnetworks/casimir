@@ -303,5 +303,11 @@ export default function useContracts() {
 }
 
 function formatNumber(number: number) {
-    return number.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')
+    const SI_SYMBOL = ['', 'K', 'M', 'B', 'T', 'P', 'E']
+    const tier = Math.log10(Math.abs(number)) / 3 | 0
+    if(tier === 0) return number.toFixed(2)
+    const suffix = SI_SYMBOL[tier]
+    const scale = Math.pow(10, tier * 3)
+    const scaled = number / scale
+    return scaled.toFixed(2) + suffix
 }
