@@ -128,9 +128,9 @@ export default function useUsers () {
         const oneYear = new Date().getTime() - 31536000000
         const oneYearInterval = (latest - oneYear) / 11
         const sixMonths = new Date().getTime() - 15768000000
-        const sixMonthInterval = (latest - sixMonths) / 11
+        const sixMonthInterval = (latest - sixMonths) / 5
         const oneMonth = new Date().getTime() - 2628000000
-        const oneMonthInterval = (latest - oneMonth) / 11
+        const oneMonthInterval = 29
         sortedTransactions.forEach((tx: any) => {
             const receivedAt = new Date(tx.receivedAt)
             if (!earliest) earliest = receivedAt.getTime()
@@ -181,11 +181,13 @@ export default function useUsers () {
             /* One Month */
             if (new Date(receivedAt).getTime() > oneMonth) {
                 if (!result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress)) {
-                    result.oneMonth.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
-                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneMonth) / oneMonthInterval)
+                    result.oneMonth.data.push({ walletAddress, walletBalance: Array(30).fill(0) })
+                    const daysAgo = Math.floor((new Date().getTime() - new Date(receivedAt).getTime()) / 86400000)
+                    const intervalIndex = 29 - daysAgo
                     result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
                 } else {
-                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneMonth) / oneMonthInterval)
+                    const daysAgo = Math.floor((new Date().getTime() - new Date(receivedAt).getTime()) / 86400000)
+                    const intervalIndex = 29 - daysAgo
                     result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
                 }
             }
@@ -223,10 +225,11 @@ export default function useUsers () {
         })
 
         // Set the oneMonth labels array to the interval labels
-        result.oneMonth.labels = Array(12).fill(0).map((_, i) => {
-            const date = new Date(oneMonth + (oneMonthInterval * i))
-            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
-        })
+        result.oneMonth.labels = []
+        for (let i = 30; i > 0; i--) {
+            const date = new Date().getTime() - ((i - 1) * 86400000)
+            result.oneMonth.labels.push(`${new Date(date).getMonth() + 1}/${new Date(date).getDate()}`)
+        }
         userAnalytics.value = result
     }
 
