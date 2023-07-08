@@ -156,10 +156,12 @@ export default function useUsers () {
             if (new Date(receivedAt).getTime() > oneYear) {
                 if (!result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress)) {
                     result.oneYear.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
-                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneYear) / oneYearInterval)
+                    const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+                    const intervalIndex = 11 - monthsAgo
                     result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
                 } else {
-                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneYear) / oneYearInterval)
+                    const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+                    const intervalIndex = 11 - monthsAgo
                     result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
                 }
             }
@@ -214,8 +216,9 @@ export default function useUsers () {
 
         // Set the oneYear labels array to the interval labels
         result.oneYear.labels = Array(12).fill(0).map((_, i) => {
-            const date = new Date(oneYear + (oneYearInterval * i))
-            return date.getMonth() === 0 ? `${date.getFullYear()} ${months[date.getMonth()]}` : `${months[date.getMonth()]}`
+            const date = new Date (new Date().setDate(1))
+            const monthIndex = new Date(date.setMonth(date.getMonth() - (11 - i)))
+            return `${months[monthIndex.getMonth()]} ${monthIndex.getFullYear()}`
         })
 
         // Set the sixMonth labels array to the interval labels
