@@ -1,5 +1,8 @@
 version: "3.7"
 services: 
+  messenger:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   operator-1:
     extra_hosts:
       - "host.docker.internal:host-gateway"
