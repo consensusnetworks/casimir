@@ -1,7 +1,6 @@
-import os from 'os'
 import { fetchRetry, run } from '@casimir/helpers'
 
-const resourcePath = 'scripts/resources/rockx-dkg-cli'
+const resourcePath = 'scripts/resources'
 
 void async function () {
     process.env.BIP39_SEED = process.env.BIP39_SEED || 'test test test test test test test test test test test junk'
@@ -13,19 +12,15 @@ void async function () {
     process.env.LINK_TOKEN_ADDRESS = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
     process.env.SSV_TOKEN_ADDRESS = '0x3a9f01091C446bdE031E39ea8354647AFef091E7'
     process.env.WETH_TOKEN_ADDRESS = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
-    process.env.CLI_PATH = `./${resourcePath}/build/bin/rockx-dkg-cli`
+    process.env.CLI_PATH = `./${resourcePath}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
     process.env.MESSENGER_SRV_ADDR = 'http://0.0.0.0:3000'
     process.env.USE_HARDCODED_OPERATORS = 'true'
 
-    await run(`make -C ${resourcePath} build`)
+    await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
     const cli = await run(`which ${process.env.CLI_PATH}`)
     if (!cli) throw new Error('DKG CLI not found')
 
-    if (os.platform() === 'linux') {
-        await run(`docker compose -f ${resourcePath}/docker-compose.yaml -f docker-compose.override.yaml up -d`)
-    } else {
-        await run(`docker compose -f ${resourcePath}/docker-compose.yaml up -d`)
-    }
+    await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml -f ${resourcePath}/../docker-compose.override.yaml up -d`)
     console.log('🔑 DKG service started')
 
     const ping = await fetchRetry(`${process.env.MESSENGER_SRV_ADDR}/ping`)

@@ -100,7 +100,7 @@ export function kebabCase(string: string): string {
  * @returns A promise that resolves when the command exits
  */
 export async function run(command: string) {
-    const child = exec(command, { maxBuffer: 1024 * 5000 })
+    const child = exec(command)
     let data = ''
     return new Promise((resolve, reject) => {
         child.on('error', reject)
