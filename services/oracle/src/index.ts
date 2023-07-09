@@ -2,34 +2,39 @@ import { config } from './providers/config'
 import { getEventsIterable } from './providers/events'
 import { 
     initiateDepositHandler, 
-    initiatePoolExitHandler, 
-    initiatePoolReshareHandler, 
-    reportCompletedExitsHandler, 
-    reportForcedExitsHandler
+    // initiateResharesHandler, 
+    // initiateExitsHandler, 
+    // reportForcedExitsHandler,
+    reportCompletedExitsHandler
 } from './providers/handlers'
 
-const handlers = {
-    DepositRequested: initiateDepositHandler,
-    ReshareRequested: initiatePoolReshareHandler,
-    ExitRequested: initiatePoolExitHandler,
-    ForcedExitReportsRequested: reportForcedExitsHandler,
-    CompletedExitReportsRequested: reportCompletedExitsHandler
-}
+void async function () {
 
-const { 
-    provider,
-    signer,
-    manager,
-    views,
-    linkTokenAddress,
-    ssvTokenAddress,
-    wethTokenAddress,
-    cliPath,
-    messengerUrl
-} = config()
-
-;(async function () {
+    const handlers = {
+        DepositRequested: initiateDepositHandler,
+        /**
+         * We don't need to handle these/they aren't ready:
+         * ResharesRequested: initiateResharesHandler,
+         * ExitRequested: initiateExitsHandler,
+         * ForcedExitReportsRequested: reportForcedExitsHandler,
+         */
+        CompletedExitReportsRequested: reportCompletedExitsHandler
+    }
+    
+    const { 
+        provider,
+        signer,
+        manager,
+        views,
+        linkTokenAddress,
+        ssvTokenAddress,
+        wethTokenAddress,
+        cliPath,
+        messengerUrl
+    } = config()
+    
     const eventsIterable = getEventsIterable({ manager, events: Object.keys(handlers) })
+
     for await (const event of eventsIterable) {
         const details = event?.[event.length - 1]
         const { args } = details
@@ -48,6 +53,7 @@ const {
             args 
         })
     }
-})()
+}()
+
 
 

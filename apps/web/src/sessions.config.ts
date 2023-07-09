@@ -1,11 +1,11 @@
 import Session from 'supertokens-web-js/recipe/session'
 import useEnvironment from '@/composables/environment'
 
-const { usersBaseURL } = useEnvironment()
+const { usersUrl } = useEnvironment()
 
 export const SuperTokensWebJSConfig = {
   appInfo: {
-      apiDomain: usersBaseURL,
+      apiDomain: usersUrl,
       appName: 'Casimir',
       // apiBasePath: '/',
   },

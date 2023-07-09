@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import useEthers from '@/composables/ethers'
 import useContracts from '@/composables/contracts'
 import useLedger from '@/composables/ledger'
-import useSolana from '@/composables/solana'
+// import useSolana from '@/composables/solana'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
 import useWalletConnect from '@/composables/walletConnect'
@@ -38,7 +38,7 @@ export default function useWallet() {
   const { listenForContractEvents, refreshBreakdown } = useContracts()
   const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
-  const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
+  // const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
   const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
@@ -225,9 +225,9 @@ export default function useWallet() {
         await sendWalletConnectTransaction(txRequest)
       } else if (ethersProviderList.includes(txRequest.providerString)) {
         await sendEthersTransaction(txRequest)
-      } else if (solanaProviderList.includes(txRequest.providerString)) {
+      }/* else if (solanaProviderList.includes(txRequest.providerString)) {
         await sendSolanaTransaction(txRequest)
-      } else if (selectedProvider.value === 'IoPay') {
+      }*/ else if (selectedProvider.value === 'IoPay') {
         // await sendIoPayTransaction(txRequest)
       } else if (selectedProvider.value === 'Ledger') {
         await sendLedgerTransaction(txRequest)
@@ -300,7 +300,7 @@ export default function useWallet() {
         const trezorAddresses = await getTrezorAddress[currency]() as CryptoAddress[]
         setWalletProviderAddresses(trezorAddresses)
       }
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error selecting provider: ${error.message}`)
     }
   }
@@ -355,9 +355,9 @@ export default function useWallet() {
         await signWalletConnectMessage(messageRequest)
       } else if (ethersProviderList.includes(messageRequest.providerString)) {
         await signEthersMessage(messageRequest)
-      } else if (solanaProviderList.includes(messageRequest.providerString)) {
+      }/* else if (solanaProviderList.includes(messageRequest.providerString)) {
         await signSolanaMessage(messageRequest)
-      } else if (messageRequest.providerString === 'IoPay') {
+      }*/ else if (messageRequest.providerString === 'IoPay') {
         // await signIoPayMessage(messageRequest)
       } else if (messageRequest.providerString === 'Ledger') {
         await signLedgerMessage(messageRequest)

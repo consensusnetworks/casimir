@@ -7,5 +7,5 @@ export interface BrowserProviders {
   MetaMask?: EthersProvider
   OkxWallet?: EthersProvider
   TrustWallet?: EthersProvider
-  // Phantom?: any // TODO: Fix this.
+  Phantom?: any
 }

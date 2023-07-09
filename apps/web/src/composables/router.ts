@@ -10,17 +10,21 @@ const routes = [
         path: '/', 
         name: Overview,
         component: Overview,
-    },
-    { 
+    }
+]
+
+if (import.meta.env.DEV) {
+    routes.push({ 
         path: '/test', 
         name: Test, 
         component: Test,
-    },
-]
-
+    })
+}
 
 const router = createRouter({
     history: createWebHistory(),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     routes
 })
 

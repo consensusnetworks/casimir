@@ -7,7 +7,7 @@ export interface JsonSchema {
         [key: string]: {
             type: string,
             description: string,
-            default: string | number | boolean | null
+            default?: string | number | boolean | null
         }
     },
     uniqueFields?: string[],

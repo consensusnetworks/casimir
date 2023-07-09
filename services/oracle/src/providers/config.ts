@@ -19,8 +19,8 @@ export function config() {
     /** Get manager contract */
     const managerAddress = process.env.MANAGER_ADDRESS
     if (!managerAddress) throw new Error('No manager address provided')
-    const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi, provider) as CasimirManager & ethers.Contract
-    
+    const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi, provider) as ethers.Contract & CasimirManager
+
     /** Get views contract */
     const viewsAddress = process.env.VIEWS_ADDRESS
     if (!viewsAddress) throw new Error('No views address provided')

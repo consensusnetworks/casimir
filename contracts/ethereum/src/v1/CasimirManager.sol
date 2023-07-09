@@ -587,8 +587,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             prepoolBalance -= remainder;
         }
         sender.send(amount);
-
-        emit WithdrawalFulfilled(sender, amount);
     }
 
     /**

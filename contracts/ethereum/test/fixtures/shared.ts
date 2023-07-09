@@ -87,6 +87,7 @@ export async function secondUserDepositFixture() {
     if ((await manager.upkeepId()).toNumber() === 0) {
         await depositUpkeepBalanceHandler({ manager, signer: oracle })
     }
+
     await initiateDepositHandler({ manager, signer: oracle })
     
     let requestId = 0
@@ -311,6 +312,7 @@ export async function fourthUserDepositFixture() {
     const depositAmount = round(72 * ((100 + await manager.feePercent()) / 100), 10)
     const deposit = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
+
     for (let i = 0; i < 2; i++) {
         await initiateDepositHandler({ manager, signer: oracle })
     }
@@ -424,7 +426,9 @@ export async function thirdUserFullWithdrawalFixture() {
     const currentBalance = await ethers.provider.getBalance(exitedPoolAddress)
     const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitedBalance.toString()))
     await setBalance(exitedPoolAddress, nextBalance)
+    
     await reportCompletedExitsHandler({ manager, views, signer: oracle, args: { count: 1 } })
+
     await runUpkeep({ upkeep, keeper })
 
     return { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, oracle, requestId }

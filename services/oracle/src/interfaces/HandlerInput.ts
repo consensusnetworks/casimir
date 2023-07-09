@@ -7,7 +7,7 @@ export interface HandlerInput {
     /** Transaction signer */
     signer: ethers.Signer
     /** Manager contract */
-    manager: CasimirManager & ethers.Contract
+    manager: ethers.Contract & CasimirManager
     /** Views contract */
     views: CasimirViews & ethers.Contract
     /** Link token address */

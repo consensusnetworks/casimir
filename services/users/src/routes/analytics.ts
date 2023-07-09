@@ -46,7 +46,7 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
         //     ORDER BY received_at DESC
         //     LIMIT 50
         // `
-        const [, rows] = await query(stmt, opt)
+        const { rows } = await query(stmt, opt)
         const data = formatResult(rows)
         res.status(200).json({
             error: false,

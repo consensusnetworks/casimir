@@ -1,0 +1,29 @@
+version: "3.7"
+services: 
+  messenger:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  operator-1:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  operator-2:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  operator-3:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  operator-4:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  operator-5:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  operator-6:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  operator-7:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  operator-8:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
