@@ -14,7 +14,7 @@ func TestNewGlueClient(t *testing.T) {
 		t.Error(err)
 	}
 
-	client, err := NewGlueClient(config)
+	client, err := NewGlueService(config)
 
 	if err != nil {
 		t.Error(err)
@@ -32,7 +32,7 @@ func TestGlueClient_LoadDatabases(t *testing.T) {
 		t.Error(err)
 	}
 
-	glue, err := NewGlueClient(config)
+	glue, err := NewGlueService(config)
 
 	if err != nil {
 		t.Error(err)
@@ -49,30 +49,35 @@ func TestGlueClient_LoadDatabases(t *testing.T) {
 	}
 
 	for _, database := range glue.Databases {
-		if *database.Name == AnalyticsDatabaseDev {
+		fmt.Println(*database.Name)
+		if *database.Name == CasimirAnalyticsDatabaseDev {
 			return
 		}
 	}
 	t.Error("database not found")
 }
 
-func TestGlueClient_LoadTables(t *testing.T) {
+func TestGlueService_Introspect(t *testing.T) {
 	config, err := LoadDefaultAWSConfig()
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	client, err := NewGlueClient(config)
+	client, err := NewGlueService(config)
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = client.LoadTables(AnalyticsDatabaseDev)
+	err = client.Introspect(Dev)
 
 	if err != nil {
 		t.Error(err)
+	}
+
+	if len(client.Tables) == 0 {
+		t.Error("no tables returned")
 	}
 
 	for _, table := range client.Tables {

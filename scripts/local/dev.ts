@@ -111,6 +111,7 @@ void async function () {
 
             const seed = await getSecret('consensus-networks-bip39-seed')
             const wallet = getWallet(seed)
+            console.log(`private key: ${wallet.privateKey}`)
             const nonce = nonces[chain][fork]
             const managerIndex = 1 // We deploy a mock functions oracle before the manager
             if (!process.env.PUBLIC_MANAGER_ADDRESS) {

@@ -13,8 +13,6 @@ const (
 
 type Logger struct {
 	*zap.Logger
-	// Keep warn and error logs in a local file
-	Local bool
 }
 
 type LogEntry struct {
@@ -25,20 +23,21 @@ type LogEntry struct {
 	Stacktrace string `json:"stacktrace"`
 }
 
-func NewLogger(local bool) (*Logger, error) {
-	if !local {
-		logger, err := zap.NewProduction()
+var EncoderConfig = zapcore.EncoderConfig{
+	TimeKey:        "time",
+	LevelKey:       "level",
+	NameKey:        "logger",
+	CallerKey:      "caller",
+	MessageKey:     "message",
+	StacktraceKey:  "stacktrace",
+	LineEnding:     zapcore.DefaultLineEnding,
+	EncodeLevel:    zapcore.CapitalLevelEncoder,
+	EncodeTime:     zapcore.ISO8601TimeEncoder,
+	EncodeDuration: zapcore.SecondsDurationEncoder,
+	EncodeCaller:   zapcore.ShortCallerEncoder,
+}
 
-		if err != nil {
-			return nil, err
-		}
-
-		return &Logger{
-			Logger: logger,
-			Local:  local,
-		}, nil
-	}
-
+func NewFileLogger() (*Logger, error) {
 	var file *os.File
 
 	_, err := os.Stat(LogFile)
@@ -49,33 +48,16 @@ func NewLogger(local bool) (*Logger, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		file = f
 	}
 
-	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		MessageKey:     "message",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.CapitalLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	}
-
-	fileEncoder := zapcore.NewJSONEncoder(encoderConfig)
-
-	logLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= zapcore.WarnLevel
-	})
+	fileEncoder := zapcore.NewJSONEncoder(EncoderConfig)
 
 	fileWriteSyncer := zapcore.AddSync(file)
 
 	fileLogger := zap.New(
-		zapcore.NewCore(fileEncoder, fileWriteSyncer, logLevel),
+		zapcore.NewCore(fileEncoder, fileWriteSyncer, zapcore.DebugLevel),
 		zap.AddCaller(),
 		zap.AddStacktrace(zap.ErrorLevel),
 		zap.AddStacktrace(zap.WarnLevel),
@@ -83,6 +65,22 @@ func NewLogger(local bool) (*Logger, error) {
 
 	return &Logger{
 		Logger: fileLogger,
-		Local:  local,
+	}, nil
+}
+
+func NewConsoleLogger() (*Logger, error) {
+	encoder := zapcore.NewJSONEncoder(EncoderConfig)
+
+	sync := zapcore.AddSync(os.Stdout)
+
+	fileLogger := zap.New(
+		zapcore.NewCore(encoder, sync, zapcore.DebugLevel),
+		zap.AddCaller(),
+		zap.AddStacktrace(zap.ErrorLevel),
+		zap.AddStacktrace(zap.WarnLevel),
+	)
+
+	return &Logger{
+		Logger: fileLogger,
 	}, nil
 }

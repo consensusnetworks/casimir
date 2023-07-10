@@ -3,49 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
-	"path"
-	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 )
 
-const (
-	ETHERUEM_RPC_URL       = "ETHEREUM_RPC_URL"
-	PUBLIC_MANAGER_ADDRESS = "PUBLIC_MANAGER_ADDRESS"
-)
-
-func LoadEnv() error {
-	wd, err := os.Getwd()
-
-	if err != nil {
-		return err
-	}
-
-	envPath := path.Join(wd, ".env")
-	currentDir := strings.Split(wd, "/")
-
-	if currentDir[len(currentDir)-1] == "casimir" {
-		envPath = path.Join(wd, "services", "crawler", ".env")
-	}
-
-	err = godotenv.Load(envPath)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func main() {
-	err := LoadEnv()
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	err = Start(os.Args)
+	err := Start(os.Args)
 
 	if err != nil {
 		fmt.Println(err)
@@ -59,9 +22,15 @@ func Start(args []string) error {
 		Version: "0.0.1",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:    "local",
-				Aliases: []string{"l"},
-				Usage:   "Stream from a local hardhat network",
+				Name:    "development",
+				Aliases: []string{"dev"},
+				Usage:   "Set the environment to development",
+				Value:   true,
+			},
+			&cli.BoolFlag{
+				Name:    "production",
+				Aliases: []string{"prod"},
+				Usage:   "Set the environment to production",
 				Value:   false,
 			},
 		},
@@ -84,65 +53,79 @@ func Start(args []string) error {
 }
 
 func RootCmd(c *cli.Context) error {
-
-	// Run the crawler first even if we're streaming locally
-	// because we use the crawler's introspect for the streamer
-	crawler, err := NewEthereumCrawler()
+	logger, err := NewConsoleLogger()
 
 	if err != nil {
 		return err
 	}
 
-	err = crawler.Introspect()
+	l := logger.Sugar()
+
+	err = LoadEnv()
 
 	if err != nil {
 		return err
 	}
 
-	if c.Bool("local") {
-		localStreamer, err := NewEthereumStreamer(true)
+	l.Infof("Loaded environment variables")
 
-		if err != nil {
-			return err
-		}
+	env := Dev
 
-		err = localStreamer.Stream()
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+	if c.Bool("production") {
+		env = Prod
 	}
 
-	err = crawler.Crawl()
+	// if env == Dev {
+	// 	err = PingEthereumNode("http://localhost:8545", 3)
+
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+
+	l.Infof("Environment set to %s", env)
+
+	// chain crawler
+	// _, err = NewEthereumCrawler(CrawlerConfig{Env: env})
+
+	// if err != nil {
+	// 	return err
+	// }
+
+	// // chain streamer
+	// _, err = NewEthereumStreamer(StreamerConfig{Fork: false, Env: env})
+
+	// if err != nil {
+	// 	return err
+	// }
+
+	// fork streamer
+
+	config := Config{Fork: true, Env: env}
+
+	forkCrawler, err := NewEthereumCrawler(config)
 
 	if err != nil {
 		return err
 	}
 
-	defer crawler.Close()
-
-	streamer, err := NewEthereumStreamer(false)
+	err = forkCrawler.Crawl()
 
 	if err != nil {
 		return err
 	}
 
-	// for now use crawler's introspect
-	streamer.Glue = crawler.Glue
-	streamer.S3 = crawler.S3
+	// forkStreamer, err := NewEthereumStreamer(config)
 
-	streamer.EventBucket = crawler.EventBucket
-	streamer.StakingBucket = crawler.StakingBucket
-	streamer.WalletBucket = crawler.WalletBucket
+	// if err != nil {
+	// 	return err
+	// }
 
-	// the streamer can start head + 1 because the crawler is inclusive
-	err = streamer.Stream()
+	// err = forkStreamer.Stream()
 
-	if err != nil {
-		return err
-	}
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

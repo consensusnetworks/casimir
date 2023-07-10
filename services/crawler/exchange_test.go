@@ -45,7 +45,7 @@ func TestHistoricalPrice(t *testing.T) {
 		t.Fatal("ETHEREUM_RPC_URL is not set")
 	}
 
-	client, err := NewEthereumClient(url)
+	client, err := NewEthereumService(url)
 
 	if err != nil {
 		t.Fatal(err)

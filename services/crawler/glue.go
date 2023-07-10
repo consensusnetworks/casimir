@@ -2,30 +2,36 @@ package main
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"strconv"
+	"strings"
 )
 
 const (
-	AnalyticsDatabaseDev  = "casimir_analytics_database_dev"
-	AnalyticsDatabaseProd = "casimir_analytics_database_prod"
+	CasimirAnalyticsDatabaseDev  = "casimir_analytics_database_dev"
+	CasimirAnalyticsDatabaseProd = "casimir_analytics_database_prod"
 )
-
-type GlueClient struct {
-	Client    *glue.Client
-	Databases []types.Database
-	Tables    []types.Table
-}
 
 type Table struct {
 	Name     string
 	Database string
-	Version  string
+	Version  int
 	Bucket   string
 	SerDe    string
+}
+
+type GlueService struct {
+	Client          *glue.Client
+	Databases       []types.Database
+	Tables          []types.Table
+	EventBucket     Table
+	WalletBucket    Table
+	StakingBucket   Table
+	ResourceVersion int
 }
 
 func LoadDefaultAWSConfig() (*aws.Config, error) {
@@ -41,15 +47,15 @@ func LoadDefaultAWSConfig() (*aws.Config, error) {
 	return &config, nil
 }
 
-func NewGlueClient(config *aws.Config) (*GlueClient, error) {
+func NewGlueService(config *aws.Config) (*GlueService, error) {
 	client := glue.NewFromConfig(*config)
 
-	return &GlueClient{
+	return &GlueService{
 		Client: client,
 	}, nil
 }
 
-func (g *GlueClient) LoadDatabases() error {
+func (g *GlueService) LoadDatabases() error {
 	req, err := g.Client.GetDatabases(context.Background(), &glue.GetDatabasesInput{})
 
 	if err != nil {
@@ -69,7 +75,7 @@ func (g *GlueClient) LoadDatabases() error {
 	return nil
 }
 
-func (g *GlueClient) LoadTables(databaseName string) error {
+func (g *GlueService) LoadTables(databaseName string) error {
 	input := &glue.GetTablesInput{
 		DatabaseName: aws.String(databaseName),
 	}
@@ -89,6 +95,101 @@ func (g *GlueClient) LoadTables(databaseName string) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (g *GlueService) Introspect(env Environment) error {
+	db := CasimirAnalyticsDatabaseDev
+
+	if env == Prod {
+		db = CasimirAnalyticsDatabaseProd
+	}
+
+	err := g.LoadDatabases()
+
+	if err != nil {
+		return err
+	}
+
+	err = g.LoadTables(db)
+
+	if err != nil {
+		return err
+	}
+
+	if len(g.Tables) == 0 {
+		return nil
+	}
+
+	for _, t := range g.Tables {
+		table := *t.Name
+		serde := t.StorageDescriptor.SerdeInfo.SerializationLibrary
+		bucket := t.StorageDescriptor.Location
+
+		cleanedBucket := strings.TrimPrefix(*bucket, "s3://")
+		cleanedBucket = strings.TrimSuffix(cleanedBucket, "/")
+
+		switch {
+		case strings.Contains(table, "event"):
+			lastWord := table[len(table)-1]
+
+			resourceVersion, err := strconv.Atoi(string(lastWord))
+
+			if err != nil {
+				return err
+			}
+
+			g.EventBucket = Table{
+				Name:     table,
+				Database: db,
+				Version:  resourceVersion,
+				Bucket:   cleanedBucket,
+				SerDe:    strings.Split(*serde, ".")[3],
+			}
+
+			g.ResourceVersion = resourceVersion
+		case strings.Contains(table, "staking"):
+			lastWord := table[len(table)-1]
+
+			resourceVersion, err := strconv.Atoi(string(lastWord))
+
+			if err != nil {
+				return err
+			}
+
+			g.StakingBucket = Table{
+				Name:     table,
+				Database: db,
+				Version:  resourceVersion,
+				Bucket:   cleanedBucket,
+				SerDe:    strings.Split(*serde, ".")[3],
+			}
+
+		case strings.Contains(table, "wallet"):
+			lastWord := table[len(table)-1]
+
+			resourceVersion, err := strconv.Atoi(string(lastWord))
+
+			if err != nil {
+				return err
+			}
+
+			g.WalletBucket = Table{
+				Name:     table,
+				Database: db,
+				Version:  resourceVersion,
+				Bucket:   cleanedBucket,
+				SerDe:    strings.Split(*serde, ".")[3],
+			}
+		default:
+			return fmt.Errorf("UnrecognizedGlueTable: %s\n", table)
+		}
+	}
+
+	if g.ResourceVersion == 0 {
+		return fmt.Errorf("ResourceVersionNotFound")
 	}
 
 	return nil

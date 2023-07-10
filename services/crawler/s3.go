@@ -12,19 +12,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-type S3Client struct {
+type S3Service struct {
 	Client *s3.Client
 }
 
-func NewS3Client(config *aws.Config) (*S3Client, error) {
+func NewS3Service(config *aws.Config) (*S3Service, error) {
 	client := s3.NewFromConfig(*config)
 
-	return &S3Client{
+	return &S3Service{
 		Client: client,
 	}, nil
 }
 
-func (s *S3Client) Upload(bucket string, key string, fpath string) error {
+func (s *S3Service) UploadFile(bucket string, key string, fpath string) error {
 	var err error
 
 	file, err := os.Open(fpath)
@@ -49,7 +49,7 @@ func (s *S3Client) Upload(bucket string, key string, fpath string) error {
 	return nil
 }
 
-func (s *S3Client) UploadBytes(bucket string, key string, data *bytes.Buffer) error {
+func (s *S3Service) UploadBytes(bucket string, key string, data *bytes.Buffer) error {
 	opt := &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -64,11 +64,11 @@ func (s *S3Client) UploadBytes(bucket string, key string, data *bytes.Buffer) er
 	return nil
 }
 
-func (s *S3Client) MultipartUpload(bucket, key, fpath string) error {
-	return s.Upload(bucket, key, fpath)
+func (s *S3Service) MultipartUploadFile(bucket, key, fpath string) error {
+	return s.UploadFile(bucket, key, fpath)
 }
 
-func (s *S3Client) Get(bucket, key string) (*bytes.Buffer, error) {
+func (s *S3Service) Get(bucket, key string) (*bytes.Buffer, error) {
 	var err error
 
 	opt := &s3.GetObjectInput{
@@ -91,7 +91,7 @@ func (s *S3Client) Get(bucket, key string) (*bytes.Buffer, error) {
 	return buf, nil
 }
 
-func (s *S3Client) ListObjects(bucket, key string) (*[]string, error) {
+func (s *S3Service) ListObjects(bucket, key string) (*[]string, error) {
 	if bucket == "" {
 		return nil, fmt.Errorf("bucket name is empty")
 	}
@@ -119,7 +119,7 @@ func (s *S3Client) ListObjects(bucket, key string) (*[]string, error) {
 	return &objects, nil
 }
 
-func (s *S3Client) AlreadyConsumed(bucket, key string) (*[]int64, error) {
+func (s *S3Service) AlreadyConsumed(bucket, key string) (*[]int64, error) {
 	files, err := s.ListObjects(bucket, key)
 
 	if err != nil {

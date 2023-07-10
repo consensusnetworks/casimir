@@ -5,39 +5,36 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-type ChainType string
 type NetworkType string
 type ProviderType string
-type EventType string
+type ChainType string
 
 const (
-	Ethereum ChainType = "ethereum"
-
-	EtheruemMainnet NetworkType = "mainnet"
-	EtheruemGoerli  NetworkType = "goerli"
-
 	Casimir ProviderType = "casimir"
 
-	Block       EventType = "block"
-	Transaction EventType = "transaction"
-	Contract    EventType = "contract"
+	EthereumMainnet NetworkType = "mainnet"
+	EthereumGoerli  NetworkType = "goerli"
+	EthereumHardhat NetworkType = "hardhat"
+
+	Ethereum ChainType = "ethereum"
 )
 
-type EthereumClient struct {
+type EthereumService struct {
 	Client   *ethclient.Client
 	Network  NetworkType
 	Provider ProviderType
 	Url      url.URL
 }
 
-func NewEthereumClient(raw string) (*EthereumClient, error) {
+func NewEthereumService(raw string) (*EthereumService, error) {
 	if raw == "" {
-		return nil, errors.New("empty url")
+		return nil, errors.New("EmptyEthereumUrl: Ethereum url cannot be empty")
 	}
 
 	url, err := url.Parse(raw)
@@ -68,14 +65,22 @@ func NewEthereumClient(raw string) (*EthereumClient, error) {
 
 	switch id.Int64() {
 	case 1:
-		net = EtheruemMainnet
+		net = EthereumMainnet
 	case 5:
-		net = EtheruemGoerli
+		if url.Host == "nodes.casimir.co" {
+			urlPath := strings.Split(url.Path, "/")
+			tt := urlPath[len(urlPath)-1]
+			if tt == "hardhat" {
+				net = EthereumHardhat
+				break
+			}
+			net = EthereumGoerli
+		}
 	default:
 		return nil, fmt.Errorf("unsupported network id: %d", id.Int64())
 	}
 
-	return &EthereumClient{
+	return &EthereumService{
 		Client:   client,
 		Network:  net,
 		Provider: Casimir,
@@ -83,65 +88,30 @@ func NewEthereumClient(raw string) (*EthereumClient, error) {
 	}, nil
 }
 
-func NewLocalEthereumClient() (*EthereumClient, error) {
-	url := url.URL{
-		Scheme: "http",
-		Host:   "localhost:8545",
+func PingEthereumNode(url string, retry int) error {
+	backoff := 2 * time.Second
+	var err error
+	for i := 0; i < retry; i++ {
+		fmt.Println("url", url)
+		client, dailErr := ethclient.Dial(url)
+		if err != nil {
+			err = dailErr
+			fmt.Printf("Retrying to ping %s\n", url)
+			time.Sleep(backoff)
+			continue
+		}
+
+		defer client.Close()
+
+		_, netErr := client.NetworkID(context.Background())
+
+		if err != nil {
+			err = netErr
+			fmt.Printf("Retrying to ping %s\n", url)
+			time.Sleep(backoff)
+			continue
+		}
+		return nil
 	}
-
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
-
-	defer cancel()
-
-	client, err := ethclient.DialContext(ctx, url.String())
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer cancel()
-
-	var net NetworkType
-
-	id, err := client.NetworkID(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	switch id.Int64() {
-	case 1:
-		net = EtheruemMainnet
-	case 5:
-		net = EtheruemGoerli
-	default:
-		return nil, fmt.Errorf("unsupported network id: %d", id.Int64())
-	}
-
-	return &EthereumClient{
-		Client:   client,
-		Network:  net,
-		Provider: Casimir,
-		Url:      url,
-	}, nil
-}
-
-func (c ChainType) String() string {
-	switch c {
-	case Ethereum:
-		return "ethereum"
-	default:
-		return ""
-	}
-}
-
-func (c NetworkType) String() string {
-	switch c {
-	case EtheruemMainnet:
-		return "mainnet"
-	case EtheruemGoerli:
-		return "goerli"
-	default:
-		return ""
-	}
+	return err
 }
