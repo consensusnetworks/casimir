@@ -1,3 +1,4 @@
+import os from 'os'
 import { fetchRetry, run } from '@casimir/helpers'
 
 const resourcePath = 'scripts/resources'
@@ -20,7 +21,11 @@ void async function () {
     const cli = await run(`which ${process.env.CLI_PATH}`)
     if (!cli) throw new Error('DKG CLI not found')
 
-    await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml -f ${resourcePath}/../docker-compose.override.yaml up -d`)
+    if (os.platform() === 'linux') {
+        await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml -f ${resourcePath}/../docker-compose.override.yaml up -d`)
+    } else {
+        await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml up -d`)
+    }
     console.log('🔑 DKG service started')
 
     const ping = await fetchRetry(`${process.env.MESSENGER_SRV_ADDR}/ping`)

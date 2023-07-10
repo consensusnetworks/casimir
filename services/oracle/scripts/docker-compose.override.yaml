@@ -1,29 +1,38 @@
 version: "3.7"
 services: 
   messenger:
+    network_mode: "host"
     extra_hosts:
       - "host.docker.internal:host-gateway"
   operator-1:
+    network_mode: "host"
     extra_hosts:
       - "host.docker.internal:host-gateway"
   operator-2:
+    network_mode: "host"
     extra_hosts:
       - "host.docker.internal:host-gateway"
   operator-3:
+    network_mode: "host"
     extra_hosts:
       - "host.docker.internal:host-gateway"
   operator-4:
+    network_mode: "host"
     extra_hosts:
       - "host.docker.internal:host-gateway"
   operator-5:
+    network_mode: "host"
     extra_hosts:
       - "host.docker.internal:host-gateway"
   operator-6:
+    network_mode: "host"
     extra_hosts:
       - "host.docker.internal:host-gateway"
   operator-7:
+    network_mode: "host"
     extra_hosts:
       - "host.docker.internal:host-gateway"
   operator-8:
+    network_mode: "host"
     extra_hosts:
       - "host.docker.internal:host-gateway"
