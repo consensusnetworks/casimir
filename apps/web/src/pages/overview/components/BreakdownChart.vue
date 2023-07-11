@@ -37,9 +37,7 @@ const getAccountColor = (address: string) => {
 }
 
 const formatLegendLabel = (address: string) => {
-  console.log(user.value?.accounts[0].address, address)
   const account = user.value?.accounts.find(item => item.address.toLocaleLowerCase() === address.toLocaleLowerCase())
-  console.log('account', account)
 
   if (address.length <= 4) {
     return address
