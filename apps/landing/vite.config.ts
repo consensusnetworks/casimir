@@ -4,9 +4,9 @@ import { fileURLToPath } from 'url'
 import * as path from 'path'
 
 export default defineConfig({
-  server: { port: 3001 },
+  server: { port: 3002 },
   plugins: [
-    vue({ include: [/\.vue$/] })
+    vue()
   ],
   define: {
     'global': 'globalThis',

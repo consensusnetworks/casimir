@@ -51,7 +51,6 @@ interface ICasimirManager {
     event TipsDeposited(uint256 amount);
     event WithdrawalRequested(address indexed sender, uint256 amount);
     event WithdrawalInitiated(address indexed sender, uint256 amount);
-    event WithdrawalFulfilled(address indexed sender, uint256 amount);
 
     /*************/
     /* Mutations */

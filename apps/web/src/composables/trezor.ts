@@ -10,7 +10,7 @@ const { createSiweMessage, signInWithEthereum } = useAuth()
 const trezorPath = 'm/44\'/60\'/0\'/0/0'
 
 export default function useTrezor() {
-    const { ethereumURL } = useEnvironment()
+    const { ethereumUrl } = useEnvironment()
     const { getGasPriceAndLimit } = useEthers()
 
     // TODO: Implement this:
@@ -24,7 +24,7 @@ export default function useTrezor() {
 
     function getEthersTrezorSigner(): EthersTrezorSigner {
         const options = {
-            provider: new ethers.providers.JsonRpcProvider(ethereumURL),
+            provider: new ethers.providers.JsonRpcProvider(ethereumUrl),
             path: trezorPath
         }
         return new EthersTrezorSigner(options)
@@ -75,15 +75,14 @@ export default function useTrezor() {
             const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
             const signer = getEthersTrezorSigner()
             const signedMessage = await signer.signMessageWithIndex(message, pathIndex)
-            const loginResponse = await signInWithEthereum({ 
+            await signInWithEthereum({ 
                 address, 
                 currency,
                 message, 
                 provider, 
                 signedMessage
             })
-            return await loginResponse.json()
-        } catch (error) {
+        } catch (error: any) {
             console.log(error)
             throw new Error(error)
         }
@@ -102,7 +101,7 @@ export default function useTrezor() {
           value: ethers.utils.parseUnits(value),
           type: 0
         } as ethers.UnsignedTransaction
-        const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumURL, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+        const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumUrl, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
         unsignedTransaction.gasPrice = gasPrice
         unsignedTransaction.gasLimit = gasLimit
 

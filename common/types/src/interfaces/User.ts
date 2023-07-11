@@ -1,9 +1,6 @@
 import { ProviderString } from '@casimir/types'
-import { Account } from '@casimir/types'
 
 export interface User {
-    /* The accounts associated with the user */
-    accounts: Account[]
     /* Unique ID (and essential for auth verification) */
     address: string
     /* ISO Timestamp of when user was created */

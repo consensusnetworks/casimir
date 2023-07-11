@@ -233,16 +233,16 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             } else {
                 (
                     uint32 activatedDeposits,
-                    uint32 unexpectedExits,
+                    uint32 forcedExits,
                     uint32 completedExits,
-                    uint32[5] memory compoundablePools 
+                    uint32[5] memory compoundablePoolIds 
                 ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
                 reportActivatedDeposits = activatedDeposits;
-                reportForcedExits = unexpectedExits;
+                reportForcedExits = forcedExits;
                 reportCompletedExits = completedExits;
-                reportCompoundablePoolIds = compoundablePools;
+                reportCompoundablePoolIds = compoundablePoolIds;
                 finalizableActivatedDeposits = activatedDeposits;
-                finalizableCompoundablePoolIds = compoundablePools;
+                finalizableCompoundablePoolIds = compoundablePoolIds;
             }
             if (reportRemainingRequests == 0) {
                 reportStatus = ReportStatus.PROCESSING;

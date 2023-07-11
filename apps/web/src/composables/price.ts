@@ -1,4 +1,5 @@
 import { Currency } from '@casimir/types'
+import useEnvironment from './environment'
 
 type PriceEntry = {
     time: number;
@@ -14,6 +15,8 @@ type PriceEntry = {
 
   
 export default function usePrice() {
+    const { cryptoCompareApiKey } = useEnvironment()
+
     function convertToWholeUnits (currency: Currency | string, amount: number) {
         switch (currency) {
             case 'BTC':
@@ -47,7 +50,7 @@ export default function usePrice() {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'authorization': `Apikey ${import.meta.env.PUBLIC_CRYPTO_COMPARE_API_KEY}`
+                'authorization': `Apikey ${cryptoCompareApiKey}`
             }
         }
         const response = await fetch (`https://min-api.cryptocompare.com/data/pricehistorical?fsym=${from}&tsyms=${to}&ts=${timestamp}`, options)

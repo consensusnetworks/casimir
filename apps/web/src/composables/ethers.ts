@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { EthersProvider } from '@/interfaces/index'
+import { EthersProvider } from '@casimir/types'
 import { Account, TransactionRequest, UserWithAccounts } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
@@ -7,8 +7,13 @@ import useContracts from '@/composables/contracts'
 import useEnvironment from '@/composables/environment'
 import useUsers from '@/composables/users'
 
+interface ethereumWindow extends Window {
+  ethereum: any;
+}
+declare const window: ethereumWindow
+
 const { createSiweMessage, signInWithEthereum } = useAuth()
-const { ethereumURL } = useEnvironment()
+const { ethereumUrl } = useEnvironment()
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
@@ -20,7 +25,7 @@ export default function useEthers() {
         method: 'wallet_addEthereumChain',
         params: [network]
       })
-    } catch(error) {
+    } catch(error: any) {
       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
     }
   }
@@ -99,7 +104,7 @@ export default function useEthers() {
     
     if (provider) {
       const address = (await requestEthersAccount(provider as EthersProvider))[0]
-      const balance = await getEthersBalance(address)
+      const balance = (await getEthersBalance(address)).toString()
       return [{ address, balance }]
     } else {
       throw new Error('Provider not yet connected to this dapp. Please connect and try again.')
@@ -107,7 +112,7 @@ export default function useEthers() {
   }
 
   async function getEthersBalance(address: string) : Promise<GLfloat> {
-    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
     const balance = await provider.getBalance(address)
     return parseFloat(ethers.utils.formatEther(balance))
   }
@@ -149,7 +154,7 @@ export default function useEthers() {
   async function listenForTransactions() {
     const { manager, refreshBreakdown } = useContracts()
     const { user } = useUsers()
-    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
     provider.on('block', async (blockNumber: number) => {
       console.log('blockNumber :>> ', blockNumber)
       const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
@@ -184,7 +189,7 @@ export default function useEthers() {
         provider, 
         signedMessage
       })
-    } catch (err) {
+    } catch (err: any) {
       throw new Error(err.message)
     }
   }
@@ -207,7 +212,7 @@ export default function useEthers() {
       to,
       value: weiAmount
     }
-    const ethFees = await estimateEIP1559GasFee(ethereumURL, tx)
+    const ethFees = await estimateEIP1559GasFee(ethereumUrl, tx)
     const { fee, gasLimit } = ethFees
     const requiredBalance = parseFloat(value) + parseFloat(fee)
     const balance = await getEthersBalance(from)
@@ -241,7 +246,7 @@ export default function useEthers() {
             method:'wallet_switchEthereumChain',
             params: [{chainId: chainId}]
           })
-        } catch (err) {
+        } catch (err: any) {
             console.log(`Error occurred while switching chain to chainId ${chainId}, err: ${err.message} code: ${err.code}`)
             if (err.code === 4902){
               if (chainId === '5') {
@@ -280,7 +285,7 @@ function getBrowserProvider(providerString: ProviderString) {
     if (!ethereum.providerMap && ethereum.isMetaMask) {
       return ethereum
     }
-    return window.ethereum?.providerMap?.get(providerString) || undefined
+    return ethereum?.providerMap?.get(providerString) || undefined
   } else if (providerString === 'BraveWallet') {
     return getBraveWallet()
   } else if (providerString === 'TrustWallet') {

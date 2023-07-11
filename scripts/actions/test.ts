@@ -1,21 +1,16 @@
-import { $, argv, echo } from 'zx'
+import { $, echo } from 'zx'
 import { loadCredentials } from '@casimir/helpers'
 
 /**
  * Test the GitHub Actions workflows in `.github/workflows`
  * 
- * Arguments:
- *      --workflow: workflow-to-test (optional, i.e., --workflow release)
- * 
  * Further information:
  * See https://github.com/nektos/act
  */
 void async function () {
-    /** Workflows available to test */
-    const workflows = ['push', 'release']
 
     /** Default to push workflow */
-    const workflow = workflows.includes(argv.workflow) ? argv.workflow : 'push'
+    const workflow = process.env.WORKFLOW || 'push'
 
     /** Get AWS credentials for deployment */
     const { accessKeyId, secretAccessKey } = await loadCredentials()
