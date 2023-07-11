@@ -103,6 +103,7 @@ Customize and override the defaults for your *local development environment* by 
 | `MOCK_SERVICES` | Whether to mock backend services | `true` |
 | `BUILD_PREVIEW` | Whether to preview web app production build | `false` |
 | `VALIDATOR_COUNT` | Number of validators to generate for tests | `4` |
+| `START_BLOCK` | Starting block number for local fork network | `` |
 
 ### Apps
 
