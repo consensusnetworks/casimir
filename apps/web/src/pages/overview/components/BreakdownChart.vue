@@ -30,6 +30,8 @@ const getAccountColor = (address: string) => {
       return '#D4A0FF'
     case 'IoPay':
       return '#00D7C7'
+    case 'TrustWallet':
+      return '#0B65C6'
     default:
       return'#80ABFF'
   }
