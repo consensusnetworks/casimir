@@ -3,7 +3,9 @@ import { Account, AddAccountOptions, ProviderString, RemoveAccountOptions, UserW
 import useEnvironment from '@/composables/environment'
 import useEthers from './ethers'
 import * as Session from 'supertokens-web-js/recipe/session'
-import txData from '../mockData/mock_transaction_data.json'
+import useTxData from '../mockData/mock_transaction_data'
+
+const { txData } = useTxData()
 
 const { usersUrl } = useEnvironment()
 
@@ -39,12 +41,12 @@ export default function useUsers() {
                 headers: { 
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ account })
+                body: JSON.stringify({ account, id: user?.value?.id })
             }
             const response = await fetch(`${usersUrl}/user/add-sub-account`, requestOptions)
-            const { error, message, data: user } = await response.json()
-            setUser(user)
-            return { error, message, data: user }
+            const { error, message, data: updatedUser } = await response.json()
+            setUser(updatedUser)
+            return { error, message, data: updatedUser }
         } catch (error: any) {
             throw new Error(error.message || 'Error adding account')
         }
@@ -126,18 +128,14 @@ export default function useUsers() {
         let earliest: any = null
         const latest: any = new Date().getTime()
         const oneYear = new Date().getTime() - 31536000000
-        const oneYearInterval = (latest - oneYear) / 12
         const sixMonths = new Date().getTime() - 15768000000
-        const sixMonthInterval = (latest - sixMonths) / 12
         const oneMonth = new Date().getTime() - 2628000000
-        const oneMonthInterval = (latest - oneMonth) / 12
         sortedTransactions.forEach((tx: any) => {
             const receivedAt = new Date(tx.receivedAt)
             if (!earliest) earliest = receivedAt.getTime()
             if (receivedAt.getTime() < earliest) earliest = receivedAt.getTime()
         })
-        const historicalInterval = (latest - earliest) / 12
-        
+        const historicalInterval = (latest - earliest) / 11
         
         sortedTransactions.forEach((tx: any) => {
             const { receivedAt, walletAddress, walletBalance } = tx
@@ -159,10 +157,12 @@ export default function useUsers() {
             if (new Date(receivedAt).getTime() > oneYear) {
                 if (!result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress)) {
                     result.oneYear.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
-                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneYear) / oneYearInterval)
+                    const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+                    const intervalIndex = 11 - monthsAgo
                     result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
                 } else {
-                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneYear) / oneYearInterval)
+                    const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+                    const intervalIndex = 11 - monthsAgo
                     result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
                 }
             }
@@ -170,11 +170,13 @@ export default function useUsers() {
             /* Six Months */
             if (new Date(receivedAt).getTime() > sixMonths) {
                 if (!result.sixMonth.data.find((obj: any) => obj.walletAddress === walletAddress)) {
-                    result.sixMonth.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
-                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - sixMonths) / sixMonthInterval)
+                    result.sixMonth.data.push({ walletAddress, walletBalance: Array(6).fill(0) })
+                    const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+                    const intervalIndex = 5 - monthsAgo
                     result.sixMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
                 } else {
-                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - sixMonths) / sixMonthInterval)
+                    const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+                    const intervalIndex = 5 - monthsAgo
                     result.sixMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
                 }
             }
@@ -182,58 +184,75 @@ export default function useUsers() {
             /* One Month */
             if (new Date(receivedAt).getTime() > oneMonth) {
                 if (!result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress)) {
-                    result.oneMonth.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
-                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneMonth) / oneMonthInterval)
+                    result.oneMonth.data.push({ walletAddress, walletBalance: Array(30).fill(0) })
+                    const daysAgo = Math.floor((new Date().getTime() - new Date(receivedAt).getTime()) / 86400000)
+                    const intervalIndex = 29 - daysAgo
                     result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
                 } else {
-                    const intervalIndex = Math.floor((new Date(receivedAt).getTime() - oneMonth) / oneMonthInterval)
+                    const daysAgo = Math.floor((new Date().getTime() - new Date(receivedAt).getTime()) / 86400000)
+                    const intervalIndex = 29 - daysAgo
                     result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
                 }
             }
         })
 
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
         // Set the historical labels array to the interval labels
+        let previousMonth: any = null
         result.historical.labels = Array(12).fill(0).map((_, i) => {
             const date = new Date(earliest + (historicalInterval * i))
-            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+            const currentMonth = date.getMonth()
+            if (!previousMonth) {
+                previousMonth = currentMonth
+                return date.getMonth() === 0 ? `${date.getFullYear()} ${months[date.getMonth()]} ${date.getDate()}` : `${months[date.getMonth()]} ${date.getDate()}`
+            } else if (currentMonth < previousMonth) {
+                previousMonth = currentMonth
+                return `${date.getFullYear()} ${months[date.getMonth()]} ${date.getDate()}`
+            } else {
+                previousMonth = currentMonth
+                return `${months[date.getMonth()]} ${date.getDate()}`
+            }
         })
 
         // Set the oneYear labels array to the interval labels
         result.oneYear.labels = Array(12).fill(0).map((_, i) => {
-            const date = new Date(oneYear + (oneYearInterval * i))
-            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+            const date = new Date (new Date().setDate(1))
+            const monthIndex = new Date(date.setMonth(date.getMonth() - (11 - i)))
+            return `${months[monthIndex.getMonth()]} ${monthIndex.getFullYear()}`
         })
 
         // Set the sixMonth labels array to the interval labels
-        result.sixMonth.labels = Array(12).fill(0).map((_, i) => {
-            const date = new Date(sixMonths + (sixMonthInterval * i))
-            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+        result.sixMonth.labels = Array(6).fill(0).map((_, i) => {
+            const date = new Date (new Date().setDate(1))
+            const monthIndex = new Date(date.setMonth(date.getMonth() - (5 - i)))
+            return `${months[monthIndex.getMonth()]} ${monthIndex.getFullYear()}`
         })
 
         // Set the oneMonth labels array to the interval labels
-        result.oneMonth.labels = Array(12).fill(0).map((_, i) => {
-            const date = new Date(oneMonth + (oneMonthInterval * i))
-            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
-        })
+        result.oneMonth.labels = []
+        for (let i = 30; i > 0; i--) {
+            const date = new Date().getTime() - ((i - 1) * 86400000)
+            result.oneMonth.labels.push(`${new Date(date).getMonth() + 1}/${new Date(date).getDate()}`)
+        }
         userAnalytics.value = result
     }
 
     async function getUserAnalytics() {
         try {
-            const userId = user.value?.id
             const requestOptions = {
                 method: 'GET',
                 headers: { 
                     'Content-Type': 'application/json'
                 }
             }
-            const response = await fetch(`${usersUrl}/analytics/${userId}`, requestOptions)
+            const response = await fetch(`${usersUrl}/analytics`, requestOptions)
             const { error, message, data } = await response.json()
             if (error) throw new Error(message)
             
             // TODO: Swap this when the API / data is ready
             // rawUserAnalytics.value = data
-            rawUserAnalytics.value = txData
+            rawUserAnalytics.value = txData.value
             
             setUserAnalytics()
             return { error, message, data }
@@ -279,6 +298,7 @@ export default function useUsers() {
             body: JSON.stringify({
                 address,
                 currency,
+                id: user?.value?.id,
                 ownerAddress,
                 walletProvider,
             })

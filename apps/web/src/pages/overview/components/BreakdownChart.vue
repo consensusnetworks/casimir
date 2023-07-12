@@ -4,7 +4,9 @@ import { onMounted, ref, watch} from 'vue'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 
-const { currentStaked, stakingRewards, totalDeposited } = useContracts()
+import { ProviderString } from '@casimir/types'
+
+const { currentStaked, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
 const { user, getUserAnalytics, userAnalytics } = useUsers()
 
 const chardId = ref('cross_provider_chart')
@@ -12,7 +14,46 @@ const selectedTimeframe = ref('historical')
 
 const chartData = ref({} as any)
 
-const setMockData = () => {
+const getAccountColor = (address: string) => {
+  const walletProvider = user.value?.accounts.find( item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase())?.walletProvider as ProviderString
+
+  switch (walletProvider){
+    case 'MetaMask':
+      return '#F6851B'
+    case 'CoinbaseWallet':
+      return '#3773F5'
+    case 'WalletConnect':
+      return '#3396FF'
+    case 'Trezor':
+      return '#00854D'
+    case 'Ledger':
+      return '#D4A0FF'
+    case 'IoPay':
+      return '#00D7C7'
+    case 'TrustWallet':
+      return '#0B65C6'
+    default:
+      return'#80ABFF'
+  }
+    
+}
+
+const formatLegendLabel = (address: string) => {
+  const account = user.value?.accounts.find(item => item.address.toLocaleLowerCase() === address.toLocaleLowerCase())
+
+  if (address.length <= 4) {
+    return address
+  }
+
+  var start = address.substring(0, 3)
+  var end = address.substring(address.length - 3)
+  var middle = '.'.repeat(2)
+
+
+  return (account? account.walletProvider : 'Unknown') + ' (' + start + middle + end + ')'
+}
+
+const setChartData = () => {
   let labels
   let data = []
   switch (selectedTimeframe.value) {
@@ -37,73 +78,63 @@ const setMockData = () => {
       break
   }
 
+  
   chartData.value = {
     labels : labels,
     datasets : data.map((item: any) => {
+      const primaryAccount = item.walletAddress.toLocaleLowerCase() === user.value?.address.toLocaleLowerCase()
       return {
         data : item.walletBalance,
-        label : item.walletAddress,
-        borderColor : '#2F80ED',
-        fill: true,
-        backgroundColor: '#2F80ED',
+        label : formatLegendLabel(item.walletAddress),
+        borderColor : getAccountColor(item.walletAddress),
+        fill: primaryAccount,
+        backgroundColor: primaryAccount? getAccountColor(item.walletAddress) : null,
         pointRadius: 0,
         tension: 0.1
       }
     })
-    // [
-    //     {
-    //         data : Array.from({length: labels.length}, () => Math.floor(Math.random() * (250 - 200 + 1) + 200)),
-    //         label : 'Primary Account',
-    //         borderColor : '#2F80ED',
-    //         fill: true,
-    //         backgroundColor: '#2F80ED',
-    //         pointRadius: 0,
-    //         tension: 0.1
-    //     },
-    //     {
-    //         data : Array.from({length: labels.length}, () => Math.floor(Math.random() * (150 - 100 + 1) + 100)),
-    //         label : 'Secondary Account',
-    //         borderColor : '#A8C8F3',
-    //         fill: false,
-    //         // backgroundColor: null,
-    //         pointRadius: 0,
-    //         tension: 0.1
-    //     },
-    //     {
-    //         data : Array.from({length: labels.length}, () => Math.floor(Math.random() * (50 - 0 + 1) + 50)),
-    //         label : '3rd Account',
-    //         borderColor : '#53389E',
-    //         fill: false,
-    //         // backgroundColor: null,
-    //         pointRadius: 0,
-    //         tension: 0.1
-    //     }
-    // ]
   }
 }
 
-// onMounted(() => {
-//   setMockData()
-// })
+onMounted(async () => {
+  if (user.value?.id) {
+    await getUserAnalytics()
+    setChartData()
+    await refreshBreakdown()
+  }
+})
 
 watch(user, async () => {
     if (user.value?.id) {
       await getUserAnalytics()
-      setMockData()
+      setChartData()
     }
 })
 
 watch(selectedTimeframe, () => {
-  setMockData()
+  setChartData()
 })
 </script>
 
 <template>
   <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap">
     <div class="flex flex-wrap justify-between mb-[52px]">
+      <div>
+        <h6 class="blance_title mb-[15px]">
+          Total Balance Across Connected Wallets
+        </h6>
+        <div class="flex items-center gap-[12px]">
+          <h5 class="blance_amount">
+            {{ totalWalletBalance.usd }}
+          </h5>
+          <span class="blance_exchange">
+            {{ totalWalletBalance.exchange }}
+          </span>
+        </div>
+      </div>
       <div class="">
         <h6 class="blance_title mb-[15px]">
-          Current Staked
+          Currently Staked
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="blance_amount">
@@ -116,7 +147,7 @@ watch(selectedTimeframe, () => {
       </div>
       <div>
         <h6 class="blance_title mb-[15px]">
-          Staking Rewards
+          All Time Staking Rewards Earned
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="blance_amount">
@@ -124,19 +155,6 @@ watch(selectedTimeframe, () => {
           </h5>
           <span class="blance_exchange">
             {{ stakingRewards.exchange }}
-          </span>
-        </div>
-      </div>
-      <div>
-        <h6 class="blance_title mb-[15px]">
-          Total Deposited
-        </h6>
-        <div class="flex items-center gap-[12px]">
-          <h5 class="blance_amount">
-            {{ totalDeposited.usd }}
-          </h5>
-          <span class="blance_exchange">
-            {{ totalDeposited.exchange }}
           </span>
         </div>
       </div>

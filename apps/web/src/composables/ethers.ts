@@ -58,7 +58,7 @@ export default function useEthers() {
       // const gasEstimateInEth = ethers.utils.formatEther(gasEstimate)
       const fee = maxPriorityFeePerGasInWei?.mul(gasEstimate).add(maxFeePerGasInWei)
       const feeInWei = ethers.utils.formatEther(fee)
-      const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
+      const feeInEth = (parseFloat(feeInWei) / 10**18).toFixed(8).toString()
       return {
         gasLimit: gasEstimate.toString(),
         fee: feeInEth
@@ -85,7 +85,7 @@ export default function useEthers() {
       const gasEstimate = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
       const fee = gasPrice.mul(gasEstimate)
       const feeInWei = ethers.utils.formatEther(fee)
-      const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
+      const feeInEth = (parseFloat(feeInWei) / 10**18).toFixed(8).toString()
       return {
         gasLimit: gasEstimate.toString(),
         fee: feeInEth
@@ -146,7 +146,7 @@ export default function useEthers() {
 
   async function getMaxETHAfterFees(rpcUrl: string, unsignedTx: ethers.utils.Deferrable<ethers.providers.TransactionRequest>, totalAmount: string) {
     const { fee } = await estimateEIP1559GasFee(rpcUrl, unsignedTx)
-    const total = parseInt(totalAmount) - parseInt(fee)
+    const total = parseFloat(totalAmount) - parseFloat(fee)
     const maxAfterFees = ethers.utils.formatEther(total).toString()
     return maxAfterFees
   }
@@ -214,7 +214,7 @@ export default function useEthers() {
     }
     const ethFees = await estimateEIP1559GasFee(ethereumUrl, tx)
     const { fee, gasLimit } = ethFees
-    const requiredBalance = parseInt(value) + parseInt(fee)
+    const requiredBalance = parseFloat(value) + parseFloat(fee)
     const balance = await getEthersBalance(from)
     if (balance < requiredBalance) {
       throw new Error('Insufficient balance')

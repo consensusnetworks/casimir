@@ -118,7 +118,7 @@ watch(props, ()=> {
                     let rgb = hexToRGB(line_chart.data.datasets[i].backgroundColor)
 
                     gradient.addColorStop(0, `rgba(${rgb?.r},${rgb?.g},${rgb?.b}, 0.28)`) 
-                    gradient.addColorStop(1, 'rgba(0, 0, 0,0)') 
+                    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.0)') 
 
                     line_chart.data.datasets[i].backgroundColor = gradient
                 }

@@ -22,15 +22,14 @@ const stakingRewards = ref<BreakdownAmount>({
     exchange: '0 ETH'
 })
 
-const totalDeposited = ref<BreakdownAmount>({
+const totalWalletBalance = ref<BreakdownAmount>({
     usd: '$0.00',
     exchange: '0 ETH'
 })
 
 export default function useContracts() {
-    
     const { ethereumUrl, managerAddress, viewsAddress } = useEnvironment()
-    const { ethersProviderList, getEthersBrowserSigner } = useEthers()
+    const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
     const { getEthersLedgerSigner } = useLedger()
     const { getCurrentPrice } = usePrice()
     const { getEthersTrezorSigner } = useTrezor()
@@ -79,9 +78,11 @@ export default function useContracts() {
             const totalStaked = currentStaked.reduce((accumulator, currentValue) => accumulator.add(currentValue), ethers.BigNumber.from(0))
             const totalStakedUSD = parseFloat(ethers.utils.formatEther(totalStaked)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
             const totalStakedETH = parseFloat(ethers.utils.formatEther(totalStaked))
+            const formattedTotalStakedUSD = formatNumber(totalStakedUSD)
+            const formattedTotalStakedETH = formatNumber(totalStakedETH)
             return {
-                exchange: totalStakedETH.toFixed(2) + ' ETH',
-                usd: '$ ' + totalStakedUSD.toFixed(2)
+                exchange: formattedTotalStakedUSD + ' ETH',
+                usd: '$ ' + formattedTotalStakedETH
             }
         } catch (error) {
             console.log('Error occurred while fetching stake:', error)
@@ -92,7 +93,6 @@ export default function useContracts() {
         }
     }
     
-
     async function getDepositFees() {
         const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
         const fees = await manager.connect(provider).feePercent()
@@ -172,15 +172,31 @@ export default function useContracts() {
         }))
     }
 
-    async function getTotalDeposited() : Promise<BreakdownAmount> {
+    // async function getStakingRewards() : Promise<BreakdownAmount> {
+    //     const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
+    //     const promises = [] as Array<Promise<ethers.BigNumber>>
+    //     // TODO: Replace .getUserRewards with actual method that get's rewards OR figure out how to derive rewards
+    //     addresses.forEach((address) => {promises.push(manager.connect(provider).getUserRewards(address))})
+    //     const stakingRewards = (await Promise.all(promises)).reduce((a, b) => a.add(b))
+    //     const stakingRewardsUSD = parseFloat(ethers.utils.formatEther(stakingRewards)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+    //     const stakingRewardsETH = parseFloat(ethers.utils.formatEther(stakingRewards))
+    //     return {
+    //         exchange: stakingRewardsETH.toFixed(2) + ' ETH',
+    //         usd: '$ ' + stakingRewardsUSD.toFixed(2)
+    //     }
+    // }
+
+    async function getTotalWalletBalance() : Promise<BreakdownAmount> {
         const promises = [] as Array<Promise<any>>
         const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
-        addresses.forEach((address) => { promises.push(getUserContractEventsTotals(address)) })
-        const totalDeposited = (await Promise.all(promises)).reduce((acc, curr) => acc + curr.StakeDeposited, 0)
-        const totalDepositedUSD = totalDeposited * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        addresses.forEach((address) => { promises.push(getEthersBalance(address)) })
+        const totalWalletBalance = (await Promise.all(promises)).reduce((acc, curr) => acc + curr, 0)
+        const totalWalletBalanceUSD = totalWalletBalance * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+        const formattedTotalWalletBalance = formatNumber(totalWalletBalance)
+        const formattedTotalWalletBalanceUSD = formatNumber(totalWalletBalanceUSD)
         return {
-            exchange: totalDeposited.toFixed(2) + ' ETH',
-            usd: '$ ' + totalDepositedUSD.toFixed(2)
+            exchange: formattedTotalWalletBalance + ' ETH',
+            usd: '$ ' + formattedTotalWalletBalanceUSD
         }
     }
 
@@ -222,8 +238,8 @@ export default function useContracts() {
 
     async function refreshBreakdown() {
         setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
-        // setBreakdownValue({ name: 'totalDeposited', ...await getTotalDeposited() })
-        // setBreakdownValue({ name: 'stakingRewards', ...await getStakingRewards() })
+        setBreakdownValue({ name: 'totalWalletBalance', ...await getTotalWalletBalance() })
+        // setBreakdownValue({ name: 'stakingRewardsEarned', ...await getStakingRewards() })
     }
 
     function setBreakdownValue({ name, exchange, usd }: { name: BreakdownString, exchange: string, usd: string}) {
@@ -234,13 +250,13 @@ export default function useContracts() {
                     usd
                 }
             break
-            case 'totalDeposited':
-                totalDeposited.value = {
+            case 'totalWalletBalance':
+                totalWalletBalance.value = {
                     exchange,
                     usd
                 }
             break
-            case 'stakingRewards':
+            case 'stakingRewardsEarned':
                 stakingRewards.value = {
                     exchange,
                     usd
@@ -271,7 +287,7 @@ export default function useContracts() {
         currentStaked, 
         manager, 
         stakingRewards, 
-        totalDeposited, 
+        totalWalletBalance, 
         deposit, 
         getCurrentStaked,
         getDepositFees, 
@@ -280,4 +296,14 @@ export default function useContracts() {
         refreshBreakdown,
         withdraw 
     }
+}
+
+function formatNumber(number: number) {
+    const SI_SYMBOL = ['', 'K', 'M', 'B', 'T', 'P', 'E']
+    const tier = Math.log10(Math.abs(number)) / 3 | 0
+    if(tier === 0) return number.toFixed(2)
+    const suffix = SI_SYMBOL[tier]
+    const scale = Math.pow(10, tier * 3)
+    const scaled = number / scale
+    return scaled.toFixed(2) + suffix
 }

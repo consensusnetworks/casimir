@@ -120,17 +120,17 @@ watch(formattedAmountToStake, async () => {
     let maxAmount
     // minAmount is 0.0001 ETH 
     let minAmount = 0.0001
-    if(selectedWallet.value){
+    if (selectedWallet.value) {
       maxAmount = await getEthersBalance(selectedWallet.value)
-    }else{
+    } else {
       maxAmount = 0
     }
     
-    if(floatAmount > maxAmount){
+    if (floatAmount > maxAmount) {
       errorMessage.value = 'Insufficient Funds'
-    } else if(floatAmount < minAmount){
+    } else if (floatAmount < minAmount) {
       errorMessage.value = 'Minimun Staking is 0.0001 ETH'
-    }else {
+    } else {
       errorMessage.value = null
     }
   } else{
@@ -141,7 +141,6 @@ watch(formattedAmountToStake, async () => {
 watch(user, () => {
   aggregateAddressesByProvider()
   termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
-  console.log('user.value.agreedToTermsOfService :>> ', user.value?.agreedToTermsOfService)
 })
 
 onMounted(async () => {
