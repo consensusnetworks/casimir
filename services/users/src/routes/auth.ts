@@ -32,7 +32,7 @@ router.post('/nonce', async (req: express.Request, res: express.Response) => {
     }
 })
 
-router.post('/login', verifySession(), async (req: SessionRequest, res: express.Response) => {
+router.post('/login', async (req: express.Request, res: express.Response) => {
     try {
         const { body } = req
         const loginCredentials = body
@@ -86,7 +86,8 @@ router.post('/login', verifySession(), async (req: SessionRequest, res: express.
                 console.log('LOGGING IN!')
                 const response = verifyMessageSignature({ address, currency, message, signedMessage, provider })
                 upsertNonce(address)
-                const userId = req.session?.getUserId() as string
+                const user = await getUserByAddress(address)
+                const userId = user?.id.toString() as string
                 response ? await Session.createNewSession(req, res, userId) : null
                 res.setHeader('Content-Type', 'application/json')
                 res.status(200)
