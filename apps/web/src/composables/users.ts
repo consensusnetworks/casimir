@@ -3,7 +3,9 @@ import { Account, AddAccountOptions, ProviderString, RemoveAccountOptions, UserW
 import useEnvironment from '@/composables/environment'
 import useEthers from './ethers'
 import * as Session from 'supertokens-web-js/recipe/session'
-import txData from '../mockData/mock_transaction_data.json'
+import useTxData from '../mockData/mock_transaction_data'
+
+const { txData } = useTxData()
 
 const { usersUrl } = useEnvironment()
 
@@ -250,7 +252,7 @@ export default function useUsers() {
             
             // TODO: Swap this when the API / data is ready
             // rawUserAnalytics.value = data
-            rawUserAnalytics.value = txData
+            rawUserAnalytics.value = txData.value
             
             setUserAnalytics()
             return { error, message, data }

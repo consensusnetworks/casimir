@@ -1,7 +1,5 @@
 import { createWebHistory, createRouter } from 'vue-router'
 import useUsers from '@/composables/users'
-
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import Overview from '@/pages/overview/Overview.vue'
 import Test from '@/pages/test/Test.vue'
 

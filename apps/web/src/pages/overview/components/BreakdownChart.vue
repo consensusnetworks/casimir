@@ -15,7 +15,7 @@ const selectedTimeframe = ref('historical')
 const chartData = ref({} as any)
 
 const getAccountColor = (address: string) => {
-  const walletProvider = user.value?.accounts.find( item =>  item.address === address)?.walletProvider as ProviderString
+  const walletProvider = user.value?.accounts.find( item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase())?.walletProvider as ProviderString
 
   switch (walletProvider){
     case 'MetaMask':
@@ -30,8 +30,27 @@ const getAccountColor = (address: string) => {
       return '#D4A0FF'
     case 'IoPay':
       return '#00D7C7'
+    case 'TrustWallet':
+      return '#0B65C6'
+    default:
+      return'#80ABFF'
   }
     
+}
+
+const formatLegendLabel = (address: string) => {
+  const account = user.value?.accounts.find(item => item.address.toLocaleLowerCase() === address.toLocaleLowerCase())
+
+  if (address.length <= 4) {
+    return address
+  }
+
+  var start = address.substring(0, 3)
+  var end = address.substring(address.length - 3)
+  var middle = '.'.repeat(2)
+
+
+  return (account? account.walletProvider : 'Unknown') + ' (' + start + middle + end + ')'
 }
 
 const setChartData = () => {
@@ -59,15 +78,17 @@ const setChartData = () => {
       break
   }
 
+  
   chartData.value = {
     labels : labels,
     datasets : data.map((item: any) => {
+      const primaryAccount = item.walletAddress.toLocaleLowerCase() === user.value?.address.toLocaleLowerCase()
       return {
         data : item.walletBalance,
-        label : item.walletAddress,
+        label : formatLegendLabel(item.walletAddress),
         borderColor : getAccountColor(item.walletAddress),
-        fill: item.walletAddress === user.value?.address,
-        backgroundColor: item.walletAddress === user.value?.address? getAccountColor(item.walletAddress) : null,
+        fill: primaryAccount,
+        backgroundColor: primaryAccount? getAccountColor(item.walletAddress) : null,
         pointRadius: 0,
         tension: 0.1
       }
