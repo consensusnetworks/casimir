@@ -1,5 +1,6 @@
 import { pascalCase } from '@casimir/helpers'
 import { ProjectConfig } from '../interfaces/ProjectConfig'
+import dataPackage from '@casimir/data/package.json'
 
 /**
  * CDK app config
@@ -10,27 +11,28 @@ export class Config implements ProjectConfig {
     public readonly env
     public readonly rootDomain
     public readonly subdomains
-    public readonly nodesIp
+    public readonly dataVersion
 
     /** List of required environment variables */
     public readonly requiredEnvVars = ['PROJECT', 'STAGE', 'AWS_ACCOUNT', 'AWS_REGION']
 
     constructor() {
         this.checkEnvVars()
-        this.project = pascalCase(process.env.PROJECT as string)
-        this.stage = pascalCase(process.env.STAGE as string)
+        this.project = process.env.PROJECT as string
+        this.stage = process.env.STAGE as string
         this.env = {
             account: process.env.AWS_ACCOUNT as string,
             region: process.env.AWS_REGION as string
         }
-        this.rootDomain = `${this.stage === 'Prod' ? '' : `${this.stage.toLowerCase()}.`}casimir.co`
+        this.rootDomain = `${this.stage === 'prod' ? '' : `${this.stage}.`}casimir.co`
         this.subdomains = {
             nodes: 'nodes',
             landing: 'www',
             users: 'users',
+            web: 'app',
             wildcard: '*'
         }
-        this.nodesIp = process.env.NODES_IP as string
+        this.dataVersion = Number(dataPackage.version.split('.')[0])
     }
 
     /**
@@ -57,22 +59,26 @@ export class Config implements ProjectConfig {
      * ```
      */
     getFullStackName(stackName: string): string {
-        return this.project + pascalCase(stackName) + this.stage
+        return pascalCase(this.project) + pascalCase(stackName) + pascalCase(this.stage)
     }
 
     /**
      * Get stack resource name with project prefix and stage suffix
      * @param stackName Stack name
      * @param resourceName Resource name
+     * @param version Optional resource version
      * @returns Resource name
      * @example
      * ```typescript
      * const resourceName = config.getFullStackResourceName('etl', 'event-bucket')
-     * console.log(resourceName) // EtlEventBucketDev
+     * console.log(resourceName) // CasimirEtlEventBucketDev
      * ```
      */
-    getFullStackResourceName(stackName: string, resourceName: string): string {
-        return this.project + pascalCase(stackName) + pascalCase(resourceName) + this.stage
+    getFullStackResourceName(stackName: string, resourceName: string, version?: number): string {
+        const name = pascalCase(this.project) + pascalCase(stackName) + pascalCase(resourceName) + pascalCase(this.stage)
+        if (version) {
+            return name + version
+        }
+        return name
     }
-
 }

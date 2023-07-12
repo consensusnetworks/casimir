@@ -1,40 +1,160 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { onMounted } from 'vue'
+import { onMounted, ref, watch} from 'vue'
+import useContracts from '@/composables/contracts'
+import useUsers from '@/composables/users'
 
-onMounted(() => {
-    // Needed for new Icon Library
-    // eslint-disable-next-line no-undef
-    feather.replace()
+import { ProviderString } from '@casimir/types'
+
+const { currentStaked, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
+const { user, getUserAnalytics, userAnalytics } = useUsers()
+
+const chardId = ref('cross_provider_chart')
+const selectedTimeframe = ref('historical')
+
+const chartData = ref({} as any)
+
+const getAccountColor = (address: string) => {
+  const walletProvider = user.value?.accounts.find( item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase())?.walletProvider as ProviderString
+
+  switch (walletProvider){
+    case 'MetaMask':
+      return '#F6851B'
+    case 'CoinbaseWallet':
+      return '#3773F5'
+    case 'WalletConnect':
+      return '#3396FF'
+    case 'Trezor':
+      return '#00854D'
+    case 'Ledger':
+      return '#D4A0FF'
+    case 'IoPay':
+      return '#00D7C7'
+    case 'TrustWallet':
+      return '#0B65C6'
+    default:
+      return'#80ABFF'
+  }
+    
+}
+
+const formatLegendLabel = (address: string) => {
+  const account = user.value?.accounts.find(item => item.address.toLocaleLowerCase() === address.toLocaleLowerCase())
+
+  if (address.length <= 4) {
+    return address
+  }
+
+  var start = address.substring(0, 3)
+  var end = address.substring(address.length - 3)
+  var middle = '.'.repeat(2)
+
+
+  return (account? account.walletProvider : 'Unknown') + ' (' + start + middle + end + ')'
+}
+
+const setChartData = () => {
+  let labels
+  let data = []
+  switch (selectedTimeframe.value) {
+    case '1 month':
+      labels = userAnalytics.value.oneMonth.labels
+      data = userAnalytics.value.oneMonth.data
+      break
+    case '6 months':
+      labels = userAnalytics.value.sixMonth.labels
+      data = userAnalytics.value.sixMonth.data
+      break
+    case '12 months':
+      labels = userAnalytics.value.oneYear.labels
+      data = userAnalytics.value.oneYear.data
+      break
+    case 'historical':
+      labels = userAnalytics.value.historical.labels
+      data = userAnalytics.value.historical.data
+      break
+    
+    default:
+      break
+  }
+
+  
+  chartData.value = {
+    labels : labels,
+    datasets : data.map((item: any) => {
+      const primaryAccount = item.walletAddress.toLocaleLowerCase() === user.value?.address.toLocaleLowerCase()
+      return {
+        data : item.walletBalance,
+        label : formatLegendLabel(item.walletAddress),
+        borderColor : getAccountColor(item.walletAddress),
+        fill: primaryAccount,
+        backgroundColor: primaryAccount? getAccountColor(item.walletAddress) : null,
+        pointRadius: 0,
+        tension: 0.1
+      }
+    })
+  }
+}
+
+onMounted(async () => {
+  if (user.value?.id) {
+    await getUserAnalytics()
+    setChartData()
+    await refreshBreakdown()
+  }
+})
+
+watch(user, async () => {
+    if (user.value?.id) {
+      await getUserAnalytics()
+      setChartData()
+    }
+})
+
+watch(selectedTimeframe, () => {
+  setChartData()
 })
 </script>
 
 <template>
   <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap">
-    <div class="flex flex-wrap gap-[68px] mb-[52px]">
+    <div class="flex flex-wrap justify-between mb-[52px]">
       <div>
         <h6 class="blance_title mb-[15px]">
-          Total Staked
+          Total Balance Across Connected Wallets
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="blance_amount">
-            $150
+            {{ totalWalletBalance.usd }}
           </h5>
           <span class="blance_exchange">
-            0.00054 ETH
+            {{ totalWalletBalance.exchange }}
+          </span>
+        </div>
+      </div>
+      <div class="">
+        <h6 class="blance_title mb-[15px]">
+          Currently Staked
+        </h6>
+        <div class="flex items-center gap-[12px]">
+          <h5 class="blance_amount">
+            {{ currentStaked.usd }}
+          </h5>
+          <span class="blance_exchange">
+            {{ currentStaked.exchange }}
           </span>
         </div>
       </div>
       <div>
         <h6 class="blance_title mb-[15px]">
-          Staking Rewards
+          All Time Staking Rewards Earned
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="blance_amount">
-            $17.25
+            {{ stakingRewards.usd }}
           </h5>
           <span class="blance_exchange">
-            0.004 ETH
+            {{ stakingRewards.exchange }}
           </span>
         </div>
       </div>
@@ -44,26 +164,49 @@ onMounted(() => {
         <h6 class="card_title">
           Ethereum Balance
         </h6>
-        <div class="flex items-center gap-[22px]">
-          <div class="flex gap-[10px] items-center">
-            <div class="w-[9px] h-[9px] bg-[#2F80ED] rounded-[999px]" />
+        <div class="flex flex-wrap items-center gap-[22px]">
+          <div
+            v-for="item in chartData.datasets"
+            :key="item"
+            class="flex gap-[10px] items-center"
+          >
+            <div
+              class="w-[9px] h-[9px] rounded-[999px]"
+              :style="`background: ${item.borderColor};`"
+            />
             <span class="legent_label">
-              Primary Account
+              {{ item.label }} 
             </span>
           </div>
         </div>
       </div>
       <div class="border border-[#D0D5DD] rounded-[8px] overflow-hidden">
-        <button class="timeframe_button rounded-l-[]">
+        <button
+          class="timeframe_button"
+          :class="selectedTimeframe === '1 month'? 'bg-[#F3F3F3]' : ''"
+          @click="selectedTimeframe = '1 month'"
+        >
           1 month
         </button>
-        <button class="timeframe_button border-x border-x-[#D0D5DD] bg-[#F3F3F3]">
+        <button
+          class="timeframe_button border-x border-x-[#D0D5DD]"
+          :class="selectedTimeframe === '6 months'? 'bg-[#F3F3F3]' : ''"
+          @click="selectedTimeframe = '6 months'"
+        >
           6 months
         </button>
-        <button class="timeframe_button border-r border-r-[#D0D5DD]">
+        <button
+          class="timeframe_button border-r border-r-[#D0D5DD]"
+          :class="selectedTimeframe === '12 months'? 'bg-[#F3F3F3]' : ''"
+          @click="selectedTimeframe = '12 months'"
+        >
           12 months
         </button>
-        <button class="timeframe_button">
+        <button
+          class="timeframe_button"
+          :class="selectedTimeframe === 'historical'? 'bg-[#F3F3F3]' : ''"
+          @click="selectedTimeframe = 'historical'"
+        >
           historical
         </button>
       </div>
@@ -78,10 +221,12 @@ onMounted(() => {
         class="w-full h-[240px]"
       >
         <LineChartJS
-          :id="'cross_provider_chart'"
+          :id="chardId"
           :legend="false"
           :x-grid-lines="false"
           :y-grid-lines="true"
+          :data="chartData"
+          :gradient="true"
         />
       </div>
     </div>
@@ -96,6 +241,12 @@ onMounted(() => {
   font-size: 16px;
   letter-spacing: -0.01em;
   color: #7D8398;
+  @media (max-width: 1210px) {
+    font-size: 14px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 12px;
+  };
 }
 .blance_amount{
   font-family: 'IBM Plex Sans';
@@ -103,6 +254,12 @@ onMounted(() => {
   font-weight: 500;
   font-size: 28px;
   color: #344054;
+  @media (max-width: 1210px) {
+    font-size: 24px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 22px;
+  };
 }
 .blance_title{
   font-family: 'IBM Plex Sans';
@@ -112,6 +269,14 @@ onMounted(() => {
   line-height: 20px;
   letter-spacing: -0.01em;
   color: #667085;
+  @media (max-width: 1210px) {
+    font-size: 12px;
+    line-height: 18px;
+  };
+  @media (max-width: 1100px) {
+    font-size: 10px;
+    line-height: 16px;
+  };
 }
 .chart_y_label{
     font-family: 'IBM Plex Sans';
@@ -158,5 +323,8 @@ onMounted(() => {
     font-size: 18px;
     line-height: 28px;
     color: #101828;
+    @media (max-width: 1200px) {
+      font-size: 14px;
+    };
 }
 </style>

@@ -14,21 +14,17 @@ async function* getEvent({ manager, event }: { manager: ethers.Contract, event: 
     
     manager.on(event, listener)
     
-    try {
-        while (true) {
-            if (queue.length === 0) {
-                await new Promise<void>(resolve => {
-                    const waitListener = () => {
-                        manager.off(event, waitListener)
-                        resolve()
-                    }
-                    manager.on(event, waitListener)
-                })
-            } else {
-                yield queue.shift()
-            }
+    while (true) {
+        if (queue.length === 0) {
+            await new Promise<void>(resolve => {
+                const waitListener = () => {
+                    manager.off(event, waitListener)
+                    resolve()
+                }
+                manager.on(event, waitListener)
+            })
+        } else {
+            yield queue.shift()
         }
-    } finally {
-        manager.off(event, listener)
     }
 }

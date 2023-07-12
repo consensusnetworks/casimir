@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import WalletConnectProvider from '@walletconnect/web3-provider'
+import WalletConnectProvider from '@walletconnect/web3-provider/dist/umd/index.min.js'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
@@ -11,15 +11,15 @@ const { createSiweMessage, signInWithEthereum } = useAuth()
 const isWalletConnectSigner = (signer: ethers.Signer | Promise<ethers.Signer> | undefined) => typeof (signer as Promise<ethers.Signer>).then === 'function'
 
 export default function useWalletConnect() {
-  const { ethereumURL, walletConnectURL } = useEnvironment()
+  const { ethereumUrl, walletConnectUrl } = useEnvironment()
   const { getGasPriceAndLimit } = useEthers()
 
   async function getEthersWalletConnectSigner(): Promise<ethers.Signer> {
     const options = {
       rpc: {
-        1337: ethereumURL
+        1337: ethereumUrl
       },
-      bridge: walletConnectURL
+      bridge: walletConnectUrl
     }
     const walletConnectProvider = new WalletConnectProvider(options)
     await walletConnectProvider.enable()
@@ -45,14 +45,13 @@ export default function useWalletConnect() {
     try {
       const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signedMessage = await signWalletConnectMessage({ message, providerString: provider })
-      const walletConnectLoginResponse = await signInWithEthereum({
+      await signInWithEthereum({
         address,
         currency: currency || 'ETH',
         provider,
         message,
         signedMessage
       })
-      return await walletConnectLoginResponse.json()
     } catch (err) {
       console.log('error in loginWithWalletConnect :>> ', err)
     }
@@ -77,7 +76,7 @@ export default function useWalletConnect() {
       chainId,
       value: ethers.utils.parseUnits(value)
     } as ethers.UnsignedTransaction
-    const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumURL, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumUrl, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
     unsignedTransaction.gasPrice = gasPrice
     unsignedTransaction.gasLimit = gasLimit
 

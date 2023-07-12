@@ -108,7 +108,9 @@ export async function run(command: string) {
             process.stdout.write(chunk.toString())
             data += chunk.toString()
         })
-        child.on('exit', () => resolve(data))
+        child.on('exit', () => {
+            resolve(data)
+        })
     })
 }
 
@@ -122,7 +124,6 @@ export async function runRetry(command: string, retriesLeft: number | undefined 
     if (retriesLeft === 0) {
         throw new Error('Command failed after maximum retries')
     }
-
     try {
         return await run(command)
     } catch (error) {

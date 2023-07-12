@@ -84,7 +84,10 @@ export class Schema {
 
             const comment = property.description
             if (comment.includes('PK')) column += ' PRIMARY KEY'
-
+            
+            const defaultValue = property.default
+            if (defaultValue !== undefined) column += ` DEFAULT ${defaultValue}`
+            
             return column
         })
 

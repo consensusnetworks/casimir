@@ -8,14 +8,27 @@ import { $, echo } from 'zx'
  * See https://docs.aws.amazon.com/cdk/api/v2
  */
 void async function () {
-    /** Get AWS secrets */
+    /** Configure the environment with fallback default values */
+    process.env.PROJECT = process.env.PROJECT || 'casimir'
+    process.env.STAGE = process.env.STAGE || 'dev'
+    process.env.AWS_REGION = process.env.AWS_REGION || 'us-east-2'
+    
+    /** Get AWS credentials */
     await loadCredentials()
     process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')
-    process.env.NODES_IP = await getSecret('casimir-nodes-ip')
+
+    /** Set private environment variables */
+    process.env.ETHEREUM_RPC_URL = 'https://nodes.casimir.co/eth/hardhat'
+    process.env.USERS_URL = `https://users.${process.env.STAGE}.casimir.co`
+
+    /** Set public environment variables */
+    process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
+    process.env.PUBLIC_USERS_URL = process.env.USERS_URL
+    process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
 
     /** Prepare CDK resources */
     await $`npm run build --workspace @casimir/landing`
-    await $`npm run build --workspace @casimir/users`
+    await $`npm run build --workspace @casimir/web`
 
     /** Prepare CDK app */
     await $`npm run bootstrap --workspace @casimir/cdk`

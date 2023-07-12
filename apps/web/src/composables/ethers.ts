@@ -1,12 +1,19 @@
 import { ethers } from 'ethers'
-import { EthersProvider } from '@/interfaces/index'
-import { TransactionRequest } from '@casimir/types'
+import { EthersProvider } from '@casimir/types'
+import { Account, TransactionRequest, UserWithAccounts } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
+import useContracts from '@/composables/contracts'
 import useEnvironment from '@/composables/environment'
+import useUsers from '@/composables/users'
+
+interface ethereumWindow extends Window {
+  ethereum: any;
+}
+declare const window: ethereumWindow
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
-const { ethereumURL } = useEnvironment()
+const { ethereumUrl } = useEnvironment()
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
@@ -51,7 +58,7 @@ export default function useEthers() {
       // const gasEstimateInEth = ethers.utils.formatEther(gasEstimate)
       const fee = maxPriorityFeePerGasInWei?.mul(gasEstimate).add(maxFeePerGasInWei)
       const feeInWei = ethers.utils.formatEther(fee)
-      const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
+      const feeInEth = (parseFloat(feeInWei) / 10**18).toFixed(8).toString()
       return {
         gasLimit: gasEstimate.toString(),
         fee: feeInEth
@@ -78,7 +85,7 @@ export default function useEthers() {
       const gasEstimate = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
       const fee = gasPrice.mul(gasEstimate)
       const feeInWei = ethers.utils.formatEther(fee)
-      const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
+      const feeInEth = (parseFloat(feeInWei) / 10**18).toFixed(8).toString()
       return {
         gasLimit: gasEstimate.toString(),
         fee: feeInEth
@@ -92,46 +99,22 @@ export default function useEthers() {
     }
   }
 
-  async function getEthersAddress (providerString: ProviderString) {
-    const provider = getBrowserProvider(providerString)
-    if (provider) {
-      return (await requestEthersAccount(provider as EthersProvider))
-    }
-  }
-
   async function getEthersAddressWithBalance (providerString: ProviderString) {
     const provider = getBrowserProvider(providerString)
     
     if (provider) {
       const address = (await requestEthersAccount(provider as EthersProvider))[0]
-      const balance = await getEthersBalance(address)
+      const balance = (await getEthersBalance(address)).toString()
       return [{ address, balance }]
     } else {
       throw new Error('Provider not yet connected to this dapp. Please connect and try again.')
     }
   }
 
-  async function getEthersBalance(address: string, ) {
-    const provider = new ethers.providers.JsonRpcProvider(ethereumURL)
+  async function getEthersBalance(address: string) : Promise<GLfloat> {
+    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
     const balance = await provider.getBalance(address)
-    return ethers.utils.formatEther(balance)
-  }
-
-  async function getGasPriceAndLimit(
-    rpcUrl: string,
-    unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
-  ) {
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
-    const gasPrice = await provider.getGasPrice()
-    const gasLimit = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
-    return { gasPrice, gasLimit }
-  }
-
-  function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
-    const provider = getBrowserProvider(providerString)
-    if (provider) {
-      return new ethers.providers.Web3Provider(provider as EthersProvider).getSigner()
-    }
+    return parseFloat(ethers.utils.formatEther(balance))
   }
 
   async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
@@ -144,14 +127,54 @@ export default function useEthers() {
     return currency
   }
 
+  function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
+    const provider = getBrowserProvider(providerString)
+    if (provider) {
+      return new ethers.providers.Web3Provider(provider as EthersProvider).getSigner()
+    }
+  }
+
+  async function getGasPriceAndLimit(
+    rpcUrl: string,
+    unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+  ) {
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+    const gasPrice = await provider.getGasPrice()
+    const gasLimit = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    return { gasPrice, gasLimit }
+  }
+
   async function getMaxETHAfterFees(rpcUrl: string, unsignedTx: ethers.utils.Deferrable<ethers.providers.TransactionRequest>, totalAmount: string) {
     const { fee } = await estimateEIP1559GasFee(rpcUrl, unsignedTx)
-    const total = parseInt(totalAmount) - parseInt(fee)
+    const total = parseFloat(totalAmount) - parseFloat(fee)
     const maxAfterFees = ethers.utils.formatEther(total).toString()
     return maxAfterFees
   }
 
-  async function loginWithEthers(loginCredentials: LoginCredentials) {
+  async function listenForTransactions() {
+    const { manager, refreshBreakdown } = useContracts()
+    const { user } = useUsers()
+    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
+    provider.on('block', async (blockNumber: number) => {
+      console.log('blockNumber :>> ', blockNumber)
+      const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
+      const block = await provider.getBlockWithTransactions(blockNumber)
+      const transactions = block.transactions
+      transactions.map(async (tx) => {
+        if (addresses.includes(tx.from.toLowerCase())) {
+          console.log('tx :>> ', tx)
+          const response = manager.interface.parseTransaction({ data: tx.data })
+          console.log('response :>> ', response)
+          await refreshBreakdown()
+        }
+      })
+    })
+    await new Promise(() => {
+      // Wait indefinitely using a Promise that never resolves
+    })
+  }
+
+  async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
     const { provider, address, currency } = loginCredentials
     const browserProvider = getBrowserProvider(provider)
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
@@ -159,17 +182,15 @@ export default function useEthers() {
       const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signer = web3Provider.getSigner()
       const signedMessage = await signer.signMessage(message)
-      const ethersLoginResponse = await signInWithEthereum({ 
+      await signInWithEthereum({ 
         address,
         currency,
         message, 
         provider, 
         signedMessage
       })
-      return await ethersLoginResponse.json()
-    } catch (err) {
-      console.log('Error logging in: ', err)
-      return err
+    } catch (err: any) {
+      throw new Error(err.message)
     }
   }
 
@@ -191,11 +212,11 @@ export default function useEthers() {
       to,
       value: weiAmount
     }
-    const ethFees = await estimateEIP1559GasFee(ethereumURL, tx)
+    const ethFees = await estimateEIP1559GasFee(ethereumUrl, tx)
     const { fee, gasLimit } = ethFees
-    const requiredBalance = parseInt(value) + parseInt(fee)
+    const requiredBalance = parseFloat(value) + parseFloat(fee)
     const balance = await getEthersBalance(from)
-    if (parseInt(balance) < requiredBalance) {
+    if (balance < requiredBalance) {
       throw new Error('Insufficient balance')
     }
     console.log(`Sending ${value} ETH to ${to} with estimated ${fee} ETH in fees using ~${gasLimit.toString()} in gas.`)
@@ -205,8 +226,7 @@ export default function useEthers() {
   async function signEthersMessage(messageRequest: MessageRequest): Promise<string> {
     const { providerString, message } = messageRequest
     const browserProvider = getBrowserProvider(providerString)
-    const web3Provider: ethers.providers.Web3Provider =
-      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const signer = web3Provider.getSigner()
     const signature = await signer.signMessage(message)
     return signature
@@ -226,7 +246,7 @@ export default function useEthers() {
             method:'wallet_switchEthereumChain',
             params: [{chainId: chainId}]
           })
-        } catch(err: any){
+        } catch (err: any) {
             console.log(`Error occurred while switching chain to chainId ${chainId}, err: ${err.message} code: ${err.code}`)
             if (err.code === 4902){
               if (chainId === '5') {
@@ -244,17 +264,17 @@ export default function useEthers() {
     estimateEIP1559GasFee,
     estimateLegacyGasFee,
     ethersProviderList,
-    getMaxETHAfterFees,
-    getEthersAddress,
     getEthersAddressWithBalance,
     getEthersBalance,
-    getEthersBrowserSigner,
     getEthersBrowserProviderSelectedCurrency,
+    getEthersBrowserSigner,
     getGasPriceAndLimit,
+    getMaxETHAfterFees,
+    listenForTransactions,
     loginWithEthers,
     requestEthersAccount,
-    signEthersMessage,
     sendEthersTransaction,
+    signEthersMessage,
     switchEthersNetwork
   }
 }
@@ -265,7 +285,7 @@ function getBrowserProvider(providerString: ProviderString) {
     if (!ethereum.providerMap && ethereum.isMetaMask) {
       return ethereum
     }
-    return window.ethereum?.providerMap?.get(providerString) || undefined
+    return ethereum?.providerMap?.get(providerString) || undefined
   } else if (providerString === 'BraveWallet') {
     return getBraveWallet()
   } else if (providerString === 'TrustWallet') {

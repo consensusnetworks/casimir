@@ -1,19 +1,19 @@
+import fs from 'fs'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { CasimirManager, CasimirViews } from '../build/artifacts/types'
-import { validatorStore } from '@casimir/data'
 import { Validator } from '@casimir/types'
 import { getClusterDetails } from '@casimir/ssv'
 import { getWithdrawalCredentials } from '@casimir/helpers'
 import { getPrice } from '@casimir/uniswap'
 
+const mockValidatorsPath = './scripts/.out/validators.json'
 const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS as string
 const ssvTokenAddress = process.env.SSV_TOKEN_ADDRESS as string
 const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS as string
 
-const mockValidators: Validator[] = Object.values(validatorStore)
-
 export async function initiateDepositHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
+    const mockValidators: Validator[] = JSON.parse(fs.readFileSync(mockValidatorsPath, 'utf8'))[signer.address]
     const nonce = await ethers.provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
       from: manager.address,

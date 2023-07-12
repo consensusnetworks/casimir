@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
-import Chart, { ChartItem } from 'chart.js/auto'
+import { onMounted, watch } from 'vue'
+import Chart, { ChartData } from 'chart.js/auto'
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
@@ -19,53 +19,40 @@ const props = defineProps({
     yGridLines: {
         type: Boolean,
         default: false
+    }, 
+    data: {
+        type: Object,
+        required: true
+    },
+    gradient: {
+        type: Boolean,
+        default: false
+    },
+    height: {
+        type: Number,
+        default: 400
     }
 })
 
-const chart = ref(null as any)
+const hexToRGB = (hex: string) => {
+    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : {r: 0, g: 0, b: 0}
+}
+
+let ctx: any
+let line_chart: Chart<any, any[], unknown>
 onMounted(() => {
-    // TD: make this gradient dynamic with the data and it's colors
-    var ctx = document.getElementById(props.id)?.getContext('2d')
-    var gradient = ctx? ctx.createLinearGradient(0, 0, 0, 400): 'black'
-        gradient.addColorStop(0, 'rgba(86, 138, 217,0.28)')   
-        gradient.addColorStop(1, 'rgba(86, 138, 217,0)') 
-    chart.value = new Chart(document.getElementById(props.id) as ChartItem , {
+    ctx = (document.getElementById(props.id) as HTMLCanvasElement).getContext('2d')
+    line_chart = new Chart(ctx, {
         type : 'line',
-		data : {
-			labels : [ 'Jan 22', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
-             'Sep', 'Oct', 'Nov', 'Dec', 'Jan 23', 'Feb', 'Mar' ],
-			datasets : [
-                {
-                    data : Array.from({length: 15}, () => Math.floor(Math.random() * (250 - 200 + 1) + 200)),
-                    label : 'Primary Account',
-                    borderColor : '#2F80ED',
-                    fill: true,
-                    backgroundColor: gradient,
-                    pointRadius: 0,
-                    tension: 0.1
-                },
-                {
-                    data : Array.from({length: 15}, () => Math.floor(Math.random() * (150 - 100 + 1) + 100)),
-                    label : '-',
-                    borderColor : '#A8C8F3',
-                    fill: false,
-                    // backgroundColor: gradient,
-                    pointRadius: 0,
-                    tension: 0.1
-                },
-                {
-                    data : Array.from({length: 15}, () => Math.floor(Math.random() * (50 - 0 + 1) + 50)),
-                    label : '-',
-                    borderColor : '#53389E',
-                    fill: false,
-                    // backgroundColor: gradient,
-                    pointRadius: 0,
-                    tension: 0.1
-                }
-            ]
-		},
+		data : props.data as ChartData<any>,
 		options : {
-            responsive: false,
+            responsive: true,
             maintainAspectRatio: false,
             plugins: {
                 legend: {
@@ -99,7 +86,7 @@ onMounted(() => {
                     },
                 }
             }
-		}
+        }
     })
 
     const line_chart_container_el = document.getElementById('line_chart_container_' + props.id)
@@ -112,17 +99,41 @@ onMounted(() => {
             WIDTH = line_chart_container_el.offsetWidth
             HEIGHT = line_chart_container_el.offsetHeight
         }
-        chart.value.resize(WIDTH -20 , HEIGHT)
+        line_chart.resize(WIDTH , HEIGHT )
     }
     if(line_chart_container_el){
         new ResizeObserver(outputsize).observe(line_chart_container_el)   
     }
 })
+
+watch(props, ()=> {
+    if(line_chart.data !== props.data){
+        line_chart.data = props.data as ChartData
+
+        if(props.gradient){
+            
+            for (let i = 0; i < line_chart.data.datasets.length; i++) {
+                if(line_chart.data.datasets[i].backgroundColor){
+                    let gradient = ctx? ctx.createLinearGradient(0, 0, 0, 400): 'black'
+                    let rgb = hexToRGB(line_chart.data.datasets[i].backgroundColor)
+
+                    gradient.addColorStop(0, `rgba(${rgb?.r},${rgb?.g},${rgb?.b}, 0.28)`) 
+                    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.0)') 
+
+                    line_chart.data.datasets[i].backgroundColor = gradient
+                }
+            }
+        }
+
+        line_chart.update()
+    }
+    
+})
 </script>
 
 <template>
   <div 
-    class="h-full w-full"
+    class="w-full h-full"
   >
     <canvas
       :id="props.id"
