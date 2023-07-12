@@ -172,19 +172,19 @@ export default function useContracts() {
         }))
     }
 
-    async function getStakingRewards() : Promise<BreakdownAmount> {
-        const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
-        const promises = [] as Array<Promise<ethers.BigNumber>>
-        // TODO: Replace .getUserRewards with actual method that get's rewards OR figure out how to derive rewards
-        addresses.forEach((address) => {promises.push(manager.connect(provider).getUserRewards(address))})
-        const stakingRewards = (await Promise.all(promises)).reduce((a, b) => a.add(b))
-        const stakingRewardsUSD = parseFloat(ethers.utils.formatEther(stakingRewards)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-        const stakingRewardsETH = parseFloat(ethers.utils.formatEther(stakingRewards))
-        return {
-            exchange: stakingRewardsETH.toFixed(2) + ' ETH',
-            usd: '$ ' + stakingRewardsUSD.toFixed(2)
-        }
-    }
+    // async function getStakingRewards() : Promise<BreakdownAmount> {
+    //     const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
+    //     const promises = [] as Array<Promise<ethers.BigNumber>>
+    //     // TODO: Replace .getUserRewards with actual method that get's rewards OR figure out how to derive rewards
+    //     addresses.forEach((address) => {promises.push(manager.connect(provider).getUserRewards(address))})
+    //     const stakingRewards = (await Promise.all(promises)).reduce((a, b) => a.add(b))
+    //     const stakingRewardsUSD = parseFloat(ethers.utils.formatEther(stakingRewards)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
+    //     const stakingRewardsETH = parseFloat(ethers.utils.formatEther(stakingRewards))
+    //     return {
+    //         exchange: stakingRewardsETH.toFixed(2) + ' ETH',
+    //         usd: '$ ' + stakingRewardsUSD.toFixed(2)
+    //     }
+    // }
 
     async function getTotalWalletBalance() : Promise<BreakdownAmount> {
         const promises = [] as Array<Promise<any>>
