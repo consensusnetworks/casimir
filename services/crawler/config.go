@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"net/url"
 	"os"
 	"path"
 	"strconv"
@@ -19,8 +20,15 @@ const (
 	Prod     Environment = "prod"
 
 	AWSAthenaTimeFormat = "2006-01-02:15 04:05.999999999"
-	ETHEREUM_RPC_URL    = "ETHEREUM_RPC_URL"
 )
+
+type Config struct {
+	Env     Environment `json:"environment"`
+	Fork    bool        `json:"fork"`
+	Network NetworkType `json:"network"`
+	URL     url.URL     `json:"url"`
+	User    string      `json:"user"`
+}
 
 type PackageJSON struct {
 	Version string `json:"version"`

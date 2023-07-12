@@ -15,3 +15,15 @@ func TestGetContractBuildArtifact(t *testing.T) {
 		t.Fatal("ContractName is not Casimir")
 	}
 }
+
+func TestGetResourceVersion(t *testing.T) {
+	rv, err := GetResourceVersion()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rv != 1 {
+		t.Fatalf("expected: %d, got: %d", 1, rv)
+	}
+}

@@ -88,30 +88,18 @@ func NewEthereumService(raw string) (*EthereumService, error) {
 	}, nil
 }
 
-func PingEthereumNode(url string, retry int) error {
-	backoff := 2 * time.Second
-	var err error
-	for i := 0; i < retry; i++ {
-		fmt.Println("url", url)
-		client, dailErr := ethclient.Dial(url)
-		if err != nil {
-			err = dailErr
-			fmt.Printf("Retrying to ping %s\n", url)
-			time.Sleep(backoff)
-			continue
-		}
+func PingEthereumNode(url string) error {
+	client, err := ethclient.Dial(url)
 
-		defer client.Close()
-
-		_, netErr := client.NetworkID(context.Background())
-
-		if err != nil {
-			err = netErr
-			fmt.Printf("Retrying to ping %s\n", url)
-			time.Sleep(backoff)
-			continue
-		}
-		return nil
+	if err != nil {
+		return err
 	}
+
+	_, err = client.NetworkID(context.Background())
+
+	if err != nil {
+		return err
+	}
+
 	return err
 }

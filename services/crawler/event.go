@@ -32,6 +32,12 @@ type BlockConfig struct {
 	ContractAddress string       `json:"contract_address"`
 }
 
+type BlockEvents struct {
+	Events        []Event // +1 block
+	Wallet        []Wallet
+	StakingAction []StakingAction
+}
+
 type Event struct {
 	Chain            ChainType    `json:"chain"`
 	Network          NetworkType  `json:"network"`
@@ -88,6 +94,12 @@ type ABI struct {
 	Anonymous       bool          `json:"anonymous,omitempty"`
 	Name            string        `json:"name,omitempty"`
 	Outputs         []interface{} `json:"outputs,omitempty"`
+}
+
+func (a ABI) String() string {
+	json, _ := json.Marshal(a)
+
+	return string(json)
 }
 
 type Input struct {
@@ -224,13 +236,12 @@ func GetBlockEvents(bcnfg BlockConfig, client *ethclient.Client) (*BlockEventsRe
 func EventNDJSON(txs []Event) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 
-	enc := json.NewEncoder(&buf)
-	enc.SetIndent("", "")
-
 	for _, tx := range txs {
-		if err := enc.Encode(tx); err != nil {
-			return nil, fmt.Errorf("failed to encode wallet to JSON: %v", err)
+		txJSON, err := json.Marshal(tx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encode events to JSON: %v", err)
 		}
+		buf.Write(txJSON)
 		buf.WriteString("\n")
 	}
 
@@ -240,13 +251,27 @@ func EventNDJSON(txs []Event) (*bytes.Buffer, error) {
 func WalletNDJSON(txs []Wallet) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 
-	enc := json.NewEncoder(&buf)
-	enc.SetIndent("", "")
-
 	for _, tx := range txs {
-		if err := enc.Encode(tx); err != nil {
+		txJSON, err := json.Marshal(tx)
+		if err != nil {
 			return nil, fmt.Errorf("failed to encode wallet to JSON: %v", err)
 		}
+		buf.Write(txJSON)
+		buf.WriteString("\n")
+	}
+
+	return &buf, nil
+}
+
+func NDJSON[T Event | Wallet](events []T) (*bytes.Buffer, error) {
+	var buf bytes.Buffer
+
+	for _, ev := range events {
+		txJSON, err := json.Marshal(ev)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encode wallet to JSON: %v", err)
+		}
+		buf.Write(txJSON)
 		buf.WriteString("\n")
 	}
 
