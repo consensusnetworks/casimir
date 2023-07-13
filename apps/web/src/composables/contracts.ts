@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
-import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/artifacts/types'
+import { CasimirManager, CasimirViews, ContractEventsByAddress } from '@casimir/ethereum/build/artifacts/types'
 import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
 import CasimirViewsJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
 import useEnvironment from './environment'
@@ -36,6 +36,7 @@ export default function useContracts() {
     const { user } = useUsers()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
 
+    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
     const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager
     const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, CasimirViewsJson.abi) as CasimirViews
     
@@ -172,20 +173,44 @@ export default function useContracts() {
         }))
     }
 
-    // TODO: Replace .getUserRewards with actual method that get's rewards OR figure out how to derive rewards
-    // async function getStakingRewards() : Promise<BreakdownAmount> {
-    //     const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
-    //     const promises = [] as Array<Promise<ethers.BigNumber>>
-    //     // TODO: Replace .getUserRewards with actual method that get's rewards OR figure out how to derive rewards
-    //     addresses.forEach((address) => {promises.push(manager.connect(provider).getUserRewards(address))})
-    //     const stakingRewards = (await Promise.all(promises)).reduce((a, b) => a.add(b))
-    //     const stakingRewardsUSD = parseFloat(ethers.utils.formatEther(stakingRewards)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-    //     const stakingRewardsETH = parseFloat(ethers.utils.formatEther(stakingRewards))
-    //     return {
-    //         exchange: stakingRewardsETH.toFixed(2) + ' ETH',
-    //         usd: '$ ' + stakingRewardsUSD.toFixed(2)
-    //     }
-    // }
+    async function getAllTimeStakingRewards() : Promise<BreakdownAmount> {
+        try {
+            /* Get User's Current Stake */
+            const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
+            const currentUserStakePromises = [] as Array<Promise<ethers.BigNumber>>
+            addresses.forEach((address) => {currentUserStakePromises.push(manager.connect(provider).getUserStake(address))})
+            const resolvedCurrentUserStakePromises = await Promise.all(currentUserStakePromises)
+            const currentUserStake = resolvedCurrentUserStakePromises.reduce((accumulator, currentValue) => accumulator.add(currentValue), ethers.BigNumber.from(0))
+            const currentUserStakeETH = parseFloat(ethers.utils.formatEther(currentUserStake))
+
+            /* Get User's All Time Deposits and Withdrawals */
+            const userEventTotalsPromises = [] as Array<Promise<ethers.BigNumber>>
+            addresses.forEach((address) => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address))})
+            const userEventTotals = await Promise.all(userEventTotalsPromises) as Array<ContractEventsByAddress>
+            const userEventTotalsSum = userEventTotals.reduce((acc, curr) => {
+                const { StakeDeposited, WithdrawalInitiated } = curr
+                return {
+                    StakeDeposited: acc.StakeDeposited + StakeDeposited,
+                    WithdrawalInitiated: acc.WithdrawalInitiated + WithdrawalInitiated
+                }
+            }, { StakeDeposited: 0, WithdrawalInitiated: 0 })
+            const stakedDepositedETH = userEventTotalsSum.StakeDeposited
+            const withdrawalInitiatedETH = userEventTotalsSum.WithdrawalInitiated
+
+            /* Get User's All Time Rewards by Subtracting (StakeDesposited + WithdrawalInitiated) from CurrentStake */
+            const currentUserStakeMinusEvents = currentUserStakeETH - stakedDepositedETH - withdrawalInitiatedETH
+            return {
+                exchange: formatNumber(currentUserStakeMinusEvents),
+                usd: formatNumber(currentUserStakeMinusEvents * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' })))
+            }
+        } catch (err) {
+            console.error('err :>> ', err)
+            return {
+                exchange: '0 ETH',
+                usd: '$ 0.00'
+            }
+        }
+    }
 
     async function getTotalWalletBalance() : Promise<BreakdownAmount> {
         const promises = [] as Array<Promise<any>>
@@ -201,7 +226,7 @@ export default function useContracts() {
         }
     }
 
-    async function getUserContractEventsTotals(address: string) {
+    async function getContractEventsTotalsByAddress(address: string) : Promise<ContractEventsByAddress> {
         const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
         const eventList = [
             'StakeDeposited',
@@ -240,7 +265,7 @@ export default function useContracts() {
     async function refreshBreakdown() {
         setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
         setBreakdownValue({ name: 'totalWalletBalance', ...await getTotalWalletBalance() })
-        // setBreakdownValue({ name: 'stakingRewardsEarned', ...await getStakingRewards() })
+        setBreakdownValue({ name: 'stakingRewardsEarned', ...await getAllTimeStakingRewards() })
     }
 
     function setBreakdownValue({ name, exchange, usd }: { name: BreakdownString, exchange: string, usd: string}) {

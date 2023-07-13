@@ -9,6 +9,7 @@ import { BrowserProviders } from './interfaces/BrowserProviders'
 import { Cluster } from './interfaces/Cluster'
 import { ContractArgs } from './interfaces/ContractArgs'
 import { ContractConfig } from './interfaces/ContractConfig'
+import { ContractEventsByAddress } from './interfaces/ContractEventsByAddress'
 import { CryptoAddress } from './interfaces/CryptoAddress'
 import { Currency } from './interfaces/Currency'
 import { DeploymentConfig } from './interfaces/DeploymentConfig'
@@ -40,7 +41,8 @@ export type {
     BrowserProviders,
     Cluster,
     ContractArgs,
-    ContractConfig, 
+    ContractConfig,
+    ContractEventsByAddress,
     CryptoAddress,
     Currency,
     DeploymentConfig,
