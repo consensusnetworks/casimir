@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
-import { CasimirManager, CasimirViews, ContractEventsByAddress } from '@casimir/ethereum/build/artifacts/types'
+import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/artifacts/types'
 import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
 import CasimirViewsJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
 import useEnvironment from './environment'
@@ -10,7 +10,7 @@ import usePrice from '@/composables/price'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
 import useWalletConnect from './walletConnect'
-import { Account, BreakdownAmount, BreakdownString, Pool, ProviderString, UserWithAccounts } from '@casimir/types'
+import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Pool, ProviderString, UserWithAccounts } from '@casimir/types'
 
 const currentStaked = ref<BreakdownAmount>({
     usd: '$0.00',
@@ -184,21 +184,21 @@ export default function useContracts() {
             const currentUserStakeETH = parseFloat(ethers.utils.formatEther(currentUserStake))
 
             /* Get User's All Time Deposits and Withdrawals */
-            const userEventTotalsPromises = [] as Array<Promise<ethers.BigNumber>>
+            const userEventTotalsPromises = [] as Array<Promise<ContractEventsByAddress>>
             addresses.forEach((address) => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address))})
             const userEventTotals = await Promise.all(userEventTotalsPromises) as Array<ContractEventsByAddress>
             const userEventTotalsSum = userEventTotals.reduce((acc, curr) => {
                 const { StakeDeposited, WithdrawalInitiated } = curr
                 return {
-                    StakeDeposited: acc.StakeDeposited + StakeDeposited,
-                    WithdrawalInitiated: acc.WithdrawalInitiated + WithdrawalInitiated
+                    StakeDeposited: acc.StakeDeposited && StakeDeposited ? acc.StakeDeposited + StakeDeposited : acc.StakeDeposited,
+                    WithdrawalInitiated: acc.WithdrawalInitiated && WithdrawalInitiated ? acc.WithdrawalInitiated + WithdrawalInitiated : acc.WithdrawalInitiated
                 }
             }, { StakeDeposited: 0, WithdrawalInitiated: 0 })
             const stakedDepositedETH = userEventTotalsSum.StakeDeposited
             const withdrawalInitiatedETH = userEventTotalsSum.WithdrawalInitiated
 
             /* Get User's All Time Rewards by Subtracting (StakeDesposited + WithdrawalInitiated) from CurrentStake */
-            const currentUserStakeMinusEvents = currentUserStakeETH - stakedDepositedETH - withdrawalInitiatedETH
+            const currentUserStakeMinusEvents = currentUserStakeETH - (stakedDepositedETH as number) - (withdrawalInitiatedETH as number)
             return {
                 exchange: formatNumber(currentUserStakeMinusEvents),
                 usd: formatNumber(currentUserStakeMinusEvents * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' })))
