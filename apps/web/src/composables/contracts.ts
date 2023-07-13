@@ -101,77 +101,79 @@ export default function useContracts() {
         return feesRounded
     }
 
-    // async function getPools(address: string): Promise<Pool[]> {
-    //     const { user } = useUsers()
-    //     const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)        
-    //     const userStake = await manager.connect(provider).getUserStake(address) // to get user's stake balance
-    //     const poolStake = await manager.connect(provider).getTotalStake() // to get total stake balance
-    //     const poolIds = [
-    //         ...await manager.connect(provider).getPendingPoolIds(),
-    //         ...await manager.connect(provider).getStakedPoolIds()
-    //     ]
+    /*
+    async function getPools(address: string): Promise<Pool[]> {
+        const { user } = useUsers()
+        const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)        
+        const userStake = await manager.connect(provider).getUserStake(address) // to get user's stake balance
+        const poolStake = await manager.connect(provider).getTotalStake() // to get total stake balance
+        const poolIds = [
+            ...await manager.connect(provider).getPendingPoolIds(),
+            ...await manager.connect(provider).getStakedPoolIds()
+        ]
 
-    //     console.log('userStake :>> ', ethers.utils.formatEther(userStake))
-    //     console.log('poolStake :>> ', ethers.utils.formatEther(poolStake))
-    //     console.log('poolIds :>> ', poolIds)
+        console.log('userStake :>> ', ethers.utils.formatEther(userStake))
+        console.log('poolStake :>> ', ethers.utils.formatEther(poolStake))
+        console.log('poolIds :>> ', poolIds)
 
-    //     return await Promise.all(poolIds.map(async (poolId: number) => {
-    //         const { publicKey, operatorIds } = await views.connect(provider).getPoolDetails(poolId)
+        return await Promise.all(poolIds.map(async (poolId: number) => {
+            const { publicKey, operatorIds } = await views.connect(provider).getPoolDetails(poolId)
             
-    //         // TODO: Decide when/how to get rewards/userRewards
-    //         let pool: Pool = {
-    //             id: poolId,
-    //             rewards: ethers.utils.formatEther(poolStake),
-    //             stake: ethers.utils.formatEther(poolStake),
-    //             userRewards: ethers.utils.formatEther(userStake),
-    //             userStake: ethers.utils.formatEther(userStake)
-    //         }
+            // TODO: Decide when/how to get rewards/userRewards
+            let pool: Pool = {
+                id: poolId,
+                rewards: ethers.utils.formatEther(poolStake),
+                stake: ethers.utils.formatEther(poolStake),
+                userRewards: ethers.utils.formatEther(userStake),
+                userStake: ethers.utils.formatEther(userStake)
+            }
 
-    //         if (publicKey) {
-    //             // Validator data from beaconcha.in hardcoded for now
-    //             // const response = await fetch(`https://prater.beaconcha.in/api/v1/validator/${validatorPublicKey}`)
-    //             // const { data } = await response.json()
-    //             // const { status } = data
-    //             const validator = {
-    //                 publicKey,
-    //                 status: 'Active',
-    //                 effectiveness: '0%',
-    //                 apr: '0%', // See issue #205 https://github.com/consensusnetworks/casimir/issues/205#issuecomment-1338142532
-    //                 url: `https://prater.beaconcha.in/validator/${publicKey}`
-    //             }
+            if (publicKey) {
+                // Validator data from beaconcha.in hardcoded for now
+                // const response = await fetch(`https://prater.beaconcha.in/api/v1/validator/${validatorPublicKey}`)
+                // const { data } = await response.json()
+                // const { status } = data
+                const validator = {
+                    publicKey,
+                    status: 'Active',
+                    effectiveness: '0%',
+                    apr: '0%', // See issue #205 https://github.com/consensusnetworks/casimir/issues/205#issuecomment-1338142532
+                    url: `https://prater.beaconcha.in/validator/${publicKey}`
+                }
 
 
-    //             // TODO: Replace with less hardcoded network call?
-    //             const operators = await Promise.all(operatorIds.map(async (operatorId) => {
-    //                 const network = 'prater'
-    //                 const response = await fetch(`https://api.ssv.network/api/v3/${network}/operators/${operatorId}`)
-    //                 const { performance } = await response.json()
-    //                 return {
-    //                     id: operatorId.toNumber(),
-    //                     '24HourPerformance': performance['24h'],
-    //                     '30DayPerformance': performance['30d'],
-    //                     url: `https://explorer.ssv.network/operators/${operatorId}`
-    //                 }
-    //             }))
+                // TODO: Replace with less hardcoded network call?
+                const operators = await Promise.all(operatorIds.map(async (operatorId) => {
+                    const network = 'prater'
+                    const response = await fetch(`https://api.ssv.network/api/v3/${network}/operators/${operatorId}`)
+                    const { performance } = await response.json()
+                    return {
+                        id: operatorId.toNumber(),
+                        '24HourPerformance': performance['24h'],
+                        '30DayPerformance': performance['30d'],
+                        url: `https://explorer.ssv.network/operators/${operatorId}`
+                    }
+                }))
 
-    //             pool = {
-    //                 ...pool,
-    //                 validator,
-    //                 operators
-    //             }
-    //         }
+                pool = {
+                    ...pool,
+                    validator,
+                    operators
+                }
+            }
             
-    //         user.value?.accounts.forEach(account => {
-    //             if (account.address === address) {
-    //                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //                 // @ts-ignore
-    //                 account.pools ? account.pools.push(pool) : account.pools = [pool]
-    //             }
-    //         })
+            user.value?.accounts.forEach(account => {
+                if (account.address === address) {
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    account.pools ? account.pools.push(pool) : account.pools = [pool]
+                }
+            })
             
-    //         return pool
-    //     }))
-    // }
+            return pool
+        }))
+    }
+    */
 
     async function getAllTimeStakingRewards() : Promise<BreakdownAmount> {
         try {
@@ -186,7 +188,7 @@ export default function useContracts() {
 
             /* Get User's All Time Deposits and Withdrawals */
             const userEventTotalsPromises = [] as Array<Promise<ContractEventsByAddress>>
-            addresses.forEach((address) => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address))})
+            addresses.forEach(address => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address))})
             const userEventTotals = await Promise.all(userEventTotalsPromises) as Array<ContractEventsByAddress>
             const userEventTotalsSum = userEventTotals.reduce((acc, curr) => {
                 const { StakeDeposited, WithdrawalInitiated } = curr
@@ -258,6 +260,11 @@ export default function useContracts() {
             return userEventTotals
         } catch (err) {
             console.error(`There was an error in getContractEventsTotalsByAddress: ${err}`)
+            return {
+                StakeDeposited: 0,
+                StakeRebalanced: 0,
+                WithdrawalInitiated: 0
+            }
         }
     }
 
