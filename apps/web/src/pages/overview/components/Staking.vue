@@ -138,9 +138,10 @@ watch(formattedAmountToStake, async () => {
   }
 })
 
-watch(user, () => {
+watch(user, async () => {
   aggregateAddressesByProvider()
   termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
+  address_balance.value = (Math.round( await getEthersBalance(user.value?.address as string) * 100) / 100 ) + ' ETH'
 })
 
 onMounted(async () => {
@@ -148,10 +149,11 @@ onMounted(async () => {
   aggregateAddressesByProvider()
   currentEthPrice.value = Math.round((await getCurrentPrice({coin: 'ETH', currency: 'USD'})) * 100) / 100
   estimatedFees.value = await getDepositFees()
+  user.value?.address ? address_balance.value = (Math.round( await getEthersBalance(user.value?.address as string) * 100) / 100 ) + ' ETH' : address_balance.value = '- - -'
 })
 
 
-onUnmounted(() =>{
+onUnmounted(() => {
   window.removeEventListener('click', handleOutsideClick)
 })
 
@@ -261,6 +263,9 @@ const handleDeposit = async () => {
             hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
             @click="selectedWallet = wallet, openSelectWalletInput = false, selectedProvider = item.provider"
           >
+            item: {{ item }}
+            wallet: {{ wallet }}
+            selectedProvider: {{ selectedProvider }}
             {{ convertString(wallet) }}
             <vue-feather
               type="chevron-right" 
