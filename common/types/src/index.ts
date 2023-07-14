@@ -28,6 +28,7 @@ import { RemoveAccountOptions } from './interfaces/RemoveAccountOptions'
 import { User } from './interfaces/User'
 import { UserAddedSuccess } from './interfaces/UserAddedSuccess'
 import { UserWithAccounts } from './interfaces/UserWithAccounts'
+import { UserAnalyticsData } from './interfaces/UserAnalyticsData'
 import { Validator } from './interfaces/Validator'
 
 export type {
@@ -60,6 +61,7 @@ export type {
     RemoveAccountOptions,
     User,
     UserAddedSuccess,
+    UserAnalyticsData,
     UserWithAccounts,
     Validator,
 }

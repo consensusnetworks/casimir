@@ -7,7 +7,7 @@ import useUsers from '@/composables/users'
 import { ProviderString } from '@casimir/types'
 
 const { currentStaked, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
-const { user, getUserAnalytics, userAnalytics } = useUsers()
+const { user, getUserAnalytics, setUserAnalytics, userAnalytics } = useUsers()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('historical')
@@ -54,6 +54,7 @@ const formatLegendLabel = (address: string) => {
 }
 
 const setChartData = () => {
+  console.log('setting chart data in BreakdownChart.vue')
   let labels
   let data = []
   switch (selectedTimeframe.value) {
@@ -101,6 +102,8 @@ onMounted(async () => {
     await getUserAnalytics()
     setChartData()
     await refreshBreakdown()
+  } else {
+    setUserAnalytics()
   }
 })
 
@@ -108,6 +111,8 @@ watch(user, async () => {
     if (user.value?.id) {
       await getUserAnalytics()
       setChartData()
+    } else {
+      setUserAnalytics()
     }
 })
 

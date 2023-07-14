@@ -140,10 +140,17 @@ watch(formattedAmountToStake, async () => {
 })
 
 watch(user, async () => {
-  aggregateAddressesByProvider()
-  termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
-  address_balance.value = (Math.round( await getEthersBalance(user.value?.address as string) * 100) / 100 ) + ' ETH'
-  selectedWallet.value = user.value?.address as string
+  if (user.value?.id) {
+    aggregateAddressesByProvider()
+    termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
+    address_balance.value = (Math.round( await getEthersBalance(user.value?.address as string) * 100) / 100 ) + ' ETH'
+    selectedWallet.value = user.value?.address as string
+  } else {
+    selectedProvider.value = ''
+    selectedWallet.value = null
+    formattedAmountToStake.value = ''
+    address_balance.value = null
+  }
 })
 
 onMounted(async () => {
