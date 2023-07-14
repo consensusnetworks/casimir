@@ -110,10 +110,6 @@ const aggregateAddressesByProvider = () => {
   }
 }
 
-watch(selectedWallet, async () => {
-  address_balance.value = selectedWallet.value ?  (Math.round( await getEthersBalance(selectedWallet.value) * 100) / 100 ) + ' ETH': '- - -'
-})
-
 watch(formattedAmountToStake, async () => {
   if(formattedAmountToStake.value){
     const floatAmount = parseFloat(formattedAmountToStake.value?.replace(/,/g, ''))
@@ -142,6 +138,7 @@ watch(user, async () => {
   aggregateAddressesByProvider()
   termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
   address_balance.value = (Math.round( await getEthersBalance(user.value?.address as string) * 100) / 100 ) + ' ETH'
+  selectedWallet.value = user.value?.address as string
 })
 
 onMounted(async () => {
@@ -150,8 +147,8 @@ onMounted(async () => {
   currentEthPrice.value = Math.round((await getCurrentPrice({coin: 'ETH', currency: 'USD'})) * 100) / 100
   estimatedFees.value = await getDepositFees()
   user.value?.address ? address_balance.value = (Math.round( await getEthersBalance(user.value?.address as string) * 100) / 100 ) + ' ETH' : address_balance.value = '- - -'
+  selectedWallet.value = user.value?.address as string
 })
-
 
 onUnmounted(() => {
   window.removeEventListener('click', handleOutsideClick)
@@ -257,16 +254,13 @@ const handleDeposit = async () => {
           
 
           <button
-            v-for="wallet in item.addresses"
-            :key="wallet"
+            v-for="address in item.addresses"
+            :key="address"
             class="w-full text-left rounded-[8px] py-[10px] px-[14px] 
             hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
-            @click="selectedWallet = wallet, openSelectWalletInput = false, selectedProvider = item.provider"
+            @click="selectedWallet = address, openSelectWalletInput = false, selectedProvider = item.provider"
           >
-            item: {{ item }}
-            wallet: {{ wallet }}
-            selectedProvider: {{ selectedProvider }}
-            {{ convertString(wallet) }}
+            {{ convertString(address) }}
             <vue-feather
               type="chevron-right" 
               size="36"
