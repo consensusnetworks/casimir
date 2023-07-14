@@ -4,8 +4,12 @@ import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
 import useUsers from '@/composables/users.ts'
 
+const itemsPerPage = ref(7)
+const currentPage = ref(1)
+const totalPages = ref(1)
+
 const searchInput = ref('')
-const tableView = ref('Wallets')
+const tableView = ref('Transactions')
 
 const selectedHeader = ref('')
 const selectedOrientation = ref('ascending')
@@ -119,11 +123,14 @@ const filterData = () => {
       }
     })
   }
+  totalPages.value = Math.round(filteredDataArray.length / itemsPerPage.value)
 
-  filteredData.value = filteredDataArray as any
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  filteredData.value = filteredDataArray.slice(start, end) as any
 }
 
-watch([searchInput, tableView, selectedHeader, selectedOrientation], ()=>{
+watch([searchInput, tableView, selectedHeader, selectedOrientation, currentPage], ()=>{
   filterData()
 })
 
@@ -477,14 +484,14 @@ onMounted(() =>{
                 class="flex items-center gap-[12px]"
               >
                 <div
-                  v-if="item[header.value ] === 'staked'"
+                  v-if="item[header.value ] === 'Active'"
                   class="flex items-center gap-[8px] status_pill bg-[#ECFDF3] text-[#027A48]"
                 >
                   <div class="bg-[#027A48] rounded-[999px] w-[8px] h-[8px]" />
                   Staked
                 </div>
                 <div
-                  v-else-if="item[header.value ] === 'pending'" 
+                  v-else-if="item[header.value ] === 'Pending'" 
                   class="flex items-center gap-[8px] status_pill bg-[#FFFAEB] text-[#B54708]"
                 >
                   <div class="bg-[#F79009] rounded-[999px] w-[8px] h-[8px]" />
@@ -498,8 +505,8 @@ onMounted(() =>{
                 <div
                   v-for="operator in item[header.value ]"
                   :key="operator"
-                  :class="`w-[24px] h-[24px] border-[2px] border-white bg-blue-300 rounded-[999px]`"
-                  :style="`margin-left: -20px`"
+                  :class="`w-[24px] h-[24px] border-[2px] border-white  rounded-[999px]`"
+                  :style="`margin-left: -20px; background-color: ${operator}; opacity: 0.55`"
                 />
               </div>
               <div v-else>
@@ -510,20 +517,27 @@ onMounted(() =>{
         </tbody>
       </table>
     </div>
-    <!-- Waiting on a bigger data set to do this.. for now will comment out -->
-    <!-- <div class="flex justify-between items-center mt-[12px]">
+    <div class="flex justify-between items-center mt-[12px]">
       <div class="page_number ml-[56px]">
-        Page 1 of 10
+        Page {{ currentPage }} of {{ totalPages }}
       </div>
       <div class="flex items-center gap-[12px]">
-        <button class="pagination_button">
+        <button
+          class="pagination_button"
+          :disabled="currentPage === 1"
+          @click="currentPage > 1? currentPage = currentPage - 1 : ''"
+        >
           Previous
         </button>
-        <button class="pagination_button mr-[33px]">
+        <button
+          class="pagination_button mr-[33px]"
+          :disabled="currentPage === totalPages"
+          @click="currentPage < totalPages? currentPage = currentPage + 1 : ''"
+        >
           Next
         </button>
       </div>
-    </div> -->
+    </div>
   </div>
 </template>
 
