@@ -183,6 +183,7 @@ export default function useWallet() {
     setSelectedCurrency('')
     setPrimaryAddress('')
     setUserAnalytics()
+    await refreshBreakdown()
     // loadingUserWallets.value = false
     console.log('user.value :>> ', user.value)
   }

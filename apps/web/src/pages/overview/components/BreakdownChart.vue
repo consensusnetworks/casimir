@@ -7,7 +7,7 @@ import useUsers from '@/composables/users'
 import { ProviderString } from '@casimir/types'
 
 const { currentStaked, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
-const { user, getUserAnalytics, setUserAnalytics, userAnalytics } = useUsers()
+const { user, getUserAnalytics, userAnalytics } = useUsers()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('historical')
@@ -102,7 +102,7 @@ onMounted(async () => {
     setChartData()
     await refreshBreakdown()
   } else {
-    setUserAnalytics()
+    setChartData()
   }
 })
 
@@ -111,7 +111,7 @@ watch(user, async () => {
       await getUserAnalytics()
       setChartData()
     } else {
-      setUserAnalytics()
+      setChartData()
     }
 })
 

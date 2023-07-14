@@ -141,7 +141,6 @@ watch(formattedAmountToStake, async () => {
 
 watch(user, async () => {
   if (user.value?.id) {
-    console.log('aggregating addresses by provider running')
     aggregateAddressesByProvider()
     termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
     address_balance.value = (Math.round( await getEthersBalance(user.value?.address as string) * 100) / 100 ) + ' ETH'

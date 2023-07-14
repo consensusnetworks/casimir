@@ -8,7 +8,10 @@ import useTxData from '../mockData/mock_transaction_data'
 const { txData } = useTxData()
 const { usersUrl } = useEnvironment()
 
-const userAnalyticsInit = {
+// 0xd557a5745d4560B24D36A68b52351ffF9c86A212
+const session = ref<boolean>(false)
+const user = ref<UserWithAccounts | undefined>(undefined)
+const userAnalytics = ref<UserAnalyticsData>({
     oneMonth: {
         labels: [],
         data: []
@@ -25,12 +28,7 @@ const userAnalyticsInit = {
         labels: [],
         data: []
     }
-}
-
-// 0xd557a5745d4560B24D36A68b52351ffF9c86A212
-const session = ref<boolean>(false)
-const user = ref<UserWithAccounts | undefined>(undefined)
-const userAnalytics = ref<UserAnalyticsData>(userAnalyticsInit)
+})
 const rawUserAnalytics = ref<any>(null)
 const userAddresses = ref<Array<string>>([])
 
@@ -313,11 +311,33 @@ export default function useUsers() {
         userAddresses.value = newUser?.accounts.map(account => account.address) as Array<string>
     }
 
-    function setUserAnalytics(data: UserAnalyticsData = userAnalyticsInit) {
-        userAnalytics.value = data
+    function setUserAnalytics(data?: UserAnalyticsData) {
+        if (user.value?.id) {
+            userAnalytics.value = data as UserAnalyticsData
+        } else {
+            const userAnalyticsInit = {
+                oneMonth: {
+                    labels: [],
+                    data: []
+                },
+                sixMonth: {
+                    labels: [],
+                    data: []
+                },
+                oneYear: {
+                    labels: [],
+                    data: []
+                },
+                historical: {
+                    labels: [],
+                    data: []
+                }
+            }
+            userAnalytics.value = userAnalyticsInit
+        }
     }
 
-    function setRawAnalytics(data: UserAnalyticsData = userAnalyticsInit) {
+    function setRawAnalytics(data: UserAnalyticsData) {
         rawUserAnalytics.value = data
     }
 

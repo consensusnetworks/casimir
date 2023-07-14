@@ -284,6 +284,21 @@ export default function useContracts() {
 
     async function refreshBreakdown() {
         try {
+            if (!user.value?.id) {
+                // Reset currentStaked, totalWalletBalance, and stakingRewards
+                currentStaked.value = {
+                    exchange: '0 ETH',
+                    usd: '$ 0.00'
+                }
+                totalWalletBalance.value = {
+                    exchange: '0 ETH',
+                    usd: '$ 0.00'
+                }
+                stakingRewards.value = {
+                    exchange: '0 ETH',
+                    usd: '$ 0.00'
+                }
+            }
             setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
             setBreakdownValue({ name: 'totalWalletBalance', ...await getTotalWalletBalance() })
             setBreakdownValue({ name: 'stakingRewardsEarned', ...await getAllTimeStakingRewards() })
