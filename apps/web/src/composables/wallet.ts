@@ -184,7 +184,8 @@ export default function useWallet() {
     setPrimaryAddress('')
     setUserAnalytics()
     await refreshBreakdown()
-    // loadingUserWallets.value = false
+    // TODO: Fix bug that doesn't allow you to log in without refreshing page after a user logs out
+    window.location.reload()
     console.log('user.value :>> ', user.value)
   }
 
