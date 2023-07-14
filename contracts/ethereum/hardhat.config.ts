@@ -22,7 +22,7 @@ const hardhatNetwork = process.env.HARDHAT_NETWORK as string
 const forkUrl = process.env.ETHEREUM_FORK_RPC_URL as string
 const forkNetwork = forkUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
 const forkChainId = { mainnet: 1, goerli: 5 }[forkNetwork]
-const forkConfig = { url: forkUrl, blockNumber: parseInt(process.env.START_BLOCK || '0') || undefined }
+const forkConfig = { url: forkUrl, blockNumber: parseInt(process.env.ETHEREUM_FORK_BLOCK || '0') || undefined }
 
 const externalEnv = {
   mainnet: {

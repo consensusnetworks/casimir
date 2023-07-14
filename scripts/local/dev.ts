@@ -103,7 +103,7 @@ void async function () {
             process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
 
             const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
-            process.env.START_BLOCK = process.env.START_BLOCK || `${await provider.getBlockNumber()}`
+            process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 5}`
 
             const wallet = getWallet(process.env.BIP39_SEED)
             const nonce = await provider.getTransactionCount(wallet.address)
@@ -152,6 +152,7 @@ void async function () {
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
     process.env.PUBLIC_LEDGER_APP = process.env.LEDGER_APP
     process.env.PUBLIC_SPECULOS_URL = process.env.SPECULOS_URL
+    process.env.PUBLIC_ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK
 
     if (process.env.BUILD_PREVIEW === 'true') {
         $`npm run build --workspace @casimir/web`

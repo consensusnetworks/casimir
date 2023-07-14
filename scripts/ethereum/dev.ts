@@ -60,7 +60,7 @@ void async function () {
     echo (chalk.bgBlackBright('Serving local fork at ') + chalk.bgBlue(process.env.ETHEREUM_RPC_URL))
 
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
-    process.env.START_BLOCK = process.env.START_BLOCK || `${await provider.getBlockNumber()}`
+    process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 5}`
 
     const wallet = getWallet(process.env.BIP39_SEED)
     const nonce = await provider.getTransactionCount(wallet.address)

@@ -1,62 +1,50 @@
-// Functions: Handle requests for validator balances (total active balance and total swept balance) and pool validator details (activated deposits, forced exits, completed exits, and compoundable pool IDs)
-// Config: Expose a combination of preset and dynamic Functions config:
-//     - Preset args: CasimirViews contract address (obtained after initial deployment), method signatures (`getCompoundablePoolIds(uint256 startIndex, uint256 endIndex)`, `getDepositedPoolCount()`, `getSweptBalance(uint256 startIndex, uint256 endIndex)`, and `getValidatorPublicKeys(uint256 startIndex, uint256 endIndex)`)
-//     - Dynamic args: previous report block number, report block number, request type (balances or details)
-//     - Secrets: complete archive node (execution and consensus) provider URLs (preferably split evenly across DON)
-// Balances handler: report validator total active balance and total swept balance
-//     1. Obtain CasimirViews contract address, method signatures, previous report block number, report block number, and request type from args
-//     2. Select balances handler (for request type 1)
-//     3. Get deposited (pending or staked) pool count at report block number from CasimirViews (1 request)
-//     4. Get validator public keys at the report block number from CasimirViews (1 request, with max pool count batch size for additional requests)
-//     5. Get Beacon validator balances at report block number from Beacon API (1 request)
-//     6. Sum Beacon validator balances to obtain the total active balance
-//     7. Get swept balance at the report block number from CasimirViews (1 request, with max pool count batch size for additional requests)
-//     8. Sum swept balances to obtain total swept balance
-//     9. Encode uint128(active balance) and uint128(swept balance)
-//     10. Return single response bytes
-// Details handler: report validator activated deposits, forced exits, completed exits, and compoundable pool IDs
-//     1. Obtain CasimirViews contract address, method signatures, report block number, and request type from args
-//     2. Select details handler (for request type 2)
-//     3. Get deposited (pending or staked) pool count at report block number from CasimirViews (1 request)
-//     4. Get validator public keys at the report block number from CasimirViews (1 request, with max pool count batch size for additional requests)
-//     5. Get Beacon validators at report block number from Beacon API (1 request)
-//     6. Sum activated deposits within the reporting period (between the report and previous report block numbers) to obtain activated deposits
-//     7. Sum forced exits within the reporting period (between the report and the previous report block numbers) to obtain forced exits
-//     8. Sum completed exits (with withdrawal_done status) to obtain completed exits
-//     9. Get compoundable pool IDs from CasimirViews (1 request)
-//     10. Encode uint32(activated deposits), uint32(forced exits), uint32(completed exits), and uint32[5](compoundable pool IDs)
-//     11. Return single response bytes
+/**********************/
+/** MOCK BEACON DATA **/
+const mockValidatorPublicKeys = [
+	'0x88e1b777156a0945851d2940d604727fce299daaaf12aa6c04410c3e31887ab018f6a748017aa8717fbb7f242624afcf',
+	'0x96c9cd76264cdfd84d6c3c704101db435c150cbfe088c031e1bef740f8f7de24fceccdd755d1d2e091ccb6e58fb93db4',
+	'0x832e23566d61f2b141e1ab57e2a4362d228de7bb53acb096f0ea6d500d3490b323b41ce3ae2104772ba243ae48cdccfd',
+	'0x8b65cc087ed99e559b4e1be14776a54e02b458cdd79d792394186539cdd53ea937647cd4aba333a470ba9f6393c6e612'
+]
+const mockPreviousReportSlot = 6055000
+const mockReportSlot = 6055335
+/**********************/
 
-const previousReportBlock = '0x' + parseInt(args[0]).toString(16)
-const reportBlock = '0x' + parseInt(args[1]).toString(16)
-const requestType = args[2]
-const viewsAddress = args[3]
-const getCompoundablePoolIdsSignature = args[4]
-const getDepositedPoolCountSignature = args[5]
-const getSweptBalanceSignature = args[6]
-const getValidatorPublicKeysSignature = args[7]
+const genesisTimestamp = args[0]
+const previousReportTimestamp = args[1]
+const reportTimestamp = args[2]
+const reportBlockNumber = '0x' + parseInt(args[3]).toString(16)
+const requestType = args[4]
+const viewsAddress = args[5]
+const getCompoundablePoolIdsSignature = args[6]
+const getDepositedPoolCountSignature = args[7]
+const getSweptBalanceSignature = args[8]
+const getValidatorPublicKeysSignature = args[9]
+const ethereumUrl = secrets.ethereumRpcUrl
+const ethereumBeaconUrl = secrets.ethereumBeaconRpcUrl
+const previousReportSlot = mockPreviousReportSlot // Math.floor((previousReportTimestamp - genesisTimestamp) / 12)
+const previousReportEpoch = Math.floor(previousReportSlot / 32)
+const reportSlot = mockReportSlot // Math.floor((reportTimestamp - genesisTimestamp) / 12)
+const reportEpoch = Math.floor(reportSlot / 32)
 
-const url = secrets.ethereumApiUrl
-
-switch (requestType) {
-	case '1':
-		return await balancesHandler()
-	case '2':
-		return await detailsHandler()
-	default:
-		throw new Error('Invalid request type')
+try {
+	switch (requestType) {
+		case '1':
+			return await balancesHandler()
+		case '2':
+			return await detailsHandler()
+		default:
+			throw new Error('Invalid request type')
+	}
+} catch (error) {
+	return Buffer.from(error.message)
 }
 
 async function balancesHandler() {
 	const depositedPoolCount = await getDepositedPoolCount()
 	
-	console.log('depositedPoolCount', depositedPoolCount)
-
 	const startIndex = BigInt(0).toString(16).padStart(64, '0')
 	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
-	
-	console.log('startIndex', startIndex)
-	console.log('endIndex', endIndex)
 
 	const validatorPublicKeys = await getValidatorPublicKeys(startIndex, endIndex)
 	const validators = await getValidators(validatorPublicKeys)
@@ -68,12 +56,15 @@ async function balancesHandler() {
 
 	const sweptBalance = await getSweptBalance(startIndex, endIndex)
 
-	const response = Buffer.concat([
+	console.log("Results", {
+		activeBalance,
+		sweptBalance
+	})
+
+	return Buffer.concat([
 		encodeUint128(activeBalance),
 		encodeUint128(sweptBalance)
 	])
-
-	return response
 }
 
 async function detailsHandler() {
@@ -85,22 +76,29 @@ async function detailsHandler() {
 	const validatorPublicKeys = await getValidatorPublicKeys(startIndex, endIndex)
 	const validators = await getValidators(validatorPublicKeys)
 
-	const activatedDeposits = validators.reduce((accumulator, { activation_epoch, status }) => {
-		if (status.includes('active') && activation_epoch >= previousReportBlock && activation_epoch < reportBlock) {
+	const activatedDeposits = validators.reduce((accumulator, { validator }) => {
+		const { activation_epoch } = validator
+		const activatedDuringReportPeriod = activation_epoch > previousReportEpoch && activation_epoch <= reportEpoch
+		if (activatedDuringReportPeriod) {
 			accumulator += 1
 		}
 		return accumulator
 	}, 0)
 
-	const forcedExits = validators.reduce((accumulator, { exit_epoch, status }) => {
-		if (status.includes('exiting') && exit_epoch >= previousReportBlock && exit_epoch < reportBlock) {
+	const ongoingSlashes = validators.reduce((accumulator, { status, validator }) => {
+		const { slashed } = validator
+		const ongoing = status !== 'withdrawal_done'
+		if (slashed && ongoing) {
 			accumulator += 1
 		}
 		return accumulator
 	}, 0)
 
-	const completedExits = validators.reduce((accumulator, { exit_epoch, status }) => {
-		if (status === 'withdrawal_done' && exit_epoch >= previousReportBlock && exit_epoch < reportBlock) {
+	const completedExits = validators.reduce((accumulator, { status, validator }) => {
+		const { withdrawable_epoch } = validator
+		const completedDuringReportPeriod = withdrawable_epoch >= previousReportEpoch && withdrawable_epoch < reportEpoch
+		const completed = status === 'withdrawal_done'
+		if (completedDuringReportPeriod && completed) {
 			accumulator += 1
 		}
 		return accumulator
@@ -108,19 +106,24 @@ async function detailsHandler() {
 
 	const compoundablePoolIds = await getCompoundablePoolIds(startIndex, endIndex)
 
-	const response = Buffer.concat([
+	console.log("Results", {
+		activatedDeposits,
+		ongoingSlashes,
+		completedExits,
+		compoundablePoolIds
+	})
+
+	return Buffer.concat([
 		encodeUint32(activatedDeposits),
-		encodeUint32(forcedExits),
+		encodeUint32(ongoingSlashes),
 		encodeUint32(completedExits),
 		encodeUint32Array(compoundablePoolIds)
 	])
-
-	return response
 }
 
 async function getCompoundablePoolIds(startIndex, endIndex) {
 	const request = await Functions.makeHttpRequest({
-		url: 'http://localhost:8545',
+		url: ethereumUrl,
 		method: 'POST',
 		data: {
 			id: 1,
@@ -131,7 +134,7 @@ async function getCompoundablePoolIds(startIndex, endIndex) {
 					to: viewsAddress,
 					data: getCompoundablePoolIdsSignature + '0'.repeat(24) + startIndex + endIndex
 				},
-				{ blockNumber: reportBlock }
+				{ blockNumber: reportBlockNumber }
 			]
 		}
 	})
@@ -149,7 +152,7 @@ async function getCompoundablePoolIds(startIndex, endIndex) {
 
 async function getDepositedPoolCount() {
 	const request = await Functions.makeHttpRequest({
-		url: 'http://localhost:8545',
+		url: ethereumUrl,
 		method: 'POST',
 		data: {
 			id: 1,
@@ -160,7 +163,7 @@ async function getDepositedPoolCount() {
 					to: viewsAddress,
 					data: getDepositedPoolCountSignature
 				},
-				{ blockNumber: reportBlock }
+				{ blockNumber: reportBlockNumber }
 			]
 		}
 	})
@@ -170,7 +173,7 @@ async function getDepositedPoolCount() {
 
 async function getSweptBalance(startIndex, endIndex) {
 	const request = await Functions.makeHttpRequest({
-		url: 'http://localhost:8545',
+		url: ethereumUrl,
 		method: 'POST',
 		data: {
 			id: 1,
@@ -181,7 +184,7 @@ async function getSweptBalance(startIndex, endIndex) {
 					to: viewsAddress,
 					data: getSweptBalanceSignature + '0'.repeat(24) + startIndex + endIndex
 				},
-				{ blockNumber: reportBlock }
+				{ blockNumber: reportBlockNumber }
 			]
 		}
 	})
@@ -191,7 +194,7 @@ async function getSweptBalance(startIndex, endIndex) {
 
 async function getValidatorPublicKeys(startIndex, endIndex) {
 	const request = await Functions.makeHttpRequest({
-		url: 'http://localhost:8545',
+		url: ethereumUrl,
 		method: 'POST',
 		data: {
 			id: 1,
@@ -202,7 +205,7 @@ async function getValidatorPublicKeys(startIndex, endIndex) {
 					to: viewsAddress,
 					data: getValidatorPublicKeysSignature + startIndex + endIndex
 				},
-				{ blockNumber: reportBlock }
+				{ blockNumber: reportBlockNumber }
 			]
 		}
 	})
@@ -222,8 +225,9 @@ async function getValidatorPublicKeys(startIndex, endIndex) {
 }
 
 async function getValidators(validatorPublicKeys) {
+	validatorPublicKeys = mockValidatorPublicKeys // TODO: remove
 	const request = await Functions.makeHttpRequest({
-		url: `${url}/eth/v1/beacon/states/finalized/validators?id=${validatorPublicKeys.join(',')}`
+		url: `${ethereumBeaconUrl}/eth/v1/beacon/states/${reportSlot}/validators?id=${validatorPublicKeys.join(',')}`
 	})
 	if (request.error) throw new Error('Failed to get validators')
 	return request.data.data
