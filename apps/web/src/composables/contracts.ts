@@ -27,8 +27,12 @@ const totalWalletBalance = ref<BreakdownAmount>({
     exchange: '0 ETH'
 })
 
+const { ethereumUrl, managerAddress, viewsAddress } = useEnvironment()
+const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
+const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager
+const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, CasimirViewsJson.abi) as CasimirViews
+
 export default function useContracts() {
-    const { ethereumUrl, managerAddress, viewsAddress } = useEnvironment()
     const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
     const { getEthersLedgerSigner } = useLedger()
     const { getCurrentPrice } = usePrice()
@@ -36,9 +40,9 @@ export default function useContracts() {
     const { user } = useUsers()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
 
-    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-    const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager
-    const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, CasimirViewsJson.abi) as CasimirViews
+    const stakeDepositedListener = async () => await refreshBreakdown()
+    const stakeRebalancedListener = async () => await refreshBreakdown()
+    const withdrawalInitiatedListener = async () => await refreshBreakdown()
     
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         try {
@@ -61,7 +65,7 @@ export default function useContracts() {
             await result.wait()
             return true
         } catch (err) {
-            console.error(`There was an error in despoit function: ${JSON.stringify(err)}`)
+            console.error(`There was an error in deposit function: ${JSON.stringify(err)}`)
             return false
         }
     }
@@ -270,9 +274,9 @@ export default function useContracts() {
 
     async function listenForContractEvents() {
         try {
-            manager.on('StakeDeposited', async () => await refreshBreakdown())
-            manager.on('StakeRebalanced', async () => await refreshBreakdown())
-            manager.on('WithdrawalInitiated', async () => await refreshBreakdown())
+            manager.on('StakeDeposited', stakeDepositedListener)
+            manager.on('StakeRebalanced', stakeRebalancedListener)
+            manager.on('WithdrawalInitiated', withdrawalInitiatedListener)
         } catch (err) {
             console.log(`There was an error in listenForContractEvents: ${err}`)
         }
@@ -311,6 +315,12 @@ export default function useContracts() {
         }
     }
 
+    function stopListeningForContractEvents() {
+        manager.removeListener('StakeDeposited', stakeDepositedListener)
+        manager.removeListener('StakeRebalanced', stakeRebalancedListener)
+        manager.removeListener('WithdrawalInitiated', withdrawalInitiatedListener)
+    }
+
     async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         const signerCreators = {
             'Browser': getEthersBrowserSigner,
@@ -340,6 +350,7 @@ export default function useContracts() {
         // getPools, 
         listenForContractEvents,
         refreshBreakdown,
+        stopListeningForContractEvents,
         withdraw 
     }
 }

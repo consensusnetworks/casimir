@@ -20,8 +20,8 @@ const currentEthPrice = ref<number>(0)
 const estimatedFees = ref<number|string>('-')
 const formattedAmountToStake = ref<string>('')
 const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
-const selectedProvider = ref<ProviderString>('')
-const selectedWallet = ref(null as null | string)
+const selectedStakingProvider = ref<ProviderString>('')
+const selectedWalletAddress = ref(null as null | string)
 
 // Wallet Select Refs
 const errorMessage = ref(null as null | string)
@@ -108,8 +108,8 @@ const aggregateAddressesByProvider = () => {
     })
   } else {
     // empty out staking comp
-    selectedProvider.value = ''
-    selectedWallet.value = null
+    selectedStakingProvider.value = ''
+    selectedWalletAddress.value = null
     formattedAmountToStake.value = ''
     address_balance.value = null
   }
@@ -121,8 +121,8 @@ watch(formattedAmountToStake, async () => {
     let maxAmount
     // minAmount is 0.0001 ETH 
     let minAmount = 0.0001
-    if (selectedWallet.value) {
-      maxAmount = await getEthersBalance(selectedWallet.value)
+    if (selectedWalletAddress.value) {
+      maxAmount = await getEthersBalance(selectedWalletAddress.value)
     } else {
       maxAmount = 0
     }
@@ -141,13 +141,15 @@ watch(formattedAmountToStake, async () => {
 
 watch(user, async () => {
   if (user.value?.id) {
+    console.log('aggregating addresses by provider running')
     aggregateAddressesByProvider()
     termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
     address_balance.value = (Math.round( await getEthersBalance(user.value?.address as string) * 100) / 100 ) + ' ETH'
-    selectedWallet.value = user.value?.address as string
+    selectedWalletAddress.value = user.value?.address as string
+    selectedStakingProvider.value = user.value?.walletProvider as ProviderString
   } else {
-    selectedProvider.value = ''
-    selectedWallet.value = null
+    selectedStakingProvider.value = ''
+    selectedWalletAddress.value = null
     formattedAmountToStake.value = ''
     address_balance.value = null
   }
@@ -158,8 +160,11 @@ onMounted(async () => {
   aggregateAddressesByProvider()
   currentEthPrice.value = Math.round((await getCurrentPrice({coin: 'ETH', currency: 'USD'})) * 100) / 100
   estimatedFees.value = await getDepositFees()
-  user.value?.address ? address_balance.value = (Math.round( await getEthersBalance(user.value?.address as string) * 100) / 100 ) + ' ETH' : address_balance.value = '- - -'
-  selectedWallet.value = user.value?.address as string
+  if (user.value?.id) {
+    address_balance.value = (Math.round( await getEthersBalance(user.value?.address as string) * 100) / 100 ) + ' ETH'
+    selectedStakingProvider.value = user.value?.walletProvider as ProviderString
+  }
+  selectedWalletAddress.value = user.value?.address as string
 })
 
 onUnmounted(() => {
@@ -170,7 +175,7 @@ const handleDeposit = async () => {
   stakingActionLoader.value = true
   
   loading.value = true
-  const isSuccess = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedProvider.value })
+  const isSuccess = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedStakingProvider.value })
   loading.value = false
   if (isSuccess) {
     success.value = true
@@ -186,10 +191,10 @@ const handleDeposit = async () => {
     stakeButtonText.value = 'Stake'
 
     // empty out staking comp
-    selectedProvider.value = ''
-    selectedWallet.value = null
+    // selectedStakingProvider.value = ''
+    // selectedWalletAddress.value = null
+    // address_balance.value = null
     formattedAmountToStake.value = ''
-    address_balance.value = null
     
   }, 3000)
   
@@ -220,11 +225,11 @@ const handleDeposit = async () => {
       <button
         id="selectWalletInputButton"
         class="flex items-center justify-between gap-[8px] w-full h-full px-[10px] py-[14px]"
-        :class="selectedWallet? 'text-black' : 'text-grey_4'"
+        :class="selectedWalletAddress? 'text-black' : 'text-grey_4'"
         @click="openSelectWalletInput = !openSelectWalletInput"
       >
         <h6>
-          {{ selectedWallet? convertString(selectedWallet) : 'Select wallet' }}
+          {{ selectedWalletAddress? convertString(selectedWalletAddress) : 'Select wallet' }}
         </h6>
         <vue-feather
           :type="openSelectWalletInput? 'chevron-up' : 'chevron-down'" 
@@ -257,14 +262,13 @@ const handleDeposit = async () => {
             >
             {{ item.provider }}
           </div>
-          
 
           <button
             v-for="address in item.addresses"
             :key="address"
             class="w-full text-left rounded-[8px] py-[10px] px-[14px] 
             hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
-            @click="selectedWallet = address, openSelectWalletInput = false, selectedProvider = item.provider"
+            @click="selectedWalletAddress = address, openSelectWalletInput = false, selectedStakingProvider = item.provider"
           >
             {{ convertString(address) }}
             <vue-feather
@@ -364,7 +368,7 @@ const handleDeposit = async () => {
     <button
       class="card_button  h-[37px] w-full "
       :class="success? 'bg-approve' : failure? 'bg-decline' : 'bg-primary'"
-      :disabled="!(termsOfServiceCheckbox && selectedWallet && formattedAmountToStake && !errorMessage)"
+      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)"
       @click="handleDeposit()"
     >
       <div

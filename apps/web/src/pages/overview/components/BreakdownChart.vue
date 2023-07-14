@@ -54,7 +54,6 @@ const formatLegendLabel = (address: string) => {
 }
 
 const setChartData = () => {
-  console.log('setting chart data in BreakdownChart.vue')
   let labels
   let data = []
   switch (selectedTimeframe.value) {

@@ -36,7 +36,7 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
-  const { listenForContractEvents, refreshBreakdown } = useContracts()
+  const { listenForContractEvents, refreshBreakdown, stopListeningForContractEvents } = useContracts()
   const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, stopListeningForTransactions, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   // const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
@@ -175,6 +175,7 @@ export default function useWallet() {
   async function logout() {
     loadingUserWallets.value = true
     await Session.signOut()
+    stopListeningForContractEvents()
     stopListeningForTransactions()
     setUser(undefined)
     setSelectedAddress('')
