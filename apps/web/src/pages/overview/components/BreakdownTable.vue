@@ -9,7 +9,7 @@ const currentPage = ref(1)
 const totalPages = ref(1)
 
 const searchInput = ref('')
-const tableView = ref('Transactions')
+const tableView = ref('Wallets')
 
 const selectedHeader = ref('')
 const selectedOrientation = ref('ascending')
