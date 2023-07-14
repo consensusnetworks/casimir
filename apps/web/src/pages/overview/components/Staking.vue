@@ -14,20 +14,27 @@ const { getEthersBalance } = useEthers()
 const { user, updateUserAgreement } = useUsers()
 const { getCurrentPrice } = usePrice()
 
-const selectedProvider = ref<ProviderString>('')
-const selectedWallet = ref(null as null | string)
-const formattedAmountToStake = ref<string>('')
+// Staking Component Refs
 const address_balance = ref(null as null | string)
 const currentEthPrice = ref<number>(0)
 const estimatedFees = ref<number|string>('-')
+const formattedAmountToStake = ref<string>('')
+const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
+const selectedProvider = ref<ProviderString>('')
+const selectedWallet = ref(null as null | string)
 
-const openSelectWalletInput = ref(false)
-
-const openTermsOfService = ref(false)
-
+// Wallet Select Refs
 const errorMessage = ref(null as null | string)
-
+const openSelectWalletInput = ref(false)
+const openTermsOfService = ref(false)
 const termsOfServiceCheckbox = ref(false)
+
+// Staking Action Loader Refs
+const loading = ref(false)
+const stakeButtonText = ref('Stake')
+const stakingActionLoader = ref(false)
+const success = ref(false)
+const failure = ref(false)
 
 const handleInputOnAmountToStake = (event: any) => {
   const value = event.target.value.replace(/[^\d.]/g, '')
@@ -42,8 +49,6 @@ const handleInputOnAmountToStake = (event: any) => {
   // Update the model value
   formattedAmountToStake.value = parts.join('.')
 }
-
-const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
 
 const convertString = (inputString: string) => {
   if (inputString.length <= 4) {
@@ -153,12 +158,6 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('click', handleOutsideClick)
 })
-
-const stakingActionLoader = ref(false)
-const loading = ref(false)
-const success = ref(false)
-const failure = ref(false)
-const stakeButtonText = ref('Stake')
 
 const handleDeposit = async () => {
   stakingActionLoader.value = true
