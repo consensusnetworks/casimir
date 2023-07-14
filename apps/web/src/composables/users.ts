@@ -362,6 +362,7 @@ export default function useUsers() {
         user: readonly(user),
         userAddresses,
         userAnalytics,
+        rawUserAnalytics,
         addAccount,
         checkIfSecondaryAddress,
         checkIfPrimaryUserExists,
