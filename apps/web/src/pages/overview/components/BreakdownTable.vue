@@ -2,7 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
-import useUsers from '@/composables/users.ts'
+import useUsers from '@/composables/users'
 
 const itemsPerPage = ref(7)
 const currentPage = ref(1)
