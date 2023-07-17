@@ -1,18 +1,20 @@
+import { AnalyticsData } from '@casimir/types'
+
 export interface UserAnalyticsData {
     oneMonth: {
         labels: string[];
-        data: number[];
+        data: AnalyticsData[];
       }
       sixMonth: {
         labels: string[]
-        data: number[]
+        data: AnalyticsData[]
       }
       oneYear: {
         labels: string[]
-        data: number[]
+        data: AnalyticsData[]
       }
       historical: {
         labels: string[]
-        data: number[]
+        data: AnalyticsData[]
       }
 }

@@ -1,6 +1,7 @@
 import { Account } from './interfaces/Account'
 import { AccountWithStakingInfo } from './interfaces/AccountWithStakingInfo'
 import { AddAccountOptions } from './interfaces/AddAccountOptions'
+import { AnalyticsData } from './interfaces/AnalyticsData'
 import { ApiResponse } from './interfaces/ApiResponse'
 import { BalanceSnapshot } from './interfaces/BalanceSnapshot'
 import { BreakdownAmount } from './interfaces/BreakdownAmount'
@@ -36,6 +37,7 @@ export type {
     AccountWithStakingInfo,
     ApiResponse,
     AddAccountOptions,
+    AnalyticsData,
     BalanceSnapshot,
     BreakdownAmount,
     BreakdownString,

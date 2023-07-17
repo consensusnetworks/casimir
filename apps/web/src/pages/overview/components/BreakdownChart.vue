@@ -5,7 +5,7 @@ import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 import useEthers from '@/composables/ethers'
 
-import { ProviderString } from '@casimir/types'
+import { AnalyticsData, ProviderString, UserAnalyticsData } from '@casimir/types'
 
 const { currentStaked, listenForContractEvents, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
 const { user, getUserAnalytics, userAnalytics } = useUsers()
@@ -57,7 +57,7 @@ const formatLegendLabel = (address: string) => {
 
 const setChartData = () => {
   let labels
-  let data = []
+  let data: Array<AnalyticsData> = []
   switch (selectedTimeframe.value) {
     case '1 month':
       labels = userAnalytics.value.oneMonth.labels

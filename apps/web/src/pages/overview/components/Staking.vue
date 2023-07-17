@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
-import usePrice from '@/composables/price.ts'
+import usePrice from '@/composables/price'
 import useEthers from '@/composables/ethers'
 import useUsers from '@/composables/users'
 import useContracts from '@/composables/contracts'
