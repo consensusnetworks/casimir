@@ -50,9 +50,13 @@ export default function useTxData () {
         txDirection: 'incoming',
         txId: '0xf46d39ca96e489fb0eb2097f073bfde2dc7960bf8358e0692fa79cc8597d283e',
         receivedAt: generateRandomDate(),
-        amount: '0',
+        amount: (Math.random() * 20.00).toFixed(2),
         price: '0.0',
-        gasFee: '195178697897910'
+        gasFee: '195178697897910',
+        rewards:(Math.random() * 10.00).toFixed(2),
+        apy: (Math.random() * 10.00).toFixed(2) + '%',
+        status: Math.random() > 0.5? 'Pending' : 'Active',
+        opperators: [ 'red', 'green', 'blue', 'orange', 'yellow'] //This is random until I get more info on how it will look like from backend
       }
   
       data.push(transaction)

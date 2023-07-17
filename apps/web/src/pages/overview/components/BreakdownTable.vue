@@ -1,7 +1,12 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
+import useUsers from '@/composables/users'
+
+const itemsPerPage = ref(7)
+const currentPage = ref(1)
+const totalPages = ref(1)
 
 const searchInput = ref('')
 const tableView = ref('Wallets')
@@ -72,54 +77,24 @@ const tableHeaderOptions = ref(
   }
 )
 
-const tableMockedItems = ref({
+const { rawUserAnalytics, user } = useUsers()
+
+const tableData = ref({
   Wallets: [
-    {
-      wallet_provider: 'MetaMask',
-      act: '12345678910asdfghjkl;qwertyuiopzxcvbnm',
-      bal: '1.5 ETH',
-      stk_amt: '0.5 ETH',
-      stk_rwd: '0.034 ETH'
-    },
-    {
-      wallet_provider: 'CoinbaseWallet',
-      act: '12345678910asdfghjkl;qwertyuiopzxcvbnm',
-      bal: '1.5 ETH',
-      stk_amt: '0.5 ETH',
-      stk_rwd: '0.034 ETH'
-    }
   ],
   Transactions: [
-    {
-      tx_hash: '1234567890qwertyuiopasdfghjklzxcvbnm',
-      stk_amt: '1.5 ETH',
-      stk_rwd: '0.045 ETH',
-      date: '01/01/2023',
-      apy: '2.1 %',
-      status: 'pending',
-      operators: ['op 1', 'op 2', 'op 3', 'op 4', 'op 5']
-    },
-    {
-      tx_hash: '1234567890qwertyuiopasdfghjklzxcvbnm',
-      stk_amt: '1.5 ETH',
-      stk_rwd: '0.045 ETH',
-      date: '01/01/2023',
-      apy: '2.1 %',
-      status: 'pending',
-      operators: ['op 1', 'op 2', 'op 3', 'op 4', 'op 5']
-    },
   ],
 })
 
-const filteredData = ref(tableMockedItems.value[tableView.value as keyof typeof tableMockedItems.value])
+const filteredData = ref(tableData.value[tableView.value as keyof typeof tableData.value])
 
 const filterData = () => {
   let filteredDataArray
   if (searchInput.value === '') {
-    filteredDataArray = tableMockedItems.value[tableView.value as keyof typeof tableMockedItems.value]
+    filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
   } else {
     const searchTerm = searchInput.value
-    filteredDataArray = (tableMockedItems.value[tableView.value as keyof typeof tableMockedItems.value] as Array<any>).filter(item => {
+    filteredDataArray = (tableData.value[tableView.value as keyof typeof tableData.value] as Array<any>).filter(item => {
       return (
         // Might need to modify to match types each variable
         item.wallet_provider?.toLowerCase().includes(searchTerm) ||
@@ -148,11 +123,14 @@ const filterData = () => {
       }
     })
   }
+  totalPages.value = Math.round(filteredDataArray.length / itemsPerPage.value)
 
-  filteredData.value = filteredDataArray
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  filteredData.value = filteredDataArray.slice(start, end) as any
 }
 
-watch([searchInput, tableView, selectedHeader, selectedOrientation], ()=>{
+watch([searchInput, tableView, selectedHeader, selectedOrientation, currentPage], ()=>{
   filterData()
 })
 
@@ -174,12 +152,10 @@ const convertJsonToCsv = (jsonData: any[]) => {
   const csvRows = []
 
   if (!Array.isArray(jsonData)) {
-    console.error('jsonData is not an array')
     return ''
   }
 
   if (jsonData.length === 0) {
-    console.warn('jsonData is an empty array')
     return ''
   }
 
@@ -240,6 +216,70 @@ const removeItemFromCheckedList = (item:any) => {
     checkedItems.value.splice(index, 1)
   }
 }
+
+const setTableData = () =>{
+
+  if(!rawUserAnalytics.value) return 
+
+  const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
+    new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
+  })
+
+  const newTable = tableData.value
+
+  newTable.Transactions = sortedTransactions.map((item: any) =>{
+    return {
+        tx_hash: item.txId,
+        stk_amt: item.amount,
+        stk_rwd: item.rewards,
+        date: item.receivedAt,
+        apy: item.apy,
+        status: item.status,
+        operators: item.opperators
+    }
+  })
+
+  let filteredWallets = [] as any
+
+  sortedTransactions.forEach((item: any) => {
+    const index = filteredWallets.findIndex((i: any)=> i.act === item.walletAddress)
+
+    if(index > -1) {
+      if(new Date(filteredWallets[index].date).getTime() < new Date(item.receivedAt).getTime()){
+        filteredWallets[index].bal === item.walletBalance
+      }
+    } else {
+      let provider = user.value?.accounts.find(i => i.address.toLocaleLowerCase() === item.walletAddress.toLocaleLowerCase())?.walletProvider
+      filteredWallets.push(
+        {
+          wallet_provider: provider? provider : 'Unknown',
+          act: item.walletAddress,
+          bal: item.walletBalance,
+          stk_amt: item.amount,
+          stk_rwd: item.rewards,
+          date: item.receivedAt
+        }
+      )
+    }
+  })
+
+  newTable.Wallets = filteredWallets
+
+  tableData.value = newTable
+
+}
+
+watch(rawUserAnalytics, () =>{
+  setTableData()
+  filterData()
+})
+
+onMounted(() =>{
+  setTableData()
+  filterData()
+})
+
+
 </script>
 
 <template>
@@ -318,7 +358,7 @@ const removeItemFromCheckedList = (item:any) => {
         <thead>
           <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
             <th
-              v-for="header in tableHeaderOptions[tableView as keyof typeof tableHeaderOptions].headers"
+              v-for="header in tableHeaderOptions[tableView].headers"
               :key="header.title"
               class="table_header "
             >
@@ -379,11 +419,11 @@ const removeItemFromCheckedList = (item:any) => {
         >
           <tr
             v-for="item in filteredData"
-            :key="(item as any).act || (item as any).tx_hash"
+            :key="item"
             class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
           >
             <td
-              v-for="header in tableHeaderOptions[tableView as keyof typeof tableHeaderOptions].headers"
+              v-for="header in tableHeaderOptions[tableView].headers"
               :key="header.title"
               class="dynamic_padding"
             >
@@ -403,12 +443,13 @@ const removeItemFromCheckedList = (item:any) => {
                   />
                 </button>
                 <img
-                  :src="`/${item[header.value as keyof typeof item]}.svg`"
+                  v-if="item[header.value] != 'Unknown'"
+                  :src="`/${item[header.value ]}.svg`"
                   alt="Avatar "
                   class="w-[20px] h-[20px]"
                 >
-                <h6 class="title_name 800s:w-[20px] w-[50px] truncate">
-                  {{ item[header.value as keyof typeof item] }}
+                <h6 class="title_name 800s:w-[20px]">
+                  {{ item[header.value ] }}
                 </h6>
               </div>
               <div
@@ -416,7 +457,7 @@ const removeItemFromCheckedList = (item:any) => {
                 class="flex items-center gap-[12px] underline"
               >
                 <a href=""> 
-                  {{ convertString(item[header.value as keyof typeof item]) }}
+                  {{ convertString(item[header.value ]) }}
                 </a>
               </div>
               <div
@@ -435,7 +476,7 @@ const removeItemFromCheckedList = (item:any) => {
                   />
                 </button>
                 <a class="">
-                  {{ convertString(item[header.value as keyof typeof item]) }}
+                  {{ convertString(item[header.value ]) }}
                 </a>
               </div>
               <div
@@ -443,14 +484,14 @@ const removeItemFromCheckedList = (item:any) => {
                 class="flex items-center gap-[12px]"
               >
                 <div
-                  v-if="item[header.value as keyof typeof item] === 'staked'"
+                  v-if="item[header.value ] === 'Active'"
                   class="flex items-center gap-[8px] status_pill bg-[#ECFDF3] text-[#027A48]"
                 >
                   <div class="bg-[#027A48] rounded-[999px] w-[8px] h-[8px]" />
                   Staked
                 </div>
                 <div
-                  v-else-if="item[header.value as keyof typeof item] === 'pending'" 
+                  v-else-if="item[header.value ] === 'Pending'" 
                   class="flex items-center gap-[8px] status_pill bg-[#FFFAEB] text-[#B54708]"
                 >
                   <div class="bg-[#F79009] rounded-[999px] w-[8px] h-[8px]" />
@@ -462,34 +503,41 @@ const removeItemFromCheckedList = (item:any) => {
                 class="flex items-center gap-[12px] pl-[20px]"
               >
                 <div
-                  v-for="operator in item[header.value as keyof typeof item]"
+                  v-for="operator in item[header.value ]"
                   :key="operator"
-                  :class="`w-[24px] h-[24px] border-[2px] border-white bg-blue-300 rounded-[999px]`"
-                  :style="`margin-left: -20px`"
+                  :class="`w-[24px] h-[24px] border-[2px] border-white  rounded-[999px]`"
+                  :style="`margin-left: -20px; background-color: ${operator}; opacity: 0.55`"
                 />
               </div>
               <div v-else>
-                {{ item[header.value as keyof typeof item] }}
+                {{ item[header.value ] }}
               </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <!-- Waiting on a bigger data set to do this.. for now will comment out -->
-    <!-- <div class="flex justify-between items-center mt-[12px]">
+    <div class="flex justify-between items-center mt-[12px]">
       <div class="page_number ml-[56px]">
-        Page 1 of 10
+        Page {{ currentPage }} of {{ totalPages }}
       </div>
       <div class="flex items-center gap-[12px]">
-        <button class="pagination_button">
+        <button
+          class="pagination_button"
+          :disabled="currentPage === 1"
+          @click="currentPage > 1? currentPage = currentPage - 1 : ''"
+        >
           Previous
         </button>
-        <button class="pagination_button mr-[33px]">
+        <button
+          class="pagination_button mr-[33px]"
+          :disabled="currentPage === totalPages"
+          @click="currentPage < totalPages? currentPage = currentPage + 1 : ''"
+        >
           Next
         </button>
       </div>
-    </div> -->
+    </div>
   </div>
 </template>
 
