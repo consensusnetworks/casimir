@@ -2,7 +2,7 @@ import fs from 'fs'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { CasimirManager, CasimirViews } from '../build/artifacts/types'
-import { Validator } from '@casimir/types'
+import { PoolStatus, Validator } from '@casimir/types'
 import { getClusterDetails } from '@casimir/ssv'
 import { getWithdrawalCredentials } from '@casimir/helpers'
 import { getPrice } from '@casimir/uniswap'
@@ -98,7 +98,7 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
         const poolDetails = await views.getPoolDetails(poolId)
-        if (poolDetails.status === 2 || poolDetails.status === 3) {
+        if (poolDetails.status === PoolStatus.EXITING_FORCED || poolDetails.status === PoolStatus.EXITING_REQUESTED) {
             remaining--
             
             /**

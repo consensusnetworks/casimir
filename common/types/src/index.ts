@@ -21,6 +21,7 @@ import { LoginCredentials } from './interfaces/LoginCredentials'
 import { MessageRequest } from './interfaces/MessageRequest'
 import { Operator } from './interfaces/Operator'
 import { Pool } from './interfaces/Pool'
+import { PoolStatus } from './interfaces/PoolStatus'
 import { ProviderString } from './interfaces/ProviderString'
 import { TransactionRequest } from './interfaces/TransactionRequest'
 import { RemoveAccountOptions } from './interfaces/RemoveAccountOptions'
@@ -60,4 +61,8 @@ export type {
     UserAddedSuccess,
     UserWithAccounts,
     Validator,
+}
+
+export {
+    PoolStatus
 }

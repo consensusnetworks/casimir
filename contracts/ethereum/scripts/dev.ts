@@ -7,6 +7,7 @@ import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/reso
 import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
 import { getEventsIterable } from '@casimir/oracle/src/providers/events'
 import { fetchRetry, run } from '@casimir/helpers'
+import { PoolStatus } from '@casimir/types'
 
 void async function () {
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
@@ -114,7 +115,7 @@ void async function () {
                         for (const poolId of stakedPoolIds) {
                             if (remaining === 0) break
                             const poolDetails = await views.getPoolDetails(poolId)
-                            if (poolDetails.status === 3) {
+                            if (poolDetails.status === PoolStatus.EXITING_REQUESTED) {
                                 remaining--
                                 const poolAddress = await manager.getPoolAddress(poolId)
                                 const currentBalance = await ethers.provider.getBalance(poolAddress)
