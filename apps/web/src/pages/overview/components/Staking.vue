@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
-import usePrice from '@/composables/price'
+import usePrice from '@/composables/price.ts'
 import useEthers from '@/composables/ethers'
 import useUsers from '@/composables/users'
 import useContracts from '@/composables/contracts'
@@ -98,7 +98,7 @@ const aggregateAddressesByProvider = () => {
   if (user.value) {
     const accounts = user.value.accounts
     const providers = accounts.map((account) => account.walletProvider)
-    const uniqueProviders = [...new Set(providers)]
+    const uniqueProviders = [...new Set(providers)] as Array<ProviderString>
     uniqueProviders.forEach((provider) => {
       const addresses = accounts.filter((account) => account.walletProvider === provider).map((account) => account.address)
       formattedWalletOptions.value.push({
