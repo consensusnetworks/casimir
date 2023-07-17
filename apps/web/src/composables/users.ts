@@ -37,7 +37,7 @@ export default function useUsers() {
         try {
             const requestOptions = {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ account, id: user?.value?.id })
@@ -55,7 +55,7 @@ export default function useUsers() {
         try {
             const requestOptions = {
                 method: 'GET',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json'
                 }
             }
@@ -86,7 +86,7 @@ export default function useUsers() {
     }
 
     /**
-     * Checks if session exists and, if so: 
+     * Checks if session exists and, if so:
      * Gets the user's account via the API
      * Sets the user's account locally
     */
@@ -135,16 +135,16 @@ export default function useUsers() {
             if (receivedAt.getTime() < earliest) earliest = receivedAt.getTime()
         })
         const historicalInterval = (latest - earliest) / 11
-        
+
         sortedTransactions.forEach((tx: any) => {
             const { receivedAt, walletAddress, walletBalance } = tx
             /* Historical */
             if (!userAnalytics.value.historical.data.find((obj: any) => obj.walletAddress === walletAddress)) {
                 userAnalytics.value.historical.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
                 // Determine which interval the receivedAt falls into
-                const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / historicalInterval)
+                const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / historicalInterval);
                 // Set the value of the intervalIndex to the walletBalance
-                userAnalytics.value.historical.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+                (userAnalytics.value as UserAnalyticsData).historical.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
             } else {
                 // Determine which interval the receivedAt falls into
                 const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / historicalInterval)
@@ -241,14 +241,14 @@ export default function useUsers() {
         try {
             const requestOptions = {
                 method: 'GET',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json'
                 }
             }
             const response = await fetch(`${usersUrl}/analytics`, requestOptions)
             const { error, message, data } = await response.json()
             if (error) throw new Error(message)
-            
+
             // TODO: Pass data from above when the API / data is ready
             setRawAnalytics(txData.value)
             computeUserAnalytics()
@@ -269,7 +269,7 @@ export default function useUsers() {
         try {
             const requestOptions = {
                 method: 'GET',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json'
                 }
             }
@@ -289,7 +289,7 @@ export default function useUsers() {
         address = address.toLowerCase()
         const requestOptions = {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -352,7 +352,7 @@ export default function useUsers() {
                 balance
               }
             }))
-            
+
             user.value.accounts = accountsWithBalances
             setUser(user.value)
           }
@@ -365,7 +365,7 @@ export default function useUsers() {
         const userId = user?.value?.id
         const requestOptions = {
             method: 'PUT',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ userId, updatedAddress })
@@ -376,7 +376,7 @@ export default function useUsers() {
     async function updateUserAgreement(agreed: boolean) {
         const requestOptions = {
             method: 'PUT',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ agreed })
