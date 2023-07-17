@@ -1,18 +1,17 @@
 import { ref, readonly } from 'vue'
-import { Account, AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse } from '@casimir/types'
+import { Account, AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse, UserAnalyticsData } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from './ethers'
 import * as Session from 'supertokens-web-js/recipe/session'
 import useTxData from '../mockData/mock_transaction_data'
 
 const { txData } = useTxData()
-
 const { usersUrl } = useEnvironment()
 
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const session = ref<boolean>(false)
-const user = ref<UserWithAccounts | null>(null)
-const userAnalytics = ref<any>({
+const user = ref<UserWithAccounts | undefined>(undefined)
+const userAnalytics = ref<UserAnalyticsData>({
     oneMonth: {
         labels: [],
         data: []
@@ -38,7 +37,7 @@ export default function useUsers() {
         try {
             const requestOptions = {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ account, id: user?.value?.id })
@@ -56,7 +55,7 @@ export default function useUsers() {
         try {
             const requestOptions = {
                 method: 'GET',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json'
                 }
             }
@@ -87,7 +86,7 @@ export default function useUsers() {
     }
 
     /**
-     * Checks if session exists and, if so: 
+     * Checks if session exists and, if so:
      * Gets the user's account via the API
      * Sets the user's account locally
     */
@@ -119,8 +118,8 @@ export default function useUsers() {
         }
     }
 
-    function setUserAnalytics() {
-        const result = userAnalytics.value
+    function computeUserAnalytics() {
+        // const result = userAnalytics.value
         const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
             new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
         })
@@ -136,63 +135,54 @@ export default function useUsers() {
             if (receivedAt.getTime() < earliest) earliest = receivedAt.getTime()
         })
         const historicalInterval = (latest - earliest) / 11
-        
+
         sortedTransactions.forEach((tx: any) => {
             const { receivedAt, walletAddress, walletBalance } = tx
             /* Historical */
-            if (!result.historical.data.find((obj: any) => obj.walletAddress === walletAddress)) {
-                result.historical.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
-                // Determine which interval the receivedAt falls into
-                const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / historicalInterval)
-                // Set the value of the intervalIndex to the walletBalance
-                result.historical.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
-            } else {
-                // Determine which interval the receivedAt falls into
-                const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / historicalInterval)
-                // Set the value of the intervalIndex to the walletBalance
-                result.historical.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+            let historicalDataIndex = userAnalytics.value.historical.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
+            if (historicalDataIndex === -1) {
+                const dataLength = userAnalytics.value.historical.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
+                historicalDataIndex = dataLength - 1
             }
+            // Determine which interval the receivedAt falls into
+            const intervalIndex = Math.floor((new Date(receivedAt).getTime() - earliest) / historicalInterval)
+            // Set the value of the intervalIndex to the walletBalance
+            userAnalytics.value.historical.data[historicalDataIndex].walletBalance[intervalIndex] = walletBalance
 
             /* One Year */
             if (new Date(receivedAt).getTime() > oneYear) {
-                if (!result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress)) {
-                    result.oneYear.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
-                    const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
-                    const intervalIndex = 11 - monthsAgo
-                    result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
-                } else {
-                    const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
-                    const intervalIndex = 11 - monthsAgo
-                    result.oneYear.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+                let oneYearDataIndex = userAnalytics.value.oneYear.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
+                if (oneYearDataIndex === -1) {
+                    const dataLength = userAnalytics.value.oneYear.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
+                    oneYearDataIndex = dataLength - 1
                 }
+                const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+                const intervalIndex = 11 - monthsAgo
+                userAnalytics.value.oneYear.data[oneYearDataIndex].walletBalance[intervalIndex] = walletBalance
             }
 
             /* Six Months */
             if (new Date(receivedAt).getTime() > sixMonths) {
-                if (!result.sixMonth.data.find((obj: any) => obj.walletAddress === walletAddress)) {
-                    result.sixMonth.data.push({ walletAddress, walletBalance: Array(6).fill(0) })
-                    const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
-                    const intervalIndex = 5 - monthsAgo
-                    result.sixMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
-                } else {
-                    const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
-                    const intervalIndex = 5 - monthsAgo
-                    result.sixMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+                let sixMonthDataIndex = userAnalytics.value.sixMonth.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
+                if (sixMonthDataIndex === -1) {
+                    const dataLength = userAnalytics.value.sixMonth.data.push({ walletAddress, walletBalance: Array(6).fill(0) })
+                    sixMonthDataIndex = dataLength - 1
                 }
+                const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+                const intervalIndex = 5 - monthsAgo
+                userAnalytics.value.sixMonth.data[sixMonthDataIndex].walletBalance[intervalIndex] = walletBalance
             }
 
             /* One Month */
             if (new Date(receivedAt).getTime() > oneMonth) {
-                if (!result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress)) {
-                    result.oneMonth.data.push({ walletAddress, walletBalance: Array(30).fill(0) })
-                    const daysAgo = Math.floor((new Date().getTime() - new Date(receivedAt).getTime()) / 86400000)
-                    const intervalIndex = 29 - daysAgo
-                    result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
-                } else {
-                    const daysAgo = Math.floor((new Date().getTime() - new Date(receivedAt).getTime()) / 86400000)
-                    const intervalIndex = 29 - daysAgo
-                    result.oneMonth.data.find((obj: any) => obj.walletAddress === walletAddress).walletBalance[intervalIndex] = walletBalance
+                let oneMonthDataIndex = userAnalytics.value.oneMonth.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
+                if (oneMonthDataIndex === -1) {
+                    const dataLength = userAnalytics.value.oneMonth.data.push({ walletAddress, walletBalance: Array(30).fill(0) })
+                    oneMonthDataIndex = dataLength - 1
                 }
+                const daysAgo = Math.floor((new Date().getTime() - new Date(receivedAt).getTime()) / 86400000)
+                const intervalIndex = 29 - daysAgo
+                userAnalytics.value.oneMonth.data[oneMonthDataIndex].walletBalance[intervalIndex] = walletBalance
             }
         })
 
@@ -200,7 +190,7 @@ export default function useUsers() {
 
         // Set the historical labels array to the interval labels
         let previousMonth: any = null
-        result.historical.labels = Array(12).fill(0).map((_, i) => {
+        userAnalytics.value.historical.labels = Array(12).fill(0).map((_, i) => {
             const date = new Date(earliest + (historicalInterval * i))
             const currentMonth = date.getMonth()
             if (!previousMonth) {
@@ -216,45 +206,43 @@ export default function useUsers() {
         })
 
         // Set the oneYear labels array to the interval labels
-        result.oneYear.labels = Array(12).fill(0).map((_, i) => {
+        userAnalytics.value.oneYear.labels = Array(12).fill(0).map((_, i) => {
             const date = new Date (new Date().setDate(1))
             const monthIndex = new Date(date.setMonth(date.getMonth() - (11 - i)))
             return `${months[monthIndex.getMonth()]} ${monthIndex.getFullYear()}`
         })
 
         // Set the sixMonth labels array to the interval labels
-        result.sixMonth.labels = Array(6).fill(0).map((_, i) => {
+        userAnalytics.value.sixMonth.labels = Array(6).fill(0).map((_, i) => {
             const date = new Date (new Date().setDate(1))
             const monthIndex = new Date(date.setMonth(date.getMonth() - (5 - i)))
             return `${months[monthIndex.getMonth()]} ${monthIndex.getFullYear()}`
         })
 
         // Set the oneMonth labels array to the interval labels
-        result.oneMonth.labels = []
+        userAnalytics.value.oneMonth.labels = []
         for (let i = 30; i > 0; i--) {
             const date = new Date().getTime() - ((i - 1) * 86400000)
-            result.oneMonth.labels.push(`${new Date(date).getMonth() + 1}/${new Date(date).getDate()}`)
+            userAnalytics.value.oneMonth.labels.push(`${new Date(date).getMonth() + 1}/${new Date(date).getDate()}`)
         }
-        userAnalytics.value = result
+        // userAnalytics.value = result
     }
 
     async function getUserAnalytics() {
         try {
             const requestOptions = {
                 method: 'GET',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json'
                 }
             }
             const response = await fetch(`${usersUrl}/analytics`, requestOptions)
             const { error, message, data } = await response.json()
             if (error) throw new Error(message)
-            
-            // TODO: Swap this when the API / data is ready
-            // rawUserAnalytics.value = data
-            rawUserAnalytics.value = txData.value
-            
-            setUserAnalytics()
+
+            // TODO: Pass data from above when the API / data is ready
+            setRawAnalytics(txData.value)
+            computeUserAnalytics()
             return { error, message, data }
         } catch (error: any) {
             throw new Error(error.message || 'Error getting user analytics')
@@ -272,7 +260,7 @@ export default function useUsers() {
         try {
             const requestOptions = {
                 method: 'GET',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json'
                 }
             }
@@ -292,7 +280,7 @@ export default function useUsers() {
         address = address.toLowerCase()
         const requestOptions = {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -314,6 +302,36 @@ export default function useUsers() {
         userAddresses.value = newUser?.accounts.map(account => account.address) as Array<string>
     }
 
+    function setUserAnalytics(data?: UserAnalyticsData) {
+        if (user.value?.id) {
+            userAnalytics.value = data as UserAnalyticsData
+        } else {
+            const userAnalyticsInit = {
+                oneMonth: {
+                    labels: [],
+                    data: []
+                },
+                sixMonth: {
+                    labels: [],
+                    data: []
+                },
+                oneYear: {
+                    labels: [],
+                    data: []
+                },
+                historical: {
+                    labels: [],
+                    data: []
+                }
+            }
+            userAnalytics.value = userAnalyticsInit
+        }
+    }
+
+    function setRawAnalytics(data: UserAnalyticsData) {
+        rawUserAnalytics.value = data
+    }
+
     async function setUserAccountBalances() {
         try {
           if (user?.value?.accounts) {
@@ -325,7 +343,7 @@ export default function useUsers() {
                 balance
               }
             }))
-            
+
             user.value.accounts = accountsWithBalances
             setUser(user.value)
           }
@@ -338,7 +356,7 @@ export default function useUsers() {
         const userId = user?.value?.id
         const requestOptions = {
             method: 'PUT',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ userId, updatedAddress })
@@ -349,7 +367,7 @@ export default function useUsers() {
     async function updateUserAgreement(agreed: boolean) {
         const requestOptions = {
             method: 'PUT',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ agreed })
@@ -373,6 +391,7 @@ export default function useUsers() {
         removeAccount,
         setUser,
         setUserAccountBalances,
+        setUserAnalytics,
         updatePrimaryAddress,
         updateUserAgreement
     }

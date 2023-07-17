@@ -3,11 +3,13 @@ import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { onMounted, ref, watch} from 'vue'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
+import useEthers from '@/composables/ethers'
 
-import { ProviderString } from '@casimir/types'
+import { AnalyticsData, ProviderString, UserAnalyticsData } from '@casimir/types'
 
-const { currentStaked, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
+const { currentStaked, listenForContractEvents, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
 const { user, getUserAnalytics, userAnalytics } = useUsers()
+const { listenForTransactions } = useEthers()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('historical')
@@ -55,7 +57,7 @@ const formatLegendLabel = (address: string) => {
 
 const setChartData = () => {
   let labels
-  let data = []
+  let data: Array<AnalyticsData> = []
   switch (selectedTimeframe.value) {
     case '1 month':
       labels = userAnalytics.value.oneMonth.labels
@@ -101,12 +103,21 @@ onMounted(async () => {
     await getUserAnalytics()
     setChartData()
     await refreshBreakdown()
+    // TODO: Potentially find a better place to initialize these listeners
+    // Doing this here because currently we're currently initializing listeners on connectWallet
+    // which isn't used if user is already signed in
+    listenForContractEvents()
+    listenForTransactions()
+  } else {
+    setChartData()
   }
 })
 
 watch(user, async () => {
     if (user.value?.id) {
       await getUserAnalytics()
+      setChartData()
+    } else {
       setChartData()
     }
 })

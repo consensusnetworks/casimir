@@ -14,20 +14,27 @@ const { getEthersBalance } = useEthers()
 const { user, updateUserAgreement } = useUsers()
 const { getCurrentPrice } = usePrice()
 
-const selectedProvider = ref<ProviderString>('')
-const selectedWallet = ref(null as null | string)
-const formattedAmountToStake = ref<string>('')
-const address_balance = ref(null as null | string)
-const currentEthPrice = ref<number>(0)
-const estimatedFees = ref<number|string>('-')
+// Staking Component Refs
+const addressBalance = ref<string | null>(null)
+const currentEthPrice = ref(0)
+const estimatedFees = ref<number | string>('-')
+const formattedAmountToStake = ref('')
+const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
+const selectedStakingProvider = ref<ProviderString>('')
+const selectedWalletAddress = ref(null as null | string)
 
-const openSelectWalletInput = ref(false)
-
-const openTermsOfService = ref(false)
-
+// Wallet Select Refs
 const errorMessage = ref(null as null | string)
-
+const openSelectWalletInput = ref(false)
+const openTermsOfService = ref(false)
 const termsOfServiceCheckbox = ref(false)
+
+// Staking Action Loader Refs
+const loading = ref(false)
+const stakeButtonText = ref('Stake')
+const stakingActionLoader = ref(false)
+const success = ref(false)
+const failure = ref(false)
 
 const handleInputOnAmountToStake = (event: any) => {
   const value = event.target.value.replace(/[^\d.]/g, '')
@@ -42,8 +49,6 @@ const handleInputOnAmountToStake = (event: any) => {
   // Update the model value
   formattedAmountToStake.value = parts.join('.')
 }
-
-const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
 
 const convertString = (inputString: string) => {
   if (inputString.length <= 4) {
@@ -61,10 +66,10 @@ const handleOutsideClick = (event: any) => {
   const selectWalletInputContainer = document.getElementById('selectWalletInputContainer')
   const selectWalletOptionsCard = document.getElementById('selectWalletOptionsCard')
   const selectWalletInputButton = document.getElementById('selectWalletInputButton')
-  if(selectWalletInputContainer && selectWalletOptionsCard && selectWalletInputButton){
-    if(openSelectWalletInput.value) {
-      if(!selectWalletInputContainer.contains(event.target)){
-        if(!selectWalletInputButton.contains(event.target)){
+  if (selectWalletInputContainer && selectWalletOptionsCard && selectWalletInputButton) {
+    if (openSelectWalletInput.value) {
+      if (!selectWalletInputContainer.contains(event.target)) {
+        if (!selectWalletInputButton.contains(event.target)) {
           openSelectWalletInput.value = false
         }
       }
@@ -75,11 +80,11 @@ const handleOutsideClick = (event: any) => {
   const termsOfServiceCard = document.getElementById('termsOfServiceCard')
   const termsOfServiceButton = document.getElementById('termsOfServiceButton')
 
-  
-  if(termsOfServiceCard && termsOfServiceButton && termsOfServiceContainer){
-    if(openTermsOfService.value) {
-      if(!termsOfServiceCard.contains(event.target)){
-        if(!termsOfServiceButton.contains(event.target)){
+
+  if (termsOfServiceCard && termsOfServiceButton && termsOfServiceContainer) {
+    if (openTermsOfService.value) {
+      if (!termsOfServiceCard.contains(event.target)) {
+        if (!termsOfServiceButton.contains(event.target)) {
           openTermsOfService.value = false
         }
       }
@@ -90,10 +95,10 @@ const handleOutsideClick = (event: any) => {
 const aggregateAddressesByProvider = () => {
   formattedWalletOptions.value = []
   // Iterate over user.value.accounts and aggregate addresses by provider
-  if(user.value){
+  if (user.value) {
     const accounts = user.value.accounts
     const providers = accounts.map((account) => account.walletProvider)
-    const uniqueProviders = [...new Set(providers)]
+    const uniqueProviders = [...new Set(providers)] as Array<ProviderString>
     uniqueProviders.forEach((provider) => {
       const addresses = accounts.filter((account) => account.walletProvider === provider).map((account) => account.address)
       formattedWalletOptions.value.push({
@@ -103,29 +108,25 @@ const aggregateAddressesByProvider = () => {
     })
   } else {
     // empty out staking comp
-    selectedProvider.value = ''
-    selectedWallet.value = null
+    selectedStakingProvider.value = ''
+    selectedWalletAddress.value = null
     formattedAmountToStake.value = ''
-    address_balance.value = null
+    addressBalance.value = null
   }
 }
 
-watch(selectedWallet, async () => {
-  address_balance.value = selectedWallet.value ?  (Math.round( await getEthersBalance(selectedWallet.value) * 100) / 100 ) + ' ETH': '- - -'
-})
-
 watch(formattedAmountToStake, async () => {
-  if(formattedAmountToStake.value){
+  if (formattedAmountToStake.value) {
     const floatAmount = parseFloat(formattedAmountToStake.value?.replace(/,/g, ''))
     let maxAmount
-    // minAmount is 0.0001 ETH 
+    // minAmount is 0.0001 ETH
     let minAmount = 0.0001
-    if (selectedWallet.value) {
-      maxAmount = await getEthersBalance(selectedWallet.value)
+    if (selectedWalletAddress.value) {
+      maxAmount = await getEthersBalance(selectedWalletAddress.value)
     } else {
       maxAmount = 0
     }
-    
+
     if (floatAmount > maxAmount) {
       errorMessage.value = 'Insufficient Funds'
     } else if (floatAmount < minAmount) {
@@ -133,39 +134,47 @@ watch(formattedAmountToStake, async () => {
     } else {
       errorMessage.value = null
     }
-  } else{
+  } else {
     errorMessage.value = null
   }
 })
 
-watch(user, () => {
-  aggregateAddressesByProvider()
-  termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
+watch(user, async () => {
+  if (user.value?.id) {
+    aggregateAddressesByProvider()
+    termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
+    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
+    selectedWalletAddress.value = user.value?.address as string
+    selectedStakingProvider.value = user.value?.walletProvider as ProviderString
+  } else {
+    selectedStakingProvider.value = ''
+    selectedWalletAddress.value = null
+    formattedAmountToStake.value = ''
+    addressBalance.value = null
+  }
 })
 
 onMounted(async () => {
   window.addEventListener('click', handleOutsideClick)
   aggregateAddressesByProvider()
-  currentEthPrice.value = Math.round((await getCurrentPrice({coin: 'ETH', currency: 'USD'})) * 100) / 100
+  currentEthPrice.value = Math.round((await getCurrentPrice({ coin: 'ETH', currency: 'USD' })) * 100) / 100
   estimatedFees.value = await getDepositFees()
+  if (user.value?.id) {
+    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
+    selectedStakingProvider.value = user.value?.walletProvider as ProviderString
+  }
+  selectedWalletAddress.value = user.value?.address as string
 })
 
-
-onUnmounted(() =>{
+onUnmounted(() => {
   window.removeEventListener('click', handleOutsideClick)
 })
 
-const stakingActionLoader = ref(false)
-const loading = ref(false)
-const success = ref(false)
-const failure = ref(false)
-const stakeButtonText = ref('Stake')
-
 const handleDeposit = async () => {
   stakingActionLoader.value = true
-  
+
   loading.value = true
-  const isSuccess = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedProvider.value })
+  const isSuccess = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedStakingProvider.value })
   loading.value = false
   if (isSuccess) {
     success.value = true
@@ -181,17 +190,17 @@ const handleDeposit = async () => {
     stakeButtonText.value = 'Stake'
 
     // empty out staking comp
-    selectedProvider.value = ''
-    selectedWallet.value = null
+    // selectedStakingProvider.value = ''
+    // selectedWalletAddress.value = null
+    // addressBalance.value = null
     formattedAmountToStake.value = ''
-    address_balance.value = null
-    
+
   }, 3000)
-  
+
   setTimeout(() => {
     stakingActionLoader.value = false
   }, 3500)
-  
+
 }
 </script>
 
@@ -201,11 +210,11 @@ const handleDeposit = async () => {
       v-if="stakingActionLoader"
       class="absolute w-full h-full bg-black/[.1] top-0 left-0 rounded-[3px] z-[10] "
     />
-    <h6 class="address_balance mb-[12px]">
+    <h6 class="addressBalance mb-[12px]">
       Account Balance
     </h6>
-    <h5 class="address_balance_amount mb-[27px]">
-      {{ address_balance? address_balance : '- - -' }}
+    <h5 class="addressBalance_amount mb-[27px]">
+      {{ addressBalance ? addressBalance : '- - -' }}
     </h5>
 
     <h6 class="card_title mb-[11px]">
@@ -215,14 +224,14 @@ const handleDeposit = async () => {
       <button
         id="selectWalletInputButton"
         class="flex items-center justify-between gap-[8px] w-full h-full px-[10px] py-[14px]"
-        :class="selectedWallet? 'text-black' : 'text-grey_4'"
+        :class="selectedWalletAddress ? 'text-black' : 'text-grey_4'"
         @click="openSelectWalletInput = !openSelectWalletInput"
       >
         <h6>
-          {{ selectedWallet? convertString(selectedWallet) : 'Select wallet' }}
+          {{ selectedWalletAddress ? convertString(selectedWalletAddress) : 'Select wallet' }}
         </h6>
         <vue-feather
-          :type="openSelectWalletInput? 'chevron-up' : 'chevron-down'" 
+          :type="openSelectWalletInput ? 'chevron-up' : 'chevron-down'"
           size="36"
           class="icon w-[20px]"
         />
@@ -252,18 +261,17 @@ const handleDeposit = async () => {
             >
             {{ item.provider }}
           </div>
-          
 
           <button
-            v-for="wallet in item.addresses"
-            :key="wallet"
-            class="w-full text-left rounded-[8px] py-[10px] px-[14px] 
+            v-for="address in item.addresses"
+            :key="address"
+            class="w-full text-left rounded-[8px] py-[10px] px-[14px]
             hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
-            @click="selectedWallet = wallet, openSelectWalletInput = false, selectedProvider = item.provider"
+            @click="selectedWalletAddress = address, openSelectWalletInput = false, selectedStakingProvider = item.provider"
           >
-            {{ convertString(wallet) }}
+            {{ convertString(address) }}
             <vue-feather
-              type="chevron-right" 
+              type="chevron-right"
               size="36"
               class="icon w-[20px]"
             />
@@ -281,7 +289,7 @@ const handleDeposit = async () => {
         {{ errorMessage }}
       </span>
     </div>
-    
+
 
     <div class="card_input text-black px-[10px] py-[14px]">
       <div class="flex items-center gap-[8px]">
@@ -346,7 +354,7 @@ const handleDeposit = async () => {
         type="checkbox"
         class="card_checkbox"
         @change="updateUserAgreement(termsOfServiceCheckbox)"
-      > 
+      >
       <button
         id="termsOfServiceButton"
         class="card_checkbox_text"
@@ -358,8 +366,8 @@ const handleDeposit = async () => {
 
     <button
       class="card_button  h-[37px] w-full "
-      :class="success? 'bg-approve' : failure? 'bg-decline' : 'bg-primary'"
-      :disabled="!(termsOfServiceCheckbox && selectedWallet && formattedAmountToStake && !errorMessage)"
+      :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
+      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)"
       @click="handleDeposit()"
     >
       <div
@@ -412,28 +420,34 @@ const handleDeposit = async () => {
   margin-bottom: 5px;
   background-color: #fff;
 }
+
 .dots_container .dot:nth-last-child(1) {
   animation: jumpingAnimation 1s 0.1s ease-in infinite;
 }
+
 .dots_container .dot:nth-last-child(2) {
   animation: jumpingAnimation 1s 0.2s ease-in infinite;
 }
+
 .dots_container .dot:nth-last-child(3) {
   animation: jumpingAnimation 1s 0.3s ease-in infinite;
 }
 
 @keyframes jumpingAnimation {
   0% {
-    transform: translate3d(0, 0,0);
+    transform: translate3d(0, 0, 0);
   }
+
   50% {
-    transform: translate3d(0, 6px,0);
+    transform: translate3d(0, 6px, 0);
   }
+
   100% {
     transform: translate3d(0, 0, 0);
   }
 }
-.address_balance_amount{
+
+.addressBalance_amount {
   font-style: normal;
   font-weight: 500;
   font-size: 28px;
@@ -441,7 +455,8 @@ const handleDeposit = async () => {
   letter-spacing: -0.01em;
   color: #344054;
 }
-.address_balance{
+
+.addressBalance {
   font-style: normal;
   font-weight: 400;
   font-size: 12px;
@@ -449,53 +464,54 @@ const handleDeposit = async () => {
   letter-spacing: -0.01em;
   color: #667085;
 }
-.card_container{
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box;
-    background: #FFFFFF;
-    border: 1px solid #D0D5DD;
-    box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
-    border-radius: 3px;
+
+.card_container {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: #FFFFFF;
+  border: 1px solid #D0D5DD;
+  box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
+  border-radius: 3px;
 }
 
-.card_title{
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 12px;
-    line-height: 20px;
-    color: #344054;
+.card_title {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 20px;
+  color: #344054;
 }
 
-.card_input{
-    height: 44px;
-    width: 100%;
-    background: #FFFFFF;
-    border: 1px solid #D0D5DD;
-    box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 24px;
-    letter-spacing: -0.01em;
-    color: #101828;
-    margin-bottom: 6px;
+.card_input {
+  height: 44px;
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #D0D5DD;
+  box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 24px;
+  letter-spacing: -0.01em;
+  color: #101828;
+  margin-bottom: 6px;
 }
 
 .card_message {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 400;
-    font-size: 12px;
-    line-height: 20px;
-    letter-spacing: -0.01em;
-    color: #667085;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  color: #667085;
 }
 
 .card_button {
@@ -508,44 +524,46 @@ const handleDeposit = async () => {
   line-height: 18px;
   letter-spacing: -0.03em;
   color: #FFFFFF;
-}:disabled{
+}
+
+:disabled {
   background: rgba(15, 106, 242, 0.31);
 }
 
 .card_analytics_label {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 12px;
-    line-height: 20px;
-    color: #98A2B3;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 20px;
+  color: #98A2B3;
 }
 
 .card_analytics_amount {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 12px;
-    line-height: 20px;
-    text-align: right;
-    color: #344054;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: right;
+  color: #344054;
 }
 
-.card_checkbox_text{
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 400;
-    font-size: 11px;
-    line-height: 14px;
-    letter-spacing: -0.01em;
-    text-decoration-line: underline;
-    color: #344054;
+.card_checkbox_text {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: -0.01em;
+  text-decoration-line: underline;
+  color: #344054;
 }
 
-.card_checkbox{
-    background: #FFFFFF;
-    border: 1px solid #7F7889;
-    box-shadow: 0px 0px 0px 4px rgba(237, 235, 255, 0.26);
-    border-radius: 4px;
+.card_checkbox {
+  background: #FFFFFF;
+  border: 1px solid #7F7889;
+  box-shadow: 0px 0px 0px 4px rgba(237, 235, 255, 0.26);
+  border-radius: 4px;
 }
 </style>

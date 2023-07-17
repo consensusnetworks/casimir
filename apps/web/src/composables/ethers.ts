@@ -14,6 +14,7 @@ declare const window: ethereumWindow
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
 const { ethereumUrl } = useEnvironment()
+const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
@@ -28,6 +29,23 @@ export default function useEthers() {
     } catch(error: any) {
       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
     }
+  }
+
+  async function blockListener (blockNumber: number) {
+    const { manager, refreshBreakdown } = useContracts()
+    const { user } = useUsers()
+    console.log('blockNumber :>> ', blockNumber)
+    const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
+    const block = await provider.getBlockWithTransactions(blockNumber)
+    const transactions = block.transactions
+    transactions.map(async (tx) => {
+      if (addresses.includes(tx.from.toLowerCase())) {
+        console.log('tx :>> ', tx)
+        const response = manager.interface.parseTransaction({ data: tx.data })
+        console.log('response :>> ', response)
+        await refreshBreakdown()
+      }
+    })
   }
 
   /**
@@ -112,7 +130,6 @@ export default function useEthers() {
   }
 
   async function getEthersBalance(address: string) : Promise<GLfloat> {
-    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
     const balance = await provider.getBalance(address)
     return parseFloat(ethers.utils.formatEther(balance))
   }
@@ -152,23 +169,7 @@ export default function useEthers() {
   }
 
   async function listenForTransactions() {
-    const { manager, refreshBreakdown } = useContracts()
-    const { user } = useUsers()
-    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-    provider.on('block', async (blockNumber: number) => {
-      console.log('blockNumber :>> ', blockNumber)
-      const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
-      const block = await provider.getBlockWithTransactions(blockNumber)
-      const transactions = block.transactions
-      transactions.map(async (tx) => {
-        if (addresses.includes(tx.from.toLowerCase())) {
-          console.log('tx :>> ', tx)
-          const response = manager.interface.parseTransaction({ data: tx.data })
-          console.log('response :>> ', response)
-          await refreshBreakdown()
-        }
-      })
-    })
+    provider.on('block', blockListener as ethers.providers.Listener)
     await new Promise(() => {
       // Wait indefinitely using a Promise that never resolves
     })
@@ -232,6 +233,10 @@ export default function useEthers() {
     return signature
   }
 
+  function stopListeningForTransactions() {
+    provider.off('block', blockListener as ethers.providers.Listener)
+  }
+
   async function switchEthersNetwork (providerString: ProviderString, chainId: string) {
     const provider = getBrowserProvider(providerString)
     const currentChainId = await provider.networkVersion
@@ -275,6 +280,7 @@ export default function useEthers() {
     requestEthersAccount,
     sendEthersTransaction,
     signEthersMessage,
+    stopListeningForTransactions,
     switchEthersNetwork
   }
 }
