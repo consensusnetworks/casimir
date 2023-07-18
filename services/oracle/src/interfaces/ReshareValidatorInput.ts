@@ -8,6 +8,8 @@ export interface ReshareValidatorInput {
     manager: ethers.Contract & CasimirManager
     /** Validator public key */
     publicKey: string
+    /** Pool ID */
+    poolId: number
     /** Operator registry IDs */
     operatorIds: number[]
     /** Old operator registry IDs */
