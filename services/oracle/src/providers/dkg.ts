@@ -11,9 +11,7 @@ import { operatorStore } from '@casimir/data'
 import { DepositDataInput } from '../interfaces/DepositDataInput'
 
 export class Dkg {
-    /** DKG CLI path */
     cliPath: string
-    /** DKG messenger service URL */
     messengerUrl: string
 
     constructor(options: DkgOptions) {
