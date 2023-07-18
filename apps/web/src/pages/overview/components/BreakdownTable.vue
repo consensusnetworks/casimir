@@ -43,34 +43,27 @@ const tableHeaderOptions = ref(
       ]
     },
     Transactions: {
+      // Date | Account | Type | Amount | Status | Hash
       headers: [
-        {
-          title: 'TX Hash',
-          value: 'tx_hash'
-        },
-        {
-          title: 'Staked Amount',
-          value: 'stk_amt'
-        },
-        {
-          title: 'Staked Reward',
-          value: 'stk_rwd'
-        },
         {
           title: 'Date',
           value: 'date'
         },
         {
-          title: 'APY',
-          value: 'apy'
+          title: 'Type',
+          value: 'tx_type'
+        },
+        {
+          title: 'Amount',
+          value: 'stk_amt'
         },
         {
           title: 'Status',
           value: 'status'
         },
         {
-          title: 'Operators',
-          value: 'operators'
+          title: 'Hash',
+          value: 'tx_hash'
         }
       ]
     },
