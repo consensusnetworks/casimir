@@ -77,32 +77,44 @@ void async function () {
     const blocksPerReport = 10
     const rewardPerValidator = 0.105
     let lastReportBlock = await ethers.provider.getBlockNumber()
-
+    let lastStakedPoolIds: number[] = []
     void function () {
 
         ethers.provider.on('block', async (block) => {
             if (block - blocksPerReport >= lastReportBlock) {
                 await time.increase(time.duration.days(1))
+                console.log('⌛️ Report period complete')
                 lastReportBlock = await ethers.provider.getBlockNumber()
                 await runUpkeep({ upkeep, keeper })
+                const pendingPoolIds = await manager.getPendingPoolIds()
                 const stakedPoolIds = await manager.getStakedPoolIds()
-                const stakedPoolCount = stakedPoolIds.length
-                const pendingPoolCount = (await manager.getPendingPoolIds()).length
-                if (pendingPoolCount + stakedPoolCount > 0) {
-                    const activatedBalance = pendingPoolCount * 32
+                lastStakedPoolIds = stakedPoolIds
+                if (pendingPoolIds.length + stakedPoolIds.length) {
+                    console.log('🧾 Submitting report')
+                    const activatedBalance = pendingPoolIds.length * 32
                     const exitingPoolCount = await manager.requestedExits()
+                    const sweptRewardBalance =  rewardPerValidator * lastStakedPoolIds.length
                     const sweptExitedBalance = exitingPoolCount.toNumber() * 32
-                    const rewardAmount = rewardPerValidator * stakedPoolCount
+                    const rewardAmount = rewardPerValidator * stakedPoolIds.length
                     const latestActiveBalance = await manager.latestActiveBalance()
-                    const nextActiveBalance = round(parseFloat(ethers.utils.formatEther(latestActiveBalance)) + activatedBalance - sweptExitedBalance + rewardAmount, 10)
+                    const nextActiveBalance = round(parseFloat(ethers.utils.formatEther(latestActiveBalance)) + activatedBalance + rewardAmount - sweptRewardBalance - sweptExitedBalance, 10)
                     const nextActivatedDeposits = (await manager.getPendingPoolIds()).length
+                    for (const poolId of lastStakedPoolIds) {
+                        const poolAddress = await manager.getPoolAddress(poolId)
+                        const currentBalance = await ethers.provider.getBalance(poolAddress)
+                        const nextBalance = currentBalance.add(ethers.utils.parseEther(rewardPerValidator.toString()))
+                        await setBalance(poolAddress, nextBalance)
+                    }
+                    const startIndex = ethers.BigNumber.from(0)
+                    const endIndex = ethers.BigNumber.from(pendingPoolIds.length + stakedPoolIds.length)
+                    const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)
                     const nextValues = {
                         activeBalance: nextActiveBalance,
                         sweptBalance: sweptExitedBalance,
                         activatedDeposits: nextActivatedDeposits,
                         forcedExits: 0,
                         completedExits: exitingPoolCount.toNumber(),
-                        compoundablePoolIds: [0, 0, 0, 0, 0]
+                        compoundablePoolIds
                     }
                     requestId = await fulfillReport({
                         upkeep,
@@ -115,7 +127,7 @@ void async function () {
                         for (const poolId of stakedPoolIds) {
                             if (remaining === 0) break
                             const poolDetails = await views.getPoolDetails(poolId)
-                            if (poolDetails.status === PoolStatus.EXITING_REQUESTED) {
+                            if (poolDetails.status === PoolStatus.EXITING_FORCED || poolDetails.status === PoolStatus.EXITING_REQUESTED) {
                                 remaining--
                                 const poolAddress = await manager.getPoolAddress(poolId)
                                 const currentBalance = await ethers.provider.getBalance(poolAddress)
@@ -148,15 +160,9 @@ void async function () {
         await depositUpkeepBalanceHandler({ manager, signer: oracle })
     }, 2500)
 
-    /**
-     * We are either running or simulating (using the oracle helper) the DAO oracle (@casimir/oracle)
-     */
     if (process.env.MOCK_ORACLE === 'true') {
-
         run('npm run dev --workspace @casimir/oracle')
-
     } else {
-
         const handlers = {
             DepositRequested: initiateDepositHandler,
             /**

@@ -5,8 +5,6 @@ import './interfaces/ICasimirViews.sol';
 import './interfaces/ICasimirManager.sol';
 import './interfaces/ICasimirRegistry.sol';
 
-import 'hardhat/console.sol';
-
 /**
  * @title Views contract that provides read-only access to the state
  */
@@ -48,10 +46,16 @@ contract CasimirViews is ICasimirViews {
         uint256 startIndex,
         uint256 endIndex
     ) external view returns (uint32[5] memory poolIds) {
+        uint32[] memory pendingPoolIds = manager.getPendingPoolIds();
         uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
         uint256 count = 0;
         for (uint256 i = startIndex; i < endIndex; i++) {
-            uint32 poolId = stakedPoolIds[i];
+            uint32 poolId;
+            if (i < pendingPoolIds.length) {
+                poolId = pendingPoolIds[i];
+            } else {
+                poolId = stakedPoolIds[i - pendingPoolIds.length];
+            }
             ICasimirPool pool = ICasimirPool(manager.getPoolAddress(poolId));
             if (pool.getBalance() >= compoundMinimum) {
                 poolIds[count] = poolId;
@@ -148,8 +152,6 @@ contract CasimirViews is ICasimirViews {
             address poolAddress = manager.getPoolAddress(poolId);
             ICasimirPool pool = ICasimirPool(poolAddress);
             validatorPublicKeys[count] = pool.publicKey();
-            console.log('validatorPublicKeys[count]');
-            console.logBytes(validatorPublicKeys[count]);
             count++;
         }
         return validatorPublicKeys;
