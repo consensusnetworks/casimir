@@ -89,10 +89,11 @@ Customize and override the defaults for your *local development environment* by 
 | `AWS_PROFILE` | AWS profile name for accessing secrets | `consensus-networks-dev` |
 | `PROJECT` | Project name | `casimir` |
 | `STAGE` | Environment stage name | `dev` |
-| `ETHEREUM_FORK_RPC_URL` | Ethereum RPC URL for local fork network | `https://eth-goerli.alchemyapi.io/v2/<AWS-retrieved-secret-key>` |
-| `ETHEREUM_RPC_URL` | Ethereum RPC URL for live networks | `http://127.0.0.1:8545` |
-| `NETWORK` | Set live network (defaults to local fork network) | `` |
-| `FORK` | Local fork network (defaults to supported testnet for each chain) | `testnet` |
+| `ETHEREUM_FORK_RPC_URL` | RPC URL for local fork network | `https://eth-goerli.alchemyapi.io/v2/<AWS-retrieved-secret-key>` |
+| `ETHEREUM_FORK_BLOCK` | Starting block number for local fork network | `` |
+| `ETHEREUM_RPC_URL` | Ethereum RPC URL for live network | `` |
+| `NETWORK` | Mainnet, testnet, or devnet for live network | `` |
+| `FORK` | Mainnet, testnet, or devnet for local fork network | `testnet` |
 | `MANAGER_ADDRESS` | Manager contract address | `` |
 | `VIEWS_ADDRESS` | Views contract address | `` |
 | `CRYPTO_COMPARE_API_KEY` | CryptoCompare API key | `` |

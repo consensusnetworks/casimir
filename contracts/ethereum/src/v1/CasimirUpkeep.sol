@@ -163,6 +163,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         if (reportStatus == ReportStatus.FINALIZED) {
             reportStatus = ReportStatus.REQUESTING;
             reportRequestBlock = block.number;
+            // Add previousReportTimestamp to args (previousReportTimestamp = reportTimestamp)
             reportTimestamp = block.timestamp;
             reportPeriod = manager.reportPeriod();
             Functions.Request memory req;

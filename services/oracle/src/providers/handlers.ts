@@ -3,6 +3,7 @@ import { DKG } from './dkg'
 import { HandlerInput } from '../interfaces/HandlerInput'
 import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { getClusterDetails } from '@casimir/ssv'
+import { PoolStatus } from '@casimir/types'
 import { getPrice } from '@casimir/uniswap'
 
 export async function initiateDepositHandler(input: HandlerInput) {
@@ -144,7 +145,7 @@ export async function reportForcedExitsHandler(input: HandlerInput) {
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
         const poolDetails = await views.getPoolDetails(poolId)
-        if (poolDetails.status === 1) {
+        if (poolDetails.status === PoolStatus.ACTIVE) {
             remaining--
             const reportForcedExit = await manager.connect(signer).reportForcedExit(
                 poolIndex
@@ -178,7 +179,7 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
         const poolDetails = await views.getPoolDetails(poolId)
-        if (poolDetails.status === 2 || poolDetails.status === 3) {
+        if (poolDetails.status === PoolStatus.EXITING_FORCED || poolDetails.status === PoolStatus.EXITING_REQUESTED) {
             remaining--
             
             /**
