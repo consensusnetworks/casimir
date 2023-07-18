@@ -29,15 +29,15 @@ const tableHeaderOptions = ref(
           value: 'act'
         },
         {
-          title: 'Balance',
+          title: 'Wallet Balance',
           value: 'bal'
         },
         {
-          title: 'Staked Amount',
+          title: 'Stake Balance',
           value: 'stk_amt'
         },
         {
-          title: 'Staked Reward',
+          title: 'Stake Rewards (All-Time)',
           value: 'stk_rwd'
         }
       ]
