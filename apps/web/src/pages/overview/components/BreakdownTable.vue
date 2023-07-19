@@ -9,10 +9,10 @@ const currentPage = ref(1)
 const totalPages = ref(1)
 
 const searchInput = ref('')
-const tableView = ref('Wallets')
+const tableView = ref('Staking')
 
-const selectedHeader = ref('')
-const selectedOrientation = ref('ascending')
+const selectedHeader = ref('date')
+const selectedOrientation = ref('descending')
 
 const checkedItems = ref([] as any)
 
@@ -20,6 +20,10 @@ const tableHeaderOptions = ref(
   {
     Wallets: {
       headers: [
+        {
+          title: '',
+          value: 'blank_column'
+        },
         {
           title: 'Wallet Provider',
           value: 'wallet_provider'
@@ -45,6 +49,10 @@ const tableHeaderOptions = ref(
     Transactions: {
       headers: [
         {
+          title: '',
+          value: 'blank_column'
+        },
+        {
           title: 'Date',
           value: 'date'
         },
@@ -68,6 +76,10 @@ const tableHeaderOptions = ref(
     },
     Staking: {
       headers: [
+        {
+          title: '',
+          value: 'blank_column'
+        },
         {
           title: 'Date',
           value: 'date'
@@ -108,12 +120,15 @@ const tableData = ref({
   ],
   Transactions: [
   ],
+  Staking: [
+  ],
 })
 
 const filteredData = ref(tableData.value[tableView.value as keyof typeof tableData.value])
 
 const filterData = () => {
   let filteredDataArray
+
   if (searchInput.value === '') {
     filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
   } else {
@@ -129,8 +144,9 @@ const filterData = () => {
         item.tx_hash?.toLowerCase().includes(searchTerm) ||
         item.date?.toLowerCase().includes(searchTerm) ||
         item.apy?.toLowerCase().includes(searchTerm) ||
-        item.status?.toLowerCase().includes(searchTerm) // ||
-        // item.operators?.toLowerCase().includes(searchTerm) 
+        item.status?.toLowerCase().includes(searchTerm) || 
+        item.type?.toLowerCase().includes(searchTerm) ||
+        item.staking_fees.toLowerCase().includes(searchTerm)
       )
     })
   }
@@ -255,16 +271,14 @@ const setTableData = () =>{
     return {
         tx_hash: item.txId,
         stk_amt: item.amount,
-        stk_rwd: item.rewards,
+        tx_type: item.txDirection,
         date: item.receivedAt,
-        apy: item.apy,
         status: item.status,
-        operators: item.opperators
     }
   })
 
   let filteredWallets = [] as any
-
+  let filteredStakingTransactions = [] as any
   sortedTransactions.forEach((item: any) => {
     const index = filteredWallets.findIndex((i: any)=> i.act === item.walletAddress)
 
@@ -280,15 +294,26 @@ const setTableData = () =>{
           act: item.walletAddress,
           bal: item.walletBalance,
           stk_amt: item.amount,
-          stk_rwd: item.rewards,
-          date: item.receivedAt
+          stk_rwd: item.rewards, // TODO: @Chris we need all-time staking rewards fetched here based on wallet
         }
       )
+    }
+
+    if(item.type){
+      filteredStakingTransactions.push({
+        date: item.receivedAt,
+        account: item.walletAddress,
+        type: item.type,
+        amount: item.amount,
+        staking_fees: item.stakeFee,
+        status: item.status,
+        tx_hash: item.txId
+      })
     }
   })
 
   newTable.Wallets = filteredWallets
-
+  newTable.Staking = filteredStakingTransactions
   tableData.value = newTable
 
 }

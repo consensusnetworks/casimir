@@ -15,7 +15,6 @@ export default function useTxData () {
     const endDate = new Date()
     const randomDate = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime()))
   
-    // Format the date as 'YYYY-MM-DD HH:mm:ss.SSS'
     const year = randomDate.getFullYear()
     const month = String(randomDate.getMonth() + 1).padStart(2, '0')
     const day = String(randomDate.getDate()).padStart(2, '0')
@@ -24,7 +23,7 @@ export default function useTxData () {
     const seconds = String(randomDate.getSeconds()).padStart(2, '0')
     const milliseconds = String(randomDate.getMilliseconds()).padStart(3, '0')
   
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}:${milliseconds}`
   }
 
   function generateMockTransactionData(numTransactions: number) {
