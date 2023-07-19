@@ -9,9 +9,9 @@ const currentPage = ref(1)
 const totalPages = ref(1)
 
 const searchInput = ref('')
-const tableView = ref('Staking')
+const tableView = ref('Wallets')
 
-const selectedHeader = ref('date')
+const selectedHeader = ref('wallet_provider')
 const selectedOrientation = ref('descending')
 
 const checkedItems = ref([] as any)
@@ -86,7 +86,7 @@ const tableHeaderOptions = ref(
         },
         {
           title: 'Account',
-          value: 'account'
+          value: 'act'
         },
         {
           title: 'Type',
@@ -182,7 +182,7 @@ const convertString = (inputString: string) => {
 
   var start = inputString.substring(0, 4)
   var end = inputString.substring(inputString.length - 4)
-  var middle = '*'.repeat(4)
+  var middle = '.'.repeat(4)
 
   return start + middle + end
 }
@@ -302,7 +302,7 @@ const setTableData = () =>{
     if(item.type){
       filteredStakingTransactions.push({
         date: item.receivedAt,
-        account: item.walletAddress,
+        act: item.walletAddress,
         type: item.type,
         amount: item.amount,
         staking_fees: item.stakeFee,
@@ -517,7 +517,7 @@ onMounted(() =>{
                 v-else-if="header.value === 'act'"
                 class="flex items-center gap-[12px] underline"
               >
-                <a href=""> 
+                <a href="">
                   {{ convertString(item[header.value ]) }}
                 </a>
               </div>
@@ -549,15 +549,34 @@ onMounted(() =>{
                 </div>
               </div>
               <div
-                v-else-if="header.value === 'operators'"
+                v-else-if="header.value === 'bal'"
                 class="flex items-center gap-[12px] pl-[20px]"
               >
-                <div
-                  v-for="operator in item[header.value ]"
-                  :key="operator"
-                  :class="`w-[24px] h-[24px] border-[2px] border-white  rounded-[999px]`"
-                  :style="`margin-left: -20px; background-color: ${operator}; opacity: 0.55`"
-                />
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'stk_amt'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'stk_rwd'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'amount'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'staking_fees'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
               </div>
               <div v-else>
                 {{ item[header.value ] }}
