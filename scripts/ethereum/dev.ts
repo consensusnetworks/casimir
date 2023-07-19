@@ -59,8 +59,11 @@ void async function () {
     echo (chalk.bgBlackBright('Using ') + chalk.bgBlue(process.env.FORK) + chalk.bgBlackBright(' fork from ') + chalk.bgBlue(process.env.ETHEREUM_FORK_RPC_URL))
     echo (chalk.bgBlackBright('Serving local fork at ') + chalk.bgBlue(process.env.ETHEREUM_RPC_URL))
 
-    const wallet = getWallet(process.env.BIP39_SEED)
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
+    process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 5}`
+    console.log(`📍 Forking started at ${process.env.ETHEREUM_FORK_BLOCK}`)
+
+    const wallet = getWallet(process.env.BIP39_SEED)
     const nonce = await provider.getTransactionCount(wallet.address)
     const managerIndex = 1 // We deploy a mock functions oracle before the manager
     if (!process.env.MANAGER_ADDRESS) {
