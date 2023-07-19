@@ -211,12 +211,15 @@ const handleDeposit = async () => {
       class="absolute w-full h-full bg-black/[.1] top-0 left-0 rounded-[3px] z-[10] "
     />
     <h6 class="addressBalance mb-[12px]">
-      Account Balance
+      Wallet Balance
     </h6>
-    <h5 class="addressBalance_amount mb-[27px]">
+    <h5 class="addressBalance_amount mb-[5px]">
       {{ addressBalance ? addressBalance : '- - -' }}
     </h5>
-
+    <div class="text-[12px] mb-[13px] text-blue-400">
+      <!-- TODO: @Chris we need to see how much they have staked currently based on the wallet selected -->
+      <span class=" font-[900]">50</span> ETH Currently Staked
+    </div>
     <h6 class="card_title mb-[11px]">
       Wallet
     </h6>
@@ -317,7 +320,7 @@ const handleDeposit = async () => {
       The amount to stake in set currency
     </p>
 
-    <div class="flex justify-between items-center mt-[32px]">
+    <div class="flex justify-between items-center mt-[22px]">
       <div class="flex items-center gap-[12px]">
         <h6 class="card_analytics_label">
           Fees

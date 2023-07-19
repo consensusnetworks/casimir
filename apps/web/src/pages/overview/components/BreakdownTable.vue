@@ -12,7 +12,7 @@ const searchInput = ref('')
 const tableView = ref('Wallets')
 
 const selectedHeader = ref('wallet_provider')
-const selectedOrientation = ref('descending')
+const selectedOrientation = ref('ascending')
 
 const checkedItems = ref([] as any)
 
@@ -369,18 +369,18 @@ onMounted(() =>{
             Wallets
           </button>
           <button
-            class="timeframe_button border-l border-l-[#D0D5DD]"
-            :class="tableView === 'Staking'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Staking', selectedHeader = 'date', checkedItems = []"
-          >
-            Staking
-          </button>
-          <button
             class="timeframe_button border-l border-l-[#D0D5DD] " 
             :class="tableView === 'Transactions'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
             @click="tableView = 'Transactions', selectedHeader = 'date', checkedItems = []"
           >
             Transactions
+          </button>
+          <button
+            class="timeframe_button border-l border-l-[#D0D5DD]"
+            :class="tableView === 'Staking'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
+            @click="tableView = 'Staking', selectedHeader = 'date', checkedItems = []"
+          >
+            Staking Actions
           </button>
         </div>
         <div class="flex flex-wrap items-center gap-[12px]">
