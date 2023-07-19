@@ -11,7 +11,7 @@ const totalPages = ref(1)
 const searchInput = ref('')
 const tableView = ref('Wallets')
 
-const selectedHeader = ref('')
+const selectedHeader = ref('wallet_provider')
 const selectedOrientation = ref('ascending')
 
 const checkedItems = ref([] as any)
@@ -21,6 +21,10 @@ const tableHeaderOptions = ref(
     Wallets: {
       headers: [
         {
+          title: '',
+          value: 'blank_column'
+        },
+        {
           title: 'Wallet Provider',
           value: 'wallet_provider'
         },
@@ -29,49 +33,81 @@ const tableHeaderOptions = ref(
           value: 'act'
         },
         {
-          title: 'Balance',
+          title: 'Wallet Balance',
           value: 'bal'
         },
         {
-          title: 'Staked Amount',
+          title: 'Stake Balance',
           value: 'stk_amt'
-        },
+        }, // Need to fetch based on wallet (FE SIDE)
         {
-          title: 'Staked Reward',
+          title: 'Stake Rewards (All-Time)',
           value: 'stk_rwd'
-        }
+        }, // Need to fetch based on wallet (FE SIDE)
       ]
     },
     Transactions: {
       headers: [
         {
-          title: 'TX Hash',
-          value: 'tx_hash'
-        },
-        {
-          title: 'Staked Amount',
-          value: 'stk_amt'
-        },
-        {
-          title: 'Staked Reward',
-          value: 'stk_rwd'
+          title: '',
+          value: 'blank_column'
         },
         {
           title: 'Date',
           value: 'date'
         },
         {
-          title: 'APY',
-          value: 'apy'
+          title: 'Type',
+          value: 'tx_type'
+        },
+        {
+          title: 'Amount',
+          value: 'stk_amt'
         },
         {
           title: 'Status',
           value: 'status'
         },
         {
-          title: 'Operators',
-          value: 'operators'
+          title: 'Hash',
+          value: 'tx_hash'
         }
+      ]
+    },
+    Staking: {
+      headers: [
+        {
+          title: '',
+          value: 'blank_column'
+        },
+        {
+          title: 'Date',
+          value: 'date'
+        },
+        {
+          title: 'Account',
+          value: 'act'
+        },
+        {
+          title: 'Type',
+          value: 'type'
+        },
+        {
+          title: 'Amount',
+          value: 'amount'
+        },
+        {
+          title: 'Staking Fees',
+          value: 'staking_fees'
+        },
+        {
+          title: 'Status',
+          value: 'status'
+        },
+        {
+          title: 'Hash',
+          value: 'tx_hash'
+        },
       ]
     },
   }
@@ -84,12 +120,15 @@ const tableData = ref({
   ],
   Transactions: [
   ],
+  Staking: [
+  ],
 })
 
 const filteredData = ref(tableData.value[tableView.value as keyof typeof tableData.value])
 
 const filterData = () => {
   let filteredDataArray
+
   if (searchInput.value === '') {
     filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
   } else {
@@ -105,8 +144,9 @@ const filterData = () => {
         item.tx_hash?.toLowerCase().includes(searchTerm) ||
         item.date?.toLowerCase().includes(searchTerm) ||
         item.apy?.toLowerCase().includes(searchTerm) ||
-        item.status?.toLowerCase().includes(searchTerm) // ||
-        // item.operators?.toLowerCase().includes(searchTerm) 
+        item.status?.toLowerCase().includes(searchTerm) || 
+        item.type?.toLowerCase().includes(searchTerm) ||
+        item.staking_fees.toLowerCase().includes(searchTerm)
       )
     })
   }
@@ -142,7 +182,7 @@ const convertString = (inputString: string) => {
 
   var start = inputString.substring(0, 4)
   var end = inputString.substring(inputString.length - 4)
-  var middle = '*'.repeat(4)
+  var middle = '.'.repeat(4)
 
   return start + middle + end
 }
@@ -231,16 +271,14 @@ const setTableData = () =>{
     return {
         tx_hash: item.txId,
         stk_amt: item.amount,
-        stk_rwd: item.rewards,
+        tx_type: item.txDirection,
         date: item.receivedAt,
-        apy: item.apy,
         status: item.status,
-        operators: item.opperators
     }
   })
 
   let filteredWallets = [] as any
-
+  let filteredStakingTransactions = [] as any
   sortedTransactions.forEach((item: any) => {
     const index = filteredWallets.findIndex((i: any)=> i.act === item.walletAddress)
 
@@ -256,15 +294,26 @@ const setTableData = () =>{
           act: item.walletAddress,
           bal: item.walletBalance,
           stk_amt: item.amount,
-          stk_rwd: item.rewards,
-          date: item.receivedAt
+          stk_rwd: item.rewards, // TODO: @Chris we need all-time staking rewards fetched here based on wallet
         }
       )
+    }
+
+    if(item.type){
+      filteredStakingTransactions.push({
+        date: item.receivedAt,
+        act: item.walletAddress,
+        type: item.type,
+        amount: item.amount,
+        staking_fees: item.stakeFee,
+        status: item.status,
+        tx_hash: item.txId
+      })
     }
   })
 
   newTable.Wallets = filteredWallets
-
+  newTable.Staking = filteredStakingTransactions
   tableData.value = newTable
 
 }
@@ -315,16 +364,23 @@ onMounted(() =>{
           <button
             class="timeframe_button"
             :class="tableView === 'Wallets'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Wallets', selectedHeader = '', checkedItems = []"
+            @click="tableView = 'Wallets', selectedHeader = 'wallet_provider', checkedItems = [], selectedOrientation = 'ascending'"
           >
             Wallets
           </button>
           <button
             class="timeframe_button border-l border-l-[#D0D5DD] " 
             :class="tableView === 'Transactions'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Transactions', selectedHeader = '', checkedItems = []"
+            @click="tableView = 'Transactions', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'descending'"
           >
             Transactions
+          </button>
+          <button
+            class="timeframe_button border-l border-l-[#D0D5DD]"
+            :class="tableView === 'Staking'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
+            @click="tableView = 'Staking', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'descending'"
+          >
+            Staking Actions
           </button>
         </div>
         <div class="flex flex-wrap items-center gap-[12px]">
@@ -428,7 +484,7 @@ onMounted(() =>{
               class="dynamic_padding"
             >
               <div
-                v-if="header.value === 'wallet_provider'"
+                v-if="header.value === 'blank_column'"
                 class="flex items-center gap-[12px]"
               >
                 <button
@@ -442,6 +498,11 @@ onMounted(() =>{
                     class="icon w-[14px] h-min"
                   />
                 </button>
+              </div>
+              <div
+                v-if="header.value === 'wallet_provider'"
+                class="flex items-center gap-[12px]"
+              >
                 <img
                   v-if="item[header.value] != 'Unknown'"
                   :src="`/${item[header.value ]}.svg`"
@@ -456,7 +517,7 @@ onMounted(() =>{
                 v-else-if="header.value === 'act'"
                 class="flex items-center gap-[12px] underline"
               >
-                <a href=""> 
+                <a href="">
                   {{ convertString(item[header.value ]) }}
                 </a>
               </div>
@@ -464,17 +525,6 @@ onMounted(() =>{
                 v-else-if="header.value === 'tx_hash'"
                 class="flex items-center gap-[12px]"
               >
-                <button
-                  class="checkbox_button"
-                  @click="checkedItems.includes(item)? removeItemFromCheckedList(item) : checkedItems.push(item)"
-                >
-                  <vue-feather
-                    v-show="checkedItems.includes(item)"
-                    type="check"
-                    size="20"
-                    class="icon w-[14px] h-min"
-                  />
-                </button>
                 <a class="">
                   {{ convertString(item[header.value ]) }}
                 </a>
@@ -499,15 +549,34 @@ onMounted(() =>{
                 </div>
               </div>
               <div
-                v-else-if="header.value === 'operators'"
+                v-else-if="header.value === 'bal'"
                 class="flex items-center gap-[12px] pl-[20px]"
               >
-                <div
-                  v-for="operator in item[header.value ]"
-                  :key="operator"
-                  :class="`w-[24px] h-[24px] border-[2px] border-white  rounded-[999px]`"
-                  :style="`margin-left: -20px; background-color: ${operator}; opacity: 0.55`"
-                />
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'stk_amt'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'stk_rwd'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'amount'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'staking_fees'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
               </div>
               <div v-else>
                 {{ item[header.value ] }}

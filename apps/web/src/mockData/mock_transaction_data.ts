@@ -15,7 +15,6 @@ export default function useTxData () {
     const endDate = new Date()
     const randomDate = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime()))
   
-    // Format the date as 'YYYY-MM-DD HH:mm:ss.SSS'
     const year = randomDate.getFullYear()
     const month = String(randomDate.getMonth() + 1).padStart(2, '0')
     const day = String(randomDate.getDate()).padStart(2, '0')
@@ -24,7 +23,7 @@ export default function useTxData () {
     const seconds = String(randomDate.getSeconds()).padStart(2, '0')
     const milliseconds = String(randomDate.getMilliseconds()).padStart(3, '0')
   
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}:${milliseconds}`
   }
 
   function generateMockTransactionData(numTransactions: number) {
@@ -47,18 +46,18 @@ export default function useTxData () {
       const transaction = {
         walletAddress: walletAddresses[i % walletAddresses.length],
         walletBalance: String(generateRandomBalance()),
-        txDirection: 'incoming',
+        txDirection: Math.random() < 0.5? 'incoming': 'outgoing',
         txId: '0xf46d39ca96e489fb0eb2097f073bfde2dc7960bf8358e0692fa79cc8597d283e',
         receivedAt: generateRandomDate(),
         amount: (Math.random() * 20.00).toFixed(2),
-        price: '0.0',
-        gasFee: '195178697897910',
+        price: (Math.random() * 2000.00).toFixed(2),
+        gasFee: (Math.random() * 10.00).toFixed(2),
+        stakeFee: (Math.random() * 10.00).toFixed(2),
         rewards:(Math.random() * 10.00).toFixed(2),
-        apy: (Math.random() * 10.00).toFixed(2) + '%',
+        apy: (Math.random() * 10.00).toFixed(2),
         status: Math.random() > 0.5? 'Pending' : 'Active',
-        opperators: [ 'red', 'green', 'blue', 'orange', 'yellow'] //This is random until I get more info on how it will look like from backend
+        type: Math.random() > 0.5? null : Math.random() > 0.5? 'Stake SSV' : 'Withdraw',
       }
-  
       data.push(transaction)
     }
   
