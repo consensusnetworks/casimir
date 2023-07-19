@@ -35,15 +35,14 @@ const tableHeaderOptions = ref(
         {
           title: 'Stake Balance',
           value: 'stk_amt'
-        },
+        }, // Need to fetch based on wallet (FE SIDE)
         {
           title: 'Stake Rewards (All-Time)',
           value: 'stk_rwd'
-        }
+        }, // Need to fetch based on wallet (FE SIDE)
       ]
     },
     Transactions: {
-      // Date | Account | Type | Amount | Status | Hash
       headers: [
         {
           title: 'Date',
@@ -65,6 +64,38 @@ const tableHeaderOptions = ref(
           title: 'Hash',
           value: 'tx_hash'
         }
+      ]
+    },
+    Staking: {
+      headers: [
+        {
+          title: 'Date',
+          value: 'date'
+        },
+        {
+          title: 'Account',
+          value: 'account'
+        },
+        {
+          title: 'Type',
+          value: 'type'
+        },
+        {
+          title: 'Amount',
+          value: 'amount'
+        },
+        {
+          title: 'Staking Fees',
+          value: 'staking_fees'
+        },
+        {
+          title: 'Status',
+          value: 'status'
+        },
+        {
+          title: 'Hash',
+          value: 'tx_hash'
+        },
       ]
     },
   }
