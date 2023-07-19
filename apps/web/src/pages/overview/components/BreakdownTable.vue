@@ -364,21 +364,21 @@ onMounted(() =>{
           <button
             class="timeframe_button"
             :class="tableView === 'Wallets'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Wallets', selectedHeader = 'wallet_provider', checkedItems = []"
+            @click="tableView = 'Wallets', selectedHeader = 'wallet_provider', checkedItems = [], selectedOrientation = 'ascending'"
           >
             Wallets
           </button>
           <button
             class="timeframe_button border-l border-l-[#D0D5DD] " 
             :class="tableView === 'Transactions'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Transactions', selectedHeader = 'date', checkedItems = []"
+            @click="tableView = 'Transactions', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'decending'"
           >
             Transactions
           </button>
           <button
             class="timeframe_button border-l border-l-[#D0D5DD]"
             :class="tableView === 'Staking'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Staking', selectedHeader = 'date', checkedItems = []"
+            @click="tableView = 'Staking', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'decending'"
           >
             Staking Actions
           </button>
