@@ -364,14 +364,21 @@ onMounted(() =>{
           <button
             class="timeframe_button"
             :class="tableView === 'Wallets'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Wallets', selectedHeader = '', checkedItems = []"
+            @click="tableView = 'Wallets', selectedHeader = 'wallet_provider', checkedItems = []"
           >
             Wallets
           </button>
           <button
+            class="timeframe_button border-l border-l-[#D0D5DD]"
+            :class="tableView === 'Staking'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
+            @click="tableView = 'Staking', selectedHeader = 'date', checkedItems = []"
+          >
+            Staking
+          </button>
+          <button
             class="timeframe_button border-l border-l-[#D0D5DD] " 
             :class="tableView === 'Transactions'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Transactions', selectedHeader = '', checkedItems = []"
+            @click="tableView = 'Transactions', selectedHeader = 'date', checkedItems = []"
           >
             Transactions
           </button>
@@ -477,7 +484,7 @@ onMounted(() =>{
               class="dynamic_padding"
             >
               <div
-                v-if="header.value === 'wallet_provider'"
+                v-if="header.value === 'blank_column'"
                 class="flex items-center gap-[12px]"
               >
                 <button
@@ -491,6 +498,11 @@ onMounted(() =>{
                     class="icon w-[14px] h-min"
                   />
                 </button>
+              </div>
+              <div
+                v-if="header.value === 'wallet_provider'"
+                class="flex items-center gap-[12px]"
+              >
                 <img
                   v-if="item[header.value] != 'Unknown'"
                   :src="`/${item[header.value ]}.svg`"
@@ -513,17 +525,6 @@ onMounted(() =>{
                 v-else-if="header.value === 'tx_hash'"
                 class="flex items-center gap-[12px]"
               >
-                <button
-                  class="checkbox_button"
-                  @click="checkedItems.includes(item)? removeItemFromCheckedList(item) : checkedItems.push(item)"
-                >
-                  <vue-feather
-                    v-show="checkedItems.includes(item)"
-                    type="check"
-                    size="20"
-                    class="icon w-[14px] h-min"
-                  />
-                </button>
                 <a class="">
                   {{ convertString(item[header.value ]) }}
                 </a>
