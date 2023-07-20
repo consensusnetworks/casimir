@@ -9,9 +9,6 @@
 
 > Decentralized staking and asset management
 
-## 📖 Table of Contents
-
-- [📖 Table of Contents](#-table-of-contents)
 - [About](#about)
 - [💻 Development](#-development)
   - [Prerequisites](#prerequisites)
