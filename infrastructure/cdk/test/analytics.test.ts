@@ -27,7 +27,7 @@ test('Analytics stack created', () => {
     expect(columnName).toEqual(name)
   }
 
-  const actionTable = Object.keys(resource).filter(key => key.includes('WalletTable'))[0]
+  const actionTable = Object.keys(resource).filter(key => key.includes('ActionTable'))[0]
   const actionColumns = resource[actionTable].Properties.TableInput.StorageDescriptor.Columns
   const actionGlueSchema = new Schema(actionSchema).getGlueColumns()
 
