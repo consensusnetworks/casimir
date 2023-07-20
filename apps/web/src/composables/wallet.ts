@@ -102,6 +102,7 @@ export default function useWallet() {
           setPrimaryAddress(user?.value?.address as string) 
         }
       }
+      // TODO: Implement setting user table analytics here
       await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
       await refreshBreakdown()

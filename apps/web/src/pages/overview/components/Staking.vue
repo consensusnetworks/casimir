@@ -9,7 +9,7 @@ import useContracts from '@/composables/contracts'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
-const { deposit, getDepositFees } = useContracts()
+const { deposit, getDepositFees, getUserStakeAtAddress } = useContracts()
 const { getEthersBalance } = useEthers()
 const { user, updateUserAgreement } = useUsers()
 const { getCurrentPrice } = usePrice()
@@ -17,6 +17,7 @@ const { getCurrentPrice } = usePrice()
 // Staking Component Refs
 const addressBalance = ref<string | null>(null)
 const currentEthPrice = ref(0)
+const currentUserStake = ref(0)
 const estimatedFees = ref<number | string>('-')
 const formattedAmountToStake = ref('')
 const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
@@ -112,6 +113,7 @@ const aggregateAddressesByProvider = () => {
     selectedWalletAddress.value = null
     formattedAmountToStake.value = ''
     addressBalance.value = null
+    currentUserStake.value = 0
   }
 }
 
@@ -139,6 +141,16 @@ watch(formattedAmountToStake, async () => {
   }
 })
 
+watch(selectedWalletAddress, async () => {
+  if (selectedWalletAddress.value) {
+    addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + ' ETH'
+    currentUserStake.value = await getUserStakeAtAddress(selectedWalletAddress.value)
+  } else {
+    addressBalance.value = null
+    currentUserStake.value = 0
+  }
+})
+
 watch(user, async () => {
   if (user.value?.id) {
     aggregateAddressesByProvider()
@@ -146,11 +158,13 @@ watch(user, async () => {
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     selectedWalletAddress.value = user.value?.address as string
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
+    currentUserStake.value = await getUserStakeAtAddress(selectedWalletAddress.value as string)
   } else {
     selectedStakingProvider.value = ''
     selectedWalletAddress.value = null
     formattedAmountToStake.value = ''
     addressBalance.value = null
+    currentUserStake.value = 0
   }
 })
 
@@ -162,8 +176,9 @@ onMounted(async () => {
   if (user.value?.id) {
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
+    selectedWalletAddress.value = user.value?.address as string
+    currentUserStake.value = await getUserStakeAtAddress(selectedWalletAddress.value as string)
   }
-  selectedWalletAddress.value = user.value?.address as string
 })
 
 onUnmounted(() => {
@@ -195,12 +210,13 @@ const handleDeposit = async () => {
     // addressBalance.value = null
     formattedAmountToStake.value = ''
 
-  }, 3000)
+  }, 2500)
 
   setTimeout(() => {
     stakingActionLoader.value = false
-  }, 3500)
+  }, 3000)
 
+  currentUserStake.value = await getUserStakeAtAddress(selectedWalletAddress.value as string)
 }
 </script>
 
@@ -218,7 +234,7 @@ const handleDeposit = async () => {
     </h5>
     <div class="text-[12px] mb-[13px] text-blue-400">
       <!-- TODO: @Chris we need to see how much they have staked currently based on the wallet selected -->
-      <span class=" font-[900]">50</span> ETH Currently Staked
+      <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked
     </div>
     <h6 class="card_title mb-[11px]">
       Wallet

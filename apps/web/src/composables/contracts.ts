@@ -97,6 +97,17 @@ export default function useContracts() {
             }
         }
     }
+
+    async function getUserStakeAtAddress(address: string): Promise<number> {
+        try {
+            const bigNumber = await manager.connect(provider).getUserStake(address)
+            const number = parseFloat(ethers.utils.formatEther(bigNumber))
+            return number
+        } catch (err) {
+            console.error(`There was an error in getUserStakeAtAddress function: ${JSON.stringify(err)}`)
+            return 0
+        }
+    }
     
     async function getDepositFees() {
         const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
@@ -361,7 +372,8 @@ export default function useContracts() {
         totalWalletBalance, 
         deposit, 
         getCurrentStaked,
-        getDepositFees, 
+        getDepositFees,
+        getUserStakeAtAddress,
         // getPools, 
         listenForContractEvents,
         refreshBreakdown,
