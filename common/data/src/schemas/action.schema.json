@@ -2,7 +2,7 @@
     "$id": "https://casimir.co/agg.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$comment": "analytics",
-    "title": "Staking actions events",
+    "title": "Action",
     "type": "object",
     "properties": {
         "chain": {

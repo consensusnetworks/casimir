@@ -2,7 +2,7 @@
     "$id": "https://casimir.co/event.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$comment": "analytics",
-    "title": "Transaction events",
+    "title": "Event",
     "type": "object",
     "properties": {
         "chain": {
