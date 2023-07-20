@@ -1,0 +1,61 @@
+{
+    "$id": "https://casimir.co/agg.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$comment": "analytics",
+    "title": "Action",
+    "type": "object",
+    "properties": {
+        "chain": {
+            "type": "string",
+            "description": "The chain which the event belongs to (e.g. iotex, ethereum)"
+        },
+        "network": {
+            "type": "string",
+            "description": "Network type (e.g. mainnet, testnet)"
+        },
+        "type": {
+            "type": "string",
+            "description": "Type of the event (e.g. wallet, stake)"
+        },
+        "action": {
+            "type": "string",
+            "description": "For wallet (e.g. received or sent) and for stake (e.g. stake_deposited, stake_rebalanced, withdrawal_initiated, withdrawal_fulfilled)"
+        },
+        "address": {
+            "type": "string",
+            "description": "Wallet address"
+        },
+        "amount": {
+            "type": "string",
+            "description": "Recorded amount depending on the event type"
+        },
+        "balance": {
+            "type": "string",
+            "description": "Wallet balance or the staked amount"
+        },
+        "gas": {
+            "type": "integer",
+            "description": "Gas used for the transaction"
+        },
+        "hash": {
+            "type": "string",
+            "description": "Transaction hash"
+        },
+        "price": {
+            "type": "string",
+            "description": "The exchange price of the coin at the time of the event"
+        },
+        "received_at": {
+            "type": "integer",
+            "description": "Timestamp of the event in unix format"
+        },
+        "rewards_all_time": {
+            "type": "string",
+            "description": "Total rewards earned"
+        },
+        "staking_fees": {
+            "type": "string",
+            "description": "Total staking fees"
+        }
+    }
+}
