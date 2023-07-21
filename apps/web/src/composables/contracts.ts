@@ -14,17 +14,17 @@ import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Poo
 
 const currentStaked = ref<BreakdownAmount>({
     usd: '$0.00',
-    exchange: '0 ETH'
+    eth: '0 ETH'
 })
 
 const stakingRewards = ref<BreakdownAmount>({
     usd: '$0.00',
-    exchange: '0 ETH'
+    eth: '0 ETH'
 })
 
 const totalWalletBalance = ref<BreakdownAmount>({
     usd: '$0.00',
-    exchange: '0 ETH'
+    eth: '0 ETH'
 })
 
 const { ethereumUrl, managerAddress, viewsAddress } = useEnvironment()
@@ -86,13 +86,13 @@ export default function useContracts() {
             const formattedTotalStakedUSD = formatNumber(totalStakedUSD)
             const formattedTotalStakedETH = formatNumber(totalStakedETH)
             return {
-                exchange: formattedTotalStakedUSD + ' ETH',
+                eth: formattedTotalStakedUSD + ' ETH',
                 usd: '$ ' + formattedTotalStakedETH
             }
         } catch (error) {
             console.log('Error occurred while fetching stake:', error)
             return {
-                exchange: '0 ETH',
+                eth: '0 ETH',
                 usd: '$ 0.00'
             }
         }
@@ -218,13 +218,13 @@ export default function useContracts() {
             /* Get User's All Time Rewards by Subtracting (StakeDesposited + WithdrawalInitiated) from CurrentStake */
             const currentUserStakeMinusEvents = currentUserStakeETH - (stakedDepositedETH as number) - (withdrawalInitiatedETH as number)
             return {
-                exchange: formatNumber(currentUserStakeMinusEvents),
+                eth: formatNumber(currentUserStakeMinusEvents),
                 usd: formatNumber(currentUserStakeMinusEvents * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' })))
             }
         } catch (err) {
             console.error(`There was an error in getAllTimeStakingRewards: ${err}`)
             return {
-                exchange: '0 ETH',
+                eth: '0 ETH',
                 usd: '$ 0.00'
             }
         }
@@ -239,7 +239,7 @@ export default function useContracts() {
         const formattedTotalWalletBalance = formatNumber(totalWalletBalance)
         const formattedTotalWalletBalanceUSD = formatNumber(totalWalletBalanceUSD)
         return {
-            exchange: formattedTotalWalletBalance + ' ETH',
+            eth: formattedTotalWalletBalance + ' ETH',
             usd: '$ ' + formattedTotalWalletBalanceUSD
         }
     }
@@ -298,15 +298,15 @@ export default function useContracts() {
             if (!user.value?.id) {
                 // Reset currentStaked, totalWalletBalance, and stakingRewards
                 currentStaked.value = {
-                    exchange: '0 ETH',
+                    eth: '0 ETH',
                     usd: '$ 0.00'
                 }
                 totalWalletBalance.value = {
-                    exchange: '0 ETH',
+                    eth: '0 ETH',
                     usd: '$ 0.00'
                 }
                 stakingRewards.value = {
-                    exchange: '0 ETH',
+                    eth: '0 ETH',
                     usd: '$ 0.00'
                 }
             }
@@ -318,23 +318,23 @@ export default function useContracts() {
         }
     }
 
-    function setBreakdownValue({ name, exchange, usd }: { name: BreakdownString, exchange: string, usd: string}) {
+    function setBreakdownValue({ name, eth, usd }: { name: BreakdownString, eth: string, usd: string}) {
         switch (name) {
             case 'currentStaked':
                 currentStaked.value = {
-                    exchange,
+                    eth,
                     usd
                 }
             break
             case 'totalWalletBalance':
                 totalWalletBalance.value = {
-                    exchange,
+                    eth,
                     usd
                 }
             break
             case 'stakingRewardsEarned':
                 stakingRewards.value = {
-                    exchange,
+                    eth,
                     usd
                 }
             break
