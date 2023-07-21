@@ -5,7 +5,7 @@
         "dev": "npx hardhat run scripts/dev.ts",
         "deploy": "npx hardhat run scripts/deploy.ts",
         "docgen": "npx hardhat docgen",
-        "test": "npx esno scripts/test.ts --clean \"$npm_config_clean\"",
+        "test": "npx esno scripts/test.ts",
         "clean": "npx hardhat clean",
         "build": "npx hardhat compile --show-stack-traces"
     },

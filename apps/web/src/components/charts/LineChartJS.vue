@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue'
-import Chart, { ChartItem, ChartData } from 'chart.js/auto'
+import { onMounted, watch } from 'vue'
+import Chart, { ChartData } from 'chart.js/auto'
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
@@ -47,7 +47,7 @@ const hexToRGB = (hex: string) => {
 let ctx: any
 let line_chart: Chart<any, any[], unknown>
 onMounted(() => {
-    ctx = document.getElementById(props.id)?.getContext('2d')
+    ctx = (document.getElementById(props.id) as HTMLCanvasElement).getContext('2d')
     line_chart = new Chart(ctx, {
         type : 'line',
 		data : props.data as ChartData<any>,
@@ -108,7 +108,7 @@ onMounted(() => {
 
 watch(props, ()=> {
     if(line_chart.data !== props.data){
-        line_chart.data = props.data
+        line_chart.data = props.data as ChartData
 
         if(props.gradient){
             
@@ -118,7 +118,7 @@ watch(props, ()=> {
                     let rgb = hexToRGB(line_chart.data.datasets[i].backgroundColor)
 
                     gradient.addColorStop(0, `rgba(${rgb?.r},${rgb?.g},${rgb?.b}, 0.28)`) 
-                    gradient.addColorStop(1, 'rgba(0, 0, 0,0)') 
+                    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.0)') 
 
                     line_chart.data.datasets[i].backgroundColor = gradient
                 }

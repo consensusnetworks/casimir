@@ -13,3 +13,5 @@ cdk-outputs.json
 **/**/secrets/*.json
 
 services/crawler/.env
+
+.out

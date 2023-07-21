@@ -293,7 +293,7 @@ onUnmounted(() =>{
                 <button
                   v-for="act in walletProviderAddresses"
                   :key="act.address"
-                  class="w-full border rounded-[8px] px-[10px] py-[15px] flex items-center justify-between hover:border-blue_3"
+                  class="w-full border rounded-[8px] px-[10px] py-[15px] flex items-center justify-between hover:border-blue_3 mb-[10px]"
                   @click="selectAddress(act.address), openWalletConnect = false, authFlowCardNumber = 1"
                 >
                   <div>

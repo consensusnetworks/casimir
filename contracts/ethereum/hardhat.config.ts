@@ -10,18 +10,19 @@ import '@nomicfoundation/hardhat-toolbox'
 const mnemonic = process.env.BIP39_SEED as string
 const hid = { mnemonic, count: 10 }
 
-// Mining interval is provided
+// Mining interval is provided in seconds
 const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
 const mining = { auto: false, interval: miningInterval * 1000 } // miningInterval in ms
 
-// Live network rpc is provided 
-const hardhatUrl = process.env.PUBLIC_ETHEREUM_URL as string
+// Live network rpc is provided with url and name
+const hardhatUrl = process.env.ETHEREUM_RPC_URL as string
 const hardhatNetwork = process.env.HARDHAT_NETWORK as string
 
-// Local network fork rpc is provided
-const forkingUrl = process.env.ETHEREUM_FORKING_URL as string
-const forkingNetwork = forkingUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
-const forkingChainId = { mainnet: 1, goerli: 5 }[forkingNetwork]
+// Local network fork rpc url overrides live network
+const forkUrl = process.env.ETHEREUM_FORK_RPC_URL as string
+const forkNetwork = forkUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
+const forkChainId = { mainnet: 1, goerli: 5 }[forkNetwork]
+const forkConfig = { url: forkUrl, blockNumber: parseInt(process.env.ETHEREUM_FORK_BLOCK || '0') || undefined }
 
 const externalEnv = {
   mainnet: {
@@ -55,7 +56,7 @@ const externalEnv = {
   }
 } 
 
-const network = forkingNetwork || hardhatNetwork
+const network = forkNetwork || hardhatNetwork
 if (network) {
   const args = externalEnv[network]
   for (const key in args) {
@@ -90,8 +91,8 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       accounts: mnemonic ? hid : undefined,
-      chainId: forkingChainId || 1337,
-      forking: forkingUrl ? { url: forkingUrl } : undefined,
+      chainId: forkChainId || 1337,
+      forking: forkUrl ? forkConfig : undefined,
       mining: miningInterval ? mining : { auto: true },
       allowUnlimitedContractSize: true,
       gas: 'auto',
@@ -117,8 +118,8 @@ const config: HardhatUserConfig = {
   }
 }
 
-if (process.env.LOCAL_TUNNEL) {
-  // Start a local tunnel for using RPC over https
+// Start a local tunnel for using RPC over https (e.g. for Metamask on mobile)
+if (process.env.TUNNEL === 'true') {
   const localSubdomain = `cn-hardhat-${os.userInfo().username.toLowerCase()}`
   const localUrl = `https://${localSubdomain}.loca.lt`
   localtunnel({ port: 8545, subdomain: localSubdomain }).then(

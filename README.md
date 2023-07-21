@@ -9,15 +9,24 @@
 
 > Decentralized staking and asset management
 
+- [About](#about)
+- [💻 Development](#-development)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+  - [Install](#install)
+  - [Environment](#environment)
+    - [Supported Variables](#supported-variables)
+  - [Apps](#apps)
+  - [Contracts](#contracts)
+  - [Emulators](#emulators)
+- [📊 Data](#-data)
+- [Layout](#layout)
+- [Editor](#editor)
+- [License](#license)
+
 ## About
 
 Casimir is a complete platform that allows users to monitor, move, and stake their assets while holding their own keys. With Casimir staking, users can easily and securely move funds in and out of decentralized staking pools that are operated by high-performing validators.
-
-## Status
-
-Casimir is an early work-in-progress – check out [our website](https://casimir.co) for more information about what we're building. See ongoing tasks on our [project board](https://github.com/orgs/consensusnetworks/projects/9/views/1).
-
-Also, feel free to join our [discord server](https://discord.com/invite/Vy2b3gSZx8) if you want to say hello and discuss the project.
 
 ## 💻 Development
 
@@ -27,158 +36,37 @@ Get started contributing to Casimir's codebase.
 
 Make sure your development environment has these prerequisites.
 
-1. [AWS CLI (v2.x)](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
+1. [Docker (v4.x)](https://docs.docker.com/engine/install/).
 
-2. [Docker (v4.x)](https://docs.docker.com/engine/install/) - make sure your Docker runs on startup.
+2. [Git (v2.x)](https://git-scm.com/downloads). You also need to make sure to have at least one SSH authentication key on your GitHub account (for the git cloning of submodules in various scripts). See [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
-3. [Git (v2.x)](https://git-scm.com/downloads) – we use [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to manage shared code.
+3. [Go (v1.18.x)](https://golang.org/doc/install).
 
-4. [Go (v1.18.x)](https://golang.org/doc/install) – we use [Go modules](https://blog.golang.org/using-go-modules) to manage Go dependencies.
+4. [Node.js (v18.x)](https://nodejs.org/en/download/).
 
-5. [Node.js (v18.x)](https://nodejs.org/en/download/) – we use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
-
-> 🚩 You also need to make sure to have at least one SSH authentication key on your GitHub account (for the git cloning of submodules in various scripts). See [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
+5. (**Consensus Networks team only**) [AWS CLI (v2.x)](https://aws.amazon.com/cli/) – create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
 
 ### Setup
 
-Clone the repository, checkout a new branch from develop, and install all workspace dependencies.
+Clone the repository and checkout a new branch from develop, and install all workspace dependencies.
 
 ```zsh
 git clone https://github.com/consensusnetworks/casimir.git
 cd casimir
 git checkout -b feature/stake-button develop
-npm install
 ```
 
-> 🚩 'All workspace dependencies' includes `package.json` dependencies listed in the project root and any workspace subdirectories. See [Scripts and dependencies](#scripts-and-dependencies).
-
-### Serve
-
-You can get up and running without configuration. You can also mock local backend changes and customize your environment.
-
-For frontend changes – run the development server and use the `dev` stage backend services.
-
-```zsh
-npm run dev
-```
-
-> 🚩 This will also preconfigure the application environment with the AWS credentials for the `consensus-networks-dev` profile (set AWS_PROFILE="some-other-name" in a [.env](.env) if you want to override).
-
-**All options:**
-
-| Flag | Description | Default | Example |
-| --- | --- | --- | --- |
-| `--app` | Which app to run | web | --app=landing |
-| `--clean` | Whether to clean the local database | true | --clean=false |
-| `--emulate` | Whether to use local wallet emulators | false | --emulate=ethereum |
-| `--fork` | Which live Ethereum network to fork locally | goerli | --fork=mainnet |
-| `--mock` | Whether to mock backend services and external contracts | true | --mock=false |
-| `--network` | Which live Ethereum network to use | goerli | --network=mainnet |
-
-**Example commands:**
-
-For fullstack changes – run the development server and mock the local backend services.
-
-```zsh
-npm run dev --mock
-```
-
-Emulate a Ledger hardware wallet. The default application is ethereum, and we also currently have support for the bitcoin and solana applications.
-
-```zsh
-npm run dev --ledger # or specify --ledger=ethereum, --ledger=bitcoin, or --ledger=solana
-```
-
-> 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
-
-Emulate a Trezor hardware wallet. You also need to make sure to add [these prerequisites](https://github.com/trezor/trezor-user-env#prerequisites).
-
-```zsh
-npm run dev --trezor
-```
-
-The commands above apply to any package in the [apps](apps/) directory. While the default app is [@casimir/web](apps/web/), you can specify others by passing a subcommand to `npm run dev`.
-
-```zsh
-# @casimir/web
-npm run dev # or
-npm run dev:web
-
-# @casimir/landing
-npm run dev:landing
-```
-
-### Contracts
-
-Ethereum contracts are configured with a Hardhat development environment in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file. Read more about `@casimir/ethereum` staking [here](contracts/ethereum/README.md). Below are some helpful commands for developing on or with the contracts.
-
-Run all contract tests.
-
-```zsh
-npm run test:ethereum
-```
-
-Build the contracts in [contracts/ssv](contracts/ssv).
-
-```zsh
-npm run build --workspace @casimir/ethereum
-```
-
-Deploy a contract, specifically [contracts/ethereum/src/CasimirManager.sol](contracts/ethereum/src/CasimirManager.sol) with [contracts/ethereum/scripts/ssv.deploy.ts](contracts/ethereum/deploy/ssv.deploy.ts).
-
-```zsh
-npm run deploy:ssv --workspace @casimir/ethereum
-```
-
-### Local Nodes
-
-Run local cryptonodes for fast and flexible development.
-
-Run a local Ethereum node without archived data.
-
-```zsh
-npm run dev:ethereum
-```
-
-Run a local Ethereum node with archived data from mainnet.
-
-```zsh
-npm run dev:ethereum --fork=mainnet
-```
-
-Run a local Ethereum node with archived data from Goerli testnet.
-
-```zsh
-npm run dev:ethereum --fork=goerli
-```
-
-> 🚩 Note, while the fork starts with the same state as the specified network, it lives as a local development network independent of the live network.
-
-### Environment
-
-Optionally customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for any supported variables.
-
-```zsh
-AWS_PROFILE="some-other-aws-name"
-STAGE="sandbox"
-```
-
-#### Supported Variables
-
-| Name | Description | Default |
-| --- | --- | --- |
-| `AWS_PROFILE` | AWS profile name | `"consensus-networks-dev"` |
-| `STAGE` | Environment stage name | `"dev"` |
-
-### Scripts and dependencies
+### Install
 
 We are using [npm workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) to simplify monorepo development workflows while keeping project-wide resources accessible. The core commands are below.
 
-Install all monorepo dependencies.
+Install all monorepo dependencies. The postinstall script will also build all contract types.
 
 ```zsh
 npm install
 ```
+
+Additional install commands:
 
 Clean all monorepo dependencies (remove all `node_modules` and `package-lock.json` before a fresh install).
 
@@ -200,32 +88,123 @@ npm install some-dependency --workspace @casimir/workspace-name # i.e. @casimir/
 npm install -D some-dev-dependency --workspace @casimir/workspace-name
 ```
 
+### Environment
+
+Customize and override the defaults for your *local development environment* by creating a [.env](.env) file in the project root and adding values for any supported variables. Variable usage is explained more as needed in the sections below.
+
+**If you are on the Consensus Networks team**, make sure your AWS CLI and profile are configured correctly. By default, the scripts look for the `consensus-networks-dev` named profile, but you can override the `AWS_PROFILE` name to be used in the [.env](.env) file. Regardless, the profile must have access to the `consensus-networks-dev` account resources.
+
+**If you are outside of the Consensus Networks team**, make sure to set `USE_SECRETS` to `false` and provide a valid `ETHEREUM_FORK_RPC_URL`.
+
+#### Supported Variables
+
+| Name | Description | Default |
+| --- | --- | --- |
+| `USE_SECRETS` | Whether to use AWS Secrets Manager | `true` |
+| `AWS_PROFILE` | AWS profile name for accessing secrets | `consensus-networks-dev` |
+| `PROJECT` | Project name | `casimir` |
+| `STAGE` | Environment stage name | `dev` |
+| `ETHEREUM_FORK_RPC_URL` | RPC URL for local fork network | `https://eth-goerli.alchemyapi.io/v2/<AWS-retrieved-secret-key>` |
+| `ETHEREUM_FORK_BLOCK` | Starting block number for local fork network | `` |
+| `ETHEREUM_RPC_URL` | Ethereum RPC URL for live network | `` |
+| `NETWORK` | Mainnet, testnet, or devnet for live network | `` |
+| `FORK` | Mainnet, testnet, or devnet for local fork network | `testnet` |
+| `MANAGER_ADDRESS` | Manager contract address | `` |
+| `VIEWS_ADDRESS` | Views contract address | `` |
+| `CRYPTO_COMPARE_API_KEY` | CryptoCompare API key | `` |
+| `TUNNEL` | Whether to tunnel local network RPC URLs (for remote wallets) | `false` |
+| `EMULATE` | Whether to emulate wallets | `false` |
+| `LEDGER_APP` | Ledger app name | `ethereum` |
+| `MOCK_ORACLE` | Whether to mock oracle | `true` |
+| `MOCK_SERVICES` | Whether to mock backend services | `true` |
+| `BUILD_PREVIEW` | Whether to preview web app production build | `false` |
+| `VALIDATOR_COUNT` | Number of validators to generate for tests | `4` |
+
+### Apps
+
+The apps packages provide a vite server, and the accompanying scripts set up the chain networks, backend services, and deployed contracts as needed.
+
+Run the web app (with accompanying scripts) from the root directory.
+
+```zsh
+npm run dev
+```
+
+Run the landing (page) app from the root directory.
+
+```zsh
+npm run dev:landing
+```
+
+**Additional configuration:**
+
+- Set `EMULATE` to `true` to emulate Ledger and Trezor hardware wallets.
+- Set `LEDGER_APP` to the name of the Ledger app to emulate (defaults to `ethereum`).
+- Set `TUNNEL` to `true` to tunnel the local network RPC URLs (for remote wallets).
+- Set `MOCK_ORACLE` to `false` to use pregenerated validators (or create them if unavailable).
+- Set `MOCK_SERVICES` to `false` to use the deployed backend services for the current stage.
+- Set `BUILD_PREVIEW` to `true` to run the local script with a production build preview of the web app.
+- Set `VALIDATOR_COUNT` to the number of validators to generate for tests (defaults to `4`).
+
+### Contracts
+
+Ethereum contracts are configured with a Hardhat development environment in the [contracts/ethereum/hardhat.config.ts](contracts/ethereum/hardhat.config.ts) file. Read more about `@casimir/ethereum` staking [here](contracts/ethereum/README.md). Below are some helpful commands for developing on or with the contracts.
+
+Run all contract tests.
+
+```zsh
+npm run test:ethereum
+```
+
+Build the contracts in [contracts/ssv](contracts/ssv).
+
+```zsh
+npm run build --workspace @casimir/ethereum
+```
+
+Run a local Ethereum network with deployed contracts, simulation scripts, and archived data from Goerli testnet.
+
+```zsh
+npm run dev:ethereum
+```
+
+**Additional configuration:**
+
+- Set `MOCK_ORACLE` to `false` to use pregenerated validators (or create them if unavailable).
+- Set `VALIDATOR_COUNT` to the number of validators to generate for tests (defaults to `4`).
+
+### Emulators
+
+We can emulate Ledger and Trezor hardware wallet wallets by setting the environment variable `EMULATE` to `true`. For Ledger, the default app is `ethereum`, but the app can be specified by setting the environment variable `LEDGER_APP`. For Trezor, we also need to make sure to add [these prerequisites](https://github.com/trezor/trezor-user-env#prerequisites).
+
+> 🚩 On MacOS, if you get an error because port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
+
 ## 📊 Data
 
 Data schemas, data operations/workflows, and analytics and ML notebooks are stored in the [common/data] directory (also namespaced as the @casimir/data npm workspace). See the [@casimir/data README](common/data/README.md) for detailed usage instructions.
 
 ## Layout
 
-Code is organized into work directories (apps, services, infrastructure – and more listed below).
+Code is organized into work directories (apps, common, contracts, infrastructure, services, scripts, and more listed below).
 
 ```tree
 ├── .github/ (workflows and issue templates)
 |   └── workflows/ (gh actions workflows)
 ├── apps/ (frontend apps)
-    |── landing/ (landing page app)
+|   |── landing/ (landing page app)
 |   └── web/ (main web app)
-├── infrastructure/ (deployment resources)
-|   └── cdk/ (aws stacks)
 ├── common/ (shared code)
 |   └── helpers/ (general utilities)
+├── contracts/ (blockchain contracts)
+|   └── ethereum/ (ethereum contracts)
+├── infrastructure/ (deployment resources)
+|   └── cdk/ (aws stacks)
 ├── scripts/ (devops and build scripts)
 |   └── local/ (mock and serve tasks)
 ├── services/ (backend services)
 |   └── users/ (users express api)
 └── package.json (project-wide npm dependencies and scripts)
 ```
-
-> 🚩 While developing, most likely, you shouldn't have to change into any subdirectories to run commands. Individual **npm packages** (directories with a `package.json`) are managed from the project root with [workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces). See [Scripts and dependencies](#-scripts-and-dependencies).
 
 ## Editor
 

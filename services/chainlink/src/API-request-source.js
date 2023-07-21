@@ -42,7 +42,7 @@ const managerAddress = "0x07e05700cb4e946ba50244e27f01805354cd8ef0"
 const getTotalDeposits = "0xeab1442e"
 
 const getPublicKeys = await Functions.makeHttpRequest({
-    url: 'http://localhost:8545',
+    url: 'http://127.0.0.1:8545',
     method: 'POST',
     data: {
         jsonrpc: '2.0',

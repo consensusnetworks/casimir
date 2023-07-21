@@ -1,13 +1,17 @@
 <script lang="ts" setup>
-import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
+import useUsers from '@/composables/users'
+
+const itemsPerPage = ref(7)
+const currentPage = ref(1)
+const totalPages = ref(1)
 
 const searchInput = ref('')
 const tableView = ref('Wallets')
 
-const selectedHeader = ref('')
+const selectedHeader = ref('wallet_provider')
 const selectedOrientation = ref('ascending')
 
 const checkedItems = ref([] as any)
@@ -17,6 +21,10 @@ const tableHeaderOptions = ref(
     Wallets: {
       headers: [
         {
+          title: '',
+          value: 'blank_column'
+        },
+        {
           title: 'Wallet Provider',
           value: 'wallet_provider'
         },
@@ -25,102 +33,107 @@ const tableHeaderOptions = ref(
           value: 'act'
         },
         {
-          title: 'Balance',
+          title: 'Wallet Balance',
           value: 'bal'
         },
         {
-          title: 'Staked Amount',
+          title: 'Stake Balance',
           value: 'stk_amt'
-        },
+        }, // Need to fetch based on wallet (FE SIDE)
         {
-          title: 'Staked Reward',
+          title: 'Stake Rewards (All-Time)',
           value: 'stk_rwd'
-        }
+        }, // Need to fetch based on wallet (FE SIDE)
       ]
     },
     Transactions: {
       headers: [
         {
-          title: 'TX Hash',
-          value: 'tx_hash'
-        },
-        {
-          title: 'Staked Amount',
-          value: 'stk_amt'
-        },
-        {
-          title: 'Staked Reward',
-          value: 'stk_rwd'
+          title: '',
+          value: 'blank_column'
         },
         {
           title: 'Date',
           value: 'date'
         },
         {
-          title: 'APY',
-          value: 'apy'
+          title: 'Type',
+          value: 'tx_type'
+        },
+        {
+          title: 'Amount',
+          value: 'stk_amt'
         },
         {
           title: 'Status',
           value: 'status'
         },
         {
-          title: 'Operators',
-          value: 'operators'
+          title: 'Hash',
+          value: 'tx_hash'
         }
+      ]
+    },
+    Staking: {
+      headers: [
+        {
+          title: '',
+          value: 'blank_column'
+        },
+        {
+          title: 'Date',
+          value: 'date'
+        },
+        {
+          title: 'Account',
+          value: 'act'
+        },
+        {
+          title: 'Type',
+          value: 'type'
+        },
+        {
+          title: 'Amount',
+          value: 'amount'
+        },
+        {
+          title: 'Staking Fees',
+          value: 'staking_fees'
+        },
+        {
+          title: 'Status',
+          value: 'status'
+        },
+        {
+          title: 'Hash',
+          value: 'tx_hash'
+        },
       ]
     },
   }
 )
 
-const tableMockedItems = ref({
+const { rawUserAnalytics, user } = useUsers()
+
+const tableData = ref({
   Wallets: [
-    {
-      wallet_provider: 'MetaMask',
-      act: '12345678910asdfghjkl;qwertyuiopzxcvbnm',
-      bal: '1.5 ETH',
-      stk_amt: '0.5 ETH',
-      stk_rwd: '0.034 ETH'
-    },
-    {
-      wallet_provider: 'CoinbaseWallet',
-      act: '12345678910asdfghjkl;qwertyuiopzxcvbnm',
-      bal: '1.5 ETH',
-      stk_amt: '0.5 ETH',
-      stk_rwd: '0.034 ETH'
-    }
   ],
   Transactions: [
-    {
-      tx_hash: '1234567890qwertyuiopasdfghjklzxcvbnm',
-      stk_amt: '1.5 ETH',
-      stk_rwd: '0.045 ETH',
-      date: '01/01/2023',
-      apy: '2.1 %',
-      status: 'pending',
-      operators: ['op 1', 'op 2', 'op 3', 'op 4', 'op 5']
-    },
-    {
-      tx_hash: '1234567890qwertyuiopasdfghjklzxcvbnm',
-      stk_amt: '1.5 ETH',
-      stk_rwd: '0.045 ETH',
-      date: '01/01/2023',
-      apy: '2.1 %',
-      status: 'pending',
-      operators: ['op 1', 'op 2', 'op 3', 'op 4', 'op 5']
-    },
+  ],
+  Staking: [
   ],
 })
 
-const filteredData = ref(tableMockedItems.value[tableView.value])
+const filteredData = ref(tableData.value[tableView.value as keyof typeof tableData.value])
 
 const filterData = () => {
   let filteredDataArray
+
   if (searchInput.value === '') {
-    filteredDataArray = tableMockedItems.value[tableView.value]
+    filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
   } else {
     const searchTerm = searchInput.value
-    filteredDataArray =  tableMockedItems.value[tableView.value].filter(item => {
+    filteredDataArray = (tableData.value[tableView.value as keyof typeof tableData.value] as Array<any>).filter(item => {
       return (
         // Might need to modify to match types each variable
         item.wallet_provider?.toLowerCase().includes(searchTerm) ||
@@ -131,8 +144,9 @@ const filterData = () => {
         item.tx_hash?.toLowerCase().includes(searchTerm) ||
         item.date?.toLowerCase().includes(searchTerm) ||
         item.apy?.toLowerCase().includes(searchTerm) ||
-        item.status?.toLowerCase().includes(searchTerm) // ||
-        // item.operators?.toLowerCase().includes(searchTerm) 
+        item.status?.toLowerCase().includes(searchTerm) || 
+        item.type?.toLowerCase().includes(searchTerm) ||
+        item.staking_fees.toLowerCase().includes(searchTerm)
       )
     })
   }
@@ -144,16 +158,19 @@ const filterData = () => {
 
       if (selectedOrientation.value === 'ascending') {
         return valA < valB ? -1 : valA > valB ? 1 : 0
-      } else if (selectedOrientation.value === 'descending') {
+      } else {
         return valA > valB ? -1 : valA < valB ? 1 : 0
       }
     })
   }
+  totalPages.value = Math.round(filteredDataArray.length / itemsPerPage.value)
 
-  filteredData.value = filteredDataArray
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  filteredData.value = filteredDataArray.slice(start, end) as any
 }
 
-watch([searchInput, tableView, selectedHeader, selectedOrientation], ()=>{
+watch([searchInput, tableView, selectedHeader, selectedOrientation, currentPage], ()=>{
   filterData()
 })
 
@@ -165,22 +182,20 @@ const convertString = (inputString: string) => {
 
   var start = inputString.substring(0, 4)
   var end = inputString.substring(inputString.length - 4)
-  var middle = '*'.repeat(4)
+  var middle = '.'.repeat(4)
 
   return start + middle + end
 }
 
-const convertJsonToCsv = (jsonData) => {
+const convertJsonToCsv = (jsonData: any[]) => {
   const separator = ','
   const csvRows = []
 
   if (!Array.isArray(jsonData)) {
-    console.error('jsonData is not an array')
     return ''
   }
 
   if (jsonData.length === 0) {
-    console.warn('jsonData is an empty array')
     return ''
   }
 
@@ -198,7 +213,7 @@ const convertJsonToCsv = (jsonData) => {
   return csvRows.join('\n')
 }
 
-const convertJsonToExcelBuffer = (jsonData) => {
+const convertJsonToExcelBuffer = (jsonData: unknown[]) => {
   const worksheet = XLSX.utils.json_to_sheet(jsonData)
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
@@ -241,6 +256,79 @@ const removeItemFromCheckedList = (item:any) => {
     checkedItems.value.splice(index, 1)
   }
 }
+
+const setTableData = () =>{
+
+  if(!rawUserAnalytics.value) return 
+
+  const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
+    new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
+  })
+
+  const newTable = tableData.value
+
+  newTable.Transactions = sortedTransactions.map((item: any) =>{
+    return {
+        tx_hash: item.txId,
+        stk_amt: item.amount,
+        tx_type: item.txDirection,
+        date: item.receivedAt,
+        status: item.status,
+    }
+  })
+
+  let filteredWallets = [] as any
+  let filteredStakingTransactions = [] as any
+  sortedTransactions.forEach((item: any) => {
+    const index = filteredWallets.findIndex((i: any)=> i.act === item.walletAddress)
+
+    if(index > -1) {
+      if(new Date(filteredWallets[index].date).getTime() < new Date(item.receivedAt).getTime()){
+        filteredWallets[index].bal === item.walletBalance
+      }
+    } else {
+      let provider = user.value?.accounts.find(i => i.address.toLocaleLowerCase() === item.walletAddress.toLocaleLowerCase())?.walletProvider
+      filteredWallets.push(
+        {
+          wallet_provider: provider? provider : 'Unknown',
+          act: item.walletAddress,
+          bal: item.walletBalance,
+          stk_amt: item.amount,
+          stk_rwd: item.rewards, // TODO: @Chris we need all-time staking rewards fetched here based on wallet
+        }
+      )
+    }
+
+    if(item.type){
+      filteredStakingTransactions.push({
+        date: item.receivedAt,
+        act: item.walletAddress,
+        type: item.type,
+        amount: item.amount,
+        staking_fees: item.stakeFee,
+        status: item.status,
+        tx_hash: item.txId
+      })
+    }
+  })
+
+  newTable.Wallets = filteredWallets
+  newTable.Staking = filteredStakingTransactions
+  tableData.value = newTable
+
+}
+
+watch(rawUserAnalytics, () =>{
+  setTableData()
+  filterData()
+})
+
+onMounted(() =>{
+  setTableData()
+  filterData()
+})
+
+
 </script>
 
 <template>
@@ -276,16 +364,23 @@ const removeItemFromCheckedList = (item:any) => {
           <button
             class="timeframe_button"
             :class="tableView === 'Wallets'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Wallets', selectedHeader = '', checkedItems = []"
+            @click="tableView = 'Wallets', selectedHeader = 'wallet_provider', checkedItems = [], selectedOrientation = 'ascending'"
           >
             Wallets
           </button>
           <button
             class="timeframe_button border-l border-l-[#D0D5DD] " 
             :class="tableView === 'Transactions'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Transactions', selectedHeader = '', checkedItems = []"
+            @click="tableView = 'Transactions', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'descending'"
           >
             Transactions
+          </button>
+          <button
+            class="timeframe_button border-l border-l-[#D0D5DD]"
+            :class="tableView === 'Staking'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
+            @click="tableView = 'Staking', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'descending'"
+          >
+            Staking Actions
           </button>
         </div>
         <div class="flex flex-wrap items-center gap-[12px]">
@@ -320,7 +415,7 @@ const removeItemFromCheckedList = (item:any) => {
           <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
             <th
               v-for="header in tableHeaderOptions[tableView].headers"
-              :key="header"
+              :key="header.title"
               class="table_header "
             >
               <div class="flex items-center gap-[5px]">
@@ -385,11 +480,11 @@ const removeItemFromCheckedList = (item:any) => {
           >
             <td
               v-for="header in tableHeaderOptions[tableView].headers"
-              :key="header"
+              :key="header.title"
               class="dynamic_padding"
             >
               <div
-                v-if="header.value === 'wallet_provider'"
+                v-if="header.value === 'blank_column'"
                 class="flex items-center gap-[12px]"
               >
                 <button
@@ -403,40 +498,35 @@ const removeItemFromCheckedList = (item:any) => {
                     class="icon w-[14px] h-min"
                   />
                 </button>
+              </div>
+              <div
+                v-if="header.value === 'wallet_provider'"
+                class="flex items-center gap-[12px]"
+              >
                 <img
-                  :src="`/${item[header.value]}.svg`"
+                  v-if="item[header.value] != 'Unknown'"
+                  :src="`/${item[header.value ]}.svg`"
                   alt="Avatar "
                   class="w-[20px] h-[20px]"
                 >
-                <h6 class="title_name 800s:w-[20px] w-[50px] truncate">
-                  {{ item[header.value] }}
+                <h6 class="title_name 800s:w-[20px]">
+                  {{ item[header.value ] }}
                 </h6>
               </div>
               <div
                 v-else-if="header.value === 'act'"
                 class="flex items-center gap-[12px] underline"
               >
-                <a href=""> 
-                  {{ convertString(item[header.value]) }}
+                <a href="">
+                  {{ convertString(item[header.value ]) }}
                 </a>
               </div>
               <div
                 v-else-if="header.value === 'tx_hash'"
                 class="flex items-center gap-[12px]"
               >
-                <button
-                  class="checkbox_button"
-                  @click="checkedItems.includes(item)? removeItemFromCheckedList(item) : checkedItems.push(item)"
-                >
-                  <vue-feather
-                    v-show="checkedItems.includes(item)"
-                    type="check"
-                    size="20"
-                    class="icon w-[14px] h-min"
-                  />
-                </button>
                 <a class="">
-                  {{ convertString(item[header.value]) }}
+                  {{ convertString(item[header.value ]) }}
                 </a>
               </div>
               <div
@@ -444,14 +534,14 @@ const removeItemFromCheckedList = (item:any) => {
                 class="flex items-center gap-[12px]"
               >
                 <div
-                  v-if="item[header.value] === 'staked'"
+                  v-if="item[header.value ] === 'Active'"
                   class="flex items-center gap-[8px] status_pill bg-[#ECFDF3] text-[#027A48]"
                 >
                   <div class="bg-[#027A48] rounded-[999px] w-[8px] h-[8px]" />
                   Staked
                 </div>
                 <div
-                  v-else-if="item[header.value] === 'pending'" 
+                  v-else-if="item[header.value ] === 'Pending'" 
                   class="flex items-center gap-[8px] status_pill bg-[#FFFAEB] text-[#B54708]"
                 >
                   <div class="bg-[#F79009] rounded-[999px] w-[8px] h-[8px]" />
@@ -459,38 +549,64 @@ const removeItemFromCheckedList = (item:any) => {
                 </div>
               </div>
               <div
-                v-else-if="header.value === 'operators'"
+                v-else-if="header.value === 'bal'"
                 class="flex items-center gap-[12px] pl-[20px]"
               >
-                <div
-                  v-for="operator in item[header.value]"
-                  :key="operator"
-                  :class="`w-[24px] h-[24px] border-[2px] border-white bg-blue-300 rounded-[999px]`"
-                  :style="`margin-left: -20px`"
-                />
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'stk_amt'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'stk_rwd'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'amount'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
+              </div>
+              <div
+                v-else-if="header.value === 'staking_fees'"
+                class="flex items-center gap-[12px] pl-[20px]"
+              >
+                {{ item[header.value ] }} ETH
               </div>
               <div v-else>
-                {{ item[header.value] }}
+                {{ item[header.value ] }}
               </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <!-- Waiting on a bigger data set to do this.. for now will comment out -->
-    <!-- <div class="flex justify-between items-center mt-[12px]">
+    <div class="flex justify-between items-center mt-[12px]">
       <div class="page_number ml-[56px]">
-        Page 1 of 10
+        Page {{ currentPage }} of {{ totalPages }}
       </div>
       <div class="flex items-center gap-[12px]">
-        <button class="pagination_button">
+        <button
+          class="pagination_button"
+          :disabled="currentPage === 1"
+          @click="currentPage > 1? currentPage = currentPage - 1 : ''"
+        >
           Previous
         </button>
-        <button class="pagination_button mr-[33px]">
+        <button
+          class="pagination_button mr-[33px]"
+          :disabled="currentPage === totalPages"
+          @click="currentPage < totalPages? currentPage = currentPage + 1 : ''"
+        >
           Next
         </button>
       </div>
-    </div> -->
+    </div>
   </div>
 </template>
 

@@ -1,11 +1,13 @@
 import express from 'express'
 import useDB from '../providers/db'
 import Session from 'supertokens-node/recipe/session'
+import { verifySession } from 'supertokens-node/recipe/session/framework/express'
+import { SessionRequest } from 'supertokens-node/framework/express'
 import useEthers from '../providers/ethers'
 import { Account, User } from '@casimir/types'
 
 const { verifyMessageSignature } = useEthers()
-const { addUser, getNonce, getUser, upsertNonce } = useDB()
+const { addUser, getNonce, getUserByAddress, upsertNonce } = useDB()
 const router = express.Router()
 
 router.post('/nonce', async (req: express.Request, res: express.Response) => {
@@ -40,14 +42,13 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
         const verifyNonce = parsedNonce ? await verifyMessageNonce(address, parsedNonce) : false
         const verifySignature = verifyMessageSignature(loginCredentials)
         const verificationError = !verifyDomain ? 'domain' : !verifyNonce ? 'nonce' : !verifySignature ? 'signature' : false
-
         if (verificationError) {
             return res.status(422).json({
                 error: true,
                 message: `Invalid ${verificationError}.`,
             })
         } else {
-            const user = await getUser(address)
+            const user = await getUserByAddress(address)
             if (!user) {  // signup
                 console.log('SIGNING UP!')
                 const now = new Date().toISOString()
@@ -64,7 +65,6 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
                 } as Account
 
                 const addUserResult = await addUser(newUser, account)
-
                 if (addUserResult?.address !== address) {
                     res.setHeader('Content-Type', 'application/json')
                     res.status(500)
@@ -73,7 +73,8 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
                         message: 'Problem creating new user',
                     })
                 } else {
-                    await Session.createNewSession(req, res, address)
+                    const id = addUserResult?.id.toString() as string
+                    await Session.createNewSession(req, res, id)
                     res.setHeader('Content-Type', 'application/json')
                     res.status(200)
                     res.json({
@@ -85,7 +86,9 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
                 console.log('LOGGING IN!')
                 const response = verifyMessageSignature({ address, currency, message, signedMessage, provider })
                 upsertNonce(address)
-                response ? await Session.createNewSession(req, res, address) : null
+                const user = await getUserByAddress(address)
+                const userId = user?.id.toString() as string
+                response ? await Session.createNewSession(req, res, userId) : null
                 res.setHeader('Content-Type', 'application/json')
                 res.status(200)
                 res.json({
@@ -95,6 +98,7 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
             }
         }
     } catch (error: any) {
+        console.log('error in /login :>> ', error)
         res.status(500)
         res.json({
             error: true,
@@ -121,12 +125,9 @@ function parseNonce(msg: string) {
 }
 
 function verifyMessageDomain(domain: string): boolean {
-    const stage = process.env.STAGE
-    if (stage === 'dev') {
-        return domain === 'localhost:3001'
-    } else {
-        return false
-    }
+    const url = domain.includes('localhost') ? `http://${domain}` : `https://${domain}`
+    if (process.env.WEB_URL) return url === process.env.WEB_URL
+    return url === 'http://localhost:3001'
 }
 
 async function verifyMessageNonce(address: string, msgNonce: string) : Promise<boolean> {

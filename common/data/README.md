@@ -4,70 +4,17 @@ Casimir schemas, databases, and notebooks for data modeling, exploration, and an
 
 ## Schemas
 
-Find the core JSON schemas in [src/schemas](src/schemas). These are the source of truth for data modeling in Casimir. When we deploy our [Glue](https://docs.aws.amazon.com/glue/latest/dg/define-database.html) and [Postgres](https://www.postgresql.org/docs/) tables, we use the schemas to generate columns from each JSON object's properties. See the reference table below for the database, table, file, and description of each schema.
+Find the core JSON schemas in [src/schemas](src/schemas). These are the source of truth for data modeling in Casimir. When we deploy our [Glue](https://docs.aws.amazon.com/glue/latest/dg/define-database.html) and [Postgres](https://www.postgresql.org/docs/) databases, we use the schemas to generate Glue columns or Postgres tables from each JSON object's properties. See the reference table below for the database, table, file, and description of each schema.
 
 | Database | Table | Schema | Description |
 | --- | --- | --- | --- |
-| Glue | `events` | [event.schema.json](src/schemas/event.schema.json) | On or off-chain event |
-| Glue | `aggs` | [agg.schema.json](src/schemas/agg.schema.json) | Aggregate of events |
-| Postgres | `accounts` | [account.schema.json](src/schemas/account.schema.json) | Wallet account |
-| Postgres | `users` | [user.schema.json](src/schemas/user.schema.json) | User profile |
-
-## Databases
-
-You can run a local Postgres instance for development and testing. This is a convenient way to iterate on schemas and test queries before deploying to production. (Schema reloading is still a work in progress - hopefully bootstrapping Postgres in Docker can be done faster.)
-
-```zsh
-npm run dev --workspace @casimir/data
-```
-
-**All options:**
-
-| Flag | Description | Default | Example |
-| --- | --- | --- | --- |
-| `--clean` | Delete existing pgdata before deploy | true | --clean=false |
-| `--tables` | Tables to deploy | accounts,users | --tables=accounts,users |
-
-**Example commands:**
-
-Run a local Postgres instance with the *current schemas*.
-
-```zsh
-npm run dev --workspace @casimir/data
-```
-
-Run a local Postgres instance and *watch the schemas for changes*.
-
-```zsh
-npm run watch --workspace @casimir/data
-```
-
-Clean local Docker Postgres environment, sql, and pgdata.
-
-```zsh
-npm run clean --workspace @casimir/data
-```
-
-### PSQL
-
-Query the local Postgres instance.
-
-```sql
-"Add a user"
-
-INSERT INTO users (address) VALUES ('0xd557a5745d4560B24D36A68b52351ffF9c86A212');
-
-"Add an account (with the same address as the user)"
-
-INSERT INTO accounts (address, owner_address) VALUES ('0xd557a5745d4560B24D36A68b52351ffF9c86A212', '0xd557a5745d4560B24D36A68b52351ffF9c86A212');
-
-"Query the user"
-
-SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN accounts a ON u.address = a.owner_address WHERE u.address = '0xd557a5745d4560B24D36A68b52351ffF9c86A212' GROUP BY u.address;
-
-```
-
-> 🚩 To iterate on a schema in context, use the commands above. To deploy a schema change, create a branch from `develop`, edit the JSON, and then make a PR to `develop`.
+| Analytics (Glue) | `events` | [event.schema.json](src/schemas/event.schema.json) | All events |
+| Analytics (Glue) | `staking_actions` | [staking_action.schema.json](src/schemas/staking_action.schema.json) | Staking action event transforms |
+| Analytics (Glue) | `wallets` | [wallets.schema.json](src/schemas/wallets.schema.json) | Wallet event transforms |
+| Users (Postgres) | `accounts` | [account.schema.json](src/schemas/account.schema.json) | User accounts |
+| Users (Postgres) | `nonces` | [nonce.schema.json](src/schemas/nonce.schema.json) | User auth nonces |
+| Users (Postgres) | `users` | [user.schema.json](src/schemas/user.schema.json) | User profiles |
+| Users (Postgres) | `user_accounts` | [user_account.schema.json](src/schemas/user_account.schema.json) | User account relations |
 
 ## Notebooks
 

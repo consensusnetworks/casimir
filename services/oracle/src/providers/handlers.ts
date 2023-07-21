@@ -3,6 +3,7 @@ import { DKG } from './dkg'
 import { HandlerInput } from '../interfaces/HandlerInput'
 import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { getClusterDetails } from '@casimir/ssv'
+import { PoolStatus } from '@casimir/types'
 import { getPrice } from '@casimir/uniswap'
 
 export async function initiateDepositHandler(input: HandlerInput) {
@@ -17,6 +18,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
     } = input
 
     const nonce = await provider.getTransactionCount(manager.address)
+
     const poolAddress = ethers.utils.getContractAddress({
       from: manager.address,
       nonce
@@ -26,8 +28,6 @@ export async function initiateDepositHandler(input: HandlerInput) {
     const dkg = new DKG({ cliPath, messengerUrl })
 
     const validator = await dkg.createValidator({
-        provider,
-        manager,
         operatorIds: newOperatorIds, 
         withdrawalAddress: poolAddress
     })
@@ -58,7 +58,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
     })
     const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerValidator)) * Number(price)).toPrecision(9))
 
-    const initiateDeposit = await (manager.connect(signer) as CasimirManager & ethers.Contract).initiateDeposit(
+    const initiateDeposit = await (manager.connect(signer) as ethers.Contract & CasimirManager).initiateDeposit(
         depositDataRoot,
         publicKey,
         signature,
@@ -72,7 +72,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
     await initiateDeposit.wait()
 }
 
-export async function initiatePoolReshareHandler(input: HandlerInput) {
+export async function initiateResharesHandler(input: HandlerInput) {
     const {         
         provider,
         signer,
@@ -109,7 +109,7 @@ export async function initiatePoolReshareHandler(input: HandlerInput) {
 
 }
 
-export async function initiatePoolExitHandler(input: HandlerInput) {
+export async function initiateExitsHandler(input: HandlerInput) {
     const {
         provider,
         signer,
@@ -145,7 +145,7 @@ export async function reportForcedExitsHandler(input: HandlerInput) {
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
         const poolDetails = await views.getPoolDetails(poolId)
-        if (poolDetails.status === 1) {
+        if (poolDetails.status === PoolStatus.ACTIVE) {
             remaining--
             const reportForcedExit = await manager.connect(signer).reportForcedExit(
                 poolIndex
@@ -179,7 +179,7 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
         const poolDetails = await views.getPoolDetails(poolId)
-        if (poolDetails.status === 2 || poolDetails.status === 3) {
+        if (poolDetails.status === PoolStatus.EXITING_FORCED || poolDetails.status === PoolStatus.EXITING_REQUESTED) {
             remaining--
             
             /**
