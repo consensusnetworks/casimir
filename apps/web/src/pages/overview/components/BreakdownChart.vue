@@ -5,7 +5,7 @@ import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 import useEthers from '@/composables/ethers'
 
-import { AnalyticsData, ProviderString, UserAnalyticsData } from '@casimir/types'
+import { AnalyticsData, ProviderString } from '@casimir/types'
 
 const { currentStaked, listenForContractEvents, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
 const { user, getUserAnalytics, userAnalytics } = useUsers()
@@ -135,11 +135,11 @@ watch(selectedTimeframe, () => {
           Total Balance Across Connected Wallets
         </h6>
         <div class="flex items-center gap-[12px]">
-          <h5 class="blance_amount">
-            {{ totalWalletBalance.usd }}
+          <h5 class="blance_eth">
+            {{ totalWalletBalance.eth }}
           </h5>
-          <span class="blance_exchange">
-            {{ totalWalletBalance.exchange }}
+          <span class="blance_usd">
+            {{ totalWalletBalance.usd }}
           </span>
         </div>
       </div>
@@ -148,11 +148,11 @@ watch(selectedTimeframe, () => {
           Currently Staked
         </h6>
         <div class="flex items-center gap-[12px]">
-          <h5 class="blance_amount">
-            {{ currentStaked.usd }}
+          <h5 class="blance_eth">
+            {{ currentStaked.eth }}
           </h5>
-          <span class="blance_exchange">
-            {{ currentStaked.exchange }}
+          <span class="blance_usd">
+            {{ currentStaked.usd }}
           </span>
         </div>
       </div>
@@ -161,11 +161,11 @@ watch(selectedTimeframe, () => {
           All Time Staking Rewards Earned
         </h6>
         <div class="flex items-center gap-[12px]">
-          <h5 class="blance_amount">
-            {{ stakingRewards.usd }}
+          <h5 class="blance_eth">
+            {{ stakingRewards.eth }}
           </h5>
-          <span class="blance_exchange">
-            {{ stakingRewards.exchange }}
+          <span class="blance_usd">
+            {{ stakingRewards.usd }}
           </span>
         </div>
       </div>
@@ -245,7 +245,7 @@ watch(selectedTimeframe, () => {
 </template>
 
 <style scoped>
-.blance_exchange{
+.blance_usd{
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 400;
@@ -259,7 +259,7 @@ watch(selectedTimeframe, () => {
     font-size: 12px;
   };
 }
-.blance_amount{
+.blance_eth{
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 500;

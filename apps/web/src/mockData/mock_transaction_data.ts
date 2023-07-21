@@ -54,7 +54,6 @@ export default function useTxData () {
         gasFee: (Math.random() * 10.00).toFixed(2),
         stakeFee: (Math.random() * 10.00).toFixed(2),
         rewards:(Math.random() * 10.00).toFixed(2),
-        apy: (Math.random() * 10.00).toFixed(2),
         status: Math.random() > 0.5? 'Pending' : 'Active',
         type: Math.random() > 0.5? null : Math.random() > 0.5? 'Stake SSV' : 'Withdraw',
       }

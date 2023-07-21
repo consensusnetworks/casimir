@@ -14,17 +14,17 @@ import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Poo
 
 const currentStaked = ref<BreakdownAmount>({
     usd: '$0.00',
-    exchange: '0 ETH'
+    eth: '0 ETH'
 })
 
 const stakingRewards = ref<BreakdownAmount>({
     usd: '$0.00',
-    exchange: '0 ETH'
+    eth: '0 ETH'
 })
 
 const totalWalletBalance = ref<BreakdownAmount>({
     usd: '$0.00',
-    exchange: '0 ETH'
+    eth: '0 ETH'
 })
 
 const { ethereumUrl, managerAddress, viewsAddress } = useEnvironment()
@@ -86,15 +86,26 @@ export default function useContracts() {
             const formattedTotalStakedUSD = formatNumber(totalStakedUSD)
             const formattedTotalStakedETH = formatNumber(totalStakedETH)
             return {
-                exchange: formattedTotalStakedUSD + ' ETH',
-                usd: '$ ' + formattedTotalStakedETH
+                eth: formattedTotalStakedETH + ' ETH',
+                usd: '$ ' + formattedTotalStakedUSD
             }
         } catch (error) {
             console.log('Error occurred while fetching stake:', error)
             return {
-                exchange: '0 ETH',
+                eth: '0 ETH',
                 usd: '$ 0.00'
             }
+        }
+    }
+
+    async function getUserStakeAtAddress(address: string): Promise<number> {
+        try {
+            const bigNumber = await manager.connect(provider).getUserStake(address)
+            const number = parseFloat(ethers.utils.formatEther(bigNumber))
+            return number
+        } catch (err) {
+            console.error(`There was an error in getUserStakeAtAddress function: ${JSON.stringify(err)}`)
+            return 0
         }
     }
     
@@ -197,23 +208,25 @@ export default function useContracts() {
             const userEventTotalsSum = userEventTotals.reduce((acc, curr) => {
                 const { StakeDeposited, WithdrawalInitiated } = curr
                 return {
-                    StakeDeposited: acc.StakeDeposited && StakeDeposited ? acc.StakeDeposited + StakeDeposited : acc.StakeDeposited,
-                    WithdrawalInitiated: acc.WithdrawalInitiated && WithdrawalInitiated ? acc.WithdrawalInitiated + WithdrawalInitiated : acc.WithdrawalInitiated
+                  StakeDeposited: acc.StakeDeposited + (StakeDeposited || 0),
+                  WithdrawalInitiated: acc.WithdrawalInitiated + (WithdrawalInitiated || 0),
                 }
-            }, { StakeDeposited: 0, WithdrawalInitiated: 0 })
+              }, { StakeDeposited: 0, WithdrawalInitiated: 0 } as { StakeDeposited: number; WithdrawalInitiated: number })
+              
+              
             const stakedDepositedETH = userEventTotalsSum.StakeDeposited
             const withdrawalInitiatedETH = userEventTotalsSum.WithdrawalInitiated
-
+            
             /* Get User's All Time Rewards by Subtracting (StakeDesposited + WithdrawalInitiated) from CurrentStake */
             const currentUserStakeMinusEvents = currentUserStakeETH - (stakedDepositedETH as number) - (withdrawalInitiatedETH as number)
             return {
-                exchange: formatNumber(currentUserStakeMinusEvents),
+                eth: formatNumber(currentUserStakeMinusEvents),
                 usd: formatNumber(currentUserStakeMinusEvents * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' })))
             }
         } catch (err) {
             console.error(`There was an error in getAllTimeStakingRewards: ${err}`)
             return {
-                exchange: '0 ETH',
+                eth: '0 ETH',
                 usd: '$ 0.00'
             }
         }
@@ -228,7 +241,7 @@ export default function useContracts() {
         const formattedTotalWalletBalance = formatNumber(totalWalletBalance)
         const formattedTotalWalletBalanceUSD = formatNumber(totalWalletBalanceUSD)
         return {
-            exchange: formattedTotalWalletBalance + ' ETH',
+            eth: formattedTotalWalletBalance + ' ETH',
             usd: '$ ' + formattedTotalWalletBalanceUSD
         }
     }
@@ -287,15 +300,15 @@ export default function useContracts() {
             if (!user.value?.id) {
                 // Reset currentStaked, totalWalletBalance, and stakingRewards
                 currentStaked.value = {
-                    exchange: '0 ETH',
+                    eth: '0 ETH',
                     usd: '$ 0.00'
                 }
                 totalWalletBalance.value = {
-                    exchange: '0 ETH',
+                    eth: '0 ETH',
                     usd: '$ 0.00'
                 }
                 stakingRewards.value = {
-                    exchange: '0 ETH',
+                    eth: '0 ETH',
                     usd: '$ 0.00'
                 }
             }
@@ -307,23 +320,23 @@ export default function useContracts() {
         }
     }
 
-    function setBreakdownValue({ name, exchange, usd }: { name: BreakdownString, exchange: string, usd: string}) {
+    function setBreakdownValue({ name, eth, usd }: { name: BreakdownString, eth: string, usd: string}) {
         switch (name) {
             case 'currentStaked':
                 currentStaked.value = {
-                    exchange,
+                    eth,
                     usd
                 }
             break
             case 'totalWalletBalance':
                 totalWalletBalance.value = {
-                    exchange,
+                    eth,
                     usd
                 }
             break
             case 'stakingRewardsEarned':
                 stakingRewards.value = {
-                    exchange,
+                    eth,
                     usd
                 }
             break
@@ -361,7 +374,8 @@ export default function useContracts() {
         totalWalletBalance, 
         deposit, 
         getCurrentStaked,
-        getDepositFees, 
+        getDepositFees,
+        getUserStakeAtAddress,
         // getPools, 
         listenForContractEvents,
         refreshBreakdown,

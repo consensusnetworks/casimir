@@ -344,6 +344,7 @@ export default function useUsers() {
               }
             }))
 
+            // TODO: Should be setting the wallet table balances here as well
             user.value.accounts = accountsWithBalances
             setUser(user.value)
           }
