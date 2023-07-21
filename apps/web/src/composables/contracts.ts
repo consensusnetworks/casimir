@@ -86,8 +86,8 @@ export default function useContracts() {
             const formattedTotalStakedUSD = formatNumber(totalStakedUSD)
             const formattedTotalStakedETH = formatNumber(totalStakedETH)
             return {
-                eth: formattedTotalStakedUSD + ' ETH',
-                usd: '$ ' + formattedTotalStakedETH
+                eth: formattedTotalStakedETH + ' ETH',
+                usd: '$ ' + formattedTotalStakedUSD
             }
         } catch (error) {
             console.log('Error occurred while fetching stake:', error)
@@ -208,13 +208,15 @@ export default function useContracts() {
             const userEventTotalsSum = userEventTotals.reduce((acc, curr) => {
                 const { StakeDeposited, WithdrawalInitiated } = curr
                 return {
-                    StakeDeposited: acc.StakeDeposited && StakeDeposited ? acc.StakeDeposited + StakeDeposited : acc.StakeDeposited,
-                    WithdrawalInitiated: acc.WithdrawalInitiated && WithdrawalInitiated ? acc.WithdrawalInitiated + WithdrawalInitiated : acc.WithdrawalInitiated
+                  StakeDeposited: acc.StakeDeposited + (StakeDeposited || 0),
+                  WithdrawalInitiated: acc.WithdrawalInitiated + (WithdrawalInitiated || 0),
                 }
-            }, { StakeDeposited: 0, WithdrawalInitiated: 0 })
+              }, { StakeDeposited: 0, WithdrawalInitiated: 0 } as { StakeDeposited: number; WithdrawalInitiated: number })
+              
+              
             const stakedDepositedETH = userEventTotalsSum.StakeDeposited
             const withdrawalInitiatedETH = userEventTotalsSum.WithdrawalInitiated
-
+            
             /* Get User's All Time Rewards by Subtracting (StakeDesposited + WithdrawalInitiated) from CurrentStake */
             const currentUserStakeMinusEvents = currentUserStakeETH - (stakedDepositedETH as number) - (withdrawalInitiatedETH as number)
             return {
