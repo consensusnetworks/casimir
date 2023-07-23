@@ -131,40 +131,40 @@ watch(selectedTimeframe, () => {
   <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap">
     <div class="flex flex-wrap justify-between mb-[52px]">
       <div>
-        <h6 class="blance_title mb-[15px]">
+        <h6 class="balance_title mb-[15px]">
           Total Balance Across Connected Wallets
         </h6>
         <div class="flex items-center gap-[12px]">
-          <h5 class="blance_eth">
+          <h5 class="balance_eth">
             {{ totalWalletBalance.eth }}
           </h5>
-          <span class="blance_usd">
+          <span class="balance_usd">
             {{ totalWalletBalance.usd }}
           </span>
         </div>
       </div>
       <div class="">
-        <h6 class="blance_title mb-[15px]">
+        <h6 class="balance_title mb-[15px]">
           Currently Staked
         </h6>
         <div class="flex items-center gap-[12px]">
-          <h5 class="blance_eth">
+          <h5 class="balance_eth">
             {{ currentStaked.eth }}
           </h5>
-          <span class="blance_usd">
+          <span class="balance_usd">
             {{ currentStaked.usd }}
           </span>
         </div>
       </div>
       <div>
-        <h6 class="blance_title mb-[15px]">
+        <h6 class="balance_title mb-[15px]">
           All Time Staking Rewards Earned
         </h6>
         <div class="flex items-center gap-[12px]">
-          <h5 class="blance_eth">
+          <h5 class="balance_eth">
             {{ stakingRewards.eth }}
           </h5>
-          <span class="blance_usd">
+          <span class="balance_usd">
             {{ stakingRewards.usd }}
           </span>
         </div>
@@ -245,7 +245,7 @@ watch(selectedTimeframe, () => {
 </template>
 
 <style scoped>
-.blance_usd{
+.balance_usd{
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 400;
@@ -259,7 +259,7 @@ watch(selectedTimeframe, () => {
     font-size: 12px;
   };
 }
-.blance_eth{
+.balance_eth{
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 500;
@@ -272,7 +272,7 @@ watch(selectedTimeframe, () => {
     font-size: 22px;
   };
 }
-.blance_title{
+.balance_title{
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 500;
