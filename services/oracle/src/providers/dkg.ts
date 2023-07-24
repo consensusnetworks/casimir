@@ -7,7 +7,7 @@ import { getWithdrawalCredentials, run, runRetry } from '@casimir/helpers'
 import { CreateValidatorInput } from '../interfaces/CreateValidatorInput'
 import { Validator } from '@casimir/types'
 import { ReshareValidatorInput } from '../interfaces/ReshareValidatorInput'
-import { operatorStore } from '@casimir/data'
+import { getOperatorUrls } from './registry'
 import { DepositDataInput } from '../interfaces/DepositDataInput'
 
 export class Dkg {
@@ -27,7 +27,7 @@ export class Dkg {
     async createValidator(input: CreateValidatorInput, retriesLeft: number | undefined = 25): Promise<Validator> {
         try {
             const { poolId, operatorIds, withdrawalAddress } = input
-            const operators = this.getOperatorUrls(operatorIds)
+            const operators = getOperatorUrls(operatorIds)
             const ceremonyId = await this.startKeygen({ operators, withdrawalAddress })
             
             console.log(`Started ceremony ${ceremonyId} for pool ${poolId}`)
@@ -61,8 +61,8 @@ export class Dkg {
     async reshareValidator(input: ReshareValidatorInput, retriesLeft: number | undefined = 25): Promise<Validator> {
         try {
             const { poolId, operatorIds, publicKey, oldOperatorIds, withdrawalAddress } = input
-            const operators = this.getOperatorUrls(operatorIds)
-            const oldOperators = this.getOperatorUrls(oldOperatorIds)
+            const operators = getOperatorUrls(operatorIds)
+            const oldOperators = getOperatorUrls(oldOperatorIds)
             const ceremonyId = await this.startReshare({ operators, publicKey, oldOperators })
             
             console.log(`Started ceremony ${ceremonyId} for pool ${poolId}`)
@@ -162,18 +162,5 @@ export class Dkg {
             signature: `0x${signature}`,
             withdrawalCredentials: `0x${withdrawalCredentials}`
         }
-    }
-
-    /**
-     * Get operator URLs
-     * @param {number[]} operatorIds - Operator IDs
-     * @returns {<Record<string, string>} Operator group
-     */
-    getOperatorUrls(operatorIds: number[]): Record<string, string> {
-        return operatorIds.reduce((group: Record<string, string>, id: number) => {
-            const key = id.toString() as keyof typeof operatorStore
-            group[key] = operatorStore[key]
-            return group
-        }, {})
     }
 }

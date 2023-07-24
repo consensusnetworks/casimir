@@ -14,24 +14,24 @@ void async function () {
     process.env.SSV_TOKEN_ADDRESS = '0x3a9f01091C446bdE031E39ea8354647AFef091E7'
     process.env.UNISWAP_V3_FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
     process.env.WETH_TOKEN_ADDRESS = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
+    process.env.STRATEGY = 'dkg'
     process.env.CLI_PATH = `./${resourcePath}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
     process.env.MESSENGER_SRV_ADDR = 'http://0.0.0.0:3000'
     process.env.USE_HARDCODED_OPERATORS = 'true'
 
     await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
     const cli = await run(`which ${process.env.CLI_PATH}`)
-    if (!cli) throw new Error('DKG CLI not found')
-
+    if (!cli) throw new Error('Dkg cli not found')
     if (os.platform() === 'linux') {
         await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml -f ${resourcePath}/../docker-compose.override.yaml up -d`)
     } else {
         await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml up -d`)
     }
-    console.log('🔑 DKG service started')
-
     const ping = await fetchRetry(`${process.env.MESSENGER_SRV_ADDR}/ping`)
     const { message } = await ping.json()
-    if (message !== 'pong') throw new Error('DKG service is not running')
+    if (message !== 'pong') throw new Error('Dkg service is not running')
+    console.log('🔑 Dkg service started')
 
     run('npx esno -r dotenv/config src/index.ts')
+    console.log('🔑 Oracle service started')
 }()

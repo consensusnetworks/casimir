@@ -1,6 +1,10 @@
 import { ethers } from 'ethers'
 
-export function getEventsIterable({ manager, events }: { manager: ethers.Contract, events: string[] }) {
+export function getEventsIterable({ manager, events }: { 
+    ethereumUrl: string, 
+    manager: ethers.Contract, 
+    events: string[] 
+}) {
     return (async function*() {
         for (const event of events) {
             yield* getEvent({ manager, event })

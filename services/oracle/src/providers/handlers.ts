@@ -1,47 +1,37 @@
 import { ethers } from 'ethers'
-import { Dkg } from './dkg'
 import { HandlerInput } from '../interfaces/HandlerInput'
 import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
 import { Scanner } from '@casimir/ssv'
 import { PoolStatus } from '@casimir/types'
 import { Factory } from '@casimir/uniswap'
 import { getConfig } from './config'
+import { Keychain } from './keychain'
+
+const config = getConfig()
 
 export async function initiateDepositHandler(input: HandlerInput) {
-    const { 
-        ethereumUrl,
-        provider,
-        signer,
-        manager,
-        views,
-        linkTokenAddress,
-        ssvNetworkAddress,
-        ssvNetworkViewsAddress,
-        ssvTokenAddress,
-        uniswapV3FactoryAddress,
-        wethTokenAddress,
-        cliPath,
-        messengerUrl
-    } = getConfig()
+    if (!input.args.poolId) throw new Error('No pool id provided')
 
-    const { poolId } = input as { poolId: number }
-
-    const nonce = await provider.getTransactionCount(manager.address)
-
+    const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
+    
+    const nonce = await provider.getTransactionCount(config.manager.address)
     const poolAddress = ethers.utils.getContractAddress({
-      from: manager.address,
+      from: config.manager.address,
       nonce
     })
 
     const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
-    const dkg = new Dkg({ cliPath, messengerUrl })
 
-    const validator = await dkg.createValidator({
-        poolId,
+    const keychain = new Keychain({ 
+        strategy: config.strategy,
+        cliPath: config.cliPath, 
+        messengerUrl: config.messengerUrl 
+    })
+    const validator = await keychain.createValidator({
+        poolId: input.args.poolId,
         operatorIds: newOperatorIds, 
         withdrawalAddress: poolAddress
     })
-    
     const {
         depositDataRoot,
         publicKey,
@@ -52,29 +42,30 @@ export async function initiateDepositHandler(input: HandlerInput) {
     } = validator
 
     const scanner = new Scanner({ 
-        ethereumUrl,
-        ssvNetworkAddress,
-        ssvNetworkViewsAddress
+        ethereumUrl: config.ethereumUrl,
+        ssvNetworkAddress: config.ssvNetworkAddress,
+        ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
     })
     const clusterDetails = await scanner.getClusterDetails({ 
-        ownerAddress: manager.address,
+        ownerAddress: config.manager.address,
         operatorIds
     })
     const { cluster, requiredBalancePerValidator } = clusterDetails
 
     const processed = false
     const uniswapFactory = new Factory({
-        ethereumUrl,
-        uniswapV3FactoryAddress
+        ethereumUrl: config.ethereumUrl,
+        uniswapV3FactoryAddress: config.uniswapV3FactoryAddress
     })
     const price = await uniswapFactory.getSwapPrice({ 
-        tokenIn: wethTokenAddress,
-        tokenOut: ssvTokenAddress,
+        tokenIn: config.wethTokenAddress,
+        tokenOut: config.ssvTokenAddress,
         uniswapFeeTier: 3000
     })
     const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerValidator)) * Number(price)).toPrecision(9))
 
-    const initiateDeposit = await (manager.connect(signer) as ethers.Contract & CasimirManager).initiateDeposit(
+    const signer = config.wallet.connect(provider)
+    const initiateDeposit = await (config.manager.connect(signer) as ethers.Contract & CasimirManager).initiateDeposit(
         depositDataRoot,
         publicKey,
         signature,
@@ -89,30 +80,24 @@ export async function initiateDepositHandler(input: HandlerInput) {
 }
 
 export async function initiateResharesHandler(input: HandlerInput) {
-    const { 
-        provider,
-        signer,
-        manager,
-        views,
-        linkTokenAddress,
-        ssvTokenAddress,
-        wethTokenAddress,
-        cliPath,
-        messengerUrl
-    } = getConfig()
+    if (!input.args.poolId) throw new Error('No pool id provided')
 
-    const { poolId } = input as { poolId: number }
+    const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
 
     // Todo reshare event will include the operator to boot
 
     // Get pool to reshare
-    const poolDetails = await views.getPoolDetails(poolId)
+    const poolDetails = await config.views.connect(provider).getPoolDetails(input.args.poolId)
 
     // Todo old operators and new operators only different by 1 operator
     const newOperatorGroup = [1, 2, 3, 4]
 
     // Get operators to sign reshare
-    const dkg = new Dkg({ cliPath, messengerUrl })
+    const keychain = new Keychain({ 
+        strategy: config.strategy,
+        cliPath: config.cliPath, 
+        messengerUrl: config.messengerUrl 
+    })
     // const validator = await dkg.reshareValidator({ 
     //     provider,
     //     manager,
@@ -128,50 +113,36 @@ export async function initiateResharesHandler(input: HandlerInput) {
 }
 
 export async function initiateExitsHandler(input: HandlerInput) {
-    const { 
-        provider,
-        signer,
-        manager,
-        views,
-        linkTokenAddress,
-        ssvTokenAddress,
-        wethTokenAddress,
-        cliPath,
-        messengerUrl
-    } = getConfig()
+    if (!input.args.poolId) throw new Error('No pool id provided')
 
-    const { poolId } = input as { poolId: number }
-
+    const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
+    
     // Get pool to exit
-    const poolDetails = await views.getPoolDetails(poolId)
+    const poolDetails = await config.views.connect(provider).getPoolDetails(input.args.poolId)
+
     // Get operators to sign exit
-    const dkg = new Dkg({ cliPath, messengerUrl })
+    const keychain = new Keychain({ 
+        strategy: config.strategy,
+        cliPath: config.cliPath, 
+        messengerUrl: config.messengerUrl
+    })
 }
 
 export async function reportForcedExitsHandler(input: HandlerInput) {
-    const { 
-        provider,
-        signer,
-        manager,
-        views,
-        linkTokenAddress,
-        ssvTokenAddress,
-        wethTokenAddress,
-        cliPath,
-        messengerUrl
-    } = getConfig()
+    if (!input.args.count) throw new Error('No count provided')
 
-    const { count } = input as { count: number }
+    const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
+    const signer = config.wallet.connect(provider)
 
-    const stakedPoolIds = await manager.getStakedPoolIds()
+    const stakedPoolIds = await config.manager.connect(provider).getStakedPoolIds()
     let poolIndex = 0
-    let remaining = count
+    let remaining = input.args.count
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
-        const poolDetails = await views.getPoolDetails(poolId)
+        const poolDetails = await config.views.connect(provider).getPoolDetails(poolId)
         if (poolDetails.status === PoolStatus.ACTIVE) {
             remaining--
-            const reportForcedExit = await manager.connect(signer).reportForcedExit(
+            const reportForcedExit = await config.manager.connect(signer).reportForcedExit(
                 poolIndex
             )
             await reportForcedExit.wait()
@@ -181,21 +152,10 @@ export async function reportForcedExitsHandler(input: HandlerInput) {
 }
 
 export async function reportCompletedExitsHandler(input: HandlerInput) {
-    const { 
-        ethereumUrl,
-        signer,
-        manager,
-        views,
-        linkTokenAddress,
-        ssvNetworkAddress,
-        ssvNetworkViewsAddress,
-        ssvTokenAddress,
-        wethTokenAddress,
-        cliPath,
-        messengerUrl
-    } = getConfig()
+    if (!input.args.count) throw new Error('No count provided')
 
-    const { count } = input as { count: number }
+    const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
+    const signer = config.wallet.connect(provider)
 
     /**
      * In production, we get the completed exit order from the Beacon API (sorting by withdrawn epoch)
@@ -203,12 +163,12 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
      * const stakedPublicKeys = await views.getStakedPublicKeys(startIndex, endIndex)
      * Here, we're just grabbing the next exiting pool for each completed exit
      */
-    const stakedPoolIds = await manager.getStakedPoolIds()
-    let remaining = count
+    const stakedPoolIds = await config.manager.connect(provider).getStakedPoolIds()
+    let remaining = input.args.count
     let poolIndex = 0
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
-        const poolDetails = await views.getPoolDetails(poolId)
+        const poolDetails = await config.views.connect(provider).getPoolDetails(poolId)
         if (poolDetails.status === PoolStatus.EXITING_FORCED || poolDetails.status === PoolStatus.EXITING_REQUESTED) {
             remaining--
             
@@ -224,16 +184,16 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
                 blamePercents = [100, 0, 0, 0]
             }
             const scanner = new Scanner({
-                ethereumUrl,
-                ssvNetworkAddress,
-                ssvNetworkViewsAddress
+                ethereumUrl: config.ethereumUrl,
+                ssvNetworkAddress: config.ssvNetworkAddress,
+                ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
             })
             const clusterDetails = await scanner.getClusterDetails({ 
-                ownerAddress: manager.address,
+                ownerAddress: config.manager.address,
                 operatorIds
             })
             const { cluster } = clusterDetails
-            const reportCompletedExit = await manager.connect(signer).reportCompletedExit(
+            const reportCompletedExit = await config.manager.connect(signer).reportCompletedExit(
                 poolIndex,
                 blamePercents,
                 cluster

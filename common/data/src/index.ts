@@ -6,7 +6,6 @@ import walletSchema from './schemas/wallet.schema.json'
 import stakingActionSchema from './schemas/staking_action.schema.json'
 import userAccountSchema from './schemas/user_account.schema.json'
 import operatorStore from './mock/operator.store.json'
-import validatorStore from './mock/validator.store.json'
 import accountStore from './mock/account.store.json'
 import userStore from './mock/user.store.json'
 import { Postgres } from '../../../services/users/src/providers/postgres'
@@ -24,7 +23,6 @@ export {
   accountStore,
   userStore,
   operatorStore,
-  validatorStore,
   Postgres,
   Schema
 }
