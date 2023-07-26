@@ -414,7 +414,7 @@ onMounted(() =>{
         <thead>
           <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
             <th
-              v-for="header in tableHeaderOptions[tableView].headers"
+              v-for="header in tableHeaderOptions[tableView as keyof typeof tableHeaderOptions].headers"
               :key="header.title"
               class="table_header "
             >
@@ -479,7 +479,7 @@ onMounted(() =>{
             class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
           >
             <td
-              v-for="header in tableHeaderOptions[tableView].headers"
+              v-for="header in tableHeaderOptions[tableView as keyof typeof tableHeaderOptions].headers"
               :key="header.title"
               class="dynamic_padding"
             >
