@@ -2,7 +2,7 @@ import os from 'os'
 import fs from 'fs'
 import { ethers } from 'ethers'
 import { fetchRetry, run } from '@casimir/helpers'
-import { DKG } from '@casimir/oracle/src/providers/dkg'
+import { Dkg } from '@casimir/oracle/src/providers/dkg'
 import { Validator } from '@casimir/types'
 
 void async function () {
@@ -39,21 +39,18 @@ void async function () {
     const validators = JSON.parse(fs.readFileSync(`${outputPath}/validators.json`, 'utf8') || '{}')
 
     if (!validators[oracleAddress] || Object.keys(validators[oracleAddress]).length < validatorCount) {
-        
         await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
         const cli = await run(`which ${process.env.CLI_PATH}`)
-        if (!cli) throw new Error('DKG CLI not found')
-
+        if (!cli) throw new Error('Dkg cli not found')
         if (os.platform() === 'linux') {
             await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml -f ${resourcePath}/../docker-compose.override.yaml up -d`)
         } else {
             await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml up -d`)
-        }
-        console.log('🔑 DKG service started')
-
+        }        
         const ping = await fetchRetry(`${process.env.MESSENGER_SRV_ADDR}/ping`)
         const { message } = await ping.json()
-        if (message !== 'pong') throw new Error('DKG service is not running')
+        if (message !== 'pong') throw new Error('Dkg service is not running')
+        console.log('🔑 Dkg service started')
 
         let nonce = 3
 
@@ -67,9 +64,10 @@ void async function () {
             })
 
             const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
-            const dkg = new DKG({ cliPath: process.env.CLI_PATH, messengerUrl: process.env.MESSENGER_SRV_ADDR })
+            const dkg = new Dkg({ cliPath: process.env.CLI_PATH, messengerUrl: process.env.MESSENGER_SRV_ADDR })
 
             const validator = await dkg.createValidator({
+                poolId: i + 1,
                 operatorIds: newOperatorIds,
                 withdrawalAddress: poolAddress
             })

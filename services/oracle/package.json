@@ -12,6 +12,8 @@
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {
+        "@chainsafe/bls": "^7.1.2",
+        "@chainsafe/blst": "^0.2.9",
         "ethers": "^5.7.2"
     },
     "devDependencies": {
