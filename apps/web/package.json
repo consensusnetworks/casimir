@@ -3,7 +3,7 @@
   "description": "Casimir web app",
   "private": true,
   "scripts": {
-    "dev": "vite --force",
+    "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
