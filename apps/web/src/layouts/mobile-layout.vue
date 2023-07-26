@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import Announcements from '@/pages/overview/components/Announcements.vue'
 import { ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
 
@@ -6,41 +7,40 @@ import VueFeather from 'vue-feather'
 
 // @Chris can we save this variable in storage for the user so on refresh they hop on the same view as the last
 const activeView = ref('wallets')
-// const slideAnimtaion = ref(false)
 
-// watch(activeView, () => {
-//     slideAnimtaion.value = true 
-//     setTimeout(() => {
-//         slideAnimtaion.value = false
-//     }, 500)
-// })
+const mobileViews = ref({
+    wallets: ''
+})
 </script>
 
 <template>
-  <div class="h-[100vh] w-[100vw] min-w-[360px]">
-    <div class="flex flex-col h-full w-full relative">
-      <div class="h-full w-full flex items-center justify-center absolute top-0 left-0 z-[1] bg-black">
-        <img
-          src="/casimir.svg"
-          alt="Casimir Background Logo"
-          class=""
-        >
-      </div>
-      <div class="h-full w-full z-[2] overflow-hidden">
+  <!-- For mobile version we need to concider how the app behaves if it is on a mobile browser 
+    -> search bar appears and disapears depending on the scrolling of the user 
+    (currently have not found a way to see if the bar is there or not) -->
+  <div
+    class="w-[100%] min-w-[360px]"
+    style="height: calc(100vh - 60px)"
+  >
+    <!-- Background image -->
+    <div class="h-full w-full flex items-center justify-center absolute top-0 left-0 z-[1] bg-black">
+      <img
+        src="/casimir.svg"
+        alt="Casimir Background Logo"
+        class=""
+      >
+    </div>
+    
+    <div class="flex flex-col h-full w-full  ">
+      <!-- View -->
+      <div class="h-full w-full overflow-hidden  z-[2]">
         <transition name="slide-up">
           <div
-            v-if="activeView === 'wallets'"
-            key="wallets"
-            class="w-full h-full bg-blue-400"
+            :key="activeView"
+            class="w-full h-full bg-blue-400 z-[2]"
           >
-            {{ activeView }}
-          </div>
-          <div
-            v-else-if="activeView === 'breakdown'"
-            key="breakdown"
-            class="w-full h-full bg-red-400"
-          >
-            {{ activeView }}
+            <component
+              :is="mobileViews[activeView]"
+            />
           </div>
         </transition>
       </div>
