@@ -1,14 +1,14 @@
 import vue from '@vitejs/plugin-vue'
-import { defineConfig } from 'vite'
+import { Plugin, defineConfig } from 'vite'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
-import nodePolyFills from 'rollup-plugin-polyfill-node'
+import nodePolyfills from 'rollup-plugin-polyfill-node'
 
 export default defineConfig({
   server: { port: 3001 },
   plugins: [
     vue(),
-    nodePolyFills()
+    nodePolyfills() as Plugin
   ],
   define: {
     'global': 'globalThis'
@@ -28,8 +28,5 @@ export default defineConfig({
       '.vue',
     ]
   },
-  envPrefix: 'PUBLIC_',
-  optimizeDeps:{
-    exclude: ['@wagmi/core', 'viem']
-  }
+  envPrefix: 'PUBLIC_'
 })
