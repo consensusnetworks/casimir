@@ -1,15 +1,23 @@
 <script lang="ts" setup>
-import Announcements from '@/pages/overview/components/Announcements.vue'
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import VueFeather from 'vue-feather'
+import MobileConnectWallets from '../components/mobileComponents/MobileConnectWallets.vue'
+import MobileBreakdown from '../components/mobileComponents/MobileBreakdown.vue'
+import MobileStake from '../components/mobileComponents/MobileStake.vue'
+import MobileAccounts from '../components/mobileComponents/MobileAccounts.vue'
+import MobileSetting from '../components/mobileComponents/MobileSetting.vue'
 
 // import BreakdownChart from '@/pages/overview/components/BreakdownChart.vue'
 
-// @Chris can we save this variable in storage for the user so on refresh they hop on the same view as the last
+// @Chris can we save this variable in storage for the user so on refresh they hop on the same view as the one they were on
 const activeView = ref('wallets')
 
 const mobileViews = ref({
-    wallets: ''
+    wallets: MobileConnectWallets,
+    breakdown: MobileBreakdown,
+    stake: MobileStake,
+    accounts: MobileAccounts,
+    settings: MobileSetting
 })
 </script>
 
@@ -29,7 +37,7 @@ const mobileViews = ref({
         class=""
       >
     </div>
-    
+
     <div class="flex flex-col h-full w-full  ">
       <!-- View -->
       <div class="h-full w-full overflow-hidden  z-[2]">

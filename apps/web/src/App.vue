@@ -3,7 +3,7 @@
   import DefaultLayout from '@/layouts/default-layout.vue'
   import MobileLayout from '@/layouts/mobile-layout.vue'
   import useTxData from '@/mockData/mock_transaction_data'
-  import { onMounted, onUnmounted, ref} from 'vue'
+  import { onMounted, onUnmounted, ref, watch} from 'vue'
   import useUsers from '@/composables/users'
 
   const { mockData } = useTxData()
@@ -11,30 +11,43 @@
   const { user } = useUsers()
 
   const screenWidth = ref(0)
+  const screenHeight = ref(0)
 
-  // Made this to be 600 due to how our components look, I think anything below 600 would look best in a mobile view (tablets and below)
-  const mobileWidthLimits = ref(600)
+  const showMobileView = ref(false)
 
   const findScreenDimenstions = () => {
     screenWidth.value = window.innerWidth
+    screenHeight.value = window.innerHeight
   }
+
+  watch([screenWidth, screenHeight], () => {
+    if( screenWidth.value <= 600){
+      showMobileView.value = true
+    } else if(screenWidth.value > screenHeight.value && screenWidth.value <= 800) {
+      showMobileView.value = true
+    } else {
+      showMobileView.value = false
+    }
+  })
 
   onMounted(() => {
     findScreenDimenstions()
 
     window.addEventListener('resize', findScreenDimenstions)
+    window.addEventListener('orientationchange', findScreenDimenstions)
     mockData()
   })
 
   onUnmounted(() => {
     window.removeEventListener('resize', findScreenDimenstions)
+    window.addEventListener('orientationchange', findScreenDimenstions)
   })
 </script>
   
 <template>
   <Suspense>
     <component
-      :is="screenWidth <= mobileWidthLimits? MobileLayout : DefaultLayout"
+      :is="showMobileView? MobileLayout : DefaultLayout"
     >
       <RouterView />
     </component>
