@@ -1,9 +1,6 @@
 import { ethers } from 'ethers'
-import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
-import CasimirViewsJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirViews.sol/CasimirViews.json'
-import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/artifacts/types'
 
-const supportedStrategies = ['dkg', 'ethdo']
+const supportedCliStrategies = ['dkg', 'ethdo']
 
 export function getConfig() {
     const ethereumUrl = process.env.ETHEREUM_RPC_URL
@@ -17,12 +14,8 @@ export function getConfig() {
     
     const managerAddress = process.env.MANAGER_ADDRESS
     if (!managerAddress) throw new Error('No manager address provided')
-    const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as ethers.Contract & CasimirManager
-
     const viewsAddress = process.env.VIEWS_ADDRESS
     if (!viewsAddress) throw new Error('No views address provided')
-    const views = new ethers.Contract(viewsAddress, CasimirViewsJson.abi) as CasimirViews & ethers.Contract
-
     const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS
     if (!linkTokenAddress) throw new Error('No link token address provided')
     const ssvNetworkAddress = process.env.SSV_NETWORK_ADDRESS
@@ -36,26 +29,26 @@ export function getConfig() {
     const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS
     if (!wethTokenAddress) throw new Error('No weth token address provided')
 
-    const strategy = process.env.STRATEGY
-    if (!strategy || !supportedStrategies.includes(strategy)) throw new Error('No strategy provided')
     const cliPath = process.env.CLI_PATH
     if (!cliPath) throw new Error('No cli path provided')
+    const cliStrategy = process.env.CLI_STRATEGY
+    if (!cliStrategy || !supportedCliStrategies.includes(cliStrategy)) throw new Error('No strategy provided')
     const messengerUrl = process.env.MESSENGER_SRV_ADDR
-    if (!messengerUrl && strategy === 'dkg') throw new Error('No messenger url provided')
+    if (cliStrategy === 'dkg' && !messengerUrl) throw new Error('No messenger url provided')
 
     return { 
         ethereumUrl,
         wallet,
-        manager,
-        views,
+        managerAddress,
+        viewsAddress,
         linkTokenAddress,
         ssvNetworkAddress,
         ssvNetworkViewsAddress,
         ssvTokenAddress,
         uniswapV3FactoryAddress,
         wethTokenAddress,
-        strategy,
         cliPath,
+        cliStrategy,
         messengerUrl
     }
 }

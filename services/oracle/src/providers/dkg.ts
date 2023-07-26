@@ -16,6 +16,9 @@ export class Dkg {
 
     constructor(options: DkgOptions) {
         this.cliPath = options.cliPath
+        if (!options.messengerUrl) {
+            throw new Error('No messenger url provided')
+        }
         this.messengerUrl = options.messengerUrl
     }
 
