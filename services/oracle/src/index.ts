@@ -1,4 +1,3 @@
-import { ethers } from 'ethers'
 import { getConfig } from './providers/config'
 import { getEventsIterable } from './providers/events'
 import {
@@ -22,7 +21,6 @@ const handlers = {
 }
 
 void async function () {
-
     const eventsIterable = getEventsIterable({
         ethereumUrl: config.ethereumUrl,
         managerAddress: config.managerAddress,
