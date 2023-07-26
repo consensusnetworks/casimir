@@ -109,7 +109,7 @@ export default function useDB() {
      * @param address - The user's address
      * @returns The user if found, otherwise undefined
      */
-    async function getUser(address: string) {
+    async function getUserByAddress(address: string) {
         try {
             const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.address = $1 GROUP BY u.id'
             const params = [address]
@@ -264,7 +264,7 @@ export default function useDB() {
         formatResult,
         getAccounts,
         getNonce, 
-        getUser,
+        getUserByAddress,
         getUserById,
         removeAccount, 
         updateUserAddress, 

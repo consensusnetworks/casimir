@@ -9,6 +9,21 @@
 
 > Decentralized staking and asset management
 
+- [About](#about)
+- [💻 Development](#-development)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+  - [Install](#install)
+  - [Environment](#environment)
+    - [Supported Variables](#supported-variables)
+  - [Apps](#apps)
+  - [Contracts](#contracts)
+  - [Emulators](#emulators)
+- [📊 Data](#-data)
+- [Layout](#layout)
+- [Editor](#editor)
+- [License](#license)
+
 ## About
 
 Casimir is a complete platform that allows users to monitor, move, and stake their assets while holding their own keys. With Casimir staking, users can easily and securely move funds in and out of decentralized staking pools that are operated by high-performing validators.

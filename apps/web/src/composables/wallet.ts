@@ -21,7 +21,8 @@ const activeWallets = ref([
   'WalletConnect',
   'Trezor',
   'Ledger',
-  'IoPay',
+  'TrustWallet',
+  // 'IoPay',
 ] as ProviderString[])
 const amount = ref<string>('1')
 const amountToStake = ref<string>('1.2')
@@ -35,12 +36,12 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
-  const { listenForContractEvents, refreshBreakdown } = useContracts()
-  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
+  const { listenForContractEvents, refreshBreakdown, stopListeningForContractEvents } = useContracts()
+  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, stopListeningForTransactions, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   // const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
-  const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
+  const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAnalytics, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
   const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
@@ -101,6 +102,7 @@ export default function useWallet() {
           setPrimaryAddress(user?.value?.address as string) 
         }
       }
+      // TODO: Implement setting user table analytics here
       await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
       await refreshBreakdown()
@@ -172,17 +174,20 @@ export default function useWallet() {
   }
 
   async function logout() {
-    console.log('clicked log out')
     loadingUserWallets.value = true
     await Session.signOut()
+    stopListeningForContractEvents()
+    stopListeningForTransactions()
+    setUser(undefined)
     setSelectedAddress('')
     setSelectedProvider('')
     setSelectedCurrency('')
-    setUser(undefined)
     setPrimaryAddress('')
-    loadingUserWallets.value = false
+    setUserAnalytics()
+    await refreshBreakdown()
+    // TODO: Fix bug that doesn't allow you to log in without refreshing page after a user logs out
+    window.location.reload()
     console.log('user.value :>> ', user.value)
-    // router.push('/auth')
   }
 
   async function removeConnectedAccount() {

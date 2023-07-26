@@ -51,6 +51,7 @@ void async function () {
 
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
     process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 5}`
+    console.log(`📍 Forking started at ${process.env.ETHEREUM_FORK_BLOCK}`)
 
     const wallet = getWallet(process.env.BIP39_SEED)
     const nonce = await provider.getTransactionCount(wallet.address)
