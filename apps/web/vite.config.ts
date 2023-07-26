@@ -28,5 +28,8 @@ export default defineConfig({
       '.vue',
     ]
   },
-  envPrefix: 'PUBLIC_'
+  envPrefix: 'PUBLIC_',
+  optimizeDeps:{
+    exclude: ['@wagmi/core', 'viem']
+  }
 })

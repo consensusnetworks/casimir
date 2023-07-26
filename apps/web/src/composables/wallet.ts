@@ -5,7 +5,8 @@ import useLedger from '@/composables/ledger'
 // import useSolana from '@/composables/solana'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
-import useWalletConnect from '@/composables/walletConnect'
+// import useWalletConnect from '@/composables/walletConnect'
+import useWalletConnectV2 from './walletConnectV2'
 import { Account, CryptoAddress, Currency, LoginCredentials, MessageRequest, ProviderString, TransactionRequest } from '@casimir/types'
 import * as Session from 'supertokens-web-js/recipe/session'
 
@@ -42,7 +43,8 @@ export default function useWallet() {
   // const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAnalytics, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
-  const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
+  // const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
+  const { web3modal } = useWalletConnectV2()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
     if (provider === 'Ledger') {
@@ -163,7 +165,7 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'Trezor') {
         return await loginWithTrezor(loginCredentials, selectedPathIndex.value)
       } else if (selectedProvider.value === 'WalletConnect'){
-        return await loginWithWalletConnect(loginCredentials)
+        // return await loginWithWalletConnect(loginCredentials)
       } else {
         // TODO: Implement this for other providers
         console.log('Sign up not yet supported for this wallet provider')
@@ -227,7 +229,7 @@ export default function useWallet() {
 
     try {
       if (txRequest.providerString === 'WalletConnect') {
-        await sendWalletConnectTransaction(txRequest)
+        // await sendWalletConnectTransaction(txRequest)
       } else if (ethersProviderList.includes(txRequest.providerString)) {
         await sendEthersTransaction(txRequest)
       }/* else if (solanaProviderList.includes(txRequest.providerString)) {
@@ -290,8 +292,9 @@ export default function useWallet() {
     try {
       if (provider === 'WalletConnect') {
         setSelectedProvider(provider)
-        const walletConnectAddresses = await getWalletConnectAddress()
-        setWalletProviderAddresses(walletConnectAddresses)
+        web3modal.openModal()
+        // const walletConnectAddresses = await getWalletConnectAddress()
+        // setWalletProviderAddresses(walletConnectAddresses)
       } else if (ethersProviderList.includes(provider)) {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
@@ -357,7 +360,7 @@ export default function useWallet() {
     }
     try {
       if (messageRequest.providerString === 'WalletConnect') {
-        await signWalletConnectMessage(messageRequest)
+        // await signWalletConnectMessage(messageRequest)
       } else if (ethersProviderList.includes(messageRequest.providerString)) {
         await signEthersMessage(messageRequest)
       }/* else if (solanaProviderList.includes(messageRequest.providerString)) {
