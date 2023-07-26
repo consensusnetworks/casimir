@@ -3,7 +3,7 @@
   "description": "Casimir web app",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --force",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
@@ -14,7 +14,6 @@
     "@walletconnect/web3-provider": "^1.8.0",
     "@web3modal/ethereum": "^2.7.1",
     "@web3modal/html": "^2.7.1",
-    "agent-base": "^7.1.0",
     "borsh": "^0.7.0",
     "buffer": "^6.0.3",
     "d3": "^7.8.1",

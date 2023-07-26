@@ -16,8 +16,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src'),
-      './runtimeConfig': './runtimeConfig.browser',
-      https: 'agent-base'
+      './runtimeConfig': './runtimeConfig.browser'
     },
     extensions: [
       '.js',
@@ -29,5 +28,11 @@ export default defineConfig({
       '.vue',
     ]
   },
-  envPrefix: 'PUBLIC_'
+  envPrefix: 'PUBLIC_',
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true
+    }
+  }
 })
