@@ -120,14 +120,14 @@ const config: HardhatUserConfig = {
 
 // Start a local tunnel for using RPC over https (e.g. for Metamask on mobile)
 if (process.env.TUNNEL === 'true') {
-  const localSubdomain = `cn-hardhat-${os.userInfo().username.toLowerCase()}`
+  const localSubdomain = `local-hardhat-${os.userInfo().username.toLowerCase()}`
   const localUrl = `https://${localSubdomain}.loca.lt`
   localtunnel({ port: 8545, subdomain: localSubdomain }).then(
     (tunnel: localtunnel.Tunnel) => {
       if (localUrl === tunnel.url) {
-        console.log('Your local tunnel is now available at', localUrl)
+        console.log('Your default local tunnel url is', localUrl)
       } else {
-        console.log('Your default local tunnel url is not available, instead use', tunnel.url)
+        console.log('Your default local tunnel url is not available, use', tunnel.url, 'instead')
       }
       process.on('SIGINT', () => {
         tunnel.close()
