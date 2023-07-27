@@ -3,12 +3,14 @@ import { Plugin, defineConfig } from 'vite'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
 import nodePolyfills from 'rollup-plugin-polyfill-node'
+import nodeResolve from '@rollup/plugin-node-resolve'
 
 export default defineConfig({
   server: { port: 3001 },
   plugins: [
     vue(),
-    nodePolyfills() as Plugin
+    nodePolyfills() as Plugin,
+    nodeResolve()
   ],
   define: {
     'global': 'globalThis'
@@ -28,11 +30,5 @@ export default defineConfig({
       '.vue',
     ]
   },
-  envPrefix: 'PUBLIC_',
-  build: {
-    commonjsOptions: {
-      include: [/node_modules/],
-      transformMixedEsModules: true
-    }
-  }
+  envPrefix: 'PUBLIC_'
 })
