@@ -1,7 +1,4 @@
-import { ethers } from 'ethers'
-
 export interface FactoryOptions {
-    ethereumUrl?: string
-    provider?: ethers.providers.JsonRpcProvider
+    ethereumUrl: string
     uniswapV3FactoryAddress: string
 }

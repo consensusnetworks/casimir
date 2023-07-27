@@ -35,9 +35,7 @@ void async function () {
     }
 
     const validatorCount = parseInt(process.env.VALIDATOR_COUNT as string) || 4
-
     const validators = JSON.parse(fs.readFileSync(`${outputPath}/validators.json`, 'utf8') || '{}')
-
     if (!validators[oracleAddress] || Object.keys(validators[oracleAddress]).length < validatorCount) {
         await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
         const cli = await run(`which ${process.env.CLI_PATH}`)

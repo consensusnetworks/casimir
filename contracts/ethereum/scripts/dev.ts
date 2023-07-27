@@ -10,6 +10,9 @@ import { fetchRetry, run } from '@casimir/helpers'
 import { PoolStatus } from '@casimir/types'
 
 void async function () {
+    const ethereumUrl = process.env.ETHEREUM_RPC_URL as string
+    if (!ethereumUrl) throw new Error('No ethereum url provided')
+
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
 
     const mockFunctionsOracleFactory = await ethers.getContractFactory('MockFunctionsOracle')
@@ -79,7 +82,6 @@ void async function () {
     let lastReportBlock = await ethers.provider.getBlockNumber()
     let lastStakedPoolIds: number[] = []
     void function () {
-
         ethers.provider.on('block', async (block) => {
             if (block - blocksPerReport >= lastReportBlock) {
                 await time.increase(time.duration.days(1))
@@ -163,30 +165,38 @@ void async function () {
     if (process.env.MOCK_ORACLE === 'true') {
         run('npm run dev --workspace @casimir/oracle')
     } else {
-        const handlers = {
-            DepositRequested: initiateDepositHandler,
-            /**
-             * We don't need to handle these/they aren't ready:
-             * ResharesRequested: initiateResharesHandler,
-             * ExitRequested: initiateExitsHandler,
-             * ForcedExitReportsRequested: reportForcedExitsHandler,
-             */
-            CompletedExitReportsRequested: reportCompletedExitsHandler
-        }
-
-        const eventsIterable = getEventsIterable({ manager, events: Object.keys(handlers) })
-                
-        for await (const event of eventsIterable) {
-            const details = event?.[event.length - 1]
-            const { args } = details
-            const handler = handlers[details.event as keyof typeof handlers]
-            if (!handler) throw new Error(`No handler found for event ${details.event}`)
-            await handler({ 
-                manager,
-                views,
-                signer: oracle,
-                args
+        try {
+            const handlers = {
+                DepositRequested: initiateDepositHandler,
+                /**
+                 * We don't need to handle these/they aren't ready:
+                 * ResharesRequested: initiateResharesHandler,
+                 * ExitRequested: initiateExitsHandler,
+                 * ForcedExitReportsRequested: reportForcedExitsHandler,
+                 */
+                CompletedExitReportsRequested: reportCompletedExitsHandler
+            }
+    
+            const eventsIterable = getEventsIterable({ 
+                ethereumUrl,
+                managerAddress: manager.address, 
+                events: Object.keys(handlers) 
             })
+                    
+            for await (const event of eventsIterable) {
+                const details = event?.[event.length - 1]
+                const { args } = details
+                const handler = handlers[details.event as keyof typeof handlers]
+                if (!handler) throw new Error(`No handler found for event ${details.event}`)
+                await handler({ 
+                    manager,
+                    views,
+                    signer: oracle,
+                    args
+                })
+            }
+        } catch (error) {
+            console.log('ORACLE ERROR', error)
         }
     }
 }()

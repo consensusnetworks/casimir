@@ -8,6 +8,8 @@ import { getWithdrawalCredentials } from '@casimir/helpers'
 import { Factory } from '@casimir/uniswap'
 
 const mockValidatorsPath = './scripts/.out/validators.json'
+const ethereumUrl = process.env.ETHEREUM_RPC_URL as string
+if (!ethereumUrl) throw new Error('No ethereum rpc url provided')
 const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS as string
 if (!linkTokenAddress) throw new Error('No link token address provided')
 const ssvNetworkAddress = process.env.SSV_NETWORK_ADDRESS as string
@@ -40,7 +42,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         shares,
     } = validator
     const scanner = new Scanner({
-        provider: ethers.provider,
+        ethereumUrl,
         ssvNetworkAddress,
         ssvNetworkViewsAddress
     })
@@ -51,7 +53,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
     const { cluster, requiredBalancePerValidator } = clusterDetails
     const processed = false
     const uniswapFactory = new Factory({
-        provider: ethers.provider,
+        ethereumUrl,
         uniswapV3FactoryAddress
     })
     const price = await uniswapFactory.getSwapPrice({ 
@@ -85,7 +87,7 @@ export async function depositUpkeepBalanceHandler({ manager, signer }: { manager
     const processed = false
     const requiredBalance = ethers.utils.parseEther('0.2')
     const uniswapFactory = new Factory({
-        provider: ethers.provider,
+        ethereumUrl,
         uniswapV3FactoryAddress
     })
     const price = await uniswapFactory.getSwapPrice({ 
@@ -131,7 +133,7 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
                 blamePercents = [100, 0, 0, 0]
             }
             const scanner = new Scanner({
-                provider: ethers.provider,
+                ethereumUrl,
                 ssvNetworkAddress,
                 ssvNetworkViewsAddress
             })

@@ -1,8 +1,5 @@
-import { ethers } from 'ethers'
-
 export interface ScannerOptions {
-    ethereumUrl?: string
-    provider?: ethers.providers.JsonRpcProvider
+    ethereumUrl: string
     ssvNetworkAddress: string
     ssvNetworkViewsAddress: string
 }

@@ -30,14 +30,16 @@ export class AnalyticsStack extends cdk.Stack {
 
         /** Create S3 buckets */
         const eventBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'event-bucket', config.dataVersion), {
-            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'event-bucket', config.dataVersion)),
+            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'event-bucket', config.dataVersion))
         })
 
         const actionBucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'action-bucket', config.dataVersion), {
-            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'action-bucket', config.dataVersion)),
+            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'action-bucket', config.dataVersion))
         })
         
-        new s3.Bucket(this, config.getFullStackResourceName(this.name, 'output-bucket', config.dataVersion))
+        new s3.Bucket(this, config.getFullStackResourceName(this.name, 'output-bucket', config.dataVersion), {
+            bucketName: kebabCase(config.getFullStackResourceName(this.name, 'output-bucket', config.dataVersion))
+        })
 
         /** Create Glue tables */
         new glue.Table(this, config.getFullStackResourceName(this.name, 'event-table', config.dataVersion), {
