@@ -42,7 +42,7 @@ export default function useWallet() {
   // const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAnalytics, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
-  const { web3modal, getWalletConnectAddressAndBalance, /* loginWithWalletConnectV2 */ } = useWalletConnectV2()
+  const { web3modal, getWalletConnectAddressAndBalance, loginWithWalletConnectV2 } = useWalletConnectV2()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
     if (provider === 'Ledger') {
@@ -163,9 +163,7 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'Trezor') {
         return await loginWithTrezor(loginCredentials, selectedPathIndex.value)
       } else if (selectedProvider.value === 'WalletConnect'){
-        // TODO: Fix this.
-        throw new Error('WalletConnect temporarily disabled. Please try another provider.')
-        // return await loginWithWalletConnectV2(loginCredentials)
+        return await loginWithWalletConnectV2(loginCredentials)
       } else {
         // TODO: Implement this for other providers
         console.log('Sign up not yet supported for this wallet provider')
@@ -291,8 +289,6 @@ export default function useWallet() {
     console.clear()
     try {
       if (provider === 'WalletConnect') {
-        // TODO: Fix this.
-        throw new Error('WalletConnect temporarily disabled. Please try another provider.')
         setSelectedProvider(provider)
         web3modal.openModal()
         // TODO: Need a way of unsubscribing from events
