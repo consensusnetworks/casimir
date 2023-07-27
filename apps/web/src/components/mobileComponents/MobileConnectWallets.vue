@@ -113,7 +113,6 @@ const convertString = (inputString: string) => {
               type="checkbox"
               class="mr-[5px] w-[10px] h-[10px]"
             > By connecting my address, I certify that I have read and accept the updated 
-            <!-- TD: @steve create a terms of service card -->
             <button
               class="text-primary hover:text-blue_3"
               @click="showTermsOfService = true"
