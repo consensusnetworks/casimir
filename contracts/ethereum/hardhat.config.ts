@@ -1,6 +1,7 @@
 import localtunnel from 'localtunnel'
 import os from 'os'
 import { HardhatUserConfig } from 'hardhat/config'
+import '@nomicfoundation/hardhat-foundry'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
 import 'solidity-docgen'

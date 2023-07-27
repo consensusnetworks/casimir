@@ -38,8 +38,8 @@ void async function () {
     const validators = JSON.parse(fs.readFileSync(`${outputPath}/validators.json`, 'utf8') || '{}')
     if (!validators[oracleAddress] || Object.keys(validators[oracleAddress]).length < validatorCount) {
         await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
-        const cli = await run(`which ${process.env.CLI_PATH}`)
-        if (!cli) throw new Error('Dkg cli not found')
+        const dkg = await run(`which ${process.env.CLI_PATH}`) as string
+        if (dkg.includes('not found')) throw new Error('Dkg cli not found')
         if (os.platform() === 'linux') {
             await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml -f ${resourcePath}/../docker-compose.override.yaml up -d`)
         } else {

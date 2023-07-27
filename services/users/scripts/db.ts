@@ -59,9 +59,9 @@ void async function () {
         dbReady = health.trim() === 'healthy'
         await new Promise(resolve => setTimeout(resolve, 2500))
     }
-    const atlasCli = await run('which atlas')
-    if (!atlasCli && os.platform() === 'darwin') {
-        await run('echo y | brew install atlas')
+    const atlas = await run('which atlas') as string
+    if (atlas.includes('not found')) {
+        await run('curl -sSf https://atlasgo.sh | sh -s -- --yes')
     }
     await run(`atlas schema apply --url "postgres://postgres:password@localhost:5432/users?sslmode=disable" --to "file://${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`)
 }()
