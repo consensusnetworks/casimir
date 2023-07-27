@@ -19,7 +19,7 @@
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "migrations:users": "npx esno -r dotenv/config scripts/migrations/users.ts",
     "postinstall": "npm run build --workspace @casimir/ethereum",
-    "preinstall": "git submodule update --init --recursive && git submodule foreach --recursive git checkout .",
+    "preinstall": "git submodule update --init --recursive && npm run preinstall --workspace @casimir/ethereum",
     "prepare": "husky install",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:actions": "npx esno -r dotenv/config scripts/actions/test.ts",
