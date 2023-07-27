@@ -5,7 +5,6 @@ import useLedger from '@/composables/ledger'
 // import useSolana from '@/composables/solana'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
-// import useWalletConnect from '@/composables/walletConnect'
 import useWalletConnectV2 from './walletConnectV2'
 import { Account, CryptoAddress, Currency, LoginCredentials, MessageRequest, ProviderString, TransactionRequest } from '@casimir/types'
 import * as Session from 'supertokens-web-js/recipe/session'
@@ -43,8 +42,7 @@ export default function useWallet() {
   // const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAnalytics, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
-  // const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
-  const { web3modal } = useWalletConnectV2()
+  const { web3modal, getWalletConnectAddressAndBalance, loginWithWalletConnectV2 } = useWalletConnectV2()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
     if (provider === 'Ledger') {
@@ -165,7 +163,7 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'Trezor') {
         return await loginWithTrezor(loginCredentials, selectedPathIndex.value)
       } else if (selectedProvider.value === 'WalletConnect'){
-        // return await loginWithWalletConnect(loginCredentials)
+        return await loginWithWalletConnectV2(loginCredentials)
       } else {
         // TODO: Implement this for other providers
         console.log('Sign up not yet supported for this wallet provider')
@@ -291,10 +289,18 @@ export default function useWallet() {
     console.clear()
     try {
       if (provider === 'WalletConnect') {
+        // TODO: Fix this.
+        throw new Error('WalletConnect temporarily disabled. Please try another provider.')
         setSelectedProvider(provider)
         web3modal.openModal()
-        // const walletConnectAddresses = await getWalletConnectAddress()
-        // setWalletProviderAddresses(walletConnectAddresses)
+        // TODO: Need a way of unsubscribing from events
+        web3modal.subscribeEvents(async (event) => {
+          const { name } = event
+          if (name === 'ACCOUNT_CONNECTED') {
+            const walletConnectAddressAndBalance = await getWalletConnectAddressAndBalance()
+            setWalletProviderAddresses([walletConnectAddressAndBalance])
+          }
+        })
       } else if (ethersProviderList.includes(provider)) {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
