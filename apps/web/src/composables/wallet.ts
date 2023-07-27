@@ -42,7 +42,7 @@ export default function useWallet() {
   // const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAnalytics, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
-  const { web3modal, getWalletConnectAddressAndBalance, loginWithWalletConnectV2 } = useWalletConnectV2()
+  const { web3modal, getWalletConnectAddressAndBalance, /* loginWithWalletConnectV2 */ } = useWalletConnectV2()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
     if (provider === 'Ledger') {

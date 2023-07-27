@@ -32,22 +32,22 @@ export default function useWalletConnectV2() {
     }
   }
 
-  async function loginWithWalletConnectV2(loginCredentials: LoginCredentials) {
-    const { provider, address, currency } = loginCredentials
-    try {
-      const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
-      const signedMessage = await signWalletConnectMessage({ message, providerString: provider })
-      await signInWithEthereum({
-        address,
-        currency: currency || 'ETH',
-        provider,
-        message,
-        signedMessage
-      })
-    } catch (err) {
-      console.log('error in loginWithWalletConnect :>> ', err)
-    }
-  }
+  // async function loginWithWalletConnectV2(loginCredentials: LoginCredentials) {
+  //   const { provider, address, currency } = loginCredentials
+  //   try {
+  //     const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
+  //     const signedMessage = await signWalletConnectMessage({ message, providerString: provider })
+  //     await signInWithEthereum({
+  //       address,
+  //       currency: currency || 'ETH',
+  //       provider,
+  //       message,
+  //       signedMessage
+  //     })
+  //   } catch (err) {
+  //     console.log('error in loginWithWalletConnect :>> ', err)
+  //   }
+  // }
 
   async function signWalletConnectMessage(messageRequest: MessageRequest) {
     console.log('got to signWalletConnectMessage')
@@ -60,6 +60,6 @@ export default function useWalletConnectV2() {
   return {  
     web3modal,
     getWalletConnectAddressAndBalance,
-    loginWithWalletConnectV2
+    // loginWithWalletConnectV2
   }
 }
