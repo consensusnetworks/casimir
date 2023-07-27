@@ -10,11 +10,7 @@ export class Factory {
     uniswapV3Factory: IUniswapV3Factory & ethers.Contract
 
     constructor(options: FactoryOptions) {
-        if (options.provider) {
-            this.provider = options.provider
-        } else {
-            this.provider = new ethers.providers.JsonRpcProvider(options.ethereumUrl)
-        }
+        this.provider = new ethers.providers.JsonRpcProvider(options.ethereumUrl)
         this.uniswapV3Factory = new ethers.Contract(options.uniswapV3FactoryAddress, IUniswapV3FactoryJson.abi, this.provider) as IUniswapV3Factory & ethers.Contract
     }
 

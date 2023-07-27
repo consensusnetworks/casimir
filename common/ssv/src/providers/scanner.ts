@@ -24,11 +24,7 @@ export class Scanner {
     ssvNetworkViews: ISSVNetworkViews & ethers.Contract
 
     constructor(options: ScannerOptions) {
-        if (options.provider) {
-            this.provider = options.provider
-        } else {
-            this.provider = new ethers.providers.JsonRpcProvider(options.ethereumUrl)
-        }
+        this.provider = new ethers.providers.JsonRpcProvider(options.ethereumUrl)
         this.ssvNetwork = new ethers.Contract(options.ssvNetworkAddress, ISSVNetworkJson.abi, this.provider) as ISSVNetwork & ethers.Contract
         this.ssvNetworkViews = new ethers.Contract(options.ssvNetworkViewsAddress, ISSVNetworkViewsJson.abi, this.provider) as ISSVNetworkViews & ethers.Contract
     }
