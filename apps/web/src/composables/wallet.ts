@@ -163,7 +163,9 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'Trezor') {
         return await loginWithTrezor(loginCredentials, selectedPathIndex.value)
       } else if (selectedProvider.value === 'WalletConnect'){
-        return await loginWithWalletConnectV2(loginCredentials)
+        // TODO: Fix this.
+        throw new Error('WalletConnect temporarily disabled. Please try another provider.')
+        // return await loginWithWalletConnectV2(loginCredentials)
       } else {
         // TODO: Implement this for other providers
         console.log('Sign up not yet supported for this wallet provider')
