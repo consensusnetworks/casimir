@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import VueFeather from 'vue-feather'
 import MobileConnectWallets from '../components/mobileComponents/MobileConnectWallets.vue'
 import MobileBreakdown from '../components/mobileComponents/MobileBreakdown.vue'
@@ -10,7 +10,7 @@ import MobileSetting from '../components/mobileComponents/MobileSetting.vue'
 // import BreakdownChart from '@/pages/overview/components/BreakdownChart.vue'
 
 // @Chris can we save this variable in storage for the user so on refresh they hop on the same view as the one they were on
-const activeView = ref('wallets')
+const activeView = ref('')
 
 const mobileViews = ref({
     wallets: MobileConnectWallets,
@@ -18,6 +18,12 @@ const mobileViews = ref({
     stake: MobileStake,
     accounts: MobileAccounts,
     settings: MobileSetting
+})
+
+onMounted(() => {
+  setTimeout(() =>{
+    activeView.value = 'wallets'
+  }, 1000)
 })
 </script>
 
@@ -31,20 +37,23 @@ const mobileViews = ref({
   >
     <!-- Background image -->
     <div class="h-full w-full flex items-center justify-center absolute top-0 left-0 z-[1] bg-black">
-      <img
-        src="/casimir.svg"
-        alt="Casimir Background Logo"
-        class=""
-      >
+      <div class="text-white text-center">
+        <img
+          src="/casimir.svg"
+          alt="Casimir Background Logo"
+          class="mb-[20px]"
+        >
+        <span v-show="activeView === ''">Welcome</span>
+      </div>
     </div>
 
     <div class="flex flex-col h-full w-full  ">
       <!-- View -->
-      <div class="h-full w-full overflow-hidden  z-[2]">
+      <div class="h-full w-full overflow-hidden z-[2] ">
         <transition name="slide-up">
           <div
             :key="activeView"
-            class="w-full h-full bg-blue-400 z-[2]"
+            class="w-full h-full z-[2]"
           >
             <component
               :is="mobileViews[activeView]"
