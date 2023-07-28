@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
-import { ISSVNetwork, ISSVNetworkViews } from '@casimir/ethereum/build/artifacts/types'
-import ISSVNetworkJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetwork.sol/ISSVNetwork.json'
-import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
+import { ISSVNetwork, ISSVNetworkViews } from '@casimir/ethereum/build/@types'
+import ISSVNetworkAbi from '@casimir/ethereum/build/abi/ISSVNetwork.json'
+import ISSVNetworkViewsAbi from '@casimir/ethereum/build/abi/ISSVNetworkViews.json'
 import { ClusterDetailsInput } from '../interfaces/ClusterDetailsInput'
 import { ClusterDetails } from '../interfaces/ClusterDetails'
 import { Cluster } from '@casimir/types'
@@ -24,9 +24,13 @@ export class Scanner {
     ssvNetworkViews: ISSVNetworkViews & ethers.Contract
 
     constructor(options: ScannerOptions) {
-        this.provider = new ethers.providers.JsonRpcProvider(options.ethereumUrl)
-        this.ssvNetwork = new ethers.Contract(options.ssvNetworkAddress, ISSVNetworkJson.abi, this.provider) as ISSVNetwork & ethers.Contract
-        this.ssvNetworkViews = new ethers.Contract(options.ssvNetworkViewsAddress, ISSVNetworkViewsJson.abi, this.provider) as ISSVNetworkViews & ethers.Contract
+        if (options.provider) {
+            this.provider = options.provider
+        } else {
+            this.provider = new ethers.providers.JsonRpcProvider(options.ethereumUrl)
+        }
+        this.ssvNetwork = new ethers.Contract(options.ssvNetworkAddress, ISSVNetworkAbi, this.provider) as ISSVNetwork & ethers.Contract
+        this.ssvNetworkViews = new ethers.Contract(options.ssvNetworkViewsAddress, ISSVNetworkViewsAbi, this.provider) as ISSVNetworkViews & ethers.Contract
     }
 
     /** 

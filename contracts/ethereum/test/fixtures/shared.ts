@@ -1,10 +1,10 @@
 import { ethers, network } from 'hardhat'
 import { loadFixture, time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
-import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, ISSVNetworkViews } from '@casimir/ethereum/build/artifacts/types'
-import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
-import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '@casimir/ethereum/helpers/oracle'
-import { round } from '@casimir/ethereum/helpers/math'
-import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
+import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, ISSVNetworkViews } from '../../build/@types'
+import { fulfillReport, runUpkeep } from '../../helpers/upkeep'
+import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../../helpers/oracle'
+import { round } from '../../helpers/math'
+import ISSVNetworkViewsAbi from '../../build/abi/ISSVNetworkViews.json'
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
@@ -45,7 +45,7 @@ export async function deploymentFixture() {
 
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
-    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsJson.abi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
+    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
     for (const operatorId of [1, 2, 3, 4]) {
         const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)

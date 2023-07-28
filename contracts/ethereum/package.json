@@ -3,12 +3,14 @@
     "scripts": {
         "node": "npx hardhat node",
         "dev": "npx hardhat run scripts/dev.ts",
+        "dev:docs": "forge doc --serve --port=5458",
         "deploy": "npx hardhat run scripts/deploy.ts",
-        "docgen": "npx hardhat docgen",
         "test": "npx esno scripts/test.ts",
-        "clean": "npx hardhat clean",
-        "build": "npx hardhat compile --show-stack-traces",
-        "preinstall": "npx esno scripts/preinstall.ts"
+        "clean": "npx rimraf ./build",
+        "foundryup": "npx esno scripts/foundryup.ts",
+        "postinstall": "npm run foundryup && npm run build",
+        "build": "npx hardhat compile",
+        "build:docs": "forge doc"
     },
     "dependencies": {
         "@chainlink/contracts": "^0.6.1",
@@ -30,10 +32,11 @@
         "chai": "^4.3.6",
         "esno": "^0.16.3",
         "hardhat": "^2.12.2",
+        "hardhat-abi-exporter": "^2.10.1",
         "localtunnel": "^2.0.2",
         "minimist": "^1.2.8",
         "mocha": "^10.0.0",
-        "solidity-docgen": "^0.6.0-beta.29",
+        "rimraf": "^5.0.1",
         "ts-node": "^10.8.2",
         "typechain": "^8.1.0"
     }

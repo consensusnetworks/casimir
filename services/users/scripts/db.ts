@@ -60,8 +60,12 @@ void async function () {
         await new Promise(resolve => setTimeout(resolve, 2500))
     }
     const atlas = await run('which atlas') as string
-    if (atlas.includes('not found')) {
-        await run('curl -sSf https://atlasgo.sh | sh -s -- --yes')
+    if (!atlas || atlas.includes('not found')) {
+        if (os.platform() === 'darwin') {
+            await run('echo y | brew install atlas')
+        } else {
+            throw new Error('Please install atlas using `curl -sSf https://atlasgo.sh | sh`')
+        }
     }
     await run(`atlas schema apply --url "postgres://postgres:password@localhost:5432/users?sslmode=disable" --to "file://${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`)
 }()

@@ -1,8 +1,8 @@
 import { ethers } from 'ethers'
 import { HandlerInput } from '../interfaces/HandlerInput'
-import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/artifacts/types'
-import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
-import CasimirViewsJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirViews.sol/CasimirViews.json'
+import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/@types'
+import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
+import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
 import { Scanner } from '@casimir/ssv'
 import { PoolStatus } from '@casimir/types'
 import { Factory } from '@casimir/uniswap'
@@ -21,7 +21,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerJson.abi, signer) as ethers.Contract & CasimirManager
+    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
     
     const nonce = await provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
@@ -90,8 +90,8 @@ export async function initiateResharesHandler(input: HandlerInput) {
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerJson.abi, signer) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, CasimirViewsJson.abi, provider) as ethers.Contract & CasimirViews
+    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     // Todo reshare event will include the operator to boot
 
@@ -120,8 +120,8 @@ export async function initiateExitsHandler(input: HandlerInput) {
     if (!input.args.poolId) throw new Error('No pool id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerJson.abi, provider) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, CasimirViewsJson.abi, provider) as ethers.Contract & CasimirViews
+    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, provider) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     // Get pool to exit
     const poolDetails = await views.connect(provider).getPoolDetails(input.args.poolId)
@@ -134,8 +134,8 @@ export async function reportForcedExitsHandler(input: HandlerInput) {
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerJson.abi, signer) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, CasimirViewsJson.abi, provider) as ethers.Contract & CasimirViews
+    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     const stakedPoolIds = await manager.getStakedPoolIds()
     let poolIndex = 0
@@ -159,8 +159,8 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerJson.abi, signer) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, CasimirViewsJson.abi, provider) as ethers.Contract & CasimirViews
+    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     /**
      * In production, we get the completed exit order from the Beacon API (sorting by withdrawn epoch)

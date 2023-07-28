@@ -1,14 +1,14 @@
 import fs from 'fs'
-import { KeygenInput } from '../interfaces/KeygenInput'
+import { StartKeygenInput } from '../interfaces/StartKeygenInput'
 import { DepositData } from '../interfaces/DepositData'
 import { DkgOptions } from '../interfaces/DkgOptions'
-import { ReshareInput } from '../interfaces/ReshareInput'
+import { StartReshareInput } from '../interfaces/StartReshareInput'
 import { getWithdrawalCredentials, run, runRetry } from '@casimir/helpers'
 import { CreateValidatorInput } from '../interfaces/CreateValidatorInput'
 import { Validator } from '@casimir/types'
 import { ReshareValidatorInput } from '../interfaces/ReshareValidatorInput'
 import { getOperatorUrls } from './registry'
-import { DepositDataInput } from '../interfaces/DepositDataInput'
+import { GetDepositDataInput } from '../interfaces/GetDepositDataInput'
 
 export class Dkg {
     cliPath: string
@@ -93,10 +93,10 @@ export class Dkg {
 
     /**
      * Start a keygen ceremony
-     * @param {KeygenInput} input - Keygen input
+     * @param {StartKeygenInput} input - Keygen input
      * @returns {Promise<string>} Ceremony ID
      */
-    async startKeygen(input: KeygenInput): Promise<string> {
+    async startKeygen(input: StartKeygenInput): Promise<string> {
         const { operators, withdrawalAddress } = input
         const operatorFlags = Object.entries(operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
         const thresholdFlag = `--threshold ${Object.keys(operators).length - 1}`
@@ -109,10 +109,10 @@ export class Dkg {
 
     /**
      * Start a reshare ceremony
-     * @param {ReshareInput} input - Operator IDs, public key, and old operator IDs
+     * @param {StartReshareInput} input - Operator IDs, public key, and old operator IDs
      * @returns {Promise<string>} Ceremony ID
      */
-    async startReshare(input: ReshareInput): Promise<string> {
+    async startReshare(input: StartReshareInput): Promise<string> {
         const { operators, publicKey, oldOperators } = input
         const operatorFlags = Object.entries(operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
         const thresholdFlag = `--threshold ${Object.keys(operators).length - 1}`
@@ -140,10 +140,10 @@ export class Dkg {
 
     /**
      * Get deposit data
-     * @param {DepositDataInput} input - Ceremony ID and withdrawal address
+     * @param {GetDepositDataInput} input - Ceremony ID and withdrawal address
      * @returns {Promise<DepositData>} Deposit data
      */
-    async getDepositData(input: DepositDataInput): Promise<DepositData> {
+    async getDepositData(input: GetDepositDataInput): Promise<DepositData> {
         const { ceremonyId, withdrawalAddress } = input
         const requestIdFlag = `--request-id ${ceremonyId}`
         const withdrawalCredentialsFlag = `--withdrawal-credentials 01${'0'.repeat(22)}${withdrawalAddress.split('0x')[1]}`

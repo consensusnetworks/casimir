@@ -22,7 +22,7 @@ void async function () {
         process.env.USE_HARDCODED_OPERATORS = 'true'
         await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
         const dkg = await run(`which ${process.env.CLI_PATH}`) as string
-        if (dkg.includes('not found')) throw new Error('Dkg cli not found')
+        if (!dkg || dkg.includes('not found')) throw new Error('Dkg cli not found')
         if (os.platform() === 'linux') {
             await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml -f ${resourcePath}/../docker-compose.override.yaml up -d`)
         } else {
