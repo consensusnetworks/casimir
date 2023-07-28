@@ -92,7 +92,7 @@ export async function depositUpkeepBalanceHandler({ manager, signer }: { manager
     })
     const price = await uniswapFactory.getSwapPrice({ 
         tokenIn: wethTokenAddress,
-        tokenOut: ssvTokenAddress,
+        tokenOut: linkTokenAddress,
         uniswapFeeTier: 3000
     })
     const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalance)) * Number(price)).toPrecision(9))
