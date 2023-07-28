@@ -34,7 +34,7 @@ onMounted(() => {
     (currently have not found a way to see if the bar is there or not) -->
   <div
     class="w-[100%] min-w-[360px]"
-    style="height: calc(100vh - 60px)"
+    style="height: calc(100vh - 70px)"
   >
     <!-- Background image -->
     <div class="h-full w-full flex items-center justify-center absolute top-0 left-0 z-[1] bg-black">
@@ -49,20 +49,6 @@ onMounted(() => {
     </div>
 
     <div class="flex flex-col h-full w-full  ">
-      <!-- View -->
-      <div class="h-full w-full overflow-hidden z-[2] ">
-        <transition name="slide-up">
-          <div
-            :key="activeView"
-            class="w-full h-full z-[2]"
-          >
-            <component
-              :is="mobileViews[activeView]"
-            />
-          </div>
-        </transition>
-      </div>
-
       <!-- Nav Bar -->
       <div class="h-[70px] w-full bg-black text-white flex justify-around items-center z-[3]">
         <button
@@ -125,6 +111,19 @@ onMounted(() => {
           <span>Settings</span>
         </button>
       </div>
+      <!-- View -->
+      <div class="h-full w-full overflow-hidden z-[2] ">
+        <transition name="slide-up">
+          <div
+            :key="activeView"
+            class="w-full h-full z-[2]"
+          >
+            <component
+              :is="mobileViews[activeView]"
+            />
+          </div>
+        </transition>
+      </div>
     </div>
   </div>
 </template>
@@ -136,7 +135,7 @@ onMounted(() => {
 }
 
 .slide-up-enter-from{
-    transform: translateY(100%);
+    transform: translateY(-100%);
 }
 
 .nav_item{
