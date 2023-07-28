@@ -42,7 +42,7 @@ export default function useWallet() {
   // const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAnalytics, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
-  const { web3modal, getWalletConnectAddressAndBalance, loginWithWalletConnectV2 } = useWalletConnectV2()
+  const { web3modal, disconnectWalletConnect, getWalletConnectAddressAndBalance, loginWithWalletConnectV2 } = useWalletConnectV2()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
     if (provider === 'Ledger') {
@@ -184,6 +184,7 @@ export default function useWallet() {
     setSelectedCurrency('')
     setPrimaryAddress('')
     setUserAnalytics()
+    await disconnectWalletConnect()
     await refreshBreakdown()
     // TODO: Fix bug that doesn't allow you to log in without refreshing page after a user logs out
     window.location.reload()
