@@ -128,9 +128,9 @@ const convertString = (inputString: string) => {
       v-if="showTermsOfService"
       class="absolute bg-white w-full h-[100%] top-0 left-0 px-[20px] pt-[15px] pb-[70px] overflow-auto"
     >
-      <div class="sticky top-[0] left-0 bg-black rounded-[8px] text-white text-[12px] py-[10px] flex justify-center items-center gap-[20px] mb-[10px]">
+      <div class="sticky top-[0] left-0 bg-grey_2 rounded-[8px] text-white text-[12px] py-[10px] flex justify-center items-center gap-[20px] mb-[10px]">
         <button
-          class="bg-grey_3 rounded-[8px] px-[15px] py-[7px]"
+          class="bg-grey_4 rounded-[8px] px-[15px] py-[7px]"
           @click="termsCheckbox = false, showTermsOfService = false"
         >
           Cancel

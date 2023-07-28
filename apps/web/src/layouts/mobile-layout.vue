@@ -9,6 +9,7 @@ import MobileSetting from '../components/mobileComponents/MobileSetting.vue'
 
 // import BreakdownChart from '@/pages/overview/components/BreakdownChart.vue'
 
+// @Steve need a way to figure out how the user migrates through the app on connect wallet, add more wallets 
 // @Chris can we save this variable in storage for the user so on refresh they hop on the same view as the one they were on
 const activeView = ref('')
 
