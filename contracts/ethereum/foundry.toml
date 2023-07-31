@@ -6,4 +6,4 @@ test = 'test'
 cache_path  = 'build/foundry/cache'
 
 [doc]
-out = 'build/artifacts/docs'
+out = 'build/foundry/docs'
