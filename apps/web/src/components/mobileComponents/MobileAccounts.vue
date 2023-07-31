@@ -449,6 +449,7 @@ onMounted(() =>{
                   {{ header.title }}
                 </div>
                 <button 
+                  v-show="header.value != 'blank_column'"
                   class="ml-[4px] flex flex-col items-center justify-between"
                   :class="selectedHeader === header.value? 'opacity-100' : 'opacity-25'"
                   @click="selectedHeader = header.value, selectedOrientation === 'ascending'? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
