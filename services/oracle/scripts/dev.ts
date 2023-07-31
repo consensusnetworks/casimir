@@ -21,8 +21,8 @@ void async function () {
         process.env.MESSENGER_SRV_ADDR = 'http://0.0.0.0:3000'
         process.env.USE_HARDCODED_OPERATORS = 'true'
         await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
-        const cli = await run(`which ${process.env.CLI_PATH}`)
-        if (!cli) throw new Error('Dkg cli not found')
+        const dkg = await run(`which ${process.env.CLI_PATH}`) as string
+        if (!dkg || dkg.includes('not found')) throw new Error('Dkg cli not found')
         if (os.platform() === 'linux') {
             await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml -f ${resourcePath}/../docker-compose.override.yaml up -d`)
         } else {

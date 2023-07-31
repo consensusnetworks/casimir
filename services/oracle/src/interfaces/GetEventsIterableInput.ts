@@ -1,7 +1,8 @@
 import { ethers } from 'ethers'
 
-export interface FactoryOptions {
+export interface GetEventsIterableInput {
     ethereumUrl?: string
     provider?: ethers.providers.JsonRpcProvider
-    uniswapV3FactoryAddress: string
+    managerAddress: string
+    events: string[]
 }

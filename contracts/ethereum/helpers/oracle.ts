@@ -1,15 +1,13 @@
 import fs from 'fs'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { CasimirManager, CasimirViews } from '../build/artifacts/types'
+import { CasimirManager, CasimirViews } from '../build/@types'
 import { PoolStatus, Validator } from '@casimir/types'
 import { Scanner } from '@casimir/ssv'
 import { getWithdrawalCredentials } from '@casimir/helpers'
 import { Factory } from '@casimir/uniswap'
 
 const mockValidatorsPath = './scripts/.out/validators.json'
-const ethereumUrl = process.env.ETHEREUM_RPC_URL as string
-if (!ethereumUrl) throw new Error('No ethereum rpc url provided')
 const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS as string
 if (!linkTokenAddress) throw new Error('No link token address provided')
 const ssvNetworkAddress = process.env.SSV_NETWORK_ADDRESS as string
@@ -33,6 +31,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
     const poolWithdrawalCredentials = `0x${getWithdrawalCredentials(poolAddress)}`
     const validator = mockValidators.find((validator) => validator.withdrawalCredentials === poolWithdrawalCredentials)
     if (!validator) throw new Error(`No validator found for withdrawal credentials ${poolWithdrawalCredentials}`)
+    
     const {
         depositDataRoot,
         publicKey,
@@ -41,27 +40,30 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         operatorIds,
         shares,
     } = validator
+
     const scanner = new Scanner({
-        ethereumUrl,
+        provider: ethers.provider,
         ssvNetworkAddress,
         ssvNetworkViewsAddress
     })
-    const clusterDetails = await scanner.getClusterDetails({ 
+
+    const { cluster, requiredBalancePerValidator } = await scanner.getClusterDetails({ 
         ownerAddress: manager.address,
         operatorIds
     })
-    const { cluster, requiredBalancePerValidator } = clusterDetails
-    const processed = false
+
     const uniswapFactory = new Factory({
-        ethereumUrl,
+        provider: ethers.provider,
         uniswapV3FactoryAddress
     })
+
     const price = await uniswapFactory.getSwapPrice({ 
         tokenIn: wethTokenAddress,
         tokenOut: ssvTokenAddress,
         uniswapFeeTier: 3000
     })
-    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerValidator)) * Number(price)).toPrecision(9))
+
+    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerValidator)) * price).toPrecision(9))
 
     const initiateDeposit = await manager.connect(signer).initiateDeposit(
         depositDataRoot,
@@ -72,7 +74,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         shares,
         cluster,
         feeAmount,
-        processed
+        false
     )
     await initiateDeposit.wait()
 }
@@ -84,21 +86,24 @@ export async function depositUpkeepBalanceHandler({ manager, signer }: { manager
      * We can set processed to true if the manager has enough SSV tokens
      * Here, we're just depositing double the Chainlink registration minimum
      */
-    const processed = false
-    const requiredBalance = ethers.utils.parseEther('0.2')
+    const requiredBalance = 0.2
+
     const uniswapFactory = new Factory({
-        ethereumUrl,
+        provider: ethers.provider,
         uniswapV3FactoryAddress
     })
+
     const price = await uniswapFactory.getSwapPrice({ 
         tokenIn: wethTokenAddress,
         tokenOut: linkTokenAddress,
         uniswapFeeTier: 3000
     })
-    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalance)) * Number(price)).toPrecision(9))
+    
+    const feeAmount = ethers.utils.parseEther((requiredBalance * price).toPrecision(9))
+    
     const depositUpkeepBalance = await manager.connect(signer).depositUpkeepBalance(
         feeAmount,
-        processed
+        false
     )
     await depositUpkeepBalance.wait()
 }
@@ -128,20 +133,23 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
              * Here, we're just hardcoding blame to the first operator if less than 32 ETH
              */
             const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())
+
             let blamePercents = [0, 0, 0, 0]
             if (poolDetails.balance.lt(ethers.utils.parseEther('32'))) {
                 blamePercents = [100, 0, 0, 0]
             }
+
             const scanner = new Scanner({
-                ethereumUrl,
+                provider: ethers.provider,
                 ssvNetworkAddress,
                 ssvNetworkViewsAddress
             })
-            const clusterDetails = await scanner.getClusterDetails({ 
+
+            const { cluster } = await scanner.getClusterDetails({ 
                 ownerAddress: manager.address,
                 operatorIds
             })
-            const { cluster } = clusterDetails
+
             const reportCompletedExit = await manager.connect(signer).reportCompletedExit(
                 poolIndex,
                 blamePercents,

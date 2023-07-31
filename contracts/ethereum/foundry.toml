@@ -1,0 +1,9 @@
+[profile.default]
+src = 'src/v1'
+out = 'build/foundry'
+libs = ['../../node_modules', 'node_modules', 'lib']
+test = 'test'
+cache_path  = 'build/foundry/cache'
+
+[doc]
+out = 'build/foundry/docs'

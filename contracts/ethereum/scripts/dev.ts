@@ -1,18 +1,15 @@
-import { CasimirManager, CasimirRegistry, ISSVNetworkViews, CasimirViews, CasimirUpkeep } from '@casimir/ethereum/build/artifacts/types'
+import { CasimirManager, CasimirRegistry, ISSVNetworkViews, CasimirViews, CasimirUpkeep } from '../build/@types'
 import { ethers, network } from 'hardhat'
 import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
-import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
+import ISSVNetworkViewsAbi from '../build/abi/ISSVNetworkViews.json'
 import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
 import { getEventsIterable } from '@casimir/oracle/src/providers/events'
 import { fetchRetry, run } from '@casimir/helpers'
 import { PoolStatus } from '@casimir/types'
 
 void async function () {
-    const ethereumUrl = process.env.ETHEREUM_RPC_URL as string
-    if (!ethereumUrl) throw new Error('No ethereum url provided')
-
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
 
     const mockFunctionsOracleFactory = await ethers.getContractFactory('MockFunctionsOracle')
@@ -55,7 +52,7 @@ void async function () {
 
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
-    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsJson.abi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
+    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
     for (const operatorId of [1, 2, 3, 4]) {
         const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)
@@ -178,7 +175,7 @@ void async function () {
             }
     
             const eventsIterable = getEventsIterable({ 
-                ethereumUrl,
+                provider: ethers.provider,
                 managerAddress: manager.address, 
                 events: Object.keys(handlers) 
             })

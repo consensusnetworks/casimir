@@ -1,7 +1,4 @@
 import { operatorStore } from '@casimir/data'
-import { getConfig } from './config'
-
-const config = getConfig()
 
 /**
  * Get operator URLs

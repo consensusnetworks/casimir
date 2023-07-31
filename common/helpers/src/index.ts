@@ -108,6 +108,9 @@ export async function run(command: string) {
             process.stdout.write(chunk.toString())
             data += chunk.toString()
         })
+        child.stderr?.on('data', chunk => {
+            process.stdout.write(chunk.toString())
+        })
         child.on('exit', () => {
             resolve(data)
         })

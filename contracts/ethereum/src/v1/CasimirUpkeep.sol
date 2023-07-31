@@ -137,20 +137,20 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
      */
     function checkUpkeep(
         bytes memory
-    )
-        public
-        view
-        override
-        returns (bool upkeepNeeded, bytes memory)
-    {
+    ) public view override returns (bool upkeepNeeded, bytes memory) {
         if (reportStatus == ReportStatus.FINALIZED) {
-            bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
-            bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= reportHeartbeat;
+            bool checkActive = manager.getPendingPoolIds().length +
+                manager.getStakedPoolIds().length >
+                0;
+            bool heartbeatLapsed = (block.timestamp - reportTimestamp) >=
+                reportHeartbeat;
             upkeepNeeded = checkActive && heartbeatLapsed;
         } else if (reportStatus == ReportStatus.PROCESSING) {
-            bool finalizeReport = reportCompletedExits == manager.finalizableCompletedExits();
+            bool finalizeReport = reportCompletedExits ==
+                manager.finalizableCompletedExits();
             upkeepNeeded = finalizeReport;
         }
+        return (upkeepNeeded, "");
     }
 
     /**
@@ -169,23 +169,33 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             Functions.Request memory req;
             reportRemainingRequests = 2;
             for (uint256 i = 0; i < reportRemainingRequests; i++) {
-                bytes32 requestId = sendRequest(req, linkSubscriptionId, fulfillGasLimit);
+                bytes32 requestId = sendRequest(
+                    req,
+                    linkSubscriptionId,
+                    fulfillGasLimit
+                );
                 reportRequests[requestId] = RequestType(i + 1);
             }
         } else {
             if (
                 manager.requestedWithdrawalBalance() > 0 &&
                 manager.getPendingWithdrawalEligibility(0, reportPeriod) &&
-                manager.requestedWithdrawalBalance() <= manager.getWithdrawableBalance()
+                manager.requestedWithdrawalBalance() <=
+                manager.getWithdrawableBalance()
             ) {
                 manager.fulfillWithdrawals(5);
             }
             if (finalizableActivatedDeposits > 0) {
-                uint256 maxActivatedDeposits = finalizableActivatedDeposits > 5 ? 5 : finalizableActivatedDeposits;
+                uint256 maxActivatedDeposits = finalizableActivatedDeposits > 5
+                    ? 5
+                    : finalizableActivatedDeposits;
                 finalizableActivatedDeposits -= maxActivatedDeposits;
                 manager.activateDeposits(maxActivatedDeposits);
             }
-            if (!manager.getPendingWithdrawalEligibility(0, reportPeriod) && finalizableActivatedDeposits == 0) {
+            if (
+                !manager.getPendingWithdrawalEligibility(0, reportPeriod) &&
+                finalizableActivatedDeposits == 0
+            ) {
                 reportStatus = ReportStatus.FINALIZED;
                 manager.rebalanceStake({
                     activeBalance: reportActiveBalance,
@@ -225,10 +235,10 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             delete reportRequests[requestId];
             reportRemainingRequests--;
             if (requestType == RequestType.BALANCES) {
-                (
-                    uint128 activeBalance,
-                    uint128 sweptBalance
-                ) = abi.decode(response, (uint128, uint128));
+                (uint128 activeBalance, uint128 sweptBalance) = abi.decode(
+                    response,
+                    (uint128, uint128)
+                );
                 reportActiveBalance = uint256(activeBalance);
                 reportSweptBalance = uint256(sweptBalance);
             } else {
@@ -236,7 +246,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
                     uint32 activatedDeposits,
                     uint32 forcedExits,
                     uint32 completedExits,
-                    uint32[5] memory compoundablePoolIds 
+                    uint32[5] memory compoundablePoolIds
                 ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
                 reportActivatedDeposits = activatedDeposits;
                 reportForcedExits = forcedExits;
