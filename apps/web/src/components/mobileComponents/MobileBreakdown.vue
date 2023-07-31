@@ -104,7 +104,7 @@ watch(user, async () => {
 
 <template>
   <div
-    class="h-full w-full bg-white overflow-auto relative  pb-[70px]"
+    class="h-full w-full bg-white relative  pb-[70px]"
   >
     <div class=" px-[20px] pt-[15px]">
       <h6 class="mb-[10px]">

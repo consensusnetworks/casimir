@@ -86,7 +86,7 @@ const convertString = (inputString: string) => {
          
           <div
             v-if="walletProviderAddresses.length === 0"
-            class="flex items-center justify-center h-[90%] border border rounded-[8px]"
+            class="flex items-center justify-center h-[90%] max-h-[200px] border rounded-[8px]"
           >
             <h6 class="">
               Waiting on {{ selectedProivder }}...

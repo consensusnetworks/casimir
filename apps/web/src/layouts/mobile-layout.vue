@@ -34,96 +34,98 @@ onMounted(() => {
     (currently have not found a way to see if the bar is there or not) -->
   <div
     class="w-[100%] min-w-[360px]"
-    style="height: calc(100vh - 70px)"
   >
     <!-- Background image -->
-    <div class="h-full w-full flex items-center justify-center absolute top-0 left-0 z-[1] bg-black">
+    <div class="h-screen w-full flex items-center justify-center absolute top-0 left-0 z-[0] bg-black">
       <div class="text-white text-center">
+        <div class="h-[50px] font-bold text-[24px]">
+          <span v-show="activeView === ''">Welcome!</span>
+        </div>
         <img
           src="/casimir.svg"
           alt="Casimir Background Logo"
           class="mb-[20px]"
         >
-        <span v-show="activeView === ''">Welcome</span>
       </div>
     </div>
 
-    <div class="flex flex-col h-full w-full  ">
-      <!-- Nav Bar -->
-      <div class="h-[70px] w-full bg-black text-white flex justify-around items-center z-[3]">
-        <button
-          class="nav_item"
-          :class="activeView === 'wallets'? 'text-white' : 'text-[#898a8c]'"
-          @click="activeView = 'wallets'"
-        >
-          <vue-feather
-            type="credit-card"
-            class="icon w-[16px] h-min"
-          />
-          <span>Wallets</span>
-        </button>
+    <!-- Nav Bar -->
+    <div class="h-[70px] w-full bg-black text-white flex justify-around items-center z-[3] sticky top-0 left-0 border-b border-b-grey_7">
+      <button
+        class="nav_item"
+        :class="activeView === 'wallets'? 'text-white' : 'text-[#898a8c]'"
+        @click="activeView = 'wallets'"
+      >
+        <vue-feather
+          type="credit-card"
+          class="icon w-[16px] h-min"
+        />
+        <span>Wallets</span>
+      </button>
 
-        <button
-          class="nav_item"
-          :class="activeView === 'breakdown'? 'text-white' : 'text-[#898a8c]'"
-          @click="activeView = 'breakdown'"
-        >
-          <vue-feather
-            type="layout"
-            class="icon w-[16px] h-min"
-          />
-          <span>Breakdown</span>
-        </button>
+      <button
+        class="nav_item"
+        :class="activeView === 'breakdown'? 'text-white' : 'text-[#898a8c]'"
+        @click="activeView = 'breakdown'"
+      >
+        <vue-feather
+          type="layout"
+          class="icon w-[16px] h-min"
+        />
+        <span>Breakdown</span>
+      </button>
 
-        <button
-          class="nav_item"
-          :class="activeView === 'stake'? 'text-white' : 'text-[#898a8c]'"
-          @click="activeView = 'stake'"
-        >
-          <vue-feather
-            type="download"
-            class="icon w-[16px] h-min"
-          />
-          <span>Stake</span>
-        </button>
+      <button
+        class="nav_item"
+        :class="activeView === 'stake'? 'text-white' : 'text-[#898a8c]'"
+        @click="activeView = 'stake'"
+      >
+        <vue-feather
+          type="download"
+          class="icon w-[16px] h-min"
+        />
+        <span>Stake</span>
+      </button>
 
-        <button
-          class="nav_item"
-          :class="activeView === 'accounts'? 'text-white' : 'text-[#898a8c]'"
-          @click="activeView = 'accounts'"
-        >
-          <vue-feather
-            type="table"
-            class="icon w-[16px] h-min"
-          />
-          <span>Accounts</span>
-        </button>
+      <button
+        class="nav_item"
+        :class="activeView === 'accounts'? 'text-white' : 'text-[#898a8c]'"
+        @click="activeView = 'accounts'"
+      >
+        <vue-feather
+          type="table"
+          class="icon w-[16px] h-min"
+        />
+        <span>Accounts</span>
+      </button>
 
-        <button
-          class="nav_item"
-          :class="activeView === 'settings'? 'text-white' : 'text-[#898a8c]'"
-          @click="activeView = 'settings'"
+      <button
+        class="nav_item"
+        :class="activeView === 'settings'? 'text-white' : 'text-[#898a8c]'"
+        @click="activeView = 'settings'"
+      >
+        <vue-feather
+          type="settings"
+          class="icon w-[16px] h-min"
+        />
+        <span>Settings</span>
+      </button>
+    </div>
+    <!-- View -->
+    <div
+      class="z-[3] w-full"
+      style="height: calc(100vh)"
+    >
+      <transition name="slide-up">
+        <div
+          :key="activeView"
+          class="w-full h-full z-[2]"
         >
-          <vue-feather
-            type="settings"
-            class="icon w-[16px] h-min"
+          <component
+            :is="mobileViews[activeView]"
           />
-          <span>Settings</span>
-        </button>
-      </div>
-      <!-- View -->
-      <div class="h-full w-full overflow-hidden z-[2] ">
-        <transition name="slide-up">
-          <div
-            :key="activeView"
-            class="w-full h-full z-[2]"
-          >
-            <component
-              :is="mobileViews[activeView]"
-            />
-          </div>
-        </transition>
-      </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
