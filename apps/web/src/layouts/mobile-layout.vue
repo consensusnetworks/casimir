@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
+import useUser from '@/composables/users'
 import VueFeather from 'vue-feather'
 import MobileConnectWallets from '../components/mobileComponents/MobileConnectWallets.vue'
 import MobileBreakdown from '../components/mobileComponents/MobileBreakdown.vue'
@@ -7,7 +8,8 @@ import MobileStake from '../components/mobileComponents/MobileStake.vue'
 import MobileAccounts from '../components/mobileComponents/MobileAccounts.vue'
 import MobileSetting from '../components/mobileComponents/MobileSetting.vue'
 
-// import BreakdownChart from '@/pages/overview/components/BreakdownChart.vue'
+
+const { user } = useUser()
 
 // @Steve need a way to figure out how the user migrates through the app on connect wallet, add more wallets 
 // @Chris can we save this variable in storage for the user so on refresh they hop on the same view as the one they were on
@@ -52,6 +54,8 @@ onMounted(() => {
       <button
         class="nav_item"
         :class="activeView === 'breakdown'? 'text-white' : 'text-[#898a8c]'"
+        :disabled="!user"
+        :style="!user? 'opacity: 50%' : ''"
         @click="activeView = 'breakdown'"
       >
         <vue-feather
@@ -64,6 +68,8 @@ onMounted(() => {
       <button
         class="nav_item"
         :class="activeView === 'stake'? 'text-white' : 'text-[#898a8c]'"
+        :disabled="!user"
+        :style="!user? 'opacity: 50%' : ''"
         @click="activeView = 'stake'"
       >
         <vue-feather
@@ -76,6 +82,8 @@ onMounted(() => {
       <button
         class="nav_item"
         :class="activeView === 'accounts'? 'text-white' : 'text-[#898a8c]'"
+        :disabled="!user"
+        :style="!user? 'opacity: 50%' : ''"
         @click="activeView = 'accounts'"
       >
         <vue-feather
@@ -88,6 +96,8 @@ onMounted(() => {
       <button
         class="nav_item"
         :class="activeView === 'settings'? 'text-white' : 'text-[#898a8c]'"
+        :disabled="!user"
+        :style="!user? 'opacity: 50%' : ''"
         @click="activeView = 'settings'"
       >
         <vue-feather
