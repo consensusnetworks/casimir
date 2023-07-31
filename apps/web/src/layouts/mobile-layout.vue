@@ -24,7 +24,7 @@ const mobileViews = ref({
 onMounted(() => {
   setTimeout(() =>{
     activeView.value = 'wallets'
-  }, 1000)
+  }, 100)
 })
 </script>
 
@@ -35,20 +35,6 @@ onMounted(() => {
   <div
     class="w-[100%] min-w-[360px]"
   >
-    <!-- Background image -->
-    <div class="h-screen w-full flex items-center justify-center absolute top-0 left-0 z-[0] bg-black">
-      <div class="text-white text-center">
-        <div class="h-[50px] font-bold text-[24px]">
-          <span v-show="activeView === ''">Welcome!</span>
-        </div>
-        <img
-          src="/casimir.svg"
-          alt="Casimir Background Logo"
-          class="mb-[20px]"
-        >
-      </div>
-    </div>
-
     <!-- Nav Bar -->
     <div class="h-[70px] w-full bg-black text-white flex justify-around items-center z-[3] sticky top-0 left-0 border-b border-b-grey_7">
       <button
