@@ -110,13 +110,16 @@ void async function () {
             const managerIndex = 1 // We deploy a mock functions oracle before the manager
             
             if (!process.env.MANAGER_ADDRESS) {
-                const managerAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
-                process.env.MANAGER_ADDRESS = `${managerAddress}`
+                process.env.MANAGER_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
             }
-
             if (!process.env.VIEWS_ADDRESS) {
-                const viewsAddress = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
-                process.env.VIEWS_ADDRESS = `${viewsAddress}`
+                process.env.VIEWS_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
+            }
+            if (!process.env.REGISTRY_ADDRESS) {
+                process.env.REGISTRY_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 2 })
+            }
+            if (!process.env.UPKEEP_ADDRESS) {
+                process.env.UPKEEP_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 3 })
             }
 
             $`npm run dev:${chain}`
@@ -149,6 +152,8 @@ void async function () {
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
     process.env.PUBLIC_MANAGER_ADDRESS = process.env.MANAGER_ADDRESS
     process.env.PUBLIC_VIEWS_ADDRESS = process.env.VIEWS_ADDRESS
+    process.env.PUBLIC_REGISTRY_ADDRESS = process.env.REGISTRY_ADDRESS
+    process.env.PUBLIC_UPKEEP_ADDRESS = process.env.UPKEEP_ADDRESS
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
     process.env.PUBLIC_LEDGER_APP = process.env.LEDGER_APP
     process.env.PUBLIC_SPECULOS_URL = process.env.SPECULOS_URL
