@@ -1,23 +1,24 @@
 import fs from 'fs'
-import { KeygenInput } from '../interfaces/KeygenInput'
+import { StartKeygenInput } from '../interfaces/StartKeygenInput'
 import { DepositData } from '../interfaces/DepositData'
-import { DKGOptions } from '../interfaces/DKGOptions'
-import { ReshareInput } from '../interfaces/ReshareInput'
+import { DkgOptions } from '../interfaces/DkgOptions'
+import { StartReshareInput } from '../interfaces/StartReshareInput'
 import { getWithdrawalCredentials, run, runRetry } from '@casimir/helpers'
 import { CreateValidatorInput } from '../interfaces/CreateValidatorInput'
 import { Validator } from '@casimir/types'
 import { ReshareValidatorInput } from '../interfaces/ReshareValidatorInput'
-import { operatorStore } from '@casimir/data'
-import { DepositDataInput } from '../interfaces/DepositDataInput'
+import { getOperatorUrls } from './registry'
+import { GetDepositDataInput } from '../interfaces/GetDepositDataInput'
 
-export class DKG {
-    /** DKG CLI path */
+export class Dkg {
     cliPath: string
-    /** DKG messenger service URL */
     messengerUrl: string
 
-    constructor(options: DKGOptions) {
+    constructor(options: DkgOptions) {
         this.cliPath = options.cliPath
+        if (!options.messengerUrl) {
+            throw new Error('No messenger url provided')
+        }
         this.messengerUrl = options.messengerUrl
     }
 
@@ -28,24 +29,16 @@ export class DKG {
      */
     async createValidator(input: CreateValidatorInput, retriesLeft: number | undefined = 25): Promise<Validator> {
         try {
-            const { operatorIds, withdrawalAddress } = input
-    
-            const operators = this.getOperatorUrls(operatorIds)
-    
-            /** Start a key generation ceremony with the given operators */
+            const { poolId, operatorIds, withdrawalAddress } = input
+            const operators = getOperatorUrls(operatorIds)
             const ceremonyId = await this.startKeygen({ operators, withdrawalAddress })
-            console.log(`Started ceremony with ID ${ceremonyId}`)
+            
+            console.log(`Started ceremony ${ceremonyId} for pool ${poolId}`)
     
-            /** Wait for ceremony to complete */
             await new Promise(resolve => setTimeout(resolve, 2500))
     
-            /** Get operator key shares */
             const shares = await this.getShares(ceremonyId)
-    
-            /** Get validator deposit data */
             const { depositDataRoot, publicKey, signature, withdrawalCredentials } = await this.getDepositData({ ceremonyId, withdrawalAddress })
-    
-            /** Create validator */
             const validator: Validator = {
                 depositDataRoot,
                 publicKey,
@@ -54,7 +47,6 @@ export class DKG {
                 signature,
                 withdrawalCredentials
             }
-    
             return validator
         } catch (error) {
             console.log(error)
@@ -71,24 +63,17 @@ export class DKG {
      */
     async reshareValidator(input: ReshareValidatorInput, retriesLeft: number | undefined = 25): Promise<Validator> {
         try {
-            const { operatorIds, publicKey, oldOperatorIds, withdrawalAddress } = input
-            const operators = this.getOperatorUrls(operatorIds)
-            const oldOperators = this.getOperatorUrls(oldOperatorIds)
-    
-            /** Start a key generation ceremony with the given operators */
+            const { poolId, operatorIds, publicKey, oldOperatorIds, withdrawalAddress } = input
+            const operators = getOperatorUrls(operatorIds)
+            const oldOperators = getOperatorUrls(oldOperatorIds)
             const ceremonyId = await this.startReshare({ operators, publicKey, oldOperators })
-            console.log(`Started ceremony with ID ${ceremonyId}`)
+            
+            console.log(`Started ceremony ${ceremonyId} for pool ${poolId}`)
     
-            /** Wait for ceremony to complete */
             await new Promise(resolve => setTimeout(resolve, 2500))
     
-            /** Get operator key shares */
             const shares = await this.getShares(ceremonyId)
-    
-            /** Get validator deposit data */
             const { depositDataRoot, signature, withdrawalCredentials } = await this.getDepositData({ ceremonyId, withdrawalAddress })
-    
-            /** Create validator */
             const validator: Validator = {
                 depositDataRoot,
                 publicKey,
@@ -97,7 +82,6 @@ export class DKG {
                 signature,
                 withdrawalCredentials
             }
-    
             return validator
         } catch (error) {
             console.log(error)
@@ -109,10 +93,10 @@ export class DKG {
 
     /**
      * Start a keygen ceremony
-     * @param {KeygenInput} input - Keygen input
+     * @param {StartKeygenInput} input - Keygen input
      * @returns {Promise<string>} Ceremony ID
      */
-    async startKeygen(input: KeygenInput): Promise<string> {
+    async startKeygen(input: StartKeygenInput): Promise<string> {
         const { operators, withdrawalAddress } = input
         const operatorFlags = Object.entries(operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
         const thresholdFlag = `--threshold ${Object.keys(operators).length - 1}`
@@ -125,10 +109,10 @@ export class DKG {
 
     /**
      * Start a reshare ceremony
-     * @param {ReshareInput} input - Operator IDs, public key, and old operator IDs
+     * @param {StartReshareInput} input - Operator IDs, public key, and old operator IDs
      * @returns {Promise<string>} Ceremony ID
      */
-    async startReshare(input: ReshareInput): Promise<string> {
+    async startReshare(input: StartReshareInput): Promise<string> {
         const { operators, publicKey, oldOperators } = input
         const operatorFlags = Object.entries(operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
         const thresholdFlag = `--threshold ${Object.keys(operators).length - 1}`
@@ -156,10 +140,10 @@ export class DKG {
 
     /**
      * Get deposit data
-     * @param {DepositDataInput} input - Ceremony ID and withdrawal address
+     * @param {GetDepositDataInput} input - Ceremony ID and withdrawal address
      * @returns {Promise<DepositData>} Deposit data
      */
-    async getDepositData(input: DepositDataInput): Promise<DepositData> {
+    async getDepositData(input: GetDepositDataInput): Promise<DepositData> {
         const { ceremonyId, withdrawalAddress } = input
         const requestIdFlag = `--request-id ${ceremonyId}`
         const withdrawalCredentialsFlag = `--withdrawal-credentials 01${'0'.repeat(22)}${withdrawalAddress.split('0x')[1]}`
@@ -181,18 +165,5 @@ export class DKG {
             signature: `0x${signature}`,
             withdrawalCredentials: `0x${withdrawalCredentials}`
         }
-    }
-
-    /**
-     * Get operator URLs
-     * @param {number[]} operatorIds - Operator IDs
-     * @returns {<Record<string, string>} Operator group
-     */
-    getOperatorUrls(operatorIds: number[]): Record<string, string> {
-        return operatorIds.reduce((group: Record<string, string>, id: number) => {
-            const key = id.toString() as keyof typeof operatorStore
-            group[key] = operatorStore[key]
-            return group
-        }, {})
     }
 }

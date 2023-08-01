@@ -1,3 +1,3 @@
-import { getPrice } from './providers/price'
+import { Factory } from './providers/factory'
 
-export { getPrice }
+export { Factory }

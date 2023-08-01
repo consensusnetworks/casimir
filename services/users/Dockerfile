@@ -10,7 +10,7 @@ RUN apk add --no-cache git
 COPY . .
 
 # Install dependencies
-RUN npm install
+RUN npm install --ignore-scripts
 
 # Build the users service
 RUN npm run build --workspace @casimir/users
