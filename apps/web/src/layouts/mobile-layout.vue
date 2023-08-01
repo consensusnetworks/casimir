@@ -8,7 +8,6 @@ import MobileStake from '../components/mobileComponents/MobileStake.vue'
 import MobileAccounts from '../components/mobileComponents/MobileAccounts.vue'
 import MobileSetting from '../components/mobileComponents/MobileSetting.vue'
 
-
 const { user } = useUser()
 
 // @Steve need a way to figure out how the user migrates through the app on connect wallet, add more wallets 
@@ -118,7 +117,7 @@ onMounted(() => {
           class="w-full h-full z-[2]"
         >
           <component
-            :is="mobileViews[activeView]"
+            :is="mobileViews[activeView as keyof typeof mobileViews]"
           />
         </div>
       </transition>
