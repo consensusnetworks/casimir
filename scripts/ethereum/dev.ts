@@ -62,6 +62,12 @@ void async function () {
     if (!process.env.VIEWS_ADDRESS) {
         process.env.VIEWS_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
     }
+    if (!process.env.REGISTRY_ADDRESS) {
+        process.env.REGISTRY_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 2 })
+    }
+    if (!process.env.UPKEEP_ADDRESS) {
+        process.env.UPKEEP_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 3 })
+    }
 
     process.env.SSV_NETWORK_ADDRESS = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
     process.env.SSV_NETWORK_VIEWS_ADDRESS = '0x8dB45282d7C4559fd093C26f677B3837a5598914'
