@@ -6,6 +6,12 @@ import router from '@/composables/router'
 import VueFeather from 'vue-feather'
 import useWallet from '@/composables/wallet'
 import useUser from '@/composables/users'
+import useWalletConnectV2 from '@/composables/walletConnectV2'
+const { getEthersWalletConnectSignerV2 } = useWalletConnectV2()
+
+async function func() {
+  await getEthersWalletConnectSignerV2()
+}
 
 const authFlowCardNumber = ref(1)
 const selectedProivder = ref(null as null | string)
@@ -74,6 +80,14 @@ onUnmounted(() =>{
 
 <template>
   <div class="min-w-[360px]">
+    <!-- Huge button -->
+    <button
+      class="absolute top-0 right-0 w-[60px] h-[60px] bg-white rounded-[8px] flex justify-center items-center"
+      style="z-index: 10;"
+      @click="func"
+    >
+      GetWalletConnectEthersSigner
+    </button>
     <div :class="openWalletConnect? 'flex flex-col h-screen' : ''">
       <div
         class=" px-[60px] pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"

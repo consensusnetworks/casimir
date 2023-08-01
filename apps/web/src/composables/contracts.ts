@@ -10,6 +10,7 @@ import usePrice from '@/composables/price'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
 import useWalletConnect from './walletConnect'
+import useWalletConnectV2 from './walletConnectV2'
 import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Pool, ProviderString, UserWithAccounts } from '@casimir/types'
 
 const currentStaked = ref<BreakdownAmount>({
@@ -39,6 +40,7 @@ export default function useContracts() {
     const { getEthersTrezorSigner } = useTrezor()
     const { user } = useUsers()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
+    const { getEthersWalletConnectSignerV2 } = useWalletConnectV2()
 
     const stakeDepositedListener = async () => await refreshBreakdown()
     const stakeRebalancedListener = async () => await refreshBreakdown()
@@ -51,12 +53,14 @@ export default function useContracts() {
                 'Browser': getEthersBrowserSigner,
                 'Ledger': getEthersLedgerSigner,
                 'Trezor': getEthersTrezorSigner,
-                'WalletConnect': getEthersWalletConnectSigner
+                'WalletConnect': getEthersWalletConnectSignerV2
             }
             const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer = signerCreator(walletProvider)
-            if (isWalletConnectSigner(signer)) signer = await signer
+            // if (isWalletConnectSigner(signer)) signer = await signer
+            signer = await signer
+            console.log('signer in deposit :>> ', signer)
             const managerSigner = manager.connect(signer as ethers.Signer)
             const fees = await getDepositFees()
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
