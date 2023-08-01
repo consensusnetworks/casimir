@@ -1,7 +1,5 @@
 import { ethers } from 'ethers'
 
-const supportedCliStrategies = ['dkg', 'ethdo']
-
 export function getConfig() {
     const ethereumUrl = process.env.ETHEREUM_RPC_URL
     if (!ethereumUrl) throw new Error('No ethereum rpc url provided')
@@ -31,10 +29,8 @@ export function getConfig() {
 
     const cliPath = process.env.CLI_PATH
     if (!cliPath) throw new Error('No cli path provided')
-    const cliStrategy = process.env.CLI_STRATEGY
-    if (!cliStrategy || !supportedCliStrategies.includes(cliStrategy)) throw new Error('No strategy provided')
     const messengerUrl = process.env.MESSENGER_SRV_ADDR
-    if (cliStrategy === 'dkg' && !messengerUrl) throw new Error('No messenger url provided')
+    if (!messengerUrl) throw new Error('No messenger url provided')
 
     return { 
         ethereumUrl,
@@ -48,7 +44,6 @@ export function getConfig() {
         uniswapV3FactoryAddress,
         wethTokenAddress,
         cliPath,
-        cliStrategy,
         messengerUrl
     }
 }

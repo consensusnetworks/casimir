@@ -7,12 +7,11 @@ import { Scanner } from '@casimir/ssv'
 import { PoolStatus } from '@casimir/types'
 import { Factory } from '@casimir/uniswap'
 import { getConfig } from './config'
-import { getCli } from './cli'
+import { Dkg } from './dkg'
 
 const config = getConfig()
-const cli = getCli({
+const cli = new Dkg({
     cliPath: config.cliPath,
-    cliStrategy: config.cliStrategy,
     messengerUrl: config.messengerUrl
 })
 
