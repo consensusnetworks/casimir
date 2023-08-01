@@ -1,5 +1,5 @@
 import { ref, readonly } from 'vue'
-import { Account, AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccounts, ApiResponse, UserAnalyticsData } from '@casimir/types'
+import { Account, AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccountsAndOperators, ApiResponse, UserAnalyticsData } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from './ethers'
 import * as Session from 'supertokens-web-js/recipe/session'
@@ -10,7 +10,7 @@ const { usersUrl } = useEnvironment()
 
 // 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const session = ref<boolean>(false)
-const user = ref<UserWithAccounts | undefined>(undefined)
+const user = ref<UserWithAccountsAndOperators | undefined>(undefined)
 const userAnalytics = ref<UserAnalyticsData>({
     oneMonth: {
         labels: [],
@@ -236,12 +236,17 @@ export default function useUsers() {
                     'Content-Type': 'application/json'
                 }
             }
-            const response = await fetch(`${usersUrl}/analytics`, requestOptions)
-            const { error, message, data } = await response.json()
+            // TODO: Re-enable this when athena is ready
+            // const response = await fetch(`${usersUrl}/analytics`, requestOptions)
+            // const { error, message, data } = await response.json()
+            const error = false
+            const message = 'User analytics found'
+            const data = txData.value
+
             if (error) throw new Error(message)
 
             // TODO: Pass data from above when the API / data is ready
-            setRawAnalytics(txData.value)
+            setRawAnalytics(data)
             computeUserAnalytics()
             return { error, message, data }
         } catch (error: any) {
@@ -297,8 +302,8 @@ export default function useUsers() {
         return { error: false, message: `Account removed from user: ${userAccount}`, data: userAccount }
     }
 
-    function setUser(newUser?: UserWithAccounts) {
-        user.value = newUser as UserWithAccounts
+    function setUser(newUser?: UserWithAccountsAndOperators) {
+        user.value = newUser as UserWithAccountsAndOperators
         userAddresses.value = newUser?.accounts.map(account => account.address) as Array<string>
     }
 

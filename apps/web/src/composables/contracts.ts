@@ -10,7 +10,7 @@ import usePrice from '@/composables/price'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
 import useWalletConnect from './walletConnect'
-import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Pool, ProviderString, UserWithAccounts } from '@casimir/types'
+import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Pool, ProviderString, UserWithAccountsAndOperators } from '@casimir/types'
 
 const currentStaked = ref<BreakdownAmount>({
     usd: '$0.00',
@@ -72,7 +72,7 @@ export default function useContracts() {
 
     async function getCurrentStaked(): Promise<BreakdownAmount> {
         const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-        const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
+        const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         try {
             const promises = addresses.map((address) => manager.connect(provider).getUserStake(address))
             const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
@@ -193,7 +193,7 @@ export default function useContracts() {
     async function getAllTimeStakingRewards() : Promise<BreakdownAmount> {
         try {
             /* Get User's Current Stake */
-            const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
+            const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
             const currentUserStakePromises = [] as Array<Promise<ethers.BigNumber>>
             addresses.forEach(address => currentUserStakePromises.push(manager.connect(provider).getUserStake(address)))
             const settledCurrentUserStakePromises = await Promise.allSettled(currentUserStakePromises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
@@ -234,7 +234,7 @@ export default function useContracts() {
 
     async function getTotalWalletBalance() : Promise<BreakdownAmount> {
         const promises = [] as Array<Promise<any>>
-        const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
+        const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         addresses.forEach((address) => { promises.push(getEthersBalance(address)) })
         const totalWalletBalance = (await Promise.all(promises)).reduce((acc, curr) => acc + curr, 0)
         const totalWalletBalanceUSD = totalWalletBalance * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
