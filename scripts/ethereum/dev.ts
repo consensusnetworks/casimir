@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { $, echo, chalk } from 'zx'
-import { loadCredentials, getSecret, getFutureContractAddress, getWallet, runSync, run } from '@casimir/helpers'
+import { loadCredentials, getSecret, getWallet, runSync, run } from '@casimir/helpers'
 
 /**
  * Run local a local Ethereum node and deploy contracts
@@ -57,16 +57,28 @@ void async function () {
     const nonce = await provider.getTransactionCount(wallet.address)
     const managerIndex = 1 // We deploy a mock functions oracle before the manager
     if (!process.env.MANAGER_ADDRESS) {
-        process.env.MANAGER_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
+        process.env.MANAGER_ADDRESS = ethers.utils.getContractAddress({
+            from: wallet.address,
+            nonce: nonce + managerIndex
+        })
     }
     if (!process.env.VIEWS_ADDRESS) {
-        process.env.VIEWS_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
+        process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
+            from: wallet.address,
+            nonce: nonce + managerIndex + 1
+        })
     }
     if (!process.env.REGISTRY_ADDRESS) {
-        process.env.REGISTRY_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 2 })
+        process.env.REGISTRY_ADDRESS = ethers.utils.getContractAddress({
+          from: process.env.MANAGER_ADDRESS,
+          nonce: 1
+        })
     }
     if (!process.env.UPKEEP_ADDRESS) {
-        process.env.UPKEEP_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 3 })
+        process.env.UPKEEP_ADDRESS = ethers.utils.getContractAddress({
+            from: process.env.MANAGER_ADDRESS,
+            nonce: 2
+        })
     }
 
     process.env.SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS || '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'

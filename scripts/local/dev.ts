@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { $, chalk, echo } from 'zx'
-import { loadCredentials, getSecret, getFutureContractAddress, getWallet, run, runSync } from '@casimir/helpers'
+import { loadCredentials, getSecret, getWallet, run, runSync } from '@casimir/helpers'
 
 /**
  * Run a Casimir dev server
@@ -113,16 +113,28 @@ void async function () {
             const managerIndex = 1 // We deploy a mock functions oracle before the manager
             
             if (!process.env.MANAGER_ADDRESS) {
-                process.env.MANAGER_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
+                process.env.MANAGER_ADDRESS = ethers.utils.getContractAddress({
+                    from: wallet.address,
+                    nonce: nonce + managerIndex
+                })
             }
             if (!process.env.VIEWS_ADDRESS) {
-                process.env.VIEWS_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
+                process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
+                    from: wallet.address,
+                    nonce: nonce + managerIndex + 1
+                })
             }
             if (!process.env.REGISTRY_ADDRESS) {
-                process.env.REGISTRY_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 2 })
+                process.env.REGISTRY_ADDRESS = ethers.utils.getContractAddress({
+                  from: process.env.MANAGER_ADDRESS,
+                  nonce: 1
+                })
             }
             if (!process.env.UPKEEP_ADDRESS) {
-                process.env.UPKEEP_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 3 })
+                process.env.UPKEEP_ADDRESS = ethers.utils.getContractAddress({
+                    from: process.env.MANAGER_ADDRESS,
+                    nonce: 2
+                })
             }
 
             $`npm run dev:${chain}`
