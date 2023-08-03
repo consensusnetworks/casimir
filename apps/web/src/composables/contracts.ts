@@ -52,12 +52,12 @@ interface UserOperators {
   
   interface CasimirOperator {
     id: string
-    walletAddress: string
     collateral?: string
     collateralInUse?: string
     rewards?: string
     nodeURL?: string
   }
+
 
 const userOperators = ref<UserOperators>({
     ssv: [],
@@ -132,10 +132,16 @@ export default function useContracts() {
 
     /** Get all user operators */
     async function getUserOperators() {
+        let casimirOperators = await _getCasimirOperators()
         const ssvOperators = await _getSSVOperators()
-        _setUserOperators('ssv', ssvOperators)
-        const casimirOperators = await _getCasimirOperators()
+
+        // Filter casimirOperators to only include operators that are in ssvOperators by id
+        casimirOperators = casimirOperators.filter((casimirOperator) => {
+            return ssvOperators.some((ssvOperator: SSVOperator) => { ssvOperator.id.toString() === casimirOperator.id })
+        })
+
         _setUserOperators('casimir', casimirOperators)
+        _setUserOperators('ssv', ssvOperators)
         return {
             ssv: ssvOperators,
             casimir: casimirOperators
@@ -155,7 +161,6 @@ export default function useContracts() {
                 const { id, active, resharing, collateral, poolCount } = operator
                 return {
                     id: id.toString(),
-                    walletAddress: '', // Update
                     collateral: ethers.utils.formatEther(collateral),
                 } as CasimirOperator
             })

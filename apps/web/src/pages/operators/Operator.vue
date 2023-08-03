@@ -89,7 +89,7 @@ const operatorTableHeaders = ref(
 
 const { rawUserAnalytics, user } = useUsers()
 
-const tableData = ref([])
+const tableData = ref<any>([])
 
 const filteredData = ref(tableData.value)
 
@@ -216,15 +216,16 @@ const removeItemFromCheckedList = (item:any) => {
 }
 
 const submitRegisterOperatorForm = () =>{
-    tableData.value.push({
+    const newOperator = {
         operator_id: selectedOperatorID.value,
         wallet_address: selectedWallet,
         avl_collateral: selectedCollateral,
         node_url: selectedPublicNodeURL,
         colateral_in_use: 0,
         rewards: 0
-    })
-
+    }
+    
+    tableData.value = [...tableData.value, newOperator]
     openAddOperatorModal.value = false
 }
 
@@ -232,10 +233,16 @@ const { getUserOperators, userOperators } = useContracts()
 
 const setTableData = async () =>{
   // @chris set tableData.value here 
-  // TODO: Get SSV operators by user address
-  // TODO: Get Casimir operators by user address
   await getUserOperators()
   console.log('userOperators :>> ', userOperators)
+  /**
+   * operator_id: number | string,
+   * wallet_address: string,
+   * avl_collateral: string | number,
+   * node_url: string,
+   * colateral_in_use: number,
+   * rewards: number
+   */
 }
 
 watch(user, async () => {
@@ -246,8 +253,8 @@ watch(user, async () => {
 })
 
 //   @chris adjust watcher to match varibale that we are listening to to update the table
-watch(rawUserAnalytics, () =>{
-  setTableData()
+watch(rawUserAnalytics, async () =>{
+  await setTableData()
   // filterData()
 })
 
