@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch} from 'vue'
-import useUsers from '@/composables/users'
 import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
 import { FormattedWalletOption } from '@casimir/types'
+import useContracts from '@/composables/contracts'
+import useUsers from '@/composables/users'
 
 // Form inputs
 const selectedWallet = ref()
@@ -23,7 +24,6 @@ const onSelectOperatorIDBlur = () => {
 }
 // @chris need a way to find out possible operators on selecting a wallet address
 const possibleOperatorID = ref([])
-
 
 const selectedPublicNodeURL = ref()
 
@@ -227,21 +227,34 @@ const submitRegisterOperatorForm = () =>{
     openAddOperatorModal.value = false
 }
 
-// const setTableData = () =>{
-//   @chris set tableData.value here 
-// }
+const { getUserOperators, userOperators } = useContracts()
+
+const setTableData = async () =>{
+  // @chris set tableData.value here 
+  // TODO: Get SSV operators by user address
+  const ssvOperators = await getUserOperators()
+  // TODO: Get Casimir operators by user address
+}
+
+watch(user, async () => {
+  if (user.value) {
+    await setTableData()
+  }
+  // filterData()
+})
 
 //   @chris adjust watcher to match varibale that we are listening to to update the table
-// watch(rawUserAnalytics, () =>{
-//   setTableData()
-//   filterData()
-// })
+watch(rawUserAnalytics, () =>{
+  setTableData()
+  // filterData()
+})
 
-// onMounted(() =>{
-//   setTableData()
-//   filterData()
-// })
-
+onMounted(async () => {
+  if (user.value) {
+    await setTableData()
+    // filterData()
+  }
+})
 
 </script>
 

@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { BigNumberish, ethers } from 'ethers'
 import { CasimirManager, CasimirRegistry, CasimirViews, ISSVNetworkViews } from '@casimir/ethereum/build/@types'
 import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
@@ -34,9 +34,35 @@ const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, ICasimirManagerAbi) as CasimirManager
 const casimirViews: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, ICasimirViewsAbi) as CasimirViews
 const ssvViews: ISSVNetworkViews & ethers.Contract = new ethers.Contract(ssvNetworkViewsAddress, ISSVNetworkViewsAbi) as ISSVNetworkViews
-console.log('registryAddress :>> ', registryAddress)
-const casimirOperatorRegistry: CasimirRegistry & ethers.Contract = new ethers.Contract('0x40A9DEB9Eb871e3f7A1a2946a6e8A84afAb4C598', ICasimirRegistryAbi) as CasimirRegistry
-const operatorOwnerTestAddresses = ['0x0d9f37C75f7DF825a7f02bd39dF333485853F4a9']
+const casimirOperatorRegistry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, ICasimirRegistryAbi) as CasimirRegistry
+
+interface UserOperators {
+    ssv: SSVOperator[]
+    casimir: CasimirOperator[]
+  }
+  
+  interface SSVOperator {
+    id: string
+    walletAddress: string
+    collateral?: string
+    collateralInUse?: string
+    rewards?: string
+    nodeURL?: string
+  }
+  
+  interface CasimirOperator {
+    id: string
+    walletAddress: string
+    collateral?: string
+    collateralInUse?: string
+    rewards?: string
+    nodeURL?: string
+  }
+
+const userOperators = ref<UserOperators>({
+    ssv: [],
+    casimir: []
+})
 
 export default function useContracts() {
     const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
@@ -104,47 +130,49 @@ export default function useContracts() {
         }
     }
 
+    /** Get all user operators */
+    async function getUserOperators() {
+        const ssvOperators = await _getSSVOperators()
+        _setUserOperators('ssv', ssvOperators)
+        const casimirOperators = await listCasimirOperators()
+        return {
+            ssv: ssvOperators,
+            casimir: casimirOperators
+        }
+    }
+
+    function _setUserOperators(key: 'ssv' | 'casimir', operators: Array<SSVOperator | CasimirOperator>) {
+        userOperators.value[key] = operators as Array<SSVOperator | CasimirOperator>
+    }
+
     /** SSV Operator Info Start */
-    async function listSSVOperators() {
-        // const ownerAddresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+    async function _getSSVOperators() {
+        // const ownerAddresses = (user?.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+        const ownerAddressesTest = ['0x9725Dc287005CB8F11CA628Bb769E4A4Fc8f0309']
         try {
-            const promises = operatorOwnerTestAddresses.map((address) => getSSVOperatorsByOwner(address))
-            // const promises = ownerAddresses.map((address) => getSSVOperatorsByOwner(address))
+            // const promises = ownerAddresses.map((address) => _querySSVOperators(address))
+            const promises = ownerAddressesTest.map((address) => _querySSVOperators(address))
             const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<any>>
             const operators = settledPromises
                 .filter((result) => result.status === 'fulfilled')
                 .map((result) => result.value)
-            
-            return operators
+            return operators[0]
         } catch (err) {
-            console.error(`There was an error in listSSVOperators function: ${JSON.stringify(err)}`)
+            console.error(`There was an error in _getSSVOperators function: ${JSON.stringify(err)}`)
             return []
         }
     }
 
-    async function getSSVOperatorsByOwner(address: string) {
+    async function _querySSVOperators(address: string) {
         try {
             const network = 'prater'
-            const url = `https://api.ssv.network/api/v4/${network}/operators/owned_by/${address}`
+            const url = `https://api.ssv.network/api/v3/${network}/operators/owned_by/${address}`
             const response = await fetch(url)
-            const json = await response.json()
-            console.log(`Owner address is ${address}`)
-            console.log('JSON Operators from SSV API :>> ', json)
-            return json
+            const { operators } = await response.json()
+            return operators
         } catch (err) {
-            console.error(`There was an error in getSSVOperatorsByOwner function: ${JSON.stringify(err)}`)
+            console.error(`There was an error in _querySSVOperators function: ${JSON.stringify(err)}`)
             return []
-        }
-    }
-
-    async function getSSVOperatorInfo(operatorId: number) {
-        const [owner, fee, validatorCount, isPrivate, active] = await ssvViews.connect(provider).getOperatorById(operatorId)
-        return {
-            owner,
-            fee,
-            validatorCount,
-            isPrivate,
-            active
         }
     }
     /** SSV Operator Info End */
@@ -168,14 +196,14 @@ export default function useContracts() {
         }
     }
 
-    async function listOperatorsFromCasimirViews() {
+    async function listCasimirOperators() {
         try {
             const operatorIds = await casimirOperatorRegistry.connect(provider).getOperatorIds()
             const startIndex = 0
             const endIndex = operatorIds.length
             return await casimirViews.connect(provider).getOperators(startIndex, endIndex)
         } catch (err) {
-            console.error(`There was an error in listOperatorsFromCasimirViews function: ${JSON.stringify(err)}`)
+            console.error(`There was an error in listCasimirOperators function: ${JSON.stringify(err)}`)
             return []
         }
     }
@@ -476,17 +504,16 @@ export default function useContracts() {
         currentStaked, 
         manager, 
         stakingRewards, 
-        totalWalletBalance, 
+        totalWalletBalance,
+        userOperators,
         deposit, 
         getCurrentStaked,
         getDepositFees,
+        getUserOperators,
         getUserStake,
         // getPools, 
         getCasimirOperatorInfo,
-        listOperatorsFromCasimirViews,
-        listSSVOperators,
-        listenForContractEvents,
-        getSSVOperatorInfo,
+        listCasimirOperators,
         refreshBreakdown,
         registerOperatorWithCasimir,
         stopListeningForContractEvents,
