@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
 import { FormattedWalletOption } from '@casimir/types'
 import useContracts from '@/composables/contracts'
+import { log } from 'firebase-functions/logger'
 import useUsers from '@/composables/users'
 
 // Form inputs
@@ -232,8 +233,9 @@ const { getUserOperators, userOperators } = useContracts()
 const setTableData = async () =>{
   // @chris set tableData.value here 
   // TODO: Get SSV operators by user address
-  const ssvOperators = await getUserOperators()
   // TODO: Get Casimir operators by user address
+  await getUserOperators()
+  console.log('userOperators :>> ', userOperators)
 }
 
 watch(user, async () => {
