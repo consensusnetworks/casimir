@@ -42,20 +42,21 @@ interface UserOperators {
   }
   
   interface SSVOperator {
-    id: string
-    walletAddress: string
-    collateral?: string
+    availableCollateral?: string
     collateralInUse?: string
-    rewards?: string
+    id: string
     nodeURL?: string
+    rewards?: string
+    walletAddress: string
   }
   
   interface CasimirOperator {
-    id: string
-    collateral?: string
+    availableCollateral?: string
     collateralInUse?: string
-    rewards?: string
+    id: string
     nodeURL?: string
+    rewards?: string
+    walletAddress?: string
   }
 
 
@@ -132,14 +133,32 @@ export default function useContracts() {
 
     /** Get all user operators */
     async function getUserOperators() {
-        let casimirOperators = await _getCasimirOperators()
+        const casimirOperators = await _getCasimirOperators()
         const ssvOperators = await _getSSVOperators()
 
+        // TODO: Re-enable this when IDs are lining up again.
         // Filter casimirOperators to only include operators that are in ssvOperators by id
-        casimirOperators = casimirOperators.filter((casimirOperator) => {
-            return ssvOperators.some((ssvOperator: SSVOperator) => { ssvOperator.id.toString() === casimirOperator.id })
-        })
+        // casimirOperators = casimirOperators.filter((casimirOperator) => {
+        //     return ssvOperators.some((ssvOperator: SSVOperator) => { ssvOperator.id.toString() === casimirOperator.id })
+        // })
 
+        // Need to update each casimirOperator with availableCollateral, collateralInUse, nodeURL, rewards, and walletAddress
+        casimirOperators.forEach((casimirOperator) => {
+            const ssvOperator = ssvOperators.find((ssvOperator: SSVOperator) => ssvOperator.id.toString() === casimirOperator.id)
+            if (ssvOperator) {
+                casimirOperator.availableCollateral = ssvOperator.availableCollateral
+                casimirOperator.collateralInUse = ssvOperator.collateralInUse
+                casimirOperator.nodeURL = ssvOperator.nodeURL
+                casimirOperator.rewards = ssvOperator.rewards
+                casimirOperator.walletAddress = ssvOperator.owner_address
+            } else {
+                casimirOperator.availableCollateral = '10'
+                casimirOperator.collateralInUse = '5'
+                casimirOperator.nodeURL = 'https://node.ssv.network'
+                casimirOperator.rewards = '2.5'
+                casimirOperator.walletAddress = '0xd557a5745d4560B24D36A68b52351ffF9c86A212'
+            }
+        })
         _setUserOperators('casimir', casimirOperators)
         _setUserOperators('ssv', ssvOperators)
         return {

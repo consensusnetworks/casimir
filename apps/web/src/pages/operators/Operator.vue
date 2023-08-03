@@ -65,19 +65,19 @@ const operatorTableHeaders = ref(
     },
     {
         title: 'Operator ID',
-        value: 'operator_id'
+        value: 'id'
     },
     {
         title: 'Wallet Address',
-        value: 'wallet_address'
+        value: 'walletAddress'
     },
     {
         title: 'Available Collateral',
-        value: 'avl_collateral'
+        value: 'availableCollateral'
     },
     {
         title: 'Collateral In Use',
-        value: 'colateral_in_use'
+        value: 'collateralInUse'
     },
     {
         title: 'Rewards',
@@ -218,10 +218,10 @@ const removeItemFromCheckedList = (item:any) => {
 const submitRegisterOperatorForm = () =>{
     const newOperator = {
         operator_id: selectedOperatorID.value,
-        wallet_address: selectedWallet,
-        avl_collateral: selectedCollateral,
+        walletAddress: selectedWallet,
+        availableCollateral: selectedCollateral,
         node_url: selectedPublicNodeURL,
-        colateral_in_use: 0,
+        collateralInUse: 0,
         rewards: 0
     }
     
@@ -232,36 +232,33 @@ const submitRegisterOperatorForm = () =>{
 const { getUserOperators, userOperators } = useContracts()
 
 const setTableData = async () =>{
-  // @chris set tableData.value here 
+  // TODO: Make sure userOperators have types defined below
+  // @chris set tableData.value here
   await getUserOperators()
-  console.log('userOperators :>> ', userOperators)
+
   /**
-   * operator_id: number | string,
-   * wallet_address: string,
-   * avl_collateral: string | number,
+   * availableCollateral: string | number,
+   * collateralInUse: number,
+   * id: number | string,
    * node_url: string,
-   * colateral_in_use: number,
    * rewards: number
+   * walletAddress: string,
    */
+
+  tableData.value = userOperators.value.casimir
 }
 
 watch(user, async () => {
   if (user.value) {
     await setTableData()
+    filterData()
   }
-  // filterData()
-})
-
-//   @chris adjust watcher to match varibale that we are listening to to update the table
-watch(rawUserAnalytics, async () =>{
-  await setTableData()
-  // filterData()
 })
 
 onMounted(async () => {
   if (user.value) {
     await setTableData()
-    // filterData()
+    filterData()
   }
 })
 
@@ -329,7 +326,7 @@ onMounted(async () => {
             </h6>
             <div class="card_input w-full max-w-[300px] relative">
               <input
-                id="wallet_address"
+                id="walletAddress"
                 v-model="selectedWallet"
                 type="text"
                 placeholder="Wallet Address.."
@@ -604,7 +601,7 @@ onMounted(async () => {
                   </button>
                 </div>
                 <div v-else>
-                  {{ item[header.value ] }}
+                  {{ item[header.value] }}
                 </div>
               </td>
             </tr>
