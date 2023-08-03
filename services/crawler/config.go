@@ -15,19 +15,30 @@ import (
 type Environment string
 
 const (
-	NodeHost             = "nodes.casimir.co"
-	Dev      Environment = "dev"
-	Prod     Environment = "prod"
+	Dev  Environment = "dev"
+	Prod Environment = "prod"
 
-	AWSAthenaTimeFormat = "2006-01-02:15 04:05.999999999"
+	RemoteNodeHost = "nodes.casimir.co"
+
+	ETHEREUM_RPC_URL     = "ETHEREUM_RPC_URL"
+	ETHEREUM_FORK_BLOCK  = "ETHEREUM_FORK_BLOCK"
+	ETHEREUM_START_BLOCK = "ETHEREUM_START_BLOCK"
 )
 
 type Config struct {
 	Env     Environment `json:"environment"`
-	Fork    bool        `json:"fork"`
+	Chain   ChainType   `json:"chain"`
 	Network NetworkType `json:"network"`
+	Fork    bool        `json:"fork"`
 	URL     url.URL     `json:"url"`
-	User    string      `json:"user"`
+	// genesis for goerli and mainnet, non-genesis for hardhat
+	StartBlock int64  `json:"start_block"`
+	User       string `json:"user"`
+	Version    int    `json:"version"`
+	Start      int64  `json:"start"`
+	End        int64  `json:"end"`
+	BatchSize  int64  `json:"batch_size"`
+	Concurrent int64  `json:"concurrent"`
 }
 
 type PackageJSON struct {
@@ -120,7 +131,7 @@ func GetResourceVersion() (int, error) {
 	return major, nil
 }
 
-func GetContractBuildArtifact() (*CasimirManager, error) {
+func GetContractBuildArtifact() ([]byte, error) {
 	wsd, err := WorkspaceDir()
 
 	if err != nil {
@@ -136,7 +147,7 @@ func GetContractBuildArtifact() (*CasimirManager, error) {
 	}
 
 	if os.IsNotExist(err) {
-		return nil, errors.New("ContractBuildArtifactNotFound")
+		return nil, errors.New("build artifacts not found")
 	}
 
 	casimirManagerPath := path.Join(buildPath, "CasimirManager.sol", "CasimirManager.json")
@@ -147,13 +158,5 @@ func GetContractBuildArtifact() (*CasimirManager, error) {
 		return nil, err
 	}
 
-	var cs CasimirManager
-
-	err = json.Unmarshal(casimirManagerFile, &cs)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &cs, nil
+	return casimirManagerFile, nil
 }

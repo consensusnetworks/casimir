@@ -49,12 +49,11 @@ func TestGlueClient_LoadDatabases(t *testing.T) {
 	}
 
 	for _, database := range glue.Databases {
-		fmt.Println(*database.Name)
 		if *database.Name == CasimirAnalyticsDatabaseDev {
 			return
 		}
 	}
-	t.Error("database not found")
+	t.Error("expected database not found")
 }
 
 func TestGlueService_Introspect(t *testing.T) {

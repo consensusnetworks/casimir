@@ -10,17 +10,16 @@ import (
 type EthereumStreamer struct {
 	*Logger
 	*EthereumService
-	Glue           *GlueService
-	S3             *S3Service
-	Wg             *sync.WaitGroup
-	Sema           chan struct{}
-	Head           int64
-	Version        int
-	CasimirManager *CasimirManager
-	Begin          time.Time
-	Elapsed        time.Duration
-	Fork           bool
-	Env            Environment
+	Glue    *GlueService
+	S3      *S3Service
+	Wg      *sync.WaitGroup
+	Sema    chan struct{}
+	Head    int64
+	Version int
+	Begin   time.Time
+	Elapsed time.Duration
+	Fork    bool
+	Env     Environment
 }
 
 func NewEthereumStreamer(scnfg Config) (*EthereumStreamer, error) {
@@ -60,22 +59,14 @@ func NewEthereumStreamer(scnfg Config) (*EthereumStreamer, error) {
 		return nil, err
 	}
 
-	csm, err := GetContractBuildArtifact()
-
-	if err != nil {
-		l.Infof("FailedToGetContractBuildArtifact: %s", err.Error())
-		return nil, err
-	}
-
 	srvc := &EthereumStreamer{
-		Logger:         logger,
-		Glue:           glue,
-		Wg:             &sync.WaitGroup{},
-		S3:             s3,
-		Begin:          time.Now(),
-		Fork:           scnfg.Fork,
-		Env:            scnfg.Env,
-		CasimirManager: csm,
+		Logger: logger,
+		Glue:   glue,
+		Wg:     &sync.WaitGroup{},
+		S3:     s3,
+		Begin:  time.Now(),
+		Fork:   scnfg.Fork,
+		Env:    scnfg.Env,
 	}
 
 	// if dev then use localhost fork
@@ -134,7 +125,7 @@ func (s *EthereumStreamer) Stream() error {
 
 		key := fmt.Sprintf("%s/%s/%s", Ethereum, s.Network, "contracts")
 
-		objs, err := s.S3.ListObjects(s.Glue.EventBucket.Bucket, key)
+		objs, err := s.S3.ListObjects(s.Glue.EventMeta.Bucket, key)
 
 		if err != nil {
 			l.Infof("FailedToListObjects: %s", err.Error())
@@ -142,7 +133,7 @@ func (s *EthereumStreamer) Stream() error {
 		}
 
 		if len(*objs) != 0 {
-			l.Infof("Found stale contract data from bucket, removing all previous contract data from %s", fmt.Sprintf("s3://%s/%s", s.Glue.EventBucket.Bucket, key))
+			l.Infof("Found stale contract data from bucket, removing all previous contract data from %s", fmt.Sprintf("s3://%s/%s", s.Glue.EventMeta.Bucket, key))
 			// TODO: remove previous contract data from s3
 		} else {
 			l.Infof("No stale contract data found in bucket (fresh run)")

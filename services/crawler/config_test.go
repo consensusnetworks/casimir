@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -11,9 +12,11 @@ func TestGetContractBuildArtifact(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if contract.ContractName != "CasimirManager" {
-		t.Fatal("ContractName is not Casimir")
+	if len(contract) == 0 {
+		t.Fatal("contract is empty")
 	}
+
+	fmt.Println(string(contract))
 }
 
 func TestGetResourceVersion(t *testing.T) {

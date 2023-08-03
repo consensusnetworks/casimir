@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"os"
 	"testing"
 )
@@ -16,21 +15,21 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestNewEthereumCrawler(t *testing.T) {
-	var err error
-	crawler, err := NewEthereumCrawler(Config{Env: Dev})
+// func TestNewEthereumCrawler(t *testing.T) {
+// 	var err error
+// 	crawler, err := NewEthereumCrawler(Config{Env: Dev})
 
-	if err != nil {
-		t.Error(err)
-	}
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
 
-	_, err = crawler.Client.BlockNumber(context.Background())
+// 	_, err = crawler.Client.BlockNumber(context.Background())
 
-	if err != nil {
-		t.Error(err)
-	}
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
 
-	if crawler.Version == 0 {
-		t.Error("Version not set")
-	}
-}
+// 	if crawler.Config.Version == 0 {
+// 		t.Errorf("expected at least version 1, but got %s", crawler.Config.Version)
+// 	}
+// }

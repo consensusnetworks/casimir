@@ -25,10 +25,45 @@ func TestNewS3Client(t *testing.T) {
 	}
 }
 
-func TestAlreadyConsumed(t *testing.T) {
-	config, err := LoadDefaultAWSConfig()
+func TestS3Service_CreatePartition(t *testing.T) {
+	config := Config{
+		Chain:     Ethereum,
+		Network:   EthereumGoerli,
+		Start:     0,
+		End:       25_000_000,
+		BatchSize: 1_000_000,
+		Env:       Dev,
+	}
 
-	s3c, err := NewS3Service(config)
+	awsconfig, err := LoadDefaultAWSConfig()
+
+	check(t, err)
+
+	s3c, err := NewS3Service(awsconfig)
+
+	check(t, err)
+
+	glues, err := NewGlueService(awsconfig)
+
+	check(t, err)
+
+	err = glues.Introspect(config.Env)
+
+	check(t, err)
+
+	err = s3c.CreatePartition(glues, config)
+
+	check(t, err)
+}
+
+func TestAlreadyConsumed(t *testing.T) {
+	awsconfig, err := LoadDefaultAWSConfig()
+
+	if err != nil {
+		t.Errorf("failed to load default aws config: %v", err)
+	}
+
+	s3c, err := NewS3Service(awsconfig)
 
 	if err != nil {
 		t.Errorf("failed to create new s3 client: %v", err)
@@ -64,4 +99,10 @@ func TestAlreadyConsumed(t *testing.T) {
 		consumed = append(consumed, num)
 	}
 	fmt.Printf("# of consumed: %d\n", len(consumed))
+}
+
+func check(t *testing.T, err error) {
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 }

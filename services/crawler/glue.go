@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -28,10 +29,21 @@ type GlueService struct {
 	Client          *glue.Client
 	Databases       []types.Database
 	Tables          []types.Table
-	EventBucket     Table
-	WalletBucket    Table
-	StakingBucket   Table
+	EventMeta       Table
+	ActionMeta      Table
 	ResourceVersion int
+}
+
+type Partition struct {
+	Chain   ChainType
+	Network NetworkType
+	Year    string
+	Month   string
+	Block   uint64
+}
+
+func (p *Partition) String() string {
+	return fmt.Sprintf("chain=ethereum/network=%s/year=%s/month=%s/block=%d", p.Network, p.Year, p.Month, p.Block)
 }
 
 func LoadDefaultAWSConfig() (*aws.Config, error) {
@@ -141,7 +153,7 @@ func (g *GlueService) Introspect(env Environment) error {
 				return err
 			}
 
-			g.EventBucket = Table{
+			g.EventMeta = Table{
 				Name:     table,
 				Database: db,
 				Version:  resourceVersion,
@@ -150,7 +162,7 @@ func (g *GlueService) Introspect(env Environment) error {
 			}
 
 			g.ResourceVersion = resourceVersion
-		case strings.Contains(table, "staking"):
+		case strings.Contains(table, "action"):
 			lastWord := table[len(table)-1]
 
 			resourceVersion, err := strconv.Atoi(string(lastWord))
@@ -159,24 +171,7 @@ func (g *GlueService) Introspect(env Environment) error {
 				return err
 			}
 
-			g.StakingBucket = Table{
-				Name:     table,
-				Database: db,
-				Version:  resourceVersion,
-				Bucket:   cleanedBucket,
-				SerDe:    strings.Split(*serde, ".")[3],
-			}
-
-		case strings.Contains(table, "wallet"):
-			lastWord := table[len(table)-1]
-
-			resourceVersion, err := strconv.Atoi(string(lastWord))
-
-			if err != nil {
-				return err
-			}
-
-			g.WalletBucket = Table{
+			g.ActionMeta = Table{
 				Name:     table,
 				Database: db,
 				Version:  resourceVersion,
@@ -184,13 +179,17 @@ func (g *GlueService) Introspect(env Environment) error {
 				SerDe:    strings.Split(*serde, ".")[3],
 			}
 		default:
-			return fmt.Errorf("UnrecognizedGlueTable: %s\n", table)
+			return fmt.Errorf("unknown table: %s", table)
 		}
 	}
 
 	if g.ResourceVersion == 0 {
-		return fmt.Errorf("ResourceVersionNotFound")
+		return fmt.Errorf("unexpected resource version: %d", g.ResourceVersion)
 	}
 
+	return nil
+}
+
+func (g *GlueService) Parition(s3v *S3Service, parts []string) error {
 	return nil
 }

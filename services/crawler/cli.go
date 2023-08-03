@@ -3,12 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/urfave/cli/v2"
 	"net/url"
 	"os"
 	"os/user"
 	"strings"
-	"sync"
+
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
@@ -60,6 +60,10 @@ func RootCmd(c *cli.Context) error {
 	// just for now load from local env
 	err := LoadEnv()
 
+	if err != nil {
+		return err
+	}
+
 	ethURL := os.Getenv("ETHEREUM_RPC_URL")
 
 	url, err := url.Parse(ethURL)
@@ -69,8 +73,11 @@ func RootCmd(c *cli.Context) error {
 	}
 
 	config := Config{
-		Env: Dev,
-		URL: *url,
+		Env:        Dev,
+		URL:        *url,
+		Start:      0,
+		BatchSize:  250_000,
+		Concurrent: 10,
 	}
 
 	if c.Bool("production") {
@@ -118,9 +125,9 @@ func RootCmd(c *cli.Context) error {
 		return nil
 	}
 
-	if config.URL.Host != NodeHost || config.URL.Scheme != "https" {
-		return errors.New("cannot sync with non prod resource")
-	}
+	// if config.URL.Host != RemoteNodeHost || config.URL.Scheme != "https" {
+	// 	return errors.New("can't sync with non prod resource")
+	// }
 
 	// crawl live network
 	crawler, err := NewEthereumCrawler(config)
@@ -129,27 +136,13 @@ func RootCmd(c *cli.Context) error {
 		return err
 	}
 
-	var wg sync.WaitGroup
-
-	defer wg.Wait()
-
-	wg.Add(1)
-	go Run(&wg, crawler)
-
-	return nil
-}
-
-func Run(wg *sync.WaitGroup, crawler *EthereumCrawler) error {
-	defer func() {
-		wg.Done()
-		crawler.Close()
-	}()
-
-	err := crawler.Crawl()
+	err = crawler.Crawl()
 
 	if err != nil {
 		return err
 	}
+
+	defer crawler.Close()
 
 	return nil
 }

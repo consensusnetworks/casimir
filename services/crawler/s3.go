@@ -143,3 +143,63 @@ func (s *S3Service) AlreadyConsumed(bucket, key string) (*[]int64, error) {
 	}
 	return &consumed, nil
 }
+
+func (s *S3Service) CreatePartition(glues *GlueService, config Config) error {
+	if glues.EventMeta.Name == "" {
+		return fmt.Errorf("failed to get event table meta")
+	}
+
+	if glues.ActionMeta.Name == "" {
+		return fmt.Errorf("failed to get action table meta")
+	}
+
+	startYear := 2015
+	endYear := 2025
+
+	for year := startYear; year <= endYear; year++ {
+		for month := 1; month <= 12; month++ {
+			// trailing slash to indicate directory
+			part := fmt.Sprintf("chain=%s/network=%s/year=%04d/month=%02d/", config.Chain, config.Network, year, month)
+
+			_, err := s.Client.PutObject(context.Background(), &s3.PutObjectInput{
+				Bucket: aws.String(glues.EventMeta.Bucket),
+				Key:    aws.String(part),
+			})
+
+			if err != nil {
+				return fmt.Errorf("error creating partition folder: %v", err)
+			}
+
+			_, err = s.Client.PutObject(context.Background(), &s3.PutObjectInput{
+				Bucket: aws.String(glues.ActionMeta.Bucket),
+				Key:    aws.String(part),
+			})
+
+			if err != nil {
+				return fmt.Errorf("error creating partition folder: %v", err)
+			}
+
+			// 00 is a special partition for the year 2015 holding early blocks
+			// if year == 2015 {
+			// 	_, err = s.Client.PutObject(context.Background(), &s3.PutObjectInput{
+			// 		Bucket: aws.String(glues.EventMeta.Bucket),
+			// 		Key:    aws.String(fmt.Sprintf("%s/%s/%04d/00/", config.Chain, config.Network, year)),
+			// 	})
+
+			// 	if err != nil {
+			// 		return fmt.Errorf("error creating partition folder: %v", err)
+			// 	}
+
+			// 	_, err = s.Client.PutObject(context.Background(), &s3.PutObjectInput{
+			// 		Bucket: aws.String(glues.ActionMeta.Bucket),
+			// 		Key:    aws.String(fmt.Sprintf("%s/%s/%04d/00/", config.Chain, config.Network, year)),
+			// 	})
+
+			// 	if err != nil {
+			// 		return fmt.Errorf("error creating partition folder: %v", err)
+			// 	}
+			// }
+		}
+	}
+	return nil
+}
