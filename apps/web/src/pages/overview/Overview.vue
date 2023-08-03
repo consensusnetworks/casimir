@@ -8,7 +8,7 @@ import BreakdownTable from './components/BreakdownTable.vue'
 </script>
 
 <template>
-  <div class="px-[60px] pt-[51px]">
+  <div class="px-[60px] 800s:px-[5%] pt-[51px]">
     <h6 class="title mb-[37px]">
       Breakdown
     </h6>
