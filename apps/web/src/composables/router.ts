@@ -1,12 +1,18 @@
 import { createWebHistory, createRouter } from 'vue-router'
 import useUsers from '@/composables/users'
 import Overview from '@/pages/overview/Overview.vue'
+import Operator from '@/pages/operators/Operator.vue'
 
 const routes = [
     { 
         path: '/', 
         name: Overview,
         component: Overview,
+    },
+    { 
+        path: '/operator', 
+        name: Operator,
+        component: Operator,
     }
 ]
 

@@ -233,7 +233,6 @@ const handleDeposit = async () => {
       {{ addressBalance ? addressBalance : '- - -' }}
     </h5>
     <div class="text-[12px] mb-[13px] text-blue-400">
-      <!-- TODO: @Chris we need to see how much they have staked currently based on the wallet selected -->
       <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked
     </div>
     <h6 class="card_title mb-[11px]">
