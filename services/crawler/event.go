@@ -31,17 +31,17 @@ type Event struct {
 	Network          NetworkType  `json:"network"`
 	Provider         ProviderType `json:"provider"`
 	Type             EventType    `json:"type"`
-	Height           int64        `json:"height"`
+	Height           uint64       `json:"height"`
 	Block            string       `json:"block"`
 	Transaction      string       `json:"transaction"`
-	ReceivedAt       int          `json:"received_at"`
-	Sender           string       `json:"sender" `
+	ReceivedAt       uint64       `json:"received_at"`
+	Sender           string       `json:"sender"`
 	Recipient        string       `json:"recipient"`
 	SenderBalance    string       `json:"sender_balance"`
 	RecipientBalance string       `json:"recipient_balance"`
+	Price            string       `json:"price"`
 	Amount           string       `json:"amount"`
-	Price            float64      `json:"price"`
-	GasFee           int64        `json:"gas_fee"`
+	GasFee           string       `json:"gas_fee"`
 }
 
 type Action struct {
@@ -52,30 +52,19 @@ type Action struct {
 	Address        string             `json:"address"`
 	Amount         string             `json:"amount"`
 	Balance        string             `json:"balance"`
-	Gas            uint64             `json:"gas"`
+	Gas            string             `json:"gas"`
 	Hash           string             `json:"hash"`
-	Price          float64            `json:"price"`
-	ReceivedAt     string             `json:"received_at"`
+	Price          string             `json:"price"`
+	ReceivedAt     uint64             `json:"received_at"`
 	RewardsAllTime string             `json:"rewards_all_time"`
 	StakingFees    string             `json:"staking_fees"`
 }
+
 type BlockEventsResult struct {
 	Events             []Event   `json:"events"`
 	Action             []Action  `json:"action"`
 	EventsPartitionKey Partition `json:"events_partition_key"`
 	ActionPartitionKey Partition `json:"action_partition_key"`
-}
-
-func (a Action) String() string {
-	json, _ := json.Marshal(a)
-
-	return string(json)
-}
-
-func (e Event) String() string {
-	json, _ := json.Marshal(e)
-
-	return string(json)
 }
 
 func (e EventType) String() string {

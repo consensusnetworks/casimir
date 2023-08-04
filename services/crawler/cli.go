@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -57,79 +56,83 @@ func Start(args []string) error {
 }
 
 func RootCmd(c *cli.Context) error {
-	// just for now load from local env
-	err := LoadEnv()
+	logger, err := NewConsoleLogger()
 
 	if err != nil {
 		return err
 	}
 
-	ethURL := os.Getenv("ETHEREUM_RPC_URL")
+	l := logger.Sugar().With("service", "crawler")
 
-	url, err := url.Parse(ethURL)
+	// just for now load from local env
+	err = LoadEnv()
+
+	if err != nil {
+		return err
+	}
+
+	l.Info("loaded env vars")
+
+	// 0xaaf5751d370d2fD5F1D5642C2f88bbFa67a29301
+	rpcURL := os.Getenv("ETHEREUM_RPC_URL")
+
+	if rpcURL == "" {
+		l.Errorf("ETHEREUM_RPC_URL is not set")
+		return fmt.Errorf("ETHEREUM_RPC_URL is not set")
+	}
+
+	url, err := url.Parse(rpcURL)
+
+	if err != nil {
+		return err
+	}
+
+	user, err := user.Current()
 
 	if err != nil {
 		return err
 	}
 
 	config := Config{
+		Chain:      Ethereum,
 		Env:        Dev,
-		URL:        *url,
-		Start:      0,
+		URL:        url,
 		BatchSize:  250_000,
 		Concurrent: 10,
+		User:       strings.ToLower(user.Username),
+		Fork:       false,
+		Network:    EthereumGoerli,
 	}
 
 	if c.Bool("production") {
 		config.Env = Prod
 	}
 
-	net := os.Getenv("NETWORK")
+	fork := c.Bool("fork")
 
-	lastPath := url.Path[strings.LastIndex(url.Path, "/")+1:]
-
-	switch net {
-	case "testnet":
-		config.Network = EthereumGoerli
-	case "mainnet":
-		config.Network = EthereumMainnet
-	default:
-		if lastPath == "goerli" {
-			config.Network = EthereumGoerli
-			break
-		}
-		config.Network = EthereumHardhat
+	if fork {
 		config.Fork = true
-	}
-
-	if config.Fork && config.URL.Scheme != "https" {
-		return errors.New("cannot sync local fork with prod resource")
-	}
-
-	// crawl fork
-	if config.Fork && config.URL.Host == "127.0.0.1:8545" {
-		err = PingEthereumNode(config.URL.String())
+		crawler, err := NewEthereumCrawler(config)
 
 		if err != nil {
 			return err
 		}
 
-		user, err := user.Current()
+		l.Info(crawler.Head)
+
+		err = crawler.Crawl()
 
 		if err != nil {
 			return err
 		}
 
-		config.User = user.Username
+		defer crawler.Close()
 
 		return nil
 	}
 
-	// if config.URL.Host != RemoteNodeHost || config.URL.Scheme != "https" {
-	// 	return errors.New("can't sync with non prod resource")
-	// }
+	l.With("config", config)
 
-	// crawl live network
 	crawler, err := NewEthereumCrawler(config)
 
 	if err != nil {
@@ -144,5 +147,55 @@ func RootCmd(c *cli.Context) error {
 
 	defer crawler.Close()
 
+	// streamer, err := NewEthereumStreamer(config)
+
+	// if err != nil {
+	// 	return err
+	// }
+
+	// // crawl fork
+	// if config.Fork && config.URL.Host == "127.0.0.1:8545" {
+	// 	err = PingEthereumNode(config.URL.String())
+
+	// 	if err != nil {
+	// 		return err
+	// 	}
+
+	// 	user, err := user.Current()
+
+	// 	if err != nil {
+	// 		return err
+	// 	}
+
+	// 	config.User = user.Username
+
+	// 	return nil
+	// }
+
+	// // if config.URL.Host != RemoteNodeHost || config.URL.Scheme != "https" {
+	// // 	return errors.New("can't sync with non prod resource")
+	// // }
+
+	// // crawl live network
+	// crawler, err := NewEthereumCrawler(config)
+
+	// if err != nil {
+	// 	return err
+	// }
+
+	// // err = crawler.Crawl()
+
+	// // if err != nil {
+	// // 	return err
+	// // }
+
+	// defer crawler.Close()
+
+	return nil
+}
+
+// https://nodes.casimir.co/eth/hardhat
+
+func CrawlFork() error {
 	return nil
 }

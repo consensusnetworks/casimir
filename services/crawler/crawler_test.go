@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/url"
 	"os"
 	"testing"
 )
@@ -13,6 +14,43 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(m.Run())
+}
+
+func TestGetHistoricalContracts(t *testing.T) {
+	err := LoadEnv()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	// ethURL := os.Getenv("ETHEREUM_RPC_URL")
+
+	url, err := url.Parse("https://nodes.casimir.co/eth/hardhat")
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	config := Config{
+		Env:        Dev,
+		URL:        url,
+		Start:      0,
+		BatchSize:  250_000,
+		Concurrent: 10,
+	}
+
+	crawler, err := NewEthereumCrawler(config)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = crawler.GetHistoricalContracts()
+
+	if err != nil {
+		t.Error(err)
+	}
+
 }
 
 // func TestNewEthereumCrawler(t *testing.T) {

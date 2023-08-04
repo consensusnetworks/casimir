@@ -30,15 +30,15 @@ type Config struct {
 	Chain   ChainType   `json:"chain"`
 	Network NetworkType `json:"network"`
 	Fork    bool        `json:"fork"`
-	URL     url.URL     `json:"url"`
+	URL     *url.URL    `json:"url"`
 	// genesis for goerli and mainnet, non-genesis for hardhat
-	StartBlock int64  `json:"start_block"`
+	StartBlock uint64 `json:"start_block"`
 	User       string `json:"user"`
 	Version    int    `json:"version"`
-	Start      int64  `json:"start"`
-	End        int64  `json:"end"`
-	BatchSize  int64  `json:"batch_size"`
-	Concurrent int64  `json:"concurrent"`
+	Start      uint64 `json:"start"`
+	End        uint64 `json:"end"`
+	BatchSize  uint64 `json:"batch_size"`
+	Concurrent uint64 `json:"concurrent"`
 }
 
 type PackageJSON struct {

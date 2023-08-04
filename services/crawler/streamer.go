@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -10,16 +9,17 @@ import (
 type EthereumStreamer struct {
 	*Logger
 	*EthereumService
-	Glue    *GlueService
-	S3      *S3Service
-	Wg      *sync.WaitGroup
-	Sema    chan struct{}
-	Head    int64
-	Version int
-	Begin   time.Time
-	Elapsed time.Duration
-	Fork    bool
-	Env     Environment
+	Glue      *GlueService
+	S3        *S3Service
+	Wg        *sync.WaitGroup
+	Sema      chan struct{}
+	Head      int64
+	Version   int
+	Begin     time.Time
+	Elapsed   time.Duration
+	Fork      bool
+	Env       Environment
+	StartFrom uint64
 }
 
 func NewEthereumStreamer(scnfg Config) (*EthereumStreamer, error) {
@@ -95,24 +95,24 @@ func NewEthereumStreamer(scnfg Config) (*EthereumStreamer, error) {
 	// 	return srvc, nil
 	// }
 
-	l.Infof("ConnectingToEthereumNode: %s", "wss://nodes.casimir.co/eth/hardhat")
+	// l.Infof("connecting to: %s", "wss://nodes.casimir.co/eth/hardhat")
 
-	eths, err := NewEthereumService("wss://nodes.casimir.co/eth/hardhat")
+	// eths, err := NewEthereumService("wss://nodes.casimir.co/eth/hardhat")
 
-	if err != nil {
-		l.Infof("FailedToCreateEthereumClient: %s", err.Error())
-		return nil, err
-	}
+	// if err != nil {
+	// 	l.Infof("FailedToCreateEthereumClient: %s", err.Error())
+	// 	return nil, err
+	// }
 
-	head, err := eths.Client.BlockNumber(context.Background())
+	// head, err := eths.Client.BlockNumber(context.Background())
 
-	if err != nil {
-		l.Infof("FailedToGetBlockNumber: %s", err.Error())
-		return nil, err
-	}
+	// if err != nil {
+	// 	l.Infof("FailedToGetBlockNumber: %s", err.Error())
+	// 	return nil, err
+	// }
 
-	srvc.Head = int64(head)
-	srvc.EthereumService = eths
+	// srvc.Head = int64(head)
+	// srvc.EthereumService = eths
 
 	return srvc, nil
 }

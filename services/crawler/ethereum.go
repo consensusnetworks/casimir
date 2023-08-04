@@ -76,6 +76,7 @@ func NewEthereumService(raw string) (*EthereumService, error) {
 			}
 			net = EthereumGoerli
 		}
+		net = EthereumGoerli
 	default:
 		return nil, fmt.Errorf("unsupported network id: %d", id.Int64())
 	}
@@ -99,6 +100,16 @@ func PingEthereumNode(url string) error {
 
 	if err != nil {
 		return err
+	}
+
+	header, err := client.HeaderByNumber(context.Background(), nil)
+
+	if err != nil {
+		return err
+	}
+
+	if header == nil || header.Number.Int64() == 0 {
+		return errors.New("empty header")
 	}
 
 	return err
