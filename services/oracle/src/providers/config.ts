@@ -1,6 +1,11 @@
 import { ethers } from 'ethers'
 
 export function getConfig() {
+    const cliPath = process.env.CLI_PATH
+    if (!cliPath) throw new Error('No cli path provided')
+    const messengerUrl = process.env.MESSENGER_URL
+    if (!messengerUrl) throw new Error('No messenger url provided')
+
     const ethereumUrl = process.env.ETHEREUM_RPC_URL
     if (!ethereumUrl) throw new Error('No ethereum rpc url provided')
 
@@ -14,6 +19,8 @@ export function getConfig() {
     if (!managerAddress) throw new Error('No manager address provided')
     const viewsAddress = process.env.VIEWS_ADDRESS
     if (!viewsAddress) throw new Error('No views address provided')
+    const registryAddress = process.env.REGISTRY_ADDRESS
+    if (!registryAddress) throw new Error('No registry address provided')
     const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS
     if (!linkTokenAddress) throw new Error('No link token address provided')
     const ssvNetworkAddress = process.env.SSV_NETWORK_ADDRESS
@@ -27,23 +34,19 @@ export function getConfig() {
     const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS
     if (!wethTokenAddress) throw new Error('No weth token address provided')
 
-    const cliPath = process.env.CLI_PATH
-    if (!cliPath) throw new Error('No cli path provided')
-    const messengerUrl = process.env.MESSENGER_SRV_ADDR
-    if (!messengerUrl) throw new Error('No messenger url provided')
-
-    return { 
+    return {
+        cliPath,
+        messengerUrl,
         ethereumUrl,
         wallet,
         managerAddress,
         viewsAddress,
+        registryAddress,
         linkTokenAddress,
         ssvNetworkAddress,
         ssvNetworkViewsAddress,
         ssvTokenAddress,
         uniswapV3FactoryAddress,
-        wethTokenAddress,
-        cliPath,
-        messengerUrl
+        wethTokenAddress
     }
 }

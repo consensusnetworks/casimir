@@ -4,14 +4,17 @@ import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import ISSVNetworkViewsAbi from '../build/abi/ISSVNetworkViews.json'
-import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
-import { getEventsIterable } from '@casimir/oracle/src/providers/events'
+import { depositUpkeepBalanceHandler } from '../helpers/oracle'
 import { fetchRetry, run } from '@casimir/helpers'
 import { PoolStatus } from '@casimir/types'
 
 void async function () {
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
-
+    
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [654, 655, 656, 657]
+    if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
+    const messengerUrl = process.env.MESSENGER_URL || 'https://nodes.casimir.co/eth/goerli/dkg/messenger'
+    
     const mockFunctionsOracleFactory = await ethers.getContractFactory('MockFunctionsOracle')
     const mockFunctionsOracle = await mockFunctionsOracleFactory.deploy()
     await mockFunctionsOracle.deployed()
@@ -54,7 +57,7 @@ void async function () {
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
     const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
-    for (const operatorId of [1, 2, 3, 4]) {
+    for (const operatorId of preregisteredOperatorIds) {
         const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)
         const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
         const nextBalance = currentBalance.add(ethers.utils.parseEther('4'))
@@ -147,53 +150,15 @@ void async function () {
     }()
 
     setTimeout(async () => {
-        if (process.env.MOCK_ORACLE === 'true') {
-            const ping = await fetchRetry('http://localhost:3000/ping')
-            const { message } = await ping.json()
-            if (message !== 'pong') throw new Error('DKG service is not running')
-        }
+        const ping = await fetchRetry(`${messengerUrl}/ping`)
+        const { message } = await ping.json()
+        if (message !== 'pong') throw new Error('DKG service is not running')
         const depositAmount = 32 * ((100 + await manager.feePercent()) / 100)
         const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await stake?.wait()
-        // Todo handle in oracle and only run here if (!process.env.MOCK_ORACLE)
+        // Todo handle in oracle
         await depositUpkeepBalanceHandler({ manager, signer: oracle })
     }, 2500)
 
-    if (process.env.MOCK_ORACLE === 'true') {
-        run('npm run dev --workspace @casimir/oracle')
-    } else {
-        try {
-            const handlers = {
-                DepositRequested: initiateDepositHandler,
-                /**
-                 * We don't need to handle these/they aren't ready:
-                 * ResharesRequested: initiateResharesHandler,
-                 * ExitRequested: initiateExitsHandler,
-                 * ForcedExitReportsRequested: reportForcedExitsHandler,
-                 */
-                CompletedExitReportsRequested: reportCompletedExitsHandler
-            }
-    
-            const eventsIterable = getEventsIterable({ 
-                provider: ethers.provider,
-                managerAddress: manager.address, 
-                events: Object.keys(handlers) 
-            })
-                    
-            for await (const event of eventsIterable) {
-                const details = event?.[event.length - 1]
-                const { args } = details
-                const handler = handlers[details.event as keyof typeof handlers]
-                if (!handler) throw new Error(`No handler found for event ${details.event}`)
-                await handler({ 
-                    manager,
-                    views,
-                    signer: oracle,
-                    args
-                })
-            }
-        } catch (error) {
-            console.log('ORACLE ERROR', error)
-        }
-    }
+    run('npm run dev --workspace @casimir/oracle')
 }()

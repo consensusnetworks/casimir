@@ -33,9 +33,8 @@ void async function () {
     process.env.CRYPTO_COMPARE_API_KEY = process.env.USE_SECRETS !== 'false' ? process.env.CRYPTO_COMPARE_API_KEY || await getSecret('casimir-crypto-compare-api-key') : process.env.CRYPTO_COMPARE_API_KEY || ''
     process.env.EMULATE = process.env.EMULATE || 'false'
     process.env.FORK = process.env.FORK || 'testnet'
-    process.env.MOCK_ORACLE = process.env.MOCK_ORACLE || 'true'
-    process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
     process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
+    process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
     
     if (process.env.BUILD_PREVIEW === 'true') {
         process.env.WEB_URL = process.env.WEB_URL || 'http://localhost:4173'
@@ -166,10 +165,9 @@ void async function () {
         $`npm run dev --workspace @casimir/web`
     }
 
-    if (process.env.MOCK_ORACLE === 'true' || process.env.MOCK_SERVICES === 'true') {
+    if (process.env.MOCK_SERVICES === 'true') {
         process.on('SIGINT', () => {
             const mocked: string[] = []
-            if (process.env.MOCK_ORACLE === 'true') mocked.push('oracle')
             if (process.env.MOCK_SERVICES === 'true') mocked.push(...Object.keys(services))
             const cleaners = mocked.map(mock => `npm run clean --workspace @casimir/${mock}`).join(' & ')
             if (cleaners.length) {

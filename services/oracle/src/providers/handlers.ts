@@ -1,8 +1,9 @@
 import { ethers } from 'ethers'
 import { HandlerInput } from '../interfaces/HandlerInput'
-import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/@types'
+import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
+import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
 import { Scanner } from '@casimir/ssv'
 import { PoolStatus } from '@casimir/types'
 import { Factory } from '@casimir/uniswap'
@@ -21,18 +22,23 @@ export async function initiateDepositHandler(input: HandlerInput) {
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
     const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    
+    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const registry = new ethers.Contract(config.registryAddress, ICasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
+
     const nonce = await provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
       from: manager.address,
       nonce
     })
 
-    const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
+    const operatorCount = (await registry.getOperatorIds()).length
+    const operators = await views.getOperators(0, operatorCount)
+    const eligibleOperators = operators.filter((operator) => operator.active && !operator.resharing)
+    const selectedOperatorIds = eligibleOperators.slice(0, 4).map((operator) => operator.id.toNumber())
 
     const validator = await cli.createValidator({
         poolId: input.args.poolId,
-        operatorIds: newOperatorIds, 
+        operatorIds: selectedOperatorIds, 
         withdrawalAddress: poolAddress
     })
 

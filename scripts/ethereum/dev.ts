@@ -25,8 +25,6 @@ void async function () {
 
     process.env.TUNNEL = process.env.TUNNEL || 'false'
 
-    process.env.MOCK_ORACLE = process.env.MOCK_ORACLE || 'true'
-
     process.env.MINING_INTERVAL = '12'
 
     process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
@@ -73,25 +71,8 @@ void async function () {
     process.env.SSV_NETWORK_VIEWS_ADDRESS = '0x8dB45282d7C4559fd093C26f677B3837a5598914'
     process.env.UNISWAP_V3_FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
 
-
-    if (process.env.MOCK_ORACLE === 'false') {
-        await run('npm run generate --workspace @casimir/oracle')
-    }
-
     $`npm run node --workspace @casimir/ethereum`
     const hardhatWaitTime = 2500
     await new Promise(resolve => setTimeout(resolve, hardhatWaitTime))
     $`npm run dev --workspace @casimir/ethereum -- --network localhost`
-
-    if (process.env.MOCK_ORACLE === 'true') {
-        process.on('SIGINT', () => {
-            const messes = ['oracle']
-            const cleaners = messes.map(mess => `npm run clean --workspace @casimir/${mess}`).join(' & ')
-            if (cleaners.length) {
-                console.log(`\n🧹 Cleaning up: ${messes.map(mess => `@casimir/${mess}`).join(', ')}`)
-                runSync(`${cleaners}`)
-            }
-            process.exit()
-        })
-    }
 }()
