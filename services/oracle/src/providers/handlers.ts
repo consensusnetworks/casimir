@@ -33,8 +33,21 @@ export async function initiateDepositHandler(input: HandlerInput) {
 
     const operatorCount = (await registry.getOperatorIds()).length
     const operators = await views.getOperators(0, operatorCount)
-    const eligibleOperators = operators.filter((operator) => operator.active && !operator.resharing)
-    const selectedOperatorIds = eligibleOperators.slice(0, 4).map((operator) => operator.id.toNumber())
+
+    const eligibleOperators = operators.filter((operator) => {
+        const availableCollateral = parseInt(ethers.utils.formatEther(operator.collateral)) - parseInt(operator.poolCount.toString())
+        return operator.active && !operator.resharing && availableCollateral > 0
+    })
+
+    const smallestOperators = eligibleOperators.sort((a, b) => {
+        const aPoolCount = parseInt(a.poolCount.toString())
+        const bPoolCount = parseInt(b.poolCount.toString())
+        if (aPoolCount < bPoolCount) return -1
+        if (aPoolCount > bPoolCount) return 1
+        return 0
+    })
+
+    const selectedOperatorIds = smallestOperators.slice(0, 4).map((operator) => operator.id.toNumber())
 
     const validator = await cli.createValidator({
         poolId: input.args.poolId,
