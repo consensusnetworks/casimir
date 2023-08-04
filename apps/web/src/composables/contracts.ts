@@ -47,7 +47,7 @@ interface UserOperators {
     id: string
     nodeURL?: string
     rewards?: string
-    walletAddress: string
+    walletAddress?: string
   }
   
   interface CasimirOperator {
@@ -528,6 +528,7 @@ export default function useContracts() {
         getUserStake,
         // getPools, 
         _getCasimirOperators,
+        listenForContractEvents,
         refreshBreakdown,
         registerOperatorWithCasimir,
         stopListeningForContractEvents,

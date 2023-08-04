@@ -4,7 +4,6 @@ import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
 import { FormattedWalletOption } from '@casimir/types'
 import useContracts from '@/composables/contracts'
-import { log } from 'firebase-functions/logger'
 import useUsers from '@/composables/users'
 
 // Form inputs
@@ -100,7 +99,7 @@ const filterData = () => {
     filteredDataArray = tableData.value
   } else {
     const searchTerm = searchInput.value
-    filteredDataArray = tableData.value.filter(item => {
+    filteredDataArray = tableData.value.filter((item: any) => {
       return (
         // Might need to modify to match types each variable
         // item.wallet_provider?.toLowerCase().includes(searchTerm) 
@@ -110,7 +109,7 @@ const filterData = () => {
   }
 
   if(selectedHeader.value !== '' && selectedOrientation.value !== '') {
-    filteredDataArray = filteredDataArray.sort((a, b) => {
+    filteredDataArray = filteredDataArray.sort((a: any, b: any) => {
       const valA = a[selectedHeader.value]
       const valB = b[selectedHeader.value]
 
@@ -353,7 +352,7 @@ onMounted(async () => {
                 </h6>
                 <button
                   v-for="act in user.accounts"
-                  :key="act"
+                  :key="act.address"
                   type="button"
                   class="border-y border-y-grey_1 hover:border-y-grey_3
                    text-grey_4 my-[10px] w-full flex justify-between truncate"
