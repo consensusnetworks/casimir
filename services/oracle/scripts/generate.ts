@@ -12,8 +12,8 @@ void async function () {
 
     process.env.BIP39_SEED = process.env.BIP39_SEED || 'test test test test test test test test test test test junk'
     process.env.CLI_PATH = `./${resourcePath}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
-    process.env.MESSENGER_SRV_ADDR = 'http://0.0.0.0:3000'
-    process.env.USE_HARDCODED_OPERATORS = 'true'
+    process.env.MESSENGER_SRV_ADDR = 'https://nodes.casimir.co/eth/goerli/dkg/messenger' // 'http://0.0.0.0:3000'
+    process.env.USE_HARDCODED_OPERATORS = 'false'
     if (!process.env.MANAGER_ADDRESS) throw new Error('No manager address set')
     if (!process.env.VIEWS_ADDRESS) throw new Error('No views address set')
     process.env.LINK_TOKEN_ADDRESS = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
@@ -37,21 +37,20 @@ void async function () {
     const validatorCount = parseInt(process.env.VALIDATOR_COUNT as string) || 4
     const validators = JSON.parse(fs.readFileSync(`${outputPath}/validators.json`, 'utf8') || '{}')
     if (!validators[oracleAddress] || Object.keys(validators[oracleAddress]).length < validatorCount) {
-        process.env.CLI_PATH = `./${resourcePath}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
-        process.env.MESSENGER_SRV_ADDR = 'http://0.0.0.0:3000'
-        process.env.USE_HARDCODED_OPERATORS = 'true'
-        await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
-        const dkg = await run(`which ${process.env.CLI_PATH}`) as string
-        if (!dkg || dkg.includes('not found')) throw new Error('Dkg cli not found')
-        if (os.platform() === 'linux') {
-            await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml -f ${resourcePath}/../docker-compose.override.yaml up -d`)
-        } else {
-            await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml up -d`)
+        if (process.env.USE_HARDCODED_OPERATORS === 'true') {
+            await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
+            const dkg = await run(`which ${process.env.CLI_PATH}`) as string
+            if (!dkg || dkg.includes('not found')) throw new Error('Dkg cli not found')
+            if (os.platform() === 'linux') {
+                await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml -f ${resourcePath}/../docker-compose.override.yaml up -d`)
+            } else {
+                await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml up -d`)
+            }
+            const ping = await fetchRetry(`${process.env.MESSENGER_SRV_ADDR}/ping`)
+            const { message } = await ping.json()
+            if (message !== 'pong') throw new Error('Dkg service is not running')
+            console.log('🔑 Dkg service ready')
         }
-        const ping = await fetchRetry(`${process.env.MESSENGER_SRV_ADDR}/ping`)
-        const { message } = await ping.json()
-        if (message !== 'pong') throw new Error('Dkg service is not running')
-        console.log('🔑 Dkg service ready')
 
         let nonce = 3
 
@@ -64,7 +63,7 @@ void async function () {
                 nonce
             })
 
-            const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
+            const newOperatorIds = [654, 655, 656, 657] // Todo get new group here
             
             const cli = new Dkg({ 
                 cliPath: process.env.CLI_PATH, 

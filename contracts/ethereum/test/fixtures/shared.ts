@@ -47,7 +47,7 @@ export async function deploymentFixture() {
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
     const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
-    for (const operatorId of [1, 2, 3, 4]) {
+    for (const operatorId of [654, 655, 656, 657]) {
         const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)
         const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
         const nextBalance = currentBalance.add(ethers.utils.parseEther('4'))
