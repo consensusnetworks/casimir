@@ -125,8 +125,8 @@ export default function useContracts() {
         } catch (error) {
             console.log('Error occurred while fetching stake:', error)
             return {
-                eth: '0 ETH',
-                usd: '$ 0.00'
+                eth: '0ETH',
+                usd: '$0.00'
             }
         }
     }
@@ -351,8 +351,8 @@ export default function useContracts() {
             /* Get User's All Time Rewards by Subtracting (StakeDesposited + WithdrawalInitiated) from CurrentStake */
             const currentUserStakeMinusEvents = currentUserStakeETH - (stakedDepositedETH as number) - (withdrawalInitiatedETH as number)
             return {
-                eth: formatNumber(currentUserStakeMinusEvents),
-                usd: formatNumber(currentUserStakeMinusEvents * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' })))
+                eth: `${formatNumber(currentUserStakeMinusEvents)} ETH`,
+                usd: `$${formatNumber(currentUserStakeMinusEvents * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' })))}`
             }
         } catch (err) {
             console.error(`There was an error in getAllTimeStakingRewards: ${err}`)
