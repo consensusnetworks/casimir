@@ -132,7 +132,7 @@ watch(selectedTimeframe, () => {
     <div class="flex flex-wrap justify-between mb-[52px]">
       <div>
         <h6 class="balance_title mb-[15px]">
-          Total Balance Across Connected Wallets
+          Available Balance
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="balance_eth">
@@ -158,7 +158,7 @@ watch(selectedTimeframe, () => {
       </div>
       <div>
         <h6 class="balance_title mb-[15px]">
-          All Time Staking Rewards Earned
+          Rewards Earned
         </h6>
         <div class="flex items-center gap-[12px]">
           <h5 class="balance_eth">
