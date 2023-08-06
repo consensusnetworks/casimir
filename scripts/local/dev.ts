@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { $, chalk, echo } from 'zx'
-import { loadCredentials, getSecret, getFutureContractAddress, getWallet, run, runSync } from '@casimir/helpers'
+import { loadCredentials, getSecret, getWallet, run, runSync } from '@casimir/helpers'
 
 /**
  * Run a Casimir dev server
@@ -36,7 +36,10 @@ void async function () {
     process.env.MOCK_ORACLE = process.env.MOCK_ORACLE || 'true'
     process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
     process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
-    
+    process.env.SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS || '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
+    process.env.SSV_NETWORK_VIEWS_ADDRESS = process.env.SSV_NETWORK_VIEWS_ADDRESS || '0x8dB45282d7C4559fd093C26f677B3837a5598914'
+    process.env.UNISWAP_V3_FACTORY_ADDRESS = process.env.UNISWAP_V3_FACTORY_ADDRESS || '0x1F98431c8aD98523631AE4a59f267346ea31F984'
+
     if (process.env.BUILD_PREVIEW === 'true') {
         process.env.WEB_URL = process.env.WEB_URL || 'http://localhost:4173'
     } else {
@@ -110,16 +113,28 @@ void async function () {
             const managerIndex = 1 // We deploy a mock functions oracle before the manager
             
             if (!process.env.MANAGER_ADDRESS) {
-                process.env.MANAGER_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
+                process.env.MANAGER_ADDRESS = ethers.utils.getContractAddress({
+                    from: wallet.address,
+                    nonce: nonce + managerIndex
+                })
             }
             if (!process.env.VIEWS_ADDRESS) {
-                process.env.VIEWS_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
+                process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
+                    from: wallet.address,
+                    nonce: nonce + managerIndex + 1
+                })
             }
             if (!process.env.REGISTRY_ADDRESS) {
-                process.env.REGISTRY_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 2 })
+                process.env.REGISTRY_ADDRESS = ethers.utils.getContractAddress({
+                  from: process.env.MANAGER_ADDRESS,
+                  nonce: 1
+                })
             }
             if (!process.env.UPKEEP_ADDRESS) {
-                process.env.UPKEEP_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 3 })
+                process.env.UPKEEP_ADDRESS = ethers.utils.getContractAddress({
+                    from: process.env.MANAGER_ADDRESS,
+                    nonce: 2
+                })
             }
 
             $`npm run dev:${chain}`
@@ -152,6 +167,9 @@ void async function () {
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
     process.env.PUBLIC_MANAGER_ADDRESS = process.env.MANAGER_ADDRESS
     process.env.PUBLIC_VIEWS_ADDRESS = process.env.VIEWS_ADDRESS
+    process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
+    process.env.PUBLIC_SSV_NETWORK_VIEWS_ADDRESS = process.env.SSV_NETWORK_VIEWS_ADDRESS
+    process.env.PUBLIC_UNISWAP_V3_FACTORY_ADDRESS = process.env.UNISWAP_V3_FACTORY_ADDRESS
     process.env.PUBLIC_REGISTRY_ADDRESS = process.env.REGISTRY_ADDRESS
     process.env.PUBLIC_UPKEEP_ADDRESS = process.env.UPKEEP_ADDRESS
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY

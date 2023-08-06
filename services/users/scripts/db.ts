@@ -1,7 +1,7 @@
 import fs from 'fs'
 import os from 'os'
 import { run, getSecret, loadCredentials } from '@casimir/helpers'
-import { JsonSchema, Schema, accountSchema, nonceSchema, userSchema, userAccountSchema } from '@casimir/data'
+import { JsonSchema, Schema, accountSchema, nonceSchema, operatorSchema, userSchema, userAccountSchema } from '@casimir/data'
 
 /**
  * Run a local users database and service
@@ -30,6 +30,7 @@ void async function () {
     /** All table schemas */
     const tableSchemas = {
         account: accountSchema,
+        operator: operatorSchema,
         nonce: nonceSchema,
         user: userSchema,
         userAccount: userAccountSchema

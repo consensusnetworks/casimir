@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch} from 'vue'
-import useUsers from '@/composables/users'
 import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
 import { FormattedWalletOption } from '@casimir/types'
+import useContracts from '@/composables/contracts'
+import useUsers from '@/composables/users'
 
 // Form inputs
 const selectedWallet = ref()
@@ -23,7 +24,6 @@ const onSelectOperatorIDBlur = () => {
 }
 // @chris need a way to find out possible operators on selecting a wallet address
 const possibleOperatorID = ref([])
-
 
 const selectedPublicNodeURL = ref()
 
@@ -64,19 +64,19 @@ const operatorTableHeaders = ref(
     },
     {
         title: 'Operator ID',
-        value: 'operator_id'
+        value: 'id'
     },
     {
         title: 'Wallet Address',
-        value: 'wallet_address'
+        value: 'walletAddress'
     },
     {
         title: 'Available Collateral',
-        value: 'avl_collateral'
+        value: 'availableCollateral'
     },
     {
         title: 'Collateral In Use',
-        value: 'colateral_in_use'
+        value: 'collateralInUse'
     },
     {
         title: 'Rewards',
@@ -88,7 +88,7 @@ const operatorTableHeaders = ref(
 
 const { rawUserAnalytics, user } = useUsers()
 
-const tableData = ref([])
+const tableData = ref<any>([])
 
 const filteredData = ref(tableData.value)
 
@@ -99,7 +99,7 @@ const filterData = () => {
     filteredDataArray = tableData.value
   } else {
     const searchTerm = searchInput.value
-    filteredDataArray = tableData.value.filter(item => {
+    filteredDataArray = tableData.value.filter((item: any) => {
       return (
         // Might need to modify to match types each variable
         // item.wallet_provider?.toLowerCase().includes(searchTerm) 
@@ -109,7 +109,7 @@ const filterData = () => {
   }
 
   if(selectedHeader.value !== '' && selectedOrientation.value !== '') {
-    filteredDataArray = filteredDataArray.sort((a, b) => {
+    filteredDataArray = filteredDataArray.sort((a: any, b: any) => {
       const valA = a[selectedHeader.value]
       const valB = b[selectedHeader.value]
 
@@ -215,33 +215,51 @@ const removeItemFromCheckedList = (item:any) => {
 }
 
 const submitRegisterOperatorForm = () =>{
-    tableData.value.push({
+    const newOperator = {
         operator_id: selectedOperatorID.value,
-        wallet_address: selectedWallet,
-        avl_collateral: selectedCollateral,
+        walletAddress: selectedWallet,
+        availableCollateral: selectedCollateral,
         node_url: selectedPublicNodeURL,
-        colateral_in_use: 0,
+        collateralInUse: 0,
         rewards: 0
-    })
-
+    }
+    
+    tableData.value = [...tableData.value, newOperator]
     openAddOperatorModal.value = false
 }
 
-// const setTableData = () =>{
-//   @chris set tableData.value here 
-// }
+const { getUserOperators, userOperators } = useContracts()
 
-//   @chris adjust watcher to match varibale that we are listening to to update the table
-// watch(rawUserAnalytics, () =>{
-//   setTableData()
-//   filterData()
-// })
+const setTableData = async () =>{
+  // TODO: Make sure userOperators have types defined below
+  // @chris set tableData.value here
+  await getUserOperators()
 
-// onMounted(() =>{
-//   setTableData()
-//   filterData()
-// })
+  /**
+   * availableCollateral: string | number,
+   * collateralInUse: number,
+   * id: number | string,
+   * node_url: string,
+   * rewards: number
+   * walletAddress: string,
+   */
 
+  tableData.value = userOperators.value.casimir
+}
+
+watch(user, async () => {
+  if (user.value) {
+    await setTableData()
+    filterData()
+  }
+})
+
+onMounted(async () => {
+  if (user.value) {
+    await setTableData()
+    filterData()
+  }
+})
 
 </script>
 
@@ -307,7 +325,7 @@ const submitRegisterOperatorForm = () =>{
             </h6>
             <div class="card_input w-full max-w-[300px] relative">
               <input
-                id="wallet_address"
+                id="walletAddress"
                 v-model="selectedWallet"
                 type="text"
                 placeholder="Wallet Address.."
@@ -334,7 +352,7 @@ const submitRegisterOperatorForm = () =>{
                 </h6>
                 <button
                   v-for="act in user.accounts"
-                  :key="act"
+                  :key="act.address"
                   type="button"
                   class="border-y border-y-grey_1 hover:border-y-grey_3
                    text-grey_4 my-[10px] w-full flex justify-between truncate"
@@ -582,7 +600,7 @@ const submitRegisterOperatorForm = () =>{
                   </button>
                 </div>
                 <div v-else>
-                  {{ item[header.value ] }}
+                  {{ item[header.value] }}
                 </div>
               </td>
             </tr>

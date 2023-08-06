@@ -9,7 +9,9 @@ const { addAccount, getAccounts, getUserByAddress, getUserById, updateUserAddres
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
         const id = req.session?.getUserId() as string
+        console.log('getting user by id :>> ', id)
         const user = await getUserById(id)
+        console.log('user in user home route :>> ', user)
         const message = user ? 'User found' : 'User not found'
         const error = user ? false : true
         res.setHeader('Content-Type', 'application/json')
@@ -70,7 +72,9 @@ router.get('/check-if-primary-address-exists/:provider/:address', async (req: ex
     try {
         const { params } = req
         const { address, provider } = params
+        console.log('getting user by address')
         const user = await getUserByAddress(address)
+        console.log('user in check-if-primary-.....:>> ', user)
         const userAddress = user?.address
         const userProvider = user?.walletProvider
         const sameAddress = userAddress === address
