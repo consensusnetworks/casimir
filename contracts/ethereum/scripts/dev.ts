@@ -74,7 +74,7 @@ void async function () {
      * Exit balances are swept as needed
      */
     let requestId = 0
-    const blocksPerReport = 4
+    const blocksPerReport = 10
     const rewardPerValidator = 0.105
     let lastReportBlock = await ethers.provider.getBlockNumber()
     let lastStakedPoolIds: number[] = []
