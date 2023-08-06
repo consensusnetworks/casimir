@@ -199,15 +199,17 @@ const handleDeposit = async () => {
     stakeButtonText.value = 'Transaction Failed'
   }
 
-  setTimeout(() => {
+  setTimeout(async () => {
     success.value = false
     failure.value = false
     stakeButtonText.value = 'Stake'
 
+    const ethersBalance = await getEthersBalance(user.value?.address as string)
+    addressBalance.value = (Math.round(ethersBalance * 100) / 100) + ' ETH'
     // empty out staking comp
     // selectedStakingProvider.value = ''
     // selectedWalletAddress.value = null
-    // addressBalance.value = null
+    // addressBalance.value = await getEthersBalance(user.value?.address as string)
     formattedAmountToStake.value = ''
 
   }, 2500)
