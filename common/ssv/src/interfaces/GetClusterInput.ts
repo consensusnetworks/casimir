@@ -1,4 +1,4 @@
-export interface ClusterDetailsInput {
+export interface GetClusterInput {
     ownerAddress: string
     operatorIds: number[]
 }

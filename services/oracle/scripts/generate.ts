@@ -41,14 +41,16 @@ void async function () {
     const validatorCount = 4
     const validators = JSON.parse(fs.readFileSync(`${outputPath}/validators.json`, 'utf8') || '{}')
     if (!validators[oracleAddress] || Object.keys(validators[oracleAddress]).length < validatorCount) {
-        await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
         const dkg = await run(`which ${process.env.CLI_PATH}`) as string
-        if (!dkg || dkg.includes('not found')) throw new Error('Dkg cli not found')
+        if (!dkg || dkg.includes('not found')) {
+            await run(`GOWORK=off make -C ${resourcePath}/rockx-dkg-cli build`)
+        }
         const ping = await fetchRetry(`${process.env.MESSENGER_URL}/ping`)
         const { message } = await ping.json()
         if (message !== 'pong') throw new Error('Dkg service is not running')
 
-        let nonce = 3
+        let managerNonce = 3
+        let ownerNonce = 0
 
         const newValidators: Validator[] = []
 
@@ -56,7 +58,7 @@ void async function () {
 
             const poolAddress = ethers.utils.getContractAddress({
                 from: process.env.MANAGER_ADDRESS,
-                nonce
+                nonce: managerNonce
             })
 
             const selectedOperatorIds = preregisteredOperatorIds.slice(0, 4)
@@ -66,15 +68,25 @@ void async function () {
                 messengerUrl: process.env.MESSENGER_URL 
             })
 
-            const validator = await cli.createValidator({
-                poolId: i + 1,
-                operatorIds: selectedOperatorIds,
-                withdrawalAddress: poolAddress
-            })
+            let validator: Validator | undefined
+            while (!validator) {
+                try {
+                    validator = await cli.createValidator({
+                        poolId: i + 1,
+                        operatorIds: selectedOperatorIds,
+                        ownerAddress: process.env.MANAGER_ADDRESS,
+                        ownerNonce,
+                        withdrawalAddress: poolAddress
+                    })
+                } catch (error) {
+                    console.log(error)
+                }
+            }
 
             newValidators.push(validator)
 
-            nonce++
+            managerNonce++
+            ownerNonce++
         }
 
         validators[oracleAddress] = newValidators

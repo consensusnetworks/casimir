@@ -2,23 +2,14 @@ import { ethers } from 'ethers'
 import { ISSVNetwork, ISSVNetworkViews } from '@casimir/ethereum/build/@types'
 import ISSVNetworkAbi from '@casimir/ethereum/build/abi/ISSVNetwork.json'
 import ISSVNetworkViewsAbi from '@casimir/ethereum/build/abi/ISSVNetworkViews.json'
-import { ClusterDetailsInput } from '../interfaces/ClusterDetailsInput'
-import { ClusterDetails } from '../interfaces/ClusterDetails'
-import { Cluster } from '@casimir/types'
+import { GetClusterInput } from '../interfaces/GetClusterInput'
+import { Cluster } from '../interfaces/Cluster'
 import { ScannerOptions } from '../interfaces/ScannerOptions'
 
 export class Scanner {
     DAY = 5400
     WEEK = this.DAY * 7
     MONTH = this.DAY * 30
-    eventList = [
-        'ClusterDeposited',
-        'ClusterWithdrawn',
-        'ValidatorAdded',
-        'ValidatorRemoved',
-        'ClusterLiquidated',
-        'ClusterReactivated'
-    ]
     provider: ethers.providers.JsonRpcProvider
     ssvNetwork: ISSVNetwork & ethers.Contract
     ssvNetworkViews: ISSVNetworkViews & ethers.Contract
@@ -36,12 +27,19 @@ export class Scanner {
     /** 
      * Get cluster details 
      * @param {ClusterInput} input - Operator IDs and withdrawal address
-     * @returns {Promise<ClusterDetails>} Cluster snapshot and required balance per validator
+     * @returns {Promise<Cluster>} Cluster snapshot and required balance per validator
      */
-    async getClusterDetails(input: ClusterDetailsInput): Promise<ClusterDetails> {
+    async getCluster(input: GetClusterInput): Promise<Cluster> {
         const { ownerAddress, operatorIds } = input
-        const eventFilters = this.eventList.map(event => this.ssvNetwork.filters[event](ownerAddress))
-    
+        const eventList = [
+            'ClusterDeposited',
+            'ClusterWithdrawn',
+            'ValidatorAdded',
+            'ValidatorRemoved',
+            'ClusterLiquidated',
+            'ClusterReactivated'
+        ]
+        const eventFilters = eventList.map(event => this.ssvNetwork.filters[event](ownerAddress))
         let step = this.MONTH
         const latestBlockNumber = await this.provider.getBlockNumber()
         let fromBlock = latestBlockNumber - step
@@ -97,16 +95,56 @@ export class Scanner {
             balance: 0,
             active: true
         }
-    
+        return cluster
+    }
+
+    /**
+     * Get owner validator nonce
+     * @param {string} ownerAddress - Owner address
+     * @returns {Promise<number>} Owner validator nonce
+     */
+    async getValidatorNonce(ownerAddress: string): Promise<number> {
+        const eventList = ['ValidatorAdded']
+        const eventFilters = eventList.map(event => this.ssvNetwork.filters[event](ownerAddress))
+        let step = this.MONTH
+        const latestBlockNumber = await this.provider.getBlockNumber()
+        let fromBlock = latestBlockNumber - step
+        let toBlock = latestBlockNumber
+        let nonce = 0
+        while (fromBlock > 0) {
+            try {
+                const items = (await Promise.all(
+                    eventFilters.map(async eventFilter => {
+                        return await this.ssvNetwork.queryFilter(eventFilter, fromBlock, toBlock)
+                    })
+                )).flat()
+                nonce += items.length
+                toBlock = fromBlock
+            } catch (error) {
+                console.error(error)
+                if (step === this.MONTH) {
+                    step = this.WEEK
+                } else if (step === this.WEEK) {
+                    step = this.DAY
+                }
+            }
+            fromBlock = toBlock - step
+        }
+        return nonce
+    }
+
+    /**
+     * Get minimum validator fee
+     * @param {number[]} operatorIds - Operator IDs
+     * @returns {Promise<ethers.BigNumber>} Validator fee
+     */
+    async getClusterFee(operatorIds: number[]): Promise<ethers.BigNumber> {
         const feeSum = await this.ssvNetworkViews.getNetworkFee()
         for (const operatorId of operatorIds) {
             const operatorFee = await this.ssvNetworkViews.getOperatorFee(operatorId)
             feeSum.add(operatorFee)
         }
         const liquidationThresholdPeriod = await this.ssvNetworkViews.getLiquidationThresholdPeriod()
-        const requiredBalancePerValidator = feeSum.mul(liquidationThresholdPeriod).mul(12)
-    
-        return { cluster, requiredBalancePerValidator }
+        return feeSum.mul(liquidationThresholdPeriod).mul(12)
     }
-
 }

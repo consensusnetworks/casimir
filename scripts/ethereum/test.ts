@@ -35,31 +35,45 @@ void async function () {
         const key = await getSecret(`consensus-networks-ethereum-${forks[process.env.FORK]}`)
         process.env.ETHEREUM_FORK_RPC_URL = process.env.ETHEREUM_FORK_RPC_URL || `https://eth-${forks[process.env.FORK]}.g.alchemy.com/v2/${key}`
     }
-    
+
     if (!process.env.ETHEREUM_FORK_RPC_URL) {
         throw new Error(`No ETHEREUM_FORK_RPC_URL set for ${process.env.FORK} ${forks[process.env.FORK]} network.`)
     }
 
-    echo (chalk.bgBlackBright('Using ') + chalk.bgBlue(process.env.FORK) + chalk.bgBlackBright(' fork from ') + chalk.bgBlue(process.env.ETHEREUM_FORK_RPC_URL))
+    echo(chalk.bgBlackBright('Using ') + chalk.bgBlue(process.env.FORK) + chalk.bgBlackBright(' fork from ') + chalk.bgBlue(process.env.ETHEREUM_FORK_RPC_URL))
 
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
     process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 5}`
     console.log(`📍 Forking started at ${process.env.ETHEREUM_FORK_BLOCK}`)
 
     const wallet = getWallet(process.env.BIP39_SEED)
-    const nonce = await provider.getTransactionCount(wallet.address)
-    const managerIndex = 1 // We deploy a mock functions oracle before the manager
+    
+    // Account for the mock oracle contract deployment
+    const deployerNonce = await provider.getTransactionCount(wallet.address) + 1
+
     if (!process.env.MANAGER_ADDRESS) {
-        process.env.MANAGER_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex })
+        process.env.MANAGER_ADDRESS = ethers.utils.getContractAddress({
+            from: wallet.address,
+            nonce: deployerNonce
+        })
     }
     if (!process.env.VIEWS_ADDRESS) {
-        process.env.VIEWS_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
+        process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
+            from: wallet.address,
+            nonce: deployerNonce + 1
+        })
     }
     if (!process.env.REGISTRY_ADDRESS) {
-        process.env.REGISTRY_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 2 })
+        process.env.REGISTRY_ADDRESS = ethers.utils.getContractAddress({
+            from: process.env.MANAGER_ADDRESS,
+            nonce: 1
+        })
     }
     if (!process.env.UPKEEP_ADDRESS) {
-        process.env.UPKEEP_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 3 })
+        process.env.UPKEEP_ADDRESS = ethers.utils.getContractAddress({
+            from: process.env.MANAGER_ADDRESS,
+            nonce: 2
+        })
     }
 
     process.env.SSV_NETWORK_ADDRESS = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'

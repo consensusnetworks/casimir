@@ -20,9 +20,10 @@ void async function () {
     process.env.UNISWAP_V3_FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
     process.env.WETH_TOKEN_ADDRESS = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
 
-    await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
     const dkg = await run(`which ${process.env.CLI_PATH}`) as string
-    if (!dkg || dkg.includes('not found')) throw new Error('Dkg cli not found')
+    if (!dkg || dkg.includes('not found')) {
+        await run(`GOWORK=off make -C ${resourcePath}/rockx-dkg-cli build`)
+    }
     const ping = await fetchRetry(`${process.env.MESSENGER_URL}/ping`)
     const { message } = await ping.json()
     if (message !== 'pong') throw new Error('Dkg service is not running')

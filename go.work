@@ -2,5 +2,4 @@ go 1.19
 
 use (
 	./services/crawler
-	./services/oracle/scripts/resources/rockx-dkg-cli
 )
