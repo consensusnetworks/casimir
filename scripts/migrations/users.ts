@@ -1,6 +1,6 @@
 import fs from 'fs'
 import os from 'os'
-import { JsonSchema, Schema, accountSchema, nonceSchema, userAccountSchema, userSchema } from '@casimir/data'
+import { JsonSchema, Schema, accountSchema, nonceSchema, operatorSchema, userAccountSchema, userSchema } from '@casimir/data'
 import { getSecret, run } from '@casimir/helpers'
 
 void async function () {
@@ -21,6 +21,7 @@ void async function () {
     /** All table schemas */
     const tableSchemas = {
         account: accountSchema,
+        operator: operatorSchema,
         nonce: nonceSchema,
         user: userSchema,
         userAccount: userAccountSchema

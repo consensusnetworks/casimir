@@ -91,16 +91,15 @@ void async function () {
                 await runUpkeep({ upkeep, keeper })
                 const pendingPoolIds = await manager.getPendingPoolIds()
                 const stakedPoolIds = await manager.getStakedPoolIds()
-                lastStakedPoolIds = stakedPoolIds
                 if (pendingPoolIds.length + stakedPoolIds.length) {
                     console.log('🧾 Submitting report')
                     const activatedBalance = pendingPoolIds.length * 32
                     const exitingPoolCount = await manager.requestedExits()
-                    const sweptRewardBalance =  rewardPerValidator * lastStakedPoolIds.length
                     const sweptExitedBalance = exitingPoolCount.toNumber() * 32
-                    const rewardAmount = rewardPerValidator * stakedPoolIds.length
+                    const sweptRewardBalance =  rewardPerValidator * lastStakedPoolIds.length
+                    const rewardBalance = rewardPerValidator * stakedPoolIds.length
                     const latestActiveBalance = await manager.latestActiveBalance()
-                    const nextActiveBalance = round(parseFloat(ethers.utils.formatEther(latestActiveBalance)) + activatedBalance + rewardAmount - sweptRewardBalance - sweptExitedBalance, 10)
+                    const nextActiveBalance = round(parseFloat(ethers.utils.formatEther(latestActiveBalance)) + activatedBalance + rewardBalance - sweptRewardBalance - sweptExitedBalance, 10)
                     const nextActivatedDeposits = (await manager.getPendingPoolIds()).length
                     for (const poolId of lastStakedPoolIds) {
                         const poolAddress = await manager.getPoolAddress(poolId)
@@ -110,7 +109,7 @@ void async function () {
                     }
                     const startIndex = ethers.BigNumber.from(0)
                     const endIndex = ethers.BigNumber.from(pendingPoolIds.length + stakedPoolIds.length)
-                    const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)
+                    const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)                    
                     const nextValues = {
                         activeBalance: nextActiveBalance,
                         sweptBalance: sweptExitedBalance,
@@ -146,6 +145,7 @@ void async function () {
                     }
                     await runUpkeep({ upkeep, keeper })
                 }
+                lastStakedPoolIds = stakedPoolIds
             }
         })
     }()

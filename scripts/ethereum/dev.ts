@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { $, echo, chalk } from 'zx'
-import { loadCredentials, getSecret, getFutureContractAddress, getWallet, runSync, run } from '@casimir/helpers'
+import { loadCredentials, getSecret, getWallet, runSync, run } from '@casimir/helpers'
 
 /**
  * Run local a local Ethereum node and deploy contracts

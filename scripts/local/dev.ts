@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { $, chalk, echo } from 'zx'
-import { loadCredentials, getSecret, getFutureContractAddress, getWallet, run, runSync } from '@casimir/helpers'
+import { loadCredentials, getSecret, getWallet, run, runSync } from '@casimir/helpers'
 
 /**
  * Run a Casimir dev server
@@ -34,8 +34,10 @@ void async function () {
     process.env.EMULATE = process.env.EMULATE || 'false'
     process.env.FORK = process.env.FORK || 'testnet'
     process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
-    process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
-    
+    process.env.SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS || '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
+    process.env.SSV_NETWORK_VIEWS_ADDRESS = process.env.SSV_NETWORK_VIEWS_ADDRESS || '0x8dB45282d7C4559fd093C26f677B3837a5598914'
+    process.env.UNISWAP_V3_FACTORY_ADDRESS = process.env.UNISWAP_V3_FACTORY_ADDRESS || '0x1F98431c8aD98523631AE4a59f267346ea31F984'
+
     if (process.env.BUILD_PREVIEW === 'true') {
         process.env.WEB_URL = process.env.WEB_URL || 'http://localhost:4173'
     } else {
@@ -164,6 +166,9 @@ void async function () {
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
     process.env.PUBLIC_MANAGER_ADDRESS = process.env.MANAGER_ADDRESS
     process.env.PUBLIC_VIEWS_ADDRESS = process.env.VIEWS_ADDRESS
+    process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
+    process.env.PUBLIC_SSV_NETWORK_VIEWS_ADDRESS = process.env.SSV_NETWORK_VIEWS_ADDRESS
+    process.env.PUBLIC_UNISWAP_V3_FACTORY_ADDRESS = process.env.UNISWAP_V3_FACTORY_ADDRESS
     process.env.PUBLIC_REGISTRY_ADDRESS = process.env.REGISTRY_ADDRESS
     process.env.PUBLIC_UPKEEP_ADDRESS = process.env.UPKEEP_ADDRESS
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY

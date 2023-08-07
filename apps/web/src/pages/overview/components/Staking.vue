@@ -199,15 +199,17 @@ const handleDeposit = async () => {
     stakeButtonText.value = 'Transaction Failed'
   }
 
-  setTimeout(() => {
+  setTimeout(async () => {
     success.value = false
     failure.value = false
     stakeButtonText.value = 'Stake'
 
+    const ethersBalance = await getEthersBalance(user.value?.address as string)
+    addressBalance.value = (Math.round(ethersBalance * 100) / 100) + ' ETH'
     // empty out staking comp
     // selectedStakingProvider.value = ''
     // selectedWalletAddress.value = null
-    // addressBalance.value = null
+    // addressBalance.value = await getEthersBalance(user.value?.address as string)
     formattedAmountToStake.value = ''
 
   }, 2500)
@@ -233,7 +235,6 @@ const handleDeposit = async () => {
       {{ addressBalance ? addressBalance : '- - -' }}
     </h5>
     <div class="text-[12px] mb-[13px] text-blue-400">
-      <!-- TODO: @Chris we need to see how much they have staked currently based on the wallet selected -->
       <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked
     </div>
     <h6 class="card_title mb-[11px]">
