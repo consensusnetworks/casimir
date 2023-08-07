@@ -1,7 +1,7 @@
 import fs from 'fs'
 import os from 'os'
 import { run, getSecret, loadCredentials } from '@casimir/helpers'
-import { JsonSchema, Schema, accountSchema, nonceSchema, userSchema, userAccountSchema } from '@casimir/data'
+import { JsonSchema, Schema, accountSchema, nonceSchema, operatorSchema, userSchema, userAccountSchema } from '@casimir/data'
 
 /**
  * Run a local users database and service
@@ -30,6 +30,7 @@ void async function () {
     /** All table schemas */
     const tableSchemas = {
         account: accountSchema,
+        operator: operatorSchema,
         nonce: nonceSchema,
         user: userSchema,
         userAccount: userAccountSchema
@@ -59,9 +60,13 @@ void async function () {
         dbReady = health.trim() === 'healthy'
         await new Promise(resolve => setTimeout(resolve, 2500))
     }
-    const atlasCli = await run('which atlas')
-    if (!atlasCli && os.platform() === 'darwin') {
-        await run('echo y | brew install atlas')
+    const atlas = await run('which atlas') as string
+    if (!atlas || atlas.includes('not found')) {
+        if (os.platform() === 'darwin') {
+            await run('echo y | brew install atlas')
+        } else {
+            throw new Error('Please install atlas using `curl -sSf https://atlasgo.sh | sh`')
+        }
     }
     await run(`atlas schema apply --url "postgres://postgres:password@localhost:5432/users?sslmode=disable" --to "file://${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`)
 }()

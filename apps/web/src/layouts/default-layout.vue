@@ -76,7 +76,7 @@ onUnmounted(() =>{
   <div class="min-w-[360px]">
     <div :class="openWalletConnect? 'flex flex-col h-screen' : ''">
       <div
-        class=" px-[60px] pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
+        class="px-[60px] 800s:px-[5%]  pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
         :class="openWalletConnect? 'pr-[75px]' : ''"
       >
         <img
@@ -85,7 +85,7 @@ onUnmounted(() =>{
           class="w-[21px]"
         >
 
-        <div class="flex flex-wrap items-center gap-50 h-full pr-[50px]">
+        <div class="flex flex-wrap items-center gap-50 h-full">
           <router-link
             to="/"
             class="nav_items"
@@ -94,29 +94,15 @@ onUnmounted(() =>{
             Overview
           </router-link>
           <router-link
-            to="/"
+            to="/operator"
             class="nav_items"
-            :class="router.currentRoute.value.fullPath === '/staking'? 'nav_items_active' : ''"
+            :class="router.currentRoute.value.fullPath === '/operator'? 'nav_items_active' : ''"
           >
-            Staking
-          </router-link>
-          <router-link
-            to="/"
-            class="nav_items"
-            :class="router.currentRoute.value.fullPath === '/exports'? 'nav_items_active' : ''"
-          >
-            Exports
-          </router-link>
-          <router-link
-            to="/"
-            class="nav_items"
-            :class="router.currentRoute.value.fullPath === '/resources'? 'nav_items_active' : ''"
-          >
-            Resources
+            Operator
           </router-link>
         </div>
 
-        <div class="flex items-center justify-between gap-[45px] text-white">
+        <div class="flex items-center justify-between gap-[45px] 600s:gap-[10px] text-white">
           <button
             id="setting_modal_button"
           >

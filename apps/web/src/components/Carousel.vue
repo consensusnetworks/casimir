@@ -1,7 +1,5 @@
 
 <script setup lang="ts">
-    import { defineProps } from 'vue'
-
     // eslint-disable-next-line no-undef
     const props = defineProps({
         currentSlide: {

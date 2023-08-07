@@ -3,7 +3,7 @@
   "private":"true",
   "main": "src/index.ts",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --sourcemap --platform=node --target=esnext --outfile=dist/index.js",
+    "build": "echo '@casimir/speculos build not specified. Disregard this warning and any listed errors above if @casimir/speculos is not needed for the current project build.' && exit 0",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

@@ -199,6 +199,17 @@ Collateral is used to recover lost validator effective balance at the time of co
 
 Operators will need to follow the [node onboarding process from RockX](https://github.com/RockX-SG/rockx-dkg-cli/blob/main/docs/dkg_node_installation_instructions.md) to participate in DKG make their node available to new validator selections. Todo add details.
 
+## Relevant Improvement Proposals
+
+The following improvement proposals for Ethereum and SSV are relevant to Casimir staking:
+
+1. EIP-4788: [Beacon block root in the EVM](https://eips.ethereum.org/EIPS/eip-4788)
+   - Result: Individual validator status reports are provable on-chain
+2. EIP-7002: [Execution layer triggerable exits](https://eips.ethereum.org/EIPS/eip-7002)
+   - Result: Manager contract can trigger validator exits
+3. SIP-1: [Generalized DKG support in SSV](https://github.com/bloxapp/SIPs/blob/main/sips/dkg.md)
+   - Result: SSV nodes can perform DKG operations natively
+
 ## Todo
 
 - [ ] Add notes on operator selection and performance monitoring thresholds

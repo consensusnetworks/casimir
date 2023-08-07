@@ -1,6 +1,7 @@
 {
     "$id": "https://casimir.co/event.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
+    "$comment": "analytics",
     "title": "Event",
     "type": "object",
     "properties": {
@@ -10,7 +11,7 @@
         },
         "network": {
             "type": "string",
-            "description": "The network which the event was received on (e.g. mainnet, testnet)"
+            "description": "Network type (e.g. mainnet, testnet)"
         },
         "provider": {
             "type": "string",
@@ -33,8 +34,8 @@
             "description": "The transaction hash"
         },
         "received_at": {
-            "type": "string",
-            "description": "The timestamp of the event recieved by the blockchain (format: Modified ISO 8601 e.g. 2015-03-04 22:44:30.652)"
+            "type": "integer",
+            "description": "Timestamp of the event in unix format"
         },
         "sender": {
             "type": "string",
@@ -61,7 +62,7 @@
             "description": "The exchange price of the coin at the time of the event"
         },
         "gas_fee": {
-            "type": "string",
+            "type": "integer",
             "description": "The gas fee paid for the transaction"
         }
     }

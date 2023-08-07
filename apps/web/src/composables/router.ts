@@ -1,22 +1,27 @@
 import { createWebHistory, createRouter } from 'vue-router'
 import useUsers from '@/composables/users'
 import Overview from '@/pages/overview/Overview.vue'
-import Test from '@/pages/test/Test.vue'
+import Operator from '@/pages/operators/Operator.vue'
 
 const routes = [
     { 
         path: '/', 
         name: Overview,
         component: Overview,
+    },
+    { 
+        path: '/operator', 
+        name: Operator,
+        component: Operator,
     }
 ]
 
 if (import.meta.env.DEV) {
-    routes.push({ 
-        path: '/test', 
-        name: Test, 
-        component: Test,
-    })
+    // routes.push({ 
+    //     path: '/test', 
+    //     name: Test, 
+    //     component: Test,
+    // })
 }
 
 const router = createRouter({

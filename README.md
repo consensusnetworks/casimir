@@ -9,6 +9,21 @@
 
 > Decentralized staking and asset management
 
+- [About](#about)
+- [💻 Development](#-development)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+  - [Install](#install)
+  - [Environment](#environment)
+    - [Supported Variables](#supported-variables)
+  - [Apps](#apps)
+  - [Contracts](#contracts)
+  - [Emulators](#emulators)
+- [📊 Data](#-data)
+- [Layout](#layout)
+- [Editor](#editor)
+- [License](#license)
+
 ## About
 
 Casimir is a complete platform that allows users to monitor, move, and stake their assets while holding their own keys. With Casimir staking, users can easily and securely move funds in and out of decentralized staking pools that are operated by high-performing validators.
@@ -89,20 +104,19 @@ Customize and override the defaults for your *local development environment* by 
 | `AWS_PROFILE` | AWS profile name for accessing secrets | `consensus-networks-dev` |
 | `PROJECT` | Project name | `casimir` |
 | `STAGE` | Environment stage name | `dev` |
-| `ETHEREUM_FORK_RPC_URL` | Ethereum RPC URL for local fork network | `https://eth-goerli.alchemyapi.io/v2/<AWS-retrieved-secret-key>` |
-| `ETHEREUM_RPC_URL` | Ethereum RPC URL for live networks | `http://127.0.0.1:8545` |
-| `NETWORK` | Set live network (defaults to local fork network) | `` |
-| `FORK` | Local fork network (defaults to supported testnet for each chain) | `testnet` |
+| `ETHEREUM_FORK_RPC_URL` | RPC URL for local fork network | `https://eth-goerli.alchemyapi.io/v2/<AWS-retrieved-secret-key>` |
+| `ETHEREUM_FORK_BLOCK` | Starting block number for local fork network | `` |
+| `ETHEREUM_RPC_URL` | Ethereum RPC URL for live network | `` |
+| `NETWORK` | Mainnet, testnet, or devnet for live network | `` |
+| `FORK` | Mainnet, testnet, or devnet for local fork network | `testnet` |
 | `MANAGER_ADDRESS` | Manager contract address | `` |
 | `VIEWS_ADDRESS` | Views contract address | `` |
 | `CRYPTO_COMPARE_API_KEY` | CryptoCompare API key | `` |
 | `TUNNEL` | Whether to tunnel local network RPC URLs (for remote wallets) | `false` |
 | `EMULATE` | Whether to emulate wallets | `false` |
 | `LEDGER_APP` | Ledger app name | `ethereum` |
-| `MOCK_ORACLE` | Whether to mock oracle | `true` |
 | `MOCK_SERVICES` | Whether to mock backend services | `true` |
 | `BUILD_PREVIEW` | Whether to preview web app production build | `false` |
-| `VALIDATOR_COUNT` | Number of validators to generate for tests | `4` |
 
 ### Apps
 
@@ -125,10 +139,8 @@ npm run dev:landing
 - Set `EMULATE` to `true` to emulate Ledger and Trezor hardware wallets.
 - Set `LEDGER_APP` to the name of the Ledger app to emulate (defaults to `ethereum`).
 - Set `TUNNEL` to `true` to tunnel the local network RPC URLs (for remote wallets).
-- Set `MOCK_ORACLE` to `false` to use pregenerated validators (or create them if unavailable).
 - Set `MOCK_SERVICES` to `false` to use the deployed backend services for the current stage.
 - Set `BUILD_PREVIEW` to `true` to run the local script with a production build preview of the web app.
-- Set `VALIDATOR_COUNT` to the number of validators to generate for tests (defaults to `4`).
 
 ### Contracts
 
@@ -151,11 +163,6 @@ Run a local Ethereum network with deployed contracts, simulation scripts, and ar
 ```zsh
 npm run dev:ethereum
 ```
-
-**Additional configuration:**
-
-- Set `MOCK_ORACLE` to `false` to use pregenerated validators (or create them if unavailable).
-- Set `VALIDATOR_COUNT` to the number of validators to generate for tests (defaults to `4`).
 
 ### Emulators
 

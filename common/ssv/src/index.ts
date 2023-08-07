@@ -1,3 +1,3 @@
-import { getClusterDetails } from './providers/clusters'
+import { Scanner } from './providers/scanner'
 
-export { getClusterDetails }
+export { Scanner }

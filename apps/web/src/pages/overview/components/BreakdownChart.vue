@@ -3,11 +3,13 @@ import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { onMounted, ref, watch} from 'vue'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
+import useEthers from '@/composables/ethers'
 
-import { ProviderString } from '@casimir/types'
+import { AnalyticsData, ProviderString } from '@casimir/types'
 
-const { currentStaked, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
+const { currentStaked, listenForContractEvents, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
 const { user, getUserAnalytics, userAnalytics } = useUsers()
+const { listenForTransactions } = useEthers()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('historical')
@@ -55,7 +57,7 @@ const formatLegendLabel = (address: string) => {
 
 const setChartData = () => {
   let labels
-  let data = []
+  let data: Array<AnalyticsData> = []
   switch (selectedTimeframe.value) {
     case '1 month':
       labels = userAnalytics.value.oneMonth.labels
@@ -101,12 +103,21 @@ onMounted(async () => {
     await getUserAnalytics()
     setChartData()
     await refreshBreakdown()
+    // TODO: Potentially find a better place to initialize these listeners
+    // Doing this here because currently we're currently initializing listeners on connectWallet
+    // which isn't used if user is already signed in
+    listenForContractEvents()
+    listenForTransactions()
+  } else {
+    setChartData()
   }
 })
 
 watch(user, async () => {
     if (user.value?.id) {
       await getUserAnalytics()
+      setChartData()
+    } else {
       setChartData()
     }
 })
@@ -120,41 +131,41 @@ watch(selectedTimeframe, () => {
   <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap">
     <div class="flex flex-wrap justify-between mb-[52px]">
       <div>
-        <h6 class="blance_title mb-[15px]">
-          Total Balance Across Connected Wallets
+        <h6 class="balance_title mb-[15px]">
+          Available Balance
         </h6>
         <div class="flex items-center gap-[12px]">
-          <h5 class="blance_amount">
-            {{ totalWalletBalance.usd }}
+          <h5 class="balance_eth">
+            {{ totalWalletBalance.eth }}
           </h5>
-          <span class="blance_exchange">
-            {{ totalWalletBalance.exchange }}
+          <span class="balance_usd">
+            {{ totalWalletBalance.usd }}
           </span>
         </div>
       </div>
       <div class="">
-        <h6 class="blance_title mb-[15px]">
+        <h6 class="balance_title mb-[15px]">
           Currently Staked
         </h6>
         <div class="flex items-center gap-[12px]">
-          <h5 class="blance_amount">
-            {{ currentStaked.usd }}
+          <h5 class="balance_eth">
+            {{ currentStaked.eth }}
           </h5>
-          <span class="blance_exchange">
-            {{ currentStaked.exchange }}
+          <span class="balance_usd">
+            {{ currentStaked.usd }}
           </span>
         </div>
       </div>
       <div>
-        <h6 class="blance_title mb-[15px]">
-          All Time Staking Rewards Earned
+        <h6 class="balance_title mb-[15px]">
+          Rewards Earned
         </h6>
         <div class="flex items-center gap-[12px]">
-          <h5 class="blance_amount">
-            {{ stakingRewards.usd }}
+          <h5 class="balance_eth">
+            {{ stakingRewards.eth }}
           </h5>
-          <span class="blance_exchange">
-            {{ stakingRewards.exchange }}
+          <span class="balance_usd">
+            {{ stakingRewards.usd }}
           </span>
         </div>
       </div>
@@ -234,7 +245,7 @@ watch(selectedTimeframe, () => {
 </template>
 
 <style scoped>
-.blance_exchange{
+.balance_usd{
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 400;
@@ -248,7 +259,7 @@ watch(selectedTimeframe, () => {
     font-size: 12px;
   };
 }
-.blance_amount{
+.balance_eth{
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 500;
@@ -261,7 +272,7 @@ watch(selectedTimeframe, () => {
     font-size: 22px;
   };
 }
-.blance_title{
+.balance_title{
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 500;
