@@ -41,23 +41,21 @@ interface UserOperators {
     casimir: CasimirOperator[]
   }
   
-  interface SSVOperator {
+interface SSVOperator {
+    fee: string
+    id: string
+    name: string
+    ownerAddress: string
+}
+
+interface CasimirOperator {
     availableCollateral?: string
     collateralInUse?: string
     id: string
     nodeURL?: string
     rewards?: string
     walletAddress?: string
-  }
-  
-  interface CasimirOperator {
-    availableCollateral?: string
-    collateralInUse?: string
-    id: string
-    nodeURL?: string
-    rewards?: string
-    walletAddress?: string
-  }
+}
 
 
 const userOperators = ref<UserOperators>({
@@ -136,7 +134,7 @@ export default function useContracts() {
         const userAddresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         
         const ssvOperators = await _getSSVOperators()
-        const ssvOperatorsByUser = ssvOperators.filter((ssvOperator: SSVOperator) => {
+        const ssvOperatorsByUser = ssvOperators.filter((ssvOperator: any) => {
             return userAddresses.some((address) => { address === ssvOperator.walletAddress })
         })
         const ssvOperatorIdsByUser = ssvOperatorsByUser.map((ssvOperator: SSVOperator) => ssvOperator.id.toString())
@@ -164,7 +162,6 @@ export default function useContracts() {
 
         console.log('casimirOperatorsByUser in getUserOperators :>> ', casimirOperatorsByUser)
         _setUserOperators('casimir', casimirOperatorsByUser)
-        console.log('ssvOperators in getUserOperators :>> ', ssvOperators)
         _setUserOperators('ssv', ssvOperators)
         return {
             ssv: ssvOperators,
@@ -195,7 +192,7 @@ export default function useContracts() {
         }
     }
 
-    async function _getSSVOperators() {
+    async function _getSSVOperators(): Promise<SSVOperator[]> {
         const ownerAddresses = (user?.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         // const ownerAddressesTest = ['0x9725Dc287005CB8F11CA628Bb769E4A4Fc8f0309']
         try {
@@ -205,7 +202,18 @@ export default function useContracts() {
             const operators = settledPromises
                 .filter((result) => result.status === 'fulfilled')
                 .map((result) => result.value)
-            return operators[0]
+
+            const ssvOperators = (operators[0] as Array<any>).map((operator) => {
+                const { id, fee, name, owner_address } = operator
+                return {
+                    id: id.toString(),
+                    fee: ethers.utils.formatEther(fee),
+                    name,
+                    ownerAddress: owner_address,
+                } as SSVOperator
+            })
+            
+            return ssvOperators
         } catch (err) {
             console.error(`There was an error in _getSSVOperators function: ${JSON.stringify(err)}`)
             return []
