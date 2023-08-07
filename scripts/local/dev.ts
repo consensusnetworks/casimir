@@ -33,6 +33,7 @@ void async function () {
     process.env.CRYPTO_COMPARE_API_KEY = process.env.USE_SECRETS !== 'false' ? process.env.CRYPTO_COMPARE_API_KEY || await getSecret('casimir-crypto-compare-api-key') : process.env.CRYPTO_COMPARE_API_KEY || ''
     process.env.EMULATE = process.env.EMULATE || 'false'
     process.env.FORK = process.env.FORK || 'testnet'
+    process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
     process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
     process.env.SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS || '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
     process.env.SSV_NETWORK_VIEWS_ADDRESS = process.env.SSV_NETWORK_VIEWS_ADDRESS || '0x8dB45282d7C4559fd093C26f677B3837a5598914'
