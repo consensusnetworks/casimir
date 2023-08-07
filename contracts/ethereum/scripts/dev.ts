@@ -78,17 +78,15 @@ void async function () {
      * Exit balances are swept as needed
      */
     let requestId = 0
-    const blocksPerReport = 5
+    const blocksPerReport = 10
     const rewardPerValidator = 0.105
-    let reporting = false
     let lastReportBlock = await ethers.provider.getBlockNumber()
     let lastStakedPoolIds: number[] = []
     void function () {
         ethers.provider.on('block', async (block) => {
-            if (!reporting && block - blocksPerReport >= lastReportBlock) {
+            if (block - blocksPerReport >= lastReportBlock) {
                 await time.increase(time.duration.days(1))
                 console.log('⌛️ Report period complete')
-                reporting = true
                 lastReportBlock = await ethers.provider.getBlockNumber()
                 await runUpkeep({ upkeep, keeper })
                 const pendingPoolIds = await manager.getPendingPoolIds()
@@ -120,6 +118,7 @@ void async function () {
                         completedExits: exitingPoolCount.toNumber(),
                         compoundablePoolIds
                     }
+                    console.log('🧾 Report values', nextValues)
                     requestId = await fulfillReport({
                         upkeep,
                         keeper,
@@ -147,7 +146,6 @@ void async function () {
                     }
                     await runUpkeep({ upkeep, keeper })
                 }
-                reporting = false
                 lastStakedPoolIds = stakedPoolIds
             }
         })

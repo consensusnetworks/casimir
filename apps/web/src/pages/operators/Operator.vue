@@ -27,10 +27,13 @@ const onSelectOperatorIDBlur = () => {
 // @chris need a way to find out possible operators on selecting a wallet address
 const possibleOperatorID = ref([] as string[])
 
-watch(userOperators, () =>{
-  possibleOperatorID.value = userOperators.value.ssv.filter(item => {
+watch([userOperators, selectedWallet], () =>{
+  console.log('userOperators.value :>> ', userOperators.value)
+  const casimirOperatorIds = userOperators.value.casimir.map(operator => operator.id)
+  possibleOperatorID.value = userOperators.value.ssv.filter(operator => {
+    console.log('operator :>> ', operator)
     // If userOperators.value.casimir contains id, then don't include it
-    return !userOperators.value.casimir.includes(item)
+    return !casimirOperatorIds.includes(operator.id)
   }).map(item => item.id)
 })
 
@@ -224,7 +227,6 @@ const removeItemFromCheckedList = (item:any) => {
 }
 
 const submitRegisterOperatorForm = () =>{
-
   const newOperator = {
     operator_id: selectedOperatorID.value,
     walletAddress: selectedWallet,
@@ -331,7 +333,7 @@ onMounted(async () => {
             <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
               Wallet
             </h6>
-            <div class="card_input w-full max-w-[300px] relative">
+            <div class="card_input w-full max-w-[400px] relative">
               <input
                 id="walletAddress"
                 v-model="selectedWallet"
@@ -372,14 +374,14 @@ onMounted(async () => {
               </div>
             </div>
             <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
-              If you already have an SSV Node, use the address associated with it... 
+              Select your SSV owner address 
             </div>
 
             <!-- operator id input -->
             <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
               Operator ID
             </h6>
-            <div class="card_input w-full max-w-[300px] relative">
+            <div class="card_input w-full max-w-[400px] relative">
               <input
                 id="operator_id"
                 v-model="selectedOperatorID"
@@ -429,7 +431,7 @@ onMounted(async () => {
             </div>
             <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
               <!-- @chris `here` text needs a link to the ssv operator registry-->
-              If no operators found with that wallet address, register one with SSV 
+              If no operators found with your SSV owner address, register one 
               <a
                 href=""
                 target="_blank"
@@ -443,7 +445,7 @@ onMounted(async () => {
             <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
               Public Node URL
             </h6>
-            <div class="card_input w-full max-w-[300px] relative">
+            <div class="card_input w-full max-w-[400px] relative">
               <input
                 id="operator_id"
                 v-model="selectedPublicNodeURL"
@@ -461,7 +463,7 @@ onMounted(async () => {
             </div>
             <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
               <!-- @chris `here` text needs a link to the correct page-->
-              After adding ROCK X Daemon to your SSV Node
+              Add RockX DKG support to your node as documented
               <a
                 href=""
                 target="_blank"
@@ -475,7 +477,7 @@ onMounted(async () => {
             <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
               Collateral
             </h6>
-            <div class="card_input w-full max-w-[300px] relative">
+            <div class="card_input w-full max-w-[400px] relative">
               <input
                 id="operator_id"
                 v-model="selectedCollateral"
@@ -496,7 +498,7 @@ onMounted(async () => {
               </button>
             </div>
             <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
-              If you already have an SSV Node... 
+              Deposit a minimum of 1 ETH
             </div>
 
             <div class="flex justify-end">
@@ -655,7 +657,7 @@ onMounted(async () => {
 
 <style scoped>
 .card_input {
-    padding: 0px 10px;
+    padding: 4px 10px;
     background: #FFFFFF;
     border: 1px solid #D0D5DD;
     box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);

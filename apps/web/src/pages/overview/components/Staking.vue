@@ -212,11 +212,11 @@ const handleDeposit = async () => {
     // addressBalance.value = await getEthersBalance(user.value?.address as string)
     formattedAmountToStake.value = ''
 
-  }, 2500)
+  }, 500)
 
   setTimeout(() => {
     stakingActionLoader.value = false
-  }, 3000)
+  }, 1000)
 
   currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
