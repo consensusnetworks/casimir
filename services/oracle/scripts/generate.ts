@@ -68,20 +68,13 @@ void async function () {
                 messengerUrl: process.env.MESSENGER_URL 
             })
 
-            let validator: Validator | undefined
-            while (!validator) {
-                try {
-                    validator = await cli.createValidator({
-                        poolId: i + 1,
-                        operatorIds: selectedOperatorIds,
-                        ownerAddress: process.env.MANAGER_ADDRESS,
-                        ownerNonce,
-                        withdrawalAddress: poolAddress
-                    })
-                } catch (error) {
-                    console.log(error)
-                }
-            }
+            const validator = await cli.createValidator({
+                poolId: i + 1,
+                operatorIds: selectedOperatorIds,
+                ownerAddress: process.env.MANAGER_ADDRESS,
+                ownerNonce,
+                withdrawalAddress: poolAddress
+            })
 
             newValidators.push(validator)
 

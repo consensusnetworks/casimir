@@ -99,11 +99,11 @@ export class Scanner {
     }
 
     /**
-     * Get owner validator nonce
+     * Get validator owner nonce
      * @param {string} ownerAddress - Owner address
      * @returns {Promise<number>} Owner validator nonce
      */
-    async getValidatorNonce(ownerAddress: string): Promise<number> {
+    async getNonce(ownerAddress: string): Promise<number> {
         const eventList = ['ValidatorAdded']
         const eventFilters = eventList.map(event => this.ssvNetwork.filters[event](ownerAddress))
         let step = this.MONTH
@@ -134,11 +134,11 @@ export class Scanner {
     }
 
     /**
-     * Get minimum validator fee
+     * Get minimum required validator fee
      * @param {number[]} operatorIds - Operator IDs
      * @returns {Promise<ethers.BigNumber>} Validator fee
      */
-    async getClusterFee(operatorIds: number[]): Promise<ethers.BigNumber> {
+    async getRequiredFee(operatorIds: number[]): Promise<ethers.BigNumber> {
         const feeSum = await this.ssvNetworkViews.getNetworkFee()
         for (const operatorId of operatorIds) {
             const operatorFee = await this.ssvNetworkViews.getOperatorFee(operatorId)
