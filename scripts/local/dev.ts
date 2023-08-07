@@ -33,8 +33,6 @@ void async function () {
     process.env.CRYPTO_COMPARE_API_KEY = process.env.USE_SECRETS !== 'false' ? process.env.CRYPTO_COMPARE_API_KEY || await getSecret('casimir-crypto-compare-api-key') : process.env.CRYPTO_COMPARE_API_KEY || ''
     process.env.EMULATE = process.env.EMULATE || 'false'
     process.env.FORK = process.env.FORK || 'testnet'
-    process.env.MOCK_ORACLE = process.env.MOCK_ORACLE || 'true'
-    process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
     process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
     process.env.SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS || '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
     process.env.SSV_NETWORK_VIEWS_ADDRESS = process.env.SSV_NETWORK_VIEWS_ADDRESS || '0x8dB45282d7C4559fd093C26f677B3837a5598914'
@@ -109,25 +107,26 @@ void async function () {
             process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 5}`
 
             const wallet = getWallet(process.env.BIP39_SEED)
-            const nonce = await provider.getTransactionCount(wallet.address)
-            const managerIndex = 1 // We deploy a mock functions oracle before the manager
+            
+            // Account for the mock oracle contract deployment
+            const deployerNonce = await provider.getTransactionCount(wallet.address) + 1
             
             if (!process.env.MANAGER_ADDRESS) {
                 process.env.MANAGER_ADDRESS = ethers.utils.getContractAddress({
                     from: wallet.address,
-                    nonce: nonce + managerIndex
+                    nonce: deployerNonce
                 })
             }
             if (!process.env.VIEWS_ADDRESS) {
                 process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
                     from: wallet.address,
-                    nonce: nonce + managerIndex + 1
+                    nonce: deployerNonce + 1
                 })
             }
             if (!process.env.REGISTRY_ADDRESS) {
                 process.env.REGISTRY_ADDRESS = ethers.utils.getContractAddress({
-                  from: process.env.MANAGER_ADDRESS,
-                  nonce: 1
+                from: process.env.MANAGER_ADDRESS,
+                nonce: 1
                 })
             }
             if (!process.env.UPKEEP_ADDRESS) {
@@ -184,10 +183,9 @@ void async function () {
         $`npm run dev --workspace @casimir/web`
     }
 
-    if (process.env.MOCK_ORACLE === 'true' || process.env.MOCK_SERVICES === 'true') {
+    if (process.env.MOCK_SERVICES === 'true') {
         process.on('SIGINT', () => {
             const mocked: string[] = []
-            if (process.env.MOCK_ORACLE === 'true') mocked.push('oracle')
             if (process.env.MOCK_SERVICES === 'true') mocked.push(...Object.keys(services))
             const cleaners = mocked.map(mock => `npm run clean --workspace @casimir/${mock}`).join(' & ')
             if (cleaners.length) {

@@ -32,7 +32,13 @@ void async function () {
         const { args } = details
         const handler = handlers[details.event as keyof typeof handlers]
         if (!handler) throw new Error(`No handler found for event ${details.event}`)
-        await handler({ args, cliStrategy: config.cliStrategy })
+        try {
+            await handler({ args })
+        } catch (error) {
+            await new Promise(resolve => setTimeout(resolve, 2500))
+            console.log(`Retrying handler for event ${details.event}`)
+            return await handler({ args })
+        }
     }
 }()
 

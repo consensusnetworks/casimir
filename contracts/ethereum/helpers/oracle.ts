@@ -47,10 +47,12 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         ssvNetworkViewsAddress
     })
 
-    const { cluster, requiredBalancePerValidator } = await scanner.getClusterDetails({ 
+    const cluster = await scanner.getCluster({ 
         ownerAddress: manager.address,
         operatorIds
     })
+
+    const validatorFee = await scanner.getClusterFee(operatorIds)
 
     const uniswapFactory = new Factory({
         provider: ethers.provider,
@@ -63,7 +65,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         uniswapFeeTier: 3000
     })
 
-    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerValidator)) * price).toPrecision(9))
+    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(validatorFee)) * price).toPrecision(9))
 
     const initiateDeposit = await manager.connect(signer).initiateDeposit(
         depositDataRoot,
@@ -145,7 +147,7 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
                 ssvNetworkViewsAddress
             })
 
-            const { cluster } = await scanner.getClusterDetails({ 
+            const cluster = await scanner.getCluster({ 
                 ownerAddress: manager.address,
                 operatorIds
             })

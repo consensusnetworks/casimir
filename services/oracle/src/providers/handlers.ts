@@ -1,18 +1,18 @@
 import { ethers } from 'ethers'
 import { HandlerInput } from '../interfaces/HandlerInput'
-import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/@types'
+import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
+import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
 import { Scanner } from '@casimir/ssv'
 import { PoolStatus } from '@casimir/types'
 import { Factory } from '@casimir/uniswap'
 import { getConfig } from './config'
-import { getCli } from './cli'
+import { Dkg } from './dkg'
 
 const config = getConfig()
-const cli = getCli({
+const cli = new Dkg({
     cliPath: config.cliPath,
-    cliStrategy: config.cliStrategy,
     messengerUrl: config.messengerUrl
 })
 
@@ -22,18 +22,51 @@ export async function initiateDepositHandler(input: HandlerInput) {
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
     const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    
-    const nonce = await provider.getTransactionCount(manager.address)
+    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const registry = new ethers.Contract(config.registryAddress, ICasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
+
+    const managerNonce = await provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
       from: manager.address,
-      nonce
+      nonce: managerNonce
     })
 
-    const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
+    const operatorCount = (await registry.getOperatorIds()).length
+    const operators = await views.getOperators(0, operatorCount)
+
+    const eligibleOperators = operators.filter((operator) => {
+        const availableCollateral = parseInt(ethers.utils.formatEther(operator.collateral)) - parseInt(operator.poolCount.toString())
+        return operator.active && !operator.resharing && availableCollateral > 0
+    })
+
+    const smallestOperators = eligibleOperators.sort((a, b) => {
+        const aPoolCount = parseInt(a.poolCount.toString())
+        const bPoolCount = parseInt(b.poolCount.toString())
+        if (aPoolCount < bPoolCount) return -1
+        if (aPoolCount > bPoolCount) return 1
+        return 0
+    })
+
+    const selectedOperatorIds = smallestOperators.slice(0, 4).map((operator) => operator.id.toNumber())
+
+    const scanner = new Scanner({ 
+        ethereumUrl: config.ethereumUrl,
+        ssvNetworkAddress: config.ssvNetworkAddress,
+        ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
+    })
+
+    const cluster = await scanner.getCluster({ 
+        operatorIds: selectedOperatorIds,
+        ownerAddress: manager.address
+    })
+
+    const validatorNonce = await scanner.getValidatorNonce(manager.address)
 
     const validator = await cli.createValidator({
         poolId: input.args.poolId,
-        operatorIds: newOperatorIds, 
+        operatorIds: selectedOperatorIds,
+        ownerAddress: manager.address,
+        ownerNonce: validatorNonce,
         withdrawalAddress: poolAddress
     })
 
@@ -46,19 +79,8 @@ export async function initiateDepositHandler(input: HandlerInput) {
         shares
     } = validator
 
-    const scanner = new Scanner({ 
-        ethereumUrl: config.ethereumUrl,
-        ssvNetworkAddress: config.ssvNetworkAddress,
-        ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
-    })
-
-    const clusterDetails = await scanner.getClusterDetails({ 
-        ownerAddress: manager.address,
-        operatorIds
-    })
+    const validatorFee = await scanner.getClusterFee(selectedOperatorIds)
     
-    const { cluster, requiredBalancePerValidator } = clusterDetails
-
     const uniswapFactory = new Factory({
         ethereumUrl: config.ethereumUrl,
         uniswapV3FactoryAddress: config.uniswapV3FactoryAddress
@@ -69,7 +91,8 @@ export async function initiateDepositHandler(input: HandlerInput) {
         tokenOut: config.ssvTokenAddress,
         uniswapFeeTier: 3000
     })
-    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerValidator)) * Number(price)).toPrecision(9))
+
+    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(validatorFee)) * Number(price)).toPrecision(9))
 
     const initiateDeposit = await manager.initiateDeposit(
         depositDataRoot,
@@ -188,16 +211,18 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
             if (poolDetails.balance.lt(ethers.utils.parseEther('32'))) {
                 blamePercents = [100, 0, 0, 0]
             }
+
             const scanner = new Scanner({
                 ethereumUrl: config.ethereumUrl,
                 ssvNetworkAddress: config.ssvNetworkAddress,
                 ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
             })
-            const clusterDetails = await scanner.getClusterDetails({ 
+
+            const cluster = await scanner.getCluster({ 
                 ownerAddress: manager.address,
                 operatorIds
             })
-            const { cluster } = clusterDetails
+
             const reportCompletedExit = await manager.reportCompletedExit(
                 poolIndex,
                 blamePercents,

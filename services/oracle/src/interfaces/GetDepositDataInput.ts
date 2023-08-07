@@ -1,4 +1,4 @@
 export interface GetDepositDataInput {
-    ceremonyId: string
+    requestId: string
     withdrawalAddress: string
 }

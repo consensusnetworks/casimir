@@ -17,8 +17,9 @@ describe('Operators', async function () {
         expect(operators.length).equal(4)
         expect(operators).to.satisfy((operators: ICasimirRegistry.OperatorStruct[]) => {
             const expectedActive = operators.every(operator => operator.active === true)
-            const expectedCollateral = operators.every(operator => operator.collateral.toString() === ethers.utils.parseEther('4.0').toString())
+            const expectedCollateral = operators.every(operator => operator.collateral.toString() === ethers.utils.parseEther('10.0').toString())
             const expectedResharing = operators.every(operator => operator.resharing === false)
+            console.log()
             return expectedActive && expectedCollateral && expectedResharing
         })
     })
@@ -94,13 +95,13 @@ describe('Operators', async function () {
         expect(resharesRequestedEvents.length).equal(0)
 
         const operatorOwnerBalanceBefore = await ethers.provider.getBalance(operatorOwnerAddress)
-        const requestWithdrawal = await registry.connect(operatorOwnerSigner).requestWithdrawal(deregisteringOperatorId, ethers.utils.parseEther('4'))
+        const requestWithdrawal = await registry.connect(operatorOwnerSigner).requestWithdrawal(deregisteringOperatorId, ethers.utils.parseEther('10'))
         await requestWithdrawal.wait()
         const operatorOwnerBalanceAfter = await ethers.provider.getBalance(operatorOwnerAddress)
         const deregisteredOperator = await registry.getOperator(deregisteringOperatorId)
         
         expect(deregisteredOperator.collateral.toString()).equal('0')
-        expect(ethers.utils.formatEther(operatorOwnerBalanceAfter.sub(operatorOwnerBalanceBefore).toString())).contains('3.9')
+        expect(ethers.utils.formatEther(operatorOwnerBalanceAfter.sub(operatorOwnerBalanceBefore).toString())).contains('9.9')
     })
 
     it('Pool exits with 31.0 and recovers from the blamed operator', async function () {
@@ -138,11 +139,11 @@ describe('Operators', async function () {
 
         const stake = await manager.getTotalStake()
         const userStake = await manager.getUserStake(secondUser.address)
-        const blamedOperatorId = 1 // Hardcoded the first operator
+        const blamedOperatorId = 654 // Hardcoded the first operator
         const blamedOperator = await registry.getOperator(blamedOperatorId)
 
         expect(ethers.utils.formatEther(stake)).equal('16.0')
         expect(ethers.utils.formatEther(userStake)).equal('0.0')
-        expect(blamedOperator.collateral.toString()).equal(ethers.utils.parseEther('3.0').toString())
+        expect(blamedOperator.collateral.toString()).equal(ethers.utils.parseEther('9.0').toString())
     })
 })

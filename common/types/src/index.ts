@@ -7,7 +7,6 @@ import { BalanceSnapshot } from './interfaces/BalanceSnapshot'
 import { BreakdownAmount } from './interfaces/BreakdownAmount'
 import { BreakdownString } from './interfaces/BreakdownString'
 import { BrowserProviders } from './interfaces/BrowserProviders'
-import { Cluster } from './interfaces/Cluster'
 import { ContractArgs } from './interfaces/ContractArgs'
 import { ContractConfig } from './interfaces/ContractConfig'
 import { ContractEventsByAddress } from './interfaces/ContractEventsByAddress'
@@ -44,7 +43,6 @@ export type {
     BreakdownAmount,
     BreakdownString,
     BrowserProviders,
-    Cluster,
     ContractArgs,
     ContractConfig,
     ContractEventsByAddress,

@@ -3,5 +3,7 @@ export interface ReshareValidatorInput {
     poolId: number
     operatorIds: number[]
     oldOperatorIds: number[]
+    ownerAddress: string
+    ownerNonce: number
     withdrawalAddress: string
 }

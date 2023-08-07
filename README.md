@@ -115,10 +115,8 @@ Customize and override the defaults for your *local development environment* by 
 | `TUNNEL` | Whether to tunnel local network RPC URLs (for remote wallets) | `false` |
 | `EMULATE` | Whether to emulate wallets | `false` |
 | `LEDGER_APP` | Ledger app name | `ethereum` |
-| `MOCK_ORACLE` | Whether to mock oracle | `true` |
 | `MOCK_SERVICES` | Whether to mock backend services | `true` |
 | `BUILD_PREVIEW` | Whether to preview web app production build | `false` |
-| `VALIDATOR_COUNT` | Number of validators to generate for tests | `4` |
 
 ### Apps
 
@@ -141,10 +139,8 @@ npm run dev:landing
 - Set `EMULATE` to `true` to emulate Ledger and Trezor hardware wallets.
 - Set `LEDGER_APP` to the name of the Ledger app to emulate (defaults to `ethereum`).
 - Set `TUNNEL` to `true` to tunnel the local network RPC URLs (for remote wallets).
-- Set `MOCK_ORACLE` to `false` to use pregenerated validators (or create them if unavailable).
 - Set `MOCK_SERVICES` to `false` to use the deployed backend services for the current stage.
 - Set `BUILD_PREVIEW` to `true` to run the local script with a production build preview of the web app.
-- Set `VALIDATOR_COUNT` to the number of validators to generate for tests (defaults to `4`).
 
 ### Contracts
 
@@ -167,11 +163,6 @@ Run a local Ethereum network with deployed contracts, simulation scripts, and ar
 ```zsh
 npm run dev:ethereum
 ```
-
-**Additional configuration:**
-
-- Set `MOCK_ORACLE` to `false` to use pregenerated validators (or create them if unavailable).
-- Set `VALIDATOR_COUNT` to the number of validators to generate for tests (defaults to `4`).
 
 ### Emulators
 

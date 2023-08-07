@@ -3,5 +3,4 @@ export interface HandlerInput {
         poolId?: number
         count?: number
     }
-    cliStrategy: string
 }

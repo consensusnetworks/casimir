@@ -23,7 +23,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     /*************/
 
     /** Required collateral */
-    uint256 private requiredCollateral = 4 ether;
+    uint256 private requiredCollateral = 1 ether;
     /** Minimum collateral deposit (0.1 ETH) */
     uint256 private minimumCollateralDeposit = 100000000 gwei;
 
