@@ -1,12 +1,14 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch} from 'vue'
-import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
+import useUtilies from '@/composables/utilities'
 
 const { getUserOperators, registerOperatorWithCasimir, userOperators } = useContracts()
+const { checkedItems, convertString, exportFile } = useUtilies()
+const { rawUserAnalytics, user } = useUsers()
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -16,7 +18,6 @@ const onSelectWalletBlur = () => {
         openSelectWalletOptions.value = false
     }, 200)
 }
-
 const selectedOperatorID = ref()
 const openSelectOperatorID = ref(false)
 const onSelectOperatorIDBlur = () => {
@@ -26,47 +27,16 @@ const onSelectOperatorIDBlur = () => {
 }
 // @chris need a way to find out possible operators on selecting a wallet address
 const possibleOperatorID = ref([] as string[])
-
-watch([userOperators, selectedWallet], () =>{
-  const casimirOperatorIds = userOperators.value.casimir.map(operator => operator.id)
-  possibleOperatorID.value = userOperators.value.ssv.filter(operator => {
-    return !casimirOperatorIds.includes(operator.id)
-  }).map(item => item.id)
-})
-
-
-
 const selectedPublicNodeURL = ref()
-
 const selectedCollateral = ref()
 
-const handleInputChangeCollateral = (event: any) => {
-    const value = event.target.value.replace(/[^\d.]/g, '')
-    const parts = value.split('.')
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-
-    // Limit to two decimal places
-    if (parts[1] && parts[1].length > 2) {
-        parts[1] = parts[1].slice(0, 2)
-    }
-
-    // Update the model value
-    selectedCollateral.value = parts.join('.')
-}
-// ----
 const openAddOperatorModal = ref(false)
-
 const itemsPerPage = ref(10)
 const currentPage = ref(1)
 const totalPages = ref(1)
-
 const searchInput = ref('')
-
 const selectedHeader = ref('wallet_provider')
 const selectedOrientation = ref('ascending')
-
-const checkedItems = ref([] as any)
-
 const operatorTableHeaders = ref(
   [
     {
@@ -97,16 +67,51 @@ const operatorTableHeaders = ref(
   ]
 )
 
-const { rawUserAnalytics, user } = useUsers()
-
 const tableData = ref<any>([])
+const filteredData = ref(tableData.value)
 
-
-watch(userOperators, () =>{
-  console.log('userOperators.value :>> ', userOperators.value)
+onMounted(async () => {
+  if (user.value) {
+    await setTableData()
+    filterData()
+  }
 })
 
-const filteredData = ref(tableData.value)
+watch(user, async () => {
+  if (user.value) {
+    await setTableData()
+    filterData()
+  }
+})
+
+watch(selectedWallet, () =>{
+  const casimirOperatorIds = userOperators.value.casimir.map(operator => operator.id)
+  possibleOperatorID.value = userOperators.value.ssv.filter(operator => {
+    return !casimirOperatorIds.includes(operator.id)
+  }).map(item => item.id)
+})
+
+watch(userOperators, () =>{
+  // set up table data
+})
+
+watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
+  filterData()
+})
+
+const handleInputChangeCollateral = (event: any) => {
+    const value = event.target.value.replace(/[^\d.]/g, '')
+    const parts = value.split('.')
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+
+    // Limit to two decimal places
+    if (parts[1] && parts[1].length > 2) {
+        parts[1] = parts[1].slice(0, 2)
+    }
+
+    // Update the model value
+    selectedCollateral.value = parts.join('.')
+}
 
 const filterData = () => {
   let filteredDataArray
@@ -141,86 +146,6 @@ const filterData = () => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   filteredData.value = filteredDataArray.slice(start, end) as any
-}
-
-watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
-  filterData()
-})
-
-
-const convertString = (inputString: string) => {
-  if (inputString.length && inputString.length <= 4) {
-    return inputString
-  }
-
-  var start = inputString.substring(0, 4)
-  var end = inputString.substring(inputString.length - 4)
-  var middle = '.'.repeat(4)
-
-  return start + middle + end
-}
-
-const convertJsonToCsv = (jsonData: any[]) => {
-  const separator = ','
-  const csvRows = []
-
-  if (!Array.isArray(jsonData)) {
-    return ''
-  }
-
-  if (jsonData.length === 0) {
-    return ''
-  }
-
-  const keys = Object.keys(jsonData[0])
-
-  // Add headers
-  csvRows.push(keys.join(separator))
-
-  // Convert JSON data to CSV rows
-  jsonData.forEach(obj => {
-    const values = keys.map(key => obj[key])
-    csvRows.push(values.join(separator))
-  })
-
-  return csvRows.join('\n')
-}
-
-const convertJsonToExcelBuffer = (jsonData: unknown[]) => {
-  const worksheet = XLSX.utils.json_to_sheet(jsonData)
-  const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
-  const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
-
-  return excelBuffer
-}
-
-const downloadFile = (content: any, filename: string, mimeType: any) => {
-  const blob = new Blob([content], { type: mimeType })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-
-  // Cleanup
-  URL.revokeObjectURL(url)
-}
-
-const exportFile = () => {
-
-  const jsonData = checkedItems.value.length > 0? checkedItems.value : filteredData.value
-
-  const isMac = navigator.userAgent.indexOf('Mac') !== -1
-  const fileExtension = isMac ? 'csv' : 'xlsx'
-
-  if (fileExtension === 'csv') {
-    const csvContent = convertJsonToCsv(jsonData)
-    downloadFile(csvContent, 'operator_performance.csv', 'text/csv')
-  } else {
-    const excelBuffer = convertJsonToExcelBuffer(jsonData)
-    downloadFile(excelBuffer, 'operator_performance.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-  }
 }
 
 const removeItemFromCheckedList = (item:any) => {
@@ -276,24 +201,10 @@ const setTableData = async () =>{
   tableData.value = userOperators.value.casimir
 }
 
-watch(user, async () => {
-  if (user.value) {
-    await setTableData()
-    filterData()
-  }
-})
-
-onMounted(async () => {
-  if (user.value) {
-    await setTableData()
-    filterData()
-  }
-})
-
 </script>
 
 <template>
-  <div class="px-[60px] 800s:px-[5%] pt-[51px]">
+  <div class="px-[60px] 800s:px-[5%] pt-[20px]">
     <div class="flex items-start justify-between flex-wrap">
       <h6 class="title mb-[37px]">
         Operator Performance
@@ -301,13 +212,14 @@ onMounted(async () => {
 
       <button
         class="flex items-center gap-[8px] export_button  hover:text-blue_3 hover:border-blue_3"
+        :disabled="!user?.accounts"
         @click="openAddOperatorModal = true"
       >
         <vue-feather
           type="plus"
           class="icon w-[17px] h-min"
         />
-        Add Operator
+        Add Operator {{ user?.accounts }}
       </button>
     </div>
     
@@ -315,6 +227,7 @@ onMounted(async () => {
       v-if="!user?.address"
       class="card_container w-full px-[32px] py-[31px]
        text-grey_4 flex items-center justify-center"
+      style="min-height: calc(100vh - 120px); height: 500px;"
     >
       <div class="border rounded-[3px] border-grey_1 border-dashed p-[10%] text-center">
         Connect wallet to view and register operators... 
@@ -324,7 +237,7 @@ onMounted(async () => {
     <div
       v-else
       class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap relative"
-      style="min-height: calc(100vh - 420px);"
+      style="min-height: calc(100vh - 120px); height: 500px;"
     >
       <!-- Form -->
       <div
@@ -364,7 +277,7 @@ onMounted(async () => {
               >
               <button
                 type="button"
-                @click="selectedWallet = ''"
+                @click="selectedWallet = { wallet_provider: '', address: ''}"
               >
                 <vue-feather
                   type="x"
@@ -547,7 +460,7 @@ onMounted(async () => {
         <div class="flex items-start gap-[12px]">
           <button
             class="flex items-center gap-[8px] export_button"
-            @click="exportFile()"
+            @click="exportFile(filteredData)"
           >
             <vue-feather
               type="upload-cloud"
