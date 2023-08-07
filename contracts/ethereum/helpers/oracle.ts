@@ -52,7 +52,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         operatorIds
     })
 
-    const validatorFee = await scanner.getClusterFee(operatorIds)
+    const requiredFee = await scanner.getRequiredFee(operatorIds)
 
     const uniswapFactory = new Factory({
         provider: ethers.provider,
@@ -65,7 +65,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         uniswapFeeTier: 3000
     })
 
-    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(validatorFee)) * price).toPrecision(9))
+    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * price).toPrecision(9))
 
     const initiateDeposit = await manager.connect(signer).initiateDeposit(
         depositDataRoot,

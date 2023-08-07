@@ -18,7 +18,7 @@
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "migrations:users": "npx esno -r dotenv/config scripts/migrations/users.ts",
-    "preinstall": "git submodule update --init --recursive && git submodule foreach --recursive git checkout .",
+    "preinstall": "git submodule update --init --recursive",
     "prepare": "husky install",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:actions": "npx esno -r dotenv/config scripts/actions/test.ts",
