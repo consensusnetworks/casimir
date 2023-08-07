@@ -139,16 +139,12 @@ export default function useContracts() {
         const ssvOperatorsByUser = ssvOperators.filter((ssvOperator: SSVOperator) => {
             return userAddresses.some((address) => { address === ssvOperator.walletAddress })
         })
-        console.log('ssvOperatorsByUser :>> ', ssvOperatorsByUser)
         const ssvOperatorIdsByUser = ssvOperatorsByUser.map((ssvOperator: SSVOperator) => ssvOperator.id.toString())
-        console.log('ssvOperatorIdsByUser :>> ', ssvOperatorIdsByUser)
 
         const casimirOperators = await _getCasimirOperators()
-        console.log('casimirOperators :>> ', casimirOperators)
         const casimirOperatorsByUser = casimirOperators.filter((casimirOperator: CasimirOperator) => {
             return ssvOperatorIdsByUser.some((id: string) => { id === casimirOperator.id })
         })
-        console.log('casimirOperatorsByUser :>> ', casimirOperatorsByUser)
 
         if (casimirOperatorsByUser.length) {
             // Need to update each casimirOperator with availableCollateral, collateralInUse, nodeURL, rewards, and walletAddress
@@ -166,7 +162,9 @@ export default function useContracts() {
             })
         }
 
+        console.log('casimirOperatorsByUser in getUserOperators :>> ', casimirOperatorsByUser)
         _setUserOperators('casimir', casimirOperatorsByUser)
+        console.log('ssvOperators in getUserOperators :>> ', ssvOperators)
         _setUserOperators('ssv', ssvOperators)
         return {
             ssv: ssvOperators,
@@ -214,7 +212,7 @@ export default function useContracts() {
         }
     }
 
-    async function registerOperatorWithCasimir(walletProvider: ProviderString, operatorId: BigNumberish) {
+    async function registerOperatorWithCasimir(walletProvider: ProviderString, address: string, operatorId: BigNumberish, value: string) {
         try {
             const signerCreators = {
                 'Browser': getEthersBrowserSigner,
@@ -226,8 +224,8 @@ export default function useContracts() {
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer = signerCreator(walletProvider)
             if (isWalletConnectSigner(signer)) signer = await signer
-            const result = await casimirOperatorRegistry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: '0xd557a5745d4560B24D36A68b52351ffF9c86A212', value: ethers.utils.parseEther('5')})
-            console.log('result :>> ', result)
+            const result = await casimirOperatorRegistry.connect(signer as ethers.Signer).register(operatorId, { from: address, value: ethers.utils.parseEther(value)})
+            console.log('register result :>> ', result)
             await result.wait()
             return true
         } catch (err) {

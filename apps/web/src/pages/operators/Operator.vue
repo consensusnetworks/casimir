@@ -2,14 +2,14 @@
 import { onMounted, ref, watch} from 'vue'
 import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
-import { FormattedWalletOption } from '@casimir/types'
+import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 
-const { getUserOperators, userOperators } = useContracts()
+const { getUserOperators, registerOperatorWithCasimir, userOperators } = useContracts()
 
 // Form inputs
-const selectedWallet = ref()
+const selectedWallet = ref({address: '', wallet_provider: ''})
 const openSelectWalletOptions = ref(false)
 const onSelectWalletBlur = () => {
     setTimeout(() =>{
@@ -28,14 +28,13 @@ const onSelectOperatorIDBlur = () => {
 const possibleOperatorID = ref([] as string[])
 
 watch([userOperators, selectedWallet], () =>{
-  console.log('userOperators.value :>> ', userOperators.value)
   const casimirOperatorIds = userOperators.value.casimir.map(operator => operator.id)
   possibleOperatorID.value = userOperators.value.ssv.filter(operator => {
-    console.log('operator :>> ', operator)
-    // If userOperators.value.casimir contains id, then don't include it
     return !casimirOperatorIds.includes(operator.id)
   }).map(item => item.id)
 })
+
+
 
 const selectedPublicNodeURL = ref()
 
@@ -101,6 +100,11 @@ const operatorTableHeaders = ref(
 const { rawUserAnalytics, user } = useUsers()
 
 const tableData = ref<any>([])
+
+
+watch(userOperators, () =>{
+  console.log('userOperators.value :>> ', userOperators.value)
+})
 
 const filteredData = ref(tableData.value)
 
@@ -226,17 +230,32 @@ const removeItemFromCheckedList = (item:any) => {
   }
 }
 
-const submitRegisterOperatorForm = () =>{
-  const newOperator = {
-    operator_id: selectedOperatorID.value,
-    walletAddress: selectedWallet,
-    availableCollateral: selectedCollateral,
-    node_url: selectedPublicNodeURL,
-    collateralInUse: 0,
-    rewards: 0
-  }
+const submitRegisterOperatorForm = async () =>{
+  // const newOperator = {
+  //   wallet_provider: selectedWallet.value.wallet_provider,
+  //   operator_id: selectedOperatorID.value,
+  //   walletAddress: selectedWallet.value.address,
+  //   availableCollateral: selectedCollateral.value,
+  //   node_url: selectedPublicNodeURL.value,
+  //   collateralInUse: 0,
+  //   rewards: 0
+  // }
   
-  tableData.value = [...tableData.value, newOperator]
+  // tableData.value = [...tableData.value, newOperator]
+
+  await registerOperatorWithCasimir(
+    selectedWallet.value.wallet_provider as ProviderString, 
+    selectedWallet.value.address, 
+    parseInt(selectedOperatorID.value), 
+    selectedCollateral.value 
+  )
+
+  selectedWallet.value = { address: '', wallet_provider: ''}
+  selectedOperatorID.value = ''
+  selectedPublicNodeURL.value = ''
+  selectedCollateral.value = ''
+  possibleOperatorID.value = []
+
   openAddOperatorModal.value = false
 }
 
@@ -336,7 +355,7 @@ onMounted(async () => {
             <div class="card_input w-full max-w-[400px] relative">
               <input
                 id="walletAddress"
-                v-model="selectedWallet"
+                v-model="selectedWallet.address"
                 type="text"
                 placeholder="Wallet Address.."
                 class=" outline-none text-grey_4 text-[12px] w-full"
@@ -366,7 +385,7 @@ onMounted(async () => {
                   type="button"
                   class="border-y border-y-grey_1 hover:border-y-grey_3
                    text-grey_4 my-[10px] w-full flex justify-between truncate"
-                  @click="selectedWallet = act.address"
+                  @click="selectedWallet = {address: act.address, wallet_provider: act.walletProvider}"
                 >
                   <span>{{ act.walletProvider }}</span>
                   <span>{{ convertString(act.address) }}</span>
