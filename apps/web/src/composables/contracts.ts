@@ -207,7 +207,7 @@ export default function useContracts() {
         }
     }
 
-    async function registerOperatorWithCasimir(walletProvider: ProviderString, operatorId: BigNumberish) {
+    async function registerWithCasimir(walletProvider: ProviderString, operatorId: BigNumberish) {
         try {
             const signerCreators = {
                 'Browser': getEthersBrowserSigner,
@@ -219,12 +219,12 @@ export default function useContracts() {
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer = signerCreator(walletProvider)
             if (isWalletConnectSigner(signer)) signer = await signer
-            const result = await casimirOperatorRegistry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: '0xd557a5745d4560B24D36A68b52351ffF9c86A212', value: ethers.utils.parseEther('5')})
+            const result = await casimirOperatorRegistry.connect(signer as ethers.Signer).register(operatorId, { from: '0xd557a5745d4560B24D36A68b52351ffF9c86A212', value: ethers.utils.parseEther('5')})
             console.log('result :>> ', result)
             await result.wait()
             return true
         } catch (err) {
-            console.error(`There was an error in registerOperatorWithCasimir function: ${JSON.stringify(err)}`)
+            console.error(`There was an error in registerWithCasimir function: ${JSON.stringify(err)}`)
             return false
         }
     }
@@ -530,7 +530,7 @@ export default function useContracts() {
         _getCasimirOperators,
         listenForContractEvents,
         refreshBreakdown,
-        registerOperatorWithCasimir,
+        registerWithCasimir,
         stopListeningForContractEvents,
         withdraw 
     }

@@ -61,7 +61,7 @@ export async function deploymentFixture() {
             params: [operatorOwnerAddress]
         })
         const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
-        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: preregisteredBalance })
+        const result = await registry.connect(operatorSigner).register(operatorId, { value: preregisteredBalance })
         await result.wait()
     }
 

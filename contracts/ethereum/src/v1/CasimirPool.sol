@@ -89,7 +89,7 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
                 uint256 blamePercent = blamePercents[i];
                 blameAmount = Math.mulDiv(uint256(-rewards), blamePercent, 100);
             }
-            registry.removeOperatorPool(operatorIds[i], id, blameAmount);
+            registry.removePool(operatorIds[i], id, blameAmount);
         }
         manager.depositExitedBalance{value: balance}(id);
     }

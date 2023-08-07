@@ -109,17 +109,45 @@ export async function initiateDepositHandler(input: HandlerInput) {
 }
 
 export async function initiateResharesHandler(input: HandlerInput) {
-    if (!input.args.poolId) throw new Error('No pool id provided')
+    if (!input.args.operatorId) throw new Error('No operator id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
     const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
     const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const registry = new ethers.Contract(config.registryAddress, ICasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
 
-    // Todo reshare event will include the operator to boot
+    const poolIds = [
+        ...await manager.getPendingPoolIds(),
+        ...await manager.getStakedPoolIds()
+    ]
 
-    // Get pool to reshare
-    const poolDetails = await views.connect(provider).getPoolDetails(input.args.poolId)
+    const operatorPools = await Promise.all(
+        poolIds.filter(async (poolId) => {
+            const poolDetails = await views.connect(provider).getPoolDetails(poolId)
+            return poolDetails.operatorIds.map((id: ethers.BigNumber) => id.toNumber()).includes(input.args.operatorId as number)
+        })
+    )
+
+    console.log('OPERATOR POOLS', operatorPools)
+
+    const operatorCount = (await registry.getOperatorIds()).length
+    const operators = await views.getOperators(0, operatorCount)
+
+    const eligibleOperators = operators.filter((operator) => {
+        const availableCollateral = parseInt(ethers.utils.formatEther(operator.collateral)) - parseInt(operator.poolCount.toString())
+        return operator.active && !operator.resharing && availableCollateral > 0
+    })
+
+    const smallestOperators = eligibleOperators.sort((a, b) => {
+        const aPoolCount = parseInt(a.poolCount.toString())
+        const bPoolCount = parseInt(b.poolCount.toString())
+        if (aPoolCount < bPoolCount) return -1
+        if (aPoolCount > bPoolCount) return 1
+        return 0
+    })
+
+    const selectedOperatorId = smallestOperators[0].id.toNumber()
 
     // Todo old operators and new operators only different by 1 operator
     const newOperatorGroup = [1, 2, 3, 4]

@@ -684,7 +684,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bool processed
     ) private {
         for (uint256 i = 0; i < operatorIds.length; i++) {
-            registry.addOperatorPool(operatorIds[i], poolId);
+            registry.addPool(operatorIds[i], poolId);
         }
 
         beaconDeposit.deposit{value: poolCapacity}(
@@ -877,8 +877,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         pool.setReshares(poolDetails.reshares + 1);
 
-        registry.removeOperatorPool(oldOperatorId, poolId, 0);
-        registry.addOperatorPool(newOperatorId, poolId);
+        registry.removePool(oldOperatorId, poolId, 0);
+        registry.addPool(newOperatorId, poolId);
 
         uint256 ssvAmount = retrieveFees(
             feeAmount,

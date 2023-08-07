@@ -24,8 +24,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
 
     /** Required collateral */
     uint256 private requiredCollateral = 1 ether;
-    /** Minimum collateral deposit (0.1 ETH) */
-    uint256 private minimumCollateralDeposit = 100000000 gwei;
+    /** Minimum collateral deposit (0.000000001 ETH) */
+    uint256 private minimumCollateralDeposit = 1 gwei;
 
     /*************/
     /* Immutable */
@@ -76,7 +76,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      * @notice Register an operator with the set
      * @param operatorId The operator ID
      */
-    function registerOperator(uint64 operatorId) external payable {
+    function register(uint64 operatorId) external payable {
         require(
             msg.value >= requiredCollateral,
             "Insufficient registration collateral"
@@ -117,10 +117,6 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
         );
 
         operator.collateral += int256(msg.value);
-
-        if (operator.collateral >= int256(requiredCollateral)) {
-            operator.active = true;
-        }
     }
 
     /**
@@ -147,10 +143,26 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     }
 
     /**
-     * @notice Request deregistration for an operator
+     * Request operator activation
      * @param operatorId The operator ID
      */
-    function requestDeregistration(uint64 operatorId) external {
+    function requestActivation(uint64 operatorId) external {
+        Operator storage operator = operators[operatorId];
+        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(
+            operatorId
+        );
+        require(msg.sender == operatorOwner, "Not operator owner");
+        require(!operator.active, "Operator is active");
+        require(!operator.resharing, "Operator is resharing");
+
+        operator.active = true;
+    }
+
+    /**
+     * @notice Request operator deactivation
+     * @param operatorId The operator ID
+     */
+    function requestDeactivation(uint64 operatorId) external {
         Operator storage operator = operators[operatorId];
         (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(
             operatorId
@@ -172,13 +184,13 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      * @param operatorId The operator ID
      * @param poolId The pool ID
      */
-    function addOperatorPool(
+    function addPool(
         uint64 operatorId,
         uint32 poolId
     ) external onlyOwner {
         Operator storage operator = operators[operatorId];
         require(operator.active, "Operator not active");
-        require(!operator.resharing, "Operator resharing");
+        require(!operator.resharing, "Operator is resharing");
         require(operator.collateral >= 0, "Operator owes collateral");
         require(!operatorPools[operatorId][poolId], "Pool already active");
         operatorPools[operatorId][poolId] = true;
@@ -191,7 +203,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      * @param poolId The pool ID
      * @param blameAmount The amount to recover from collateral
      */
-    function removeOperatorPool(
+    function removePool(
         uint64 operatorId,
         uint32 poolId,
         uint256 blameAmount
@@ -218,11 +230,6 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
                 recoverableCollateral = uint256(operator.collateral);
             }
             operator.collateral -= int256(blameAmount);
-
-            if (operator.collateral < 0) {
-                operator.resharing = true;
-                manager.requestReshares(operatorId);
-            }
 
             manager.depositRecoveredBalance{value: recoverableCollateral}(
                 poolId
