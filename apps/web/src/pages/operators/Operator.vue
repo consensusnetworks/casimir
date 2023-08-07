@@ -6,6 +6,8 @@ import { FormattedWalletOption } from '@casimir/types'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 
+const { getUserOperators, userOperators } = useContracts()
+
 // Form inputs
 const selectedWallet = ref()
 const openSelectWalletOptions = ref(false)
@@ -23,7 +25,14 @@ const onSelectOperatorIDBlur = () => {
     }, 200)
 }
 // @chris need a way to find out possible operators on selecting a wallet address
-const possibleOperatorID = ref([])
+const possibleOperatorID = ref([] as string[])
+
+watch(userOperators, () =>{
+  possibleOperatorID.value = userOperators.value.ssv.filter(item => {
+    // If userOperators.value.casimir contains id, then don't include it
+    return !userOperators.value.casimir.includes(item)
+  }).map(item => item.id)
+})
 
 const selectedPublicNodeURL = ref()
 
@@ -215,20 +224,19 @@ const removeItemFromCheckedList = (item:any) => {
 }
 
 const submitRegisterOperatorForm = () =>{
-    const newOperator = {
-        operator_id: selectedOperatorID.value,
-        walletAddress: selectedWallet,
-        availableCollateral: selectedCollateral,
-        node_url: selectedPublicNodeURL,
-        collateralInUse: 0,
-        rewards: 0
-    }
-    
-    tableData.value = [...tableData.value, newOperator]
-    openAddOperatorModal.value = false
-}
 
-const { getUserOperators, userOperators } = useContracts()
+  const newOperator = {
+    operator_id: selectedOperatorID.value,
+    walletAddress: selectedWallet,
+    availableCollateral: selectedCollateral,
+    node_url: selectedPublicNodeURL,
+    collateralInUse: 0,
+    rewards: 0
+  }
+  
+  tableData.value = [...tableData.value, newOperator]
+  openAddOperatorModal.value = false
+}
 
 const setTableData = async () =>{
   // TODO: Make sure userOperators have types defined below
@@ -617,7 +625,10 @@ onMounted(async () => {
           </p>
         </div>
       </div>
-      <div class="flex justify-between items-center mt-[12px]">
+      <div
+        v-if="tableData.length > 0"
+        class="flex justify-between items-center mt-[12px]"
+      >
         <div class="page_number ml-[56px]">
           Page {{ currentPage }} of {{ totalPages }}
         </div>

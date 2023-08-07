@@ -198,11 +198,11 @@ export default function useContracts() {
     }
 
     async function _getSSVOperators() {
-        // const ownerAddresses = (user?.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
-        const ownerAddressesTest = ['0x9725Dc287005CB8F11CA628Bb769E4A4Fc8f0309']
+        const ownerAddresses = (user?.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+        // const ownerAddressesTest = ['0x9725Dc287005CB8F11CA628Bb769E4A4Fc8f0309']
         try {
-            // const promises = ownerAddresses.map((address) => _querySSVOperators(address))
-            const promises = ownerAddressesTest.map((address) => _querySSVOperators(address))
+            // const promises = ownerAddressesTest.map((address) => _querySSVOperators(address))
+            const promises = ownerAddresses.map((address) => _querySSVOperators(address))
             const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<any>>
             const operators = settledPromises
                 .filter((result) => result.status === 'fulfilled')
@@ -396,7 +396,11 @@ export default function useContracts() {
                 if (event === 'StakeRebalanced') return manager.filters[event]()
                 return manager.filters[event](address)
             })
-            const items = (await Promise.all(eventFilters.map(async eventFilter => await manager.connect(provider).queryFilter(eventFilter, 0, 'latest'))))
+
+            // const items = (await Promise.all(eventFilters.map(async eventFilter => await manager.connect(provider).queryFilter(eventFilter, 0, 'latest'))))
+            // Use Promise.allSettled to avoid errors when a filter returns no results
+            const items = (await Promise.allSettled(eventFilters.map(async eventFilter => await manager.connect(provider).queryFilter(eventFilter, 0, 'latest')))).map(result => result.status === 'fulfilled' ? result.value : [])
+            console.log('items :>> ', items)
     
             const userEventTotals = eventList.reduce((acc, event) => {
                 acc[event] = 0
@@ -406,6 +410,7 @@ export default function useContracts() {
             for (const item of items) {
                 for (const action of item) {
                     const { args, event } = action
+                    console.log('event :>> ', event)
                     const { amount } = args
                     const amountInEth = parseFloat(ethers.utils.formatEther(amount))
                     userEventTotals[event as string] += amountInEth

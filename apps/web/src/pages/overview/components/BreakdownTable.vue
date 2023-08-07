@@ -116,12 +116,9 @@ const tableHeaderOptions = ref(
 const { rawUserAnalytics, user } = useUsers()
 
 const tableData = ref({
-  Wallets: [
-  ],
-  Transactions: [
-  ],
-  Staking: [
-  ],
+  Wallets: [] as {tx_hash: string, wallet_provider: string,  status: string, staking_fees: string, type: string, amount: string, bal: string,  act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
+  Transactions: [] as {tx_hash: string, wallet_provider: string,  status: string, staking_fees: string, type: string, amount: string, bal: string,  act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
+  Staking: [] as {tx_hash: string, wallet_provider: string,  status: string, staking_fees: string, type: string, amount: string, bal: string,  act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
 })
 
 const filteredData = ref(tableData.value[tableView.value as keyof typeof tableData.value])
@@ -474,8 +471,8 @@ onMounted(() =>{
           class="w-full"
         >
           <tr
-            v-for="item in filteredData"
-            :key="item"
+            v-for="(item, i) in filteredData"
+            :key="i"
             class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
           >
             <td
@@ -505,7 +502,7 @@ onMounted(() =>{
               >
                 <img
                   v-if="item[header.value] != 'Unknown'"
-                  :src="`/${item[header.value ]}.svg`"
+                  :src="`/${item[header.value].toLocaleLowerCase()}.svg`"
                   alt="Avatar "
                   class="w-[20px] h-[20px]"
                 >
@@ -552,34 +549,34 @@ onMounted(() =>{
                 v-else-if="header.value === 'bal'"
                 class="flex items-center gap-[12px] pl-[20px]"
               >
-                {{ item[header.value ] }} ETH
+                {{ item[header.value] }} ETH
               </div>
               <div
                 v-else-if="header.value === 'stk_amt'"
                 class="flex items-center gap-[12px] pl-[20px]"
               >
-                {{ item[header.value ] }} ETH
+                {{ item[header.value] }} ETH
               </div>
               <div
                 v-else-if="header.value === 'stk_rwd'"
                 class="flex items-center gap-[12px] pl-[20px]"
               >
-                {{ item[header.value ] }} ETH
+                {{ item[header.value] }} ETH
               </div>
               <div
                 v-else-if="header.value === 'amount'"
                 class="flex items-center gap-[12px] pl-[20px]"
               >
-                {{ item[header.value ] }} ETH
+                {{ item[header.value] }} ETH
               </div>
               <div
                 v-else-if="header.value === 'staking_fees'"
                 class="flex items-center gap-[12px] pl-[20px]"
               >
-                {{ item[header.value ] }} ETH
+                {{ item[header.value] }} ETH
               </div>
               <div v-else>
-                {{ item[header.value ] }}
+                {{ item[header.value as keyof typeof item] }}
               </div>
             </td>
           </tr>
