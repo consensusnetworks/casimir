@@ -133,33 +133,40 @@ export default function useContracts() {
 
     /** Get all user operators */
     async function getUserOperators() {
-        const casimirOperators = await _getCasimirOperators()
+        const userAddresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+        
         const ssvOperators = await _getSSVOperators()
-
-        // TODO: Re-enable this when IDs are lining up again.
-        // Filter casimirOperators to only include operators that are in ssvOperators by id
-        // casimirOperators = casimirOperators.filter((casimirOperator) => {
-        //     return ssvOperators.some((ssvOperator: SSVOperator) => { ssvOperator.id.toString() === casimirOperator.id })
-        // })
-
-        // Need to update each casimirOperator with availableCollateral, collateralInUse, nodeURL, rewards, and walletAddress
-        casimirOperators.forEach((casimirOperator) => {
-            const ssvOperator = ssvOperators.find((ssvOperator: SSVOperator) => ssvOperator.id.toString() === casimirOperator.id)
-            if (ssvOperator) {
-                casimirOperator.availableCollateral = ssvOperator.availableCollateral
-                casimirOperator.collateralInUse = ssvOperator.collateralInUse
-                casimirOperator.nodeURL = ssvOperator.nodeURL
-                casimirOperator.rewards = ssvOperator.rewards
-                casimirOperator.walletAddress = ssvOperator.owner_address
-            } else {
-                casimirOperator.availableCollateral = '10'
-                casimirOperator.collateralInUse = '5'
-                casimirOperator.nodeURL = 'https://node.ssv.network'
-                casimirOperator.rewards = '2.5'
-                casimirOperator.walletAddress = '0xd557a5745d4560B24D36A68b52351ffF9c86A212'
-            }
+        const ssvOperatorsByUser = ssvOperators.filter((ssvOperator: SSVOperator) => {
+            return userAddresses.some((address) => { address === ssvOperator.walletAddress })
         })
-        _setUserOperators('casimir', casimirOperators)
+        console.log('ssvOperatorsByUser :>> ', ssvOperatorsByUser)
+        const ssvOperatorIdsByUser = ssvOperatorsByUser.map((ssvOperator: SSVOperator) => ssvOperator.id.toString())
+        console.log('ssvOperatorIdsByUser :>> ', ssvOperatorIdsByUser)
+
+        const casimirOperators = await _getCasimirOperators()
+        console.log('casimirOperators :>> ', casimirOperators)
+        const casimirOperatorsByUser = casimirOperators.filter((casimirOperator: CasimirOperator) => {
+            return ssvOperatorIdsByUser.some((id: string) => { id === casimirOperator.id })
+        })
+        console.log('casimirOperatorsByUser :>> ', casimirOperatorsByUser)
+
+        if (casimirOperatorsByUser.length) {
+            // Need to update each casimirOperator with availableCollateral, collateralInUse, nodeURL, rewards, and walletAddress
+            casimirOperatorsByUser.forEach((casimirOperator) => {
+                const ssvOperator = ssvOperators.find((ssvOperator: SSVOperator) => {
+                    return ssvOperator.id.toString() === casimirOperator.id
+                })
+                if (ssvOperator) {
+                    casimirOperator.availableCollateral = ssvOperator.availableCollateral
+                    casimirOperator.collateralInUse = ssvOperator.collateralInUse
+                    casimirOperator.nodeURL = ssvOperator.nodeURL
+                    casimirOperator.rewards = ssvOperator.rewards
+                    casimirOperator.walletAddress = ssvOperator.owner_address
+                }
+            })
+        }
+
+        _setUserOperators('casimir', casimirOperatorsByUser)
         _setUserOperators('ssv', ssvOperators)
         return {
             ssv: ssvOperators,
@@ -207,7 +214,7 @@ export default function useContracts() {
         }
     }
 
-    async function registerWithCasimir(walletProvider: ProviderString, operatorId: BigNumberish) {
+    async function registerOperatorWithCasimir(walletProvider: ProviderString, operatorId: BigNumberish) {
         try {
             const signerCreators = {
                 'Browser': getEthersBrowserSigner,
@@ -219,12 +226,12 @@ export default function useContracts() {
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer = signerCreator(walletProvider)
             if (isWalletConnectSigner(signer)) signer = await signer
-            const result = await casimirOperatorRegistry.connect(signer as ethers.Signer).register(operatorId, { from: '0xd557a5745d4560B24D36A68b52351ffF9c86A212', value: ethers.utils.parseEther('5')})
+            const result = await casimirOperatorRegistry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: '0xd557a5745d4560B24D36A68b52351ffF9c86A212', value: ethers.utils.parseEther('5')})
             console.log('result :>> ', result)
             await result.wait()
             return true
         } catch (err) {
-            console.error(`There was an error in registerWithCasimir function: ${JSON.stringify(err)}`)
+            console.error(`There was an error in registerOperatorWithCasimir function: ${JSON.stringify(err)}`)
             return false
         }
     }
@@ -530,7 +537,7 @@ export default function useContracts() {
         _getCasimirOperators,
         listenForContractEvents,
         refreshBreakdown,
-        registerWithCasimir,
+        registerOperatorWithCasimir,
         stopListeningForContractEvents,
         withdraw 
     }
