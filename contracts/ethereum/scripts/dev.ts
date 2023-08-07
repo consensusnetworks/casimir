@@ -68,7 +68,7 @@ void async function () {
             params: [operatorOwnerAddress]
         })
         const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
-        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: preregisteredBalance })
+        const result = await registry.connect(operatorSigner).register(operatorId, { value: preregisteredBalance })
         await result.wait()
     }
 
@@ -78,15 +78,17 @@ void async function () {
      * Exit balances are swept as needed
      */
     let requestId = 0
-    const blocksPerReport = 10
+    const blocksPerReport = 5
     const rewardPerValidator = 0.105
+    let reporting = false
     let lastReportBlock = await ethers.provider.getBlockNumber()
     let lastStakedPoolIds: number[] = []
     void function () {
         ethers.provider.on('block', async (block) => {
-            if (block - blocksPerReport >= lastReportBlock) {
+            if (!reporting && block - blocksPerReport >= lastReportBlock) {
                 await time.increase(time.duration.days(1))
                 console.log('⌛️ Report period complete')
+                reporting = true
                 lastReportBlock = await ethers.provider.getBlockNumber()
                 await runUpkeep({ upkeep, keeper })
                 const pendingPoolIds = await manager.getPendingPoolIds()
@@ -145,6 +147,7 @@ void async function () {
                     }
                     await runUpkeep({ upkeep, keeper })
                 }
+                reporting = false
                 lastStakedPoolIds = stakedPoolIds
             }
         })
