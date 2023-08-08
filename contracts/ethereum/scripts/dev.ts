@@ -118,7 +118,6 @@ void async function () {
                         completedExits: exitingPoolCount.toNumber(),
                         compoundablePoolIds
                     }
-                    console.log('🧾 Report values', nextValues)
                     requestId = await fulfillReport({
                         upkeep,
                         keeper,
