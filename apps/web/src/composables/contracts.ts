@@ -37,11 +37,6 @@ const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAdd
 const casimirViews: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
 const casimirOperatorRegistry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
 const ssvViews: ISSVNetworkViews & ethers.Contract = new ethers.Contract(ssvNetworkViewsAddress, ISSVNetworkViewsAbi, provider) as ISSVNetworkViews
-
-interface UserOperators {
-    ssv: SSVOperator[]
-    casimir: CasimirOperator[]
-  }
   
 interface SSVOperator {
     fee: string
@@ -64,11 +59,8 @@ interface CasimirOperator {
     walletAddress?: string
 }
 
-
-const userOperators = ref<UserOperators>({
-    ssv: [],
-    casimir: []
-})
+const operators = ref<Operator[]>([])
+const registeredOperators = ref<Operator[]>([])
 
 export default function useContracts() {
     const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
@@ -146,18 +138,18 @@ export default function useContracts() {
             ssvNetworkViewsAddress
         })
 
-        const operators: Operator[] = []
+        const ssvOperators: Operator[] = []
         for (const address of userAddresses) {
             const userOperators = await scanner.getOperators(address)
-            operators.push(...userOperators)
+            ssvOperators.push(...userOperators)
         }
 
-        const registeredOperators: RegisteredOperator[] = []
-        for (const operator of operators) {
+        const casimirOperators: RegisteredOperator[] = []
+        for (const operator of ssvOperators) {
             const { active, collateral, poolCount, resharing } = await casimirOperatorRegistry.getOperator(operator.id)
             const pools = await _getPools(operator.id)
             const url = operatorStore[operator.id.toString() as keyof typeof operatorStore]
-            registeredOperators.push({
+            casimirOperators.push({
                 ...operator,
                 active,
                 collateral,
@@ -168,13 +160,8 @@ export default function useContracts() {
             })
         }
 
-        _setUserOperators('ssv', operators)
-        _setUserOperators('casimir', registeredOperators)
-
-        return {
-            operators,
-            registeredOperators
-        }
+        // _setOperators(operators)
+        // _setRegisteredOperators(registeredOperators)
     }
 
     async function _getCasimirOperators() {
@@ -466,8 +453,16 @@ export default function useContracts() {
         manager.removeListener('WithdrawalInitiated', withdrawalInitiatedListener)
     }
 
-    function _setUserOperators(key: 'ssv' | 'casimir', operators: Array<SSVOperator | CasimirOperator>) {
-        userOperators.value[key] = operators as Array<SSVOperator | CasimirOperator>
+    // function _setUserOperators(key: 'ssv' | 'casimir', operators: Array<SSVOperator | CasimirOperator>) {
+    //     userOperators.value[key] = operators as Array<SSVOperator | CasimirOperator>
+    // }
+
+    function _setOperators(operatorsArray: Array<Operator>) {
+        operators.value = operatorsArray as Array<Operator>
+    }
+
+    function _setRegisteredOperators(operatorsArray: Array<Operator>) {
+        registeredOperators.value = operatorsArray as Array<Operator>
     }
 
     async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
@@ -491,9 +486,10 @@ export default function useContracts() {
     return { 
         currentStaked, 
         manager, 
+        operators,
+        registeredOperators,
         stakingRewards, 
         totalWalletBalance,
-        userOperators,
         deposit, 
         getCurrentStaked,
         getDepositFees,

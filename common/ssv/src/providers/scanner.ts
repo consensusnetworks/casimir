@@ -6,7 +6,6 @@ import { GetClusterInput } from '../interfaces/GetClusterInput'
 import { Cluster } from '../interfaces/Cluster'
 import { Operator } from '../interfaces/Operator'
 import { ScannerOptions } from '../interfaces/ScannerOptions'
-import fs from 'fs'
 
 export class Scanner {
     DAY = 5400

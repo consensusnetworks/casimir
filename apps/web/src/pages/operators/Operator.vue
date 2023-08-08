@@ -6,7 +6,7 @@ import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 import useUtilies from '@/composables/utilities'
 
-const { getUserOperators, registerOperatorWithCasimir, userOperators } = useContracts()
+const { getUserOperators, registerOperatorWithCasimir, operators, registeredOperators } = useContracts()
 const { convertString, exportFile } = useUtilies()
 const { rawUserAnalytics, user } = useUsers()
 
@@ -95,14 +95,12 @@ watch(user, async () => {
 })
 
 watch(selectedWallet, () =>{
-  const casimirOperatorIds = userOperators.value.casimir.map(operator => operator.id)
-  possibleOperatorID.value = userOperators.value.ssv.filter(operator => {
-    return !casimirOperatorIds.includes(operator.id)
-  }).map(item => item.id)
+  // Update possibleOperatorIds
 })
 
-watch(userOperators, () =>{
-  console.log('ssv ops', userOperators.value)
+watch([operators, registeredOperators], () =>{
+  console.log('operators.value :>> ', operators.value)
+  console.log('registeredOperators.value :>> ', registeredOperators.value)
 
   // set up data table here
 })
