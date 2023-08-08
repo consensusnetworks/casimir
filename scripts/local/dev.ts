@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
 import { $, chalk, echo } from 'zx'
-import { loadCredentials, getSecret, getWallet, run, runSync } from '@casimir/helpers'
+import { getWallet, run, runSync } from '@casimir/helpers'
+import { loadCredentials, getSecret } from '@casimir/aws'
 
 /**
  * Run a Casimir dev server
