@@ -4,7 +4,9 @@ import ISSVNetworkAbi from '@casimir/ethereum/build/abi/ISSVNetwork.json'
 import ISSVNetworkViewsAbi from '@casimir/ethereum/build/abi/ISSVNetworkViews.json'
 import { GetClusterInput } from '../interfaces/GetClusterInput'
 import { Cluster } from '../interfaces/Cluster'
+import { Operator } from '../interfaces/Operator'
 import { ScannerOptions } from '../interfaces/ScannerOptions'
+import fs from 'fs'
 
 export class Scanner {
     DAY = 5400
@@ -146,5 +148,29 @@ export class Scanner {
         }
         const liquidationThresholdPeriod = await this.ssvNetworkViews.getLiquidationThresholdPeriod()
         return feeSum.mul(liquidationThresholdPeriod).mul(12)
+    }
+
+    /**
+     * Get operators by owner address
+     * @param {string} ownerAddress - Owner address
+     * @returns {Promise<Operator[]>} The owner's operators
+     */
+    async getOperators(ownerAddress: string): Promise<Operator[]> {
+        const eventFilter = this.ssvNetwork.filters.OperatorAdded(null, ownerAddress)
+        const operators: Operator[] = []
+        const items = await this.ssvNetwork.queryFilter(eventFilter, 0, 'latest')
+        for (const item of items) {
+            const { args } = item
+            const { operatorId } = args
+            const { fee, validatorCount, isPrivate } = await this.ssvNetworkViews.getOperatorById(operatorId)
+            operators.push({
+                id: operatorId.toNumber(),
+                fee,
+                ownerAddress,
+                validatorCount,
+                isPrivate
+            })
+        }
+        return operators
     }
 }

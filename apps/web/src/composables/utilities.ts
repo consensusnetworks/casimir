@@ -1,8 +1,6 @@
 import { ref } from 'vue'
 import * as XLSX from 'xlsx'
 
-const checkedItems = ref([] as any)
-
 export default function useUtilities() {
     const convertString = (inputString: string) => {
         if (inputString.length && inputString.length <= 4) {
@@ -16,7 +14,7 @@ export default function useUtilities() {
         return start + middle + end
     }
       
-    function exportFile(filteredData: any) {
+    function exportFile(checkedItems: any, filteredData: any) {
         const jsonData = checkedItems.value.length > 0 ? checkedItems.value : filteredData.value
       
         const isMac = navigator.userAgent.indexOf('Mac') !== -1
@@ -32,7 +30,6 @@ export default function useUtilities() {
       }
 
       return {
-        checkedItems,
         convertString,
         exportFile,
       }

@@ -7,7 +7,7 @@ import useUsers from '@/composables/users'
 import useUtilies from '@/composables/utilities'
 
 const { getUserOperators, registerOperatorWithCasimir, userOperators } = useContracts()
-const { checkedItems, convertString, exportFile } = useUtilies()
+const { convertString, exportFile } = useUtilies()
 const { rawUserAnalytics, user } = useUsers()
 
 // Form inputs
@@ -69,17 +69,27 @@ const operatorTableHeaders = ref(
 
 const tableData = ref<any>([])
 const filteredData = ref(tableData.value)
+const checkedItems = ref([] as any)
+
+  /**
+   * availableCollateral: string | number,
+   * collateralInUse: number,
+   * id: number | string,
+   * node_url: string,
+   * rewards: number
+   * walletAddress: string,
+   */
 
 onMounted(async () => {
   if (user.value) {
-    await setTableData()
+    await getUserOperators()
     filterData()
   }
 })
 
 watch(user, async () => {
   if (user.value) {
-    await setTableData()
+    await getUserOperators()
     filterData()
   }
 })
@@ -92,7 +102,9 @@ watch(selectedWallet, () =>{
 })
 
 watch(userOperators, () =>{
-  // set up table data
+  console.log('ssv ops', userOperators.value)
+
+  // set up data table here
 })
 
 watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
@@ -184,23 +196,6 @@ const submitRegisterOperatorForm = async () =>{
   openAddOperatorModal.value = false
 }
 
-const setTableData = async () =>{
-  // TODO: Make sure userOperators have types defined below
-  // @chris set tableData.value here
-  await getUserOperators()
-
-  /**
-   * availableCollateral: string | number,
-   * collateralInUse: number,
-   * id: number | string,
-   * node_url: string,
-   * rewards: number
-   * walletAddress: string,
-   */
-
-  tableData.value = userOperators.value.casimir
-}
-
 </script>
 
 <template>
@@ -219,7 +214,7 @@ const setTableData = async () =>{
           type="plus"
           class="icon w-[17px] h-min"
         />
-        Add Operator {{ user?.accounts }}
+        Add Operator
       </button>
     </div>
     
@@ -227,7 +222,7 @@ const setTableData = async () =>{
       v-if="!user?.address"
       class="card_container w-full px-[32px] py-[31px]
        text-grey_4 flex items-center justify-center"
-      style="min-height: calc(100vh - 120px); height: 500px;"
+      style="min-height: calc(100vh - 320px); height: 500px;"
     >
       <div class="border rounded-[3px] border-grey_1 border-dashed p-[10%] text-center">
         Connect wallet to view and register operators... 
@@ -237,7 +232,7 @@ const setTableData = async () =>{
     <div
       v-else
       class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap relative"
-      style="min-height: calc(100vh - 120px); height: 500px;"
+      style="min-height: calc(100vh - 320px); height: 500px;"
     >
       <!-- Form -->
       <div
@@ -460,7 +455,7 @@ const setTableData = async () =>{
         <div class="flex items-start gap-[12px]">
           <button
             class="flex items-center gap-[8px] export_button"
-            @click="exportFile(filteredData)"
+            @click="exportFile(checkedItems, filteredData)"
           >
             <vue-feather
               type="upload-cloud"
@@ -551,9 +546,9 @@ const setTableData = async () =>{
 
         <div
           v-else
-          class="w-full border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] text-[14px] text-grey_3"
+          class="w-full h-full border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] text-[14px] text-grey_3"
         >
-          You currently do not have operators registed under your account.
+          You currently do not have operators registered under your account.
           <p>
             Connect wallet or register operators to view their performance.
           </p>
