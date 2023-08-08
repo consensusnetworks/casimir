@@ -9,8 +9,7 @@
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {
-        "@aws-cdk/aws-glue-alpha": "^2.33.0-alpha.0",
-        "pg": "^8.10.0"
+        "@aws-cdk/aws-glue-alpha": "^2.33.0-alpha.0"
     },
     "devDependencies": {
         "@types/node": "^17.0.38"
