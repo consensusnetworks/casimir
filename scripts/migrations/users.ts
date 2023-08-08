@@ -1,7 +1,8 @@
 import fs from 'fs'
 import os from 'os'
 import { JsonSchema, Schema, accountSchema, nonceSchema, operatorSchema, userAccountSchema, userSchema } from '@casimir/data'
-import { getSecret, run } from '@casimir/helpers'
+import { run } from '@casimir/helpers'
+import { getSecret } from '@casimir/aws'
 
 void async function () {
     const project = process.env.PROJECT || 'casimir'
