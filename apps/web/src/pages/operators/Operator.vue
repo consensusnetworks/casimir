@@ -26,7 +26,7 @@ const onSelectOperatorIDBlur = () => {
     }, 200)
 }
 // @chris need a way to find out possible operators on selecting a wallet address
-const possibleOperatorID = ref([] as string[])
+const availableOperatorIDs = ref([] as string[])
 const selectedPublicNodeURL = ref()
 const selectedCollateral = ref()
 
@@ -88,12 +88,14 @@ watch(selectedWallet, () =>{
   selectedOperatorID.value = ''
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
-  
+
   if (selectedWallet.value.address === '') {
-    possibleOperatorID.value = []
+    availableOperatorIDs.value = []
   } else {
-    possibleOperatorID.value = operators.value.filter((operator: any) => {
-      return operator.ownerAddress === selectedWallet.value.address && !registeredOperators.value.includes(operator.id)
+    availableOperatorIDs.value = operators.value.filter((operator: any) => {
+      const sameAddress = operator.ownerAddress === selectedWallet.value.address
+      const idRegistered = registeredOperators.value.find((registeredOperator: any) => registeredOperator.id === operator.id)
+      return sameAddress && !idRegistered
     }).map((operator: any) => operator.id)
   }
 })
@@ -195,7 +197,7 @@ async function submitRegisterOperatorForm() {
   selectedOperatorID.value = ''
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
-  possibleOperatorID.value = []
+  availableOperatorIDs.value = []
 
   openAddOperatorModal.value = false
 }
@@ -341,14 +343,14 @@ async function submitRegisterOperatorForm() {
                   Avaliable Operators
                 </h6>
                 <div
-                  v-if="possibleOperatorID.length === 0" 
+                  v-if="availableOperatorIDs.length === 0" 
                   class="border-y border-y-grey_1
                    text-grey_4 my-[10px] text-center truncate"
                 >
                   No Operators Found
                 </div>
                 <button
-                  v-for="operator in possibleOperatorID"
+                  v-for="operator in availableOperatorIDs"
                   v-else
                   :key="operator"
                   type="button"
