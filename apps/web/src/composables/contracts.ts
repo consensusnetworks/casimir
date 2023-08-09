@@ -384,8 +384,7 @@ export default function useContracts() {
             let signer = signerCreator(walletProvider)
             if (isWalletConnectSigner(signer)) signer = await signer
             const result = await casimirOperatorRegistry.connect(signer as ethers.Signer).register(operatorId, { from: address, value: ethers.utils.parseEther(value)})
-            console.log('register result :>> ', result)
-            await result.wait(1)
+            await result.wait()
             return true
         } catch (err) {
             console.error(`There was an error in registerOperatorWithCasimir function: ${JSON.stringify(err)}`)
