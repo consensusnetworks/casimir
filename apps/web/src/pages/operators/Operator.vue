@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch} from 'vue'
 import VueFeather from 'vue-feather'
-import { FormattedWalletOption, ProviderString } from '@casimir/types'
+import { ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
-import useUtilies from '@/composables/utilities'
+import useUtilities from '@/composables/utilities'
 
 const { getUserOperators, registerOperatorWithCasimir, operators, registeredOperators } = useContracts()
-const { convertString, exportFile } = useUtilies()
-const { rawUserAnalytics, user } = useUsers()
+const { user } = useUsers()
+const { convertString, exportFile } = useUtilities()
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -52,33 +52,23 @@ const operatorTableHeaders = ref(
         value: 'walletAddress'
     },
     {
-        title: 'Available Collateral',
-        value: 'availableCollateral'
+        title: 'Collateral',
+        value: 'collateral'
     },
     {
-        title: 'Collateral In Use',
-        value: 'collateralInUse'
+        title: 'Pool Count',
+        value: 'poolCount'
     },
     {
-        title: 'Rewards',
-        value: 'rewards'
+        title: 'Node URL',
+        value: 'nodeURL'
     },
-
   ]
 )
 
 const tableData = ref<any>([])
 const filteredData = ref(tableData.value)
 const checkedItems = ref([] as any)
-
-  /**
-   * availableCollateral: string | number,
-   * collateralInUse: number,
-   * id: number | string,
-   * node_url: string,
-   * rewards: number
-   * walletAddress: string,
-   */
 
 onMounted(async () => {
   if (user.value) {
@@ -95,14 +85,29 @@ watch(user, async () => {
 })
 
 watch(selectedWallet, () =>{
-  // Update possibleOperatorIds
+  selectedOperatorID.value = ''
+  selectedPublicNodeURL.value = ''
+  selectedCollateral.value = ''
+  
+  if (selectedWallet.value.address === '') {
+    possibleOperatorID.value = []
+  } else {
+    possibleOperatorID.value = operators.value.filter((operator: any) => {
+      return operator.ownerAddress === selectedWallet.value.address && !registeredOperators.value.includes(operator.id)
+    }).map((operator: any) => operator.id)
+  }
 })
 
-watch([operators, registeredOperators], () =>{
-  console.log('operators.value :>> ', operators.value)
-  console.log('registeredOperators.value :>> ', registeredOperators.value)
-
-  // set up data table here
+watch(registeredOperators, () =>{
+  tableData.value.push(...registeredOperators.value.map((operator: any) => {
+    return {
+      id: operator.id,
+      walletAddress: operator.ownerAddress,
+      collateral: operator.collateral + ' ETH',
+      poolCount: operator.poolCount,
+      nodeURL: operator.url
+    }
+  }))
 })
 
 watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
@@ -165,25 +170,26 @@ const removeItemFromCheckedList = (item:any) => {
   }
 }
 
-const submitRegisterOperatorForm = async () =>{
-  // const newOperator = {
-  //   wallet_provider: selectedWallet.value.wallet_provider,
-  //   operator_id: selectedOperatorID.value,
-  //   walletAddress: selectedWallet.value.address,
-  //   availableCollateral: selectedCollateral.value,
-  //   node_url: selectedPublicNodeURL.value,
-  //   collateralInUse: 0,
-  //   rewards: 0
-  // }
-  
-  // tableData.value = [...tableData.value, newOperator]
-
-  await registerOperatorWithCasimir(
+async function submitRegisterOperatorForm() {
+  const registerResult = await registerOperatorWithCasimir(
     selectedWallet.value.wallet_provider as ProviderString, 
     selectedWallet.value.address, 
     parseInt(selectedOperatorID.value), 
     selectedCollateral.value 
   )
+
+  console.log('registerResult :>> ', registerResult)
+
+  // @demogorgod: this should only add if the register was successful
+  const newOperator = {
+    id: selectedOperatorID.value,
+    collateral: selectedCollateral.value,
+    nodeURL: selectedPublicNodeURL.value,
+    poolCount: 0,
+    walletAddress: selectedWallet.value.address,
+  }
+  
+  tableData.value = [...tableData.value, newOperator]
 
   selectedWallet.value = { address: '', wallet_provider: ''}
   selectedOperatorID.value = ''
