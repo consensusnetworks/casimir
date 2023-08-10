@@ -137,8 +137,12 @@ watch(selectedTimeframe, () => {
   <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap">
     <div class="flex flex-wrap gap-[20px] justify-between mb-[52px]">
       <div :class="screenWidth < 450? 'w-full border-b pb-[10px] flex justify-between items-start gap-[5px]' : ''">
-        <h6 class="balance_title mb-[15px]">
+        <h6 class="balance_title mb-[15px] tooltip_container">
           Available Balance
+
+          <div class="tooltip w-[200px]">
+            Total value of [ethereum] held in the connected wallet addresses. Does not include staked assets. 
+          </div>
         </h6>
         <div class="flex items-end gap-[12px]">
           <h5 class="balance_eth">
@@ -150,8 +154,11 @@ watch(selectedTimeframe, () => {
         </div>
       </div>
       <div :class="screenWidth < 450? 'w-full border-b pb-[10px] flex justify-between items-start gap-[5px]' : ''">
-        <h6 class="balance_title mb-[15px]">
+        <h6 class="balance_title mb-[15px] tooltip_container">
           Currently Staked
+          <div class="tooltip w-[200px] right-0">
+            Ethereum actively staked through Casimir from connected wallet addresses. Does not include withdrawn stake. 
+          </div>
         </h6>
         <div class="flex items-end gap-[12px]">
           <h5 class="balance_eth">
@@ -163,8 +170,11 @@ watch(selectedTimeframe, () => {
         </div>
       </div>
       <div :class="screenWidth < 450? 'w-full border-b pb-[10px] flex justify-between items-start gap-[5px]' : ''">
-        <h6 class="balance_title mb-[15px]">
+        <h6 class="balance_title mb-[15px] tooltip_container">
           Rewards Earned
+          <div class="tooltip w-[200px] right-0">
+            Total rewards earned from ethereum that is currently or has ever been staked through Casimir. Includes withdrawn and restaked earnings. 
+          </div>
         </h6>
         <div class="flex items-end gap-[12px]">
           <h5 class="balance_eth">
