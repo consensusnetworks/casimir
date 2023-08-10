@@ -129,21 +129,25 @@ const filterData = () => {
   if (searchInput.value === '') {
     filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
   } else {
-    const searchTerm = searchInput.value
+    const searchTerm = searchInput.value.toLocaleLowerCase()
     filteredDataArray = (tableData.value[tableView.value as keyof typeof tableData.value] as Array<any>).filter(item => {
       return (
         // Might need to modify to match types each variable
-        item.wallet_provider?.toLowerCase().includes(searchTerm) ||
-        item.act?.toLowerCase().includes(searchTerm) ||
-        item.bal?.toLowerCase().includes(searchTerm) ||
-        item.stk_amt?.toLowerCase().includes(searchTerm) ||
-        item.stk_rwd?.toLowerCase().includes(searchTerm) ||
-        item.tx_hash?.toLowerCase().includes(searchTerm) ||
-        item.date?.toLowerCase().includes(searchTerm) ||
-        item.apy?.toLowerCase().includes(searchTerm) ||
-        item.status?.toLowerCase().includes(searchTerm) || 
-        item.type?.toLowerCase().includes(searchTerm) ||
-        item.staking_fees.toLowerCase().includes(searchTerm)
+        // {tx_hash: string, wallet_provider: string,  status: string, 
+        // staking_fees: string, type: string, amount: string, bal: string,
+        // act: string, date: string, blank_column: any, stk_amt: string, 
+        // tx_type: string, stk_rwd: string }
+        item.wallet_provider?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.act?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.bal?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.stk_amt?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.stk_rwd?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.tx_hash?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.date?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.apy?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.status?.toString().toLocaleLowerCase().includes(searchTerm) || 
+        item.type?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.staking_fees?.toString().toLocaleLowerCase().includes(searchTerm)
       )
     })
   }
@@ -357,7 +361,7 @@ onMounted(() =>{
         </div>
       </div>
       <div class="flex flex-wrap gap-[20px] justify-between py-[20px] items-center border-b border-b-[#EAECF0]">
-        <div class="grouped_buttons overflow-hidden">
+        <div class="grouped_buttons flex flex-nowrap overflow-hidden w-[261px]">
           <button
             class="timeframe_button"
             :class="tableView === 'Wallets'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
@@ -381,11 +385,10 @@ onMounted(() =>{
           </button>
         </div>
         <div class="flex flex-wrap items-center gap-[12px]">
-          <div class="flex items-center gap-[8px] search_bar">
+          <div class="flex items-center w-full gap-[12px] search_bar">
             <vue-feather
               type="search"
-              size="36"
-              class="icon w-[20px] h-min text-[#667085]"
+              class="icon w-[20px] h-min pr-[20px] text-[#667085]"
             />
             <input
               v-model="searchInput"
@@ -393,6 +396,13 @@ onMounted(() =>{
               class="w-full outline-none"
               placeholder="Search"
             >
+
+            <button @click="searchInput = ''">
+              <vue-feather
+                type="x"
+                class="icon w-[14px] h-min text-[#667085]"
+              />
+            </button>
           </div>
 
           <!-- <button class="filters_button">
@@ -417,29 +427,52 @@ onMounted(() =>{
             >
               <div class="flex items-center gap-[5px]">
                 <div
-                  v-if="header.value === 'wallet_provider'"
-                  class="flex items-center"
+                  v-if="header.value === 'bal'"
+                  class="flex items-center tooltip_container"
                 >
-                  <!-- <button class="checkbox_button mr-[12px]">
-                    <vue-feather
-                      type="minus"
-                      size="20"
-                      class="icon w-[14px] h-min"
-                    />
-                  </button> -->
-                  Wallet Provider
+                  Wallet Balance
+
+                  <div class="tooltip w-[200px] left-0">
+                    Total value of [ethereum] held in the connected wallet addresses. Does not include staked assets.
+                  </div>
                 </div>
+                <div
+                  v-else-if="header.value === 'stk_amt'"
+                  class="flex items-center tooltip_container"
+                >
+                  Stake Balance
+
+                  <div class="tooltip w-[200px] left-0">
+                    Ethereum actively staked through Casimir from specified wallet address. Does not include withdrawn stake.
+                  </div>
+                </div>
+                <div
+                  v-else-if="header.value === 'stk_rwd'"
+                  class="flex items-center tooltip_container"
+                >
+                  Stake Rewards (All-Time)
+
+                  <div class="tooltip w-[200px] right-0">
+                    Total rewards earned from ethereum that is currently or has ever been staked through Casimir from specified wallet address. Includes withdrawn and restaked earnings.
+                  </div>
+                </div>
+
+                <div
+                  v-else-if="header.value === 'staking_fees'"
+                  class="flex items-center tooltip_container"
+                >
+                  Staking Fees
+
+                  <div class="tooltip w-[200px] left-0">
+                    Staking Fees (in staking actions table)
+                    Total fees charged covering Casimir maintenance fee, operator fees, SSV network fee, and the cost of oracle transactions. 
+                  </div>
+                </div>
+                
                 <div
                   v-else-if="header.value === 'tx_hash'"
                   class="flex items-center"
                 >
-                  <!-- <button class="checkbox_button mr-[12px]">
-                    <vue-feather
-                      type="minus"
-                      size="20"
-                      class="icon w-[14px] h-min"
-                    />
-                  </button> -->
                   Tx Hash
                 </div>
                 <div v-else>
@@ -727,7 +760,6 @@ onMounted(() =>{
     border-radius: 8px;
 }
 .search_bar{
-    width: 316px;
     height: 34px;
     background: #FFFFFF;
     border: 1px solid #D0D5DD;
