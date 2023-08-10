@@ -205,9 +205,9 @@ async function submitRegisterOperatorForm() {
 </script>
 
 <template>
-  <div class="px-[60px] 800s:px-[5%] pt-[20px]">
-    <div class="flex items-start justify-between flex-wrap">
-      <h6 class="title mb-[37px]">
+  <div class="px-[60px] 800s:px-[5%] pt-[51px]">
+    <div class="flex items-start gap-[20px] justify-between flex-wrap mb-[30px]">
+      <h6 class="title">
         Operator Performance
       </h6>
 
@@ -228,7 +228,7 @@ async function submitRegisterOperatorForm() {
       v-if="!user?.address"
       class="card_container w-full px-[32px] py-[31px]
        text-grey_4 flex items-center justify-center"
-      style="min-height: calc(100vh - 320px); height: 500px;"
+      style="min-height: calc(100vh - 420px);"
     >
       <div class="border rounded-[3px] border-grey_1 border-dashed p-[10%] text-center">
         Connect wallet to view and register operators... 
@@ -245,21 +245,23 @@ async function submitRegisterOperatorForm() {
         v-if="openAddOperatorModal"
         class="absolute top-0 left-0 w-full h-full bg-black/[0.2] rounded-[3px] flex items-center justify-center z-[2]"
       >
-        <div class="card_container w-[90%] h-[90%] overflow-auto px-[30px] py-[20px]">
-          <div class="flex items-start justify-between">
+        <div class="card_container w-[80%] h-[90%] overflow-auto px-[30px] py-[20px]">
+          <div class="flex items-center gap-[10px] flex-wrap justify-between">
             <h6 class="card_title">
-              Register Casimir Operator
+              Register Operator
             </h6>
-            <button
-              type="button"
-              class="card_title"
-              @click="openAddOperatorModal = false"
-            >
-              <vue-feather
-                type="x"
-                class="icon w-[17px] h-min"
-              />
-            </button>
+            <div class="">
+              <button
+                type="button"
+                class="card_title"
+                @click="openAddOperatorModal = false"
+              >
+                <vue-feather
+                  type="x"
+                  class="icon w-[17px] h-min"
+                />
+              </button>
+            </div>
           </div>
           <form @submit.prevent="submitRegisterOperatorForm">
             <!-- Wallet address input -->
@@ -306,7 +308,7 @@ async function submitRegisterOperatorForm() {
                 </button>
               </div>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
+            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
               Select your SSV owner address 
             </div>
 
@@ -362,7 +364,7 @@ async function submitRegisterOperatorForm() {
                 </button>
               </div>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
+            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
               <!-- @chris `here` text needs a link to the ssv operator registry-->
               If no operators found with your SSV owner address, register one 
               <a
@@ -394,7 +396,7 @@ async function submitRegisterOperatorForm() {
                 />
               </button>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
+            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]  whitespace-normal">
               <!-- @chris `here` text needs a link to the correct page-->
               Add RockX DKG support to your node as documented
               <a
@@ -434,7 +436,7 @@ async function submitRegisterOperatorForm() {
               Deposit a minimum of 1 ETH
             </div>
 
-            <div class="flex justify-end">
+            <div class="flex justify-end mt-[20px]">
               <button
                 type="submit"
                 class="export_button"
@@ -454,7 +456,7 @@ async function submitRegisterOperatorForm() {
               Operators
             </h6>
           </div>
-          <div class="card_subtitle mt-[4px]">
+          <div class="card_subtitle mt-[20px]">
             List of operators according to their performance 
           </div>
         </div>
@@ -552,10 +554,10 @@ async function submitRegisterOperatorForm() {
 
         <div
           v-else
-          class="w-full h-full border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] text-[14px] text-grey_3"
+          class="border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] whitespace-normal text-[14px] text-grey_3"
         >
-          You currently do not have operators registered under your account.
-          <p>
+          You currently do not have operators registed under your account.
+          <p class="mt-[30px]">
             Connect wallet or register operators to view their performance.
           </p>
         </div>
@@ -769,7 +771,7 @@ async function submitRegisterOperatorForm() {
     font-style: normal;
     font-weight: 500;
     font-size: 18px;
-    line-height: 28px;
+    line-height: 0px;
     color: #101828;
 }
 .card_container{
