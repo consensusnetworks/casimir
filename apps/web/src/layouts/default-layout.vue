@@ -6,10 +6,17 @@ import router from '@/composables/router'
 import VueFeather from 'vue-feather'
 import useWallet from '@/composables/wallet'
 import useUser from '@/composables/users'
+import useScreenDimenstions from '@/composables/screenDimenstions'
 
 const authFlowCardNumber = ref(1)
 const selectedProivder = ref(null as null | string)
 const termsCheckbox = ref(true)
+
+const openRouterMenu = ref(false)
+
+const {
+  screenWidth
+} = useScreenDimenstions()
 
 const  {
   activeWallets,
@@ -85,7 +92,10 @@ onUnmounted(() =>{
           class="w-[21px]"
         >
 
-        <div class="flex flex-wrap items-center gap-50 h-full">
+        <div
+          v-if="screenWidth >= 450"
+          class="flex flex-wrap items-center gap-50 h-full"
+        >
           <router-link
             to="/"
             class="nav_items"
@@ -100,6 +110,66 @@ onUnmounted(() =>{
           >
             Operator
           </router-link>
+        </div>
+
+        <div
+          v-else
+          class="nav_items nav_items_active relative"
+        >
+          <button
+            class="flex items-center gap-[10px]"
+            @click="openRouterMenu = true"
+          >
+            {{ router.currentRoute.value.fullPath === '/'? 'Overview' : router.currentRoute.value.fullPath === '/operator'? 'Operator' : router.currentRoute.value.fullPath }}
+            <vue-feather
+              type="chevron-down"
+              class="icon w-[13px] h-min"
+            />
+          </button>
+
+          <div
+            v-if="openRouterMenu"
+            class="absolute top-[160%] left-0 bg-white rounded-[3px] text-black pb-[15px]
+            flex flex-col gap-[10px] z-[4]"
+          >
+            <div 
+              class="flex items-center justify-between px-[15px] py-[5px] border-b"
+            >
+              Routes
+              <button 
+                @click="openRouterMenu = false"
+              >
+                <vue-feather
+                  type="x"
+                  class="icon w-[13px] mt-[3px] hover:text-grey_3"
+                />
+              </button>
+            </div>
+            <router-link
+              to="/"
+              class="flex items-center gap-[10px] px-[15px] py-[5px] hover:bg-grey_1"
+              @click="openRouterMenu = false"
+            >
+              Overview
+
+              <vue-feather
+                type="chevron-right"
+                class="icon w-[13px] h-min"
+              />
+            </router-link>
+            <router-link
+              to="/operator"
+              class="flex items-center gap-[10px] px-[15px] py-[5px] hover:bg-grey_1"
+              @click="openRouterMenu = false"
+            >
+              Operator
+
+              <vue-feather
+                type="chevron-right"
+                class="icon w-[13px] h-min"
+              />
+            </router-link>
+          </div>
         </div>
 
         <div class="flex items-center justify-between gap-[45px] 600s:gap-[10px] text-white">
@@ -126,7 +196,7 @@ onUnmounted(() =>{
         <div
           v-show="show_setting_modal"
           id="setting_modal"
-          class="absolute right-[60px] bg-white top-[100%] w-[200px] setting_modal"
+          class="absolute right-[60px] 800s:right-[5%] bg-white top-[80%] w-[200px] setting_modal"
         >
           <button class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full">
             <vue-feather
@@ -139,7 +209,7 @@ onUnmounted(() =>{
               Account
             </span>
           </button>
-          <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
+          <!--<button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
             <vue-feather
               type="layers"
               size="36"
@@ -168,7 +238,7 @@ onUnmounted(() =>{
             <span>
               API
             </span>
-          </button>
+          </button> -->
           <button
             class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full"
             :disabled="!user"
@@ -266,7 +336,8 @@ onUnmounted(() =>{
                 </h6>
               </div>
               <div v-else>
-                <div class="my-[20px] px-[10px] nav_items">
+                <!-- Not needed since its the same on the staking component -->
+                <!-- <div class="my-[20px] px-[10px] nav_items">
                   <input
                     v-model="termsCheckbox"
                     type="checkbox"
@@ -275,18 +346,18 @@ onUnmounted(() =>{
                   <button class="text-primary hover:text-blue_3">
                     Terms of Service
                   </button>.
-                </div> 
+                </div>  -->
                 <button
                   v-for="act in walletProviderAddresses"
                   :key="act.address"
-                  class="w-full border rounded-[8px] px-[10px] py-[15px] flex items-center justify-between hover:border-blue_3 mb-[10px]"
+                  class="w-full border rounded-[8px] px-[10px] py-[15px] flex flex-wrap gap-[10px] text-center items-center justify-between hover:border-blue_3 mb-[10px]"
                   @click="selectAddress(act.address), openWalletConnect = false, authFlowCardNumber = 1"
                 >
                   <div>
                     {{ convertString(act.address) }}
                   </div>
                   <div>
-                    {{ act.balance }} ETH
+                    {{ parseFloat(parseFloat(act.balance).toFixed(2)) }} ETH
                   </div>
                 </button>
               </div>

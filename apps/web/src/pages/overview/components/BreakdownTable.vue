@@ -129,21 +129,25 @@ const filterData = () => {
   if (searchInput.value === '') {
     filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
   } else {
-    const searchTerm = searchInput.value
+    const searchTerm = searchInput.value.toLocaleLowerCase()
     filteredDataArray = (tableData.value[tableView.value as keyof typeof tableData.value] as Array<any>).filter(item => {
       return (
         // Might need to modify to match types each variable
-        item.wallet_provider?.toLowerCase().includes(searchTerm) ||
-        item.act?.toLowerCase().includes(searchTerm) ||
-        item.bal?.toLowerCase().includes(searchTerm) ||
-        item.stk_amt?.toLowerCase().includes(searchTerm) ||
-        item.stk_rwd?.toLowerCase().includes(searchTerm) ||
-        item.tx_hash?.toLowerCase().includes(searchTerm) ||
-        item.date?.toLowerCase().includes(searchTerm) ||
-        item.apy?.toLowerCase().includes(searchTerm) ||
-        item.status?.toLowerCase().includes(searchTerm) || 
-        item.type?.toLowerCase().includes(searchTerm) ||
-        item.staking_fees.toLowerCase().includes(searchTerm)
+        // {tx_hash: string, wallet_provider: string,  status: string, 
+        // staking_fees: string, type: string, amount: string, bal: string,
+        // act: string, date: string, blank_column: any, stk_amt: string, 
+        // tx_type: string, stk_rwd: string }
+        item.wallet_provider?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.act?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.bal?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.stk_amt?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.stk_rwd?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.tx_hash?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.date?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.apy?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.status?.toString().toLocaleLowerCase().includes(searchTerm) || 
+        item.type?.toString().toLocaleLowerCase().includes(searchTerm) ||
+        item.staking_fees?.toString().toLocaleLowerCase().includes(searchTerm)
       )
     })
   }
@@ -357,7 +361,7 @@ onMounted(() =>{
         </div>
       </div>
       <div class="flex flex-wrap gap-[20px] justify-between py-[20px] items-center border-b border-b-[#EAECF0]">
-        <div class="grouped_buttons overflow-hidden">
+        <div class="grouped_buttons flex flex-nowrap overflow-hidden w-[261px]">
           <button
             class="timeframe_button"
             :class="tableView === 'Wallets'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
@@ -381,11 +385,10 @@ onMounted(() =>{
           </button>
         </div>
         <div class="flex flex-wrap items-center gap-[12px]">
-          <div class="flex items-center gap-[8px] search_bar">
+          <div class="flex items-center w-full gap-[12px] search_bar">
             <vue-feather
               type="search"
-              size="36"
-              class="icon w-[20px] h-min text-[#667085]"
+              class="icon w-[20px] h-min pr-[20px] text-[#667085]"
             />
             <input
               v-model="searchInput"
@@ -393,6 +396,13 @@ onMounted(() =>{
               class="w-full outline-none"
               placeholder="Search"
             >
+
+            <button @click="searchInput = ''">
+              <vue-feather
+                type="x"
+                class="icon w-[14px] h-min text-[#667085]"
+              />
+            </button>
           </div>
 
           <!-- <button class="filters_button">
@@ -727,7 +737,6 @@ onMounted(() =>{
     border-radius: 8px;
 }
 .search_bar{
-    width: 316px;
     height: 34px;
     background: #FFFFFF;
     border: 1px solid #D0D5DD;

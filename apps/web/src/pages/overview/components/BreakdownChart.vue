@@ -4,8 +4,14 @@ import { onMounted, ref, watch} from 'vue'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 import useEthers from '@/composables/ethers'
+import useScreenDimenstions from '@/composables/screenDimenstions'
 
 import { AnalyticsData, ProviderString } from '@casimir/types'
+
+
+const {
+  screenWidth
+} = useScreenDimenstions()
 
 const { currentStaked, listenForContractEvents, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
 const { user, getUserAnalytics, userAnalytics } = useUsers()
@@ -129,42 +135,42 @@ watch(selectedTimeframe, () => {
 
 <template>
   <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap">
-    <div class="flex flex-wrap justify-between mb-[52px]">
-      <div>
+    <div class="flex flex-wrap gap-[20px] justify-between mb-[52px]">
+      <div :class="screenWidth < 450? 'w-full border-b pb-[10px] flex justify-between items-start gap-[5px]' : ''">
         <h6 class="balance_title mb-[15px]">
           Available Balance
         </h6>
-        <div class="flex items-center gap-[12px]">
+        <div class="flex items-end gap-[12px]">
           <h5 class="balance_eth">
             {{ totalWalletBalance.eth }}
           </h5>
-          <span class="balance_usd">
+          <span class="balance_usd pb-[4px]">
             {{ totalWalletBalance.usd }}
           </span>
         </div>
       </div>
-      <div class="">
+      <div :class="screenWidth < 450? 'w-full border-b pb-[10px] flex justify-between items-start gap-[5px]' : ''">
         <h6 class="balance_title mb-[15px]">
           Currently Staked
         </h6>
-        <div class="flex items-center gap-[12px]">
+        <div class="flex items-end gap-[12px]">
           <h5 class="balance_eth">
             {{ currentStaked.eth }}
           </h5>
-          <span class="balance_usd">
+          <span class="balance_usd  pb-[4px]">
             {{ currentStaked.usd }}
           </span>
         </div>
       </div>
-      <div>
+      <div :class="screenWidth < 450? 'w-full border-b pb-[10px] flex justify-between items-start gap-[5px]' : ''">
         <h6 class="balance_title mb-[15px]">
           Rewards Earned
         </h6>
-        <div class="flex items-center gap-[12px]">
+        <div class="flex items-end gap-[12px]">
           <h5 class="balance_eth">
             {{ stakingRewards.eth }}
           </h5>
-          <span class="balance_usd">
+          <span class="balance_usd  pb-[4px]">
             {{ stakingRewards.usd }}
           </span>
         </div>
