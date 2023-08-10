@@ -35,8 +35,8 @@ const totalWalletBalance = ref<BreakdownAmount>({
 const { ethereumUrl, managerAddress, registryAddress, ssvNetworkAddress, ssvNetworkViewsAddress, viewsAddress } = useEnvironment()
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, ICasimirManagerAbi, provider) as CasimirManager
-const casimirViews: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
-const casimirOperatorRegistry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
+const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
+const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
 const ssvViews: ISSVNetworkViews & ethers.Contract = new ethers.Contract(ssvNetworkViewsAddress, ISSVNetworkViewsAbi, provider) as ISSVNetworkViews
 
 const operators = ref<Operator[]>([])
@@ -208,7 +208,7 @@ export default function useContracts() {
         ]
     
         for (const poolId of poolIds) {
-            const poolDetails = await casimirViews.getPoolDetails(poolId)
+            const poolDetails = await views.getPoolDetails(poolId)
             const pool = {
                 ...poolDetails,
                 operatorIds: poolDetails.operatorIds.map(id => id.toNumber()),
@@ -238,7 +238,7 @@ export default function useContracts() {
 
         const casimirOperators: RegisteredOperator[] = []
         for (const operator of ssvOperators) {
-            const { active, collateral, poolCount, resharing } = await casimirOperatorRegistry.getOperator(operator.id)
+            const { active, collateral, poolCount, resharing } = await registry.getOperator(operator.id)
             const registered = active || collateral.gt(0) || poolCount.gt(0) || resharing
             if (registered) {
                 const pools = await _getPools(operator.id)
@@ -383,7 +383,7 @@ export default function useContracts() {
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer = signerCreator(walletProvider)
             if (isWalletConnectSigner(signer)) signer = await signer
-            const result = await casimirOperatorRegistry.connect(signer as ethers.Signer).register(operatorId, { from: address, value: ethers.utils.parseEther(value)})
+            const result = await registry.connect(signer as ethers.Signer).register(operatorId, { from: address, value: ethers.utils.parseEther(value)})
             await result.wait()
             return true
         } catch (err) {
