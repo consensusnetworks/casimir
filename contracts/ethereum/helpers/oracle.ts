@@ -52,7 +52,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         operatorIds
     })
 
-    const validatorFee = await scanner.getClusterFee(operatorIds)
+    const validatorFee = await scanner.getRequiredFee(operatorIds)
 
     const uniswapFactory = new Factory({
         provider: ethers.provider,
