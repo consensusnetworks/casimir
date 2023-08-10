@@ -41,6 +41,7 @@ const ssvViews: ISSVNetworkViews & ethers.Contract = new ethers.Contract(ssvNetw
 
 const operators = ref<Operator[]>([])
 const registeredOperators = ref<Operator[]>([])
+const nonregisteredOperators = ref<Operator[]>([])
 
 export default function useContracts() {
     const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
@@ -265,8 +266,14 @@ export default function useContracts() {
                 })
             }
         }
-        _setOperators(ssvOperators)
-        _setRegisteredOperators(casimirOperators)
+        
+        const nonregOperators = ssvOperators.filter((operator: any) => {
+            const idRegistered = casimirOperators.find((registeredOperator: any) => registeredOperator.id === operator.id)
+            return !idRegistered
+        })
+
+        _setOperators(nonregOperators, 'nonregistered')
+        _setOperators(casimirOperators, 'registered')
     }
 
     // async function _getSSVOperators(): Promise<SSVOperator[]> {
@@ -415,12 +422,15 @@ export default function useContracts() {
         }
     }
 
-    function _setOperators(operatorsArray: Operator[]) {
-        operators.value = operatorsArray as Array<Operator>
-    }
-
-    function _setRegisteredOperators(operatorsArray: Array<Operator>) {
-        registeredOperators.value = operatorsArray as Array<Operator>
+    function _setOperators(operatorsArray: Operator[], type: 'nonregistered' | 'registered') {
+        switch (type) {
+            case 'nonregistered':
+                nonregisteredOperators.value = operatorsArray as Array<Operator>
+            break
+            case 'registered':
+                registeredOperators.value = operatorsArray as Array<Operator>
+            break
+        }
     }
 
     function stopListeningForContractEvents() {
@@ -452,8 +462,9 @@ export default function useContracts() {
         manager, 
         operators,
         registeredOperators,
-        stakingRewards, 
+        stakingRewards,
         totalWalletBalance,
+        nonregisteredOperators,
         deposit, 
         getCurrentStaked,
         getDepositFees,

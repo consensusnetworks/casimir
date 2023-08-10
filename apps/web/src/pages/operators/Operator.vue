@@ -7,7 +7,7 @@ import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
 import useUsers from '@/composables/users'
 
-const { getUserOperators, registerOperatorWithCasimir, operators, registeredOperators } = useContracts()
+const { getUserOperators, registerOperatorWithCasimir, nonregisteredOperators, registeredOperators } = useContracts()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
 const { user } = useUsers()
@@ -86,24 +86,21 @@ watch(user, async () => {
   }
 })
 
-watch(selectedWallet, () =>{
+watch(selectedWallet, async () =>{
   selectedOperatorID.value = ''
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
 
+  await getUserOperators()
+
   if (selectedWallet.value.address === '') {
     availableOperatorIDs.value = []
   } else {
-    availableOperatorIDs.value = operators.value.filter((operator: any) => {
-      const sameAddress = operator.ownerAddress === selectedWallet.value.address
-      const idRegistered = registeredOperators.value.find((registeredOperator: any) => registeredOperator.id === operator.id)
-      return sameAddress && !idRegistered
-    }).map((operator: any) => operator.id)
-  }
+    availableOperatorIDs.value = [...nonregisteredOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)}
 })
 
-watch(registeredOperators, () =>{
-  tableData.value.push(...registeredOperators.value.map((operator: any) => {
+watch(registeredOperators, () => {
+  tableData.value = [...registeredOperators.value].map((operator: any) => {
     return {
       id: operator.id,
       walletAddress: operator.ownerAddress,
@@ -111,7 +108,7 @@ watch(registeredOperators, () =>{
       poolCount: operator.poolCount,
       nodeURL: operator.url
     }
-  }))
+  })
 })
 
 watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
