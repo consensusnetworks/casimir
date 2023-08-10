@@ -367,7 +367,7 @@ onMounted(async () => {
               >
               <button
                 type="button"
-                @click="selectedWallet = {address: '', wallet_provider: ''}"
+                @click="selectedWallet.address = ''"
               >
                 <vue-feather
                   type="x"
