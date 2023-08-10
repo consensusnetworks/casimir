@@ -1,18 +1,6 @@
 import * as XLSX from 'xlsx'
 
-export default function useUtilities() {
-    const convertString = (inputString: string) => {
-        if (inputString.length && inputString.length <= 4) {
-          return inputString
-        }
-      
-        const start = inputString.substring(0, 4)
-        const end = inputString.substring(inputString.length - 4)
-        const middle = '.'.repeat(4)
-      
-        return start + middle + end
-    }
-      
+export default function useFiles() {  
     function exportFile(checkedItems: any, filteredData: any) {
         const jsonData = checkedItems.value.length > 0 ? checkedItems.value : filteredData.value
       
@@ -26,23 +14,11 @@ export default function useUtilities() {
           const excelBuffer = convertJsonToExcelBuffer(jsonData)
           downloadFile(excelBuffer, 'operator_performance.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         }
-      }
-
-      function formatNumber(number: number) {
-        const SI_SYMBOL = ['', 'K', 'M', 'B', 'T', 'P', 'E']
-        const tier = Math.log10(Math.abs(number)) / 3 | 0
-        if(tier === 0) return number.toFixed(2)
-        const suffix = SI_SYMBOL[tier]
-        const scale = Math.pow(10, tier * 3)
-        const scaled = number / scale
-        return scaled.toFixed(2) + suffix
     }
 
-      return {
-        convertString,
-        exportFile,
-        formatNumber
-      }
+    return {
+      exportFile
+    }
 }
 
 function downloadFile (content: any, filename: string, mimeType: any) {

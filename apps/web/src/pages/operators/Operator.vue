@@ -3,12 +3,14 @@ import { onMounted, ref, watch} from 'vue'
 import VueFeather from 'vue-feather'
 import { ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
+import useFiles from '@/composables/files'
+import useFormat from '@/composables/format'
 import useUsers from '@/composables/users'
-import useUtilities from '@/composables/utilities'
 
 const { getUserOperators, registerOperatorWithCasimir, operators, registeredOperators } = useContracts()
+const { exportFile } = useFiles()
+const { convertString } = useFormat()
 const { user } = useUsers()
-const { convertString, exportFile } = useUtilities()
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -789,4 +791,4 @@ async function submitRegisterOperatorForm() {
     letter-spacing: -0.03em;
     color: #FFFFFF;
 }
-</style>
+</style>@/composables/files

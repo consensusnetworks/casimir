@@ -11,7 +11,7 @@ import useLedger from '@/composables/ledger'
 import usePrice from '@/composables/price'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
-import useUtilities from './utilities'
+import useFormat from '@/composables/format'
 import useWalletConnect from './walletConnect'
 import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Pool, ProviderString, RegisteredOperator, UserWithAccountsAndOperators } from '@casimir/types'
 import { Operator, Scanner } from '@casimir/ssv'
@@ -44,11 +44,11 @@ const registeredOperators = ref<Operator[]>([])
 
 export default function useContracts() {
     const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
+    const { formatNumber } = useFormat()
     const { getEthersLedgerSigner } = useLedger()
     const { getCurrentPrice } = usePrice()
     const { getEthersTrezorSigner } = useTrezor()
     const { user } = useUsers()
-    const { formatNumber } = useUtilities()
     const { isWalletConnectSigner, getEthersWalletConnectSigner } = useWalletConnect()
 
     const stakeDepositedListener = async () => await refreshBreakdown()

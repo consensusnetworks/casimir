@@ -5,17 +5,12 @@ import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 import useEthers from '@/composables/ethers'
 import useScreenDimensions from '@/composables/screenDimensions'
-
 import { AnalyticsData, ProviderString } from '@casimir/types'
 
-
-const {
-  screenWidth
-} = useScreenDimensions()
-
 const { currentStaked, listenForContractEvents, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
-const { user, getUserAnalytics, userAnalytics } = useUsers()
 const { listenForTransactions } = useEthers()
+const { screenWidth } = useScreenDimensions()
+const { user, getUserAnalytics, userAnalytics } = useUsers()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('historical')
