@@ -26,6 +26,7 @@ import { Pool } from './interfaces/Pool'
 import { PoolStatus } from './interfaces/PoolStatus'
 import { ProviderString } from './interfaces/ProviderString'
 import { TransactionRequest } from './interfaces/TransactionRequest'
+import { RegisteredOperator } from './interfaces/RegisteredOperator'
 import { RemoveAccountOptions } from './interfaces/RemoveAccountOptions'
 import { User } from './interfaces/User'
 import { UserAddedSuccess } from './interfaces/UserAddedSuccess'
@@ -61,6 +62,7 @@ export type {
     Pool,
     ProviderString,
     TransactionRequest,
+    RegisteredOperator,
     RemoveAccountOptions,
     User,
     UserAddedSuccess,

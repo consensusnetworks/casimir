@@ -4,15 +4,18 @@ import Carousel from '@/components/Carousel.vue'
 import Slide from '@/components/Slide.vue'
 import router from '@/composables/router'
 import VueFeather from 'vue-feather'
-import useWallet from '@/composables/wallet'
-import useUser from '@/composables/users'
+import useFormat from '@/composables/format'
 import useScreenDimensions from '@/composables/screenDimensions'
+import useUser from '@/composables/users'
+import useWallet from '@/composables/wallet'
 
 const authFlowCardNumber = ref(1)
 const selectedProivder = ref(null as null | string)
 const termsCheckbox = ref(true)
 
 const openRouterMenu = ref(false)
+
+const { convertString } = useFormat()
 
 const {
   screenWidth
@@ -54,18 +57,6 @@ const handleOutsideClick = (event: any) => {
       authFlowCardNumber.value = 1
     }
   }
-}
-
-const convertString = (inputString: string) => {
-  if (inputString.length <= 4) {
-    return inputString
-  }
-
-  var start = inputString.substring(0, 4)
-  var end = inputString.substring(inputString.length - 4)
-  var middle = '*'.repeat(4)
-
-  return start + middle + end
 }
 
 onMounted(() => {

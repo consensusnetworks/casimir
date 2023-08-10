@@ -108,31 +108,49 @@ export class Dkg {
     /**
      * Start a keygen request
      * @param {StartKeygenInput} input - Keygen input
+     * @param {number} retries - Number of retries
      * @returns {Promise<string>} Ceremony ID
      */
-    async startKeygen(input: StartKeygenInput): Promise<string> {
-        const operatorFlags = Object.entries(input.operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
-        const thresholdFlag = `--threshold ${Object.keys(input.operators).length - 1}`
-        const withdrawalCredentialsFlag = `--withdrawal-credentials ${getWithdrawalCredentials(input.withdrawalAddress)}`
-        const forkVersionFlag = '--fork-version prater'
-        const command = `${this.cliPath} keygen ${operatorFlags} ${thresholdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
-        const request = await run(`${command}`) as string
-        return request.trim().split(' ').pop() as string
+    async startKeygen(input: StartKeygenInput, retries: number | undefined = 25): Promise<string> {
+        try {
+            const operatorFlags = Object.entries(input.operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
+            const thresholdFlag = `--threshold ${Object.keys(input.operators).length - 1}`
+            const withdrawalCredentialsFlag = `--withdrawal-credentials ${getWithdrawalCredentials(input.withdrawalAddress)}`
+            const forkVersionFlag = '--fork-version prater'
+            const command = `${this.cliPath} keygen ${operatorFlags} ${thresholdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
+            const request = await run(`${command}`) as string
+            return request.trim().split(' ').pop() as string
+        } catch (error) {
+            if (retries === 0) {
+                throw error
+            }
+            console.log(`Retrying keygen request ${retries} more times`)
+            return await this.startKeygen(input, retries - 1)
+        }
     }
 
     /**
      * Start a reshare request
      * @param {StartReshareInput} input - Operator IDs, public key, and old operator IDs
+     * @param {number} retries - Number of retries
      * @returns {Promise<string>} Ceremony ID
      */
-    async startReshare(input: StartReshareInput): Promise<string> {
-        const operatorFlags = Object.entries(input.operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
-        const thresholdFlag = `--threshold ${Object.keys(input.operators).length - 1}`
-        const publicKeyFlag = `--validator-public-key ${input.publicKey}`
-        const oldOperatorFlags = Object.entries(input.oldOperators).map(([id, url]) => `--old-operator ${id}=${url}`).join(' ')
-        const command = `${this.cliPath} reshare ${operatorFlags} ${thresholdFlag} ${publicKeyFlag} ${oldOperatorFlags}`
-        const request = await runRetry(`${command}`) as string
-        return request.trim().split(' ').pop() as string
+    async startReshare(input: StartReshareInput, retries: number | undefined = 25): Promise<string> {
+        try {
+            const operatorFlags = Object.entries(input.operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
+            const thresholdFlag = `--threshold ${Object.keys(input.operators).length - 1}`
+            const publicKeyFlag = `--validator-public-key ${input.publicKey}`
+            const oldOperatorFlags = Object.entries(input.oldOperators).map(([id, url]) => `--old-operator ${id}=${url}`).join(' ')
+            const command = `${this.cliPath} reshare ${operatorFlags} ${thresholdFlag} ${publicKeyFlag} ${oldOperatorFlags}`
+            const request = await runRetry(`${command}`) as string
+            return request.trim().split(' ').pop() as string
+        } catch (error) {
+            if (retries === 0) {
+                throw error
+            }
+            console.log(`Retrying reshare request ${retries} more times`)
+            return await this.startReshare(input, retries - 1)
+        }
     }
 
     /**
@@ -140,17 +158,25 @@ export class Dkg {
      * @param {GetSharesInput} input - Request ID, operator IDs, owner address, and owner nonce
      * @returns {Promise<string>} Combined shares
      */
-    async getShares(input: GetSharesInput): Promise<string> {
-        const requestIdFlag = `--request-id ${input.requestId}`
-        const operatorFlags = Object.entries(input.operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
-        const ownerAddressFlag = `--owner-address ${input.ownerAddress}`
-        const ownerNonceFlag = `--owner-nonce ${input.ownerNonce}`
-        const command = `${this.cliPath} get-keyshares ${requestIdFlag} ${operatorFlags} ${ownerAddressFlag} ${ownerNonceFlag}`
-        const download = await runRetry(`${command}`) as string
-        const file = download.trim().split(' ').pop() as string
-        const json = JSON.parse(fs.readFileSync(`${file}`, 'utf8'))
-        fs.rmSync(file)
-        return json.payload.readable.shares
+    async getShares(input: GetSharesInput, retries: number | undefined = 25): Promise<string> {
+        try {
+            const requestIdFlag = `--request-id ${input.requestId}`
+            const operatorFlags = Object.entries(input.operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
+            const ownerAddressFlag = `--owner-address ${input.ownerAddress}`
+            const ownerNonceFlag = `--owner-nonce ${input.ownerNonce}`
+            const command = `${this.cliPath} get-keyshares ${requestIdFlag} ${operatorFlags} ${ownerAddressFlag} ${ownerNonceFlag}`
+            const download = await runRetry(`${command}`) as string
+            const file = download.trim().split(' ').pop() as string
+            const json = JSON.parse(fs.readFileSync(`${file}`, 'utf8'))
+            fs.rmSync(file)
+            return json.payload.readable.shares
+        } catch (error) {
+            if (retries === 0) {
+                throw error
+            }
+            console.log(`Retrying get shares request ${retries} more times`)
+            return await this.getShares(input, retries - 1)
+        }
     }
 
     /**
@@ -158,26 +184,34 @@ export class Dkg {
      * @param {GetDepositDataInput} input - Ceremony ID and withdrawal address
      * @returns {Promise<DepositData>} Deposit data
      */
-    async getDepositData(input: GetDepositDataInput): Promise<DepositData> {
-        const requestIdFlag = `--request-id ${input.requestId}`
-        const withdrawalCredentialsFlag = `--withdrawal-credentials 01${'0'.repeat(22)}${input.withdrawalAddress.split('0x')[1]}`
-        const forkVersionFlag = '--fork-version prater'
-        const command = `${this.cliPath} generate-deposit-data ${requestIdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
-        const download = await runRetry(`${command}`) as string
-        const file = download.trim().split(' ').pop() as string
-        const jsonArray = JSON.parse(fs.readFileSync(file, 'utf8'))
-        fs.rmSync(file)
-        const {
-            deposit_data_root: depositDataRoot,
-            pubkey: publicKey,
-            signature,
-            withdrawal_credentials: withdrawalCredentials
-        } = jsonArray[0]
-        return {
-            depositDataRoot: `0x${depositDataRoot}`,
-            publicKey: `0x${publicKey}`,
-            signature: `0x${signature}`,
-            withdrawalCredentials: `0x${withdrawalCredentials}`
+    async getDepositData(input: GetDepositDataInput, retries: number | undefined = 25): Promise<DepositData> {
+        try {
+            const requestIdFlag = `--request-id ${input.requestId}`
+            const withdrawalCredentialsFlag = `--withdrawal-credentials 01${'0'.repeat(22)}${input.withdrawalAddress.split('0x')[1]}`
+            const forkVersionFlag = '--fork-version prater'
+            const command = `${this.cliPath} generate-deposit-data ${requestIdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
+            const download = await runRetry(`${command}`) as string
+            const file = download.trim().split(' ').pop() as string
+            const jsonArray = JSON.parse(fs.readFileSync(file, 'utf8'))
+            fs.rmSync(file)
+            const {
+                deposit_data_root: depositDataRoot,
+                pubkey: publicKey,
+                signature,
+                withdrawal_credentials: withdrawalCredentials
+            } = jsonArray[0]
+            return {
+                depositDataRoot: `0x${depositDataRoot}`,
+                publicKey: `0x${publicKey}`,
+                signature: `0x${signature}`,
+                withdrawalCredentials: `0x${withdrawalCredentials}`
+            }
+        } catch (error) {
+            if (retries === 0) {
+                throw error
+            }
+            console.log(`Retrying get deposit data request ${retries} more times`)
+            return await this.getDepositData(input, retries - 1)
         }
     }
 }

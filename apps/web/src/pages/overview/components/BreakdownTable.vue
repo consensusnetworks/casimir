@@ -3,6 +3,9 @@ import { ref, watch, onMounted } from 'vue'
 import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
 import useUsers from '@/composables/users'
+import useFormat from '@/composables/format'
+
+const { convertString } = useFormat()
 
 const itemsPerPage = ref(7)
 const currentPage = ref(1)
@@ -174,19 +177,6 @@ const filterData = () => {
 watch([searchInput, tableView, selectedHeader, selectedOrientation, currentPage], ()=>{
   filterData()
 })
-
-
-const convertString = (inputString: string) => {
-  if (inputString.length && inputString.length <= 4) {
-    return inputString
-  }
-
-  var start = inputString.substring(0, 4)
-  var end = inputString.substring(inputString.length - 4)
-  var middle = '.'.repeat(4)
-
-  return start + middle + end
-}
 
 const convertJsonToCsv = (jsonData: any[]) => {
   const separator = ','
