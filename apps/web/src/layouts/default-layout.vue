@@ -6,7 +6,7 @@ import router from '@/composables/router'
 import VueFeather from 'vue-feather'
 import useWallet from '@/composables/wallet'
 import useUser from '@/composables/users'
-import useScreenDimenstions from '@/composables/screenDimenstions'
+import useScreenDimensions from '@/composables/screenDimensions'
 
 const authFlowCardNumber = ref(1)
 const selectedProivder = ref(null as null | string)
@@ -16,7 +16,7 @@ const openRouterMenu = ref(false)
 
 const {
   screenWidth
-} = useScreenDimenstions()
+} = useScreenDimensions()
 
 const  {
   activeWallets,
