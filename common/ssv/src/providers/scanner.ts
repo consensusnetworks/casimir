@@ -32,15 +32,14 @@ export class Scanner {
      */
     async getCluster(input: GetClusterInput): Promise<Cluster> {
         const { ownerAddress, operatorIds } = input
-        const eventList = [
-            'ClusterDeposited',
-            'ClusterWithdrawn',
-            'ValidatorAdded',
-            'ValidatorRemoved',
-            'ClusterLiquidated',
-            'ClusterReactivated'
+        const eventFilters = [
+            this.ssvNetwork.filters.CusterDeposited(ownerAddress),
+            this.ssvNetwork.filters.CusterWithdrawn(ownerAddress),
+            this.ssvNetwork.filters.ValidatorAdded(ownerAddress),
+            this.ssvNetwork.filters.ValidatorRemoved(ownerAddress),
+            this.ssvNetwork.filters.ClusterLiquidated(ownerAddress),
+            this.ssvNetwork.filters.ClusterReactivated(ownerAddress)
         ]
-        const eventFilters = eventList.map(event => this.ssvNetwork.filters[event](ownerAddress))
         let step = this.MONTH
         const latestBlockNumber = await this.provider.getBlockNumber()
         let fromBlock = latestBlockNumber - step
@@ -49,11 +48,11 @@ export class Scanner {
         let cluster: Cluster | undefined
         while (!cluster && fromBlock > 0) {
             try {
-                const items = (await Promise.all(
-                    eventFilters.map(async eventFilter => {
-                        return await this.ssvNetwork.queryFilter(eventFilter, fromBlock, toBlock)
-                    })
-                )).flat()
+                const items = []
+                for (const filter of eventFilters) {
+                    const filteredItems = await this.ssvNetwork.queryFilter(filter, fromBlock, toBlock)
+                    items.push(...filteredItems)
+                }
                 for (const item of items) {
                     const { args, blockNumber } = item
                     const clusterMatch = args?.cluster !== undefined
@@ -79,7 +78,6 @@ export class Scanner {
                 }
                 toBlock = fromBlock
             } catch (error) {
-                console.error(error)
                 if (step === this.MONTH) {
                     step = this.WEEK
                 } else if (step === this.WEEK) {
@@ -88,7 +86,6 @@ export class Scanner {
             }
             fromBlock = toBlock - step
         }
-
         cluster = cluster || {
             validatorCount: 0,
             networkFeeIndex: 0,
@@ -105,33 +102,11 @@ export class Scanner {
      * @returns {Promise<number>} Owner validator nonce
      */
     async getNonce(ownerAddress: string): Promise<number> {
-        const eventList = ['ValidatorAdded']
-        const eventFilters = eventList.map(event => this.ssvNetwork.filters[event](ownerAddress))
-        let step = this.MONTH
-        const latestBlockNumber = await this.provider.getBlockNumber()
-        let fromBlock = latestBlockNumber - step
-        let toBlock = latestBlockNumber
-        let nonce = 0
-        while (fromBlock > 0) {
-            try {
-                const items = (await Promise.all(
-                    eventFilters.map(async eventFilter => {
-                        return await this.ssvNetwork.queryFilter(eventFilter, fromBlock, toBlock)
-                    })
-                )).flat()
-                nonce += items.length
-                toBlock = fromBlock
-            } catch (error) {
-                console.error(error)
-                if (step === this.MONTH) {
-                    step = this.WEEK
-                } else if (step === this.WEEK) {
-                    step = this.DAY
-                }
-            }
-            fromBlock = toBlock - step
-        }
-        return nonce
+        const eventFilter = this.ssvNetwork.filters.ValidatorAdded(ownerAddress)
+        const fromBlock = 0
+        const toBlock = 'latest'
+        const items = await this.ssvNetwork.queryFilter(eventFilter, fromBlock, toBlock)
+        return items.length
     }
 
     /**
