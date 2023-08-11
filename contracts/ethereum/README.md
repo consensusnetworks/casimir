@@ -214,22 +214,22 @@ Collateral is used to recover lost validator effective balance at the time of co
 
 Let:
 
-- $\( E \)$ be the total ETH lost, where $\( 0 \leq E \leq 4 \)$.
-- $\( P_i \)$ be the performance percentage of the $\( i^{th} \)$ operator, where $\( 0 \leq P_i \leq 100 \)$ for $\( i = 1, 2, 3, 4 \)$.
-- $\( B_i \)$ be the blame amount for the $\( i^{th} \)$ operator.
+- $ethLost$ be the total ETH lost, where $0 \leq E \leq 4$.
+- $performance_i$ be the performance percentage of the $i^{th}$ operator, where $0 \leq performance_i \leq 100$ for $i = 1, 2, 3, 4$.
+- $blameAmount_i$ be the blame amount for the $i^{th}$ operator.
 
 If all operators have equal performance, the blame is evenly distributed:
-$\[ B_i = \frac{E}{4} \quad \text{for all } i \]$
+$blameAmount_i = \frac{ethLost}{4} \quad \text{for all } i$
 
 Otherwise, the blame is distributed inversely proportional to performance:
 First, calculate the inverse of each performance:
-$\[ I_i = 100 - P_i \]$
+$inversePerformance_i = 100 - performance_i$
 
 Then, the sum of all inverses:
-$\[ S = \sum_{i=1}^{4} I_i \]$
+$inversePerformance_sum = \sum_{i=1}^{4} inversePerformance_i$
 
 Now, the blame for each operator is:
-\[ B_i = \left( \frac{I_i}{S} \right) \times E \]
+$blameAmount_i = \left( \frac{inversePerformance_i}{inversePerformance_sum} \right) \times ethLost$
 
 The blame amounts are submitted by the DAO oracle in response to a completed validator reshare or exit.
 
