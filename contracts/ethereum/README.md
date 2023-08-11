@@ -144,11 +144,11 @@ Mock (development-only) contracts and interfaces are located in the [src/mock](.
 
 ## Distributed Key Generation
 
-Casimir distributes validator key shares to operators using the [rockx-dkg-cli](https://github.com/RockX-SG/rockx-dkg-cli). The CLI is still in development, but it can be used with the local Hardhat network to generate keys and perform DKG operations. The CLI is integrated into the Casimir oracle – use the `--mock` flag when running `npm run dev:ethereum` to enable the mock DKG CLI. Otherwise, the oracle helper scripts in [./helpers/oracle](./helpers/oracle) will use pregenerated DKG keys.
+Casimir distributes validator key shares to operators using SSV nodes with [RockX DKG support](https://github.com/RockX-SG/rockx-dkg-cli). The [@casimir/oracle service](../../services/oracle) uses a DKG messenger server to interact with SSV nodes and perform DKG operations. Before running tests, the [@casimir/oracle generate script](../../services/oracle/scripts/generate.ts) is used to pregenerate DKG keys and the [oracle helper scripts](./helpers/oracle) completes tests with the pregenerated DKG keys. While running the development environment, a local instance of the [@casimir/oracle service](../../services/oracle/index.ts) is used.
 
 ## Oracles
 
-The contract uses two oracles to automate the Casimir staking experience and ensure the security of user funds. The first oracle (see the [@casimir/functions README.md](../../services/functions/README.md)), the Casimir upkeep, reports total validator balance, swept balance, and validator actions once per day (see [Chainlink Automation](https://docs.chain.link/chainlink-automation/introduction)) using trust-minimized compute infrastructure (see [Chainlink Functions](https://docs.chain.link/chainlink-functions)). The second oracle, the Casimir DAO oracle (see the [@casimir/oracle README.md](../../services/oracle/README.md)), watches the manager contract events and automatically executes zero-coordination distributed key generation (DKG) operations: validator key creating, resharing, and exiting off-chain, and submits ceremony verification proofs. The DAO oracle also submits verifiable report details in response to reported validator actions (like completed exits).
+The contract uses two oracles to automate the Casimir staking experience and ensure the security of user funds. The [Casimir Beacon oracle](../../services/functions/README.md) and the Casimir upkeep report total validator balance, swept balance, and validator actions once per day using [Chainlink Functions](https://docs.chain.link/chainlink-functions) and [Chainlink Automation](https://docs.chain.link/chainlink-automation/introduction). The [Casimir DAO oracle](../../services/oracle/README.md) watches the manager contract events and automatically executes zero-coordination distributed key generation (DKG) operations: validator creation, validator resharing, and validator exiting. The DAO oracle also submits verifiable report details in response to reported validator actions (such as an SSV cluster and operator blame amounts for a completed validator exit).
 
 ## 👥 Users
 
@@ -202,13 +202,36 @@ Operators can join the contract registry with a deposit of 4 ETH for collateral 
 
 ### Operator Selection
 
-Operators are chosen to run validators based on metrics fetched and derived directly from the SSV network. These metrics are mainly performance, market share, and fees.
+Operators are chosen to run validators based on metrics fetched and derived directly from the SSV network. These metrics are mainly unused collateral (1 ETH per operator per validator), SSV performance, Casimir pool count, and requested fees.
 
-If an operator's performance is poor for an extended period of time, or their collateral is below the threshold, Casimir removes the operator from existing operator groups by resharing or exiting. The latter is only required in the case that a validator has already undergone more than two reshares to avoid leaving the full key recoverable outside of the currently selected operators.
+If an operator owner would like to deregister their operator and free up their collateral, they can request a reshare via the Casimir registry. Casimir removes the operator from existing operator groups by resharing or exiting. The latter is only required in the case that a validator has already undergone more than two reshares to avoid leaving the full key recoverable outside of the currently selected operators.
 
 ### Operator Collateral
 
-Collateral is used to recover lost validator effective balance at the time of completing an exit. The loss blame is assigned to the four responsible operators based on performance over the duration of the validator's existence.
+Collateral is used to recover lost validator effective balance at the time of completing an exit. An operator must have at least 1 ETH of available collateral (1 ETH collateral becomes unavailable per each validator that operator joins). When an operator is removed from a pool, either when resharing or after a completed exit, they are held responsible for up to 1 ETH of the validator's effective balance if any is lost below the 32 ETH minimum. The amount they owe in this case is called the blame amount.
+
+**Blame Amount Calculation:**
+
+Let:
+
+- \( E \) be the total ETH lost, where \( 0 \leq E \leq 4 \).
+- \( P_i \) be the performance percentage of the \( i^{th} \) operator, where \( 0 \leq P_i \leq 100 \) for \( i = 1, 2, 3, 4 \).
+- \( B_i \) be the blame amount for the \( i^{th} \) operator.
+
+If all operators have equal performance, the blame is evenly distributed:
+\[ B_i = \frac{E}{4} \quad \text{for all } i \]
+
+Otherwise, the blame is distributed inversely proportional to performance:
+First, calculate the inverse of each performance:
+\[ I_i = 100 - P_i \]
+
+Then, the sum of all inverses:
+\[ S = \sum_{i=1}^{4} I_i \]
+
+Now, the blame for each operator is:
+\[ B_i = \left( \frac{I_i}{S} \right) \times E \]
+
+The blame amounts are submitted by the DAO oracle in response to a completed validator reshare or exit.
 
 ### Operator Config
 
