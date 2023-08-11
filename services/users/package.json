@@ -4,9 +4,9 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "node build.js",
-    "predev": "ts-node --transpile-only scripts/db.ts",
-    "dev": "ts-node --transpile-only src/index.ts",
-    "clean": "ts-node --transpile-only scripts/clean.ts",
+    "predev": "npx esno -r dotenv/config scripts/db.ts",
+    "dev": "npx esno -r dotenv/config src/index.ts",
+    "clean": "npx esno -r dotenv/config scripts/clean.ts",
     "test": "echo \"Warning: no test specified\" && exit 0"
   },
   "dependencies": {
@@ -23,8 +23,9 @@
     "@types/node": "^17.0.38",
     "@types/pg": "^8.6.6",
     "chai": "^4.3.6",
+    "dotenv": "^16.3.1",
     "esbuild": "^0.15.9",
-    "minimist": "^1.2.8",
-    "ts-node": "^10.9.1"
+    "esno": "^0.16.3",
+    "minimist": "^1.2.8"
   }
 }

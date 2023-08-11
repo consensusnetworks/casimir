@@ -4,12 +4,14 @@ import { fetchRetry, run } from '@casimir/helpers'
 import { Validator } from '@casimir/types'
 import { Dkg } from '../src/providers/dkg'
 
+/**
+ * Generate validator keys for ethereum testing
+ */
 void async function () {
-
     const outputPath = '../../contracts/ethereum/scripts/.out'
-    const resourcePath = 'scripts/resources'
+    const resourceDir = 'scripts/resources'
 
-    process.env.CLI_PATH = process.env.CLI_PATH || `./${resourcePath}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
+    process.env.CLI_PATH = process.env.CLI_PATH || `./${resourceDir}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
     process.env.MESSENGER_URL = process.env.MESSENGER_URL || 'https://nodes.casimir.co/eth/goerli/dkg/messenger'
     process.env.MESSENGER_SRV_ADDR = process.env.MESSENGER_URL
     process.env.USE_HARDCODED_OPERATORS = 'false'
@@ -43,7 +45,7 @@ void async function () {
     if (!validators[oracleAddress] || Object.keys(validators[oracleAddress]).length < validatorCount) {
         const dkg = await run(`which ${process.env.CLI_PATH}`) as string
         if (!dkg || dkg.includes('not found')) {
-            await run(`GOWORK=off make -C ${resourcePath}/rockx-dkg-cli build`)
+            await run(`GOWORK=off make -C ${resourceDir}/rockx-dkg-cli build`)
         }
         const ping = await fetchRetry(`${process.env.MESSENGER_URL}/ping`)
         const { message } = await ping.json()

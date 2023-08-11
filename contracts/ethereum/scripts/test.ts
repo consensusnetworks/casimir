@@ -1,11 +1,9 @@
 import { run } from '@casimir/helpers'
 
 /**
- * Test Ethereum contracts
+ * Test ethereum contracts
  */
 void async function () {
-
     await run('npm run build --workspace @casimir/ethereum')
-
-    run('npx mocha --require hardhat/register --recursive --exit --extension ts --timeout 250000')
+    await run('npx mocha --require hardhat/register --recursive --exit --extension ts --timeout 250000')
 }()

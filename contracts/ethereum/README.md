@@ -2,9 +2,9 @@
 
 Solidity contracts for decentralized staking on Ethereum
 
-## 📝 Overview
+## About
 
-Currlently stakers either need to solo-stake (and have least 32 Ether), or they need to pool their assets in a liquid staking protocol (LSD). While the former choice is a secure choice for Ether holders, the latter, LSDs, are more or less designed for Ether traders with higher risk-tolerance. Today's LSDs present an inherent counterparty risk to the user, and they rely on centralized control of staking node operators (see [The Risks of LSD](https://notes.ethereum.org/@djrtwo/risks-of-lsd)).
+Currlently stakers either need to solo-stake (and have least 32 Ether), or they need to pool their assets in a liquid staking protocol (LSD). While the former choice is a reliably secure choice for Ether holders (if they have solid infrastructure), the latter, LSDs, often present an inherent counterparty risk to the user because of  their centralized control of staking node operators (see [The Risks of LSD](https://notes.ethereum.org/@djrtwo/risks-of-lsd)).
 
 Casimir is designed to offer users the experience and security of solo-staking while pooling their assets. The Casimir contracts seamlessly connect stakers with any amount of Ether to a permissionless registry of high-performing node operators. Casimir aims to minimize counterparty risk for users and improve decentralization in Ethereum staking:
 
@@ -12,7 +12,27 @@ Casimir is designed to offer users the experience and security of solo-staking w
 - Keys are created and reshared using distributed key generation (DKG)
 - Automated balance and status reports are carried out by a decentralized oracle network (DON)
 
-### Architecture
+## Development
+
+**All testing and development commands should be run from the repository root.**
+
+See the [@casimir/ethereum section] in the [main README](../../README.md#casimirethereum) for testing and development instructions.
+
+Build the contracts (without any tests or development environment).
+
+```zsh
+# From the repository root
+npm run build --workspace @casimir/ethereum
+```
+
+To directly run any script in the [@casimir/ethereum package.json](./package.json), use the `--workspace @casimir/ethereum` flag.
+
+```zsh
+# From the repository root
+npm run <script> --workspace @casimir/ethereum
+```
+
+## Architecture
 
 Casimir distributes user deposits to Ethereum validators operated by SSV. Validator keys are shared with zero-coordination distributed key generation. Chainlink nodes report from the Beacon chain and SSV to sync balances and rewards, manage collateral recovery, and automate validator creation and exits.
 
@@ -75,14 +95,9 @@ graph LR
     J4 --> I
 ```
 
-### Contracts
+## Contracts
 
-Casimir v1 contains five internal contracts with interfaces and uses a suite of vendor contracts from Chainlink, OpenZeppelin, SSV, and Uniswap. All contract source code is located in the [./src/v1](./src/v1) directory. A Hardhat environment for development and deployment is configured in the [hardhat.config.ts](./hardhat.config.ts) file. The following contract scripts can be executed from the **monorepo root** directory:
-
-- `npm run dev:ethereum` - Run a local Ethereum network and deploy contracts
-- `npm run test:ethereum` - Run tests for the Ethereum contracts
-- `npm run clean --workspace @casimir/ethereum` - Clean the Ethereum build directory
-- `npm run build --workspace @casimir/ethereum` - Compile the Ethereum contracts
+Casimir v1 contains five internal contracts with interfaces and uses a suite of vendor contracts from Chainlink, OpenZeppelin, SSV, and Uniswap. All contract source code is located in the [./src/v1](./src/v1) directory. A Hardhat environment for development and deployment is configured in the [hardhat.config.ts](./hardhat.config.ts) file.
 
 **Internal Contracts:**
 
@@ -127,13 +142,13 @@ Mock (development-only) contracts and interfaces are located in the [src/mock](.
 | --- | --- | --- |
 | [MockFunctionsOracle](./src/v1/mock/MockFunctionsOracle.sol) | Mocks Chainlink Functions responses | [docs/index.md#mockfunctionsoracle](./docs/index.md#mockfunctionsoracle) |
 
-### Distributed Key Generation
+## Distributed Key Generation
 
 Casimir distributes validator key shares to operators using the [rockx-dkg-cli](https://github.com/RockX-SG/rockx-dkg-cli). The CLI is still in development, but it can be used with the local Hardhat network to generate keys and perform DKG operations. The CLI is integrated into the Casimir oracle – use the `--mock` flag when running `npm run dev:ethereum` to enable the mock DKG CLI. Otherwise, the oracle helper scripts in [./helpers/oracle](./helpers/oracle) will use pregenerated DKG keys.
 
-### Oracles
+## Oracles
 
-The contract uses two oracles to automate the Casimir staking experience and ensure the security of user funds. The first oracle, the Casimir upkeep, reports total validator balance, swept balance, and validator actions once per day (see [Chainlink Automation](https://docs.chain.link/chainlink-automation/introduction)) using trust-minimized compute infrastructure (see [Chainlink Functions](https://docs.chain.link/chainlink-functions)). The second oracle, the Casimir DAO oracle, watches the manager contract events and automatically executes zero-coordination distributed key generation (DKG) operations: validator key creating, resharing, and exiting off-chain, and submits ceremony verification proofs. The DAO oracle also submits verifiable report details in response to reported validator actions (like completed exits).
+The contract uses two oracles to automate the Casimir staking experience and ensure the security of user funds. The first oracle (see the [@casimir/functions README.md](../../services/functions/README.md)), the Casimir upkeep, reports total validator balance, swept balance, and validator actions once per day (see [Chainlink Automation](https://docs.chain.link/chainlink-automation/introduction)) using trust-minimized compute infrastructure (see [Chainlink Functions](https://docs.chain.link/chainlink-functions)). The second oracle, the Casimir DAO oracle (see the [@casimir/oracle README.md](../../services/oracle/README.md)), watches the manager contract events and automatically executes zero-coordination distributed key generation (DKG) operations: validator key creating, resharing, and exiting off-chain, and submits ceremony verification proofs. The DAO oracle also submits verifiable report details in response to reported validator actions (like completed exits).
 
 ## 👥 Users
 
@@ -209,11 +224,3 @@ The following improvement proposals for Ethereum and SSV are relevant to Casimir
    - Result: Manager contract can trigger validator exits
 3. SIP-1: [Generalized DKG support in SSV](https://github.com/bloxapp/SIPs/blob/main/sips/dkg.md)
    - Result: SSV nodes can perform DKG operations natively
-
-## Todo
-
-- [ ] Add notes on operator selection and performance monitoring thresholds
-- [ ] Add notes on operator collateral
-- [ ] Add notes on relationship between operator selection, performance, and collateral
-- [ ] Add notes on operator config
-- [ ] Add notes on distributed key generation and oracle integration
