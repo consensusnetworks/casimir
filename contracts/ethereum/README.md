@@ -250,17 +250,16 @@ $B_i = \left( \frac{I_i}{S} \right) \times E$
 
 The blame amounts are submitted by the DAO oracle in response to a completed validator reshare or exit.
 
-### Operator Config
+### Operator Onboarding
 
-Operators will need to follow the [node onboarding process from RockX](https://github.com/RockX-SG/rockx-dkg-cli/blob/main/docs/dkg_node_installation_instructions.md) to participate in DKG make their node available to new validator selections. Todo add details.
+Operators owners will need to [set up an SSV node with RockX](https://github.com/consensusnetworks/ssv-dkg) and register with Casimir. The operators page in the Casimir app guides an owner through the process and provides an easy interface for registration and operator management.
 
 ## Relevant Improvement Proposals
 
-The following improvement proposals for Ethereum and SSV are relevant to Casimir staking:
+The improvement proposals below for Ethereum and SSV are relevant to Casimir staking.
 
-1. EIP-4788: [Beacon block root in the EVM](https://eips.ethereum.org/EIPS/eip-4788)
-   - Result: Individual validator status reports are provable on-chain
-2. EIP-7002: [Execution layer triggerable exits](https://eips.ethereum.org/EIPS/eip-7002)
-   - Result: Manager contract can trigger validator exits
-3. SIP-1: [Generalized DKG support in SSV](https://github.com/bloxapp/SIPs/blob/main/sips/dkg.md)
-   - Result: SSV nodes can perform DKG operations natively
+| Proposal | Description | Result |
+| --- | --- | --- |
+| [EIP-4788](https://eips.ethereum.org/EIPS/eip-4788) | Beacon block root in the EVM | Individual validator status reports are provable on-chain |
+| [EIP-7002](https://eips.ethereum.org/EIPS/eip-7002) | Execution layer triggerable exits | Manager contract can trigger validator exits |
+| [SIP-1](https://github.com/bloxapp/SIPs/blob/main/sips/dkg.md) | Generalized DKG support in SSV | SSV nodes can perform DKG operations natively |
