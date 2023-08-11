@@ -208,25 +208,25 @@ If an operator owner would like to deregister their operator and free up their c
 
 ### Operator Collateral
 
-Collateral is used to recover lost validator effective balance at the time of completing an exit. An operator must have at least 1 ETH of available collateral (1 ETH collateral becomes unavailable per each validator that operator joins). When an operator is removed from a pool, either when resharing or after a completed exit, they are held responsible for up to 1 ETH of the validator's effective balance if any is lost below the 32 ETH minimum. The amount they owe in this case is called the blame amount.
+Collateral is used to recover lost validator effective balance at the time of completing an exit. An operator must have at least 1 ETH of available collateral (1 ETH collateral becomes unavailable per each validator that an operator joins) to be selected for a new pool validator. When an operator is removed from a pool, either when resharing or after a completed exit, they are held responsible for up to 1 ETH of the validator's effective balance if any is lost below the 32 ETH minimum. The potential nonzero amount an operator owes in this case is called the blame amount.
 
 **Blame Amount Calculation:**
 
 Let:
 
-- \( E \) be the total ETH lost, where \( 0 \leq E \leq 4 \).
-- \( P_i \) be the performance percentage of the \( i^{th} \) operator, where \( 0 \leq P_i \leq 100 \) for \( i = 1, 2, 3, 4 \).
-- \( B_i \) be the blame amount for the \( i^{th} \) operator.
+- $\( E \)$ be the total ETH lost, where $\( 0 \leq E \leq 4 \)$.
+- $\( P_i \)$ be the performance percentage of the $\( i^{th} \)$ operator, where $\( 0 \leq P_i \leq 100 \)$ for $\( i = 1, 2, 3, 4 \)$.
+- $\( B_i \)$ be the blame amount for the $\( i^{th} \)$ operator.
 
 If all operators have equal performance, the blame is evenly distributed:
-\[ B_i = \frac{E}{4} \quad \text{for all } i \]
+$\[ B_i = \frac{E}{4} \quad \text{for all } i \]$
 
 Otherwise, the blame is distributed inversely proportional to performance:
 First, calculate the inverse of each performance:
-\[ I_i = 100 - P_i \]
+$\[ I_i = 100 - P_i \]$
 
 Then, the sum of all inverses:
-\[ S = \sum_{i=1}^{4} I_i \]
+$\[ S = \sum_{i=1}^{4} I_i \]$
 
 Now, the blame for each operator is:
 \[ B_i = \left( \frac{I_i}{S} \right) \times E \]
