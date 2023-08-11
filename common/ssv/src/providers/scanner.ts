@@ -33,8 +33,8 @@ export class Scanner {
     async getCluster(input: GetClusterInput): Promise<Cluster> {
         const { ownerAddress, operatorIds } = input
         const eventFilters = [
-            this.ssvNetwork.filters.CusterDeposited(ownerAddress),
-            this.ssvNetwork.filters.CusterWithdrawn(ownerAddress),
+            this.ssvNetwork.filters.ClusterDeposited(ownerAddress),
+            this.ssvNetwork.filters.ClusterWithdrawn(ownerAddress),
             this.ssvNetwork.filters.ValidatorAdded(ownerAddress),
             this.ssvNetwork.filters.ValidatorRemoved(ownerAddress),
             this.ssvNetwork.filters.ClusterLiquidated(ownerAddress),
