@@ -56,7 +56,7 @@ export class Scanner {
                 for (const item of items) {
                     const { args, blockNumber } = item
                     const clusterMatch = args?.cluster !== undefined
-                    const operatorsMatch = JSON.stringify(args?.operatorIds.map((value: string) => Number(value))) === JSON.stringify(operatorIds)
+                    const operatorsMatch = JSON.stringify(args?.operatorIds.map(id => id.toNumber())) === JSON.stringify(operatorIds)
                     if (!clusterMatch || !operatorsMatch) continue
                     if (blockNumber > biggestBlockNumber) {
                         biggestBlockNumber = blockNumber
