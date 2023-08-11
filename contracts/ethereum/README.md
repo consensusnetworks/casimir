@@ -154,39 +154,56 @@ The contract uses two oracles to automate the Casimir staking experience and ens
 
 Users can deposit any amount of ETH to the manager contract. Their deposits are staked to validators run by SSV operators (see [Operators](./README.md#operators)). Rewards are auto-compounded into stake and users can withdraw their principal plus any earned proportion of new stake (or a partial amount of their choice) at any time.
 
-### User Fees
+Sure! Here's the User Fees section structured similarly to the blame amount and user stake calculations:
 
-The contract charges a 5% user fee on deposits and rewards to fund the contract's operations.
+### User Fees Calculation:
 
-**User Fee Calculation:**
+The contract charges a user fee on deposits and rewards to cover operational expenses.
 
-1. $ethAmount = depositAmount\times{\frac{100}{100 + feePercent}}$
+**Fee Distribution Calculation:**
 
-2. $feeAmount = depositAmount - ethAmount$
+Let:
+
+- $F_t$ be the total fee percentage, which is a sum of the required ETH, LINK, and SSV fees.
+- $D$ be the amount of ETH deposited by the user.
+- $E$ be the amount of ETH to be allocated for the contract's operations.
+- $F_a$ be the ETH amount to be swapped for LINK and SSV to facilitate the contract's functions.
+
+Given the 5% fee, the ETH to be allocated for the contract's operations is calculated as:
+$E = D \times \frac{100}{100 + F_t}$
+
+The amount to be converted to LINK and SSV is:
+$F_a = D - E$
 
 *Where:*
 
-- $feePercent$ is the total fee percentage, which is the sum of the required ETH, LINK, and SSV fees.
-- $depositAmount$ is the amount of ETH deposited.
-- $ethAmount$ is the amount of ETH to be distributed into the contract.
-- $feeAmount$ is the amount of ETH to be swapped for LINK and SSV to operate the contract.
+- $F_t$ typically equals 5%.
+- $D$ is the amount of ETH the user wants to deposit.
+- $E$ represents the actual ETH amount that will be added to the contract after deducting the fee.
+- $F_a$ is the remaining ETH that will be used to acquire LINK and SSV.
 
 ### User Stake
 
 The manager contract adjusts a user's stake based on the change in the total reward-to-stake ratio sum since their last interaction with the contract. Each time new rewards are reported, the ratio sum is updated to include the new rewards-to-stake ratio. The ratio sum is used to calculate a user's current stake, including compounded rewards, at any time.
 
-**User Stake Calculation:**
+**Current Stake Calculation:**
 
-1. Whenever a user deposits or updates their stake, their initial stake and the current ratio sum are recorded.
-2. When rewards are distributed, the ratio sum is updated to include the new reward-to-stake ratio.
-3. $userStake =userStake_0\times{\frac{stakeRatioSum}{userStakeRatioSum_0}}$ calculates a user's current compounded stake at any time.
+Let:
+
+- $S$ be the calculated current stake of the user, including compounded rewards.
+- $S_0$ be the initial stake of the user at the time of their last deposit or stake update.
+- $R_s$ be the current cumulative sum of reward-to-stake ratios in the contract.
+- $R_{s0}$ be the cumulative sum of reward-to-stake ratios at the time the user made their last deposit or update to their stake.
+
+The user's current compounded stake at any time is calculated as:
+$S = S_0 \times \frac{R_s}{R_{s0}}$
 
 *Where:*
 
-- $userStake$ is the calculated current stake of the user, including compounded rewards. This is [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
-- $userStake_0$ is the initial stake of the user at the time of their last deposit or stake update. This is also [**`users[userAddress].stake`**](./docs/index.md#user) in the contract, but it is accessed before settling the user's current stake.
-- $stakeRatioSum$ is the current cumulative sum of reward-to-stake ratios in the contract. This is [**`stakeRatioSum`**](./docs/index.md#stakeratiosum) in the contract.
-- $userStakeRatioSum_0$ is the cumulative sum of reward-to-stake ratios at the time the user made their last deposit or update to their stake. This is [**`users[userAddress].stakeRatioSum0`**](./docs/index.md#user) in the contract.
+- $S$ corresponds to [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
+- $S_0$ also corresponds to [**`users[userAddress].stake`**](./docs/index.md#user) in the contract, but it's accessed before settling the user's current stake.
+- $R_s$ is represented by [**`stakeRatioSum`**](./docs/index.md#stakeratiosum) in the contract.
+- $R_{s0}$ is represented by [**`users[userAddress].stakeRatioSum0`**](./docs/index.md#user) in the contract.
 
 ### User Withdrawals
 
@@ -214,22 +231,22 @@ Collateral is used to recover lost validator effective balance at the time of co
 
 Let:
 
-- $ethLost$ be the total ETH lost, where $0 \leq E \leq 4$.
-- $performance_i$ be the performance percentage of the $i^{th}$ operator, where $0 \leq performance_i \leq 100$ for $i = 1, 2, 3, 4$.
-- $blameAmount_i$ be the blame amount for the $i^{th}$ operator.
+- $E$ be the total ETH lost, where $0 \leq E \leq 4$.
+- $P_i$ be the performance percentage of the $i^{th}$ operator, where $0 \leq P_i \leq 100$ for $i = 1, 2, 3, 4$.
+- $B_i$ be the blame amount for the $i^{th}$ operator.
 
 If all operators have equal performance, the blame is evenly distributed:
-$blameAmount_i = \frac{ethLost}{4} \quad \text{for all } i$
+$B_i = \frac{E}{4} \quad \text{for all } i$
 
 Otherwise, the blame is distributed inversely proportional to performance:
 First, calculate the inverse of each performance:
-$inversePerformance_i = 100 - performance_i$
+$I_i = 100 - P_i$
 
 Then, the sum of all inverses:
-$inversePerformance_sum = \sum_{i=1}^{4} inversePerformance_i$
+$S = \sum_{i=1}^{4} I_i$
 
 Now, the blame for each operator is:
-$blameAmount_i = \left( \frac{inversePerformance_i}{inversePerformance_sum} \right) \times ethLost$
+$B_i = \left( \frac{I_i}{S} \right) \times E$
 
 The blame amounts are submitted by the DAO oracle in response to a completed validator reshare or exit.
 
