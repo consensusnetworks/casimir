@@ -3,12 +3,13 @@ import { ethers } from 'ethers'
 import { fetchRetry, run } from '@casimir/helpers'
 import { Validator } from '@casimir/types'
 import { Dkg } from '../src/providers/dkg'
+import { validatorStore } from '@casimir/data'
 
 /**
  * Generate validator keys for ethereum testing
  */
 void async function () {
-    const outputPath = '../../contracts/ethereum/scripts/.out'
+    const outputPath = '../../common/data/src/mock'
     const resourceDir = 'scripts/resources'
 
     process.env.CLI_PATH = process.env.CLI_PATH || `./${resourceDir}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
@@ -32,17 +33,8 @@ void async function () {
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, 'm/44\'/60\'/0\'/0/6')
     const oracleAddress = wallet.address
 
-    if (!fs.existsSync(outputPath)) {
-        fs.mkdirSync(outputPath)
-    }
-
-    if (!fs.existsSync(`${outputPath}/validators.json`)) {
-        fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify({}))
-    }
-
     const validatorCount = 4
-    const validators = JSON.parse(fs.readFileSync(`${outputPath}/validators.json`, 'utf8') || '{}')
-    if (!validators[oracleAddress] || Object.keys(validators[oracleAddress]).length < validatorCount) {
+    if (!validatorStore[oracleAddress] || Object.keys(validatorStore[oracleAddress]).length < validatorCount) {
         const dkg = await run(`which ${process.env.CLI_PATH}`) as string
         if (!dkg || dkg.includes('not found')) {
             await run(`GOWORK=off make -C ${resourceDir}/rockx-dkg-cli build`)
@@ -84,8 +76,8 @@ void async function () {
             ownerNonce++
         }
 
-        validators[oracleAddress] = newValidators
+        validatorStore[oracleAddress] = newValidators
 
-        fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify(validators, null, 4))
+        fs.writeFileSync(`${outputPath}/validator.store.json`, JSON.stringify(validatorStore, null, 4))
     }
 }()
