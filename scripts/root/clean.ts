@@ -25,5 +25,5 @@ void async function () {
     const submoduleDirs = submodules.match(/path = (.*)/g)?.map((path) => path.replace('path = ', ''))
 
     await run(`npx rimraf ${packageDirs.join(' ')} ${submoduleDirs?.join(' ')} node_modules package-lock.json`)
-    run('npm i --foreground-scripts')
+    await run('npm i --foreground-scripts')
 }()

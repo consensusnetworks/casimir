@@ -5,6 +5,7 @@ import { fulfillReport, runUpkeep } from '../../helpers/upkeep'
 import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../../helpers/oracle'
 import { round } from '../../helpers/math'
 import ISSVNetworkViewsAbi from '../../build/abi/ISSVNetworkViews.json'
+import { Scanner } from '@casimir/ssv'
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
@@ -48,6 +49,7 @@ export async function deploymentFixture() {
 
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
+    const ssvNetwork = await ethers.getContractAt('SSVNetwork', process.env.SSV_NETWORK_ADDRESS as string)
     const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
     const preregisteredBalance = ethers.utils.parseEther('10')
@@ -65,7 +67,7 @@ export async function deploymentFixture() {
         await result.wait()
     }
 
-    return { manager, registry, upkeep, views, ssvNetworkViews, owner, keeper, oracle }
+    return { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, keeper, oracle }
 }
 
 /** Fixture to stake 16 for the first user */

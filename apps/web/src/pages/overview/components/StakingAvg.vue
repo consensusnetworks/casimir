@@ -52,8 +52,12 @@ onUnmounted(() =>{
 <template>
   <div class="card_container px-[22px] pt-[22px] pb-[23px] text-black">
     <div class="flex justify-between items-start mb-[13px]">
-      <h6 class="card_title">
+      <h6 class="card_title tooltip_container">
         Estimated Staking Rewards
+
+        <div class="tooltip w-[200px] left-0">
+          Ethereum actively staked through Casimir from connected wallet addresses. Does not include withdrawn stake. 
+        </div>
       </h6>
       <div
         class="whitespace-nowrap relative w-[120px]"

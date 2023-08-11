@@ -1,12 +1,16 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch} from 'vue'
-import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
-import { FormattedWalletOption, ProviderString } from '@casimir/types'
+import { ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
+import useFiles from '@/composables/files'
+import useFormat from '@/composables/format'
 import useUsers from '@/composables/users'
 
-const { getUserOperators, registerOperatorWithCasimir, userOperators } = useContracts()
+const { getUserOperators, registerOperatorWithCasimir, nonregisteredOperators, registeredOperators } = useContracts()
+const { exportFile } = useFiles()
+const { convertString } = useFormat()
+const { user } = useUsers()
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -16,7 +20,6 @@ const onSelectWalletBlur = () => {
         openSelectWalletOptions.value = false
     }, 200)
 }
-
 const selectedOperatorID = ref()
 const openSelectOperatorID = ref(false)
 const onSelectOperatorIDBlur = () => {
@@ -25,48 +28,17 @@ const onSelectOperatorIDBlur = () => {
     }, 200)
 }
 // @chris need a way to find out possible operators on selecting a wallet address
-const possibleOperatorID = ref([] as string[])
-
-watch([userOperators, selectedWallet], () =>{
-  const casimirOperatorIds = userOperators.value.casimir.map(operator => operator.id)
-  possibleOperatorID.value = userOperators.value.ssv.filter(operator => {
-    return !casimirOperatorIds.includes(operator.id)
-  }).map(item => item.id)
-})
-
-
-
+const availableOperatorIDs = ref([] as string[])
 const selectedPublicNodeURL = ref()
-
 const selectedCollateral = ref()
 
-const handleInputChangeCollateral = (event: any) => {
-    const value = event.target.value.replace(/[^\d.]/g, '')
-    const parts = value.split('.')
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-
-    // Limit to two decimal places
-    if (parts[1] && parts[1].length > 2) {
-        parts[1] = parts[1].slice(0, 2)
-    }
-
-    // Update the model value
-    selectedCollateral.value = parts.join('.')
-}
-// ----
 const openAddOperatorModal = ref(false)
-
 const itemsPerPage = ref(10)
 const currentPage = ref(1)
 const totalPages = ref(1)
-
 const searchInput = ref('')
-
 const selectedHeader = ref('wallet_provider')
 const selectedOrientation = ref('ascending')
-
-const checkedItems = ref([] as any)
-
 const operatorTableHeaders = ref(
   [
     {
@@ -82,31 +54,80 @@ const operatorTableHeaders = ref(
         value: 'walletAddress'
     },
     {
-        title: 'Available Collateral',
-        value: 'availableCollateral'
+        title: 'Collateral',
+        value: 'collateral'
     },
     {
-        title: 'Collateral In Use',
-        value: 'collateralInUse'
+        title: 'Pool Count',
+        value: 'poolCount'
     },
     {
-        title: 'Rewards',
-        value: 'rewards'
+        title: 'Node URL',
+        value: 'nodeURL'
     },
-
   ]
 )
 
-const { rawUserAnalytics, user } = useUsers()
-
 const tableData = ref<any>([])
+const filteredData = ref(tableData.value)
+const checkedItems = ref([] as any)
 
-
-watch(userOperators, () =>{
-  console.log('userOperators.value :>> ', userOperators.value)
+onMounted(async () => {
+  if (user.value) {
+    await getUserOperators()
+    filterData()
+  }
 })
 
-const filteredData = ref(tableData.value)
+watch(user, async () => {
+  if (user.value) {
+    await getUserOperators()
+    filterData()
+  }
+})
+
+watch(selectedWallet, async () =>{
+  selectedOperatorID.value = ''
+  selectedPublicNodeURL.value = ''
+  selectedCollateral.value = ''
+
+  await getUserOperators()
+
+  if (selectedWallet.value.address === '') {
+    availableOperatorIDs.value = []
+  } else {
+    availableOperatorIDs.value = [...nonregisteredOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)}
+})
+
+watch(registeredOperators, () => {
+  tableData.value = [...registeredOperators.value].map((operator: any) => {
+    return {
+      id: operator.id,
+      walletAddress: operator.ownerAddress,
+      collateral: operator.collateral + ' ETH',
+      poolCount: operator.poolCount,
+      nodeURL: operator.url
+    }
+  })
+})
+
+watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
+  filterData()
+})
+
+const handleInputChangeCollateral = (event: any) => {
+    const value = event.target.value.replace(/[^\d.]/g, '')
+    const parts = value.split('.')
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+
+    // Limit to two decimal places
+    if (parts[1] && parts[1].length > 2) {
+        parts[1] = parts[1].slice(0, 2)
+    }
+
+    // Update the model value
+    selectedCollateral.value = parts.join('.')
+}
 
 const filterData = () => {
   let filteredDataArray
@@ -143,86 +164,6 @@ const filterData = () => {
   filteredData.value = filteredDataArray.slice(start, end) as any
 }
 
-watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
-  filterData()
-})
-
-
-const convertString = (inputString: string) => {
-  if (inputString.length && inputString.length <= 4) {
-    return inputString
-  }
-
-  var start = inputString.substring(0, 4)
-  var end = inputString.substring(inputString.length - 4)
-  var middle = '.'.repeat(4)
-
-  return start + middle + end
-}
-
-const convertJsonToCsv = (jsonData: any[]) => {
-  const separator = ','
-  const csvRows = []
-
-  if (!Array.isArray(jsonData)) {
-    return ''
-  }
-
-  if (jsonData.length === 0) {
-    return ''
-  }
-
-  const keys = Object.keys(jsonData[0])
-
-  // Add headers
-  csvRows.push(keys.join(separator))
-
-  // Convert JSON data to CSV rows
-  jsonData.forEach(obj => {
-    const values = keys.map(key => obj[key])
-    csvRows.push(values.join(separator))
-  })
-
-  return csvRows.join('\n')
-}
-
-const convertJsonToExcelBuffer = (jsonData: unknown[]) => {
-  const worksheet = XLSX.utils.json_to_sheet(jsonData)
-  const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
-  const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
-
-  return excelBuffer
-}
-
-const downloadFile = (content: any, filename: string, mimeType: any) => {
-  const blob = new Blob([content], { type: mimeType })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-
-  // Cleanup
-  URL.revokeObjectURL(url)
-}
-
-const exportFile = () => {
-
-  const jsonData = checkedItems.value.length > 0? checkedItems.value : filteredData.value
-
-  const isMac = navigator.userAgent.indexOf('Mac') !== -1
-  const fileExtension = isMac ? 'csv' : 'xlsx'
-
-  if (fileExtension === 'csv') {
-    const csvContent = convertJsonToCsv(jsonData)
-    downloadFile(csvContent, 'operator_performance.csv', 'text/csv')
-  } else {
-    const excelBuffer = convertJsonToExcelBuffer(jsonData)
-    downloadFile(excelBuffer, 'operator_performance.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-  }
-}
-
 const removeItemFromCheckedList = (item:any) => {
   const index = checkedItems.value.indexOf(item)
   if (index > -1) {
@@ -230,77 +171,48 @@ const removeItemFromCheckedList = (item:any) => {
   }
 }
 
-const submitRegisterOperatorForm = async () =>{
-  // const newOperator = {
-  //   wallet_provider: selectedWallet.value.wallet_provider,
-  //   operator_id: selectedOperatorID.value,
-  //   walletAddress: selectedWallet.value.address,
-  //   availableCollateral: selectedCollateral.value,
-  //   node_url: selectedPublicNodeURL.value,
-  //   collateralInUse: 0,
-  //   rewards: 0
-  // }
-  
-  // tableData.value = [...tableData.value, newOperator]
-
-  await registerOperatorWithCasimir(
+async function submitRegisterOperatorForm() {
+  const registerResult = await registerOperatorWithCasimir(
     selectedWallet.value.wallet_provider as ProviderString, 
     selectedWallet.value.address, 
     parseInt(selectedOperatorID.value), 
     selectedCollateral.value 
   )
 
+  console.log('registerResult :>> ', registerResult)
+
+  // @demogorgod: this should only add if the register was successful
+  const newOperator = {
+    id: selectedOperatorID.value,
+    collateral: selectedCollateral.value,
+    nodeURL: selectedPublicNodeURL.value,
+    poolCount: 0,
+    walletAddress: selectedWallet.value.address,
+  }
+  
+  tableData.value = [...tableData.value, newOperator]
+
   selectedWallet.value = { address: '', wallet_provider: ''}
   selectedOperatorID.value = ''
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
-  possibleOperatorID.value = []
+  availableOperatorIDs.value = []
 
   openAddOperatorModal.value = false
 }
-
-const setTableData = async () =>{
-  // TODO: Make sure userOperators have types defined below
-  // @chris set tableData.value here
-  await getUserOperators()
-
-  /**
-   * availableCollateral: string | number,
-   * collateralInUse: number,
-   * id: number | string,
-   * node_url: string,
-   * rewards: number
-   * walletAddress: string,
-   */
-
-  tableData.value = userOperators.value.casimir
-}
-
-watch(user, async () => {
-  if (user.value) {
-    await setTableData()
-    filterData()
-  }
-})
-
-onMounted(async () => {
-  if (user.value) {
-    await setTableData()
-    filterData()
-  }
-})
 
 </script>
 
 <template>
   <div class="px-[60px] 800s:px-[5%] pt-[51px]">
-    <div class="flex items-start justify-between flex-wrap">
-      <h6 class="title mb-[37px]">
+    <div class="flex items-start gap-[20px] justify-between flex-wrap mb-[30px]">
+      <h6 class="title">
         Operator Performance
       </h6>
 
       <button
         class="flex items-center gap-[8px] export_button  hover:text-blue_3 hover:border-blue_3"
+        :disabled="!user?.accounts"
         @click="openAddOperatorModal = true"
       >
         <vue-feather
@@ -315,6 +227,7 @@ onMounted(async () => {
       v-if="!user?.address"
       class="card_container w-full px-[32px] py-[31px]
        text-grey_4 flex items-center justify-center"
+      style="min-height: calc(100vh - 420px);"
     >
       <div class="border rounded-[3px] border-grey_1 border-dashed p-[10%] text-center">
         Connect wallet to view and register operators... 
@@ -324,28 +237,30 @@ onMounted(async () => {
     <div
       v-else
       class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap relative"
-      style="min-height: calc(100vh - 420px);"
+      style="min-height: calc(100vh - 320px); height: 500px;"
     >
       <!-- Form -->
       <div
         v-if="openAddOperatorModal"
         class="absolute top-0 left-0 w-full h-full bg-black/[0.2] rounded-[3px] flex items-center justify-center z-[2]"
       >
-        <div class="card_container w-[90%] h-[90%] overflow-auto px-[30px] py-[20px]">
-          <div class="flex items-start justify-between">
+        <div class="card_container w-[80%] h-[90%] overflow-auto px-[30px] py-[20px]">
+          <div class="flex items-center gap-[10px] flex-wrap justify-between">
             <h6 class="card_title">
-              Register Casimir Operator
+              Register Operator
             </h6>
-            <button
-              type="button"
-              class="card_title"
-              @click="openAddOperatorModal = false"
-            >
-              <vue-feather
-                type="x"
-                class="icon w-[17px] h-min"
-              />
-            </button>
+            <div class="">
+              <button
+                type="button"
+                class="card_title"
+                @click="openAddOperatorModal = false"
+              >
+                <vue-feather
+                  type="x"
+                  class="icon w-[17px] h-min"
+                />
+              </button>
+            </div>
           </div>
           <form @submit.prevent="submitRegisterOperatorForm">
             <!-- Wallet address input -->
@@ -364,7 +279,7 @@ onMounted(async () => {
               >
               <button
                 type="button"
-                @click="selectedWallet = ''"
+                @click="selectedWallet = { wallet_provider: '', address: ''}"
               >
                 <vue-feather
                   type="x"
@@ -392,7 +307,7 @@ onMounted(async () => {
                 </button>
               </div>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
+            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
               Select your SSV owner address 
             </div>
 
@@ -429,14 +344,14 @@ onMounted(async () => {
                   Avaliable Operators
                 </h6>
                 <div
-                  v-if="possibleOperatorID.length === 0" 
+                  v-if="availableOperatorIDs.length === 0" 
                   class="border-y border-y-grey_1
                    text-grey_4 my-[10px] text-center truncate"
                 >
                   No Operators Found
                 </div>
                 <button
-                  v-for="operator in possibleOperatorID"
+                  v-for="operator in availableOperatorIDs"
                   v-else
                   :key="operator"
                   type="button"
@@ -448,7 +363,7 @@ onMounted(async () => {
                 </button>
               </div>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
+            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
               <!-- @chris `here` text needs a link to the ssv operator registry-->
               If no operators found with your SSV owner address, register one 
               <a
@@ -480,7 +395,7 @@ onMounted(async () => {
                 />
               </button>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
+            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]  whitespace-normal">
               <!-- @chris `here` text needs a link to the correct page-->
               Add RockX DKG support to your node as documented
               <a
@@ -520,7 +435,7 @@ onMounted(async () => {
               Deposit a minimum of 1 ETH
             </div>
 
-            <div class="flex justify-end">
+            <div class="flex justify-end mt-[20px]">
               <button
                 type="submit"
                 class="export_button"
@@ -540,14 +455,14 @@ onMounted(async () => {
               Operators
             </h6>
           </div>
-          <div class="card_subtitle mt-[4px]">
+          <div class="card_subtitle mt-[20px]">
             List of operators according to their performance 
           </div>
         </div>
         <div class="flex items-start gap-[12px]">
           <button
             class="flex items-center gap-[8px] export_button"
-            @click="exportFile()"
+            @click="exportFile(checkedItems, filteredData)"
           >
             <vue-feather
               type="upload-cloud"
@@ -638,10 +553,10 @@ onMounted(async () => {
 
         <div
           v-else
-          class="w-full border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] text-[14px] text-grey_3"
+          class="border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] whitespace-normal text-[14px] text-grey_3"
         >
           You currently do not have operators registed under your account.
-          <p>
+          <p class="mt-[30px]">
             Connect wallet or register operators to view their performance.
           </p>
         </div>
@@ -855,7 +770,7 @@ onMounted(async () => {
     font-style: normal;
     font-weight: 500;
     font-size: 18px;
-    line-height: 28px;
+    line-height: 0px;
     color: #101828;
 }
 .card_container{
@@ -873,4 +788,4 @@ onMounted(async () => {
     letter-spacing: -0.03em;
     color: #FFFFFF;
 }
-</style>
+</style>@/composables/files
