@@ -124,6 +124,7 @@ export class Dkg {
             if (retries === 0) {
                 throw error
             }
+            await new Promise(resolve => setTimeout(resolve, 2500))
             console.log(`Retrying keygen request ${retries} more times`)
             return await this.startKeygen(input, retries - 1)
         }
@@ -148,6 +149,7 @@ export class Dkg {
             if (retries === 0) {
                 throw error
             }
+            await new Promise(resolve => setTimeout(resolve, 2500))
             console.log(`Retrying reshare request ${retries} more times`)
             return await this.startReshare(input, retries - 1)
         }
@@ -174,6 +176,7 @@ export class Dkg {
             if (retries === 0) {
                 throw error
             }
+            await new Promise(resolve => setTimeout(resolve, 2500))
             console.log(`Retrying get shares request ${retries} more times`)
             return await this.getShares(input, retries - 1)
         }
