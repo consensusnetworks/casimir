@@ -48,6 +48,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
     })
 
     const selectedOperatorIds = smallestOperators.slice(0, 4).map((operator) => operator.id.toNumber())
+    console.log('🤖 Selected operators', selectedOperatorIds)
 
     const scanner = new Scanner({ 
         ethereumUrl: config.ethereumUrl,

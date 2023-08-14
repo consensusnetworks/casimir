@@ -1,4 +1,3 @@
-import fs from 'fs'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { CasimirManager, CasimirViews } from '../build/@types'
@@ -6,8 +5,8 @@ import { PoolStatus, Validator } from '@casimir/types'
 import { Scanner } from '@casimir/ssv'
 import { getWithdrawalCredentials } from '@casimir/helpers'
 import { Factory } from '@casimir/uniswap'
+import { validatorStore } from '@casimir/data'
 
-const mockValidatorsPath = './scripts/.out/validators.json'
 const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS as string
 if (!linkTokenAddress) throw new Error('No link token address provided')
 const ssvNetworkAddress = process.env.SSV_NETWORK_ADDRESS as string
@@ -22,7 +21,7 @@ const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS as string
 if (!wethTokenAddress) throw new Error('No weth token address provided')
 
 export async function initiateDepositHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
-    const mockValidators: Validator[] = JSON.parse(fs.readFileSync(mockValidatorsPath, 'utf8'))[signer.address]
+    const mockValidators: Validator[] = validatorStore[signer.address as keyof typeof validatorStore]
     const nonce = await ethers.provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
       from: manager.address,

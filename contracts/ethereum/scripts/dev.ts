@@ -8,6 +8,9 @@ import { depositUpkeepBalanceHandler } from '../helpers/oracle'
 import { fetchRetry, run } from '@casimir/helpers'
 import { PoolStatus } from '@casimir/types'
 
+/**
+ * Deploy contracts to local network and run local events and oracle handling
+ */
 void async function () {
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
     
@@ -68,7 +71,7 @@ void async function () {
             params: [operatorOwnerAddress]
         })
         const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
-        const result = await registry.connect(operatorSigner).register(operatorId, { value: preregisteredBalance })
+        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: preregisteredBalance })
         await result.wait()
     }
 
@@ -108,7 +111,7 @@ void async function () {
                         await setBalance(poolAddress, nextBalance)
                     }
                     const startIndex = ethers.BigNumber.from(0)
-                    const endIndex = ethers.BigNumber.from(pendingPoolIds.length + stakedPoolIds.length)
+                    const endIndex = ethers.BigNumber.from(stakedPoolIds.length)
                     const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)                    
                     const reportValues = {
                         activeBalance: nextActiveBalance,
