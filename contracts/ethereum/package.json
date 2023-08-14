@@ -1,15 +1,15 @@
 {
     "name": "@casimir/ethereum",
     "scripts": {
-        "node": "npx hardhat node",
-        "dev": "npx hardhat run scripts/dev.ts",
-        "dev:docs": "SERVE=true npx esno scripts/docs.ts",
-        "deploy": "npx hardhat run scripts/deploy.ts",
-        "test": "npx esno scripts/test.ts",
-        "clean": "npx rimraf ./build",
-        "postinstall": "npx esno scripts/foundryup.ts",
         "build": "npx hardhat compile",
-        "build:docs": "npx esno scripts/docs.ts"
+        "clean": "npx rimraf ./build",
+        "deploy": "npx hardhat run scripts/deploy.ts",
+        "dev": "npx hardhat run scripts/dev.ts",
+        "doc": "npx esno scripts/doc.ts",
+        "doc:serve": "SERVE=true npx esno scripts/doc.ts",
+        "node": "npx hardhat node",
+        "postinstall": "npx esno scripts/foundryup.ts",
+        "test": "npx esno scripts/test.ts"
     },
     "dependencies": {
         "@chainlink/contracts": "^0.6.1",

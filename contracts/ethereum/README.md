@@ -156,7 +156,7 @@ Users can deposit any amount of ETH to the manager contract. Their deposits are 
 
 Sure! Here's the User Fees section structured similarly to the blame amount and user stake calculations:
 
-### User Fees Calculation:
+### User Fees
 
 The contract charges a user fee on deposits and rewards to cover operational expenses.
 
