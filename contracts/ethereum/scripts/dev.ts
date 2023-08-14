@@ -115,7 +115,7 @@ void async function () {
                     const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)                    
                     const reportValues = {
                         activeBalance: nextActiveBalance,
-                        sweptBalance: sweptExitedBalance + sweptRewardBalance,
+                        sweptBalance: sweptRewardBalance + sweptExitedBalance,
                         activatedDeposits: nextActivatedDeposits,
                         forcedExits: 0,
                         completedExits: exitingPoolCount.toNumber(),

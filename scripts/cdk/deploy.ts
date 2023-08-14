@@ -8,6 +8,11 @@ void async function () {
     process.env.PROJECT = process.env.PROJECT || 'casimir'
     process.env.STAGE = process.env.STAGE || 'dev'
     process.env.AWS_REGION = process.env.AWS_REGION || 'us-east-2'
+
+    /** Set default values for contracts addresses */
+    process.env.PUBLIC_MANAGER_ADDRESS = '0x5d35a44Db8a390aCfa997C9a9Ba3a2F878595630'
+    process.env.PUBLIC_VIEWS_ADDRESS = '0xC88C4022347305336E344e624E5Fa4fB8e61c21E'
+    process.env.PUBLIC_REGISTRY_ADDRESS = '0xB567C0E87Ec176177E44C91577704267C24Fbd83'
     
     await loadCredentials()
     process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')

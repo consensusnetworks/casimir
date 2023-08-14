@@ -213,6 +213,7 @@ export class Dkg {
             if (retries === 0) {
                 throw error
             }
+            await new Promise(resolve => setTimeout(resolve, 2500))
             console.log(`Retrying get deposit data request ${retries} more times`)
             return await this.getDepositData(input, retries - 1)
         }
