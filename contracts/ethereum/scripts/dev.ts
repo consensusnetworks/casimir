@@ -110,7 +110,7 @@ void async function () {
                     const startIndex = ethers.BigNumber.from(0)
                     const endIndex = ethers.BigNumber.from(pendingPoolIds.length + stakedPoolIds.length)
                     const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)                    
-                    const nextValues = {
+                    const reportValues = {
                         activeBalance: nextActiveBalance,
                         sweptBalance: sweptRewardBalance + sweptExitedBalance,
                         activatedDeposits: nextActivatedDeposits,
@@ -118,10 +118,11 @@ void async function () {
                         completedExits: exitingPoolCount.toNumber(),
                         compoundablePoolIds
                     }
+                    console.log('🧾 Report values', reportValues)
                     requestId = await fulfillReport({
                         upkeep,
                         keeper,
-                        values: nextValues,
+                        values: reportValues,
                         requestId
                     })
                     let remaining = exitingPoolCount.toNumber()
