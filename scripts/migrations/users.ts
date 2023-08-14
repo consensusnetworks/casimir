@@ -1,7 +1,8 @@
 import fs from 'fs'
 import os from 'os'
-import { JsonSchema, Schema, accountSchema, nonceSchema, userAccountSchema, userSchema } from '@casimir/data'
-import { getSecret, run } from '@casimir/helpers'
+import { JsonSchema, Schema, accountSchema, nonceSchema, operatorSchema, userAccountSchema, userSchema } from '@casimir/data'
+import { run } from '@casimir/helpers'
+import { getSecret } from '@casimir/aws'
 
 void async function () {
     const project = process.env.PROJECT || 'casimir'
@@ -21,6 +22,7 @@ void async function () {
     /** All table schemas */
     const tableSchemas = {
         account: accountSchema,
+        operator: operatorSchema,
         nonce: nonceSchema,
         user: userSchema,
         userAccount: userAccountSchema
@@ -41,9 +43,13 @@ void async function () {
     if (!fs.existsSync(sqlDir)) fs.mkdirSync(sqlDir, { recursive: true })
     fs.writeFileSync(`${sqlDir}/schema.sql`, sqlSchema)
 
-    const atlasCli = await run('which atlas')
-    if (!atlasCli && os.platform() === 'darwin') {
-        await run('echo y | brew install atlas')
+    const atlas = await run('which atlas') as string
+    if (!atlas || atlas.includes('not found')) {
+        if (os.platform() === 'darwin') {
+            await run('echo y | brew install atlas')
+        } else {
+            throw new Error('Please install atlas using `curl -sSf https://atlasgo.sh | sh`')
+        }
     }
     await run(`atlas schema apply --url "${pgUrl}?sslmode=disable" --to "file://${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`)
 }()

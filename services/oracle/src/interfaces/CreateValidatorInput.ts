@@ -1,8 +1,7 @@
 export interface CreateValidatorInput {
-    /** Pool ID */
     poolId: number
-    /** Operator registry IDs */
     operatorIds: number[]
-    /** Validator withdrawal address */
+    ownerAddress: string
+    ownerNonce: number
     withdrawalAddress: string
 }

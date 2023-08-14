@@ -1,6 +1,6 @@
-import { Account, Pool } from '@casimir/types'
+import { Account, Operator, Pool } from '@casimir/types'
 
-export interface AccountWithStakingInfo extends Account {
+export interface AccountWithStakingAndOperatorInfo extends Account {
     /** The user's current staking pools and details (this interface/logic is in the web app wallet composable, but it will be moved to the processor, see https://github.com/consensusnetworks/casimir/blob/master/apps/web/src/composables/wallet.ts#L146) */
     pools?: Pool[]
     /** The total amount of stake rewards available to withdraw (ignore for now, see note on Account.pools) */
@@ -9,4 +9,6 @@ export interface AccountWithStakingInfo extends Account {
     roi?: number
     /** The total amount currently staked (ignore for now, see note on Account.pools) */
     stake?: string
+    /** Operators associated with a given account address */
+    operators?: Operator[]
 }

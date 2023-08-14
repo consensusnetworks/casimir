@@ -1,20 +1,20 @@
-import { CasimirManager, CasimirRegistry, ISSVNetworkViews, CasimirViews, CasimirUpkeep } from '@casimir/ethereum/build/artifacts/types'
+import { CasimirManager, CasimirRegistry, ISSVNetworkViews, CasimirViews, CasimirUpkeep } from '../build/@types'
 import { ethers, network } from 'hardhat'
 import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
-import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
-import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
-import { getEventsIterable } from '@casimir/oracle/src/providers/events'
+import ISSVNetworkViewsAbi from '../build/abi/ISSVNetworkViews.json'
+import { depositUpkeepBalanceHandler } from '../helpers/oracle'
 import { fetchRetry, run } from '@casimir/helpers'
 import { PoolStatus } from '@casimir/types'
 
 void async function () {
-    const ethereumUrl = process.env.ETHEREUM_RPC_URL as string
-    if (!ethereumUrl) throw new Error('No ethereum url provided')
-
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
-
+    
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [654, 655, 656, 657]
+    if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
+    const messengerUrl = process.env.MESSENGER_URL || 'https://nodes.casimir.co/eth/goerli/dkg/messenger'
+    
     const mockFunctionsOracleFactory = await ethers.getContractFactory('MockFunctionsOracle')
     const mockFunctionsOracle = await mockFunctionsOracleFactory.deploy()
     await mockFunctionsOracle.deployed()
@@ -55,19 +55,20 @@ void async function () {
 
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
-    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsJson.abi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
+    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
-    for (const operatorId of [1, 2, 3, 4]) {
+    const preregisteredBalance = ethers.utils.parseEther('10')
+    for (const operatorId of preregisteredOperatorIds) {
         const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)
         const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
-        const nextBalance = currentBalance.add(ethers.utils.parseEther('4'))
+        const nextBalance = currentBalance.add(preregisteredBalance)
         await setBalance(operatorOwnerAddress, nextBalance)
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
             params: [operatorOwnerAddress]
         })
         const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
-        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: ethers.utils.parseEther('4') })
+        const result = await registry.connect(operatorSigner).register(operatorId, { value: preregisteredBalance })
         await result.wait()
     }
 
@@ -90,16 +91,15 @@ void async function () {
                 await runUpkeep({ upkeep, keeper })
                 const pendingPoolIds = await manager.getPendingPoolIds()
                 const stakedPoolIds = await manager.getStakedPoolIds()
-                lastStakedPoolIds = stakedPoolIds
                 if (pendingPoolIds.length + stakedPoolIds.length) {
                     console.log('🧾 Submitting report')
                     const activatedBalance = pendingPoolIds.length * 32
                     const exitingPoolCount = await manager.requestedExits()
-                    const sweptRewardBalance =  rewardPerValidator * lastStakedPoolIds.length
                     const sweptExitedBalance = exitingPoolCount.toNumber() * 32
-                    const rewardAmount = rewardPerValidator * stakedPoolIds.length
+                    const sweptRewardBalance =  rewardPerValidator * lastStakedPoolIds.length
+                    const rewardBalance = rewardPerValidator * stakedPoolIds.length
                     const latestActiveBalance = await manager.latestActiveBalance()
-                    const nextActiveBalance = round(parseFloat(ethers.utils.formatEther(latestActiveBalance)) + activatedBalance + rewardAmount - sweptRewardBalance - sweptExitedBalance, 10)
+                    const nextActiveBalance = round(parseFloat(ethers.utils.formatEther(latestActiveBalance)) + activatedBalance + rewardBalance - sweptRewardBalance - sweptExitedBalance, 10)
                     const nextActivatedDeposits = (await manager.getPendingPoolIds()).length
                     for (const poolId of lastStakedPoolIds) {
                         const poolAddress = await manager.getPoolAddress(poolId)
@@ -109,7 +109,7 @@ void async function () {
                     }
                     const startIndex = ethers.BigNumber.from(0)
                     const endIndex = ethers.BigNumber.from(pendingPoolIds.length + stakedPoolIds.length)
-                    const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)
+                    const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)                    
                     const nextValues = {
                         activeBalance: nextActiveBalance,
                         sweptBalance: sweptExitedBalance,
@@ -145,58 +145,21 @@ void async function () {
                     }
                     await runUpkeep({ upkeep, keeper })
                 }
+                lastStakedPoolIds = stakedPoolIds
             }
         })
     }()
 
     setTimeout(async () => {
-        if (process.env.MOCK_ORACLE === 'true') {
-            const ping = await fetchRetry('http://localhost:3000/ping')
-            const { message } = await ping.json()
-            if (message !== 'pong') throw new Error('DKG service is not running')
-        }
+        const ping = await fetchRetry(`${messengerUrl}/ping`)
+        const { message } = await ping.json()
+        if (message !== 'pong') throw new Error('DKG service is not running')
         const depositAmount = 32 * ((100 + await manager.feePercent()) / 100)
         const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await stake?.wait()
-        // Todo handle in oracle and only run here if (!process.env.MOCK_ORACLE)
+        // Todo handle in oracle
         await depositUpkeepBalanceHandler({ manager, signer: oracle })
     }, 2500)
 
-    if (process.env.MOCK_ORACLE === 'true') {
-        run('npm run dev --workspace @casimir/oracle')
-    } else {
-        try {
-            const handlers = {
-                DepositRequested: initiateDepositHandler,
-                /**
-                 * We don't need to handle these/they aren't ready:
-                 * ResharesRequested: initiateResharesHandler,
-                 * ExitRequested: initiateExitsHandler,
-                 * ForcedExitReportsRequested: reportForcedExitsHandler,
-                 */
-                CompletedExitReportsRequested: reportCompletedExitsHandler
-            }
-    
-            const eventsIterable = getEventsIterable({ 
-                ethereumUrl,
-                managerAddress: manager.address, 
-                events: Object.keys(handlers) 
-            })
-                    
-            for await (const event of eventsIterable) {
-                const details = event?.[event.length - 1]
-                const { args } = details
-                const handler = handlers[details.event as keyof typeof handlers]
-                if (!handler) throw new Error(`No handler found for event ${details.event}`)
-                await handler({ 
-                    manager,
-                    views,
-                    signer: oracle,
-                    args
-                })
-            }
-        } catch (error) {
-            console.log('ORACLE ERROR', error)
-        }
-    }
+    run('npm run dev --workspace @casimir/oracle')
 }()

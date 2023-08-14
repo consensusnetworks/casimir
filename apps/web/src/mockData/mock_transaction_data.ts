@@ -26,19 +26,19 @@ export default function useTxData () {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}:${milliseconds}`
   }
 
-  function generateMockTransactionData(numTransactions: number) {
-    const walletAddresses = [
-      '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
-      '0x728474D29c2F81eb17a669a7582A2C17f1042b57',
-      // '0x84725c8f954f18709aDcA150a0635D2fBE94fDfF',
-      '0x2EFD9900b748EbFfe658662c1ED853982Bf86ED9',
-      // '0x9347155C4586f25306462EbA8BB8df7f06Bb5247',
-      // '0x79AE48EF1b199C586A05D1e3bC0f83fBe576d1ae',
-      // '0xBE5F02D2d08994288aCF53ddC47d8150d41fb3A8',
-      // '0xd3260De619cc58a6A61Dfa1DDDb52d760384f9a8',
-      // '0xFcB0d31595fB9bB641DeEE0E4E50050D613337C0',
-      // '0xc3178D118c54954b4811958916ca7B3b5D2cEDc5'
-    ]
+  function generateMockTransactionData(numTransactions: number, walletAddresses: string[]) {
+    // const walletAddresses = [
+    //   '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
+    //   '0x728474D29c2F81eb17a669a7582A2C17f1042b57',
+    //   // '0x84725c8f954f18709aDcA150a0635D2fBE94fDfF',
+    //   '0x2EFD9900b748EbFfe658662c1ED853982Bf86ED9',
+    //   // '0x9347155C4586f25306462EbA8BB8df7f06Bb5247',
+    //   // '0x79AE48EF1b199C586A05D1e3bC0f83fBe576d1ae',
+    //   // '0xBE5F02D2d08994288aCF53ddC47d8150d41fb3A8',
+    //   // '0xd3260De619cc58a6A61Dfa1DDDb52d760384f9a8',
+    //   // '0xFcB0d31595fB9bB641DeEE0E4E50050D613337C0',
+    //   // '0xc3178D118c54954b4811958916ca7B3b5D2cEDc5'
+    // ]
   
     const data = []
   
@@ -63,10 +63,10 @@ export default function useTxData () {
     return data
   }
 
-  const mockData = () => {
+  const mockData = (walletAddresses:  string[]) => {
     const numTransactions = 400 // Number of transactions to generate
-    const data = generateMockTransactionData(numTransactions)
-    const jsonData = JSON.stringify(data, null, 2)
+    const data = generateMockTransactionData(numTransactions, walletAddresses)
+    // const jsonData = JSON.stringify(data, null, 2)
 
     txData.value = data
   }

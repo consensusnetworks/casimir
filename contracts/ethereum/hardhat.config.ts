@@ -1,14 +1,15 @@
 import localtunnel from 'localtunnel'
 import os from 'os'
-import { HardhatUserConfig } from 'hardhat/config'
+import { HardhatUserConfig } from 'hardhat/types'
+import '@nomicfoundation/hardhat-foundry'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
-import 'solidity-docgen'
 import '@nomicfoundation/hardhat-toolbox'
+import 'hardhat-abi-exporter'
 
 // Seed is provided
 const mnemonic = process.env.BIP39_SEED as string
-const hid = { mnemonic, count: 10 }
+const hid = { mnemonic, count: 10, accountsBalance: '100000000000000000000' }
 
 // Mining interval is provided in seconds
 const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
@@ -81,12 +82,20 @@ const config: HardhatUserConfig = {
   },
   paths: {
     tests: './test',
-    sources: './src',
-    artifacts: './build/artifacts',
-    cache: './build/cache'
+    sources: './src/v1',
+    artifacts: './build/hardhat/artifacts',
+    cache: './build/hardhat/cache'
+  },
+  abiExporter: {
+    path: './build/abi',
+    runOnCompile: true,
+    clear: true,
+    flat: true,
+    spacing: 2,
+    format: 'fullName'
   },
   typechain: {
-    outDir: './build/artifacts/types',
+    outDir: './build/@types'
   },
   networks: {
     hardhat: {
@@ -112,9 +121,6 @@ const config: HardhatUserConfig = {
       gas: 'auto',
       gasPrice: 'auto'
     }
-  },
-  mocha: {
-    timeout: 250000 // Default timeout * 10
   }
 }
 

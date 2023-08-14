@@ -14,9 +14,9 @@
         "resolveJsonModule": true
     },
     "include": [
-        "scripts/*.ts",
-        "./test/*.ts",       
-        "src/index.ts"    
+        "./helpers/*.ts",
+        "./scripts/*.ts",
+        "./test/*.ts"  
     ],
     "typeRoots": [
         "node_modules/@types"

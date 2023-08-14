@@ -1,14 +1,17 @@
 import { ethers } from 'ethers'
-import { CasimirManager } from '@casimir/ethereum/build/artifacts/types'
-import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
+import { CasimirManager } from '@casimir/ethereum/build/@types'
+import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
+import { GetEventsIterableInput } from '../interfaces/GetEventsIterableInput'
 
-export function getEventsIterable({ ethereumUrl, managerAddress, events }: { 
-    ethereumUrl: string, 
-    managerAddress: string, 
-    events: string[] 
-}) {
-    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-    const manager = new ethers.Contract(managerAddress, CasimirManagerJson.abi, provider) as ethers.Contract & CasimirManager
+export function getEventsIterable(input: GetEventsIterableInput) {
+    const events = input.events
+    let provider: ethers.providers.JsonRpcProvider
+    if (input.provider) {
+        provider = input.provider
+    } else {
+        provider = new ethers.providers.JsonRpcProvider(input.ethereumUrl)
+    }
+    const manager = new ethers.Contract(input.managerAddress, ICasimirManagerAbi, provider) as ethers.Contract & CasimirManager
     
     return (async function*() {
         for (const event of events) {

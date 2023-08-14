@@ -2,17 +2,19 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
-import usePrice from '@/composables/price'
-import useEthers from '@/composables/ethers'
-import useUsers from '@/composables/users'
 import useContracts from '@/composables/contracts'
+import useEthers from '@/composables/ethers'
+import useFormat from '@/composables/format'
+import usePrice from '@/composables/price'
+import useUsers from '@/composables/users'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
 const { deposit, getDepositFees, getUserStake } = useContracts()
 const { getEthersBalance } = useEthers()
-const { user, updateUserAgreement } = useUsers()
+const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
+const { user, updateUserAgreement } = useUsers()
 
 // Staking Component Refs
 const addressBalance = ref<string | null>(null)
@@ -49,18 +51,6 @@ const handleInputOnAmountToStake = (event: any) => {
 
   // Update the model value
   formattedAmountToStake.value = parts.join('.')
-}
-
-const convertString = (inputString: string) => {
-  if (inputString.length <= 4) {
-    return inputString
-  }
-
-  var start = inputString.substring(0, 4)
-  var end = inputString.substring(inputString.length - 4)
-  var middle = '*'.repeat(4)
-
-  return start + middle + end
 }
 
 const handleOutsideClick = (event: any) => {
@@ -199,22 +189,24 @@ const handleDeposit = async () => {
     stakeButtonText.value = 'Transaction Failed'
   }
 
-  setTimeout(() => {
+  setTimeout(async () => {
     success.value = false
     failure.value = false
     stakeButtonText.value = 'Stake'
 
+    const ethersBalance = await getEthersBalance(user.value?.address as string)
+    addressBalance.value = (Math.round(ethersBalance * 100) / 100) + ' ETH'
     // empty out staking comp
     // selectedStakingProvider.value = ''
     // selectedWalletAddress.value = null
-    // addressBalance.value = null
+    // addressBalance.value = await getEthersBalance(user.value?.address as string)
     formattedAmountToStake.value = ''
 
-  }, 2500)
+  }, 500)
 
   setTimeout(() => {
     stakingActionLoader.value = false
-  }, 3000)
+  }, 1000)
 
   currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
@@ -233,7 +225,6 @@ const handleDeposit = async () => {
       {{ addressBalance ? addressBalance : '- - -' }}
     </h5>
     <div class="text-[12px] mb-[13px] text-blue-400">
-      <!-- TODO: @Chris we need to see how much they have staked currently based on the wallet selected -->
       <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked
     </div>
     <h6 class="card_title mb-[11px]">

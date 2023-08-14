@@ -1,14 +1,18 @@
 import { ethers, network } from 'hardhat'
 import { loadFixture, time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
-import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, ISSVNetworkViews } from '@casimir/ethereum/build/artifacts/types'
-import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
-import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '@casimir/ethereum/helpers/oracle'
-import { round } from '@casimir/ethereum/helpers/math'
-import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
+import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, ISSVNetworkViews } from '../../build/@types'
+import { fulfillReport, runUpkeep } from '../../helpers/upkeep'
+import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../../helpers/oracle'
+import { round } from '../../helpers/math'
+import ISSVNetworkViewsAbi from '../../build/abi/ISSVNetworkViews.json'
+import { Scanner } from '@casimir/ssv'
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
     const [owner, , , , , keeper, oracle] = await ethers.getSigners()
+    
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [654, 655, 656, 657]
+    if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
 
     const mockFunctionsOracleFactory = await ethers.getContractFactory('MockFunctionsOracle')
     const mockFunctionsOracle = await mockFunctionsOracleFactory.deploy()
@@ -45,23 +49,34 @@ export async function deploymentFixture() {
 
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
-    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsJson.abi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
+    const ssvNetwork = await ethers.getContractAt('SSVNetwork', process.env.SSV_NETWORK_ADDRESS as string)
+    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
-    for (const operatorId of [1, 2, 3, 4]) {
+    const preregisteredBalance = ethers.utils.parseEther('10')
+    for (const operatorId of preregisteredOperatorIds) {
         const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)
         const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
-        const nextBalance = currentBalance.add(ethers.utils.parseEther('4'))
+        const nextBalance = currentBalance.add(preregisteredBalance)
         await setBalance(operatorOwnerAddress, nextBalance)
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
             params: [operatorOwnerAddress]
         })
         const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
-        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: ethers.utils.parseEther('4') })
+        const result = await registry.connect(operatorSigner).register(operatorId, { value: preregisteredBalance })
         await result.wait()
     }
 
-    return { manager, registry, upkeep, views, ssvNetworkViews, owner, keeper, oracle }
+    const scanner = new Scanner({
+        provider: ethers.provider,
+        ssvNetworkAddress: ssvNetwork.address,
+        ssvNetworkViewsAddress: ssvNetworkViews.address
+    })
+
+    const operators = await scanner.getOperators(owner.address)
+    console.log('Operators:', operators)
+
+    return { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, keeper, oracle }
 }
 
 /** Fixture to stake 16 for the first user */

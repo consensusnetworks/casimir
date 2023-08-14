@@ -1,4 +1,4 @@
-import { getSecret, loadCredentials } from '@casimir/helpers'
+import { getSecret, loadCredentials } from '@casimir/aws'
 import { $, echo } from 'zx'
 
 /**

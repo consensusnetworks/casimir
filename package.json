@@ -18,8 +18,7 @@
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "migrations:users": "npx esno -r dotenv/config scripts/migrations/users.ts",
-    "postinstall": "npm run build --workspace @casimir/ethereum",
-    "preinstall": "git submodule update --init --recursive && git submodule foreach --recursive git checkout .",
+    "preinstall": "git submodule update --init --recursive",
     "prepare": "husky install",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:actions": "npx esno -r dotenv/config scripts/actions/test.ts",
@@ -56,6 +55,7 @@
     "lint-staged": "^13.0.0",
     "minimist": "^1.2.8",
     "release-it": "^15.6.0",
+    "rimraf": "^5.0.1",
     "zx": "^7.1.1"
   },
   "lint-staged": {
@@ -81,6 +81,7 @@
   "dependencies": {
     "chart.js": "^4.2.1",
     "feather-icons": "^4.29.0",
+    "pg": "^8.11.2",
     "vue-feather": "^2.0.0",
     "xlsx": "^0.18.5"
   }
