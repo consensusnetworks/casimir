@@ -94,9 +94,9 @@ void async function () {
                 if (pendingPoolIds.length + stakedPoolIds.length) {
                     console.log('🧾 Submitting report')
                     const activatedBalance = pendingPoolIds.length * 32
+                    const sweptRewardBalance =  rewardPerValidator * lastStakedPoolIds.length
                     const exitingPoolCount = await manager.requestedExits()
                     const sweptExitedBalance = exitingPoolCount.toNumber() * 32
-                    const sweptRewardBalance =  rewardPerValidator * lastStakedPoolIds.length
                     const rewardBalance = rewardPerValidator * stakedPoolIds.length
                     const latestActiveBalance = await manager.latestActiveBalance()
                     const nextActiveBalance = round(parseFloat(ethers.utils.formatEther(latestActiveBalance)) + activatedBalance + rewardBalance - sweptRewardBalance - sweptExitedBalance, 10)
@@ -112,7 +112,7 @@ void async function () {
                     const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)                    
                     const nextValues = {
                         activeBalance: nextActiveBalance,
-                        sweptBalance: sweptExitedBalance,
+                        sweptBalance: sweptRewardBalance + sweptExitedBalance,
                         activatedDeposits: nextActivatedDeposits,
                         forcedExits: 0,
                         completedExits: exitingPoolCount.toNumber(),
