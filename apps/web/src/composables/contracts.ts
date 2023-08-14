@@ -1,8 +1,8 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
-import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/artifacts/types'
-import CasimirManagerJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
-import CasimirViewsJson from '@casimir/ethereum/build/artifacts/src/v1/CasimirManager.sol/CasimirManager.json'
+import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/@types'
+import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
+import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 import useEnvironment from './environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
@@ -29,8 +29,8 @@ const totalWalletBalance = ref<BreakdownAmount>({
 
 const { ethereumUrl, managerAddress, viewsAddress } = useEnvironment()
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, CasimirManagerJson.abi) as CasimirManager
-const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, CasimirViewsJson.abi) as CasimirViews
+const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, ICasimirManagerAbi) as CasimirManager
+const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, ICasimirViewsAbi) as CasimirViews
 
 export default function useContracts() {
     const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
@@ -98,13 +98,13 @@ export default function useContracts() {
         }
     }
 
-    async function getUserStakeAtAddress(address: string): Promise<number> {
+    async function getUserStake(address: string): Promise<number> {
         try {
             const bigNumber = await manager.connect(provider).getUserStake(address)
             const number = parseFloat(ethers.utils.formatEther(bigNumber))
             return number
         } catch (err) {
-            console.error(`There was an error in getUserStakeAtAddress function: ${JSON.stringify(err)}`)
+            console.error(`There was an error in getUserStake function: ${JSON.stringify(err)}`)
             return 0
         }
     }
@@ -216,7 +216,7 @@ export default function useContracts() {
               
             const stakedDepositedETH = userEventTotalsSum.StakeDeposited
             const withdrawalInitiatedETH = userEventTotalsSum.WithdrawalInitiated
-            
+
             /* Get User's All Time Rewards by Subtracting (StakeDesposited + WithdrawalInitiated) from CurrentStake */
             const currentUserStakeMinusEvents = currentUserStakeETH - (stakedDepositedETH as number) - (withdrawalInitiatedETH as number)
             return {
@@ -375,7 +375,7 @@ export default function useContracts() {
         deposit, 
         getCurrentStaked,
         getDepositFees,
-        getUserStakeAtAddress,
+        getUserStake,
         // getPools, 
         listenForContractEvents,
         refreshBreakdown,

@@ -112,7 +112,7 @@ func (g *GlueService) LoadTables(databaseName string) error {
 	return nil
 }
 
-func (g *GlueService) Introspect(env Environment) error {
+func (g *GlueService) Introspect(env Env) error {
 	db := CasimirAnalyticsDatabaseDev
 
 	if env == Prod {

@@ -15,9 +15,10 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
         const user = await getUserById(userId)
         const { accounts } = user
         const addresses = accounts.map((account) => account.address)
+        const database = 'casimir_analytics_action_table_dev1'
         const opt = {
             profile: process.env.AWS_PROFILE as string,
-            database: 'casimir_analytics_database_dev',
+            database,
             output: 's3://casimir-analytics-wallet-bucket-dev1/',
             workgroup: 'primary',
             catalog: 'AwsDataCatalog',
@@ -36,7 +37,7 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
          * gas_fee
          */
         const stmt = `
-            SELECT * FROM casimir_analytics_database_dev.casimir_analytics_wallet_table_dev1
+            SELECT * FROM casimir_analytics_database_dev.${database}
             WHERE wallet_address IN (${addresses.map((address) => `'${address}'`).join(',')})
             ORDER BY received_at DESC
             LIMIT 100

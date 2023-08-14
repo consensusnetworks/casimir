@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"os"
 	"path"
@@ -12,33 +13,32 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type Environment string
+type Env string
+type EnvVars string
 
 const (
-	Dev  Environment = "dev"
-	Prod Environment = "prod"
+	Dev  Env = "development"
+	Prod Env = "production"
 
-	RemoteNodeHost = "nodes.casimir.co"
-
-	ETHEREUM_RPC_URL     = "ETHEREUM_RPC_URL"
-	ETHEREUM_FORK_BLOCK  = "ETHEREUM_FORK_BLOCK"
-	ETHEREUM_START_BLOCK = "ETHEREUM_START_BLOCK"
+	ETHEREUM_RPC_URL    = "ETHEREUM_RPC_URL"
+	ETHEREUM_FORK_BLOCK = "ETHEREUM_FORK_BLOCK"
+	FORK                = "FORK"
 )
 
 type Config struct {
-	Env     Environment `json:"environment"`
 	Chain   ChainType   `json:"chain"`
 	Network NetworkType `json:"network"`
 	Fork    bool        `json:"fork"`
 	URL     *url.URL    `json:"url"`
 	// genesis for goerli and mainnet, non-genesis for hardhat
-	StartBlock uint64 `json:"start_block"`
-	User       string `json:"user"`
-	Version    int    `json:"version"`
-	Start      uint64 `json:"start"`
-	End        uint64 `json:"end"`
-	BatchSize  uint64 `json:"batch_size"`
-	Concurrent uint64 `json:"concurrent"`
+	ForkBlock        uint64 `json:"start_block"`
+	User             string `json:"user"`
+	Version          int    `json:"version"`
+	Start            uint64 `json:"start"`
+	End              uint64 `json:"end"`
+	BatchSize        uint64 `json:"batch_size"`
+	ConcurrencyLimit uint64 `json:"concurrent"`
+	Env              Env    `json:"env"`
 }
 
 type PackageJSON struct {
@@ -77,20 +77,30 @@ func WorkspaceDir() (string, error) {
 	return root, nil
 }
 
-func LoadEnv() error {
+func LoadEnv() (map[EnvVars]string, error) {
 	dir, err := ModuleDir()
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = godotenv.Load(path.Join(dir, ".env"))
 
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	return nil
+	vars := map[EnvVars]string{
+		ETHEREUM_RPC_URL:    os.Getenv(ETHEREUM_RPC_URL),
+		ETHEREUM_FORK_BLOCK: os.Getenv(ETHEREUM_FORK_BLOCK),
+		FORK:                os.Getenv(FORK),
+	}
+
+	if vars[ETHEREUM_RPC_URL] == "" {
+		return nil, fmt.Errorf("missing env var: %s", ETHEREUM_RPC_URL)
+	}
+
+	return vars, nil
 }
 
 func GetResourceVersion() (int, error) {
@@ -160,3 +170,36 @@ func GetContractBuildArtifact() ([]byte, error) {
 
 	return casimirManagerFile, nil
 }
+
+// func LoadConfig(ctx *cli.Context) (*Config, error) {
+// 	user, err := os.UserHomeDir()
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	vars, err := LoadEnv()
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	raw := vars[EthereumRPCURL]
+
+// 	rpcURL, err := url.Parse(raw)
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	config := Config{
+// 		Chain:      Ethereum,
+// 		Network:    EthereumGoerli,
+// 		Env:        Dev,
+// 		URL:        rpcURL,
+// 		BatchSize:  250_000,
+// 		Concurrent: 10,
+// 		User:       strings.ToLower(user.Username),
+// 		Fork:       c.Bool("fork"),
+// 	}
+// }

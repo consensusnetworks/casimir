@@ -23,6 +23,9 @@ const (
 	EthereumHardhat NetworkType = "hardhat"
 
 	Ethereum ChainType = "ethereum"
+
+	RemoteNodeHost = "nodes.casimir.co"
+	LocalNodeHost  = "127.0.0.1"
 )
 
 type EthereumService struct {
@@ -30,13 +33,10 @@ type EthereumService struct {
 	Network  NetworkType
 	Provider ProviderType
 	Url      url.URL
+	Synced   bool
 }
 
 func NewEthereumService(raw string) (*EthereumService, error) {
-	if raw == "" {
-		return nil, errors.New("EmptyEthereumUrl: Ethereum url cannot be empty")
-	}
-
 	url, err := url.Parse(raw)
 
 	if err != nil {
@@ -89,7 +89,7 @@ func NewEthereumService(raw string) (*EthereumService, error) {
 	}, nil
 }
 
-func PingEthereumNode(url string) error {
+func PingEthereumClient(url string) error {
 	client, err := ethclient.Dial(url)
 
 	if err != nil {

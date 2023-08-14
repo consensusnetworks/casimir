@@ -2,22 +2,11 @@ package main
 
 import (
 	"net/url"
-	"os"
 	"testing"
 )
 
-func TestMain(m *testing.M) {
-	err := LoadEnv()
-
-	if err != nil {
-		panic(err)
-	}
-
-	os.Exit(m.Run())
-}
-
 func TestGetHistoricalContracts(t *testing.T) {
-	err := LoadEnv()
+	_, err := LoadEnv()
 
 	if err != nil {
 		t.Error(err)
@@ -32,11 +21,11 @@ func TestGetHistoricalContracts(t *testing.T) {
 	}
 
 	config := Config{
-		Env:        Dev,
-		URL:        url,
-		Start:      0,
-		BatchSize:  250_000,
-		Concurrent: 10,
+		Env:              Dev,
+		URL:              url,
+		Start:            0,
+		BatchSize:        250_000,
+		ConcurrencyLimit: 10,
 	}
 
 	crawler, err := NewEthereumCrawler(config)

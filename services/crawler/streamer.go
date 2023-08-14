@@ -18,7 +18,7 @@ type EthereumStreamer struct {
 	Begin     time.Time
 	Elapsed   time.Duration
 	Fork      bool
-	Env       Environment
+	Env       Env
 	StartFrom uint64
 }
 

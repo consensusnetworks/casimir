@@ -1,10 +1,11 @@
 import localtunnel from 'localtunnel'
 import os from 'os'
-import { HardhatUserConfig } from 'hardhat/config'
+import { HardhatUserConfig } from 'hardhat/types'
+import '@nomicfoundation/hardhat-foundry'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
-import 'solidity-docgen'
 import '@nomicfoundation/hardhat-toolbox'
+import 'hardhat-abi-exporter'
 
 // Seed is provided
 const mnemonic = process.env.BIP39_SEED as string
@@ -81,12 +82,20 @@ const config: HardhatUserConfig = {
   },
   paths: {
     tests: './test',
-    sources: './src',
-    artifacts: './build/artifacts',
-    cache: './build/cache'
+    sources: './src/v1',
+    artifacts: './build/hardhat/artifacts',
+    cache: './build/hardhat/cache'
+  },
+  abiExporter: {
+    path: './build/abi',
+    runOnCompile: true,
+    clear: true,
+    flat: true,
+    spacing: 2,
+    format: 'fullName'
   },
   typechain: {
-    outDir: './build/artifacts/types',
+    outDir: './build/@types'
   },
   networks: {
     hardhat: {
@@ -112,22 +121,19 @@ const config: HardhatUserConfig = {
       gas: 'auto',
       gasPrice: 'auto'
     }
-  },
-  mocha: {
-    timeout: 250000 // Default timeout * 10
   }
 }
 
 // Start a local tunnel for using RPC over https (e.g. for Metamask on mobile)
 if (process.env.TUNNEL === 'true') {
-  const localSubdomain = `cn-hardhat-${os.userInfo().username.toLowerCase()}`
+  const localSubdomain = `local-hardhat-${os.userInfo().username.toLowerCase()}`
   const localUrl = `https://${localSubdomain}.loca.lt`
   localtunnel({ port: 8545, subdomain: localSubdomain }).then(
     (tunnel: localtunnel.Tunnel) => {
       if (localUrl === tunnel.url) {
-        console.log('Your local tunnel is now available at', localUrl)
+        console.log('Your default local tunnel url is', localUrl)
       } else {
-        console.log('Your default local tunnel url is not available, instead use', tunnel.url)
+        console.log('Your default local tunnel url is not available, use', tunnel.url, 'instead')
       }
       process.on('SIGINT', () => {
         tunnel.close()

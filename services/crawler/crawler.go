@@ -18,22 +18,20 @@ const (
 	AWSAthenaTimeFormat = "2006-01-02 15:04:05.999999999"
 )
 
-var ConcurrencyLimit = 10
-
 type EthereumCrawler struct {
 	*Logger
 	*EthereumService
 	*Config
-	Glue     *GlueService
-	S3       *S3Service
-	Wg       *sync.WaitGroup
-	Sema     chan struct{}
-	Head     uint64
-	Version  int
-	Env      Environment
-	Start    time.Time
-	Elapsed  time.Duration
-	ForkedAt uint64
+	Glue       *GlueService
+	S3         *S3Service
+	Wg         *sync.WaitGroup
+	Sema       chan struct{}
+	Head       uint64
+	Version    int
+	Env        Env
+	Start      time.Time
+	Elapsed    time.Duration
+	StartBlock uint64
 }
 
 func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
@@ -45,24 +43,11 @@ func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 
 	l := logger.Sugar()
 
-	var eths *EthereumService
+	eths, err := NewEthereumService(config.URL.String())
 
-	if config.Fork {
-		eth, err := NewEthereumService("http://127.0.0.1:8545")
-
-		if err != nil {
-			l.Infof("failed to create ethereum client: %s", err.Error())
-			return nil, err
-		}
-		eths = eth
-	} else {
-		eth, err := NewEthereumService(config.URL.String())
-
-		if err != nil {
-			l.Infof("failed to create ethereum client: %s", err.Error())
-			return nil, err
-		}
-		eths = eth
+	if err != nil {
+		l.Infof("failed to create ethereum service: %s", err.Error())
+		return nil, err
 	}
 
 	head, err := eths.Client.BlockNumber(context.Background())
@@ -71,11 +56,8 @@ func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 		l.Infof("failed to get block number: %s", err.Error())
 		return nil, err
 	}
-	config.End = head
-	// config.End = int64(1_000_000)
 
-	l.Infof("crawling range %d - %d", config.Start, config.End)
-	l.Infof("current head: %d", head)
+	config.End = head
 
 	awsConfig, err := LoadDefaultAWSConfig()
 
@@ -101,7 +83,7 @@ func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 	s3c, err := NewS3Service(awsConfig)
 
 	if err != nil {
-		l.Infof("FailedToCreateS3Client: %s", err.Error())
+		l.Infof("failed to create s3 client: %s", err.Error())
 		return nil, err
 	}
 
@@ -119,7 +101,7 @@ func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 		S3:              s3c,
 		Wg:              &sync.WaitGroup{},
 		Start:           time.Now(),
-		Sema:            make(chan struct{}, ConcurrencyLimit),
+		Sema:            make(chan struct{}, config.ConcurrencyLimit),
 		Head:            head,
 		Version:         1,
 		Config:          &config,
@@ -147,7 +129,7 @@ func (c *EthereumCrawler) Crawl() error {
 		return nil
 	}
 
-	err := PingEthereumNode(c.Config.URL.String())
+	err := PingEthereumClient(c.Config.URL.String())
 
 	if err != nil {
 		return err
@@ -273,7 +255,7 @@ func (c *EthereumCrawler) UploadBlock(result *BlockEventsResult) error {
 func (c *EthereumCrawler) GetHistoricalContracts() (*BlockEventsResult, error) {
 	var result *BlockEventsResult
 
-	contractAddr := common.HexToAddress("0xaaf5751d370d2fd5f1d5642c2f88bbfa67a29301")
+	contractAddr := common.HexToAddress("0x5d35a44Db8a390aCfa997C9a9Ba3a2F878595630")
 
 	manager, err := NewMain(contractAddr, c.Client)
 

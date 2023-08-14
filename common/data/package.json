@@ -4,7 +4,7 @@
     "version": "1.0.0",
     "main": "src/index.ts",
     "scripts": {
-        "build": "echo '@casimir/data build not specified. Disregard this warning and any listed errors above if @casimir/types is not needed for the current project build.' && exit 0",
+        "build": "echo '@casimir/data build not specified. Disregard this warning and any listed errors above if @casimir/data is not needed for the current project build.' && exit 0",
         "configure:python": "poetry install && poetry run ipython kernel install --user --name=casimir-data",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
@@ -13,8 +13,6 @@
         "pg": "^8.10.0"
     },
     "devDependencies": {
-        "@types/node": "^17.0.38",
-        "rimraf": "^4.4.0",
-        "ts-node": "^10.9.1"
+        "@types/node": "^17.0.38"
     }
 }

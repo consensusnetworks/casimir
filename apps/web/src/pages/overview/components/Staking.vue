@@ -9,7 +9,7 @@ import useContracts from '@/composables/contracts'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
-const { deposit, getDepositFees, getUserStakeAtAddress } = useContracts()
+const { deposit, getDepositFees, getUserStake } = useContracts()
 const { getEthersBalance } = useEthers()
 const { user, updateUserAgreement } = useUsers()
 const { getCurrentPrice } = usePrice()
@@ -144,7 +144,7 @@ watch(formattedAmountToStake, async () => {
 watch(selectedWalletAddress, async () => {
   if (selectedWalletAddress.value) {
     addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + ' ETH'
-    currentUserStake.value = await getUserStakeAtAddress(selectedWalletAddress.value)
+    currentUserStake.value = await getUserStake(selectedWalletAddress.value)
   } else {
     addressBalance.value = null
     currentUserStake.value = 0
@@ -158,7 +158,7 @@ watch(user, async () => {
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     selectedWalletAddress.value = user.value?.address as string
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
-    currentUserStake.value = await getUserStakeAtAddress(selectedWalletAddress.value as string)
+    currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
   } else {
     selectedStakingProvider.value = ''
     selectedWalletAddress.value = null
@@ -177,7 +177,7 @@ onMounted(async () => {
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     selectedWalletAddress.value = user.value?.address as string
-    currentUserStake.value = await getUserStakeAtAddress(selectedWalletAddress.value as string)
+    currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
   }
 })
 
@@ -216,7 +216,7 @@ const handleDeposit = async () => {
     stakingActionLoader.value = false
   }, 3000)
 
-  currentUserStake.value = await getUserStakeAtAddress(selectedWalletAddress.value as string)
+  currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
 </script>
 

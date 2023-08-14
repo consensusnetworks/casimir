@@ -20,3 +20,6 @@
 	path = contracts/ethereum/scripts/resources/ssv-network
 	url = https://github.com/bloxapp/ssv-network.git
 	branch = contract-v3
+[submodule "contracts/ethereum/lib/forge-std"]
+	path = contracts/ethereum/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std

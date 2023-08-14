@@ -1,9 +1,9 @@
-import { CasimirManager, CasimirRegistry, ISSVNetworkViews, CasimirViews, CasimirUpkeep } from '@casimir/ethereum/build/artifacts/types'
+import { CasimirManager, CasimirRegistry, ISSVNetworkViews, CasimirViews, CasimirUpkeep } from '../build/@types'
 import { ethers, network } from 'hardhat'
 import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
-import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
+import ISSVNetworkViewsAbi from '../build/abi/ISSVNetworkViews.json'
 import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
 import { getEventsIterable } from '@casimir/oracle/src/providers/events'
 import { fetchRetry, run } from '@casimir/helpers'
@@ -52,7 +52,7 @@ void async function () {
 
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
-    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsJson.abi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
+    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
     for (const operatorId of [1, 2, 3, 4]) {
         const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)
@@ -79,7 +79,6 @@ void async function () {
     let lastReportBlock = await ethers.provider.getBlockNumber()
     let lastStakedPoolIds: number[] = []
     void function () {
-
         ethers.provider.on('block', async (block) => {
             if (block - blocksPerReport >= lastReportBlock) {
                 await time.increase(time.duration.days(1))
@@ -163,30 +162,38 @@ void async function () {
     if (process.env.MOCK_ORACLE === 'true') {
         run('npm run dev --workspace @casimir/oracle')
     } else {
-        const handlers = {
-            DepositRequested: initiateDepositHandler,
-            /**
-             * We don't need to handle these/they aren't ready:
-             * ResharesRequested: initiateResharesHandler,
-             * ExitRequested: initiateExitsHandler,
-             * ForcedExitReportsRequested: reportForcedExitsHandler,
-             */
-            CompletedExitReportsRequested: reportCompletedExitsHandler
-        }
-
-        const eventsIterable = getEventsIterable({ manager, events: Object.keys(handlers) })
-                
-        for await (const event of eventsIterable) {
-            const details = event?.[event.length - 1]
-            const { args } = details
-            const handler = handlers[details.event as keyof typeof handlers]
-            if (!handler) throw new Error(`No handler found for event ${details.event}`)
-            await handler({ 
-                manager,
-                views,
-                signer: oracle,
-                args
+        try {
+            const handlers = {
+                DepositRequested: initiateDepositHandler,
+                /**
+                 * We don't need to handle these/they aren't ready:
+                 * ResharesRequested: initiateResharesHandler,
+                 * ExitRequested: initiateExitsHandler,
+                 * ForcedExitReportsRequested: reportForcedExitsHandler,
+                 */
+                CompletedExitReportsRequested: reportCompletedExitsHandler
+            }
+    
+            const eventsIterable = getEventsIterable({ 
+                provider: ethers.provider,
+                managerAddress: manager.address, 
+                events: Object.keys(handlers) 
             })
+                    
+            for await (const event of eventsIterable) {
+                const details = event?.[event.length - 1]
+                const { args } = details
+                const handler = handlers[details.event as keyof typeof handlers]
+                if (!handler) throw new Error(`No handler found for event ${details.event}`)
+                await handler({ 
+                    manager,
+                    views,
+                    signer: oracle,
+                    args
+                })
+            }
+        } catch (error) {
+            console.log('ORACLE ERROR', error)
         }
     }
 }()

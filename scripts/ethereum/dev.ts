@@ -15,43 +15,33 @@ void async function () {
         testnet: 'goerli'
     }
 
-    /** Load AWS credentials for getting secrets */
     if (process.env.USE_SECRETS !== 'false') {
         await loadCredentials()
     }
 
-    /** Get wallet seed */
     process.env.BIP39_SEED = process.env.USE_SECRETS !== 'false' ? process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') : process.env.BIP39_SEED || 'test test test test test test test test test test test junk'
 
-    /** Default to testnet */
     process.env.FORK = process.env.FORK || 'testnet'
 
-    /** Default to no tunneling */
     process.env.TUNNEL = process.env.TUNNEL || 'false'
 
-    /** Default to run mock oracle */
     process.env.MOCK_ORACLE = process.env.MOCK_ORACLE || 'true'
 
-    /** Set 12 second mining interval */
     process.env.MINING_INTERVAL = '12'
 
-    /** Set local ethereum RPC url */
     process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
 
     echo(chalk.bgBlackBright('Your mnemonic seed is ') + chalk.bgBlue(process.env.BIP39_SEED))
 
-    /** Require fork to be supported */
     if (!forks[process.env.FORK]) {
         throw new Error(`No fork ${process.env.FORK} supported.`)
     }
 
-    /** Get local ethereum fork RPC url */
     if (process.env.USE_SECRETS !== 'false') {
         const key = await getSecret(`consensus-networks-ethereum-${forks[process.env.FORK]}`)
         process.env.ETHEREUM_FORK_RPC_URL = process.env.ETHEREUM_FORK_RPC_URL || `https://eth-${forks[process.env.FORK]}.g.alchemy.com/v2/${key}`
     }
     
-    /** Require ethereum fork RPC url */
     if (!process.env.ETHEREUM_FORK_RPC_URL) {
         throw new Error(`No ETHEREUM_FORK_RPC_URL set for ${process.env.FORK} ${forks[process.env.FORK]} network.`)
     }
@@ -72,9 +62,19 @@ void async function () {
     if (!process.env.VIEWS_ADDRESS) {
         process.env.VIEWS_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 1 })
     }
+    if (!process.env.REGISTRY_ADDRESS) {
+        process.env.REGISTRY_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 2 })
+    }
+    if (!process.env.UPKEEP_ADDRESS) {
+        process.env.UPKEEP_ADDRESS = await getFutureContractAddress({ wallet, nonce, index: managerIndex + 3 })
+    }
+
+    process.env.SSV_NETWORK_ADDRESS = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
+    process.env.SSV_NETWORK_VIEWS_ADDRESS = '0x8dB45282d7C4559fd093C26f677B3837a5598914'
+    process.env.UNISWAP_V3_FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
+
 
     if (process.env.MOCK_ORACLE === 'false') {
-        /** Generate mock validators as needed */
         await run('npm run generate --workspace @casimir/oracle')
     }
 
