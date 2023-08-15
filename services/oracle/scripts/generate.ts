@@ -32,6 +32,7 @@ void async function () {
 
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, 'm/44\'/60\'/0\'/0/6')
     const oracleAddress = wallet.address
+    console.log('ORACLE ADDRESS', oracleAddress)
 
     const validatorCount = 4
     if (!validatorStore[oracleAddress] || Object.keys(validatorStore[oracleAddress]).length < validatorCount) {
