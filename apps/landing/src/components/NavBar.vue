@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import router from '@/composables/router'
 import VueFeather from 'vue-feather'
-import useScreenDimenstions from '@/composables/screenDimenstions'
+import useScreenDimentions from '@/composables/screenDimenstions'
 
-const { screenWidth } = useScreenDimenstions()
+const { screenWidth } = useScreenDimentions()
 </script>
 
 <template>
@@ -11,7 +11,7 @@ const { screenWidth } = useScreenDimenstions()
     <img
       src="/casimir.svg"
       alt="Casimir Logo"
-      class="w-[21px]"
+      class="w-[21px] mr-[100px]"
     >
 
     <router-link
@@ -28,9 +28,8 @@ const { screenWidth } = useScreenDimenstions()
     </router-link>
     <a
       href="https://app.dev.casimir.co/"
-      target="_blank"
       class="rounded-[3px] bg-white text-black text-[13px] 
-    font-[400] px-[20px] py-[6px] flex items-center gap-[5px]"
+      font-[400] px-[20px] py-[6px] flex items-center gap-[5px]"
     >
       Launch App
       <vue-feather

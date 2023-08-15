@@ -1,14 +1,19 @@
 <script lang="ts" setup>
-import useScreenDimenstions from '@/composables/screenDimenstions'
+import useScreenDimentions from '@/composables/screenDimenstions'
 import DummyBreakdown from './comoponents/DummyBreakdown.vue'
 import DummyStaking from './comoponents/DummyStaking.vue'
 import DummyChart from './comoponents/DummyChart.vue'
+import Footer from './comoponents/Footer.vue'
+import QuestionsAndAnswers from './comoponents/QuestionsAndAnswers.vue'
+import Content from './comoponents/Content.vue'
+import Roadmap from './comoponents/Roadmap.vue'
+import Features from './comoponents/Features.vue'
 
-const { screenWidth } = useScreenDimenstions()
+const { screenWidth } = useScreenDimentions()
 </script>
 
 <template>
-  <div class="text-white text-center pt-[110px] pb-[40px]">
+  <div class=" text-center pt-[110px] pb-[40px]">
     <!-- Page Header -->
     <h1 class="page_header">
       Ethereum Staking
@@ -104,14 +109,18 @@ const { screenWidth } = useScreenDimenstions()
     </div>
 
     <!-- Features -->
+    <Features class="my-[15px] w-full" />
 
     <!-- Roadmap -->
+    <Roadmap class="my-[15px] w-full" />
 
     <!-- Litepaper Content -->
-
+    <Content class="my-[15px] w-full" />
     <!-- Q&As -->
+    <QuestionsAndAnswers class="my-[15px] w-full" />
 
     <!-- Footer -->
+    <Footer class="my-[15px] w-full" />
   </div>
 </template>
 

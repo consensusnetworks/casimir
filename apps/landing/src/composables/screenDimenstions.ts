@@ -6,14 +6,14 @@ const initializeComposable = ref(false)
 const screenWidth = ref(0)
 const screenHeight = ref(0)
   
-export default function useScreenDimenstions() {
+export default function useScreenDimentions() {
 
     const findScreenDimenstions = () => {
         try {
             screenWidth.value = window.innerWidth
             screenHeight.value = window.innerHeight 
         } catch (error) {
-            console.log('Listening to screen dimentions error', error)
+            console.log('Listening to screen dimenstions error', error)
         }
         
     }
