@@ -29,15 +29,15 @@ const showMore = ref(false)
           class="w-full max-w-[800px] border-b border-b-grey_1 pb-[20px] mb-[20px]"
         >
           <button 
-            class="w-full flex items-start justify-between"
+            class="w-full flex items-start justify-between text-grey_6 hover:text-grey_3"
             @click="openTab === index? openTab = -1 : openTab = index"
           >
-            <h6 class="text-[14px] font-[500] text-grey_6">
+            <h6 class="text-[14px] font-[500] ">
               {{ item.question }}
             </h6>
             <vue-feather
               :type="openTab === index? 'minus-circle':'plus-circle'"
-              class="icon w-[20px] text-grey_4"
+              class="icon w-[20px]"
             />
           </button>
           <div
@@ -45,6 +45,20 @@ const showMore = ref(false)
             class="text-[12px] text-left text-grey_4 mt-[15px]"
           >
             {{ item.answer }}
+            <div class="mt-[5px] flex justify-center">
+              <a
+                v-show="item.link != ''"
+                class="text-primary outline-none hover:text-blue_4"
+                :href="item.link"
+                target="_blank"
+              >
+                Resourse
+                <vue-feather
+                  type="link"
+                  class="w-[12px]"
+                />
+              </a>
+            </div>
           </div>
         </div>
       </div>
