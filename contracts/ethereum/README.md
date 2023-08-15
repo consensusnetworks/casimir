@@ -16,7 +16,7 @@ Casimir is designed to offer users the experience and security of solo-staking w
 
 **All testing and development commands should be run from the repository root.**
 
-See the [@casimir/ethereum section] in the [main README](../../README.md#casimirethereum) for testing and development instructions.
+See the [@casimir/ethereum section in the repository root README.md](https://github.com/consensusnetworks/casimir/blob/master/README.md#casimirethereum) for testing and development instructions.
 
 Build the contracts (without any tests or development environment).
 
@@ -25,7 +25,7 @@ Build the contracts (without any tests or development environment).
 npm run build --workspace @casimir/ethereum
 ```
 
-To directly run any script in the [@casimir/ethereum package.json](./package.json), use the `--workspace @casimir/ethereum` flag.
+To directly run any script in the [@casimir/ethereum package.json](https://github.com/consensusnetworks/casimir/blob/master/contracts/ethereum/package.json), use the `--workspace @casimir/ethereum` flag.
 
 ```zsh
 # From the repository root
@@ -97,62 +97,69 @@ graph LR
 
 ## Contracts
 
-Casimir v1 contains five internal contracts with interfaces and uses a suite of vendor contracts from Chainlink, OpenZeppelin, SSV, and Uniswap. All contract source code is located in the [./src/v1](./src/v1) directory. A Hardhat environment for development and deployment is configured in the [hardhat.config.ts](./hardhat.config.ts) file.
+Casimir v1 contains five internal contracts with interfaces and uses a suite of vendor contracts from Chainlink, OpenZeppelin, SSV, and Uniswap. A Hardhat environment is configured in [hardhat.config.ts](https://github.com/consensusnetworks/casimir/blob/master/contracts/ethereum/hardhat.config.ts).
 
 **Internal Contracts:**
 
-Core internal contracts and interfaces are located in the root of the [src/v1](./src/v1) directory.
+Internal contracts and interfaces are located in [src/v1](src/v1).
 
-| Contract | Description | Docs |
-| --- | --- | --- |
-| [CasimirManager](./src/v1/CasimirManager.sol) | Accepts and distributes deposits | [docs/index.md#casimirmanager](./docs/index.md#casimirmanager) |
-| [CasimirPool](./src/v1/CasimirPool.sol) | Accepts deposits and stakes a validator | [docs/index.md#casimirpool](./docs/index.md#casimirpool) |
-| [CasimirRegistry](./src/v1/CasimirRegistry.sol) | Manages operator registration | [docs/index.md#casimirregistry](./docs/index.md#casimirregistry) |
-| [CasimirUpkeep](./src/v1/CasimirUpkeep.sol) | Automates and handles reports | [docs/index.md#CasimirUpkeep](./docs/index.md#CasimirUpkeep) |
-| [CasimirViews](./src/v1/CasimirViews.sol) | Provides read-only access to state | [docs/index.md#casimirviews](./docs/index.md#casimirviews) |
-| [Types](./src/v1/libraries/Types.sol) | Defines internal types | [docs/index.md#types](./docs/index.md#types) |
+| Contract | Description |
+| --- | --- |
+| CasimirManager | Accepts and distributes deposits |
+| CasimirPool | Accepts deposits and stakes a validator |
+| CasimirRegistry | Manages operator registration and collateral |
+| CasimirUpkeep | Automates and handles reports |
+| CasimirViews | Provides complex off-chain-only call methods |
+
+**Internal Libraries:**
+
+Internal library source code is located in [src/v1/lib](src/v1/libraries).
+
+| Library | Description |
+| --- | --- |
+| Types | Defines internal types |
 
 **Vendor Contracts:**
 
 Vendor contracts and interfaces are located in the [src/v1/vendor](./src/v1/vendor) directory, or they are imported directly from installed libraries.
 
-| Contract | Description | Docs |
-| --- | --- | --- |
-| [AutomationRegistry](../../node_modules/@chainlink/contracts/src/v0.8/interfaces/AutomationRegistryInterface2_0.sol) | Subscribes and funds upkeeps | – |
-| [DepositContract](./src/v1/vendor/interfaces/IDepositContract.sol) | Accepts Beacon deposits | – |
-| [ERC20](../../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol) | Standardizes tokens | – |
-| [FunctionsClient](../../node_modules/@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol) | Calls Chainlink Functions | – |
-| [KeeperRegistrar](./src/v1/vendor/interfaces/KeeperRegistryInterface.sol) | Allows upkeep subscription registration | – |
-| [Math](../../node_modules/@openzeppelin/contracts/utils/math/Math.sol) | Provides math helpers | – |
-| [Ownable](../../node_modules/@openzeppelin/contracts/access/Ownable.sol) | Provides ownable access control | – |
-| [ReentrancyGuard](../../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol) | Secures against reentrancy | – |
-| [SSVNetwork](./src/v1/vendor/interfaces/ISSVNetwork.sol) | Registers SSV validators | – |
-| [SSVNetworkCore](./src/v1/vendor/interfaces/ISSVNetworkCore.sol) | Provides base SSV logic and types | – |
-| [SSVNetworkViews](./src/v1/vendor/interfaces/ISSVNetworkViews.sol) | Provides read-only access to SSV network state | – |
-| [SwapRouter](../../node_modules/@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol) | Routes token swaps | – |
-| [UniswapV3Factory](../../node_modules/@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol) | Provides access to Uniswap V3 pools | – |
-| [UniswapV3PoolState](../../node_modules/@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol) | Provides access to Uniswap V3 pool state | – |
-| [WETH](./src/v1/vendor/interfaces/IWETH.sol) | Wraps ETH for swapping | – |
+| Contract | Description |
+| --- | --- |
+| AutomationRegistry | Subscribes and funds upkeeps |
+| DepositContract | Accepts Beacon deposits |
+| ERC20 | Standardizes tokens |
+| FunctionsClient | Calls Chainlink Functions |
+| KeeperRegistrar | Allows upkeep subscription registration |
+| Math | Provides math helpers |
+| Ownable | Provides ownable access control |
+| ReentrancyGuard | Secures against reentrancy |
+| SSVNetwork | Registers SSV validators |
+| SSVNetworkCore | Provides base SSV logic and types |
+| SSVNetworkViews | Provides read-only access to SSV network state |
+| SwapRouter | Routes token swaps |
+| UniswapV3Factory | Provides access to Uniswap V3 pools |
+| UniswapV3PoolState | Provides access to Uniswap V3 pool state |
+| WETH | Wraps ETH for swapping |
 
 **Mock Contracts:**
 
 Mock (development-only) contracts and interfaces are located in the [src/mock](./src/v1/mock) directory.
 
-| Contract | Description | Docs |
-| --- | --- | --- |
-| [MockFunctionsOracle](./src/v1/mock/MockFunctionsOracle.sol) | Mocks Chainlink Functions responses | [docs/index.md#mockfunctionsoracle](./docs/index.md#mockfunctionsoracle) |
+| Contract | Description |
+| --- | --- |
+| MockFunctionsOracle | Mocks Chainlink Functions responses |
 
 ## Distributed Key Generation
 
-Casimir distributes validator key shares to operators using SSV nodes with [RockX DKG support](https://github.com/RockX-SG/rockx-dkg-cli). The [@casimir/oracle service](../../services/oracle) uses a DKG messenger server to interact with SSV nodes and perform DKG operations. Before running tests, the [@casimir/oracle generate script](../../services/oracle/scripts/generate.ts) is used to pregenerate DKG keys and the [oracle helper scripts](./helpers/oracle) completes tests with the pregenerated DKG keys. While running the development environment, a local instance of the [@casimir/oracle service](../../services/oracle/index.ts) is used.
+Casimir distributes validator key shares to operators using SSV nodes with [RockX DKG support](https://github.com/RockX-SG/rockx-dkg-cli). The [@casimir/oracle service](https://github.com/consensusnetworks/casimir/blob/master/services/oracle) uses a DKG messenger server to interact with SSV nodes and perform DKG operations. Before running tests, the [@casimir/oracle generate script](https://github.com/consensusnetworks/casimir/blob/master/services/oracle/scripts/generate.ts) is used to pregenerate DKG keys and the [oracle helper scripts](https://github.com/consensusnetworks/casimir/blob/master/contracts/ethereum/helpers/oracle) completes tests with the pregenerated DKG keys. While running the development environment, a local instance of the @casimir/oracle service is used.
 
 ## Oracles
 
-The contract uses two oracles to automate the Casimir staking experience and ensure the security of user funds. The [Casimir Beacon oracle](../../services/functions/README.md) and the Casimir upkeep report total validator balance, swept balance, and validator actions once per day using [Chainlink Functions](https://docs.chain.link/chainlink-functions) and [Chainlink Automation](https://docs.chain.link/chainlink-automation/introduction). The [Casimir DAO oracle](../../services/oracle/README.md) watches the manager contract events and automatically executes zero-coordination distributed key generation (DKG) operations: validator creation, validator resharing, and validator exiting. The DAO oracle also submits verifiable report details in response to reported validator actions (such as an SSV cluster and operator blame amounts for a completed validator exit).
+The contract uses two oracles to automate the Casimir staking experience and ensure the security of user funds. The [Casimir Beacon oracle](https://github.com/consensusnetworks/casimir/blob/master/services/functions) and the upkeep contract report total validator balance, swept balance, and validator actions once per day using [Chainlink Functions](https://docs.chain.link/chainlink-functions) and [Chainlink Automation](https://docs.chain.link/chainlink-automation/introduction). The [Casimir DAO oracle](https://github.com/consensusnetworks/casimir/blob/master/services/oracle) watches the manager contract events and automatically executes zero-coordination distributed key generation (DKG) operations: validator creation, validator resharing, and validator exiting. The DAO oracle also submits verifiable report details in response to reported validator actions (such as an SSV cluster and operator blame amounts for a completed validator exit).
 
-## 👥 Users
+## Users
 
-Users can deposit any amount of ETH to the manager contract. Their deposits are staked to validators run by SSV operators (see [Operators](./README.md#operators)). Rewards are auto-compounded into stake and users can withdraw their principal plus any earned proportion of new stake (or a partial amount of their choice) at any time.
+Users can deposit any amount of ETH to the manager contract. Their deposits are staked to validators run by SSV operators (see [Operators](#operators)). Rewards are auto-compounded into stake and users can withdraw their principal plus any earned proportion of new stake (or a partial amount of their choice) at any time.
 
 Sure! Here's the User Fees section structured similarly to the blame amount and user stake calculations:
 
@@ -175,7 +182,7 @@ $E = D \times \frac{100}{100 + F_t}$
 The amount to be converted to LINK and SSV is:
 $F_a = D - E$
 
-*Where:*
+Where:
 
 - $F_t$ typically equals 5%.
 - $D$ is the amount of ETH the user wants to deposit.
@@ -198,24 +205,24 @@ Let:
 The user's current compounded stake at any time is calculated as:
 $S = S_0 \times \frac{R_s}{R_{s0}}$
 
-*Where:*
+Where:
 
-- $S$ corresponds to [**`users[userAddress].stake`**](./docs/index.md#user) in the contract.
-- $S_0$ also corresponds to [**`users[userAddress].stake`**](./docs/index.md#user) in the contract, but it's accessed before settling the user's current stake.
-- $R_s$ is represented by [**`stakeRatioSum`**](./docs/index.md#stakeratiosum) in the contract.
-- $R_{s0}$ is represented by [**`users[userAddress].stakeRatioSum0`**](./docs/index.md#user) in the contract.
+- $S$ corresponds to **`users[userAddress].stake`** in the contract.
+- $S_0$ also corresponds to **`users[userAddress].stake`** in the contract, but it's accessed before settling the user's current stake.
+- $R_s$ is represented by **`stakeRatioSum`** in the contract.
+- $R_{s0}$ is represented by **`users[userAddress].stakeRatioSum0`** in the contract.
 
 ### User Withdrawals
 
 Users can request a withdrawal of any amount of their stake at any time. If the requested amount is available in the buffered balance (prepooled balance plus withdrawn balance), the withdrawal is fulfilled immediately. Otherwise, the withdrawal is added to the pending withdrawals queue and fulfilled when the requested amount is available (usually within 1-4 days, depending on the amount).
 
-## 👷 Operators
+## Operators
 
-Each Casimir validator is run by four selected operators holding the key shares to perform duties with threshold signatures on SSV. Registration is open to any SSV operator (see [Operator Registration](./README.md#operatorregistration). Operators are selected by an algorithm that ensures high-performance but emphasizes decentralization (see [Operator Selection](./README.md#operatorselection)) as user's deposit stake and new validators are required.
+Each Casimir validator is run by four selected operators holding the key shares to perform duties with threshold signatures on SSV. Registration is open to any SSV operator (see [Operator Registration](#operator-registration). Operators are selected by an algorithm that ensures high-performance but emphasizes decentralization (see [Operator Selection](#operator-selection)) as user's deposit stake and new validators are required.
 
 ### Operator Registration
 
-Operators can join the contract registry with a deposit of 4 ETH for collateral (see [Operator Collateral](./README.md#operatorcollateral)) and a lightweight SSV node config add-on (see [Operator Config](./README.md#operatorconfig)).
+Operators can join the contract registry with a deposit of 4 ETH for collateral (see [Operator Collateral](#operator-collateral)) and a lightweight SSV node config add-on (see [Operator Onboarding](#operator-onboarding)).
 
 ### Operator Selection
 
@@ -254,12 +261,16 @@ The blame amounts are submitted by the DAO oracle in response to a completed val
 
 Operators owners will need to [set up an SSV node with RockX](https://github.com/consensusnetworks/ssv-dkg) and register with Casimir. The operators page in the Casimir app guides an owner through the process and provides an easy interface for registration and operator management.
 
-## Relevant Improvement Proposals
+## Future Development
 
-The improvement proposals below for Ethereum and SSV are relevant to Casimir staking.
+Casimir will receive ongoing development and maintenance to improve the user experience and security of the protocol. The development and release of proposal solutions will be rigorously reviewed and voted on by the Casimir DAO. The following is a list of planned improvements proposals.
+
+**Improvement Proposals:**
 
 | Proposal | Description | Result |
 | --- | --- | --- |
-| [EIP-4788](https://eips.ethereum.org/EIPS/eip-4788) | Beacon block root in the EVM | Individual validator status reports are provable on-chain |
-| [EIP-7002](https://eips.ethereum.org/EIPS/eip-7002) | Execution layer triggerable exits | Manager contract can trigger validator exits |
-| [SIP-1](https://github.com/bloxapp/SIPs/blob/main/sips/dkg.md) | Generalized DKG support in SSV | SSV nodes can perform DKG operations natively |
+| CIP-1 | Trigger validator exits in manager using [SSV voluntary exits](https://github.com/bloxapp/SIPs/blob/voluntary_exit/sips/voluntary_exit.md) | Improves decentralization by allowing validators to be exited without relying on the DAO oracle |
+| CIP-2 | Trigger DKG operations without oracle or messenger server using RockX's p2p solution for [SSV DKG](https://github.com/bloxapp/SIPs/blob/main/sips/dkg.md) | Improves decentralization by allowing DKG operations to be triggered without relying on the DAO oracle or messenger server |
+| CIP-3 | Create an opt-in or alternative staking provider that integrates Casimir pools with [EigenLayer pods](https://github.com/Layr-Labs/eigenlayer-contracts/blob/master/docs/EigenPods.md) | Improves user staking account functionality and utility for some use cases |
+| CIP-4 | Prove validator status reports using [beacon block root in the EVM](https://eips.ethereum.org/EIPS/eip-4788) | Improves decentralization by allowing validator status reports to be verified on-chain |
+| CIP-5 | Trigger validator exits in manager using [execution layer triggerable exits](https://eips.ethereum.org/EIPS/eip-7002) | Improves decentralization by allowing validators to be exited without relying on the DAO oracle or node operators |

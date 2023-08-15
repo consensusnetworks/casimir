@@ -14,7 +14,7 @@
   - [Prerequisites](#prerequisites)
   - [Setup](#setup)
   - [Configure](#configure)
-    - [Supported Environment Variables](#supported-environment-variables)
+    - [Environment Variables](#environment-variables)
   - [Apps](#apps)
     - [@casimir/web](#casimirweb)
     - [@casimir/landing](#casimirlanding)
@@ -113,7 +113,7 @@ echo "AWS_PROFILE=<"your-aws-profile-name">" > .env
 echo "USE_SECRETS=false" > .env
 ```
 
-#### Supported Environment Variables
+#### Environment Variables
 
 | Name | Description | Default |
 | - | - | - |
