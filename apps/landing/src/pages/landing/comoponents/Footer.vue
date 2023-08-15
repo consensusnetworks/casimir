@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import useScreenDimentions from '@/composables/screenDimenstions'
+const { screenWidth } = useScreenDimentions()
 </script>
 
 <template>
@@ -47,15 +49,21 @@
     </div>
 
     <!-- Content -->
-    <div class="flex items-start justify-between gap-[100px] py-[30px]">
-      <div class="max-w-[250px] text-left text-[14px] font-[400] text-grey_6">
+    <div
+      class="flex items-start justify-between gap-[20px] py-[30px]"
+      :class="screenWidth < 800? 'flex-wrap' : ''"
+    >
+      <div
+        class=" text-left text-[14px] font-[400] text-grey_6"
+        :class="screenWidth < 800? 'w-full' : 'max-w-[250px]'"
+      >
         Join our community, as we strive for greatness. 
         We will keep you updated to our latest content and updates. We promise to get 
         back to you as soon as possible. Thank you!
       </div>
 
       <div class="flex items-start justify-around gap-[20px] text-left text-[14px] font-[400] text-grey_6 w-full">
-        <div>
+        <div class="min-w-[100px]">
           <h6 class="font-[500] mb-[10px]">
             Product
           </h6>
@@ -81,7 +89,7 @@
           </div>
         </div>
 
-        <div>
+        <div class="min-w-[100px]">
           <h6 class="font-[500] mb-[10px]">
             About Us
           </h6>
@@ -104,7 +112,7 @@
           </div>
         </div>
 
-        <div>
+        <div class="min-w-[100px]">
           <h6 class="font-[500] mb-[10px]">
             Community
           </h6>
@@ -121,7 +129,7 @@
           </div>
         </div>
 
-        <div>
+        <div class="min-w-[100px]">
           <h6 class="font-[500] mb-[10px]">
             Resourses
           </h6>

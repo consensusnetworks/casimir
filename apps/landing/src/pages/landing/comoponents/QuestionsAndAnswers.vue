@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import VueFeather from 'vue-feather'
-import useQuestionsAndAnswers from '@/composables/QuestionsAndAnswers'
+import useQuestionsAndAnswers from '@/composables/questionsAndAnswers'
 import { ref } from 'vue'
 
 const {questionsAndAnswers} = useQuestionsAndAnswers()
@@ -29,10 +29,10 @@ const showMore = ref(false)
           class="w-full max-w-[800px] border-b border-b-grey_1 pb-[20px] mb-[20px]"
         >
           <button 
-            class="w-full flex items-start justify-between text-grey_6 hover:text-grey_3"
+            class="w-full flex gap-[10px] items-start justify-between text-grey_6 hover:text-grey_3"
             @click="openTab === index? openTab = -1 : openTab = index"
           >
-            <h6 class="text-[14px] font-[500] ">
+            <h6 class="text-[14px] font-[500] text-left w-[90%]">
               {{ item.question }}
             </h6>
             <vue-feather
