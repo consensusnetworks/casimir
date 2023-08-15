@@ -2,17 +2,19 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
-import usePrice from '@/composables/price'
-import useEthers from '@/composables/ethers'
-import useUsers from '@/composables/users'
 import useContracts from '@/composables/contracts'
+import useEthers from '@/composables/ethers'
+import useFormat from '@/composables/format'
+import usePrice from '@/composables/price'
+import useUsers from '@/composables/users'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
 const { deposit, getDepositFees, getUserStake } = useContracts()
 const { getEthersBalance } = useEthers()
-const { user, updateUserAgreement } = useUsers()
+const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
+const { user, updateUserAgreement } = useUsers()
 
 // Staking Component Refs
 const addressBalance = ref<string | null>(null)
@@ -49,18 +51,6 @@ const handleInputOnAmountToStake = (event: any) => {
 
   // Update the model value
   formattedAmountToStake.value = parts.join('.')
-}
-
-const convertString = (inputString: string) => {
-  if (inputString.length <= 4) {
-    return inputString
-  }
-
-  var start = inputString.substring(0, 4)
-  var end = inputString.substring(inputString.length - 4)
-  var middle = '*'.repeat(4)
-
-  return start + middle + end
 }
 
 const handleOutsideClick = (event: any) => {
@@ -212,11 +202,11 @@ const handleDeposit = async () => {
     // addressBalance.value = await getEthersBalance(user.value?.address as string)
     formattedAmountToStake.value = ''
 
-  }, 2500)
+  }, 500)
 
   setTimeout(() => {
     stakingActionLoader.value = false
-  }, 3000)
+  }, 1000)
 
   currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }

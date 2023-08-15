@@ -120,7 +120,7 @@ describe('Operators', async function () {
     
         await time.increase(time.duration.days(1))
         await runUpkeep({ upkeep, keeper })
-        const nextValues = {
+        const reportValues = {
             activeBalance: 0,
             sweptBalance: sweptExitedBalance,
             activatedDeposits: 0,
@@ -131,7 +131,7 @@ describe('Operators', async function () {
         await fulfillReport({
             upkeep,
             keeper,
-            values: nextValues,
+            values: reportValues,
             requestId
         })
         await reportCompletedExitsHandler({ manager, views, signer: oracle, args: { count: 1 } })

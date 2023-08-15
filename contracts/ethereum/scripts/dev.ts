@@ -8,6 +8,9 @@ import { depositUpkeepBalanceHandler } from '../helpers/oracle'
 import { fetchRetry, run } from '@casimir/helpers'
 import { PoolStatus } from '@casimir/types'
 
+/**
+ * Deploy contracts to local network and run local events and oracle handling
+ */
 void async function () {
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
     
@@ -94,9 +97,9 @@ void async function () {
                 if (pendingPoolIds.length + stakedPoolIds.length) {
                     console.log('🧾 Submitting report')
                     const activatedBalance = pendingPoolIds.length * 32
+                    const sweptRewardBalance =  rewardPerValidator * lastStakedPoolIds.length
                     const exitingPoolCount = await manager.requestedExits()
                     const sweptExitedBalance = exitingPoolCount.toNumber() * 32
-                    const sweptRewardBalance =  rewardPerValidator * lastStakedPoolIds.length
                     const rewardBalance = rewardPerValidator * stakedPoolIds.length
                     const latestActiveBalance = await manager.latestActiveBalance()
                     const nextActiveBalance = round(parseFloat(ethers.utils.formatEther(latestActiveBalance)) + activatedBalance + rewardBalance - sweptRewardBalance - sweptExitedBalance, 10)
@@ -108,20 +111,21 @@ void async function () {
                         await setBalance(poolAddress, nextBalance)
                     }
                     const startIndex = ethers.BigNumber.from(0)
-                    const endIndex = ethers.BigNumber.from(pendingPoolIds.length + stakedPoolIds.length)
+                    const endIndex = ethers.BigNumber.from(stakedPoolIds.length)
                     const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)                    
-                    const nextValues = {
+                    const reportValues = {
                         activeBalance: nextActiveBalance,
-                        sweptBalance: sweptExitedBalance,
+                        sweptBalance: sweptRewardBalance + sweptExitedBalance,
                         activatedDeposits: nextActivatedDeposits,
                         forcedExits: 0,
                         completedExits: exitingPoolCount.toNumber(),
                         compoundablePoolIds
                     }
+                    console.log('🧾 Report values', reportValues)
                     requestId = await fulfillReport({
                         upkeep,
                         keeper,
-                        values: nextValues,
+                        values: reportValues,
                         requestId
                     })
                     let remaining = exitingPoolCount.toNumber()

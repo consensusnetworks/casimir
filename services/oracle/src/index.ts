@@ -2,7 +2,7 @@ import { getConfig } from './providers/config'
 import { getEventsIterable } from './providers/events'
 import {
     initiateDepositHandler,
-    // initiateResharesHandler, 
+    initiateResharesHandler, 
     // initiateExitsHandler, 
     // reportForcedExitsHandler,
     reportCompletedExitsHandler
@@ -11,9 +11,9 @@ import {
 const config = getConfig()
 const handlers = {
     DepositRequested: initiateDepositHandler,
+    ResharesRequested: initiateResharesHandler,
     /**
      * We don't need to handle these/they aren't ready:
-     * ResharesRequested: initiateResharesHandler,
      * ExitRequested: initiateExitsHandler,
      * ForcedExitReportsRequested: reportForcedExitsHandler,
      */
@@ -32,13 +32,7 @@ void async function () {
         const { args } = details
         const handler = handlers[details.event as keyof typeof handlers]
         if (!handler) throw new Error(`No handler found for event ${details.event}`)
-        try {
-            await handler({ args })
-        } catch (error) {
-            await new Promise(resolve => setTimeout(resolve, 2500))
-            console.log(`Retrying handler for event ${details.event}`)
-            return await handler({ args })
-        }
+        await handler({ args })
     }
 }()
 

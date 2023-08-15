@@ -4,6 +4,7 @@ import ISSVNetworkAbi from '@casimir/ethereum/build/abi/ISSVNetwork.json'
 import ISSVNetworkViewsAbi from '@casimir/ethereum/build/abi/ISSVNetworkViews.json'
 import { GetClusterInput } from '../interfaces/GetClusterInput'
 import { Cluster } from '../interfaces/Cluster'
+import { Operator } from '../interfaces/Operator'
 import { ScannerOptions } from '../interfaces/ScannerOptions'
 
 export class Scanner {
@@ -31,15 +32,14 @@ export class Scanner {
      */
     async getCluster(input: GetClusterInput): Promise<Cluster> {
         const { ownerAddress, operatorIds } = input
-        const eventList = [
-            'ClusterDeposited',
-            'ClusterWithdrawn',
-            'ValidatorAdded',
-            'ValidatorRemoved',
-            'ClusterLiquidated',
-            'ClusterReactivated'
+        const eventFilters = [
+            this.ssvNetwork.filters.ClusterDeposited(ownerAddress),
+            this.ssvNetwork.filters.ClusterWithdrawn(ownerAddress),
+            this.ssvNetwork.filters.ValidatorAdded(ownerAddress),
+            this.ssvNetwork.filters.ValidatorRemoved(ownerAddress),
+            this.ssvNetwork.filters.ClusterLiquidated(ownerAddress),
+            this.ssvNetwork.filters.ClusterReactivated(ownerAddress)
         ]
-        const eventFilters = eventList.map(event => this.ssvNetwork.filters[event](ownerAddress))
         let step = this.MONTH
         const latestBlockNumber = await this.provider.getBlockNumber()
         let fromBlock = latestBlockNumber - step
@@ -48,15 +48,15 @@ export class Scanner {
         let cluster: Cluster | undefined
         while (!cluster && fromBlock > 0) {
             try {
-                const items = (await Promise.all(
-                    eventFilters.map(async eventFilter => {
-                        return await this.ssvNetwork.queryFilter(eventFilter, fromBlock, toBlock)
-                    })
-                )).flat()
+                const items = []
+                for (const filter of eventFilters) {
+                    const filteredItems = await this.ssvNetwork.queryFilter(filter, fromBlock, toBlock)
+                    items.push(...filteredItems)
+                }
                 for (const item of items) {
                     const { args, blockNumber } = item
                     const clusterMatch = args?.cluster !== undefined
-                    const operatorsMatch = JSON.stringify(args?.operatorIds.map((value: string) => Number(value))) === JSON.stringify(operatorIds)
+                    const operatorsMatch = JSON.stringify(args?.operatorIds.map(id => id.toNumber())) === JSON.stringify(operatorIds)
                     if (!clusterMatch || !operatorsMatch) continue
                     if (blockNumber > biggestBlockNumber) {
                         biggestBlockNumber = blockNumber
@@ -78,7 +78,6 @@ export class Scanner {
                 }
                 toBlock = fromBlock
             } catch (error) {
-                console.error(error)
                 if (step === this.MONTH) {
                     step = this.WEEK
                 } else if (step === this.WEEK) {
@@ -87,7 +86,6 @@ export class Scanner {
             }
             fromBlock = toBlock - step
         }
-
         cluster = cluster || {
             validatorCount: 0,
             networkFeeIndex: 0,
@@ -99,46 +97,24 @@ export class Scanner {
     }
 
     /**
-     * Get owner validator nonce
+     * Get validator owner nonce
      * @param {string} ownerAddress - Owner address
      * @returns {Promise<number>} Owner validator nonce
      */
-    async getValidatorNonce(ownerAddress: string): Promise<number> {
-        const eventList = ['ValidatorAdded']
-        const eventFilters = eventList.map(event => this.ssvNetwork.filters[event](ownerAddress))
-        let step = this.MONTH
-        const latestBlockNumber = await this.provider.getBlockNumber()
-        let fromBlock = latestBlockNumber - step
-        let toBlock = latestBlockNumber
-        let nonce = 0
-        while (fromBlock > 0) {
-            try {
-                const items = (await Promise.all(
-                    eventFilters.map(async eventFilter => {
-                        return await this.ssvNetwork.queryFilter(eventFilter, fromBlock, toBlock)
-                    })
-                )).flat()
-                nonce += items.length
-                toBlock = fromBlock
-            } catch (error) {
-                console.error(error)
-                if (step === this.MONTH) {
-                    step = this.WEEK
-                } else if (step === this.WEEK) {
-                    step = this.DAY
-                }
-            }
-            fromBlock = toBlock - step
-        }
-        return nonce
+    async getNonce(ownerAddress: string): Promise<number> {
+        const eventFilter = this.ssvNetwork.filters.ValidatorAdded(ownerAddress)
+        const fromBlock = 0
+        const toBlock = 'latest'
+        const items = await this.ssvNetwork.queryFilter(eventFilter, fromBlock, toBlock)
+        return items.length
     }
 
     /**
-     * Get minimum validator fee
+     * Get minimum required validator fee
      * @param {number[]} operatorIds - Operator IDs
      * @returns {Promise<ethers.BigNumber>} Validator fee
      */
-    async getClusterFee(operatorIds: number[]): Promise<ethers.BigNumber> {
+    async getRequiredFee(operatorIds: number[]): Promise<ethers.BigNumber> {
         const feeSum = await this.ssvNetworkViews.getNetworkFee()
         for (const operatorId of operatorIds) {
             const operatorFee = await this.ssvNetworkViews.getOperatorFee(operatorId)
@@ -146,5 +122,29 @@ export class Scanner {
         }
         const liquidationThresholdPeriod = await this.ssvNetworkViews.getLiquidationThresholdPeriod()
         return feeSum.mul(liquidationThresholdPeriod).mul(12)
+    }
+
+    /**
+     * Get operators by owner address
+     * @param {string} ownerAddress - Owner address
+     * @returns {Promise<Operator[]>} The owner's operators
+     */
+    async getOperators(ownerAddress: string): Promise<Operator[]> {
+        const eventFilter = this.ssvNetwork.filters.OperatorAdded(null, ownerAddress)
+        const operators: Operator[] = []
+        const items = await this.ssvNetwork.queryFilter(eventFilter, 0, 'latest')
+        for (const item of items) {
+            const { args } = item
+            const { operatorId } = args
+            const { fee, validatorCount, isPrivate } = await this.ssvNetworkViews.getOperatorById(operatorId)
+            operators.push({
+                id: operatorId.toNumber(),
+                fee,
+                ownerAddress,
+                validatorCount,
+                isPrivate
+            })
+        }
+        return operators
     }
 }

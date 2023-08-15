@@ -23,3 +23,4 @@
 [submodule "services/oracle/scripts/resources/rockx-dkg-cli"]
 	path = services/oracle/scripts/resources/rockx-dkg-cli
 	url = https://github.com/RockX-SG/rockx-dkg-cli.git
+	branch = main
