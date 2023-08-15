@@ -13,7 +13,6 @@ export class Config implements ProjectConfig {
     public readonly subdomains
     public readonly dataVersion
 
-    /** List of required environment variables */
     public readonly requiredEnvVars = ['PROJECT', 'STAGE', 'AWS_ACCOUNT', 'AWS_REGION']
 
     constructor() {
@@ -26,6 +25,7 @@ export class Config implements ProjectConfig {
         }
         this.rootDomain = `${this.stage === 'prod' ? '' : `${this.stage}.`}casimir.co`
         this.subdomains = {
+            docsEthereum: 'docs.ethereum',
             nodes: 'nodes',
             landing: 'www',
             users: 'users',

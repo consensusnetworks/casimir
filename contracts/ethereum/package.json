@@ -2,11 +2,11 @@
     "name": "@casimir/ethereum",
     "scripts": {
         "build": "npx hardhat compile",
+        "build:docs": "npx esno scripts/docs.ts",
         "clean": "npx rimraf ./build",
         "deploy": "npx hardhat run scripts/deploy.ts",
         "dev": "npx hardhat run scripts/dev.ts",
-        "doc": "npx esno scripts/doc.ts",
-        "doc:serve": "SERVE=true npx esno scripts/doc.ts",
+        "dev:docs": "DEV=true npx esno scripts/docs.ts",
         "node": "npx hardhat node",
         "postinstall": "npx esno scripts/foundryup.ts",
         "test": "npx esno scripts/test.ts"
