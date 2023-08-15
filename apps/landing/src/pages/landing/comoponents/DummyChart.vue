@@ -67,6 +67,7 @@ const setupMockData =() =>{
                 data : item.walletBalance,
                 label : 'MetaMask 0xd5****A212',
                 borderColor : '#F6851B',
+                borderWidth: 1,
                 fill: true,
                 backgroundColor: '#F6851B',
                 pointRadius: 0,
