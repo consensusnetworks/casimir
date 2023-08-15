@@ -33,7 +33,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install mdBook KaTeX and Mermaid plugins
+      - name: Install mdBook plugins
         uses: actions-rs/cargo@v1
         with:
           command: install
