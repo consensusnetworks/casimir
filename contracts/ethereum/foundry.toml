@@ -6,4 +6,5 @@ test = 'test'
 cache_path  = 'build/foundry/cache'
 
 [doc]
+title = 'Casimir Ethereum Docs'
 out = 'build/foundry/docs'
