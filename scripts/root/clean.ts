@@ -1,29 +1,43 @@
 import { run } from '@casimir/helpers'
 import fs from 'fs'
+import { promisify } from 'util'
+
+const readFile = promisify(fs.readFile)
+const readdir = promisify(fs.readdir)
+const exists = promisify(fs.exists)
+const rm = promisify(fs.rm)
 
 /**
  * Clean all repository dependencies
  */
 void async function () {
 
-    const { workspaces } = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+    const { workspaces } = JSON.parse(await readFile('package.json', 'utf8'))
     const packageDirs: string[] = []
     for (const workspace of workspaces) {
-        const packages = fs.readdirSync(workspace.replace('/*', ''))
+        const baseDir = workspace.replace('/*', '')
+        const packages = await readdir(baseDir)
         for (const pkg of packages) {
-            const isNpm = fs.existsSync(`${workspace.replace('*', '')}/${pkg}/package.json`)
+            const isNpm = await exists(`${baseDir}/${pkg}/package.json`)
             if (isNpm) {
-                packageDirs.push(workspace.replace('*', `${pkg}/build`))
-                packageDirs.push(workspace.replace('*', `${pkg}/dist`))
-                packageDirs.push(workspace.replace('*', `${pkg}/node_modules`))
-                packageDirs.push(workspace.replace('*', `${pkg}/scripts/.out`))
+                packageDirs.push(`${baseDir}/${pkg}/build`)
+                packageDirs.push(`${baseDir}/${pkg}/dist`)
+                packageDirs.push(`${baseDir}/${pkg}/node_modules`)
+                packageDirs.push(`${baseDir}/${pkg}/scripts/.out`)
             }
         }
     }
 
-    const submodules = fs.readFileSync('.gitmodules', 'utf8')
-    const submoduleDirs = submodules.match(/path = (.*)/g)?.map((path) => path.replace('path = ', ''))
+    const submodules = await readFile('.gitmodules', 'utf8')
+    const submoduleDirs = submodules.match(/path = (.*)/g)?.map((path) => path.replace('path = ', '')) || []
 
-    await run(`npx rimraf ${packageDirs.join(' ')} ${submoduleDirs?.join(' ')} node_modules package-lock.json`)
-    await run('npm i --foreground-scripts')
+    const items = ['node_modules', 'package-lock.json'].concat(packageDirs, submoduleDirs)
+    for (const item of items) {
+        if (await exists(item)) {
+            console.log('Removing', item)
+            await rm(item, { recursive: true })
+        }
+    }
+    console.log('Reinstalling dependencies')
+    await run('npm i')
 }()
