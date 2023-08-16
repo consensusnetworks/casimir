@@ -1,13 +1,5 @@
 #!/bin/bash
-# Emulate ledger app
-#
-# Example:
-#
-#    scripts/ledger/emulate -a app-name (i.e. -a ethereum)
-#
-# Further information:
-# See https://github.com/LedgerHQ/speculos
-#
+# Emulate a ledger with a preloaded app
 
 # Get variables from root .env
 export $(xargs < .env)

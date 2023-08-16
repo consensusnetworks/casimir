@@ -9,6 +9,9 @@ import ISSVNetworkViewsAbi from '../../build/abi/ISSVNetworkViews.json'
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
     const [owner, , , , , keeper, oracle] = await ethers.getSigners()
+    
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [654, 655, 656, 657]
+    if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
 
     const mockFunctionsOracleFactory = await ethers.getContractFactory('MockFunctionsOracle')
     const mockFunctionsOracle = await mockFunctionsOracleFactory.deploy()
@@ -45,23 +48,25 @@ export async function deploymentFixture() {
 
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
+    const ssvNetwork = await ethers.getContractAt('SSVNetwork', process.env.SSV_NETWORK_ADDRESS as string)
     const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
-    for (const operatorId of [1, 2, 3, 4]) {
+    const preregisteredBalance = ethers.utils.parseEther('10')
+    for (const operatorId of preregisteredOperatorIds) {
         const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)
         const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
-        const nextBalance = currentBalance.add(ethers.utils.parseEther('4'))
+        const nextBalance = currentBalance.add(preregisteredBalance)
         await setBalance(operatorOwnerAddress, nextBalance)
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
             params: [operatorOwnerAddress]
         })
         const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
-        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: ethers.utils.parseEther('4') })
+        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: preregisteredBalance })
         await result.wait()
     }
 
-    return { manager, registry, upkeep, views, ssvNetworkViews, owner, keeper, oracle }
+    return { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, keeper, oracle }
 }
 
 /** Fixture to stake 16 for the first user */
@@ -93,7 +98,7 @@ export async function secondUserDepositFixture() {
     let requestId = 0
     await time.increase(time.duration.days(1))   
     await runUpkeep({ upkeep, keeper }) 
-    const nextValues = {
+    const reportValues = {
         activeBalance: 32,
         sweptBalance: 0,
         activatedDeposits: 1,
@@ -104,7 +109,7 @@ export async function secondUserDepositFixture() {
     requestId = await fulfillReport({
         upkeep,
         keeper,
-        values: nextValues,
+        values: reportValues,
         requestId
     })
     await runUpkeep({ upkeep, keeper })
@@ -119,7 +124,7 @@ export async function rewardsPostSecondUserDepositFixture() {
     let requestId = latestRequestId
     await time.increase(time.duration.days(1))
     await runUpkeep({ upkeep, keeper })
-    const nextValues = {
+    const reportValues = {
         activeBalance: 32.105,
         sweptBalance: 0,
         activatedDeposits: 0,
@@ -130,7 +135,7 @@ export async function rewardsPostSecondUserDepositFixture() {
     requestId = await fulfillReport({
         upkeep,
         keeper,
-        values: nextValues,
+        values: reportValues,
         requestId
     })
     await runUpkeep({ upkeep, keeper })
@@ -155,7 +160,7 @@ export async function sweepPostSecondUserDepositFixture() {
         await setBalance(poolAddress, nextBalance)
     }
     const compoundablePoolIds = [1, 0, 0, 0, 0]
-    const nextValues = {
+    const reportValues = {
         activeBalance: 32,
         sweptBalance: sweptRewards,
         activatedDeposits: 0,
@@ -166,7 +171,7 @@ export async function sweepPostSecondUserDepositFixture() {
     requestId = await fulfillReport({
         upkeep,
         keeper,
-        values: nextValues,
+        values: reportValues,
         requestId
     })
     await runUpkeep({ upkeep, keeper })
@@ -188,7 +193,7 @@ export async function thirdUserDepositFixture() {
     let requestId = latestRequestId
     await time.increase(time.duration.days(1))
     await runUpkeep({ upkeep, keeper })
-    const nextValues = {
+    const reportValues = {
         activeBalance: 64,
         sweptBalance: 0,
         activatedDeposits: 1,
@@ -199,7 +204,7 @@ export async function thirdUserDepositFixture() {
     requestId = await fulfillReport({
         upkeep,
         keeper,
-        values: nextValues,
+        values: reportValues,
         requestId
     })
     await runUpkeep({ upkeep, keeper })
@@ -214,7 +219,7 @@ export async function rewardsPostThirdUserDepositFixture() {
     let requestId = latestRequestId
     await time.increase(time.duration.days(1))
     await runUpkeep({ upkeep, keeper })
-    const nextValues = {
+    const reportValues = {
         activeBalance: 64.21,
         sweptBalance: 0,
         activatedDeposits: 0,
@@ -225,7 +230,7 @@ export async function rewardsPostThirdUserDepositFixture() {
     requestId = await fulfillReport({
         upkeep,
         keeper,
-        values: nextValues,
+        values: reportValues,
         requestId
     })
     await runUpkeep({ upkeep, keeper })
@@ -250,7 +255,7 @@ export async function sweepPostThirdUserDepositFixture() {
         await setBalance(poolAddress, nextBalance)
     }
     const compoundablePoolIds = [1, 2, 0, 0, 0]
-    const nextValues = {
+    const reportValues = {
         activeBalance: 64,
         sweptBalance: sweptRewards,
         activatedDeposits: 0,
@@ -261,7 +266,7 @@ export async function sweepPostThirdUserDepositFixture() {
     requestId = await fulfillReport({
         upkeep,
         keeper,
-        values: nextValues,
+        values: reportValues,
         requestId
     })
     await runUpkeep({ upkeep, keeper })
@@ -279,7 +284,7 @@ export async function firstUserPartialWithdrawalFixture() {
     let requestId = latestRequestId
     await time.increase(time.duration.days(1))
     await runUpkeep({ upkeep, keeper })
-    const nextValues = {
+    const reportValues = {
         activeBalance: 64,
         sweptBalance: 0,
         activatedDeposits: 0,
@@ -290,7 +295,7 @@ export async function firstUserPartialWithdrawalFixture() {
     requestId = await fulfillReport({
         upkeep,
         keeper,
-        values: nextValues,
+        values: reportValues,
         requestId
     })
     await runUpkeep({ upkeep, keeper })
@@ -314,7 +319,7 @@ export async function fourthUserDepositFixture() {
     let requestId = latestRequestId
     await time.increase(time.duration.days(1))
     await runUpkeep({ upkeep, keeper })
-    const nextValues = {
+    const reportValues = {
         activeBalance: 128,
         sweptBalance: 0,
         activatedDeposits: 2,
@@ -325,7 +330,7 @@ export async function fourthUserDepositFixture() {
     requestId = await fulfillReport({
         upkeep,
         keeper,
-        values: nextValues,
+        values: reportValues,
         requestId
     })
     await runUpkeep({ upkeep, keeper })
@@ -340,7 +345,7 @@ export async function activeBalanceLossFixture() {
     let requestId = latestRequestId
     await time.increase(time.duration.days(1))
     await runUpkeep({ upkeep, keeper })
-    const nextValues = {
+    const reportValues = {
         activeBalance: 126,
         sweptBalance: 0,
         activatedDeposits: 0,
@@ -351,7 +356,7 @@ export async function activeBalanceLossFixture() {
     requestId = await fulfillReport({
         upkeep,
         keeper,
-        values: nextValues,
+        values: reportValues,
         requestId
     })
     await runUpkeep({ upkeep, keeper })
@@ -368,7 +373,7 @@ export async function activeBalanceRecoveryFixture() {
     for (let i = 0; i < 2; i++) {
         await time.increase(time.duration.days(1))
         await runUpkeep({ upkeep, keeper })
-        const nextValues = {
+        const reportValues = {
             activeBalance: nextActiveBalance,
             sweptBalance: 0,
             activatedDeposits: 0,
@@ -379,7 +384,7 @@ export async function activeBalanceRecoveryFixture() {
         requestId = await fulfillReport({
             upkeep,
             keeper,
-            values: nextValues,
+            values: reportValues,
             requestId
         })
         await runUpkeep({ upkeep, keeper })
@@ -401,7 +406,7 @@ export async function thirdUserFullWithdrawalFixture() {
     await time.increase(time.duration.days(1))
     await runUpkeep({ upkeep, keeper })
     const sweptExitedBalance = 32
-    const nextValues = {
+    const reportValues = {
         activeBalance: 96,
         sweptBalance: sweptExitedBalance,
         activatedDeposits: 0,
@@ -412,7 +417,7 @@ export async function thirdUserFullWithdrawalFixture() {
     requestId = await fulfillReport({
         upkeep,
         keeper,
-        values: nextValues,
+        values: reportValues,
         requestId
     })
     const exitedPoolId = (await manager.getStakedPoolIds())[0]
@@ -443,7 +448,7 @@ export async function simulationFixture() {
         const rewardsAmount = rewardsPerValidator * stakedPoolIds.length
         totalRewards += round(rewardsAmount, 10)
         nextActiveBalance = round(nextActiveBalance + rewardsAmount, 10)            
-        const nextValues = {
+        const reportValues = {
             activeBalance: nextActiveBalance,
             sweptBalance: 0,
             activatedDeposits: 0,
@@ -454,7 +459,7 @@ export async function simulationFixture() {
         requestId = await fulfillReport({
             upkeep,
             keeper,
-            values: nextValues,
+            values: reportValues,
             requestId
         })
         await runUpkeep({ upkeep, keeper })
@@ -472,7 +477,7 @@ export async function simulationFixture() {
         await setBalance(poolAddress, nextBalance)
     }
     const compoundablePoolIds = [2, 3, 4, 0, 0]
-    const nextValues = {
+    const reportValues = {
         activeBalance: 96,
         sweptBalance: sweptRewards,
         activatedDeposits: 0,
@@ -483,7 +488,7 @@ export async function simulationFixture() {
     requestId = await fulfillReport({
         upkeep,
         keeper,
-        values: nextValues,
+        values: reportValues,
         requestId
     })
     await runUpkeep({ upkeep, keeper })

@@ -1,19 +1,23 @@
-import os from 'os'
 import fs from 'fs'
 import { ethers } from 'ethers'
 import { fetchRetry, run } from '@casimir/helpers'
-import { getCli } from '../src/providers/cli'
 import { Validator } from '@casimir/types'
+import { Dkg } from '../src/providers/dkg'
+import { validatorStore } from '@casimir/data'
 
+/**
+ * Generate validator keys for ethereum testing
+ */
 void async function () {
+    const outputPath = '../../common/data/src/mock'
+    const resourceDir = 'scripts/resources'
 
-    const outputPath = '../../contracts/ethereum/scripts/.out'
-    const resourcePath = 'scripts/resources'
+    process.env.CLI_PATH = process.env.CLI_PATH || `./${resourceDir}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
+    process.env.MESSENGER_URL = process.env.MESSENGER_URL || 'https://nodes.casimir.co/eth/goerli/dkg/messenger'
+    process.env.MESSENGER_SRV_ADDR = process.env.MESSENGER_URL
+    process.env.USE_HARDCODED_OPERATORS = 'false'
 
-    process.env.BIP39_SEED = process.env.BIP39_SEED || 'test test test test test test test test test test test junk'
-    process.env.CLI_PATH = `./${resourcePath}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
-    process.env.MESSENGER_SRV_ADDR = 'http://0.0.0.0:3000'
-    process.env.USE_HARDCODED_OPERATORS = 'true'
+    process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
     if (!process.env.MANAGER_ADDRESS) throw new Error('No manager address set')
     if (!process.env.VIEWS_ADDRESS) throw new Error('No views address set')
     process.env.LINK_TOKEN_ADDRESS = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
@@ -22,45 +26,25 @@ void async function () {
     process.env.SSV_TOKEN_ADDRESS = '0x3a9f01091C446bdE031E39ea8354647AFef091E7'
     process.env.UNISWAP_V3_FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
     process.env.WETH_TOKEN_ADDRESS = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
-    process.env.CLI_STRATEGY = 'dkg'
+
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [654, 655, 656, 657]
+    if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
 
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, 'm/44\'/60\'/0\'/0/6')
     const oracleAddress = wallet.address
 
-    if (!fs.existsSync(outputPath)) {
-        fs.mkdirSync(outputPath)
-    }
-
-    if (!fs.existsSync(`${outputPath}/validators.json`)) {
-        fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify({}))
-    }
-
-    const validatorCount = parseInt(process.env.VALIDATOR_COUNT as string) || 4
-    const validators = JSON.parse(fs.readFileSync(`${outputPath}/validators.json`, 'utf8') || '{}')
-    if (!validators[oracleAddress] || Object.keys(validators[oracleAddress]).length < validatorCount) {
-        if (process.env.CLI_STRATEGY === 'dkg') {
-            process.env.CLI_PATH = `./${resourcePath}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
-            process.env.MESSENGER_SRV_ADDR = 'http://0.0.0.0:3000'
-            process.env.USE_HARDCODED_OPERATORS = 'true'
-            await run(`make -C ${resourcePath}/rockx-dkg-cli build`)
-            const dkg = await run(`which ${process.env.CLI_PATH}`) as string
-            if (!dkg || dkg.includes('not found')) throw new Error('Dkg cli not found')
-            if (os.platform() === 'linux') {
-                await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml -f ${resourcePath}/../docker-compose.override.yaml up -d`)
-            } else {
-                await run(`docker compose -f ${resourcePath}/rockx-dkg-cli/docker-compose.yaml up -d`)
-            }
-            const ping = await fetchRetry(`${process.env.MESSENGER_SRV_ADDR}/ping`)
-            const { message } = await ping.json()
-            if (message !== 'pong') throw new Error('Dkg service is not running')
-            console.log('🔑 Dkg service ready')
-        } else {
-            process.env.CLI_PATH = 'docker run -it ethdo'
-            await run('docker pull wealdtech/ethdo && docker build -t ethdo .')
-            console.log('🔑 Ethdo service ready')
+    const validatorCount = 4
+    if (!validatorStore[oracleAddress] || Object.keys(validatorStore[oracleAddress]).length < validatorCount) {
+        const dkg = await run(`which ${process.env.CLI_PATH}`) as string
+        if (!dkg || dkg.includes('not found')) {
+            await run(`GOWORK=off make -C ${resourceDir}/rockx-dkg-cli build`)
         }
+        const ping = await fetchRetry(`${process.env.MESSENGER_URL}/ping`)
+        const { message } = await ping.json()
+        if (message !== 'pong') throw new Error('Dkg service is not running')
 
-        let nonce = 3
+        let managerNonce = 3
+        let ownerNonce = 0
 
         const newValidators: Validator[] = []
 
@@ -68,32 +52,32 @@ void async function () {
 
             const poolAddress = ethers.utils.getContractAddress({
                 from: process.env.MANAGER_ADDRESS,
-                nonce
+                nonce: managerNonce
             })
 
-            const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
-            
-            const cli = getCli({ 
-                cliPath: process.env.CLI_PATH, 
-                cliStrategy: process.env.CLI_STRATEGY,
-                messengerUrl: process.env.MESSENGER_SRV_ADDR 
+            const selectedOperatorIds = preregisteredOperatorIds.slice(0, 4)
+
+            const cli = new Dkg({
+                cliPath: process.env.CLI_PATH,
+                messengerUrl: process.env.MESSENGER_URL
             })
 
             const validator = await cli.createValidator({
                 poolId: i + 1,
-                operatorIds: newOperatorIds,
+                operatorIds: selectedOperatorIds,
+                ownerAddress: process.env.MANAGER_ADDRESS,
+                ownerNonce,
                 withdrawalAddress: poolAddress
             })
 
             newValidators.push(validator)
 
-            nonce++
+            managerNonce++
+            ownerNonce++
         }
 
-        validators[oracleAddress] = newValidators
+        validatorStore[oracleAddress] = newValidators
 
-        fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify(validators, null, 4))
-
-        await run('npm run clean --workspace @casimir/oracle')
+        fs.writeFileSync(`${outputPath}/validator.store.json`, JSON.stringify(validatorStore, null, 4))
     }
 }()

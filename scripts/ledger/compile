@@ -1,13 +1,5 @@
 #!/bin/bash
-# Compile ledger app
-#
-# Example:
-#
-#    scripts/ledger/compile -a app-name (i.e. -a ethereum)
-#
-# Further information:
-# See https://github.com/LedgerHQ/speculos
-#
+# Compile a ledger app
 
 # Get args
 while getopts :a: flag

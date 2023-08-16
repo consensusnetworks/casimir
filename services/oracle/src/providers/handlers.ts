@@ -1,18 +1,18 @@
 import { ethers } from 'ethers'
 import { HandlerInput } from '../interfaces/HandlerInput'
-import { CasimirManager, CasimirViews } from '@casimir/ethereum/build/@types'
+import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
+import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
 import { Scanner } from '@casimir/ssv'
 import { PoolStatus } from '@casimir/types'
 import { Factory } from '@casimir/uniswap'
 import { getConfig } from './config'
-import { getCli } from './cli'
+import { Dkg } from './dkg'
 
 const config = getConfig()
-const cli = getCli({
+const cli = new Dkg({
     cliPath: config.cliPath,
-    cliStrategy: config.cliStrategy,
     messengerUrl: config.messengerUrl
 })
 
@@ -22,18 +22,54 @@ export async function initiateDepositHandler(input: HandlerInput) {
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
     const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    
-    const nonce = await provider.getTransactionCount(manager.address)
+    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const registry = new ethers.Contract(config.registryAddress, ICasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
+
+    const managerNonce = await provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
       from: manager.address,
-      nonce
+      nonce: managerNonce
     })
 
-    const newOperatorIds = [1, 2, 3, 4] // Todo get new group here
+    const operatorCount = (await registry.getOperatorIds()).length
+    const operators = await views.getOperators(0, operatorCount)
+
+    const eligibleOperators = operators.filter((operator) => {
+        const availableCollateral = parseInt(ethers.utils.formatEther(operator.collateral)) - parseInt(operator.poolCount.toString())
+        return operator.active && !operator.resharing && availableCollateral > 0
+    })
+
+    const smallestOperators = eligibleOperators.sort((a, b) => {
+        const aPoolCount = parseInt(a.poolCount.toString())
+        const bPoolCount = parseInt(b.poolCount.toString())
+        if (aPoolCount < bPoolCount) return -1
+        if (aPoolCount > bPoolCount) return 1
+        return 0
+    })
+
+    const selectedOperatorIds = smallestOperators.slice(0, 4).map((operator) => operator.id.toNumber())
+    console.log('🤖 Selected operators', selectedOperatorIds)
+
+    const scanner = new Scanner({ 
+        ethereumUrl: config.ethereumUrl,
+        ssvNetworkAddress: config.ssvNetworkAddress,
+        ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
+    })
+
+    const cluster = await scanner.getCluster({ 
+        operatorIds: selectedOperatorIds,
+        ownerAddress: manager.address
+    })
+
+    const ownerNonce = await scanner.getNonce(manager.address)
+
+    const requiredFee = await scanner.getRequiredFee(selectedOperatorIds)
 
     const validator = await cli.createValidator({
         poolId: input.args.poolId,
-        operatorIds: newOperatorIds, 
+        operatorIds: selectedOperatorIds,
+        ownerAddress: manager.address,
+        ownerNonce,
         withdrawalAddress: poolAddress
     })
 
@@ -45,20 +81,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
         operatorIds,
         shares
     } = validator
-
-    const scanner = new Scanner({ 
-        ethereumUrl: config.ethereumUrl,
-        ssvNetworkAddress: config.ssvNetworkAddress,
-        ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
-    })
-
-    const clusterDetails = await scanner.getClusterDetails({ 
-        ownerAddress: manager.address,
-        operatorIds
-    })
     
-    const { cluster, requiredBalancePerValidator } = clusterDetails
-
     const uniswapFactory = new Factory({
         ethereumUrl: config.ethereumUrl,
         uniswapV3FactoryAddress: config.uniswapV3FactoryAddress
@@ -69,7 +92,8 @@ export async function initiateDepositHandler(input: HandlerInput) {
         tokenOut: config.ssvTokenAddress,
         uniswapFeeTier: 3000
     })
-    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredBalancePerValidator)) * Number(price)).toPrecision(9))
+
+    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * Number(price)).toPrecision(9))
 
     const initiateDeposit = await manager.initiateDeposit(
         depositDataRoot,
@@ -86,34 +110,115 @@ export async function initiateDepositHandler(input: HandlerInput) {
 }
 
 export async function initiateResharesHandler(input: HandlerInput) {
-    if (!input.args.poolId) throw new Error('No pool id provided')
+    if (!input.args.operatorId) throw new Error('No operator id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
     const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
     const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const registry = new ethers.Contract(config.registryAddress, ICasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
 
-    // Todo reshare event will include the operator to boot
+    const poolIds = [
+        ...await manager.getPendingPoolIds(),
+        ...await manager.getStakedPoolIds()
+    ]
 
-    // Get pool to reshare
-    const poolDetails = await views.connect(provider).getPoolDetails(input.args.poolId)
+    for (const poolId of poolIds) {
+        const poolDetails = await views.getPoolDetails(poolId)
+        const oldOperatorIds = poolDetails.operatorIds.map(id => id.toNumber())
+        if (oldOperatorIds.includes(input.args.operatorId)) {
+            const poolAddress = await manager.getPoolAddress(poolId)
 
-    // Todo old operators and new operators only different by 1 operator
-    const newOperatorGroup = [1, 2, 3, 4]
+            const operatorCount = (await registry.getOperatorIds()).length
+            const operators = await views.getOperators(0, operatorCount)
+        
+            const eligibleOperators = operators.filter((operator) => {
+                const availableCollateral = parseInt(ethers.utils.formatEther(operator.collateral)) - parseInt(operator.poolCount.toString())
+                return operator.active && !operator.resharing && availableCollateral > 0
+            })
+        
+            const smallestOperators = eligibleOperators.sort((a, b) => {
+                const aPoolCount = parseInt(a.poolCount.toString())
+                const bPoolCount = parseInt(b.poolCount.toString())
+                if (aPoolCount < bPoolCount) return -1
+                if (aPoolCount > bPoolCount) return 1
+                return 0
+            })
+        
+            const newOperatorId = smallestOperators.find((operator) => !oldOperatorIds.includes(operator.id.toNumber()))?.id.toNumber()
 
-    // Get operators to sign reshare
-    // const validator = await cli.reshareValidator({ 
-    //     provider,
-    //     manager,
-    //     publicKey, 
-    //     operatorIds: newOperatorGroup, 
-    //     oldOperatorIds: operatorIds, 
-    //     withdrawalAddress: manager.address 
-    // })
-
-
-    // Submit new shares to pool
-
+            if (newOperatorId && poolDetails.reshares.toNumber() > 1) {
+                const newOperatorIds = oldOperatorIds.map((operatorId) => {
+                    if (operatorId === input.args.operatorId) return newOperatorId
+                    return operatorId
+                })
+    
+                const scanner = new Scanner({ 
+                    ethereumUrl: config.ethereumUrl,
+                    ssvNetworkAddress: config.ssvNetworkAddress,
+                    ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
+                })
+    
+                const oldCluster = await scanner.getCluster({
+                    operatorIds: oldOperatorIds,
+                    ownerAddress: manager.address
+                })
+            
+                const cluster = await scanner.getCluster({ 
+                    operatorIds: newOperatorIds,
+                    ownerAddress: manager.address
+                })
+            
+                const ownerNonce = await scanner.getNonce(manager.address)
+            
+                const requiredFee = await scanner.getRequiredFee(newOperatorIds)
+    
+                const validator = await cli.reshareValidator({ 
+                    publicKey: poolDetails.publicKey,
+                    poolId,
+                    oldOperatorIds,
+                    operatorIds: newOperatorIds,
+                    ownerAddress: manager.address,
+                    ownerNonce,
+                    withdrawalAddress: poolAddress
+                })
+    
+                const {
+                    operatorIds,
+                    shares
+                } = validator
+    
+                const uniswapFactory = new Factory({
+                    ethereumUrl: config.ethereumUrl,
+                    uniswapV3FactoryAddress: config.uniswapV3FactoryAddress
+                })
+            
+                const price = await uniswapFactory.getSwapPrice({ 
+                    tokenIn: config.wethTokenAddress,
+                    tokenOut: config.ssvTokenAddress,
+                    uniswapFeeTier: 3000
+                })
+            
+                const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * Number(price)).toPrecision(9))
+            
+                const reportReshare = await manager.reportReshare(
+                    poolId,
+                    operatorIds,
+                    oldOperatorIds,
+                    newOperatorId,
+                    input.args.operatorId,
+                    shares,
+                    cluster,
+                    oldCluster,
+                    feeAmount,
+                    false
+                )
+                await reportReshare.wait()
+            } else {
+                // Exit pool
+            }
+        }
+    }
 }
 
 export async function initiateExitsHandler(input: HandlerInput) {
@@ -124,7 +229,7 @@ export async function initiateExitsHandler(input: HandlerInput) {
     const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     // Get pool to exit
-    const poolDetails = await views.connect(provider).getPoolDetails(input.args.poolId)
+    const poolDetails = await views.getPoolDetails(input.args.poolId)
 
     // Get operators to sign exit
 }
@@ -188,16 +293,18 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
             if (poolDetails.balance.lt(ethers.utils.parseEther('32'))) {
                 blamePercents = [100, 0, 0, 0]
             }
+
             const scanner = new Scanner({
                 ethereumUrl: config.ethereumUrl,
                 ssvNetworkAddress: config.ssvNetworkAddress,
                 ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
             })
-            const clusterDetails = await scanner.getClusterDetails({ 
+
+            const cluster = await scanner.getCluster({ 
                 ownerAddress: manager.address,
                 operatorIds
             })
-            const { cluster } = clusterDetails
+
             const reportCompletedExit = await manager.reportCompletedExit(
                 poolIndex,
                 blamePercents,

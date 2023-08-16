@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "./interfaces/ICasimirRegistry.sol";
-import "./interfaces/ICasimirManager.sol";
-import "./libraries/Types.sol";
-import "./vendor/interfaces/ISSVNetworkViews.sol";
+import './interfaces/ICasimirRegistry.sol';
+import './interfaces/ICasimirManager.sol';
+import './libraries/Types.sol';
+import './vendor/interfaces/ISSVNetworkViews.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
@@ -45,7 +45,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     /** Operators */
     mapping(uint64 => Operator) private operators;
     /** Operator pools */
-    mapping(uint64 => mapping(uint32 => bool)) private operatorPools;
+    mapping(uint64 => mapping (uint32 => bool)) private operatorPools;
 
     /*************/
     /* Modifiers */
@@ -81,9 +81,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
             msg.value >= requiredCollateral,
             "Insufficient registration collateral"
         );
-        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(
-            operatorId
-        );
+        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(operatorId);
         require(
             msg.sender == operatorOwner,
             "Only operator owner can register"
@@ -130,15 +128,16 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      */
     function requestWithdrawal(uint64 operatorId, uint256 amount) external {
         Operator storage operator = operators[operatorId];
-        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(
-            operatorId
-        );
-        require(msg.sender == operatorOwner, "Not operator owner");
+        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(operatorId);
         require(
-            (!operator.active &&
-                !operator.resharing &&
-                operator.collateral >= int256(amount)) ||
-                operator.collateral >= int256(requiredCollateral),
+            msg.sender == operatorOwner,
+            "Not operator owner"
+        );
+        require(
+            !operator.active &&
+            !operator.resharing &&
+            operator.collateral >= int256(amount) ||
+            operator.collateral >= int256(requiredCollateral),
             "Not allowed to withdraw amount"
         );
 
@@ -152,10 +151,11 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      */
     function requestDeregistration(uint64 operatorId) external {
         Operator storage operator = operators[operatorId];
-        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(
-            operatorId
+        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(operatorId);
+        require(
+            msg.sender == operatorOwner,
+            "Not operator owner"
         );
-        require(msg.sender == operatorOwner, "Not operator owner");
         require(operator.active, "Operator is not active");
         require(!operator.resharing, "Operator is resharing");
 
@@ -197,10 +197,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
         uint256 blameAmount
     ) external onlyOwnerOrPool(poolId) {
         Operator storage operator = operators[operatorId];
-        require(
-            operatorPools[operatorId][poolId],
-            "Pool is not active for operator"
-        );
+        require(operatorPools[operatorId][poolId], "Pool is not active for operator");
 
         operatorPools[operatorId][poolId] = false;
         operator.poolCount -= 1;
@@ -224,9 +221,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
                 manager.requestReshares(operatorId);
             }
 
-            manager.depositRecoveredBalance{value: recoverableCollateral}(
-                poolId
-            );
+            manager.depositRecoveredBalance{value: recoverableCollateral}(poolId);
         }
     }
 
