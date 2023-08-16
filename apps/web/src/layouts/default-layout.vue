@@ -8,7 +8,6 @@ import useFormat from '@/composables/format'
 import useScreenDimensions from '@/composables/screenDimensions'
 import useUser from '@/composables/users'
 import useWallet from '@/composables/wallet'
-import WalletConnectProvider from '@/components/WalletConnectProvider.vue'
 
 const authFlowCardNumber = ref(1)
 const selectedProvider = ref(null as null | string)
@@ -73,7 +72,6 @@ onUnmounted(() =>{
 
 <template>
   <div class="min-w-[360px]">
-    <WalletConnectProvider />
     <div :class="openWalletConnect? 'flex flex-col h-screen' : ''">
       <div
         class="px-[60px] 800s:px-[5%]  pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"

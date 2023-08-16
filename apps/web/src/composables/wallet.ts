@@ -42,7 +42,7 @@ export default function useWallet() {
   // const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
   const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAnalytics, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
-  const { /* web3modal, disconnectWalletConnect, getWalletConnectAddressAndBalance, */ loginWithWalletConnectV2 } = useWalletConnectV2()
+  const { /* disconnectWalletConnect, getWalletConnectAddressAndBalance, */ walletConnectAddresses, connectWalletConnectV2, loginWithWalletConnectV2 } = useWalletConnectV2()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
     if (provider === 'Ledger') {
@@ -290,16 +290,10 @@ export default function useWallet() {
     console.clear()
     try {
       if (provider === 'WalletConnect') {
+        console.log('selected WalletConnect!!')
         setSelectedProvider(provider)
-        // web3modal.openModal()
-        // TODO: Need a way of unsubscribing from events
-        // web3modal.subscribeEvents(async (event) => {
-        //   const { name } = event
-        //   if (name === 'ACCOUNT_CONNECTED') {
-        //     const walletConnectAddressAndBalance = await getWalletConnectAddressAndBalance()
-        //     setWalletProviderAddresses([walletConnectAddressAndBalance])
-        //   }
-        // })
+        await connectWalletConnectV2('eip155:5')
+        setWalletProviderAddresses(walletConnectAddresses.value as CryptoAddress[])
       } else if (ethersProviderList.includes(provider)) {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
