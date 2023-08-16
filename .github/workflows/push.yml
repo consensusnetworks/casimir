@@ -33,6 +33,15 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Install mdBook plugins
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: mdbook-katex mdbook-mermaid
           
       - name: Install and build all package dependencies
         run: npm ci

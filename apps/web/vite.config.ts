@@ -2,13 +2,15 @@ import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
-import nodePolyFills from 'rollup-plugin-polyfill-node'
+import nodePolyfills from 'rollup-plugin-polyfill-node'
+import nodeResolve from '@rollup/plugin-node-resolve'
 
 export default defineConfig({
   server: { port: 3001 },
   plugins: [
     vue(),
-    nodePolyFills()
+    nodePolyfills(),
+    nodeResolve()
   ],
   define: {
     'global': 'globalThis'

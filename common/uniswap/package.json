@@ -3,14 +3,13 @@
   "private": "true",
   "main": "src/index.ts",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --sourcemap --platform=node --target=esnext --outfile=dist/index.js",
+    "build": "echo '@casimir/uniswap build not specified. Disregard this warning and any listed errors above if @casimir/uniswap is not needed for the current project build.' && exit 0",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "ethers": "^5.7.2"
   },
   "devDependencies": {
-    "@types/node": "^17.0.38",
-    "esbuild": "^0.15.9"
+    "@types/node": "^17.0.38"
   }
 }

@@ -10,16 +10,16 @@
     "services/*"
   ],
   "scripts": {
-    "clean": "npm exec --workspaces -- npx rimraf node_modules dist && npx rimraf node_modules package-lock.json && npm i",
+    "clean": "npx esno scripts/root/clean.ts",
     "deploy:cdk": "npx esno -r dotenv/config scripts/cdk/deploy.ts",
-    "dev": "npx esno -r dotenv/config scripts/local/dev.ts",
+    "dev": "npx esno -r dotenv/config scripts/root/dev.ts",
     "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts",
     "dev:landing": "npm run dev --workspace @casimir/landing",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "migrations:users": "npx esno -r dotenv/config scripts/migrations/users.ts",
-    "postinstall": "npm run build --workspace @casimir/ethereum",
-    "preinstall": "git submodule update --init --recursive && git submodule foreach --recursive git checkout .",
+    "postinstall": "npx esno scripts/root/check.ts && npm run build --workspace @casimir/ethereum",
+    "preinstall": "git submodule sync && git submodule update --init --recursive",
     "prepare": "husky install",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:actions": "npx esno -r dotenv/config scripts/actions/test.ts",
@@ -31,9 +31,12 @@
     "type": "git",
     "url": "git+https://github.com/consensusnetworks/casimir.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
+  "keywords": [
+    "self-custody",
+    "staking"
+  ],
+  "author": "Consensus Networks",
+  "license": "Apache",
   "bugs": {
     "url": "https://github.com/consensusnetworks/casimir/issues"
   },
@@ -54,7 +57,6 @@
     "http-proxy-middleware": "^2.0.6",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.0",
-    "minimist": "^1.2.8",
     "release-it": "^15.6.0",
     "zx": "^7.1.1"
   },
@@ -77,11 +79,5 @@
     "hooks": {
       "after:bump": "npx auto-changelog -p"
     }
-  },
-  "dependencies": {
-    "chart.js": "^4.2.1",
-    "feather-icons": "^4.29.0",
-    "vue-feather": "^2.0.0",
-    "xlsx": "^0.18.5"
   }
 }

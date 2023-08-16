@@ -1,6 +1,6 @@
 import { Postgres } from './postgres'
 import { camelCase } from '@casimir/helpers'
-import { Account, RemoveAccountOptions, User, UserAddedSuccess, UserWithAccounts } from '@casimir/types'
+import { Account, OperatorAddedSuccess, RemoveAccountOptions, User, UserAddedSuccess, UserWithAccountsAndOperators } from '@casimir/types'
 import useEthers from './ethers'
 
 const { generateNonce } = useEthers()
@@ -12,6 +12,11 @@ const postgres = new Postgres({
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || 'password'
 })
+
+interface AddOperatorOptions {
+    userId: number
+    accountId: number
+}
 
 export default function useDB() {
 
@@ -35,6 +40,22 @@ export default function useDB() {
         } catch (error) {
             throw new Error('There was an error adding the account to the database')
         }
+    }
+
+    /**
+     * Adds operator to operator table
+     * @param userId
+     * @param accountId
+     * @returns Promise<OperatorAddedSuccess | undefined>
+     */
+    // TODO: Need some check to make sure operator is properly registered
+    async function addOperator({userId, accountId}: AddOperatorOptions) : Promise<OperatorAddedSuccess | undefined> {
+        const created_at = new Date().toISOString()
+        const text = 'INSERT INTO operators (user_id, account_id, created_at) VALUES ($1, $2, $3) RETURNING *;'
+        const params = [userId, accountId, created_at]
+        const rows = await postgres.query(text, params)
+        const addedOperator = rows[0]
+        return formatResult(addedOperator)
     }
 
     /**
@@ -109,37 +130,104 @@ export default function useDB() {
      * @param address - The user's address
      * @returns The user if found, otherwise undefined
      */
-    async function getUser(address: string) {
+    async function getUserByAddress(address: string): Promise<UserWithAccountsAndOperators | undefined> {
         try {
-            const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.address = $1 GROUP BY u.id'
+            const text = `
+                SELECT 
+                    u.*, 
+                    json_agg(
+                        json_build_object(
+                            'id', a.id,
+                            'address', a.address,
+                            'balance', a.balance,
+                            'currency', a.currency,
+                            'created_at', a.created_at,
+                            'updated_at', a.updated_at,
+                            'user_id', a.user_id,
+                            'wallet_provider', a.wallet_provider,
+                            'operators', COALESCE(
+                                (SELECT json_agg(o.*) FROM operators o WHERE a.id = o.account_id), 
+                                '[]'::json
+                            )
+                        )
+                    ) AS accounts,
+                    COALESCE(
+                        (SELECT json_agg(o.*) FROM operators o WHERE u.id = o.user_id), 
+                        '[]'::json
+                    ) AS operators
+                FROM 
+                    users u 
+                LEFT JOIN 
+                    user_accounts ua ON u.id = ua.user_id 
+                LEFT JOIN 
+                    accounts a ON ua.account_id = a.id 
+                WHERE 
+                    u.address = $1 
+                GROUP BY 
+                    u.id
+            `
             const params = [address]
             const rows = await postgres.query(text, params)
             const user = rows[0]
-            return formatResult(user) as User
+            return formatResult(user) as UserWithAccountsAndOperators
         } catch (error) {
             console.log('ERROR in DB')
             throw new Error('There was an error getting user from the database')
         }
     }
-
+    
     /**
      * Get a user by id.
      * @param id - The user's id
      * @returns The user if found, otherwise undefined
      * @throws Error if the user is not found
      */
-    async function getUserById(id: string) {
+    async function getUserById(id: string): Promise<UserWithAccountsAndOperators | undefined> {
         try {
-            const text = 'SELECT u.*, json_agg(a.*) AS accounts FROM users u JOIN user_accounts ua ON u.id = ua.user_id JOIN accounts a ON ua.account_id = a.id WHERE u.id = $1 GROUP BY u.id'
+            const text = `
+                SELECT 
+                    u.*, 
+                    json_agg(
+                        json_build_object(
+                            'id', a.id,
+                            'address', a.address,
+                            'balance', a.balance,
+                            'currency', a.currency,
+                            'created_at', a.created_at,
+                            'updated_at', a.updated_at,
+                            'user_id', a.user_id,
+                            'wallet_provider', a.wallet_provider,
+                            'operators', COALESCE(
+                                (SELECT json_agg(o.*) FROM operators o WHERE a.id = o.account_id), 
+                                '[]'::json
+                            )
+                        )
+                    ) AS accounts,
+                    COALESCE(
+                        (SELECT json_agg(o.*) FROM operators o WHERE u.id = o.user_id), 
+                        '[]'::json
+                    ) AS operators
+                FROM 
+                    users u 
+                LEFT JOIN 
+                    user_accounts ua ON u.id = ua.user_id 
+                LEFT JOIN 
+                    accounts a ON ua.account_id = a.id 
+                WHERE 
+                    u.id = $1 
+                GROUP BY 
+                    u.id
+            `
             const params = [id]
             const rows = await postgres.query(text, params)
             const user = rows[0]
-            return formatResult(user) as UserWithAccounts
+            return formatResult(user) as UserWithAccountsAndOperators
         } catch (err) {
             throw new Error('There was an error getting user by id from the database')
         }
     }
-
+    
+    // TODO: Does this also delete any operator associated with the address associated with this account?
     /**
      * Remove an account.
      * @param address - The account's address (pk)
@@ -259,16 +347,17 @@ export default function useDB() {
       
 
     return { 
-        addAccount, 
+        addAccount,
+        addOperator,
         addUser,
         formatResult,
         getAccounts,
         getNonce, 
-        getUser,
+        getUserByAddress,
         getUserById,
         removeAccount, 
         updateUserAddress, 
         updateUserAgreedToTermsOfService,
-        upsertNonce 
+        upsertNonce
     }
 }

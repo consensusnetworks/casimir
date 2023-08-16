@@ -11,14 +11,11 @@ import { Config } from './config'
 import { kebabCase } from '@casimir/helpers'
 
 /**
- * Users API stack
+ * Users service stack
  */
 export class UsersStack extends cdk.Stack {
-    /** Stack name */
     public readonly name = 'users'
-    /** Path to stack build assets or Dockerfile */
     public readonly assetPath = 'services/users/Dockerfile'
-    /** Path to stack build context */
     public readonly contextPath = '../../'
 
     constructor(scope: Construct, id: string, props: UsersStackProps) {
@@ -28,7 +25,6 @@ export class UsersStack extends cdk.Stack {
         const { project, stage, rootDomain, subdomains } = config
         const { certificate, hostedZone, vpc } = props
 
-        /** Create the users DB credentials */
         const dbCredentials = new secretsmanager.Secret(this, config.getFullStackResourceName(this.name, 'db-credentials'), {
             secretName: kebabCase(config.getFullStackResourceName(this.name, 'db-credentials')),
             generateSecretString: {
@@ -41,16 +37,13 @@ export class UsersStack extends cdk.Stack {
             }
         })
 
-        /** Create a DB security group */
         const dbSecurityGroup = new ec2.SecurityGroup(this, config.getFullStackResourceName(this.name, 'db-security-group'), {
             vpc,
             allowAllOutbound: true
         })
 
-        /** Allow inbound traffic to DB security group */
         dbSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(5432))
 
-        /** Create a DB cluster */
         const dbCluster = new rds.DatabaseCluster(this, config.getFullStackResourceName(this.name, 'db-cluster'), {
             engine: rds.DatabaseClusterEngine.auroraPostgres({
                 version: rds.AuroraPostgresEngineVersion.VER_15_2
@@ -70,24 +63,21 @@ export class UsersStack extends cdk.Stack {
             port: 5432
         })
 
-        /** Add serverless V2 scaling configuration to DB cluster */
         cdk.Aspects.of(dbCluster).add({
             visit(node) {
                 if (node instanceof rds.CfnDBCluster) {
                     node.serverlessV2ScalingConfiguration = {
-                        minCapacity: 0.5, // min capacity is 0.5 vCPU
-                        maxCapacity: 1 // max capacity is 1 vCPU (default)
+                        minCapacity: 0.5,
+                        maxCapacity: 1
                     }
                 }
             },
         })
 
-        /** Create an ECS cluster */
         const ecsCluster = new ecs.Cluster(this, config.getFullStackResourceName(this.name, 'cluster'), {
             vpc
         })
 
-        /** Build the users service image */
         const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
             directory: this.contextPath,
             file: this.assetPath,
@@ -95,7 +85,6 @@ export class UsersStack extends cdk.Stack {
             ignoreMode: cdk.IgnoreMode.GIT
         })
 
-        /** Get the required secrets */
         const requiredSecrets = {
             DB_HOST: ecs.Secret.fromSecretsManager(dbCredentials, 'host'),
             DB_PORT: ecs.Secret.fromSecretsManager(dbCredentials, 'port'),
@@ -104,17 +93,14 @@ export class UsersStack extends cdk.Stack {
             DB_PASSWORD: ecs.Secret.fromSecretsManager(dbCredentials, 'password')
         }
 
-        /** Define optional secrets */
         const optionalSecrets: { SESSIONS_HOST?: ecs.Secret, SESSIONS_KEY?: ecs.Secret } = {}
 
         if (config.stage === 'prod' || config.stage === 'dev') {
-            /** Get the sessions credentials */
             const sessionsCredentials = secretsmanager.Secret.fromSecretNameV2(this, config.getFullStackResourceName(this.name, 'sessions-credentials'), kebabCase(config.getFullStackResourceName(this.name, 'sessions-credentials')))
             optionalSecrets.SESSIONS_HOST = ecs.Secret.fromSecretsManager(sessionsCredentials, 'host')
             optionalSecrets.SESSIONS_KEY = ecs.Secret.fromSecretsManager(sessionsCredentials, 'key')
         }
 
-        /** Create a load-balanced users service */
         const fargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, config.getFullStackResourceName(this.name, 'fargate'), {
             assignPublicIp: true,
             certificate,
@@ -134,7 +120,6 @@ export class UsersStack extends cdk.Stack {
             }
         })
 
-        /** Override the default health check path */
         fargateService.targetGroup.configureHealthCheck({
             path: '/health'
         })

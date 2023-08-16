@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { CasimirUpkeep } from '../build/artifacts/types'
+import { CasimirUpkeep } from '../build/@types'
 
 export interface ReportValues {
     activeBalance: number

@@ -1,16 +1,23 @@
-import { CasimirManager, CasimirRegistry, ISSVNetworkViews, CasimirViews, CasimirUpkeep } from '@casimir/ethereum/build/artifacts/types'
+import { CasimirManager, CasimirRegistry, ISSVNetworkViews, CasimirViews, CasimirUpkeep } from '../build/@types'
 import { ethers, network } from 'hardhat'
 import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
-import ISSVNetworkViewsJson from '@casimir/ethereum/build/artifacts/scripts/resources/ssv-network/contracts/ISSVNetworkViews.sol/ISSVNetworkViews.json'
-import { depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
-import { getEventsIterable } from '@casimir/oracle/src/providers/events'
+import ISSVNetworkViewsAbi from '../build/abi/ISSVNetworkViews.json'
+import { depositUpkeepBalanceHandler } from '../helpers/oracle'
 import { fetchRetry, run } from '@casimir/helpers'
+import { PoolStatus } from '@casimir/types'
 
+/**
+ * Deploy contracts to local network and run local events and oracle handling
+ */
 void async function () {
     const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
-
+    
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [654, 655, 656, 657]
+    if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
+    const messengerUrl = process.env.MESSENGER_URL || 'https://nodes.casimir.co/eth/goerli/dkg/messenger'
+    
     const mockFunctionsOracleFactory = await ethers.getContractFactory('MockFunctionsOracle')
     const mockFunctionsOracle = await mockFunctionsOracleFactory.deploy()
     await mockFunctionsOracle.deployed()
@@ -51,19 +58,20 @@ void async function () {
 
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
-    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsJson.abi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
+    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
-    for (const operatorId of [1, 2, 3, 4]) {
+    const preregisteredBalance = ethers.utils.parseEther('10')
+    for (const operatorId of preregisteredOperatorIds) {
         const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(operatorId)
         const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
-        const nextBalance = currentBalance.add(ethers.utils.parseEther('4'))
+        const nextBalance = currentBalance.add(preregisteredBalance)
         await setBalance(operatorOwnerAddress, nextBalance)
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
             params: [operatorOwnerAddress]
         })
         const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
-        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: ethers.utils.parseEther('4') })
+        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: preregisteredBalance })
         await result.wait()
     }
 
@@ -76,37 +84,48 @@ void async function () {
     const blocksPerReport = 10
     const rewardPerValidator = 0.105
     let lastReportBlock = await ethers.provider.getBlockNumber()
-
+    let lastStakedPoolIds: number[] = []
     void function () {
-
         ethers.provider.on('block', async (block) => {
             if (block - blocksPerReport >= lastReportBlock) {
                 await time.increase(time.duration.days(1))
+                console.log('⌛️ Report period complete')
                 lastReportBlock = await ethers.provider.getBlockNumber()
                 await runUpkeep({ upkeep, keeper })
+                const pendingPoolIds = await manager.getPendingPoolIds()
                 const stakedPoolIds = await manager.getStakedPoolIds()
-                const stakedPoolCount = stakedPoolIds.length
-                const pendingPoolCount = (await manager.getPendingPoolIds()).length
-                if (pendingPoolCount + stakedPoolCount > 0) {
-                    const activatedBalance = pendingPoolCount * 32
+                if (pendingPoolIds.length + stakedPoolIds.length) {
+                    console.log('🧾 Submitting report')
+                    const activatedBalance = pendingPoolIds.length * 32
+                    const sweptRewardBalance =  rewardPerValidator * lastStakedPoolIds.length
                     const exitingPoolCount = await manager.requestedExits()
                     const sweptExitedBalance = exitingPoolCount.toNumber() * 32
-                    const rewardAmount = rewardPerValidator * stakedPoolCount
+                    const rewardBalance = rewardPerValidator * stakedPoolIds.length
                     const latestActiveBalance = await manager.latestActiveBalance()
-                    const nextActiveBalance = round(parseFloat(ethers.utils.formatEther(latestActiveBalance)) + activatedBalance - sweptExitedBalance + rewardAmount, 10)
+                    const nextActiveBalance = round(parseFloat(ethers.utils.formatEther(latestActiveBalance)) + activatedBalance + rewardBalance - sweptRewardBalance - sweptExitedBalance, 10)
                     const nextActivatedDeposits = (await manager.getPendingPoolIds()).length
-                    const nextValues = {
+                    for (const poolId of lastStakedPoolIds) {
+                        const poolAddress = await manager.getPoolAddress(poolId)
+                        const currentBalance = await ethers.provider.getBalance(poolAddress)
+                        const nextBalance = currentBalance.add(ethers.utils.parseEther(rewardPerValidator.toString()))
+                        await setBalance(poolAddress, nextBalance)
+                    }
+                    const startIndex = ethers.BigNumber.from(0)
+                    const endIndex = ethers.BigNumber.from(stakedPoolIds.length)
+                    const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)                    
+                    const reportValues = {
                         activeBalance: nextActiveBalance,
-                        sweptBalance: sweptExitedBalance,
+                        sweptBalance: sweptRewardBalance + sweptExitedBalance,
                         activatedDeposits: nextActivatedDeposits,
                         forcedExits: 0,
                         completedExits: exitingPoolCount.toNumber(),
-                        compoundablePoolIds: [0, 0, 0, 0, 0]
+                        compoundablePoolIds
                     }
+                    console.log('🧾 Report values', reportValues)
                     requestId = await fulfillReport({
                         upkeep,
                         keeper,
-                        values: nextValues,
+                        values: reportValues,
                         requestId
                     })
                     let remaining = exitingPoolCount.toNumber()
@@ -114,7 +133,7 @@ void async function () {
                         for (const poolId of stakedPoolIds) {
                             if (remaining === 0) break
                             const poolDetails = await views.getPoolDetails(poolId)
-                            if (poolDetails.status === 3) {
+                            if (poolDetails.status === PoolStatus.EXITING_FORCED || poolDetails.status === PoolStatus.EXITING_REQUESTED) {
                                 remaining--
                                 const poolAddress = await manager.getPoolAddress(poolId)
                                 const currentBalance = await ethers.provider.getBalance(poolAddress)
@@ -130,56 +149,21 @@ void async function () {
                     }
                     await runUpkeep({ upkeep, keeper })
                 }
+                lastStakedPoolIds = stakedPoolIds
             }
         })
     }()
 
     setTimeout(async () => {
-        if (process.env.MOCK_ORACLE === 'true') {
-            const ping = await fetchRetry('http://localhost:3000/ping')
-            const { message } = await ping.json()
-            if (message !== 'pong') throw new Error('DKG service is not running')
-        }
+        const ping = await fetchRetry(`${messengerUrl}/ping`)
+        const { message } = await ping.json()
+        if (message !== 'pong') throw new Error('DKG service is not running')
         const depositAmount = 32 * ((100 + await manager.feePercent()) / 100)
         const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await stake?.wait()
-        // Todo handle in oracle and only run here if (!process.env.MOCK_ORACLE)
+        // Todo handle in oracle
         await depositUpkeepBalanceHandler({ manager, signer: oracle })
     }, 2500)
 
-    /**
-     * We are either running or simulating (using the oracle helper) the DAO oracle (@casimir/oracle)
-     */
-    if (process.env.MOCK_ORACLE === 'true') {
-
-        run('npm run dev --workspace @casimir/oracle')
-
-    } else {
-
-        const handlers = {
-            DepositRequested: initiateDepositHandler,
-            /**
-             * We don't need to handle these/they aren't ready:
-             * ResharesRequested: initiateResharesHandler,
-             * ExitRequested: initiateExitsHandler,
-             * ForcedExitReportsRequested: reportForcedExitsHandler,
-             */
-            CompletedExitReportsRequested: reportCompletedExitsHandler
-        }
-
-        const eventsIterable = getEventsIterable({ manager, events: Object.keys(handlers) })
-                
-        for await (const event of eventsIterable) {
-            const details = event?.[event.length - 1]
-            const { args } = details
-            const handler = handlers[details.event as keyof typeof handlers]
-            if (!handler) throw new Error(`No handler found for event ${details.event}`)
-            await handler({ 
-                manager,
-                views,
-                signer: oracle,
-                args
-            })
-        }
-    }
+    run('npm run dev --workspace @casimir/oracle')
 }()

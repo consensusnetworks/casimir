@@ -89,21 +89,26 @@ onMounted(() => {
         }
     })
 
-    const line_chart_container_el = document.getElementById('line_chart_container_' + props.id)
-    let WIDTH = 0
-    let HEIGHT =  0
+    try {
+        const line_chart_container_el = document.getElementById('line_chart_container_' + props.id)
+        let WIDTH = 0
+        let HEIGHT =  0
 
-     // watches for size changes... 
-    const outputsize = () => {
-        if(line_chart_container_el){
-            WIDTH = line_chart_container_el.offsetWidth
-            HEIGHT = line_chart_container_el.offsetHeight
+        // watches for size changes... 
+        const outputsize = () => {
+            if(line_chart_container_el){
+                WIDTH = line_chart_container_el.offsetWidth
+                HEIGHT = line_chart_container_el.offsetHeight
+            }
+            line_chart.resize(WIDTH , HEIGHT )
         }
-        line_chart.resize(WIDTH , HEIGHT )
+        if(line_chart_container_el){
+            new ResizeObserver(outputsize).observe(line_chart_container_el)   
+        }
+    } catch (error) {
+        console.log('Line Chart Resizing Error', error)
     }
-    if(line_chart_container_el){
-        new ResizeObserver(outputsize).observe(line_chart_container_el)   
-    }
+    
 })
 
 watch(props, ()=> {
@@ -118,7 +123,7 @@ watch(props, ()=> {
                     let rgb = hexToRGB(line_chart.data.datasets[i].backgroundColor)
 
                     gradient.addColorStop(0, `rgba(${rgb?.r},${rgb?.g},${rgb?.b}, 0.28)`) 
-                    gradient.addColorStop(1, 'rgba(0, 0, 0,0)') 
+                    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.0)') 
 
                     line_chart.data.datasets[i].backgroundColor = gradient
                 }

@@ -1,6 +1,4 @@
-export interface DKGOptions {
-    /** DKG CLI path */
+export interface DkgOptions {
     cliPath: string
-    /** DKG messenger service URL */
     messengerUrl: string
 }

@@ -1,3 +1,6 @@
-import { getClusterDetails } from './providers/clusters'
+import { Scanner } from './providers/scanner'
+import { Operator } from './interfaces/Operator'
 
-export { getClusterDetails }
+export { Scanner }
+export type { Operator }
+

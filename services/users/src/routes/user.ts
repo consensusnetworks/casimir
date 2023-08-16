@@ -4,12 +4,14 @@ import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
 
 const router = express.Router()
-const { addAccount, getAccounts, getUser, getUserById, updateUserAddress, updateUserAgreedToTermsOfService, removeAccount } = useDB()
+const { addAccount, getAccounts, getUserByAddress, getUserById, updateUserAddress, updateUserAgreedToTermsOfService, removeAccount } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
-        const address = req.session?.getUserId().toLowerCase() as string
-        const user = await getUser(address)
+        const id = req.session?.getUserId() as string
+        console.log('getting user by id :>> ', id)
+        const user = await getUserById(id)
+        console.log('user in user home route :>> ', user)
         const message = user ? 'User found' : 'User not found'
         const error = user ? false : true
         res.setHeader('Content-Type', 'application/json')
@@ -32,11 +34,13 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
 router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
         console.log('ADDING ACCOUNT!')
-        const { account } = req.body
+        const { account, id } = req.body
         const { ownerAddress } = account
-        const userSessionsAddress = req.session?.getUserId().toLowerCase()
-        const validatedAddress = validateAddress(userSessionsAddress, ownerAddress)
-        if (!validatedAddress) {
+        const userId = id.toString()
+        const userSessionId = req.session?.getUserId()
+        const validatedUserId = validateUserId(userSessionId, userId)
+        console.log('validatedUserId :>> ', validatedUserId)
+        if (!validatedUserId) {
             res.setHeader('Content-Type', 'application/json')
             res.status(200)
             res.json({
@@ -46,7 +50,7 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
             })
         }
         await addAccount(account)
-        const user = await getUser(ownerAddress)
+        const user = await getUserByAddress(ownerAddress)
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
@@ -68,7 +72,9 @@ router.get('/check-if-primary-address-exists/:provider/:address', async (req: ex
     try {
         const { params } = req
         const { address, provider } = params
-        const user = await getUser(address)
+        console.log('getting user by address')
+        const user = await getUserByAddress(address)
+        console.log('user in check-if-primary-.....:>> ', user)
         const userAddress = user?.address
         const userProvider = user?.walletProvider
         const sameAddress = userAddress === address
@@ -116,6 +122,7 @@ router.get('/check-secondary-address/:address', async (req: express.Request, res
             data: users
         })
     } catch (error: any) {
+        console.log('error in /check-secondary-address :>> ', error)
         res.setHeader('Content-Type', 'application/json')
         res.status(500)
         res.json({
@@ -128,9 +135,10 @@ router.get('/check-secondary-address/:address', async (req: express.Request, res
 router.post('/remove-sub-account', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
         console.log('REMOVING ACCOUNT!')
-        const { address, currency, ownerAddress, walletProvider } = req.body
-        const userSessionsAddress = req.session?.getUserId()
-        const validatedAddress = validateAddress(userSessionsAddress, ownerAddress)
+        const { address, currency, id, ownerAddress, walletProvider } = req.body
+        const userId = id.toString()
+        const userSessionId = req.session?.getUserId()
+        const validatedAddress = validateUserId(userSessionId, userId)
         if (!validatedAddress) {    
             res.setHeader('Content-Type', 'application/json')
             res.status(200)
@@ -142,7 +150,7 @@ router.post('/remove-sub-account', verifySession(), async (req: SessionRequest, 
             return
         }
         const accountRemoved = await removeAccount({ address, currency, ownerAddress, walletProvider })
-        const user = await getUser(ownerAddress)
+        const user = await getUserByAddress(ownerAddress)
         
         if (accountRemoved) {
             res.setHeader('Content-Type', 'application/json')
@@ -224,8 +232,8 @@ function maskAddress(address: string) {
     return address.slice(0, 6) + '...' + address.slice(-4)
 }
 
-function validateAddress(userSessionsAddress:string | undefined, address:string) {
-    return userSessionsAddress === address
+function validateUserId(userSessionId:string | undefined, userId:string) {
+    return userSessionId === userId
 }
 
 export default router

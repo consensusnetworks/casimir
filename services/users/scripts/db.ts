@@ -1,14 +1,14 @@
 import fs from 'fs'
 import os from 'os'
-import { run, getSecret, loadCredentials } from '@casimir/helpers'
-import { JsonSchema, Schema, accountSchema, nonceSchema, userSchema, userAccountSchema } from '@casimir/data'
+import { run } from '@casimir/helpers'
+import { getSecret, loadCredentials } from '@casimir/aws'
+import { JsonSchema, Schema, accountSchema, nonceSchema, operatorSchema, userSchema, userAccountSchema } from '@casimir/data'
 
 /**
  * Run a local users database and service
  */
 void async function () {
 
-    /** Load credentials and get secrets for non-local config */
     if (process.env.STAGE !== 'local') {
         await loadCredentials()
         const dbCredentials = await getSecret(`${process.env.PROJECT}-users-db-credentials-${process.env.STAGE}`)
@@ -24,18 +24,16 @@ void async function () {
         process.env.SESSIONS_KEY = sessionsKey
     }
 
-    /** Resource path from package caller */
-    const resourcePath = './scripts'
+    const resourceDir = './scripts'
 
-    /** All table schemas */
     const tableSchemas = {
         account: accountSchema,
+        operator: operatorSchema,
         nonce: nonceSchema,
         user: userSchema,
         userAccount: userAccountSchema
     }
 
-    /** Generate SQL schema */
     let sqlSchema = ''
     for (const table of Object.keys(tableSchemas)) {
         const tableSchema = tableSchemas[table] as JsonSchema
@@ -45,23 +43,26 @@ void async function () {
         sqlSchema += `${postgresTable}\n\n`
     }
 
-    /** Write schema to ${resourcePath}/.out/sql/schema.sql */
-    const sqlDir = `${resourcePath}/.out/sql`
+    const sqlDir = `${resourceDir}/.out/sql`
     if (!fs.existsSync(sqlDir)) fs.mkdirSync(sqlDir, { recursive: true })
     fs.writeFileSync(`${sqlDir}/schema.sql`, sqlSchema)
 
-    /** Start or sync database with latest schema */
     const stackName = 'casimir-users-db'
-    await run(`docker compose -p ${stackName} -f ${resourcePath}/docker-compose.yaml up -d`)
+    await run(`docker compose -p ${stackName} -f ${resourceDir}/docker-compose.yaml up -d`)
     let dbReady = false
     while (!dbReady) {
         const health = await run('docker inspect --format=\'{{lower .State.Health.Status}}\' postgres') as string
         dbReady = health.trim() === 'healthy'
         await new Promise(resolve => setTimeout(resolve, 2500))
     }
-    const atlasCli = await run('which atlas')
-    if (!atlasCli && os.platform() === 'darwin') {
-        await run('echo y | brew install atlas')
+    const atlas = await run('which atlas') as string
+    if (!atlas || atlas.includes('not found')) {
+        if (os.platform() === 'darwin') {
+            await run('echo y | brew install atlas')
+        } else {
+            throw new Error('Please install atlas using `curl -sSf https://atlasgo.sh | sh`')
+        }
     }
+    
     await run(`atlas schema apply --url "postgres://postgres:password@localhost:5432/users?sslmode=disable" --to "file://${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`)
 }()

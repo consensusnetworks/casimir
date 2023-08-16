@@ -1,14 +1,15 @@
 import localtunnel from 'localtunnel'
 import os from 'os'
-import { HardhatUserConfig } from 'hardhat/config'
+import { HardhatUserConfig } from 'hardhat/types'
+import '@nomicfoundation/hardhat-foundry'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
-import 'solidity-docgen'
 import '@nomicfoundation/hardhat-toolbox'
+import 'hardhat-abi-exporter'
 
 // Seed is provided
 const mnemonic = process.env.BIP39_SEED as string
-const hid = { mnemonic, count: 10 }
+const hid = { mnemonic, count: 10, accountsBalance: '100000000000000000000' }
 
 // Mining interval is provided in seconds
 const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
@@ -22,6 +23,7 @@ const hardhatNetwork = process.env.HARDHAT_NETWORK as string
 const forkUrl = process.env.ETHEREUM_FORK_RPC_URL as string
 const forkNetwork = forkUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
 const forkChainId = { mainnet: 1, goerli: 5 }[forkNetwork]
+const forkConfig = { url: forkUrl, blockNumber: parseInt(process.env.ETHEREUM_FORK_BLOCK || '0') || undefined }
 
 const externalEnv = {
   mainnet: {
@@ -80,18 +82,26 @@ const config: HardhatUserConfig = {
   },
   paths: {
     tests: './test',
-    sources: './src',
-    artifacts: './build/artifacts',
-    cache: './build/cache'
+    sources: './src/v1',
+    artifacts: './build/hardhat/artifacts',
+    cache: './build/hardhat/cache'
+  },
+  abiExporter: {
+    path: './build/abi',
+    runOnCompile: true,
+    clear: true,
+    flat: true,
+    spacing: 2,
+    format: 'fullName'
   },
   typechain: {
-    outDir: './build/artifacts/types',
+    outDir: './build/@types'
   },
   networks: {
     hardhat: {
       accounts: mnemonic ? hid : undefined,
       chainId: forkChainId || 1337,
-      forking: forkUrl ? { url: forkUrl } : undefined,
+      forking: forkUrl ? forkConfig : undefined,
       mining: miningInterval ? mining : { auto: true },
       allowUnlimitedContractSize: true,
       gas: 'auto',
@@ -111,22 +121,19 @@ const config: HardhatUserConfig = {
       gas: 'auto',
       gasPrice: 'auto'
     }
-  },
-  mocha: {
-    timeout: 250000 // Default timeout * 10
   }
 }
 
 // Start a local tunnel for using RPC over https (e.g. for Metamask on mobile)
 if (process.env.TUNNEL === 'true') {
-  const localSubdomain = `cn-hardhat-${os.userInfo().username.toLowerCase()}`
+  const localSubdomain = `local-hardhat-${os.userInfo().username.toLowerCase()}`
   const localUrl = `https://${localSubdomain}.loca.lt`
   localtunnel({ port: 8545, subdomain: localSubdomain }).then(
     (tunnel: localtunnel.Tunnel) => {
       if (localUrl === tunnel.url) {
-        console.log('Your local tunnel is now available at', localUrl)
+        console.log('Your default local tunnel url is', localUrl)
       } else {
-        console.log('Your default local tunnel url is not available, instead use', tunnel.url)
+        console.log('Your default local tunnel url is not available, use', tunnel.url, 'instead')
       }
       process.on('SIGINT', () => {
         tunnel.close()

@@ -5,7 +5,7 @@ import useLedger from '@/composables/ledger'
 // import useSolana from '@/composables/solana'
 import useTrezor from '@/composables/trezor'
 import useUsers from '@/composables/users'
-import useWalletConnect from '@/composables/walletConnect'
+import useWalletConnectV2 from './walletConnectV2'
 import { Account, CryptoAddress, Currency, LoginCredentials, MessageRequest, ProviderString, TransactionRequest } from '@casimir/types'
 import * as Session from 'supertokens-web-js/recipe/session'
 
@@ -21,7 +21,8 @@ const activeWallets = ref([
   'WalletConnect',
   'Trezor',
   'Ledger',
-  'IoPay',
+  'TrustWallet',
+  // 'IoPay',
 ] as ProviderString[])
 const amount = ref<string>('1')
 const amountToStake = ref<string>('1.2')
@@ -35,13 +36,13 @@ const selectedCurrency = ref<Currency>('')
 const toAddress = ref<string>('0x728474D29c2F81eb17a669a7582A2C17f1042b57')
 
 export default function useWallet() {
-  const { listenForContractEvents, refreshBreakdown } = useContracts()
-  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, switchEthersNetwork } = useEthers()
+  const { listenForContractEvents, refreshBreakdown, stopListeningForContractEvents } = useContracts()
+  const { estimateEIP1559GasFee, ethersProviderList, getEthersAddressWithBalance, getEthersBalance, sendEthersTransaction, signEthersMessage, listenForTransactions, loginWithEthers, getEthersBrowserProviderSelectedCurrency, stopListeningForTransactions, switchEthersNetwork } = useEthers()
   const { getLedgerAddress, loginWithLedger, sendLedgerTransaction, signLedgerMessage } = useLedger()
   // const { solanaProviderList, sendSolanaTransaction, signSolanaMessage } = useSolana()
   const { getTrezorAddress, loginWithTrezor, sendTrezorTransaction, signTrezorMessage } = useTrezor()
-  const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
-  const { getWalletConnectAddress, loginWithWalletConnect, sendWalletConnectTransaction, signWalletConnectMessage } = useWalletConnect()
+  const { addAccount, getUser, checkIfSecondaryAddress, checkIfPrimaryUserExists, removeAccount, setUser, setUserAnalytics, setUserAccountBalances, updatePrimaryAddress, user } = useUsers()
+  const { web3modal, getWalletConnectAddressAndBalance, /* loginWithWalletConnectV2 */ } = useWalletConnectV2()
 
   function getColdStorageAddress(provider: ProviderString, currency: Currency = 'ETH') {
     if (provider === 'Ledger') {
@@ -101,6 +102,7 @@ export default function useWallet() {
           setPrimaryAddress(user?.value?.address as string) 
         }
       }
+      // TODO: Implement setting user table analytics here
       await setUserAccountBalances()
       console.log('user.value after connecting wallet :>> ', user.value)
       await refreshBreakdown()
@@ -161,7 +163,9 @@ export default function useWallet() {
       } else if (selectedProvider.value === 'Trezor') {
         return await loginWithTrezor(loginCredentials, selectedPathIndex.value)
       } else if (selectedProvider.value === 'WalletConnect'){
-        return await loginWithWalletConnect(loginCredentials)
+        // TODO: Fix this.
+        throw new Error('WalletConnect temporarily disabled. Please try another provider.')
+        // return await loginWithWalletConnectV2(loginCredentials)
       } else {
         // TODO: Implement this for other providers
         console.log('Sign up not yet supported for this wallet provider')
@@ -172,17 +176,20 @@ export default function useWallet() {
   }
 
   async function logout() {
-    console.log('clicked log out')
     loadingUserWallets.value = true
     await Session.signOut()
+    stopListeningForContractEvents()
+    stopListeningForTransactions()
+    setUser(undefined)
     setSelectedAddress('')
     setSelectedProvider('')
     setSelectedCurrency('')
-    setUser(undefined)
     setPrimaryAddress('')
-    loadingUserWallets.value = false
+    setUserAnalytics()
+    await refreshBreakdown()
+    // TODO: Fix bug that doesn't allow you to log in without refreshing page after a user logs out
+    window.location.reload()
     console.log('user.value :>> ', user.value)
-    // router.push('/auth')
   }
 
   async function removeConnectedAccount() {
@@ -222,7 +229,7 @@ export default function useWallet() {
 
     try {
       if (txRequest.providerString === 'WalletConnect') {
-        await sendWalletConnectTransaction(txRequest)
+        // await sendWalletConnectTransaction(txRequest)
       } else if (ethersProviderList.includes(txRequest.providerString)) {
         await sendEthersTransaction(txRequest)
       }/* else if (solanaProviderList.includes(txRequest.providerString)) {
@@ -284,9 +291,18 @@ export default function useWallet() {
     console.clear()
     try {
       if (provider === 'WalletConnect') {
+        // TODO: Fix this.
+        throw new Error('WalletConnect temporarily disabled. Please try another provider.')
         setSelectedProvider(provider)
-        const walletConnectAddresses = await getWalletConnectAddress()
-        setWalletProviderAddresses(walletConnectAddresses)
+        web3modal.openModal()
+        // TODO: Need a way of unsubscribing from events
+        web3modal.subscribeEvents(async (event) => {
+          const { name } = event
+          if (name === 'ACCOUNT_CONNECTED') {
+            const walletConnectAddressAndBalance = await getWalletConnectAddressAndBalance()
+            setWalletProviderAddresses([walletConnectAddressAndBalance])
+          }
+        })
       } else if (ethersProviderList.includes(provider)) {
         setSelectedProvider(provider)
         const ethersAddresses = await getEthersAddressWithBalance(provider) as CryptoAddress[]
@@ -352,7 +368,7 @@ export default function useWallet() {
     }
     try {
       if (messageRequest.providerString === 'WalletConnect') {
-        await signWalletConnectMessage(messageRequest)
+        // await signWalletConnectMessage(messageRequest)
       } else if (ethersProviderList.includes(messageRequest.providerString)) {
         await signEthersMessage(messageRequest)
       }/* else if (solanaProviderList.includes(messageRequest.providerString)) {

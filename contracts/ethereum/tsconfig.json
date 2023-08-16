@@ -14,10 +14,10 @@
         "resolveJsonModule": true
     },
     "include": [
-        "scripts/*.ts",
-        "./test/*.ts",       
-        "src/index.ts"    
-, "test/e2e/simulation.ts", "helpers/deploy.ts"    ],
+        "./helpers/*.ts",
+        "./scripts/*.ts",
+        "./test/*.ts"  
+    ],
     "typeRoots": [
         "node_modules/@types"
     ],

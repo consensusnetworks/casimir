@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { EthersProvider } from '@casimir/types'
-import { Account, TransactionRequest, UserWithAccounts } from '@casimir/types'
+import { Account, TransactionRequest, UserWithAccountsAndOperators } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useContracts from '@/composables/contracts'
@@ -14,6 +14,7 @@ declare const window: ethereumWindow
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
 const { ethereumUrl } = useEnvironment()
+const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
@@ -28,6 +29,23 @@ export default function useEthers() {
     } catch(error: any) {
       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
     }
+  }
+
+  async function blockListener (blockNumber: number) {
+    const { manager, refreshBreakdown } = useContracts()
+    const { user } = useUsers()
+    console.log('blockNumber :>> ', blockNumber)
+    const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+    const block = await provider.getBlockWithTransactions(blockNumber)
+    const transactions = block.transactions
+    transactions.map(async (tx) => {
+      if (addresses.includes(tx.from.toLowerCase())) {
+        console.log('tx :>> ', tx)
+        const response = manager.interface.parseTransaction({ data: tx.data })
+        console.log('response :>> ', response)
+        await refreshBreakdown()
+      }
+    })
   }
 
   /**
@@ -58,7 +76,7 @@ export default function useEthers() {
       // const gasEstimateInEth = ethers.utils.formatEther(gasEstimate)
       const fee = maxPriorityFeePerGasInWei?.mul(gasEstimate).add(maxFeePerGasInWei)
       const feeInWei = ethers.utils.formatEther(fee)
-      const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
+      const feeInEth = (parseFloat(feeInWei) / 10**18).toFixed(8).toString()
       return {
         gasLimit: gasEstimate.toString(),
         fee: feeInEth
@@ -85,7 +103,7 @@ export default function useEthers() {
       const gasEstimate = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
       const fee = gasPrice.mul(gasEstimate)
       const feeInWei = ethers.utils.formatEther(fee)
-      const feeInEth = (parseInt(feeInWei) / 10**18).toFixed(8).toString()
+      const feeInEth = (parseFloat(feeInWei) / 10**18).toFixed(8).toString()
       return {
         gasLimit: gasEstimate.toString(),
         fee: feeInEth
@@ -112,7 +130,6 @@ export default function useEthers() {
   }
 
   async function getEthersBalance(address: string) : Promise<GLfloat> {
-    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
     const balance = await provider.getBalance(address)
     return parseFloat(ethers.utils.formatEther(balance))
   }
@@ -146,29 +163,13 @@ export default function useEthers() {
 
   async function getMaxETHAfterFees(rpcUrl: string, unsignedTx: ethers.utils.Deferrable<ethers.providers.TransactionRequest>, totalAmount: string) {
     const { fee } = await estimateEIP1559GasFee(rpcUrl, unsignedTx)
-    const total = parseInt(totalAmount) - parseInt(fee)
+    const total = parseFloat(totalAmount) - parseFloat(fee)
     const maxAfterFees = ethers.utils.formatEther(total).toString()
     return maxAfterFees
   }
 
   async function listenForTransactions() {
-    const { manager, refreshBreakdown } = useContracts()
-    const { user } = useUsers()
-    const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-    provider.on('block', async (blockNumber: number) => {
-      console.log('blockNumber :>> ', blockNumber)
-      const addresses = (user.value as UserWithAccounts).accounts.map((account: Account) => account.address) as string[]
-      const block = await provider.getBlockWithTransactions(blockNumber)
-      const transactions = block.transactions
-      transactions.map(async (tx) => {
-        if (addresses.includes(tx.from.toLowerCase())) {
-          console.log('tx :>> ', tx)
-          const response = manager.interface.parseTransaction({ data: tx.data })
-          console.log('response :>> ', response)
-          await refreshBreakdown()
-        }
-      })
-    })
+    provider.on('block', blockListener as ethers.providers.Listener)
     await new Promise(() => {
       // Wait indefinitely using a Promise that never resolves
     })
@@ -214,7 +215,7 @@ export default function useEthers() {
     }
     const ethFees = await estimateEIP1559GasFee(ethereumUrl, tx)
     const { fee, gasLimit } = ethFees
-    const requiredBalance = parseInt(value) + parseInt(fee)
+    const requiredBalance = parseFloat(value) + parseFloat(fee)
     const balance = await getEthersBalance(from)
     if (balance < requiredBalance) {
       throw new Error('Insufficient balance')
@@ -230,6 +231,10 @@ export default function useEthers() {
     const signer = web3Provider.getSigner()
     const signature = await signer.signMessage(message)
     return signature
+  }
+
+  function stopListeningForTransactions() {
+    provider.off('block', blockListener as ethers.providers.Listener)
   }
 
   async function switchEthersNetwork (providerString: ProviderString, chainId: string) {
@@ -275,6 +280,7 @@ export default function useEthers() {
     requestEthersAccount,
     sendEthersTransaction,
     signEthersMessage,
+    stopListeningForTransactions,
     switchEthersNetwork
   }
 }

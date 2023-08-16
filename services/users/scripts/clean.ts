@@ -1,15 +1,11 @@
 import { run } from '@casimir/helpers'
 
-/** Resource path from package caller */
-const resourcePath = './scripts'
-
-/** Compose stack name */
-const stackName = 'casimir-users-db'
-
 /**
- * Clean up resources
+ * Clean up users resources
  */
 void async function () {
-    await run(`rm -rf ${resourcePath}/.out`)
-    await run(`docker compose -p ${stackName} -f ${resourcePath}/docker-compose.yaml down`)
+    const resourceDir = './scripts'
+    const stackName = 'casimir-users-db'
+    await run(`rm -rf ${resourceDir}/.out`)
+    await run(`docker compose -p ${stackName} -f ${resourceDir}/docker-compose.yaml down`)
 }()

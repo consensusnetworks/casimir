@@ -2,7 +2,7 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 prompt_npm_install() {
-    echo "📦 package-lock.json changed. Do you want to run 'npm install'? (y/n)"
+    echo "📦 package-lock.json changed. Do you want to run 'npm install'? (y/n) "
     read answer < /dev/tty
 
     case "$answer" in
