@@ -112,10 +112,10 @@ const { screenWidth } = useScreenDimentions()
     <Features class="my-[15px] w-full" />  
     
     <!-- Litepaper Content -->
-    <Content class="my-[15px] w-full" />
+    <Content class="my-[275px] w-full" />
 
     <!-- Roadmap -->
-    <Roadmap class="my-[100px] w-full" />
+    <Roadmap class="mb-[150px] w-full" />
 
     <!-- Q&As -->
     <QuestionsAndAnswers class="my-[15px] w-full" />

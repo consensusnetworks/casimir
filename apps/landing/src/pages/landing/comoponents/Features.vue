@@ -3,7 +3,7 @@ import VueFeather from 'vue-feather'
 </script>
 
 <template>
-  <div class="my-[60px]">
+  <div class="my-[60px] px-[10%]">
     <div class="text-center my-[60px]">
       <span class="text-[14px] font-[600] text-primary">Features</span>
       <h1 class="text-[36px] font-[600] mt-[20px]">

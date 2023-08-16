@@ -17,7 +17,7 @@ const { roadmapItems, casimirRoadmapLocation } = useRoadmap()
       </p>
     </div>
 
-    <div class="w-full flex items-start justify-around flex-wrap gap-[50px]">
+    <div class="w-full flex items-start justify-around flex-wrap gap-[50px] px-[10%]">
       <div
         v-for="(item, index) in roadmapItems"
         :key="index"
