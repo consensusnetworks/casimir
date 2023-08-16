@@ -16,7 +16,7 @@ void async function () {
         await loadCredentials()
     }
 
-    process.env.BIP39_SEED = process.env.USE_SECRETS !== 'false' ? process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') : process.env.BIP39_SEED || 'test test test test test test test test test test test junk'
+    process.env.BIP39_SEED = process.env.USE_SECRETS !== 'false' ? process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') : process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
     process.env.FORK = process.env.FORK || 'testnet'
     process.env.TUNNEL = process.env.TUNNEL || 'false'
     process.env.MINING_INTERVAL = '12'

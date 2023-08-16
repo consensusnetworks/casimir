@@ -17,7 +17,7 @@ void async function () {
     process.env.MESSENGER_SRV_ADDR = process.env.MESSENGER_URL
     process.env.USE_HARDCODED_OPERATORS = 'false'
 
-    process.env.BIP39_SEED = process.env.BIP39_SEED || 'test test test test test test test test test test test junk'
+    process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
     if (!process.env.MANAGER_ADDRESS) throw new Error('No manager address set')
     if (!process.env.VIEWS_ADDRESS) throw new Error('No views address set')
     process.env.LINK_TOKEN_ADDRESS = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
@@ -32,7 +32,6 @@ void async function () {
 
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, 'm/44\'/60\'/0\'/0/6')
     const oracleAddress = wallet.address
-    console.log('ORACLE ADDRESS', oracleAddress)
 
     const validatorCount = 4
     if (!validatorStore[oracleAddress] || Object.keys(validatorStore[oracleAddress]).length < validatorCount) {
@@ -57,10 +56,10 @@ void async function () {
             })
 
             const selectedOperatorIds = preregisteredOperatorIds.slice(0, 4)
-            
-            const cli = new Dkg({ 
-                cliPath: process.env.CLI_PATH, 
-                messengerUrl: process.env.MESSENGER_URL 
+
+            const cli = new Dkg({
+                cliPath: process.env.CLI_PATH,
+                messengerUrl: process.env.MESSENGER_URL
             })
 
             const validator = await cli.createValidator({
