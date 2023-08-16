@@ -7,18 +7,18 @@ import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment'
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
 import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins'
-import { LandingStackProps } from '../interfaces/StackProps'
+import { DocsStackProps } from '../interfaces/StackProps'
 import { pascalCase } from '@casimir/helpers'
 import { Config } from './config'
 
 /**
- * Landing page stack
+ * Documentation sites stack
  */
-export class LandingStack extends cdk.Stack {
-    public readonly name = pascalCase('landing')
-    public readonly assetPath = '../../apps/landing/dist'
+export class DocsStack extends cdk.Stack {
+    public readonly name = pascalCase('docs')
+    public readonly assetPath = '../../contracts/ethereum/build/foundry/docs/book'
 
-    constructor(scope: Construct, id: string, props: LandingStackProps) {
+    constructor(scope: Construct, id: string, props: DocsStackProps) {
         super(scope, id, props)
 
         const config = new Config()
@@ -28,7 +28,6 @@ export class LandingStack extends cdk.Stack {
         const bucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'bucket'), {
             accessControl: s3.BucketAccessControl.PRIVATE
         })
-
         const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, config.getFullStackResourceName(this.name, 'origin-access-identity'))
         bucket.grantRead(originAccessIdentity)
 
@@ -37,7 +36,7 @@ export class LandingStack extends cdk.Stack {
             /** Replace deprecated method when cross-region support is out of beta */
             return new certmgr.DnsValidatedCertificate(this, config.getFullStackResourceName(this.name, 'cert'), {
                 domainName: rootDomain,
-                subjectAlternativeNames: [`${subdomains.landing}.${rootDomain}`],
+                subjectAlternativeNames: [`${subdomains.docsEthereum}.${rootDomain}`],
                 hostedZone,
                 region: 'us-east-1'
             })
@@ -64,7 +63,7 @@ export class LandingStack extends cdk.Stack {
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 origin: new cloudfrontOrigins.S3Origin(bucket, { originAccessIdentity })
             },
-            domainNames: [rootDomain, `${subdomains.landing}.${rootDomain}`]
+            domainNames: [`${subdomains.docsEthereum}.${rootDomain}`]
         })
 
         new s3Deployment.BucketDeployment(this, config.getFullStackResourceName(this.name, 'bucket-deployment'), {
@@ -74,15 +73,8 @@ export class LandingStack extends cdk.Stack {
             distributionPaths: ['/*']
         })
 
-        new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record'), {
-            recordName: rootDomain,
-            zone: hostedZone as route53.IHostedZone,
-            target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
-            ttl: cdk.Duration.minutes(1),
-        })
-
-        new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record-www'), {
-            recordName: `${subdomains.landing}.${rootDomain}`,
+        new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record-docs'), {
+            recordName: `${subdomains.docsEthereum}.${rootDomain}`,
             zone: hostedZone as route53.IHostedZone,
             target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
             ttl: cdk.Duration.minutes(1),

@@ -445,9 +445,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         reportPeriod++;
         uint256 expectedActivatedBalance = activatedDeposits * poolCapacity;
         uint256 expectedExitedBalance = completedExits * poolCapacity;
-        int256 rewards = int256(
-            activeBalance + sweptBalance + finalizableRecoveredBalance
-        ) - int256(getExpectedEffectiveBalance() + expectedExitedBalance);
+        int256 rewards = int256(activeBalance + sweptBalance + finalizableRecoveredBalance) - int256(getExpectedEffectiveBalance() + expectedExitedBalance);
         int256 change = rewards - latestActiveRewardBalance;
         if (change > 0) {
             uint256 gain = uint256(change);
@@ -478,9 +476,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
             emit StakeRebalanced(loss);
         }
-        int256 sweptRewards = int256(
-            sweptBalance + finalizableRecoveredBalance
-        ) - int256(finalizableExitedBalance);
+        int256 sweptRewards = int256(sweptBalance + finalizableRecoveredBalance) - int256(finalizableExitedBalance);
         if (sweptRewards > 0) {
             latestActiveBalanceAfterFees -= subtractFees(uint256(sweptRewards));
         }
@@ -512,7 +508,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Request to withdraw user stake
      * @param amount The amount of stake to withdraw
      */
-    function requestWithdrawal(uint256 amount) external nonReentrant {
+    function requestWithdrawal(
+        uint256 amount
+    ) external nonReentrant {
         require(amount > stakeMinimum, "Withdrawing less than minimum");
         setActionCount(msg.sender);
         User storage user = users[msg.sender];
@@ -640,7 +638,12 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         pendingPoolIds.push(poolId);
 
         poolAddresses[poolId] = address(
-            new CasimirPool(address(registry), poolId, publicKey, operatorIds)
+            new CasimirPool(
+                address(registry),
+                poolId,
+                publicKey,
+                operatorIds
+            )
         );
 
         bytes memory computedWithdrawalCredentials = abi.encodePacked(
@@ -684,7 +687,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bool processed
     ) private {
         for (uint256 i = 0; i < operatorIds.length; i++) {
-            registry.addPool(operatorIds[i], poolId);
+            registry.addOperatorPool(operatorIds[i], poolId);
         }
 
         beaconDeposit.deposit{value: poolCapacity}(
@@ -816,7 +819,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
         require(
             poolDetails.status == ICasimirPool.PoolStatus.EXITING_FORCED ||
-                poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED,
+            poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED,
             "Pool not exiting"
         );
 
@@ -832,11 +835,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         pool.setStatus(ICasimirPool.PoolStatus.WITHDRAWN);
         pool.withdrawBalance(blamePercents);
-        ssvNetwork.removeValidator(
-            poolDetails.publicKey,
-            poolDetails.operatorIds,
-            cluster
-        );
+        ssvNetwork.removeValidator(poolDetails.publicKey, poolDetails.operatorIds, cluster);
 
         emit ExitCompleted(poolId);
     }
@@ -870,15 +869,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
         require(
             poolDetails.status == ICasimirPool.PoolStatus.PENDING ||
-                poolDetails.status == ICasimirPool.PoolStatus.ACTIVE,
+            poolDetails.status == ICasimirPool.PoolStatus.ACTIVE,
             "Pool not active"
         );
         require(poolDetails.reshares < 2, "Pool already reshared twice");
 
         pool.setReshares(poolDetails.reshares + 1);
 
-        registry.removePool(oldOperatorId, poolId, 0);
-        registry.addPool(newOperatorId, poolId);
+        registry.removeOperatorPool(oldOperatorId, poolId, 0);
+        registry.addOperatorPool(newOperatorId, poolId);
 
         uint256 ssvAmount = retrieveFees(
             feeAmount,
@@ -1104,8 +1103,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint256 period
     ) public view returns (bool pendingWithdrawalEligibility) {
         if (requestedWithdrawals > index) {
-            pendingWithdrawalEligibility =
-                requestedWithdrawalQueue[index].period <= period;
+            pendingWithdrawalEligibility = requestedWithdrawalQueue[index].period <= period;
         }
     }
 

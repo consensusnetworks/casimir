@@ -1,5 +1,8 @@
 import { ethers } from 'hardhat'
 
+/**
+ * Deploy ethereum contracts
+ */
 void async function () {
     const managerArgs = {
         oracleAddress: process.env.ORACLE_ADDRESS,

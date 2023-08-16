@@ -1,10 +1,9 @@
 import { ref } from 'vue'
 import { BigNumberish, ethers } from 'ethers'
-import { CasimirManager, CasimirRegistry, CasimirViews, ISSVNetworkViews } from '@casimir/ethereum/build/@types'
+import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
 import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
-import ISSVNetworkViewsAbi from '@casimir/ethereum/build/abi/ISSVNetworkViews.json'
 import useEnvironment from './environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
@@ -16,7 +15,6 @@ import useWalletConnect from './walletConnect'
 import useWalletConnectV2 from './walletConnectV2'
 import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Pool, ProviderString, RegisteredOperator, UserWithAccountsAndOperators } from '@casimir/types'
 import { Operator, Scanner } from '@casimir/ssv'
-// import { operatorStore } from '@casimir/data'
 
 const currentStaked = ref<BreakdownAmount>({
     usd: '$0.00',
@@ -38,7 +36,6 @@ const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, ICasimirManagerAbi, provider) as CasimirManager
 const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
 const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
-const ssvViews: ISSVNetworkViews & ethers.Contract = new ethers.Contract(ssvNetworkViewsAddress, ISSVNetworkViewsAbi, provider) as ISSVNetworkViews
 
 const operators = ref<Operator[]>([])
 const registeredOperators = ref<Operator[]>([])
@@ -394,7 +391,7 @@ export default function useContracts() {
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer = signerCreator(walletProvider)
             if (isWalletConnectSigner(signer)) signer = await signer
-            const result = await registry.connect(signer as ethers.Signer).register(operatorId, { from: address, value: ethers.utils.parseEther(value)})
+            const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(value)})
             await result.wait()
             return true
         } catch (err) {

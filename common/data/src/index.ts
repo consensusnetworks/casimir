@@ -8,6 +8,7 @@ import operatorStore from './mock/operator.store.json'
 import userAccountSchema from './schemas/user_account.schema.json'
 import userSchema from './schemas/user.schema.json'
 import userStore from './mock/user.store.json'
+import validatorStore from './mock/validator.store.json'
 import { Postgres } from '../../../services/users/src/providers/postgres'
 import { JsonType, GlueType, PostgresType, Schema } from './providers/schema'
 import { JsonSchema } from './interfaces/JsonSchema'
@@ -23,6 +24,7 @@ export {
   userAccountSchema,
   userSchema,
   userStore,
+  validatorStore,
   Postgres,
   Schema
 }
