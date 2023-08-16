@@ -12,7 +12,6 @@
     "@ledgerhq/hw-transport": "^6.27.10",
     "@ledgerhq/hw-transport-webusb": "^6.27.10",
     "@trezor/connect-web": "^9.0.3",
-    "@walletconnect/ethereum-provider": "^2.9.1",
     "ethers": "^5.7.2"
   }
 }

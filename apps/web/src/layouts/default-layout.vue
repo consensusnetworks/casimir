@@ -7,16 +7,11 @@ import VueFeather from 'vue-feather'
 import useFormat from '@/composables/format'
 import useScreenDimensions from '@/composables/screenDimensions'
 import useUser from '@/composables/users'
-import useWalletConnectV2 from '@/composables/walletConnectV2'
-const { getEthersWalletConnectSignerV2 } = useWalletConnectV2()
-
-async function func() {
-  await getEthersWalletConnectSignerV2()
-}
 import useWallet from '@/composables/wallet'
+import WalletConnectProvider from '@/components/WalletConnectProvider.vue'
 
 const authFlowCardNumber = ref(1)
-const selectedProivder = ref(null as null | string)
+const selectedProvider = ref(null as null | string)
 const termsCheckbox = ref(true)
 
 const openRouterMenu = ref(false)
@@ -78,14 +73,7 @@ onUnmounted(() =>{
 
 <template>
   <div class="min-w-[360px]">
-    <!-- Huge button -->
-    <button
-      class="absolute top-0 right-0 w-[60px] h-[60px] bg-white rounded-[8px] flex justify-center items-center"
-      style="z-index: 10;"
-      @click="func"
-    >
-      GetWalletConnectEthersSigner
-    </button>
+    <WalletConnectProvider />
     <div :class="openWalletConnect? 'flex flex-col h-screen' : ''">
       <div
         class="px-[60px] 800s:px-[5%]  pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
@@ -303,7 +291,7 @@ onUnmounted(() =>{
                   v-for="wallet in activeWallets"
                   :key="wallet"
                   class="w-[140px] h-[100px] border flex flex-col justify-center items-center rounded-[8px]"
-                  @click="selectProvider(wallet, 'ETH'), authFlowCardNumber = 2, selectedProivder = wallet"
+                  @click="selectProvider(wallet, 'ETH'), authFlowCardNumber = 2, selectedProvider = wallet"
                 >
                   <img
                     :src="`/${wallet.toLowerCase()}.svg`"
@@ -323,7 +311,7 @@ onUnmounted(() =>{
               class="absolute top-0 left-0 w-full h-full bg-white card px-[50px] py-[25px]"
             >
               <h6 class="nav_items flex items-center mb-[20px]">
-                <button @click="authFlowCardNumber = 1, selectedProivder = null">
+                <button @click="authFlowCardNumber = 1, selectedProvider = null">
                   <vue-feather
                     type="chevron-left"
                     size=""
@@ -337,7 +325,7 @@ onUnmounted(() =>{
                 class="flex items-center justify-center h-[90%]"
               >
                 <h6 class="nav_items">
-                  Waiting on {{ selectedProivder }}...
+                  Waiting on {{ selectedProvider }}...
                 </h6>
               </div>
               <div v-else>
