@@ -61,7 +61,10 @@ const { screenWidth } = useScreenDimentions()
               :style="'top: calc(50% - 100px); right: calc(50% - 200px)'"
             />
           </div>
-          <div class="h-full flex items-center justify-between gap-[20px]">
+          <div
+            v-if="screenWidth >= 500"
+            class="h-full flex items-center justify-between gap-[20px]"
+          >
             <div class="screenshot_card h-full w-full">
               <DummyBreakdown
                 :title="'Available Balance'"

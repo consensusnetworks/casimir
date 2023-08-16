@@ -62,8 +62,8 @@ const { screenWidth } = useScreenDimentions()
         back to you as soon as possible. Thank you!
       </div>
 
-      <div class="flex items-start justify-around gap-[20px] text-left text-[14px] font-[400] text-grey_6 w-full">
-        <div class="min-w-[100px]">
+      <div class="flex flex-wrap items-start justify-around gap-[20px] text-left text-[14px] font-[400] text-grey_6 w-full">
+        <div class="min-w-[100px] mt-[20px]">
           <h6 class="font-[500] mb-[10px]">
             Product
           </h6>
@@ -89,7 +89,7 @@ const { screenWidth } = useScreenDimentions()
           </div>
         </div>
 
-        <div class="min-w-[100px]">
+        <div class="min-w-[100px] mt-[20px]">
           <h6 class="font-[500] mb-[10px]">
             About Us
           </h6>
@@ -112,7 +112,7 @@ const { screenWidth } = useScreenDimentions()
           </div>
         </div>
 
-        <div class="min-w-[100px]">
+        <div class="min-w-[100px] mt-[20px]">
           <h6 class="font-[500] mb-[10px]">
             Community
           </h6>
@@ -129,7 +129,7 @@ const { screenWidth } = useScreenDimentions()
           </div>
         </div>
 
-        <div class="min-w-[100px]">
+        <div class="min-w-[100px] mt-[20px]">
           <h6 class="font-[500] mb-[10px]">
             Resourses
           </h6>

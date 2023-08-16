@@ -36,7 +36,7 @@ const { roadmapItems, casimirRoadmapLocation } = useRoadmap()
           {{ item.title }}
         </h6>
         <p
-          class="text-[14px] font-[400] mb-[20px] max-w-[300px]"
+          class="text-[14px] font-[400] mb-[20px] w-[300px]"
           :class="item.step === casimirRoadmapLocation? 'text-blue_3' : 'text-grey_4'"
         >
           {{ item.description }}

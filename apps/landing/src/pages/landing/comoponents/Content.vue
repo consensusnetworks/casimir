@@ -1,10 +1,17 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import useScreenDimentions from '@/composables/screenDimenstions'
+
+const { screenWidth } = useScreenDimentions()
+</script>
 
 <template>
   <div class="w-full">
     <div class="flex items-center justify-center flex-wrap-reverse gap-[100px]">
       <div>
-        <div class="text-left">
+        <div
+          class="text-left"
+          :class="screenWidth <= 500? 'text-center px-[10%]' : 'text-left'"
+        >
           <span class="text-[14px] font-[600] text-primary">New</span>
           <h1 class="text-[36px] font-[600] leading-10 mb-[10px]">
             Decentralized <br>
@@ -26,7 +33,7 @@
         >
       </div>
     </div>
-    <div class="flex items-center justify-center flex-wrap gap-[100px]">
+    <div class="flex items-center justify-center flex-wrap gap-[100px] mt-[100px]">
       <div class="max-w-full w-[500px]">
         <img
           src="/future_casimir.svg"
@@ -34,7 +41,9 @@
         >
       </div>
       <div>
-        <div class="text-left">
+        <div 
+          :class="screenWidth <= 500? 'text-center px-[10%]' : 'text-left'"
+        >
           <span class="text-[14px] font-[600] text-primary">Future</span>
           <h1 class="text-[36px] font-[600] leading-10 mb-[10px]">
             Beyond Staking
@@ -56,11 +65,10 @@
         <img
           src="/minimal_trust.svg"
           alt="handshake image"
-          class="h-[70px] mb-[20px]"
+          class="h-[40px]"
         >
       </div>
-      <div class="w-full text-center">
-        <span class="text-[14px] font-[600] text-primary">Trustless</span>
+      <div class="w-full text-center mb-[20px]">
         <h1 class="text-[36px] font-[600] leading-10">
           Minimal Trust
         </h1>
