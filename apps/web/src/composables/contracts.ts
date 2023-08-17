@@ -47,7 +47,7 @@ export default function useContracts() {
     const { getCurrentPrice } = usePrice()
     const { getEthersTrezorSigner } = useTrezor()
     const { user } = useUsers()
-    const { getEthersWalletConnectSignerV2 } = useWalletConnectV2()
+    const { walletConnectSigner } = useWalletConnectV2()
 
     const stakeDepositedListener = async () => await refreshBreakdown()
     const stakeRebalancedListener = async () => await refreshBreakdown()
@@ -59,17 +59,15 @@ export default function useContracts() {
                 'Browser': getEthersBrowserSigner,
                 'Ledger': getEthersLedgerSigner,
                 'Trezor': getEthersTrezorSigner,
-                'WalletConnect': getEthersWalletConnectSignerV2
             }
-            console.log('amount :>> ', amount)
-            console.log('walletProvider :>> ', walletProvider)
-            console.log('signerCreators :>> ', signerCreators)
-            return 
             const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
-            let signer = signerCreator(walletProvider)
-            // if (isWalletConnectSigner(signer)) signer = await signer
-            signer = await signer
+            let signer
+            if (walletProvider === 'WalletConnect') {
+                signer = walletConnectSigner
+            } else {
+                signer = signerCreator(walletProvider)
+            }
             console.log('signer in deposit :>> ', signer)
             const managerSigner = manager.connect(signer as ethers.Signer)
             const fees = await getDepositFees()
@@ -385,13 +383,17 @@ export default function useContracts() {
             const signerCreators = {
                 'Browser': getEthersBrowserSigner,
                 'Ledger': getEthersLedgerSigner,
-                'Trezor': getEthersTrezorSigner,
-                'WalletConnect': getEthersWalletConnectSignerV2
+                'Trezor': getEthersTrezorSigner
             }
             const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
-            const signer = signerCreator(walletProvider)
-            // if (isWalletConnectSigner(signer)) signer = await signer
+            let signer
+            if (walletProvider === 'WalletConnect') {
+                signer = walletConnectSigner
+            } else {
+                signer = signerCreator(walletProvider)
+            }
+            console.log('signer in registerOperatorWithCasimir :>> ', signer)
             const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(value)})
             await result.wait()
             return true
@@ -446,12 +448,16 @@ export default function useContracts() {
             'Browser': getEthersBrowserSigner,
             'Ledger': getEthersLedgerSigner,
             'Trezor': getEthersTrezorSigner,
-            'WalletConnect': getEthersWalletConnectSignerV2
         }
         const signerType = ['MetaMask', 'CoinbaseWallet'].includes(walletProvider) ? 'Browser' : walletProvider
         const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
-        const signer = signerCreator(walletProvider)
-        // if (isWalletConnectSigner(signer)) signer = await signer
+        let signer
+            if (walletProvider === 'WalletConnect') {
+                signer = walletConnectSigner
+            } else {
+                signer = signerCreator(walletProvider)
+            }
+            console.log('signer in withdraw :>> ', signer)
         const managerSigner = manager.connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
         // const withdrawableBalance = await manager.getWithdrawableBalance()

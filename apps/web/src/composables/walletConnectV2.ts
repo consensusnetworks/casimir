@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import Client from '@walletconnect/sign-client'
 import { ethers, providers } from 'ethers'
 import { apiGetChainNamespace, ChainsMap } from 'caip-api'
@@ -17,11 +17,12 @@ const client = ref<Client | null>(null)
 let cleanupFunctions: Array<any> = [] // TODO: Potentially fix type here.
 const ethereumProvider = ref<UniversalProvider | null>(null)
 const hasCheckedPersistedSession = ref(false)
-const isInitializing = ref(false)
+const componentIsMounted = ref(false)
 const pairings = ref<PairingTypes.Struct[]>([])
 const session = ref<SessionTypes.Struct | null>(null)
-const walletConnectWeb3Provider = ref<Web3Provider | null>(null)
 const walletConnectAddresses = ref<CryptoAddress[]>([])
+const walletConnectWeb3Provider = ref<Web3Provider | null>(null)
+const walletConnectSigner = ref<ethers.Signer | null>(null)
 const web3Modal = ref<Web3Modal | null>(null)
 
 
@@ -91,9 +92,10 @@ export default function useWalletConnectV2() {
     }
   }
 
-  function getEthersWalletConnectSignerV2(): ethers.Signer | null {
-    return walletConnectWeb3Provider.value?.getSigner() || null
-  }
+  // function getEthersWalletConnectSignerV2(): ethers.Signer | null {
+  //   walletConnectSigner.value = walletConnectWeb3Provider.value?.getSigner()
+  //   return walletConnectWeb3Provider.value?.getSigner() || null
+  // }
 
   async function loginWithWalletConnectV2(loginCredentials: LoginCredentials) {
     const { provider, address, currency } = loginCredentials
@@ -118,6 +120,9 @@ export default function useWalletConnectV2() {
   })
 
   onMounted(async () => {
+    if (componentIsMounted.value) return
+    componentIsMounted.value = true
+
     // Load chain data
     await loadChainData()
   
@@ -139,6 +144,10 @@ export default function useWalletConnectV2() {
     }
   })
 
+  onUnmounted(() => {
+    componentIsMounted.value = false
+  })
+
   async function signWalletConnectMessage(message: string) : Promise<string>{
     try {
       const signer = walletConnectWeb3Provider.value?.getSigner()
@@ -152,9 +161,9 @@ export default function useWalletConnectV2() {
 
   return {
     walletConnectAddresses,
+    walletConnectSigner,
     walletConnectWeb3Provider,
     connectWalletConnectV2,
-    getEthersWalletConnectSignerV2,
     loginWithWalletConnectV2
   }
 }
@@ -179,8 +188,6 @@ async function _checkForPersistedSession() {
 }
 
 async function createClient() {
-  isInitializing.value = true
-
   if (!DEFAULT_PROJECT_ID) {
       console.log('There is no project ID set for WalletConnect')
       return
@@ -203,6 +210,7 @@ async function createClient() {
 
 function createWeb3Provider(provider: UniversalProvider) {
   walletConnectWeb3Provider.value = new providers.Web3Provider(provider)
+  walletConnectSigner.value = walletConnectWeb3Provider.value?.getSigner()
 }
 
 async function loadChainData() {
