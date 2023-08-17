@@ -141,9 +141,8 @@ export default function useWalletConnectV2() {
 
   async function signWalletConnectMessage(message: string) : Promise<string>{
     try {
-      const provider = new ethers.providers.Web3Provider(ethereumProvider.value as UniversalProvider)
-      const signer = provider.getSigner()
-      return await signer.signMessage(message)
+      const signer = walletConnectWeb3Provider.value?.getSigner()
+      return await signer?.signMessage(message) as string
     } catch(err) {
       console.error('error in signWalletConnectMessage :>> ', err)
       throw err
@@ -203,8 +202,7 @@ async function createClient() {
 }
 
 function createWeb3Provider(provider: UniversalProvider) {
-  const localWeb3Provider = new providers.Web3Provider(provider)
-  walletConnectWeb3Provider.value = localWeb3Provider
+  walletConnectWeb3Provider.value = new providers.Web3Provider(provider)
 }
 
 async function loadChainData() {
