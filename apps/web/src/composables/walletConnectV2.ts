@@ -7,7 +7,7 @@ import { CryptoAddress, LoginCredentials } from '@casimir/types'
 import { Web3Modal } from '@web3modal/standalone'
 import { Web3Provider } from '@ethersproject/providers'
 import UniversalProvider from '@walletconnect/universal-provider'
-import useAuth from './auth'
+import useAuth from '@/composables/auth'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
 const balances = ref<AccountBalances | null>(null)
@@ -100,7 +100,6 @@ export default function useWalletConnectV2() {
     try {
       const message = await createSiweMessage(address, 'Sign in with Ethereum to the Casimir.')
       const signedMessage = await signWalletConnectMessage(message)
-      console.log('signedMessage :>> ', signedMessage)
       await signInWithEthereum({
         address,
         currency: currency || 'ETH',
@@ -129,29 +128,22 @@ export default function useWalletConnectV2() {
   
     // Check for persisted sessions
     if (ethereumProvider.value && !hasCheckedPersistedSession.value) {
-      await _checkForPersistedSession(ethereumProvider.value as UniversalProvider)
+      await _checkForPersistedSession()
       hasCheckedPersistedSession.value = true
     }
   
+    // Subscribe to provider events
     if (ethereumProvider.value) {
       console.log('subscribing started')
-      _subscribeToProviderEvents(ethereumProvider.value as UniversalProvider)
+      _subscribeToProviderEvents()
     }
   })
 
   async function signWalletConnectMessage(message: string) : Promise<string>{
     try {
-      const provider = new ethers.providers.Web3Provider(walletConnectWeb3Provider.value as any)
+      const provider = new ethers.providers.Web3Provider(ethereumProvider.value as UniversalProvider)
       const signer = provider.getSigner()
-      console.log('provider in signWalletConnectMessage :>> ', provider)
-      console.log('signer in signWalletConnectMessage :>> ', signer)
-      console.log('typeof message in signWalletConnectMessage :>> ', typeof message)
-      console.log('checking session.value in signWalletConnectMessage :>> ', session.value)
-      // TODO: Try this with trust wallet as well
-      // TODO: Try this with Hardhat Localhost
-      const signature = await signer.signMessage(message)
-      console.log('signature in signWalletConnectMessage :>> ', signature)
-      return signature
+      return await signer.signMessage(message)
     } catch(err) {
       console.error('error in signWalletConnectMessage :>> ', err)
       throw err
@@ -168,8 +160,9 @@ export default function useWalletConnectV2() {
   }
 }
 
-async function _checkForPersistedSession(provider: UniversalProvider) {
-  if (typeof provider === 'undefined') {
+async function _checkForPersistedSession() {
+  const provider = ethereumProvider.value as UniversalProvider
+  if (!provider) {
     throw new Error('WalletConnect is not initialized')
   }
   const localPairings = provider.client.pairing.getAll({ active: true })
@@ -194,7 +187,7 @@ async function createClient() {
       return
   }
 
-  const provider = await UniversalProvider.init({
+  ethereumProvider.value = await UniversalProvider.init({
       projectId: DEFAULT_PROJECT_ID,
       logger: DEFAULT_LOGGER,
       relayUrl: DEFAULT_RELAY_URL,
@@ -205,8 +198,7 @@ async function createClient() {
       walletConnectVersion: 2,
   })
 
-  ethereumProvider.value = provider as UniversalProvider
-  client.value = provider.client
+  client.value = ethereumProvider.value.client
   web3Modal.value = localWeb3Modal
 }
 
@@ -279,7 +271,8 @@ function resetApp() {
   walletConnectWeb3Provider.value = null
 }
 
-function _subscribeToProviderEvents(provider: UniversalProvider) {
+function _subscribeToProviderEvents() {
+  const provider = ethereumProvider.value as UniversalProvider
   // Event handler for display_uri
   const handleDisplayUri = (uri: string) => {
     console.log('DISPLAY URI EVENT', 'QR Code Modal open')
@@ -332,18 +325,18 @@ const DEFAULT_LOGGER = 'warn'
 const DEFAULT_MAIN_CHAINS = [
   // mainnets
   'eip155:1',
-  'eip155:10',
-  'eip155:100',
-  'eip155:137',
-  'eip155:42161',
-  'eip155:42220',
+  // 'eip155:10',
+  // 'eip155:100',
+  // 'eip155:137',
+  // 'eip155:42161',
+  // 'eip155:42220',
 ]
 const DEFAULT_TEST_CHAINS = [
   // testnets
   'eip155:5',
-  'eip155:69',
-  'eip155:80001',
-  'eip155:421611',
-  'eip155:44787',
+  // 'eip155:69',
+  // 'eip155:80001',
+  // 'eip155:421611',
+  // 'eip155:44787',
 ] 
 const DEFAULT_CHAINS = [...DEFAULT_MAIN_CHAINS, ...DEFAULT_TEST_CHAINS]
