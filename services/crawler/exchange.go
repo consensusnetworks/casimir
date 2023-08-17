@@ -272,8 +272,6 @@ func (c ChainType) Short() string {
 	switch c {
 	case Ethereum:
 		return "ETH"
-	case Bitcoin:
-		return "BTC"
 	default:
 		return ""
 	}

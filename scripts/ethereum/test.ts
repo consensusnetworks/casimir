@@ -17,11 +17,9 @@ void async function () {
     }
 
     process.env.FORK = process.env.FORK || 'testnet'
-    process.env.BIP39_SEED = process.env.USE_SECRETS !== 'false' ? process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') : process.env.BIP39_SEED || 'test test test test test test test test test test test junk'
+    process.env.BIP39_SEED = process.env.USE_SECRETS !== 'false' ? process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') : process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
 
     console.log(`Your mnemonic is ${process.env.BIP39_SEED}`)
-
-    process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
 
     process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_FORK_URL[process.env.FORK.toUpperCase()]
     if (!process.env.ETHEREUM_FORK_RPC_URL) {
@@ -31,9 +29,6 @@ void async function () {
     console.log(`Using ${process.env.FORK} fork from ${process.env.ETHEREUM_FORK_RPC_URL}`)
 
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
-    process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 5}`
-    console.log(`📍 Forking started at ${process.env.ETHEREUM_FORK_BLOCK}`)
-
     const wallet = getWallet(process.env.BIP39_SEED)
     
     // Account for the mock oracle contract deployment

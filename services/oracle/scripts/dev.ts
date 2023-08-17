@@ -11,7 +11,7 @@ void async function () {
     process.env.MESSENGER_SRV_ADDR = process.env.MESSENGER_URL
     process.env.USE_HARDCODED_OPERATORS = 'false'
 
-    process.env.BIP39_SEED = process.env.BIP39_SEED || 'test test test test test test test test test test test junk'
+    process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
     process.env.BIP39_PATH_INDEX = process.env.BIP39_PATH_INDEX || '6'
     if (!process.env.MANAGER_ADDRESS) throw new Error('Manager address not found')
     if (!process.env.VIEWS_ADDRESS) throw new Error('Views address not found')

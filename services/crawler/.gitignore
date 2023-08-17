@@ -5,3 +5,4 @@ log.txt
 .env
 build
 data
+logs.ndjson
