@@ -1,11 +1,18 @@
-import { createWebHistory, createRouter, RouterOptions } from 'vue-router'
+import Landing from '@/pages/landing/Landing.vue'
+import { createWebHistory, createRouter } from 'vue-router'
 
 const routes = [ 
-    // No routes for landing anymore, will add more when needed in the future
-] as RouterOptions['routes']
+    { 
+        path: '/', 
+        name: Landing,
+        component: Landing,
+    },
+]
 
 const router = createRouter({
     history: createWebHistory(),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     routes
 })
 
