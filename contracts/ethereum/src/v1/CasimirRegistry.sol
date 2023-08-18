@@ -106,6 +106,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
 
         operator.collateral += msg.value;
         operator.active = true;
+
+        emit CollateralDeposited(operatorId, msg.value);
     }
 
     /**
@@ -129,6 +131,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
 
         operator.collateral -= amount;
         operatorOwner.send(amount);
+
+        emit WithdrawalFulfilled(operatorId, amount);
     }
 
     /**
@@ -151,6 +155,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
             operator.resharing = true;
             manager.requestReshares(operatorId);
         }
+
+        emit DeregistrationRequested(operatorId);
     }
 
     /**
@@ -171,6 +177,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
 
         operatorPools[operatorId][poolId] = true;
         operator.poolCount += 1;
+
+        emit OperatorPoolAdded(operatorId, poolId);
     }
 
     /**
@@ -200,6 +208,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
             operator.collateral -= blameAmount;
             manager.depositRecoveredBalance{value: blameAmount}(poolId);
         }
+
+        emit OperatorPoolRemoved(operatorId, poolId, blameAmount);
     }
 
     /**

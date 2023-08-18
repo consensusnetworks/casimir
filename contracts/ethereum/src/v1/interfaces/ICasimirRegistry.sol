@@ -21,9 +21,13 @@ interface ICasimirRegistry {
     /* Events */
     /**********/
 
-    event OperatorRegistered(uint64 indexed operatorId);
+    event CollateralDeposited(uint64 indexed operatorId, uint256 amount);
     event DeregistrationRequested(uint64 indexed operatorId);
     event DeregistrationCompleted(uint64 indexed operatorId);
+    event OperatorPoolAdded(uint64 indexed operatorId, uint32 poolId);
+    event OperatorPoolRemoved(uint64 operatorId, uint32 poolId, uint256 blameAmount);
+    event OperatorRegistered(uint64 indexed operatorId);
+    event WithdrawalFulfilled(uint64 indexed operatorId, uint256 amount);
 
     /*************/
     /* Mutations */

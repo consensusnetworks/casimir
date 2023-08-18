@@ -315,6 +315,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         exitedBalance += balance;
         finalizableExitedBalance += balance;
         finalizableCompletedExits++;
+
+        emit ExitedBalanceDeposited(poolId, msg.value);
     }
 
     /**
@@ -326,6 +328,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     ) external payable onlyRegistry {
         recoveredBalances[poolId] += msg.value;
         finalizableRecoveredBalance += msg.value;
+
+        emit RecoveredBalanceDeposited(poolId, msg.value);
     }
 
     /**
@@ -348,6 +352,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
         ssvToken.approve(address(ssvNetwork), ssvAmount);
         ssvNetwork.deposit(address(this), operatorIds, ssvAmount, cluster);
+
+        emit ClusterBalanceDeposited(ssvAmount);
     }
 
     /**
@@ -387,6 +393,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         if (upkeepId == 0) {
             revert("Upkeep not registered");
         }
+
+        emit UpkeepBalanceDeposited(linkAmount);
     }
 
     /**
@@ -394,6 +402,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function depositReservedFees() external payable {
         reservedFeeBalance += msg.value;
+
+        emit ReservedFeesDeposited(msg.value);
     }
 
     /**
@@ -405,6 +415,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         reservedFeeBalance -= amount;
         owner().send(amount);
+
+        emit ReservedFeesWithdrawn(amount);
     }
 
     /**
@@ -587,6 +599,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             prepoolBalance -= remainder;
         }
         sender.send(amount);
+
+        emit WithdrawalFulfilled(sender, amount);
     }
 
     /**
@@ -711,6 +725,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             ssvAmount,
             cluster
         );
+
+        emit PoolRegistered(poolId);
     }
 
     /**
@@ -801,6 +817,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             }
             pool.setStatus(ICasimirPool.PoolStatus.EXITING_FORCED);
         }
+
+        emit ForcedExitsReported(poolIds);
     }
 
     /**
@@ -992,6 +1010,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function withdrawUpkeepBalance() external onlyOracle {
         linkRegistry.cancelUpkeep(upkeepId);
+
+        emit UpkeepBalanceWithdrawn();
     }
 
     /**
@@ -1000,6 +1020,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function withdrawLINKBalance(uint256 amount) external onlyOwner {
         linkToken.transfer(owner(), amount);
+
+        emit LINKBalanceWithdrawn(amount);
     }
 
     /**
@@ -1008,6 +1030,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function withdrawSSVBalance(uint256 amount) external onlyOwner {
         ssvToken.transfer(owner(), amount);
+
+        emit SSVBalanceWithdrawn(amount);
     }
 
     /**
@@ -1016,6 +1040,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function setFunctionsAddress(address functionsAddress) external onlyOwner {
         upkeep.setOracleAddress(functionsAddress);
+
+        emit FunctionsAddressSet(functionsAddress);
     }
 
     /**

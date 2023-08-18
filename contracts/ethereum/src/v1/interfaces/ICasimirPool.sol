@@ -14,6 +14,14 @@ interface ICasimirPool {
         WITHDRAWN
     }
 
+    /**********/
+    /* Events */
+    /**********/
+
+    event OperatorIdsSet(uint64[] operatorIds);
+    event ResharesSet(uint256 reshares);
+    event StatusSet(PoolStatus status);
+
     /***********/
     /* Structs */
     /***********/

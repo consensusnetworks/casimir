@@ -100,6 +100,8 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
      */
     function setOperatorIds(uint64[] memory _operatorIds) external onlyOwner {
         operatorIds = _operatorIds;
+
+        emit OperatorIdsSet(_operatorIds);
     }
 
     /**
@@ -108,6 +110,8 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
      */
     function setReshares(uint256 _reshares) external onlyOwner {
         reshares = _reshares;
+
+        emit ResharesSet(_reshares);
     }
 
     /**
@@ -115,7 +119,9 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
      * @param _status The pool status
      */
     function setStatus(PoolStatus _status) external onlyOwner {
-        status = _status;        
+        status = _status;   
+
+        emit StatusSet(_status);     
     }
 
     /**

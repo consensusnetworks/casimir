@@ -35,20 +35,33 @@ interface ICasimirManager {
     /* Events */
     /**********/
 
+    event ClusterBalanceDeposited(uint256 amount);
     event DepositRequested(uint32 indexed poolId);
     event DepositInitiated(uint32 indexed poolId);
     event DepositActivated(uint32 indexed poolId);
+    event ForcedExitsReported(uint32[] poolIds);
+    event FunctionsAddressSet(address functionsAddress);
+    event LINKBalanceWithdrawn(uint256 amount);
     event ResharesRequested(uint64 indexed operatorId);
     event ReshareCompleted(uint32 indexed poolId);
+    event ExitedBalanceDeposited(uint32 indexed poolId, uint256 amount);
     event ExitRequested(uint32 indexed poolId);
     event ForcedExitReportsRequested(uint256 count);
     event SlashedExitReportsRequested(uint256 count);
     event CompletedExitReportsRequested(uint256 count);
     event ExitCompleted(uint32 indexed poolId);
+    event PoolRegistered(uint32 poolId);
     event StakeDeposited(address indexed sender, uint256 amount);
     event StakeRebalanced(uint256 amount);
+    event RecoveredBalanceDeposited(uint32 indexed poolId, uint256 amount);
+    event ReservedFeesDeposited(uint256 amount);
+    event ReservedFeesWithdrawn(uint256 amount);
     event RewardsDeposited(uint256 amount);
+    event SSVBalanceWithdrawn(uint256 amount);
     event TipsDeposited(uint256 amount);
+    event UpkeepBalanceDeposited(uint256 amount);
+    event UpkeepBalanceWithdrawn();
+    event WithdrawalFulfilled(address indexed sender, uint256 amount);
     event WithdrawalRequested(address indexed sender, uint256 amount);
     event WithdrawalInitiated(address indexed sender, uint256 amount);
 

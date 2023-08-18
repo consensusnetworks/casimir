@@ -24,6 +24,8 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
     /**********/
     
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
+    event OracleAddressSet(address oracleAddress);
+    event RequestSet();
     event UpkeepPerformed(ReportStatus indexed status);
 
     /*************/

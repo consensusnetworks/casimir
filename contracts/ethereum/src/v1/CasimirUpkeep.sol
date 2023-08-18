@@ -129,6 +129,8 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         fulfillGasLimit = _fulfillGasLimit;
         linkSubscriptionId = _linkSubscriptionId;
         requestCBOR = _requestCBOR;
+
+        emit RequestSet();
     }
 
     /**
@@ -264,6 +266,8 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
      */
     function setOracleAddress(address newOracleAddress) external onlyOwner {
         setOracle(newOracleAddress);
+
+        emit OracleAddressSet(newOracleAddress);
     }
 
     // Dev-only functions
