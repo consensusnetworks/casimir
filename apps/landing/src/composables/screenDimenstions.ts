@@ -1,6 +1,5 @@
 import { onMounted, onUnmounted, readonly, ref } from 'vue'
 
-
 const initializeComposable = ref(false)
 
 const screenWidth = ref(0)
@@ -13,9 +12,8 @@ export default function useScreenDimentions() {
             screenWidth.value = window.innerWidth
             screenHeight.value = window.innerHeight 
         } catch (error) {
-            console.log('Listening to screen dimenstions error', error)
+            console.log('Listening to screen dimentions error', error)
         }
-        
     }
       
     onMounted(() => {

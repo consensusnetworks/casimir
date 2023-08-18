@@ -20,7 +20,7 @@ const roadmapItems = ref([
     {
         step: 2,
         title: 'Goerli Launch',
-        description: 'Launch publicly for Goerli Testnet.'
+        description: 'Launch publicly for Goerli Testnet. Coming Soon!!'
      },
     {
         step: 3,

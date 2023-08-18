@@ -11,7 +11,7 @@ const { screenWidth } = useScreenDimentions()
     <img
       src="/casimir.svg"
       alt="Casimir Logo"
-      class="w-[21px] mr-[100px]"
+      class="w-[21px] "
     >
 
     <router-link
@@ -19,24 +19,8 @@ const { screenWidth } = useScreenDimentions()
       class="nav_items"
       :class="router.currentRoute.value.fullPath === '/'? 'nav_items_active' : ''"
     >
-      <span 
-        v-show="screenWidth >= 400"
-      >
-        Casimir
-      </span> 
       Landing
     </router-link>
-    <a
-      href="https://app.dev.casimir.co/"
-      class="rounded-[3px] bg-white text-black text-[13px] 
-      font-[400] px-[20px] py-[6px] flex items-center gap-[5px]"
-    >
-      Launch App
-      <vue-feather
-        type="arrow-up-right"
-        class="icon h-[14px]"
-      />
-    </a>
   </div>
 </template>
 

@@ -54,7 +54,7 @@ const { screenWidth } = useScreenDimentions()
       :class="screenWidth < 800? 'flex-wrap' : ''"
     >
       <div
-        class=" text-left text-[14px] font-[400] text-grey_6"
+        class=" text-left text-[14px] font-[400] text-grey_6 mt-[20px]"
         :class="screenWidth < 800? 'w-full' : 'max-w-[250px]'"
       >
         Join our community, as we strive for greatness. 

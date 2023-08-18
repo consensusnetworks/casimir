@@ -11,10 +11,10 @@ const showMore = ref(false)
 <template>
   <div class="my-[60px]">
     <div class="text-center my-[60px]">
-      <h1 class="text-[36px] font-[600] mt-[20px]">
+      <h1 class="text-[36px] font-[600] mt-[20px] tracking-tight">
         Frequently Asked Questions
       </h1>
-      <p class="text-[16px] font-[400] text-grey_4">
+      <p class="text-[16px] font-[400] text-grey_4 tracking-tight">
         Everything you need to know, in one place!
       </p>
     </div>

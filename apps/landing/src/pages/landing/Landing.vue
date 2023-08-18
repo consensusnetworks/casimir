@@ -13,7 +13,7 @@ const { screenWidth } = useScreenDimentions()
 </script>
 
 <template>
-  <div class=" text-center pt-[110px] pb-[40px]">
+  <div class=" text-center pt-[40px] pb-[40px]">
     <!-- Page Header -->
     <h1 class="page_header">
       Ethereum Staking
@@ -22,9 +22,24 @@ const { screenWidth } = useScreenDimentions()
       Made Simple
     </h1>
 
-    <h2 class="page_subheader my-[40px]">
-      Managed Ethereum Nodes Ready For Staking
+    <h2 class="page_subheader my-[20px]">
+      A simple, self-custody staking platform
     </h2>
+
+    <div class="flex justify-center mb-[40px]">
+      <a
+        href="https://app.dev.casimir.co/"
+        class="rounded-[3px] bg-white text-black text-[13px] 
+        font-[400] px-[20px] py-[6px] flex items-center gap-[5px] w-min whitespace-nowrap"
+        style="box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);"
+      >
+        Launch App
+        <vue-feather
+          type="arrow-up-right"
+          class="icon h-[14px]"
+        />
+      </a>
+    </div>
 
     <!-- Screenshots -->
     <div
@@ -50,16 +65,6 @@ const { screenWidth } = useScreenDimentions()
               class="absolute top-[50% - 50px] h-[200px] z-[2]"
               :style="'top: calc(50% - 100px); left: calc(50% - 100px)'"
             >
-            <div 
-              class="absolute top-[50% - 50px] h-[200px] w-[200px]
-               bg-black/[0.6] rounded-[999px] opacity-75 blur-[25px] z-[1]"
-              :style="'top: calc(50% - 100px); left: calc(50% - 200px)'"
-            />
-            <div 
-              class="absolute top-[50% - 50px] h-[200px] w-[200px]
-               bg-primary/[0.6] rounded-[999px] blur-[25px] z-[1]"
-              :style="'top: calc(50% - 100px); right: calc(50% - 200px)'"
-            />
           </div>
           <div
             v-if="screenWidth >= 500"
@@ -78,10 +83,6 @@ const { screenWidth } = useScreenDimentions()
                   class="h-full absolute top-0 z-[1]"
                   :style="'left: calc(50% - 40px)'"
                 >
-                <div 
-                  class="h-[100px] w-[100px] absolute top-[-10px] bg-primary/[0.25] z-[2] rounded-[999px] blur"
-                  :style="'left: calc(50% - 50px)'"
-                />
               </div>
             </div>
             <div class="w-full h-full flex flex-col gap-[20px]">
@@ -115,7 +116,7 @@ const { screenWidth } = useScreenDimentions()
     <Features class="my-[15px] w-full" />  
     
     <!-- Litepaper Content -->
-    <Content class="my-[275px] w-full" />
+    <Content class="mt-[250px] w-full" />
 
     <!-- Roadmap -->
     <Roadmap class="mb-[150px] w-full" />
@@ -143,7 +144,7 @@ const { screenWidth } = useScreenDimentions()
     color: #FFF;
     text-align: center;
     font-family: IBM Plex Sans;
-    font-size: 65px;
+    font-size: 84px;
     font-style: normal;
     font-weight: 500;
     line-height: 77px;
@@ -153,7 +154,7 @@ const { screenWidth } = useScreenDimentions()
     color: #CECECE;
     text-align: center;
     font-family: IBM Plex Sans;
-    font-size: 20px;
+    font-size: 18px;
     font-style: normal;
     font-weight: 400;
     line-height: 20px;
