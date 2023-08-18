@@ -62,7 +62,7 @@ export default function useWalletConnectV2() {
               ],
               chains: [`eip155:${chainId}`],
               events: ['chainChanged', 'accountsChanged'],
-              rpcMap: { chainId: `https://rpc.walletconnect.com?chainId=eip155:${chainId}&projectId=${DEFAULT_PROJECT_ID}`,},
+              rpcMap: { chainId: `https://rpc.walletconnect.com?chainId=eip155:${chainId}&projectId=${WALLET_CONNECT_PROJECT_ID}`,},
             },
           },
           pairingTopic: pairing?.topic,
@@ -188,19 +188,19 @@ async function _checkForPersistedSession() {
 }
 
 async function createClient() {
-  if (!DEFAULT_PROJECT_ID) {
+  if (!WALLET_CONNECT_PROJECT_ID) {
       console.log('There is no project ID set for WalletConnect')
       return
   }
 
   ethereumProvider.value = await UniversalProvider.init({
-      projectId: DEFAULT_PROJECT_ID,
+      projectId: WALLET_CONNECT_PROJECT_ID,
       logger: DEFAULT_LOGGER,
       relayUrl: DEFAULT_RELAY_URL,
   })
 
   const localWeb3Modal = new Web3Modal({
-      projectId: DEFAULT_PROJECT_ID,
+      projectId: WALLET_CONNECT_PROJECT_ID,
       walletConnectVersion: 2,
   })
 
@@ -325,7 +325,7 @@ function _subscribeToProviderEvents() {
   cleanupFunctions.push(() => provider.off('session_delete', handleSessionDelete))
 }
 
-const DEFAULT_PROJECT_ID = '8e6877b49198d7a9f9561b8712805726'
+const WALLET_CONNECT_PROJECT_ID = '8e6877b49198d7a9f9561b8712805726'
 const DEFAULT_RELAY_URL = 'wss://relay.walletconnect.com'
 const DEFAULT_LOGGER = 'warn'
 const DEFAULT_MAIN_CHAINS = [
