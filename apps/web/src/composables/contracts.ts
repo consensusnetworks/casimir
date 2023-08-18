@@ -64,11 +64,10 @@ export default function useContracts() {
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer
             if (walletProvider === 'WalletConnect') {
-                signer = walletConnectSigner
+                signer = walletConnectSigner.value
             } else {
                 signer = signerCreator(walletProvider)
             }
-            console.log('signer in deposit :>> ', signer)
             const managerSigner = manager.connect(signer as ethers.Signer)
             const fees = await getDepositFees()
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
@@ -389,11 +388,10 @@ export default function useContracts() {
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer
             if (walletProvider === 'WalletConnect') {
-                signer = walletConnectSigner
+                signer = walletConnectSigner.value
             } else {
                 signer = signerCreator(walletProvider)
             }
-            console.log('signer in registerOperatorWithCasimir :>> ', signer)
             const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(value)})
             await result.wait()
             return true
@@ -453,11 +451,10 @@ export default function useContracts() {
         const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
         let signer
             if (walletProvider === 'WalletConnect') {
-                signer = walletConnectSigner
+                signer = walletConnectSigner.value
             } else {
                 signer = signerCreator(walletProvider)
             }
-            console.log('signer in withdraw :>> ', signer)
         const managerSigner = manager.connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
         // const withdrawableBalance = await manager.getWithdrawableBalance()

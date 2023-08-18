@@ -8,8 +8,10 @@ import { Web3Modal } from '@web3modal/standalone'
 import { Web3Provider } from '@ethersproject/providers'
 import UniversalProvider from '@walletconnect/universal-provider'
 import useAuth from '@/composables/auth'
+import useEthers from '@/composables/ethers'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
+const { getEthersBalance } = useEthers()
 const balances = ref<AccountBalances | null>(null)
 const chain = ref<string>('')
 const chainData = ref<ChainNamespaces | null>(null)
@@ -71,13 +73,13 @@ export default function useWalletConnectV2() {
         createWeb3Provider(ethereumProvider.value as UniversalProvider)
         const _accounts = await ethereumProvider.value.enable()
         console.log('_accounts', _accounts)
-        walletConnectAddresses.value = _accounts.map(address => {
-          // TODO: Replace balance placeholder with actual balance in BOTH PLACES.
+        const promises = _accounts.map(async address => {
           return {
             address,
-            balance: '40'
+            balance: (await getEthersBalance(address)).toString() as string
           }
         })
+        walletConnectAddresses.value = await Promise.all(promises) as CryptoAddress[]
         if (!_session) {
           console.error('Failed to establish a session.')
           return  // or throw an error if that's more appropriate
@@ -177,7 +179,7 @@ async function _checkForPersistedSession() {
   pairings.value = localPairings
   console.log('RESTORED PAIRINGS: ', localPairings)
 
-  if (typeof session.value !== 'undefined') return
+  // if (typeof session.value !== 'undefined') return
 
   if (provider.session) {
     const _session = provider.session
@@ -252,20 +254,21 @@ async function onSessionConnected(_session: SessionTypes.Struct) {
   const allNamespaceAccounts = Object.values(_session.namespaces)
     .map(namespace => namespace.accounts)
     .flat()
-  const allNamespaceChains = Object.keys(_session.namespaces)
 
   const chainData = allNamespaceAccounts[0].split(':')
   const caipChainId = `${chainData[0]}:${chainData[1]}`
   chain.value = caipChainId
   session.value = _session
-  // TODO: Replace balance placeholder with actual balance in BOTH PLACES.
-  walletConnectAddresses.value = allNamespaceAccounts.map(account => {
+  const promises = allNamespaceAccounts.map(async account => {
+    const address = account.split(':')[2]
     return {
-      address: account.split(':')[2],
-      balance: '40'
+      address,
+      balance: (await getEthersBalance(address)).toString() as string
     }
   })
+  walletConnectAddresses.value = await Promise.all(promises) as CryptoAddress[]
   createWeb3Provider(ethereumProvider.value as UniversalProvider)
+  console.log('walletConnectSigner.value :>> ', walletConnectSigner.value)
 }
 
 function resetApp() {
