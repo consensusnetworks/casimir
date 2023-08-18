@@ -13,7 +13,7 @@ interface ICasimirRegistry {
         uint64 id;
         bool active;
         bool resharing;
-        int256 collateral;
+        uint256 collateral;
         uint256 poolCount;
     }
 
