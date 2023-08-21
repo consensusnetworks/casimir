@@ -50,8 +50,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint256 private constant compoundMinimum = 100000000 gwei;
     /** Minimum balance for upkeep registration (0.1 LINK) */
     uint256 upkeepRegistrationMinimum = 100000000 gwei;
-    /** Stake minimum (0.0001 ETH) */
-    uint256 private constant stakeMinimum = 100000000000000;
     /** Scale factor for each rewards to stake ratio */
     uint256 private constant scaleFactor = 1 ether;
     /** Uniswap 0.3% fee tier */
@@ -263,9 +261,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Deposit user stake
      */
     function depositStake() external payable nonReentrant {
-        require(msg.value >= stakeMinimum, "Stake less than minimum");
-
         setActionCount(msg.sender);
+
         User storage user = users[msg.sender];
         uint256 depositAfterFees = subtractFees(msg.value);
         reservedFeeBalance += msg.value - depositAfterFees;
@@ -523,8 +520,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function requestWithdrawal(
         uint256 amount
     ) external nonReentrant {
-        require(amount > stakeMinimum, "Withdrawing less than minimum");
         setActionCount(msg.sender);
+
         User storage user = users[msg.sender];
         user.stake0 = getUserStake(msg.sender);
         require(user.stake0 >= amount, "Withdrawing more than user stake");
