@@ -80,9 +80,11 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
             msg.sender == operatorOwner,
             "Only operator owner can register"
         );
+        require(operatorId != 0, "Invalid operator ID");
+        Operator storage operator = operators[operatorId];
+        require(operator.id == 0, "Operator already registered");
 
         operatorIds.push(operatorId);
-        Operator storage operator = operators[operatorId];
         operator.id = operatorId;
         operator.active = true;
         operator.collateral = msg.value;
@@ -136,10 +138,10 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     }
 
     /**
-     * @notice Request deregistration for an operator
+     * @notice Request to deactivate an operator
      * @param operatorId The operator ID
      */
-    function requestDeregistration(uint64 operatorId) external {
+    function requestDeactivation(uint64 operatorId) external {
         Operator storage operator = operators[operatorId];
         (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(operatorId);
         require(
@@ -156,7 +158,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
             manager.requestReshares(operatorId);
         }
 
-        emit DeregistrationRequested(operatorId);
+        emit DeactivationRequested(operatorId);
     }
 
     /**
