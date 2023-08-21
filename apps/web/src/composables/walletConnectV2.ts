@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Client from '@walletconnect/sign-client'
 import { ethers, providers } from 'ethers'
 import { apiGetChainNamespace, ChainsMap } from 'caip-api'
@@ -119,6 +119,7 @@ export default function useWalletConnectV2() {
   onBeforeUnmount(() => {
     cleanupFunctions.forEach((cleanup) => cleanup())
     cleanupFunctions = [] // Reset the array
+    componentIsMounted.value = false
   })
 
   onMounted(async () => {
@@ -144,10 +145,6 @@ export default function useWalletConnectV2() {
       console.log('subscribing started')
       _subscribeToProviderEvents()
     }
-  })
-
-  onUnmounted(() => {
-    componentIsMounted.value = false
   })
 
   async function signWalletConnectMessage(message: string) : Promise<string>{
