@@ -1,7 +1,7 @@
 import { ref, readonly } from 'vue'
 import { Account, AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccountsAndOperators, ApiResponse, UserAnalyticsData } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
-import useEthers from './ethers'
+import useEthers from '@/composables/ethers'
 import * as Session from 'supertokens-web-js/recipe/session'
 import useTxData from '../mockData/mock_transaction_data'
 

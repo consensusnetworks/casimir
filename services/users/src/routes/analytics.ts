@@ -15,7 +15,8 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
         const user = await getUserById(userId)
         const { accounts } = user
         const addresses = accounts.map((account) => account.address)
-        const database = 'casimir_analytics_action_table_dev1'
+        const database = 'casimir_analytics_database_dev'
+        const athenaTable = 'casimir_analytics_action_table_dev1'
         const opt = {
             profile: process.env.AWS_PROFILE as string,
             database,
@@ -25,7 +26,7 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
             backoff: 1000,
             region: 'us-east-2',
         }
-        /**
+        /** 
          * Can query the following properties:
          * wallet_address
          * wallet_balance
@@ -37,17 +38,12 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
          * gas_fee
          */
         const stmt = `
-            SELECT * FROM casimir_analytics_database_dev.${database}
-            WHERE wallet_address IN (${addresses.map((address) => `'${address}'`).join(',')})
+            SELECT * FROM ${database}.${athenaTable}
+            WHERE address IN (${addresses.map((address) => `'${address}'`).join(',')})
             ORDER BY received_at DESC
             LIMIT 100
         `
-        // const stmt = `
-        //     SELECT * FROM casimir_analytics_database_dev.casimir_analytics_wallet_table_dev1
-        //     ORDER BY received_at DESC
-        //     LIMIT 50
-        // `
-        const { rows } = await query(stmt, opt)
+        const { rows } = query(stmt, opt)
         const data = formatResult(rows)
         res.status(200).json({
             error: false,
