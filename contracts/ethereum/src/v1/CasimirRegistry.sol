@@ -23,7 +23,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     /*************/
 
     /** Required collateral per operator per pool */
-    uint256 private requiredCollateral = 1 ether;
+    uint256 private constant requiredCollateral = 1 ether;
 
     /*************/
     /* Immutable */

@@ -17,7 +17,7 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     /*************/
 
     /** Pool capacity */
-    uint256 poolCapacity = 32 ether;
+    uint256 private constant poolCapacity = 32 ether;
 
     /*************/
     /* Immutable */

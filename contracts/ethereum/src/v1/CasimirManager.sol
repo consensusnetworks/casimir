@@ -49,7 +49,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Compound minimum (0.1 ETH) */
     uint256 private constant compoundMinimum = 100000000 gwei;
     /** Minimum balance for upkeep registration (0.1 LINK) */
-    uint256 upkeepRegistrationMinimum = 100000000 gwei;
+    uint256 private constant upkeepRegistrationMinimum = 100000000 gwei;
     /** Scale factor for each rewards to stake ratio */
     uint256 private constant scaleFactor = 1 ether;
     /** Uniswap 0.3% fee tier */
@@ -89,7 +89,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /*********/
 
     /** Total fee percentage */
-    uint32 public feePercent = 5;
+    uint32 public constant feePercent = 5;
     /** Last pool ID created */
     uint32 private lastPoolId;
     /** Current report period */
