@@ -298,9 +298,10 @@ async function submitRegisterOperatorForm() {
               <input
                 id="walletAddress"
                 v-model="selectedWallet.address"
+                readonly
                 type="text"
                 placeholder="Wallet Address.."
-                class=" outline-none text-grey_4 text-[12px] w-full"
+                class="outline-none text-grey_4 text-[12px] w-full cursor-pointer"
                 @focus="openSelectWalletOptions = true"
                 @blur="onSelectWalletBlur"
               >
