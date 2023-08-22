@@ -4,6 +4,7 @@ pragma solidity 0.8.18;
 import './interfaces/ICasimirViews.sol';
 import './interfaces/ICasimirManager.sol';
 import './interfaces/ICasimirRegistry.sol';
+import './interfaces/ICasimirPool.sol';
 
 import 'hardhat/console.sol';
 
@@ -147,7 +148,8 @@ contract CasimirViews is ICasimirViews {
             }
             address poolAddress = manager.getPoolAddress(poolId);
             ICasimirPool pool = ICasimirPool(poolAddress);
-            validatorPublicKeys[count] = pool.publicKey();
+            ICasimirPool.PoolDetails memory details = pool.getDetails();
+            validatorPublicKeys[count] = details.publicKey;
             console.log('validatorPublicKeys[count]');
             console.logBytes(validatorPublicKeys[count]);
             count++;

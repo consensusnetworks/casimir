@@ -753,11 +753,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         while (count > 0) {
             uint32 poolId = stakedPoolIds[index];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-
-            ICasimirPool.PoolStatus poolStatus = pool.status();
+            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
             if (
-                poolStatus == ICasimirPool.PoolStatus.PENDING ||
-                poolStatus == ICasimirPool.PoolStatus.ACTIVE
+                poolDetails.status == ICasimirPool.PoolStatus.PENDING ||
+                poolDetails.status == ICasimirPool.PoolStatus.ACTIVE
             ) {
                 count--;
                 index++;
@@ -802,14 +801,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < poolIds.length; i++) {
             uint32 poolId = poolIds[i];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            ICasimirPool.PoolStatus poolStatus = pool.status();
+            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
             require(
-                poolStatus != ICasimirPool.PoolStatus.EXITING_FORCED,
+                poolDetails.status != ICasimirPool.PoolStatus.EXITING_FORCED,
                 "Forced exit already reported"
             );
 
             forcedExits++;
-            if (poolStatus == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
+            if (poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
                 requestedExits--;
             }
             pool.setStatus(ICasimirPool.PoolStatus.EXITING_FORCED);

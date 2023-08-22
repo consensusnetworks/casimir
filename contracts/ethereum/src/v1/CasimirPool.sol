@@ -33,15 +33,15 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     /*********/
 
     /** Pool ID */
-    uint32 public id;
+    uint32 private id;
     /** Validator public key */
-    bytes public publicKey;
+    bytes private publicKey;
     /** Operator IDs */
     uint64[] private operatorIds;
     /** Reshares */
-    uint256 public reshares;
+    uint256 private reshares;
     /** Status */
-    PoolStatus public status;
+    PoolStatus private status;
 
     /**
      * @notice Constructor
@@ -106,22 +106,22 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
 
     /**
      * @notice Set the reshare count
-     * @param _reshares The reshare count
+     * @param newReshares The new reshare count
      */
-    function setReshares(uint256 _reshares) external onlyOwner {
-        reshares = _reshares;
+    function setReshares(uint256 newReshares) external onlyOwner {
+        reshares = newReshares;
 
-        emit ResharesSet(_reshares);
+        emit ResharesSet(newReshares);
     }
 
     /**
      * @notice Set the pool status
-     * @param _status The pool status
+     * @param newStatus The new pool status
      */
-    function setStatus(PoolStatus _status) external onlyOwner {
-        status = _status;   
+    function setStatus(PoolStatus newStatus) external onlyOwner {
+        status = newStatus;   
 
-        emit StatusSet(_status);     
+        emit StatusSet(newStatus);     
     }
 
     /**
@@ -145,13 +145,5 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
      */
     function getBalance() external view returns (uint256) {
         return address(this).balance;
-    }
-
-    /**
-     * @notice Get the operator IDs
-     * @return operatorIds The operator IDs
-     */
-    function getOperatorIds() external view returns (uint64[] memory) {
-        return operatorIds;
     }
 }
