@@ -24,8 +24,6 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
     /** Oracle heartbeat */
     uint256 public constant reportHeartbeat = 1 days;
-    /** Pool capacity */
-    uint256 public constant poolCapacity = 32 ether;
 
     /*************/
     /* Immutable */
