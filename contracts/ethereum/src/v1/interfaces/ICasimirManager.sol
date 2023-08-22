@@ -78,10 +78,12 @@ interface ICasimirManager {
         uint64[] memory operatorIds,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external;
     function depositUpkeepBalance(
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external;
     function rebalanceStake(
@@ -102,6 +104,7 @@ interface ICasimirManager {
         bytes calldata shares,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external;
     function activateDeposits(uint256 count) external;
@@ -124,6 +127,7 @@ interface ICasimirManager {
         ISSVNetworkCore.Cluster memory cluster,
         ISSVNetworkCore.Cluster memory oldCluster,
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external;
     function withdrawLINKBalance(uint256 amount) external;

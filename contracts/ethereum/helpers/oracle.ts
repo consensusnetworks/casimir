@@ -65,6 +65,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
     })
 
     const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * price).toPrecision(9))
+    const minimumTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
 
     const initiateDeposit = await manager.connect(signer).initiateDeposit(
         depositDataRoot,
@@ -75,6 +76,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         shares,
         cluster,
         feeAmount,
+        minimumTokenAmount,
         false
     )
     await initiateDeposit.wait()
@@ -101,9 +103,11 @@ export async function depositUpkeepBalanceHandler({ manager, signer }: { manager
     })
     
     const feeAmount = ethers.utils.parseEther((requiredBalance * price).toPrecision(9))
-    
+    const minimumTokenAmount = ethers.utils.parseEther((requiredBalance * 0.99).toPrecision(9))
+
     const depositUpkeepBalance = await manager.connect(signer).depositUpkeepBalance(
         feeAmount,
+        minimumTokenAmount,
         false
     )
     await depositUpkeepBalance.wait()

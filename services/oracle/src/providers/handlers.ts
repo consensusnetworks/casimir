@@ -94,6 +94,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
     })
 
     const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * Number(price)).toPrecision(9))
+    const minimumTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
 
     const initiateDeposit = await manager.initiateDeposit(
         depositDataRoot,
@@ -104,6 +105,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
         shares,
         cluster,
         feeAmount,
+        minimumTokenAmount,
         false
     )
     await initiateDeposit.wait()
@@ -200,7 +202,8 @@ export async function initiateResharesHandler(input: HandlerInput) {
                 })
             
                 const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * Number(price)).toPrecision(9))
-            
+                const minimumTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * 0.99).toPrecision(9))
+
                 const reportReshare = await manager.reportReshare(
                     poolId,
                     operatorIds,
@@ -211,6 +214,7 @@ export async function initiateResharesHandler(input: HandlerInput) {
                     cluster,
                     oldCluster,
                     feeAmount,
+                    minimumTokenAmount,
                     false
                 )
                 await reportReshare.wait()

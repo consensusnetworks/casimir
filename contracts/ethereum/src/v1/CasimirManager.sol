@@ -348,16 +348,19 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param operatorIds The operator IDs
      * @param cluster The SSV cluster snapshot
      * @param feeAmount The fee amount to deposit
+     * @param minimumTokenAmount The minimum SSV token amount out after processing fees
      * @param processed Whether the fee amount is already processed
      */
     function depositClusterBalance(
         uint64[] memory operatorIds,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external onlyOracle {
         uint256 ssvAmount = retrieveFees(
             feeAmount,
+            minimumTokenAmount,
             tokenAddresses[Token.SSV],
             processed
         );
@@ -370,14 +373,17 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @notice Deposit to the upkeep balance
      * @param feeAmount The fee amount to deposit
+     * @param minimumTokenAmount The minimum LINK token amount out after processing fees
      * @param processed Whether the fee amount is already processed
      */
     function depositUpkeepBalance(
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external onlyOracleOrUpkeep {
         uint256 linkAmount = retrieveFees(
             feeAmount,
+            minimumTokenAmount,
             tokenAddresses[Token.LINK],
             processed
         );
@@ -649,6 +655,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param operatorIds The operator IDs
      * @param shares The operator shares
      * @param feeAmount The fee amount to deposit
+     * @param minimumTokenAmount The minimum SSV token amount out after processing fees
      * @param cluster The SSV cluster snapshot
      */
     function initiateDeposit(
@@ -660,6 +667,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bytes memory shares,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external onlyOracle {
         require(readyPoolIds.length > 0, "No ready pools");
@@ -699,6 +707,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             shares,
             cluster,
             feeAmount,
+            minimumTokenAmount,
             processed
         );
 
@@ -715,6 +724,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         bytes memory shares,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) private {
         for (uint256 i = 0; i < operatorIds.length; i++) {
@@ -730,6 +740,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         uint256 ssvAmount = retrieveFees(
             feeAmount,
+            minimumTokenAmount,
             tokenAddresses[Token.SSV],
             processed
         );
@@ -889,6 +900,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param cluster The SSV cluster snapshot
      * @param oldCluster The old SSV cluster snapshot
      * @param feeAmount The fee amount to deposit
+     * @param minimumTokenAmount The minimum SSV token amount out after processing fees
      * @param processed Whether the fee amount is already processed
      */
     function reportReshare(
@@ -901,6 +913,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ISSVNetworkCore.Cluster memory cluster,
         ISSVNetworkCore.Cluster memory oldCluster,
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external onlyOracle {
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
@@ -919,6 +932,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         uint256 ssvAmount = retrieveFees(
             feeAmount,
+            minimumTokenAmount,
             tokenAddresses[Token.SSV],
             processed
         );
@@ -948,23 +962,25 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function subtractFees(
         uint256 amount
-    ) private view returns (uint256 amountAfterFees) {
+    ) private pure returns (uint256 amountAfterFees) {
         amountAfterFees = Math.mulDiv(amount, 100, 100 + FEE_PERCENT);
     }
 
     /**
      * @dev Retrieve fees for a given amount of a given token
      * @param amount The amount to retrieve
+     * @param minimumTokenAmount The minimum token amount out after processing fees
      * @param token The token address
      * @param processed Whether the amount is already processed
      */
     function retrieveFees(
         uint256 amount,
+        uint256 minimumTokenAmount,
         address token,
         bool processed
     ) private returns (uint256 amountOut) {
         if (!processed) {
-            amountOut = processFees(amount, token);
+            amountOut = processFees(amount, minimumTokenAmount, token);
         } else {
             amountOut = amount;
         }
@@ -973,11 +989,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @dev Process reserved fees to a given token
      * @param amount The amount to process
+     * @param minimumTokenAmount The minimum token amount out after processing fees
      * @param tokenOut The output token address
      * @return amountOut The output token amount out
      */
     function processFees(
         uint256 amount,
+        uint256 minimumTokenAmount,
         address tokenOut
     ) private returns (uint256 amountOut) {
         reservedFeeBalance -= amount;
@@ -1005,7 +1023,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: amount,
-                amountOutMinimum: 0,
+                amountOutMinimum: minimumTokenAmount,
                 sqrtPriceLimitX96: 0
             });
         amountOut = swapRouter.exactInputSingle(params);
