@@ -14,6 +14,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/AutomationRegistryInterface2_0.
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
@@ -1038,7 +1039,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The amount to withdraw
      */
     function withdrawLINKBalance(uint256 amount) external onlyOwner {
-        linkToken.transfer(owner(), amount);
+        SafeERC20.safeTransfer(linkToken, owner(), amount);
 
         emit LINKBalanceWithdrawn(amount);
     }
@@ -1048,7 +1049,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The amount to withdraw
      */
     function withdrawSSVBalance(uint256 amount) external onlyOwner {
-        ssvToken.transfer(owner(), amount);
+        SafeERC20.safeTransfer(ssvToken, owner(), amount);
 
         emit SSVBalanceWithdrawn(amount);
     }
