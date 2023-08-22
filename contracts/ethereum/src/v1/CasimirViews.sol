@@ -119,7 +119,7 @@ contract CasimirViews is ICasimirViews {
     function getSweptBalance(
         uint256 startIndex,
         uint256 endIndex
-    ) public view returns (uint128 sweptBalance) {
+    ) external view returns (uint128 sweptBalance) {
         for (uint256 i = startIndex; i <= endIndex; i++) {
             uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
             uint32 poolId = stakedPoolIds[i];

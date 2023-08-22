@@ -1122,7 +1122,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Get the reserved fee balance
      * @return reservedFeeBalance The reserved fee balance
      */
-    function getReservedFeeBalance() public view returns (uint256) {
+    function getReservedFeeBalance() external view returns (uint256) {
         return reservedFeeBalance;
     }
 

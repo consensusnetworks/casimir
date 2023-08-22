@@ -104,7 +104,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         string calldata source,
         bytes calldata secrets,
         string[] calldata args
-    ) public pure returns (bytes memory) {
+    ) external pure returns (bytes memory) {
         Functions.Request memory req;
         req.initializeRequest(
             Functions.Location.Inline,
