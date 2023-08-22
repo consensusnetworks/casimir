@@ -19,6 +19,8 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
+import 'hardhat/console.sol';
+
 /**
  * @title Manager contract that accepts and distributes deposits
  */
@@ -49,7 +51,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Compound minimum (0.1 ETH) */
     uint256 private constant COMPOUND_MINIMUM = 100000000 gwei;
     /** Minimum balance for upkeep registration (0.1 LINK) */
-    uint256 private constant upkeepRegistrationMinimum = 100000000 gwei;
+    uint256 private constant UPKEEP_REGISTRATION_MINIMUM = 100000000 gwei;
     /** Scale factor for each rewards to stake ratio */
     uint256 private constant SCALE_FACTOR = 1 ether;
     /** Uniswap 0.3% fee tier */
@@ -61,7 +63,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /* Immutable */
     /*************/
 
-    /** Manager oracle address */
+    /** DAO oracle address */
     address private immutable oracleAddress;
     /** Registry contract */
     ICasimirRegistry private immutable registry;
@@ -203,7 +205,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * @notice Constructor
-     * @param _oracleAddress The manager oracle address
+     * @param daoOracleAddress The DAO oracle address
      * @param beaconDepositAddress The Beacon deposit address
      * @param linkFunctionsAddress The Chainlink functions oracle address
      * @param linkRegistrarAddress The Chainlink keeper registrar address
@@ -217,7 +219,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param wethTokenAddress The WETH contract address
      */
     constructor(
-        address _oracleAddress,
+        address daoOracleAddress,
         address beaconDepositAddress,
         address linkFunctionsAddress,
         address linkRegistrarAddress,
@@ -230,7 +232,18 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         address swapRouterAddress,
         address wethTokenAddress
     ) {
-        oracleAddress = _oracleAddress;
+        require(daoOracleAddress != address(0), "Missing oracle address");
+        require(beaconDepositAddress != address(0), "Missing beacon deposit address");
+        require(linkRegistrarAddress != address(0), "Missing link registrar address");
+        require(linkRegistryAddress != address(0), "Missing link registry address");
+        require(linkTokenAddress != address(0), "Missing link token address");
+        require(ssvNetworkAddress != address(0), "Missing SSV network address");
+        require(ssvTokenAddress != address(0), "Missing SSV token address");
+        require(swapFactoryAddress != address(0), "Missing Uniswap factory address");
+        require(swapRouterAddress != address(0), "Missing Uniswap router address");
+        require(wethTokenAddress != address(0), "Missing WETH token address");
+
+        oracleAddress = daoOracleAddress;
         beaconDeposit = IDepositContract(beaconDepositAddress);
         linkRegistrar = KeeperRegistrarInterface(linkRegistrarAddress);
         linkRegistry = AutomationRegistryInterface(linkRegistryAddress);
@@ -369,7 +382,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
         linkToken.approve(address(linkRegistrar), linkAmount);
         if (upkeepId == 0) {
-            if (linkAmount < upkeepRegistrationMinimum) {
+            if (linkAmount < UPKEEP_REGISTRATION_MINIMUM) {
                 revert("Upkeep registration minimum not met");
             }
             upkeepId = linkRegistrar.registerUpkeep(
@@ -565,6 +578,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param count The number of withdrawals to complete
      */
     function fulfillWithdrawals(uint256 count) external onlyUpkeep {
+        uint256 withdrawalAmount;
+        uint256 withdrawalCount;
         while (count > 0) {
             count--;
             if (requestedWithdrawalQueue.length == 0) {
@@ -575,11 +590,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 break;
             }
             requestedWithdrawalQueue.remove(0);
-            requestedWithdrawalBalance -= withdrawal.amount;
-            requestedWithdrawals--;
+            withdrawalAmount += withdrawal.amount;
+            withdrawalCount++;
 
             fulfillWithdrawal(withdrawal.user, withdrawal.amount);
         }
+        requestedWithdrawalBalance -= withdrawalAmount;
+        requestedWithdrawals -= withdrawalCount;
     }
 
     /**
@@ -588,6 +605,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The withdrawal amount
      */
     function fulfillWithdrawal(address sender, uint256 amount) private {
+        require(sender != address(0), "Missing sender");
+
         if (amount <= exitedBalance) {
             exitedBalance -= amount;
         } else {
@@ -798,6 +817,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param poolIds The pool IDs
      */
     function reportForcedExits(uint32[] memory poolIds) external onlyOracle {
+        uint256 newForcedExits;
+        uint256 newRequestedExits;
         for (uint256 i = 0; i < poolIds.length; i++) {
             uint32 poolId = poolIds[i];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
@@ -807,12 +828,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 "Forced exit already reported"
             );
 
-            forcedExits++;
+            newForcedExits++;
             if (poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
-                requestedExits--;
+                newRequestedExits++;
             }
             pool.setStatus(ICasimirPool.PoolStatus.EXITING_FORCED);
         }
+        forcedExits += newForcedExits;
+        requestedExits -= newRequestedExits;
 
         emit ForcedExitsReported(poolIds);
     }
@@ -1031,13 +1054,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Update the functions oracle address
-     * @param functionsAddress New functions oracle address
+     * @notice Set a new functions oracle address
+     * @param newFunctionsAddress New functions oracle address
      */
-    function setFunctionsAddress(address functionsAddress) external onlyOwner {
-        upkeep.setOracleAddress(functionsAddress);
+    function setFunctionsAddress(address newFunctionsAddress) external onlyOwner {
+        upkeep.setFunctionsAddress(newFunctionsAddress);
 
-        emit FunctionsAddressSet(functionsAddress);
+        emit FunctionsAddressSet(newFunctionsAddress);
     }
 
     /**

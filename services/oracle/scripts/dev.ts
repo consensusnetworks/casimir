@@ -1,7 +1,7 @@
 import { fetchRetry, run } from '@casimir/helpers'
 
 /**
- * Start development oracle service
+ * Start development DAO oracle service
  */
 void async function () {
     const resourceDir = 'scripts/resources'

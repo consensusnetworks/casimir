@@ -7,6 +7,8 @@ import {Functions, FunctionsClient} from "@chainlink/contracts/src/v0.8/dev/func
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+import 'hardhat/console.sol';
+
 /**
  * @title Upkeep contract that automates and handles reports
  */
@@ -39,11 +41,11 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Current report status */
     ReportStatus private reportStatus;
     /** Current report period */
-    uint32 reportPeriod;
+    uint32 private reportPeriod;
     /** Current report remaining request count */
-    uint256 reportRemainingRequests;
+    uint256 private reportRemainingRequests;
     /** Current report block */
-    uint256 reportRequestBlock;
+    uint256 private reportRequestBlock;
     /** Current report request timestamp */
     uint256 private reportTimestamp;
     /** Current report swept balance */
@@ -57,11 +59,11 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Current report completed exits */
     uint256 private reportCompletedExits;
     /** Current report compoundable pools */
-    uint32[5] reportCompoundablePoolIds;
+    uint32[5] private reportCompoundablePoolIds;
     /** Finalizable activated deposits */
     uint256 private finalizableActivatedDeposits;
     /** Finalizable compoundable pools */
-    uint32[5] finalizableCompoundablePoolIds;
+    uint32[5] private finalizableCompoundablePoolIds;
     /** Current report request */
     mapping(bytes32 => RequestType) private reportRequests;
     /** Current report response error */
@@ -69,7 +71,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Binary request source code */
     bytes public requestCBOR;
     /** Fulfillment gas limit */
-    uint32 fulfillGasLimit;
+    uint32 private fulfillGasLimit;
     /** Functions subscription ID (Mocked until managed subscriptions are implemented) */
     uint64 private linkSubscriptionId = 1;
 
@@ -79,11 +81,16 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
     /**
      * Constructor
-     * @param linkFunctionsAddress The functions oracle contract address
+     * @param functionsAddress The functions oracle address
      */
     constructor(
-        address linkFunctionsAddress
-    ) FunctionsClient(linkFunctionsAddress) {
+        address functionsAddress
+    ) FunctionsClient(functionsAddress) {
+        require(
+            functionsAddress != address(0),
+            "Missing functions address"
+        );
+
         manager = ICasimirManager(msg.sender);
     }
 
@@ -259,13 +266,18 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     }
 
     /**
-     * @notice Update the functions oracle address
-     * @param newOracleAddress New oracle address
+     * @notice Set a new functions oracle address
+     * @param newFunctionsAddress New functions oracle address
      */
-    function setOracleAddress(address newOracleAddress) external onlyOwner {
-        setOracle(newOracleAddress);
+    function setFunctionsAddress(address newFunctionsAddress) external onlyOwner {
+        require (
+            newFunctionsAddress != address(0),
+            "Missing functions address"
+        );
 
-        emit OracleAddressSet(newOracleAddress);
+        setOracle(newFunctionsAddress);
+
+        emit FunctionsAddressSet(newFunctionsAddress);
     }
 
     // Dev-only functions

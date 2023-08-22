@@ -34,6 +34,9 @@ contract CasimirViews is ICasimirViews {
      * @param registryAddress The registry address
      */
     constructor(address managerAddress, address registryAddress) {
+        require(managerAddress != address(0), "Missing manager address");
+        require(registryAddress != address(0), "Missing registry address");
+
         manager = ICasimirManager(managerAddress);
         registry = ICasimirRegistry(registryAddress);
     }

@@ -5,7 +5,7 @@ import { ethers } from 'hardhat'
  */
 void async function () {
     const managerArgs = {
-        oracleAddress: process.env.ORACLE_ADDRESS,
+        daoOracleAddress: process.env.DAO_ORACLE_ADDRESS,
         beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
         linkFunctionsAddress: process.env.LINK_FUNCTIONS_ADDRESS,
         linkRegistrarAddress: process.env.LINK_REGISTRAR_ADDRESS,

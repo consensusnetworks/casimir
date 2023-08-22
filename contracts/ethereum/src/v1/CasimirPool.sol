@@ -56,6 +56,8 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
         bytes memory _publicKey,
         uint64[] memory _operatorIds
     ) {
+        require(registryAddress != address(0), "Missing registry address");
+
         manager = ICasimirManager(msg.sender);
         registry = ICasimirRegistry(registryAddress);
         id = _id;

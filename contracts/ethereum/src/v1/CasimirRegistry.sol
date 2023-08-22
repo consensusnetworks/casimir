@@ -66,6 +66,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      * @param ssvNetworkViewsAddress The SSV network views address
      */
     constructor(address ssvNetworkViewsAddress) {
+        require(ssvNetworkViewsAddress != address(0), "Missing SSV network views address");
+
         manager = ICasimirManager(msg.sender);
         ssvNetworkViews = ISSVNetworkViews(ssvNetworkViewsAddress);
     }

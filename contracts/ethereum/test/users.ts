@@ -35,15 +35,15 @@ describe('Users', async function () {
     })
 
     it('User\'s 64.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
-        const { manager, upkeep, views, keeper, oracle } = await loadFixture(deploymentFixture)
+        const { manager, upkeep, views, keeper, daoOracle } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
         const depositAmount = round(64 * ((100 + await manager.feePercent()) / 100), 10)
         const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
-        await initiateDepositHandler({ manager, signer: oracle })
-        await initiateDepositHandler({ manager, signer: oracle })
+        await initiateDepositHandler({ manager, signer: daoOracle })
+        await initiateDepositHandler({ manager, signer: daoOracle })
 
         const pendingPoolIds = await manager.getPendingPoolIds()
         
@@ -110,7 +110,7 @@ describe('Users', async function () {
         const currentBalance = await ethers.provider.getBalance(exitedPoolAddress)
         const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitedBalance.toString()))
         await setBalance(exitedPoolAddress, nextBalance)
-        await reportCompletedExitsHandler({ manager, views, signer: oracle, args: { count: 1 } })
+        await reportCompletedExitsHandler({ manager, views, signer: daoOracle, args: { count: 1 } })
         const finalizableCompletedExits = await manager.finalizableCompletedExits()
         expect(finalizableCompletedExits.toNumber()).equal(1)
         await runUpkeep({ upkeep, keeper })

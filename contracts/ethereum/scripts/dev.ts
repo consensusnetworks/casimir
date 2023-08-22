@@ -12,7 +12,7 @@ import { PoolStatus } from '@casimir/types'
  * Deploy contracts to local network and run local events and oracle handling
  */
 void async function () {
-    const [, , , , fourthUser, keeper, oracle] = await ethers.getSigners()
+    const [, , , , fourthUser, keeper, daoOracle] = await ethers.getSigners()
     
     const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [654, 655, 656, 657]
     if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
@@ -24,7 +24,7 @@ void async function () {
     console.log(`MockFunctionsOracle contract deployed to ${mockFunctionsOracle.address}`)
 
     const managerArgs = {
-        oracleAddress: oracle.address,
+        daoOracleAddress: daoOracle.address,
         beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
         linkFunctionsAddress: mockFunctionsOracle.address,
         linkRegistrarAddress: process.env.LINK_REGISTRAR_ADDRESS,
@@ -161,8 +161,8 @@ void async function () {
         const depositAmount = 32 * ((100 + await manager.feePercent()) / 100)
         const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await stake?.wait()
-        // Todo handle in oracle
-        await depositUpkeepBalanceHandler({ manager, signer: oracle })
+        // Todo handle in DAO oracle
+        await depositUpkeepBalanceHandler({ manager, signer: daoOracle })
     }, 2500)
 
     run('npm run dev --workspace @casimir/oracle')

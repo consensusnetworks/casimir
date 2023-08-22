@@ -31,7 +31,7 @@ void async function () {
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
     const wallet = getWallet(process.env.BIP39_SEED)
     
-    // Account for the mock oracle contract deployment
+    // Account for the mock functions oracle contract deployment
     const deployerNonce = await provider.getTransactionCount(wallet.address) + 1
 
     if (!process.env.MANAGER_ADDRESS) {
