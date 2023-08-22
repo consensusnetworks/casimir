@@ -58,12 +58,20 @@ const operatorTableHeaders = ref(
         value: 'collateral'
     },
     {
-        title: 'Pool Count',
+        title: 'Active Validators',
         value: 'poolCount'
     },
     {
         title: 'Node URL',
         value: 'nodeURL'
+    },
+    {
+        title: '',
+        value: 'deactivate'
+    },
+    {
+        title: '',
+        value: 'withdraw_collateral'
     },
   ]
 )
@@ -85,8 +93,6 @@ onMounted(async () => {
       for (let i = 0; i < inputs.length; i++) {
           inputs[i].setAttribute('autocomplete', 'off')
       }
-
-      document.removeEventListener('DOMContentLoaded', disableAutofill)
     }
 
     document.addEventListener('DOMContentLoaded', disableAutofill)
@@ -456,7 +462,7 @@ async function submitRegisterOperatorForm() {
               </button>
             </div>
             <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
-              Deposit a minimum of 1 ETH
+              Deposit >= 1ETH per validator you want to run
             </div>
 
             <div class="flex justify-end mt-[20px]">
@@ -567,6 +573,28 @@ async function submitRegisterOperatorForm() {
                     />
                   </button>
                 </div>
+                <div
+                  v-if="header.value === 'deactivate'"
+                  class="flex items-center gap-[12px]"
+                >
+                  <!-- TODO: @Chris, wanna hook up this button? -->
+                  <button
+                    class="bg-decline text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500]"
+                  >
+                    Deactivate
+                  </button>
+                </div>
+                <div
+                  v-if="header.value === 'withdraw_collateral'"
+                  class="flex items-center gap-[12px]"
+                >
+                  <!-- TODO: @Chris, wanna hook up this button? -->
+                  <button
+                    class="bg-primary text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500]"
+                  >
+                    Withdraw
+                  </button>
+                </div>
                 <div v-else>
                   {{ item[header.value] }}
                 </div>
@@ -580,6 +608,7 @@ async function submitRegisterOperatorForm() {
           class="border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] whitespace-normal text-[14px] text-grey_3"
         >
           You currently do not have operators registed under your account.
+          
           <p class="mt-[30px]">
             Connect wallet or register operators to view their performance.
           </p>
