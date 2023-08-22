@@ -23,6 +23,7 @@ const {
 
 const  {
   activeWallets,
+  openWalletsModal,
   walletProviderAddresses,
   logout,
   selectAddress,
@@ -32,7 +33,6 @@ const  {
 const { user } = useUser()
 
 const show_setting_modal = ref(false)
-const openWalletConnect = ref(false)
 
 const handleOutsideClick = (event: any) => {
   const setting_modal = document.getElementById('setting_modal')
@@ -52,8 +52,8 @@ const handleOutsideClick = (event: any) => {
   const connect_wallet_container = document.getElementById('connect_wallet_container')
   const connect_wallet_card = document.getElementById('connect_wallet_card')
   if(connect_wallet_container && connect_wallet_card){
-    if(openWalletConnect.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
-      openWalletConnect.value = false
+    if(openWalletsModal.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
+      openWalletsModal.value = false
       authFlowCardNumber.value = 1
     }
   }
@@ -72,10 +72,10 @@ onUnmounted(() =>{
 
 <template>
   <div class="min-w-[360px]">
-    <div :class="openWalletConnect? 'flex flex-col h-screen' : ''">
+    <div :class="openWalletsModal? 'flex flex-col h-screen' : ''">
       <div
         class="px-[60px] 800s:px-[5%]  pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
-        :class="openWalletConnect? 'pr-[75px]' : ''"
+        :class="openWalletsModal? 'pr-[75px]' : ''"
       >
         <img
           src="/casimir.svg"
@@ -177,7 +177,7 @@ onUnmounted(() =>{
           <div class="connect_wallet_gradient">
             <button
               class="connect_wallet flex justify-between items-center gap-[8px] whitespace-nowrap"
-              @click="openWalletConnect = true"
+              @click="openWalletsModal = true"
             >
               Connect Wallet
             </button>
@@ -249,7 +249,7 @@ onUnmounted(() =>{
 
       <div
         class="relative text-black"
-        :class="openWalletConnect? 'overflow-hidden pr-[15px]' : ''"
+        :class="openWalletsModal? 'overflow-hidden pr-[15px]' : ''"
       >
         <slot />
         <div
@@ -262,7 +262,7 @@ onUnmounted(() =>{
     </div>
 
     <div
-      v-show="openWalletConnect"
+      v-show="openWalletsModal"
       id="connect_wallet_container"
       class="w-full h-full bg-[#121212]/[0.23] fixed 
       z-[20] top-0 left-0 flex items-center justify-center"
@@ -342,7 +342,7 @@ onUnmounted(() =>{
                   v-for="act in walletProviderAddresses"
                   :key="act.address"
                   class="w-full border rounded-[8px] px-[10px] py-[15px] flex flex-wrap gap-[10px] text-center items-center justify-between hover:border-blue_3 mb-[10px]"
-                  @click="selectAddress(act.address), openWalletConnect = false, authFlowCardNumber = 1"
+                  @click="selectAddress(act.address), openWalletsModal = false, authFlowCardNumber = 1"
                 >
                   <div>
                     {{ convertString(act.address) }}

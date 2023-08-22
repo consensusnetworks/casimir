@@ -1,15 +1,17 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch, onActivated} from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
 import { ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
 import useUsers from '@/composables/users'
+import useWallets from '@/composables/wallet'
 
 const { getUserOperators, registerOperatorWithCasimir, nonregisteredOperators, registeredOperators } = useContracts()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
+const { openWalletsModal } = useWallets()
 const { user } = useUsers()
 
 // Form inputs
@@ -332,6 +334,12 @@ async function submitRegisterOperatorForm() {
                 >
                   <span>{{ act.walletProvider }}</span>
                   <span>{{ convertString(act.address) }}</span>
+                </button>
+                <button
+                  class="text-primary underline"
+                  @click="openWalletsModal = true"
+                >
+                  Connect Wallet
                 </button>
               </div>
             </div>

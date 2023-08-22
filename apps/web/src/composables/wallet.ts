@@ -28,6 +28,7 @@ const amount = ref<string>('1')
 const amountToStake = ref<string>('1.2')
 const walletProviderAddresses = ref<CryptoAddress[]>([])
 const loadingUserWallets = ref(false)
+const openWalletsModal = ref(false)
 const primaryAddress = ref('')
 const selectedProvider = ref<ProviderString>('')
 const selectedAddress = ref<string>('')
@@ -406,6 +407,7 @@ export default function useWallet() {
     getUserBalance,
     loadingUserWallets,
     logout,
+    openWalletsModal,
     primaryAddress,
     removeConnectedAccount,
     selectAddress,
