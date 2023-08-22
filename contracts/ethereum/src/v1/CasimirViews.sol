@@ -17,7 +17,7 @@ contract CasimirViews is ICasimirViews {
     /*************/
 
     /** Compound minimum (0.1 ETH) */
-    uint256 private constant compoundMinimum = 100000000 gwei;
+    uint256 private constant COMPOUND_MINIMUM = 100000000 gwei;
 
     /*************/
     /* Immutable */
@@ -54,7 +54,7 @@ contract CasimirViews is ICasimirViews {
         for (uint256 i = startIndex; i < endIndex; i++) {
             uint32 poolId = stakedPoolIds[i];
             ICasimirPool pool = ICasimirPool(manager.getPoolAddress(poolId));
-            if (pool.getBalance() >= compoundMinimum) {
+            if (pool.getBalance() >= COMPOUND_MINIMUM) {
                 poolIds[count] = poolId;
                 count++;
                 if (count == 5) {

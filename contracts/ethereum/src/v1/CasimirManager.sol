@@ -43,19 +43,19 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /*************/
 
     /** User action period */
-    uint256 private constant actionPeriod = 1 days;
+    uint256 private constant ACTION_PERIOD = 1 days;
     /** Max user actions per period */
-    uint256 private constant maxActionsPerPeriod = 5;
+    uint256 private constant MAX_ACTIONS_PER_PERIOD = 5;
     /** Compound minimum (0.1 ETH) */
-    uint256 private constant compoundMinimum = 100000000 gwei;
+    uint256 private constant COMPOUND_MINIMUM = 100000000 gwei;
     /** Minimum balance for upkeep registration (0.1 LINK) */
     uint256 private constant upkeepRegistrationMinimum = 100000000 gwei;
     /** Scale factor for each rewards to stake ratio */
-    uint256 private constant scaleFactor = 1 ether;
+    uint256 private constant SCALE_FACTOR = 1 ether;
     /** Uniswap 0.3% fee tier */
-    uint24 private constant uniswapFeeTier = 3000;
+    uint24 private constant UNISWAP_FEE_TIER = 3000;
     /** Pool capacity */
-    uint256 private constant poolCapacity = 32 ether;
+    uint256 private constant POOL_CAPACITY = 32 ether;
 
     /*************/
     /* Immutable */
@@ -252,7 +252,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     receive() external payable {
         tipBalance += msg.value;
-        if (tipBalance >= compoundMinimum) {
+        if (tipBalance >= COMPOUND_MINIMUM) {
             depositTips();
         }
     }
@@ -422,7 +422,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function distributeStake(uint256 amount) private {
         while (amount > 0) {
-            uint256 remainingCapacity = poolCapacity - prepoolBalance;
+            uint256 remainingCapacity = POOL_CAPACITY - prepoolBalance;
             if (remainingCapacity > amount) {
                 prepoolBalance += amount;
                 amount = 0;
@@ -452,8 +452,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint256 completedExits
     ) external onlyUpkeep {
         reportPeriod++;
-        uint256 expectedActivatedBalance = activatedDeposits * poolCapacity;
-        uint256 expectedExitedBalance = completedExits * poolCapacity;
+        uint256 expectedActivatedBalance = activatedDeposits * POOL_CAPACITY;
+        uint256 expectedExitedBalance = completedExits * POOL_CAPACITY;
         int256 rewards = int256(activeBalance + sweptBalance + finalizableRecoveredBalance) - int256(getExpectedEffectiveBalance() + expectedExitedBalance);
         int256 change = rewards - latestActiveRewardBalance;
         if (change > 0) {
@@ -542,13 +542,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             requestedWithdrawalBalance += amount;
             requestedWithdrawals++;
 
-            uint256 coveredExitBalance = requestedExits * poolCapacity;
+            uint256 coveredExitBalance = requestedExits * POOL_CAPACITY;
             if (requestedWithdrawalBalance > coveredExitBalance) {
                 uint256 exitsRequired = (requestedWithdrawalBalance -
-                    coveredExitBalance) / poolCapacity;
+                    coveredExitBalance) / POOL_CAPACITY;
                 if (
                     (requestedWithdrawalBalance - coveredExitBalance) %
-                        poolCapacity >
+                        POOL_CAPACITY >
                     0
                 ) {
                     exitsRequired++;
@@ -608,11 +608,11 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         User storage user = users[userAddress];
         require(
             user.actionPeriodTimestamp == 0 ||
-                user.actionCount < maxActionsPerPeriod ||
-                block.timestamp >= user.actionPeriodTimestamp + actionPeriod,
+                user.actionCount < MAX_ACTIONS_PER_PERIOD ||
+                block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD,
             "Action period maximum reached"
         );
-        if (block.timestamp >= user.actionPeriodTimestamp + actionPeriod) {
+        if (block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD) {
             user.actionPeriodTimestamp = block.timestamp;
             user.actionCount = 1;
         } else {
@@ -701,7 +701,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             registry.addOperatorPool(operatorIds[i], poolId);
         }
 
-        beaconDeposit.deposit{value: poolCapacity}(
+        beaconDeposit.deposit{value: POOL_CAPACITY}(
             publicKey,
             withdrawalCredentials,
             signature,
@@ -968,7 +968,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             swapFactory.getPool(
                 tokenAddresses[Token.WETH],
                 tokenOut,
-                uniswapFeeTier
+                UNISWAP_FEE_TIER
             )
         );
         require(swapPool.liquidity() >= amount, "Not enough liquidity");
@@ -977,7 +977,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             .ExactInputSingleParams({
                 tokenIn: tokenAddresses[Token.WETH],
                 tokenOut: tokenOut,
-                fee: uniswapFeeTier,
+                fee: UNISWAP_FEE_TIER,
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: amount,
@@ -1083,7 +1083,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @return readyBalance The ready balance
      */
     function getReadyBalance() public view returns (uint256 readyBalance) {
-        readyBalance = readyPoolIds.length * poolCapacity;
+        readyBalance = readyPoolIds.length * POOL_CAPACITY;
     }
 
     /**
@@ -1111,7 +1111,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         view
         returns (uint256 expectedEffectiveBalance)
     {
-        expectedEffectiveBalance = stakedPoolIds.length * poolCapacity;
+        expectedEffectiveBalance = stakedPoolIds.length * POOL_CAPACITY;
     }
 
     /**

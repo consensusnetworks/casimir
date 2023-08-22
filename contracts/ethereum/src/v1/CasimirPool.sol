@@ -17,7 +17,7 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     /*************/
 
     /** Pool capacity */
-    uint256 private constant poolCapacity = 32 ether;
+    uint256 private constant POOL_CAPACITY = 32 ether;
 
     /*************/
     /* Immutable */
@@ -79,7 +79,7 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
         require(status == PoolStatus.WITHDRAWN, "Pool must be withdrawn");
 
         uint256 balance = address(this).balance;
-        int256 rewards = int256(balance) - int256(poolCapacity);
+        int256 rewards = int256(balance) - int256(POOL_CAPACITY);
         if (rewards > 0) {
             manager.depositRewards{value: uint256(rewards)}();
         }
