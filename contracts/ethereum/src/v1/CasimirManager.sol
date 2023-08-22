@@ -998,7 +998,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint64[] memory operatorIds,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 amount
-    ) private {
+    ) external onlyOracle {
         ssvNetwork.withdraw(operatorIds, amount, cluster);
     }
 
