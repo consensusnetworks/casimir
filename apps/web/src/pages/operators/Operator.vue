@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch} from 'vue'
+import { onMounted, ref, watch, onActivated} from 'vue'
 import VueFeather from 'vue-feather'
 import { ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
@@ -75,6 +75,23 @@ const checkedItems = ref([] as any)
 onMounted(async () => {
   if (user.value) {
     await getUserOperators()
+    const primaryAccount = user.value.accounts.find(item => { return item.address === user.value?.address})
+    selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
+
+
+    // Autofill disable
+    const disableAutofill = () => {
+      let inputs = document.getElementsByTagName('input')
+      for (let i = 0; i < inputs.length; i++) {
+          inputs[i].setAttribute('autocomplete', 'off')
+      }
+
+      document.removeEventListener('DOMContentLoaded', disableAutofill)
+    }
+
+    document.addEventListener('DOMContentLoaded', disableAutofill)
+    //
+
     filterData()
   }
 })
@@ -82,6 +99,10 @@ onMounted(async () => {
 watch(user, async () => {
   if (user.value) {
     await getUserOperators()
+    if(selectedWallet.value.address === ''){
+      const primaryAccount = user.value.accounts.find(item => { item.address === user.value?.address})
+      selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
+    }
     filterData()
   }
 })
@@ -315,18 +336,21 @@ async function submitRegisterOperatorForm() {
             <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
               Operator ID
             </h6>
-            <div class="card_input w-full max-w-[400px] relative">
+            <div
+              class="card_input w-full max-w-[400px] relative"
+              @click="openSelectOperatorID = !openSelectOperatorID"
+            >
               <input
                 id="operator_id"
                 v-model="selectedOperatorID"
                 type="text"
                 placeholder="Operator ID.."
-                class=" outline-none text-grey_4 text-[12px] w-full"
-                
+                class=" outline-none text-grey_4 text-[12px] w-full bg-white cursor-pointer"
+                disabled
                 @focus="openSelectOperatorID = true"
                 @blur="onSelectOperatorIDBlur"
               >
-              <button
+              <!-- <button
                 type="button"
                 @click="selectedOperatorID = ''"
               >
@@ -335,7 +359,7 @@ async function submitRegisterOperatorForm() {
                   size=""
                   class="icon w-[12px] h-min"
                 />
-              </button>
+              </button> -->
               <div
                 v-show="openSelectOperatorID"
                 class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white"
