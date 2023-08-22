@@ -291,9 +291,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Deposit a given amount of rewards
+     * @notice Deposit a given amount of rewards from a pool
+     * @param poolId The pool ID
      */
-    function depositRewards() external payable {
+    function depositRewards(uint32 poolId) external payable {
+        require(msg.value > 0, "No rewards to deposit");
+        address poolAddress = poolAddresses[poolId];
+        require(msg.sender == poolAddress, "Not pool");
+
         uint256 rewardsAfterFees = subtractFees(msg.value);
         reservedFeeBalance += msg.value - rewardsAfterFees;
         distributeStake(rewardsAfterFees);
@@ -766,8 +771,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         while (count > 0) {
             count--;
-
             uint32 poolId = pendingPoolIds[0];
+            ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
+            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
+            require(
+                poolDetails.status == ICasimirPool.PoolStatus.PENDING,
+                "Pool not pending"
+            );
+
+            pool.setStatus(ICasimirPool.PoolStatus.ACTIVE);
             pendingPoolIds.remove(0);
             stakedPoolIds.push(poolId);
 

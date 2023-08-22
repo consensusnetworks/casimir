@@ -70,7 +70,7 @@ interface ICasimirManager {
     /*************/
 
     function depositStake() external payable;
-    function depositRewards() external payable;
+    function depositRewards(uint32 poolId) external payable;
     function depositExitedBalance(uint32 poolId) external payable;
     function depositRecoveredBalance(uint32 poolId) external payable;
     function depositReservedFees() external payable;

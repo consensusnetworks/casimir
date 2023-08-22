@@ -69,8 +69,10 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
      * @notice Deposit rewards from a pool to the manager
      */
     function depositRewards() external onlyOwner {
+        require(status == PoolStatus.ACTIVE, "Pool must be active");
+
         uint256 balance = address(this).balance;
-        manager.depositRewards{value: balance}();
+        manager.depositRewards{value: balance}(id);
     }
 
     /**
@@ -83,7 +85,7 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
         uint256 balance = address(this).balance;
         int256 rewards = int256(balance) - int256(POOL_CAPACITY);
         if (rewards > 0) {
-            manager.depositRewards{value: uint256(rewards)}();
+            manager.depositRewards{value: uint256(rewards)}(id);
         }
         for (uint256 i = 0; i < blamePercents.length; i++) {
             uint256 blameAmount;
