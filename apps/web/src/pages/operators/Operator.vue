@@ -415,6 +415,7 @@ async function submitRegisterOperatorForm() {
                 v-model="selectedPublicNodeURL"
                 type="text"
                 placeholder="URL.."
+                autocomplete="off"
                 class=" outline-none text-grey_4 text-[12px] w-full"
               >
               <button @click="selectedPublicNodeURL = ''">
@@ -446,7 +447,8 @@ async function submitRegisterOperatorForm() {
                 id="operator_id"
                 v-model="selectedCollateral"
                 type="text"
-                placeholder="Collateral.."
+                placeholder="0.00"
+                autocomplete="off"
                 class=" outline-none text-grey_4 text-[12px] w-full"
                 @input="handleInputChangeCollateral"
               >
