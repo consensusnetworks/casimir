@@ -23,7 +23,7 @@ const onSelectWalletBlur = () => {
 const selectedOperatorID = ref()
 const openSelectOperatorID = ref(false)
 const onSelectOperatorIDBlur = () => {
-    setTimeout(() =>{
+    setTimeout(() => {
         openSelectOperatorID.value = false
     }, 200)
 }
@@ -345,7 +345,6 @@ async function submitRegisterOperatorForm() {
             </h6>
             <div
               class="card_input w-full max-w-[400px] relative"
-              @click="openSelectOperatorID = !openSelectOperatorID"
             >
               <input
                 id="operator_id"
@@ -353,7 +352,7 @@ async function submitRegisterOperatorForm() {
                 type="text"
                 placeholder="Operator ID.."
                 class=" outline-none text-grey_4 text-[12px] w-full bg-white cursor-pointer"
-                disabled
+                autocomplete="off"
                 @focus="openSelectOperatorID = true"
                 @blur="onSelectOperatorIDBlur"
               >
