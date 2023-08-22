@@ -350,6 +350,7 @@ async function submitRegisterOperatorForm() {
                 id="operator_id"
                 v-model="selectedOperatorID"
                 type="text"
+                readonly
                 placeholder="Operator ID.."
                 class=" outline-none text-grey_4 text-[12px] w-full bg-white cursor-pointer"
                 autocomplete="off"
