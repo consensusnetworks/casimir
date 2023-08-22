@@ -33,7 +33,7 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     /*********/
 
     /** Pool ID */
-    uint32 private id;
+    uint32 private immutable id;
     /** Validator public key */
     bytes private publicKey;
     /** Operator IDs */
