@@ -473,7 +473,7 @@ async function submitRegisterOperatorForm() {
               </button>
             </div>
             <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
-              Deposit >= 1ETH per validator you want to run
+              Deposit at least 1 ETH per validator you plan to run.
             </div>
 
             <div class="flex justify-end mt-[20px]">

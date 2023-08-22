@@ -242,7 +242,7 @@ export default function useContracts() {
             const registered = active || collateral.gt(0) || poolCount.gt(0) || resharing
             if (registered) {
                 const pools = await _getPools(operator.id)
-                // TODO: Replace once we have this working again
+                // TODO: Replace these Public Nodes URLs once we have this working again
                 const operatorStore = {
                     '654': 'https://nodes.casimir.co/eth/goerli/dkg/1',
                     '655': 'https://nodes.casimir.co/eth/goerli/dkg/2',
