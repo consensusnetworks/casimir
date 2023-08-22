@@ -25,7 +25,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /*************/
 
     /** Oracle heartbeat */
-    uint256 public constant reportHeartbeat = 1 days;
+    uint256 private constant REPORT_HEARTBEAT = 1 days;
 
     /*************/
     /* Immutable */
@@ -152,7 +152,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     {
         if (reportStatus == ReportStatus.FINALIZED) {
             bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
-            bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= reportHeartbeat;
+            bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= REPORT_HEARTBEAT;
             upkeepNeeded = checkActive && heartbeatLapsed;
         } else if (reportStatus == ReportStatus.PROCESSING) {
             bool finalizeReport = reportCompletedExits == manager.finalizableCompletedExits();

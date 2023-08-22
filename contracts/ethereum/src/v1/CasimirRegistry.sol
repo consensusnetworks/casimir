@@ -23,7 +23,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     /*************/
 
     /** Required collateral per operator per pool */
-    uint256 private constant requiredCollateral = 1 ether;
+    uint256 private constant REQUIRED_COLLATERAL = 1 ether;
 
     /*************/
     /* Immutable */
@@ -176,7 +176,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
         require(operator.active, "Operator not active");
         require(!operator.resharing, "Operator resharing");
         require(!operatorPools[operatorId][poolId], "Pool already active");
-        uint256 eligiblePools = (operator.collateral / requiredCollateral) - operator.poolCount;
+        uint256 eligiblePools = (operator.collateral / REQUIRED_COLLATERAL) - operator.poolCount;
         require(eligiblePools > 0, "No remaining eligible pools");
 
         operatorPools[operatorId][poolId] = true;
@@ -198,7 +198,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     ) external onlyOwnerOrPool(poolId) {
         Operator storage operator = operators[operatorId];
         require(operatorPools[operatorId][poolId], "Pool is not active for operator");
-        require(blameAmount <= requiredCollateral, "Blame amount is more than collateral");
+        require(blameAmount <= REQUIRED_COLLATERAL, "Blame amount is more than collateral");
 
         operatorPools[operatorId][poolId] = false;
         operator.poolCount -= 1;
