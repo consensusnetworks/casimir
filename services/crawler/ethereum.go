@@ -4,57 +4,63 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/url"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-type ChainType string
-type NetworkType string
-type ProviderType string
-type EventType string
+type Chain string
+type Network string
+type Provider string
 
 const (
-	Ethereum ChainType = "ethereum"
-	Bitcoin  ChainType = "bitcoin"
-	Iotex    ChainType = "iotex"
+	Ethereum Chain = "ethereum"
 
-	EtheruemMainnet NetworkType = "mainnet"
-	EtheruemGoerli  NetworkType = "goerli"
+	Casimir Provider = "casimir"
 
-	Casimir ProviderType = "casimir"
-
-	Block       EventType = "block"
-	Transaction EventType = "transaction"
-	Contract    EventType = "contract"
+	EthereumMainnet Network = "mainnet"
+	EthereumHardhat Network = "hardhat"
+	EthereumGoerli  Network = "goerli"
 )
 
-type EthereumClient struct {
+type EthereumService struct {
+	URL      *url.URL
 	Client   *ethclient.Client
-	Network  NetworkType
-	Provider ProviderType
-	Url      url.URL
+	Network  Network
+	Provider Provider
+	Head     *types.Header
 }
 
-func NewEthereumClient(Provider ProviderType, url url.URL) (*EthereumClient, error) {
-	if url.String() == "" {
+func NewEthereumService(raw string) (*EthereumService, error) {
+	if raw == "" {
+		return nil, errors.New("url cannot be empty")
+	}
+
+	parsed, err := url.Parse(raw)
+
+	if parsed.String() == "" {
 		return nil, errors.New("etheruem rpc url is empty")
 	}
 
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
+	ctx := context.TODO()
 
-	defer cancel()
-
-	client, err := ethclient.DialContext(ctx, url.String())
+	client, err := ethclient.DialContext(ctx, parsed.String())
 
 	if err != nil {
 		return nil, err
 	}
 
-	defer cancel()
+	header, err := client.HeaderByNumber(context.Background(), nil)
 
-	var net NetworkType
+	if err != nil {
+		return nil, err
+	}
+
+	var net Network
 
 	id, err := client.NetworkID(ctx)
 
@@ -64,41 +70,103 @@ func NewEthereumClient(Provider ProviderType, url url.URL) (*EthereumClient, err
 
 	switch id.Int64() {
 	case 1:
-		net = EtheruemMainnet
+		net = EthereumMainnet
 	case 5:
-		net = EtheruemGoerli
+		net = EthereumGoerli
 	default:
 		return nil, fmt.Errorf("unsupported network id: %d", id.Int64())
 	}
 
-	return &EthereumClient{
+	return &EthereumService{
 		Client:   client,
 		Network:  net,
 		Provider: Casimir,
-		Url:      url,
+		URL:      parsed,
+		Head:     header,
 	}, nil
 }
 
-func (c ChainType) String() string {
-	switch c {
-	case Ethereum:
-		return "ethereum"
-	case Bitcoin:
-		return "bitcoin"
-	case Iotex:
-		return "iotex"
-	default:
-		return ""
+func NewEthereumServiceWithTimeout(raw string, timeout time.Duration) (*EthereumService, error) {
+	if raw == "" {
+		return nil, errors.New("url cannot be empty")
 	}
+
+	parsed, err := url.Parse(raw)
+
+	if parsed.String() == "" {
+		return nil, errors.New("etheruem rpc url is empty")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+
+	defer cancel()
+
+	client, err := ethclient.DialContext(ctx, parsed.String())
+
+	if err != nil {
+		return nil, err
+	}
+
+	header, err := client.HeaderByNumber(ctx, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var net Network
+
+	id, err := client.NetworkID(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch id.Int64() {
+	case 1:
+		net = EthereumMainnet
+	case 5:
+		net = EthereumGoerli
+	default:
+		return nil, fmt.Errorf("unsupported network id: %d", id.Int64())
+	}
+
+	return &EthereumService{
+		Client:   client,
+		Network:  net,
+		Provider: Casimir,
+		URL:      parsed,
+		Head:     header,
+	}, nil
 }
 
-func (c NetworkType) String() string {
-	switch c {
-	case EtheruemMainnet:
-		return "mainnet"
-	case EtheruemGoerli:
-		return "goerli"
-	default:
-		return ""
+func (e *EthereumService) GetBlockByNumber(b uint64) (*types.Block, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+
+	defer cancel()
+
+	block, err := e.Client.BlockByNumber(ctx, big.NewInt(int64(b)))
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get block=%d: %s", b, err.Error())
 	}
+
+	return block, nil
+}
+
+func (e *EthereumService) GetBlockTransactions(block string) (*types.Transaction, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+	defer cancel()
+
+	txs, pending, err := e.Client.TransactionByHash(ctx, common.HexToHash(block))
+
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: handle this
+	if pending {
+		return nil, fmt.Errorf("pending: %s still has pending transaction", block)
+	}
+	return txs, nil
 }
