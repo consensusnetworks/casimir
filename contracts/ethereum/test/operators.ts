@@ -28,7 +28,7 @@ describe('Operators', async function () {
         const { manager, registry, views, daoOracle } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
-        const depositAmount = round(32 * ((100 + await manager.feePercent()) / 100), 10)
+        const depositAmount = round(32 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
         const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
@@ -49,7 +49,7 @@ describe('Operators', async function () {
         const { manager, registry, ssvNetworkViews, daoOracle } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
-        const depositAmount = round(32 * ((100 + await manager.feePercent()) / 100), 10)
+        const depositAmount = round(32 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
         const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 

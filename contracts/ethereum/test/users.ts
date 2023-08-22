@@ -11,7 +11,7 @@ describe('Users', async function () {
         const { manager } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
-        const depositAmount = round(16 * ((100 + await manager.feePercent()) / 100), 10)
+        const depositAmount = round(16 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
         const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
@@ -38,7 +38,7 @@ describe('Users', async function () {
         const { manager, upkeep, views, keeper, daoOracle } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
-        const depositAmount = round(64 * ((100 + await manager.feePercent()) / 100), 10)
+        const depositAmount = round(64 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
         const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
@@ -129,7 +129,7 @@ describe('Users', async function () {
         const { manager } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
-        const depositAmount = round(16 * ((100 + await manager.feePercent()) / 100), 10)
+        const depositAmount = round(16 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
         const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 

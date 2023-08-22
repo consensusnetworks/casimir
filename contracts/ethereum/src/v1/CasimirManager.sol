@@ -91,7 +91,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /*********/
 
     /** Total fee percentage */
-    uint32 public constant feePercent = 5;
+    uint32 public constant FEE_PERCENT = 5;
     /** Last pool ID created */
     uint32 private lastPoolId;
     /** Current report period */
@@ -948,7 +948,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function subtractFees(
         uint256 amount
     ) private view returns (uint256 amountAfterFees) {
-        amountAfterFees = Math.mulDiv(amount, 100, 100 + feePercent);
+        amountAfterFees = Math.mulDiv(amount, 100, 100 + FEE_PERCENT);
     }
 
     /**
