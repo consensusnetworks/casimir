@@ -50,7 +50,7 @@ export default function useContracts() {
     const { getCurrentPrice } = usePrice()
     const { getEthersTrezorSigner } = useTrezor()
     const { user } = useUsers()
-    const { walletConnectSigner } = useWalletConnectV2()
+    const { getWalletConnectSignerV2, walletConnectSigner } = useWalletConnectV2()
 
     const stakeDepositedListener = async () => await refreshBreakdown()
     const stakeRebalancedListener = async () => await refreshBreakdown()
@@ -62,21 +62,17 @@ export default function useContracts() {
                 'Browser': getEthersBrowserSigner,
                 'Ledger': getEthersLedgerSigner,
                 'Trezor': getEthersTrezorSigner,
+                'WalletConnect': getWalletConnectSignerV2
             }
             const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
-            let signer
-            if (walletProvider === 'WalletConnect') {
-                signer = walletConnectSigner.value
-            } else {
-                signer = signerCreator(walletProvider)
-            }
+            const signer = await signerCreator(walletProvider)
             const managerSigner = manager.connect(signer as ethers.Signer)
             const fees = await getDepositFees()
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
             const value = ethers.utils.parseEther(depositAmount.toString())
             const result = await managerSigner.depositStake({ value, type: 0 })
-            await result.wait()
+            await result.wait(3)
             return true
         } catch (err) {
             console.error(`There was an error in deposit function: ${JSON.stringify(err)}`)
@@ -168,7 +164,6 @@ export default function useContracts() {
     }
 
     async function getCurrentStaked(): Promise<BreakdownAmount> {
-        const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
         const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         try {
             const promises = addresses.map((address) => manager.getUserStake(address))
@@ -196,7 +191,6 @@ export default function useContracts() {
     }
 
     async function getDepositFees() {
-        const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
         const fees = await manager.feePercent()
         const feesRounded = Math.round(fees * 100) / 100
         return feesRounded

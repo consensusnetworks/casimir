@@ -27,6 +27,8 @@ const walletConnectWeb3Provider = ref<Web3Provider | null>(null)
 const walletConnectSigner = ref<ethers.Signer | null>(null)
 const web3Modal = ref<Web3Modal | null>(null)
 
+let nonReactiveEthereumProvider: UniversalProvider | null = null
+let nonReactiveWalletConnectWeb3Provider: Web3Provider | null = null
 
 interface AccountBalances {
   [account: string]: AssetData;
@@ -94,10 +96,36 @@ export default function useWalletConnectV2() {
     }
   }
 
-  // function getEthersWalletConnectSignerV2(): ethers.Signer | null {
-  //   walletConnectSigner.value = walletConnectWeb3Provider.value?.getSigner()
-  //   return walletConnectWeb3Provider.value?.getSigner() || null
-  // }
+  async function getWalletConnectSignerV2(): Promise<ethers.Signer | null> {
+    await reinitializeWalletConnect()
+    // Create a new instance of the Web3Provider based on the current provider's connection
+    const newWeb3Provider = new providers.Web3Provider(nonReactiveWalletConnectWeb3Provider?.provider as providers.ExternalProvider)
+    return newWeb3Provider.getSigner() || null
+  }
+
+  async function reinitializeWalletConnect() {
+    // Check if WalletConnect client is already initialized
+    if (!client.value) {
+        // Initialize the WalletConnect client
+        await createClient()
+    }
+
+    // Check if the Web3Provider is already initialized
+    if (!walletConnectWeb3Provider.value && ethereumProvider.value) {
+        walletConnectWeb3Provider.value = new providers.Web3Provider(ethereumProvider.value)
+        nonReactiveWalletConnectWeb3Provider = walletConnectWeb3Provider.value
+    }
+
+    // Check if the signer is already initialized
+    if (!walletConnectSigner.value && walletConnectWeb3Provider.value) {
+        walletConnectSigner.value = walletConnectWeb3Provider.value.getSigner()
+    }
+
+    // Optionally, you can check for an existing session and restore it
+    if (!session.value && ethereumProvider.value) {
+        await _checkForPersistedSession()
+    }
+  }
 
   async function loginWithWalletConnectV2(loginCredentials: LoginCredentials) {
     const { provider, address, currency } = loginCredentials
@@ -163,7 +191,10 @@ export default function useWalletConnectV2() {
     walletConnectSigner,
     walletConnectWeb3Provider,
     connectWalletConnectV2,
-    loginWithWalletConnectV2
+    getWalletConnectSignerV2,
+    loginWithWalletConnectV2,
+    nonReactiveEthereumProvider,
+    nonReactiveWalletConnectWeb3Provider,
   }
 }
 
@@ -198,6 +229,8 @@ async function createClient() {
       relayUrl: DEFAULT_RELAY_URL,
   })
 
+  nonReactiveEthereumProvider = ethereumProvider.value as UniversalProvider
+
   const localWeb3Modal = new Web3Modal({
       projectId: WALLET_CONNECT_PROJECT_ID,
       walletConnectVersion: 2,
@@ -209,6 +242,7 @@ async function createClient() {
 
 function createWeb3Provider(provider: UniversalProvider) {
   walletConnectWeb3Provider.value = new providers.Web3Provider(provider)
+  nonReactiveWalletConnectWeb3Provider = walletConnectWeb3Provider.value as Web3Provider
   walletConnectSigner.value = walletConnectWeb3Provider.value?.getSigner()
 }
 
