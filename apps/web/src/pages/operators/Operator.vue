@@ -31,7 +31,7 @@ const onSelectOperatorIDBlur = () => {
 }
 // @chris need a way to find out possible operators on selecting a wallet address
 const availableOperatorIDs = ref([] as string[])
-const selectedPublicNodeURL = ref()
+const selectedPublicNodeURL = ref('')
 const selectedCollateral = ref()
 
 const openAddOperatorModal = ref(false)
@@ -81,6 +81,9 @@ const operatorTableHeaders = ref(
 const tableData = ref<any>([])
 const filteredData = ref(tableData.value)
 const checkedItems = ref([] as any)
+
+const loading = ref(false)
+const submitButtonTxt = ref('Submit')
 
 onMounted(async () => {
   if (user.value) {
@@ -186,7 +189,7 @@ const filterData = () => {
       }
     })
   }
-  totalPages.value = Math.round(filteredDataArray.length / itemsPerPage.value)
+  totalPages.value = Math.round(filteredDataArray.length / itemsPerPage.value) || 1
 
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
@@ -201,33 +204,39 @@ const removeItemFromCheckedList = (item:any) => {
 }
 
 async function submitRegisterOperatorForm() {
-  const registerResult = await registerOperatorWithCasimir(
+  loading.value = true
+  submitButtonTxt.value = 'Submitting...'
+  const registeredSuccess = await registerOperatorWithCasimir(
     selectedWallet.value.wallet_provider as ProviderString, 
     selectedWallet.value.address, 
     parseInt(selectedOperatorID.value), 
     selectedCollateral.value 
   )
+  console.log('registeredSuccess :>> ', registeredSuccess)
+  loading.value = false
 
-  console.log('registerResult :>> ', registerResult)
+  if (registeredSuccess) {
+    openAddOperatorModal.value = false
+    submitButtonTxt.value = 'Submit'
+    
+    const newOperator = {
+      id: selectedOperatorID.value,
+      collateral: selectedCollateral.value + ' ETH',
+      nodeURL: selectedPublicNodeURL.value,
+      poolCount: 0,
+      walletAddress: selectedWallet.value.address,
+    }
 
-  // @demogorgod: this should only add if the register was successful
-  const newOperator = {
-    id: selectedOperatorID.value,
-    collateral: selectedCollateral.value,
-    nodeURL: selectedPublicNodeURL.value,
-    poolCount: 0,
-    walletAddress: selectedWallet.value.address,
+    // TODO: @DemogorGod - this isn't causing the expected behavior...note the proxy objects as you add validatprs
+    tableData.value.push(newOperator)
+    console.log('tableData.value in submitRegisterOperatorForm :>> ', tableData.value)
   }
-  
-  tableData.value = [...tableData.value, newOperator]
 
-  selectedWallet.value = { address: '', wallet_provider: ''}
+  // selectedWallet.value = { address: '', wallet_provider: ''}
   selectedOperatorID.value = ''
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
   availableOperatorIDs.value = []
-
-  openAddOperatorModal.value = false
 }
 
 </script>
@@ -236,7 +245,7 @@ async function submitRegisterOperatorForm() {
   <div class="px-[60px] 800s:px-[5%] pt-[51px]">
     <div class="flex items-start gap-[20px] justify-between flex-wrap mb-[30px]">
       <h6 class="title">
-        Operator Performance
+        Operators
       </h6>
 
       <button
@@ -259,7 +268,12 @@ async function submitRegisterOperatorForm() {
       style="min-height: calc(100vh - 420px);"
     >
       <div class="border rounded-[3px] border-grey_1 border-dashed p-[10%] text-center">
-        Connect wallet to view and register operators... 
+        <button
+          class="text-primary underline"
+          @click="openWalletsModal = true"
+        >
+          Connect wallet
+        </button> to view and register operators... 
       </div>
     </div>
 
@@ -481,7 +495,7 @@ async function submitRegisterOperatorForm() {
                 type="submit"
                 class="export_button"
               >
-                Submit
+                {{ submitButtonTxt }}
               </button>
             </div>
           </form>

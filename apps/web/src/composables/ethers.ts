@@ -31,22 +31,31 @@ export default function useEthers() {
     }
   }
 
-  async function blockListener (blockNumber: number) {
+  async function blockListener(blockNumber: number) {
     const { manager, refreshBreakdown } = useContracts()
     const { user } = useUsers()
+
     console.log('blockNumber :>> ', blockNumber)
     const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
     const block = await provider.getBlockWithTransactions(blockNumber)
     const transactions = block.transactions
-    transactions.map(async (tx) => {
-      if (addresses.includes(tx.from.toLowerCase())) {
-        console.log('tx :>> ', tx)
-        const response = manager.interface.parseTransaction({ data: tx.data })
-        console.log('response :>> ', response)
-        await refreshBreakdown()
-      }
+
+    const txs = transactions.map(async (tx) => {
+        if (addresses.includes(tx.from.toLowerCase())) {
+            console.log('tx :>> ', tx)
+            try {
+                // const response = manager.interface.parseTransaction({ data: tx.data })
+                // console.log('response :>> ', response)
+                await refreshBreakdown()
+            } catch (error) {
+                console.error('Error parsing transaction:', error)
+            }
+        }
     })
-  }
+
+    await Promise.all(txs)
+}
+
 
   /**
    * Estimate gas fee using EIP 1559 methodology
