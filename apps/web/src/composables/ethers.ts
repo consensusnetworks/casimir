@@ -38,9 +38,8 @@ export default function useEthers() {
     console.log('blockNumber :>> ', blockNumber)
     const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
     const block = await provider.getBlockWithTransactions(blockNumber)
-    const transactions = block.transactions
-
-    const txs = transactions.map(async (tx) => {
+    
+    const txs = block.transactions.map(async (tx) => {
         if (addresses.includes(tx.from.toLowerCase())) {
             console.log('tx :>> ', tx)
             try {
