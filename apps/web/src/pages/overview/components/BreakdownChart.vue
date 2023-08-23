@@ -7,7 +7,7 @@ import useEthers from '@/composables/ethers'
 import useScreenDimensions from '@/composables/screenDimensions'
 import { AnalyticsData, ProviderString } from '@casimir/types'
 
-const { currentStaked, listenForContractEvents, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
+const { currentStaked, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
 const { listenForTransactions } = useEthers()
 const { screenWidth } = useScreenDimensions()
 const { user, getUserAnalytics, userAnalytics } = useUsers()
@@ -107,7 +107,6 @@ onMounted(async () => {
     // TODO: Potentially find a better place to initialize these listeners
     // Doing this here because currently we're currently initializing listeners on connectWallet
     // which isn't used if user is already signed in
-    listenForContractEvents()
     listenForTransactions()
   } else {
     setChartData()
