@@ -606,7 +606,8 @@ async function submitRegisterOperatorForm() {
                 >
                   <!-- TODO: @Chris, wanna hook up this button? -->
                   <button
-                    class="bg-primary text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500]"
+                    class="bg-primary text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] opacity-50"
+                    disabled
                   >
                     Withdraw
                   </button>
