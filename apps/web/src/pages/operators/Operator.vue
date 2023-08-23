@@ -8,7 +8,7 @@ import useFormat from '@/composables/format'
 import useUsers from '@/composables/users'
 import useWallets from '@/composables/wallet'
 
-const { getUserOperators, registerOperatorWithCasimir, nonregisteredOperators, registeredOperators } = useContracts()
+const { getUserOperators, registerOperatorWithCasimir, loadingRegisteredOperators, nonregisteredOperators, registeredOperators } = useContracts()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
 const { openWalletsModal } = useWallets()
@@ -110,7 +110,7 @@ onMounted(async () => {
 watch(user, async () => {
   if (user.value) {
     await getUserOperators()
-    if(selectedWallet.value.address === ''){
+    if (selectedWallet.value.address === ''){
       const primaryAccount = user.value.accounts.find(item => { item.address === user.value?.address})
       selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
     }
@@ -132,6 +132,7 @@ watch(selectedWallet, async () =>{
 })
 
 watch(registeredOperators, () => {
+  openAddOperatorModal.value = false
   tableData.value = [...registeredOperators.value].map((operator: any) => {
     return {
       id: operator.id,
@@ -141,6 +142,7 @@ watch(registeredOperators, () => {
       nodeURL: operator.url
     }
   })
+  filterData()
 })
 
 watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
@@ -204,35 +206,23 @@ const removeItemFromCheckedList = (item:any) => {
 }
 
 async function submitRegisterOperatorForm() {
-  loading.value = true
-  submitButtonTxt.value = 'Submitting...'
-  const registeredSuccess = await registerOperatorWithCasimir(
-    selectedWallet.value.wallet_provider as ProviderString, 
-    selectedWallet.value.address, 
-    parseInt(selectedOperatorID.value), 
-    selectedCollateral.value 
-  )
-  console.log('registeredSuccess :>> ', registeredSuccess)
-  loading.value = false
-
-  if (registeredSuccess) {
+  try {
+    await registerOperatorWithCasimir(
+      selectedWallet.value.wallet_provider as ProviderString, 
+      selectedWallet.value.address, 
+      parseInt(selectedOperatorID.value), 
+      selectedCollateral.value 
+    )
     openAddOperatorModal.value = false
-    submitButtonTxt.value = 'Submit'
-    
-    const newOperator = {
-      id: selectedOperatorID.value,
-      collateral: selectedCollateral.value + ' ETH',
-      nodeURL: selectedPublicNodeURL.value,
-      poolCount: 0,
-      walletAddress: selectedWallet.value.address,
-    }
-
-    // TODO: @DemogorGod - this isn't causing the expected behavior...note the proxy objects as you add validatprs
-    tableData.value.push(newOperator)
-    console.log('tableData.value in submitRegisterOperatorForm :>> ', tableData.value)
+  } catch (error) {
+    console.log('Error in submitRegisterOperatorForm :>> ', error)
+    openAddOperatorModal.value = false
   }
 
-  // selectedWallet.value = { address: '', wallet_provider: ''}
+  if (selectedWallet.value.address === '') {
+      const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address})
+      selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
+  }
   selectedOperatorID.value = ''
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
@@ -495,7 +485,8 @@ async function submitRegisterOperatorForm() {
                 type="submit"
                 class="export_button"
               >
-                {{ submitButtonTxt }}
+                <span v-if="loadingRegisteredOperators">Submitting</span>
+                <span v-else>Submit</span>
               </button>
             </div>
           </form>

@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { BigNumberish, ethers } from 'ethers'
 import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
@@ -39,6 +39,9 @@ const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registry
 const operators = ref<Operator[]>([])
 const registeredOperators = ref<Operator[]>([])
 const nonregisteredOperators = ref<Operator[]>([])
+
+const isMounted = ref(false)
+const loadingRegisteredOperators = ref(false)
 
 export default function useContracts() {
     const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
@@ -331,13 +334,28 @@ export default function useContracts() {
 
     async function listenForContractEvents() {
         try {
+            console.log('listening for contract events')
             manager.on('StakeDeposited', stakeDepositedListener)
             manager.on('StakeRebalanced', stakeRebalancedListener)
             manager.on('WithdrawalInitiated', withdrawalInitiatedListener)
+            registry.on('OperatorRegistered', getUserOperators)
+            registry.on('OperatorDeregistered', getUserOperators)
+            registry.on('DeregistrationRequested', getUserOperators)
         } catch (err) {
             console.log(`There was an error in listenForContractEvents: ${err}`)
         }
     }
+
+    onMounted(() => {
+        if (isMounted.value) return
+        isMounted.value = true
+        listenForContractEvents()
+    })
+
+    onUnmounted(() => {
+        stopListeningForContractEvents()
+        isMounted.value = false
+    })
 
     async function _querySSVOperators(address: string) {
         try {
@@ -378,6 +396,7 @@ export default function useContracts() {
     }
 
     async function registerOperatorWithCasimir(walletProvider: ProviderString, address: string, operatorId: BigNumberish, value: string) {
+        loadingRegisteredOperators.value = true
         try {
             const signerCreators = {
                 'Browser': getEthersBrowserSigner,
@@ -393,11 +412,12 @@ export default function useContracts() {
                 signer = signerCreator(walletProvider)
             }
             const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(value)})
-            await result.wait()
-            return true
+            loadingRegisteredOperators.value = false
+            // TODO: @shanejearley - How many confirmations do we want to wait?
+            await result?.wait(1)
         } catch (err) {
             console.error(`There was an error in registerOperatorWithCasimir function: ${JSON.stringify(err)}`)
-            return false
+            loadingRegisteredOperators.value = false
         }
     }
 
@@ -463,8 +483,9 @@ export default function useContracts() {
     }
 
     return { 
-        currentStaked, 
-        manager, 
+        currentStaked,
+        loadingRegisteredOperators,
+        manager,
         operators,
         registeredOperators,
         stakingRewards,
