@@ -55,7 +55,6 @@ export default function useEthers() {
     await Promise.all(txs)
 }
 
-
   /**
    * Estimate gas fee using EIP 1559 methodology
    * @returns string in ETH

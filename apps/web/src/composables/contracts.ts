@@ -56,6 +56,37 @@ export default function useContracts() {
     const stakeRebalancedListener = async () => await refreshBreakdown()
     const withdrawalInitiatedListener = async () => await refreshBreakdown()
     
+    // async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
+    //     try {
+    //         const signerCreators = {
+    //             'Browser': getEthersBrowserSigner,
+    //             'Ledger': getEthersLedgerSigner,
+    //             'Trezor': getEthersTrezorSigner,
+    //             'WalletConnect': getWalletConnectSignerV2
+    //         }
+    //         const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
+    //         const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
+    //         const signer = await signerCreator(walletProvider)
+    //         const managerSigner = manager.connect(signer as ethers.Signer)
+    //         const fees = await getDepositFees()
+    //         const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
+    //         const value = ethers.utils.parseEther(depositAmount.toString())
+    //         const estimatedGas = await managerSigner.estimateGas.depositStake({ value, type: 0 })
+    //         console.log('estimatedGas :>> ', estimatedGas)
+    //         // Convert estimatedGas from BigNumber to number
+    //         const gasLimit = estimatedGas.toNumber()
+    //         console.log('gasLimit :>> ', gasLimit)
+    //         const bufferFactor = 1.5
+    //         const bufferedGasLimit = Math.ceil(gasLimit * bufferFactor)
+    //         const result = await managerSigner.depositStake({ value, type: 0, gasLimit: bufferedGasLimit })
+    //         await result.wait(3)
+    //         return true
+    //     } catch (err) {
+    //         console.error(`There was an error in deposit function: ${JSON.stringify(err)}`)
+    //         return false
+    //     }
+    // }
+
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         try {
             const signerCreators = {
@@ -68,17 +99,47 @@ export default function useContracts() {
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             const signer = await signerCreator(walletProvider)
             const managerSigner = manager.connect(signer as ethers.Signer)
+            
             const fees = await getDepositFees()
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
             const value = ethers.utils.parseEther(depositAmount.toString())
-            const result = await managerSigner.depositStake({ value, type: 0 })
-            await result.wait(3)
+    
+            const estimatedGas = await managerSigner.estimateGas.depositStake({ value, type: 0 })
+            const gasLimit = estimatedGas.toNumber()
+            const bufferFactor = 1.5
+            const bufferedGasLimit = Math.ceil(gasLimit * bufferFactor)
+    
+            // Get current network base fee (you might need to adjust this based on your ethers version and setup)
+            const currentBlock = await provider.getBlock('latest')
+            const baseFeePerGas = currentBlock.baseFeePerGas
+            
+            // Set maxPriorityFeePerGas and maxFeePerGas
+            const maxPriorityFeePerGas = ethers.utils.parseUnits('2', 'gwei') // 2 Gwei, adjust as needed
+            const maxFeePerGas = baseFeePerGas?.add(maxPriorityFeePerGas).mul(2) // Paying up to 2x the current base fee
+    
+            const result = await managerSigner.depositStake({
+                value,
+                type: 2,  // Set to Type 2 for EIP-1559 transactions
+                gasLimit: bufferedGasLimit,
+                maxPriorityFeePerGas,
+                maxFeePerGas
+            })
+
+            console.log('result.hash: ', result.hash)
+            
+            await result.wait(4)
+
+            const receipt = await provider.getTransactionReceipt(result.hash)
+            console.log('receipt.status: ', receipt.status)  // 0 means failed, 1 means succeeded
+            console.log('receipt.gasUsed: ', receipt.gasUsed.toString()) 
+    
             return true
         } catch (err) {
             console.error(`There was an error in deposit function: ${JSON.stringify(err)}`)
             return false
         }
     }
+    
 
     async function getAllTimeStakingRewards() : Promise<BreakdownAmount> {
         try {
