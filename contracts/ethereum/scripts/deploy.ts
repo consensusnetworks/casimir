@@ -7,7 +7,8 @@ void async function () {
     const managerArgs = {
         daoOracleAddress: process.env.DAO_ORACLE_ADDRESS,
         beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
-        linkFunctionsAddress: process.env.LINK_FUNCTIONS_ADDRESS,
+        functionsBillingRegistryAddress: process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS,
+        functionsOracleAddress: process.env.FUNCTIONS_ORACLE_ADDRESS,
         linkRegistrarAddress: process.env.LINK_REGISTRAR_ADDRESS,
         linkRegistryAddress: process.env.LINK_REGISTRY_ADDRESS,
         linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,

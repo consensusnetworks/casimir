@@ -6,8 +6,6 @@ import './interfaces/ICasimirManager.sol';
 import './interfaces/ICasimirRegistry.sol';
 import './interfaces/ICasimirPool.sol';
 
-import 'hardhat/console.sol';
-
 /**
  * @title Views contract that provides read-only access to the state
  */
@@ -57,7 +55,8 @@ contract CasimirViews is ICasimirViews {
         for (uint256 i = startIndex; i < endIndex; i++) {
             uint32 poolId = stakedPoolIds[i];
             ICasimirPool pool = ICasimirPool(manager.getPoolAddress(poolId));
-            if (pool.getBalance() >= COMPOUND_MINIMUM) {
+            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
+            if (poolDetails.balance >= COMPOUND_MINIMUM) {
                 poolIds[count] = poolId;
                 count++;
                 if (count == 5) {
@@ -124,7 +123,8 @@ contract CasimirViews is ICasimirViews {
             uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
             uint32 poolId = stakedPoolIds[i];
             ICasimirPool pool = ICasimirPool(manager.getPoolAddress(poolId));
-            sweptBalance += uint128(pool.getBalance() / 1 gwei);
+            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
+            sweptBalance += uint128(poolDetails.balance / 1 gwei);
         }
     }
 
@@ -153,8 +153,6 @@ contract CasimirViews is ICasimirViews {
             ICasimirPool pool = ICasimirPool(poolAddress);
             ICasimirPool.PoolDetails memory details = pool.getDetails();
             validatorPublicKeys[count] = details.publicKey;
-            console.log('validatorPublicKeys[count]');
-            console.logBytes(validatorPublicKeys[count]);
             count++;
         }
         return validatorPublicKeys;

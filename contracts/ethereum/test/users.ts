@@ -3,7 +3,7 @@ import { loadFixture, setBalance, time } from '@nomicfoundation/hardhat-network-
 import { expect } from 'chai'
 import { deploymentFixture } from './fixtures/shared'
 import { round } from '../helpers/math'
-import { initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
+import { depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
 import { fulfillReport, runUpkeep } from '../helpers/upkeep'
 
 describe('Users', async function () {
@@ -35,12 +35,19 @@ describe('Users', async function () {
     })
 
     it('User\'s 64.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
-        const { manager, upkeep, views, keeper, daoOracle } = await loadFixture(deploymentFixture)
+        const { manager, upkeep, views, keeper, daoOracle, functionsBillingRegistry } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
         const depositAmount = round(64 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
         const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
+
+        if ((await manager.functionsId()).toNumber() === 0) {
+            await depositFunctionsBalanceHandler({ manager, signer: daoOracle })
+        }
+        if ((await manager.upkeepId()).toNumber() === 0) {
+            await depositUpkeepBalanceHandler({ manager, signer: daoOracle })
+        }
 
         await initiateDepositHandler({ manager, signer: daoOracle })
         await initiateDepositHandler({ manager, signer: daoOracle })
@@ -51,7 +58,7 @@ describe('Users', async function () {
 
         await time.increase(time.duration.days(1))   
         await runUpkeep({ upkeep, keeper })
-        let requestId = 0
+
         const firstReportValues = {
             activeBalance: 64,
             sweptBalance: 0,
@@ -60,12 +67,14 @@ describe('Users', async function () {
             completedExits: 0,
             compoundablePoolIds: [0, 0, 0, 0, 0]
         }
-        requestId = await fulfillReport({
-            upkeep,
+
+        await fulfillReport({
             keeper,
-            values: firstReportValues,
-            requestId
+            upkeep,
+            functionsBillingRegistry,
+            values: firstReportValues
         })
+
         await runUpkeep({ upkeep, keeper })
 
         const stakedPoolIds = await manager.getStakedPoolIds()
@@ -90,6 +99,7 @@ describe('Users', async function () {
 
         await time.increase(time.duration.days(1))   
         await runUpkeep({ upkeep, keeper })
+
         const sweptExitedBalance = 32
         const secondReportValues = {
             activeBalance: 32,
@@ -99,12 +109,14 @@ describe('Users', async function () {
             completedExits: 1,
             compoundablePoolIds: [0, 0, 0, 0, 0]
         }
+
         await fulfillReport({
-            upkeep,
             keeper,
-            values: secondReportValues,
-            requestId
+            upkeep,
+            functionsBillingRegistry,
+            values: secondReportValues
         })
+
         const exitedPoolId = (await manager.getStakedPoolIds())[0]
         const exitedPoolAddress = await manager.getPoolAddress(exitedPoolId)
         const currentBalance = await ethers.provider.getBalance(exitedPoolAddress)

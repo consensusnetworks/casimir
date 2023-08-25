@@ -50,5 +50,4 @@ interface ICasimirPool {
     /***********/
 
     function getDetails() external view returns (PoolDetails memory);
-    function getBalance() external view returns (uint256);
 }

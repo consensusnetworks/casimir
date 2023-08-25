@@ -9,8 +9,10 @@ import "./libraries/Types.sol";
 import "./vendor/interfaces/IDepositContract.sol";
 import "./vendor/interfaces/ISSVNetwork.sol";
 import "./vendor/interfaces/IWETH9.sol";
-import "./vendor/interfaces/KeeperRegistrarInterface.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AutomationRegistryInterface2_0.sol";
+import "./vendor/interfaces/IFunctionsBillingRegistry.sol";
+import "./vendor/interfaces/IKeeperRegistrar.sol";
+import "./vendor/interfaces/IAutomationRegistry.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -19,8 +21,6 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-
-import 'hardhat/console.sol';
 
 /**
  * @title Manager contract that accepts and distributes deposits
@@ -51,8 +51,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint256 private constant MAX_ACTIONS_PER_PERIOD = 5;
     /** Compound minimum (0.1 ETH) */
     uint256 private constant COMPOUND_MINIMUM = 100000000 gwei;
-    /** Minimum balance for upkeep registration (0.1 LINK) */
-    uint256 private constant UPKEEP_REGISTRATION_MINIMUM = 100000000 gwei;
     /** Scale factor for each rewards to stake ratio */
     uint256 private constant SCALE_FACTOR = 1 ether;
     /** Uniswap 0.3% fee tier */
@@ -72,12 +70,14 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     ICasimirUpkeep private immutable upkeep;
     /** Beacon deposit contract */
     IDepositContract private immutable beaconDeposit;
+    /** Chainlink functions billing registry contract */
+    IFunctionsBillingRegistry private immutable functionsBillingRegistry;
     /** Keeper registrar contract */
-    KeeperRegistrarInterface private immutable linkRegistrar;
-    /** Keeper registry contract */
-    AutomationRegistryInterface private immutable linkRegistry;
+    IKeeperRegistrar private immutable linkRegistrar;
+    /** Automation registry contract */
+    IAutomationRegistry private immutable linkRegistry;
     /** LINK ERC-20 token contract */
-    IERC20 private immutable linkToken;
+    LinkTokenInterface private immutable linkToken;
     /** SSV network contract */
     ISSVNetwork private immutable ssvNetwork;
     /** SSV ERC-20 token contract */
@@ -97,7 +97,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     uint32 private lastPoolId;
     /** Current report period */
     uint32 public reportPeriod;
-    /** Upkeep ID */
+    /** Chainlink functions subscription ID */
+    uint64 public functionsId;
+    /** Chainlink upkeep subscription ID */
     uint256 public upkeepId;
     /** Latest active balance */
     uint256 public latestActiveBalance;
@@ -134,7 +136,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Total exited deposits */
     uint256 private exitedBalance;
     /** Total reserved fees */
-    uint256 private reservedFeeBalance;
+    uint256 public reservedFeeBalance;
     /** IDs of pools ready for initiation */
     uint32[] private readyPoolIds;
     /** IDS of pools pending deposit confirmation */
@@ -172,18 +174,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     modifier onlyOracleOrRegistry() {
         require(
             msg.sender == oracleAddress || msg.sender == address(registry),
-            "Not owner or registry"
-        );
-        _;
-    }
-
-    /**
-     * @dev Validate the caller is the oracle or upkeep
-     */
-    modifier onlyOracleOrUpkeep() {
-        require(
-            msg.sender == oracleAddress || msg.sender == address(upkeep),
-            "Not oracle or upkeep"
+            "Not oracle or registry"
         );
         _;
     }
@@ -208,7 +199,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Constructor
      * @param daoOracleAddress The DAO oracle address
      * @param beaconDepositAddress The Beacon deposit address
-     * @param linkFunctionsAddress The Chainlink functions oracle address
+     * @param functionsBillingRegistryAddress The Chainlink functions billing registry address
+     * @param functionsOracleAddress The Chainlink functions oracle address
      * @param linkRegistrarAddress The Chainlink keeper registrar address
      * @param linkRegistryAddress The Chainlink keeper registry address
      * @param linkTokenAddress The Chainlink token address
@@ -222,7 +214,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     constructor(
         address daoOracleAddress,
         address beaconDepositAddress,
-        address linkFunctionsAddress,
+        address functionsBillingRegistryAddress,
+        address functionsOracleAddress,
         address linkRegistrarAddress,
         address linkRegistryAddress,
         address linkTokenAddress,
@@ -235,6 +228,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     ) {
         require(daoOracleAddress != address(0), "Missing oracle address");
         require(beaconDepositAddress != address(0), "Missing beacon deposit address");
+        require(functionsBillingRegistryAddress != address(0), "Missing functions billing registry address");
         require(linkRegistrarAddress != address(0), "Missing link registrar address");
         require(linkRegistryAddress != address(0), "Missing link registry address");
         require(linkTokenAddress != address(0), "Missing link token address");
@@ -246,9 +240,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         oracleAddress = daoOracleAddress;
         beaconDeposit = IDepositContract(beaconDepositAddress);
-        linkRegistrar = KeeperRegistrarInterface(linkRegistrarAddress);
-        linkRegistry = AutomationRegistryInterface(linkRegistryAddress);
-        linkToken = IERC20(linkTokenAddress);
+        functionsBillingRegistry = IFunctionsBillingRegistry(functionsBillingRegistryAddress);
+        linkRegistrar = IKeeperRegistrar(linkRegistrarAddress);
+        linkRegistry = IAutomationRegistry(linkRegistryAddress);
+        linkToken = LinkTokenInterface(linkTokenAddress);
         tokenAddresses[Token.LINK] = linkTokenAddress;
         ssvNetwork = ISSVNetwork(ssvNetworkAddress);
         tokenAddresses[Token.SSV] = ssvTokenAddress;
@@ -258,7 +253,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         tokenAddresses[Token.WETH] = wethTokenAddress;
 
         registry = new CasimirRegistry(ssvNetworkViewsAddress);
-        upkeep = new CasimirUpkeep(linkFunctionsAddress);
+        upkeep = new CasimirUpkeep(functionsOracleAddress);
     }
 
     /**
@@ -376,6 +371,40 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Deposit to the functions balance
+     * @param feeAmount The fee amount to deposit
+     * @param minimumTokenAmount The minimum LINK token amount out after processing fees
+     * @param processed Whether the fee amount is already processed
+     */
+    function depositFunctionsBalance(
+        uint256 feeAmount,
+        uint256 minimumTokenAmount,
+        bool processed
+    ) external onlyOracle {
+        uint256 linkAmount = retrieveFees(
+            feeAmount,
+            minimumTokenAmount,
+            tokenAddresses[Token.LINK],
+            processed
+        );
+        if (functionsId == 0) {
+            
+            functionsId = functionsBillingRegistry.createSubscription();
+            functionsBillingRegistry.addConsumer(functionsId, address(upkeep));
+        }
+        require(
+            linkToken.transferAndCall(
+                address(functionsBillingRegistry),
+                linkAmount,
+                abi.encode(functionsId)
+            ),
+            "Transfer failed"
+        );
+
+        emit FunctionsBalanceDeposited(linkAmount);
+    }
+
+    /**
      * @notice Deposit to the upkeep balance
      * @param feeAmount The fee amount to deposit
      * @param minimumTokenAmount The minimum LINK token amount out after processing fees
@@ -385,7 +414,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint256 feeAmount,
         uint256 minimumTokenAmount,
         bool processed
-    ) external onlyOracleOrUpkeep {
+    ) external onlyOracle {
         uint256 linkAmount = retrieveFees(
             feeAmount,
             minimumTokenAmount,
@@ -394,11 +423,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
         linkToken.approve(address(linkRegistrar), linkAmount);
         if (upkeepId == 0) {
-            if (linkAmount < UPKEEP_REGISTRATION_MINIMUM) {
-                revert("Upkeep registration minimum not met");
-            }
             upkeepId = linkRegistrar.registerUpkeep(
-                KeeperRegistrarInterface.RegistrationParams({
+                IKeeperRegistrar.RegistrationParams({
                     name: string("CasimirV1Upkeep"),
                     encryptedEmail: new bytes(0),
                     upkeepContract: address(upkeep),
@@ -412,9 +438,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         } else {
             linkRegistry.addFunds(upkeepId, uint96(linkAmount));
         }
-        if (upkeepId == 0) {
-            revert("Upkeep not registered");
-        }
 
         emit UpkeepBalanceDeposited(linkAmount);
     }
@@ -422,7 +445,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /**
      * @notice Deposit reserved fees
      */
-    function depositReservedFees() external payable {
+    function depositReservedFees() external payable onlyOwner {
         reservedFeeBalance += msg.value;
 
         emit ReservedFeesDeposited(msg.value);
@@ -479,7 +502,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         reportPeriod++;
         uint256 expectedActivatedBalance = activatedDeposits * POOL_CAPACITY;
         uint256 expectedExitedBalance = completedExits * POOL_CAPACITY;
-        int256 rewards = int256(activeBalance + sweptBalance + finalizableRecoveredBalance) - int256(getExpectedEffectiveBalance() + expectedExitedBalance);
+        uint256 expectedEffectiveBalance = stakedPoolIds.length * POOL_CAPACITY;
+        int256 rewards = int256(activeBalance + sweptBalance + finalizableRecoveredBalance) - int256(expectedEffectiveBalance + expectedExitedBalance);
         int256 change = rewards - latestActiveRewardBalance;
         if (change > 0) {
             uint256 gain = uint256(change);
@@ -1056,12 +1080,23 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Cancel upkeep and withdraw the upkeep balance
+     * @notice Cancel the Chainlink functions subscription
      */
-    function withdrawUpkeepBalance() external onlyOracle {
-        linkRegistry.cancelUpkeep(upkeepId);
+    function cancelFunctions() external onlyOracle {
+        functionsBillingRegistry.cancelSubscription(functionsId, address(this));
+        functionsId = 0;
 
-        emit UpkeepBalanceWithdrawn();
+        emit FunctionsCancelled();
+    }
+
+    /**
+     * @notice Cancel the Chainlink upkeep subscription
+     */
+    function cancelUpkeep() external onlyOracle {
+        linkRegistry.cancelUpkeep(upkeepId);
+        upkeepId = 0;
+
+        emit UpkeepCancelled();
     }
 
     /**
@@ -1069,7 +1104,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The amount to withdraw
      */
     function withdrawLINKBalance(uint256 amount) external onlyOwner {
-        SafeERC20.safeTransfer(linkToken, owner(), amount);
+        require(linkToken.transfer(owner(), amount), "Transfer failed");
 
         emit LINKBalanceWithdrawn(amount);
     }
@@ -1085,13 +1120,27 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Set a new functions oracle address
-     * @param newFunctionsAddress New functions oracle address
+     * Set a new Chainlink functions request
+     * @param newRequestCBOR The new Chainlink functions request CBOR
+     * @param newFulfillGasLimit The new Chainlink functions fulfill gas limit 
      */
-    function setFunctionsAddress(address newFunctionsAddress) external onlyOwner {
-        upkeep.setFunctionsAddress(newFunctionsAddress);
+    function setFunctionsRequest(
+        bytes calldata  newRequestCBOR,
+        uint32 newFulfillGasLimit
+    ) external onlyOwner {
+        upkeep.setRequest(newRequestCBOR, newFulfillGasLimit);
 
-        emit FunctionsAddressSet(newFunctionsAddress);
+        emit FunctionsRequestSet(newRequestCBOR, newFulfillGasLimit);
+    }
+
+    /**
+     * @notice Set a new Chainlink functions oracle address
+     * @param newFunctionsOracleAddress New Chainlink functions oracle address
+     */
+    function setFunctionsOracleAddress(address newFunctionsOracleAddress) external onlyOwner {
+        upkeep.setOracleAddress(newFunctionsOracleAddress);
+
+        emit FunctionsOracleAddressSet(newFunctionsOracleAddress);
     }
 
     /**
@@ -1146,26 +1195,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getWithdrawableBalance() public view returns (uint256) {
         return prepoolBalance + exitedBalance;
-    }
-
-    /**
-     * @notice Get the reserved fee balance
-     * @return reservedFeeBalance The reserved fee balance
-     */
-    function getReservedFeeBalance() external view returns (uint256) {
-        return reservedFeeBalance;
-    }
-
-    /**
-     * @notice Get the expected effective balance
-     * @return expectedEffectiveBalance The expected effective balance
-     */
-    function getExpectedEffectiveBalance()
-        public
-        view
-        returns (uint256 expectedEffectiveBalance)
-    {
-        expectedEffectiveBalance = stakedPoolIds.length * POOL_CAPACITY;
     }
 
     /**
@@ -1234,13 +1263,5 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getUpkeepAddress() external view returns (address upkeepAddress) {
         upkeepAddress = address(upkeep);
-    }
-
-    /**
-     * @notice Get the upkeep balance
-     * @return upkeepBalance The upkeep balance
-     */
-    function getUpkeepBalance() external view returns (uint256 upkeepBalance) {
-        upkeepBalance = linkRegistry.getUpkeep(upkeepId).balance;
     }
 }

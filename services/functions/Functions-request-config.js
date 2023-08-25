@@ -1,4 +1,5 @@
 const fs = require("fs")
+const path = require("path")
 
 // Loads environment variables from .env.enc file (if it exists)
 require("@chainlink/env-enc").config()
@@ -29,11 +30,11 @@ const requestConfig = {
   // Code language (only JavaScript is currently supported)
   codeLanguage: CodeLanguage.JavaScript,
   // String containing the source code to be executed
-  source: fs.readFileSync("./API-request-source.js").toString(),
+  source: fs.readFileSync(path.join(__dirname, 'API-request-source.js')).toString(),
   // Secrets can be accessed within the source code with `secrets.varName` (ie: secrets.apiKey). The secrets object can only contain string values.
   secrets: {
-    ethereumRpcUrl: process.env.ETHEREUM_RPC_URL ?? "",
-    ethereumBeaconRpcUrl: process.env.ETHEREUM_BEACON_RPC_URL ?? "",
+    // ethereumRpcUrl: process.env.ETHEREUM_RPC_URL ?? "",
+    // ethereumBeaconRpcUrl: process.env.ETHEREUM_BEACON_RPC_URL ?? "",
   },
   // Per-node secrets objects assigned to each DON member. When using per-node secrets, nodes can only use secrets which they have been assigned.
   perNodeSecrets: [],
