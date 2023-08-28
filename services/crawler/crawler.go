@@ -5,12 +5,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethereum "github.com/ethereum/go-ethereum"
+	// "github.com/ethereum/go-ethereum/accounts/abi"
+	// "github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -28,7 +31,9 @@ type EthereumCrawler struct {
 	Start               time.Time
 	Elapsed             time.Duration
 	PriorityAddressList []common.Address
-	Unprocessed         []uint64
+	// the block when the contract was first deployed
+	StartBlock  uint64
+	Unprocessed []uint64
 }
 
 func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
@@ -82,9 +87,8 @@ func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
 		return nil, err
 	}
 
-	pr := []common.Address{
-		common.HexToAddress("0xd557a5745d4560B24D36A68b52351ffF9c86A212"),
-	}
+	// TODO: add any priorty addresses needed first
+	pr := []common.Address{}
 
 	return &EthereumCrawler{
 		Logger:              logger,
@@ -96,16 +100,17 @@ func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
 		Sema:                make(chan struct{}, config.ConcurrencyLimit),
 		Version:             rv,
 		Config:              config,
+		StartBlock:          9564114,
 		PriorityAddressList: pr,
 	}, nil
 }
 
 func (c *EthereumCrawler) Crawl() error {
 	defer c.Wg.Wait()
+
 	l := c.Logger.Sugar()
 
 	l.Info(c.Config)
-	l.Infof("current head: %d", c.EthereumService.Head.Number)
 
 	if len(c.PriorityAddressList) > 0 {
 		addressStrings := make([]string, len(c.PriorityAddressList))
@@ -178,6 +183,58 @@ func (c *EthereumCrawler) ProcessBlock(b uint64) error {
 
 	return nil
 }
+
+func (c *EthereumCrawler) ContractLogs(b uint64) error {
+	// var events *BlockEvents
+
+	contractAddr := common.HexToAddress("0x5d35a44Db8a390aCfa997C9a9Ba3a2F878595630")
+
+	// caller, err := NewMainCaller(contractAddr, c.EthereumService.Client)
+
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// filterOpt := &bind.FilterOpts{
+	// 	Start: c.StartBlock,
+	// }
+
+	// if err != nil {
+	// 	return err
+	// }
+
+	// v := []interface{}
+
+	// logCh, err := caller.contract.FilterLogs(opt, "dd", v)
+
+	query := ethereum.FilterQuery{
+		FromBlock: big.NewInt(9564114),
+		Addresses: []common.Address{contractAddr},
+	}
+
+	logs, err := c.EthereumService.Client.FilterLogs(context.Background(), query)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// contractAbi, err := abi.JSON(strings.NewReader(string(MainABI)))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
+	for _, vLog := range logs {
+		fmt.Println(vLog)
+		// ii, err := contractAbi.Unpack("DepositInitiated", vLog.Data)
+		// if err != nil {
+			// log.Fatal(err)
+		// }
+	}
+	return nil
+}
+
 func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 	l := c.Logger.Sugar()
 	txs := &BlockEvents{}
@@ -294,6 +351,7 @@ func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 
 	if (len(txs.TxEvents)-1)*2 != len(txs.Actions) {
 		l.Errorf("events mismatch: block=%d events=%d actions=%d", b, len(txs.TxEvents), len(txs.Actions))
+		return nil, errors.New("check the nnumber of")
 	}
 
 	return txs, nil
@@ -356,34 +414,6 @@ func (c *EthereumCrawler) UploadBlockEvents(result *BlockEvents) error {
 	}
 
 	return nil
-}
-
-func (c *EthereumCrawler) GetHistoricalContracts() (*BlockEvents, error) {
-	var result *BlockEvents
-
-	contractAddr := common.HexToAddress("0x5d35a44Db8a390aCfa997C9a9Ba3a2F878595630")
-
-	manager, err := NewMain(contractAddr, c.EthereumService.Client)
-
-	if err != nil {
-		return nil, err
-	}
-
-	opt := &bind.CallOpts{}
-
-	mine := common.HexToAddress("0x84725c8f954f18709aDcA150a0635D2fBE94fDfF")
-
-	userStaked, err := manager.GetUserStake(opt, mine)
-
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println("----")
-	fmt.Println(userStaked)
-	fmt.Println("----")
-
-	return result, nil
 }
 
 func GasFeeInETH(gasPrice *big.Int, gasLimit uint64) float64 {

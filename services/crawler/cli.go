@@ -53,13 +53,13 @@ func RootCmd(c *cli.Context) error {
 		return err
 	}
 
-	live, err := NewEthereumCrawler(config)
+	crawler, err := NewEthereumCrawler(config)
 
 	if err != nil {
 		return err
 	}
 
-	err = live.Crawl()
+	err = crawler.Crawl()
 
 	if err != nil {
 		return err
