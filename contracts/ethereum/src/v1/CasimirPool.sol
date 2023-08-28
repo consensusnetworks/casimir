@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import './interfaces/ICasimirPool.sol';
-import './interfaces/ICasimirManager.sol';
-import './interfaces/ICasimirRegistry.sol';
+import "./interfaces/ICasimirPool.sol";
+import "./interfaces/ICasimirManager.sol";
+import "./interfaces/ICasimirRegistry.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -46,7 +46,7 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     /**
      * @notice Constructor
      * @param registryAddress The registry address
-     * @param _id The pool ID 
+     * @param _id The pool ID
      * @param _publicKey The validator public key
      * @param _operatorIds The operator IDs
      */
@@ -123,16 +123,20 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
      * @param newStatus The new pool status
      */
     function setStatus(PoolStatus newStatus) external onlyOwner {
-        status = newStatus;   
+        status = newStatus;
 
-        emit StatusSet(newStatus);     
+        emit StatusSet(newStatus);
     }
 
     /**
      * @notice Get the pool details
      * @return poolDetails The pool details
      */
-    function getDetails() external view returns (PoolDetails memory poolDetails) {
+    function getDetails()
+        external
+        view
+        returns (PoolDetails memory poolDetails)
+    {
         poolDetails = PoolDetails({
             id: id,
             balance: address(this).balance,

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import './interfaces/ICasimirViews.sol';
-import './interfaces/ICasimirManager.sol';
-import './interfaces/ICasimirRegistry.sol';
-import './interfaces/ICasimirPool.sol';
+import "./interfaces/ICasimirViews.sol";
+import "./interfaces/ICasimirManager.sol";
+import "./interfaces/ICasimirRegistry.sol";
+import "./interfaces/ICasimirPool.sol";
 
 /**
  * @title Views contract that provides read-only access to the state
@@ -70,21 +70,30 @@ contract CasimirViews is ICasimirViews {
      * @notice Get the deposited pool count
      * @return depositedPoolCount The deposited pool count
      */
-    function getDepositedPoolCount() external view returns (uint256 depositedPoolCount) {
-        return manager.getPendingPoolIds().length + manager.getStakedPoolIds().length;
+    function getDepositedPoolCount()
+        external
+        view
+        returns (uint256 depositedPoolCount)
+    {
+        return
+            manager.getPendingPoolIds().length +
+            manager.getStakedPoolIds().length;
     }
 
     /**
      * @notice Get operators
      * @param startIndex The start index
-     * @param endIndex The end index 
+     * @param endIndex The end index
      * @return operators The operators
      */
     function getOperators(
         uint256 startIndex,
         uint256 endIndex
     ) external view returns (ICasimirRegistry.Operator[] memory) {
-        ICasimirRegistry.Operator[] memory operators = new ICasimirRegistry.Operator[](endIndex - startIndex);
+        ICasimirRegistry.Operator[]
+            memory operators = new ICasimirRegistry.Operator[](
+                endIndex - startIndex
+            );
         uint64[] memory operatorIds = registry.getOperatorIds();
         uint256 count = 0;
         for (uint256 i = startIndex; i < endIndex; i++) {
@@ -100,7 +109,9 @@ contract CasimirViews is ICasimirViews {
      * @param poolId The pool ID
      * @return poolDetails The pool details
      */
-    function getPoolDetails(uint32 poolId) external view returns (ICasimirPool.PoolDetails memory poolDetails) {
+    function getPoolDetails(
+        uint32 poolId
+    ) external view returns (ICasimirPool.PoolDetails memory poolDetails) {
         address poolAddress = manager.getPoolAddress(poolId);
         if (poolAddress != address(0)) {
             ICasimirPool pool = ICasimirPool(poolAddress);
