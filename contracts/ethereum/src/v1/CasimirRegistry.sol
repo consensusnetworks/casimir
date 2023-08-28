@@ -22,10 +22,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     /* Constants */
     /*************/
 
-    /** Required collateral */
-    uint256 private requiredCollateral = 4 ether;
-    /** Minimum collateral deposit (0.1 ETH) */
-    uint256 private minimumCollateralDeposit = 100000000 gwei;
+    /** Required collateral per operator per pool */
+    uint256 private constant REQUIRED_COLLATERAL = 1 ether;
 
     /*************/
     /* Immutable */
@@ -68,6 +66,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      * @param ssvNetworkViewsAddress The SSV network views address
      */
     constructor(address ssvNetworkViewsAddress) {
+        require(ssvNetworkViewsAddress != address(0), "Missing SSV network views address");
+
         manager = ICasimirManager(msg.sender);
         ssvNetworkViews = ISSVNetworkViews(ssvNetworkViewsAddress);
     }
@@ -77,21 +77,19 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      * @param operatorId The operator ID
      */
     function registerOperator(uint64 operatorId) external payable {
-        require(
-            msg.value >= requiredCollateral,
-            "Insufficient registration collateral"
-        );
         (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(operatorId);
         require(
             msg.sender == operatorOwner,
             "Only operator owner can register"
         );
+        require(operatorId != 0, "Invalid operator ID");
+        Operator storage operator = operators[operatorId];
+        require(operator.id == 0, "Operator already registered");
 
         operatorIds.push(operatorId);
-        Operator storage operator = operators[operatorId];
         operator.id = operatorId;
         operator.active = true;
-        operator.collateral = int256(msg.value);
+        operator.collateral = msg.value;
 
         emit OperatorRegistered(operatorId);
     }
@@ -101,10 +99,6 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      * @param operatorId The operator ID
      */
     function depositCollateral(uint64 operatorId) external payable {
-        require(
-            msg.value > minimumCollateralDeposit,
-            "Insufficient collateral deposit"
-        );
         Operator storage operator = operators[operatorId];
         (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(
             operatorId
@@ -114,11 +108,10 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
             "Only operator owner can deposit collateral"
         );
 
-        operator.collateral += int256(msg.value);
+        operator.collateral += msg.value;
+        operator.active = true;
 
-        if (operator.collateral >= int256(requiredCollateral)) {
-            operator.active = true;
-        }
+        emit CollateralDeposited(operatorId, msg.value);
     }
 
     /**
@@ -136,20 +129,21 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
         require(
             !operator.active &&
             !operator.resharing &&
-            operator.collateral >= int256(amount) ||
-            operator.collateral >= int256(requiredCollateral),
+            operator.collateral >= amount,
             "Not allowed to withdraw amount"
         );
 
-        operator.collateral -= int256(amount);
+        operator.collateral -= amount;
         operatorOwner.send(amount);
+
+        emit WithdrawalFulfilled(operatorId, amount);
     }
 
     /**
-     * @notice Request deregistration for an operator
+     * @notice Request to deactivate an operator
      * @param operatorId The operator ID
      */
-    function requestDeregistration(uint64 operatorId) external {
+    function requestDeactivation(uint64 operatorId) external {
         Operator storage operator = operators[operatorId];
         (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(operatorId);
         require(
@@ -165,6 +159,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
             operator.resharing = true;
             manager.requestReshares(operatorId);
         }
+
+        emit DeactivationRequested(operatorId);
     }
 
     /**
@@ -179,10 +175,14 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
         Operator storage operator = operators[operatorId];
         require(operator.active, "Operator not active");
         require(!operator.resharing, "Operator resharing");
-        require(operator.collateral >= 0, "Operator owes collateral");
         require(!operatorPools[operatorId][poolId], "Pool already active");
+        uint256 eligiblePools = (operator.collateral / REQUIRED_COLLATERAL) - operator.poolCount;
+        require(eligiblePools > 0, "No remaining eligible pools");
+
         operatorPools[operatorId][poolId] = true;
         operator.poolCount += 1;
+
+        emit OperatorPoolAdded(operatorId, poolId);
     }
 
     /**
@@ -198,6 +198,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     ) external onlyOwnerOrPool(poolId) {
         Operator storage operator = operators[operatorId];
         require(operatorPools[operatorId][poolId], "Pool is not active for operator");
+        require(blameAmount <= REQUIRED_COLLATERAL, "Blame amount is more than collateral");
 
         operatorPools[operatorId][poolId] = false;
         operator.poolCount -= 1;
@@ -208,21 +209,11 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
         }
 
         if (blameAmount > 0) {
-            uint256 recoverableCollateral;
-            if (operator.collateral >= int256(blameAmount)) {
-                recoverableCollateral = blameAmount;
-            } else if (operator.collateral > 0) {
-                recoverableCollateral = uint256(operator.collateral);
-            }
-            operator.collateral -= int256(blameAmount);
-
-            if (operator.collateral < 0) {
-                operator.resharing = true;
-                manager.requestReshares(operatorId);
-            }
-
-            manager.depositRecoveredBalance{value: recoverableCollateral}(poolId);
+            operator.collateral -= blameAmount;
+            manager.depositRecoveredBalance{value: blameAmount}(poolId);
         }
+
+        emit OperatorPoolRemoved(operatorId, poolId, blameAmount);
     }
 
     /**

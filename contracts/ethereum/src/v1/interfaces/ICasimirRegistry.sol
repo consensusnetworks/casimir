@@ -13,7 +13,7 @@ interface ICasimirRegistry {
         uint64 id;
         bool active;
         bool resharing;
-        int256 collateral;
+        uint256 collateral;
         uint256 poolCount;
     }
 
@@ -21,9 +21,13 @@ interface ICasimirRegistry {
     /* Events */
     /**********/
 
-    event OperatorRegistered(uint64 indexed operatorId);
-    event DeregistrationRequested(uint64 indexed operatorId);
+    event CollateralDeposited(uint64 indexed operatorId, uint256 amount);
+    event DeactivationRequested(uint64 indexed operatorId);
     event DeregistrationCompleted(uint64 indexed operatorId);
+    event OperatorPoolAdded(uint64 indexed operatorId, uint32 poolId);
+    event OperatorPoolRemoved(uint64 operatorId, uint32 poolId, uint256 blameAmount);
+    event OperatorRegistered(uint64 indexed operatorId);
+    event WithdrawalFulfilled(uint64 indexed operatorId, uint256 amount);
 
     /*************/
     /* Mutations */
@@ -32,7 +36,7 @@ interface ICasimirRegistry {
     function registerOperator(uint64 operatorId) external payable;
     function depositCollateral(uint64 operatorId) external payable;
     function requestWithdrawal(uint64 operatorId, uint256 amount) external;
-    function requestDeregistration(uint64 operatorId) external;
+    function requestDeactivation(uint64 operatorId) external;
     function addOperatorPool(uint64 operatorId, uint32 poolId) external;
     function removeOperatorPool(uint64 operatorId, uint32 poolId, uint256 blameAmount) external;
 
