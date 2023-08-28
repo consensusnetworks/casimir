@@ -3,7 +3,7 @@ pragma solidity 0.8.18;
 
 import "./interfaces/ICasimirUpkeep.sol";
 import "./interfaces/ICasimirManager.sol";
-import {Functions, FunctionsClient} from "./vendor/FunctionsClient.sol";
+import "./vendor/FunctionsClient.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -91,32 +91,6 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     }
 
     /**
-     * @notice Generate a new Functions.Request(off-chain, saving gas)
-     * @param source JavaScript source code
-     * @param secrets Encrypted secrets payload
-     * @param args List of arguments accessible from within the source code
-     */
-    function generateRequest(
-        string calldata source,
-        bytes calldata secrets,
-        string[] calldata args
-    ) external pure returns (bytes memory) {
-        Functions.Request memory req;
-        req.initializeRequest(
-            Functions.Location.Inline,
-            Functions.CodeLanguage.JavaScript,
-            source
-        );
-        if (secrets.length > 0) {
-            req.addRemoteSecrets(secrets);
-        }
-        if (args.length > 0) {
-            req.addArgs(args);
-        }
-        return req.encodeCBOR();
-    }
-
-    /**
      * Set a new Chainlink functions request
      * @param newRequestCBOR The new Chainlink functions request CBOR
      * @param newFulfillGasLimit The new Chainlink functions fulfill gas limit 
@@ -129,28 +103,6 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         fulfillGasLimit = newFulfillGasLimit;
 
         emit RequestSet(newRequestCBOR, newFulfillGasLimit);
-    }
-
-    /**
-     * @notice Check if the upkeep is needed
-     * @return upkeepNeeded True if the upkeep is needed
-     */
-    function checkUpkeep(
-        bytes memory
-    )
-        public
-        view
-        override
-        returns (bool upkeepNeeded, bytes memory)
-    {
-        if (reportStatus == ReportStatus.FINALIZED) {
-            bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
-            bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= REPORT_HEARTBEAT;
-            upkeepNeeded = checkActive && heartbeatLapsed;
-        } else if (reportStatus == ReportStatus.PROCESSING) {
-            bool finalizeReport = reportCompletedExits == manager.finalizableCompletedExits();
-            upkeepNeeded = finalizeReport;
-        }
     }
 
     /**
@@ -208,6 +160,69 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     }
 
     /**
+     * @notice Set a new Chainlink functions oracle address
+     * @param newOracleAddress New Chainlink functions oracle address
+     */
+    function setOracleAddress(address newOracleAddress) external onlyOwner {
+        require (
+            newOracleAddress != address(0),
+            "Missing oracle address"
+        );
+
+        setOracle(newOracleAddress);
+
+        emit OracleAddressSet(newOracleAddress);
+    }
+
+    /**
+     * @notice Generate a new Functions.Request(off-chain, saving gas)
+     * @param source JavaScript source code
+     * @param secrets Encrypted secrets payload
+     * @param args List of arguments accessible from within the source code
+     */
+    function generateRequest(
+        string calldata source,
+        bytes calldata secrets,
+        string[] calldata args
+    ) external pure returns (bytes memory) {
+        Functions.Request memory req;
+        req.initializeRequest(
+            Functions.Location.Inline,
+            Functions.CodeLanguage.JavaScript,
+            source
+        );
+        if (secrets.length > 0) {
+            req.addRemoteSecrets(secrets);
+        }
+        if (args.length > 0) {
+            req.addArgs(args);
+        }
+        return req.encodeCBOR();
+    }
+
+    /**
+     * @notice Check if the upkeep is needed
+     * @return upkeepNeeded True if the upkeep is needed
+     */
+    function checkUpkeep(
+        bytes memory
+    )
+        public
+        view
+        override
+        returns (bool upkeepNeeded, bytes memory)
+    {
+        if (reportStatus == ReportStatus.FINALIZED) {
+            bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
+            bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= REPORT_HEARTBEAT;
+            upkeepNeeded = checkActive && heartbeatLapsed;
+        } else if (reportStatus == ReportStatus.PROCESSING) {
+            bool finalizeReport = reportCompletedExits == manager.finalizableCompletedExits();
+            upkeepNeeded = finalizeReport;
+        }
+    }
+
+    /**
      * @notice Callback that is invoked once the DON has resolved the request or hit an error
      * @param requestId The request ID, returned by sendRequest()
      * @param response Aggregated response from the user code
@@ -259,20 +274,5 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         }
 
         emit OCRResponse(requestId, response, _error);
-    }
-
-    /**
-     * @notice Set a new Chainlink functions oracle address
-     * @param newOracleAddress New Chainlink functions oracle address
-     */
-    function setOracleAddress(address newOracleAddress) external onlyOwner {
-        require (
-            newOracleAddress != address(0),
-            "Missing oracle address"
-        );
-
-        setOracle(newOracleAddress);
-
-        emit OracleAddressSet(newOracleAddress);
     }
 }

@@ -302,18 +302,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Deposit the current tip balance
-     */
-    function depositTips() private {
-        uint256 tipsAfterFees = subtractFees(tipBalance);
-        reservedFeeBalance += tipBalance - tipsAfterFees;
-        tipBalance = 0;
-        distributeStake(tipsAfterFees);
-
-        emit TipsDeposited(tipsAfterFees);
-    }
-
-    /**
      * @notice Deposit exited balance from a given pool ID
      * @param poolId The pool ID
      */
@@ -462,28 +450,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         owner().send(amount);
 
         emit ReservedFeesWithdrawn(amount);
-    }
-
-    /**
-     * @dev Distribute a given amount of stake
-     * @param amount The amount of stake to distribute
-     */
-    function distributeStake(uint256 amount) private {
-        while (amount > 0) {
-            uint256 remainingCapacity = POOL_CAPACITY - prepoolBalance;
-            if (remainingCapacity > amount) {
-                prepoolBalance += amount;
-                amount = 0;
-            } else {
-                lastPoolId++;
-                uint32 poolId = lastPoolId;
-                prepoolBalance = 0;
-                amount -= remainingCapacity;
-                readyPoolIds.push(poolId);
-
-                emit DepositRequested(poolId);
-            }
-        }
     }
 
     /**
@@ -650,37 +616,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Fulfill a withdrawal
-     * @param sender The withdrawal sender
-     * @param amount The withdrawal amount
-     */
-    function fulfillWithdrawal(address sender, uint256 amount) private {
-        sender.send(amount);
-
-        emit WithdrawalFulfilled(sender, amount);
-    }
-
-    /**
-     * Check and set a user's action count
-     * @param userAddress The user address to check
-     */
-    function setActionCount(address userAddress) private {
-        User storage user = users[userAddress];
-        require(
-            user.actionPeriodTimestamp == 0 ||
-                user.actionCount < MAX_ACTIONS_PER_PERIOD ||
-                block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD,
-            "Action period maximum reached"
-        );
-        if (block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD) {
-            user.actionPeriodTimestamp = block.timestamp;
-            user.actionCount = 1;
-        } else {
-            user.actionCount++;
-        }
-    }
-
-    /**
      * @notice Initiate the next ready pool
      * @param depositDataRoot The deposit data root
      * @param publicKey The validator public key
@@ -748,49 +683,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         emit DepositInitiated(poolId);
     }
 
-    function registerPool(
-        uint32 poolId,
-        bytes32 depositDataRoot,
-        bytes memory publicKey,
-        bytes memory signature,
-        bytes memory withdrawalCredentials,
-        uint64[] memory operatorIds,
-        bytes memory shares,
-        ISSVNetworkCore.Cluster memory cluster,
-        uint256 feeAmount,
-        uint256 minimumTokenAmount,
-        bool processed
-    ) private {
-        for (uint256 i = 0; i < operatorIds.length; i++) {
-            registry.addOperatorPool(operatorIds[i], poolId);
-        }
-
-        beaconDeposit.deposit{value: POOL_CAPACITY}(
-            publicKey,
-            withdrawalCredentials,
-            signature,
-            depositDataRoot
-        );
-
-        uint256 ssvAmount = retrieveFees(
-            feeAmount,
-            minimumTokenAmount,
-            tokenAddresses[Token.SSV],
-            processed
-        );
-        ssvToken.approve(address(ssvNetwork), ssvAmount);
-
-        ssvNetwork.registerValidator(
-            publicKey,
-            operatorIds,
-            shares,
-            ssvAmount,
-            cluster
-        );
-
-        emit PoolRegistered(poolId);
-    }
-
     /**
      * @notice Activate a given count of the next pending pools
      * @param count The number of pools to activate
@@ -813,31 +705,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             stakedPoolIds.push(poolId);
 
             emit DepositActivated(poolId);
-        }
-    }
-
-    /**
-     * @notice Request a given count of staked pool exits
-     * @param count The number of exits to request
-     */
-    function requestExits(uint256 count) private {
-        uint256 index = 0;
-        while (count > 0) {
-            uint32 poolId = stakedPoolIds[index];
-            ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
-            if (
-                poolDetails.status == ICasimirPool.PoolStatus.PENDING ||
-                poolDetails.status == ICasimirPool.PoolStatus.ACTIVE
-            ) {
-                count--;
-                index++;
-
-                pool.setStatus(ICasimirPool.PoolStatus.EXITING_REQUESTED);
-                requestedExits++;
-
-                emit ExitRequested(poolId);
-            }
         }
     }
 
@@ -997,80 +864,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Get reservable fees from a given amount
-     * @param amount The amount to reserve fees from
-     * @return amountAfterFees The amount after fees
-     */
-    function subtractFees(
-        uint256 amount
-    ) private pure returns (uint256 amountAfterFees) {
-        amountAfterFees = Math.mulDiv(amount, 100, 100 + FEE_PERCENT);
-    }
-
-    /**
-     * @dev Retrieve fees for a given amount of a given token
-     * @param amount The amount to retrieve
-     * @param minimumTokenAmount The minimum token amount out after processing fees
-     * @param token The token address
-     * @param processed Whether the amount is already processed
-     */
-    function retrieveFees(
-        uint256 amount,
-        uint256 minimumTokenAmount,
-        address token,
-        bool processed
-    ) private returns (uint256 amountOut) {
-        if (!processed) {
-            amountOut = processFees(amount, minimumTokenAmount, token);
-        } else {
-            amountOut = amount;
-        }
-    }
-
-    /**
-     * @dev Process reserved fees to a given token
-     * @param amount The amount to process
-     * @param minimumTokenAmount The minimum token amount out after processing fees
-     * @param tokenOut The output token address
-     * @return amountOut The output token amount out
-     */
-    function processFees(
-        uint256 amount,
-        uint256 minimumTokenAmount,
-        address tokenOut
-    ) private returns (uint256 amountOut) {
-        reservedFeeBalance -= amount;
-        IWETH9 wethToken = IWETH9(tokenAddresses[Token.WETH]);
-        wethToken.deposit{value: amount}();
-        wethToken.approve(
-            address(swapRouter),
-            wethToken.balanceOf(address(this))
-        );
-
-        IUniswapV3PoolState swapPool = IUniswapV3PoolState(
-            swapFactory.getPool(
-                tokenAddresses[Token.WETH],
-                tokenOut,
-                UNISWAP_FEE_TIER
-            )
-        );
-        require(swapPool.liquidity() >= amount, "Not enough liquidity");
-
-        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
-            .ExactInputSingleParams({
-                tokenIn: tokenAddresses[Token.WETH],
-                tokenOut: tokenOut,
-                fee: UNISWAP_FEE_TIER,
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: amount,
-                amountOutMinimum: minimumTokenAmount,
-                sqrtPriceLimitX96: 0
-            });
-        amountOut = swapRouter.exactInputSingle(params);
-    }
-
-    /**
      * @notice Withdraw a given amount of a cluster balance
      * @param operatorIds The operator IDs
      * @param cluster The SSV cluster snapshot
@@ -1149,75 +942,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the total user stake for a given user address
-     * @param userAddress The user address
-     * @return userStake The total user stake
-     */
-    function getUserStake(
-        address userAddress
-    ) public view returns (uint256 userStake) {
-        userStake = Math.mulDiv(
-            users[userAddress].stake0,
-            stakeRatioSum,
-            users[userAddress].stakeRatioSum0
-        );
-    }
-
-    /**
-     * @notice Get the total stake
-     * @return totalStake The total stake
-     */
-    function getTotalStake() public view returns (uint256 totalStake) {
-        totalStake =
-            getBufferedBalance() +
-            latestActiveBalanceAfterFees -
-            requestedWithdrawalBalance;
-    }
-
-    /**
-     * @notice Get the buffered balance
-     * @return bufferedBalance The buffered balance
-     */
-    function getBufferedBalance()
-        public
-        view
-        returns (uint256 bufferedBalance)
-    {
-        bufferedBalance = getWithdrawableBalance() + getReadyBalance();
-    }
-
-    /**
-     * @notice Get the ready balance
-     * @return readyBalance The ready balance
-     */
-    function getReadyBalance() public view returns (uint256 readyBalance) {
-        readyBalance = readyPoolIds.length * POOL_CAPACITY;
-    }
-
-    /**
-     * @notice Get the withdrawable balanace
-     * @return withdrawableBalance The withdrawable balanace
-     */
-    function getWithdrawableBalance() public view returns (uint256) {
-        return prepoolBalance + exitedBalance;
-    }
-
-    /**
-     * @notice Get the eligibility of a pending withdrawal
-     * @param index The index of the pending withdrawal
-     * @param period The period to check
-     * @return pendingWithdrawalEligibility The eligibility of a pending withdrawal
-     */
-    function getPendingWithdrawalEligibility(
-        uint256 index,
-        uint256 period
-    ) public view returns (bool pendingWithdrawalEligibility) {
-        if (requestedWithdrawals > index) {
-            pendingWithdrawalEligibility = requestedWithdrawalQueue[index].period <= period;
-        }
-    }
-
-    /**
      * @notice Get the ready pool IDs
      * @return readyPoolIds The ready pool IDs
      */
@@ -1254,11 +978,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Get the registry address
      * @return registryAddress The registry address
      */
-    function getRegistryAddress()
-        external
-        view
-        returns (address registryAddress)
-    {
+    function getRegistryAddress() external view returns (address registryAddress) {
         registryAddress = address(registry);
     }
 
@@ -1268,5 +988,291 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      */
     function getUpkeepAddress() external view returns (address upkeepAddress) {
         upkeepAddress = address(upkeep);
+    }
+
+    /**
+     * @notice Get the total user stake for a given user address
+     * @param userAddress The user address
+     * @return userStake The total user stake
+     */
+    function getUserStake(
+        address userAddress
+    ) public view returns (uint256 userStake) {
+        userStake = Math.mulDiv(
+            users[userAddress].stake0,
+            stakeRatioSum,
+            users[userAddress].stakeRatioSum0
+        );
+    }
+
+    /**
+     * @notice Get the total stake
+     * @return totalStake The total stake
+     */
+    function getTotalStake() public view returns (uint256 totalStake) {
+        totalStake =
+            getBufferedBalance() +
+            latestActiveBalanceAfterFees -
+            requestedWithdrawalBalance;
+    }
+
+    /**
+     * @notice Get the buffered balance
+     * @return bufferedBalance The buffered balance
+     */
+    function getBufferedBalance() public view returns (uint256 bufferedBalance) {
+        bufferedBalance = getWithdrawableBalance() + getReadyBalance();
+    }
+
+    /**
+     * @notice Get the ready balance
+     * @return readyBalance The ready balance
+     */
+    function getReadyBalance() public view returns (uint256 readyBalance) {
+        readyBalance = readyPoolIds.length * POOL_CAPACITY;
+    }
+
+    /**
+     * @notice Get the withdrawable balanace
+     * @return withdrawableBalance The withdrawable balanace
+     */
+    function getWithdrawableBalance() public view returns (uint256) {
+        return prepoolBalance + exitedBalance;
+    }
+
+    /**
+     * @notice Get the eligibility of a pending withdrawal
+     * @param index The index of the pending withdrawal
+     * @param period The period to check
+     * @return pendingWithdrawalEligibility The eligibility of a pending withdrawal
+     */
+    function getPendingWithdrawalEligibility(
+        uint256 index,
+        uint256 period
+    ) public view returns (bool pendingWithdrawalEligibility) {
+        if (requestedWithdrawals > index) {
+            pendingWithdrawalEligibility = requestedWithdrawalQueue[index].period <= period;
+        }
+    }
+
+    /**
+     * @notice Deposit the current tip balance
+     */
+    function depositTips() private {
+        uint256 tipsAfterFees = subtractFees(tipBalance);
+        reservedFeeBalance += tipBalance - tipsAfterFees;
+        tipBalance = 0;
+        distributeStake(tipsAfterFees);
+
+        emit TipsDeposited(tipsAfterFees);
+    }
+
+    /**
+     * @dev Distribute a given amount of stake
+     * @param amount The amount of stake to distribute
+     */
+    function distributeStake(uint256 amount) private {
+        while (amount > 0) {
+            uint256 remainingCapacity = POOL_CAPACITY - prepoolBalance;
+            if (remainingCapacity > amount) {
+                prepoolBalance += amount;
+                amount = 0;
+            } else {
+                lastPoolId++;
+                uint32 poolId = lastPoolId;
+                prepoolBalance = 0;
+                amount -= remainingCapacity;
+                readyPoolIds.push(poolId);
+
+                emit DepositRequested(poolId);
+            }
+        }
+    }
+
+    /**
+     * @notice Fulfill a withdrawal
+     * @param sender The withdrawal sender
+     * @param amount The withdrawal amount
+     */
+    function fulfillWithdrawal(address sender, uint256 amount) private {
+        sender.send(amount);
+
+        emit WithdrawalFulfilled(sender, amount);
+    }
+
+    /**
+     * Check and set a user's action count
+     * @param userAddress The user address to check
+     */
+    function setActionCount(address userAddress) private {
+        User storage user = users[userAddress];
+        require(
+            user.actionPeriodTimestamp == 0 ||
+                user.actionCount < MAX_ACTIONS_PER_PERIOD ||
+                block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD,
+            "Action period maximum reached"
+        );
+        if (block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD) {
+            user.actionPeriodTimestamp = block.timestamp;
+            user.actionCount = 1;
+        } else {
+            user.actionCount++;
+        }
+    }
+
+    /**
+     * @dev Register a pool with Beacon and SSV
+     * @param poolId The pool ID
+     * @param depositDataRoot The deposit data root
+     * @param publicKey The validator public key
+     * @param signature The signature
+     * @param withdrawalCredentials The withdrawal credentials
+     * @param operatorIds The operator IDs
+     * @param shares The operator shares
+     * @param cluster The SSV cluster snapshot
+     * @param feeAmount The fee amount to deposit
+     * @param minimumTokenAmount The minimum SSV token amount out after processing fees
+     * @param processed Whether the fee amount is already processed
+     */
+    function registerPool(
+        uint32 poolId,
+        bytes32 depositDataRoot,
+        bytes memory publicKey,
+        bytes memory signature,
+        bytes memory withdrawalCredentials,
+        uint64[] memory operatorIds,
+        bytes memory shares,
+        ISSVNetworkCore.Cluster memory cluster,
+        uint256 feeAmount,
+        uint256 minimumTokenAmount,
+        bool processed
+    ) private {
+        for (uint256 i = 0; i < operatorIds.length; i++) {
+            registry.addOperatorPool(operatorIds[i], poolId);
+        }
+
+        beaconDeposit.deposit{value: POOL_CAPACITY}(
+            publicKey,
+            withdrawalCredentials,
+            signature,
+            depositDataRoot
+        );
+
+        uint256 ssvAmount = retrieveFees(
+            feeAmount,
+            minimumTokenAmount,
+            tokenAddresses[Token.SSV],
+            processed
+        );
+        ssvToken.approve(address(ssvNetwork), ssvAmount);
+
+        ssvNetwork.registerValidator(
+            publicKey,
+            operatorIds,
+            shares,
+            ssvAmount,
+            cluster
+        );
+
+        emit PoolRegistered(poolId);
+    }
+
+    /**
+     * @notice Request a given count of staked pool exits
+     * @param count The number of exits to request
+     */
+    function requestExits(uint256 count) private {
+        uint256 index = 0;
+        while (count > 0) {
+            uint32 poolId = stakedPoolIds[index];
+            ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
+            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
+            if (
+                poolDetails.status == ICasimirPool.PoolStatus.PENDING ||
+                poolDetails.status == ICasimirPool.PoolStatus.ACTIVE
+            ) {
+                count--;
+                index++;
+
+                pool.setStatus(ICasimirPool.PoolStatus.EXITING_REQUESTED);
+                requestedExits++;
+
+                emit ExitRequested(poolId);
+            }
+        }
+    }
+
+    /**
+     * @dev Retrieve fees for a given amount of a given token
+     * @param amount The amount to retrieve
+     * @param minimumTokenAmount The minimum token amount out after processing fees
+     * @param token The token address
+     * @param processed Whether the amount is already processed
+     */
+    function retrieveFees(
+        uint256 amount,
+        uint256 minimumTokenAmount,
+        address token,
+        bool processed
+    ) private returns (uint256 amountOut) {
+        if (!processed) {
+            amountOut = processFees(amount, minimumTokenAmount, token);
+        } else {
+            amountOut = amount;
+        }
+    }
+
+    /**
+     * @dev Process reserved fees to a given token
+     * @param amount The amount to process
+     * @param minimumTokenAmount The minimum token amount out after processing fees
+     * @param tokenOut The output token address
+     * @return amountOut The output token amount out
+     */
+    function processFees(
+        uint256 amount,
+        uint256 minimumTokenAmount,
+        address tokenOut
+    ) private returns (uint256 amountOut) {
+        reservedFeeBalance -= amount;
+        IWETH9 wethToken = IWETH9(tokenAddresses[Token.WETH]);
+        wethToken.deposit{value: amount}();
+        wethToken.approve(
+            address(swapRouter),
+            wethToken.balanceOf(address(this))
+        );
+
+        IUniswapV3PoolState swapPool = IUniswapV3PoolState(
+            swapFactory.getPool(
+                tokenAddresses[Token.WETH],
+                tokenOut,
+                UNISWAP_FEE_TIER
+            )
+        );
+        require(swapPool.liquidity() >= amount, "Not enough liquidity");
+
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
+            .ExactInputSingleParams({
+                tokenIn: tokenAddresses[Token.WETH],
+                tokenOut: tokenOut,
+                fee: UNISWAP_FEE_TIER,
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: amount,
+                amountOutMinimum: minimumTokenAmount,
+                sqrtPriceLimitX96: 0
+            });
+        amountOut = swapRouter.exactInputSingle(params);
+    }
+
+    /**
+     * @dev Get reservable fees from a given amount
+     * @param amount The amount to reserve fees from
+     * @return amountAfterFees The amount after fees
+     */
+    function subtractFees(
+        uint256 amount
+    ) private pure returns (uint256 amountAfterFees) {
+        amountAfterFees = Math.mulDiv(amount, 100, 100 + FEE_PERCENT);
     }
 }
