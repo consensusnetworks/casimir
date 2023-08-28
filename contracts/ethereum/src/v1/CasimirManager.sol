@@ -579,6 +579,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         user.stake0 -= amount;
 
         if (amount <= getWithdrawableBalance()) {
+            if (amount <= exitedBalance) {
+                exitedBalance -= amount;
+            } else {
+                uint256 remainder = amount - exitedBalance;
+                exitedBalance = 0;
+                prepoolBalance -= remainder;
+            }
             fulfillWithdrawal(msg.sender, amount);
         } else {
             requestedWithdrawalQueue.push(
@@ -631,6 +638,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
             fulfillWithdrawal(withdrawal.user, withdrawal.amount);
         }
+        if (withdrawalAmount <= exitedBalance) {
+            exitedBalance -= withdrawalAmount;
+        } else {
+            uint256 remainder = withdrawalAmount - exitedBalance;
+            exitedBalance = 0;
+            prepoolBalance -= remainder;
+        }
         requestedWithdrawalBalance -= withdrawalAmount;
         requestedWithdrawals -= withdrawalCount;
     }
@@ -641,15 +655,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The withdrawal amount
      */
     function fulfillWithdrawal(address sender, uint256 amount) private {
-        require(sender != address(0), "Missing sender");
-
-        if (amount <= exitedBalance) {
-            exitedBalance -= amount;
-        } else {
-            uint256 remainder = amount - exitedBalance;
-            exitedBalance = 0;
-            prepoolBalance -= remainder;
-        }
         sender.send(amount);
 
         emit WithdrawalFulfilled(sender, amount);
