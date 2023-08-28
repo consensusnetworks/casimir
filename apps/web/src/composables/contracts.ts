@@ -197,7 +197,7 @@ export default function useContracts() {
 
     async function getDepositFees() {
         const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-        const fees = await manager.feePercent()
+        const fees = await manager.FEE_PERCENT()
         const feesRounded = Math.round(fees * 100) / 100
         return feesRounded
     }

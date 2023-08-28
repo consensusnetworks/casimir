@@ -1,10 +1,10 @@
 # @casimir/oracle
 
-Casimir validators oracle service
+Casimir DAO oracle service
 
 ## About
 
-The validator oracle service initiates and reports on validator operations: distributed key generation (DKG) ceremonies, DKG reshares, and DKG or presigned exit requests. It contains a [NodeJS](https://nodejs.org) application that listens for `DepositRequested`, `ReshareRequested`, and `ExitRequested` events, which then internally uses the [RockX DKG CLI and messenger server](https://github.com/rockx/rockx-dkg-cli) to initiate and retrieve operator group DKG results. The `DepositRequested` event starts a new DKG keygen and retrieves the results to submit a new validator via `depositPool`. The `ReshareRequested` event starts a new DKG reshare and retrieves the results to update an existing validator via `resharePool`. The `ExitRequested` event starts a new DKG exit and retrieves the results to submit a signed exit message directly to the Beacon chain.
+The DAO oracle service initiates and reports on validator operations: distributed key generation (DKG) ceremonies, DKG reshares, and DKG or presigned exit requests. It contains a [NodeJS](https://nodejs.org) application that listens for `DepositRequested`, `ReshareRequested`, and `ExitRequested` events, which then internally uses the [RockX DKG CLI and messenger server](https://github.com/rockx/rockx-dkg-cli) to initiate and retrieve operator group DKG results. The `DepositRequested` event starts a new DKG keygen and retrieves the results to submit a new validator via `depositPool`. The `ReshareRequested` event starts a new DKG reshare and retrieves the results to update an existing validator via `resharePool`. The `ExitRequested` event starts a new DKG exit and retrieves the results to submit a signed exit message directly to the Beacon chain.
 
 DKG operations and reports will theoretically have [verifiable](https://docs.obol.tech/docs/next/charon/dkg#dkg-verification) aspects that prove fair DKG ceremonies.
 

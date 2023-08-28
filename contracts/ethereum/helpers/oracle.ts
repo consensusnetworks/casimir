@@ -65,6 +65,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
     })
 
     const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * price).toPrecision(9))
+    const minimumTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
 
     const initiateDeposit = await manager.connect(signer).initiateDeposit(
         depositDataRoot,
@@ -75,19 +76,50 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         shares,
         cluster,
         feeAmount,
+        minimumTokenAmount,
         false
     )
     await initiateDeposit.wait()
 }
 
-export async function depositUpkeepBalanceHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
-    
+export async function depositFunctionsBalanceHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
     /**
-     * In production, we check the upkeep balance before reporting
-     * We can set processed to true if the manager has enough SSV tokens
+     * In production, we check the functions balance before reporting
+     * We can set processed to true if the manager has enough LINK tokens
      * Here, we're just depositing double the Chainlink registration minimum
      */
-    const requiredBalance = 0.2
+    const requiredBalance = 5
+
+    const uniswapFactory = new Factory({
+        provider: ethers.provider,
+        uniswapV3FactoryAddress
+    })
+
+    const price = await uniswapFactory.getSwapPrice({
+        tokenIn: wethTokenAddress,
+        tokenOut: linkTokenAddress,
+        uniswapFeeTier: 3000
+    })
+
+    const feeAmount = ethers.utils.parseEther((requiredBalance * price).toPrecision(9))
+    const minimumTokenAmount = ethers.utils.parseEther((requiredBalance * 0.99).toPrecision(9))
+
+    const depositFunctionsBalance = await manager.connect(signer).depositFunctionsBalance(
+        feeAmount,
+        minimumTokenAmount,
+        false
+    )
+    await depositFunctionsBalance.wait()
+}
+
+
+export async function depositUpkeepBalanceHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
+    /**
+     * In production, we check the upkeep balance before reporting
+     * We can set processed to true if the manager has enough LINK tokens
+     * Here, we're just depositing double the Chainlink registration minimum
+     */
+    const requiredBalance = 5
 
     const uniswapFactory = new Factory({
         provider: ethers.provider,
@@ -101,9 +133,11 @@ export async function depositUpkeepBalanceHandler({ manager, signer }: { manager
     })
     
     const feeAmount = ethers.utils.parseEther((requiredBalance * price).toPrecision(9))
-    
+    const minimumTokenAmount = ethers.utils.parseEther((requiredBalance * 0.99).toPrecision(9))
+
     const depositUpkeepBalance = await manager.connect(signer).depositUpkeepBalance(
         feeAmount,
+        minimumTokenAmount,
         false
     )
     await depositUpkeepBalance.wait()
