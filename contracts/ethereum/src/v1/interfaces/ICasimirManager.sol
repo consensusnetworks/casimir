@@ -84,6 +84,11 @@ interface ICasimirManager {
         uint256 minimumTokenAmount,
         bool processed
     ) external;
+    function depositFunctionsBalance(
+        uint256 feeAmount,
+        uint256 minimumTokenAmount,
+        bool processed
+    ) external;
     function depositUpkeepBalance(
         uint256 feeAmount,
         uint256 minimumTokenAmount,

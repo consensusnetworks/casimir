@@ -22,7 +22,7 @@ void async function () {
     process.env.MINING_INTERVAL = '12'
     process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
 
-    console.log(`Your mnemonic seed is ${process.env.BIP39_SEED}}`)
+    console.log(`Your mnemonic seed is ${process.env.BIP39_SEED}`)
 
     process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_FORK_URL[process.env.FORK.toUpperCase()]
     if (!process.env.ETHEREUM_FORK_RPC_URL) {

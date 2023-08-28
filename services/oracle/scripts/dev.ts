@@ -17,6 +17,7 @@ void async function () {
     if (!process.env.VIEWS_ADDRESS) throw new Error('Views address not found')
     if (!process.env.REGISTRY_ADDRESS) throw new Error('Registry address not found')
     if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error('Functions billing registry address not found')
+    if (!process.env.LINK_REGISTRY_ADDRESS) throw new Error('Link registry address not found')
     process.env.LINK_TOKEN_ADDRESS = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
     process.env.SSV_NETWORK_ADDRESS = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
     process.env.SSV_NETWORK_VIEWS_ADDRESS = '0x8dB45282d7C4559fd093C26f677B3837a5598914'

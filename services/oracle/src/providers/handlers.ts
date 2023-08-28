@@ -1,10 +1,11 @@
 import { ethers } from 'ethers'
 import { HandlerInput } from '../interfaces/HandlerInput'
-import { CasimirManager, CasimirRegistry, CasimirViews, FunctionsBillingRegistry } from '@casimir/ethereum/build/@types'
+import { CasimirManager, CasimirRegistry, CasimirViews, IFunctionsBillingRegistry, IAutomationRegistry } from '@casimir/ethereum/build/@types'
 import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
 import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
-import FunctionsBillingRegistryInterface from '@casimir/ethereum/build/abi/FunctionsBillingRegistryInterface.json'
+import IFunctionsBillingRegistryAbi from '@casimir/ethereum/build/abi/IFunctionsBillingRegistry.json'
+import IAutomationRegistryAbi from '@casimir/ethereum/build/abi/IAutomationRegistry.json'
 import { Scanner } from '@casimir/ssv'
 import { PoolStatus } from '@casimir/types'
 import { Factory } from '@casimir/uniswap'
@@ -21,17 +22,20 @@ export async function depositFunctionsBalanceHandler() {
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
     const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, FunctionsBillingRegistryInterface, provider) as ethers.Contract & FunctionsBillingRegistry
+    const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, IFunctionsBillingRegistryAbi, provider) as ethers.Contract & IFunctionsBillingRegistry
 
     const minimumBalance = 0.2
     const refundBalance = 5
     const functionsId = await manager.functionsId()
-    const subscription = await functionsBillingRegistry.getSubscription(functionsId)
-
-    const balance = Number(ethers.utils.formatEther(subscription.balance).split('.').map((part, index) => {
-        if (index === 0) return part
-        return part.slice(0, 1)
-    }))
+    let balance = 0
+    if (functionsId.gt(0)) {
+        const subscription = await functionsBillingRegistry.getSubscription(functionsId)
+        balance = Number(ethers.utils.formatEther(subscription.balance).split('.').map((part, index) => {
+            if (index === 0) return part
+            return part.slice(0, 1)
+        }).join('.'))
+    }
+    console.log('🤖 Functions balance', balance)
 
     if (balance < minimumBalance) {
         const uniswapFactory = new Factory({
@@ -61,17 +65,20 @@ export async function depositUpkeepBalanceHandler() {
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
     const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, FunctionsBillingRegistryInterface, provider) as ethers.Contract & FunctionsBillingRegistry
+    const linkRegistry = new ethers.Contract(config.linkRegistryAddress, IAutomationRegistryAbi, provider) as ethers.Contract & IAutomationRegistry
 
     const minimumBalance = 0.2
     const refundBalance = 5
-    const functionsId = await manager.functionsId()
-    const subscription = await functionsBillingRegistry.getSubscription(functionsId)
-
-    const balance = Number(ethers.utils.formatEther(subscription.balance).split('.').map((part, index) => {
-        if (index === 0) return part
-        return part.slice(0, 1)
-    }))
+    const upkeepId = await manager.upkeepId()
+    let balance = 0
+    if (upkeepId.gt(0)) {
+        const subscription = await linkRegistry.getUpkeep(upkeepId)
+        balance = Number(ethers.utils.formatEther(subscription.balance).split('.').map((part, index) => {
+            if (index === 0) return part
+            return part.slice(0, 1)
+        }).join('.'))
+    }
+    console.log('🤖 Upkeep balance', balance)
 
     if (balance < minimumBalance) {
         const uniswapFactory = new Factory({

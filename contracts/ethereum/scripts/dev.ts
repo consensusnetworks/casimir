@@ -206,8 +206,8 @@ void async function () {
         const { message } = await ping.json()
         if (message !== 'pong') throw new Error('DKG service is not running')
         const depositAmount = 32 * ((100 + await manager.FEE_PERCENT()) / 100)
-        const stake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
-        await stake?.wait()
+        const depositStake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        await depositStake?.wait()
     }, 2500)
 
     process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = functionsBillingRegistry.address

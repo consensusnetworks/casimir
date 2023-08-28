@@ -137,13 +137,8 @@ export async function secondUserDepositFixture() {
     const deposit = await manager.connect(secondUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
     
-    if ((await manager.functionsId()).toNumber() === 0) {
-        await depositFunctionsBalanceHandler({ manager, signer: daoOracle })
-    }
-    if ((await manager.upkeepId()).toNumber() === 0) {
-        await depositUpkeepBalanceHandler({ manager, signer: daoOracle })
-    }
-
+    await depositFunctionsBalanceHandler({ manager, signer: daoOracle })
+    await depositUpkeepBalanceHandler({ manager, signer: daoOracle })
     await initiateDepositHandler({ manager, signer: daoOracle })
 
     await time.increase(time.duration.days(1))

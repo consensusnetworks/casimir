@@ -19,7 +19,6 @@ describe('Operators', async function () {
             const expectedActive = operators.every(operator => operator.active === true)
             const expectedCollateral = operators.every(operator => operator.collateral.toString() === ethers.utils.parseEther('10.0').toString())
             const expectedResharing = operators.every(operator => operator.resharing === false)
-            console.log()
             return expectedActive && expectedCollateral && expectedResharing
         })
     })
