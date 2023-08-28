@@ -1,6 +1,57 @@
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { CasimirUpkeep, FunctionsBillingRegistry } from '../build/@types'
+import { CasimirUpkeep } from '../build/@types'
+
+export interface ReportValues {
+    activeBalance: number
+    sweptBalance: number
+    activatedDeposits: number
+    forcedExits: number
+    completedExits: number
+    compoundablePoolIds: number[]
+}
+
+export async function fulfillReport({
+    upkeep,
+    keeper,
+    requestId,
+    values
+}: { 
+    upkeep: CasimirUpkeep,
+    keeper: SignerWithAddress,
+    requestId: number,
+    values: ReportValues
+}) {    
+    const { activeBalance, sweptBalance, activatedDeposits, forcedExits, completedExits, compoundablePoolIds } = values
+    
+    requestId++
+    const balancesRequestIdHash = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [requestId]))
+    const balancesResponseBytes = ethers.utils.defaultAbiCoder.encode(
+        ['uint128', 'uint128'],
+        [ethers.utils.parseEther(activeBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
+    )
+    await fulfillFunctionsRequest({
+        upkeep,
+        keeper,
+        requestIdHash: balancesRequestIdHash,
+        responseBytes: balancesResponseBytes
+    })
+
+    requestId++
+    const detailsRequestIdHash = ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['uint256'], [requestId]))
+    const detailsResponseBytes = ethers.utils.defaultAbiCoder.encode(
+        ['uint32', 'uint32', 'uint32', 'uint32[5]'],
+        [activatedDeposits, forcedExits, completedExits, compoundablePoolIds]
+    )
+    await fulfillFunctionsRequest({
+        upkeep,
+        keeper,
+        requestIdHash: detailsRequestIdHash,
+        responseBytes: detailsResponseBytes
+    })
+
+    return requestId
+}
 
 export async function runUpkeep({
     upkeep, keeper
@@ -20,85 +71,17 @@ export async function runUpkeep({
     return ranUpkeep
 }
 
-export interface ReportValues {
-    activeBalance: number
-    sweptBalance: number
-    activatedDeposits: number
-    forcedExits: number
-    completedExits: number
-    compoundablePoolIds: number[]
-}
-
-export async function fulfillReport({
-    keeper,
-    upkeep,
-    functionsBillingRegistry,
-    values
-}: {
-    keeper: SignerWithAddress,
-    upkeep: CasimirUpkeep,
-    functionsBillingRegistry: FunctionsBillingRegistry,
-    values: ReportValues
-}) {
-    const { activeBalance, sweptBalance, activatedDeposits, forcedExits, completedExits, compoundablePoolIds } = values
-
-    const requestIds = (await upkeep.queryFilter(upkeep.filters.RequestSent())).slice(-2).map((event) => event.args.id)
-    
-    const balancesRequestId = requestIds[0]
-    const balancesResponseBytes = ethers.utils.defaultAbiCoder.encode(
-        ['uint128', 'uint128'],
-        [ethers.utils.parseEther(activeBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
-    )
-    
-    await fulfillFunctionsRequest({
-        keeper,
-        functionsBillingRegistry,
-        requestId: balancesRequestId,
-        responseBytes: balancesResponseBytes
-    })
-
-    const detailsRequestId = requestIds[1]
-    const detailsResponseBytes = ethers.utils.defaultAbiCoder.encode(
-        ['uint32', 'uint32', 'uint32', 'uint32[5]'],
-        [activatedDeposits, forcedExits, completedExits, compoundablePoolIds]
-    )
-
-    await fulfillFunctionsRequest({
-        keeper,
-        functionsBillingRegistry,
-        requestId: detailsRequestId,
-        responseBytes: detailsResponseBytes
-    })
-}
-
 export async function fulfillFunctionsRequest({
-    keeper,
-    functionsBillingRegistry,
-    requestId,
+    upkeep, 
+    keeper, 
+    requestIdHash,
     responseBytes
 }: {
+    upkeep: CasimirUpkeep,
     keeper: SignerWithAddress,
-    functionsBillingRegistry: FunctionsBillingRegistry,
-    requestId: string,
+    requestIdHash: string,
     responseBytes: string
 }) {
-    const dummyTransmitter = keeper.address
-    const dummySigners = Array(31).fill(dummyTransmitter)
-
-    // const { success, result, resultLog } = await simulateRequest(requestConfig)
-    
-    const fulfillAndBill = await functionsBillingRegistry.connect(keeper).fulfillAndBill(
-        requestId,
-        responseBytes,
-        '0x',
-        dummyTransmitter,
-        dummySigners,
-        4,
-        100_000,
-        500_000,
-        {
-            gasLimit: 500_000,
-        }
-    )
-    await fulfillAndBill.wait()
+    const mockFulfillRequest = await upkeep.connect(keeper).mockFulfillRequest(requestIdHash, responseBytes, [])
+    await mockFulfillRequest.wait()
 }

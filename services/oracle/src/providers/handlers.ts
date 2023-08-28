@@ -1,11 +1,9 @@
 import { ethers } from 'ethers'
 import { HandlerInput } from '../interfaces/HandlerInput'
-import { CasimirManager, CasimirRegistry, CasimirViews, IFunctionsBillingRegistry, IAutomationRegistry } from '@casimir/ethereum/build/@types'
+import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
 import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
-import IFunctionsBillingRegistryAbi from '@casimir/ethereum/build/abi/IFunctionsBillingRegistry.json'
-import IAutomationRegistryAbi from '@casimir/ethereum/build/abi/IAutomationRegistry.json'
 import { Scanner } from '@casimir/ssv'
 import { PoolStatus } from '@casimir/types'
 import { Factory } from '@casimir/uniswap'
@@ -17,92 +15,6 @@ const cli = new Dkg({
     cliPath: config.cliPath,
     messengerUrl: config.messengerUrl
 })
-
-export async function depositFunctionsBalanceHandler() {
-    const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
-    const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, IFunctionsBillingRegistryAbi, provider) as ethers.Contract & IFunctionsBillingRegistry
-
-    const minimumBalance = 0.2
-    const refundBalance = 5
-    const functionsId = await manager.functionsId()
-    let balance = 0
-    if (functionsId.gt(0)) {
-        const subscription = await functionsBillingRegistry.getSubscription(functionsId)
-        balance = Number(ethers.utils.formatEther(subscription.balance).split('.').map((part, index) => {
-            if (index === 0) return part
-            return part.slice(0, 1)
-        }).join('.'))
-    }
-    console.log('🤖 Functions balance', balance)
-
-    if (balance < minimumBalance) {
-        const uniswapFactory = new Factory({
-            provider,
-            uniswapV3FactoryAddress: config.uniswapV3FactoryAddress
-        })
-
-        const price = await uniswapFactory.getSwapPrice({
-            tokenIn: config.wethTokenAddress,
-            tokenOut: config.linkTokenAddress,
-            uniswapFeeTier: 3000
-        })
-
-        const feeAmount = ethers.utils.parseEther((refundBalance * price).toPrecision(9))
-        const minimumTokenAmount = ethers.utils.parseEther((refundBalance * 0.99).toPrecision(9))
-
-        const depositFunctionsBalance = await manager.connect(signer).depositFunctionsBalance(
-            feeAmount,
-            minimumTokenAmount,
-            false
-        )
-        await depositFunctionsBalance.wait()
-    }
-}
-
-export async function depositUpkeepBalanceHandler() {
-    const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
-    const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const linkRegistry = new ethers.Contract(config.linkRegistryAddress, IAutomationRegistryAbi, provider) as ethers.Contract & IAutomationRegistry
-
-    const minimumBalance = 0.2
-    const refundBalance = 5
-    const upkeepId = await manager.upkeepId()
-    let balance = 0
-    if (upkeepId.gt(0)) {
-        const subscription = await linkRegistry.getUpkeep(upkeepId)
-        balance = Number(ethers.utils.formatEther(subscription.balance).split('.').map((part, index) => {
-            if (index === 0) return part
-            return part.slice(0, 1)
-        }).join('.'))
-    }
-    console.log('🤖 Upkeep balance', balance)
-
-    if (balance < minimumBalance) {
-        const uniswapFactory = new Factory({
-            provider,
-            uniswapV3FactoryAddress: config.uniswapV3FactoryAddress
-        })
-
-        const price = await uniswapFactory.getSwapPrice({
-            tokenIn: config.wethTokenAddress,
-            tokenOut: config.linkTokenAddress,
-            uniswapFeeTier: 3000
-        })
-
-        const feeAmount = ethers.utils.parseEther((refundBalance * price).toPrecision(9))
-        const minimumTokenAmount = ethers.utils.parseEther((refundBalance * 0.99).toPrecision(9))    
-
-        const depositUpkeepBalance = await manager.connect(signer).depositUpkeepBalance(
-            feeAmount,
-            minimumTokenAmount,
-            false
-        )
-        await depositUpkeepBalance.wait()
-    }
-}
 
 export async function initiateDepositHandler(input: HandlerInput) {
     if (!input.args.poolId) throw new Error('No pool id provided')
@@ -182,7 +94,6 @@ export async function initiateDepositHandler(input: HandlerInput) {
     })
 
     const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * Number(price)).toPrecision(9))
-    const minimumTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
 
     const initiateDeposit = await manager.initiateDeposit(
         depositDataRoot,
@@ -193,7 +104,6 @@ export async function initiateDepositHandler(input: HandlerInput) {
         shares,
         cluster,
         feeAmount,
-        minimumTokenAmount,
         false
     )
     await initiateDeposit.wait()
@@ -290,8 +200,7 @@ export async function initiateResharesHandler(input: HandlerInput) {
                 })
             
                 const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * Number(price)).toPrecision(9))
-                const minimumTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * 0.99).toPrecision(9))
-
+            
                 const reportReshare = await manager.reportReshare(
                     poolId,
                     operatorIds,
@@ -302,7 +211,6 @@ export async function initiateResharesHandler(input: HandlerInput) {
                     cluster,
                     oldCluster,
                     feeAmount,
-                    minimumTokenAmount,
                     false
                 )
                 await reportReshare.wait()

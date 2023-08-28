@@ -17,7 +17,7 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     /*************/
 
     /** Pool capacity */
-    uint256 private constant POOL_CAPACITY = 32 ether;
+    uint256 poolCapacity = 32 ether;
 
     /*************/
     /* Immutable */
@@ -33,15 +33,15 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     /*********/
 
     /** Pool ID */
-    uint32 private immutable id;
+    uint32 public id;
     /** Validator public key */
-    bytes private publicKey;
+    bytes public publicKey;
     /** Operator IDs */
     uint64[] private operatorIds;
     /** Reshares */
-    uint256 private reshares;
+    uint256 public reshares;
     /** Status */
-    PoolStatus private status;
+    PoolStatus public status;
 
     /**
      * @notice Constructor
@@ -56,8 +56,6 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
         bytes memory _publicKey,
         uint64[] memory _operatorIds
     ) {
-        require(registryAddress != address(0), "Missing registry address");
-
         manager = ICasimirManager(msg.sender);
         registry = ICasimirRegistry(registryAddress);
         id = _id;
@@ -69,10 +67,8 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
      * @notice Deposit rewards from a pool to the manager
      */
     function depositRewards() external onlyOwner {
-        require(status == PoolStatus.ACTIVE, "Pool must be active");
-
         uint256 balance = address(this).balance;
-        manager.depositRewards{value: balance}(id);
+        manager.depositRewards{value: balance}();
     }
 
     /**
@@ -83,9 +79,9 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
         require(status == PoolStatus.WITHDRAWN, "Pool must be withdrawn");
 
         uint256 balance = address(this).balance;
-        int256 rewards = int256(balance) - int256(POOL_CAPACITY);
+        int256 rewards = int256(balance) - int256(poolCapacity);
         if (rewards > 0) {
-            manager.depositRewards{value: uint256(rewards)}(id);
+            manager.depositRewards{value: uint256(rewards)}();
         }
         for (uint256 i = 0; i < blamePercents.length; i++) {
             uint256 blameAmount;
@@ -104,28 +100,22 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
      */
     function setOperatorIds(uint64[] memory _operatorIds) external onlyOwner {
         operatorIds = _operatorIds;
-
-        emit OperatorIdsSet(_operatorIds);
     }
 
     /**
      * @notice Set the reshare count
-     * @param newReshares The new reshare count
+     * @param _reshares The reshare count
      */
-    function setReshares(uint256 newReshares) external onlyOwner {
-        reshares = newReshares;
-
-        emit ResharesSet(newReshares);
+    function setReshares(uint256 _reshares) external onlyOwner {
+        reshares = _reshares;
     }
 
     /**
      * @notice Set the pool status
-     * @param newStatus The new pool status
+     * @param _status The pool status
      */
-    function setStatus(PoolStatus newStatus) external onlyOwner {
-        status = newStatus;   
-
-        emit StatusSet(newStatus);     
+    function setStatus(PoolStatus _status) external onlyOwner {
+        status = _status;        
     }
 
     /**
@@ -141,5 +131,21 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
             reshares: reshares,
             status: status
         });
+    }
+
+    /**
+     * @notice Get the pool balance
+     * @return balance The pool balance
+     */
+    function getBalance() external view returns (uint256) {
+        return address(this).balance;
+    }
+
+    /**
+     * @notice Get the operator IDs
+     * @return operatorIds The operator IDs
+     */
+    function getOperatorIds() external view returns (uint64[] memory) {
+        return operatorIds;
     }
 }

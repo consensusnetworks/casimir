@@ -22,7 +22,7 @@ void async function () {
     process.env.MINING_INTERVAL = '12'
     process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
 
-    console.log(`Your mnemonic seed is ${process.env.BIP39_SEED}`)
+    console.log(`Your mnemonic seed is ${process.env.BIP39_SEED}}`)
 
     process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_FORK_URL[process.env.FORK.toUpperCase()]
     if (!process.env.ETHEREUM_FORK_RPC_URL) {
@@ -38,8 +38,8 @@ void async function () {
 
     const wallet = getWallet(process.env.BIP39_SEED)
 
-    // Account for the mock Chainlink functions deployments
-    const deployerNonce = await provider.getTransactionCount(wallet.address) + 5
+    // Account for the mock oracle contract deployment
+    const deployerNonce = await provider.getTransactionCount(wallet.address) + 1
     
     if (!process.env.MANAGER_ADDRESS) {
         process.env.MANAGER_ADDRESS = ethers.utils.getContractAddress({
