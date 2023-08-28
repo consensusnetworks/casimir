@@ -147,9 +147,7 @@ Mock (development-only) contracts and interfaces are located in the [src/mock](.
 
 | Contract | Description |
 | --- | --- |
-| FunctionsBillingRegistry | Handles billing for Chainlink Functions |
-| FunctionsOracle | Make Chainlink Functions requests |
-| FunctionsOracleFactory | Deploy Chainlink Functions oracle |
+| MockFunctionsOracle | Mocks Chainlink Functions responses |
 
 ## Distributed Key Generation
 

@@ -31,10 +31,10 @@ void async function () {
     if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
 
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, 'm/44\'/60\'/0\'/0/6')
-    const daoOracleAddress = wallet.address
+    const oracleAddress = wallet.address
 
     const validatorCount = 4
-    if (!validatorStore[daoOracleAddress] || Object.keys(validatorStore[daoOracleAddress]).length < validatorCount) {
+    if (!validatorStore[oracleAddress] || Object.keys(validatorStore[oracleAddress]).length < validatorCount) {
         const dkg = await run(`which ${process.env.CLI_PATH}`) as string
         if (!dkg || dkg.includes('not found')) {
             await run(`GOWORK=off make -C ${resourceDir}/rockx-dkg-cli build`)
@@ -76,7 +76,7 @@ void async function () {
             ownerNonce++
         }
 
-        validatorStore[daoOracleAddress] = newValidators
+        validatorStore[oracleAddress] = newValidators
 
         fs.writeFileSync(`${outputPath}/validator.store.json`, JSON.stringify(validatorStore, null, 4))
     }

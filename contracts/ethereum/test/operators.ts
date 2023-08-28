@@ -19,19 +19,20 @@ describe('Operators', async function () {
             const expectedActive = operators.every(operator => operator.active === true)
             const expectedCollateral = operators.every(operator => operator.collateral.toString() === ethers.utils.parseEther('10.0').toString())
             const expectedResharing = operators.every(operator => operator.resharing === false)
+            console.log()
             return expectedActive && expectedCollateral && expectedResharing
         })
     })
 
     it('First initiated deposit uses 4 eligible operators', async function () {
-        const { manager, registry, views, daoOracle } = await loadFixture(deploymentFixture)
+        const { manager, registry, views, oracle } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
-        const depositAmount = round(32 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
+        const depositAmount = round(32 * ((100 + await manager.feePercent()) / 100), 10)
         const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
-        await initiateDepositHandler({ manager, signer: daoOracle })
+        await initiateDepositHandler({ manager, signer: oracle })
 
         const operatorIds = await registry.getOperatorIds()
         const startIndex = 0
@@ -45,14 +46,14 @@ describe('Operators', async function () {
     })
 
     it('Operator deregistration with 1 pool emits 1 reshare request', async function () {
-        const { manager, registry, ssvNetworkViews, daoOracle } = await loadFixture(deploymentFixture)
+        const { manager, registry, ssvNetworkViews, oracle } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
-        const depositAmount = round(32 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
+        const depositAmount = round(32 * ((100 + await manager.feePercent()) / 100), 10)
         const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
-        await initiateDepositHandler({ manager, signer: daoOracle })
+        await initiateDepositHandler({ manager, signer: oracle })
 
         const operatorIds = await registry.getOperatorIds()
         const deregisteringOperatorId = operatorIds[0]
@@ -62,8 +63,8 @@ describe('Operators', async function () {
             method: 'hardhat_impersonateAccount',
             params: [operatorOwnerAddress]
         })
-        const requestDeactivation = await registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
-        await requestDeactivation.wait()
+        const requestDeregistration = await registry.connect(operatorOwnerSigner).requestDeregistration(deregisteringOperatorId)
+        await requestDeregistration.wait()
         const deregisteringOperator = await registry.getOperator(deregisteringOperatorId)
         const resharesRequestedEvents = await manager.queryFilter(manager.filters.ResharesRequested(), -1)
         const resharesRequestedEvent = resharesRequestedEvents[0]
@@ -84,8 +85,8 @@ describe('Operators', async function () {
             method: 'hardhat_impersonateAccount',
             params: [operatorOwnerAddress]
         })
-        const requestDeactivation = await registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
-        await requestDeactivation.wait()
+        const requestDeregistration = await registry.connect(operatorOwnerSigner).requestDeregistration(deregisteringOperatorId)
+        await requestDeregistration.wait()
         const deregisteringOperator = await registry.getOperator(deregisteringOperatorId)
         const resharesRequestedEvents = await manager.queryFilter(manager.filters.ResharesRequested(), -1)
 
@@ -104,7 +105,7 @@ describe('Operators', async function () {
     })
 
     it('Pool exits with 31.0 and recovers from the blamed operator', async function () {
-        const { manager, registry, upkeep, views, secondUser, keeper, daoOracle, functionsBillingRegistry } = await loadFixture(secondUserDepositFixture)
+        const { manager, registry, upkeep, views, secondUser, keeper, oracle, requestId } = await loadFixture(secondUserDepositFixture)
 
         const secondStake = await manager.getUserStake(secondUser.address)
         const withdraw = await manager.connect(secondUser).requestWithdrawal(secondStake)
@@ -119,7 +120,6 @@ describe('Operators', async function () {
     
         await time.increase(time.duration.days(1))
         await runUpkeep({ upkeep, keeper })
-
         const reportValues = {
             activeBalance: 0,
             sweptBalance: sweptExitedBalance,
@@ -128,15 +128,13 @@ describe('Operators', async function () {
             completedExits: 1,
             compoundablePoolIds: [0, 0, 0, 0, 0]
         }
-
         await fulfillReport({
-            keeper,
             upkeep,
-            functionsBillingRegistry,
-            values: reportValues
+            keeper,
+            values: reportValues,
+            requestId
         })
-
-        await reportCompletedExitsHandler({ manager, views, signer: daoOracle, args: { count: 1 } })
+        await reportCompletedExitsHandler({ manager, views, signer: oracle, args: { count: 1 } })
         await runUpkeep({ upkeep, keeper })
 
         const stake = await manager.getTotalStake()
