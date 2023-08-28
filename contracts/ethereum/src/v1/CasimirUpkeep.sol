@@ -3,7 +3,7 @@ pragma solidity 0.8.18;
 
 import "./interfaces/ICasimirUpkeep.sol";
 import "./interfaces/ICasimirManager.sol";
-import {Functions, FunctionsClient} from "@chainlink/contracts/src/v0.8/dev/functions/FunctionsClient.sol";
+import {Functions, FunctionsClient} from "./vendor/FunctionsClient.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -15,7 +15,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /* Libraries */
     /*************/
 
-    /** Use Chainlink Functions */
+    /** Use Chainlink functions request library */
     using Functions for Functions.Request;
 
     /*************/
@@ -23,9 +23,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /*************/
 
     /** Oracle heartbeat */
-    uint256 public constant reportHeartbeat = 1 days;
-    /** Pool capacity */
-    uint256 public constant poolCapacity = 32 ether;
+    uint256 private constant REPORT_HEARTBEAT = 1 days;
 
     /*************/
     /* Immutable */
@@ -41,11 +39,11 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Current report status */
     ReportStatus private reportStatus;
     /** Current report period */
-    uint32 reportPeriod;
+    uint32 private reportPeriod;
     /** Current report remaining request count */
-    uint256 reportRemainingRequests;
+    uint256 private reportRemainingRequests;
     /** Current report block */
-    uint256 reportRequestBlock;
+    uint256 private reportRequestBlock;
     /** Current report request timestamp */
     uint256 private reportTimestamp;
     /** Current report swept balance */
@@ -59,21 +57,19 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Current report completed exits */
     uint256 private reportCompletedExits;
     /** Current report compoundable pools */
-    uint32[5] reportCompoundablePoolIds;
+    uint32[5] private reportCompoundablePoolIds;
     /** Finalizable activated deposits */
     uint256 private finalizableActivatedDeposits;
     /** Finalizable compoundable pools */
-    uint32[5] finalizableCompoundablePoolIds;
+    uint32[5] private finalizableCompoundablePoolIds;
     /** Current report request */
     mapping(bytes32 => RequestType) private reportRequests;
     /** Current report response error */
     bytes private reportResponseError;
     /** Binary request source code */
-    bytes public requestCBOR;
+    bytes private requestCBOR;
     /** Fulfillment gas limit */
-    uint32 fulfillGasLimit;
-    /** Functions subscription ID (Mocked until managed subscriptions are implemented) */
-    uint64 private linkSubscriptionId = 1;
+    uint32 private fulfillGasLimit;
 
     /***************/
     /* Constructor */
@@ -81,11 +77,16 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
     /**
      * Constructor
-     * @param linkFunctionsAddress The functions oracle contract address
+     * @param functionsOracleAddress The Chainlink functions oracle address
      */
     constructor(
-        address linkFunctionsAddress
-    ) FunctionsClient(linkFunctionsAddress) {
+        address functionsOracleAddress
+    ) FunctionsClient(functionsOracleAddress) {
+        require(
+            functionsOracleAddress != address(0),
+            "Missing functions oracle address"
+        );
+
         manager = ICasimirManager(msg.sender);
     }
 
@@ -99,7 +100,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         string calldata source,
         bytes calldata secrets,
         string[] calldata args
-    ) public pure returns (bytes memory) {
+    ) external pure returns (bytes memory) {
         Functions.Request memory req;
         req.initializeRequest(
             Functions.Location.Inline,
@@ -116,19 +117,18 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     }
 
     /**
-     * @notice Set the bytes representing the CBOR-encoded Functions.Request
-     * @param _fulfillGasLimit Maximum amount of gas used to call the client contract's `handleOracleFulfillment` function
-     * @param _linkSubscriptionId The functions billing subscription ID used to pay for Functions requests
-     * @param _requestCBOR Bytes representing the CBOR-encoded Functions.Request
+     * Set a new Chainlink functions request
+     * @param newRequestCBOR The new Chainlink functions request CBOR
+     * @param newFulfillGasLimit The new Chainlink functions fulfill gas limit 
      */
     function setRequest(
-        uint32 _fulfillGasLimit,
-        uint64 _linkSubscriptionId,
-        bytes calldata _requestCBOR
+        bytes calldata  newRequestCBOR,
+        uint32 newFulfillGasLimit
     ) external onlyOwner {
-        fulfillGasLimit = _fulfillGasLimit;
-        linkSubscriptionId = _linkSubscriptionId;
-        requestCBOR = _requestCBOR;
+        requestCBOR = newRequestCBOR;
+        fulfillGasLimit = newFulfillGasLimit;
+
+        emit RequestSet(newRequestCBOR, newFulfillGasLimit);
     }
 
     /**
@@ -145,7 +145,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     {
         if (reportStatus == ReportStatus.FINALIZED) {
             bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
-            bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= reportHeartbeat;
+            bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= REPORT_HEARTBEAT;
             upkeepNeeded = checkActive && heartbeatLapsed;
         } else if (reportStatus == ReportStatus.PROCESSING) {
             bool finalizeReport = reportCompletedExits == manager.finalizableCompletedExits();
@@ -165,11 +165,14 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             reportRequestBlock = block.number;
             reportTimestamp = block.timestamp;
             reportPeriod = manager.reportPeriod();
-            Functions.Request memory req;
+            uint64 functionsId = manager.functionsId();
             reportRemainingRequests = 2;
             for (uint256 i = 0; i < reportRemainingRequests; i++) {
-                bytes32 requestId = sendRequest(req, linkSubscriptionId, fulfillGasLimit);
+                bytes32 requestId = s_oracle.sendRequest(functionsId, requestCBOR, fulfillGasLimit);
+                s_pendingRequests[requestId] = s_oracle.getRegistry();
                 reportRequests[requestId] = RequestType(i + 1);
+                
+                emit RequestSent(requestId);
             }
         } else {
             if (
@@ -259,27 +262,17 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     }
 
     /**
-     * @notice Update the functions oracle address
-     * @param newOracleAddress New oracle address
+     * @notice Set a new Chainlink functions oracle address
+     * @param newOracleAddress New Chainlink functions oracle address
      */
     function setOracleAddress(address newOracleAddress) external onlyOwner {
+        require (
+            newOracleAddress != address(0),
+            "Missing oracle address"
+        );
+
         setOracle(newOracleAddress);
-    }
 
-    // Dev-only functions
-
-    /**
-     * @notice Fulfill the request for testing
-     * @param requestId The request ID, returned by sendRequest()
-     * @param response Aggregated response from the user code
-     * @param err Aggregated error from the user code or from the sweptStake pipeline
-     * Either response or error parameter will be set, but never both
-     */
-    function mockFulfillRequest(
-        bytes32 requestId,
-        bytes memory response,
-        bytes memory err
-    ) external {
-        fulfillRequest(requestId, response, err);
+        emit OracleAddressSet(newOracleAddress);
     }
 }

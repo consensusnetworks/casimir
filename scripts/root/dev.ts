@@ -84,8 +84,8 @@ void async function () {
 
         const wallet = getWallet(process.env.BIP39_SEED)
 
-        // Account for the mock oracle contract deployment
-        const deployerNonce = await provider.getTransactionCount(wallet.address) + 1
+        // Account for the mock Chainlink functions deployments
+        const deployerNonce = await provider.getTransactionCount(wallet.address) + 5
 
         if (!process.env.MANAGER_ADDRESS) {
             process.env.MANAGER_ADDRESS = ethers.utils.getContractAddress({

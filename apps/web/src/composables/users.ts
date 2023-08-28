@@ -1,7 +1,7 @@
 import { ref, readonly } from 'vue'
 import { Account, AddAccountOptions, ProviderString, RemoveAccountOptions, UserWithAccountsAndOperators, ApiResponse, UserAnalyticsData } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
-import useEthers from './ethers'
+import useEthers from '@/composables/ethers'
 import * as Session from 'supertokens-web-js/recipe/session'
 import useTxData from '../mockData/mock_transaction_data'
 
@@ -120,6 +120,7 @@ export default function useUsers() {
 
     function computeUserAnalytics() {
         // const result = userAnalytics.value
+        console.log('rawUserAnalytics in computeAnalytics :>> ', rawUserAnalytics)
         const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
             new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
         })
@@ -237,16 +238,24 @@ export default function useUsers() {
                 }
             }
             // TODO: Re-enable this when athena is ready
-            // const response = await fetch(`${usersUrl}/analytics`, requestOptions)
-            // const { error, message, data } = await response.json()
-            const error = false
-            const message = 'User analytics found'
-            const data = txData.value
+            const response = await fetch(`${usersUrl}/analytics`, requestOptions)
+            const { error, message, data } = await response.json()
+            console.log('data from analytics :>> ', data)
+            // const error = false
+            // const message = 'User analytics found'
+
+            // TODO: Get events, actions, and contract data from the API
+            // Then format the data to be used in the charts (see computeUserAnalytics) and give to Steve.
+
+            // We get the user's analytics (wallet balance) data here.
+            // const data = txData.value
 
             if (error) throw new Error(message)
 
             // TODO: Pass data from above when the API / data is ready
             setRawAnalytics(data)
+
+            // This compute's the user's wallet balance over time
             computeUserAnalytics()
             return { error, message, data }
         } catch (error: any) {

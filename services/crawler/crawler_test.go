@@ -1,47 +1,62 @@
 package main
 
 import (
-	"context"
+	"net/url"
 	"testing"
 )
 
-func TestNewEthereumCrawler(t *testing.T) {
-	var err error
-	crawler, err := NewEthereumCrawler()
+func TestGetHistoricalContracts(t *testing.T) {
+	_, err := LoadEnv()
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = crawler.Client.BlockNumber(context.Background())
+	// ethURL := os.Getenv("ETHEREUM_RPC_URL")
+
+	url, err := url.Parse("https://nodes.casimir.co/eth/hardhat")
 
 	if err != nil {
 		t.Error(err)
 	}
+
+	config := Config{
+		Env:              Dev,
+		URL:              url,
+		Start:            0,
+		BatchSize:        250_000,
+		ConcurrencyLimit: 10,
+	}
+
+	crawler, err := NewEthereumCrawler(config)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = crawler.GetHistoricalContracts()
+
+	if err != nil {
+		t.Error(err)
+	}
+
 }
 
-func TestEthereumCrawler_Introspect(t *testing.T) {
-	crawler, err := NewEthereumCrawler()
+// func TestNewEthereumCrawler(t *testing.T) {
+// 	var err error
+// 	crawler, err := NewEthereumCrawler(Config{Env: Dev})
 
-	if err != nil {
-		t.Error(err)
-	}
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
 
-	err = crawler.Introspect()
+// 	_, err = crawler.Client.BlockNumber(context.Background())
 
-	if err != nil {
-		t.Error(err)
-	}
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
 
-	if crawler.txBucket == "" {
-		t.Error("introspection returned no tables, expected events table")
-	}
-
-	if crawler.walletBucket == "" {
-		t.Error("introspection returned no tables, expected wallets table")
-	}
-
-	if crawler.stakingBucket == "" {
-		t.Error("introspection returned no tables, expected staking action table")
-	}
-}
+// 	if crawler.Config.Version == 0 {
+// 		t.Errorf("expected at least version 1, but got %s", crawler.Config.Version)
+// 	}
+// }

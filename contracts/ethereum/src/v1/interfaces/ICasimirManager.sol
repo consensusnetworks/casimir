@@ -35,20 +35,36 @@ interface ICasimirManager {
     /* Events */
     /**********/
 
+    event ClusterBalanceDeposited(uint256 amount);
     event DepositRequested(uint32 indexed poolId);
     event DepositInitiated(uint32 indexed poolId);
     event DepositActivated(uint32 indexed poolId);
+    event ForcedExitsReported(uint32[] poolIds);
+    event FunctionsRequestSet(bytes newRequestCBOR, uint32 newFulfillGasLimit);
+    event FunctionsOracleAddressSet(address newFunctionsOracleAddress);
+    event LINKBalanceWithdrawn(uint256 amount);
     event ResharesRequested(uint64 indexed operatorId);
     event ReshareCompleted(uint32 indexed poolId);
+    event ExitedBalanceDeposited(uint32 indexed poolId, uint256 amount);
     event ExitRequested(uint32 indexed poolId);
     event ForcedExitReportsRequested(uint256 count);
     event SlashedExitReportsRequested(uint256 count);
     event CompletedExitReportsRequested(uint256 count);
     event ExitCompleted(uint32 indexed poolId);
+    event PoolRegistered(uint32 poolId);
     event StakeDeposited(address indexed sender, uint256 amount);
     event StakeRebalanced(uint256 amount);
+    event RecoveredBalanceDeposited(uint32 indexed poolId, uint256 amount);
+    event ReservedFeesDeposited(uint256 amount);
+    event ReservedFeesWithdrawn(uint256 amount);
     event RewardsDeposited(uint256 amount);
+    event SSVBalanceWithdrawn(uint256 amount);
     event TipsDeposited(uint256 amount);
+    event FunctionsBalanceDeposited(uint256 amount);
+    event UpkeepBalanceDeposited(uint256 amount);
+    event FunctionsCancelled();
+    event UpkeepCancelled();
+    event WithdrawalFulfilled(address indexed sender, uint256 amount);
     event WithdrawalRequested(address indexed sender, uint256 amount);
     event WithdrawalInitiated(address indexed sender, uint256 amount);
 
@@ -57,7 +73,7 @@ interface ICasimirManager {
     /*************/
 
     function depositStake() external payable;
-    function depositRewards() external payable;
+    function depositRewards(uint32 poolId) external payable;
     function depositExitedBalance(uint32 poolId) external payable;
     function depositRecoveredBalance(uint32 poolId) external payable;
     function depositReservedFees() external payable;
@@ -65,10 +81,17 @@ interface ICasimirManager {
         uint64[] memory operatorIds,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
+        bool processed
+    ) external;
+    function depositFunctionsBalance(
+        uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external;
     function depositUpkeepBalance(
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external;
     function rebalanceStake(
@@ -89,6 +112,7 @@ interface ICasimirManager {
         bytes calldata shares,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external;
     function activateDeposits(uint256 count) external;
@@ -111,19 +135,25 @@ interface ICasimirManager {
         ISSVNetworkCore.Cluster memory cluster,
         ISSVNetworkCore.Cluster memory oldCluster,
         uint256 feeAmount,
+        uint256 minimumTokenAmount,
         bool processed
     ) external;
     function withdrawLINKBalance(uint256 amount) external;
     function withdrawSSVBalance(uint256 amount) external;
-    function setFunctionsAddress(address functionsAddress) external;
+    function setFunctionsRequest(bytes calldata newRequestCBOR, uint32 newFulfillGasLimit) external;
+    function setFunctionsOracleAddress(address newOracleAddress) external;
+    function cancelFunctions() external;
+    function cancelUpkeep() external;
 
     /***********/
     /* Getters */
     /***********/
 
+    function functionsId() external view returns (uint64);
     function upkeepId() external view returns (uint256);    
     function latestActiveBalance() external view returns (uint256);
-    function feePercent() external view returns (uint32);
+    function reservedFeeBalance() external view returns (uint256);
+    function FEE_PERCENT() external view returns (uint32);
     function requestedWithdrawalBalance() external view returns (uint256);
     function requestedExits() external view returns (uint256);
     function finalizableCompletedExits() external view returns (uint256);
@@ -133,12 +163,10 @@ interface ICasimirManager {
     function getPendingPoolIds() external view returns (uint32[] memory);
     function getStakedPoolIds() external view returns (uint32[] memory);
     function getBufferedBalance() external view returns (uint256);
-    function getExpectedEffectiveBalance() external view returns (uint256);
     function getPendingWithdrawalEligibility(uint256 index, uint256 period) external view returns (bool);
     function getWithdrawableBalance() external view returns (uint256);
     function getUserStake(address userAddress) external view returns (uint256);
     function getPoolAddress(uint32 poolId) external view returns (address);
     function getRegistryAddress() external view returns (address);
     function getUpkeepAddress() external view returns (address);
-    function getUpkeepBalance() external view returns (uint256 upkeepBalance);
 }
