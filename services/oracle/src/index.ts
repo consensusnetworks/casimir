@@ -1,6 +1,8 @@
 import { getConfig } from './providers/config'
 import { getEventsIterable } from './providers/events'
 import {
+    depositFunctionsBalanceHandler,
+    depositUpkeepBalanceHandler,
     initiateDepositHandler,
     initiateResharesHandler, 
     // initiateExitsHandler, 
@@ -32,6 +34,8 @@ void async function () {
         const { args } = details
         const handler = handlers[details.event as keyof typeof handlers]
         if (!handler) throw new Error(`No handler found for event ${details.event}`)
+        await depositFunctionsBalanceHandler()
+        await depositUpkeepBalanceHandler()
         await handler({ args })
     }
 }()

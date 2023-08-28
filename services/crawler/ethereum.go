@@ -5,41 +5,42 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-type ChainType string
 type NetworkType string
 type ProviderType string
-type EventType string
+type ChainType string
 
 const (
-	Ethereum ChainType = "ethereum"
-	Bitcoin  ChainType = "bitcoin"
-	Iotex    ChainType = "iotex"
-
-	EtheruemMainnet NetworkType = "mainnet"
-	EtheruemGoerli  NetworkType = "goerli"
-
 	Casimir ProviderType = "casimir"
 
-	Block       EventType = "block"
-	Transaction EventType = "transaction"
-	Contract    EventType = "contract"
+	EthereumMainnet NetworkType = "mainnet"
+	EthereumGoerli  NetworkType = "goerli"
+	EthereumHardhat NetworkType = "hardhat"
+
+	Ethereum ChainType = "ethereum"
+
+	RemoteNodeHost = "nodes.casimir.co"
+	LocalNodeHost  = "127.0.0.1"
 )
 
-type EthereumClient struct {
+type EthereumService struct {
 	Client   *ethclient.Client
 	Network  NetworkType
 	Provider ProviderType
 	Url      url.URL
+	Synced   bool
 }
 
-func NewEthereumClient(Provider ProviderType, url url.URL) (*EthereumClient, error) {
-	if url.String() == "" {
-		return nil, errors.New("etheruem rpc url is empty")
+func NewEthereumService(raw string) (*EthereumService, error) {
+	url, err := url.Parse(raw)
+
+	if err != nil {
+		return nil, err
 	}
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
@@ -64,41 +65,52 @@ func NewEthereumClient(Provider ProviderType, url url.URL) (*EthereumClient, err
 
 	switch id.Int64() {
 	case 1:
-		net = EtheruemMainnet
+		net = EthereumMainnet
 	case 5:
-		net = EtheruemGoerli
+		if url.Host == "nodes.casimir.co" {
+			urlPath := strings.Split(url.Path, "/")
+			tt := urlPath[len(urlPath)-1]
+			if tt == "hardhat" {
+				net = EthereumHardhat
+				break
+			}
+			net = EthereumGoerli
+		}
+		net = EthereumGoerli
 	default:
 		return nil, fmt.Errorf("unsupported network id: %d", id.Int64())
 	}
 
-	return &EthereumClient{
+	return &EthereumService{
 		Client:   client,
 		Network:  net,
 		Provider: Casimir,
-		Url:      url,
+		Url:      *url,
 	}, nil
 }
 
-func (c ChainType) String() string {
-	switch c {
-	case Ethereum:
-		return "ethereum"
-	case Bitcoin:
-		return "bitcoin"
-	case Iotex:
-		return "iotex"
-	default:
-		return ""
-	}
-}
+func PingEthereumClient(url string) error {
+	client, err := ethclient.Dial(url)
 
-func (c NetworkType) String() string {
-	switch c {
-	case EtheruemMainnet:
-		return "mainnet"
-	case EtheruemGoerli:
-		return "goerli"
-	default:
-		return ""
+	if err != nil {
+		return err
 	}
+
+	_, err = client.NetworkID(context.Background())
+
+	if err != nil {
+		return err
+	}
+
+	header, err := client.HeaderByNumber(context.Background(), nil)
+
+	if err != nil {
+		return err
+	}
+
+	if header == nil || header.Number.Int64() == 0 {
+		return errors.New("empty header")
+	}
+
+	return err
 }

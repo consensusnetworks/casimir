@@ -24,7 +24,7 @@ void async function () {
 
     process.env.PROJECT = process.env.PROJECT || 'casimir'
     process.env.STAGE = process.env.STAGE || 'local'
-    process.env.BIP39_SEED = process.env.USE_SECRETS !== 'false' ? process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') : process.env.BIP39_SEED || 'test test test test test test test test test test test junk'
+    process.env.BIP39_SEED = process.env.USE_SECRETS !== 'false' ? process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') : process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
     process.env.CRYPTO_COMPARE_API_KEY = process.env.USE_SECRETS !== 'false' ? process.env.CRYPTO_COMPARE_API_KEY || await getSecret('casimir-crypto-compare-api-key') : process.env.CRYPTO_COMPARE_API_KEY || ''
     process.env.EMULATE = process.env.EMULATE || 'false'
     process.env.FORK = process.env.FORK || 'testnet'
@@ -84,8 +84,8 @@ void async function () {
 
         const wallet = getWallet(process.env.BIP39_SEED)
 
-        // Account for the mock oracle contract deployment
-        const deployerNonce = await provider.getTransactionCount(wallet.address) + 1
+        // Account for the mock Chainlink functions deployments
+        const deployerNonce = await provider.getTransactionCount(wallet.address) + 5
 
         if (!process.env.MANAGER_ADDRESS) {
             process.env.MANAGER_ADDRESS = ethers.utils.getContractAddress({

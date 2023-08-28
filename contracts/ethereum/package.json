@@ -3,7 +3,7 @@
     "scripts": {
         "build": "npx hardhat compile",
         "build:docs": "npx esno scripts/docs.ts",
-        "clean": "npx rimraf ./build",
+        "clean": "npx esno scripts/clean.ts",
         "deploy": "npx hardhat run scripts/deploy.ts",
         "dev": "npx hardhat run scripts/dev.ts",
         "dev:docs": "DEV=true npx esno scripts/docs.ts",
@@ -34,7 +34,6 @@
         "hardhat-abi-exporter": "^2.10.1",
         "localtunnel": "^2.0.2",
         "mocha": "^10.0.0",
-        "rimraf": "^5.0.1",
         "typechain": "^8.1.0"
     }
 }

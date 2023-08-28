@@ -1,37 +1,55 @@
 package main
 
 import (
-	"fmt"
+	"os"
 
-	"github.com/fatih/color"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 const (
-	info = "[INFO]"
-	warn = "[WARN]"
-	err  = "[ERROR]"
+	LogFile = "services/crawler/logs.ndjson"
 )
 
-type Logger interface {
-	Info(format string, args ...interface{})
-	Warn(format string, args ...interface{})
-	Error(format string, args ...interface{})
+type Logger struct {
+	*zap.Logger
 }
 
-type StdoutLogger struct{}
-
-func NewStdoutLogger() *StdoutLogger {
-	return &StdoutLogger{}
+type LogEntry struct {
+	Level      string `json:"level"`
+	Time       string `json:"time"`
+	Caller     string `json:"caller"`
+	Message    string `json:"message"`
+	Stacktrace string `json:"stacktrace"`
 }
 
-func (l *StdoutLogger) Info(format string, args ...interface{}) {
-	fmt.Printf(color.GreenString(info)+" "+format, args...)
+var EncoderConfig = zapcore.EncoderConfig{
+	TimeKey:        "time",
+	LevelKey:       "level",
+	NameKey:        "logger",
+	CallerKey:      "caller",
+	MessageKey:     "message",
+	StacktraceKey:  "stacktrace",
+	LineEnding:     zapcore.DefaultLineEnding,
+	EncodeLevel:    zapcore.CapitalLevelEncoder,
+	EncodeTime:     zapcore.ISO8601TimeEncoder,
+	EncodeDuration: zapcore.SecondsDurationEncoder,
+	EncodeCaller:   zapcore.ShortCallerEncoder,
 }
 
-func (l *StdoutLogger) Warn(format string, args ...interface{}) {
-	fmt.Printf(color.YellowString(warn)+" "+format, args...)
-}
+func NewConsoleLogger() (*Logger, error) {
+	encoder := zapcore.NewJSONEncoder(EncoderConfig)
 
-func (l *StdoutLogger) Error(format string, args ...interface{}) {
-	fmt.Printf(color.RedString(err)+" "+format, args...)
+	sync := zapcore.AddSync(os.Stdout)
+
+	fileLogger := zap.New(
+		zapcore.NewCore(encoder, sync, zapcore.DebugLevel),
+		zap.AddCaller(),
+		zap.AddStacktrace(zap.ErrorLevel),
+		zap.AddStacktrace(zap.WarnLevel),
+	)
+
+	return &Logger{
+		Logger: fileLogger,
+	}, nil
 }
