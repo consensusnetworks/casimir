@@ -20,38 +20,37 @@ const { roadmapItems, casimirRoadmapLocation } = useRoadmap()
       </p>
     </div>
 
-    <div class="w-full flex flex-col items-center justify-center px-[10%] gap-[5px]">
+    <div class="w-full flex flex-col items-center justify-center px-[20%] 600s:px-[10%] gap-[10px]">
       <div
         v-for="(item, index) in roadmapItems"
         :key="index"
-        class="flex flex-col items-center justify-center h-[200px] relative"
-        :class="index % 2 === 1? 'border-l' : 'border-r'"
+        class="flex flex-col items-center justify-center h-[200px] relative w-full"
+        :class="index === 0? 'border-l' : index === roadmapItems.length - 1? 'border-r' : 'border-x'"
       >
         <div
           class="rounded-[999px] w-[40px] h-[40px] border flex items-center justify-center text-[16px] font-[500] mb-[40px] absolute"
-          style="top: calc(50% - 20px)"
+          :style="index % 2 === 0? 'left: -20px; top: 0;' : 'right: -20px; top: 0;'"
           :class="item.step === casimirRoadmapLocation? 'bg-blue_3 text-white' : 'text-grey_4 bg-white'"
         >
           {{ item.step }}
         </div>
-
+        
         <h6
-          class="text-[18px] font-[500] mb-[20px] absolute whitespace-nowrap"
-          :style="index % 2 === 1? 'left: 30px' : 'right: 30px'"
-          style="top: calc(50% - 15px)"
-          :class="item.step === casimirRoadmapLocation? 'text-blue_3' : 'text-grey_4'"
+          class="text-[18px] font-[500] mb-[20px] whitespace-nowrap w-full h-full px-[30px]"
+          :style="item.step === casimirRoadmapLocation? 'color: #80abff' : 'color: #a6a6a6'"
+          :class="index % 2 === 0? 'text-left ' : 'text-right'"
         >
-          <div
-            class="tooltip_container"
-            :class="screenWidth < 450? 'whitespace-normal' : ''"
-          >
+          <h6 class="mt-[10px] text-[12px] font-[600] tracking-wide text-grey_3">
+            {{ item.projectedCompletionTime }}
+          </h6>
+
+          <h2 class="mt-[5px] font-[600]">
             {{ item.title }}
-            <p
-              class="tooltip"
-            >
-              {{ item.description }}
-            </p>
-          </div>
+          </h2>
+
+          <p class="text-[14px] font-[400] mt-[10px] whitespace-normal">
+            {{ item.description }}
+          </p>
         </h6>
       </div>
     </div>
@@ -59,4 +58,4 @@ const { roadmapItems, casimirRoadmapLocation } = useRoadmap()
 </template>
 
 
-<style scoped></style>@/composables/screenDimensions
+<style scoped></style>

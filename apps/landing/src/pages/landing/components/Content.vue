@@ -44,7 +44,7 @@ watch(tabShowing, ()=>{
         <div :class="i === tabShowing? 'bg-primary/[0.75] expand h-full w-full' : 'w-[0px]'" />
       </button>
     </div>
-    <div class="mt-[60px] h-[500px]">
+    <div class="mt-[60px] h-[300px]">
       <div
         v-if="tabShowing === 1"
         class="text-center"
