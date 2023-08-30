@@ -1,5 +1,5 @@
 import { loadCredentials } from '@casimir/aws'
-import { run } from '@casimir/helpers'
+import { run } from '@casimir/shell'
 
 /**
  * Test a workflow from `.github/workflows`

@@ -35,7 +35,6 @@ export async function depositFunctionsBalanceHandler() {
             return part.slice(0, 1)
         }).join('.'))
     }
-    console.log('🤖 Functions balance', balance)
 
     if (balance < minimumBalance) {
         const uniswapFactory = new Factory({
@@ -78,7 +77,6 @@ export async function depositUpkeepBalanceHandler() {
             return part.slice(0, 1)
         }).join('.'))
     }
-    console.log('🤖 Upkeep balance', balance)
 
     if (balance < minimumBalance) {
         const uniswapFactory = new Factory({

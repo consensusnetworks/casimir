@@ -1,4 +1,4 @@
-import { run } from '@casimir/helpers'
+import { run } from '@casimir/shell'
 
 void async function () {
     const forge = await run('which forge') as string

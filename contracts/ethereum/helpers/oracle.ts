@@ -3,7 +3,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { CasimirManager, CasimirViews } from '../build/@types'
 import { PoolStatus, Validator } from '@casimir/types'
 import { Scanner } from '@casimir/ssv'
-import { getWithdrawalCredentials } from '@casimir/helpers'
 import { Factory } from '@casimir/uniswap'
 import { validatorStore } from '@casimir/data'
 
@@ -27,7 +26,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
       from: manager.address,
       nonce
     })
-    const poolWithdrawalCredentials = `0x${getWithdrawalCredentials(poolAddress)}`
+    const poolWithdrawalCredentials = '01' + '0'.repeat(22) + poolAddress.split('0x')[1]
     const validator = mockValidators.find((validator) => validator.withdrawalCredentials === poolWithdrawalCredentials)
     if (!validator) throw new Error(`No validator found for withdrawal credentials ${poolWithdrawalCredentials}`)
     

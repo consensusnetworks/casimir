@@ -1,5 +1,5 @@
 import { getConfig } from './providers/config'
-import { getEventsIterable } from './providers/events'
+import { getEventsIterable } from '@casimir/events'
 import {
     depositFunctionsBalanceHandler,
     depositUpkeepBalanceHandler,

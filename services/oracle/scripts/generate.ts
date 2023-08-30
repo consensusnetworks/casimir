@@ -1,6 +1,7 @@
 import fs from 'fs'
 import { ethers } from 'ethers'
-import { fetchRetry, run } from '@casimir/helpers'
+import { fetchRetry } from '@casimir/fetch'
+import { run } from '@casimir/shell'
 import { Validator } from '@casimir/types'
 import { Dkg } from '../src/providers/dkg'
 import { validatorStore } from '@casimir/data'

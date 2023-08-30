@@ -1,5 +1,5 @@
 import { getSecret, loadCredentials } from '@casimir/aws'
-import { run } from '@casimir/helpers'
+import { run } from '@casimir/shell'
 
 /**
  * Deploy CDK stacks

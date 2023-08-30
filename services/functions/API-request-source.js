@@ -42,7 +42,7 @@ try {
 
 async function balancesHandler() {
 	const depositedPoolCount = await getDepositedPoolCount()
-	
+
 	const startIndex = BigInt(0).toString(16).padStart(64, '0')
 	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
 
@@ -69,10 +69,10 @@ async function balancesHandler() {
 
 async function detailsHandler() {
 	const depositedPoolCount = await getDepositedPoolCount()
-	
+
 	const startIndex = BigInt(0).toString(16).padStart(64, '0')
 	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
-	
+
 	const validatorPublicKeys = await getValidatorPublicKeys(startIndex, endIndex)
 	const validators = await getValidators(validatorPublicKeys)
 
@@ -139,8 +139,8 @@ async function getCompoundablePoolIds(startIndex, endIndex) {
 		}
 	})
 	if (request.error) throw new Error('Failed to get compoundable pool IDs')
-	const rawPoolIds = request.data.result.slice(2);
-	let poolIds = [];
+	const rawPoolIds = request.data.result.slice(2)
+	let poolIds = []
 	for (let i = 0; i < 5; i++) {
 		let start = i * 8
 		let end = start + 8

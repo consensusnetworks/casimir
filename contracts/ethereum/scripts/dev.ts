@@ -4,7 +4,8 @@ import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import ISSVNetworkViewsAbi from '../build/abi/ISSVNetworkViews.json'
-import { fetchRetry, run } from '@casimir/helpers'
+import { fetchRetry } from '@casimir/fetch'
+import { run } from '@casimir/shell'
 import { PoolStatus } from '@casimir/types'
 import { requestConfig } from '@casimir/functions'
 
@@ -212,4 +213,5 @@ void async function () {
 
     process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = functionsBillingRegistry.address
     run('npm run dev --workspace @casimir/oracle')
+    run('npm run dev --workspace @casimir/functions')
 }()

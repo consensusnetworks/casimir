@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { run } from '@casimir/helpers'
+import { run } from '@casimir/shell'
 
 void async function () {
     const cargo = await run('which cargo') as string

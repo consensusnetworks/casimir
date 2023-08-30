@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { getWallet, run } from '@casimir/helpers'
+import { run } from '@casimir/shell'
 import { loadCredentials, getSecret } from '@casimir/aws'
 
 /**
@@ -14,12 +14,13 @@ void async function () {
 
     if (process.env.USE_SECRETS !== 'false') {
         await loadCredentials()
+        process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed')
+    } else {
+        process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
     }
+    console.log(`Your mnemonic is ${process.env.BIP39_SEED}`)
 
     process.env.FORK = process.env.FORK || 'testnet'
-    process.env.BIP39_SEED = process.env.USE_SECRETS !== 'false' ? process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') : process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
-
-    console.log(`Your mnemonic is ${process.env.BIP39_SEED}`)
 
     process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_FORK_URL[process.env.FORK.toUpperCase()]
     if (!process.env.ETHEREUM_FORK_RPC_URL) {
@@ -29,7 +30,8 @@ void async function () {
     console.log(`Using ${process.env.FORK} fork from ${process.env.ETHEREUM_FORK_RPC_URL}`)
 
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
-    const wallet = getWallet(process.env.BIP39_SEED)
+    const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
+
     
     // Account for the mock Chainlink functions deployments
     const deployerNonce = await provider.getTransactionCount(wallet.address) + 5

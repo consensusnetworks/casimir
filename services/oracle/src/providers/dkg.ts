@@ -3,7 +3,7 @@ import { StartKeygenInput } from '../interfaces/StartKeygenInput'
 import { DepositData } from '../interfaces/DepositData'
 import { DkgOptions } from '../interfaces/DkgOptions'
 import { StartReshareInput } from '../interfaces/StartReshareInput'
-import { getWithdrawalCredentials, run, runRetry } from '@casimir/helpers'
+import { run, runRetry } from '@casimir/shell'
 import { CreateValidatorInput } from '../interfaces/CreateValidatorInput'
 import { Validator } from '@casimir/types'
 import { ReshareValidatorInput } from '../interfaces/ReshareValidatorInput'
@@ -115,7 +115,7 @@ export class Dkg {
         try {
             const operatorFlags = Object.entries(input.operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
             const thresholdFlag = `--threshold ${Object.keys(input.operators).length - 1}`
-            const withdrawalCredentialsFlag = `--withdrawal-credentials ${getWithdrawalCredentials(input.withdrawalAddress)}`
+            const withdrawalCredentialsFlag = `--withdrawal-credentials ${'01' + '0'.repeat(22) + input.withdrawalAddress.split('0x')[1]}`
             const forkVersionFlag = '--fork-version prater'
             const command = `${this.cliPath} keygen ${operatorFlags} ${thresholdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
             const request = await run(`${command}`) as string

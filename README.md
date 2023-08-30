@@ -192,7 +192,6 @@ The common packages provide shared code for the project:
 
 - [@casimir/aws](common/aws): AWS helpers
 - [@casimir/data](common/data): data schemas and operational workflows
-- [@casimir/helpers](common/helpers): general utilities
 - [@casimir/speculos](common/speculos): Ledger emulator helpers
 - [@casimir/ssv](common/ssv): SSV helpers
 - [@casimir/types](common/types): shared types

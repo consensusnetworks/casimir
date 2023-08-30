@@ -1,4 +1,4 @@
-import { run } from '@casimir/helpers'
+import { run } from '@casimir/shell'
 
 /**
  * Clean up resources

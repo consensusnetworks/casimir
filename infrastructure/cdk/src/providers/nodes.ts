@@ -3,7 +3,7 @@ import * as cdk from 'aws-cdk-lib'
 import * as route53 from 'aws-cdk-lib/aws-route53'
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
 import { NodesStackProps } from '../interfaces/StackProps'
-import { kebabCase, pascalCase } from '@casimir/helpers'
+import { kebabCase, pascalCase } from '@casimir/format'
 import { Config } from './config'
 
 /**
