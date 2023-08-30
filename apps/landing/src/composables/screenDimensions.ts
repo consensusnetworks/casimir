@@ -5,7 +5,7 @@ const initializeComposable = ref(false)
 const screenWidth = ref(0)
 const screenHeight = ref(0)
   
-export default function useScreenDimentions() {
+export default function useScreenDimensions() {
 
     const findScreenDimenstions = () => {
         try {

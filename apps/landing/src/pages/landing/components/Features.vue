@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import VueFeather from 'vue-feather'
-import useScreenDimentions from '@/composables/screenDimenstions'
+import useScreenDimensions from '@/composables/screenDimensions'
 
-const { screenWidth } = useScreenDimentions()
+const { screenWidth } = useScreenDimensions()
 
 </script>
 
@@ -111,4 +111,4 @@ const { screenWidth } = useScreenDimentions()
 </template>
 
 
-<style scoped></style>
+<style scoped></style>@/composables/screenDimensions

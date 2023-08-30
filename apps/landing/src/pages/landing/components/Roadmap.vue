@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import useRoadmap from '@/composables/roadmapItems'
 import VueFeather from 'vue-feather'
-import useScreenDimentions from '@/composables/screenDimenstions'
+import useScreenDimensions from '@/composables/screenDimensions'
 
-const { screenWidth } = useScreenDimentions()
+const { screenWidth } = useScreenDimensions()
 
 const { roadmapItems, casimirRoadmapLocation } = useRoadmap()
 </script>
@@ -59,4 +59,4 @@ const { roadmapItems, casimirRoadmapLocation } = useRoadmap()
 </template>
 
 
-<style scoped></style>
+<style scoped></style>@/composables/screenDimensions

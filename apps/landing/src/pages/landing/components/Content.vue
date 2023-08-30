@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import useScreenDimentions from '@/composables/screenDimenstions'
+import useScreenDimensions from '@/composables/screenDimensions'
 import { onMounted, ref, watch } from 'vue'
 
-const { screenWidth } = useScreenDimentions()
+const { screenWidth } = useScreenDimensions()
 
 const tabShowing = ref(1)
 const interval = ref(null) as any
@@ -108,4 +108,4 @@ watch(tabShowing, ()=>{
 .expand {
   transition: width 5.5s ease; 
 }
-</style>
+</style>@/composables/screenDimensions

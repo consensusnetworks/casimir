@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import router from '@/composables/router'
 import VueFeather from 'vue-feather'
-import useScreenDimentions from '@/composables/screenDimenstions'
+import useScreenDimensions from '@/composables/screenDimensions'
 
-const { screenWidth } = useScreenDimentions()
+const { screenWidth } = useScreenDimensions()
 </script>
 
 <template>
@@ -38,4 +38,4 @@ const { screenWidth } = useScreenDimentions()
 .nav_items_active{
   color: #FFFFFF;
 }
-</style>
+</style>@/composables/screenDimensions

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import useScreenDimentions from '@/composables/screenDimenstions'
-const { screenWidth } = useScreenDimentions()
+import useScreenDimensions from '@/composables/screenDimensions'
+const { screenWidth } = useScreenDimensions()
 </script>
 
 <template>
@@ -154,4 +154,4 @@ const { screenWidth } = useScreenDimentions()
 </template>
 
 
-<style scoped></style>
+<style scoped></style>@/composables/screenDimensions

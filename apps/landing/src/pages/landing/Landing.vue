@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import useScreenDimentions from '@/composables/screenDimenstions'
-import DummyBreakdown from './comoponents/DummyBreakdown.vue'
-import DummyStaking from './comoponents/DummyStaking.vue'
-import DummyChart from './comoponents/DummyChart.vue'
-import Footer from './comoponents/Footer.vue'
-import QuestionsAndAnswers from './comoponents/QuestionsAndAnswers.vue'
-import Content from './comoponents/Content.vue'
-import Roadmap from './comoponents/Roadmap.vue'
-import Features from './comoponents/Features.vue'
+import useScreenDimensions from '@/composables/screenDimensions'
+import DummyBreakdown from './components/DummyBreakdown.vue'
+import DummyStaking from './components/DummyStaking.vue'
+import DummyChart from './components/DummyChart.vue'
+import Footer from './components/Footer.vue'
+import QuestionsAndAnswers from './components/QuestionsAndAnswers.vue'
+import Content from './components/Content.vue'
+import Roadmap from './components/Roadmap.vue'
+import Features from './components/Features.vue'
 
-const { screenWidth } = useScreenDimentions()
+const { screenWidth } = useScreenDimensions()
 </script>
 
 <template>
@@ -159,4 +159,4 @@ const { screenWidth } = useScreenDimentions()
     font-weight: 400;
     line-height: 20px;
 }
-</style>
+</style>@/composables/screenDimensions
