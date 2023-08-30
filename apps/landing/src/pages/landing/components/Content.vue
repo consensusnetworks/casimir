@@ -25,7 +25,7 @@ watch(tabShowing, ()=>{
 </script>
 
 <template>
-  <div class="w-full">
+  <div class="w-full px-[10%]">
     <div 
       :class="screenWidth <= 500? 'text-center px-[10%]' : 'text-center'"
     >
@@ -44,60 +44,68 @@ watch(tabShowing, ()=>{
         <div :class="i === tabShowing? 'bg-primary/[0.75] expand h-full w-full' : 'w-[0px]'" />
       </button>
     </div>
-    <div class="mt-[20px] h-[500px]">
+    <div class="mt-[60px] h-[500px]">
       <div
         v-if="tabShowing === 1"
-        class="text-left"
+        class="text-center"
       >
         <span class="text-[12px] font-[600] text-primary">New </span>
-        <h1 class="text-[28px] font-[600] leading-10 mb-[10px] tracking-tight">
+        <h1 class="text-[28px] font-[500] leading-10 mb-[10px] tracking-tight text-grey_3">
           Decentralized 
           Self Staking
         </h1>
-        <p class="text-[14px] font-[400] text-grey_4 w-full max-w-[650px] tracking-wide">
-          Consensus Networks, a provider of blockchain infrastructure, nodes, and staking services, is
-          introducing Casimir SelfStake, a non-custodial Ethereum (ETH) staking platform driven by account
-          abstraction and distributed validator technology. Our primary objective is to establish a
-          permissionless solution for staking and digital asset management that upholds the core principles
-          of the Ethereum Protocol and the wider Web3.0 ecosystem.
-        </p>
+        <div class="flex items-center justify-center">
+          <p class="text-[14px] font-[400] text-grey_4 w-full max-w-[650px] tracking-wide">
+            Consensus Networks, a provider of blockchain infrastructure, nodes, and staking services, is
+            introducing Casimir SelfStake, a non-custodial Ethereum (ETH) staking platform driven by account
+            abstraction and distributed validator technology. Our primary objective is to establish a
+            permissionless solution for staking and digital asset management that upholds the core principles
+            of the Ethereum Protocol and the wider Web3.0 ecosystem.
+          </p>
+        </div>
       </div>
 
       <div
         v-else-if="tabShowing === 2"
-        class="text-left"
+        class="text-center"
       >
         <span class="text-[12px] font-[600] text-primary">Future </span>
-        <h1 class="text-[28px] font-[600] leading-10 mb-[10px] tracking-tight">
+        <h1 class="text-[28px] font-[600] leading-10 mb-[10px] tracking-tight text-grey_3">
           Beyond Staking
         </h1>
-        <p class="text-[14px] font-[400] text-grey_4 max-w-[650px] tracking-wide">
-          With Casimir's native integration at Layer 1, users
-          can easily engage with NFTs or DeFi protocols, whether it's creating, trading, or managing
-          these digital assets. By eliminating the need for additional bridges or intermediaries,
-          Casimir enables a more direct and efficient interaction with the NFT and DeFi space. For
-          emerging use cases, such as Eigenlayer, Casimir's integration at Layer 1 would enable users
-          to take advantage of the Eigenlayer rehypothecating functionality in a more native manner
-          compared to other solutions.
-        </p>
+
+        <div class="flex items-center justify-center">
+          <p class="text-[14px] font-[400] text-grey_4 max-w-[650px] tracking-wide">
+            With Casimir's native integration at Layer 1, users
+            can easily engage with NFTs or DeFi protocols, whether it's creating, trading, or managing
+            these digital assets. By eliminating the need for additional bridges or intermediaries,
+            Casimir enables a more direct and efficient interaction with the NFT and DeFi space. For
+            emerging use cases, such as Eigenlayer, Casimir's integration at Layer 1 would enable users
+            to take advantage of the Eigenlayer rehypothecating functionality in a more native manner
+            compared to other solutions.
+          </p>
+        </div>
       </div>
       <div
         v-else-if="tabShowing === 3"
-        class="text-left"
+        class="text-center"
       >
         <span class="text-[12px] font-[600] text-primary">Assurance </span>
-        <h1 class="text-[28px] font-[600] leading-10 mb-[10px] tracking-tight">
+        <h1 class="text-[28px] font-[600] leading-10 mb-[10px] tracking-tight text-grey_3">
           Minimal Trust
         </h1>
-        <p class="text-[14px] font-[400] text-grey_4 w-full max-w-[650px] tracking-wide">
-          With Casimir's native integration at Layer 1, users
-          can easily engage with NFTs or DeFi protocols, whether it's creating, trading, or managing
-          these digital assets. By eliminating the need for additional bridges or intermediaries,
-          Casimir enables a more direct and efficient interaction with the NFT and DeFi space. For
-          emerging use cases, such as Eigenlayer, Casimir's integration at Layer 1 would enable users
-          to take advantage of the Eigenlayer rehypothecating functionality in a more native manner
-          compared to other solutions.
-        </p>
+
+        <div class="flex items-center justify-center">
+          <p class="text-[14px] font-[400] text-grey_4 w-full max-w-[650px] tracking-wide">
+            With Casimir's native integration at Layer 1, users
+            can easily engage with NFTs or DeFi protocols, whether it's creating, trading, or managing
+            these digital assets. By eliminating the need for additional bridges or intermediaries,
+            Casimir enables a more direct and efficient interaction with the NFT and DeFi space. For
+            emerging use cases, such as Eigenlayer, Casimir's integration at Layer 1 would enable users
+            to take advantage of the Eigenlayer rehypothecating functionality in a more native manner
+            compared to other solutions.
+          </p>
+        </div>
       </div>
     </div>
   </div>
