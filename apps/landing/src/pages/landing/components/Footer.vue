@@ -14,7 +14,7 @@ const { screenWidth } = useScreenDimensions()
       <div class="flex items-center justify-between gap-[10px]">
         <!-- social -->
         <a
-          href="http://"
+          href="https://discord.gg/Vy2b3gSZx8"
           target="_blank"
         >
           <img
@@ -25,7 +25,7 @@ const { screenWidth } = useScreenDimensions()
         </a>
 
         <a
-          href="http://"
+          href="https://github.com/consensusnetworks/casimir"
           target="_blank"
         >
           <img
@@ -36,7 +36,7 @@ const { screenWidth } = useScreenDimensions()
         </a>
 
         <a
-          href="http://"
+          href="https://twitter.com/casimirAssets/"
           target="_blank"
         >
           <img
