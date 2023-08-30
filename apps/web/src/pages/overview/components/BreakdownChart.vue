@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { onMounted, ref, watch} from 'vue'
+import { onMounted, ref, watch, onUnmounted} from 'vue'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 import useEthers from '@/composables/ethers'
 import useScreenDimensions from '@/composables/screenDimensions'
 import { AnalyticsData, ProviderString } from '@casimir/types'
+import VueFeather from 'vue-feather'
 
 const { currentStaked, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
 const { listenForTransactions } = useEthers()
@@ -16,6 +17,8 @@ const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('historical')
 
 const chartData = ref({} as any)
+
+const openFilterDropdown = ref(false)
 
 const getAccountColor = (address: string) => {
   const walletProvider = user.value?.accounts.find( item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase())?.walletProvider as ProviderString
@@ -99,6 +102,20 @@ const setChartData = () => {
   }
 }
 
+const listenToDropdownClicks = (event: any) =>{
+  const divToTrack = document.getElementById('filter_dropdown')
+
+      // Check if the clicked element is not inside the div you want to track
+      if (
+        divToTrack &&
+        !divToTrack.contains(event.target) &&
+        event.target !== divToTrack
+      ) {
+        // Click happened outside the div
+        openFilterDropdown.value = false
+      }
+}
+
 onMounted(async () => {
   if (user.value?.id) {
     await getUserAnalytics()
@@ -108,10 +125,15 @@ onMounted(async () => {
     // Doing this here because currently we're currently initializing listeners on connectWallet
     // which isn't used if user is already signed in
     listenForTransactions()
+    document.addEventListener('click', listenToDropdownClicks)
   } else {
     setChartData()
   }
 })
+
+onUnmounted(() => {
+  document.removeEventListener('click', listenToDropdownClicks)
+}),
 
 watch(user, async () => {
     if (user.value?.id) {
@@ -185,7 +207,53 @@ watch(selectedTimeframe, () => {
         <h6 class="card_title">
           Ethereum Balance
         </h6>
+      </div>
+      <div
+        id="filter_dropdown" 
+        class="relative"
+      >
+        <button
+          class="card_input flex items-center gap-[10px]"
+          @click="openFilterDropdown = !openFilterDropdown"
+        >
+          Filter Chart
+          <vue-feather
+            :type="openFilterDropdown? 'chevron-up' : 'chevron-down'" 
+            size="36"
+            class="icon w-[20px] h-min text-[#667085] "
+          />
+        </button>
+        <div
+          v-show="openFilterDropdown"
+          class="absolute top-[110%] left-0 w-full card_input z-[5]"
+        >
+          <div class="flex items-center justify-between gap-[5px]">
+            <input type="checkbox"> Balance
+          </div>
+          <div class="flex items-center justify-between gap-[5px]">
+            <input type="checkbox"> Staked
+          </div>
+          <div class="flex items-center justify-between gap-[5px]">
+            <input type="checkbox"> Rewards
+          </div>
+        </div>
+      </div>
+      
+      <div class="w-full flex items-start justify-between flex-wrap gap-[20px]">
         <div class="flex flex-wrap items-center gap-[22px]">
+          <!-- delete  -->
+          <div
+            class="flex gap-[10px] items-center"
+          >
+            <div
+              class="w-[9px] h-[9px] rounded-[999px]"
+              :style="`background: orange;`"
+            />
+            <span class="legent_label">
+              MetaMask
+            </span>
+          </div>
+          <!--  -->
           <div
             v-for="item in chartData.datasets"
             :key="item"
@@ -200,36 +268,37 @@ watch(selectedTimeframe, () => {
             </span>
           </div>
         </div>
-      </div>
-      <div class="border border-[#D0D5DD] rounded-[8px] overflow-hidden">
-        <button
-          class="timeframe_button"
-          :class="selectedTimeframe === '1 month'? 'bg-[#F3F3F3]' : ''"
-          @click="selectedTimeframe = '1 month'"
-        >
-          1 month
-        </button>
-        <button
-          class="timeframe_button border-x border-x-[#D0D5DD]"
-          :class="selectedTimeframe === '6 months'? 'bg-[#F3F3F3]' : ''"
-          @click="selectedTimeframe = '6 months'"
-        >
-          6 months
-        </button>
-        <button
-          class="timeframe_button border-r border-r-[#D0D5DD]"
-          :class="selectedTimeframe === '12 months'? 'bg-[#F3F3F3]' : ''"
-          @click="selectedTimeframe = '12 months'"
-        >
-          12 months
-        </button>
-        <button
-          class="timeframe_button"
-          :class="selectedTimeframe === 'historical'? 'bg-[#F3F3F3]' : ''"
-          @click="selectedTimeframe = 'historical'"
-        >
-          historical
-        </button>
+
+        <div class="border border-[#D0D5DD] rounded-[8px] overflow-hidden">
+          <button
+            class="timeframe_button"
+            :class="selectedTimeframe === '1 month'? 'bg-[#F3F3F3]' : ''"
+            @click="selectedTimeframe = '1 month'"
+          >
+            1 month
+          </button>
+          <button
+            class="timeframe_button border-x border-x-[#D0D5DD]"
+            :class="selectedTimeframe === '6 months'? 'bg-[#F3F3F3]' : ''"
+            @click="selectedTimeframe = '6 months'"
+          >
+            6 months
+          </button>
+          <button
+            class="timeframe_button border-r border-r-[#D0D5DD]"
+            :class="selectedTimeframe === '12 months'? 'bg-[#F3F3F3]' : ''"
+            @click="selectedTimeframe = '12 months'"
+          >
+            12 months
+          </button>
+          <button
+            class="timeframe_button"
+            :class="selectedTimeframe === 'historical'? 'bg-[#F3F3F3]' : ''"
+            @click="selectedTimeframe = 'historical'"
+          >
+            historical
+          </button>
+        </div>
       </div>
     </div>
     <hr class="w-full bg-[#EAECF0] mt-[20px] mb-[24px]">
@@ -335,6 +404,19 @@ watch(selectedTimeframe, () => {
     border: 1px solid #D0D5DD;
     box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
     border-radius: 3px;
+}
+.card_input{
+    background: #FFFFFF;
+    border: 1px solid #D0D5DD;
+    box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
+    border-radius: 8px;
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 10px;
+    line-height: 20px;
+    color: #344054;
+    padding: 2px 12px;
 }
 
 .card_title{
