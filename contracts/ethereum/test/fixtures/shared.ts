@@ -5,7 +5,7 @@ import { fulfillReport, runUpkeep } from '../../helpers/upkeep'
 import { depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../../helpers/oracle'
 import { round } from '../../helpers/math'
 import ISSVNetworkViewsAbi from '../../build/abi/ISSVNetworkViews.json'
-import { requestConfig } from '@casimir/functions'
+import requestConfig from '@casimir/functions/Functions-request-config'
 
 
 /** Fixture to deploy SSV manager contract */

@@ -1,29 +1,16 @@
 import { getConfig } from './providers/config'
 import { getEventsIterable } from '@casimir/events'
-import {
-    depositFunctionsBalanceHandler,
-    depositUpkeepBalanceHandler,
-    initiateDepositHandler,
-    initiateResharesHandler, 
-    // initiateExitsHandler, 
-    // reportForcedExitsHandler,
-    reportCompletedExitsHandler
-} from './providers/handlers'
+import { fulfillRequestHandler } from './providers/handlers'
 import { HandlerInput } from './interfaces/HandlerInput'
 
 const config = getConfig()
 
 const contracts = {
-    CasimirManager: {
-        abi: config.managerAbi,
-        address: config.managerAddress,
+    FunctionsOracle: {
+        abi: config.functionsOracleAbi,
+        address: config.functionsOracleAddress,
         events: {
-            DepositRequested: initiateDepositHandler,
-            ResharesRequested: initiateResharesHandler,
-            // ExitRequested: initiateExitsHandler,
-            // ForcedExitReportsRequested: reportForcedExitsHandler,
-            CompletedExitReportsRequested: reportCompletedExitsHandler
-            
+            OracleRequest: fulfillRequestHandler
         }
     }
 }
@@ -53,15 +40,8 @@ void async function () {
     for await (const event of eventsIterable) {
         const details = event?.[event.length - 1]
         const { args } = details
-        const handler = handlers[details.event as keyof typeof handlers]
+        const handler = handlers[details.event]
         if (!handler) throw new Error(`No handler found for event ${details.event}`)
-        await depositFunctionsBalanceHandler()
-        await depositUpkeepBalanceHandler()
         await handler({ args })
     }
 }()
-
-
-
-
-

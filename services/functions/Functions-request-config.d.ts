@@ -1,5 +1,5 @@
-declare module '@casimir/functions' {
-    export const requestConfig: {
+declare module '@casimir/functions/Functions-request-config' {
+    const requestConfig: {
         codeLocation: number
         codeLanguage: number
         source: string
@@ -10,4 +10,5 @@ declare module '@casimir/functions' {
         expectedReturnType: string
         secretsURLs: never[]
     }
+    export default requestConfig
 }

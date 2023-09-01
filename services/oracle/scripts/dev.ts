@@ -14,11 +14,11 @@ void async function () {
 
     process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
     process.env.BIP39_PATH_INDEX = process.env.BIP39_PATH_INDEX || '6'
-    if (!process.env.MANAGER_ADDRESS) throw new Error('Manager address not found')
-    if (!process.env.VIEWS_ADDRESS) throw new Error('Views address not found')
-    if (!process.env.REGISTRY_ADDRESS) throw new Error('Registry address not found')
-    if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error('Functions billing registry address not found')
-    if (!process.env.LINK_REGISTRY_ADDRESS) throw new Error('Link registry address not found')
+    if (!process.env.MANAGER_ADDRESS) throw new Error('No manager address provided')
+    if (!process.env.VIEWS_ADDRESS) throw new Error('No views address provided')
+    if (!process.env.REGISTRY_ADDRESS) throw new Error('No registry address provided')
+    if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error('No functions billing registry address provided')
+    if (!process.env.LINK_REGISTRY_ADDRESS) throw new Error('No link registry address provided')
     process.env.LINK_TOKEN_ADDRESS = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
     process.env.SSV_NETWORK_ADDRESS = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
     process.env.SSV_NETWORK_VIEWS_ADDRESS = '0x8dB45282d7C4559fd093C26f677B3837a5598914'

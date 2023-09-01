@@ -26,7 +26,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
       from: manager.address,
       nonce
     })
-    const poolWithdrawalCredentials = '01' + '0'.repeat(22) + poolAddress.split('0x')[1]
+    const poolWithdrawalCredentials = '0x' + '01' + '0'.repeat(22) + poolAddress.split('0x')[1]
     const validator = mockValidators.find((validator) => validator.withdrawalCredentials === poolWithdrawalCredentials)
     if (!validator) throw new Error(`No validator found for withdrawal credentials ${poolWithdrawalCredentials}`)
     

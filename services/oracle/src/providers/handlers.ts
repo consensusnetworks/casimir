@@ -1,9 +1,9 @@
 import { ethers } from 'ethers'
 import { HandlerInput } from '../interfaces/HandlerInput'
 import { CasimirManager, CasimirRegistry, CasimirViews, IFunctionsBillingRegistry, IAutomationRegistry } from '@casimir/ethereum/build/@types'
-import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
-import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
-import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
+import CasimirManagerAbi from '@casimir/ethereum/build/abi/CasimirManager.json'
+import CasimirViewsAbi from '@casimir/ethereum/build/abi/CasimirViews.json'
+import CasimirRegistryAbi from '@casimir/ethereum/build/abi/CasimirRegistry.json'
 import IFunctionsBillingRegistryAbi from '@casimir/ethereum/build/abi/IFunctionsBillingRegistry.json'
 import IAutomationRegistryAbi from '@casimir/ethereum/build/abi/IAutomationRegistry.json'
 import { Scanner } from '@casimir/ssv'
@@ -13,6 +13,7 @@ import { getConfig } from './config'
 import { Dkg } from './dkg'
 
 const config = getConfig()
+
 const cli = new Dkg({
     cliPath: config.cliPath,
     messengerUrl: config.messengerUrl
@@ -21,7 +22,7 @@ const cli = new Dkg({
 export async function depositFunctionsBalanceHandler() {
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
     const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, IFunctionsBillingRegistryAbi, provider) as ethers.Contract & IFunctionsBillingRegistry
 
     const minimumBalance = 0.2
@@ -63,7 +64,7 @@ export async function depositFunctionsBalanceHandler() {
 export async function depositUpkeepBalanceHandler() {
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
     const linkRegistry = new ethers.Contract(config.linkRegistryAddress, IAutomationRegistryAbi, provider) as ethers.Contract & IAutomationRegistry
 
     const minimumBalance = 0.2
@@ -103,13 +104,14 @@ export async function depositUpkeepBalanceHandler() {
 }
 
 export async function initiateDepositHandler(input: HandlerInput) {
-    if (!input.args.poolId) throw new Error('No pool id provided')
+    const { poolId } = input.args
+    if (!poolId) throw new Error('No pool id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
-    const registry = new ethers.Contract(config.registryAddress, ICasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
+    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(config.viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const registry = new ethers.Contract(config.registryAddress, CasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
 
     const managerNonce = await provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
@@ -152,7 +154,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
     const requiredFee = await scanner.getRequiredFee(selectedOperatorIds)
 
     const validator = await cli.createValidator({
-        poolId: input.args.poolId,
+        poolId,
         operatorIds: selectedOperatorIds,
         ownerAddress: manager.address,
         ownerNonce,
@@ -198,13 +200,14 @@ export async function initiateDepositHandler(input: HandlerInput) {
 }
 
 export async function initiateResharesHandler(input: HandlerInput) {
-    if (!input.args.operatorId) throw new Error('No operator id provided')
+    const { operatorId } = input.args
+    if (!operatorId) throw new Error('No operator id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
-    const registry = new ethers.Contract(config.registryAddress, ICasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
+    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(config.viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const registry = new ethers.Contract(config.registryAddress, CasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
 
     const poolIds = [
         ...await manager.getPendingPoolIds(),
@@ -214,7 +217,7 @@ export async function initiateResharesHandler(input: HandlerInput) {
     for (const poolId of poolIds) {
         const poolDetails = await views.getPoolDetails(poolId)
         const oldOperatorIds = poolDetails.operatorIds.map(id => id.toNumber())
-        if (oldOperatorIds.includes(input.args.operatorId)) {
+        if (oldOperatorIds.includes(operatorId)) {
             const poolAddress = await manager.getPoolAddress(poolId)
 
             const operatorCount = (await registry.getOperatorIds()).length
@@ -295,7 +298,7 @@ export async function initiateResharesHandler(input: HandlerInput) {
                     operatorIds,
                     oldOperatorIds,
                     newOperatorId,
-                    input.args.operatorId,
+                    operatorId,
                     shares,
                     cluster,
                     oldCluster,
@@ -312,29 +315,31 @@ export async function initiateResharesHandler(input: HandlerInput) {
 }
 
 export async function initiateExitsHandler(input: HandlerInput) {
-    if (!input.args.poolId) throw new Error('No pool id provided')
+    const { poolId } = input.args
+    if (!poolId) throw new Error('No pool id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
-    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, provider) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, provider) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(config.viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     // Get pool to exit
-    const poolDetails = await views.getPoolDetails(input.args.poolId)
+    const poolDetails = await views.getPoolDetails(poolId)
 
     // Get operators to sign exit
 }
 
 export async function reportForcedExitsHandler(input: HandlerInput) {
-    if (!input.args.count) throw new Error('No count provided')
+    const { count } = input.args
+    if (!count) throw new Error('No count provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(config.viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     const stakedPoolIds = await manager.getStakedPoolIds()
     let poolIndex = 0
-    let remaining = input.args.count
+    let remaining = count
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
         const poolDetails = await views.getPoolDetails(poolId)
@@ -350,12 +355,13 @@ export async function reportForcedExitsHandler(input: HandlerInput) {
 }
 
 export async function reportCompletedExitsHandler(input: HandlerInput) {
-    if (!input.args.count) throw new Error('No count provided')
+    const { count } = input.args
+    if (!count) throw new Error('No count provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, ICasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(config.viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     /**
      * In production, we get the completed exit order from the Beacon API (sorting by withdrawn epoch)
@@ -364,7 +370,7 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
      * Here, we're just grabbing the next exiting pool for each completed exit
      */
     const stakedPoolIds = await manager.getStakedPoolIds()
-    let remaining = input.args.count
+    let remaining = count
     let poolIndex = 0
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]

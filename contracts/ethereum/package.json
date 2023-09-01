@@ -11,23 +11,21 @@
         "postinstall": "npx esno scripts/foundryup.ts",
         "test": "npx esno scripts/test.ts"
     },
-    "dependencies": {
-        "@chainlink/contracts": "^0.6.1",
-        "@openzeppelin/contracts": "^4.8.0",
-        "@uniswap/v3-core": "1.0.1",
-        "@uniswap/v3-periphery": "^1.4.3"
-    },
     "devDependencies": {
+        "@chainlink/contracts": "^0.6.1",
         "@nomicfoundation/hardhat-foundry": "^1.0.2",
         "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
         "@nomicfoundation/hardhat-toolbox": "^2.0.2",
         "@nomiclabs/hardhat-ethers": "^2.0.6",
+        "@openzeppelin/contracts": "^4.8.0",
         "@typechain/ethers-v5": "^10.1.0",
         "@typechain/hardhat": "^6.1.2",
         "@types/chai": "^4.3.1",
         "@types/localtunnel": "^2.0.1",
         "@types/mocha": "^9.1.1",
         "@types/node": "^17.0.45",
+        "@uniswap/v3-core": "1.0.1",
+        "@uniswap/v3-periphery": "^1.4.3",
         "chai": "^4.3.6",
         "esno": "^0.16.3",
         "hardhat": "^2.12.2",

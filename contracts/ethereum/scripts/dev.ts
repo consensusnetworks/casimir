@@ -7,7 +7,7 @@ import ISSVNetworkViewsAbi from '../build/abi/ISSVNetworkViews.json'
 import { fetchRetry } from '@casimir/fetch'
 import { run } from '@casimir/shell'
 import { PoolStatus } from '@casimir/types'
-import { requestConfig } from '@casimir/functions'
+import requestConfig from '@casimir/functions/Functions-request-config'
 
 /**
  * Deploy contracts to local network and run local events and oracle handling
@@ -212,6 +212,7 @@ void async function () {
     }, 2500)
 
     process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = functionsBillingRegistry.address
+    process.env.FUNCTIONS_ORACLE_ADDRESS = functionsOracle.address
     run('npm run dev --workspace @casimir/oracle')
     run('npm run dev --workspace @casimir/functions')
 }()
