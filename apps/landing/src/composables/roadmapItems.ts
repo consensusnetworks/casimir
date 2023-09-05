@@ -14,39 +14,39 @@ const casimirRoadmapLocation = ref(2)
 const roadmapItems = ref([
     {
         step: 1,
-        title: 'Internal Testnet',
+        title: 'Limited Goerli Launch',
         description: 'Deploy and test beta version.',
         projectedCompletionTime: 'Completed'
 
     },
     {
         step: 2,
-        title: 'Goerli Launch',
+        title: 'Public Goerli Launch',
         description: 'Launch publicly for Goerli Testnet. Coming Soon!!',
         projectedCompletionTime: 'Ongoing'
      },
     {
         step: 3,
-        title: 'Mainnet Beta',
-        description: 'Launch with Mainnet and selected validator set.',
+        title: 'Limited Mainnet Launch',
+        description: 'Launch with select operators on Mainnet.',
         projectedCompletionTime: 'Q3 2023'
     },
     {
         step: 4,
-        title: 'Full Mainnet',
-        description: 'Launch with permissionless validators on Mainnet.',
+        title: 'Public Mainnet Launch',
+        description: 'Launch with permissionless operators on Mainnet.',
         projectedCompletionTime: 'Q4 2023'
     },
     {
         step: 5,
         title: 'Eigenlayer Restaking',
-        description: 'Integrate with Eigenlayer to enable native restaking and eigenpod creation. ',
+        description: 'Offer stakers opt-in native restaking with EigenLayer.',
         projectedCompletionTime: 'Q1 2023'
     },
     {
         step: 6,
-        title: 'Liquid Withdrawl Pools',
-        description: 'Launch with native ETH pools to allow users instant unstaking if desired.',
+        title: 'Flexible Liquidity',
+        description: 'Offer instant staking withdrawals with liquidity pool integration.',
         projectedCompletionTime: 'Q2 2024'
     },
 ])
