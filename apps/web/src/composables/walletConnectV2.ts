@@ -1,7 +1,6 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Client from '@walletconnect/sign-client'
 import { ethers, providers } from 'ethers'
-import { apiGetChainNamespace, ChainsMap } from 'caip-api'
 import { PairingTypes, SessionTypes } from '@walletconnect/types'
 import { CryptoAddress, LoginCredentials } from '@casimir/types'
 import { Web3Modal } from '@web3modal/standalone'
@@ -9,6 +8,9 @@ import { Web3Provider } from '@ethersproject/providers'
 import UniversalProvider from '@walletconnect/universal-provider'
 import useAuth from '@/composables/auth'
 import useEthers from '@/composables/ethers'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { apiGetChainNamespace, ChainsMap } from 'caip-api'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
 const { getEthersBalance } = useEthers()

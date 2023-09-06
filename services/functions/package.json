@@ -1,6 +1,7 @@
 {
     "name": "@casimir/functions",
     "private": true,
+    "main": "index.js",
     "scripts": {
         "compile": "hardhat compile",
         "test": "npm run test:unit",

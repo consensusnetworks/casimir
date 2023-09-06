@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import './interfaces/ICasimirViews.sol';
-import './interfaces/ICasimirManager.sol';
-import './interfaces/ICasimirRegistry.sol';
-
-import 'hardhat/console.sol';
+import "./interfaces/ICasimirViews.sol";
+import "./interfaces/ICasimirManager.sol";
+import "./interfaces/ICasimirRegistry.sol";
+import "./interfaces/ICasimirPool.sol";
 
 /**
  * @title Views contract that provides read-only access to the state
@@ -16,7 +15,7 @@ contract CasimirViews is ICasimirViews {
     /*************/
 
     /** Compound minimum (0.1 ETH) */
-    uint256 private constant compoundMinimum = 100000000 gwei;
+    uint256 private constant COMPOUND_MINIMUM = 100000000 gwei;
 
     /*************/
     /* Immutable */
@@ -33,6 +32,9 @@ contract CasimirViews is ICasimirViews {
      * @param registryAddress The registry address
      */
     constructor(address managerAddress, address registryAddress) {
+        require(managerAddress != address(0), "Missing manager address");
+        require(registryAddress != address(0), "Missing registry address");
+
         manager = ICasimirManager(managerAddress);
         registry = ICasimirRegistry(registryAddress);
     }
@@ -53,7 +55,8 @@ contract CasimirViews is ICasimirViews {
         for (uint256 i = startIndex; i < endIndex; i++) {
             uint32 poolId = stakedPoolIds[i];
             ICasimirPool pool = ICasimirPool(manager.getPoolAddress(poolId));
-            if (pool.getBalance() >= compoundMinimum) {
+            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
+            if (poolDetails.balance >= COMPOUND_MINIMUM) {
                 poolIds[count] = poolId;
                 count++;
                 if (count == 5) {
@@ -67,21 +70,30 @@ contract CasimirViews is ICasimirViews {
      * @notice Get the deposited pool count
      * @return depositedPoolCount The deposited pool count
      */
-    function getDepositedPoolCount() external view returns (uint256 depositedPoolCount) {
-        return manager.getPendingPoolIds().length + manager.getStakedPoolIds().length;
+    function getDepositedPoolCount()
+        external
+        view
+        returns (uint256 depositedPoolCount)
+    {
+        return
+            manager.getPendingPoolIds().length +
+            manager.getStakedPoolIds().length;
     }
 
     /**
      * @notice Get operators
      * @param startIndex The start index
-     * @param endIndex The end index 
+     * @param endIndex The end index
      * @return operators The operators
      */
     function getOperators(
         uint256 startIndex,
         uint256 endIndex
     ) external view returns (ICasimirRegistry.Operator[] memory) {
-        ICasimirRegistry.Operator[] memory operators = new ICasimirRegistry.Operator[](endIndex - startIndex);
+        ICasimirRegistry.Operator[]
+            memory operators = new ICasimirRegistry.Operator[](
+                endIndex - startIndex
+            );
         uint64[] memory operatorIds = registry.getOperatorIds();
         uint256 count = 0;
         for (uint256 i = startIndex; i < endIndex; i++) {
@@ -97,7 +109,9 @@ contract CasimirViews is ICasimirViews {
      * @param poolId The pool ID
      * @return poolDetails The pool details
      */
-    function getPoolDetails(uint32 poolId) external view returns (ICasimirPool.PoolDetails memory poolDetails) {
+    function getPoolDetails(
+        uint32 poolId
+    ) external view returns (ICasimirPool.PoolDetails memory poolDetails) {
         address poolAddress = manager.getPoolAddress(poolId);
         if (poolAddress != address(0)) {
             ICasimirPool pool = ICasimirPool(poolAddress);
@@ -115,12 +129,13 @@ contract CasimirViews is ICasimirViews {
     function getSweptBalance(
         uint256 startIndex,
         uint256 endIndex
-    ) public view returns (uint128 sweptBalance) {
+    ) external view returns (uint128 sweptBalance) {
         for (uint256 i = startIndex; i <= endIndex; i++) {
             uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
             uint32 poolId = stakedPoolIds[i];
             ICasimirPool pool = ICasimirPool(manager.getPoolAddress(poolId));
-            sweptBalance += uint128(pool.getBalance() / 1 gwei);
+            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
+            sweptBalance += uint128(poolDetails.balance / 1 gwei);
         }
     }
 
@@ -147,9 +162,8 @@ contract CasimirViews is ICasimirViews {
             }
             address poolAddress = manager.getPoolAddress(poolId);
             ICasimirPool pool = ICasimirPool(poolAddress);
-            validatorPublicKeys[count] = pool.publicKey();
-            console.log('validatorPublicKeys[count]');
-            console.logBytes(validatorPublicKeys[count]);
+            ICasimirPool.PoolDetails memory details = pool.getDetails();
+            validatorPublicKeys[count] = details.publicKey;
             count++;
         }
         return validatorPublicKeys;
