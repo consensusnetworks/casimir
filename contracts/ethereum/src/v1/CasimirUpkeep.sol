@@ -4,8 +4,9 @@ pragma solidity 0.8.18;
 import "./interfaces/ICasimirUpkeep.sol";
 import "./interfaces/ICasimirManager.sol";
 import "./vendor/FunctionsClient.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title Upkeep contract that automates and handles reports
@@ -22,7 +23,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /* Constants */
     /*************/
 
-    /** Oracle heartbeat */
+    /** Report-to-report heartbeat duration */
     uint256 private constant REPORT_HEARTBEAT = 1 days;
 
     /*************/
@@ -36,6 +37,8 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /* State */
     /*********/
 
+    /** Previous report timestamp */
+    uint256 private previousReportTimestamp;
     /** Current report status */
     ReportStatus private reportStatus;
     /** Current report period */
@@ -66,10 +69,12 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     mapping(bytes32 => RequestType) private reportRequests;
     /** Current report response error */
     bytes private reportResponseError;
-    /** Binary request source code */
-    bytes private requestCBOR;
+    /** Request source */
+    string requestSource;
+    /** Request arguments */
+    string[] public requestArgs;
     /** Fulfillment gas limit */
-    uint32 private fulfillGasLimit;
+    uint32 public fulfillGasLimit;
 
     /***************/
     /* Constructor */
@@ -92,17 +97,24 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
 
     /**
      * Set a new Chainlink functions request
-     * @param newRequestCBOR The new Chainlink functions request CBOR
+     * @param newRequestSource JavaScript source code
+     * @param newRequestArgs List of arguments accessible from within the source code
      * @param newFulfillGasLimit The new Chainlink functions fulfill gas limit 
      */
     function setRequest(
-        bytes calldata  newRequestCBOR,
+        string calldata newRequestSource,
+        string[] calldata newRequestArgs,
         uint32 newFulfillGasLimit
     ) external onlyOwner {
-        requestCBOR = newRequestCBOR;
+        requestSource = newRequestSource;
+        requestArgs = newRequestArgs;
         fulfillGasLimit = newFulfillGasLimit;
 
-        emit RequestSet(newRequestCBOR, newFulfillGasLimit);
+        emit RequestSet(
+            newRequestSource, 
+            newRequestArgs,
+            newFulfillGasLimit
+        );
     }
 
     /**
@@ -113,19 +125,23 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         require(upkeepNeeded, "Upkeep not needed");
 
         if (reportStatus == ReportStatus.FINALIZED) {
+            previousReportTimestamp = reportTimestamp;
             reportStatus = ReportStatus.REQUESTING;
             reportRequestBlock = block.number;
             reportTimestamp = block.timestamp;
             reportPeriod = manager.reportPeriod();
-            uint64 functionsId = manager.functionsId();
-            reportRemainingRequests = 2;
-            for (uint256 i = 0; i < reportRemainingRequests; i++) {
-                bytes32 requestId = s_oracle.sendRequest(functionsId, requestCBOR, fulfillGasLimit);
-                s_pendingRequests[requestId] = s_oracle.getRegistry();
-                reportRequests[requestId] = RequestType(i + 1);
-                
-                emit RequestSent(requestId);
-            }
+            Functions.Request memory currentRequest;
+            currentRequest.initializeRequest(
+                Functions.Location.Inline,
+                Functions.CodeLanguage.JavaScript,
+                requestSource
+            );
+            string[] memory currentRequestArgs = requestArgs;
+            currentRequestArgs[6] = Strings.toString(previousReportTimestamp);
+            currentRequestArgs[7] = Strings.toString(reportTimestamp);
+            currentRequestArgs[8] = Strings.toString(reportRequestBlock);
+            sendReportRequest(currentRequest, currentRequestArgs, RequestType.BALANCES);
+            sendReportRequest(currentRequest, currentRequestArgs, RequestType.DETAILS);
         } else {
             if (
                 manager.requestedWithdrawalBalance() > 0 &&
@@ -175,32 +191,6 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     }
 
     /**
-     * @notice Generate a new Functions.Request(off-chain, saving gas)
-     * @param source JavaScript source code
-     * @param secrets Encrypted secrets payload
-     * @param args List of arguments accessible from within the source code
-     */
-    function generateRequest(
-        string calldata source,
-        bytes calldata secrets,
-        string[] calldata args
-    ) external pure returns (bytes memory) {
-        Functions.Request memory req;
-        req.initializeRequest(
-            Functions.Location.Inline,
-            Functions.CodeLanguage.JavaScript,
-            source
-        );
-        if (secrets.length > 0) {
-            req.addRemoteSecrets(secrets);
-        }
-        if (args.length > 0) {
-            req.addArgs(args);
-        }
-        return req.encodeCBOR();
-    }
-
-    /**
      * @notice Check if the upkeep is needed
      * @return upkeepNeeded True if the upkeep is needed
      */
@@ -210,7 +200,7 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         public
         view
         override
-        returns (bool upkeepNeeded, bytes memory)
+        returns (bool upkeepNeeded, bytes memory checkData)
     {
         if (reportStatus == ReportStatus.FINALIZED) {
             bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
@@ -220,25 +210,26 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             bool finalizeReport = reportCompletedExits == manager.finalizableCompletedExits();
             upkeepNeeded = finalizeReport;
         }
+        return (upkeepNeeded, checkData);
     }
 
     /**
      * @notice Callback that is invoked once the DON has resolved the request or hit an error
      * @param requestId The request ID, returned by sendRequest()
-     * @param response Aggregated response from the user code
-     * @param _error Aggregated error from the user code or from the sweptStake pipeline
+     * @param response Aggregated response from the DON
+     * @param executionError Aggregated error from the code execution
      * Either response or error parameter will be set, but never both
      */
     function fulfillRequest(
         bytes32 requestId,
         bytes memory response,
-        bytes memory _error
+        bytes memory executionError
     ) internal override {
         RequestType requestType = reportRequests[requestId];
         require(requestType != RequestType.NONE, "Invalid request ID");
 
-        reportResponseError = _error;
-        if (_error.length == 0) {
+        reportResponseError = executionError;
+        if (executionError.length == 0) {
             delete reportRequests[requestId];
             reportRemainingRequests--;
             if (requestType == RequestType.BALANCES) {
@@ -273,6 +264,24 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             }
         }
 
-        emit OCRResponse(requestId, response, _error);
+        emit OCRResponse(requestId, response, executionError);
+    }
+
+    /**
+     * @notice Send a report request
+     * @param currentRequest The Chainlink functions request
+     * @param currentRequestArgs The Chainlink functions request arguments
+     * @param currentRequestType The Chainlink functions request type
+     */
+    function sendReportRequest(
+        Functions.Request memory currentRequest,
+        string[] memory currentRequestArgs,
+        RequestType currentRequestType
+    ) private {
+        currentRequestArgs[9] = Strings.toString(uint256(currentRequestType));
+        currentRequest.addArgs(currentRequestArgs);
+        bytes32 requestId = sendRequest(currentRequest, manager.functionsId(), fulfillGasLimit);
+        reportRequests[requestId] = currentRequestType;
+        reportRemainingRequests++;
     }
 }

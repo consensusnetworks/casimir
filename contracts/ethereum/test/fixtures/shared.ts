@@ -103,10 +103,10 @@ export async function deploymentFixture() {
         await result.wait()
     }
 
-    const secrets = '0x' // Parse requestConfig.secrets and encrypt if necessary
-    const requestCBOR = await upkeep.generateRequest(requestConfig.source, secrets, requestConfig.args)
+    const requestSource = requestConfig.source
+    const requestArgs = requestConfig.args
     const fulfillGasLimit = 300000
-    const setRequest = await manager.setFunctionsRequest(requestCBOR, fulfillGasLimit)
+    const setRequest = await manager.setFunctionsRequest(requestSource, requestArgs, fulfillGasLimit)
     await setRequest.wait()
 
     await functionsBillingRegistry.setAuthorizedSenders([keeper.address, manager.address, upkeep.address, functionsOracle.address])

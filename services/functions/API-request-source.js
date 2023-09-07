@@ -1,43 +1,27 @@
-/**********************/
-/** MOCK BEACON DATA **/
-const mockValidatorPublicKeys = [
-	'0x88e1b777156a0945851d2940d604727fce299daaaf12aa6c04410c3e31887ab018f6a748017aa8717fbb7f242624afcf',
-	'0x96c9cd76264cdfd84d6c3c704101db435c150cbfe088c031e1bef740f8f7de24fceccdd755d1d2e091ccb6e58fb93db4',
-	'0x832e23566d61f2b141e1ab57e2a4362d228de7bb53acb096f0ea6d500d3490b323b41ce3ae2104772ba243ae48cdccfd',
-	'0x8b65cc087ed99e559b4e1be14776a54e02b458cdd79d792394186539cdd53ea937647cd4aba333a470ba9f6393c6e612'
-]
-const mockPreviousReportSlot = 6055000
-const mockReportSlot = 6055335
-/**********************/
-
 const genesisTimestamp = args[0]
-const previousReportTimestamp = args[1]
-const reportTimestamp = args[2]
-const reportBlockNumber = '0x' + parseInt(args[3]).toString(16)
-const requestType = args[4]
-const viewsAddress = args[5]
-const getCompoundablePoolIdsSignature = args[6]
-const getDepositedPoolCountSignature = args[7]
-const getSweptBalanceSignature = args[8]
-const getValidatorPublicKeysSignature = args[9]
-const ethereumUrl = secrets.ethereumRpcUrl || 'http://localhost:8545'
-const ethereumBeaconUrl = secrets.ethereumBeaconRpcUrl || 'http://localhost:5052'
-const previousReportSlot = mockPreviousReportSlot // Math.floor((previousReportTimestamp - genesisTimestamp) / 12)
+const viewsAddress = args[1]
+const getCompoundablePoolIdsSignature = args[2]
+const getDepositedPoolCountSignature = args[3]
+const getSweptBalanceSignature = args[4]
+const getValidatorPublicKeysSignature = args[5]
+const previousReportTimestamp = args[6]
+const reportTimestamp = args[7]
+const reportBlockNumber = '0x' + parseInt(args[8]).toString(16)
+const requestType = args[9]
+const ethereumUrl = secrets.ethereumRpcUrl ?? 'http://localhost:8546'
+const ethereumBeaconUrl = secrets.ethereumBeaconRpcUrl ?? 'http://localhost:5052'
+const previousReportSlot = Math.floor((previousReportTimestamp - genesisTimestamp) / 12)
 const previousReportEpoch = Math.floor(previousReportSlot / 32)
-const reportSlot = mockReportSlot // Math.floor((reportTimestamp - genesisTimestamp) / 12)
+const reportSlot = Math.floor((reportTimestamp - genesisTimestamp) / 12)
 const reportEpoch = Math.floor(reportSlot / 32)
 
-try {
-	switch (requestType) {
-		case '1':
-			return await balancesHandler()
-		case '2':
-			return await detailsHandler()
-		default:
-			throw new Error('Invalid request type')
-	}
-} catch (error) {
-	return Buffer.from(error.message)
+switch (requestType) {
+	case '1':
+		return await balancesHandler()
+	case '2':
+		return await detailsHandler()
+	default:
+		throw new Error('Invalid request type')
 }
 
 async function balancesHandler() {
@@ -47,7 +31,7 @@ async function balancesHandler() {
 	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
 
 	const validatorPublicKeys = await getValidatorPublicKeys(startIndex, endIndex)
-	const validators = await getValidators(validatorPublicKeys)
+	const validators = [] // await getValidators(validatorPublicKeys)
 
 	const activeBalance = validators.reduce((accumulator, { balance }) => {
 		accumulator += parseFloat(balance)
@@ -74,7 +58,7 @@ async function detailsHandler() {
 	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
 
 	const validatorPublicKeys = await getValidatorPublicKeys(startIndex, endIndex)
-	const validators = await getValidators(validatorPublicKeys)
+	const validators = [] // await getValidators(validatorPublicKeys)
 
 	const activatedDeposits = validators.reduce((accumulator, { validator }) => {
 		const { activation_epoch } = validator
@@ -225,7 +209,6 @@ async function getValidatorPublicKeys(startIndex, endIndex) {
 }
 
 async function getValidators(validatorPublicKeys) {
-	validatorPublicKeys = mockValidatorPublicKeys // TODO: remove
 	const request = await Functions.makeHttpRequest({
 		url: `${ethereumBeaconUrl}/eth/v1/beacon/states/${reportSlot}/validators?id=${validatorPublicKeys.join(',')}`
 	})

@@ -40,7 +40,7 @@ interface ICasimirManager {
     event DepositInitiated(uint32 indexed poolId);
     event DepositActivated(uint32 indexed poolId);
     event ForcedExitsReported(uint32[] poolIds);
-    event FunctionsRequestSet(bytes newRequestCBOR, uint32 newFulfillGasLimit);
+    event FunctionsRequestSet(string newRequestSource, string[] newRequestArgs, uint32 newFulfillGasLimit);
     event FunctionsOracleAddressSet(address newFunctionsOracleAddress);
     event LINKBalanceWithdrawn(uint256 amount);
     event ResharesRequested(uint64 indexed operatorId);
@@ -140,7 +140,11 @@ interface ICasimirManager {
     ) external;
     function withdrawLINKBalance(uint256 amount) external;
     function withdrawSSVBalance(uint256 amount) external;
-    function setFunctionsRequest(bytes calldata newRequestCBOR, uint32 newFulfillGasLimit) external;
+    function setFunctionsRequest(
+        string calldata newRequestSource,
+        string[] calldata newRequestArgs,
+        uint32 newFulfillGasLimit
+    ) external;
     function setFunctionsOracleAddress(address newOracleAddress) external;
     function cancelFunctions() external;
     function cancelUpkeep() external;

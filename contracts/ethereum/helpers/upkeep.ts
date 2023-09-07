@@ -45,7 +45,7 @@ export async function fulfillReport({
     const requestIds = (await upkeep.queryFilter(upkeep.filters.RequestSent())).slice(-2).map((event) => event.args.id)
     
     const balancesRequestId = requestIds[0]
-    const balancesResponseBytes = ethers.utils.defaultAbiCoder.encode(
+    const balancesResponse = ethers.utils.defaultAbiCoder.encode(
         ['uint128', 'uint128'],
         [ethers.utils.parseEther(activeBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
     )
@@ -54,11 +54,11 @@ export async function fulfillReport({
         keeper,
         functionsBillingRegistry,
         requestId: balancesRequestId,
-        responseBytes: balancesResponseBytes
+        response: balancesResponse
     })
 
     const detailsRequestId = requestIds[1]
-    const detailsResponseBytes = ethers.utils.defaultAbiCoder.encode(
+    const detailsResponse = ethers.utils.defaultAbiCoder.encode(
         ['uint32', 'uint32', 'uint32', 'uint32[5]'],
         [activatedDeposits, forcedExits, completedExits, compoundablePoolIds]
     )
@@ -67,7 +67,7 @@ export async function fulfillReport({
         keeper,
         functionsBillingRegistry,
         requestId: detailsRequestId,
-        responseBytes: detailsResponseBytes
+        response: detailsResponse
     })
 }
 
@@ -75,12 +75,12 @@ export async function fulfillFunctionsRequest({
     keeper,
     functionsBillingRegistry,
     requestId,
-    responseBytes
+    response
 }: {
     keeper: SignerWithAddress,
     functionsBillingRegistry: FunctionsBillingRegistry,
     requestId: string,
-    responseBytes: string
+    response: string
 }) {
     const dummyTransmitter = keeper.address
     const dummySigners = Array(31).fill(dummyTransmitter)
@@ -89,7 +89,7 @@ export async function fulfillFunctionsRequest({
     
     const fulfillAndBill = await functionsBillingRegistry.connect(keeper).fulfillAndBill(
         requestId,
-        responseBytes,
+        response,
         '0x',
         dummyTransmitter,
         dummySigners,

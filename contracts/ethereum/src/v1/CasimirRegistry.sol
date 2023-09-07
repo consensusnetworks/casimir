@@ -212,12 +212,10 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
 
         operatorPools[operatorId][poolId] = false;
         operator.poolCount -= 1;
-
         if (operator.poolCount == 0 && operator.resharing) {
             operator.active = false;
             operator.resharing = false;
         }
-
         if (blameAmount > 0) {
             operator.collateral -= blameAmount;
             manager.depositRecoveredBalance{value: blameAmount}(poolId);

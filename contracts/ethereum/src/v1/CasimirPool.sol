@@ -27,13 +27,13 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     ICasimirManager private immutable manager;
     /** Registry contract */
     ICasimirRegistry private immutable registry;
+    /** Pool ID */
+    uint32 private immutable id;
 
     /*********/
     /* State */
     /*********/
 
-    /** Pool ID */
-    uint32 private immutable id;
     /** Validator public key */
     bytes private publicKey;
     /** Operator IDs */

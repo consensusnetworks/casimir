@@ -3,7 +3,7 @@ import cbor from 'cbor'
 
 /**
  * Decodes a CBOR hex string, and adds opening and closing brackets to the CBOR if they are not present.
- * @param hexstr The hex string to decode
+ * @param hex The hex string to decode
  */
 export function decodeDietCBOR(hex: string) {
     const buf = hexToBuf(hex)

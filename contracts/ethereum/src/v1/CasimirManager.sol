@@ -251,7 +251,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         swapFactory = IUniswapV3Factory(swapFactoryAddress);
         swapRouter = ISwapRouter(swapRouterAddress);
         tokenAddresses[Token.WETH] = wethTokenAddress;
-
         registry = new CasimirRegistry(ssvNetworkViewsAddress);
         upkeep = new CasimirUpkeep(functionsOracleAddress);
     }
@@ -543,7 +542,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
         user.stakeRatioSum0 = stakeRatioSum;
         user.stake0 -= amount;
-
         if (amount <= getWithdrawableBalance()) {
             if (amount <= exitedBalance) {
                 exitedBalance -= amount;
@@ -563,7 +561,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             );
             requestedWithdrawalBalance += amount;
             requestedWithdrawals++;
-
             uint256 coveredExitBalance = requestedExits * POOL_CAPACITY;
             if (requestedWithdrawalBalance > coveredExitBalance) {
                 uint256 exitsRequired = (requestedWithdrawalBalance -
@@ -601,7 +598,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             requestedWithdrawalQueue.remove(0);
             withdrawalAmount += withdrawal.amount;
             withdrawalCount++;
-
             fulfillWithdrawal(withdrawal.user, withdrawal.amount);
         }
         if (withdrawalAmount <= exitedBalance) {
@@ -644,7 +640,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint32 poolId = readyPoolIds[0];
         readyPoolIds.remove(0);
         pendingPoolIds.push(poolId);
-
         poolAddresses[poolId] = address(
             new CasimirPool(
                 address(registry),
@@ -653,32 +648,44 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 operatorIds
             )
         );
-
         bytes memory computedWithdrawalCredentials = abi.encodePacked(
             bytes1(uint8(1)),
             bytes11(0),
             poolAddresses[poolId]
         );
-
         require(
             keccak256(computedWithdrawalCredentials) ==
                 keccak256(withdrawalCredentials),
             "Invalid withdrawal credentials"
         );
 
-        registerPool(
-            poolId,
-            depositDataRoot,
-            publicKey,
-            signature,
-            withdrawalCredentials,
-            operatorIds,
-            shares,
-            cluster,
-            feeAmount,
-            minimumTokenAmount,
-            processed
-        );
+        {
+            for (uint256 i = 0; i < operatorIds.length; i++) {
+                registry.addOperatorPool(operatorIds[i], poolId);
+            }
+            beaconDeposit.deposit{value: POOL_CAPACITY}(
+                publicKey,
+                withdrawalCredentials,
+                signature,
+                depositDataRoot
+            );
+            uint256 ssvAmount = retrieveFees(
+                feeAmount,
+                minimumTokenAmount,
+                tokenAddresses[Token.SSV],
+                processed
+            );
+            ssvToken.approve(address(ssvNetwork), ssvAmount);
+            ssvNetwork.registerValidator(
+                publicKey,
+                operatorIds,
+                shares,
+                ssvAmount,
+                cluster
+            );
+
+            emit PoolRegistered(poolId);
+        }
 
         emit DepositInitiated(poolId);
     }
@@ -781,7 +788,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         );
 
         stakedPoolIds.remove(poolIndex);
-
         if (poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
             requestedExits--;
         } else if (
@@ -789,7 +795,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ) {
             forcedExits--;
         }
-
         pool.setStatus(ICasimirPool.PoolStatus.WITHDRAWN);
         pool.withdrawBalance(blamePercents);
         ssvNetwork.removeValidator(poolDetails.publicKey, poolDetails.operatorIds, cluster);
@@ -919,16 +924,26 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * Set a new Chainlink functions request
-     * @param newRequestCBOR The new Chainlink functions request CBOR
+     * @param newRequestSource JavaScript source code
+     * @param newRequestArgs List of arguments accessible from within the source code
      * @param newFulfillGasLimit The new Chainlink functions fulfill gas limit 
      */
     function setFunctionsRequest(
-        bytes calldata  newRequestCBOR,
+        string calldata newRequestSource,
+        string[] calldata newRequestArgs,
         uint32 newFulfillGasLimit
     ) external onlyOwner {
-        upkeep.setRequest(newRequestCBOR, newFulfillGasLimit);
+        upkeep.setRequest(
+            newRequestSource,
+            newRequestArgs,
+            newFulfillGasLimit
+        );
 
-        emit FunctionsRequestSet(newRequestCBOR, newFulfillGasLimit);
+        emit FunctionsRequestSet(
+            newRequestSource, 
+            newRequestArgs,
+            newFulfillGasLimit
+        );
     }
 
     /**
@@ -1112,69 +1127,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD,
             "Action period maximum reached"
         );
+
         if (block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD) {
             user.actionPeriodTimestamp = block.timestamp;
             user.actionCount = 1;
         } else {
             user.actionCount++;
         }
-    }
-
-    /**
-     * @dev Register a pool with Beacon and SSV
-     * @param poolId The pool ID
-     * @param depositDataRoot The deposit data root
-     * @param publicKey The validator public key
-     * @param signature The signature
-     * @param withdrawalCredentials The withdrawal credentials
-     * @param operatorIds The operator IDs
-     * @param shares The operator shares
-     * @param cluster The SSV cluster snapshot
-     * @param feeAmount The fee amount to deposit
-     * @param minimumTokenAmount The minimum SSV token amount out after processing fees
-     * @param processed Whether the fee amount is already processed
-     */
-    function registerPool(
-        uint32 poolId,
-        bytes32 depositDataRoot,
-        bytes memory publicKey,
-        bytes memory signature,
-        bytes memory withdrawalCredentials,
-        uint64[] memory operatorIds,
-        bytes memory shares,
-        ISSVNetworkCore.Cluster memory cluster,
-        uint256 feeAmount,
-        uint256 minimumTokenAmount,
-        bool processed
-    ) private {
-        for (uint256 i = 0; i < operatorIds.length; i++) {
-            registry.addOperatorPool(operatorIds[i], poolId);
-        }
-
-        beaconDeposit.deposit{value: POOL_CAPACITY}(
-            publicKey,
-            withdrawalCredentials,
-            signature,
-            depositDataRoot
-        );
-
-        uint256 ssvAmount = retrieveFees(
-            feeAmount,
-            minimumTokenAmount,
-            tokenAddresses[Token.SSV],
-            processed
-        );
-        ssvToken.approve(address(ssvNetwork), ssvAmount);
-
-        ssvNetwork.registerValidator(
-            publicKey,
-            operatorIds,
-            shares,
-            ssvAmount,
-            cluster
-        );
-
-        emit PoolRegistered(poolId);
     }
 
     /**
@@ -1193,7 +1152,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             ) {
                 count--;
                 index++;
-
                 pool.setStatus(ICasimirPool.PoolStatus.EXITING_REQUESTED);
                 requestedExits++;
 
@@ -1241,7 +1199,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             address(swapRouter),
             wethToken.balanceOf(address(this))
         );
-
         IUniswapV3PoolState swapPool = IUniswapV3PoolState(
             swapFactory.getPool(
                 tokenAddresses[Token.WETH],
