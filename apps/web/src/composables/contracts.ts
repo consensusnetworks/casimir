@@ -15,6 +15,13 @@ import useWalletConnectV2 from './walletConnectV2'
 import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Pool, ProviderString, RegisteredOperator, UserWithAccountsAndOperators } from '@casimir/types'
 import { Operator, Scanner } from '@casimir/ssv'
 
+interface RegisterOperatorWithCasimirParams {
+    walletProvider: ProviderString
+    address: string
+    operatorId: BigNumberish
+    collateral: string
+}
+
 const currentStaked = ref<BreakdownAmount>({
     usd: '$0.00',
     eth: '0 ETH'
@@ -395,7 +402,7 @@ export default function useContracts() {
         }
     }
 
-    async function registerOperatorWithCasimir(walletProvider: ProviderString, address: string, operatorId: BigNumberish, value: string) {
+    async function registerOperatorWithCasimir({ walletProvider, address, operatorId, collateral }: RegisterOperatorWithCasimirParams) {
         loadingRegisteredOperators.value = true
         try {
             const signerCreators = {
@@ -411,7 +418,7 @@ export default function useContracts() {
             } else {
                 signer = signerCreator(walletProvider)
             }
-            const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(value)})
+            const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral)})
             loadingRegisteredOperators.value = false
             // TODO: @shanejearley - How many confirmations do we want to wait?
             await result?.wait(1)
