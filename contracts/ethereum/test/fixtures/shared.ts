@@ -1,10 +1,10 @@
 import { ethers, network } from 'hardhat'
 import { loadFixture, time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
-import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, FunctionsBillingRegistry, FunctionsOracleFactory, ISSVNetworkViews } from '../../build/@types'
+import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, FunctionsBillingRegistry, FunctionsOracleFactory, ISSVViews } from '../../build/@types'
 import { fulfillReport, runUpkeep } from '../../helpers/upkeep'
 import { depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../../helpers/oracle'
 import { round } from '../../helpers/math'
-import ISSVNetworkViewsAbi from '../../build/abi/ISSVNetworkViews.json'
+import ISSVViewsAbi from '../../build/abi/ISSVViews.json'
 import requestConfig from '@casimir/functions/Functions-request-config'
 
 
@@ -61,7 +61,7 @@ export async function deploymentFixture() {
         linkRegistryAddress: process.env.LINK_REGISTRY_ADDRESS,
         linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
         ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
-        ssvNetworkViewsAddress: process.env.SSV_NETWORK_VIEWS_ADDRESS,
+        ssvViewsAddress: process.env.SSV_VIEWS_ADDRESS,
         ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
         swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
         swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
@@ -84,13 +84,13 @@ export async function deploymentFixture() {
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
     const ssvNetwork = await ethers.getContractAt('SSVNetwork', process.env.SSV_NETWORK_ADDRESS as string)
-    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
+    const ssvViews = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
 
-    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [654, 655, 656, 657]
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [156, 157, 158, 159]
     if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
     const preregisteredBalance = ethers.utils.parseEther('10')
     for (const operatorId of preregisteredOperatorIds) {
-        const [operatorOwnerAddress] = await ssvNetworkViews.getOperatorById(operatorId)
+        const [operatorOwnerAddress] = await ssvViews.getOperatorById(operatorId)
         const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
         const nextBalance = currentBalance.add(preregisteredBalance)
         await setBalance(operatorOwnerAddress, nextBalance)
@@ -113,7 +113,7 @@ export async function deploymentFixture() {
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
     await functionsOracle.addAuthorizedSenders([keeper.address, manager.address])
 
-    return { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, keeper, daoOracle, functionsBillingRegistry }
+    return { manager, registry, upkeep, views, ssvNetwork, ssvViews, owner, keeper, daoOracle, functionsBillingRegistry }
 }
 
 /** Fixture to stake 16 for the first user */

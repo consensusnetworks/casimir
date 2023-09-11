@@ -10,8 +10,8 @@ const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS as string
 if (!linkTokenAddress) throw new Error('No link token address provided')
 const ssvNetworkAddress = process.env.SSV_NETWORK_ADDRESS as string
 if (!ssvNetworkAddress) throw new Error('No ssv network address provided')
-const ssvNetworkViewsAddress = process.env.SSV_NETWORK_VIEWS_ADDRESS as string
-if (!ssvNetworkViewsAddress) throw new Error('No ssv network views address provided')
+const ssvViewsAddress = process.env.SSV_VIEWS_ADDRESS as string
+if (!ssvViewsAddress) throw new Error('No ssv views address provided')
 const ssvTokenAddress = process.env.SSV_TOKEN_ADDRESS as string
 if (!ssvTokenAddress) throw new Error('No ssv token address provided')
 const uniswapV3FactoryAddress = process.env.UNISWAP_V3_FACTORY_ADDRESS as string
@@ -42,7 +42,7 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
     const scanner = new Scanner({
         provider: ethers.provider,
         ssvNetworkAddress,
-        ssvNetworkViewsAddress
+        ssvViewsAddress
     })
 
     const cluster = await scanner.getCluster({ 
@@ -176,7 +176,7 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
             const scanner = new Scanner({
                 provider: ethers.provider,
                 ssvNetworkAddress,
-                ssvNetworkViewsAddress
+                ssvViewsAddress
             })
 
             const cluster = await scanner.getCluster({ 

@@ -4,7 +4,7 @@ pragma solidity 0.8.18;
 import "./interfaces/ICasimirRegistry.sol";
 import "./interfaces/ICasimirManager.sol";
 import "./libraries/Types.sol";
-import "./vendor/interfaces/ISSVNetworkViews.sol";
+import "./vendor/interfaces/ISSVViews.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
@@ -31,8 +31,8 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
 
     /** Manager contract */
     ICasimirManager private immutable manager;
-    /** SSV network views contract */
-    ISSVNetworkViews private immutable ssvNetworkViews;
+    /** SSV views contract */
+    ISSVViews private immutable ssvViews;
 
     /*********/
     /* State */
@@ -63,16 +63,16 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
 
     /**
      * @notice Constructor
-     * @param ssvNetworkViewsAddress The SSV network views address
+     * @param ssvViewsAddress The SSV views address
      */
-    constructor(address ssvNetworkViewsAddress) {
+    constructor(address ssvViewsAddress) {
         require(
-            ssvNetworkViewsAddress != address(0),
-            "Missing SSV network views address"
+            ssvViewsAddress != address(0),
+            "Missing SSV views address"
         );
 
         manager = ICasimirManager(msg.sender);
-        ssvNetworkViews = ISSVNetworkViews(ssvNetworkViewsAddress);
+        ssvViews = ISSVViews(ssvViewsAddress);
     }
 
     /**
@@ -80,7 +80,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      * @param operatorId The operator ID
      */
     function registerOperator(uint64 operatorId) external payable {
-        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(
+        (address operatorOwner, , , , , ) = ssvViews.getOperatorById(
             operatorId
         );
         require(
@@ -105,7 +105,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      */
     function depositCollateral(uint64 operatorId) external payable {
         Operator storage operator = operators[operatorId];
-        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(
+        (address operatorOwner, , , , , ) = ssvViews.getOperatorById(
             operatorId
         );
         require(
@@ -126,7 +126,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      */
     function requestWithdrawal(uint64 operatorId, uint256 amount) external {
         Operator storage operator = operators[operatorId];
-        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(
+        (address operatorOwner, , , , , ) = ssvViews.getOperatorById(
             operatorId
         );
         require(msg.sender == operatorOwner, "Not operator owner");
@@ -149,7 +149,7 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
      */
     function requestDeactivation(uint64 operatorId) external {
         Operator storage operator = operators[operatorId];
-        (address operatorOwner, , , , ) = ssvNetworkViews.getOperatorById(
+        (address operatorOwner, , , , , ) = ssvViews.getOperatorById(
             operatorId
         );
         require(msg.sender == operatorOwner, "Not operator owner");

@@ -45,7 +45,7 @@ describe('Operators', async function () {
     })
 
     it('Operator deregistration with 1 pool emits 1 reshare request', async function () {
-        const { manager, registry, ssvNetworkViews, daoOracle } = await loadFixture(deploymentFixture)
+        const { manager, registry, ssvViews, daoOracle } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
         const depositAmount = round(32 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
@@ -56,7 +56,7 @@ describe('Operators', async function () {
 
         const operatorIds = await registry.getOperatorIds()
         const deregisteringOperatorId = operatorIds[0]
-        const operatorOwnerAddress = (await ssvNetworkViews.getOperatorById(deregisteringOperatorId)).owner
+        const operatorOwnerAddress = (await ssvViews.getOperatorById(deregisteringOperatorId)).owner
         const operatorOwnerSigner = ethers.provider.getSigner(operatorOwnerAddress)
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
@@ -74,11 +74,11 @@ describe('Operators', async function () {
     })
 
     it('Operator deregistration with 0 pools allows immediate collateral withdrawal', async function () {
-        const { manager, registry, ssvNetworkViews } = await loadFixture(deploymentFixture)
+        const { manager, registry, ssvViews } = await loadFixture(deploymentFixture)
 
         const operatorIds = await registry.getOperatorIds()
         const deregisteringOperatorId = operatorIds[0]
-        const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(deregisteringOperatorId)
+        const [ operatorOwnerAddress ] = await ssvViews.getOperatorById(deregisteringOperatorId)
         const operatorOwnerSigner = ethers.provider.getSigner(operatorOwnerAddress)
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
@@ -141,7 +141,7 @@ describe('Operators', async function () {
 
         const stake = await manager.getTotalStake()
         const userStake = await manager.getUserStake(secondUser.address)
-        const blamedOperatorId = 654 // Hardcoded the first operator
+        const blamedOperatorId = 156 // Hardcoded the first operator
         const blamedOperator = await registry.getOperator(blamedOperatorId)
 
         expect(ethers.utils.formatEther(stake)).equal('16.0')

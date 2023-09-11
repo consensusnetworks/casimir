@@ -141,7 +141,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
     const scanner = new Scanner({ 
         ethereumUrl: config.ethereumUrl,
         ssvNetworkAddress: config.ssvNetworkAddress,
-        ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
+        ssvViewsAddress: config.ssvViewsAddress
     })
 
     const cluster = await scanner.getCluster({ 
@@ -247,7 +247,7 @@ export async function initiateResharesHandler(input: HandlerInput) {
                 const scanner = new Scanner({ 
                     ethereumUrl: config.ethereumUrl,
                     ssvNetworkAddress: config.ssvNetworkAddress,
-                    ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
+                    ssvViewsAddress: config.ssvViewsAddress
                 })
     
                 const oldCluster = await scanner.getCluster({
@@ -393,7 +393,7 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
             const scanner = new Scanner({
                 ethereumUrl: config.ethereumUrl,
                 ssvNetworkAddress: config.ssvNetworkAddress,
-                ssvNetworkViewsAddress: config.ssvNetworkViewsAddress
+                ssvViewsAddress: config.ssvViewsAddress
             })
 
             const cluster = await scanner.getCluster({ 

@@ -135,7 +135,7 @@ Vendor contracts and interfaces are located in the [src/v1/vendor](./src/v1/vend
 | ReentrancyGuard | Secures against reentrancy |
 | SSVNetwork | Registers SSV validators |
 | SSVNetworkCore | Provides base SSV logic and types |
-| SSVNetworkViews | Provides read-only access to SSV network state |
+| SSVViews | Provides read-only access to SSV network state |
 | SwapRouter | Routes token swaps |
 | UniswapV3Factory | Provides access to Uniswap V3 pools |
 | UniswapV3PoolState | Provides access to Uniswap V3 pool state |

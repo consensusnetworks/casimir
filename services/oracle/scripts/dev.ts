@@ -20,8 +20,8 @@ void async function () {
     if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error('No functions billing registry address provided')
     if (!process.env.LINK_REGISTRY_ADDRESS) throw new Error('No link registry address provided')
     process.env.LINK_TOKEN_ADDRESS = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
-    process.env.SSV_NETWORK_ADDRESS = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
-    process.env.SSV_NETWORK_VIEWS_ADDRESS = '0x8dB45282d7C4559fd093C26f677B3837a5598914'
+    process.env.SSV_NETWORK_ADDRESS = '0xC3CD9A0aE89Fff83b71b58b6512D43F8a41f363D'
+    process.env.SSV_VIEWS_ADDRESS = '0xAE2C84c48272F5a1746150ef333D5E5B51F68763'
     process.env.SSV_TOKEN_ADDRESS = '0x3a9f01091C446bdE031E39ea8354647AFef091E7'
     process.env.UNISWAP_V3_FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
     process.env.WETH_TOKEN_ADDRESS = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'

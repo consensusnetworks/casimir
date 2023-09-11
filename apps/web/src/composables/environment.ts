@@ -14,7 +14,7 @@ export default function useEnvironment() {
     const walletConnectUrl = 'https://bridge.walletconnect.org'
     const cryptoCompareApiKey = import.meta.env.PUBLIC_CRYPTO_COMPARE_API_KEY || ''
     const ssvNetworkAddress = import.meta.env.PUBLIC_SSV_NETWORK_ADDRESS
-    const ssvNetworkViewsAddress = import.meta.env.PUBLIC_SSV_NETWORK_VIEWS_ADDRESS
+    const ssvViewsAddress = import.meta.env.PUBLIC_SSV_VIEWS_ADDRESS
     
     return {
         domain,
@@ -26,7 +26,7 @@ export default function useEnvironment() {
         registryAddress,
         speculosUrl,
         ssvNetworkAddress,
-        ssvNetworkViewsAddress,
+        ssvViewsAddress,
         usersUrl,
         viewsAddress,
         walletConnectUrl,

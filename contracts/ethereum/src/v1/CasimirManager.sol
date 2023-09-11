@@ -80,8 +80,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     IAutomationRegistry private immutable linkRegistry;
     /** LINK ERC-20 token contract */
     LinkTokenInterface private immutable linkToken;
-    /** SSV network contract */
-    ISSVNetwork private immutable ssvNetwork;
+    /** SSV clusters contract */
+    ISSVClusters private immutable ssvClusters;
     /** SSV ERC-20 token contract */
     IERC20 private immutable ssvToken;
     /** Uniswap factory contract */
@@ -205,7 +205,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param linkRegistryAddress The Chainlink keeper registry address
      * @param linkTokenAddress The Chainlink token address
      * @param ssvNetworkAddress The SSV network address
-     * @param ssvNetworkViewsAddress The SSV network views address
+     * @param ssvViewsAddress The SSV views address
      * @param ssvTokenAddress The SSV token address
      * @param swapFactoryAddress The Uniswap factory address
      * @param swapRouterAddress The Uniswap router address
@@ -220,7 +220,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         address linkRegistryAddress,
         address linkTokenAddress,
         address ssvNetworkAddress,
-        address ssvNetworkViewsAddress,
+        address ssvViewsAddress,
         address ssvTokenAddress,
         address swapFactoryAddress,
         address swapRouterAddress,
@@ -245,13 +245,13 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         linkRegistry = IAutomationRegistry(linkRegistryAddress);
         linkToken = LinkTokenInterface(linkTokenAddress);
         tokenAddresses[Token.LINK] = linkTokenAddress;
-        ssvNetwork = ISSVNetwork(ssvNetworkAddress);
+        ssvClusters = ISSVClusters(ssvNetworkAddress);
         tokenAddresses[Token.SSV] = ssvTokenAddress;
         ssvToken = IERC20(ssvTokenAddress);
         swapFactory = IUniswapV3Factory(swapFactoryAddress);
         swapRouter = ISwapRouter(swapRouterAddress);
         tokenAddresses[Token.WETH] = wethTokenAddress;
-        registry = new CasimirRegistry(ssvNetworkViewsAddress);
+        registry = new CasimirRegistry(ssvViewsAddress);
         upkeep = new CasimirUpkeep(functionsOracleAddress);
     }
 
@@ -351,8 +351,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             tokenAddresses[Token.SSV],
             processed
         );
-        ssvToken.approve(address(ssvNetwork), ssvAmount);
-        ssvNetwork.deposit(address(this), operatorIds, ssvAmount, cluster);
+        ssvToken.approve(address(ssvClusters), ssvAmount);
+        ssvClusters.deposit(address(this), operatorIds, ssvAmount, cluster);
 
         emit ClusterBalanceDeposited(ssvAmount);
     }
@@ -675,8 +675,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 tokenAddresses[Token.SSV],
                 processed
             );
-            ssvToken.approve(address(ssvNetwork), ssvAmount);
-            ssvNetwork.registerValidator(
+            ssvToken.approve(address(ssvClusters), ssvAmount);
+            ssvClusters.registerValidator(
                 publicKey,
                 operatorIds,
                 shares,
@@ -797,7 +797,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         }
         pool.setStatus(ICasimirPool.PoolStatus.WITHDRAWN);
         pool.withdrawBalance(blamePercents);
-        ssvNetwork.removeValidator(poolDetails.publicKey, poolDetails.operatorIds, cluster);
+        ssvClusters.removeValidator(poolDetails.publicKey, poolDetails.operatorIds, cluster);
 
         emit ExitCompleted(poolId);
     }
@@ -849,15 +849,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             tokenAddresses[Token.SSV],
             processed
         );
-        ssvToken.approve(address(ssvNetwork), ssvAmount);
+        ssvToken.approve(address(ssvClusters), ssvAmount);
 
-        ssvNetwork.removeValidator(
+        ssvClusters.removeValidator(
             poolDetails.publicKey,
             oldOperatorIds,
             oldCluster
         );
 
-        ssvNetwork.registerValidator(
+        ssvClusters.registerValidator(
             poolDetails.publicKey,
             operatorIds,
             shares,
@@ -879,7 +879,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         ISSVNetworkCore.Cluster memory cluster,
         uint256 amount
     ) external onlyOracle {
-        ssvNetwork.withdraw(operatorIds, amount, cluster);
+        ssvClusters.withdraw(operatorIds, amount, cluster);
     }
 
     /**

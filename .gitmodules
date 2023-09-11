@@ -16,11 +16,10 @@
 [submodule "contracts/ethereum/scripts/resources/ssv-network"]
 	path = contracts/ethereum/scripts/resources/ssv-network
 	url = https://github.com/bloxapp/ssv-network.git
-	branch = contract-v3
+	branch = jato-v2
 [submodule "contracts/ethereum/lib/forge-std"]
 	path = contracts/ethereum/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
 [submodule "services/oracle/scripts/resources/rockx-dkg-cli"]
 	path = services/oracle/scripts/resources/rockx-dkg-cli
 	url = https://github.com/RockX-SG/rockx-dkg-cli.git
-	branch = main

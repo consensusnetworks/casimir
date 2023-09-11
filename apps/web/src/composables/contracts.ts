@@ -30,7 +30,7 @@ const totalWalletBalance = ref<BreakdownAmount>({
     eth: '0 ETH'
 })
 
-const { ethereumUrl, managerAddress, registryAddress, ssvNetworkAddress, ssvNetworkViewsAddress, viewsAddress } = useEnvironment()
+const { ethereumUrl, managerAddress, registryAddress, ssvNetworkAddress, ssvViewsAddress, viewsAddress } = useEnvironment()
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, CasimirManagerAbi, provider) as CasimirManager
 const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as CasimirViews
@@ -230,7 +230,7 @@ export default function useContracts() {
         const scanner = new Scanner({ 
             ethereumUrl,
             ssvNetworkAddress,
-            ssvNetworkViewsAddress
+            ssvViewsAddress
         })
 
         const ssvOperators: Operator[] = []
@@ -251,10 +251,10 @@ export default function useContracts() {
                     '655': 'https://nodes.casimir.co/eth/goerli/dkg/2',
                     '656': 'https://nodes.casimir.co/eth/goerli/dkg/3',
                     '657': 'https://nodes.casimir.co/eth/goerli/dkg/4',
-                    '658': 'https://nodes.casimir.co/eth/goerli/dkg/5',
-                    '659': 'https://nodes.casimir.co/eth/goerli/dkg/6',
-                    '660': 'https://nodes.casimir.co/eth/goerli/dkg/7',
-                    '661': 'https://nodes.casimir.co/eth/goerli/dkg/8'
+                    '156': 'https://nodes.casimir.co/eth/goerli/dkg/5',
+                    '157': 'https://nodes.casimir.co/eth/goerli/dkg/6',
+                    '158': 'https://nodes.casimir.co/eth/goerli/dkg/7',
+                    '159': 'https://nodes.casimir.co/eth/goerli/dkg/8'
                 }
                 const url = operatorStore[operator.id.toString() as keyof typeof operatorStore]
                 casimirOperators.push({

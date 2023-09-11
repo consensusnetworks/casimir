@@ -32,8 +32,8 @@ export function getConfig() {
     if (!linkTokenAddress) throw new Error('No link token address provided')
     const ssvNetworkAddress = process.env.SSV_NETWORK_ADDRESS
     if (!ssvNetworkAddress) throw new Error('No ssv network address provided')
-    const ssvNetworkViewsAddress = process.env.SSV_NETWORK_VIEWS_ADDRESS
-    if (!ssvNetworkViewsAddress) throw new Error('No ssv network views address provided')
+    const ssvViewsAddress = process.env.SSV_VIEWS_ADDRESS
+    if (!ssvViewsAddress) throw new Error('No ssv network views address provided')
     const ssvTokenAddress = process.env.SSV_TOKEN_ADDRESS
     if (!ssvTokenAddress) throw new Error('No ssv token address provided')
     const uniswapV3FactoryAddress = process.env.UNISWAP_V3_FACTORY_ADDRESS
@@ -54,7 +54,7 @@ export function getConfig() {
         linkRegistryAddress,
         linkTokenAddress,
         ssvNetworkAddress,
-        ssvNetworkViewsAddress,
+        ssvViewsAddress,
         ssvTokenAddress,
         uniswapV3FactoryAddress,
         wethTokenAddress

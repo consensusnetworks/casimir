@@ -1,9 +1,9 @@
-import { CasimirManager, CasimirRegistry, ISSVNetworkViews, CasimirViews, CasimirUpkeep, FunctionsOracleFactory, FunctionsBillingRegistry } from '../build/@types'
+import { CasimirManager, CasimirRegistry, ISSVViews, CasimirViews, CasimirUpkeep, FunctionsOracleFactory, FunctionsBillingRegistry } from '../build/@types'
 import { ethers, network } from 'hardhat'
 import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
-import ISSVNetworkViewsAbi from '../build/abi/ISSVNetworkViews.json'
+import ISSVViewsAbi from '../build/abi/ISSVViews.json'
 import { fetchRetry } from '@casimir/fetch'
 import { run } from '@casimir/shell'
 import { PoolStatus } from '@casimir/types'
@@ -67,7 +67,7 @@ void async function () {
         linkRegistryAddress: process.env.LINK_REGISTRY_ADDRESS,
         linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
         ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
-        ssvNetworkViewsAddress: process.env.SSV_NETWORK_VIEWS_ADDRESS,
+        ssvViewsAddress: process.env.SSV_VIEWS_ADDRESS,
         ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
         swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
         swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
@@ -94,14 +94,14 @@ void async function () {
 
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
     const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
-    const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
+    const ssvViewsAddress = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
 
-    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [654, 655, 656, 657]
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [156, 157, 158, 159]
     if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
     const messengerUrl = process.env.MESSENGER_URL || 'https://nodes.casimir.co/eth/goerli/dkg/messenger'
     const preregisteredBalance = ethers.utils.parseEther('10')
     for (const operatorId of preregisteredOperatorIds) {
-        const [operatorOwnerAddress] = await ssvNetworkViews.getOperatorById(operatorId)
+        const [operatorOwnerAddress] = await ssvViewsAddress.getOperatorById(operatorId)
         const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
         const nextBalance = currentBalance.add(preregisteredBalance)
         await setBalance(operatorOwnerAddress, nextBalance)

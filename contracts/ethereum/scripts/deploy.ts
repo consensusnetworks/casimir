@@ -13,7 +13,7 @@ void async function () {
         linkRegistryAddress: process.env.LINK_REGISTRY_ADDRESS,
         linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
         ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
-        ssvNetworkViewsAddress: process.env.SSV_NETWORK_VIEWS_ADDRESS,
+        ssvViewsAddress: process.env.SSV_VIEWS_ADDRESS,
         ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
         swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
         swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
