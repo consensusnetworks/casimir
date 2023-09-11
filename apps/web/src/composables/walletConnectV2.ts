@@ -179,7 +179,10 @@ export default function useWalletConnectV2() {
 
   async function signWalletConnectMessage(message: string) : Promise<string>{
     try {
-      const signer = walletConnectWeb3Provider.value?.getSigner()
+      console.log('got to signWalletConnectMessage')
+      console.log('message :>> ', message)
+      const signer = nonReactiveWalletConnectWeb3Provider?.getSigner()
+      console.log('signer :>> ', signer)
       return await signer?.signMessage(message) as string
     } catch(err) {
       console.error('error in signWalletConnectMessage :>> ', err)
