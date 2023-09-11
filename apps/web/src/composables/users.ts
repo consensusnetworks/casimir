@@ -51,6 +51,23 @@ export default function useUsers() {
         }
     }
 
+    async function addOperator({ address, nodeUrl }: { address: string, nodeUrl: string }) {
+        try {
+            const requestOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ address, nodeUrl })
+            }
+            const response = await fetch(`${usersUrl}/user/add-operator`, requestOptions)
+            const { error, message } = await response.json()
+            return { error, message }
+        } catch (error: any) {
+            throw new Error(error.message || 'Error adding operator')
+        }
+    }
+
     async function checkIfPrimaryUserExists(provider: ProviderString, address: string): Promise<ApiResponse> {
         try {
             const requestOptions = {
@@ -397,6 +414,7 @@ export default function useUsers() {
         userAnalytics,
         rawUserAnalytics,
         addAccount,
+        addOperator,
         checkIfSecondaryAddress,
         checkIfPrimaryUserExists,
         checkUserSessionExists,

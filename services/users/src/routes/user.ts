@@ -4,7 +4,7 @@ import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
 
 const router = express.Router()
-const { addAccount, getAccounts, getUserByAddress, getUserById, updateUserAddress, updateUserAgreedToTermsOfService, removeAccount } = useDB()
+const { addAccount, addOperator, getAccounts, getUserByAddress, getUserById, updateUserAddress, updateUserAgreedToTermsOfService, removeAccount } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
@@ -64,6 +64,30 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
             message: 'Error adding account',
             error: true,
             data: null
+        })
+    }
+})
+
+router.post('/add-operator', verifySession(), async (req: SessionRequest, res: express.Response) => {
+    try {
+        console.log('ADDING OPERATOR!')
+        const { address, nodeUrl } = req.body
+        const userId = parseInt(req.session?.getUserId() as string)
+        const accounts = await getAccounts(address)
+        const userAccount = accounts.find(account => parseInt(account.userId) === userId)
+        const accountId = userAccount?.id as number
+        await addOperator({ accountId, nodeUrl, userId })
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            message: 'Operator added',
+            error: false
+        })
+    } catch (err) {
+        res.status(500)
+        res.json({
+            message: 'Error adding operator',
+            error: true
         })
     }
 })
