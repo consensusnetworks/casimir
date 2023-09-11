@@ -12,7 +12,7 @@ const { getUserOperators, registerOperatorWithCasimir, loadingRegisteredOperator
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
 const { openWalletsModal } = useWallets()
-const { user } = useUsers()
+const { user, addOperator } = useUsers()
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -207,17 +207,23 @@ const removeItemFromCheckedList = (item:any) => {
 
 async function submitRegisterOperatorForm() {
   try {
-    await registerOperatorWithCasimir(
-      selectedWallet.value.wallet_provider as ProviderString, 
-      selectedWallet.value.address, 
-      parseInt(selectedOperatorID.value), 
-      selectedCollateral.value 
-    )
+    await registerOperatorWithCasimir({
+      walletProvider: selectedWallet.value.wallet_provider as ProviderString, 
+      address: selectedWallet.value.address,
+      operatorId: parseInt(selectedOperatorID.value), 
+      collateral: selectedCollateral.value
+    })
     openAddOperatorModal.value = false
   } catch (error) {
     console.log('Error in submitRegisterOperatorForm :>> ', error)
     openAddOperatorModal.value = false
   }
+
+  // Add the nodeUrl to the operator
+  await addOperator({
+    address: selectedWallet.value.address,
+    nodeUrl: selectedPublicNodeURL.value
+  })
 
   if (selectedWallet.value.address === '') {
       const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address})
