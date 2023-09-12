@@ -5,11 +5,12 @@ import "./interfaces/ICasimirViews.sol";
 import "./interfaces/ICasimirManager.sol";
 import "./interfaces/ICasimirRegistry.sol";
 import "./interfaces/ICasimirPool.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title Views contract that provides read-only access to the state
  */
-contract CasimirViews is ICasimirViews {
+contract CasimirViews is ICasimirViews, Initializable {
     /*************/
     /* Constants */
     /*************/
@@ -18,20 +19,25 @@ contract CasimirViews is ICasimirViews {
     uint256 private constant COMPOUND_MINIMUM = 100000000 gwei;
 
     /*************/
-    /* Immutable */
+    /* State */
     /*************/
 
     /** Manager contract */
-    ICasimirManager private immutable manager;
+    ICasimirManager private manager;
     /** Registry contract */
-    ICasimirRegistry private immutable registry;
+    ICasimirRegistry private registry;
+
+    // @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
     /**
-     * @notice Constructor
+     * @notice Initialize the contract
      * @param managerAddress The manager address
      * @param registryAddress The registry address
      */
-    constructor(address managerAddress, address registryAddress) {
+    function initialize(address managerAddress, address registryAddress) public initializer {
         require(managerAddress != address(0), "Missing manager address");
         require(registryAddress != address(0), "Missing registry address");
 

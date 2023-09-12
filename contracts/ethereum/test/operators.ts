@@ -104,7 +104,7 @@ describe('Operators', async function () {
     })
 
     it('Pool exits with 31.0 and recovers from the blamed operator', async function () {
-        const { manager, registry, upkeep, views, secondUser, keeper, daoOracle, functionsBillingRegistry } = await loadFixture(secondUserDepositFixture)
+        const { manager, registry, upkeep, views, secondUser, donTransmitter, daoOracle, functionsBillingRegistry } = await loadFixture(secondUserDepositFixture)
 
         const secondStake = await manager.getUserStake(secondUser.address)
         const withdraw = await manager.connect(secondUser).requestWithdrawal(secondStake)
@@ -118,7 +118,7 @@ describe('Operators', async function () {
         await setBalance(withdrawnPoolAddress, nextBalance)
     
         await time.increase(time.duration.days(1))
-        await runUpkeep({ upkeep, keeper })
+        await runUpkeep({ donTransmitter, upkeep })
 
         const reportValues = {
             activeBalance: 0,
@@ -130,14 +130,14 @@ describe('Operators', async function () {
         }
 
         await fulfillReport({
-            keeper,
+            donTransmitter,
             upkeep,
             functionsBillingRegistry,
             values: reportValues
         })
 
         await reportCompletedExitsHandler({ manager, views, signer: daoOracle, args: { count: 1 } })
-        await runUpkeep({ upkeep, keeper })
+        await runUpkeep({ donTransmitter, upkeep })
 
         const stake = await manager.getTotalStake()
         const userStake = await manager.getUserStake(secondUser.address)

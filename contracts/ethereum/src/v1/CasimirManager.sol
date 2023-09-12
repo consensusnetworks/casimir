@@ -13,11 +13,14 @@ import "./vendor/interfaces/IFunctionsBillingRegistry.sol";
 import "./vendor/interfaces/IKeeperRegistrar.sol";
 import "./vendor/interfaces/IAutomationRegistry.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/beacon/IBeaconUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
@@ -25,13 +28,11 @@ import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 /**
  * @title Manager contract that accepts and distributes deposits
  */
-contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
+contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /*************/
     /* Libraries */
     /*************/
 
-    /** Use math for precise division */
-    using Math for uint256;
     /** Use internal type for uint32 array */
     using Types32Array for uint32[];
     /** Use internal type for bytes array */
@@ -60,39 +61,36 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     /** Total fee percentage */
     uint32 public constant FEE_PERCENT = 5;
     
-    /*************/
-    /* Immutable */
-    /*************/
-
-    /** DAO oracle address */
-    address private immutable oracleAddress;
-    /** Registry contract */
-    ICasimirRegistry private immutable registry;
-    /** Upkeep contract */
-    ICasimirUpkeep private immutable upkeep;
-    /** Beacon deposit contract */
-    IDepositContract private immutable beaconDeposit;
-    /** Chainlink functions billing registry contract */
-    IFunctionsBillingRegistry private immutable functionsBillingRegistry;
-    /** Keeper registrar contract */
-    IKeeperRegistrar private immutable linkRegistrar;
-    /** Automation registry contract */
-    IAutomationRegistry private immutable linkRegistry;
-    /** LINK ERC-20 token contract */
-    LinkTokenInterface private immutable linkToken;
-    /** SSV clusters contract */
-    ISSVClusters private immutable ssvClusters;
-    /** SSV ERC-20 token contract */
-    IERC20 private immutable ssvToken;
-    /** Uniswap factory contract */
-    IUniswapV3Factory private immutable swapFactory;
-    /** Uniswap router contract  */
-    ISwapRouter private immutable swapRouter;
-
     /*********/
     /* State */
     /*********/
 
+    /** DAO oracle address */
+    address private oracleAddress;
+    /** Registry contract */
+    ICasimirRegistry private registry;
+    /** Upkeep contract */
+    ICasimirUpkeep private upkeep;
+    /** Beacon deposit contract */
+    IDepositContract private beaconDeposit;
+    /** Chainlink functions billing registry contract */
+    IFunctionsBillingRegistry private functionsBillingRegistry;
+    /** Keeper registrar contract */
+    IKeeperRegistrar private keeperRegistrar;
+    /** Automation registry contract */
+    IAutomationRegistry private keeperRegistry;
+    /** LINK ERC-20 token contract */
+    LinkTokenInterface private linkToken;
+    /** Pool beacon contract */
+    IBeaconUpgradeable private poolBeacon;
+    /** SSV clusters contract */
+    ISSVClusters private ssvClusters;
+    /** SSV ERC-20 token contract */
+    IERC20Upgradeable private ssvToken;
+    /** Uniswap factory contract */
+    IUniswapV3Factory private swapFactory;
+    /** Uniswap router contract  */
+    ISwapRouter private swapRouter;
     /** Last pool ID created */
     uint32 private lastPoolId;
     /** Current report period */
@@ -117,8 +115,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     mapping(Token => address) private tokenAddresses;
     /** All users */
     mapping(address => User) private users;
-    /** Sum of scaled rewards to balance ratios (intial value required) */
-    uint256 private stakeRatioSum = 1000 ether;
+    /** Sum of scaled rewards to balance ratios */
+    uint256 private stakeRatioSum;
     /** Total pending withdrawals count */
     uint256 private requestedWithdrawals;
     /** Total pending withdrawal amount */
@@ -195,64 +193,98 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         _;
     }
 
+    // @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
-     * @notice Constructor
+     * @notice Initialize the contract
      * @param daoOracleAddress The DAO oracle address
      * @param beaconDepositAddress The Beacon deposit address
      * @param functionsBillingRegistryAddress The Chainlink functions billing registry address
      * @param functionsOracleAddress The Chainlink functions oracle address
-     * @param linkRegistrarAddress The Chainlink keeper registrar address
-     * @param linkRegistryAddress The Chainlink keeper registry address
+     * @param keeperRegistrarAddress The Chainlink keeper registrar address
+     * @param keeperRegistryAddress The Chainlink keeper registry address
      * @param linkTokenAddress The Chainlink token address
+     * @param poolBeaconAddress The pool beacon address
+     * @param registryBeaconAddress The registry beacon address
      * @param ssvNetworkAddress The SSV network address
      * @param ssvViewsAddress The SSV views address
      * @param ssvTokenAddress The SSV token address
      * @param swapFactoryAddress The Uniswap factory address
      * @param swapRouterAddress The Uniswap router address
+     * @param upkeepBeaconAddress The upkeep beacon address
      * @param wethTokenAddress The WETH contract address
      */
-    constructor(
+    function initialize(
         address daoOracleAddress,
         address beaconDepositAddress,
         address functionsBillingRegistryAddress,
         address functionsOracleAddress,
-        address linkRegistrarAddress,
-        address linkRegistryAddress,
+        address keeperRegistrarAddress,
+        address keeperRegistryAddress,
         address linkTokenAddress,
+        address poolBeaconAddress,
+        address registryBeaconAddress,
         address ssvNetworkAddress,
         address ssvViewsAddress,
         address ssvTokenAddress,
         address swapFactoryAddress,
         address swapRouterAddress,
+        address upkeepBeaconAddress,
         address wethTokenAddress
-    ) {
+    ) public initializer {
         require(daoOracleAddress != address(0), "Missing oracle address");
         require(beaconDepositAddress != address(0), "Missing beacon deposit address");
         require(functionsBillingRegistryAddress != address(0), "Missing functions billing registry address");
-        require(linkRegistrarAddress != address(0), "Missing link registrar address");
-        require(linkRegistryAddress != address(0), "Missing link registry address");
+        require(keeperRegistrarAddress != address(0), "Missing keeper registrar address");
+        require(keeperRegistryAddress != address(0), "Missing keeper registry address");
+        require(upkeepBeaconAddress != address(0), "Missing upkeep beacon address");
         require(linkTokenAddress != address(0), "Missing link token address");
+        require(poolBeaconAddress != address(0), "Missing pool beacon address");
+        require(registryBeaconAddress != address(0), "Missing registry beacon address");
         require(ssvNetworkAddress != address(0), "Missing SSV network address");
         require(ssvTokenAddress != address(0), "Missing SSV token address");
         require(swapFactoryAddress != address(0), "Missing Uniswap factory address");
         require(swapRouterAddress != address(0), "Missing Uniswap router address");
         require(wethTokenAddress != address(0), "Missing WETH token address");
 
+        __Ownable_init();
+        __ReentrancyGuard_init();
         oracleAddress = daoOracleAddress;
         beaconDeposit = IDepositContract(beaconDepositAddress);
         functionsBillingRegistry = IFunctionsBillingRegistry(functionsBillingRegistryAddress);
-        linkRegistrar = IKeeperRegistrar(linkRegistrarAddress);
-        linkRegistry = IAutomationRegistry(linkRegistryAddress);
+        keeperRegistrar = IKeeperRegistrar(keeperRegistrarAddress);
+        keeperRegistry = IAutomationRegistry(keeperRegistryAddress);
         linkToken = LinkTokenInterface(linkTokenAddress);
         tokenAddresses[Token.LINK] = linkTokenAddress;
+        poolBeacon = IBeaconUpgradeable(poolBeaconAddress);
         ssvClusters = ISSVClusters(ssvNetworkAddress);
         tokenAddresses[Token.SSV] = ssvTokenAddress;
-        ssvToken = IERC20(ssvTokenAddress);
+        ssvToken = IERC20Upgradeable(ssvTokenAddress);
         swapFactory = IUniswapV3Factory(swapFactoryAddress);
         swapRouter = ISwapRouter(swapRouterAddress);
         tokenAddresses[Token.WETH] = wethTokenAddress;
-        registry = new CasimirRegistry(ssvViewsAddress);
-        upkeep = new CasimirUpkeep(functionsOracleAddress);
+        registry = ICasimirRegistry(
+            address(new BeaconProxy(
+                registryBeaconAddress,
+                abi.encodeWithSelector(
+                    CasimirRegistry(address(0)).initialize.selector,
+                    ssvViewsAddress
+                )
+            ))
+        );
+        upkeep = ICasimirUpkeep(
+            address(new BeaconProxy(
+                upkeepBeaconAddress,
+                abi.encodeWithSelector(
+                    CasimirUpkeep(address(0)).initialize.selector,
+                    functionsOracleAddress
+                )
+            ))
+        );
+        stakeRatioSum = 1000 ether;
     }
 
     /**
@@ -408,9 +440,9 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             tokenAddresses[Token.LINK],
             processed
         );
-        linkToken.approve(address(linkRegistrar), linkAmount);
+        linkToken.approve(address(keeperRegistrar), linkAmount);
         if (upkeepId == 0) {
-            upkeepId = linkRegistrar.registerUpkeep(
+            upkeepId = keeperRegistrar.registerUpkeep(
                 IKeeperRegistrar.RegistrationParams({
                     name: string("CasimirV1Upkeep"),
                     encryptedEmail: new bytes(0),
@@ -423,7 +455,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 })
             );
         } else {
-            linkRegistry.addFunds(upkeepId, uint96(linkAmount));
+            keeperRegistry.addFunds(upkeepId, uint96(linkAmount));
         }
 
         emit UpkeepBalanceDeposited(linkAmount);
@@ -474,7 +506,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             uint256 gain = uint256(change);
             if (rewards > 0) {
                 uint256 gainAfterFees = subtractFees(gain);
-                stakeRatioSum += Math.mulDiv(
+                stakeRatioSum += MathUpgradeable.mulDiv(
                     stakeRatioSum,
                     gainAfterFees,
                     getTotalStake()
@@ -483,7 +515,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
                 emit StakeRebalanced(gainAfterFees);
             } else {
-                stakeRatioSum += Math.mulDiv(
+                stakeRatioSum += MathUpgradeable.mulDiv(
                     stakeRatioSum,
                     gain,
                     getTotalStake()
@@ -494,7 +526,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             }
         } else if (change < 0) {
             uint256 loss = uint256(-change);
-            stakeRatioSum -= Math.mulDiv(stakeRatioSum, loss, getTotalStake());
+            stakeRatioSum -= MathUpgradeable.mulDiv(stakeRatioSum, loss, getTotalStake());
             latestActiveBalanceAfterFees -= loss;
 
             emit StakeRebalanced(loss);
@@ -640,14 +672,16 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         uint32 poolId = readyPoolIds[0];
         readyPoolIds.remove(0);
         pendingPoolIds.push(poolId);
-        poolAddresses[poolId] = address(
-            new CasimirPool(
+        poolAddresses[poolId] = address(new BeaconProxy(
+            address(poolBeacon),
+            abi.encodeWithSelector(
+                CasimirPool(address(0)).initialize.selector,
                 address(registry),
                 poolId,
                 publicKey,
                 operatorIds
             )
-        );
+        ));
         bytes memory computedWithdrawalCredentials = abi.encodePacked(
             bytes1(uint8(1)),
             bytes11(0),
@@ -896,7 +930,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @notice Cancel the Chainlink upkeep subscription
      */
     function cancelUpkeep() external onlyOracle {
-        linkRegistry.cancelUpkeep(upkeepId);
+        keeperRegistry.cancelUpkeep(upkeepId);
         upkeepId = 0;
 
         emit UpkeepCancelled();
@@ -917,7 +951,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param amount The amount to withdraw
      */
     function withdrawSSVBalance(uint256 amount) external onlyOwner {
-        SafeERC20.safeTransfer(ssvToken, owner(), amount);
+        SafeERC20Upgradeable.safeTransfer(ssvToken, owner(), amount);
 
         emit SSVBalanceWithdrawn(amount);
     }
@@ -933,7 +967,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         string[] calldata newRequestArgs,
         uint32 newFulfillGasLimit
     ) external onlyOwner {
-        upkeep.setRequest(
+        upkeep.setFunctionsRequest(
             newRequestSource,
             newRequestArgs,
             newFulfillGasLimit
@@ -951,7 +985,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
      * @param newFunctionsOracleAddress New Chainlink functions oracle address
      */
     function setFunctionsOracleAddress(address newFunctionsOracleAddress) external onlyOwner {
-        upkeep.setOracleAddress(newFunctionsOracleAddress);
+        upkeep.setFunctionsOracleAddress(newFunctionsOracleAddress);
 
         emit FunctionsOracleAddressSet(newFunctionsOracleAddress);
     }
@@ -1013,7 +1047,7 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function getUserStake(
         address userAddress
     ) public view returns (uint256 userStake) {
-        userStake = Math.mulDiv(
+        userStake = MathUpgradeable.mulDiv(
             users[userAddress].stake0,
             stakeRatioSum,
             users[userAddress].stakeRatioSum0
@@ -1230,6 +1264,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
     function subtractFees(
         uint256 amount
     ) private pure returns (uint256 amountAfterFees) {
-        amountAfterFees = Math.mulDiv(amount, 100, 100 + FEE_PERCENT);
+        amountAfterFees = MathUpgradeable.mulDiv(amount, 100, 100 + FEE_PERCENT);
     }
 }

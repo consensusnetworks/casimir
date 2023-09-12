@@ -26,8 +26,8 @@ export function getConfig() {
     if (!registryAddress) throw new Error('No registry address provided')
     const functionsBillingRegistryAddress = process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS
     if (!functionsBillingRegistryAddress) throw new Error('No functions billing registry address provided')
-    const linkRegistryAddress = process.env.LINK_REGISTRY_ADDRESS
-    if (!linkRegistryAddress) throw new Error('No link registry address provided')
+    const keeperRegistryAddress = process.env.KEEPER_REGISTRY_ADDRESS
+    if (!keeperRegistryAddress) throw new Error('No link registry address provided')
     const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS
     if (!linkTokenAddress) throw new Error('No link token address provided')
     const ssvNetworkAddress = process.env.SSV_NETWORK_ADDRESS
@@ -51,7 +51,7 @@ export function getConfig() {
         viewsAddress,
         registryAddress,
         functionsBillingRegistryAddress,
-        linkRegistryAddress,
+        keeperRegistryAddress,
         linkTokenAddress,
         ssvNetworkAddress,
         ssvViewsAddress,

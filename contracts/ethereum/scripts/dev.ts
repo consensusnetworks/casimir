@@ -1,5 +1,5 @@
 import { CasimirManager, CasimirRegistry, ISSVViews, CasimirViews, CasimirUpkeep, FunctionsOracleFactory, FunctionsBillingRegistry } from '../build/@types'
-import { ethers, network } from 'hardhat'
+import { ethers, network, upgrades } from 'hardhat'
 import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
 import { round } from '@casimir/ethereum/helpers/math'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
@@ -13,7 +13,7 @@ import requestConfig from '@casimir/functions/Functions-request-config'
  * Deploy contracts to local network and run local events and oracle handling
  */
 void async function () {
-    const [, , , , fourthUser, keeper, daoOracle] = await ethers.getSigners()
+    const [owner, , , , fourthUser, donTransmitter, daoOracle] = await ethers.getSigners()
 
     const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')
     const functionsOracleFactory = await functionsOracleFactoryFactory.deploy() as FunctionsOracleFactory
@@ -58,24 +58,44 @@ void async function () {
         functionsBillingRegistryConfig.requestTimeoutSeconds
     )
 
+    const poolFactory = await ethers.getContractFactory('CasimirPool')
+    const poolBeacon = await upgrades.deployBeacon(poolFactory, { unsafeAllow: ['constructor'] })
+    await poolBeacon.deployed()
+    console.log(`CasimirPool beacon deployed to ${poolBeacon.address}`)
+
+    const registryFactory = await ethers.getContractFactory('CasimirRegistry')
+    const registryBeacon = await upgrades.deployBeacon(registryFactory, { unsafeAllow: ['constructor'] })
+    await registryBeacon.deployed()
+    console.log(`CasimirRegistry beacon deployed to ${registryBeacon.address}`)
+
+    const upkeepFactory = await ethers.getContractFactory('CasimirUpkeep')
+    const upkeepBeacon = await upgrades.deployBeacon(upkeepFactory, { unsafeAllow: ['constructor'] })
+    await upkeepBeacon.deployed()
+    console.log(`CasimirUpkeep beacon deployed to ${upkeepBeacon.address}`)
+
     const managerArgs = {
         daoOracleAddress: daoOracle.address,
         beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
         functionsBillingRegistryAddress: functionsBillingRegistry.address,
         functionsOracleAddress: functionsOracle.address,
-        linkRegistrarAddress: process.env.LINK_REGISTRAR_ADDRESS,
-        linkRegistryAddress: process.env.LINK_REGISTRY_ADDRESS,
+        keeperRegistrarAddress: process.env.KEEPER_REGISTRAR_ADDRESS,
+        keeperRegistryAddress: process.env.KEEPER_REGISTRY_ADDRESS,
         linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
+        poolBeaconAddress: poolBeacon.address,
+        registryBeaconAddress: registryBeacon.address,
         ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
         ssvViewsAddress: process.env.SSV_VIEWS_ADDRESS,
         ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
         swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
         swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
+        upkeepBeaconAddress: upkeepBeacon.address,
         wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
     }
     const managerFactory = await ethers.getContractFactory('CasimirManager')
-    const manager = await managerFactory.deploy(...Object.values(managerArgs)) as CasimirManager
+    console.log('Nonce before manager', await ethers.provider.getTransactionCount(owner.address))
+    const manager = await upgrades.deployProxy(managerFactory, Object.values(managerArgs), { unsafeAllow: ['constructor'] }) as CasimirManager
     await manager.deployed()
+    console.log('Nonce after manager', await ethers.provider.getTransactionCount(owner.address))
     console.log(`CasimirManager contract deployed to ${manager.address}`)
 
     const registryAddress = await manager.getRegistryAddress()
@@ -89,7 +109,10 @@ void async function () {
         registryAddress
     }
     const viewsFactory = await ethers.getContractFactory('CasimirViews')
-    const views = await viewsFactory.deploy(...Object.values(viewsArgs)) as CasimirViews
+    console.log('Nonce before views', await ethers.provider.getTransactionCount(owner.address))
+    const views = await upgrades.deployProxy(viewsFactory, Object.values(viewsArgs), { unsafeAllow: ['constructor'] }) as CasimirViews
+    await views.deployed()
+    console.log('Nonce after views', await ethers.provider.getTransactionCount(owner.address))
     console.log(`CasimirViews contract deployed to ${views.address}`)
 
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
@@ -120,9 +143,9 @@ void async function () {
     const setRequest = await manager.setFunctionsRequest(requestSource, requestArgs, fulfillGasLimit)
     await setRequest.wait()
 
-    await functionsBillingRegistry.setAuthorizedSenders([keeper.address, manager.address, upkeep.address, functionsOracle.address])
+    await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, manager.address, upkeep.address, functionsOracle.address])
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
-    await functionsOracle.addAuthorizedSenders([keeper.address, manager.address])
+    await functionsOracle.addAuthorizedSenders([donTransmitter.address, manager.address])
 
     /**
      * We are simulating the oracle reporting on a more frequent basis
@@ -139,7 +162,7 @@ void async function () {
                 await time.increase(time.duration.days(1))
                 console.log('⌛️ Report period complete')
                 lastReportBlock = await ethers.provider.getBlockNumber()
-                await runUpkeep({ upkeep, keeper })
+                await runUpkeep({ donTransmitter, upkeep })
                 const pendingPoolIds = await manager.getPendingPoolIds()
                 const stakedPoolIds = await manager.getStakedPoolIds()
                 if (pendingPoolIds.length + stakedPoolIds.length) {
@@ -171,7 +194,7 @@ void async function () {
                     }
                     console.log('🧾 Report values', reportValues)
                     await fulfillReport({
-                        keeper,
+                        donTransmitter,
                         upkeep,
                         functionsBillingRegistry,
                         values: reportValues
@@ -195,7 +218,7 @@ void async function () {
                             finalizableCompletedExits = await manager.finalizableCompletedExits()
                         }
                     }
-                    await runUpkeep({ upkeep, keeper })
+                    await runUpkeep({ donTransmitter, upkeep })
                 }
                 lastStakedPoolIds = stakedPoolIds
             }

@@ -4,14 +4,15 @@ pragma solidity 0.8.18;
 import "./interfaces/ICasimirUpkeep.sol";
 import "./interfaces/ICasimirManager.sol";
 import "./vendor/FunctionsClient.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 /**
- * @title Upkeep contract that automates and handles reports
+ * @title Upkeep contract that automates reporting operations
  */
-contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
+contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, FunctionsClient {
     /*************/
     /* Libraries */
     /*************/
@@ -26,17 +27,13 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     /** Report-to-report heartbeat duration */
     uint256 private constant REPORT_HEARTBEAT = 1 days;
 
-    /*************/
-    /* Immutable */
-    /*************/
-
-    /** Manager contract */
-    ICasimirManager private immutable manager;
 
     /*********/
     /* State */
     /*********/
 
+    /** Manager contract */
+    ICasimirManager private manager;
     /** Previous report timestamp */
     uint256 private previousReportTimestamp;
     /** Current report status */
@@ -71,28 +68,47 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     bytes private reportResponseError;
     /** Request source */
     string requestSource;
-    /** Request arguments */
-    string[] public requestArgs;
+    /** Default request arguments */
+    string[] public defaultRequestArgs;
     /** Fulfillment gas limit */
     uint32 public fulfillGasLimit;
 
-    /***************/
-    /* Constructor */
-    /***************/
+    // @custom:oz-upgrades-unsafe-allow constructor
+    constructor() FunctionsClient(address(0)) {
+        _disableInitializers();
+    }
 
     /**
-     * Constructor
+     * Initialize the contract
      * @param functionsOracleAddress The Chainlink functions oracle address
      */
-    constructor(
+    function initialize(
         address functionsOracleAddress
-    ) FunctionsClient(functionsOracleAddress) {
+    ) public initializer {
         require(
             functionsOracleAddress != address(0),
             "Missing functions oracle address"
         );
 
+        __Ownable_init();
+        __ReentrancyGuard_init();
+        setOracle(functionsOracleAddress);
         manager = ICasimirManager(msg.sender);
+    }
+
+    /**
+     * @notice Set a new Chainlink functions oracle address
+     * @param newFunctionsOracleAddress New Chainlink functions oracle address
+     */
+    function setFunctionsOracleAddress(address newFunctionsOracleAddress) external onlyOwner {
+        require (
+            newFunctionsOracleAddress != address(0),
+            "Missing functions oracle address"
+        );
+
+        setOracle(newFunctionsOracleAddress);
+
+        emit FunctionsOracleAddressSet(newFunctionsOracleAddress);
     }
 
     /**
@@ -101,16 +117,16 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
      * @param newRequestArgs List of arguments accessible from within the source code
      * @param newFulfillGasLimit The new Chainlink functions fulfill gas limit 
      */
-    function setRequest(
+    function setFunctionsRequest(
         string calldata newRequestSource,
         string[] calldata newRequestArgs,
         uint32 newFulfillGasLimit
     ) external onlyOwner {
         requestSource = newRequestSource;
-        requestArgs = newRequestArgs;
+        defaultRequestArgs = newRequestArgs;
         fulfillGasLimit = newFulfillGasLimit;
 
-        emit RequestSet(
+        emit FunctionsRequestSet(
             newRequestSource, 
             newRequestArgs,
             newFulfillGasLimit
@@ -130,18 +146,18 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             reportRequestBlock = block.number;
             reportTimestamp = block.timestamp;
             reportPeriod = manager.reportPeriod();
-            Functions.Request memory currentRequest;
-            currentRequest.initializeRequest(
+            Functions.Request memory request;
+            request.initializeRequest(
                 Functions.Location.Inline,
                 Functions.CodeLanguage.JavaScript,
                 requestSource
             );
-            string[] memory currentRequestArgs = requestArgs;
-            currentRequestArgs[6] = Strings.toString(previousReportTimestamp);
-            currentRequestArgs[7] = Strings.toString(reportTimestamp);
-            currentRequestArgs[8] = Strings.toString(reportRequestBlock);
-            sendReportRequest(currentRequest, currentRequestArgs, RequestType.BALANCES);
-            sendReportRequest(currentRequest, currentRequestArgs, RequestType.DETAILS);
+            string[] memory requestArgs = defaultRequestArgs;
+            requestArgs[6] = StringsUpgradeable.toString(previousReportTimestamp);
+            requestArgs[7] = StringsUpgradeable.toString(reportTimestamp);
+            requestArgs[8] = StringsUpgradeable.toString(reportRequestBlock);
+            sendFunctionsRequest(request, requestArgs, RequestType.BALANCES);
+            sendFunctionsRequest(request, requestArgs, RequestType.DETAILS);
         } else {
             if (
                 manager.requestedWithdrawalBalance() > 0 &&
@@ -173,21 +189,6 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
         }
 
         emit UpkeepPerformed(reportStatus);
-    }
-
-    /**
-     * @notice Set a new Chainlink functions oracle address
-     * @param newOracleAddress New Chainlink functions oracle address
-     */
-    function setOracleAddress(address newOracleAddress) external onlyOwner {
-        require (
-            newOracleAddress != address(0),
-            "Missing oracle address"
-        );
-
-        setOracle(newOracleAddress);
-
-        emit OracleAddressSet(newOracleAddress);
     }
 
     /**
@@ -268,20 +269,20 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
     }
 
     /**
-     * @notice Send a report request
-     * @param currentRequest The Chainlink functions request
-     * @param currentRequestArgs The Chainlink functions request arguments
-     * @param currentRequestType The Chainlink functions request type
+     * @notice Send a Chainlink functions request
+     * @param request The Chainlink functions request
+     * @param requestArgs The Chainlink functions request arguments
+     * @param requestType The Chainlink functions request type
      */
-    function sendReportRequest(
-        Functions.Request memory currentRequest,
-        string[] memory currentRequestArgs,
-        RequestType currentRequestType
+    function sendFunctionsRequest(
+        Functions.Request memory request,
+        string[] memory requestArgs,
+        RequestType requestType
     ) private {
-        currentRequestArgs[9] = Strings.toString(uint256(currentRequestType));
-        currentRequest.addArgs(currentRequestArgs);
-        bytes32 requestId = sendRequest(currentRequest, manager.functionsId(), fulfillGasLimit);
-        reportRequests[requestId] = currentRequestType;
+        requestArgs[9] = StringsUpgradeable.toString(uint256(requestType));
+        request.addArgs(requestArgs);
+        bytes32 requestId = sendRequest(request, manager.functionsId(), fulfillGasLimit);
+        reportRequests[requestId] = requestType;
         reportRemainingRequests++;
     }
 }

@@ -3,17 +3,18 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { CasimirUpkeep, FunctionsBillingRegistry } from '../build/@types'
 
 export async function runUpkeep({
-    upkeep, keeper
+    donTransmitter, upkeep,
 }: {
-    upkeep: CasimirUpkeep, keeper: SignerWithAddress
+    donTransmitter: SignerWithAddress,
+    upkeep: CasimirUpkeep,
 }) {
     let ranUpkeep = false
     const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await upkeep.connect(keeper).checkUpkeep(checkData)
+    const { ...check } = await upkeep.connect(donTransmitter).checkUpkeep(checkData)
     const { upkeepNeeded } = check
     if (upkeepNeeded) {
         const performData = ethers.utils.toUtf8Bytes('')
-        const performUpkeep = await upkeep.connect(keeper).performUpkeep(performData)
+        const performUpkeep = await upkeep.connect(donTransmitter).performUpkeep(performData)
         await performUpkeep.wait()
         ranUpkeep = true
     }
@@ -30,12 +31,12 @@ export interface ReportValues {
 }
 
 export async function fulfillReport({
-    keeper,
+    donTransmitter,
     upkeep,
     functionsBillingRegistry,
     values
 }: {
-    keeper: SignerWithAddress,
+    donTransmitter: SignerWithAddress,
     upkeep: CasimirUpkeep,
     functionsBillingRegistry: FunctionsBillingRegistry,
     values: ReportValues
@@ -51,7 +52,7 @@ export async function fulfillReport({
     )
     
     await fulfillFunctionsRequest({
-        keeper,
+        donTransmitter,
         functionsBillingRegistry,
         requestId: balancesRequestId,
         response: balancesResponse
@@ -64,7 +65,7 @@ export async function fulfillReport({
     )
 
     await fulfillFunctionsRequest({
-        keeper,
+        donTransmitter,
         functionsBillingRegistry,
         requestId: detailsRequestId,
         response: detailsResponse
@@ -72,22 +73,22 @@ export async function fulfillReport({
 }
 
 export async function fulfillFunctionsRequest({
-    keeper,
+    donTransmitter,
     functionsBillingRegistry,
     requestId,
     response
 }: {
-    keeper: SignerWithAddress,
+    donTransmitter: SignerWithAddress,
     functionsBillingRegistry: FunctionsBillingRegistry,
     requestId: string,
     response: string
 }) {
-    const dummyTransmitter = keeper.address
+    const dummyTransmitter = donTransmitter.address
     const dummySigners = Array(31).fill(dummyTransmitter)
 
     // const { success, result, resultLog } = await simulateRequest(requestConfig)
     
-    const fulfillAndBill = await functionsBillingRegistry.connect(keeper).fulfillAndBill(
+    const fulfillAndBill = await functionsBillingRegistry.connect(donTransmitter).fulfillAndBill(
         requestId,
         response,
         '0x',

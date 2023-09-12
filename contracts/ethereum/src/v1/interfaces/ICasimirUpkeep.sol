@@ -24,8 +24,8 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
     /**********/
     
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
-    event RequestSet(string newRequestSource, string[] newRequestArgs, uint32 newFulfillGasLimit);
-    event OracleAddressSet(address newOracleAddress);
+    event FunctionsRequestSet(string newRequestSource, string[] newRequestArgs, uint32 newFulfillGasLimit);
+    event FunctionsOracleAddressSet(address newFunctionsOracleAddress);
     event UpkeepPerformed(ReportStatus indexed status);
 
     /*************/
@@ -33,12 +33,12 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
     /*************/
 
     function performUpkeep(bytes calldata performData) external;
-    function setRequest(
+    function setFunctionsRequest(
         string calldata newRequestSource,
         string[] calldata newRequestArgs,
         uint32 newFulfillGasLimit
     ) external;
-    function setOracleAddress(address newOracleAddress) external;
+    function setFunctionsOracleAddress(address newFunctionsOracleAddress) external;
 
     /***********/
     /* Getters */

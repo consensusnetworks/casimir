@@ -33,9 +33,9 @@ void async function () {
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
 
     
-    // Account for the mock Chainlink functions deployments
-    const deployerNonce = await provider.getTransactionCount(wallet.address) + 5
-
+    // Account for the mock and beacon deployments
+    const deployerNonce = await provider.getTransactionCount(wallet.address) + 13
+    
     if (!process.env.MANAGER_ADDRESS) {
         process.env.MANAGER_ADDRESS = ethers.utils.getContractAddress({
             from: wallet.address,
@@ -46,7 +46,7 @@ void async function () {
     if (!process.env.VIEWS_ADDRESS) {
         process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
             from: wallet.address,
-            nonce: deployerNonce + 1
+            nonce: deployerNonce + 2
         })
     }
 

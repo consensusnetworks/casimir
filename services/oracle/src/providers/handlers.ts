@@ -65,14 +65,14 @@ export async function depositUpkeepBalanceHandler() {
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
     const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const linkRegistry = new ethers.Contract(config.linkRegistryAddress, IAutomationRegistryAbi, provider) as ethers.Contract & IAutomationRegistry
+    const keeperRegistry = new ethers.Contract(config.keeperRegistryAddress, IAutomationRegistryAbi, provider) as ethers.Contract & IAutomationRegistry
 
     const minimumBalance = 0.2
     const refundBalance = 5
     const upkeepId = await manager.upkeepId()
     let balance = 0
     if (upkeepId.gt(0)) {
-        const subscription = await linkRegistry.getUpkeep(upkeepId)
+        const subscription = await keeperRegistry.getUpkeep(upkeepId)
         balance = Number(ethers.utils.formatEther(subscription.balance).split('.').map((part, index) => {
             if (index === 0) return part
             return part.slice(0, 1)

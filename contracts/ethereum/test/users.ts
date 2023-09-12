@@ -35,7 +35,7 @@ describe('Users', async function () {
     })
 
     it('User\'s 64.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
-        const { manager, upkeep, views, keeper, daoOracle, functionsBillingRegistry } = await loadFixture(deploymentFixture)
+        const { manager, upkeep, views, donTransmitter, daoOracle, functionsBillingRegistry } = await loadFixture(deploymentFixture)
         const [, user] = await ethers.getSigners()
 
         const depositAmount = round(64 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
@@ -57,7 +57,7 @@ describe('Users', async function () {
         expect(pendingPoolIds.length).equal(2)
 
         await time.increase(time.duration.days(1))   
-        await runUpkeep({ upkeep, keeper })
+        await runUpkeep({ donTransmitter, upkeep })
 
         const firstReportValues = {
             activeBalance: 64,
@@ -69,13 +69,13 @@ describe('Users', async function () {
         }
 
         await fulfillReport({
-            keeper,
+            donTransmitter,
             upkeep,
             functionsBillingRegistry,
             values: firstReportValues
         })
 
-        await runUpkeep({ upkeep, keeper })
+        await runUpkeep({ donTransmitter, upkeep })
 
         const stakedPoolIds = await manager.getStakedPoolIds()
         
@@ -98,7 +98,7 @@ describe('Users', async function () {
         expect(ethers.utils.formatEther(userStake)).equal('32.0')
 
         await time.increase(time.duration.days(1))   
-        await runUpkeep({ upkeep, keeper })
+        await runUpkeep({ donTransmitter, upkeep })
 
         const sweptExitedBalance = 32
         const secondReportValues = {
@@ -111,7 +111,7 @@ describe('Users', async function () {
         }
 
         await fulfillReport({
-            keeper,
+            donTransmitter,
             upkeep,
             functionsBillingRegistry,
             values: secondReportValues
@@ -125,7 +125,7 @@ describe('Users', async function () {
         await reportCompletedExitsHandler({ manager, views, signer: daoOracle, args: { count: 1 } })
         const finalizableCompletedExits = await manager.finalizableCompletedExits()
         expect(finalizableCompletedExits.toNumber()).equal(1)
-        await runUpkeep({ upkeep, keeper })
+        await runUpkeep({ donTransmitter, upkeep })
 
         stake = await manager.getTotalStake()
         userStake = await manager.getUserStake(user.address)

@@ -5,12 +5,14 @@ import "./interfaces/ICasimirRegistry.sol";
 import "./interfaces/ICasimirManager.sol";
 import "./libraries/Types.sol";
 import "./vendor/interfaces/ISSVViews.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 /**
  * @title Registry contract that manages operators
  */
-contract CasimirRegistry is ICasimirRegistry, Ownable {
+contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /*************/
     /* Libraries */
     /*************/
@@ -25,19 +27,14 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
     /** Required collateral per operator per pool */
     uint256 private constant REQUIRED_COLLATERAL = 1 ether;
 
-    /*************/
-    /* Immutable */
-    /*************/
-
-    /** Manager contract */
-    ICasimirManager private immutable manager;
-    /** SSV views contract */
-    ISSVViews private immutable ssvViews;
-
     /*********/
     /* State */
     /*********/
 
+    /** Manager contract */
+    ICasimirManager private manager;
+    /** SSV views contract */
+    ISSVViews private ssvViews;
     /** Operator IDs */
     uint64[] private operatorIds;
     /** Operators */
@@ -61,16 +58,23 @@ contract CasimirRegistry is ICasimirRegistry, Ownable {
         _;
     }
 
+    // @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
-     * @notice Constructor
+     * @notice Initialize the contract
      * @param ssvViewsAddress The SSV views address
      */
-    constructor(address ssvViewsAddress) {
+    function initialize(address ssvViewsAddress) public initializer {
         require(
             ssvViewsAddress != address(0),
             "Missing SSV views address"
         );
-
+        
+        __Ownable_init();
+        __ReentrancyGuard_init();
         manager = ICasimirManager(msg.sender);
         ssvViews = ISSVViews(ssvViewsAddress);
     }
