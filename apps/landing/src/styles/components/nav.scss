@@ -1,0 +1,41 @@
+.nav {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background-color: rgba(251, 251, 253, 0.8);
+  border: 1px solid rgb(216, 222, 228);
+  backdrop-filter: saturate(180%) blur(6px);
+  transition: background-color 0.3s ease;
+
+  .nav__container {
+    max-width: $max-width;
+    display: flex;
+    height: 40px;
+    justify-content: space-between;
+    align-items: center;
+    // padding: 8px 0;
+    margin: 0 auto;
+
+    .logo {
+      cursor: pointer;
+      width: 18px;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    .nav__links {
+      display: flex;
+      flex-direction: row;
+      gap: 2.2rem;
+
+      a {
+        &.active {
+          font-weight: 500;
+        }
+      }
+    }
+  }
+}

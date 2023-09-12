@@ -1,0 +1,24 @@
+.footer {
+  max-width: $max-width;
+  width: 100%;
+  margin: 50px auto 0 auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  color: black;
+  padding: 1rem 0;
+
+  .c {
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: -0.4px;
+    margin: 0;
+  }
+
+  ul {
+    display: flex;
+    flex-direction: row;
+    gap: 2.2rem;
+  }
+}

@@ -1,0 +1,188 @@
+// Typography Variables
+$serif-font: "IBM Plex Sans", sans-serif;
+$mono-font: "IBM Plex Mono", monospace;
+
+$base-font-size: 16px;
+$font-family: $serif-font;
+$line-height: 1.5;
+
+$text-1-font-size: 2.986rem;
+$text-2-font-size: 2.488rem;
+$text-3-font-size: 2.074rem;
+$text-4-font-size: 1.728rem;
+$text-5-font-size: 1.44rem;
+$text-6-font-size: 1.2rem;
+$text-7-font-size: 1rem;
+$text-8-font-size: 0.92rem;
+$text-9-font-size: 0.833rem;
+$text-10-font-size: 0.694rem;
+$text-11-font-size: 0.579rem;
+$text-12-font-size: 0.482rem;
+$text-13-font-size: 0.252rem;
+
+$default-text-color: rgb(25, 25, 25);
+$heading-text-color: #000;
+$link-text-color: #007bff;
+$link-text-decoration: none;
+
+body {
+  font-family: $font-family;
+  font-size: $base-font-size;
+  line-height: $line-height;
+  color: $default-text-color;
+}
+
+@mixin typography(
+  $size: $text-2-font-size,
+  $weight: 400,
+  $color: $default-text-color,
+  $letter-spacing: -0.04px,
+  $line-height: 1.38
+) {
+  font-size: $size;
+  font-weight: $weight;
+  color: $color;
+  letter-spacing: $letter-spacing;
+  line-height: $line-height;
+}
+
+@mixin base {
+  padding: 0;
+  margin: 0;
+  transition: all 0.22s ease;
+}
+
+h1 {
+  @include base;
+  @include typography($text-3-font-size, 400, $heading-text-color, -0.9px);
+}
+
+h2 {
+  @include base;
+  @include typography($text-4-font-size, 400, $heading-text-color);
+}
+
+h3 {
+  @include base;
+  @include typography($text-5-font-size, 400, $heading-text-color);
+}
+
+h4 {
+  @include base;
+  @include typography($text-6-font-size, 400, $heading-text-color);
+}
+
+h5 {
+  @include base;
+  @include typography($text-7-font-size, 400, $heading-text-color);
+}
+
+h6 {
+  @include base;
+  @include typography($text-7-font-size, 400, $heading-text-color);
+}
+
+p {
+  @include base;
+  @include typography($text-7-font-size, 400);
+  max-width: 520px;
+  word-wrap: break-word;
+}
+
+span {
+  @include base;
+  @include typography($text-7-font-size, 400);
+}
+
+a {
+  @include base;
+  color: $link-text-color;
+  text-decoration: $link-text-decoration;
+  font-size: $text-7-font-size;
+}
+
+.text-1 {
+  @include base;
+  @include typography($text-1-font-size, 400, $heading-text-color, -2px);
+}
+
+.text-2 {
+  @include base;
+  @include typography($text-2-font-size, 400, $heading-text-color);
+}
+
+.text-3 {
+  @include base;
+  @include typography($text-3-font-size, 400, $heading-text-color, -0.8px);
+}
+
+.text-4 {
+  @include base;
+  @include typography($text-4-font-size, 400, $heading-text-color);
+}
+
+.text-5 {
+  @include base;
+  @include typography($text-5-font-size, 400, $heading-text-color);
+}
+
+.text-6 {
+  @include base;
+  @include typography($text-6-font-size, 400, $heading-text-color);
+}
+
+.text-7 {
+  @include base;
+  @include typography($text-7-font-size, 400);
+}
+
+.text-8 {
+  @include base;
+  @include typography($text-8-font-size, 500);
+}
+
+.text-9 {
+  @include base;
+  @include typography($text-9-font-size, 400);
+
+  :hover {
+    background-color: $blue-4;
+  }
+}
+
+.text-10 {
+  @include base;
+  @include typography($text-10-font-size, 500);
+}
+
+.text-11 {
+  @include base;
+  @include typography($text-11-font-size, 400);
+}
+
+.text-12 {
+  @include base;
+  @include typography($text-12-font-size, 400);
+}
+
+.text-13 {
+  @include base;
+  @include typography($text-13-font-size, 400);
+}
+
+.text-r {
+  @include base;
+  @include typography($text-8-font-size, 400, $heading-text-color);
+  color: rgb(91, 91, 91);
+  line-height: 1.6;
+}
+
+.bold {
+  font-weight: 500;
+}
+
+.highlight {
+  @include base;
+  // @include typography($text-8-font-size, 400, $heading-text-color);
+  color: #0d5fff;
+}
