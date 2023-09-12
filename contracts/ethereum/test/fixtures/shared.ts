@@ -8,9 +8,11 @@ import ISSVNetworkAbi from '../../build/abi/ISSVNetwork.json'
 import ISSVViewsAbi from '../../build/abi/ISSVViews.json'
 import requestConfig from '@casimir/functions/Functions-request-config'
 
+upgrades.silenceWarnings()
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
+
     const [owner, , , , , donTransmitter, daoOracle] = await ethers.getSigners()
 
     const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')

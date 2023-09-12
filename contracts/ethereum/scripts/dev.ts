@@ -9,6 +9,8 @@ import { run } from '@casimir/shell'
 import { PoolStatus } from '@casimir/types'
 import requestConfig from '@casimir/functions/Functions-request-config'
 
+upgrades.silenceWarnings()
+
 /**
  * Deploy contracts to local network and run local events and oracle handling
  */

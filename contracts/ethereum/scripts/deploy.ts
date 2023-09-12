@@ -1,8 +1,10 @@
 import { ethers, upgrades } from 'hardhat'
 
+upgrades.silenceWarnings()
+
 /**
  * Deploy ethereum contracts
- */
+*/
 void async function () {
     const poolFactory = await ethers.getContractFactory('CasimirPool')
     const poolBeacon = await upgrades.deployBeacon(poolFactory, { unsafeAllow: ['constructor'] })
