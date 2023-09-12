@@ -5,35 +5,29 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"math/big"
-	"strings"
 	"sync"
 	"time"
 
-	ethereum "github.com/ethereum/go-ethereum"
-	// "github.com/ethereum/go-ethereum/accounts/abi"
-	// "github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type EthereumCrawler struct {
-	Logger              *Logger
-	EthereumService     *EthereumService
-	Config              *Config
-	Glue                *GlueService
-	S3                  *S3Service
-	Wg                  *sync.WaitGroup
-	Mu                  *sync.Mutex
-	Sema                chan struct{}
-	Version             int
-	Env                 Env
-	Start               time.Time
-	Elapsed             time.Duration
-	PriorityAddressList []common.Address
-	// the block when the contract was first deployed
-	StartBlock  uint64
-	Unprocessed []uint64
+	Logger          *Logger
+	EthereumService *EthereumService
+	ContractService *ContractService
+	Config          *Config
+	Glue            *GlueService
+	S3              *S3Service
+	Wg              *sync.WaitGroup
+	Mu              *sync.Mutex
+	Sema            chan struct{}
+	Version         int
+	Env             Env
+	Start           time.Time
+	Elapsed         time.Duration
+	StartBlock      uint64
+	Unprocessed     []uint64
 }
 
 func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
@@ -52,6 +46,8 @@ func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
 		return nil, err
 	}
 
+	l.Info("created ethereum service")
+
 	awsConfig, err := LoadDefaultAWSConfig()
 
 	if err != nil {
@@ -66,6 +62,8 @@ func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
 		return nil, err
 	}
 
+	l.Info("created glue service")
+
 	err = glue.Introspect(config.Env)
 
 	if err != nil {
@@ -73,12 +71,16 @@ func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
 		return nil, err
 	}
 
-	s3c, err := NewS3Service(awsConfig)
+	l.Info("successfully introspected glue tables")
+
+	s3v, err := NewS3Service(awsConfig)
 
 	if err != nil {
 		l.Infof("failed to create s3 client: %s", err.Error())
 		return nil, err
 	}
+
+	l.Info("created s3 service")
 
 	rv, err := GetResourceVersion()
 
@@ -87,21 +89,27 @@ func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
 		return nil, err
 	}
 
-	// TODO: add any priorty addresses needed first
-	pr := []common.Address{}
+	cs, err := NewContractService(eths)
+
+	if err != nil {
+		return nil, err
+	}
+
+	l.Info("created contract service")
 
 	return &EthereumCrawler{
-		Logger:              logger,
-		EthereumService:     eths,
-		Glue:                glue,
-		S3:                  s3c,
-		Wg:                  &sync.WaitGroup{},
-		Start:               time.Now(),
-		Sema:                make(chan struct{}, config.ConcurrencyLimit),
-		Version:             rv,
-		Config:              config,
-		StartBlock:          9564114,
-		PriorityAddressList: pr,
+		Logger:          logger,
+		EthereumService: eths,
+		ContractService: cs,
+		Glue:            glue,
+		S3:              s3v,
+		Wg:              &sync.WaitGroup{},
+		Start:           time.Now(),
+		Sema:            make(chan struct{}, config.ConcurrencyLimit),
+		Version:         rv,
+		Config:          config,
+		// TODO: source this from env var
+		StartBlock: 9564114,
 	}, nil
 }
 
@@ -111,15 +119,6 @@ func (c *EthereumCrawler) Crawl() error {
 	l := c.Logger.Sugar()
 
 	l.Info(c.Config)
-
-	if len(c.PriorityAddressList) > 0 {
-		addressStrings := make([]string, len(c.PriorityAddressList))
-		for i, addr := range c.PriorityAddressList {
-			addressStrings[i] = addr.Hex()
-		}
-		addressString := strings.Join(addressStrings, ", ")
-		l.Infof("priority list (%d): %s", len(c.PriorityAddressList), addressString)
-	}
 
 	head := uint64(c.EthereumService.Head.Number.Int64())
 
@@ -184,62 +183,11 @@ func (c *EthereumCrawler) ProcessBlock(b uint64) error {
 	return nil
 }
 
-func (c *EthereumCrawler) ContractLogs(b uint64) error {
-	// var events *BlockEvents
-
-	contractAddr := common.HexToAddress("0x5d35a44Db8a390aCfa997C9a9Ba3a2F878595630")
-
-	// caller, err := NewMainCaller(contractAddr, c.EthereumService.Client)
-
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// filterOpt := &bind.FilterOpts{
-	// 	Start: c.StartBlock,
-	// }
-
-	// if err != nil {
-	// 	return err
-	// }
-
-	// v := []interface{}
-
-	// logCh, err := caller.contract.FilterLogs(opt, "dd", v)
-
-	query := ethereum.FilterQuery{
-		FromBlock: big.NewInt(9564114),
-		Addresses: []common.Address{contractAddr},
-	}
-
-	logs, err := c.EthereumService.Client.FilterLogs(context.Background(), query)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// contractAbi, err := abi.JSON(strings.NewReader(string(MainABI)))
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-
-	for _, vLog := range logs {
-		fmt.Println(vLog)
-		// ii, err := contractAbi.Unpack("DepositInitiated", vLog.Data)
-		// if err != nil {
-			// log.Fatal(err)
-		// }
-	}
-	return nil
-}
-
 func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 	l := c.Logger.Sugar()
-	txs := &BlockEvents{}
+	events := &BlockEvents{}
 
-	block, err := c.EthereumService.GetBlockByNumber(b)
+	block, err := c.EthereumService.Block(b)
 
 	if err != nil {
 		return nil, err
@@ -250,7 +198,7 @@ func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 	ttyear := fmt.Sprintf("%04d", tt.Year())
 	ttmonth := fmt.Sprintf("%02d", tt.Month())
 
-	txs.TxEventsPK = Partition{
+	events.TxEventsPK = Partition{
 		Chain:   Ethereum,
 		Network: c.Config.Network,
 		Year:    ttyear,
@@ -258,103 +206,130 @@ func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 		Block:   b,
 	}
 
-	blockEvent := &TxEvent{
-		Chain:      Ethereum,
-		Network:    c.Config.Network,
-		Provider:   Casimir,
-		Type:       Block,
-		Height:     b,
-		Block:      block.Hash().Hex(),
-		ReceivedAt: block.Time(),
-	}
+	blockEvent := c.NewBlockEvent(block)
 
-	txs.TxEvents = append(txs.TxEvents, blockEvent)
+	events.TxEvents = append(events.TxEvents, blockEvent)
 
 	if block.Transactions().Len() == 0 {
-		return txs, nil
+		return events, nil
 	}
 
 	for _, tx := range block.Transactions() {
-		txEvent := TxEvent{
-			Chain:       Ethereum,
-			Network:     c.Config.Network,
-			Provider:    Casimir,
-			Block:       block.Hash().Hex(),
-			Type:        Transaction,
-			Height:      b,
-			Transaction: tx.Hash().Hex(),
-			ReceivedAt:  blockEvent.ReceivedAt,
-			GasFee:      fmt.Sprintf("%f", GasFeeInETH(tx.GasPrice(), tx.Gas())),
-		}
-
-		if tx.Value() != nil {
-			txEvent.Amount = tx.Value().String()
-		}
-
-		sender, err := c.EthereumService.Client.TransactionSender(context.Background(), tx, block.Hash(), uint(0))
+		txEvent, err := c.NewTxEvent(block, tx)
 
 		if err != nil {
 			return nil, err
 		}
 
-		txEvent.Sender = sender.Hex()
-		senderBalance, err := c.EthereumService.Client.BalanceAt(context.Background(), sender, block.Number())
+		events.TxEvents = append(events.TxEvents, txEvent)
+
+		actions, err := c.NewActionEvents(txEvent)
 
 		if err != nil {
 			return nil, err
 		}
 
-		txEvent.SenderBalance = senderBalance.String()
-
-		if tx.To() != nil {
-			txEvent.Recipient = tx.To().Hex()
-			recipeintBalance, err := c.EthereumService.Client.BalanceAt(context.Background(), *tx.To(), block.Number())
-
-			if err != nil {
-				return nil, err
-			}
-
-			txEvent.RecipientBalance = recipeintBalance.String()
-		}
-
-		txs.TxEvents = append(txs.TxEvents, &txEvent)
-
-		senderAction := Action{
-			Chain:      Ethereum,
-			Network:    c.Config.Network,
-			Type:       Wallet,
-			Action:     Sent,
-			Address:    txEvent.Sender,
-			Amount:     txEvent.Amount,
-			Balance:    txEvent.SenderBalance,
-			Gas:        fmt.Sprintf("%f", GasFeeInETH(tx.GasPrice(), tx.Gas())),
-			Hash:       tx.Hash().Hex(),
-			ReceivedAt: blockEvent.ReceivedAt,
-		}
-
-		recipientAction := Action{
-			Chain:      Ethereum,
-			Network:    c.Config.Network,
-			Type:       Wallet,
-			Action:     Received,
-			Address:    txEvent.Recipient,
-			Amount:     txEvent.Amount,
-			Balance:    txEvent.RecipientBalance,
-			Gas:        fmt.Sprintf("%f", GasFeeInETH(tx.GasPrice(), tx.Gas())),
-			Hash:       tx.Hash().Hex(),
-			ReceivedAt: blockEvent.ReceivedAt,
-		}
-
-		txs.ActionsPK = txs.TxEventsPK
-		txs.Actions = append(txs.Actions, &senderAction, &recipientAction)
+		events.ActionsPK = events.TxEventsPK
+		events.Actions = append(events.Actions, actions...)
 	}
 
-	if (len(txs.TxEvents)-1)*2 != len(txs.Actions) {
-		l.Errorf("events mismatch: block=%d events=%d actions=%d", b, len(txs.TxEvents), len(txs.Actions))
+	if (len(events.TxEvents)-1)*2 != len(events.Actions) {
+		l.Errorf("events mismatch: block=%d events=%d actions=%d", b, len(events.TxEvents), len(events.Actions))
 		return nil, errors.New("check the nnumber of")
 	}
+	return events, nil
+}
 
-	return txs, nil
+func (c *EthereumCrawler) NewActionEvents(txEvent *TxEvent) ([]*Action, error) {
+	sender := &Action{
+		Chain:      Ethereum,
+		Network:    c.Config.Network,
+		Type:       Wallet,
+		Action:     Sent,
+		Address:    txEvent.Sender,
+		Amount:     txEvent.Amount,
+		Balance:    txEvent.SenderBalance,
+		Gas:        txEvent.GasFee,
+		Hash:       txEvent.Transaction,
+		ReceivedAt: txEvent.ReceivedAt,
+	}
+
+	recipient := &Action{
+		Chain:      Ethereum,
+		Network:    c.Config.Network,
+		Type:       Wallet,
+		Action:     Received,
+		Address:    txEvent.Recipient,
+		Amount:     txEvent.Amount,
+		Balance:    txEvent.RecipientBalance,
+		Gas:        txEvent.GasFee,
+		Hash:       txEvent.Transaction,
+		ReceivedAt: txEvent.ReceivedAt,
+	}
+
+	return []*Action{sender, recipient}, nil
+}
+
+func (c *EthereumCrawler) NewBlockEvent(b *types.Block) *TxEvent {
+	return &TxEvent{
+		Chain:      Ethereum,
+		Network:    c.Config.Network,
+		Provider:   Casimir,
+		EventType:  Block,
+		Height:     b.Number().Uint64(),
+		Block:      b.Hash().Hex(),
+		ReceivedAt: b.Time(),
+	}
+}
+
+func (c *EthereumCrawler) NewTxEvent(b *types.Block, tx *types.Transaction) (*TxEvent, error) {
+	txEvent := TxEvent{
+		Chain:       Ethereum,
+		Network:     c.Config.Network,
+		Provider:    Casimir,
+		Block:       b.Hash().Hex(),
+		EventType:   Transaction,
+		Height:      b.Number().Uint64(),
+		Transaction: tx.Hash().Hex(),
+		ReceivedAt:  b.Time(),
+		GasFee:      fmt.Sprintf("%f", GasFeeInETH(tx.GasPrice(), tx.Gas())),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+
+	defer cancel()
+
+	if tx.Value() != nil {
+		txEvent.Amount = tx.Value().String()
+	}
+
+	sender, err := c.EthereumService.Client.TransactionSender(ctx, tx, b.Hash(), uint(0))
+
+	if err != nil {
+		return nil, err
+	}
+
+	txEvent.Sender = sender.Hex()
+	senderBalance, err := c.EthereumService.Client.BalanceAt(ctx, sender, b.Number())
+
+	if err != nil {
+		return nil, err
+	}
+
+	txEvent.SenderBalance = senderBalance.String()
+
+	if tx.To() != nil {
+		txEvent.Recipient = tx.To().Hex()
+		recipeintBalance, err := c.EthereumService.Client.BalanceAt(ctx, *tx.To(), b.Number())
+
+		if err != nil {
+			return nil, err
+		}
+
+		txEvent.RecipientBalance = recipeintBalance.String()
+	}
+
+	return &txEvent, nil
 }
 
 func (c *EthereumCrawler) Close() {

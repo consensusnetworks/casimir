@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -41,6 +40,10 @@ func NewEthereumService(raw string) (*EthereumService, error) {
 	}
 
 	parsed, err := url.Parse(raw)
+
+	if err != nil {
+		return nil, err
+	}
 
 	if parsed.String() == "" {
 		return nil, errors.New("etheruem rpc url is empty")
@@ -92,6 +95,10 @@ func NewEthereumServiceWithTimeout(raw string, timeout time.Duration) (*Ethereum
 	}
 
 	parsed, err := url.Parse(raw)
+
+	if err != nil {
+		return nil, err
+	}
 
 	if parsed.String() == "" {
 		return nil, errors.New("etheruem rpc url is empty")
@@ -153,20 +160,31 @@ func (e *EthereumService) GetBlockByNumber(b uint64) (*types.Block, error) {
 	return block, nil
 }
 
-func (e *EthereumService) GetBlockTransactions(block string) (*types.Transaction, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (e *EthereumService) Block(b uint64) (*types.Block, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 
 	defer cancel()
 
-	txs, pending, err := e.Client.TransactionByHash(ctx, common.HexToHash(block))
+	block, err := e.Client.BlockByNumber(ctx, big.NewInt(int64(b)))
 
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: handle this
-	if pending {
-		return nil, fmt.Errorf("pending: %s still has pending transaction", block)
-	}
-	return txs, nil
+	return block, nil
 }
+
+// func (e *EthereumService) Transactions(b uint64) ([]*types.Transaction, error) {
+// 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+
+// 	defer cancel()
+
+// 	// get the block transactions
+// 	block, err := e.Client.BlockByNumber(ctx, big.NewInt(int64(b)))
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return block.Transactions(), nil
+// }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"os/user"
 	"path"
 	"strconv"
 	"strings"
@@ -15,30 +16,82 @@ import (
 )
 
 type Env int
-type EnvVars int
 
 const (
 	Dev Env = iota
 	Prod
-
-	ETHEREUM_RPC_URL EnvVars = iota
-	ETHEREUM_FORK_BLOCK
 )
 
 type Config struct {
-	Chain            Chain              `json:"chain"`
-	Network          Network            `json:"network"`
-	URL              *url.URL           `json:"url"`
-	User             string             `json:"user"`
-	BatchSize        uint64             `json:"batch_size"`
-	ConcurrencyLimit uint64             `json:"concurrent"`
-	Env              Env                `json:"env"`
-	Version          int                `json:"version"`
-	EnvVars          map[EnvVars]string `json:"env_vars"`
+	Chain            Chain    `json:"chain"`
+	Network          Network  `json:"network"`
+	URL              *url.URL `json:"url"`
+	User             string   `json:"user"`
+	BatchSize        uint64   `json:"batch_size"`
+	ConcurrencyLimit uint64   `json:"concurrent"`
+	Env              Env      `json:"env"`
+	Stream           bool     `json:"stream"`
 }
 
 type PkgJSON struct {
 	Version string `json:"version"`
+}
+
+func LoadConfig(ctx *cli.Context) (*Config, error) {
+	err := LoadEnv()
+
+	if err != nil {
+		return nil, err
+	}
+
+	rpc := os.Getenv("ETHEREUM_RPC_URL")
+
+	url, err := url.Parse(rpc)
+
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := user.Current()
+
+	if err != nil {
+		return nil, err
+	}
+
+	net := EthereumGoerli
+
+	netpath := strings.Split(url.Path, "/")
+
+	if len(netpath) > 2 {
+		if netpath[2] == "goerli" {
+			net = EthereumGoerli
+		}
+
+		if netpath[2] == "mainnet" {
+			net = EthereumMainnet
+		}
+
+		if netpath[2] == "hardhat" {
+			net = EthereumHardhat
+		}
+	}
+
+	config := Config{
+		Chain:            Ethereum,
+		Network:          net,
+		Env:              Dev,
+		URL:              url,
+		BatchSize:        100_000,
+		ConcurrencyLimit: 10,
+		User:             strings.ReplaceAll(strings.ToLower(user.Name), " ", "_"),
+		Stream:           false,
+	}
+
+	if ctx.Bool("production") {
+		config.Env = Prod
+	}
+
+	return &config, nil
 }
 
 func ModuleDir() (string, error) {
@@ -73,29 +126,24 @@ func WorkspaceDir() (string, error) {
 	return root, nil
 }
 
-func LoadEnv() (map[EnvVars]string, error) {
+func LoadEnv() error {
 	dir, err := ModuleDir()
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = godotenv.Load(path.Join(dir, ".env"))
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	vars := map[EnvVars]string{
-		ETHEREUM_RPC_URL:    os.Getenv(ETHEREUM_RPC_URL.String()),
-		ETHEREUM_FORK_BLOCK: os.Getenv(ETHEREUM_FORK_BLOCK.String()),
+	if os.Getenv("ETHEREUM_RPC_URL") == "" {
+		return fmt.Errorf("missing environment variable: %s is required", "ETHEREUM_RPC_URL")
 	}
 
-	if vars[ETHEREUM_RPC_URL] == "" {
-		return nil, fmt.Errorf("missing environment variable: %s is required", ETHEREUM_RPC_URL)
-	}
-
-	return vars, nil
+	return nil
 }
 
 func GetResourceVersion() (int, error) {
@@ -166,80 +214,12 @@ func GetContractBuildArtifact() ([]byte, error) {
 	return casimirManagerFile, nil
 }
 
-func LoadConfig(ctx *cli.Context) (*Config, error) {
-	vars, err := LoadEnv()
-
-	if err != nil {
-		return nil, err
-	}
-
-	rpc := vars[ETHEREUM_RPC_URL]
-
-	url, err := url.Parse(rpc)
-
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := os.UserHomeDir()
-
-	if err != nil {
-		return nil, err
-	}
-
-	net := EthereumGoerli
-
-	netpath := strings.Split(url.Path, "/")
-
-	if len(netpath) > 2 {
-		if netpath[2] == "goerli" {
-			net = EthereumGoerli
-		}
-
-		if netpath[2] == "mainnet" {
-			net = EthereumMainnet
-		}
-
-		if netpath[2] == "hardhat" {
-			net = EthereumHardhat
-		}
-	}
-
-	config := Config{
-		Chain:            Ethereum,
-		Network:          net,
-		Env:              Dev,
-		URL:              url,
-		BatchSize:        100_000,
-		ConcurrencyLimit: 10,
-		User:             strings.ToLower(user),
-		EnvVars:          vars,
-	}
-
-	if ctx.Bool("production") {
-		config.Env = Prod
-	}
-
-	return &config, nil
-}
-
 func (e Env) String() string {
 	switch e {
 	case Dev:
 		return "dev"
 	case Prod:
 		return "prod"
-	default:
-		return ""
-	}
-}
-
-func (e EnvVars) String() string {
-	switch e {
-	case ETHEREUM_RPC_URL:
-		return "ETHEREUM_RPC_URL"
-	case ETHEREUM_FORK_BLOCK:
-		return "ETHEREUM_RPC_URL"
 	default:
 		return ""
 	}

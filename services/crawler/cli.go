@@ -8,14 +8,14 @@ import (
 )
 
 func main() {
-	err := Start(os.Args)
+	err := Run(os.Args)
 
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func Start(args []string) error {
+func Run(args []string) error {
 	app := &cli.App{
 		Name:    "crawler",
 		Usage:   "Crawl and stream Ethereum blockchain events",
@@ -34,7 +34,29 @@ func Start(args []string) error {
 				Value:   false,
 			},
 		},
-		Action: RootCmd,
+		Action: func(ctx *cli.Context) error {
+			config, err := LoadConfig(ctx)
+
+			if err != nil {
+				return err
+			}
+
+			cc, err := NewEthereumCrawler(config)
+
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(cc)
+
+			// _, err = cc.ContractService.EventLogs()
+
+			// if err != nil {
+			// 	return err
+			// }
+
+			return nil
+		},
 	}
 
 	err := app.Run(args)
@@ -44,26 +66,4 @@ func Start(args []string) error {
 	}
 
 	return err
-}
-
-func RootCmd(c *cli.Context) error {
-	config, err := LoadConfig(c)
-
-	if err != nil {
-		return err
-	}
-
-	crawler, err := NewEthereumCrawler(config)
-
-	if err != nil {
-		return err
-	}
-
-	err = crawler.Crawl()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

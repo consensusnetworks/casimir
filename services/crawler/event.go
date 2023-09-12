@@ -27,22 +27,24 @@ const (
 	WithdrawalFullfilled ActionType = "withdrawal_fullfilled"
 )
 
-// type Event interface {
-// 	ChainType() Chain
-// 	NetworkType() Network
-// 	ProviderType() Provider
-// 	EventType() EventType
-// 	ActionType() ActionType
-// 	ReceivedAt() int64
-// 	Amount() string
-// 	Price() string
-// }
+// Event represents an event in casimir captured by the crawler
+type Event interface {
+	ChainType() Chain
+	NetworkType() Network
+	ProviderType() Provider
+	EventType() EventType
+	ActionType() ActionType
+	ReceivedAt() int64
+	Amount() string
+	Price() string
+}
 
+// TxEvent is to capture regular transaction and also a block event.
 type TxEvent struct {
 	Chain            Chain     `json:"chain"`
 	Network          Network   `json:"network"`
 	Provider         Provider  `json:"provider"`
-	Type             EventType `json:"type"`
+	EventType        EventType `json:"event_type"`
 	Height           uint64    `json:"height"`
 	Block            string    `json:"block"`
 	Transaction      string    `json:"transaction"`
@@ -54,8 +56,13 @@ type TxEvent struct {
 	Amount           string    `json:"amount"`
 	Price            string    `json:"price"`
 	GasFee           string    `json:"gas_fee"`
+	Count            uint64    `json:"count"`
+	PoolId           uint64    `json:"pool_id"`
+	NewOwner         string    `json:"new_owner"`
+	OperatorId       string    `json:"operator_id"`
 }
 
+// Action
 type Action struct {
 	Chain          Chain      `json:"chain"`
 	Network        Network    `json:"network"`
@@ -74,8 +81,8 @@ type Action struct {
 
 type BlockEvents struct {
 	TxEvents   []*TxEvent `json:"events"`
-	TxEventsPK Partition  `json:"events_partition_key"`
 	Actions    []*Action  `json:"action"`
+	TxEventsPK Partition  `json:"events_partition_key"`
 	ActionsPK  Partition  `json:"action_partition_key"`
 }
 
