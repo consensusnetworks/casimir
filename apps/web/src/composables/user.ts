@@ -512,7 +512,7 @@ export default function useUser() {
      * @returns 
      */
     async function login(loginCredentials: LoginCredentials, pathIndex?: number) {
-        const { provider, address, currency } = loginCredentials
+        const { provider } = loginCredentials
         try {
             if (ethersProviderList.includes(provider)) {
                 await loginWithEthers(loginCredentials)
