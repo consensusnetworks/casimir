@@ -6,7 +6,7 @@ import router from '@/composables/router'
 import VueFeather from 'vue-feather'
 import useFormat from '@/composables/format'
 import useScreenDimensions from '@/composables/screenDimensions'
-import useTestUser from '@/composables/testUser'
+import useUser from '@/composables/testUser'
 import { CryptoAddress, Currency, ProviderString } from '@casimir/types'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
@@ -40,7 +40,7 @@ const {
   addAccountToUser,
   login,
   logout,
-} = useTestUser()
+} = useUser()
 
 function checkIfAddressIsUsed (account: CryptoAddress): boolean {
   const { address } = account
@@ -487,4 +487,4 @@ onUnmounted(() =>{
   height: 36px;
 }
 
-</style>
+</style>@/composables/user

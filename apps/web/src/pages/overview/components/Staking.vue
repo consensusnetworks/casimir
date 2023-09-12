@@ -6,7 +6,7 @@ import useContracts from '@/composables/contracts'
 import useEthers from '@/composables/ethers'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
-import useTestUser from '@/composables/testUser'
+import useUser from '@/composables/testUser'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
@@ -14,7 +14,7 @@ const { deposit, getDepositFees, getUserStake } = useContracts()
 const { getEthersBalance } = useEthers()
 const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
-const { user, updateUserAgreement } = useTestUser()
+const { user, updateUserAgreement } = useUser()
 
 // Staking Component Refs
 const addressBalance = ref<string | null>(null)
@@ -576,4 +576,4 @@ const handleDeposit = async () => {
   box-shadow: 0px 0px 0px 4px rgba(237, 235, 255, 0.26);
   border-radius: 4px;
 }
-</style>
+</style>@/composables/user

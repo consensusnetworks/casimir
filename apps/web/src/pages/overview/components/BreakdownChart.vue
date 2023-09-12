@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { onMounted, ref, watch} from 'vue'
-import useTestUser from '@/composables/testUser'
+import useUser from '@/composables/testUser'
 import useScreenDimensions from '@/composables/screenDimensions'
 import { AnalyticsData, ProviderString } from '@casimir/types'
 
-const { currentStaked, stakingRewards, totalWalletBalance, user, userAnalytics } = useTestUser()
+const { currentStaked, stakingRewards, totalWalletBalance, user, userAnalytics } = useUser()
 const { screenWidth } = useScreenDimensions()
 
 const chardId = ref('cross_provider_chart')
@@ -329,4 +329,4 @@ watch(selectedTimeframe, () => {
       font-size: 14px;
     };
 }
-</style>
+</style>@/composables/user

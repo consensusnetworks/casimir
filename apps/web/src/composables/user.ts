@@ -62,7 +62,7 @@ const totalWalletBalance = ref<BreakdownAmount>({
     eth: '0 ETH'
 })
 
-export default function useTestUser() {
+export default function useUser() {
     async function addAccountToUser({ provider, address, currency }: { provider: string, address: string, currency: string}) {
         const userAccountExists = user.value?.accounts?.some((account: Account | any) => account?.address === address && account?.walletProvider === provider && account?.currency === currency)
         if (userAccountExists) return 'Account already exists for this user'

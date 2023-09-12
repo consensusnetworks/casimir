@@ -5,12 +5,12 @@ import { ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
-import useTestUser from '@/composables/testUser'
+import useUser from '@/composables/testUser'
 
 const {  registerOperatorWithCasimir, loadingRegisteredOperators } = useContracts()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
-const { user, nonregisteredOperators, registeredOperators, addOperator } = useTestUser()
+const { user, nonregisteredOperators, registeredOperators, addOperator } = useUser()
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -869,4 +869,4 @@ async function submitRegisterOperatorForm() {
     letter-spacing: -0.03em;
     color: #FFFFFF;
 }
-</style>@/composables/files
+</style>@/composables/files@/composables/user
