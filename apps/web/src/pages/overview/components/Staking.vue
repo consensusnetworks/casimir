@@ -6,7 +6,7 @@ import useContracts from '@/composables/contracts'
 import useEthers from '@/composables/ethers'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
-import useUser from '@/composables/testUser'
+import useUser from '@/composables/user'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 

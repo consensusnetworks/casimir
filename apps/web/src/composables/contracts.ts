@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref } from 'vue'
+import { ref } from 'vue'
 import { BigNumberish, ethers } from 'ethers'
 import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
@@ -9,8 +9,8 @@ import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useWalletConnectV2 from './walletConnectV2'
-import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Pool, ProviderString, RegisteredOperator, UserWithAccountsAndOperators } from '@casimir/types'
-import { Operator, Scanner } from '@casimir/ssv'
+import { ProviderString } from '@casimir/types'
+import { Operator } from '@casimir/ssv'
 
 interface RegisterOperatorWithCasimirParams {
     walletProvider: ProviderString
@@ -27,7 +27,6 @@ const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registry
 
 const operators = ref<Operator[]>([])
 
-const isMounted = ref(false)
 const loadingRegisteredOperators = ref(false)
 
 export default function useContracts() {
@@ -122,15 +121,6 @@ export default function useContracts() {
             return 0
         }
     }
-
-    onMounted(() => {
-        if (isMounted.value) return
-        isMounted.value = true
-    })
-
-    onUnmounted(() => {
-        isMounted.value = false
-    })
 
     async function _querySSVOperators(address: string) {
         try {

@@ -2,7 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
-import useUser from '@/composables/testUser'
+import useUser from '@/composables/user'
 import useFormat from '@/composables/format'
 
 const { convertString } = useFormat()

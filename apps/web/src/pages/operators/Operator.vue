@@ -5,7 +5,7 @@ import { ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
-import useUser from '@/composables/testUser'
+import useUser from '@/composables/user'
 
 const {  registerOperatorWithCasimir, loadingRegisteredOperators } = useContracts()
 const { exportFile } = useFiles()
