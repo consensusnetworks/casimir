@@ -20,7 +20,7 @@ const { formatNumber } = useFormat()
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
 const { getCurrentPrice } = usePrice()
-const { loginWithWalletConnectV2 } = useWalletConnect()
+const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
 
 const initializeComposable = ref(false)
 const nonregisteredOperators = ref<Operator[]>([])
@@ -547,6 +547,7 @@ export default function useUser() {
             initializeComposable.value = true
             const session = await Session.doesSessionExist()
             if (session) await getUser()
+            await initializeWalletConnect()
 
             watch(user, async () => {
                 console.log('User Updated', user.value)
@@ -559,7 +560,8 @@ export default function useUser() {
         }
     })
     
-    onUnmounted(() =>{
+    onUnmounted(() => {
+        uninitializeWalletConnect()
         initializeComposable.value = false
     })
 

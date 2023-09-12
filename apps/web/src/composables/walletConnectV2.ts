@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref } from 'vue'
 import Client from '@walletconnect/sign-client'
 import { ethers, providers } from 'ethers'
 import { PairingTypes, SessionTypes } from '@walletconnect/types'
@@ -147,13 +147,7 @@ export default function useWalletConnectV2() {
     }
   }
 
-  onBeforeUnmount(() => {
-    cleanupFunctions.forEach((cleanup) => cleanup())
-    cleanupFunctions = [] // Reset the array
-    componentIsMounted.value = false
-  })
-
-  onMounted(async () => {
+  async function initializeWalletConnect() {
     if (componentIsMounted.value) return
     componentIsMounted.value = true
 
@@ -176,8 +170,8 @@ export default function useWalletConnectV2() {
       console.log('subscribing started')
       _subscribeToProviderEvents()
     }
-  })
-
+  }
+  
   async function signWalletConnectMessage(message: string) : Promise<string>{
     try {
       console.log('got to signWalletConnectMessage')
@@ -192,15 +186,23 @@ export default function useWalletConnectV2() {
     }
   }
 
+  function uninitializeWalletConnect() {
+    cleanupFunctions.forEach((cleanup) => cleanup())
+    cleanupFunctions = [] // Reset the array
+    componentIsMounted.value = false
+  }
+
   return {
+    nonReactiveEthereumProvider,
+    nonReactiveWalletConnectWeb3Provider,
     walletConnectAddresses,
     walletConnectSigner,
     walletConnectWeb3Provider,
     connectWalletConnectV2,
     getWalletConnectSignerV2,
+    initializeWalletConnect,
     loginWithWalletConnectV2,
-    nonReactiveEthereumProvider,
-    nonReactiveWalletConnectWeb3Provider,
+    uninitializeWalletConnect
   }
 }
 

@@ -30,7 +30,7 @@ const operators = ref<Operator[]>([])
 const loadingRegisteredOperators = ref(false)
 
 export default function useContracts() {
-    const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
+    const { ethersProviderList, getEthersBrowserSigner } = useEthers()
     const { getEthersLedgerSigner } = useLedger()
     const { getEthersTrezorSigner } = useTrezor()
     const { getWalletConnectSignerV2, nonReactiveWalletConnectWeb3Provider } = useWalletConnectV2()
