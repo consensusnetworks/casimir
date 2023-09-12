@@ -3,8 +3,8 @@
   "private": true,
   "source": "src/index.html",
   "scripts": {
-    "dev": "parcel src/html/*.html --no-cache --cache-dir ./.parcel-cache",
-    "build": "parcel build src/html/*.html",
+    "dev": "parcel 'src/html/*.html' --no-cache --cache-dir ./.parcel-cache",
+    "build": "parcel build 'src/html/*.html' --no-cache --cache-dir ./.parcel-cache",
     "clean": "rm -rf dist .parcel-cache"
   },
   "devDependencies": {

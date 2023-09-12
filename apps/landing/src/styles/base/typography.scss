@@ -79,7 +79,7 @@ h5 {
 
 h6 {
   @include base;
-  @include typography($text-7-font-size, 400, $heading-text-color);
+  @include typography($text-8-font-size, 400, $heading-text-color);
 }
 
 p {
@@ -183,6 +183,5 @@ a {
 
 .highlight {
   @include base;
-  // @include typography($text-8-font-size, 400, $heading-text-color);
   color: #0d5fff;
 }
