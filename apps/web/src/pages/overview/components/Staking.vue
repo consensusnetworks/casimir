@@ -6,7 +6,7 @@ import useContracts from '@/composables/contracts'
 import useEthers from '@/composables/ethers'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
-import useUsers from '@/composables/users'
+import useTestUser from '@/composables/testUser'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
@@ -14,7 +14,7 @@ const { deposit, getDepositFees, getUserStake } = useContracts()
 const { getEthersBalance } = useEthers()
 const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
-const { user, updateUserAgreement } = useUsers()
+const { user, updateUserAgreement } = useTestUser()
 
 // Staking Component Refs
 const addressBalance = ref<string | null>(null)

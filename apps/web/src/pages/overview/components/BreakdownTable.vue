@@ -2,7 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
-import useUsers from '@/composables/users'
+import useTestUser from '@/composables/testUser'
 import useFormat from '@/composables/format'
 
 const { convertString } = useFormat()
@@ -116,7 +116,7 @@ const tableHeaderOptions = ref(
   }
 )
 
-const { rawUserAnalytics, user } = useUsers()
+const { rawUserAnalytics, user } = useTestUser()
 
 const tableData = ref({
   Wallets: [] as {tx_hash: string, wallet_provider: string,  status: string, staking_fees: string, type: string, amount: string, bal: string,  act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],

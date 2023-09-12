@@ -17,7 +17,7 @@ import BreakdownTable from './components/BreakdownTable.vue'
       <div class=" h-[541px] 800s:h-max dynamic_width">
         <BreakdownChart />
       </div>
-      <!-- <div class="w-full max-w-[300px] 1000s:max-w-none 1000s:flex 700s:flex-wrap justify-between gap-[63px] items-start">
+      <div class="w-full max-w-[300px] 1000s:max-w-none 1000s:flex 700s:flex-wrap justify-between gap-[63px] items-start">
         <div class="w-full">
           <Staking view-id="full_view" />
         </div>
@@ -28,10 +28,10 @@ import BreakdownTable from './components/BreakdownTable.vue'
             </div>
           </div>
         </div>
-      </div> -->
+      </div>
     </div>
 
-    <!-- <div class="w-full flex justify-between items-start gap-[63px]">
+    <div class="w-full flex justify-between items-start gap-[63px]">
       <div class="h-full w-full overflow-auto">
         <BreakdownTable />
       </div>
@@ -42,7 +42,7 @@ import BreakdownTable from './components/BreakdownTable.vue'
           </div>
         </div>
       </div>
-    </div> -->
+    </div>
   </div>
 </template>
 

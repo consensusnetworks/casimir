@@ -1,16 +1,12 @@
 <script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { onMounted, ref, watch} from 'vue'
-import useContracts from '@/composables/contracts'
-import useUsers from '@/composables/users'
-import useEthers from '@/composables/ethers'
 import useTestUser from '@/composables/testUser'
 import useScreenDimensions from '@/composables/screenDimensions'
 import { AnalyticsData, ProviderString } from '@casimir/types'
 
-const { currentStaked, stakingRewards, totalWalletBalance } = useTestUser()
+const { currentStaked, stakingRewards, totalWalletBalance, user, userAnalytics } = useTestUser()
 const { screenWidth } = useScreenDimensions()
-const { user, getUserAnalytics, userAnalytics } = useUsers()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('historical')
@@ -100,26 +96,11 @@ const setChartData = () => {
 }
 
 onMounted(async () => {
-  // if (user.value?.id) {
-    // await getUserAnalytics()
-    // setChartData()
-    // await refreshBreakdown()
-    // // TODO: Potentially find a better place to initialize these listeners
-    // // Doing this here because currently we're currently initializing listeners on connectWallet
-    // // which isn't used if user is already signed in
-    // listenForTransactions()
-  // } else {
     setChartData()
-  // }
 })
 
 watch(user, async () => {
-    // if (user.value?.id) {
-    //   await getUserAnalytics()
-    //   setChartData()
-    // } else {
-      setChartData()
-    // }
+    setChartData()
 })
 
 watch(selectedTimeframe, () => {

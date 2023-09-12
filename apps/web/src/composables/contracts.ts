@@ -7,10 +7,7 @@ import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
 import useEnvironment from './environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
-import usePrice from '@/composables/price'
 import useTrezor from '@/composables/trezor'
-import useUsers from '@/composables/users'
-import useFormat from '@/composables/format'
 import useWalletConnectV2 from './walletConnectV2'
 import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Pool, ProviderString, RegisteredOperator, UserWithAccountsAndOperators } from '@casimir/types'
 import { Operator, Scanner } from '@casimir/ssv'
@@ -35,11 +32,8 @@ const loadingRegisteredOperators = ref(false)
 
 export default function useContracts() {
     const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
-    const { formatNumber } = useFormat()
     const { getEthersLedgerSigner } = useLedger()
-    const { getCurrentPrice } = usePrice()
     const { getEthersTrezorSigner } = useTrezor()
-    const { user } = useUsers()
     const { getWalletConnectSignerV2, nonReactiveWalletConnectWeb3Provider } = useWalletConnectV2()
     
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
@@ -65,9 +59,6 @@ export default function useContracts() {
             console.log('fees :>> ', fees)
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
             console.log('depositAmount :>> ', depositAmount)
-            // Get wallet balance to check if user has enough funds to deposit
-            const walletBalance = await getEthersBalance((user.value as UserWithAccountsAndOperators).accounts[0].address)
-            console.log('walletBalance :>> ', walletBalance)
             const value = ethers.utils.parseEther(depositAmount.toString())
             console.log('value :>> ', value)
             const result = await managerSigner.depositStake({ value, type: 2 })
@@ -138,7 +129,6 @@ export default function useContracts() {
     })
 
     onUnmounted(() => {
-        stopListeningForContractEvents()
         isMounted.value = false
     })
 
