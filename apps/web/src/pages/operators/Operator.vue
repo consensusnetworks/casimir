@@ -6,13 +6,13 @@ import useContracts from '@/composables/contracts'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
 import useUsers from '@/composables/users'
-import useWallets from '@/composables/wallet'
+import useTestUser from '@/composables/testUser'
 
-const { getUserOperators, registerOperatorWithCasimir, loadingRegisteredOperators, nonregisteredOperators, registeredOperators } = useContracts()
+const {  registerOperatorWithCasimir, loadingRegisteredOperators } = useContracts()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
-const { openWalletsModal } = useWallets()
-const { user, addOperator } = useUsers()
+const { addOperator } = useUsers()
+const { user, nonregisteredOperators, registeredOperators } = useTestUser()
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -87,7 +87,7 @@ const submitButtonTxt = ref('Submit')
 
 onMounted(async () => {
   if (user.value) {
-    await getUserOperators()
+    // await getUserOperators()
     const primaryAccount = user.value.accounts.find(item => { return item.address === user.value?.address})
     selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
 
@@ -109,7 +109,7 @@ onMounted(async () => {
 
 watch(user, async () => {
   if (user.value) {
-    await getUserOperators()
+    // await getUserOperators()
     if (selectedWallet.value.address === ''){
       const primaryAccount = user.value.accounts.find(item => { item.address === user.value?.address})
       selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
@@ -123,7 +123,7 @@ watch(selectedWallet, async () =>{
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
 
-  await getUserOperators()
+  // await getUserOperators()
 
   if (selectedWallet.value.address === '') {
     availableOperatorIDs.value = []
@@ -148,6 +148,13 @@ watch(registeredOperators, () => {
 watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
   filterData()
 })
+
+const openWalletsModal = () => {
+  const el = document.getElementById('connect_wallet_button')
+  if (el) {
+    el.click()
+  }
+}
 
 const handleInputChangeCollateral = (event: any) => {
     const value = event.target.value.replace(/[^\d.]/g, '')
@@ -266,7 +273,7 @@ async function submitRegisterOperatorForm() {
       <div class="border rounded-[3px] border-grey_1 border-dashed p-[10%] text-center">
         <button
           class="text-primary underline"
-          @click="openWalletsModal = true"
+          @click="openWalletsModal"
         >
           Connect wallet
         </button> to view and register operators... 

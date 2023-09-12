@@ -4,11 +4,11 @@ import { onMounted, ref, watch} from 'vue'
 import useContracts from '@/composables/contracts'
 import useUsers from '@/composables/users'
 import useEthers from '@/composables/ethers'
+import useTestUser from '@/composables/testUser'
 import useScreenDimensions from '@/composables/screenDimensions'
 import { AnalyticsData, ProviderString } from '@casimir/types'
 
-const { currentStaked, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
-const { listenForTransactions } = useEthers()
+const { currentStaked, stakingRewards, totalWalletBalance } = useTestUser()
 const { screenWidth } = useScreenDimensions()
 const { user, getUserAnalytics, userAnalytics } = useUsers()
 
@@ -100,26 +100,26 @@ const setChartData = () => {
 }
 
 onMounted(async () => {
-  if (user.value?.id) {
-    await getUserAnalytics()
+  // if (user.value?.id) {
+    // await getUserAnalytics()
+    // setChartData()
+    // await refreshBreakdown()
+    // // TODO: Potentially find a better place to initialize these listeners
+    // // Doing this here because currently we're currently initializing listeners on connectWallet
+    // // which isn't used if user is already signed in
+    // listenForTransactions()
+  // } else {
     setChartData()
-    await refreshBreakdown()
-    // TODO: Potentially find a better place to initialize these listeners
-    // Doing this here because currently we're currently initializing listeners on connectWallet
-    // which isn't used if user is already signed in
-    listenForTransactions()
-  } else {
-    setChartData()
-  }
+  // }
 })
 
 watch(user, async () => {
-    if (user.value?.id) {
-      await getUserAnalytics()
+    // if (user.value?.id) {
+    //   await getUserAnalytics()
+    //   setChartData()
+    // } else {
       setChartData()
-    } else {
-      setChartData()
-    }
+    // }
 })
 
 watch(selectedTimeframe, () => {

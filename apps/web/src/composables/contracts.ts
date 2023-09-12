@@ -22,21 +22,6 @@ interface RegisterOperatorWithCasimirParams {
     collateral: string
 }
 
-const currentStaked = ref<BreakdownAmount>({
-    usd: '$0.00',
-    eth: '0 ETH'
-})
-
-const stakingRewards = ref<BreakdownAmount>({
-    usd: '$0.00',
-    eth: '0 ETH'
-})
-
-const totalWalletBalance = ref<BreakdownAmount>({
-    usd: '$0.00',
-    eth: '0 ETH'
-})
-
 const { ethereumUrl, managerAddress, registryAddress, ssvNetworkAddress, ssvNetworkViewsAddress, viewsAddress } = useEnvironment()
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, ICasimirManagerAbi, provider) as CasimirManager
@@ -44,8 +29,6 @@ const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, 
 const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
 
 const operators = ref<Operator[]>([])
-const registeredOperators = ref<Operator[]>([])
-const nonregisteredOperators = ref<Operator[]>([])
 
 const isMounted = ref(false)
 const loadingRegisteredOperators = ref(false)
@@ -58,10 +41,6 @@ export default function useContracts() {
     const { getEthersTrezorSigner } = useTrezor()
     const { user } = useUsers()
     const { getWalletConnectSignerV2, nonReactiveWalletConnectWeb3Provider } = useWalletConnectV2()
-
-    const stakeDepositedListener = async () => await refreshBreakdown()
-    const stakeRebalancedListener = async () => await refreshBreakdown()
-    const withdrawalInitiatedListener = async () => await refreshBreakdown()
     
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         try {
@@ -102,116 +81,6 @@ export default function useContracts() {
         }
     }
 
-    async function getAllTimeStakingRewards() : Promise<BreakdownAmount> {
-        try {
-            /* Get User's Current Stake */
-            const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
-            const currentUserStakePromises = [] as Array<Promise<ethers.BigNumber>>
-            addresses.forEach(address => currentUserStakePromises.push(manager.getUserStake(address)))
-            const settledCurrentUserStakePromises = await Promise.allSettled(currentUserStakePromises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
-            const currentUserStake = settledCurrentUserStakePromises.filter(result => result.status === 'fulfilled').map(result => result.value)
-            const currentUserStakeSum = currentUserStake.reduce((acc, curr) => acc.add(curr), ethers.BigNumber.from(0))
-            const currentUserStakeETH = parseFloat(ethers.utils.formatEther(currentUserStakeSum))
-
-            /* Get User's All Time Deposits and Withdrawals */
-            const userEventTotalsPromises = [] as Array<Promise<ContractEventsByAddress>>
-            addresses.forEach(address => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address))})
-            const userEventTotals = await Promise.all(userEventTotalsPromises) as Array<ContractEventsByAddress>
-            const userEventTotalsSum = userEventTotals.reduce((acc, curr) => {
-                const { StakeDeposited, WithdrawalInitiated } = curr
-                return {
-                  StakeDeposited: acc.StakeDeposited + (StakeDeposited || 0),
-                  WithdrawalInitiated: acc.WithdrawalInitiated + (WithdrawalInitiated || 0),
-                }
-              }, { StakeDeposited: 0, WithdrawalInitiated: 0 } as { StakeDeposited: number; WithdrawalInitiated: number })
-              
-              
-            const stakedDepositedETH = userEventTotalsSum.StakeDeposited
-            const withdrawalInitiatedETH = userEventTotalsSum.WithdrawalInitiated
-
-            /* Get User's All Time Rewards by Subtracting (StakeDeposited + WithdrawalInitiated) from CurrentStake */
-            const currentUserStakeMinusEvents = currentUserStakeETH - (stakedDepositedETH as number) - (withdrawalInitiatedETH as number)
-            return {
-                eth: `${formatNumber(currentUserStakeMinusEvents)} ETH`,
-                usd: `$${formatNumber(currentUserStakeMinusEvents * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' })))}`
-            }
-        } catch (err) {
-            console.error(`There was an error in getAllTimeStakingRewards: ${err}`)
-            return {
-                eth: '0 ETH',
-                usd: '$ 0.00'
-            }
-        }
-    }
-
-    async function getContractEventsTotalsByAddress(address: string) : Promise<ContractEventsByAddress> {
-        try {
-            const eventList = [
-                'StakeDeposited',
-                'StakeRebalanced',
-                'WithdrawalInitiated'
-            ]
-            const eventFilters = eventList.map(event => {
-                if (event === 'StakeRebalanced') return manager.filters[event]()
-                return manager.filters[event](address)
-            })
-
-            // const items = (await Promise.all(eventFilters.map(async eventFilter => await manager.queryFilter(eventFilter, 0, 'latest'))))
-            // Use Promise.allSettled to avoid errors when a filter returns no results
-            const items = (await Promise.allSettled(eventFilters.map(async eventFilter => await manager.queryFilter(eventFilter, 0, 'latest')))).map(result => result.status === 'fulfilled' ? result.value : [])
-    
-            const userEventTotals = eventList.reduce((acc, event) => {
-                acc[event] = 0
-                return acc
-            }, {} as { [key: string]: number })
-    
-            for (const item of items) {
-                for (const action of item) {
-                    const { args, event } = action
-                    const { amount } = args
-                    const amountInEth = parseFloat(ethers.utils.formatEther(amount))
-                    userEventTotals[event as string] += amountInEth
-                }
-            }
-    
-            return userEventTotals
-        } catch (err) {
-            console.error(`There was an error in getContractEventsTotalsByAddress: ${err}`)
-            return {
-                StakeDeposited: 0,
-                StakeRebalanced: 0,
-                WithdrawalInitiated: 0
-            }
-        }
-    }
-
-    async function getCurrentStaked(): Promise<BreakdownAmount> {
-        const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
-        try {
-            const promises = addresses.map((address) => manager.getUserStake(address))
-            const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
-            const currentStaked = settledPromises
-                .filter((result) => result.status === 'fulfilled')
-                .map((result) => result.value)
-    
-            const totalStaked = currentStaked.reduce((accumulator, currentValue) => accumulator.add(currentValue), ethers.BigNumber.from(0))
-            const totalStakedUSD = parseFloat(ethers.utils.formatEther(totalStaked)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-            const totalStakedETH = parseFloat(ethers.utils.formatEther(totalStaked))
-            const formattedTotalStakedUSD = formatNumber(totalStakedUSD)
-            const formattedTotalStakedETH = formatNumber(totalStakedETH)
-            return {
-                eth: formattedTotalStakedETH + ' ETH',
-                usd: '$ ' + formattedTotalStakedUSD
-            }
-        } catch (error) {
-            console.log('Error occurred while fetching stake:', error)
-            return {
-                eth: '0ETH',
-                usd: '$0.00'
-            }
-        }
-    }
-
     async function getDepositFees(): Promise<number> {
         try {
             const fees = await manager.FEE_PERCENT()
@@ -221,82 +90,6 @@ export default function useContracts() {
             console.error(`There was an error in getDepositFees function: ${JSON.stringify(err)}`)
             throw new Error(err)
         }
-    }
-
-    async function _getPools(operatorId: number): Promise<Pool[]> {
-        const pools: Pool[] = []
-
-        const poolIds = [
-            ...await manager.getPendingPoolIds(),
-            ...await manager.getStakedPoolIds()
-        ]
-    
-        for (const poolId of poolIds) {
-            const poolDetails = await views.getPoolDetails(poolId)
-            const pool = {
-                ...poolDetails,
-                operatorIds: poolDetails.operatorIds.map(id => id.toNumber()),
-                reshares: poolDetails.reshares.toNumber()
-            }
-            if (pool.operatorIds.includes(operatorId)) {
-                pools.push(pool)
-            }
-        }
-        return pools
-    }
-
-    async function getUserOperators(): Promise<void> {
-        const userAddresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
-
-        const scanner = new Scanner({ 
-            ethereumUrl,
-            ssvNetworkAddress,
-            ssvNetworkViewsAddress
-        })
-
-        const ssvOperators: Operator[] = []
-        for (const address of userAddresses) {
-            const userOperators = await scanner.getOperators(address)
-            ssvOperators.push(...userOperators)
-        }
-
-        const casimirOperators: RegisteredOperator[] = []
-        for (const operator of ssvOperators) {
-            const { active, collateral, poolCount, resharing } = await registry.getOperator(operator.id)
-            const registered = active || collateral.gt(0) || poolCount.gt(0) || resharing
-            if (registered) {
-                const pools = await _getPools(operator.id)
-                // TODO: Replace these Public Nodes URLs once we have this working again
-                const operatorStore = {
-                    '654': 'https://nodes.casimir.co/eth/goerli/dkg/1',
-                    '655': 'https://nodes.casimir.co/eth/goerli/dkg/2',
-                    '656': 'https://nodes.casimir.co/eth/goerli/dkg/3',
-                    '657': 'https://nodes.casimir.co/eth/goerli/dkg/4',
-                    '658': 'https://nodes.casimir.co/eth/goerli/dkg/5',
-                    '659': 'https://nodes.casimir.co/eth/goerli/dkg/6',
-                    '660': 'https://nodes.casimir.co/eth/goerli/dkg/7',
-                    '661': 'https://nodes.casimir.co/eth/goerli/dkg/8'
-                }
-                const url = operatorStore[operator.id.toString() as keyof typeof operatorStore]
-                casimirOperators.push({
-                    ...operator,
-                    active,
-                    collateral: ethers.utils.formatEther(collateral),
-                    poolCount: poolCount.toNumber(),
-                    url,
-                    resharing,
-                    pools
-                })
-            }
-        }
-        
-        const nonregOperators = ssvOperators.filter((operator: any) => {
-            const idRegistered = casimirOperators.find((registeredOperator: any) => registeredOperator.id === operator.id)
-            return !idRegistered
-        })
-
-        _setOperators(nonregOperators, 'nonregistered')
-        _setOperators(casimirOperators, 'registered')
     }
 
     // async function _getSSVOperators(): Promise<SSVOperator[]> {
@@ -328,20 +121,6 @@ export default function useContracts() {
     //     }
     // }
 
-    async function getTotalWalletBalance() : Promise<BreakdownAmount> {
-        const promises = [] as Array<Promise<any>>
-        const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
-        addresses.forEach((address) => { promises.push(getEthersBalance(address)) })
-        const totalWalletBalance = (await Promise.all(promises)).reduce((acc, curr) => acc + curr, 0)
-        const totalWalletBalanceUSD = totalWalletBalance * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-        const formattedTotalWalletBalance = formatNumber(totalWalletBalance)
-        const formattedTotalWalletBalanceUSD = formatNumber(totalWalletBalanceUSD)
-        return {
-            eth: formattedTotalWalletBalance + ' ETH',
-            usd: '$ ' + formattedTotalWalletBalanceUSD
-        }
-    }
-
     async function getUserStake(address: string): Promise<number> {
         try {
             const bigNumber = await manager.getUserStake(address)
@@ -353,24 +132,9 @@ export default function useContracts() {
         }
     }
 
-    async function listenForContractEvents() {
-        try {
-            console.log('listening for contract events')
-            manager.on('StakeDeposited', stakeDepositedListener)
-            manager.on('StakeRebalanced', stakeRebalancedListener)
-            manager.on('WithdrawalInitiated', withdrawalInitiatedListener)
-            registry.on('OperatorRegistered', getUserOperators)
-            registry.on('OperatorDeregistered', getUserOperators)
-            registry.on('DeregistrationRequested', getUserOperators)
-        } catch (err) {
-            console.log(`There was an error in listenForContractEvents: ${err}`)
-        }
-    }
-
     onMounted(() => {
         if (isMounted.value) return
         isMounted.value = true
-        listenForContractEvents()
     })
 
     onUnmounted(() => {
@@ -388,31 +152,6 @@ export default function useContracts() {
         } catch (err) {
             console.error(`There was an error in _querySSVOperators function: ${JSON.stringify(err)}`)
             return []
-        }
-    }
-
-    async function refreshBreakdown() {
-        try {
-            if (!user.value?.id) {
-                // Reset currentStaked, totalWalletBalance, and stakingRewards
-                currentStaked.value = {
-                    eth: '0 ETH',
-                    usd: '$ 0.00'
-                }
-                totalWalletBalance.value = {
-                    eth: '0 ETH',
-                    usd: '$ 0.00'
-                }
-                stakingRewards.value = {
-                    eth: '0 ETH',
-                    usd: '$ 0.00'
-                }
-            }
-            setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
-            setBreakdownValue({ name: 'totalWalletBalance', ...await getTotalWalletBalance() })
-            setBreakdownValue({ name: 'stakingRewardsEarned', ...await getAllTimeStakingRewards() })
-        } catch (err) {
-            console.log(`There was an error in refreshBreakdown: ${err}`)
         }
     }
 
@@ -442,46 +181,6 @@ export default function useContracts() {
         }
     }
 
-    function setBreakdownValue({ name, eth, usd }: { name: BreakdownString, eth: string, usd: string}) {
-        switch (name) {
-            case 'currentStaked':
-                currentStaked.value = {
-                    eth,
-                    usd
-                }
-            break
-            case 'totalWalletBalance':
-                totalWalletBalance.value = {
-                    eth,
-                    usd
-                }
-            break
-            case 'stakingRewardsEarned':
-                stakingRewards.value = {
-                    eth,
-                    usd
-                }
-            break
-        }
-    }
-
-    function _setOperators(operatorsArray: Operator[], type: 'nonregistered' | 'registered') {
-        switch (type) {
-            case 'nonregistered':
-                nonregisteredOperators.value = operatorsArray as Array<Operator>
-            break
-            case 'registered':
-                registeredOperators.value = operatorsArray as Array<Operator>
-            break
-        }
-    }
-
-    function stopListeningForContractEvents() {
-        manager.removeListener('StakeDeposited', stakeDepositedListener)
-        manager.removeListener('StakeRebalanced', stakeRebalancedListener)
-        manager.removeListener('WithdrawalInitiated', withdrawalInitiatedListener)
-    }
-
     async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         const signerCreators = {
             'Browser': getEthersBrowserSigner,
@@ -504,23 +203,15 @@ export default function useContracts() {
     }
 
     return { 
-        currentStaked,
         loadingRegisteredOperators,
         manager,
+        views,
+        registry,
         operators,
-        registeredOperators,
-        stakingRewards,
-        totalWalletBalance,
-        nonregisteredOperators,
         deposit, 
-        getCurrentStaked,
         getDepositFees,
-        getUserOperators,
         getUserStake,
-        listenForContractEvents,
-        refreshBreakdown,
         registerOperatorWithCasimir,
-        stopListeningForContractEvents,
         withdraw 
     }
 }

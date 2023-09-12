@@ -92,6 +92,7 @@ export default function useWalletConnectV2() {
         chain.value = caipChainId
       
         web3Modal.value?.closeModal()
+        return walletConnectAddresses.value
     } catch (e) {
       console.error('Failed to connect to WalletConnect.')
       console.error(e)
