@@ -543,6 +543,7 @@ export default function useTestUser() {
       
     onMounted(async () => {
         if (!initializeComposable.value) {
+            initializeComposable.value = true
             const session = await Session.doesSessionExist()
             if (session) await getUser()
 
@@ -555,7 +556,6 @@ export default function useTestUser() {
                     uninitializeUser()
                 }
             })
-            initializeComposable.value = true
         }
     })
     

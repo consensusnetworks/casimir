@@ -13,12 +13,11 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
         const user = await getUserById(id)
         console.log('user in user home route :>> ', user)
         const message = user ? 'User found' : 'User not found'
-        const error = user ? false : true
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
             message,
-            error,
+            error: false,
             user
         })
     } catch (err) {
