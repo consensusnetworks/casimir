@@ -12,6 +12,7 @@ import useTrezor from '@/composables/trezor'
 import useWalletConnect from '@/composables/walletConnectV2'
 import { Operator, Scanner } from '@casimir/ssv'
 
+// Test address: 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const { manager, registry, views } = useContracts()
 const { ethereumUrl, managerAddress, registryAddress, ssvNetworkAddress, ssvNetworkViewsAddress, usersUrl, viewsAddress } = useEnvironment()
 const { ethersProviderList, loginWithEthers } = useEthers()
@@ -548,9 +549,8 @@ export default function useTestUser() {
             if (session) await getUser()
 
             watch(user, async () => {
+                console.log('User Updated', user.value)
                 if (user.value) {
-                    // Update user accounts, operators, analytics
-                    console.log('User Updated', user.value)
                     await initializeUser()
                 } else {
                     uninitializeUser()
