@@ -73,6 +73,14 @@ func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
 
 	l.Info("successfully introspected glue tables")
 
+	for _, db := range glue.Databases {
+		l.Infof("database: %s", *db.Name)
+	}
+
+	for _, table := range glue.Tables {
+		l.Infof("table: %s", *table.Name)
+	}
+
 	s3v, err := NewS3Service(awsConfig)
 
 	if err != nil {

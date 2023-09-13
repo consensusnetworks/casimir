@@ -33,7 +33,7 @@ func NewContractService(eths *EthereumService) (*ContractService, error) {
 		return nil, err
 	}
 
-	addr := common.HexToAddress("0x5d35a44Db8a390aCfa997C9a9Ba3a2F878595630")
+	addr := common.HexToAddress("0xc58C19B841986411F98d919e2588EFb5D0632dd4")
 
 	caller, err := NewMain(addr, eths.Client)
 
@@ -50,7 +50,7 @@ func NewContractService(eths *EthereumService) (*ContractService, error) {
 	}
 
 	if !cs.IsLive() {
-		return nil, fmt.Errorf("it seems like the contract code is deployed")
+		return nil, fmt.Errorf("it seems like the contract code is not deployed at %s", addr.Hex())
 	}
 
 	return &cs, nil

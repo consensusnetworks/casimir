@@ -41,13 +41,11 @@ func Run(args []string) error {
 				return err
 			}
 
-			cc, err := NewEthereumCrawler(config)
+			_, err = NewEthereumCrawler(config)
 
 			if err != nil {
 				return err
 			}
-
-			fmt.Println(cc)
 
 			// _, err = cc.ContractService.EventLogs()
 

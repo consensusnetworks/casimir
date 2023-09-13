@@ -131,7 +131,7 @@ func (g *GlueService) Introspect(env Env) error {
 	}
 
 	if len(g.Tables) == 0 {
-		return nil
+		return fmt.Errorf("no tables found in database: %s", db)
 	}
 
 	for _, t := range g.Tables {
