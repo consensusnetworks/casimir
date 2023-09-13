@@ -20,5 +20,19 @@
     display: flex;
     flex-direction: row;
     gap: 2.2rem;
+
+    li {
+      a {
+        color: $slate-10;
+
+        &:hover {
+          color: $slate-12;
+        }
+
+        &.active {
+          font-weight: 500;
+        }
+      }
+    }
   }
 }

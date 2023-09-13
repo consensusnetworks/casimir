@@ -14,17 +14,15 @@ newsletterSubmit.addEventListener("click", (event) => {
 function newSlot() {
   const slot = document.createElement("div");
   const span = document.createElement("span");
-  const p = document.createElement("p");
+
+  span.textContent = "New Transaction";
+
 
   slot.classList.add("slot");
   span.classList.add("highlight");
   span.classList.add("text-10");
 
-  p.textContent = "Some article description stuff.";
-  span.textContent = "New Transaction";
-
   slot.appendChild(span);
-  slot.appendChild(p);
   slots.appendChild(slot);
 }
 

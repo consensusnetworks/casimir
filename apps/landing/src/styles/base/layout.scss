@@ -1,0 +1,7 @@
+@import "breakpoints";
+
+$max-width: 960px;
+
+.container {
+  max-width: $max-width;
+}
