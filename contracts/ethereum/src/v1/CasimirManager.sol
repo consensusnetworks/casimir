@@ -200,8 +200,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
 
     /**
      * @notice Initialize the contract
-     * @param daoOracleAddress The DAO oracle address
      * @param beaconDepositAddress The Beacon deposit address
+     * @param daoOracleAddress The DAO oracle address
      * @param functionsBillingRegistryAddress The Chainlink functions billing registry address
      * @param functionsOracleAddress The Chainlink functions oracle address
      * @param keeperRegistrarAddress The Chainlink keeper registrar address
@@ -218,8 +218,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @param wethTokenAddress The WETH contract address
      */
     function initialize(
-        address daoOracleAddress,
         address beaconDepositAddress,
+        address daoOracleAddress,
         address functionsBillingRegistryAddress,
         address functionsOracleAddress,
         address keeperRegistrarAddress,
@@ -235,8 +235,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         address upkeepBeaconAddress,
         address wethTokenAddress
     ) public initializer {
-        require(daoOracleAddress != address(0), "Missing oracle address");
         require(beaconDepositAddress != address(0), "Missing beacon deposit address");
+        require(daoOracleAddress != address(0), "Missing oracle address");
         require(functionsBillingRegistryAddress != address(0), "Missing functions billing registry address");
         require(keeperRegistrarAddress != address(0), "Missing keeper registrar address");
         require(keeperRegistryAddress != address(0), "Missing keeper registry address");

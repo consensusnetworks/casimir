@@ -15,7 +15,7 @@ upgrades.silenceWarnings()
  * Deploy contracts to local network and run local events and oracle handling
  */
 void async function () {
-    const [owner, , , , fourthUser, donTransmitter, daoOracle] = await ethers.getSigners()
+    const [ , daoOracle, donTransmitter, firstUser ] = await ethers.getSigners()
 
     const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')
     const functionsOracleFactory = await functionsOracleFactoryFactory.deploy() as FunctionsOracleFactory
@@ -76,8 +76,8 @@ void async function () {
     console.log(`CasimirUpkeep beacon deployed to ${upkeepBeacon.address}`)
 
     const managerArgs = {
-        daoOracleAddress: daoOracle.address,
         beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
+        daoOracleAddress: daoOracle.address,
         functionsBillingRegistryAddress: functionsBillingRegistry.address,
         functionsOracleAddress: functionsOracle.address,
         keeperRegistrarAddress: process.env.KEEPER_REGISTRAR_ADDRESS,
@@ -94,39 +94,32 @@ void async function () {
         wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
     }
     const managerFactory = await ethers.getContractFactory('CasimirManager')
-    console.log('Nonce before manager', await ethers.provider.getTransactionCount(owner.address))
     const manager = await upgrades.deployProxy(managerFactory, Object.values(managerArgs), { unsafeAllow: ['constructor'] }) as CasimirManager
     await manager.deployed()
-    console.log('Nonce after manager', await ethers.provider.getTransactionCount(owner.address))
     console.log(`CasimirManager contract deployed to ${manager.address}`)
 
-    const registryAddress = await manager.getRegistryAddress()
-    console.log(`CasimirRegistry contract deployed to ${registryAddress}`)
+    const registry = await ethers.getContractAt('CasimirRegistry', await manager.getRegistryAddress()) as CasimirRegistry
+    console.log(`CasimirRegistry contract deployed to ${registry.address}`)
 
-    const upkeepAddress = await manager.getUpkeepAddress()
-    console.log(`CasimirUpkeep contract deployed to ${upkeepAddress}`)
+    const upkeep = await ethers.getContractAt('CasimirUpkeep', await manager.getUpkeepAddress()) as CasimirUpkeep
+    console.log(`CasimirUpkeep contract deployed to ${upkeep.address}`)
 
     const viewsArgs = {
         managerAddress: manager.address,
-        registryAddress
+        registryAddress: registry.address
     }
     const viewsFactory = await ethers.getContractFactory('CasimirViews')
-    console.log('Nonce before views', await ethers.provider.getTransactionCount(owner.address))
     const views = await upgrades.deployProxy(viewsFactory, Object.values(viewsArgs), { unsafeAllow: ['constructor'] }) as CasimirViews
     await views.deployed()
-    console.log('Nonce after views', await ethers.provider.getTransactionCount(owner.address))
     console.log(`CasimirViews contract deployed to ${views.address}`)
 
-    const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
-    const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
-    const ssvViewsAddress = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
-
+    const ssvViews = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
     const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [156, 157, 158, 159]
     if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
     const messengerUrl = process.env.MESSENGER_URL || 'https://nodes.casimir.co/eth/goerli/dkg/messenger'
     const preregisteredBalance = ethers.utils.parseEther('10')
     for (const operatorId of preregisteredOperatorIds) {
-        const [operatorOwnerAddress] = await ssvViewsAddress.getOperatorById(operatorId)
+        const [operatorOwnerAddress] = await ssvViews.getOperatorById(operatorId)
         const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
         const nextBalance = currentBalance.add(preregisteredBalance)
         await setBalance(operatorOwnerAddress, nextBalance)
@@ -139,13 +132,10 @@ void async function () {
         await result.wait()
     }
 
-    const requestSource = requestConfig.source
-    const requestArgs = requestConfig.args
-    const fulfillGasLimit = 300000
-    const setRequest = await manager.setFunctionsRequest(requestSource, requestArgs, fulfillGasLimit)
+    const setRequest = await manager.setFunctionsRequest(requestConfig.source, requestConfig.args, 300000)
     await setRequest.wait()
 
-    await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, manager.address, upkeep.address, functionsOracle.address])
+    await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, functionsOracle.address])
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
     await functionsOracle.addAuthorizedSenders([donTransmitter.address, manager.address])
 
@@ -232,7 +222,7 @@ void async function () {
         const { message } = await ping.json()
         if (message !== 'pong') throw new Error('DKG service is not running')
         const depositAmount = 32 * ((100 + await manager.FEE_PERCENT()) / 100)
-        const depositStake = await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        const depositStake = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await depositStake?.wait()
     }, 2500)
 

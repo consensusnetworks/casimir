@@ -25,10 +25,10 @@ describe('Operators', async function () {
 
     it('First initiated deposit uses 4 eligible operators', async function () {
         const { manager, registry, views, daoOracle } = await loadFixture(deploymentFixture)
-        const [, user] = await ethers.getSigners()
+        const [ firstUser ] = await ethers.getSigners()
 
         const depositAmount = round(32 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
-        const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
         await initiateDepositHandler({ manager, signer: daoOracle })
@@ -46,10 +46,10 @@ describe('Operators', async function () {
 
     it('Operator deregistration with 1 pool emits 1 reshare request', async function () {
         const { manager, registry, ssvViews, daoOracle } = await loadFixture(deploymentFixture)
-        const [, user] = await ethers.getSigners()
+        const [ firstUser ] = await ethers.getSigners()
 
         const depositAmount = round(32 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
-        const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
         await initiateDepositHandler({ manager, signer: daoOracle })
@@ -60,7 +60,7 @@ describe('Operators', async function () {
         const operatorOwnerSigner = ethers.provider.getSigner(operatorOwnerAddress)
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
-            params: [operatorOwnerAddress]
+            params: [ operatorOwnerAddress ]
         })
         const requestDeactivation = await registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
         await requestDeactivation.wait()
@@ -82,7 +82,7 @@ describe('Operators', async function () {
         const operatorOwnerSigner = ethers.provider.getSigner(operatorOwnerAddress)
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
-            params: [operatorOwnerAddress]
+            params: [ operatorOwnerAddress ]
         })
         const requestDeactivation = await registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
         await requestDeactivation.wait()
@@ -126,7 +126,7 @@ describe('Operators', async function () {
             activatedDeposits: 0,
             forcedExits: 0,
             completedExits: 1,
-            compoundablePoolIds: [0, 0, 0, 0, 0]
+            compoundablePoolIds: [ 0, 0, 0, 0, 0 ]
         }
 
         await fulfillReport({

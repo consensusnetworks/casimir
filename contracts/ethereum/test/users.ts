@@ -9,25 +9,25 @@ import { fulfillReport, runUpkeep } from '../helpers/upkeep'
 describe('Users', async function () {
     it('User\'s 16.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
         const { manager } = await loadFixture(deploymentFixture)
-        const [, user] = await ethers.getSigners()
+        const [ firstUser ] = await ethers.getSigners()
 
         const depositAmount = round(16 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
-        const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
         let stake = await manager.getTotalStake()
-        let userStake = await manager.getUserStake(user.address)
+        let userStake = await manager.getUserStake(firstUser.address)
 
         expect(ethers.utils.formatEther(stake)).equal('16.0')
         expect(ethers.utils.formatEther(userStake)).equal('16.0')
 
-        const userBalanceBefore = await ethers.provider.getBalance(user.address)
-        const userWithdrawalRequest = await manager.connect(user).requestWithdrawal(ethers.utils.parseEther('8.0'))
+        const userBalanceBefore = await ethers.provider.getBalance(firstUser.address)
+        const userWithdrawalRequest = await manager.connect(firstUser).requestWithdrawal(ethers.utils.parseEther('8.0'))
         await userWithdrawalRequest.wait()
-        const userBalanceAfter = await ethers.provider.getBalance(user.address)
+        const userBalanceAfter = await ethers.provider.getBalance(firstUser.address)
 
         stake = await manager.getTotalStake()
-        userStake = await manager.getUserStake(user.address)
+        userStake = await manager.getUserStake(firstUser.address)
 
         expect(ethers.utils.formatEther(stake)).equal('8.0')
         expect(ethers.utils.formatEther(userStake)).equal('8.0')
@@ -35,11 +35,11 @@ describe('Users', async function () {
     })
 
     it('User\'s 64.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
-        const { manager, upkeep, views, donTransmitter, daoOracle, functionsBillingRegistry } = await loadFixture(deploymentFixture)
-        const [, user] = await ethers.getSigners()
+        const { manager, upkeep, views, functionsBillingRegistry, daoOracle, donTransmitter } = await loadFixture(deploymentFixture)
+        const [ firstUser ] = await ethers.getSigners()
 
         const depositAmount = round(64 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
-        const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
         if ((await manager.functionsId()).toNumber() === 0) {
@@ -65,7 +65,7 @@ describe('Users', async function () {
             activatedDeposits: 2,
             forcedExits: 0,
             completedExits: 0,
-            compoundablePoolIds: [0, 0, 0, 0, 0]
+            compoundablePoolIds: [ 0, 0, 0, 0, 0 ]
         }
 
         await fulfillReport({
@@ -82,17 +82,17 @@ describe('Users', async function () {
         expect(stakedPoolIds.length).equal(2)
 
         let stake = await manager.getTotalStake()
-        let userStake = await manager.getUserStake(user.address)
+        let userStake = await manager.getUserStake(firstUser.address)
 
         expect(ethers.utils.formatEther(stake)).equal('64.0')
         expect(ethers.utils.formatEther(userStake)).equal('64.0')
 
-        const userBalanceBefore = await ethers.provider.getBalance(user.address)
-        const userWithdrawalRequest = await manager.connect(user).requestWithdrawal(ethers.utils.parseEther('32.0'))
+        const userBalanceBefore = await ethers.provider.getBalance(firstUser.address)
+        const userWithdrawalRequest = await manager.connect(firstUser).requestWithdrawal(ethers.utils.parseEther('32.0'))
         await userWithdrawalRequest.wait()
 
         stake = await manager.getTotalStake()
-        userStake = await manager.getUserStake(user.address)
+        userStake = await manager.getUserStake(firstUser.address)
 
         expect(ethers.utils.formatEther(stake)).equal('32.0')
         expect(ethers.utils.formatEther(userStake)).equal('32.0')
@@ -107,7 +107,7 @@ describe('Users', async function () {
             activatedDeposits: 0,
             forcedExits: 0,
             completedExits: 1,
-            compoundablePoolIds: [0, 0, 0, 0, 0]
+            compoundablePoolIds: [ 0, 0, 0, 0, 0 ]
         }
 
         await fulfillReport({
@@ -128,9 +128,9 @@ describe('Users', async function () {
         await runUpkeep({ donTransmitter, upkeep })
 
         stake = await manager.getTotalStake()
-        userStake = await manager.getUserStake(user.address)
+        userStake = await manager.getUserStake(firstUser.address)
 
-        const userBalanceAfter = await ethers.provider.getBalance(user.address)
+        const userBalanceAfter = await ethers.provider.getBalance(firstUser.address)
 
         expect(ethers.utils.formatEther(stake)).equal('32.0')
         expect(ethers.utils.formatEther(userStake)).equal('32.0')
@@ -139,18 +139,18 @@ describe('Users', async function () {
 
     it('User\'s 16.0 stake and five withdrawal requests fails on the 6th daily action', async function () {
         const { manager } = await loadFixture(deploymentFixture)
-        const [, user] = await ethers.getSigners()
+        const [ firstUser ] = await ethers.getSigners()
 
         const depositAmount = round(16 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
-        const deposit = await manager.connect(user).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
         for (let i = 0; i < 4; i++) {
-            const withdrawalRequest = await manager.connect(user).requestWithdrawal(ethers.utils.parseEther('2.0'))
+            const withdrawalRequest = await manager.connect(firstUser).requestWithdrawal(ethers.utils.parseEther('2.0'))
             await withdrawalRequest.wait()
         }
 
-        const failedWithdrawalRequest = manager.connect(user).requestWithdrawal(ethers.utils.parseEther('2.0'))
+        const failedWithdrawalRequest = manager.connect(firstUser).requestWithdrawal(ethers.utils.parseEther('2.0'))
         await expect(failedWithdrawalRequest).to.be.rejectedWith('Action period maximum reached')
     })
 })

@@ -8,9 +8,8 @@ export function getConfig() {
 
     const mnemonic = process.env.BIP39_SEED
     if (!mnemonic) throw new Error('No mnemonic provided')
-    const pathIndex = process.env.BIP39_PATH_INDEX
-    const path = `m/44'/60'/0'/0/${pathIndex || 0}`
-    const wallet = ethers.Wallet.fromMnemonic(mnemonic, path)
+    const accountPath = 'm/44\'/60\'/0\'/0/2'
+    const wallet = ethers.Wallet.fromMnemonic(mnemonic, accountPath)
 
     const functionsBillingRegistryAbi = FunctionsBillingRegistryAbi
     const functionsBillingRegistryAddress = process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS

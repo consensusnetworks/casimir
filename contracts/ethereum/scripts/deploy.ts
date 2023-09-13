@@ -1,4 +1,5 @@
 import { ethers, upgrades } from 'hardhat'
+import requestConfig from '@casimir/functions/Functions-request-config'
 
 upgrades.silenceWarnings()
 
@@ -6,6 +7,51 @@ upgrades.silenceWarnings()
  * Deploy ethereum contracts
 */
 void async function () {
+    const [ , daoOracle, donTransmitter ] = await ethers.getSigners()
+
+    const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')
+    const functionsOracleFactory = await functionsOracleFactoryFactory.deploy()
+    await functionsOracleFactory.deployed()
+    console.log(`FunctionsOracleFactory contract deployed to ${functionsOracleFactory.address}`)
+
+    const deployNewOracle = await functionsOracleFactory.deployNewOracle()
+    const deployNewOracleReceipt = await deployNewOracle.wait()
+    if (!deployNewOracleReceipt.events) throw new Error('Functions oracle deployment failed')
+    const functionsOracleAddress = deployNewOracleReceipt.events[1].args?.don as string
+    const functionsOracle = await ethers.getContractAt('FunctionsOracle', functionsOracleAddress)
+    const acceptOwnership = await functionsOracle.acceptOwnership()
+    await acceptOwnership.wait()
+    console.log(`FunctionsOracle contract deployed to ${functionsOracle.address}`)
+
+    const functionsBillingRegistryArgs = {
+        linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
+        linkEthFeedAddress: process.env.LINK_ETH_FEED_ADDRESS,
+        functionsOracleAddress: functionsOracle.address
+    }
+    const functionsBillingRegistryFactory = await ethers.getContractFactory('FunctionsBillingRegistry')
+    const functionsBillingRegistry = await functionsBillingRegistryFactory.deploy(...Object.values(functionsBillingRegistryArgs))
+    await functionsBillingRegistry.deployed()
+    console.log(`FunctionsBillingRegistry contract deployed to ${functionsBillingRegistry.address}`)
+
+    const functionsBillingRegistryConfig = {
+        maxGasLimit: 400_000,
+        stalenessSeconds: 86_400,
+        gasAfterPaymentCalculation:
+            21_000 + 5_000 + 2_100 + 20_000 + 2 * 2_100 - 15_000 + 7_315,
+        weiPerUnitLink: ethers.BigNumber.from('5000000000000000'),
+        gasOverhead: 100_000,
+        requestTimeoutSeconds: 300,
+    }
+
+    await functionsBillingRegistry.setConfig(
+        functionsBillingRegistryConfig.maxGasLimit,
+        functionsBillingRegistryConfig.stalenessSeconds,
+        functionsBillingRegistryConfig.gasAfterPaymentCalculation,
+        functionsBillingRegistryConfig.weiPerUnitLink,
+        functionsBillingRegistryConfig.gasOverhead,
+        functionsBillingRegistryConfig.requestTimeoutSeconds
+    )
+
     const poolFactory = await ethers.getContractFactory('CasimirPool')
     const poolBeacon = await upgrades.deployBeacon(poolFactory, { unsafeAllow: ['constructor'] })
     await poolBeacon.deployed()
@@ -22,10 +68,10 @@ void async function () {
     console.log(`CasimirUpkeep beacon deployed to ${upkeepBeacon.address}`)
 
     const managerArgs = {
-        daoOracleAddress: process.env.DAO_ORACLE_ADDRESS,
         beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
-        functionsBillingRegistryAddress: process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS,
-        functionsOracleAddress: process.env.FUNCTIONS_ORACLE_ADDRESS,
+        daoOracleAddress: daoOracle.address,
+        functionsBillingRegistryAddress: functionsBillingRegistry.address,
+        functionsOracleAddress: functionsOracle.address,
         keeperRegistrarAddress: process.env.KEEPER_REGISTRAR_ADDRESS,
         keeperRegistryAddress: process.env.KEEPER_REGISTRY_ADDRESS,
         linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
@@ -44,17 +90,24 @@ void async function () {
     await manager.deployed()
     console.log(`CasimirManager contract deployed to ${manager.address}`)
 
-    const registryAddress = await manager.getRegistryAddress()
-    console.log(`CasimirRegistry contract deployed to ${registryAddress}`)
+    const registry = await ethers.getContractAt('CasimirRegistry', await manager.getRegistryAddress())
+    console.log(`CasimirRegistry contract deployed to ${registry.address}`)
 
-    const upkeepAddress = await manager.getUpkeepAddress()
-    console.log(`CasimirUpkeep contract deployed to ${upkeepAddress}`)
+    const upkeep = await ethers.getContractAt('CasimirUpkeep', await manager.getUpkeepAddress())
+    console.log(`CasimirUpkeep contract deployed to ${upkeep.address}`)
 
     const viewsArgs = {
         managerAddress: manager.address,
-        registryAddress
+        registryAddress: registry.address
     }
     const viewsFactory = await ethers.getContractFactory('CasimirViews')
     const views = await upgrades.deployProxy(viewsFactory, Object.values(viewsArgs))
     console.log(`CasimirViews contract deployed to ${views.address}`)
+
+    const setRequest = await manager.setFunctionsRequest(requestConfig.source, requestConfig.args, 300000)
+    await setRequest.wait()
+
+    await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, functionsOracle.address])
+    await functionsOracle.setRegistry(functionsBillingRegistry.address)
+    await functionsOracle.addAuthorizedSenders([donTransmitter.address, manager.address])
 }()

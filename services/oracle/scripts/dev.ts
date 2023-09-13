@@ -13,7 +13,6 @@ void async function () {
     process.env.USE_HARDCODED_OPERATORS = 'false'
 
     process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
-    process.env.BIP39_PATH_INDEX = process.env.BIP39_PATH_INDEX || '6'
     if (!process.env.MANAGER_ADDRESS) throw new Error('No manager address provided')
     if (!process.env.VIEWS_ADDRESS) throw new Error('No views address provided')
     if (!process.env.REGISTRY_ADDRESS) throw new Error('No registry address provided')
