@@ -185,9 +185,9 @@ export default function useContracts() {
     return { 
         loadingRegisteredOperators,
         manager,
-        views,
-        registry,
         operators,
+        registry,
+        views,
         deposit, 
         getDepositFees,
         getUserStake,

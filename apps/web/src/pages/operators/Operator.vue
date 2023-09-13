@@ -99,7 +99,6 @@ onMounted(async () => {
     }
 
     document.addEventListener('DOMContentLoaded', disableAutofill)
-    //
 
     filterData()
   }

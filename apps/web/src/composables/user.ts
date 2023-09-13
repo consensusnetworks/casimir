@@ -23,6 +23,7 @@ const { getCurrentPrice } = usePrice()
 const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
 
 const initializeComposable = ref(false)
+const initializedUser = ref(false)
 const nonregisteredOperators = ref<Operator[]>([])
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const rawUserAnalytics = ref<any>(null)
@@ -112,6 +113,7 @@ export default function useUser() {
     }
 
     async function blockListener(blockNumber: number) {
+        if (!user.value) return
         console.log('blockNumber :>> ', blockNumber)
         const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         const block = await provider.getBlockWithTransactions(blockNumber)
@@ -477,31 +479,23 @@ export default function useUser() {
         registeredOperators.value = casimirOperators as Array<RegisteredOperator>
     }
 
-    async function initializeUser() {
-        listenForContractEvents()
-        listenForTransactions()
-        await Promise.all([refreshBreakdown(), getUserOperators(), getUserAnalytics()])
-    }
-
     function listenForContractEvents() {
+        stopListeningForContractEvents() // Clear old listeners
         try {
-            console.log('listening for contract events')
             manager.on('StakeDeposited', stakeDepositedListener)
             manager.on('StakeRebalanced', stakeRebalancedListener)
             manager.on('WithdrawalInitiated', withdrawalInitiatedListener)
             registry.on('OperatorRegistered', getUserOperators)
-            registry.on('OperatorDeregistered', getUserOperators)
-            registry.on('DeregistrationRequested', getUserOperators)
+            // registry.on('OperatorDeregistered', getUserOperators)
+            // registry.on('DeregistrationRequested', getUserOperators)
         } catch (err) {
             console.log(`There was an error in listenForContractEvents: ${err}`)
         }
     }
 
     async function listenForTransactions() {
+        stopListeningForTransactions()
         provider.on('block', blockListener as ethers.providers.Listener)
-        await new Promise(() => {
-          // Wait indefinitely using a Promise that never resolves
-        })
     }
 
     /**
@@ -523,11 +517,9 @@ export default function useUser() {
             } else if (provider === 'WalletConnect'){
                 await loginWithWalletConnectV2(loginCredentials)
             } else {
-                // TODO: Implement this for other providers
                 console.log('Sign up not yet supported for this wallet provider')
             }
             await getUser()
-            
         } catch (error: any) {
             throw new Error(error.message || 'There was an error logging in')
         }
@@ -536,32 +528,33 @@ export default function useUser() {
     async function logout() {
         await Session.signOut()
         uninitializeUser()
-        // await disconnectWalletConnect()
         // TODO: Fix bug that doesn't allow you to log in without refreshing page after a user logs out
         window.location.reload()
-        console.log('user.value :>> ', user.value)
     }
       
     onMounted(async () => {
         if (!initializeComposable.value) {
             initializeComposable.value = true
-            const session = await Session.doesSessionExist()
-            if (session) await getUser()
-            await initializeWalletConnect()
-
+            listenForContractEvents()
+            listenForTransactions()
             watch(user, async () => {
-                console.log('User Updated', user.value)
-                if (user.value) {
-                    await initializeUser()
-                } else {
+                if (user.value && !initializedUser.value) {
+                    initializedUser.value = true
+                    await Promise.all([refreshBreakdown(), getUserOperators(), getUserAnalytics()])
+                } else if (!user.value) {
                     uninitializeUser()
                 }
             })
+            const session = await Session.doesSessionExist()
+            if (session) await getUser()
+            await initializeWalletConnect()
         }
     })
     
     onUnmounted(() => {
         uninitializeWalletConnect()
+        stopListeningForContractEvents()
+        stopListeningForTransactions()
         initializeComposable.value = false
     })
 
@@ -651,7 +644,7 @@ export default function useUser() {
     }
 
     function stopListeningForTransactions() {
-        provider.off('block', blockListener as ethers.providers.Listener)
+        provider.removeAllListeners('block')
     }
 
     function uninitializeUser() {
