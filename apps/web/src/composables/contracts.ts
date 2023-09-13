@@ -19,7 +19,7 @@ interface RegisterOperatorWithCasimirParams {
     collateral: string
 }
 
-const { ethereumUrl, managerAddress, registryAddress, ssvNetworkAddress, ssvNetworkViewsAddress, viewsAddress } = useEnvironment()
+const { ethereumUrl, managerAddress, registryAddress, viewsAddress } = useEnvironment()
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, ICasimirManagerAbi, provider) as CasimirManager
 const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, ICasimirViewsAbi, provider) as CasimirViews

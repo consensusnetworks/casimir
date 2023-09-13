@@ -14,7 +14,7 @@ import { Operator, Scanner } from '@casimir/ssv'
 
 // Test address: 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const { manager, registry, views } = useContracts()
-const { ethereumUrl, managerAddress, registryAddress, ssvNetworkAddress, ssvNetworkViewsAddress, usersUrl, viewsAddress } = useEnvironment()
+const { ethereumUrl, ssvNetworkAddress, ssvNetworkViewsAddress, usersUrl } = useEnvironment()
 const { ethersProviderList, loginWithEthers } = useEthers()
 const { formatNumber } = useFormat()
 const { loginWithLedger } = useLedger()
