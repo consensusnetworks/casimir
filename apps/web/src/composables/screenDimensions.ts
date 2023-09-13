@@ -20,7 +20,6 @@ export default function useScreenDimensions() {
       
     onMounted(() => {
         if(!initializeComposable.value){
-            console.log('listening to screen dimensions')
             findScreenDimensions()
             window.addEventListener('resize', findScreenDimensions)
             initializeComposable.value = true

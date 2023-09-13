@@ -5,12 +5,11 @@ import useUser from '@/composables/user'
 import useScreenDimensions from '@/composables/screenDimensions'
 import { AnalyticsData, ProviderString } from '@casimir/types'
 
-const { currentStaked, stakingRewards, totalWalletBalance, user, userAnalytics } = useUser()
+const { currentStaked, finishedComputingUerAnalytics, stakingRewards, totalWalletBalance, user, userAnalytics } = useUser()
 const { screenWidth } = useScreenDimensions()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('historical')
-
 const chartData = ref({} as any)
 
 const getAccountColor = (address: string) => {
@@ -58,26 +57,25 @@ const setChartData = () => {
   switch (selectedTimeframe.value) {
     case '1 month':
       labels = userAnalytics.value.oneMonth.labels
-      data = userAnalytics.value.oneMonth.data
+      data = userAnalytics.value.oneMonth.data as any
       break
     case '6 months':
       labels = userAnalytics.value.sixMonth.labels
-      data = userAnalytics.value.sixMonth.data
+      data = userAnalytics.value.sixMonth.data as any
       break
     case '12 months':
       labels = userAnalytics.value.oneYear.labels
-      data = userAnalytics.value.oneYear.data
+      data = userAnalytics.value.oneYear.data as any
       break
     case 'historical':
       labels = userAnalytics.value.historical.labels
-      data = userAnalytics.value.historical.data
+      data = userAnalytics.value.historical.data as any
       break
     
     default:
       break
   }
 
-  
   chartData.value = {
     labels : labels,
     datasets : data.map((item: any) => {
@@ -99,12 +97,16 @@ onMounted(async () => {
     setChartData()
 })
 
+watch(selectedTimeframe, () => {
+  setChartData()
+})
+
 watch(user, async () => {
     setChartData()
 })
 
-watch(selectedTimeframe, () => {
-  setChartData()
+watch(finishedComputingUerAnalytics, async () => {
+    setChartData()
 })
 </script>
 

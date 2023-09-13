@@ -11,6 +11,9 @@ import usePrice from '@/composables/price'
 import useTrezor from '@/composables/trezor'
 import useWalletConnect from '@/composables/walletConnectV2'
 import { Operator, Scanner } from '@casimir/ssv'
+import useTxData from '../mockData/mock_transaction_data'
+
+const { mockData, txData } = useTxData()
 
 // Test address: 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const { manager, registry, views } = useContracts()
@@ -24,6 +27,7 @@ const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletCon
 
 const initializeComposable = ref(false)
 const initializedUser = ref(false)
+const finishedComputingUerAnalytics = ref(false)
 const nonregisteredOperators = ref<Operator[]>([])
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const rawUserAnalytics = ref<any>(null)
@@ -135,6 +139,7 @@ export default function useUser() {
     }
 
     function computeUserAnalytics() {
+        finishedComputingUerAnalytics.value = false
         // const result = userAnalytics.value
         console.log('rawUserAnalytics in computeAnalytics :>> ', rawUserAnalytics)
         const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
@@ -243,6 +248,7 @@ export default function useUser() {
             userAnalytics.value.oneMonth.labels.push(`${new Date(date).getMonth() + 1}/${new Date(date).getDate()}`)
         }
         // userAnalytics.value = result
+        finishedComputingUerAnalytics.value = true
     }
 
     async function getAllTimeStakingRewards() : Promise<BreakdownAmount> {
@@ -401,18 +407,17 @@ export default function useUser() {
             }
             // TODO: Re-enable this when athena is ready
             const response = await fetch(`${usersUrl}/analytics`, requestOptions)
-            const { error, message, data } = await response.json()
-            console.log('data from analytics :>> ', data)
-            // const error = false
-            // const message = 'User analytics found'
+            const { error, message, data: athenaData } = await response.json()
+            // console.log('data from analytics :>> ', data)
+            if (error) throw new Error(`Error in getUserAnalytics: ${message}`)
 
             // TODO: Get events, actions, and contract data from the API
             // Then format the data to be used in the charts (see computeUserAnalytics) and give to Steve.
 
             // We get the user's analytics (wallet balance) data here.
-            // const data = txData.value
-
-            if (error) throw new Error(message)
+            mockData()
+            console.log('txData.value :>> ', txData.value)
+            const data = txData.value
 
             // TODO: Pass data from above when the API / data is ready
             rawUserAnalytics.value = data
@@ -696,8 +701,10 @@ export default function useUser() {
 
     return {
         currentStaked: readonly(currentStaked),
+        finishedComputingUerAnalytics: readonly(finishedComputingUerAnalytics),
         nonregisteredOperators: readonly(nonregisteredOperators),
-        rawUserAnalytics: readonly(rawUserAnalytics),
+        // rawUserAnalytics: readonly(rawUserAnalytics), // Causes there to be crazy warnings in browser console
+        rawUserAnalytics,
         registeredOperators: readonly(registeredOperators),
         stakingRewards: readonly(stakingRewards),
         totalWalletBalance: readonly(totalWalletBalance),

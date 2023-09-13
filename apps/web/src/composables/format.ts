@@ -33,6 +33,6 @@ export default function useFormat() {
         convertString, 
         formatDecimalString,
         formatNumber,
-        trimAndLowercaseAddress
+        trimAndLowercaseAddress,
     }
 }
