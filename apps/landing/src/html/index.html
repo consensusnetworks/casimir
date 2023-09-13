@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Casimir - Ethereum Staking Platform</title>
+    <title>Casimir - Ethereum Staking Platform | Stake & Earn Rewards</title>
     <link rel="stylesheet" href="../styles/index.scss" />
     <script type="module" src="../scripts/index.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -24,119 +24,48 @@
         </a>
         <ul class="nav__links">
           <li>
-            <a
-              class="text-9"
-              href="https://github.com/consensusnetworks/casimir#casimir"
+            <a href="https://github.com/consensusnetworks/casimir#casimir"
+              >API Reference</a
             >
-              API Reference
-            </a>
           </li>
-          <li><a class="text-9" href="/blog">Blog</a></li>
-          <li><a class="text-9" href="/changelog">Changelog</a></li>
-          <li>
-            <a class="text-9" href="https://consensusnetworks.com">Company</a>
-          </li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/changelog">Changelog</a></li>
+          <li><a href="https://consensusnetworks.com">Company</a></li>
         </ul>
       </div>
     </nav>
+
     <section class="hero">
-      <div class="text__container">
-        <h1>
-          Self-custodial Ethereum staking<br />
-          made simple to stake & earn rewards.
-        </h1>
+      <div class="hero__container">
+        <div class="text__container">
+          <!-- <span class="pill">Beta</span> -->
+          <h1 class="text-3">
+            Self-custodial Ethereum staking <br />
+            <span class="text-3 highlight"> stake </span> &
+            <span class="text-3 highlight">earn</span> rewards
+          </h1>
+        </div>
         <div class="cta__container">
           <a href="https://app.dev.casimir.co" class="btn-primary">
             Launch App
           </a>
-          <a href="/" class="btn-text">Read the whitepaper</a>
+
+          <a href="https://app.dev.casimir.co" class="btn-secondary">
+            Contribute
+          </a>
         </div>
       </div>
       <div class="slots"></div>
     </section>
 
-    <section class="overview">
-      <span class="highlight">Minimized Risk & Maximized Rewards</span>
-      <h2>
-        Fine-grained operator analytics <br />updated to the latest network
-      </h2>
-      <div class="elements">
-        <div>
-          <div class="logo-wr">
-            <img src="../assets/key.svg" />
-          </div>
-          <span>Non custodial (DKG)</span>
-          <p>
-            Whether you have a team of 2 or 200, our shared team inboxes keep
-            everyone on the same page and in the loop.
-          </p>
-        </div>
-
-        <div>
-          <div class="logo-wr">
-            <img src="../assets/disc.svg" />
-          </div>
-          <span>No single point of failure (DVT)</span>
-          <p>
-            Whether you have a team of 2 or 200, our shared team inboxes keep
-            everyone on the same page and in the loop.
-          </p>
-        </div>
-
-        <div>
-          <div class="logo-wr">
-            <img src="../assets/users.svg" />
-          </div>
-          <span>Independent operators</span>
-          <p>
-            Whether you have a team of 2 or 200, our shared team inboxes keep
-            everyone on the same page and in the loop.
-          </p>
-        </div>
-      </div>
-
-      <div class="elements">
-        <div>
-          <div class="logo-wr">
-            <img src="../assets/lock.svg" />
-          </div>
-          <span>Full control of your ETH</span>
-          <p>
-            Whether you have a team of 2 or 200, our shared team inboxes keep
-            everyone on the same page and in the loop.
-          </p>
-        </div>
-
-        <div>
-          <div class="logo-wr">
-            <img src="../assets/credit-card.svg" />
-          </div>
-          <span>No minimums</span>
-          <p>
-            Whether you have a team of 2 or 200, our shared team inboxes keep
-            everyone on the same page and in the loop.
-          </p>
-        </div>
-
-        <div>
-          <div class="logo-wr">
-            <img src="../assets/flash.svg" />
-          </div>
-          <span>Permissionless</span>
-          <p>
-            Whether you have a team of 2 or 200, our shared team inboxes keep
-            everyone on the same page and in the loop.
-          </p>
-        </div>
-      </div>
-    </section>
-
     <section class="features">
-      <span class="highlight">Ethereum Staking</span>
-      <h1>
-        Simple self-custodial <br />
-        Ethereum staking
-      </h1>
+      <div class="overview__header">
+        <span class="highlight text-8">Ethereum Staking</span>
+        <h1>
+          Simple self-custodial <br />
+          Ethereum staking
+        </h1>
+      </div>
       <div class="features__container">
         <div class="card">
           <div class="top__rect">
@@ -187,6 +116,91 @@
               analysis.
             </span>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="overview">
+      <div class="overview__header">
+        <span class="highlight text-8">Minimized Risk & Maximized Rewards</span>
+        <h2>
+          Fine-grained operator analytics <br />updated to the latest network
+        </h2>
+      </div>
+
+      <div class="mock"></div>
+
+      <div class="overview__container">
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img src="../assets/key.svg" width="17" />
+            </div>
+            <span class="text-7 bold">Non custodial (DKG)</span>
+          </div>
+          <span class="text-r">
+            Whether you have a team of 2 or 200, our shared team inboxes keep.
+          </span>
+        </div>
+
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img src="../assets/disc.svg" width="17" />
+            </div>
+            <span class="text-7 bold">Non custodial (DKG)</span>
+          </div>
+          <span class="text-r">
+            Whether you have a team of 2 or 200, our shared team inboxes keep.
+          </span>
+        </div>
+
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img src="../assets/key.svg" width="17" />
+            </div>
+            <span class="text-7 bold">Non custodial (DKG)</span>
+          </div>
+          <span class="text-r">
+            Whether you have a team of 2 or 200, our shared team inboxes keep.
+          </span>
+        </div>
+
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img src="../assets/key.svg" width="17" />
+            </div>
+            <span class="text-7 bold">Non custodial (DKG)</span>
+          </div>
+          <span class="text-r">
+            Whether you have a team of 2 or 200, our shared team inboxes keep.
+          </span>
+        </div>
+
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img src="../assets/key.svg" width="17" />
+            </div>
+            <span class="text-7 bold">Non custodial (DKG)</span>
+          </div>
+          <span class="text-r">
+            Whether you have a team of 2 or 200, our shared team inboxes keep.
+          </span>
+        </div>
+
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img src="../assets/key.svg" width="17" />
+            </div>
+            <span class="text-7 bold">Non custodial (DKG)</span>
+          </div>
+          <span class="text-r">
+            Whether you have a team of 2 or 200, our shared team inboxes keep.
+          </span>
         </div>
       </div>
     </section>
@@ -442,15 +456,13 @@
       <span class="c">© 2021 Casimir. All rights reserved.</span>
       <ul>
         <li>
-          <a class="text-9" href="https://api.casimir.co">API Reference</a>
+          <a href="https://api.casimir.co">API Reference</a>
         </li>
-        <li><a class="text-9" href="/">Discord</a></li>
+        <li><a href="/">Discord</a></li>
         <li>
-          <a class="text-9" href="https://github.com/consensusnetworks/casimir"
-            >GitHub</a
-          >
+          <a href="https://github.com/consensusnetworks/casimir">GitHub</a>
         </li>
-        <li><a class="text-9" href="/">Contact Us</a></li>
+        <li><a href="/">Contact Us</a></li>
       </ul>
     </section>
   </body>
