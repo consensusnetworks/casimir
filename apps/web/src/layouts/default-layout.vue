@@ -85,7 +85,7 @@ onUnmounted(() =>{
 
         <div
           v-if="screenWidth >= 450"
-          class="flex flex-wrap items-center gap-50 h-full"
+          class="flex flex-wrap items-center gap-50 h-full "
         >
           <router-link
             to="/"
@@ -105,7 +105,7 @@ onUnmounted(() =>{
 
         <div
           v-else
-          class="nav_items nav_items_active relative"
+          class="nav_items nav_items_active relative "
         >
           <button
             class="flex items-center gap-[10px]"
@@ -163,7 +163,7 @@ onUnmounted(() =>{
           </div>
         </div>
 
-        <div class="flex items-center justify-between gap-[45px] 600s:gap-[10px] text-white">
+        <div class="flex items-center justify-between gap-[45px] 600s:gap-[10px] text-white h-[76px]">
           <button
             id="setting_modal_button"
           >
