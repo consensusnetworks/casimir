@@ -40,9 +40,13 @@ interface ICasimirPool {
     /*************/
 
     function depositRewards() external;
+
     function withdrawBalance(uint32[] memory blamePercents) external;
+
     function setOperatorIds(uint64[] memory operatorIds) external;
+
     function setReshares(uint256 newReshares) external;
+
     function setStatus(PoolStatus newStatus) external;
 
     /***********/

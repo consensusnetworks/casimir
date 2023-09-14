@@ -24,7 +24,10 @@ const contractFilters = Object.values(contracts).map((contract) => {
     }
 })
 
-const startBlock = getStartBlock(`${__dirname}/data/block.log`)
+let startBlock
+if (process.env.USE_LOGS === 'true') {
+    startBlock = getStartBlock('.log/block.log')
+}
 
 const eventsIterable = getEventsIterable({
     contractFilters,
@@ -48,10 +51,16 @@ void async function () {
             const handler = handlers[details.event]
             if (!handler) throw new Error(`No handler found for event ${details.event}`)
             await handler({ args })
-            updateStartBlock(`${__dirname}/data/block.log`, details.blockNumber)
+            if (process.env.USE_LOGS === 'true') {
+                updateStartBlock('.log/block.log', details.blockNumber)
+            }
         }
     } catch (error) {
-        updateErrorLog(`${__dirname}/data/error.log`, JSON.stringify(error, null, 4))
+        if (process.env.USE_LOGS === 'true') {
+            updateErrorLog('.log/error.log', (error as Error).message)
+        } else {
+            console.log(error)
+        }
         process.exit(1)
     }
 }()

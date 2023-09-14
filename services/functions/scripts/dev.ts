@@ -10,6 +10,7 @@ void async function() {
     if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error('No functions billing registry address provided')
     if (!process.env.FUNCTIONS_ORACLE_ADDRESS) throw new Error('No functions oracle address provided')
 
-    run('npx esno -r dotenv/config src/index.ts >> data/functions.log')
+    process.env.USE_LOGS = process.env.USE_LOGS || 'false'
+    run(`npx esno -r dotenv/config src/index.ts${process.env.USE_LOGS === 'true' ? ' >> .log/functions.log' : ''}`)
     console.log('🔗 Functions service started')
 }()

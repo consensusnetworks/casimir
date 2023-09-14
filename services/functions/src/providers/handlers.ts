@@ -42,7 +42,9 @@ export async function fulfillRequestHandler(input: HandlerInput): Promise<void> 
         //     }
         // )
         // await fulfillAndBill.wait()
-        updateExecutionLog(`${__dirname}/data/execution.log`, resultLog)
+        if (process.env.USE_LOGS === 'true') {
+            updateExecutionLog('.log/execution.log', resultLog)
+        }
     } else {
         throw new Error(resultLog)
     }
