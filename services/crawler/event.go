@@ -27,7 +27,6 @@ const (
 	WithdrawalFullfilled ActionType = "withdrawal_fullfilled"
 )
 
-// Event represents an event in casimir captured by the crawler
 type Event interface {
 	ChainType() Chain
 	NetworkType() Network
@@ -39,7 +38,6 @@ type Event interface {
 	Price() string
 }
 
-// TxEvent is to capture regular transaction and also a block event.
 type TxEvent struct {
 	Chain            Chain     `json:"chain"`
 	Network          Network   `json:"network"`
@@ -62,7 +60,6 @@ type TxEvent struct {
 	OperatorId       string    `json:"operator_id"`
 }
 
-// Action
 type Action struct {
 	Chain          Chain      `json:"chain"`
 	Network        Network    `json:"network"`

@@ -5,32 +5,46 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/big"
+	"log"
 	"sync"
 	"time"
 
+	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
+type State int
+
+const (
+	Ready State = iota + 1
+	Running
+	Stopped
+)
+
 type EthereumCrawler struct {
-	Logger          *Logger
 	EthereumService *EthereumService
 	ContractService *ContractService
-	Config          *Config
 	Glue            *GlueService
 	S3              *S3Service
-	Wg              *sync.WaitGroup
-	Mu              *sync.Mutex
+	Logger          *Logger
+	Config          Config
+	Wg              sync.WaitGroup
+	Mu              sync.Mutex
 	Sema            chan struct{}
+	Unprocessed     []uint64  // blocks that failed to process
+	Start           time.Time // the time when the crawler was started
+	StartedAtBlock  uint64    // the block when the crawler was started
 	Version         int
 	Env             Env
-	Start           time.Time
 	Elapsed         time.Duration
-	StartBlock      uint64
-	Unprocessed     []uint64
+	State
 }
 
-func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
+type Task struct {
+	Block uint64
+}
+
+func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 	logger, err := NewConsoleLogger()
 
 	if err != nil {
@@ -73,14 +87,6 @@ func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
 
 	l.Info("successfully introspected glue tables")
 
-	for _, db := range glue.Databases {
-		l.Infof("database: %s", *db.Name)
-	}
-
-	for _, table := range glue.Tables {
-		l.Infof("table: %s", *table.Name)
-	}
-
 	s3v, err := NewS3Service(awsConfig)
 
 	if err != nil {
@@ -105,19 +111,28 @@ func NewEthereumCrawler(config *Config) (*EthereumCrawler, error) {
 
 	l.Info("created contract service")
 
+	head, err := eths.Client.HeaderByNumber(context.Background(), nil)
+
+	if err != nil {
+		l.Infof("failed to get head block: %s", err.Error())
+		return nil, err
+	}
+
 	return &EthereumCrawler{
 		Logger:          logger,
 		EthereumService: eths,
 		ContractService: cs,
 		Glue:            glue,
 		S3:              s3v,
-		Wg:              &sync.WaitGroup{},
+		Wg:              sync.WaitGroup{},
 		Start:           time.Now(),
 		Sema:            make(chan struct{}, config.ConcurrencyLimit),
 		Version:         rv,
 		Config:          config,
+		State:           Ready,
+		StartedAtBlock:  uint64(head.Number.Int64()),
 		// TODO: source this from env var
-		StartBlock: 9564114,
+		// StartBlock: 9564114,
 	}, nil
 }
 
@@ -399,19 +414,28 @@ func (c *EthereumCrawler) UploadBlockEvents(result *BlockEvents) error {
 	return nil
 }
 
-func GasFeeInETH(gasPrice *big.Int, gasLimit uint64) float64 {
-	gasPriceFloat64 := new(big.Float).SetInt(gasPrice)
-	gasLimitInt64 := int64(gasLimit)
+func (c *EthereumCrawler) Stream() error {
+	l := c.Logger.Sugar()
 
-	gasFee := new(big.Float).Mul(gasPriceFloat64, big.NewFloat(float64(gasLimitInt64)))
-	gasFeeFloat64, _ := gasFee.Float64()
+	l.Infof("starting stream from ")
 
-	return gasFeeFloat64 / 1e18
-}
+	query := ethereum.FilterQuery{}
 
-func WeiToETH(wei *big.Int) float64 {
-	weiEth := big.NewInt(1e18)
-	eth := new(big.Float).Quo(new(big.Float).SetInt(wei), new(big.Float).SetInt(weiEth))
-	float, _ := eth.Float64()
-	return float
+	logs := make(chan types.Log)
+
+	sub, err := c.EthereumService.Client.SubscribeFilterLogs(context.Background(), query, logs)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for {
+		select {
+		case err := <-sub.Err():
+			log.Fatal(err)
+		case vLog := <-logs:
+			fmt.Println(vLog) // pointer to event log
+			l.Infow("new log", "block", vLog.BlockNumber, "tx", vLog.TxHash, "topics", vLog.Topics)
+		}
+	}
 }

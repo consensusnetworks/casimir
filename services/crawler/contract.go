@@ -16,16 +16,15 @@ import (
 
 // ContractService handles all calls and operations with the deployed Casimir contract
 type ContractService struct {
-	// includes the tx and filterer
-	Caller          *Main
-	ContractAddress common.Address
-	ABI             abi.ABI
-	Eths            *EthereumService
-	// the block when the contract was deployed
-	StartBlock uint64
+	Caller         *Main // includes the tx and filterer
+	CasimirManager common.Address
+	ABI            abi.ABI
+	Eths           *EthereumService
+	StartBlock     uint64 // the block when the contract was deployed
+	Timeout        time.Duration
 }
 
-// NewContractService creates a new contract service used to call the contract
+// NewContractService calls the generated contract code and binds the passed Ethereum client
 func NewContractService(eths *EthereumService) (*ContractService, error) {
 	abi, err := abi.JSON(strings.NewReader(MainMetaData.ABI))
 
@@ -33,37 +32,39 @@ func NewContractService(eths *EthereumService) (*ContractService, error) {
 		return nil, err
 	}
 
-	addr := common.HexToAddress("0xc58C19B841986411F98d919e2588EFb5D0632dd4")
+	// local
+	casimirManager := common.HexToAddress("0xfCd243D10C7E578a01FC8b7E0cFA64bC6d98c254")
 
-	caller, err := NewMain(addr, eths.Client)
+	caller, err := NewMain(casimirManager, eths.Client)
 
 	if err != nil {
 		return nil, err
 	}
 
 	cs := ContractService{
-		ContractAddress: addr,
-		StartBlock:      uint64(9602550),
-		ABI:             abi,
-		Caller:          caller,
-		Eths:            eths,
+		CasimirManager: casimirManager,
+		StartBlock:     uint64(9602550),
+		ABI:            abi,
+		Caller:         caller,
+		Eths:           eths,
+		Timeout:        3 * time.Second,
 	}
 
 	if !cs.IsLive() {
-		return nil, fmt.Errorf("it seems like the contract code is not deployed at %s", addr.Hex())
+		return nil, fmt.Errorf("it seems like the contract code is not deployed at %s", casimirManager.Hex())
 	}
 
 	return &cs, nil
 }
 
-// IsLive is just to ping the contract before moving forward
+// IsLive pings the contract before moving forward with any calls
 func (cs *ContractService) IsLive() bool {
 	_, err := cs.Caller.LatestActiveBalance(&bind.CallOpts{})
 	return err == nil
 }
 
-func (cs ContractService) GetUserStake(addr common.Address) (*big.Int, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (cs *ContractService) GetUserStake(addr common.Address) (*big.Int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), cs.Timeout)
 
 	defer cancel()
 
@@ -82,10 +83,10 @@ func (cs ContractService) GetUserStake(addr common.Address) (*big.Int, error) {
 
 // EventLogs queries for all contract events starting from the  StartBlock (when contract was deployed)
 // and decodes (unpack) the logs using the ABI
-func (cs ContractService) EventLogs() (*[]interface{}, error) {
+func (cs *ContractService) EventLogs() (*[]Event, error) {
 	filter := ethereum.FilterQuery{
 		FromBlock: big.NewInt(int64(cs.StartBlock)),
-		Addresses: []common.Address{cs.ContractAddress},
+		Addresses: []common.Address{cs.CasimirManager},
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -98,9 +99,13 @@ func (cs ContractService) EventLogs() (*[]interface{}, error) {
 		return nil, err
 	}
 
-	_, err = cs.ParseLogs(logs)
+	events, err := cs.ParseLogs(logs)
 
-	return nil, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return events, nil
 }
 
 // FilterLogs parses the raw logs based on the event type (topic[0]).

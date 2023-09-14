@@ -22,13 +22,14 @@ const (
 	Prod
 )
 
+// Config is the configuration used by the streamer and crawler
 type Config struct {
 	Chain            Chain    `json:"chain"`
 	Network          Network  `json:"network"`
 	URL              *url.URL `json:"url"`
 	User             string   `json:"user"`
 	BatchSize        uint64   `json:"batch_size"`
-	ConcurrencyLimit uint64   `json:"concurrent"`
+	ConcurrencyLimit uint64   `json:"concurrency_limit"`
 	Env              Env      `json:"env"`
 	Stream           bool     `json:"stream"`
 }
@@ -37,11 +38,11 @@ type PkgJSON struct {
 	Version string `json:"version"`
 }
 
-func LoadConfig(ctx *cli.Context) (*Config, error) {
+func LoadConfig(ctx *cli.Context) (Config, error) {
 	err := LoadEnv()
 
 	if err != nil {
-		return nil, err
+		return Config{}, err
 	}
 
 	rpc := os.Getenv("ETHEREUM_RPC_URL")
@@ -49,13 +50,13 @@ func LoadConfig(ctx *cli.Context) (*Config, error) {
 	url, err := url.Parse(rpc)
 
 	if err != nil {
-		return nil, err
+		return Config{}, err
 	}
 
 	user, err := user.Current()
 
 	if err != nil {
-		return nil, err
+		return Config{}, err
 	}
 
 	net := EthereumGoerli
@@ -91,7 +92,7 @@ func LoadConfig(ctx *cli.Context) (*Config, error) {
 		config.Env = Prod
 	}
 
-	return &config, nil
+	return config, nil
 }
 
 func ModuleDir() (string, error) {

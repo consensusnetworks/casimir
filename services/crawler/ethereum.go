@@ -174,6 +174,23 @@ func (e *EthereumService) Block(b uint64) (*types.Block, error) {
 	return block, nil
 }
 
+func GasFeeInETH(gasPrice *big.Int, gasLimit uint64) float64 {
+	gasPriceFloat64 := new(big.Float).SetInt(gasPrice)
+	gasLimitInt64 := int64(gasLimit)
+
+	gasFee := new(big.Float).Mul(gasPriceFloat64, big.NewFloat(float64(gasLimitInt64)))
+	gasFeeFloat64, _ := gasFee.Float64()
+
+	return gasFeeFloat64 / 1e18
+}
+
+func WeiToETH(wei *big.Int) float64 {
+	weiEth := big.NewInt(1e18)
+	eth := new(big.Float).Quo(new(big.Float).SetInt(wei), new(big.Float).SetInt(weiEth))
+	float, _ := eth.Float64()
+	return float
+}
+
 // func (e *EthereumService) Transactions(b uint64) ([]*types.Transaction, error) {
 // 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 

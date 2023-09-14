@@ -41,17 +41,23 @@ func Run(args []string) error {
 				return err
 			}
 
-			_, err = NewEthereumCrawler(config)
+			crawler, err := NewEthereumCrawler(config)
 
 			if err != nil {
 				return err
 			}
 
-			// _, err = cc.ContractService.EventLogs()
+			// _, err = crawler.ContractService.EventLogs()
 
 			// if err != nil {
-			// 	return err
+			// return err
 			// }
+
+			err = crawler.Stream()
+
+			if err != nil {
+				return err
+			}
 
 			return nil
 		},
