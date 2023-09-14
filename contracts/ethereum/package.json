@@ -1,6 +1,6 @@
 {
     "name": "@casimir/ethereum",
-    "version": "1.0.0",
+    "version": "1.0.0-beta.0",
     "scripts": {
         "build": "npx hardhat compile",
         "build:docs": "npx esno scripts/docs.ts",

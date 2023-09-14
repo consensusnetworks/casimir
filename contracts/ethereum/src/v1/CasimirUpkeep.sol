@@ -72,6 +72,8 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
     string[] public defaultRequestArgs;
     /** Fulfillment gas limit */
     uint32 public fulfillGasLimit;
+    /** Storage gap */
+    uint256[50] private __gap;
 
     // @custom:oz-upgrades-unsafe-allow constructor
     constructor() FunctionsClient(address(0)) {

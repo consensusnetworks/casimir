@@ -145,6 +145,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
     uint256 public requestedExits;
     /** Slashed pool count */
     uint256 private forcedExits;
+    /** Storage gap */
+    uint256[50] private __gap;
 
     /*************/
     /* Modifiers */

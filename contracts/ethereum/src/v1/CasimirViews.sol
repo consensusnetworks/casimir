@@ -26,6 +26,8 @@ contract CasimirViews is ICasimirViews, Initializable {
     ICasimirManager private manager;
     /** Registry contract */
     ICasimirRegistry private registry;
+    /** Storage gap */
+    uint256[50] private __gap;
 
     // @custom:oz-upgrades-unsafe-allow constructor
     constructor() {

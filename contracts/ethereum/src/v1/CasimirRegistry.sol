@@ -41,6 +41,8 @@ contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable,
     mapping(uint64 => Operator) private operators;
     /** Operator pools */
     mapping(uint64 => mapping(uint32 => bool)) private operatorPools;
+    /** Storage gap */
+    uint256[50] private __gap;
 
     /*************/
     /* Modifiers */

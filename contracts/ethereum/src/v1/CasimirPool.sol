@@ -38,6 +38,8 @@ contract CasimirPool is ICasimirPool, Initializable, OwnableUpgradeable, Reentra
     uint256 private reshares;
     /** Status */
     PoolStatus private status;
+    /** Storage gap */
+    uint256[50] private __gap;
 
     // @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
