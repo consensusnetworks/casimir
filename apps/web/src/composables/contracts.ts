@@ -211,7 +211,7 @@ export default function useContracts() {
         ]
     
         for (const poolId of poolIds) {
-            const poolDetails = await views.getPoolDetails(poolId)
+            const poolDetails = await views.getPool(poolId)
             const pool = {
                 ...poolDetails,
                 operatorIds: poolDetails.operatorIds.map(id => id.toNumber()),

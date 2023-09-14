@@ -95,7 +95,7 @@ interface ICasimirManager {
         bool processed
     ) external;
     function rebalanceStake(
-        uint256 activeBalance, 
+        uint256 beaconBalance, 
         uint256 sweptBalance, 
         uint256 activatedDeposits,
         uint256 completedExits
@@ -155,7 +155,7 @@ interface ICasimirManager {
 
     function functionsId() external view returns (uint64);
     function upkeepId() external view returns (uint256);    
-    function latestActiveBalance() external view returns (uint256);
+    function latestBeaconBalance() external view returns (uint256);
     function reservedFeeBalance() external view returns (uint256);
     function FEE_PERCENT() external view returns (uint32);
     function requestedWithdrawalBalance() external view returns (uint256);

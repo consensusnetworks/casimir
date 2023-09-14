@@ -28,7 +28,7 @@ void async function () {
     process.env.UNISWAP_V3_FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
     process.env.WETH_TOKEN_ADDRESS = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
 
-    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [ 156, 157, 158, 159 ]
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [156, 157, 158, 159]
     if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
 
     const accountPath = 'm/44\'/60\'/0\'/0/1'

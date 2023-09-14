@@ -15,7 +15,7 @@ upgrades.silenceWarnings()
  * Deploy contracts to local network and run local events and oracle handling
  */
 void async function () {
-    const [ , daoOracle, donTransmitter, firstUser ] = await ethers.getSigners()
+    const [, daoOracle, donTransmitter, firstUser] = await ethers.getSigners()
 
     const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')
     const functionsOracleFactory = await functionsOracleFactoryFactory.deploy() as FunctionsOracleFactory
@@ -164,8 +164,8 @@ void async function () {
                     const exitingPoolCount = await manager.requestedExits()
                     const sweptExitedBalance = exitingPoolCount.toNumber() * 32
                     const rewardBalance = rewardPerValidator * stakedPoolIds.length
-                    const latestActiveBalance = await manager.latestActiveBalance()
-                    const nextActiveBalance = round(parseFloat(ethers.utils.formatEther(latestActiveBalance)) + activatedBalance + rewardBalance - sweptRewardBalance - sweptExitedBalance, 10)
+                    const latestBeaconBalance = await manager.latestBeaconBalance()
+                    const nextBeaconBalance = round(parseFloat(ethers.utils.formatEther(latestBeaconBalance)) + activatedBalance + rewardBalance - sweptRewardBalance - sweptExitedBalance, 10)
                     const nextActivatedDeposits = (await manager.getPendingPoolIds()).length
                     for (const poolId of lastStakedPoolIds) {
                         const poolAddress = await manager.getPoolAddress(poolId)
@@ -177,7 +177,7 @@ void async function () {
                     const endIndex = ethers.BigNumber.from(stakedPoolIds.length)
                     const compoundablePoolIds = await views.getCompoundablePoolIds(startIndex, endIndex)
                     const reportValues = {
-                        activeBalance: nextActiveBalance,
+                        beaconBalance: nextBeaconBalance,
                         sweptBalance: sweptRewardBalance + sweptExitedBalance,
                         activatedDeposits: nextActivatedDeposits,
                         forcedExits: 0,
@@ -195,7 +195,7 @@ void async function () {
                     if (remaining) {
                         for (const poolId of stakedPoolIds) {
                             if (remaining === 0) break
-                            const poolDetails = await views.getPoolDetails(poolId)
+                            const poolDetails = await views.getPool(poolId)
                             if (poolDetails.status === PoolStatus.EXITING_FORCED || poolDetails.status === PoolStatus.EXITING_REQUESTED) {
                                 remaining--
                                 const poolAddress = await manager.getPoolAddress(poolId)

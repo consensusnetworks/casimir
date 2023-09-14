@@ -99,10 +99,10 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
     uint64 public functionsId;
     /** Chainlink upkeep subscription ID */
     uint256 public upkeepId;
-    /** Latest active balance */
-    uint256 public latestActiveBalance;
-    /** Latest active balance after fees */
-    uint256 private latestActiveBalanceAfterFees;
+    /** Latest beacon chain balance */
+    uint256 public latestBeaconBalance;
+    /** Latest beacon chain balance after fees */
+    uint256 private latestBeaconBalanceAfterFees;
     /** Latest active rewards */
     int256 private latestActiveRewardBalance;
     /** Exited pool count */
@@ -485,13 +485,13 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
 
     /**
      * @notice Rebalance the rewards to stake ratio and redistribute swept rewards
-     * @param activeBalance The active balance
+     * @param beaconBalance The beacon chain balance
      * @param sweptBalance The swept balance
      * @param activatedDeposits The count of activated deposits
      * @param completedExits The count of withdrawn exits
      */
     function rebalanceStake(
-        uint256 activeBalance,
+        uint256 beaconBalance,
         uint256 sweptBalance,
         uint256 activatedDeposits,
         uint256 completedExits
@@ -500,7 +500,7 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         uint256 expectedActivatedBalance = activatedDeposits * POOL_CAPACITY;
         uint256 expectedExitedBalance = completedExits * POOL_CAPACITY;
         uint256 expectedEffectiveBalance = stakedPoolIds.length * POOL_CAPACITY;
-        int256 rewards = int256(activeBalance + sweptBalance + finalizableRecoveredBalance) - int256(expectedEffectiveBalance + expectedExitedBalance);
+        int256 rewards = int256(beaconBalance + sweptBalance + finalizableRecoveredBalance) - int256(expectedEffectiveBalance + expectedExitedBalance);
         int256 change = rewards - latestActiveRewardBalance;
         if (change > 0) {
             uint256 gain = uint256(change);
@@ -511,7 +511,7 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
                     gainAfterFees,
                     getTotalStake()
                 );
-                latestActiveBalanceAfterFees += gainAfterFees;
+                latestBeaconBalanceAfterFees += gainAfterFees;
 
                 emit StakeRebalanced(gainAfterFees);
             } else {
@@ -520,25 +520,25 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
                     gain,
                     getTotalStake()
                 );
-                latestActiveBalanceAfterFees += gain;
+                latestBeaconBalanceAfterFees += gain;
 
                 emit StakeRebalanced(gain);
             }
         } else if (change < 0) {
             uint256 loss = uint256(-change);
             stakeRatioSum -= MathUpgradeable.mulDiv(stakeRatioSum, loss, getTotalStake());
-            latestActiveBalanceAfterFees -= loss;
+            latestBeaconBalanceAfterFees -= loss;
 
             emit StakeRebalanced(loss);
         }
         int256 sweptRewards = int256(sweptBalance + finalizableRecoveredBalance) - int256(finalizableExitedBalance);
         if (sweptRewards > 0) {
-            latestActiveBalanceAfterFees -= subtractFees(uint256(sweptRewards));
+            latestBeaconBalanceAfterFees -= subtractFees(uint256(sweptRewards));
         }
-        latestActiveBalanceAfterFees -= finalizableExitedBalance;
-        latestActiveBalanceAfterFees += expectedActivatedBalance;
+        latestBeaconBalanceAfterFees -= finalizableExitedBalance;
+        latestBeaconBalanceAfterFees += expectedActivatedBalance;
         latestActiveRewardBalance = rewards - sweptRewards;
-        latestActiveBalance = activeBalance;
+        latestBeaconBalance = beaconBalance;
         finalizableExitedBalance = 0;
         finalizableRecoveredBalance = 0;
         finalizableCompletedExits = 0;
@@ -1061,7 +1061,7 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
     function getTotalStake() public view returns (uint256 totalStake) {
         totalStake =
             getBufferedBalance() +
-            latestActiveBalanceAfterFees -
+            latestBeaconBalanceAfterFees -
             requestedWithdrawalBalance;
     }
 

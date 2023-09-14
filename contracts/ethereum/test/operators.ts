@@ -25,7 +25,7 @@ describe('Operators', async function () {
 
     it('First initiated deposit uses 4 eligible operators', async function () {
         const { manager, registry, views, daoOracle } = await loadFixture(deploymentFixture)
-        const [ firstUser ] = await ethers.getSigners()
+        const [firstUser] = await ethers.getSigners()
 
         const depositAmount = round(32 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
         const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
@@ -46,7 +46,7 @@ describe('Operators', async function () {
 
     it('Operator deregistration with 1 pool emits 1 reshare request', async function () {
         const { manager, registry, ssvViews, daoOracle } = await loadFixture(deploymentFixture)
-        const [ firstUser ] = await ethers.getSigners()
+        const [firstUser] = await ethers.getSigners()
 
         const depositAmount = round(32 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
         const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
@@ -60,15 +60,15 @@ describe('Operators', async function () {
         const operatorOwnerSigner = ethers.provider.getSigner(operatorOwnerAddress)
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
-            params: [ operatorOwnerAddress ]
+            params: [operatorOwnerAddress]
         })
         const requestDeactivation = await registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
         await requestDeactivation.wait()
         const deregisteringOperator = await registry.getOperator(deregisteringOperatorId)
         const resharesRequestedEvents = await manager.queryFilter(manager.filters.ResharesRequested(), -1)
         const resharesRequestedEvent = resharesRequestedEvents[0]
-        
-        expect(deregisteringOperator.resharing).equal(true)        
+
+        expect(deregisteringOperator.resharing).equal(true)
         expect(resharesRequestedEvents.length).equal(1)
         expect(resharesRequestedEvent.args?.operatorId.toNumber()).equal(deregisteringOperatorId.toNumber())
     })
@@ -78,11 +78,11 @@ describe('Operators', async function () {
 
         const operatorIds = await registry.getOperatorIds()
         const deregisteringOperatorId = operatorIds[0]
-        const [ operatorOwnerAddress ] = await ssvViews.getOperatorById(deregisteringOperatorId)
+        const [operatorOwnerAddress] = await ssvViews.getOperatorById(deregisteringOperatorId)
         const operatorOwnerSigner = ethers.provider.getSigner(operatorOwnerAddress)
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
-            params: [ operatorOwnerAddress ]
+            params: [operatorOwnerAddress]
         })
         const requestDeactivation = await registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
         await requestDeactivation.wait()
@@ -90,7 +90,7 @@ describe('Operators', async function () {
         const resharesRequestedEvents = await manager.queryFilter(manager.filters.ResharesRequested(), -1)
 
         expect(deregisteringOperator.active).equal(false)
-        expect(deregisteringOperator.resharing).equal(false)        
+        expect(deregisteringOperator.resharing).equal(false)
         expect(resharesRequestedEvents.length).equal(0)
 
         const operatorOwnerBalanceBefore = await ethers.provider.getBalance(operatorOwnerAddress)
@@ -98,7 +98,7 @@ describe('Operators', async function () {
         await requestWithdrawal.wait()
         const operatorOwnerBalanceAfter = await ethers.provider.getBalance(operatorOwnerAddress)
         const deregisteredOperator = await registry.getOperator(deregisteringOperatorId)
-        
+
         expect(deregisteredOperator.collateral.toString()).equal('0')
         expect(ethers.utils.formatEther(operatorOwnerBalanceAfter.sub(operatorOwnerBalanceBefore).toString())).contains('9.9')
     })
@@ -116,17 +116,17 @@ describe('Operators', async function () {
         const currentBalance = await ethers.provider.getBalance(withdrawnPoolAddress)
         const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitedBalance.toString()))
         await setBalance(withdrawnPoolAddress, nextBalance)
-    
+
         await time.increase(time.duration.days(1))
         await runUpkeep({ donTransmitter, upkeep })
 
         const reportValues = {
-            activeBalance: 0,
+            beaconBalance: 0,
             sweptBalance: sweptExitedBalance,
             activatedDeposits: 0,
             forcedExits: 0,
             completedExits: 1,
-            compoundablePoolIds: [ 0, 0, 0, 0, 0 ]
+            compoundablePoolIds: [0, 0, 0, 0, 0]
         }
 
         await fulfillReport({

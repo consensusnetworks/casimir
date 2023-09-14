@@ -9,7 +9,7 @@ import { fulfillReport, runUpkeep } from '../helpers/upkeep'
 describe('Users', async function () {
     it('User\'s 16.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
         const { manager } = await loadFixture(deploymentFixture)
-        const [ firstUser ] = await ethers.getSigners()
+        const [firstUser] = await ethers.getSigners()
 
         const depositAmount = round(16 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
         const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
@@ -36,7 +36,7 @@ describe('Users', async function () {
 
     it('User\'s 64.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
         const { manager, upkeep, views, functionsBillingRegistry, daoOracle, donTransmitter } = await loadFixture(deploymentFixture)
-        const [ firstUser ] = await ethers.getSigners()
+        const [firstUser] = await ethers.getSigners()
 
         const depositAmount = round(64 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
         const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
@@ -53,19 +53,19 @@ describe('Users', async function () {
         await initiateDepositHandler({ manager, signer: daoOracle })
 
         const pendingPoolIds = await manager.getPendingPoolIds()
-        
+
         expect(pendingPoolIds.length).equal(2)
 
-        await time.increase(time.duration.days(1))   
+        await time.increase(time.duration.days(1))
         await runUpkeep({ donTransmitter, upkeep })
 
         const firstReportValues = {
-            activeBalance: 64,
+            beaconBalance: 64,
             sweptBalance: 0,
             activatedDeposits: 2,
             forcedExits: 0,
             completedExits: 0,
-            compoundablePoolIds: [ 0, 0, 0, 0, 0 ]
+            compoundablePoolIds: [0, 0, 0, 0, 0]
         }
 
         await fulfillReport({
@@ -78,7 +78,7 @@ describe('Users', async function () {
         await runUpkeep({ donTransmitter, upkeep })
 
         const stakedPoolIds = await manager.getStakedPoolIds()
-        
+
         expect(stakedPoolIds.length).equal(2)
 
         let stake = await manager.getTotalStake()
@@ -97,17 +97,17 @@ describe('Users', async function () {
         expect(ethers.utils.formatEther(stake)).equal('32.0')
         expect(ethers.utils.formatEther(userStake)).equal('32.0')
 
-        await time.increase(time.duration.days(1))   
+        await time.increase(time.duration.days(1))
         await runUpkeep({ donTransmitter, upkeep })
 
         const sweptExitedBalance = 32
         const secondReportValues = {
-            activeBalance: 32,
+            beaconBalance: 32,
             sweptBalance: sweptExitedBalance,
             activatedDeposits: 0,
             forcedExits: 0,
             completedExits: 1,
-            compoundablePoolIds: [ 0, 0, 0, 0, 0 ]
+            compoundablePoolIds: [0, 0, 0, 0, 0]
         }
 
         await fulfillReport({
@@ -139,7 +139,7 @@ describe('Users', async function () {
 
     it('User\'s 16.0 stake and five withdrawal requests fails on the 6th daily action', async function () {
         const { manager } = await loadFixture(deploymentFixture)
-        const [ firstUser ] = await ethers.getSigners()
+        const [firstUser] = await ethers.getSigners()
 
         const depositAmount = round(16 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
         const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })

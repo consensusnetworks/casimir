@@ -7,7 +7,7 @@ upgrades.silenceWarnings()
  * Deploy ethereum contracts
 */
 void async function () {
-    const [ , daoOracle, donTransmitter ] = await ethers.getSigners()
+    const [, daoOracle, donTransmitter] = await ethers.getSigners()
 
     const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')
     const functionsOracleFactory = await functionsOracleFactoryFactory.deploy()

@@ -215,7 +215,7 @@ export async function initiateResharesHandler(input: HandlerInput) {
     ]
 
     for (const poolId of poolIds) {
-        const poolDetails = await views.getPoolDetails(poolId)
+        const poolDetails = await views.getPool(poolId)
         const oldOperatorIds = poolDetails.operatorIds.map(id => id.toNumber())
         if (oldOperatorIds.includes(operatorId)) {
             const poolAddress = await manager.getPoolAddress(poolId)
@@ -323,7 +323,7 @@ export async function initiateExitsHandler(input: HandlerInput) {
     const views = new ethers.Contract(config.viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     // Get pool to exit
-    const poolDetails = await views.getPoolDetails(poolId)
+    const poolDetails = await views.getPool(poolId)
 
     // Get operators to sign exit
 }
@@ -342,7 +342,7 @@ export async function reportForcedExitsHandler(input: HandlerInput) {
     let remaining = count
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
-        const poolDetails = await views.getPoolDetails(poolId)
+        const poolDetails = await views.getPool(poolId)
         if (poolDetails.status === PoolStatus.ACTIVE) {
             remaining--
             const reportForcedExit = await manager.reportForcedExit(
@@ -374,7 +374,7 @@ export async function reportCompletedExitsHandler(input: HandlerInput) {
     let poolIndex = 0
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
-        const poolDetails = await views.getPoolDetails(poolId)
+        const poolDetails = await views.getPool(poolId)
         if (poolDetails.status === PoolStatus.EXITING_FORCED || poolDetails.status === PoolStatus.EXITING_REQUESTED) {
             remaining--
             

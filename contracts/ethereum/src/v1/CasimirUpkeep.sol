@@ -48,8 +48,8 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
     uint256 private reportTimestamp;
     /** Current report swept balance */
     uint256 private reportSweptBalance;
-    /** Current report active balance */
-    uint256 private reportActiveBalance;
+    /** Current report beacon chain balance */
+    uint256 private reportBeaconBalance;
     /** Current report deposit activations */
     uint256 private reportActivatedDeposits;
     /** Current report unexpected exits */
@@ -153,9 +153,9 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
                 requestSource
             );
             string[] memory requestArgs = defaultRequestArgs;
-            requestArgs[6] = StringsUpgradeable.toString(previousReportTimestamp);
-            requestArgs[7] = StringsUpgradeable.toString(reportTimestamp);
-            requestArgs[8] = StringsUpgradeable.toString(reportRequestBlock);
+            requestArgs[7] = StringsUpgradeable.toString(previousReportTimestamp);
+            requestArgs[8] = StringsUpgradeable.toString(reportTimestamp);
+            requestArgs[9] = StringsUpgradeable.toString(reportRequestBlock);
             sendFunctionsRequest(request, requestArgs, RequestType.BALANCES);
             sendFunctionsRequest(request, requestArgs, RequestType.DETAILS);
         } else {
@@ -174,13 +174,13 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
             if (!manager.getPendingWithdrawalEligibility(0, reportPeriod) && finalizableActivatedDeposits == 0) {
                 reportStatus = ReportStatus.FINALIZED;
                 manager.rebalanceStake({
-                    activeBalance: reportActiveBalance,
+                    beaconBalance: reportBeaconBalance,
                     sweptBalance: reportSweptBalance,
                     activatedDeposits: reportActivatedDeposits,
                     completedExits: reportCompletedExits
                 });
                 manager.compoundRewards(reportCompoundablePoolIds);
-                reportActiveBalance = 0;
+                reportBeaconBalance = 0;
                 reportActivatedDeposits = 0;
                 reportForcedExits = 0;
                 reportCompletedExits = 0;
@@ -235,10 +235,10 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
             reportRemainingRequests--;
             if (requestType == RequestType.BALANCES) {
                 (
-                    uint128 activeBalance,
+                    uint128 beaconBalance,
                     uint128 sweptBalance
                 ) = abi.decode(response, (uint128, uint128));
-                reportActiveBalance = uint256(activeBalance);
+                reportBeaconBalance = uint256(beaconBalance);
                 reportSweptBalance = uint256(sweptBalance);
             } else {
                 (
@@ -279,7 +279,7 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
         string[] memory requestArgs,
         RequestType requestType
     ) private {
-        requestArgs[9] = StringsUpgradeable.toString(uint256(requestType));
+        requestArgs[10] = StringsUpgradeable.toString(uint256(requestType));
         request.addArgs(requestArgs);
         bytes32 requestId = sendRequest(request, manager.functionsId(), fulfillGasLimit);
         reportRequests[requestId] = requestType;

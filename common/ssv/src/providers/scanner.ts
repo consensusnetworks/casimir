@@ -32,7 +32,7 @@ export class Scanner {
      */
     async getCluster(input: GetClusterInput): Promise<Cluster> {
         const { ownerAddress, operatorIds } = input
-        const eventFilters = [
+        const contractFilters = [
             this.ssvClusters.filters.ClusterDeposited(ownerAddress),
             this.ssvClusters.filters.ClusterWithdrawn(ownerAddress),
             this.ssvClusters.filters.ValidatorAdded(ownerAddress),
@@ -49,7 +49,7 @@ export class Scanner {
         while (!cluster && fromBlock > 0) {
             try {
                 const items = []
-                for (const filter of eventFilters) {
+                for (const filter of contractFilters) {
                     const filteredItems = await this.ssvClusters.queryFilter(filter, fromBlock, toBlock)
                     items.push(...filteredItems)
                 }

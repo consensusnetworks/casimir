@@ -10,7 +10,7 @@ import 'hardhat-abi-exporter'
 
 // Seed is provided
 const mnemonic = process.env.BIP39_SEED as string
-const hid = { mnemonic, count: 10, accountsBalance: '1000000000000000000000' }
+const hid = { mnemonic, count: 10 }
 
 // Mining interval is provided in seconds
 const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
@@ -115,7 +115,7 @@ const config: HardhatUserConfig = {
     },
     networks: {
         hardhat: {
-            accounts: mnemonic ? hid : undefined,
+            accounts: mnemonic ? { ...hid, accountsBalance: '1000000000000000000000' } : undefined,
             chainId: forkChainId || 1337,
             forking: forkUrl ? forkConfig : undefined,
             mining: miningInterval ? mining : { auto: true },

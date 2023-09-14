@@ -13,23 +13,33 @@ interface ICasimirViews {
         uint256 startIndex,
         uint256 endIndex
     ) external view returns (uint32[5] memory);
+
     function getDepositedPoolCount()
         external
         view
         returns (uint256 depositedPoolCount);
+
+    function getDepositedPoolPublicKeys(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (bytes[] memory);
+
+    function getDepositedPoolStatuses(
+        uint256 startIndex,
+        uint256 endIndex
+    ) external view returns (ICasimirPool.PoolStatus[] memory);
+
     function getOperators(
         uint256 startIndex,
         uint256 endIndex
     ) external view returns (ICasimirRegistry.Operator[] memory);
-    function getPoolDetails(
+
+    function getPool(
         uint32 poolId
     ) external view returns (ICasimirPool.PoolDetails memory);
+
     function getSweptBalance(
         uint256 startIndex,
         uint256 endIndex
     ) external view returns (uint128);
-    function getValidatorPublicKeys(
-        uint256 startIndex,
-        uint256 endIndex
-    ) external view returns (bytes[] memory);
 }

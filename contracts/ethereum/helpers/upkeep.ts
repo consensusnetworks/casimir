@@ -22,7 +22,7 @@ export async function runUpkeep({
 }
 
 export interface ReportValues {
-    activeBalance: number
+    beaconBalance: number
     sweptBalance: number
     activatedDeposits: number
     forcedExits: number
@@ -41,14 +41,14 @@ export async function fulfillReport({
     functionsBillingRegistry: FunctionsBillingRegistry,
     values: ReportValues
 }) {
-    const { activeBalance, sweptBalance, activatedDeposits, forcedExits, completedExits, compoundablePoolIds } = values
+    const { beaconBalance, sweptBalance, activatedDeposits, forcedExits, completedExits, compoundablePoolIds } = values
 
     const requestIds = (await upkeep.queryFilter(upkeep.filters.RequestSent())).slice(-2).map((event) => event.args.id)
     
     const balancesRequestId = requestIds[0]
     const balancesResponse = ethers.utils.defaultAbiCoder.encode(
         ['uint128', 'uint128'],
-        [ethers.utils.parseEther(activeBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
+        [ethers.utils.parseEther(beaconBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
     )
     
     await fulfillFunctionsRequest({

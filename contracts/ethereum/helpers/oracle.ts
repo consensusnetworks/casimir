@@ -156,7 +156,7 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
     let poolIndex = 0
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
-        const poolDetails = await views.getPoolDetails(poolId)
+        const poolDetails = await views.getPool(poolId)
         if (poolDetails.status === PoolStatus.EXITING_FORCED || poolDetails.status === PoolStatus.EXITING_REQUESTED) {
             remaining--
             

@@ -43,11 +43,12 @@ const requestConfig = {
     // Args (string only array) can be accessed within the source code with `args[index]` (ie: args[0]).
     args: [
         "1616508000", // genesisTimestamp
-        "0x5D908fa3128E5Ee0EAa4be3F7894F7814B4e6489", // viewsAddress
+        "0x552804Cf1fbFfa1E539bEBeF7117d5E8a1E4F32D", // viewsAddress
         "0x0812a9fe", // getCompoundablePoolIds(uint256,uint256)
         "0x5d1e0780", // getDepositedPoolCount()
+        "0xdcf25c1d", // getDepositedPoolPublicKeys(uint256,uint256)
+        "0xb29a57e4", // getDepositedPoolStatuses(uint256,uint256)
         "0x12c3456b", // getSweptBalance(uint256,uint256)
-        "0xf6647134", // getValidatorPublicKeys(uint256,uint256)
         "0", // previousReportTimestamp
         "0", // reportTimestamp
         "0", // reportBlockNumber

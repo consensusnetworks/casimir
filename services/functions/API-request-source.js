@@ -1,15 +1,18 @@
-const genesisTimestamp = args[0]
-const viewsAddress = args[1]
-const getCompoundablePoolIdsSignature = args[2]
-const getDepositedPoolCountSignature = args[3]
-const getSweptBalanceSignature = args[4]
-const getValidatorPublicKeysSignature = args[5]
-const previousReportTimestamp = args[6]
-const reportTimestamp = args[7]
-const reportBlockNumber = '0x' + parseInt(args[8]).toString(16)
-const requestType = args[9]
-const ethereumUrl = secrets.ethereumRpcUrl ?? 'http://localhost:8546'
-const ethereumBeaconUrl = secrets.ethereumBeaconRpcUrl ?? 'http://localhost:5052'
+const [ 
+	genesisTimestamp,
+	viewsAddress,
+	getCompoundablePoolIdsSignature,
+	getDepositedPoolCountSignature,
+	getDepositedPoolPublicKeysSignature,
+	getDepositedPoolStatusesSignature,
+	getSweptBalanceSignature,
+	previousReportTimestamp,
+	reportTimestamp,
+	reportBlockNumber,
+	requestType
+] = args
+const ethereumUrl = secrets.ethereumRpcUrl ?? 'http://127.0.0.1:8545'
+const ethereumBeaconUrl = secrets.ethereumBeaconRpcUrl ?? 'http://127.0.0.1:5052'
 const previousReportSlot = Math.floor((previousReportTimestamp - genesisTimestamp) / 12)
 const previousReportEpoch = Math.floor(previousReportSlot / 32)
 const reportSlot = Math.floor((reportTimestamp - genesisTimestamp) / 12)
@@ -26,14 +29,13 @@ switch (requestType) {
 
 async function balancesHandler() {
 	const depositedPoolCount = await getDepositedPoolCount()
-
 	const startIndex = BigInt(0).toString(16).padStart(64, '0')
 	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
+	
+	const depositedPoolPublicKeys = await getDepositedPoolPublicKeys(startIndex, endIndex)
+	const validators = await getValidators(depositedPoolPublicKeys)
 
-	const validatorPublicKeys = await getValidatorPublicKeys(startIndex, endIndex)
-	const validators = [] // await getValidators(validatorPublicKeys)
-
-	const activeBalance = validators.reduce((accumulator, { balance }) => {
+	const beaconBalance = validators.reduce((accumulator, { balance }) => {
 		accumulator += parseFloat(balance)
 		return accumulator
 	}, 0)
@@ -41,24 +43,29 @@ async function balancesHandler() {
 	const sweptBalance = await getSweptBalance(startIndex, endIndex)
 
 	console.log("Results", {
-		activeBalance,
+		beaconBalance,
 		sweptBalance
 	})
 
 	return Buffer.concat([
-		encodeUint128(activeBalance),
+		encodeUint128(beaconBalance),
 		encodeUint128(sweptBalance)
 	])
 }
 
 async function detailsHandler() {
 	const depositedPoolCount = await getDepositedPoolCount()
-
 	const startIndex = BigInt(0).toString(16).padStart(64, '0')
 	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
-
-	const validatorPublicKeys = await getValidatorPublicKeys(startIndex, endIndex)
-	const validators = [] // await getValidators(validatorPublicKeys)
+	
+	const depositedPoolPublicKeys = await getDepositedPoolPublicKeys(startIndex, endIndex)
+	const depositedPoolStatuses = await getDepositedPoolStatuses(startIndex, endIndex)
+	for (let i = 0; i < depositedPoolCount; i++) {
+		console.log("* Pool")
+		console.log("-- Public key", depositedPoolPublicKeys[i])
+		console.log("-- Status", depositedPoolStatuses[i])
+	}
+	const validators = [] // await getValidators(depositedPoolPublicKeys)
 
 	const activatedDeposits = validators.reduce((accumulator, { validator }) => {
 		const { activation_epoch } = validator
@@ -69,7 +76,7 @@ async function detailsHandler() {
 		return accumulator
 	}, 0)
 
-	const ongoingSlashes = validators.reduce((accumulator, { status, validator }) => {
+	const forcedExits = validators.reduce((accumulator, { status, validator }) => {
 		const { slashed } = validator
 		const ongoing = status !== 'withdrawal_done'
 		if (slashed && ongoing) {
@@ -92,14 +99,14 @@ async function detailsHandler() {
 
 	console.log("Results", {
 		activatedDeposits,
-		ongoingSlashes,
+		forcedExits,
 		completedExits,
 		compoundablePoolIds
 	})
 
 	return Buffer.concat([
 		encodeUint32(activatedDeposits),
-		encodeUint32(ongoingSlashes),
+		encodeUint32(forcedExits),
 		encodeUint32(completedExits),
 		encodeUint32Array(compoundablePoolIds)
 	])
@@ -118,7 +125,7 @@ async function getCompoundablePoolIds(startIndex, endIndex) {
 					to: viewsAddress,
 					data: getCompoundablePoolIdsSignature + '0'.repeat(24) + startIndex + endIndex
 				},
-				{ blockNumber: reportBlockNumber }
+				{ blockNumber: '0x' + parseInt(reportBlockNumber).toString(16) }
 			]
 		}
 	})
@@ -147,7 +154,7 @@ async function getDepositedPoolCount() {
 					to: viewsAddress,
 					data: getDepositedPoolCountSignature
 				},
-				{ blockNumber: reportBlockNumber }
+				{ blockNumber: '0x' + parseInt(reportBlockNumber).toString(16) }
 			]
 		}
 	})
@@ -155,7 +162,7 @@ async function getDepositedPoolCount() {
 	return Number(request.data.result)
 }
 
-async function getSweptBalance(startIndex, endIndex) {
+async function getDepositedPoolPublicKeys(startIndex, endIndex) {
 	const request = await Functions.makeHttpRequest({
 		url: ethereumUrl,
 		method: 'POST',
@@ -166,30 +173,9 @@ async function getSweptBalance(startIndex, endIndex) {
 			params: [
 				{
 					to: viewsAddress,
-					data: getSweptBalanceSignature + '0'.repeat(24) + startIndex + endIndex
+					data: getDepositedPoolPublicKeysSignature + startIndex + endIndex
 				},
-				{ blockNumber: reportBlockNumber }
-			]
-		}
-	})
-	if (request.error) throw new Error('Failed to get swept balance')
-	return parseFloat(request.data.result.slice(0, -9))
-}
-
-async function getValidatorPublicKeys(startIndex, endIndex) {
-	const request = await Functions.makeHttpRequest({
-		url: ethereumUrl,
-		method: 'POST',
-		data: {
-			id: 1,
-			jsonrpc: '2.0',
-			method: 'eth_call',
-			params: [
-				{
-					to: viewsAddress,
-					data: getValidatorPublicKeysSignature + startIndex + endIndex
-				},
-				{ blockNumber: reportBlockNumber }
+				{ blockNumber: '0x' + parseInt(reportBlockNumber).toString(16) }
 			]
 		}
 	})
@@ -206,6 +192,56 @@ async function getValidatorPublicKeys(startIndex, endIndex) {
 		publicKeys.push(publicKey)
 	}
 	return publicKeys
+}
+
+async function getDepositedPoolStatuses(startIndex, endIndex) {
+	const request = await Functions.makeHttpRequest({
+		url: ethereumUrl,
+		method: 'POST',
+		data: {
+			id: 1,
+			jsonrpc: '2.0',
+			method: 'eth_call',
+			params: [
+				{
+					to: viewsAddress,
+					data: getDepositedPoolStatusesSignature + '0'.repeat(24) + startIndex + endIndex
+				},
+				{ blockNumber: '0x' + parseInt(reportBlockNumber).toString(16) }
+			]
+		}
+	})
+	if (request.error) throw new Error('Failed to get validator statuses')
+	const rawStatuses = request.data.result.slice(2)
+	const statuses = []
+	for (let i = 0; i < 5; i++) {
+		let start = i * 8
+		let end = start + 8
+		let status = parseInt(rawStatuses.slice(start, end), 16)
+		statuses.push(status)
+	}
+	return statuses
+}
+
+async function getSweptBalance(startIndex, endIndex) {
+	const request = await Functions.makeHttpRequest({
+		url: ethereumUrl,
+		method: 'POST',
+		data: {
+			id: 1,
+			jsonrpc: '2.0',
+			method: 'eth_call',
+			params: [
+				{
+					to: viewsAddress,
+					data: getSweptBalanceSignature + '0'.repeat(24) + startIndex + endIndex
+				},
+				{ blockNumber: '0x' + parseInt(reportBlockNumber).toString(16) }
+			]
+		}
+	})
+	if (request.error) throw new Error('Failed to get swept balance')
+	return parseFloat(request.data.result.slice(0, -9))
 }
 
 async function getValidators(validatorPublicKeys) {

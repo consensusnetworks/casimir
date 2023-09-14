@@ -28,12 +28,6 @@ void async function () {
     await manager.deployed()
     console.log(`CasimirManager contract upgraded at ${manager.address}`)
 
-    const registryAddress = await manager.getRegistryAddress()
-    console.log(`CasimirRegistry contract upgraded at ${registryAddress}`)
-
-    const upkeepAddress = await manager.getUpkeepAddress()
-    console.log(`CasimirUpkeep contract upgraded at ${upkeepAddress}`)
-
     const viewsFactory = await ethers.getContractFactory('CasimirViews')
     const viewsAddress = process.env.VIEWS_ADDRESS || '0x552804Cf1fbFfa1E539bEBeF7117d5E8a1E4F32D'
     const views = await upgrades.upgradeProxy(viewsAddress, viewsFactory)
