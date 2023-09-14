@@ -2,8 +2,8 @@
 @import "./base/variables.scss";
 @import "./base/typography.scss";
 @import "./base/button.scss";
-@import "./components/nav.scss";
-@import "./components/footer.scss";
+@import "./base/nav.scss";
+@import "./base/footer.scss";
 
 .changelog {
   max-width: $max-width;

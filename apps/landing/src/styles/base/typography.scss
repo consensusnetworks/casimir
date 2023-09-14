@@ -55,7 +55,7 @@ body {
 }
 
 h1 {
-  @include typography($text-3-font-size, 400, $heading-text-color, -0.92px);
+  @include typography($text-2-font-size, 400, $heading-text-color, -1px);
 }
 
 h2 {

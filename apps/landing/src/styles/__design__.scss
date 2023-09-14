@@ -1,20 +1,15 @@
+@import "./base/layout.scss";
 @import "./base/reset.scss";
 @import "./base/variables.scss";
 @import "./base/typography.scss";
+@import "./base/pill.scss";
 @import "./base/button.scss";
 @import "./base/nav.scss";
+@import "./base/footer.scss";
 
-.blog__container {
-  max-width: 920px;
+.comps {
   margin: 60px auto;
+  max-width: $max-width;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 40px;
-
-  .blog__content {
-    border: 1px solid green;
-    margin: 30px 0;
-  }
 }

@@ -1,0 +1,26 @@
+// @mixin base {
+//   position: relative;
+//   display: inline-block;
+//   cursor: pointer;
+//   border-radius: 5px;
+//   font-weight: 500;
+//   text-decoration: none;
+//   transition: all 0.12s ease;
+//   -webkit-box-align: center;
+//   -webkit-font-smoothing: antialiased;
+//   font-size: $text-9-font-size;
+// }
+
+.pill {
+  box-shadow: inset 0px 1px 0px rgba(0, 0, 0, 0.1),
+    inset 0px -1px 0px 1px rgba(0, 0, 0, 0.1);
+  color: rgb(11, 121, 175);
+  background-color: $blue-5;
+  text-transform: uppercase;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  width: fit-content;
+  font-size: $text-10-font-size;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}

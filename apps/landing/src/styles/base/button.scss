@@ -8,16 +8,14 @@
   transition: all 0.12s ease;
   -webkit-box-align: center;
   -webkit-font-smoothing: antialiased;
-  // color: $slate-10;
   font-size: $text-9-font-size;
 }
 
 .btn-primary {
   @include base;
-  // background-image: linear-gradient(rgb(7, 136, 222), rgb(17, 106, 184));
-  background-color: $brand-blue;
+  background-color: $slate-12;
   border-radius: 5px;
-  border: 1px solid #0d55e6;
+  border: 1px solid $slate-6;
   color: $slate-1;
   cursor: pointer;
   display: inline-flex;
@@ -26,7 +24,7 @@
   font-size: 13px;
   &:hover {
     color: $slate-1;
-    background-color: darken($brand-blue, 5%);
+    background-color: lighten($slate-12, 10%);
   }
 }
 
