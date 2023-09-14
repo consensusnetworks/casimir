@@ -308,7 +308,7 @@ onUnmounted(() =>{
               v-show="currentSlide === 2"
               class="absolute top-0 left-0 w-full h-full bg-white card px-[50px] py-[25px]"
             >
-              <h6 class="nav_items flex items-center mb-[20px]">
+              <h6 class="nav_items flex items-center mb-[20px] h-[29px]">
                 <button @click="authFlowCardNumber = 1, selectedProvider = null">
                   <vue-feather
                     type="chevron-left"
