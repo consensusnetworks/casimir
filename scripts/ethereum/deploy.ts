@@ -2,7 +2,7 @@ import { run } from '@casimir/shell'
 import { loadCredentials, getSecret } from '@casimir/aws'
 
 /**
- * Run an ethereum development environment
+ * Deploy ethereum contracts
  */
 void async function () {
     enum ETHEREUM_NETWORK_NAME {
@@ -23,8 +23,6 @@ void async function () {
     console.log(`Your mnemonic seed is ${process.env.BIP39_SEED}`)
 
     process.env.NETWORK = process.env.NETWORK || 'testnet'
-    process.env.TUNNEL = process.env.TUNNEL || 'false'
-    process.env.MINING_INTERVAL = '12'
     process.env.ETHEREUM_RPC_URL = ETHEREUM_NETWORK_URL[process.env.NETWORK.toUpperCase()]
     const networkName = ETHEREUM_NETWORK_NAME[process.env.NETWORK.toUpperCase()]
     
