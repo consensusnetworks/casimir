@@ -65,11 +65,11 @@ void async function () {
         }
 
         if (!process.env.MANAGER_ADDRESS) {
-            throw new Error(`No MANAGER_ADDRESS set for ${process.env.NETWORK} ethereum network.`)
+            throw new Error(`No manager address provided for ${process.env.NETWORK} ethereum network.`)
         }
 
         if (!process.env.VIEWS_ADDRESS) {
-            throw new Error(`No VIEWS_ADDRESS set for ${process.env.NETWORK} ethereum network.`)
+            throw new Error(`No views address provided for ${process.env.NETWORK} ethereum network.`)
         }
 
     } else {
