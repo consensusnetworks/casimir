@@ -79,7 +79,7 @@ onUnmounted(() =>{
     <div :class="openWalletsModal? 'flex flex-col h-screen' : ''">
       <div
         class="px-[60px] 800s:px-[5%]  pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
-        :class="openWalletsModal? 'pr-[75px]' : ''"
+        :class="openWalletsModal && doesScrollBarExist? 'pr-[75px]' : ''"
       >
         <img
           src="/casimir.svg"
