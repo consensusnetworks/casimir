@@ -59,7 +59,9 @@ contract CasimirPool is ICasimirPool, Initializable, OwnableUpgradeable, Reentra
         bytes memory _publicKey,
         uint64[] memory _operatorIds
     ) public initializer {
-        require(registryAddress != address(0), "Missing registry address");
+        if (registryAddress == address(0)) {
+            revert InvalidAddress();
+        }
         
         __Ownable_init();
         __ReentrancyGuard_init();
@@ -74,7 +76,9 @@ contract CasimirPool is ICasimirPool, Initializable, OwnableUpgradeable, Reentra
      * @notice Deposit rewards from a pool to the manager
      */
     function depositRewards() external onlyOwner {
-        require(status == PoolStatus.ACTIVE, "Pool must be active");
+        if (status != PoolStatus.ACTIVE) {
+            revert InvalidStatus();
+        }
 
         uint256 balance = address(this).balance;
         manager.depositRewards{value: balance}(id);
@@ -85,7 +89,9 @@ contract CasimirPool is ICasimirPool, Initializable, OwnableUpgradeable, Reentra
      * @param blamePercents The operator loss blame percents
      */
     function withdrawBalance(uint32[] memory blamePercents) external onlyOwner {
-        require(status == PoolStatus.WITHDRAWN, "Pool must be withdrawn");
+        if (status != PoolStatus.WITHDRAWN) {
+            revert InvalidStatus();
+        }
 
         uint256 balance = address(this).balance;
         int256 rewards = int256(balance) - int256(POOL_CAPACITY);

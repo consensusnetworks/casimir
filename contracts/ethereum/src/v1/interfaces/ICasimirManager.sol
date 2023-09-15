@@ -22,8 +22,6 @@ interface ICasimirManager {
     struct User {
         uint256 stake0;
         uint256 stakeRatioSum0;
-        uint256 actionPeriodTimestamp;
-        uint256 actionCount;
     }
     struct Withdrawal {
         address user;
@@ -72,6 +70,24 @@ interface ICasimirManager {
     event WithdrawalRequested(address indexed sender, uint256 amount);
     event WithdrawalInitiated(address indexed sender, uint256 amount);
 
+    /**********/
+    /* Errors */
+    /**********/
+
+    error ActionPeriodMaximumReached();
+    error ForcedExitAlreadyReported();
+    error InvalidAmount();
+    error InvalidAddress();
+    error InvalidWithdrawalCredentials();
+    error NoPendingPools();
+    error NoReadyPools();
+    error PoolAlreadyReshared();
+    error PoolNotActive();
+    error PoolNotExiting();
+    error PoolNotPending();
+    error TransferFailed();
+    error Unauthorized();
+
     /*************/
     /* Mutations */
     /*************/
@@ -114,8 +130,6 @@ interface ICasimirManager {
     ) external;
 
     function compoundRewards(uint32[5] memory poolIds) external;
-
-    function requestExit(uint32 poolId) external;
 
     function requestWithdrawal(uint256 amount) external;
 
@@ -203,8 +217,6 @@ interface ICasimirManager {
     function reportPeriod() external view returns (uint32);
 
     function getTotalStake() external view returns (uint256);
-
-    function getReadyPoolIds() external view returns (uint32[] memory);
 
     function getPendingPoolIds() external view returns (uint32[] memory);
 

@@ -32,6 +32,15 @@ interface ICasimirRegistry {
     event OperatorRegistered(uint64 indexed operatorId);
     event WithdrawalFulfilled(uint64 indexed operatorId, uint256 amount);
 
+    /**********/
+    /* Errors */
+    /**********/
+
+    error InvalidAmount();
+    error InvalidAddress();
+    error TransferFailed();
+    error Unauthorized();
+
     /*************/
     /* Mutations */
     /*************/

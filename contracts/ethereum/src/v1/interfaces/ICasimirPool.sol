@@ -22,6 +22,13 @@ interface ICasimirPool {
     event ResharesSet(uint256 reshares);
     event StatusSet(PoolStatus status);
 
+    /**********/
+    /* Errors */
+    /**********/
+
+    error InvalidAddress();
+    error InvalidStatus();
+
     /***********/
     /* Structs */
     /***********/

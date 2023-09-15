@@ -53,6 +53,12 @@ export async function deploymentFixture() {
         functionsBillingRegistryConfig.requestTimeoutSeconds
     )
 
+    const arrayFactory = await ethers.getContractFactory('CasimirArray')
+    const arrayLibrary = await arrayFactory.deploy()
+
+    const factoryFactory = await ethers.getContractFactory('CasimirFactory')
+    const factoryLibrary = await factoryFactory.deploy()
+
     const poolFactory = await ethers.getContractFactory('CasimirPool')
     const poolBeacon = await upgrades.deployBeacon(poolFactory, { unsafeAllow: ['constructor'] })
     await poolBeacon.deployed()
@@ -83,8 +89,13 @@ export async function deploymentFixture() {
         upkeepBeaconAddress: upkeepBeacon.address,
         wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
     }
-    const managerFactory = await ethers.getContractFactory('CasimirManager')
-    const manager = await upgrades.deployProxy(managerFactory, Object.values(managerArgs), { unsafeAllow: ['constructor'] }) as CasimirManager
+    const managerFactory = await ethers.getContractFactory('CasimirManager', {
+        libraries: {
+            CasimirArray: arrayLibrary.address,
+            CasimirFactory: factoryLibrary.address
+        }
+    })
+    const manager = await upgrades.deployProxy(managerFactory, Object.values(managerArgs), { unsafeAllow: ['constructor', 'external-library-linking'] }) as CasimirManager
     await manager.deployed()
 
     const registryAddress = await manager.getRegistryAddress()

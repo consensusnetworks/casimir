@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "./CasimirPool.sol";
-import "./CasimirRegistry.sol";
-import "./CasimirUpkeep.sol";
 import "./interfaces/ICasimirManager.sol";
-import "./libraries/Types.sol";
+import "./libraries/CasimirArray.sol";
+import "./libraries/CasimirFactory.sol";
 import "./vendor/interfaces/IDepositContract.sol";
 import "./vendor/interfaces/ISSVNetwork.sol";
 import "./vendor/interfaces/IWETH9.sol";
@@ -13,7 +11,6 @@ import "./vendor/interfaces/IFunctionsBillingRegistry.sol";
 import "./vendor/interfaces/IKeeperRegistrar.sol";
 import "./vendor/interfaces/IAutomationRegistry.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
-import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/beacon/IBeaconUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -28,28 +25,27 @@ import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 /**
  * @title Manager contract that accepts and distributes deposits
  */
-contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract CasimirManager is
+    ICasimirManager,
+    Initializable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable
+{
     /*************/
     /* Libraries */
     /*************/
 
     /** Use internal type for uint32 array */
-    using Types32Array for uint32[];
+    using CasimirArray for uint32[];
     /** Use internal type for bytes array */
-    using TypesBytesArray for bytes[];
+    using CasimirArray for bytes[];
     /** Use internal type for withdrawal array */
-    using TypesWithdrawalArray for Withdrawal[];
-    /** Use internal type for address */
-    using TypesAddress for address;
+    using CasimirArray for Withdrawal[];
 
     /*************/
     /* Constants */
     /*************/
 
-    /** User action period */
-    uint256 private constant ACTION_PERIOD = 1 days;
-    /** Max user actions per period */
-    uint256 private constant MAX_ACTIONS_PER_PERIOD = 5;
     /** Compound minimum (0.1 ETH) */
     uint256 private constant COMPOUND_MINIMUM = 100000000 gwei;
     /** Scale factor for each rewards to stake ratio */
@@ -60,7 +56,7 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
     uint256 private constant POOL_CAPACITY = 32 ether;
     /** Total fee percentage */
     uint32 public constant FEE_PERCENT = 5;
-    
+
     /*********/
     /* State */
     /*********/
@@ -148,53 +144,6 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
     /** Storage gap */
     uint256[50] private __gap;
 
-    /*************/
-    /* Modifiers */
-    /*************/
-
-    /**
-     * @dev Validate the caller is the authorized pool
-     */
-    modifier onlyPool(uint32 poolId) {
-        require(msg.sender == poolAddresses[poolId], "Not pool");
-        _;
-    }
-
-    /**
-     * @dev Validate the caller is the oracle
-     */
-    modifier onlyOracle() {
-        require(msg.sender == oracleAddress, "Not oracle");
-        _;
-    }
-
-    /**
-     * @dev Validate the caller is the oracle or registry
-     */
-    modifier onlyOracleOrRegistry() {
-        require(
-            msg.sender == oracleAddress || msg.sender == address(registry),
-            "Not oracle or registry"
-        );
-        _;
-    }
-
-    /**
-     * @dev Validate the caller is the registry
-     */
-    modifier onlyRegistry() {
-        require(msg.sender == address(registry), "Not registry");
-        _;
-    }
-
-    /**
-     * @dev Validate the caller is the upkeep contract
-     */
-    modifier onlyUpkeep() {
-        require(msg.sender == address(upkeep), "Not upkeep");
-        _;
-    }
-
     // @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -237,26 +186,30 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         address upkeepBeaconAddress,
         address wethTokenAddress
     ) public initializer {
-        require(beaconDepositAddress != address(0), "Missing beacon deposit address");
-        require(daoOracleAddress != address(0), "Missing oracle address");
-        require(functionsBillingRegistryAddress != address(0), "Missing functions billing registry address");
-        require(keeperRegistrarAddress != address(0), "Missing keeper registrar address");
-        require(keeperRegistryAddress != address(0), "Missing keeper registry address");
-        require(upkeepBeaconAddress != address(0), "Missing upkeep beacon address");
-        require(linkTokenAddress != address(0), "Missing link token address");
-        require(poolBeaconAddress != address(0), "Missing pool beacon address");
-        require(registryBeaconAddress != address(0), "Missing registry beacon address");
-        require(ssvNetworkAddress != address(0), "Missing SSV network address");
-        require(ssvTokenAddress != address(0), "Missing SSV token address");
-        require(swapFactoryAddress != address(0), "Missing Uniswap factory address");
-        require(swapRouterAddress != address(0), "Missing Uniswap router address");
-        require(wethTokenAddress != address(0), "Missing WETH token address");
+        onlyAddress(beaconDepositAddress);
+        onlyAddress(daoOracleAddress);
+        onlyAddress(functionsBillingRegistryAddress);
+        onlyAddress(functionsOracleAddress);
+        onlyAddress(keeperRegistrarAddress);
+        onlyAddress(keeperRegistryAddress);
+        onlyAddress(linkTokenAddress);
+        onlyAddress(poolBeaconAddress);
+        onlyAddress(registryBeaconAddress);
+        onlyAddress(ssvNetworkAddress);
+        onlyAddress(ssvViewsAddress);
+        onlyAddress(ssvTokenAddress);
+        onlyAddress(swapFactoryAddress);
+        onlyAddress(swapRouterAddress);
+        onlyAddress(upkeepBeaconAddress);
+        onlyAddress(wethTokenAddress);
 
         __Ownable_init();
         __ReentrancyGuard_init();
         oracleAddress = daoOracleAddress;
         beaconDeposit = IDepositContract(beaconDepositAddress);
-        functionsBillingRegistry = IFunctionsBillingRegistry(functionsBillingRegistryAddress);
+        functionsBillingRegistry = IFunctionsBillingRegistry(
+            functionsBillingRegistryAddress
+        );
         keeperRegistrar = IKeeperRegistrar(keeperRegistrarAddress);
         keeperRegistry = IAutomationRegistry(keeperRegistryAddress);
         linkToken = LinkTokenInterface(linkTokenAddress);
@@ -269,22 +222,16 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         swapRouter = ISwapRouter(swapRouterAddress);
         tokenAddresses[Token.WETH] = wethTokenAddress;
         registry = ICasimirRegistry(
-            address(new BeaconProxy(
+            CasimirFactory.createRegistry(
                 registryBeaconAddress,
-                abi.encodeWithSelector(
-                    CasimirRegistry(address(0)).initialize.selector,
-                    ssvViewsAddress
-                )
-            ))
+                ssvViewsAddress
+            )
         );
         upkeep = ICasimirUpkeep(
-            address(new BeaconProxy(
+            CasimirFactory.createUpkeep(
                 upkeepBeaconAddress,
-                abi.encodeWithSelector(
-                    CasimirUpkeep(address(0)).initialize.selector,
-                    functionsOracleAddress
-                )
-            ))
+                functionsOracleAddress
+            )
         );
         stakeRatioSum = 1000 ether;
     }
@@ -303,8 +250,6 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Deposit user stake
      */
     function depositStake() external payable nonReentrant {
-        setActionCount(msg.sender);
-
         User storage user = users[msg.sender];
         uint256 depositAfterFees = subtractFees(msg.value);
         reservedFeeBalance += msg.value - depositAfterFees;
@@ -323,9 +268,13 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @param poolId The pool ID
      */
     function depositRewards(uint32 poolId) external payable {
-        require(msg.value > 0, "No rewards to deposit");
+        if (msg.value == 0) {
+            revert InvalidAmount();
+        }
         address poolAddress = poolAddresses[poolId];
-        require(msg.sender == poolAddress, "Not pool");
+        if (msg.sender != poolAddress) {
+            revert Unauthorized();
+        }
 
         uint256 rewardsAfterFees = subtractFees(msg.value);
         reservedFeeBalance += msg.value - rewardsAfterFees;
@@ -338,9 +287,10 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Deposit exited balance from a given pool ID
      * @param poolId The pool ID
      */
-    function depositExitedBalance(
-        uint32 poolId
-    ) external payable onlyPool(poolId) {
+    function depositExitedBalance(uint32 poolId) external payable {
+        if (msg.sender != poolAddresses[poolId]) {
+            revert Unauthorized();
+        }
         uint256 balance = msg.value + recoveredBalances[poolId];
         delete recoveredBalances[poolId];
         delete poolAddresses[poolId];
@@ -357,7 +307,11 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      */
     function depositRecoveredBalance(
         uint32 poolId
-    ) external payable onlyRegistry {
+    ) external payable {
+        if (msg.sender != address(registry)) {
+            revert Unauthorized();
+        }
+
         recoveredBalances[poolId] += msg.value;
         finalizableRecoveredBalance += msg.value;
 
@@ -378,7 +332,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         uint256 feeAmount,
         uint256 minimumTokenAmount,
         bool processed
-    ) external onlyOracle {
+    ) external {
+        onlyOracle();
         uint256 ssvAmount = retrieveFees(
             feeAmount,
             minimumTokenAmount,
@@ -401,7 +356,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         uint256 feeAmount,
         uint256 minimumTokenAmount,
         bool processed
-    ) external onlyOracle {
+    ) external {
+        onlyOracle();
         uint256 linkAmount = retrieveFees(
             feeAmount,
             minimumTokenAmount,
@@ -409,18 +365,18 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
             processed
         );
         if (functionsId == 0) {
-            
             functionsId = functionsBillingRegistry.createSubscription();
             functionsBillingRegistry.addConsumer(functionsId, address(upkeep));
         }
-        require(
-            linkToken.transferAndCall(
+        if (
+            !linkToken.transferAndCall(
                 address(functionsBillingRegistry),
                 linkAmount,
                 abi.encode(functionsId)
-            ),
-            "Transfer failed"
-        );
+            )
+        ) {
+            revert TransferFailed();
+        }
 
         emit FunctionsBalanceDeposited(linkAmount);
     }
@@ -435,7 +391,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         uint256 feeAmount,
         uint256 minimumTokenAmount,
         bool processed
-    ) external onlyOracle {
+    ) external {
+        onlyOracle();
         uint256 linkAmount = retrieveFees(
             feeAmount,
             minimumTokenAmount,
@@ -477,10 +434,15 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @param amount The amount of fees to withdraw
      */
     function withdrawReservedFees(uint256 amount) external onlyOwner {
-        require(amount <= reservedFeeBalance, "Withdrawing more than reserved");
+        if (amount > reservedFeeBalance) {
+            revert InvalidAmount();
+        }
 
         reservedFeeBalance -= amount;
-        owner().send(amount);
+        (bool success, ) = owner().call{value: amount}("");
+        if (!success) {
+            revert TransferFailed();
+        }
 
         emit ReservedFeesWithdrawn(amount);
     }
@@ -497,12 +459,15 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         uint256 sweptBalance,
         uint256 activatedDeposits,
         uint256 completedExits
-    ) external onlyUpkeep {
+    ) external {
+        onlyUpkeep();
         reportPeriod++;
         uint256 expectedActivatedBalance = activatedDeposits * POOL_CAPACITY;
         uint256 expectedExitedBalance = completedExits * POOL_CAPACITY;
         uint256 expectedEffectiveBalance = stakedPoolIds.length * POOL_CAPACITY;
-        int256 rewards = int256(beaconBalance + sweptBalance + finalizableRecoveredBalance) - int256(expectedEffectiveBalance + expectedExitedBalance);
+        int256 rewards = int256(
+            beaconBalance + sweptBalance + finalizableRecoveredBalance
+        ) - int256(expectedEffectiveBalance + expectedExitedBalance);
         int256 change = rewards - latestActiveRewardBalance;
         if (change > 0) {
             uint256 gain = uint256(change);
@@ -528,12 +493,18 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
             }
         } else if (change < 0) {
             uint256 loss = uint256(-change);
-            stakeRatioSum -= MathUpgradeable.mulDiv(stakeRatioSum, loss, getTotalStake());
+            stakeRatioSum -= MathUpgradeable.mulDiv(
+                stakeRatioSum,
+                loss,
+                getTotalStake()
+            );
             latestBeaconBalanceAfterFees -= loss;
 
             emit StakeRebalanced(loss);
         }
-        int256 sweptRewards = int256(sweptBalance + finalizableRecoveredBalance) - int256(finalizableExitedBalance);
+        int256 sweptRewards = int256(
+            sweptBalance + finalizableRecoveredBalance
+        ) - int256(finalizableExitedBalance);
         if (sweptRewards > 0) {
             latestBeaconBalanceAfterFees -= subtractFees(uint256(sweptRewards));
         }
@@ -550,7 +521,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Compound rewards given a list of pool IDs
      * @param poolIds The list of pool IDs
      */
-    function compoundRewards(uint32[5] memory poolIds) external onlyUpkeep {
+    function compoundRewards(uint32[5] memory poolIds) external {
+        onlyUpkeep();
         for (uint256 i = 0; i < poolIds.length; i++) {
             uint32 poolId = poolIds[i];
             if (poolId == 0) {
@@ -565,14 +537,12 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Request to withdraw user stake
      * @param amount The amount of stake to withdraw
      */
-    function requestWithdrawal(
-        uint256 amount
-    ) external nonReentrant {
-        setActionCount(msg.sender);
-
+    function requestWithdrawal(uint256 amount) external nonReentrant {
         User storage user = users[msg.sender];
         user.stake0 = getUserStake(msg.sender);
-        require(user.stake0 >= amount, "Withdrawing more than user stake");
+        if (user.stake0 < amount) {
+            revert InvalidAmount();
+        }
 
         user.stakeRatioSum0 = stakeRatioSum;
         user.stake0 -= amount;
@@ -617,7 +587,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Fulfill a given count of pending withdrawals
      * @param count The number of withdrawals to complete
      */
-    function fulfillWithdrawals(uint256 count) external onlyUpkeep {
+    function fulfillWithdrawals(uint256 count) external {
+        onlyUpkeep();
         uint256 withdrawalAmount;
         uint256 withdrawalCount;
         while (count > 0) {
@@ -629,7 +600,7 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
             if (withdrawal.period > reportPeriod) {
                 break;
             }
-            requestedWithdrawalQueue.remove(0);
+            requestedWithdrawalQueue.removeWithdrawalItem(0);
             withdrawalAmount += withdrawal.amount;
             withdrawalCount++;
             fulfillWithdrawal(withdrawal.user, withdrawal.amount);
@@ -668,32 +639,33 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         uint256 feeAmount,
         uint256 minimumTokenAmount,
         bool processed
-    ) external onlyOracle {
-        require(readyPoolIds.length > 0, "No ready pools");
+    ) external {
+        onlyOracle();
+        if (readyPoolIds.length == 0) {
+            revert NoReadyPools();
+        }
 
         uint32 poolId = readyPoolIds[0];
-        readyPoolIds.remove(0);
+        readyPoolIds.removeUint32Item(0);
         pendingPoolIds.push(poolId);
-        poolAddresses[poolId] = address(new BeaconProxy(
+        poolAddresses[poolId] = CasimirFactory.createPool(
             address(poolBeacon),
-            abi.encodeWithSelector(
-                CasimirPool(address(0)).initialize.selector,
-                address(registry),
-                poolId,
-                publicKey,
-                operatorIds
-            )
-        ));
+            address(registry),
+            poolId,
+            publicKey,
+            operatorIds
+        );
         bytes memory computedWithdrawalCredentials = abi.encodePacked(
             bytes1(uint8(1)),
             bytes11(0),
             poolAddresses[poolId]
         );
-        require(
-            keccak256(computedWithdrawalCredentials) ==
-                keccak256(withdrawalCredentials),
-            "Invalid withdrawal credentials"
-        );
+        if (
+            keccak256(computedWithdrawalCredentials) !=
+            keccak256(withdrawalCredentials)
+        ) {
+            revert InvalidWithdrawalCredentials();
+        }
 
         {
             for (uint256 i = 0; i < operatorIds.length; i++) {
@@ -730,21 +702,23 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Activate a given count of the next pending pools
      * @param count The number of pools to activate
      */
-    function activateDeposits(uint256 count) external onlyUpkeep {
-        require(pendingPoolIds.length >= count, "Not enough pending pools");
+    function activateDeposits(uint256 count) external {
+        onlyUpkeep();
+        if (pendingPoolIds.length == 0) {
+            revert NoPendingPools();
+        }
 
         while (count > 0) {
             count--;
             uint32 poolId = pendingPoolIds[0];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
             ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
-            require(
-                poolDetails.status == ICasimirPool.PoolStatus.PENDING,
-                "Pool not pending"
-            );
+            if (poolDetails.status != ICasimirPool.PoolStatus.PENDING) {
+                revert PoolNotPending();
+            }
 
             pool.setStatus(ICasimirPool.PoolStatus.ACTIVE);
-            pendingPoolIds.remove(0);
+            pendingPoolIds.removeUint32Item(0);
             stakedPoolIds.push(poolId);
 
             emit DepositActivated(poolId);
@@ -755,7 +729,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Request reports a given count of forced exits
      * @param count The number of forced exits
      */
-    function requestForcedExitReports(uint256 count) external onlyUpkeep {
+    function requestForcedExitReports(uint256 count) external {
+        onlyUpkeep();
         emit ForcedExitReportsRequested(count);
     }
 
@@ -763,7 +738,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Request reports for a given count of completed exits
      * @param count The number of completed exits
      */
-    function requestCompletedExitReports(uint256 count) external onlyUpkeep {
+    function requestCompletedExitReports(uint256 count) external {
+        onlyUpkeep();
         emit CompletedExitReportsRequested(count);
     }
 
@@ -771,7 +747,11 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Request reshares for an operator
      * @param operatorId The operator ID
      */
-    function requestReshares(uint64 operatorId) external onlyOracleOrRegistry {
+    function requestReshares(uint64 operatorId) external {
+        if (msg.sender != oracleAddress && msg.sender != address(registry)) {
+            revert Unauthorized();
+        }
+
         emit ResharesRequested(operatorId);
     }
 
@@ -779,20 +759,22 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Report pool forced (unrequested) exits
      * @param poolIds The pool IDs
      */
-    function reportForcedExits(uint32[] memory poolIds) external onlyOracle {
+    function reportForcedExits(uint32[] memory poolIds) external {
+        onlyOracle();
         uint256 newForcedExits;
         uint256 newRequestedExits;
         for (uint256 i = 0; i < poolIds.length; i++) {
             uint32 poolId = poolIds[i];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
             ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
-            require(
-                poolDetails.status != ICasimirPool.PoolStatus.EXITING_FORCED,
-                "Forced exit already reported"
-            );
+            if (poolDetails.status == ICasimirPool.PoolStatus.EXITING_FORCED) {
+                revert ForcedExitAlreadyReported();
+            }
 
             newForcedExits++;
-            if (poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
+            if (
+                poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED
+            ) {
                 newRequestedExits++;
             }
             pool.setStatus(ICasimirPool.PoolStatus.EXITING_FORCED);
@@ -813,17 +795,19 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         uint256 poolIndex,
         uint32[] memory blamePercents,
         ISSVNetworkCore.Cluster memory cluster
-    ) external onlyOracle {
+    ) external {
+        onlyOracle();
         uint32 poolId = stakedPoolIds[poolIndex];
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
         ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
-        require(
-            poolDetails.status == ICasimirPool.PoolStatus.EXITING_FORCED ||
-            poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED,
-            "Pool not exiting"
-        );
+        if (
+            poolDetails.status != ICasimirPool.PoolStatus.EXITING_FORCED &&
+            poolDetails.status != ICasimirPool.PoolStatus.EXITING_REQUESTED
+        ) {
+            revert PoolNotExiting();
+        }
 
-        stakedPoolIds.remove(poolIndex);
+        stakedPoolIds.removeUint32Item(poolIndex);
         if (poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
             requestedExits--;
         } else if (
@@ -833,7 +817,11 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         }
         pool.setStatus(ICasimirPool.PoolStatus.WITHDRAWN);
         pool.withdrawBalance(blamePercents);
-        ssvClusters.removeValidator(poolDetails.publicKey, poolDetails.operatorIds, cluster);
+        ssvClusters.removeValidator(
+            poolDetails.publicKey,
+            poolDetails.operatorIds,
+            cluster
+        );
 
         emit ExitCompleted(poolId);
     }
@@ -864,15 +852,19 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         uint256 feeAmount,
         uint256 minimumTokenAmount,
         bool processed
-    ) external onlyOracle {
+    ) external {
+        onlyOracle();
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
         ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
-        require(
-            poolDetails.status == ICasimirPool.PoolStatus.PENDING ||
-            poolDetails.status == ICasimirPool.PoolStatus.ACTIVE,
-            "Pool not active"
-        );
-        require(poolDetails.reshares < 2, "Pool already reshared twice");
+        if (
+            poolDetails.status != ICasimirPool.PoolStatus.ACTIVE &&
+            poolDetails.status != ICasimirPool.PoolStatus.PENDING
+        ) {
+            revert PoolNotActive();
+        }
+        if (poolDetails.reshares >= 2) {
+            revert PoolAlreadyReshared();
+        }
 
         pool.setReshares(poolDetails.reshares + 1);
 
@@ -914,14 +906,16 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         uint64[] memory operatorIds,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 amount
-    ) external onlyOracle {
+    ) external {
+        onlyOracle();
         ssvClusters.withdraw(operatorIds, amount, cluster);
     }
 
     /**
      * @notice Cancel the Chainlink functions subscription
      */
-    function cancelFunctions() external onlyOracle {
+    function cancelFunctions() external {
+        onlyOracle();
         functionsBillingRegistry.cancelSubscription(functionsId, address(this));
         functionsId = 0;
 
@@ -931,7 +925,8 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
     /**
      * @notice Cancel the Chainlink upkeep subscription
      */
-    function cancelUpkeep() external onlyOracle {
+    function cancelUpkeep() external {
+        onlyOracle();
         keeperRegistry.cancelUpkeep(upkeepId);
         upkeepId = 0;
 
@@ -943,7 +938,9 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @param amount The amount to withdraw
      */
     function withdrawLINKBalance(uint256 amount) external onlyOwner {
-        require(linkToken.transfer(owner(), amount), "Transfer failed");
+        if (!linkToken.transfer(owner(), amount)) {
+            revert TransferFailed();
+        }
 
         emit LINKBalanceWithdrawn(amount);
     }
@@ -962,7 +959,7 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * Set a new Chainlink functions request
      * @param newRequestSource JavaScript source code
      * @param newRequestArgs List of arguments accessible from within the source code
-     * @param newFulfillGasLimit The new Chainlink functions fulfill gas limit 
+     * @param newFulfillGasLimit The new Chainlink functions fulfill gas limit
      */
     function setFunctionsRequest(
         string calldata newRequestSource,
@@ -976,7 +973,7 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
         );
 
         emit FunctionsRequestSet(
-            newRequestSource, 
+            newRequestSource,
             newRequestArgs,
             newFulfillGasLimit
         );
@@ -986,18 +983,28 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Set a new Chainlink functions oracle address
      * @param newFunctionsOracleAddress New Chainlink functions oracle address
      */
-    function setFunctionsOracleAddress(address newFunctionsOracleAddress) external onlyOwner {
+    function setFunctionsOracleAddress(
+        address newFunctionsOracleAddress
+    ) external onlyOwner {
         upkeep.setFunctionsOracleAddress(newFunctionsOracleAddress);
 
         emit FunctionsOracleAddressSet(newFunctionsOracleAddress);
     }
 
     /**
-     * @notice Get the ready pool IDs
-     * @return readyPoolIds The ready pool IDs
+     * @notice Get the eligibility of a pending withdrawal
+     * @param index The index of the pending withdrawal
+     * @param period The period to check
+     * @return pendingWithdrawalEligibility The eligibility of a pending withdrawal
      */
-    function getReadyPoolIds() external view returns (uint32[] memory) {
-        return readyPoolIds;
+    function getPendingWithdrawalEligibility(
+        uint256 index,
+        uint256 period
+    ) external view returns (bool pendingWithdrawalEligibility) {
+        if (requestedWithdrawals > index) {
+            pendingWithdrawalEligibility =
+                requestedWithdrawalQueue[index].period <= period;
+        }
     }
 
     /**
@@ -1029,7 +1036,11 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Get the registry address
      * @return registryAddress The registry address
      */
-    function getRegistryAddress() external view returns (address registryAddress) {
+    function getRegistryAddress()
+        external
+        view
+        returns (address registryAddress)
+    {
         registryAddress = address(registry);
     }
 
@@ -1071,16 +1082,12 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @notice Get the buffered balance
      * @return bufferedBalance The buffered balance
      */
-    function getBufferedBalance() public view returns (uint256 bufferedBalance) {
-        bufferedBalance = getWithdrawableBalance() + getReadyBalance();
-    }
-
-    /**
-     * @notice Get the ready balance
-     * @return readyBalance The ready balance
-     */
-    function getReadyBalance() public view returns (uint256 readyBalance) {
-        readyBalance = readyPoolIds.length * POOL_CAPACITY;
+    function getBufferedBalance()
+        public
+        view
+        returns (uint256 bufferedBalance)
+    {
+        bufferedBalance = getWithdrawableBalance() + readyPoolIds.length * POOL_CAPACITY;
     }
 
     /**
@@ -1089,21 +1096,6 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      */
     function getWithdrawableBalance() public view returns (uint256) {
         return prepoolBalance + exitedBalance;
-    }
-
-    /**
-     * @notice Get the eligibility of a pending withdrawal
-     * @param index The index of the pending withdrawal
-     * @param period The period to check
-     * @return pendingWithdrawalEligibility The eligibility of a pending withdrawal
-     */
-    function getPendingWithdrawalEligibility(
-        uint256 index,
-        uint256 period
-    ) public view returns (bool pendingWithdrawalEligibility) {
-        if (requestedWithdrawals > index) {
-            pendingWithdrawalEligibility = requestedWithdrawalQueue[index].period <= period;
-        }
     }
 
     /**
@@ -1146,30 +1138,12 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
      * @param amount The withdrawal amount
      */
     function fulfillWithdrawal(address sender, uint256 amount) private {
-        sender.send(amount);
+        (bool success, ) = sender.call{value: amount}("");
+        if (!success) {
+            revert TransferFailed();
+        }
 
         emit WithdrawalFulfilled(sender, amount);
-    }
-
-    /**
-     * Check and set a user's action count
-     * @param userAddress The user address to check
-     */
-    function setActionCount(address userAddress) private {
-        User storage user = users[userAddress];
-        require(
-            user.actionPeriodTimestamp == 0 ||
-                user.actionCount < MAX_ACTIONS_PER_PERIOD ||
-                block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD,
-            "Action period maximum reached"
-        );
-
-        if (block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD) {
-            user.actionPeriodTimestamp = block.timestamp;
-            user.actionCount = 1;
-        } else {
-            user.actionCount++;
-        }
     }
 
     /**
@@ -1266,6 +1240,37 @@ contract CasimirManager is ICasimirManager, Initializable, OwnableUpgradeable, R
     function subtractFees(
         uint256 amount
     ) private pure returns (uint256 amountAfterFees) {
-        amountAfterFees = MathUpgradeable.mulDiv(amount, 100, 100 + FEE_PERCENT);
+        amountAfterFees = MathUpgradeable.mulDiv(
+            amount,
+            100,
+            100 + FEE_PERCENT
+        );
+    }
+
+    /**
+     * @dev Validate the caller is the oracle
+     */
+    function onlyOracle() private view {
+        if (msg.sender != oracleAddress) {
+            revert Unauthorized();
+        }
+    }
+
+    /**
+     * @dev Validate the caller is the upkeep contract
+     */
+    function onlyUpkeep() private view {
+        if (msg.sender != address(upkeep)) {
+            revert Unauthorized();
+        }
+    }
+
+    /**
+     * @dev Validate an address is not the zero address
+     */
+    function onlyAddress(address checkAddress) private pure {
+        if (checkAddress == address(0)) {
+            revert InvalidAddress();
+        }
     }
 }

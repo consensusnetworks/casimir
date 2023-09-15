@@ -136,21 +136,4 @@ describe('Users', async function () {
         expect(ethers.utils.formatEther(userStake)).equal('32.0')
         expect(ethers.utils.formatEther(userBalanceAfter.sub(userBalanceBefore))).contains('31.9')
     })
-
-    it('User\'s 16.0 stake and five withdrawal requests fails on the 6th daily action', async function () {
-        const { manager } = await loadFixture(deploymentFixture)
-        const [firstUser] = await ethers.getSigners()
-
-        const depositAmount = round(16 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
-        const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
-        await deposit.wait()
-
-        for (let i = 0; i < 4; i++) {
-            const withdrawalRequest = await manager.connect(firstUser).requestWithdrawal(ethers.utils.parseEther('2.0'))
-            await withdrawalRequest.wait()
-        }
-
-        const failedWithdrawalRequest = manager.connect(firstUser).requestWithdrawal(ethers.utils.parseEther('2.0'))
-        await expect(failedWithdrawalRequest).to.be.rejectedWith('Action period maximum reached')
-    })
 })

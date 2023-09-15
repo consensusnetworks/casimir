@@ -3,7 +3,6 @@ pragma solidity 0.8.18;
 
 import "./interfaces/ICasimirRegistry.sol";
 import "./interfaces/ICasimirManager.sol";
-import "./libraries/Types.sol";
 import "./vendor/interfaces/ISSVViews.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -13,13 +12,6 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
  * @title Registry contract that manages operators
  */
 contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
-    /*************/
-    /* Libraries */
-    /*************/
-
-    /** Use internal type for address */
-    using TypesAddress for address;
-
     /*************/
     /* Constants */
     /*************/
@@ -52,11 +44,12 @@ contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable,
      * @dev Validate the caller is owner or the authorized pool
      */
     modifier onlyOwnerOrPool(uint32 poolId) {
-        require(
-            msg.sender == owner() ||
-                msg.sender == manager.getPoolAddress(poolId),
-            "Only owner or the authorized pool can call this function"
-        );
+        if (
+            msg.sender != owner() &&
+            msg.sender != manager.getPoolAddress(poolId)
+        ) {
+            revert Unauthorized();
+        }
         _;
     }
 
@@ -70,10 +63,9 @@ contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable,
      * @param ssvViewsAddress The SSV views address
      */
     function initialize(address ssvViewsAddress) public initializer {
-        require(
-            ssvViewsAddress != address(0),
-            "Missing SSV views address"
-        );
+        if (ssvViewsAddress == address(0)) {
+            revert InvalidAddress();
+        }
         
         __Ownable_init();
         __ReentrancyGuard_init();
@@ -89,10 +81,9 @@ contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable,
         (address operatorOwner, , , , , ) = ssvViews.getOperatorById(
             operatorId
         );
-        require(
-            msg.sender == operatorOwner,
-            "Only operator owner can register"
-        );
+        if (msg.sender != operatorOwner) {
+            revert Unauthorized();
+        }
         require(operatorId != 0, "Invalid operator ID");
         Operator storage operator = operators[operatorId];
         require(operator.id == 0, "Operator already registered");
@@ -135,16 +126,18 @@ contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable,
         (address operatorOwner, , , , , ) = ssvViews.getOperatorById(
             operatorId
         );
-        require(msg.sender == operatorOwner, "Not operator owner");
-        require(
-            !operator.active &&
-                !operator.resharing &&
-                operator.collateral >= amount,
-            "Not allowed to withdraw amount"
-        );
+        if (msg.sender != operatorOwner) {
+            revert Unauthorized();
+        }
+        if (operator.active || operator.resharing || operator.collateral < amount) {
+            revert InvalidAmount();
+        }
 
         operator.collateral -= amount;
-        operatorOwner.send(amount);
+        (bool success, ) = operatorOwner.call{value: amount}("");
+        if (!success) {
+            revert TransferFailed();
+        }
 
         emit WithdrawalFulfilled(operatorId, amount);
     }
@@ -158,7 +151,9 @@ contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable,
         (address operatorOwner, , , , , ) = ssvViews.getOperatorById(
             operatorId
         );
-        require(msg.sender == operatorOwner, "Not operator owner");
+        if (msg.sender != operatorOwner) {
+            revert Unauthorized();
+        }       
         require(operator.active, "Operator is not active");
         require(!operator.resharing, "Operator is resharing");
 
