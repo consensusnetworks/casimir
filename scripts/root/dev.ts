@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
-import { run, runSync } from '@casimir/shell'
 import { loadCredentials, getSecret } from '@casimir/aws'
+import { ETHEREUM_FORK_URL } from '@casimir/env'
+import { run, runSync } from '@casimir/shell'
 
 /**
  * Run an integrated development environment
@@ -11,11 +12,6 @@ void async function () {
         users: {
             port: 4000
         }
-    }
-
-    enum ETHEREUM_FORK_URL {
-        MAINNET = 'https://mainnet.infura.io/v3/46a379ac6895489f812f33beb726b03b',
-        TESTNET = 'https://goerli.infura.io/v3/46a379ac6895489f812f33beb726b03b'
     }
 
     if (process.env.USE_SECRETS !== 'false') {
