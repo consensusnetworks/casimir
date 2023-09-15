@@ -123,7 +123,9 @@ watch(selectedWallet, async () =>{
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
 
-  await getUserOperators()
+  // TODO: @Chris change this back to the composable please! 
+  // maybe have Operators as an object for each account that they have connected? since it depends on the selected wallet.
+  // await getUserOperators()
 
   if (selectedWallet.value.address === '') {
     availableOperatorIDs.value = []
@@ -245,7 +247,7 @@ async function submitRegisterOperatorForm() {
       </h6>
 
       <button
-        class="flex items-center gap-[8px] export_button  hover:text-blue_3 hover:border-blue_3"
+        class="flex items-center gap-[8px] export_button  hover:text-blue_3 hover:border-blue_3 h-[38px]"
         :disabled="!user?.accounts"
         @click="openAddOperatorModal = true"
       >
@@ -329,7 +331,7 @@ async function submitRegisterOperatorForm() {
               </button>
               <div
                 v-show="openSelectWalletOptions"
-                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white"
+                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
                 <h6 class="text-[12px]">
                   Your Connected Wallets
@@ -340,16 +342,10 @@ async function submitRegisterOperatorForm() {
                   type="button"
                   class="border-y border-y-grey_1 hover:border-y-grey_3
                    text-grey_4 my-[10px] w-full flex justify-between truncate"
-                  @click="selectedWallet = {address: act.address, wallet_provider: act.walletProvider}"
+                  @click="selectedWallet = {address: act.address, wallet_provider: act.walletProvider}, openSelectWalletOptions = false"
                 >
                   <span>{{ act.walletProvider }}</span>
                   <span>{{ convertString(act.address) }}</span>
-                </button>
-                <button
-                  class="text-primary underline"
-                  @click="openWalletsModal = true"
-                >
-                  Connect Wallet
                 </button>
               </div>
             </div>
@@ -387,7 +383,7 @@ async function submitRegisterOperatorForm() {
               </button> -->
               <div
                 v-show="openSelectOperatorID"
-                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white"
+                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
                 <h6 class="text-[12px]">
                   Avaliable Operators
@@ -490,6 +486,7 @@ async function submitRegisterOperatorForm() {
               <button
                 type="submit"
                 class="export_button"
+                @click="submitRegisterOperatorForm"
               >
                 <span v-if="loadingRegisteredOperators">Submitting</span>
                 <span v-else>Submit</span>
@@ -513,7 +510,7 @@ async function submitRegisterOperatorForm() {
         </div>
         <div class="flex items-start gap-[12px]">
           <button
-            class="flex items-center gap-[8px] export_button"
+            class="flex items-center gap-[8px] export_button h-[38px]"
             @click="exportFile(checkedItems, filteredData)"
           >
             <vue-feather
@@ -683,6 +680,7 @@ async function submitRegisterOperatorForm() {
     letter-spacing: -0.01em;
     color: #101828;
     margin-bottom: 6px;
+    height: 34px;
 }
 .dynamic_padding{
   padding: 12px 24px;
