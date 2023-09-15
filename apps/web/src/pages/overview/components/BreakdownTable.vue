@@ -636,7 +636,7 @@ onMounted(() =>{
     </div>
     <div class="flex justify-between items-center mt-[12px]">
       <div class="page_number ml-[56px]">
-        Page {{ currentPage }} of {{ totalPages }}
+        Page {{ totalPages === 0? 0 : currentPage }} of {{ totalPages }}
       </div>
       <div class="flex items-center gap-[12px]">
         <button
