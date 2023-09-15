@@ -1,4 +1,5 @@
 import { getSecret, loadCredentials } from '@casimir/aws'
+import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
 import { run } from '@casimir/shell'
 
 /**
@@ -12,15 +13,27 @@ void async function () {
     await loadCredentials()
     process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')
 
-    process.env.ETHEREUM_RPC_URL = 'https://nodes.casimir.co/eth/hardhat'
     process.env.USERS_URL = `https://users.${process.env.STAGE}.casimir.co`
+    process.env.CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
 
-    process.env.PUBLIC_MANAGER_ADDRESS = '0x5d35a44Db8a390aCfa997C9a9Ba3a2F878595630'
-    process.env.PUBLIC_VIEWS_ADDRESS = '0xC88C4022347305336E344e624E5Fa4fB8e61c21E'
-    process.env.PUBLIC_REGISTRY_ADDRESS = '0xB567C0E87Ec176177E44C91577704267C24Fbd83'
-    process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
+    const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
+    process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
+    process.env.MANAGER_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.MANAGER_ADDRESS
+    process.env.REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.REGISTRY_ADDRESS
+    process.env.UPKEEP_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.UPKEEP_ADDRESS
+    process.env.VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.VIEWS_ADDRESS
+    process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_NETWORK_ADDRESS
+    process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
+    
     process.env.PUBLIC_USERS_URL = process.env.USERS_URL
-    process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
+    process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
+    process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
+    process.env.PUBLIC_MANAGER_ADDRESS = process.env.MANAGER_ADDRESS
+    process.env.PUBLIC_REGISTRY_ADDRESS = process.env.REGISTRY_ADDRESS
+    process.env.PUBLIC_UPKEEP_ADDRESS = process.env.UPKEEP_ADDRESS
+    process.env.PUBLIC_VIEWS_ADDRESS = process.env.VIEWS_ADDRESS
+    process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
+    process.env.PUBLIC_SSV_VIEWS_ADDRESS = process.env.SSV_VIEWS_ADDRESS
     
     await run('npm run build --workspace @casimir/ethereum')
     await run('npm run build:docs --workspace @casimir/ethereum')

@@ -1,3 +1,4 @@
+import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
 import { run } from '@casimir/shell'
 
 /**
@@ -5,10 +6,19 @@ import { run } from '@casimir/shell'
  */
 void async function() {
     process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
-    process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || 'http://127.0.0.1:8545'
-    process.env.ETHEREUM_BEACON_RPC_URL = process.env.ETHEREUM_BEACON_RPC_URL || 'http://127.0.0.1:5052'
-    if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error('No functions billing registry address provided')
+    const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
+    if (process.env.NETWORK) {
+        process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
+        process.env.UPKEEP_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.UPKEEP_ADDRESS
+        process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FUNCTIONS_BILLING_REGISTRY_ADDRESS
+        process.env.FUNCTIONS_ORACLE_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FUNCTIONS_ORACLE_ADDRESS
+    }
+    if (!process.env.ETHEREUM_RPC_URL) throw new Error(`No ethereum rpc url provided for ${networkKey}`)
+    if (!process.env.UPKEEP_ADDRESS) throw new Error(`No upkeep address provided for ${networkKey}`)
+    if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error(`No functions billing registry address provided for ${networkKey}`)
     if (!process.env.FUNCTIONS_ORACLE_ADDRESS) throw new Error('No functions oracle address provided')
+    
+    process.env.ETHEREUM_BEACON_RPC_URL = process.env.ETHEREUM_BEACON_RPC_URL || 'http://127.0.0.1:5002'
 
     process.env.USE_LOGS = process.env.USE_LOGS || 'false'
     run(`npx esno -r dotenv/config src/index.ts${process.env.USE_LOGS === 'true' ? ' >> .log/functions.log' : ''}`)

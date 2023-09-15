@@ -1,5 +1,5 @@
 import { loadCredentials, getSecret } from '@casimir/aws'
-import { ETHEREUM_NETWORK_NAME, ETHEREUM_NETWORK_URL } from '@casimir/env'
+import { ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from '@casimir/env'
 import { run } from '@casimir/shell'
 
 /**
@@ -15,7 +15,7 @@ void async function () {
     console.log(`Your mnemonic seed is ${process.env.BIP39_SEED}`)
 
     process.env.NETWORK = process.env.NETWORK || 'testnet'
-    process.env.ETHEREUM_RPC_URL = ETHEREUM_NETWORK_URL[process.env.NETWORK.toUpperCase()]
+    process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[process.env.NETWORK.toUpperCase()]
     const networkName = ETHEREUM_NETWORK_NAME[process.env.NETWORK.toUpperCase()]
     
     console.log(`Using ${networkName} network from ${process.env.ETHEREUM_RPC_URL}`)

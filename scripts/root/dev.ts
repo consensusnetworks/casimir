@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { loadCredentials, getSecret } from '@casimir/aws'
-import { ETHEREUM_FORK_URL } from '@casimir/env'
+import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
 import { run, runSync } from '@casimir/shell'
 
 /**
@@ -28,9 +28,6 @@ void async function () {
     process.env.FORK = process.env.FORK || 'testnet'
     process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
     process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
-    process.env.SSV_NETWORK_ADDRESS = '0xC3CD9A0aE89Fff83b71b58b6512D43F8a41f363D'
-    process.env.SSV_VIEWS_ADDRESS = '0xAE2C84c48272F5a1746150ef333D5E5B51F68763'
-    process.env.UNISWAP_V3_FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
 
     if (process.env.BUILD_PREVIEW === 'true') {
         process.env.WEB_URL = process.env.WEB_URL || 'http://localhost:4173'
@@ -51,26 +48,39 @@ void async function () {
         }
     }
 
+    const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
+    process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_NETWORK_ADDRESS
+    process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
+    process.env.SWAP_FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SWAP_FACTORY_ADDRESS
     if (process.env.NETWORK) {
-
+        process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
         if (!process.env.ETHEREUM_RPC_URL) {
-            process.env.ETHEREUM_RPC_URL = ETHEREUM_FORK_URL[process.env.NETWORK.toUpperCase()]
-            if (!process.env.ETHEREUM_RPC_URL) {
-                throw new Error(`Ethereum ${process.env.NETWORK} is not supported`)
-            }
+            throw new Error(`Ethereum ${process.env.NETWORK} is not supported`)
         }
 
+        process.env.MANAGER_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.MANAGER_ADDRESS
         if (!process.env.MANAGER_ADDRESS) {
             throw new Error(`No manager address provided for ${process.env.NETWORK} ethereum network.`)
         }
 
+        process.env.REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.REGISTRY_ADDRESS
+        if (!process.env.REGISTRY_ADDRESS) {
+            throw new Error(`No registry address provided for ${process.env.NETWORK} ethereum network.`)
+        }
+
+        process.env.UPKEEP_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.UPKEEP_ADDRESS
+        if (!process.env.UPKEEP_ADDRESS) {
+            throw new Error(`No upkeep address provided for ${process.env.NETWORK} ethereum network.`)
+        }
+
+        process.env.VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.VIEWS_ADDRESS
         if (!process.env.VIEWS_ADDRESS) {
             throw new Error(`No views address provided for ${process.env.NETWORK} ethereum network.`)
         }
 
     } else {
 
-        process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_FORK_URL[process.env.FORK.toUpperCase()]
+        process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_RPC_URL[networkKey]
         if (!process.env.ETHEREUM_FORK_RPC_URL) {
             throw new Error(`Ethereum ${process.env.FORK} is not supported`)
         }
@@ -92,13 +102,6 @@ void async function () {
             })
         }
 
-        if (!process.env.VIEWS_ADDRESS) {
-            process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
-                from: wallet.address,
-                nonce: walletNonce + 2
-            })
-        }
-
         if (!process.env.REGISTRY_ADDRESS) {
             process.env.REGISTRY_ADDRESS = ethers.utils.getContractAddress({
                 from: process.env.MANAGER_ADDRESS,
@@ -110,6 +113,13 @@ void async function () {
             process.env.UPKEEP_ADDRESS = ethers.utils.getContractAddress({
                 from: process.env.MANAGER_ADDRESS,
                 nonce: 2
+            })
+        }
+
+        if (!process.env.VIEWS_ADDRESS) {
+            process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
+                from: wallet.address,
+                nonce: walletNonce + 2
             })
         }
 
@@ -137,11 +147,11 @@ void async function () {
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
     process.env.PUBLIC_MANAGER_ADDRESS = process.env.MANAGER_ADDRESS
     process.env.PUBLIC_VIEWS_ADDRESS = process.env.VIEWS_ADDRESS
-    process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
-    process.env.PUBLIC_SSV_VIEWS_ADDRESS = process.env.SSV_VIEWS_ADDRESS
-    process.env.PUBLIC_UNISWAP_V3_FACTORY_ADDRESS = process.env.UNISWAP_V3_FACTORY_ADDRESS
     process.env.PUBLIC_REGISTRY_ADDRESS = process.env.REGISTRY_ADDRESS
     process.env.PUBLIC_UPKEEP_ADDRESS = process.env.UPKEEP_ADDRESS
+    process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
+    process.env.PUBLIC_SSV_VIEWS_ADDRESS = process.env.SSV_VIEWS_ADDRESS
+    process.env.PUBLIC_SWAP_FACTORY_ADDRESS = process.env.SWAP_FACTORY_ADDRESS
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
     process.env.PUBLIC_LEDGER_APP = process.env.LEDGER_APP
     process.env.PUBLIC_SPECULOS_URL = process.env.SPECULOS_URL

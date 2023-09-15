@@ -14,7 +14,7 @@ const ssvViewsAddress = process.env.SSV_VIEWS_ADDRESS as string
 if (!ssvViewsAddress) throw new Error('No ssv views address provided')
 const ssvTokenAddress = process.env.SSV_TOKEN_ADDRESS as string
 if (!ssvTokenAddress) throw new Error('No ssv token address provided')
-const uniswapV3FactoryAddress = process.env.UNISWAP_V3_FACTORY_ADDRESS as string
+const uniswapV3FactoryAddress = process.env.SWAP_FACTORY_ADDRESS as string
 if (!uniswapV3FactoryAddress) throw new Error('No uniswap v3 factory address provided')
 const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS as string
 if (!wethTokenAddress) throw new Error('No weth token address provided')

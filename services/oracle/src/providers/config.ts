@@ -34,7 +34,7 @@ export function getConfig() {
     if (!ssvViewsAddress) throw new Error('No ssv network views address provided')
     const ssvTokenAddress = process.env.SSV_TOKEN_ADDRESS
     if (!ssvTokenAddress) throw new Error('No ssv token address provided')
-    const uniswapV3FactoryAddress = process.env.UNISWAP_V3_FACTORY_ADDRESS
+    const uniswapV3FactoryAddress = process.env.SWAP_FACTORY_ADDRESS
     if (!uniswapV3FactoryAddress) throw new Error('No uniswap v3 factory address provided')
     const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS
     if (!wethTokenAddress) throw new Error('No weth token address provided')

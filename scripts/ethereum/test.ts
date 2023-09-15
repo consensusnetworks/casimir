@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { loadCredentials, getSecret } from '@casimir/aws'
-import { ETHEREUM_FORK_URL } from '@casimir/env'
+import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
 import { run } from '@casimir/shell'
 
 /**
@@ -17,7 +17,7 @@ void async function () {
 
     process.env.FORK = process.env.FORK || 'testnet'
 
-    process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_FORK_URL[process.env.FORK.toUpperCase()]
+    process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_RPC_URL[process.env.FORK.toUpperCase()]
     if (!process.env.ETHEREUM_FORK_RPC_URL) {
         throw new Error(`Ethereum ${process.env.FORK} is not supported`)
     }
@@ -38,13 +38,6 @@ void async function () {
         })
     }
 
-    if (!process.env.VIEWS_ADDRESS) {
-        process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
-            from: wallet.address,
-            nonce: walletNonce + 2
-        })
-    }
-
     if (!process.env.REGISTRY_ADDRESS) {
         process.env.REGISTRY_ADDRESS = ethers.utils.getContractAddress({
             from: process.env.MANAGER_ADDRESS,
@@ -59,9 +52,16 @@ void async function () {
         })
     }
 
-    process.env.SSV_NETWORK_ADDRESS = '0xC3CD9A0aE89Fff83b71b58b6512D43F8a41f363D'
-    process.env.SSV_VIEWS_ADDRESS = '0xAE2C84c48272F5a1746150ef333D5E5B51F68763'
-    process.env.UNISWAP_V3_FACTORY_ADDRESS = process.env.UNISWAP_V3_FACTORY_ADDRESS || '0x1F98431c8aD98523631AE4a59f267346ea31F984'
+    if (!process.env.VIEWS_ADDRESS) {
+        process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
+            from: wallet.address,
+            nonce: walletNonce + 2
+        })
+    }
+
+    process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[process.env.FORK.toUpperCase()]?.SSV_NETWORK_ADDRESS
+    process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[process.env.FORK.toUpperCase()]?.SSV_VIEWS_ADDRESS
+    process.env.SWAP_FACTORY_ADDRESS = ETHEREUM_CONTRACTS[process.env.FORK.toUpperCase()]?.SWAP_FACTORY_ADDRESS
 
     await run('npm run generate --workspace @casimir/oracle')
     run('npm run test --workspace @casimir/ethereum')
