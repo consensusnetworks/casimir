@@ -189,7 +189,7 @@ onUnmounted(() =>{
           id="setting_modal"
           class="absolute right-[60px] 800s:right-[5%] bg-white top-[80%] w-[200px] setting_modal"
         >
-          <button class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full">
+          <button class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full h-[41px]">
             <vue-feather
               type="user"
               size="36"
@@ -231,7 +231,7 @@ onUnmounted(() =>{
             </span>
           </button> -->
           <button
-            class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full"
+            class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full h-[41px]"
             :disabled="!user"
             @click="logout"
           >
