@@ -59,7 +59,11 @@ const handleOutsideClick = (event: any) => {
   }
 }
 
+const doesScrollBarExist = ref(true)
+
 onMounted(() => {
+  doesScrollBarExist.value =  document.documentElement.scrollHeight > document.documentElement.clientHeight
+
   window.addEventListener('click', handleOutsideClick)
 })
 
@@ -249,7 +253,7 @@ onUnmounted(() =>{
 
       <div
         class="relative text-black"
-        :class="openWalletsModal? 'overflow-hidden pr-[15px]' : ''"
+        :class="openWalletsModal && doesScrollBarExist? 'overflow-hidden pr-[15px]' : ''"
       >
         <slot />
         <div
