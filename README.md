@@ -1,4 +1,4 @@
-<img width="50px" alt="Casimir logo" src="common/images/casimir.png">
+<img width="50px" alt="Casimir logo" src="casimir.png">
 
 # Casimir
 
