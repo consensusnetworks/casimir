@@ -242,5 +242,4 @@ void async function () {
     process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = functionsBillingRegistry.address
     process.env.FUNCTIONS_ORACLE_ADDRESS = functionsOracle.address
     run('npm run dev --workspace @casimir/oracle')
-    run('npm run dev --workspace @casimir/functions')
 }()

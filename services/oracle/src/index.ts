@@ -10,7 +10,7 @@ import {
     // reportForcedExitsHandler,
     reportCompletedExitsHandler
 } from './providers/handlers'
-import { HandlerInput } from './interfaces/HandlerInput'
+import { ethers } from 'ethers'
 
 const config = getConfig()
 
@@ -48,7 +48,7 @@ const eventsIterable = getEventsIterable({
     startBlock
 })
 
-const handlers: Record<string, (input: HandlerInput) => Promise<void>> = {}
+const handlers: Record<string, (input: ethers.utils.Result) => Promise<void>> = {}
 for (const contractName in contracts) {
     const contract = contracts[contractName as keyof typeof contracts]
     for (const [event, handler] of Object.entries(contract.events)) {
@@ -59,13 +59,13 @@ for (const contractName in contracts) {
 void async function () {
     try {
         for await (const event of eventsIterable) {
-            const details = event?.[event.length - 1]
-            const { args } = details
+            const details = event?.[event.length - 1] as ethers.Event
+            const input = details.args as ethers.utils.Result
             const handler = handlers[details.event as keyof typeof handlers]
             if (!handler) throw new Error(`No handler found for event ${details.event}`)
             await depositFunctionsBalanceHandler()
             await depositUpkeepBalanceHandler()
-            await handler({ args })
+            await handler(input)
             if (process.env.USE_LOGS === 'true') {
                 updateStartBlock('.log/block.log', details.blockNumber)
             }

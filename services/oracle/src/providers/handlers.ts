@@ -1,5 +1,4 @@
 import { ethers } from 'ethers'
-import { HandlerInput } from '../interfaces/HandlerInput'
 import { CasimirManager, CasimirRegistry, CasimirViews, IFunctionsBillingRegistry, IAutomationRegistry } from '@casimir/ethereum/build/@types'
 import CasimirManagerAbi from '@casimir/ethereum/build/abi/CasimirManager.json'
 import CasimirViewsAbi from '@casimir/ethereum/build/abi/CasimirViews.json'
@@ -103,8 +102,8 @@ export async function depositUpkeepBalanceHandler() {
     }
 }
 
-export async function initiateDepositHandler(input: HandlerInput) {
-    const { poolId } = input.args
+export async function initiateDepositHandler(input: ethers.utils.Result) {
+    const { poolId } = input
     if (!poolId) throw new Error('No pool id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
@@ -199,8 +198,8 @@ export async function initiateDepositHandler(input: HandlerInput) {
     await initiateDeposit.wait()
 }
 
-export async function initiateResharesHandler(input: HandlerInput) {
-    const { operatorId } = input.args
+export async function initiateResharesHandler(input: ethers.utils.Result) {
+    const { operatorId } = input
     if (!operatorId) throw new Error('No operator id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
@@ -240,7 +239,7 @@ export async function initiateResharesHandler(input: HandlerInput) {
 
             if (newOperatorId && poolDetails.reshares.toNumber() > 1) {
                 const newOperatorIds = oldOperatorIds.map((operatorId) => {
-                    if (operatorId === input.args.operatorId) return newOperatorId
+                    if (operatorId === input.operatorId) return newOperatorId
                     return operatorId
                 })
     
@@ -314,8 +313,8 @@ export async function initiateResharesHandler(input: HandlerInput) {
     }
 }
 
-export async function initiateExitsHandler(input: HandlerInput) {
-    const { poolId } = input.args
+export async function initiateExitsHandler(input: ethers.utils.Result) {
+    const { poolId } = input
     if (!poolId) throw new Error('No pool id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
@@ -328,8 +327,8 @@ export async function initiateExitsHandler(input: HandlerInput) {
     // Get operators to sign exit
 }
 
-export async function reportForcedExitsHandler(input: HandlerInput) {
-    const { count } = input.args
+export async function reportForcedExitsHandler(input: ethers.utils.Result) {
+    const { count } = input
     if (!count) throw new Error('No count provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
@@ -354,8 +353,8 @@ export async function reportForcedExitsHandler(input: HandlerInput) {
     }
 }
 
-export async function reportCompletedExitsHandler(input: HandlerInput) {
-    const { count } = input.args
+export async function reportCompletedExitsHandler(input: ethers.utils.Result) {
+    const { count } = input
     if (!count) throw new Error('No count provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)

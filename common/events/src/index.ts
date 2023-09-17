@@ -13,8 +13,8 @@ export function getEventsIterable(input: {
     const provider =
         input.provider || new ethers.providers.JsonRpcProvider(input.ethereumUrl)
     return (async function* () {
-        const queue: any[][] = []
-        const listener = (...args: any[]) => queue.push(args)
+        const queue: ethers.Event[][] = []
+        const enqueue = (...args: ethers.Event[]) => queue.push(args)
         for (const filter of input.contractFilters) {
             const contract = new ethers.Contract(
                 filter.address,
@@ -28,13 +28,13 @@ export function getEventsIterable(input: {
                         input.startBlock,
                         'latest'
                     )
-                    for (const eventObj of historicalEvents) {
-                        queue.push([eventObj])
+                    for (const historicalEvent of historicalEvents) {
+                        enqueue(historicalEvent)
                     }
                 }
             }
             for (const event of filter.events) {
-                contract.on(event, listener)
+                contract.on(event, enqueue)
                 while (true) {
                     if (queue.length === 0) {
                         await new Promise<void>((resolve) => {

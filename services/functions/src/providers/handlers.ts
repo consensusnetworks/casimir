@@ -1,6 +1,5 @@
 import { ethers } from 'ethers'
 import { decodeDietCBOR } from './format'
-import { HandlerInput } from '../interfaces/HandlerInput'
 import requestConfig from '@casimir/functions/Functions-request-config'
 import { simulateRequest } from '../../FunctionsSandboxLibrary'
 import { getConfig } from './config'
@@ -9,8 +8,8 @@ import { updateExecutionLog } from '@casimir/logs'
 
 const config = getConfig()
 
-export async function fulfillRequestHandler(input: HandlerInput): Promise<void> {
-    const { requestId, data } = input.args
+export async function fulfillRequestHandler(input: ethers.utils.Result): Promise<void> {
+    const { requestId, data } = input
     if (!requestId) throw new Error('No request id provided')
     if (!data) throw new Error('No data provided')
 
@@ -23,25 +22,22 @@ export async function fulfillRequestHandler(input: HandlerInput): Promise<void> 
         args
     }
     const { result, resultLog, success } = await simulateRequest(currentRequestConfig)
-    console.log('Execution result', result)
-    console.log('Execution result log', resultLog)
-    console.log('Execution success', success)
     if (success) {        
-        // const dummySigners = Array(31).fill(signer.address)    
-        // const fulfillAndBill = await functionsBillingRegistry.fulfillAndBill(
-        //     requestId,
-        //     result,
-        //     '0x',
-        //     signer.address,
-        //     dummySigners,
-        //     4,
-        //     100_000,
-        //     500_000,
-        //     {
-        //         gasLimit: 500_000,
-        //     }
-        // )
-        // await fulfillAndBill.wait()
+        const dummySigners = Array(31).fill(signer.address)    
+        const fulfillAndBill = await functionsBillingRegistry.fulfillAndBill(
+            requestId,
+            result,
+            '0x',
+            signer.address,
+            dummySigners,
+            4,
+            100_000,
+            500_000,
+            {
+                gasLimit: 500_000,
+            }
+        )
+        await fulfillAndBill.wait()
         if (process.env.USE_LOGS === 'true') {
             updateExecutionLog('.log/execution.log', resultLog)
         }

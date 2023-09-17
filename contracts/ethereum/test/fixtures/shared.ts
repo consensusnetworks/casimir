@@ -1,6 +1,6 @@
 import { ethers, network, upgrades } from 'hardhat'
 import { loadFixture, time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
-import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, FunctionsBillingRegistry, FunctionsOracle, FunctionsOracleFactory, IBeaconUpgradeable, ISSVViews } from '../../build/@types'
+import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, FunctionsBillingRegistry, FunctionsOracle, FunctionsOracleFactory, ISSVViews } from '../../build/@types'
 import { fulfillReport, runUpkeep } from '../../helpers/upkeep'
 import { depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../../helpers/oracle'
 import { round } from '../../helpers/math'

@@ -43,7 +43,7 @@ const requestConfig = {
     // Args (string only array) can be accessed within the source code with `args[index]` (ie: args[0]).
     args: [
         "1616508000", // genesisTimestamp
-        "0x552804Cf1fbFfa1E539bEBeF7117d5E8a1E4F32D", // viewsAddress
+        "0xc9F69bD5F43153FB485cBF1DB907EE1eb28c9B29", // viewsAddress
         "0x0812a9fe", // getCompoundablePoolIds(uint256,uint256)
         "0x5d1e0780", // getDepositedPoolCount()
         "0xdcf25c1d", // getDepositedPoolPublicKeys(uint256,uint256)
