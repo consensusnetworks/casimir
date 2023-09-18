@@ -309,6 +309,17 @@ const setTableData = () =>{
 
 }
 
+const checkAll = ref(false)
+watch(checkAll, () =>{
+  filteredData.value.map(item =>{
+    if(checkAll.value && !checkedItems.value.includes(item)){
+      checkedItems.value.push(item)
+    }else if(!checkAll && checkedItems.value.includes(item)){
+      removeItemFromCheckedList(item)
+    }
+  })
+})
+
 watch(rawUserAnalytics, () =>{
   setTableData()
   filterData()
@@ -323,7 +334,7 @@ onMounted(() =>{
 </script>
 
 <template>
-  <div class="card_container pt-[42px] pb-[34px] text-black">
+  <div class="card_container pt-[42px] pb-[34px] text-black flex flex-col">
     <div class="px-[32px]">
       <div class="flex flex-wrap gap-[20px] justify-between items-start pb-[20px] border-b border-b-[#EAECF0] ">
         <div>
@@ -338,7 +349,7 @@ onMounted(() =>{
         </div>
         <div class="flex items-start gap-[12px]">
           <button
-            class="flex items-center gap-[8px] export_button"
+            class="flex items-center gap-[8px] export_button h-[38px]"
             @click="exportFile()"
           >
             <vue-feather
@@ -406,8 +417,8 @@ onMounted(() =>{
         </div>
       </div>
     </div>
-    <div class="w-full overflow-x-scroll">
-      <table class="w-full">
+    <div class="w-full overflow-x-scroll h-full min-h-[200px]">
+      <table class="w-full min-h-[200px] ">
         <thead>
           <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
             <th
@@ -416,6 +427,22 @@ onMounted(() =>{
               class="table_header "
             >
               <div class="flex items-center gap-[5px]">
+                <div
+                  v-if="header.value === 'blank_column'"
+                  class="flex items-center"
+                >
+                  <button
+                    class="checkbox_button"
+                    @click="checkAll = !checkAll"
+                  >
+                    <vue-feather
+                      v-show="checkAll"
+                      type="check"
+                      size="20"
+                      class="icon w-[14px] h-min"
+                    />
+                  </button>
+                </div>
                 <div
                   v-if="header.value === 'bal'"
                   class="flex items-center tooltip_container"
@@ -469,20 +496,21 @@ onMounted(() =>{
                   {{ header.title }}
                 </div>
                 <button 
-                  class="ml-[4px] flex flex-col items-center justify-between"
-                  :class="selectedHeader === header.value? 'opacity-100' : 'opacity-25'"
+                  class="ml-[4px] h-min"
+                  :class="selectedHeader === header.value? 'opacity-100 text-primary' : 'opacity-90 text-grey_4'"
                   @click="selectedHeader = header.value, selectedOrientation === 'ascending'? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
                 >
                   <vue-feather
                     type="arrow-up"
                     size="20"
-                    class="icon h-min "
+                    class="icon h-[8px]"
                     :class="selectedOrientation === 'ascending'? 'w-[10px]' : 'w-[8px] opacity-50'"
-                  />
+                  /> 
+                  <br>
                   <vue-feather
                     type="arrow-down"
                     size="20"
-                    class="icon h-min"
+                    class="icon h-[8px]"
                     :class="selectedOrientation === 'descending'? 'w-[10px]' : 'w-[8px] opacity-50'"
                   />
                 </button>
@@ -608,7 +636,7 @@ onMounted(() =>{
     </div>
     <div class="flex justify-between items-center mt-[12px]">
       <div class="page_number ml-[56px]">
-        Page {{ currentPage }} of {{ totalPages }}
+        Page {{ totalPages === 0? 0 : currentPage }} of {{ totalPages }}
       </div>
       <div class="flex items-center gap-[12px]">
         <button
@@ -840,7 +868,6 @@ onMounted(() =>{
 }
 .card_container{
     width: 100%;
-    height: 100%;
     box-sizing: border-box;
     background: #FFFFFF;
     border: 1px solid #D0D5DD;

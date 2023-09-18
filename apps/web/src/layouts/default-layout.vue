@@ -115,7 +115,11 @@ const handleOutsideClick = (event: any) => {
   }
 }
 
+const doesScrollBarExist = ref(true)
+
 onMounted(() => {
+  doesScrollBarExist.value =  document.documentElement.scrollHeight > document.documentElement.clientHeight
+
   window.addEventListener('click', handleOutsideClick)
 })
 
@@ -131,7 +135,7 @@ onUnmounted(() =>{
     <div :class="openWalletsModal? 'flex flex-col h-screen' : ''">
       <div
         class="px-[60px] 800s:px-[5%]  pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
-        :class="openWalletsModal? 'pr-[75px]' : ''"
+        :class="openWalletsModal && doesScrollBarExist? 'pr-[75px]' : ''"
       >
         <img
           src="/casimir.svg"
@@ -141,7 +145,7 @@ onUnmounted(() =>{
 
         <div
           v-if="screenWidth >= 450"
-          class="flex flex-wrap items-center gap-50 h-full"
+          class="flex flex-wrap items-center gap-50 h-full "
         >
           <router-link
             to="/"
@@ -161,7 +165,7 @@ onUnmounted(() =>{
 
         <div
           v-else
-          class="nav_items nav_items_active relative"
+          class="nav_items nav_items_active relative "
         >
           <button
             class="flex items-center gap-[10px]"
@@ -219,7 +223,7 @@ onUnmounted(() =>{
           </div>
         </div>
 
-        <div class="flex items-center justify-between gap-[45px] 600s:gap-[10px] text-white">
+        <div class="flex items-center justify-between gap-[45px] 600s:gap-[10px] text-white h-[76px]">
           <button
             id="setting_modal_button"
           >
@@ -246,7 +250,7 @@ onUnmounted(() =>{
           id="setting_modal"
           class="absolute right-[60px] 800s:right-[5%] bg-white top-[80%] w-[200px] setting_modal"
         >
-          <button class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full">
+          <button class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full h-[41px]">
             <vue-feather
               type="user"
               size="36"
@@ -288,7 +292,7 @@ onUnmounted(() =>{
             </span>
           </button> -->
           <button
-            class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full"
+            class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full h-[41px]"
             :disabled="!user"
             @click="logout"
           >
@@ -306,7 +310,7 @@ onUnmounted(() =>{
 
       <div
         class="relative text-black"
-        :class="openWalletsModal? 'overflow-hidden pr-[15px]' : ''"
+        :class="openWalletsModal && doesScrollBarExist? 'overflow-hidden pr-[15px]' : ''"
       >
         <slot />
         <div
@@ -365,7 +369,7 @@ onUnmounted(() =>{
               v-show="currentSlide === 2"
               class="absolute top-0 left-0 w-full h-full bg-white card px-[50px] py-[25px]"
             >
-              <h6 class="nav_items flex items-center mb-[20px]">
+              <h6 class="nav_items flex items-center mb-[20px] h-[29px]">
                 <button @click="authFlowCardNumber = 1, selectedProvider = null">
                   <vue-feather
                     type="chevron-left"

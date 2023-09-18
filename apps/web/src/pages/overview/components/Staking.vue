@@ -53,34 +53,17 @@ const handleInputOnAmountToStake = (event: any) => {
   formattedAmountToStake.value = parts.join('.')
 }
 
-const handleOutsideClick = (event: any) => {
-  const selectWalletInputContainer = document.getElementById('selectWalletInputContainer')
-  const selectWalletOptionsCard = document.getElementById('selectWalletOptionsCard')
-  const selectWalletInputButton = document.getElementById('selectWalletInputButton')
-  if (selectWalletInputContainer && selectWalletOptionsCard && selectWalletInputButton) {
-    if (openSelectWalletInput.value) {
-      if (!selectWalletInputContainer.contains(event.target)) {
-        if (!selectWalletInputButton.contains(event.target)) {
-          openSelectWalletInput.value = false
-        }
-      }
-    }
+const selectAmountInput = () => {
+  const inputElement = document.getElementById('amount_input')
+  
+  if(inputElement){
+
+    inputElement.setSelectionRange(0, inputElement.value.length)
+  
+    // For mobile devices
+    inputElement.select()
   }
-
-  const termsOfServiceContainer = document.getElementById('termsOfServiceContainer')
-  const termsOfServiceCard = document.getElementById('termsOfServiceCard')
-  const termsOfServiceButton = document.getElementById('termsOfServiceButton')
-
-
-  if (termsOfServiceCard && termsOfServiceButton && termsOfServiceContainer) {
-    if (openTermsOfService.value) {
-      if (!termsOfServiceCard.contains(event.target)) {
-        if (!termsOfServiceButton.contains(event.target)) {
-          openTermsOfService.value = false
-        }
-      }
-    }
-  }
+  
 }
 
 const aggregateAddressesByProvider = () => {
@@ -159,7 +142,6 @@ watch(user, async () => {
 })
 
 onMounted(async () => {
-  window.addEventListener('click', handleOutsideClick)
   aggregateAddressesByProvider()
   currentEthPrice.value = Math.round((await getCurrentPrice({ coin: 'ETH', currency: 'USD' })) * 100) / 100
   estimatedFees.value = await getDepositFees()
@@ -171,8 +153,39 @@ onMounted(async () => {
   }
 })
 
-onUnmounted(() => {
-  window.removeEventListener('click', handleOutsideClick)
+const handleOutsideClickForWalletInput = (event: any) => {
+  const selectWalletInputContainer = document.getElementById('selectWalletInputContainer')
+  const selectWalletInputButton = document.getElementById('selectWalletInputButton')
+
+  if(!selectWalletInputContainer?.contains(event.target) && !selectWalletInputButton?.contains(event.target)){
+    openSelectWalletInput.value = false
+  }
+}
+
+const handleOutsideClickForTermsOfService = (event: any) => {
+  const termsOfServiceContainer = document.getElementById('termsOfServiceContainer')
+  const termsOfServiceButton = document.getElementById('termsOfServiceButton')
+
+
+  if(!termsOfServiceContainer?.contains(event.target) && !termsOfServiceButton?.contains(event.target)){
+    openTermsOfService.value = false
+  }
+}
+
+watch(openSelectWalletInput, ()=>{
+  if(openSelectWalletInput.value){
+    window.addEventListener('click', handleOutsideClickForWalletInput)
+  }else {
+    window.removeEventListener('click', handleOutsideClickForWalletInput)
+  }
+})
+
+watch(openTermsOfService, ()=>{
+  if(openTermsOfService.value){
+    window.addEventListener('click', handleOutsideClickForTermsOfService)
+  }else {
+    window.removeEventListener('click', handleOutsideClickForTermsOfService)
+  }
 })
 
 const handleDeposit = async () => {
@@ -221,7 +234,10 @@ const handleDeposit = async () => {
     <h6 class="addressBalance mb-[12px]">
       Wallet Balance
     </h6>
-    <h5 class="addressBalance_amount mb-[5px]">
+    <h5
+      class="addressBalance_amount mb-[5px]"
+      :class="addressBalance? 'font-[500]' : 'font-[300]'"
+    >
       {{ addressBalance ? addressBalance : '- - -' }}
     </h5>
     <div class="text-[12px] mb-[13px] text-blue-400">
@@ -301,13 +317,16 @@ const handleDeposit = async () => {
     </div>
 
 
-    <div class="card_input text-black px-[10px] py-[14px]">
+    <button
+      class="card_input text-black px-[10px] py-[14px] cursor-text"
+      @click="selectAmountInput"
+    >
       <div class="flex items-center gap-[8px]">
         <!-- <h6 class="text-[#667085]">
           $
         </h6> -->
         <input
-          id="amount"
+          id="amount_input"
           v-model="formattedAmountToStake"
           type="text"
           pattern="^\d{1,3}(,\d{3})*(\.\d+)?$"
@@ -321,7 +340,7 @@ const handleDeposit = async () => {
           ETH
         </h6>
       </div>
-    </div>
+    </button>
 
     <p class="card_message">
       The amount to stake in set currency
@@ -459,7 +478,6 @@ const handleDeposit = async () => {
 
 .addressBalance_amount {
   font-style: normal;
-  font-weight: 500;
   font-size: 28px;
   line-height: 20px;
   letter-spacing: -0.01em;
