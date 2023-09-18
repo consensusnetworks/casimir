@@ -95,51 +95,6 @@
   }
 }
 
-.features {
-  max-width: $max-width;
-  margin: 120px auto 0 auto;
-  width: 100%;
-  display: grid;
-  flex-direction: column;
-  justify-content: space-between;
-  text-align: center;
-
-  .features__container {
-    margin: 3rem auto;
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
-
-    .card {
-      background-color: #ffffff;
-      border: 1px solid rgb(216, 222, 228);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      align-items: flex-start;
-
-      .top__rect {
-        background-color: $blue-4;
-        height: 100%;
-        width: 100%;
-      }
-
-      .bottom__text {
-        padding: 20px 30px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-        gap: 8px;
-        border-top: 1px solid rgb(216, 222, 228);
-        text-align: left;
-      }
-    }
-  }
-}
-
 .overview {
   max-width: $max-width;
   margin: 120px auto 0 auto;
@@ -166,7 +121,9 @@
   .overview__header {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    gap: 120px;
   }
 
   .overview__container {
@@ -188,6 +145,50 @@
         justify-content: space-between;
         align-items: center;
         gap: 15px;
+      }
+    }
+  }
+}
+
+.features {
+  max-width: $max-width;
+  margin: 120px auto 0 auto;
+  width: 100%;
+  display: grid;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+
+  .features__container {
+    margin: 3rem auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+
+    .card {
+      background-color: #ffffff;
+      border: 1px solid rgb(216, 222, 228);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-start;
+
+      .top__rect {
+        background-color: $blue-4;
+        height: 100%;
+        width: 100%;
+      }
+
+      .bottom__text {
+        padding: 20px 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 8px;
+        border-top: 1px solid rgb(216, 222, 228);
+        text-align: left;
       }
     }
   }
