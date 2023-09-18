@@ -5,11 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"strings"
 	"sync"
 	"time"
 
-	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -22,33 +21,30 @@ const (
 )
 
 type EthereumCrawler struct {
-	EthereumService *EthereumService
-	ContractService *ContractService
-	Glue            *GlueService
-	S3              *S3Service
-	Logger          *Logger
-	Config          Config
-	Wg              sync.WaitGroup
-	Mu              sync.Mutex
-	Sema            chan struct{}
-	Unprocessed     []uint64  // blocks that failed to process
-	Start           time.Time // the time when the crawler was started
-	StartedAtBlock  uint64    // the block when the crawler was started
-	Version         int
-	Env             Env
-	Elapsed         time.Duration
-	State
-}
-
-type Task struct {
-	Block uint64
+	EthereumService   *EthereumService
+	ContractService   *ContractService
+	Glue              *GlueService
+	S3                *S3Service
+	Logger            *Logger
+	Config            Config
+	Wg                sync.WaitGroup
+	Mu                sync.Mutex
+	Sema              chan struct{}
+	Unprocessed       []uint64  // blocks that failed to process
+	Start             time.Time // the time when the crawler was started
+	Version           int
+	Env               Env
+	Elapsed           time.Duration
+	CrawlState        State
+	StreamState       State
+	crawlerStartBlock uint64
 }
 
 func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 	logger, err := NewConsoleLogger()
 
 	if err != nil {
-		return nil, errors.New("failed to create logger")
+		return nil, fmt.Errorf("failed to create logger: %s", err.Error())
 	}
 
 	l := logger.Sugar()
@@ -56,8 +52,7 @@ func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 	eths, err := NewEthereumService(config.URL.String())
 
 	if err != nil {
-		l.Infof("failed to create ethereum service: %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to create ethereum service: %s", err.Error())
 	}
 
 	l.Info("created ethereum service")
@@ -103,25 +98,17 @@ func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 		return nil, err
 	}
 
-	cs, err := NewContractService(eths)
+	// cs, err := NewContractService(eths)
 
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	l.Info("created contract service")
-
-	head, err := eths.Client.HeaderByNumber(context.Background(), nil)
-
-	if err != nil {
-		l.Infof("failed to get head block: %s", err.Error())
-		return nil, err
-	}
+	// l.Info("created contract service")
 
 	return &EthereumCrawler{
 		Logger:          logger,
 		EthereumService: eths,
-		ContractService: cs,
 		Glue:            glue,
 		S3:              s3v,
 		Wg:              sync.WaitGroup{},
@@ -129,21 +116,54 @@ func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 		Sema:            make(chan struct{}, config.ConcurrencyLimit),
 		Version:         rv,
 		Config:          config,
-		State:           Ready,
-		StartedAtBlock:  uint64(head.Number.Int64()),
-		// TODO: source this from env var
-		// StartBlock: 9564114,
+		Env:             config.Env,
+		CrawlState:      Ready,
+		StreamState:     Ready,
+		// ContractService: cs,
 	}, nil
 }
 
-func (c *EthereumCrawler) Crawl() error {
-	defer c.Wg.Wait()
-
+func (c *EthereumCrawler) Run() error {
 	l := c.Logger.Sugar()
 
-	l.Info(c.Config)
+	defer c.Close()
 
-	head := uint64(c.EthereumService.Head.Number.Int64())
+	c.Wg.Add(2)
+
+	go func() {
+		defer c.Wg.Done()
+		err := c.Crawl()
+
+		if err != nil {
+			l.Errorf("failed to crawl: %s", err.Error())
+		}
+
+		c.StreamState = Stopped
+	}()
+
+	go func() {
+		defer c.Wg.Done()
+		err := c.Stream()
+
+		if err != nil {
+			l.Errorf("failed to stream: %s", err.Error())
+		}
+		c.StreamState = Stopped
+	}()
+
+	return nil
+}
+
+func (c *EthereumCrawler) Crawl() error {
+	l := c.Logger.Sugar()
+
+	head := c.EthereumService.Head.Number.Uint64()
+
+	if c.CrawlState != Ready {
+		return errors.New("crawler not ready")
+	}
+
+	l.Infof("crawling %s from block %d to %d", c.Config.Network, c.crawlerStartBlock, head)
 
 	for i := uint64(0); i <= head; i += uint64(c.Config.BatchSize) {
 		end := i + uint64(c.Config.BatchSize) - 1
@@ -152,37 +172,101 @@ func (c *EthereumCrawler) Crawl() error {
 		}
 
 		c.Wg.Add(1)
-		go func(start, end uint64) {
-			defer func() {
-				c.Wg.Done()
-				<-c.Sema
-			}()
-
-			c.Sema <- struct{}{}
-
-			err := c.ProcessBatch(start, end)
-			if err != nil {
-				l.Error(err)
-			}
-		}(i, end)
+		go c.ProcessBatch(i, end)
 	}
 
 	return nil
 }
 
+func (c *EthereumCrawler) Stream() error {
+	l := c.Logger.Sugar()
+
+	wsurl := strings.Replace(c.EthereumService.URL.String(), "https", "wss", 1)
+
+	_, err := NewEthereumService(wsurl)
+
+	if err != nil {
+		return err
+	}
+
+	current := c.EthereumService.Head.Number.Int64()
+
+	l.Infof("streaming %s starting from block %d", c.Config.Network, current)
+
+	header := make(chan *types.Header)
+
+	sub, err := c.EthereumService.Client.SubscribeNewHead(context.Background(), header)
+
+	if err != nil {
+		return err
+	}
+
+	for {
+		select {
+		case err := <-sub.Err():
+			return err
+		case h := <-header:
+			block, err := c.EthereumService.Block(h.Number.Uint64())
+
+			if err != nil {
+				return err
+			}
+
+			err = c.ProcessBlock(block.Number().Uint64())
+
+			if err != nil {
+				return err
+			}
+		}
+	}
+}
+
+func (c *EthereumCrawler) Close() {
+	l := c.Logger.Sugar()
+
+	if len(c.Unprocessed) > 0 {
+		l.Infof("unprocessed blocks: %d", len(c.Unprocessed))
+
+		for _, b := range c.Unprocessed {
+			err := c.ProcessBlock(b)
+
+			if err != nil {
+				// TODO: log this to s3 for another process retry
+				l.Errorf("failed to process block=%d: %s", b, err.Error())
+				continue
+			}
+		}
+	}
+
+	c.Wg.Wait()
+	close(c.Sema)
+	c.EthereumService.Client.Close()
+
+	c.Elapsed = time.Since(c.Start)
+
+	l.Infof("time elapse: %s, closed all connections, shutting down...", c.Elapsed)
+	l.Sync()
+}
+
 func (c *EthereumCrawler) ProcessBatch(start, end uint64) error {
 	l := c.Logger.Sugar()
-	l.Infof("processing batch=%d-%d", start, end)
 
-	defer l.Infof("completed batch=%d-%d", start, end)
+	defer func() {
+		c.Wg.Done()
+		<-c.Sema
+		l.Infof("completed batch=%d-%d", start, end)
+	}()
+
+	c.Sema <- struct{}{}
+
+	l.Infof("processing batch=%d-%d", start, end)
 
 	for i := start; i <= end; i++ {
 		err := c.ProcessBlock(i)
 
 		if err != nil {
 			c.Unprocessed = append(c.Unprocessed, i)
-
-			l.Info(err.Error())
+			l.Errorf("failed to process block=%d: %s", i, err.Error())
 			continue
 		}
 	}
@@ -207,7 +291,6 @@ func (c *EthereumCrawler) ProcessBlock(b uint64) error {
 }
 
 func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
-	l := c.Logger.Sugar()
 	events := &BlockEvents{}
 
 	block, err := c.EthereumService.Block(b)
@@ -245,25 +328,24 @@ func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 		}
 
 		events.TxEvents = append(events.TxEvents, txEvent)
+		// actions, err := c.NewActionEvents(txEvent)
 
-		actions, err := c.NewActionEvents(txEvent)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
-		if err != nil {
-			return nil, err
-		}
-
-		events.ActionsPK = events.TxEventsPK
-		events.Actions = append(events.Actions, actions...)
+		// events.ActionsPK = events.TxEventsPK
+		// events.Actions = append(events.Actions, actions...)
 	}
 
-	if (len(events.TxEvents)-1)*2 != len(events.Actions) {
-		l.Errorf("events mismatch: block=%d events=%d actions=%d", b, len(events.TxEvents), len(events.Actions))
-		return nil, errors.New("check the nnumber of")
-	}
+	// if (len(events.TxEvents)-1)*2 != len(events.Actions) {
+	// 	l.Errorf("events mismatch: block=%d events=%d actions=%d", b, len(events.TxEvents), len(events.Actions))
+	// 	return nil, errors.New("check the nnumber of")
+	// }
 	return events, nil
 }
 
-func (c *EthereumCrawler) NewActionEvents(txEvent *TxEvent) ([]*Action, error) {
+func (c *EthereumCrawler) NewActionEvents(txEvent *EthereumEvent) ([]*Action, error) {
 	sender := &Action{
 		Chain:      Ethereum,
 		Network:    c.Config.Network,
@@ -293,8 +375,8 @@ func (c *EthereumCrawler) NewActionEvents(txEvent *TxEvent) ([]*Action, error) {
 	return []*Action{sender, recipient}, nil
 }
 
-func (c *EthereumCrawler) NewBlockEvent(b *types.Block) *TxEvent {
-	return &TxEvent{
+func (c *EthereumCrawler) NewBlockEvent(b *types.Block) *EthereumEvent {
+	return &EthereumEvent{
 		Chain:      Ethereum,
 		Network:    c.Config.Network,
 		Provider:   Casimir,
@@ -305,8 +387,8 @@ func (c *EthereumCrawler) NewBlockEvent(b *types.Block) *TxEvent {
 	}
 }
 
-func (c *EthereumCrawler) NewTxEvent(b *types.Block, tx *types.Transaction) (*TxEvent, error) {
-	txEvent := TxEvent{
+func (c *EthereumCrawler) NewTxEvent(b *types.Block, tx *types.Transaction) (*EthereumEvent, error) {
+	txEvent := EthereumEvent{
 		Chain:       Ethereum,
 		Network:     c.Config.Network,
 		Provider:    Casimir,
@@ -355,19 +437,6 @@ func (c *EthereumCrawler) NewTxEvent(b *types.Block, tx *types.Transaction) (*Tx
 	return &txEvent, nil
 }
 
-func (c *EthereumCrawler) Close() {
-	l := c.Logger.Sugar()
-	defer l.Sync()
-
-	c.EthereumService.Client.Close()
-	close(c.Sema)
-
-	c.Elapsed = time.Since(c.Start)
-
-	l.Info("closed all connections, shutting down...")
-	l.Infof("time elapsed: %s", c.Elapsed)
-}
-
 func (c *EthereumCrawler) UploadBlockEvents(result *BlockEvents) error {
 	l := c.Logger.Sugar()
 
@@ -376,66 +445,42 @@ func (c *EthereumCrawler) UploadBlockEvents(result *BlockEvents) error {
 		return errors.New("no events found, there shoudl be at least one block event")
 	}
 
-	encodedEvents, err := NDJSON[TxEvent](result.TxEvents)
+	encodedEvents, err := NDJSON[EthereumEvent](result.TxEvents)
 
 	if err != nil {
 		return err
 	}
 
-	ext := "ndjson"
+	eventPartition := fmt.Sprintf("%s.ndjson", result.TxEventsPK.Marshal())
 
-	eventPartition := fmt.Sprintf("%s.%s", result.TxEventsPK.String(), ext)
-
-	err = c.S3.UploadBytes(c.Glue.EventMeta.Bucket, eventPartition, bytes.NewBuffer(encodedEvents.Bytes()))
+	err = c.S3.Upload(c.Glue.EventMetadata.Bucket, eventPartition, bytes.NewBuffer(encodedEvents.Bytes()))
 
 	if err != nil {
 		return err
 	}
 
-	// l.Infof("uploaded block=%d events to partition=%s", result.TxEventsPK.Block, eventPartition)
+	// l.Infof("uploaded block=%d to partition=%s", result.TxEventsPK.Block, eventPartition)
 
-	if len(result.Actions) > 0 {
-		act, err := NDJSON[Action](result.Actions)
+	// if len(result.Actions) > 0 {
+	// 	act, err := NDJSON[Action](result.Actions)
 
-		if err != nil {
-			return err
-		}
+	// 	if err != nil {
+	// 		return err
+	// 	}
 
-		actionPartition := fmt.Sprintf("%s.%s", result.ActionsPK.String(), ext)
+	// 	actionPartition := fmt.Sprintf("%s.%s", result.ActionsPK.String(), ext)
 
-		err = c.S3.UploadBytes(c.Glue.ActionMeta.Bucket, actionPartition, bytes.NewBuffer(act.Bytes()))
+	// 	err = c.S3.Upload(c.Glue.ActionMeta.Bucket, actionPartition, bytes.NewBuffer(act.Bytes()))
 
-		if err != nil {
-			return err
-		}
-		// l.Infof("uploaded block %d actions to %s", result.ActionsPK.Block, actionPartition)
-	}
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	// l.Infof("uploaded block %d actions to %s", result.ActionsPK.Block, actionPartition)
+	// }
 
 	return nil
 }
 
-func (c *EthereumCrawler) Stream() error {
-	l := c.Logger.Sugar()
-
-	l.Infof("starting stream from ")
-
-	query := ethereum.FilterQuery{}
-
-	logs := make(chan types.Log)
-
-	sub, err := c.EthereumService.Client.SubscribeFilterLogs(context.Background(), query, logs)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for {
-		select {
-		case err := <-sub.Err():
-			log.Fatal(err)
-		case vLog := <-logs:
-			fmt.Println(vLog) // pointer to event log
-			l.Infow("new log", "block", vLog.BlockNumber, "tx", vLog.TxHash, "topics", vLog.Topics)
-		}
-	}
+func (s State) String() string {
+	return [...]string{"ready", "running", "stopped"}[s-1]
 }

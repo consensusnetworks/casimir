@@ -83,7 +83,7 @@ func (cs *ContractService) GetUserStake(addr common.Address) (*big.Int, error) {
 
 // EventLogs queries for all contract events starting from the  StartBlock (when contract was deployed)
 // and decodes (unpack) the logs using the ABI
-func (cs *ContractService) EventLogs() (*[]Event, error) {
+func (cs *ContractService) EventLogs() (*[]EthereumEvent, error) {
 	filter := ethereum.FilterQuery{
 		FromBlock: big.NewInt(int64(cs.StartBlock)),
 		Addresses: []common.Address{cs.CasimirManager},
@@ -110,7 +110,7 @@ func (cs *ContractService) EventLogs() (*[]Event, error) {
 
 // FilterLogs parses the raw logs based on the event type (topic[0]).
 // To find all the parse methods in the manager use: grep -E '^\s*func.*Parse.*{' ./casimir_manager.go
-func (cs ContractService) ParseLogs(logs []types.Log) (*[]Event, error) {
+func (cs ContractService) ParseLogs(logs []types.Log) (*[]EthereumEvent, error) {
 	// var events []Event
 
 	for _, l := range logs {

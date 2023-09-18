@@ -21,16 +21,16 @@ type Table struct {
 	Name     string
 	Database string
 	Version  int
-	Bucket   string
-	SerDe    string
+	Bucket   string // Bucket is the underlying S3 bucket where the table data is stored
+	SerDe    string // SerDe is the serialization/deserialization library used by the table
 }
 
 type GlueService struct {
-	Client          *glue.Client
-	Databases       []types.Database
-	Tables          []types.Table
-	EventMeta       Table
-	ActionMeta      Table
+	Client        *glue.Client
+	Databases     []types.Database
+	Tables        []types.Table
+	EventMetadata Table
+	// ActionMeta      Table
 	ResourceVersion int
 }
 
@@ -43,27 +43,32 @@ type Partition struct {
 	Block   uint64
 }
 
-func NewGlueService(config *aws.Config) (*GlueService, error) {
-	return &GlueService{
-		Client: glue.NewFromConfig(*config),
-	}, nil
-}
-
-func (p *Partition) String() string {
+func (p *Partition) Marshal() string {
 	return fmt.Sprintf("chain=%s/network=%s/year=%s/month=%s/block=%d", p.Chain, p.Network, p.Year, p.Month, p.Block)
 }
 
-func LoadDefaultAWSConfig() (*aws.Config, error) {
+func (p *Partition) Unmarshal(partition string, part *Partition) error {
+	return nil
+}
+
+func NewGlueService(config aws.Config) (*GlueService, error) {
+
+	return &GlueService{
+		Client: glue.NewFromConfig(config),
+	}, nil
+}
+
+func LoadDefaultAWSConfig() (aws.Config, error) {
 	region := "us-east-2"
 	config, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion(region),
 	)
 
 	if err != nil {
-		return nil, err
+		return aws.Config{}, err
 	}
 
-	return &config, nil
+	return config, nil
 }
 
 func (g *GlueService) LoadDatabases() error {
@@ -139,47 +144,33 @@ func (g *GlueService) Introspect(env Env) error {
 		serde := t.StorageDescriptor.SerdeInfo.SerializationLibrary
 		bucket := t.StorageDescriptor.Location
 
-		cleanedBucket := strings.TrimPrefix(*bucket, "s3://")
-		cleanedBucket = strings.TrimSuffix(cleanedBucket, "/")
+		cleaned := strings.TrimPrefix(*bucket, "s3://")
+		cleaned = strings.TrimSuffix(cleaned, "/")
 
-		switch {
-		case strings.Contains(table, "event"):
-			lastWord := table[len(table)-1]
+		if strings.Contains(table, "event") {
+			lastw := table[len(table)-1]
 
-			resourceVersion, err := strconv.Atoi(string(lastWord))
+			resourceVersion, err := strconv.Atoi(string(lastw))
 
 			if err != nil {
 				return err
 			}
 
-			g.EventMeta = Table{
+			g.EventMetadata = Table{
 				Name:     table,
 				Database: db,
 				Version:  resourceVersion,
-				Bucket:   cleanedBucket,
+				Bucket:   cleaned,
 				SerDe:    strings.Split(*serde, ".")[3],
 			}
 
 			g.ResourceVersion = resourceVersion
-		case strings.Contains(table, "action"):
-			lastWord := table[len(table)-1]
-
-			resourceVersion, err := strconv.Atoi(string(lastWord))
-
-			if err != nil {
-				return err
-			}
-
-			g.ActionMeta = Table{
-				Name:     table,
-				Database: db,
-				Version:  resourceVersion,
-				Bucket:   cleanedBucket,
-				SerDe:    strings.Split(*serde, ".")[3],
-			}
-		default:
-			return fmt.Errorf("unknown table: %s", table)
+			break
 		}
+	}
+
+	if g.EventMetadata.Bucket == "" || g.EventMetadata.SerDe == "" {
+		return fmt.Errorf("failed to get event table meta")
 	}
 
 	if g.ResourceVersion == 0 {

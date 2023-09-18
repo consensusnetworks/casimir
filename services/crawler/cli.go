@@ -35,7 +35,7 @@ func Run(args []string) error {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			config, err := LoadConfig(ctx)
+			config, err := ConfigFromCLI(ctx)
 
 			if err != nil {
 				return err
@@ -47,13 +47,7 @@ func Run(args []string) error {
 				return err
 			}
 
-			// _, err = crawler.ContractService.EventLogs()
-
-			// if err != nil {
-			// return err
-			// }
-
-			err = crawler.Stream()
+			err = crawler.Run()
 
 			if err != nil {
 				return err

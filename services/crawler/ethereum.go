@@ -32,6 +32,7 @@ type EthereumService struct {
 	Network  Network
 	Provider Provider
 	Head     *types.Header
+	Ws       bool
 }
 
 func NewEthereumService(raw string) (*EthereumService, error) {
@@ -86,7 +87,51 @@ func NewEthereumService(raw string) (*EthereumService, error) {
 		Provider: Casimir,
 		URL:      parsed,
 		Head:     header,
+		Ws:       parsed.Scheme == "ws" || parsed.Scheme == "wss",
 	}, nil
+}
+
+func WhichNetwork(raw string) (Network, error) {
+	if raw == "" {
+		return "", errors.New("url cannot be empty")
+	}
+
+	parsed, err := url.Parse(raw)
+
+	if err != nil {
+		return "", err
+	}
+
+	if parsed.String() == "" {
+		return "", errors.New("etheruem rpc url is empty")
+	}
+
+	ctx := context.TODO()
+
+	client, err := ethclient.DialContext(ctx, parsed.String())
+
+	if err != nil {
+		return "", err
+	}
+
+	var net Network
+
+	id, err := client.NetworkID(ctx)
+
+	if err != nil {
+		return "", err
+	}
+
+	switch id.Int64() {
+	case 1:
+		net = EthereumMainnet
+	case 5:
+		net = EthereumGoerli
+	default:
+		return "", fmt.Errorf("unsupported network id: %d", id.Int64())
+	}
+
+	return net, nil
 }
 
 func NewEthereumServiceWithTimeout(raw string, timeout time.Duration) (*EthereumService, error) {

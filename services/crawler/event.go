@@ -27,18 +27,7 @@ const (
 	WithdrawalFullfilled ActionType = "withdrawal_fullfilled"
 )
 
-type Event interface {
-	ChainType() Chain
-	NetworkType() Network
-	ProviderType() Provider
-	EventType() EventType
-	ActionType() ActionType
-	ReceivedAt() int64
-	Amount() string
-	Price() string
-}
-
-type TxEvent struct {
+type EthereumEvent struct {
 	Chain            Chain     `json:"chain"`
 	Network          Network   `json:"network"`
 	Provider         Provider  `json:"provider"`
@@ -77,10 +66,10 @@ type Action struct {
 }
 
 type BlockEvents struct {
-	TxEvents   []*TxEvent `json:"events"`
-	Actions    []*Action  `json:"action"`
-	TxEventsPK Partition  `json:"events_partition_key"`
-	ActionsPK  Partition  `json:"action_partition_key"`
+	TxEvents   []*EthereumEvent `json:"events"`
+	Actions    []*Action        `json:"action"`
+	TxEventsPK Partition        `json:"events_partition_key"`
+	ActionsPK  Partition        `json:"action_partition_key"`
 }
 
 func (a ActionType) String() string {
@@ -128,7 +117,7 @@ func (tx TxDirection) String() string {
 	}
 }
 
-func NDJSON[T TxEvent | Action](events []*T) (*bytes.Buffer, error) {
+func NDJSON[T EthereumEvent | Action](events []*T) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 
 	for _, ev := range events {

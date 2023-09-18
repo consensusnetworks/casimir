@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
+	"io"
 	"strconv"
 	"strings"
 
@@ -16,44 +16,19 @@ type S3Service struct {
 	Client *s3.Client
 }
 
-func NewS3Service(config *aws.Config) (*S3Service, error) {
-	client := s3.NewFromConfig(*config)
+func NewS3Service(config aws.Config) (*S3Service, error) {
+	client := s3.NewFromConfig(config)
 
 	return &S3Service{
 		Client: client,
 	}, nil
 }
 
-func (s *S3Service) UploadFile(bucket string, key string, fpath string) error {
-	var err error
-
-	file, err := os.Open(fpath)
-
-	if err != nil {
-		return fmt.Errorf("failed to open file %q: %v", fpath, err)
-	}
-
-	defer file.Close()
-
+func (s *S3Service) Upload(bucket string, key string, reader io.Reader) error {
 	opt := &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
-		Body:   file,
-	}
-
-	_, err = s.Client.PutObject(context.Background(), opt)
-
-	if err != nil {
-		return fmt.Errorf("failed to put object: %v", err)
-	}
-	return nil
-}
-
-func (s *S3Service) UploadBytes(bucket string, key string, data *bytes.Buffer) error {
-	opt := &s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-		Body:   bytes.NewReader(data.Bytes()),
+		Body:   reader,
 	}
 
 	_, err := s.Client.PutObject(context.Background(), opt)
@@ -61,11 +36,8 @@ func (s *S3Service) UploadBytes(bucket string, key string, data *bytes.Buffer) e
 	if err != nil {
 		return fmt.Errorf("failed to put object: %v", err)
 	}
-	return nil
-}
 
-func (s *S3Service) MultipartUploadFile(bucket, key, fpath string) error {
-	return s.UploadFile(bucket, key, fpath)
+	return nil
 }
 
 func (s *S3Service) Get(bucket, key string) (*bytes.Buffer, error) {
@@ -100,7 +72,7 @@ func (s *S3Service) ListObjects(bucket, key string) (*[]string, error) {
 
 	opt := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
-		Prefix: aws.String(key),
+		// Prefix: aws.String(key),
 	}
 
 	paginator := s3.NewListObjectsV2Paginator(s.Client, opt)
@@ -116,10 +88,13 @@ func (s *S3Service) ListObjects(bucket, key string) (*[]string, error) {
 			objects = append(objects, *obj.Key)
 		}
 	}
+
+	fmt.Println("objects:", len(objects))
+
 	return &objects, nil
 }
 
-func (s *S3Service) AlreadyConsumed(bucket, key string) (*[]int64, error) {
+func (s *S3Service) ConsumedBlocks(bucket, key string) (*[]int64, error) {
 	files, err := s.ListObjects(bucket, key)
 
 	if err != nil {
@@ -145,13 +120,13 @@ func (s *S3Service) AlreadyConsumed(bucket, key string) (*[]int64, error) {
 }
 
 func (s *S3Service) CreatePartition(glues *GlueService, config Config) error {
-	if glues.EventMeta.Name == "" {
+	if glues.EventMetadata.Name == "" {
 		return fmt.Errorf("failed to get event table meta")
 	}
 
-	if glues.ActionMeta.Name == "" {
-		return fmt.Errorf("failed to get action table meta")
-	}
+	// if glues.ActionMeta.Name == "" {
+	// 	return fmt.Errorf("failed to get action table meta")
+	// }
 
 	startYear := 2015
 	endYear := 2025
@@ -162,7 +137,7 @@ func (s *S3Service) CreatePartition(glues *GlueService, config Config) error {
 			part := fmt.Sprintf("chain=%s/network=%s/year=%04d/month=%02d/", config.Chain, config.Network, year, month)
 
 			_, err := s.Client.PutObject(context.Background(), &s3.PutObjectInput{
-				Bucket: aws.String(glues.EventMeta.Bucket),
+				Bucket: aws.String(glues.EventMetadata.Bucket),
 				Key:    aws.String(part),
 			})
 
@@ -170,19 +145,19 @@ func (s *S3Service) CreatePartition(glues *GlueService, config Config) error {
 				return fmt.Errorf("error creating partition folder: %v", err)
 			}
 
-			_, err = s.Client.PutObject(context.Background(), &s3.PutObjectInput{
-				Bucket: aws.String(glues.ActionMeta.Bucket),
-				Key:    aws.String(part),
-			})
+			// _, err = s.Client.PutObject(context.Background(), &s3.PutObjectInput{
+			// 	Bucket: aws.String(glues.ActionMeta.Bucket),
+			// 	Key:    aws.String(part),
+			// })
 
-			if err != nil {
-				return fmt.Errorf("error creating partition folder: %v", err)
-			}
+			// if err != nil {
+			// 	return fmt.Errorf("error creating partition folder: %v", err)
+			// }
 
 			// 00 is a special partition for the year 2015 holding early blocks
 			// if year == 2015 {
 			// 	_, err = s.Client.PutObject(context.Background(), &s3.PutObjectInput{
-			// 		Bucket: aws.String(glues.EventMeta.Bucket),
+			// 		Bucket: aws.String(glues.EventMetadata.Bucket),
 			// 		Key:    aws.String(fmt.Sprintf("%s/%s/%04d/00/", config.Chain, config.Network, year)),
 			// 	})
 

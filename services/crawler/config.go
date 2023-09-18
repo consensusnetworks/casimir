@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"os/user"
 	"path"
 	"strconv"
 	"strings"
@@ -22,12 +21,10 @@ const (
 	Prod
 )
 
-// Config is the configuration used by the streamer and crawler
 type Config struct {
 	Chain            Chain    `json:"chain"`
 	Network          Network  `json:"network"`
 	URL              *url.URL `json:"url"`
-	User             string   `json:"user"`
 	BatchSize        uint64   `json:"batch_size"`
 	ConcurrencyLimit uint64   `json:"concurrency_limit"`
 	Env              Env      `json:"env"`
@@ -38,7 +35,7 @@ type PkgJSON struct {
 	Version string `json:"version"`
 }
 
-func LoadConfig(ctx *cli.Context) (Config, error) {
+func ConfigFromCLI(ctx *cli.Context) (Config, error) {
 	err := LoadEnv()
 
 	if err != nil {
@@ -48,12 +45,6 @@ func LoadConfig(ctx *cli.Context) (Config, error) {
 	rpc := os.Getenv("ETHEREUM_RPC_URL")
 
 	url, err := url.Parse(rpc)
-
-	if err != nil {
-		return Config{}, err
-	}
-
-	user, err := user.Current()
 
 	if err != nil {
 		return Config{}, err
@@ -82,9 +73,8 @@ func LoadConfig(ctx *cli.Context) (Config, error) {
 		Network:          net,
 		Env:              Dev,
 		URL:              url,
-		BatchSize:        100_000,
+		BatchSize:        100,
 		ConcurrencyLimit: 10,
-		User:             strings.ReplaceAll(strings.ToLower(user.Name), " ", "_"),
 		Stream:           false,
 	}
 
