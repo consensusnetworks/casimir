@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -128,7 +129,7 @@ func (c *EthereumCrawler) Run() error {
 
 	defer c.Close()
 
-	c.Wg.Add(2)
+	c.Wg.Add(1)
 
 	go func() {
 		defer c.Wg.Done()
@@ -141,6 +142,7 @@ func (c *EthereumCrawler) Run() error {
 		c.StreamState = Stopped
 	}()
 
+	c.Wg.Add(1)
 	go func() {
 		defer c.Wg.Done()
 		err := c.Stream()
@@ -183,40 +185,30 @@ func (c *EthereumCrawler) Stream() error {
 
 	wsurl := strings.Replace(c.EthereumService.URL.String(), "https", "wss", 1)
 
-	_, err := NewEthereumService(wsurl)
+	eths, err := NewEthereumService(wsurl)
 
 	if err != nil {
 		return err
 	}
 
-	current := c.EthereumService.Head.Number.Int64()
+	fmt.Println(wsurl)
 
-	l.Infof("streaming %s starting from block %d", c.Config.Network, current)
+	l.Infof("streaming %s starting from block %d", c.Config.Network, eths.Head.Number.Uint64())
 
-	header := make(chan *types.Header)
+	headers := make(chan *types.Header)
 
-	sub, err := c.EthereumService.Client.SubscribeNewHead(context.Background(), header)
+	sub, err := c.EthereumService.Client.SubscribeNewHead(context.Background(), headers)
 
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	for {
 		select {
 		case err := <-sub.Err():
-			return err
-		case h := <-header:
-			block, err := c.EthereumService.Block(h.Number.Uint64())
-
-			if err != nil {
-				return err
-			}
-
-			err = c.ProcessBlock(block.Number().Uint64())
-
-			if err != nil {
-				return err
-			}
+			log.Fatal(err)
+		case header := <-headers:
+			fmt.Println(header.Hash().Hex())
 		}
 	}
 }
@@ -437,7 +429,7 @@ func (c *EthereumCrawler) EventFromTransaction(b *types.Block, tx *types.Transac
 	return &txEvent, nil
 }
 
-func (c *EthereumCrawler) EventFromLog(log *types.Log) (*EthereumEvent, error) {
+func (c *EthereumCrawler) EventFromLog(log types.Log) (*EthereumEvent, error) {
 	return nil, nil
 }
 

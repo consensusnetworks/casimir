@@ -81,10 +81,7 @@ func (cs *ContractService) GetUserStake(addr common.Address) (*big.Int, error) {
 	return total, nil
 }
 
-// FilterLogs queries for all contract events starting from the time when contract was deployed
-// and unpacks the logs using the ABI.
-// Note: to find all the parse methods in the manager use: grep -E '^\s*func.*Parse.*{' ./casimir_manager.go
-func (cs *ContractService) FilterLogs() (*[]EthereumEvent, error) {
+func (cs *ContractService) FilterLogs() ([]types.Log, error) {
 	filter := ethereum.FilterQuery{
 		FromBlock: big.NewInt(int64(cs.StartBlock)),
 		Addresses: []common.Address{cs.CasimirManager},
@@ -100,21 +97,11 @@ func (cs *ContractService) FilterLogs() (*[]EthereumEvent, error) {
 		return nil, err
 	}
 
-	events := make([]EthereumEvent, len(logs))
-
-	for _, l := range logs {
-		event, err := cs.ParseLog(l)
-
-		if err != nil {
-			return nil, err
-		}
-		events = append(events, *event)
-	}
-
-	return &events, nil
+	return logs, nil
 }
 
-func (cs ContractService) ParseLog(l types.Log) (*EthereumEvent, error) {
+// to find all the parse methods in the manager use: grep -E '^\s*func.*Parse.*{' ./casimir_manager.go
+func (cs ContractService) ParseLog(l types.Log) (interface{}, error) {
 	event, err := cs.ABI.EventByID(l.Topics[0])
 
 	if err != nil {
@@ -122,169 +109,141 @@ func (cs ContractService) ParseLog(l types.Log) (*EthereumEvent, error) {
 	}
 
 	switch event.Name {
-
 	case "CompletedExitReportsRequested":
-		req, err := cs.Caller.ParseCompletedExitReportsRequested(l)
+		l, err := cs.Caller.ParseCompletedExitReportsRequested(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, "count:", req.Count)
+		return l, nil
 
 	case "DepositActivated":
-		req, err := cs.Caller.ParseDepositActivated(l)
+		l, err := cs.Caller.ParseDepositActivated(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, ", pool_id:", req.PoolId)
-		fmt.Println("---")
-
+		return l, nil
 	case "DepositInitiated":
-		req, err := cs.Caller.ParseDepositInitiated(l)
+		l, err := cs.Caller.ParseDepositInitiated(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, ", pool_id:", req.PoolId)
-		fmt.Println("---")
-
+		return l, nil
 	case "DepositRequested":
-		req, err := cs.Caller.ParseDepositRequested(l)
+		l, err := cs.Caller.ParseDepositRequested(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, ", pool_id:", req.PoolId)
-		fmt.Println("---")
-
+		return l, nil
 	case "ExitCompleted":
-		req, err := cs.Caller.ParseExitCompleted(l)
+		l, err := cs.Caller.ParseExitCompleted(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, "pool_id:", req.PoolId)
-
+		return l, nil
 	case "ExitRequested":
-		req, err := cs.Caller.ParseExitRequested(l)
+		l, err := cs.Caller.ParseExitRequested(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, "pool_id:", req.PoolId)
-
+		return l, nil
 	case "ForcedExitReportsRequested":
-		req, err := cs.Caller.ParseForcedExitReportsRequested(l)
+		l, err := cs.Caller.ParseForcedExitReportsRequested(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, "count:", req.Count)
+		return l, nil
 	case "OwnershipTransferred":
-		req, err := cs.Caller.ParseOwnershipTransferred(l)
+		l, err := cs.Caller.ParseOwnershipTransferred(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, ", new_owner:", req.NewOwner)
-		fmt.Println("---")
-
+		return l, nil
 	case "ReshareCompleted":
-		req, err := cs.Caller.ParseReshareCompleted(l)
+		l, err := cs.Caller.ParseReshareCompleted(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, ", pool_id:", req.PoolId)
-		fmt.Println("---")
-
+		return l, nil
 	case "ResharesRequested":
-		req, err := cs.Caller.ParseResharesRequested(l)
+		l, err := cs.Caller.ParseResharesRequested(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, ", operator_id:", req.OperatorId)
-		fmt.Println("---")
+		return l, nil
 	case "RewardsDeposited":
-		req, err := cs.Caller.ParseRewardsDeposited(l)
+		l, err := cs.Caller.ParseRewardsDeposited(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, ", amount:", req.Amount)
-		fmt.Println("---")
-
+		return l, nil
 	case "SlashedExitReportsRequested":
-		req, err := cs.Caller.ParseSlashedExitReportsRequested(l)
+		l, err := cs.Caller.ParseSlashedExitReportsRequested(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, ", count:", req.Count)
-		fmt.Println("---")
-
+		return l, nil
 	case "StakeDeposited":
-		deposit, err := cs.Caller.ParseStakeDeposited(l)
+		l, err := cs.Caller.ParseStakeDeposited(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, ", sender", deposit.Sender, ", amount:", deposit.Amount)
-		fmt.Println("---")
+		return l, nil
 	case "StakeRebalanced":
-		req, err := cs.Caller.ParseStakeRebalanced(l)
+		l, err := cs.Caller.ParseStakeRebalanced(l)
 
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("event:", event.Name, ", amount:", req.Amount)
-		fmt.Println("---")
-
+		return l, nil
 	case "TipsDeposited":
-		req, err := cs.Caller.ParseTipsDeposited(l)
+		l, err := cs.Caller.ParseTipsDeposited(l)
 
 		if err != nil {
 			return nil, err
 		}
-
-		fmt.Println("event:", event.Name, ", amount:", req.Amount)
-		fmt.Println("---")
+		return l, nil
 	case "WithdrawalInitiated":
-		req, err := cs.Caller.ParseWithdrawalInitiated(l)
+		l, err := cs.Caller.ParseWithdrawalInitiated(l)
 
 		if err != nil {
 			return nil, err
 		}
-
-		fmt.Println("event:", event.Name, ", sender", req.Sender, ", amount:", req.Amount)
-
+		return l, nil
 	case "WithdrawalRequested":
-		req, err := cs.Caller.ParseWithdrawalRequested(l)
+		l, err := cs.Caller.ParseWithdrawalRequested(l)
 
 		if err != nil {
 			return nil, err
 		}
-
-		fmt.Println("event:", event.Name, ", sender", req.Sender, ", amount:", req.Amount)
+		return l, nil
 	default:
-		fmt.Println("unknown event:", event.Name)
+		return nil, fmt.Errorf("unknown event: %s", event.Name)
 	}
-
-	return nil, nil
 }
