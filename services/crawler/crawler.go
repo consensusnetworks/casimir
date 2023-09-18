@@ -30,8 +30,8 @@ type EthereumCrawler struct {
 	Wg                sync.WaitGroup
 	Mu                sync.Mutex
 	Sema              chan struct{}
-	Unprocessed       []uint64  // blocks that failed to process
-	Start             time.Time // the time when the crawler was started
+	Unprocessed       []uint64
+	Start             time.Time
 	Version           int
 	Env               Env
 	Elapsed           time.Duration
@@ -312,7 +312,7 @@ func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 		Block:   b,
 	}
 
-	blockEvent := c.NewBlockEvent(block)
+	blockEvent := c.EventFromBlock(block)
 
 	events.TxEvents = append(events.TxEvents, blockEvent)
 
@@ -321,7 +321,7 @@ func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 	}
 
 	for _, tx := range block.Transactions() {
-		txEvent, err := c.NewTxEvent(block, tx)
+		txEvent, err := c.EventFromTransaction(block, tx)
 
 		if err != nil {
 			return nil, err
@@ -375,7 +375,7 @@ func (c *EthereumCrawler) NewActionEvents(txEvent *EthereumEvent) ([]*Action, er
 	return []*Action{sender, recipient}, nil
 }
 
-func (c *EthereumCrawler) NewBlockEvent(b *types.Block) *EthereumEvent {
+func (c *EthereumCrawler) EventFromBlock(b *types.Block) *EthereumEvent {
 	return &EthereumEvent{
 		Chain:      Ethereum,
 		Network:    c.Config.Network,
@@ -387,7 +387,7 @@ func (c *EthereumCrawler) NewBlockEvent(b *types.Block) *EthereumEvent {
 	}
 }
 
-func (c *EthereumCrawler) NewTxEvent(b *types.Block, tx *types.Transaction) (*EthereumEvent, error) {
+func (c *EthereumCrawler) EventFromTransaction(b *types.Block, tx *types.Transaction) (*EthereumEvent, error) {
 	txEvent := EthereumEvent{
 		Chain:       Ethereum,
 		Network:     c.Config.Network,
@@ -435,6 +435,10 @@ func (c *EthereumCrawler) NewTxEvent(b *types.Block, tx *types.Transaction) (*Et
 	}
 
 	return &txEvent, nil
+}
+
+func (c *EthereumCrawler) EventFromLog(log *types.Log) (*EthereumEvent, error) {
+	return nil, nil
 }
 
 func (c *EthereumCrawler) UploadBlockEvents(result *BlockEvents) error {

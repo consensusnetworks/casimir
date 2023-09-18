@@ -64,6 +64,18 @@
         "gas_fee": {
             "type": "integer",
             "description": "The gas fee paid for the transaction"
+        },
+        "count": {
+            "type": "integer"
+        },
+        "pool_id": {
+            "type": "integer"
+        },
+        "new_owner": {
+            "type": "string"
+        },
+        "operator_id": {
+            "type": "string"
         }
     }
 }
