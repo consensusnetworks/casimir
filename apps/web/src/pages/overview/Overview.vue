@@ -26,9 +26,6 @@ import BreakdownTable from './components/BreakdownTable.vue'
             <div class="w-full mb-[37px]">
               <StakingAvg view-id="small_view" /> 
             </div>
-            <!-- <div class="w-full h-[261px]">
-              <Announcements view-id="small_view" />
-            </div> -->
           </div>
         </div>
       </div>
@@ -43,9 +40,6 @@ import BreakdownTable from './components/BreakdownTable.vue'
           <div class="w-full mb-[37px]">
             <StakingAvg view-id="full_view" /> 
           </div>
-          <!-- <div class="w-full h-[261px]">
-            <Announcements view-id="full_view" />
-          </div> -->
         </div>
       </div>
     </div>

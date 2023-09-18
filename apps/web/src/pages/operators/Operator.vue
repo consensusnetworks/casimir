@@ -5,14 +5,12 @@ import { ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
-import useUsers from '@/composables/users'
-import useWallets from '@/composables/wallet'
+import useUser from '@/composables/user'
 
-const { getUserOperators, registerOperatorWithCasimir, loadingRegisteredOperators, nonregisteredOperators, registeredOperators } = useContracts()
+const {  registerOperatorWithCasimir, loadingRegisteredOperators } = useContracts()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
-const { openWalletsModal } = useWallets()
-const { user, addOperator } = useUsers()
+const { user, nonregisteredOperators, registeredOperators, addOperator } = useUser()
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -87,7 +85,7 @@ const submitButtonTxt = ref('Submit')
 
 onMounted(async () => {
   if (user.value) {
-    await getUserOperators()
+    // await getUserOperators()
     const primaryAccount = user.value.accounts.find(item => { return item.address === user.value?.address})
     selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
 
@@ -101,7 +99,6 @@ onMounted(async () => {
     }
 
     document.addEventListener('DOMContentLoaded', disableAutofill)
-    //
 
     filterData()
   }
@@ -109,7 +106,7 @@ onMounted(async () => {
 
 watch(user, async () => {
   if (user.value) {
-    await getUserOperators()
+    // await getUserOperators()
     if (selectedWallet.value.address === ''){
       const primaryAccount = user.value.accounts.find(item => { item.address === user.value?.address})
       selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
@@ -123,8 +120,6 @@ watch(selectedWallet, async () =>{
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
 
-  // TODO: @Chris change this back to the composable please! 
-  // maybe have Operators as an object for each account that they have connected? since it depends on the selected wallet.
   // await getUserOperators()
 
   if (selectedWallet.value.address === '') {
@@ -150,6 +145,13 @@ watch(registeredOperators, () => {
 watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
   filterData()
 })
+
+const openWalletsModal = () => {
+  const el = document.getElementById('connect_wallet_button')
+  if (el) {
+    el.click()
+  }
+}
 
 const handleInputChangeCollateral = (event: any) => {
     const value = event.target.value.replace(/[^\d.]/g, '')
@@ -268,7 +270,7 @@ async function submitRegisterOperatorForm() {
       <div class="border rounded-[3px] border-grey_1 border-dashed p-[10%] text-center">
         <button
           class="text-primary underline"
-          @click="openWalletsModal = true"
+          @click="openWalletsModal"
         >
           Connect wallet
         </button> to view and register operators... 
@@ -862,4 +864,4 @@ async function submitRegisterOperatorForm() {
     letter-spacing: -0.03em;
     color: #FFFFFF;
 }
-</style>@/composables/files
+</style>@/composables/files@/composables/user

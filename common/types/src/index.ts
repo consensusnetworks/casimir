@@ -25,6 +25,7 @@ import { OperatorAddedSuccess } from './interfaces/OperatorAddedSuccess'
 import { Pool } from './interfaces/Pool'
 import { PoolStatus } from './interfaces/PoolStatus'
 import { ProviderString } from './interfaces/ProviderString'
+import { SignInWithEthereumCredentials } from './interfaces/SignInWithEthereumCredentials'
 import { TransactionRequest } from './interfaces/TransactionRequest'
 import { RegisteredOperator } from './interfaces/RegisteredOperator'
 import { RemoveAccountOptions } from './interfaces/RemoveAccountOptions'
@@ -61,6 +62,7 @@ export type {
     OperatorAddedSuccess,
     Pool,
     ProviderString,
+    SignInWithEthereumCredentials,
     TransactionRequest,
     RegisteredOperator,
     RemoveAccountOptions,
