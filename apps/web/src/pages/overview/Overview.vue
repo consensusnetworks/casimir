@@ -32,9 +32,9 @@ import BreakdownTable from './components/BreakdownTable.vue'
     </div>
 
     <div class="w-full flex justify-between items-start gap-[63px]">
-      <!-- <div class="h-full w-full overflow-auto">
+      <div class="h-full w-full overflow-auto">
         <BreakdownTable />
-      </div> -->
+      </div>
       <div class="1000s:sr-only not-sr-only">
         <div class="w-[300px]">
           <div class="w-full mb-[37px]">

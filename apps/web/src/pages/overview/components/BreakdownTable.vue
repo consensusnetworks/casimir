@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx'
 import VueFeather from 'vue-feather'
 import useUser from '@/composables/user'
 import useFormat from '@/composables/format'
+import useAnalytics from '@/composables/analytics'
 
 const { convertString } = useFormat()
 
@@ -116,7 +117,7 @@ const tableHeaderOptions = ref(
   }
 )
 
-const { rawUserAnalytics, user } = useUser()
+const {  user } = useUser()
 
 const tableData = ref({
   Wallets: [] as {tx_hash: string, wallet_provider: string,  status: string, staking_fees: string, type: string, amount: string, bal: string,  act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
@@ -247,6 +248,9 @@ const removeItemFromCheckedList = (item:any) => {
     checkedItems.value.splice(index, 1)
   }
 }
+
+const {rawUserAnalytics } = useAnalytics()
+
 
 const setTableData = () =>{
 

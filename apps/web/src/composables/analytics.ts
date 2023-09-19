@@ -213,5 +213,6 @@ export default function useAnalytics() {
         userAnalytics: readonly(userAnalytics),
         getUserAnalyticsError: readonly(getUserAnalyticsError),
         updateAnalytics,
+        rawUserAnalytics,
     }
 }
