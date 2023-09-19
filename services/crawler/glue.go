@@ -17,21 +17,21 @@ const (
 	CasimirAnalyticsDatabaseProd = "casimir_analytics_database_prod"
 )
 
+type GlueService struct {
+	Client          *glue.Client
+	Databases       []types.Database
+	Tables          []types.Table
+	EventMetadata   Table
+	ResourceVersion int
+	ActionMeta      Table
+}
+
 type Table struct {
 	Name     string
 	Database string
 	Version  int
-	Bucket   string // Bucket is the underlying S3 bucket where the table data is stored
-	SerDe    string // SerDe is the serialization/deserialization library used by the table
-}
-
-type GlueService struct {
-	Client        *glue.Client
-	Databases     []types.Database
-	Tables        []types.Table
-	EventMetadata Table
-	// ActionMeta      Table
-	ResourceVersion int
+	Bucket   string
+	SerDe    string
 }
 
 type Partition struct {
@@ -48,72 +48,36 @@ func (p *Partition) Marshal() string {
 }
 
 func (p *Partition) Unmarshal(partition string, part *Partition) error {
+	kvpairs := strings.Split(partition, "/")
+	for _, p := range kvpairs {
+		kv := strings.Split(p, "=")
+
+		switch kv[0] {
+		case "chain":
+			part.Chain = Chain(kv[1])
+		case "network":
+			part.Network = Network(kv[1])
+		case "year":
+			part.Year = kv[1]
+		case "month":
+			part.Month = kv[1]
+		case "block":
+			block, err := strconv.Atoi(kv[1])
+			if err != nil {
+				return err
+			}
+			part.Block = uint64(block)
+		default:
+			return fmt.Errorf("unexpected partition key: %s", kv[0])
+		}
+	}
 	return nil
 }
 
 func NewGlueService(config aws.Config) (*GlueService, error) {
-
 	return &GlueService{
 		Client: glue.NewFromConfig(config),
 	}, nil
-}
-
-func LoadDefaultAWSConfig() (aws.Config, error) {
-	region := "us-east-2"
-	config, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion(region),
-	)
-
-	if err != nil {
-		return aws.Config{}, err
-	}
-
-	return config, nil
-}
-
-func (g *GlueService) LoadDatabases() error {
-	req, err := g.Client.GetDatabases(context.Background(), &glue.GetDatabasesInput{})
-
-	if err != nil {
-		return err
-	}
-
-	g.Databases = append(g.Databases, req.DatabaseList...)
-
-	if req.NextToken != nil {
-		err := g.LoadDatabases()
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (g *GlueService) LoadTables(databaseName string) error {
-	input := &glue.GetTablesInput{
-		DatabaseName: aws.String(databaseName),
-	}
-
-	req, err := g.Client.GetTables(context.Background(), input)
-
-	if err != nil {
-		return err
-	}
-
-	g.Tables = append(g.Tables, req.TableList...)
-
-	if req.NextToken != nil {
-		input.NextToken = req.NextToken
-		err = g.LoadTables(databaseName)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (g *GlueService) Introspect(env Env) error {
@@ -180,6 +144,60 @@ func (g *GlueService) Introspect(env Env) error {
 	return nil
 }
 
-func (g *GlueService) Parition(s3v *S3Service, parts []string) error {
+func LoadDefaultAWSConfig() (aws.Config, error) {
+	region := "us-east-2"
+	config, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(region),
+	)
+
+	if err != nil {
+		return aws.Config{}, err
+	}
+
+	return config, nil
+}
+
+func (g *GlueService) LoadDatabases() error {
+	req, err := g.Client.GetDatabases(context.Background(), &glue.GetDatabasesInput{})
+
+	if err != nil {
+		return err
+	}
+
+	g.Databases = append(g.Databases, req.DatabaseList...)
+
+	if req.NextToken != nil {
+		err := g.LoadDatabases()
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (g *GlueService) LoadTables(db string) error {
+	input := &glue.GetTablesInput{
+		DatabaseName: aws.String(db),
+	}
+
+	req, err := g.Client.GetTables(context.Background(), input)
+
+	if err != nil {
+		return err
+	}
+
+	g.Tables = append(g.Tables, req.TableList...)
+
+	if req.NextToken != nil {
+		input.NextToken = req.NextToken
+		err = g.LoadTables(db)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

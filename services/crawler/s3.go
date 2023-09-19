@@ -24,7 +24,7 @@ func NewS3Service(config aws.Config) (*S3Service, error) {
 	}, nil
 }
 
-func (s *S3Service) Upload(bucket string, key string, reader io.Reader) error {
+func (s *S3Service) Put(bucket string, key string, reader io.Reader) error {
 	opt := &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),

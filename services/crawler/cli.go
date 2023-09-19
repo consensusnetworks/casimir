@@ -21,6 +21,31 @@ func Run(args []string) error {
 		Usage:   "Crawl and stream Ethereum blockchain events",
 		Version: "1.0.0",
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "network",
+				Usage: "Set the ethereum network to crawl",
+				Value: "goerli",
+			},
+			&cli.BoolFlag{
+				Name:  "stream",
+				Usage: "Stream events to the event stream",
+				Value: false,
+			},
+			&cli.BoolFlag{
+				Name:  "contract",
+				Usage: "Crawl contract events",
+				Value: false,
+			},
+			&cli.Uint64Flag{
+				Name:  "concurrency",
+				Usage: "Set the concurrency limit for the crawler",
+				Value: 1,
+			},
+			&cli.Uint64Flag{
+				Name:  "batch",
+				Usage: "Set the batch size for the crawler",
+				Value: 10,
+			},
 			&cli.BoolFlag{
 				Name:    "development",
 				Aliases: []string{"dev"},
@@ -35,7 +60,7 @@ func Run(args []string) error {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			config, err := ConfigFromCLI(ctx)
+			config, err := NewConfigWithContext(ctx)
 
 			if err != nil {
 				return err

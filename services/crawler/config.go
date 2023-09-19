@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/url"
 	"os"
 	"path"
@@ -22,20 +21,21 @@ const (
 )
 
 type Config struct {
-	Chain            Chain    `json:"chain"`
-	Network          Network  `json:"network"`
-	URL              *url.URL `json:"url"`
-	BatchSize        uint64   `json:"batch_size"`
-	ConcurrencyLimit uint64   `json:"concurrency_limit"`
-	Env              Env      `json:"env"`
-	Stream           bool     `json:"stream"`
+	Chain       Chain
+	Network     Network
+	URL         *url.URL
+	BatchSize   uint64
+	Concurrency uint64
+	Env         Env
+	Stream      bool
+	Contract    bool
 }
 
 type PkgJSON struct {
 	Version string `json:"version"`
 }
 
-func ConfigFromCLI(ctx *cli.Context) (Config, error) {
+func NewConfigWithContext(ctx *cli.Context) (Config, error) {
 	err := LoadEnv()
 
 	if err != nil {
@@ -44,45 +44,65 @@ func ConfigFromCLI(ctx *cli.Context) (Config, error) {
 
 	rpc := os.Getenv("ETHEREUM_RPC_URL")
 
+	if rpc == "" {
+		return Config{}, errors.New("missing environment variable: ETHEREUM_RPC_URL is required")
+	}
+
 	url, err := url.Parse(rpc)
 
 	if err != nil {
 		return Config{}, err
 	}
 
+	network := ctx.String("network")
 	net := EthereumGoerli
 
-	netpath := strings.Split(url.Path, "/")
+	if url.Host == "nodes.casimir.co" {
+		netpath := strings.Split(url.Path, "/")
 
-	if len(netpath) > 2 {
-		if netpath[2] == "goerli" {
+		if len(netpath) > 2 && netpath[1] == "eth" {
+			if netpath[2] == "goerli" {
+				net = EthereumGoerli
+			}
+
+			if netpath[2] == "mainnet" {
+				net = EthereumMainnet
+			}
+
+			if netpath[2] == "hardhat" {
+				net = EthereumHardhat
+			}
+		}
+	} else {
+		if network == "goerli" {
 			net = EthereumGoerli
 		}
 
-		if netpath[2] == "mainnet" {
+		if network == "mainnet" {
 			net = EthereumMainnet
 		}
 
-		if netpath[2] == "hardhat" {
+		if network == "hardhat" {
 			net = EthereumHardhat
 		}
 	}
 
-	config := Config{
-		Chain:            Ethereum,
-		Network:          net,
-		Env:              Dev,
-		URL:              url,
-		BatchSize:        100,
-		ConcurrencyLimit: 10,
-		Stream:           false,
-	}
+	env := Dev
 
 	if ctx.Bool("production") {
-		config.Env = Prod
+		env = Prod
 	}
 
-	return config, nil
+	return Config{
+		Env:         env,
+		Chain:       Ethereum,
+		Network:     net,
+		URL:         url,
+		BatchSize:   ctx.Uint64("batch"),
+		Concurrency: ctx.Uint64("concurrency"),
+		Stream:      ctx.Bool("stream"),
+		Contract:    ctx.Bool("contract"),
+	}, nil
 }
 
 func ModuleDir() (string, error) {
@@ -128,10 +148,6 @@ func LoadEnv() error {
 
 	if err != nil {
 		return err
-	}
-
-	if os.Getenv("ETHEREUM_RPC_URL") == "" {
-		return fmt.Errorf("missing environment variable: %s is required", "ETHEREUM_RPC_URL")
 	}
 
 	return nil
@@ -208,9 +224,9 @@ func GetContractBuildArtifact() ([]byte, error) {
 func (e Env) String() string {
 	switch e {
 	case Dev:
-		return "dev"
+		return "development"
 	case Prod:
-		return "prod"
+		return "production"
 	default:
 		return ""
 	}

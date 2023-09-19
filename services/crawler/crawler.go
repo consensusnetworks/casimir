@@ -5,12 +5,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"math/big"
 	"strings"
 	"sync"
 	"time"
 
+	ethereum "github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 type State int
@@ -22,23 +27,23 @@ const (
 )
 
 type EthereumCrawler struct {
-	EthereumService   *EthereumService
-	ContractService   *ContractService
-	Glue              *GlueService
-	S3                *S3Service
-	Logger            *Logger
-	Config            Config
-	Wg                sync.WaitGroup
-	Mu                sync.Mutex
-	Sema              chan struct{}
-	Unprocessed       []uint64
-	Start             time.Time
-	Version           int
-	Env               Env
-	Elapsed           time.Duration
-	CrawlState        State
-	StreamState       State
-	crawlerStartBlock uint64
+	CrawlSvc    *EthereumService
+	StreamSvc   *EthereumService
+	ContractSvc *ContractService
+	GlueSvc     *GlueService
+	S3Svc       *S3Service
+	Logger      *Logger
+	Config      Config
+	Wg          sync.WaitGroup
+	Mu          sync.Mutex
+	Sema        chan struct{}
+	Unprocessed []uint64
+	Start       time.Time
+	Version     int
+	Env         Env
+	Elapsed     time.Duration
+	CrawlState  State
+	StreamState State
 }
 
 func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
@@ -81,7 +86,7 @@ func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 		return nil, err
 	}
 
-	l.Info("successfully introspected glue tables")
+	l.Info("introspected glue tables")
 
 	s3v, err := NewS3Service(awsConfig)
 
@@ -95,33 +100,53 @@ func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 	rv, err := GetResourceVersion()
 
 	if err != nil {
-		l.Infof("FailedToGetResourceVersion: %s", err.Error())
+		l.Infof("failed to get resource version: %s", err.Error())
 		return nil, err
 	}
 
-	// cs, err := NewContractService(eths)
+	crawler := &EthereumCrawler{
+		Logger:     logger,
+		CrawlSvc:   eths,
+		GlueSvc:    glue,
+		S3Svc:      s3v,
+		Wg:         sync.WaitGroup{},
+		Start:      time.Now(),
+		Sema:       make(chan struct{}, config.Concurrency),
+		Version:    rv,
+		Config:     config,
+		Env:        config.Env,
+		CrawlState: Ready,
+	}
 
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if config.Stream {
+		crawler.StreamState = Ready
 
-	// l.Info("created contract service")
+		wseths, err := NewEthereumService("wss://eth-mainnet.g.alchemy.com/v2/RxFGV7vLIDJ--_DWPRWIyiyukklef6pf")
 
-	return &EthereumCrawler{
-		Logger:          logger,
-		EthereumService: eths,
-		Glue:            glue,
-		S3:              s3v,
-		Wg:              sync.WaitGroup{},
-		Start:           time.Now(),
-		Sema:            make(chan struct{}, config.ConcurrencyLimit),
-		Version:         rv,
-		Config:          config,
-		Env:             config.Env,
-		CrawlState:      Ready,
-		StreamState:     Ready,
-		// ContractService: cs,
-	}, nil
+		if err != nil {
+			return nil, err
+		}
+
+		if wseths.Network != crawler.CrawlSvc.Network {
+			return nil, errors.New("stream network must match crawl network")
+		}
+
+		crawler.CrawlSvc = wseths
+	}
+
+	if config.Contract {
+		wsvc, err := NewContractService()
+
+		if err != nil {
+			return nil, err
+		}
+
+		crawler.ContractSvc = wsvc
+
+		l.Info("created contract service")
+	}
+
+	return crawler, nil
 }
 
 func (c *EthereumCrawler) Run() error {
@@ -129,8 +154,9 @@ func (c *EthereumCrawler) Run() error {
 
 	defer c.Close()
 
-	c.Wg.Add(1)
+	l.Infow("running crawler with config", "config", c.Config)
 
+	c.Wg.Add(1)
 	go func() {
 		defer c.Wg.Done()
 		err := c.Crawl()
@@ -138,20 +164,21 @@ func (c *EthereumCrawler) Run() error {
 		if err != nil {
 			l.Errorf("failed to crawl: %s", err.Error())
 		}
-
 		c.StreamState = Stopped
 	}()
 
-	c.Wg.Add(1)
-	go func() {
-		defer c.Wg.Done()
-		err := c.Stream()
+	if c.Config.Stream {
+		c.Wg.Add(1)
+		go func() {
+			defer c.Wg.Done()
+			err := c.Stream()
 
-		if err != nil {
-			l.Errorf("failed to stream: %s", err.Error())
-		}
-		c.StreamState = Stopped
-	}()
+			if err != nil {
+				l.Errorf("failed to stream: %s", err.Error())
+			}
+			c.StreamState = Stopped
+		}()
+	}
 
 	return nil
 }
@@ -159,13 +186,13 @@ func (c *EthereumCrawler) Run() error {
 func (c *EthereumCrawler) Crawl() error {
 	l := c.Logger.Sugar()
 
-	head := c.EthereumService.Head.Number.Uint64()
+	head := c.CrawlSvc.Head.Number.Uint64()
 
 	if c.CrawlState != Ready {
 		return errors.New("crawler not ready")
 	}
 
-	l.Infof("crawling %s from block %d to %d", c.Config.Network, c.crawlerStartBlock, head)
+	l.Infof("crawling %s starting from block %d", c.Config.Network, head)
 
 	for i := uint64(0); i <= head; i += uint64(c.Config.BatchSize) {
 		end := i + uint64(c.Config.BatchSize) - 1
@@ -181,36 +208,36 @@ func (c *EthereumCrawler) Crawl() error {
 }
 
 func (c *EthereumCrawler) Stream() error {
-	l := c.Logger.Sugar()
+	// l := c.Logger.Sugar()
 
-	wsurl := strings.Replace(c.EthereumService.URL.String(), "https", "wss", 1)
+	// l.Infof("creating websocket connection to %s", wsurl)
 
-	eths, err := NewEthereumService(wsurl)
+	// eths, err := NewEthereumService(wsurl)
 
-	if err != nil {
-		return err
-	}
+	// if err != nil {
+	// 	return err
+	// }
 
-	fmt.Println(wsurl)
+	// l.Infof("streaming %s starting from block %d", c.Config.Network, eths.Head.Number.Uint64())
 
-	l.Infof("streaming %s starting from block %d", c.Config.Network, eths.Head.Number.Uint64())
+	// headers := make(chan *types.Header)
 
-	headers := make(chan *types.Header)
+	// sub, err := c.EthereumService.Client.SubscribeNewHead(context.Background(), headers)
 
-	sub, err := c.EthereumService.Client.SubscribeNewHead(context.Background(), headers)
+	// if err != nil {
+	// 	return err
+	// }
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	// for {
+	// 	select {
+	// 	case err := <-sub.Err():
+	// 		log.Fatal(err)
+	// 	case header := <-headers:
+	// 		fmt.Println(header.Hash().Hex())
+	// 	}
+	// }
 
-	for {
-		select {
-		case err := <-sub.Err():
-			log.Fatal(err)
-		case header := <-headers:
-			fmt.Println(header.Hash().Hex())
-		}
-	}
+	return nil
 }
 
 func (c *EthereumCrawler) Close() {
@@ -232,7 +259,7 @@ func (c *EthereumCrawler) Close() {
 
 	c.Wg.Wait()
 	close(c.Sema)
-	c.EthereumService.Client.Close()
+	c.CrawlSvc.Client.Close()
 
 	c.Elapsed = time.Since(c.Start)
 
@@ -259,6 +286,7 @@ func (c *EthereumCrawler) ProcessBatch(start, end uint64) error {
 		if err != nil {
 			c.Unprocessed = append(c.Unprocessed, i)
 			l.Errorf("failed to process block=%d: %s", i, err.Error())
+			l.Errorf("adding block=%d to unprocessed queue", i)
 			continue
 		}
 	}
@@ -273,7 +301,7 @@ func (c *EthereumCrawler) ProcessBlock(b uint64) error {
 		return err
 	}
 
-	err = c.UploadBlockEvents(txs)
+	err = c.Upload(txs)
 
 	if err != nil {
 		return err
@@ -285,7 +313,7 @@ func (c *EthereumCrawler) ProcessBlock(b uint64) error {
 func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 	events := &BlockEvents{}
 
-	block, err := c.EthereumService.Block(b)
+	block, err := c.CrawlSvc.Block(b)
 
 	if err != nil {
 		return nil, err
@@ -320,20 +348,23 @@ func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 		}
 
 		events.TxEvents = append(events.TxEvents, txEvent)
-		// actions, err := c.NewActionEvents(txEvent)
+		actions, err := c.NewActionEvents(txEvent)
 
-		// if err != nil {
-		// 	return nil, err
-		// }
+		if err != nil {
+			return nil, err
+		}
 
-		// events.ActionsPK = events.TxEventsPK
-		// events.Actions = append(events.Actions, actions...)
+		events.ActionsPK = events.TxEventsPK
+		events.Actions = append(events.Actions, actions...)
 	}
 
-	// if (len(events.TxEvents)-1)*2 != len(events.Actions) {
-	// 	l.Errorf("events mismatch: block=%d events=%d actions=%d", b, len(events.TxEvents), len(events.Actions))
-	// 	return nil, errors.New("check the nnumber of")
-	// }
+	l := c.Logger.Sugar()
+
+	if (len(events.TxEvents)-1)*2 != len(events.Actions) {
+		l.Errorf("events mismatch: block=%d events=%d actions=%d", b, len(events.TxEvents), len(events.Actions))
+		return nil, errors.New("events mismatch: there should be twice as many actions as events")
+	}
+
 	return events, nil
 }
 
@@ -400,14 +431,14 @@ func (c *EthereumCrawler) EventFromTransaction(b *types.Block, tx *types.Transac
 		txEvent.Amount = tx.Value().String()
 	}
 
-	sender, err := c.EthereumService.Client.TransactionSender(ctx, tx, b.Hash(), uint(0))
+	sender, err := c.CrawlSvc.Client.TransactionSender(ctx, tx, b.Hash(), uint(0))
 
 	if err != nil {
 		return nil, err
 	}
 
 	txEvent.Sender = sender.Hex()
-	senderBalance, err := c.EthereumService.Client.BalanceAt(ctx, sender, b.Number())
+	senderBalance, err := c.CrawlSvc.Client.BalanceAt(ctx, sender, b.Number())
 
 	if err != nil {
 		return nil, err
@@ -417,7 +448,7 @@ func (c *EthereumCrawler) EventFromTransaction(b *types.Block, tx *types.Transac
 
 	if tx.To() != nil {
 		txEvent.Recipient = tx.To().Hex()
-		recipeintBalance, err := c.EthereumService.Client.BalanceAt(ctx, *tx.To(), b.Number())
+		recipeintBalance, err := c.CrawlSvc.Client.BalanceAt(ctx, *tx.To(), b.Number())
 
 		if err != nil {
 			return nil, err
@@ -433,7 +464,7 @@ func (c *EthereumCrawler) EventFromLog(log types.Log) (*EthereumEvent, error) {
 	return nil, nil
 }
 
-func (c *EthereumCrawler) UploadBlockEvents(result *BlockEvents) error {
+func (c *EthereumCrawler) Upload(result *BlockEvents) error {
 	l := c.Logger.Sugar()
 
 	if len(result.TxEvents) == 0 {
@@ -449,34 +480,262 @@ func (c *EthereumCrawler) UploadBlockEvents(result *BlockEvents) error {
 
 	eventPartition := fmt.Sprintf("%s.ndjson", result.TxEventsPK.Marshal())
 
-	err = c.S3.Upload(c.Glue.EventMetadata.Bucket, eventPartition, bytes.NewBuffer(encodedEvents.Bytes()))
+	err = c.S3Svc.Put(c.GlueSvc.EventMetadata.Bucket, eventPartition, bytes.NewBuffer(encodedEvents.Bytes()))
 
 	if err != nil {
 		return err
 	}
 
-	// l.Infof("uploaded block=%d to partition=%s", result.TxEventsPK.Block, eventPartition)
+	l.Infof("uploaded block=%d events to partition=%s", result.TxEventsPK.Block, eventPartition)
 
-	// if len(result.Actions) > 0 {
-	// 	act, err := NDJSON[Action](result.Actions)
+	if len(result.Actions) > 0 {
+		act, err := NDJSON[Action](result.Actions)
 
-	// 	if err != nil {
-	// 		return err
-	// 	}
+		if err != nil {
+			return err
+		}
 
-	// 	actionPartition := fmt.Sprintf("%s.%s", result.ActionsPK.String(), ext)
+		actionPartition := fmt.Sprintf("%s.ndjson", result.ActionsPK.Marshal())
 
-	// 	err = c.S3.Upload(c.Glue.ActionMeta.Bucket, actionPartition, bytes.NewBuffer(act.Bytes()))
+		err = c.S3Svc.Put(c.GlueSvc.ActionMeta.Bucket, actionPartition, bytes.NewBuffer(act.Bytes()))
 
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	// l.Infof("uploaded block %d actions to %s", result.ActionsPK.Block, actionPartition)
-	// }
+		if err != nil {
+			return err
+		}
+
+		l.Infof("uploaded block=%d actions events to partition=%s", result.ActionsPK.Block, actionPartition)
+	}
 
 	return nil
 }
 
-func (s State) String() string {
-	return [...]string{"ready", "running", "stopped"}[s-1]
+type ContractService struct {
+	Caller         *Main // includes the tx and filterer
+	CasimirManager common.Address
+	ABI            abi.ABI
+	StartBlock     uint64 // the block when the contract was deployed
+	Timeout        time.Duration
+}
+
+// NewContractService calls the generated contract code and binds the passed Ethereum client
+func NewContractService(client *ethclient.Client) (*ContractService, error) {
+	abi, err := abi.JSON(strings.NewReader(MainMetaData.ABI))
+
+	if err != nil {
+		return nil, err
+	}
+
+	// local
+	casimirManager := common.HexToAddress("0xfCd243D10C7E578a01FC8b7E0cFA64bC6d98c254")
+
+	caller, err := NewMain(casimirManager, client)
+
+	if err != nil {
+		return nil, err
+	}
+
+	cs := ContractService{
+		CasimirManager: casimirManager,
+		StartBlock:     uint64(9602550),
+		ABI:            abi,
+		Caller:         caller,
+		Timeout:        3 * time.Second,
+	}
+
+	if !cs.Deployed() {
+		return nil, fmt.Errorf("it seems like the contract code is not deployed at %s", casimirManager.Hex())
+	}
+
+	return &cs, nil
+}
+
+// IsLive pings the contract before moving forward with any calls
+func (cs *ContractService) Deployed() bool {
+	_, err := cs.Caller.LatestActiveBalance(&bind.CallOpts{})
+	return err == nil
+}
+
+func (cs *ContractService) GetUserStake(addr common.Address) (*big.Int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), cs.Timeout)
+
+	defer cancel()
+
+	opts := &bind.CallOpts{
+		Context: ctx,
+	}
+
+	total, err := cs.Caller.GetUserStake(opts, addr)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return total, nil
+}
+
+func (c *EthereumCrawler) FilterLogs() ([]types.Log, error) {
+	filter := ethereum.FilterQuery{
+		FromBlock: big.NewInt(int64(c.ContractSvc.StartBlock)),
+		Addresses: []common.Address{c.ContractSvc.CasimirManager},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+	defer cancel()
+
+	logs, err := c.CrawlSvc.Client.FilterLogs(ctx, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return logs, nil
+}
+
+// to find all the parse methods in the manager use: grep -E '^\s*func.*Parse.*{' ./casimir_manager.go
+func (cs ContractService) ParseLog(l types.Log) (interface{}, error) {
+	event, err := cs.ABI.EventByID(l.Topics[0])
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch event.Name {
+	case "CompletedExitReportsRequested":
+		l, err := cs.Caller.ParseCompletedExitReportsRequested(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+
+	case "DepositActivated":
+		l, err := cs.Caller.ParseDepositActivated(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "DepositInitiated":
+		l, err := cs.Caller.ParseDepositInitiated(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "DepositRequested":
+		l, err := cs.Caller.ParseDepositRequested(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "ExitCompleted":
+		l, err := cs.Caller.ParseExitCompleted(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "ExitRequested":
+		l, err := cs.Caller.ParseExitRequested(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "ForcedExitReportsRequested":
+		l, err := cs.Caller.ParseForcedExitReportsRequested(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "OwnershipTransferred":
+		l, err := cs.Caller.ParseOwnershipTransferred(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "ReshareCompleted":
+		l, err := cs.Caller.ParseReshareCompleted(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "ResharesRequested":
+		l, err := cs.Caller.ParseResharesRequested(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "RewardsDeposited":
+		l, err := cs.Caller.ParseRewardsDeposited(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "SlashedExitReportsRequested":
+		l, err := cs.Caller.ParseSlashedExitReportsRequested(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "StakeDeposited":
+		l, err := cs.Caller.ParseStakeDeposited(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "StakeRebalanced":
+		l, err := cs.Caller.ParseStakeRebalanced(l)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return l, nil
+	case "TipsDeposited":
+		l, err := cs.Caller.ParseTipsDeposited(l)
+
+		if err != nil {
+			return nil, err
+		}
+		return l, nil
+	case "WithdrawalInitiated":
+		l, err := cs.Caller.ParseWithdrawalInitiated(l)
+
+		if err != nil {
+			return nil, err
+		}
+		return l, nil
+	case "WithdrawalRequested":
+		l, err := cs.Caller.ParseWithdrawalRequested(l)
+
+		if err != nil {
+			return nil, err
+		}
+		return l, nil
+	default:
+		return nil, fmt.Errorf("unknown event: %s", event.Name)
+	}
 }
