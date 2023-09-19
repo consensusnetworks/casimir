@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 	"sync"
@@ -26,6 +27,14 @@ const (
 	Stopped
 )
 
+type ContractService struct {
+	Caller         *Main // includes the tx and filterer
+	CasimirManager common.Address
+	ABI            abi.ABI
+	StartBlock     uint64 // the block when the contract was deployed
+	Timeout        time.Duration
+}
+
 type EthereumCrawler struct {
 	CrawlSvc    *EthereumService
 	StreamSvc   *EthereumService
@@ -33,6 +42,7 @@ type EthereumCrawler struct {
 	GlueSvc     *GlueService
 	S3Svc       *S3Service
 	Logger      *Logger
+	StreamQueue *StreamQueue
 	Config      Config
 	Wg          sync.WaitGroup
 	Mu          sync.Mutex
@@ -42,8 +52,13 @@ type EthereumCrawler struct {
 	Version     int
 	Env         Env
 	Elapsed     time.Duration
-	CrawlState  State
-	StreamState State
+}
+
+type StreamQueue struct {
+	mu     sync.Mutex
+	queue  []uint64
+	cond   *sync.Cond
+	closed bool
 }
 
 func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
@@ -105,46 +120,48 @@ func NewEthereumCrawler(config Config) (*EthereumCrawler, error) {
 	}
 
 	crawler := &EthereumCrawler{
-		Logger:     logger,
-		CrawlSvc:   eths,
-		GlueSvc:    glue,
-		S3Svc:      s3v,
-		Wg:         sync.WaitGroup{},
-		Start:      time.Now(),
-		Sema:       make(chan struct{}, config.Concurrency),
-		Version:    rv,
-		Config:     config,
-		Env:        config.Env,
-		CrawlState: Ready,
+		Logger:   logger,
+		CrawlSvc: eths,
+		GlueSvc:  glue,
+		S3Svc:    s3v,
+		Wg:       sync.WaitGroup{},
+		Start:    time.Now(),
+		Sema:     make(chan struct{}, config.Concurrency),
+		Version:  rv,
+		Config:   config,
+		Env:      config.Env,
 	}
 
-	if config.Stream {
-		crawler.StreamState = Ready
+	crawler.CrawlSvc.State = Ready
 
-		wseths, err := NewEthereumService("wss://eth-mainnet.g.alchemy.com/v2/RxFGV7vLIDJ--_DWPRWIyiyukklef6pf")
+	if config.Stream {
+		streamsvc, err := NewEthereumService("wss://eth-goerli.g.alchemy.com/v2/xIW7WYw3IdVvHrfNejq29qsA0Bmdgmy2")
 
 		if err != nil {
 			return nil, err
 		}
 
-		if wseths.Network != crawler.CrawlSvc.Network {
+		if streamsvc.Network != crawler.CrawlSvc.Network {
 			return nil, errors.New("stream network must match crawl network")
 		}
 
-		crawler.CrawlSvc = wseths
+		crawler.StreamSvc = streamsvc
+		crawler.StreamSvc.State = Ready
+		crawler.StreamQueue = NewStreamQueue()
+
 	}
 
-	if config.Contract {
-		wsvc, err := NewContractService()
+	// if config.Contract {
+	// 	wsvc, err := NewContractService(eths.Client)
 
-		if err != nil {
-			return nil, err
-		}
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
 
-		crawler.ContractSvc = wsvc
+	// 	crawler.ContractSvc = wsvc
 
-		l.Info("created contract service")
-	}
+	// 	l.Info("created contract service")
+	// }
 
 	return crawler, nil
 }
@@ -158,25 +175,30 @@ func (c *EthereumCrawler) Run() error {
 
 	c.Wg.Add(1)
 	go func() {
-		defer c.Wg.Done()
+		defer func() {
+			c.Wg.Done()
+			c.CrawlSvc.State = Stopped
+		}()
 		err := c.Crawl()
 
 		if err != nil {
 			l.Errorf("failed to crawl: %s", err.Error())
 		}
-		c.StreamState = Stopped
 	}()
 
 	if c.Config.Stream {
 		c.Wg.Add(1)
 		go func() {
-			defer c.Wg.Done()
+			defer func() {
+				c.Wg.Done()
+				c.StreamSvc.State = Stopped
+			}()
 			err := c.Stream()
 
 			if err != nil {
 				l.Errorf("failed to stream: %s", err.Error())
 			}
-			c.StreamState = Stopped
+			c.StreamSvc.State = Stopped
 		}()
 	}
 
@@ -186,9 +208,10 @@ func (c *EthereumCrawler) Run() error {
 func (c *EthereumCrawler) Crawl() error {
 	l := c.Logger.Sugar()
 
-	head := c.CrawlSvc.Head.Number.Uint64()
+	// head := c.CrawlSvc.Head.Number.Uint64()
+	head := uint64(20)
 
-	if c.CrawlState != Ready {
+	if c.CrawlSvc.State != Ready {
 		return errors.New("crawler not ready")
 	}
 
@@ -208,36 +231,30 @@ func (c *EthereumCrawler) Crawl() error {
 }
 
 func (c *EthereumCrawler) Stream() error {
-	// l := c.Logger.Sugar()
+	l := c.Logger.Sugar()
 
-	// l.Infof("creating websocket connection to %s", wsurl)
+	l.Infof("creating websocket connection to %s", c.StreamSvc.URL.String())
 
-	// eths, err := NewEthereumService(wsurl)
+	headers := make(chan *types.Header)
 
-	// if err != nil {
-	// 	return err
-	// }
+	sub, err := c.StreamSvc.Client.SubscribeNewHead(context.Background(), headers)
 
-	// l.Infof("streaming %s starting from block %d", c.Config.Network, eths.Head.Number.Uint64())
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// headers := make(chan *types.Header)
+	defer sub.Unsubscribe()
 
-	// sub, err := c.EthereumService.Client.SubscribeNewHead(context.Background(), headers)
-
-	// if err != nil {
-	// 	return err
-	// }
-
-	// for {
-	// 	select {
-	// 	case err := <-sub.Err():
-	// 		log.Fatal(err)
-	// 	case header := <-headers:
-	// 		fmt.Println(header.Hash().Hex())
-	// 	}
-	// }
-
-	return nil
+	for {
+		select {
+		case err := <-sub.Err():
+			log.Fatal(err)
+		case header := <-headers:
+			c.StreamQueue.Push(header.Number.Uint64())
+			l.Infof("new block from stream: %d", header.Number.Uint64())
+			l.Infof("enqueued block=%d (queue size=%d)", header.Number.Uint64(), len(c.StreamQueue.queue))
+		}
+	}
 }
 
 func (c *EthereumCrawler) Close() {
@@ -261,10 +278,59 @@ func (c *EthereumCrawler) Close() {
 	close(c.Sema)
 	c.CrawlSvc.Client.Close()
 
+	if c.Config.Stream {
+		c.StreamSvc.Client.Close()
+		c.StreamQueue.Close()
+	}
+
 	c.Elapsed = time.Since(c.Start)
 
 	l.Infof("time elapse: %s, closed all connections, shutting down...", c.Elapsed)
 	l.Sync()
+}
+
+func NewStreamQueue() *StreamQueue {
+	mu := sync.Mutex{}
+	cond := sync.NewCond(&mu)
+
+	return &StreamQueue{
+		mu:     mu,
+		cond:   cond,
+		closed: false,
+	}
+}
+
+func (q *StreamQueue) Push(b uint64) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	if q.closed {
+		return
+	}
+
+	q.queue = append(q.queue, b)
+	q.cond.Signal()
+}
+
+func (q *StreamQueue) Pop() uint64 {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	for len(q.queue) == 0 {
+		q.cond.Wait()
+	}
+
+	b := q.queue[0]
+	q.queue = q.queue[1:]
+	return b
+}
+
+func (q *StreamQueue) Close() {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	q.closed = true
+	q.cond.Broadcast()
 }
 
 func (c *EthereumCrawler) ProcessBatch(start, end uint64) error {
@@ -295,7 +361,7 @@ func (c *EthereumCrawler) ProcessBatch(start, end uint64) error {
 }
 
 func (c *EthereumCrawler) ProcessBlock(b uint64) error {
-	txs, err := c.GetBlockEvents(b)
+	txs, err := c.BlockEvents(b)
 
 	if err != nil {
 		return err
@@ -310,12 +376,13 @@ func (c *EthereumCrawler) ProcessBlock(b uint64) error {
 	return nil
 }
 
-func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
+func (c *EthereumCrawler) BlockEvents(b uint64) (*BlockEvents, error) {
 	events := &BlockEvents{}
 
 	block, err := c.CrawlSvc.Block(b)
 
 	if err != nil {
+		log.Fatalf("debug11: %s", err.Error())
 		return nil, err
 	}
 
@@ -324,7 +391,7 @@ func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 	ttyear := fmt.Sprintf("%04d", tt.Year())
 	ttmonth := fmt.Sprintf("%02d", tt.Month())
 
-	events.TxEventsPK = Partition{
+	events.EventsPartition = Partition{
 		Chain:   Ethereum,
 		Network: c.Config.Network,
 		Year:    ttyear,
@@ -344,6 +411,7 @@ func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 		txEvent, err := c.EventFromTransaction(block, tx)
 
 		if err != nil {
+			log.Fatal("debug222")
 			return nil, err
 		}
 
@@ -354,7 +422,7 @@ func (c *EthereumCrawler) GetBlockEvents(b uint64) (*BlockEvents, error) {
 			return nil, err
 		}
 
-		events.ActionsPK = events.TxEventsPK
+		events.ActionsPartition = events.EventsPartition
 		events.Actions = append(events.Actions, actions...)
 	}
 
@@ -468,7 +536,7 @@ func (c *EthereumCrawler) Upload(result *BlockEvents) error {
 	l := c.Logger.Sugar()
 
 	if len(result.TxEvents) == 0 {
-		l.Errorf("no events found for block=%d", result.TxEventsPK.Block)
+		l.Errorf("no events found for block=%d", result.EventsPartition.Block)
 		return errors.New("no events found, there shoudl be at least one block event")
 	}
 
@@ -478,7 +546,7 @@ func (c *EthereumCrawler) Upload(result *BlockEvents) error {
 		return err
 	}
 
-	eventPartition := fmt.Sprintf("%s.ndjson", result.TxEventsPK.Marshal())
+	eventPartition := fmt.Sprintf("%s.ndjson", result.EventsPartition.Marshal())
 
 	err = c.S3Svc.Put(c.GlueSvc.EventMetadata.Bucket, eventPartition, bytes.NewBuffer(encodedEvents.Bytes()))
 
@@ -486,7 +554,7 @@ func (c *EthereumCrawler) Upload(result *BlockEvents) error {
 		return err
 	}
 
-	l.Infof("uploaded block=%d events to partition=%s", result.TxEventsPK.Block, eventPartition)
+	// l.Infof("uploaded block=%d events to partition=%s", result.TxEventsPK.Block, eventPartition)
 
 	if len(result.Actions) > 0 {
 		act, err := NDJSON[Action](result.Actions)
@@ -495,29 +563,19 @@ func (c *EthereumCrawler) Upload(result *BlockEvents) error {
 			return err
 		}
 
-		actionPartition := fmt.Sprintf("%s.ndjson", result.ActionsPK.Marshal())
+		actionPartition := fmt.Sprintf("%s.ndjson", result.ActionsPartition.Marshal())
 
 		err = c.S3Svc.Put(c.GlueSvc.ActionMeta.Bucket, actionPartition, bytes.NewBuffer(act.Bytes()))
 
 		if err != nil {
 			return err
 		}
-
-		l.Infof("uploaded block=%d actions events to partition=%s", result.ActionsPK.Block, actionPartition)
+		// l.Infof("uploaded block=%d actions events to partition=%s", result.ActionsPK.Block, actionPartition)
 	}
 
 	return nil
 }
 
-type ContractService struct {
-	Caller         *Main // includes the tx and filterer
-	CasimirManager common.Address
-	ABI            abi.ABI
-	StartBlock     uint64 // the block when the contract was deployed
-	Timeout        time.Duration
-}
-
-// NewContractService calls the generated contract code and binds the passed Ethereum client
 func NewContractService(client *ethclient.Client) (*ContractService, error) {
 	abi, err := abi.JSON(strings.NewReader(MainMetaData.ABI))
 
@@ -549,7 +607,6 @@ func NewContractService(client *ethclient.Client) (*ContractService, error) {
 	return &cs, nil
 }
 
-// IsLive pings the contract before moving forward with any calls
 func (cs *ContractService) Deployed() bool {
 	_, err := cs.Caller.LatestActiveBalance(&bind.CallOpts{})
 	return err == nil

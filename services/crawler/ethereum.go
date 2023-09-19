@@ -33,6 +33,7 @@ type EthereumService struct {
 	Provider Provider
 	Head     *types.Header
 	Ws       bool
+	State    State
 }
 
 func NewEthereumService(raw string) (*EthereumService, error) {
@@ -91,7 +92,7 @@ func NewEthereumService(raw string) (*EthereumService, error) {
 	}, nil
 }
 
-func WhichNetwork(raw string) (Network, error) {
+func NetworkID(raw string) (Network, error) {
 	if raw == "" {
 		return "", errors.New("url cannot be empty")
 	}
@@ -191,7 +192,7 @@ func NewEthereumServiceWithTimeout(raw string, timeout time.Duration) (*Ethereum
 	}, nil
 }
 
-func (e *EthereumService) GetBlockByNumber(b uint64) (*types.Block, error) {
+func (e *EthereumService) BlockByNumber(b uint64) (*types.Block, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 
 	defer cancel()

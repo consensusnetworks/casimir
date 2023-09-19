@@ -31,7 +31,7 @@ type EthereumEvent struct {
 	Chain            Chain     `json:"chain"`
 	Network          Network   `json:"network"`
 	Provider         Provider  `json:"provider"`
-	EventType        EventType `json:"event_type"`
+	EventType        EventType `json:"event"`
 	Height           uint64    `json:"height"`
 	Block            string    `json:"block"`
 	Transaction      string    `json:"transaction"`
@@ -66,10 +66,10 @@ type Action struct {
 }
 
 type BlockEvents struct {
-	TxEvents   []*EthereumEvent `json:"events"`
-	Actions    []*Action        `json:"action"`
-	TxEventsPK Partition        `json:"events_partition_key"`
-	ActionsPK  Partition        `json:"action_partition_key"`
+	TxEvents         []*EthereumEvent
+	Actions          []*Action
+	EventsPartition  Partition
+	ActionsPartition Partition
 }
 
 func (a ActionType) String() string {
