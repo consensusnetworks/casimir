@@ -6,11 +6,15 @@ import useContracts from '@/composables/contracts'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
 import useUser from '@/composables/user'
+import useOperators from '@/composables/operators'
+import { UserWithAccountsAndOperators} from '@casimir/types'
 
-const {  registerOperatorWithCasimir, loadingRegisteredOperators } = useContracts()
+
+const { registerOperatorWithCasimir, loadingRegisteredOperators } = useContracts()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
-const { user, nonregisteredOperators, registeredOperators, addOperator } = useUser()
+const { user,  } = useUser()
+const { addOperator } = useOperators(user.value as UserWithAccountsAndOperators)
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -85,6 +89,7 @@ const submitButtonTxt = ref('Submit')
 
 onMounted(async () => {
   if (user.value) {
+    
     // await getUserOperators()
     const primaryAccount = user.value.accounts.find(item => { return item.address === user.value?.address})
     selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
@@ -104,8 +109,17 @@ onMounted(async () => {
   }
 })
 
+const nonregisteredOperators = ref()
+const registeredOperators = ref()
+
 watch(user, async () => {
   if (user.value) {
+    const { nonregisteredOperatorsRaw, registeredOperatorsRaw } = useOperators(user.value as UserWithAccountsAndOperators)
+
+    console.log(nonregisteredOperatorsRaw, registeredOperatorsRaw)
+    nonregisteredOperators.value = nonregisteredOperatorsRaw.value
+    registeredOperators.value = registeredOperatorsRaw.value
+
     // await getUserOperators()
     if (selectedWallet.value.address === ''){
       const primaryAccount = user.value.accounts.find(item => { item.address === user.value?.address})
@@ -125,6 +139,7 @@ watch(selectedWallet, async () =>{
   if (selectedWallet.value.address === '') {
     availableOperatorIDs.value = []
   } else {
+    console.log('nonregisteredOperators on select wallet', nonregisteredOperators)
     availableOperatorIDs.value = [...nonregisteredOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)}
 })
 
@@ -145,6 +160,7 @@ watch(registeredOperators, () => {
 watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
   filterData()
 })
+
 
 const openWalletsModal = () => {
   const el = document.getElementById('connect_wallet_button')
