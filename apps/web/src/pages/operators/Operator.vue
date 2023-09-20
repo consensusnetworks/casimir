@@ -14,7 +14,6 @@ const { registerOperatorWithCasimir, loadingRegisteredOperators } = useContracts
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
 const { user,  } = useUser()
-const { addOperator } = useOperators(user.value as UserWithAccountsAndOperators)
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -89,10 +88,12 @@ const submitButtonTxt = ref('Submit')
 
 onMounted(async () => {
   if (user.value) {
-    
-    // await getUserOperators()
     const primaryAccount = user.value.accounts.find(item => { return item.address === user.value?.address})
+    console.log('primaryAccount in onMounted :>> ', primaryAccount)
     selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
+
+
+    await initializeComposable(user.value as UserWithAccountsAndOperators)
 
 
     // Autofill disable
@@ -109,22 +110,19 @@ onMounted(async () => {
   }
 })
 
-const nonregisteredOperators = ref()
-const registeredOperators = ref()
+const { addOperator, initializeComposable, nonregisteredOperators, registeredOperators } = useOperators()
 
 watch(user, async () => {
   if (user.value) {
-    const { nonregisteredOperatorsRaw, registeredOperatorsRaw } = useOperators(user.value as UserWithAccountsAndOperators)
 
-    console.log(nonregisteredOperatorsRaw, registeredOperatorsRaw)
-    nonregisteredOperators.value = nonregisteredOperatorsRaw.value
-    registeredOperators.value = registeredOperatorsRaw.value
 
-    // await getUserOperators()
     if (selectedWallet.value.address === ''){
-      const primaryAccount = user.value.accounts.find(item => { item.address === user.value?.address})
-      selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
+      selectedWallet.value = {address: user.value.address as string, wallet_provider: user.value.walletProvider as string}
     }
+
+
+    await initializeComposable(user.value as UserWithAccountsAndOperators)
+
     filterData()
   }
 })
@@ -134,12 +132,9 @@ watch(selectedWallet, async () =>{
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
 
-  // await getUserOperators()
-
   if (selectedWallet.value.address === '') {
     availableOperatorIDs.value = []
-  } else {
-    console.log('nonregisteredOperators on select wallet', nonregisteredOperators)
+  } else if(nonregisteredOperators.value && nonregisteredOperators.value.length > 0) {
     availableOperatorIDs.value = [...nonregisteredOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)}
 })
 

@@ -6,14 +6,14 @@ import { Operator, Scanner } from '@casimir/ssv'
 import { RegisteredOperator, Pool, Account, UserWithAccountsAndOperators } from '@casimir/types'
 import { ethers } from 'ethers'
 
-export default function useOperators(user: UserWithAccountsAndOperators) {
+export default function useOperators() {
     // const { user } = useUser()
     const { ethereumUrl, ssvNetworkAddress, ssvNetworkViewsAddress, usersUrl } = useEnvironment()
     const { manager, registry, views } = useContracts()
 
 
-    const nonregisteredOperatorsRaw = ref<Operator[]>([])
-    const registeredOperatorsRaw = ref<Operator[]>([])
+    const nonregisteredOperators = ref<Operator[]>([])
+    const registeredOperators = ref<Operator[]>([])
 
     async function addOperator({ address, nodeUrl }: { address: string, nodeUrl: string }) {
         try {
@@ -32,7 +32,7 @@ export default function useOperators(user: UserWithAccountsAndOperators) {
         }
     }
 
-    async function getUserOperators(): Promise<void> {
+    async function getUserOperators(user: UserWithAccountsAndOperators): Promise<void> {
         console.log('user :>> ', user)
         const userAddresses = user?.accounts.map((account: Account) => account.address) as string[]
 
@@ -83,9 +83,9 @@ export default function useOperators(user: UserWithAccountsAndOperators) {
             return !idRegistered
         })
 
-        nonregisteredOperatorsRaw.value = nonregOperators as Array<Operator>
-        registeredOperatorsRaw.value = casimirOperators as Array<RegisteredOperator>
-        console.log('Ran Operators.ts', nonregisteredOperatorsRaw.value, registeredOperatorsRaw.value)
+        nonregisteredOperators.value = nonregOperators as Array<Operator>
+        registeredOperators.value = casimirOperators as Array<RegisteredOperator>
+        console.log('Ran Operators.ts', nonregisteredOperators.value, registeredOperators.value)
     }
 
     async function _getPools(operatorId: number): Promise<Pool[]> {
@@ -121,17 +121,23 @@ export default function useOperators(user: UserWithAccountsAndOperators) {
         }
     }
 
-    watchEffect(async () => {
-        if(user){
-            console.log('reached watchEffect in Operators.ts', user)
-            listenForContractEvents()
-            await getUserOperators()
-        }
+    async function initializeComposable(user: UserWithAccountsAndOperators){
+        console.log('reached watchEffect in Operators.ts', user)
+        listenForContractEvents()
+        await getUserOperators(user)
+    }
+    watchEffect( () => {
+        // if(user){
+            // console.log('reached watchEffect in Operators.ts', user)
+            // listenForContractEvents()
+            // await getUserOperators()
+        // }
     })
 
     return { 
-        nonregisteredOperatorsRaw: readonly(nonregisteredOperatorsRaw),
-        registeredOperatorsRaw: readonly(registeredOperatorsRaw),
+        nonregisteredOperators: readonly(nonregisteredOperators),
+        registeredOperators: readonly(registeredOperators),
         addOperator,
+        initializeComposable
     }
 }
