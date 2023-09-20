@@ -26,7 +26,6 @@ void async function () {
     process.env.STAGE = process.env.STAGE || 'local'
     process.env.BIP39_SEED = process.env.USE_SECRETS !== 'false' ? process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') : process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
     process.env.CRYPTO_COMPARE_API_KEY = process.env.USE_SECRETS !== 'false' ? process.env.CRYPTO_COMPARE_API_KEY || await getSecret('casimir-crypto-compare-api-key') : process.env.CRYPTO_COMPARE_API_KEY || ''
-    process.env.EMULATE = process.env.EMULATE || 'false'
     process.env.FORK = process.env.FORK || 'testnet'
     process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
     process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
@@ -118,22 +117,6 @@ void async function () {
         run('npm run dev:ethereum')
     }
 
-    if (process.env.EMULATE === 'true') {
-
-        const port = 5001
-        const existingProcess = await run(`lsof -i :${port} | grep LISTEN | awk '{print $2}'`)
-        if (existingProcess) {
-            throw new Error(`Port ${port} is already in use by process ${existingProcess}, but is required by speculos.`)
-        }
-
-        run('npx esno scripts/ledger/proxy.ts')
-        run(`scripts/ledger/emulate -a ${process.env.LEDGER_APP}`)
-        run('scripts/trezor/emulate')
-
-        process.env.SPECULOS_URL = `http://localhost:${port}`
-        process.env.LEDGER_APP = process.env.LEDGER_APP || 'ethereum'
-    }
-
     process.env.PUBLIC_STAGE = process.env.STAGE
     process.env.PUBLIC_USERS_URL = process.env.USERS_URL
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
@@ -145,8 +128,6 @@ void async function () {
     process.env.PUBLIC_REGISTRY_ADDRESS = process.env.REGISTRY_ADDRESS
     process.env.PUBLIC_UPKEEP_ADDRESS = process.env.UPKEEP_ADDRESS
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
-    process.env.PUBLIC_LEDGER_APP = process.env.LEDGER_APP
-    process.env.PUBLIC_SPECULOS_URL = process.env.SPECULOS_URL
     process.env.PUBLIC_ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK
 
     if (process.env.BUILD_PREVIEW === 'true') {

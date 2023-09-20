@@ -9,13 +9,12 @@ import useAuth from '@/composables/auth'
 const { createSiweMessage, signInWithEthereum } = useAuth()
 
 export default function useLedger() {
-  const { ethereumUrl, ledgerType, speculosUrl } = useEnvironment()
+  const { ethereumUrl } = useEnvironment()
   const { getGasPriceAndLimit } = useEthers()
 
   // function getBitcoinLedgerSigner() {
   //   const options = {
-  //     type: ledgerType,
-  //     baseURL: speculosUrl
+  //     type: 'usb'
   //   }
   //   return new BitcoinLedgerSigner(options)
   // }
@@ -23,8 +22,7 @@ export default function useLedger() {
   function getEthersLedgerSigner() {
     const options = {
       provider: new ethers.providers.JsonRpcProvider(ethereumUrl),
-      type: ledgerType,
-      baseURL: speculosUrl
+      type: 'usb'
     }
     return new EthersLedgerSigner(options)
   }
@@ -33,25 +31,25 @@ export default function useLedger() {
     // 'BTC': getBitcoinLedgerAddress,
     'ETH': getEthersLedgerAddresses,
     'IOTX': () => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         console.log('IOTX is not yet supported on Ledger')
         resolve('IOTX is not yet supported on Ledger')
       }) as Promise<string>
     },
     'SOL': () => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         console.log('SOL is not yet supported on Ledger')
         resolve('SOL is not yet supported on Ledger')
       }) as Promise<string>
     },
     '': () => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         console.log('No currency selected')
         resolve('No currency selected')
       }) as Promise<string>
     },
     'USD': () => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         console.log('USD is not yet supported on Ledger')
         resolve('USD is not yet supported on Ledger')
       }) as Promise<string>

@@ -19,6 +19,21 @@ interface ICasimirManager {
     /* Structs */
     /***********/
 
+    struct Config {
+        address daoOracleAddress;
+        address beaconDepositAddress;
+        address functionsBillingRegistryAddress;
+        address functionsOracleAddress;
+        address linkRegistrarAddress;
+        address linkRegistryAddress;
+        address linkTokenAddress;
+        address ssvNetworkAddress;
+        address ssvNetworkViewsAddress;
+        address ssvTokenAddress;
+        address swapFactoryAddress;
+        address swapRouterAddress;
+        address wethTokenAddress;
+    }
     struct User {
         uint256 stake0;
         uint256 stakeRatioSum0;

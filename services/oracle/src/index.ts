@@ -4,7 +4,7 @@ import {
     depositFunctionsBalanceHandler,
     depositUpkeepBalanceHandler,
     initiateDepositHandler,
-    initiateResharesHandler, 
+    reportResharesHandler, 
     // initiateExitsHandler, 
     // reportForcedExitsHandler,
     reportCompletedExitsHandler
@@ -13,7 +13,7 @@ import {
 const config = getConfig()
 const handlers = {
     DepositRequested: initiateDepositHandler,
-    ResharesRequested: initiateResharesHandler,
+    ResharesRequested: reportResharesHandler,
     /**
      * We don't need to handle these/they aren't ready:
      * ExitRequested: initiateExitsHandler,

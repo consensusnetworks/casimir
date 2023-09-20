@@ -1,12 +1,11 @@
 import { ethers, network } from 'hardhat'
 import { loadFixture, time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
-import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, FunctionsBillingRegistry, FunctionsOracleFactory, ISSVNetworkViews } from '../../build/@types'
+import { CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, FunctionsBillingRegistry, FunctionsOracle, FunctionsOracleFactory, ISSVNetworkViews, SSVNetwork } from '../../build/@types'
 import { fulfillReport, runUpkeep } from '../../helpers/upkeep'
 import { depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../../helpers/oracle'
 import { round } from '../../helpers/math'
 import ISSVNetworkViewsAbi from '../../build/abi/ISSVNetworkViews.json'
 import { requestConfig } from '@casimir/functions'
-
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
@@ -52,7 +51,7 @@ export async function deploymentFixture() {
         functionsBillingRegistryConfig.requestTimeoutSeconds
     )
 
-    const managerArgs = {
+    const managerConfig = {
         daoOracleAddress: daoOracle.address,
         beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
         functionsBillingRegistryAddress: functionsBillingRegistry.address,
@@ -66,6 +65,9 @@ export async function deploymentFixture() {
         swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
         swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
         wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
+    }
+    const managerArgs = {
+        config: managerConfig
     }
     const managerFactory = await ethers.getContractFactory('CasimirManager')
     const manager = await managerFactory.deploy(...Object.values(managerArgs)) as CasimirManager
@@ -86,6 +88,12 @@ export async function deploymentFixture() {
     const ssvNetwork = await ethers.getContractAt('SSVNetwork', process.env.SSV_NETWORK_ADDRESS as string)
     const ssvNetworkViews = await ethers.getContractAt(ISSVNetworkViewsAbi, process.env.SSV_NETWORK_VIEWS_ADDRESS as string) as ISSVNetworkViews
 
+    return { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, keeper, daoOracle, functionsBillingRegistry, functionsOracle }
+}
+
+export async function readyStateFixture() {
+    const { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, keeper, daoOracle, functionsBillingRegistry, functionsOracle } = await loadFixture(deploymentFixture)
+
     const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [654, 655, 656, 657]
     if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
     const preregisteredBalance = ethers.utils.parseEther('10')
@@ -101,6 +109,11 @@ export async function deploymentFixture() {
         const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
         const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: preregisteredBalance })
         await result.wait()
+
+        await network.provider.request({
+            method: 'hardhat_stopImpersonatingAccount',
+            params: [operatorOwnerAddress]
+        })
     }
 
     const secrets = '0x' // Parse requestConfig.secrets and encrypt if necessary
@@ -113,24 +126,24 @@ export async function deploymentFixture() {
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
     await functionsOracle.addAuthorizedSenders([keeper.address, manager.address])
 
-    return { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, keeper, daoOracle, functionsBillingRegistry }
+    return { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, keeper, daoOracle, functionsBillingRegistry, functionsOracle }
 }
 
 /** Fixture to stake 16 for the first user */
 export async function firstUserDepositFixture() {
-    const { manager, registry, upkeep, views, owner, keeper, daoOracle, functionsBillingRegistry } = await loadFixture(deploymentFixture)
+    const { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, keeper, daoOracle, functionsBillingRegistry, functionsOracle } = await loadFixture(readyStateFixture)
     const [, firstUser] = await ethers.getSigners()
 
     const depositAmount = round(16 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
     const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
-    return { manager, registry, upkeep, views, owner, firstUser, keeper, daoOracle, functionsBillingRegistry }
+    return { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, firstUser, keeper, daoOracle, functionsBillingRegistry, functionsOracle }
 }
 
 /** Fixture to stake 24 for the second user */
 export async function secondUserDepositFixture() {
-    const { manager, registry, upkeep, views, owner, firstUser, keeper, daoOracle, functionsBillingRegistry } = await loadFixture(firstUserDepositFixture)
+    const { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, firstUser, keeper, daoOracle, functionsBillingRegistry, functionsOracle } = await loadFixture(firstUserDepositFixture)
     const [, , secondUser] = await ethers.getSigners()
 
     const depositAmount = round(24 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
@@ -162,7 +175,7 @@ export async function secondUserDepositFixture() {
 
     await runUpkeep({ upkeep, keeper })
 
-    return { manager, registry, upkeep, views, owner, firstUser, secondUser, keeper, daoOracle, functionsBillingRegistry }
+    return { manager, registry, upkeep, views, ssvNetwork, ssvNetworkViews, owner, firstUser, secondUser, keeper, daoOracle, functionsBillingRegistry, functionsOracle }
 }
 
 /** Fixture to report increase of 0.105 in total rewards before fees */
@@ -460,13 +473,20 @@ export async function activeBalanceRecoveryFixture() {
     return { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, daoOracle, functionsBillingRegistry }
 }
 
-/** Fixture to full withdraw ~24.07 */
-export async function thirdUserFullWithdrawalFixture() {
+/** Fixture to request to withdraw ~24.07 from the third user */
+export async function thirdUserWithdrawalRequestedFixture() {
     const { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, daoOracle, functionsBillingRegistry } = await loadFixture(activeBalanceRecoveryFixture)
 
     const thirdStake = await manager.getUserStake(thirdUser.address)
     const withdraw = await manager.connect(thirdUser).requestWithdrawal(thirdStake)
     await withdraw.wait()
+
+    return { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, daoOracle, functionsBillingRegistry }
+}
+
+/** Fixture to full withdraw ~24.07 */
+export async function thirdUserWithdrawalCompletedFixture() {
+    const { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, daoOracle, functionsBillingRegistry } = await loadFixture(thirdUserWithdrawalRequestedFixture)
 
     await time.increase(time.duration.days(1))
     await runUpkeep({ upkeep, keeper })
@@ -503,7 +523,7 @@ export async function thirdUserFullWithdrawalFixture() {
 
 /** Fixture to simulate rewards */
 export async function simulationFixture() {
-    const { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, daoOracle, functionsBillingRegistry } = await loadFixture(thirdUserFullWithdrawalFixture)
+    const { manager, registry, upkeep, views, firstUser, secondUser, thirdUser, fourthUser, keeper, daoOracle, functionsBillingRegistry } = await loadFixture(thirdUserWithdrawalCompletedFixture)
 
     const rewardsPerValidator = 0.105
     let nextActiveBalance = 96

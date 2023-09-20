@@ -197,63 +197,37 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * @notice Constructor
-     * @param daoOracleAddress The DAO oracle address
-     * @param beaconDepositAddress The Beacon deposit address
-     * @param functionsBillingRegistryAddress The Chainlink functions billing registry address
-     * @param functionsOracleAddress The Chainlink functions oracle address
-     * @param linkRegistrarAddress The Chainlink keeper registrar address
-     * @param linkRegistryAddress The Chainlink keeper registry address
-     * @param linkTokenAddress The Chainlink token address
-     * @param ssvNetworkAddress The SSV network address
-     * @param ssvNetworkViewsAddress The SSV network views address
-     * @param ssvTokenAddress The SSV token address
-     * @param swapFactoryAddress The Uniswap factory address
-     * @param swapRouterAddress The Uniswap router address
-     * @param wethTokenAddress The WETH contract address
+     * @param config The manager config
      */
-    constructor(
-        address daoOracleAddress,
-        address beaconDepositAddress,
-        address functionsBillingRegistryAddress,
-        address functionsOracleAddress,
-        address linkRegistrarAddress,
-        address linkRegistryAddress,
-        address linkTokenAddress,
-        address ssvNetworkAddress,
-        address ssvNetworkViewsAddress,
-        address ssvTokenAddress,
-        address swapFactoryAddress,
-        address swapRouterAddress,
-        address wethTokenAddress
-    ) {
-        require(daoOracleAddress != address(0), "Missing oracle address");
-        require(beaconDepositAddress != address(0), "Missing beacon deposit address");
-        require(functionsBillingRegistryAddress != address(0), "Missing functions billing registry address");
-        require(linkRegistrarAddress != address(0), "Missing link registrar address");
-        require(linkRegistryAddress != address(0), "Missing link registry address");
-        require(linkTokenAddress != address(0), "Missing link token address");
-        require(ssvNetworkAddress != address(0), "Missing SSV network address");
-        require(ssvTokenAddress != address(0), "Missing SSV token address");
-        require(swapFactoryAddress != address(0), "Missing Uniswap factory address");
-        require(swapRouterAddress != address(0), "Missing Uniswap router address");
-        require(wethTokenAddress != address(0), "Missing WETH token address");
+    constructor(Config memory config) {
+        require(config.daoOracleAddress != address(0), "Missing oracle address");
+        require(config.beaconDepositAddress != address(0), "Missing beacon deposit address");
+        require(config.functionsBillingRegistryAddress != address(0), "Missing functions billing registry address");
+        require(config.linkRegistrarAddress != address(0), "Missing link registrar address");
+        require(config.linkRegistryAddress != address(0), "Missing link registry address");
+        require(config.linkTokenAddress != address(0), "Missing link token address");
+        require(config.ssvNetworkAddress != address(0), "Missing SSV network address");
+        require(config.ssvTokenAddress != address(0), "Missing SSV token address");
+        require(config.swapFactoryAddress != address(0), "Missing Uniswap factory address");
+        require(config.swapRouterAddress != address(0), "Missing Uniswap router address");
+        require(config.wethTokenAddress != address(0), "Missing WETH token address");
 
-        oracleAddress = daoOracleAddress;
-        beaconDeposit = IDepositContract(beaconDepositAddress);
-        functionsBillingRegistry = IFunctionsBillingRegistry(functionsBillingRegistryAddress);
-        linkRegistrar = IKeeperRegistrar(linkRegistrarAddress);
-        linkRegistry = IAutomationRegistry(linkRegistryAddress);
-        linkToken = LinkTokenInterface(linkTokenAddress);
-        tokenAddresses[Token.LINK] = linkTokenAddress;
-        ssvNetwork = ISSVNetwork(ssvNetworkAddress);
-        tokenAddresses[Token.SSV] = ssvTokenAddress;
-        ssvToken = IERC20(ssvTokenAddress);
-        swapFactory = IUniswapV3Factory(swapFactoryAddress);
-        swapRouter = ISwapRouter(swapRouterAddress);
-        tokenAddresses[Token.WETH] = wethTokenAddress;
+        oracleAddress = config.daoOracleAddress;
+        beaconDeposit = IDepositContract(config.beaconDepositAddress);
+        functionsBillingRegistry = IFunctionsBillingRegistry(config.functionsBillingRegistryAddress);
+        linkRegistrar = IKeeperRegistrar(config.linkRegistrarAddress);
+        linkRegistry = IAutomationRegistry(config.linkRegistryAddress);
+        linkToken = LinkTokenInterface(config.linkTokenAddress);
+        tokenAddresses[Token.LINK] = config.linkTokenAddress;
+        ssvNetwork = ISSVNetwork(config.ssvNetworkAddress);
+        tokenAddresses[Token.SSV] = config.ssvTokenAddress;
+        ssvToken = IERC20(config.ssvTokenAddress);
+        swapFactory = IUniswapV3Factory(config.swapFactoryAddress);
+        swapRouter = ISwapRouter(config.swapRouterAddress);
+        tokenAddresses[Token.WETH] = config.wethTokenAddress;
 
-        registry = new CasimirRegistry(ssvNetworkViewsAddress);
-        upkeep = new CasimirUpkeep(functionsOracleAddress);
+        registry = new CasimirRegistry(config.ssvNetworkViewsAddress);
+        upkeep = new CasimirUpkeep(config.functionsOracleAddress);
     }
 
     /**
@@ -376,7 +350,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             processed
         );
         if (functionsId == 0) {
-            
             functionsId = functionsBillingRegistry.createSubscription();
             functionsBillingRegistry.addConsumer(functionsId, address(upkeep));
         }
@@ -834,7 +807,6 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         require(poolDetails.reshares < 2, "Pool already reshared twice");
 
         pool.setReshares(poolDetails.reshares + 1);
-
         registry.removeOperatorPool(oldOperatorId, poolId, 0);
         registry.addOperatorPool(newOperatorId, poolId);
 

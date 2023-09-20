@@ -199,7 +199,7 @@ export async function initiateDepositHandler(input: HandlerInput) {
     await initiateDeposit.wait()
 }
 
-export async function initiateResharesHandler(input: HandlerInput) {
+export async function reportResharesHandler(input: HandlerInput) {
     if (!input.args.operatorId) throw new Error('No operator id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)

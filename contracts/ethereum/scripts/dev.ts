@@ -111,6 +111,10 @@ void async function () {
         const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
         const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: preregisteredBalance })
         await result.wait()
+        await network.provider.request({
+            method: 'hardhat_stopImpersonatingAccount',
+            params: [operatorOwnerAddress]
+        })
     }
 
     const secrets = '0x' // Parse requestConfig.secrets and encrypt if necessary

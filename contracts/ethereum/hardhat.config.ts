@@ -1,10 +1,11 @@
 import localtunnel from 'localtunnel'
+import fs from 'fs'
 import os from 'os'
 import { HardhatUserConfig } from 'hardhat/types'
-import '@nomicfoundation/hardhat-foundry'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
 import '@nomicfoundation/hardhat-toolbox'
+import 'hardhat-preprocessor'
 import 'hardhat-abi-exporter'
 
 // Seed is provided
@@ -69,15 +70,9 @@ if (network) {
 }
 
 const compilerSettings = {
-    viaIR: true,
     optimizer: {
         enabled: true,
-        runs: 1,
-        details: {
-            yulDetails: {
-                optimizerSteps: 'u'
-            }
-        }
+        runs: 1
     }
 }
 const compilerVersions = ['0.8.18']
@@ -86,6 +81,21 @@ const compilers = [...compilerVersions, ...externalCompilerVersions].map(version
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
+    preprocess: {
+        eachLine: () => ({
+            transform: (line: string) => {
+                if (line.match(/^\s*import /i)) {
+                    for (const [from, to] of getRemappings()) {
+                        if (line.includes(from)) {
+                            line = line.replace(from, to)
+                            break
+                        }
+                    }
+                }
+                return line
+            }
+        })
+    },
     solidity: {
         compilers,
     },
@@ -135,6 +145,18 @@ const config: HardhatUserConfig = {
 
 // Start a local tunnel for using RPC over https (e.g. for Metamask on mobile)
 if (process.env.TUNNEL === 'true') {
+    runLocalTunnel()
+}
+
+function getRemappings() {
+    return fs
+        .readFileSync('remappings.txt', 'utf8')
+        .split('\n')
+        .filter(Boolean) // remove empty lines
+        .map((line) => line.trim().split('='))
+}
+
+function runLocalTunnel() {
     const localSubdomain = `local-hardhat-${os.userInfo().username.toLowerCase()}`
     const localUrl = `https://${localSubdomain}.loca.lt`
     localtunnel({ port: 8545, subdomain: localSubdomain }).then(
