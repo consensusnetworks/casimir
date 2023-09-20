@@ -33,7 +33,6 @@ export default function useOperators() {
     }
 
     async function getUserOperators(user: UserWithAccountsAndOperators): Promise<void> {
-        console.log('user :>> ', user)
         const userAddresses = user?.accounts.map((account: Account) => account.address) as string[]
 
         const scanner = new Scanner({ 
@@ -85,7 +84,6 @@ export default function useOperators() {
 
         nonregisteredOperators.value = nonregOperators as Array<Operator>
         registeredOperators.value = casimirOperators as Array<RegisteredOperator>
-        console.log('Ran Operators.ts', nonregisteredOperators.value, registeredOperators.value)
     }
 
     async function _getPools(operatorId: number): Promise<Pool[]> {
@@ -122,16 +120,11 @@ export default function useOperators() {
     }
 
     async function initializeComposable(user: UserWithAccountsAndOperators){
-        console.log('reached watchEffect in Operators.ts', user)
         listenForContractEvents()
         await getUserOperators(user)
     }
     watchEffect( () => {
-        // if(user){
-            // console.log('reached watchEffect in Operators.ts', user)
-            // listenForContractEvents()
-            // await getUserOperators()
-        // }
+        // 
     })
 
     return { 

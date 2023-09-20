@@ -31,8 +31,6 @@ export default function useAnalytics() {
 
     function computeUserAnalytics() {
         finishedComputingUerAnalytics.value = false
-        // const result = userAnalytics.value
-        console.log('rawUserAnalytics in computeAnalytics :>> ', rawUserAnalytics)
         const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
             new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
         })
@@ -163,7 +161,6 @@ export default function useAnalytics() {
 
             // We get the user's analytics (wallet balance) data here.
             mockData()
-            console.log('txData.value :>> ', txData.value)
             const data = txData.value
 
             // TODO: Pass data from above when the API / data is ready

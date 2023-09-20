@@ -30,7 +30,7 @@ const onSelectOperatorIDBlur = () => {
         openSelectOperatorID.value = false
     }, 200)
 }
-// @chris need a way to find out possible operators on selecting a wallet address
+
 const availableOperatorIDs = ref([] as string[])
 const selectedPublicNodeURL = ref('')
 const selectedCollateral = ref()
@@ -88,13 +88,8 @@ const submitButtonTxt = ref('Submit')
 
 onMounted(async () => {
   if (user.value) {
-    const primaryAccount = user.value.accounts.find(item => { return item.address === user.value?.address})
-    console.log('primaryAccount in onMounted :>> ', primaryAccount)
-    selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
-
 
     await initializeComposable(user.value as UserWithAccountsAndOperators)
-
 
     // Autofill disable
     const disableAutofill = () => {
@@ -114,13 +109,6 @@ const { addOperator, initializeComposable, nonregisteredOperators, registeredOpe
 
 watch(user, async () => {
   if (user.value) {
-
-
-    if (selectedWallet.value.address === ''){
-      selectedWallet.value = {address: user.value.address as string, wallet_provider: user.value.walletProvider as string}
-    }
-
-
     await initializeComposable(user.value as UserWithAccountsAndOperators)
 
     filterData()
@@ -152,9 +140,16 @@ watch(registeredOperators, () => {
   filterData()
 })
 
+watch(openAddOperatorModal, () =>{
+  if(openAddOperatorModal.value){
+    selectedWallet.value = {address: user.value?.address as string, wallet_provider: user.value?.walletProvider as string}
+  }
+})
+
 watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
   filterData()
 })
+
 
 
 const openWalletsModal = () => {
