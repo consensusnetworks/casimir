@@ -1,12 +1,14 @@
-<script lang="ts" setup>
+b<script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { onMounted, ref, toValue, watch} from 'vue'
 import useAnalytics from '@/composables/analytics'
 import useUser from '@/composables/user'
 import useScreenDimensions from '@/composables/screenDimensions'
-import { AnalyticsData, ProviderString, UserAnalyticsData } from '@casimir/types'
+import { AnalyticsData, ProviderString, UserAnalyticsData, UserWithAccountsAndOperators } from '@casimir/types'
+import useBreakdownMetrics from '@/composables/breakdownMetrics'
 
-const { currentStaked, stakingRewards, totalWalletBalance, user } = useUser()
+const {  user } = useUser()
+const { currentStaked, stakingRewards, totalWalletBalance, initializeComposable, uninitializeComposable } = useBreakdownMetrics()
 const { screenWidth } = useScreenDimensions()
 
 const chardId = ref('cross_provider_chart')
@@ -53,7 +55,6 @@ const formatLegendLabel = (address: string) => {
 }
 
 const setChartData = (userAnalytics: UserAnalyticsData) => {
-  console.log('user analytics in BreakdownChart', userAnalytics)
   let labels
   let data: Array<AnalyticsData> = []
   switch (selectedTimeframe.value) {
@@ -99,6 +100,11 @@ const setChartData = (userAnalytics: UserAnalyticsData) => {
 const {userAnalytics, updateAnalytics } = useAnalytics()
 
 onMounted(() => {
+  if(user.value){
+    initializeComposable(user.value as UserWithAccountsAndOperators)
+  }else{
+    uninitializeComposable()
+  }
   setChartData(userAnalytics.value as UserAnalyticsData)
 })
 
@@ -111,6 +117,11 @@ watch(userAnalytics, () => {
 })
 
 watch(user, async () => {
+  if (user.value) {
+    initializeComposable(user.value as UserWithAccountsAndOperators)
+  } else {
+    uninitializeComposable()
+  }
   await updateAnalytics()
   setChartData(userAnalytics.value as UserAnalyticsData)
 })
