@@ -115,6 +115,7 @@ void async function () {
     const views = await upgrades.deployProxy(viewsFactory, Object.values(viewsArgs), { unsafeAllow: ['constructor'] })
     console.log(`CasimirViews contract deployed to ${views.address}`)
 
+    requestConfig.args[1] = views.address
     const setRequest = await manager.setFunctionsRequest(requestConfig.source, requestConfig.args, 300000)
     await setRequest.wait()
 

@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { loadCredentials, getSecret } from '@casimir/aws'
-import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
+import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from '@casimir/env'
 import { run } from '@casimir/shell'
 
 /**
@@ -25,7 +25,9 @@ void async function () {
         throw new Error(`Ethereum ${process.env.FORK} is not supported`)
     }
 
-    console.log(`Using ${process.env.FORK} fork from ${process.env.ETHEREUM_FORK_RPC_URL}`)
+    const networkName = ETHEREUM_NETWORK_NAME[process.env.FORK.toUpperCase()]
+
+    console.log(`Using ${networkName} fork from ${process.env.ETHEREUM_FORK_RPC_URL}`)
     console.log(`Serving local fork at ${process.env.ETHEREUM_RPC_URL}`)
 
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)

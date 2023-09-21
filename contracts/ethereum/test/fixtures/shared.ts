@@ -130,6 +130,7 @@ export async function deploymentFixture() {
         await result.wait()
     }
 
+    requestConfig.args[1] = views.address
     const setRequest = await manager.setFunctionsRequest(requestConfig.source, requestConfig.args, 300000)
     await setRequest.wait()
 

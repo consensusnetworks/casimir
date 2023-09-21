@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { loadCredentials, getSecret } from '@casimir/aws'
-import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
+import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from '@casimir/env'
 import { run, runSync } from '@casimir/shell'
 
 /**
@@ -54,6 +54,10 @@ void async function () {
     process.env.SWAP_FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SWAP_FACTORY_ADDRESS
     if (process.env.NETWORK) {
         process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
+        const networkName = ETHEREUM_NETWORK_NAME[networkKey]
+
+        console.log(`Using ${networkName} network from ${process.env.ETHEREUM_RPC_URL}`)
+
         if (!process.env.ETHEREUM_RPC_URL) {
             throw new Error(`Ethereum ${process.env.NETWORK} is not supported`)
         }
