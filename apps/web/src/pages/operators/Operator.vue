@@ -6,11 +6,14 @@ import useContracts from '@/composables/contracts'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
 import useUser from '@/composables/user'
+import useOperators from '@/composables/operators'
+import { UserWithAccountsAndOperators} from '@casimir/types'
 
-const {  registerOperatorWithCasimir, loadingRegisteredOperators } = useContracts()
+
+const { registerOperatorWithCasimir, loadingRegisteredOperators } = useContracts()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
-const { user, nonregisteredOperators, registeredOperators, addOperator } = useUser()
+const { user,  } = useUser()
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -27,7 +30,7 @@ const onSelectOperatorIDBlur = () => {
         openSelectOperatorID.value = false
     }, 200)
 }
-// @chris need a way to find out possible operators on selecting a wallet address
+
 const availableOperatorIDs = ref([] as string[])
 const selectedPublicNodeURL = ref('')
 const selectedCollateral = ref()
@@ -85,10 +88,8 @@ const submitButtonTxt = ref('Submit')
 
 onMounted(async () => {
   if (user.value) {
-    // await getUserOperators()
-    const primaryAccount = user.value.accounts.find(item => { return item.address === user.value?.address})
-    selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
 
+    await initializeComposable(user.value as UserWithAccountsAndOperators)
 
     // Autofill disable
     const disableAutofill = () => {
@@ -104,13 +105,12 @@ onMounted(async () => {
   }
 })
 
+const { addOperator, initializeComposable, nonregisteredOperators, registeredOperators } = useOperators()
+
 watch(user, async () => {
   if (user.value) {
-    // await getUserOperators()
-    if (selectedWallet.value.address === ''){
-      const primaryAccount = user.value.accounts.find(item => { item.address === user.value?.address})
-      selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
-    }
+    await initializeComposable(user.value as UserWithAccountsAndOperators)
+
     filterData()
   }
 })
@@ -120,11 +120,9 @@ watch(selectedWallet, async () =>{
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
 
-  // await getUserOperators()
-
   if (selectedWallet.value.address === '') {
     availableOperatorIDs.value = []
-  } else {
+  } else if(nonregisteredOperators.value && nonregisteredOperators.value.length > 0) {
     availableOperatorIDs.value = [...nonregisteredOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)}
 })
 
@@ -142,9 +140,17 @@ watch(registeredOperators, () => {
   filterData()
 })
 
+watch(openAddOperatorModal, () =>{
+  if(openAddOperatorModal.value){
+    selectedWallet.value = {address: user.value?.address as string, wallet_provider: user.value?.walletProvider as string}
+  }
+})
+
 watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
   filterData()
 })
+
+
 
 const openWalletsModal = () => {
   const el = document.getElementById('connect_wallet_button')

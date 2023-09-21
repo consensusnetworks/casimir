@@ -1,11 +1,14 @@
-<script lang="ts" setup>
+b<script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { onMounted, ref, watch} from 'vue'
+import { onMounted, ref, toValue, watch} from 'vue'
+import useAnalytics from '@/composables/analytics'
 import useUser from '@/composables/user'
 import useScreenDimensions from '@/composables/screenDimensions'
-import { AnalyticsData, ProviderString } from '@casimir/types'
+import { AnalyticsData, ProviderString, UserAnalyticsData, UserWithAccountsAndOperators } from '@casimir/types'
+import useBreakdownMetrics from '@/composables/breakdownMetrics'
 
-const { currentStaked, finishedComputingUerAnalytics, stakingRewards, totalWalletBalance, user, userAnalytics } = useUser()
+const {  user } = useUser()
+const { currentStaked, stakingRewards, totalWalletBalance, initializeComposable, uninitializeComposable } = useBreakdownMetrics()
 const { screenWidth } = useScreenDimensions()
 
 const chardId = ref('cross_provider_chart')
@@ -51,25 +54,25 @@ const formatLegendLabel = (address: string) => {
   return (account? account.walletProvider : 'Unknown') + ' (' + start + middle + end + ')'
 }
 
-const setChartData = () => {
+const setChartData = (userAnalytics: UserAnalyticsData) => {
   let labels
   let data: Array<AnalyticsData> = []
   switch (selectedTimeframe.value) {
     case '1 month':
-      labels = userAnalytics.value.oneMonth.labels
-      data = userAnalytics.value.oneMonth.data as any
+      labels = userAnalytics.oneMonth.labels
+      data = userAnalytics.oneMonth.data as any
       break
     case '6 months':
-      labels = userAnalytics.value.sixMonth.labels
-      data = userAnalytics.value.sixMonth.data as any
+      labels = userAnalytics.sixMonth.labels
+      data = userAnalytics.sixMonth.data as any
       break
     case '12 months':
-      labels = userAnalytics.value.oneYear.labels
-      data = userAnalytics.value.oneYear.data as any
+      labels = userAnalytics.oneYear.labels
+      data = userAnalytics.oneYear.data as any
       break
     case 'historical':
-      labels = userAnalytics.value.historical.labels
-      data = userAnalytics.value.historical.data as any
+      labels = userAnalytics.historical.labels
+      data = userAnalytics.historical.data as any
       break
     
     default:
@@ -93,21 +96,36 @@ const setChartData = () => {
   }
 }
 
-onMounted(async () => {
-    setChartData()
+
+const {userAnalytics, updateAnalytics } = useAnalytics()
+
+onMounted(() => {
+  if(user.value){
+    initializeComposable(user.value as UserWithAccountsAndOperators)
+  }else{
+    uninitializeComposable()
+  }
+  setChartData(userAnalytics.value as UserAnalyticsData)
 })
 
 watch(selectedTimeframe, () => {
-  setChartData()
+  setChartData(userAnalytics.value as UserAnalyticsData)
+})
+
+watch(userAnalytics, () => {
+  setChartData(userAnalytics.value as UserAnalyticsData)
 })
 
 watch(user, async () => {
-    setChartData()
+  if (user.value) {
+    initializeComposable(user.value as UserWithAccountsAndOperators)
+  } else {
+    uninitializeComposable()
+  }
+  await updateAnalytics()
+  setChartData(userAnalytics.value as UserAnalyticsData)
 })
 
-watch(finishedComputingUerAnalytics, async () => {
-    setChartData()
-})
 </script>
 
 <template>
