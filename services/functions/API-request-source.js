@@ -33,7 +33,7 @@ async function balancesHandler() {
 	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
 	
 	const depositedPoolPublicKeys = await getDepositedPoolPublicKeys(startIndex, endIndex)
-	const validators = [] // await getValidators(depositedPoolPublicKeys)
+	const validators = await getValidators(depositedPoolPublicKeys)
 
 	const beaconBalance = validators.reduce((accumulator, { balance }) => {
 		accumulator += parseFloat(balance)
@@ -65,7 +65,7 @@ async function detailsHandler() {
 		console.log("-- Public key", depositedPoolPublicKeys[i])
 		console.log("-- Status", depositedPoolStatuses[i])
 	}
-	const validators = [] // await getValidators(depositedPoolPublicKeys)
+	const validators = await getValidators(depositedPoolPublicKeys)
 
 	const activatedDeposits = validators.reduce((accumulator, { validator }) => {
 		const { activation_epoch } = validator

@@ -11,7 +11,7 @@ upgrades.silenceWarnings()
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
-    const [owner, daoOracle, donTransmitter] = await ethers.getSigners()
+    const [, daoOracle, donTransmitter] = await ethers.getSigners()
 
     const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')
     const functionsOracleFactory = await functionsOracleFactoryFactory.deploy() as FunctionsOracleFactory
