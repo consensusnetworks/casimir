@@ -1,3 +1,4 @@
+import { loadCredentials, getSecret } from '@casimir/aws'
 import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
 import { run } from '@casimir/shell'
 
@@ -5,7 +6,14 @@ import { run } from '@casimir/shell'
  * Start the Chainlink functions service
  */
 void async function() {
-    process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
+    
+    if (process.env.USE_SECRETS !== 'false') {
+        await loadCredentials()
+        process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') as string
+    } else {
+        process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
+    }
+
     const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
     if (process.env.NETWORK) {
         process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]

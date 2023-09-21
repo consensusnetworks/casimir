@@ -1,3 +1,4 @@
+import { loadCredentials, getSecret } from '@casimir/aws'
 import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
 import { fetchRetry } from '@casimir/fetch'
 import { run } from '@casimir/shell'
@@ -13,7 +14,12 @@ void async function () {
     process.env.MESSENGER_SRV_ADDR = process.env.MESSENGER_URL
     process.env.USE_HARDCODED_OPERATORS = 'false'
 
-    process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
+    if (process.env.USE_SECRETS !== 'false') {
+        await loadCredentials()
+        process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') as string
+    } else {
+        process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
+    }
 
     const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
     if (process.env.NETWORK) {
@@ -51,6 +57,7 @@ void async function () {
     const { message } = await ping.json()
     if (message !== 'pong') throw new Error('Dkg service is not running')
 
+    process.env.USE_LOGS = process.env.USE_LOGS || 'false'
     run('npx esno -r dotenv/config src/index.ts')
     console.log('🔮 Oracle service started')
 }()
