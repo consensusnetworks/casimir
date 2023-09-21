@@ -77,7 +77,7 @@ contract CasimirPool is ICasimirPool, Initializable, OwnableUpgradeable, Reentra
      */
     function depositRewards() external onlyOwner {
         if (status != PoolStatus.ACTIVE) {
-            revert InvalidStatus();
+            revert Inactive();
         }
 
         uint256 balance = address(this).balance;
@@ -90,7 +90,7 @@ contract CasimirPool is ICasimirPool, Initializable, OwnableUpgradeable, Reentra
      */
     function withdrawBalance(uint32[] memory blamePercents) external onlyOwner {
         if (status != PoolStatus.WITHDRAWN) {
-            revert InvalidStatus();
+            revert NotWithdrawn();
         }
 
         uint256 balance = address(this).balance;

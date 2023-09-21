@@ -31,6 +31,14 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
     );
     event FunctionsOracleAddressSet(address newFunctionsOracleAddress);
     event UpkeepPerformed(ReportStatus indexed status);
+    
+    /**********/
+    /* Errors */
+    /**********/
+
+    error InvalidAddress();
+    error InvalidRequest();
+    error NotNeeded();
 
     /*************/
     /* Mutations */

@@ -84,9 +84,10 @@ contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable,
         if (msg.sender != operatorOwner) {
             revert Unauthorized();
         }
-        require(operatorId != 0, "Invalid operator ID");
         Operator storage operator = operators[operatorId];
-        require(operator.id == 0, "Operator already registered");
+        if (operator.id != 0) {
+            revert AlreadyRegistered();
+        }
 
         operatorIds.push(operatorId);
         operator.id = operatorId;
@@ -105,10 +106,9 @@ contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable,
         (address operatorOwner, , , , , ) = ssvViews.getOperatorById(
             operatorId
         );
-        require(
-            msg.sender == operatorOwner,
-            "Only operator owner can deposit collateral"
-        );
+        if (msg.sender != operatorOwner) {
+            revert Unauthorized();
+        }
 
         operator.collateral += msg.value;
         operator.active = true;
@@ -154,8 +154,12 @@ contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable,
         if (msg.sender != operatorOwner) {
             revert Unauthorized();
         }       
-        require(operator.active, "Operator is not active");
-        require(!operator.resharing, "Operator is resharing");
+        if (!operator.active) {
+            revert Inactive();
+        }
+        if (operator.resharing) {
+            revert Resharing();
+        }
 
         if (operator.poolCount == 0) {
             operator.active = false;
@@ -177,12 +181,20 @@ contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable,
         uint32 poolId
     ) external onlyOwner {
         Operator storage operator = operators[operatorId];
-        require(operator.active, "Operator not active");
-        require(!operator.resharing, "Operator resharing");
-        require(!operatorPools[operatorId][poolId], "Pool already active");
+        if (!operator.active) {
+            revert Inactive();  
+        }
+        if (operator.resharing) {
+            revert Resharing();
+        }
+        if (operatorPools[operatorId][poolId]) {
+            revert AlreadyExists();
+        }
         uint256 eligiblePools = (operator.collateral / REQUIRED_COLLATERAL) -
             operator.poolCount;
-        require(eligiblePools > 0, "No remaining eligible pools");
+        if (eligiblePools == 0) {
+            revert InsufficientCollateral();
+        }
 
         operatorPools[operatorId][poolId] = true;
         operator.poolCount += 1;
@@ -202,14 +214,12 @@ contract CasimirRegistry is ICasimirRegistry, Initializable, OwnableUpgradeable,
         uint256 blameAmount
     ) external onlyOwnerOrPool(poolId) {
         Operator storage operator = operators[operatorId];
-        require(
-            operatorPools[operatorId][poolId],
-            "Pool is not active for operator"
-        );
-        require(
-            blameAmount <= REQUIRED_COLLATERAL,
-            "Blame amount is more than collateral"
-        );
+        if (!operatorPools[operatorId][poolId]) {
+            revert DoesNotExist();
+        }
+        if (blameAmount > REQUIRED_COLLATERAL) {
+            revert InvalidAmount();
+        }
 
         operatorPools[operatorId][poolId] = false;
         operator.poolCount -= 1;

@@ -26,8 +26,9 @@ interface ICasimirPool {
     /* Errors */
     /**********/
 
+    error Inactive();
     error InvalidAddress();
-    error InvalidStatus();
+    error NotWithdrawn();
 
     /***********/
     /* Structs */

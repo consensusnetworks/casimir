@@ -11,7 +11,7 @@ upgrades.silenceWarnings()
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
-    const [, daoOracle, donTransmitter] = await ethers.getSigners()
+    const [owner, daoOracle, donTransmitter] = await ethers.getSigners()
 
     const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')
     const functionsOracleFactory = await functionsOracleFactoryFactory.deploy() as FunctionsOracleFactory
@@ -82,8 +82,8 @@ export async function deploymentFixture() {
         poolBeaconAddress: poolBeacon.address,
         registryBeaconAddress: registryBeacon.address,
         ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
-        ssvViewsAddress: process.env.SSV_VIEWS_ADDRESS,
         ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
+        ssvViewsAddress: process.env.SSV_VIEWS_ADDRESS,
         swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
         swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
         upkeepBeaconAddress: upkeepBeacon.address,
@@ -97,7 +97,7 @@ export async function deploymentFixture() {
     })
     const manager = await upgrades.deployProxy(managerFactory, Object.values(managerArgs), { unsafeAllow: ['constructor', 'external-library-linking'] }) as CasimirManager
     await manager.deployed()
-
+    
     const registryAddress = await manager.getRegistryAddress()
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
 
@@ -118,6 +118,7 @@ export async function deploymentFixture() {
     const preregisteredBalance = ethers.utils.parseEther('10')
     for (const operatorId of preregisteredOperatorIds) {
         const [operatorOwnerAddress] = await ssvViews.getOperatorById(operatorId)
+        const operatorOwnerSigner = ethers.provider.getSigner(operatorOwnerAddress)
         const currentBalance = await ethers.provider.getBalance(operatorOwnerAddress)
         const nextBalance = currentBalance.add(preregisteredBalance)
         await setBalance(operatorOwnerAddress, nextBalance)
@@ -125,8 +126,7 @@ export async function deploymentFixture() {
             method: 'hardhat_impersonateAccount',
             params: [operatorOwnerAddress]
         })
-        const operatorSigner = ethers.provider.getSigner(operatorOwnerAddress)
-        const result = await registry.connect(operatorSigner).registerOperator(operatorId, { value: preregisteredBalance })
+        const result = await registry.connect(operatorOwnerSigner).registerOperator(operatorId, { value: preregisteredBalance })
         await result.wait()
     }
 

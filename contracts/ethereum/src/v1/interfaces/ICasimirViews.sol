@@ -5,6 +5,12 @@ import "./ICasimirPool.sol";
 import "./ICasimirRegistry.sol";
 
 interface ICasimirViews {
+    /**********/
+    /* Errors */
+    /**********/
+
+    error InvalidAddress();
+
     /***********/
     /* Getters */
     /***********/

@@ -76,6 +76,7 @@ interface ICasimirManager {
 
     error ActionPeriodMaximumReached();
     error ForcedExitAlreadyReported();
+    error InsufficientLiquidity();
     error InvalidAmount();
     error InvalidAddress();
     error InvalidWithdrawalCredentials();

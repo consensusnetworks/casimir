@@ -36,8 +36,14 @@ interface ICasimirRegistry {
     /* Errors */
     /**********/
 
+    error AlreadyExists();
+    error AlreadyRegistered();
+    error DoesNotExist();
+    error Inactive();
+    error InsufficientCollateral();
     error InvalidAmount();
     error InvalidAddress();
+    error Resharing();
     error TransferFailed();
     error Unauthorized();
 

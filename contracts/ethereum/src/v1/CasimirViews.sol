@@ -40,8 +40,8 @@ contract CasimirViews is ICasimirViews, Initializable {
      * @param registryAddress The registry address
      */
     function initialize(address managerAddress, address registryAddress) public initializer {
-        require(managerAddress != address(0), "Missing manager address");
-        require(registryAddress != address(0), "Missing registry address");
+        onlyAddress(managerAddress);
+        onlyAddress(registryAddress);
 
         manager = ICasimirManager(managerAddress);
         registry = ICasimirRegistry(registryAddress);
@@ -218,6 +218,15 @@ contract CasimirViews is ICasimirViews, Initializable {
             ICasimirPool pool = ICasimirPool(manager.getPoolAddress(poolId));
             ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
             sweptBalance += uint128(poolDetails.balance / 1 gwei);
+        }
+    }
+
+    /**
+     * @dev Validate an address is not the zero address
+     */
+    function onlyAddress(address checkAddress) private pure {
+        if (checkAddress == address(0)) {
+            revert InvalidAddress();
         }
     }
 }

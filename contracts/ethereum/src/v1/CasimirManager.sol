@@ -179,8 +179,8 @@ contract CasimirManager is
         address poolBeaconAddress,
         address registryBeaconAddress,
         address ssvNetworkAddress,
-        address ssvViewsAddress,
         address ssvTokenAddress,
+        address ssvViewsAddress,
         address swapFactoryAddress,
         address swapRouterAddress,
         address upkeepBeaconAddress,
@@ -196,8 +196,8 @@ contract CasimirManager is
         onlyAddress(poolBeaconAddress);
         onlyAddress(registryBeaconAddress);
         onlyAddress(ssvNetworkAddress);
-        onlyAddress(ssvViewsAddress);
         onlyAddress(ssvTokenAddress);
+        onlyAddress(ssvViewsAddress);
         onlyAddress(swapFactoryAddress);
         onlyAddress(swapRouterAddress);
         onlyAddress(upkeepBeaconAddress);
@@ -1216,7 +1216,9 @@ contract CasimirManager is
                 UNISWAP_FEE_TIER
             )
         );
-        require(swapPool.liquidity() >= amount, "Not enough liquidity");
+        if (swapPool.liquidity() < amount) {
+            revert InsufficientLiquidity();
+        }
 
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
             .ExactInputSingleParams({

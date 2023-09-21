@@ -87,10 +87,9 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
     function initialize(
         address functionsOracleAddress
     ) public initializer {
-        require(
-            functionsOracleAddress != address(0),
-            "Missing functions oracle address"
-        );
+        if (functionsOracleAddress == address(0)) {
+            revert InvalidAddress();
+        }
 
         __Ownable_init();
         __ReentrancyGuard_init();
@@ -103,10 +102,9 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
      * @param newFunctionsOracleAddress New Chainlink functions oracle address
      */
     function setFunctionsOracleAddress(address newFunctionsOracleAddress) external onlyOwner {
-        require (
-            newFunctionsOracleAddress != address(0),
-            "Missing functions oracle address"
-        );
+        if (newFunctionsOracleAddress == address(0)) {
+            revert InvalidAddress();
+        }
 
         setOracle(newFunctionsOracleAddress);
 
@@ -140,7 +138,9 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
      */
     function performUpkeep(bytes calldata) external override {
         (bool upkeepNeeded, ) = checkUpkeep("");
-        require(upkeepNeeded, "Upkeep not needed");
+        if (!upkeepNeeded) {
+            revert NotNeeded();
+        }
 
         if (reportStatus == ReportStatus.FINALIZED) {
             previousReportTimestamp = reportTimestamp;
@@ -229,7 +229,9 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
         bytes memory executionError
     ) internal override {
         RequestType requestType = reportRequests[requestId];
-        require(requestType != RequestType.NONE, "Invalid request ID");
+        if (requestType == RequestType.NONE) {
+            revert InvalidRequest();
+        }
 
         reportResponseError = executionError;
         if (executionError.length == 0) {
