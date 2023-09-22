@@ -1,6 +1,6 @@
 b<script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { onMounted, ref, toValue, watch} from 'vue'
+import { onMounted, ref, watch} from 'vue'
 import useAnalytics from '@/composables/analytics'
 import useUser from '@/composables/user'
 import useScreenDimensions from '@/composables/screenDimensions'
@@ -97,11 +97,12 @@ const setChartData = (userAnalytics: UserAnalyticsData) => {
 }
 
 
-const {userAnalytics, updateAnalytics } = useAnalytics()
+const {userAnalytics, updateAnalytics, initializeAnalyticsComposable } = useAnalytics()
 
 onMounted(() => {
   if(user.value){
     initializeComposable(user.value as UserWithAccountsAndOperators)
+    initializeAnalyticsComposable()
   }else{
     uninitializeComposable()
   }

@@ -373,7 +373,6 @@ onUnmounted(() =>{
                 <button @click="authFlowCardNumber = 1, selectedProvider = null">
                   <vue-feather
                     type="chevron-left"
-                    size=""
                     class="icon w-[20px] h-min text-primary hover:text-blue_3 mr-[10px] mt-[5px]"
                   />
                 </button>
