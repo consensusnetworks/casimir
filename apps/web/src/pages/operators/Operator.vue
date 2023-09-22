@@ -343,7 +343,6 @@ async function submitRegisterOperatorForm() {
               >
                 <vue-feather
                   type="x"
-                  size=""
                   class="icon w-[12px] h-min"
                 />
               </button>
@@ -454,7 +453,6 @@ async function submitRegisterOperatorForm() {
               <button @click="selectedPublicNodeURL = ''">
                 <vue-feather
                   type="x"
-                  size=""
                   class="icon w-[12px] h-min"
                 />
               </button>
@@ -491,7 +489,6 @@ async function submitRegisterOperatorForm() {
               >
                 <vue-feather
                   type="x"
-                  size=""
                   class="icon w-[12px] h-min"
                 />
               </button>
