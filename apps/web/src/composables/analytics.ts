@@ -149,12 +149,12 @@ export default function useAnalytics() {
                 }
             }
             // TODO: Re-enable this when athena is ready
-            const response = await fetch(`${usersUrl}/analytics`, requestOptions)
-            const { error, message, data: athenaData } = await response.json()
+            // const response = await fetch(`${usersUrl}/analytics`, requestOptions)
+            // const { error, message, data: athenaData } = await response.json()
             // console.log('data from analytics :>> ', data)
             // userAnalytics.value = athenaData
-            getUserAnalyticsError.value = error
-            if (error) throw new Error(`Error in getUserAnalytics: ${message}`)
+            // getUserAnalyticsError.value = error
+            // if (error) throw new Error(`Error in getUserAnalytics: ${message}`)
 
             // TODO: Get events, actions, and contract data from the API
             // Then format the data to be used in the charts (see computeUserAnalytics) and give to Steve.
@@ -168,7 +168,8 @@ export default function useAnalytics() {
 
             // This compute's the user's wallet balance over time
             computeUserAnalytics()
-            return { error, message, data }
+            // return { error, message, data }
+            return { data }
         } catch (error: any) {
             throw new Error(error.message || 'Error getting user analytics')
         }
