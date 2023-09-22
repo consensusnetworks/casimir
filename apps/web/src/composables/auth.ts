@@ -1,5 +1,5 @@
 import useEnvironment from '@/composables/environment'
-import { LoginCredentials } from '@casimir/types'
+import { SignInWithEthereumCredentials } from '@casimir/types'
 
 const { domain, origin, usersUrl } = useEnvironment()
 
@@ -45,17 +45,17 @@ export default function useAuth() {
      * Signs user up if they don't exist, otherwise
      * logs the user in with an address, message, and signed message
      * 
-     * @param {LoginCredentials} loginCredentials - The user's address, provider, currency, message, and signed message 
+     * @param {SignInWithEthereumCredentials} signInWithEthereumCredentials - The user's address, provider, currency, message, and signed message 
      * @returns {Promise<Response>} - The response from the login request
      */
-    async function signInWithEthereum(loginCredentials: LoginCredentials): Promise<void> {
+    async function signInWithEthereum(signInWithEthereumCredentials: SignInWithEthereumCredentials): Promise<void> {
         try {
             const requestOptions = {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(loginCredentials)
+                body: JSON.stringify(signInWithEthereumCredentials)
             }
             const response = await fetch(`${usersUrl}/auth/login`, requestOptions)
             const { error, message } = await response.json()

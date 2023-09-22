@@ -163,8 +163,6 @@ The contract uses two oracles to automate the Casimir staking experience and ens
 
 Users can deposit any amount of ETH to the manager contract. Their deposits are staked to validators run by SSV operators (see [Operators](#operators)). Rewards are auto-compounded into stake and users can withdraw their principal plus any earned proportion of new stake (or a partial amount of their choice) at any time.
 
-Sure! Here's the User Fees section structured similarly to the blame amount and user stake calculations:
-
 ### User Fees
 
 The contract charges a user fee on deposits and rewards to cover operational expenses.

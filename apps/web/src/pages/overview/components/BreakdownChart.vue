@@ -1,20 +1,18 @@
-<script lang="ts" setup>
+b<script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { onMounted, ref, watch} from 'vue'
-import useContracts from '@/composables/contracts'
-import useUsers from '@/composables/users'
-import useEthers from '@/composables/ethers'
+import { onMounted, ref, toValue, watch} from 'vue'
+import useAnalytics from '@/composables/analytics'
+import useUser from '@/composables/user'
 import useScreenDimensions from '@/composables/screenDimensions'
-import { AnalyticsData, ProviderString } from '@casimir/types'
+import { AnalyticsData, ProviderString, UserAnalyticsData, UserWithAccountsAndOperators } from '@casimir/types'
+import useBreakdownMetrics from '@/composables/breakdownMetrics'
 
-const { currentStaked, refreshBreakdown, stakingRewards, totalWalletBalance } = useContracts()
-const { listenForTransactions } = useEthers()
+const {  user } = useUser()
+const { currentStaked, stakingRewards, totalWalletBalance, initializeComposable, uninitializeComposable } = useBreakdownMetrics()
 const { screenWidth } = useScreenDimensions()
-const { user, getUserAnalytics, userAnalytics } = useUsers()
 
 const chardId = ref('cross_provider_chart')
 const selectedTimeframe = ref('historical')
-
 const chartData = ref({} as any)
 
 const getAccountColor = (address: string) => {
@@ -56,32 +54,31 @@ const formatLegendLabel = (address: string) => {
   return (account? account.walletProvider : 'Unknown') + ' (' + start + middle + end + ')'
 }
 
-const setChartData = () => {
+const setChartData = (userAnalytics: UserAnalyticsData) => {
   let labels
   let data: Array<AnalyticsData> = []
   switch (selectedTimeframe.value) {
     case '1 month':
-      labels = userAnalytics.value.oneMonth.labels
-      data = userAnalytics.value.oneMonth.data
+      labels = userAnalytics.oneMonth.labels
+      data = userAnalytics.oneMonth.data as any
       break
     case '6 months':
-      labels = userAnalytics.value.sixMonth.labels
-      data = userAnalytics.value.sixMonth.data
+      labels = userAnalytics.sixMonth.labels
+      data = userAnalytics.sixMonth.data as any
       break
     case '12 months':
-      labels = userAnalytics.value.oneYear.labels
-      data = userAnalytics.value.oneYear.data
+      labels = userAnalytics.oneYear.labels
+      data = userAnalytics.oneYear.data as any
       break
     case 'historical':
-      labels = userAnalytics.value.historical.labels
-      data = userAnalytics.value.historical.data
+      labels = userAnalytics.historical.labels
+      data = userAnalytics.historical.data as any
       break
     
     default:
       break
   }
 
-  
   chartData.value = {
     labels : labels,
     datasets : data.map((item: any) => {
@@ -99,32 +96,36 @@ const setChartData = () => {
   }
 }
 
-onMounted(async () => {
-  if (user.value?.id) {
-    await getUserAnalytics()
-    setChartData()
-    await refreshBreakdown()
-    // TODO: Potentially find a better place to initialize these listeners
-    // Doing this here because currently we're currently initializing listeners on connectWallet
-    // which isn't used if user is already signed in
-    listenForTransactions()
-  } else {
-    setChartData()
-  }
-})
 
-watch(user, async () => {
-    if (user.value?.id) {
-      await getUserAnalytics()
-      setChartData()
-    } else {
-      setChartData()
-    }
+const {userAnalytics, updateAnalytics } = useAnalytics()
+
+onMounted(() => {
+  if(user.value){
+    initializeComposable(user.value as UserWithAccountsAndOperators)
+  }else{
+    uninitializeComposable()
+  }
+  setChartData(userAnalytics.value as UserAnalyticsData)
 })
 
 watch(selectedTimeframe, () => {
-  setChartData()
+  setChartData(userAnalytics.value as UserAnalyticsData)
 })
+
+watch(userAnalytics, () => {
+  setChartData(userAnalytics.value as UserAnalyticsData)
+})
+
+watch(user, async () => {
+  if (user.value) {
+    initializeComposable(user.value as UserWithAccountsAndOperators)
+  } else {
+    uninitializeComposable()
+  }
+  await updateAnalytics()
+  setChartData(userAnalytics.value as UserAnalyticsData)
+})
+
 </script>
 
 <template>
@@ -348,4 +349,4 @@ watch(selectedTimeframe, () => {
       font-size: 14px;
     };
 }
-</style>
+</style>@/composables/user

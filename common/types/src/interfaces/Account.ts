@@ -15,7 +15,7 @@ export interface Account {
     /** The unique account id */
     id: number
     /** The account snapshots */
-    snapshots?: BalanceSnapshot[]
+    // snapshots?: BalanceSnapshot[]
     /** The account transactions */
     // transactions?: Transaction[]
     /** The user id associated with the account */

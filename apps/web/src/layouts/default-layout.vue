@@ -6,31 +6,87 @@ import router from '@/composables/router'
 import VueFeather from 'vue-feather'
 import useFormat from '@/composables/format'
 import useScreenDimensions from '@/composables/screenDimensions'
-import useUser from '@/composables/users'
-import useWallet from '@/composables/wallet'
+import useUser from '@/composables/user'
+import { CryptoAddress, Currency, ProviderString } from '@casimir/types'
+import useEthers from '@/composables/ethers'
+import useLedger from '@/composables/ledger'
+import useTrezor from '@/composables/trezor'
+import useWalletConnect from '@/composables/walletConnectV2'
 
+const { ethersProviderList, getEthersAddressWithBalance } = useEthers()
+const { convertString, trimAndLowercaseAddress } = useFormat()
+const { getLedgerAddress } = useLedger()
+const { getTrezorAddress } = useTrezor()
+const { screenWidth } = useScreenDimensions()
+const { connectWalletConnectV2 } = useWalletConnect()
+
+const activeWallets = [
+  'MetaMask',
+  'CoinbaseWallet',
+  'WalletConnect',
+  'Trezor',
+  'Ledger',
+  'TrustWallet',
+  // 'IoPay',
+] as ProviderString[]
 const authFlowCardNumber = ref(1)
-const selectedProvider = ref(null as null | string)
-const termsCheckbox = ref(true)
-
+const selectedProvider = ref(null as ProviderString | null)
 const openRouterMenu = ref(false)
-
-const { convertString } = useFormat()
+const openWalletsModal = ref(false)
+const walletProviderAddresses = ref([] as CryptoAddress[])
 
 const {
-  screenWidth
-} = useScreenDimensions()
-
-const  {
-  activeWallets,
-  openWalletsModal,
-  walletProviderAddresses,
+  user,
+  addAccountToUser,
+  login,
   logout,
-  selectAddress,
-  selectProvider,
-} = useWallet()
+} = useUser()
 
-const { user } = useUser()
+function checkIfAddressIsUsed (account: CryptoAddress): boolean {
+  const { address } = account
+  if (user.value?.accounts) {
+    const accountAddresses = user.value.accounts.map((account: any) => account.address)
+    if (accountAddresses.includes(address)) return true
+  }
+  return false
+}
+
+  /**
+   * Checks if user is adding an account or logging in
+   * @param address 
+  */
+   async function selectAddress(address: string) {
+    address = trimAndLowercaseAddress(address)
+    if (user.value) {
+      // Add account
+      await addAccountToUser({provider: selectedProvider.value as ProviderString, address, currency: 'ETH'})
+    } else {
+      // Login
+      await login({provider: selectedProvider.value as ProviderString, address, currency: 'ETH'})
+    }
+  }
+
+/**
+ * Sets the selected provider and returns the set of addresses available for the selected provider
+ * @param provider 
+ * @param currency 
+*/
+async function selectProvider(provider: ProviderString, currency: Currency = 'ETH'): Promise<void> {
+  console.clear()
+  try {
+    if (provider === 'WalletConnect') {
+      walletProviderAddresses.value = await connectWalletConnectV2('eip155:5') as CryptoAddress[]
+    } else if (ethersProviderList.includes(provider)) {
+      walletProviderAddresses.value = await getEthersAddressWithBalance(provider) as CryptoAddress[]
+    } else if (provider === 'Ledger') {
+      walletProviderAddresses.value = await getLedgerAddress[currency]() as CryptoAddress[]
+    } else if (provider === 'Trezor') {
+      walletProviderAddresses.value = await getTrezorAddress[currency]() as CryptoAddress[]
+    }
+  } catch (error: any) {
+    throw new Error(`Error selecting provider: ${error.message}`)
+  }
+}
 
 const show_setting_modal = ref(false)
 
@@ -59,7 +115,11 @@ const handleOutsideClick = (event: any) => {
   }
 }
 
+const doesScrollBarExist = ref(true)
+
 onMounted(() => {
+  doesScrollBarExist.value =  document.documentElement.scrollHeight > document.documentElement.clientHeight
+
   window.addEventListener('click', handleOutsideClick)
 })
 
@@ -75,7 +135,7 @@ onUnmounted(() =>{
     <div :class="openWalletsModal? 'flex flex-col h-screen' : ''">
       <div
         class="px-[60px] 800s:px-[5%]  pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
-        :class="openWalletsModal? 'pr-[75px]' : ''"
+        :class="openWalletsModal && doesScrollBarExist? 'pr-[75px]' : ''"
       >
         <img
           src="/casimir.svg"
@@ -85,7 +145,7 @@ onUnmounted(() =>{
 
         <div
           v-if="screenWidth >= 450"
-          class="flex flex-wrap items-center gap-50 h-full"
+          class="flex flex-wrap items-center gap-50 h-full "
         >
           <router-link
             to="/"
@@ -105,7 +165,7 @@ onUnmounted(() =>{
 
         <div
           v-else
-          class="nav_items nav_items_active relative"
+          class="nav_items nav_items_active relative "
         >
           <button
             class="flex items-center gap-[10px]"
@@ -163,7 +223,7 @@ onUnmounted(() =>{
           </div>
         </div>
 
-        <div class="flex items-center justify-between gap-[45px] 600s:gap-[10px] text-white">
+        <div class="flex items-center justify-between gap-[45px] 600s:gap-[10px] text-white h-[76px]">
           <button
             id="setting_modal_button"
           >
@@ -176,6 +236,7 @@ onUnmounted(() =>{
 
           <div class="connect_wallet_gradient">
             <button
+              id="connect_wallet_button"
               class="connect_wallet flex justify-between items-center gap-[8px] whitespace-nowrap"
               @click="openWalletsModal = true"
             >
@@ -189,7 +250,7 @@ onUnmounted(() =>{
           id="setting_modal"
           class="absolute right-[60px] 800s:right-[5%] bg-white top-[80%] w-[200px] setting_modal"
         >
-          <button class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full">
+          <button class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full h-[41px]">
             <vue-feather
               type="user"
               size="36"
@@ -231,7 +292,7 @@ onUnmounted(() =>{
             </span>
           </button> -->
           <button
-            class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full"
+            class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full h-[41px]"
             :disabled="!user"
             @click="logout"
           >
@@ -249,7 +310,7 @@ onUnmounted(() =>{
 
       <div
         class="relative text-black"
-        :class="openWalletsModal? 'overflow-hidden pr-[15px]' : ''"
+        :class="openWalletsModal && doesScrollBarExist? 'overflow-hidden pr-[15px]' : ''"
       >
         <slot />
         <div
@@ -308,7 +369,7 @@ onUnmounted(() =>{
               v-show="currentSlide === 2"
               class="absolute top-0 left-0 w-full h-full bg-white card px-[50px] py-[25px]"
             >
-              <h6 class="nav_items flex items-center mb-[20px]">
+              <h6 class="nav_items flex items-center mb-[20px] h-[29px]">
                 <button @click="authFlowCardNumber = 1, selectedProvider = null">
                   <vue-feather
                     type="chevron-left"
@@ -327,29 +388,25 @@ onUnmounted(() =>{
                 </h6>
               </div>
               <div v-else>
-                <!-- Not needed since its the same on the staking component -->
-                <!-- <div class="my-[20px] px-[10px] nav_items">
-                  <input
-                    v-model="termsCheckbox"
-                    type="checkbox"
-                    class="mr-[5px]"
-                  > By connecting my address, I certify that I have read and accept the updated 
-                  <button class="text-primary hover:text-blue_3">
-                    Terms of Service
-                  </button>.
-                </div>  -->
                 <button
                   v-for="act in walletProviderAddresses"
                   :key="act.address"
                   class="w-full border rounded-[8px] px-[10px] py-[15px] flex flex-wrap gap-[10px] text-center items-center justify-between hover:border-blue_3 mb-[10px]"
+                  :disable="checkIfAddressIsUsed(act)"
                   @click="selectAddress(act.address), openWalletsModal = false, authFlowCardNumber = 1"
                 >
                   <div>
-                    {{ convertString(act.address) }}
+                    {{ convertString(act.address) }} 
                   </div>
                   <div>
                     {{ parseFloat(parseFloat(act.balance).toFixed(2)) }} ETH
                   </div>
+                  <p
+                    v-if="checkIfAddressIsUsed(act)"
+                    class="text-decline text-[12px] font-[400]"
+                  >
+                    Address in use.
+                  </p>
                 </button>
               </div>
             </div>
@@ -434,4 +491,4 @@ onUnmounted(() =>{
   height: 36px;
 }
 
-</style>
+</style>@/composables/user

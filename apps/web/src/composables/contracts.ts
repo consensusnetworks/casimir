@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref } from 'vue'
+import { ref } from 'vue'
 import { BigNumberish, ethers } from 'ethers'
 import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 import CasimirManagerAbi from '@casimir/ethereum/build/abi/CasimirManager.json'
@@ -7,54 +7,33 @@ import CasimirViewsAbi from '@casimir/ethereum/build/abi/CasimirViews.json'
 import useEnvironment from './environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
-import usePrice from '@/composables/price'
 import useTrezor from '@/composables/trezor'
-import useUsers from '@/composables/users'
-import useFormat from '@/composables/format'
 import useWalletConnectV2 from './walletConnectV2'
-import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Pool, ProviderString, RegisteredOperator, UserWithAccountsAndOperators } from '@casimir/types'
-import { Operator, Scanner } from '@casimir/ssv'
+import { ProviderString } from '@casimir/types'
+import { Operator } from '@casimir/ssv'
 
-const currentStaked = ref<BreakdownAmount>({
-    usd: '$0.00',
-    eth: '0 ETH'
-})
+interface RegisterOperatorWithCasimirParams {
+    walletProvider: ProviderString
+    address: string
+    operatorId: BigNumberish
+    collateral: string
+}
 
-const stakingRewards = ref<BreakdownAmount>({
-    usd: '$0.00',
-    eth: '0 ETH'
-})
-
-const totalWalletBalance = ref<BreakdownAmount>({
-    usd: '$0.00',
-    eth: '0 ETH'
-})
-
-const { ethereumUrl, managerAddress, registryAddress, ssvNetworkAddress, ssvViewsAddress, viewsAddress } = useEnvironment()
+const { ethereumUrl, managerAddress, registryAddress, viewsAddress } = useEnvironment()
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, CasimirManagerAbi, provider) as CasimirManager
 const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as CasimirViews
 const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, CasimirRegistryAbi, provider) as CasimirRegistry
 
 const operators = ref<Operator[]>([])
-const registeredOperators = ref<Operator[]>([])
-const nonregisteredOperators = ref<Operator[]>([])
 
-const isMounted = ref(false)
 const loadingRegisteredOperators = ref(false)
 
 export default function useContracts() {
-    const { ethersProviderList, getEthersBalance, getEthersBrowserSigner } = useEthers()
-    const { formatNumber } = useFormat()
+    const { ethersProviderList, getEthersBrowserSigner } = useEthers()
     const { getEthersLedgerSigner } = useLedger()
-    const { getCurrentPrice } = usePrice()
     const { getEthersTrezorSigner } = useTrezor()
-    const { user } = useUsers()
-    const { walletConnectSigner } = useWalletConnectV2()
-
-    const stakeDepositedListener = async () => await refreshBreakdown()
-    const stakeRebalancedListener = async () => await refreshBreakdown()
-    const withdrawalInitiatedListener = async () => await refreshBreakdown()
+    const { getWalletConnectSignerV2, nonReactiveWalletConnectWeb3Provider } = useWalletConnectV2()
     
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         try {
@@ -62,220 +41,45 @@ export default function useContracts() {
                 'Browser': getEthersBrowserSigner,
                 'Ledger': getEthersLedgerSigner,
                 'Trezor': getEthersTrezorSigner,
+                'WalletConnect': getWalletConnectSignerV2
             }
             const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer
             if (walletProvider === 'WalletConnect') {
-                signer = walletConnectSigner.value
+                signer = await signerCreator(walletProvider)
             } else {
                 signer = signerCreator(walletProvider)
             }
+            console.log('signer :>> ', signer)
             const managerSigner = manager.connect(signer as ethers.Signer)
+            console.log('managerSigner :>> ', managerSigner)
             const fees = await getDepositFees()
+            console.log('fees :>> ', fees)
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
+            console.log('depositAmount :>> ', depositAmount)
             const value = ethers.utils.parseEther(depositAmount.toString())
-            const result = await managerSigner.depositStake({ value, type: 0 })
-            await result.wait()
+            console.log('value :>> ', value)
+            const result = await managerSigner.depositStake({ value, type: 2 })
+            console.log('result :>> ', result)
+            await result.wait(2)
             return true
         } catch (err) {
+            console.log('err :>> ', err)
             console.error(`There was an error in deposit function: ${JSON.stringify(err)}`)
             return false
         }
     }
 
-    async function getAllTimeStakingRewards() : Promise<BreakdownAmount> {
+    async function getDepositFees(): Promise<number> {
         try {
-            /* Get User's Current Stake */
-            const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
-            const currentUserStakePromises = [] as Array<Promise<ethers.BigNumber>>
-            addresses.forEach(address => currentUserStakePromises.push(manager.getUserStake(address)))
-            const settledCurrentUserStakePromises = await Promise.allSettled(currentUserStakePromises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
-            const currentUserStake = settledCurrentUserStakePromises.filter(result => result.status === 'fulfilled').map(result => result.value)
-            const currentUserStakeSum = currentUserStake.reduce((acc, curr) => acc.add(curr), ethers.BigNumber.from(0))
-            const currentUserStakeETH = parseFloat(ethers.utils.formatEther(currentUserStakeSum))
-
-            /* Get User's All Time Deposits and Withdrawals */
-            const userEventTotalsPromises = [] as Array<Promise<ContractEventsByAddress>>
-            addresses.forEach(address => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address))})
-            const userEventTotals = await Promise.all(userEventTotalsPromises) as Array<ContractEventsByAddress>
-            const userEventTotalsSum = userEventTotals.reduce((acc, curr) => {
-                const { StakeDeposited, WithdrawalInitiated } = curr
-                return {
-                  StakeDeposited: acc.StakeDeposited + (StakeDeposited || 0),
-                  WithdrawalInitiated: acc.WithdrawalInitiated + (WithdrawalInitiated || 0),
-                }
-              }, { StakeDeposited: 0, WithdrawalInitiated: 0 } as { StakeDeposited: number; WithdrawalInitiated: number })
-              
-              
-            const stakedDepositedETH = userEventTotalsSum.StakeDeposited
-            const withdrawalInitiatedETH = userEventTotalsSum.WithdrawalInitiated
-
-            /* Get User's All Time Rewards by Subtracting (StakeDeposited + WithdrawalInitiated) from CurrentStake */
-            const currentUserStakeMinusEvents = currentUserStakeETH - (stakedDepositedETH as number) - (withdrawalInitiatedETH as number)
-            return {
-                eth: `${formatNumber(currentUserStakeMinusEvents)} ETH`,
-                usd: `$${formatNumber(currentUserStakeMinusEvents * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' })))}`
-            }
-        } catch (err) {
-            console.error(`There was an error in getAllTimeStakingRewards: ${err}`)
-            return {
-                eth: '0 ETH',
-                usd: '$ 0.00'
-            }
+            const fees = await manager.FEE_PERCENT()
+            const feesRounded = Math.round(fees * 100) / 100
+            return feesRounded
+        } catch (err: any) {
+            console.error(`There was an error in getDepositFees function: ${JSON.stringify(err)}`)
+            throw new Error(err)
         }
-    }
-
-    async function getContractEventsTotalsByAddress(address: string) : Promise<ContractEventsByAddress> {
-        try {
-            const eventList = [
-                'StakeDeposited',
-                'StakeRebalanced',
-                'WithdrawalInitiated'
-            ]
-            const eventFilters = eventList.map(event => {
-                if (event === 'StakeRebalanced') return manager.filters[event]()
-                return manager.filters[event](address)
-            })
-
-            // const items = (await Promise.all(eventFilters.map(async eventFilter => await manager.queryFilter(eventFilter, 0, 'latest'))))
-            // Use Promise.allSettled to avoid errors when a filter returns no results
-            const items = (await Promise.allSettled(eventFilters.map(async eventFilter => await manager.queryFilter(eventFilter, 0, 'latest')))).map(result => result.status === 'fulfilled' ? result.value : [])
-    
-            const userEventTotals = eventList.reduce((acc, event) => {
-                acc[event] = 0
-                return acc
-            }, {} as { [key: string]: number })
-    
-            for (const item of items) {
-                for (const action of item) {
-                    const { args, event } = action
-                    const { amount } = args
-                    const amountInEth = parseFloat(ethers.utils.formatEther(amount))
-                    userEventTotals[event as string] += amountInEth
-                }
-            }
-    
-            return userEventTotals
-        } catch (err) {
-            console.error(`There was an error in getContractEventsTotalsByAddress: ${err}`)
-            return {
-                StakeDeposited: 0,
-                StakeRebalanced: 0,
-                WithdrawalInitiated: 0
-            }
-        }
-    }
-
-    async function getCurrentStaked(): Promise<BreakdownAmount> {
-        const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-        const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
-        try {
-            const promises = addresses.map((address) => manager.getUserStake(address))
-            const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
-            const currentStaked = settledPromises
-                .filter((result) => result.status === 'fulfilled')
-                .map((result) => result.value)
-    
-            const totalStaked = currentStaked.reduce((accumulator, currentValue) => accumulator.add(currentValue), ethers.BigNumber.from(0))
-            const totalStakedUSD = parseFloat(ethers.utils.formatEther(totalStaked)) * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-            const totalStakedETH = parseFloat(ethers.utils.formatEther(totalStaked))
-            const formattedTotalStakedUSD = formatNumber(totalStakedUSD)
-            const formattedTotalStakedETH = formatNumber(totalStakedETH)
-            return {
-                eth: formattedTotalStakedETH + ' ETH',
-                usd: '$ ' + formattedTotalStakedUSD
-            }
-        } catch (error) {
-            console.log('Error occurred while fetching stake:', error)
-            return {
-                eth: '0ETH',
-                usd: '$0.00'
-            }
-        }
-    }
-
-    async function getDepositFees() {
-        const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-        const fees = await manager.feePercent()
-        const feesRounded = Math.round(fees * 100) / 100
-        return feesRounded
-    }
-
-    async function _getPools(operatorId: number): Promise<Pool[]> {
-        const pools: Pool[] = []
-
-        const poolIds = [
-            ...await manager.getPendingPoolIds(),
-            ...await manager.getStakedPoolIds()
-        ]
-    
-        for (const poolId of poolIds) {
-            const poolDetails = await views.getPool(poolId)
-            const pool = {
-                ...poolDetails,
-                operatorIds: poolDetails.operatorIds.map(id => id.toNumber()),
-                reshares: poolDetails.reshares.toNumber()
-            }
-            if (pool.operatorIds.includes(operatorId)) {
-                pools.push(pool)
-            }
-        }
-        return pools
-    }
-
-    async function getUserOperators(): Promise<void> {
-        const userAddresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
-
-        const scanner = new Scanner({ 
-            ethereumUrl,
-            ssvNetworkAddress,
-            ssvViewsAddress
-        })
-
-        const ssvOperators: Operator[] = []
-        for (const address of userAddresses) {
-            const userOperators = await scanner.getOperators(address)
-            ssvOperators.push(...userOperators)
-        }
-
-        const casimirOperators: RegisteredOperator[] = []
-        for (const operator of ssvOperators) {
-            const { active, collateral, poolCount, resharing } = await registry.getOperator(operator.id)
-            const registered = active || collateral.gt(0) || poolCount.gt(0) || resharing
-            if (registered) {
-                const pools = await _getPools(operator.id)
-                // TODO: Replace these Public Nodes URLs once we have this working again
-                const operatorStore = {
-                    '654': 'https://nodes.casimir.co/eth/goerli/dkg/1',
-                    '655': 'https://nodes.casimir.co/eth/goerli/dkg/2',
-                    '656': 'https://nodes.casimir.co/eth/goerli/dkg/3',
-                    '657': 'https://nodes.casimir.co/eth/goerli/dkg/4',
-                    '156': 'https://nodes.casimir.co/eth/goerli/dkg/5',
-                    '157': 'https://nodes.casimir.co/eth/goerli/dkg/6',
-                    '158': 'https://nodes.casimir.co/eth/goerli/dkg/7',
-                    '159': 'https://nodes.casimir.co/eth/goerli/dkg/8'
-                }
-                const url = operatorStore[operator.id.toString() as keyof typeof operatorStore]
-                casimirOperators.push({
-                    ...operator,
-                    active,
-                    collateral: ethers.utils.formatEther(collateral),
-                    poolCount: poolCount.toNumber(),
-                    url,
-                    resharing,
-                    pools
-                })
-            }
-        }
-        
-        const nonregOperators = ssvOperators.filter((operator: any) => {
-            const idRegistered = casimirOperators.find((registeredOperator: any) => registeredOperator.id === operator.id)
-            return !idRegistered
-        })
-
-        _setOperators(nonregOperators, 'nonregistered')
-        _setOperators(casimirOperators, 'registered')
     }
 
     // async function _getSSVOperators(): Promise<SSVOperator[]> {
@@ -307,20 +111,6 @@ export default function useContracts() {
     //     }
     // }
 
-    async function getTotalWalletBalance() : Promise<BreakdownAmount> {
-        const promises = [] as Array<Promise<any>>
-        const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
-        addresses.forEach((address) => { promises.push(getEthersBalance(address)) })
-        const totalWalletBalance = (await Promise.all(promises)).reduce((acc, curr) => acc + curr, 0)
-        const totalWalletBalanceUSD = totalWalletBalance * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
-        const formattedTotalWalletBalance = formatNumber(totalWalletBalance)
-        const formattedTotalWalletBalanceUSD = formatNumber(totalWalletBalanceUSD)
-        return {
-            eth: formattedTotalWalletBalance + ' ETH',
-            usd: '$ ' + formattedTotalWalletBalanceUSD
-        }
-    }
-
     async function getUserStake(address: string): Promise<number> {
         try {
             const bigNumber = await manager.getUserStake(address)
@@ -331,31 +121,6 @@ export default function useContracts() {
             return 0
         }
     }
-
-    async function listenForContractEvents() {
-        try {
-            console.log('listening for contract events')
-            manager.on('StakeDeposited', stakeDepositedListener)
-            manager.on('StakeRebalanced', stakeRebalancedListener)
-            manager.on('WithdrawalInitiated', withdrawalInitiatedListener)
-            registry.on('OperatorRegistered', getUserOperators)
-            registry.on('OperatorDeregistered', getUserOperators)
-            registry.on('DeregistrationRequested', getUserOperators)
-        } catch (err) {
-            console.log(`There was an error in listenForContractEvents: ${err}`)
-        }
-    }
-
-    onMounted(() => {
-        if (isMounted.value) return
-        isMounted.value = true
-        listenForContractEvents()
-    })
-
-    onUnmounted(() => {
-        stopListeningForContractEvents()
-        isMounted.value = false
-    })
 
     async function _querySSVOperators(address: string) {
         try {
@@ -370,32 +135,7 @@ export default function useContracts() {
         }
     }
 
-    async function refreshBreakdown() {
-        try {
-            if (!user.value?.id) {
-                // Reset currentStaked, totalWalletBalance, and stakingRewards
-                currentStaked.value = {
-                    eth: '0 ETH',
-                    usd: '$ 0.00'
-                }
-                totalWalletBalance.value = {
-                    eth: '0 ETH',
-                    usd: '$ 0.00'
-                }
-                stakingRewards.value = {
-                    eth: '0 ETH',
-                    usd: '$ 0.00'
-                }
-            }
-            setBreakdownValue({ name: 'currentStaked', ...await getCurrentStaked() })
-            setBreakdownValue({ name: 'totalWalletBalance', ...await getTotalWalletBalance() })
-            setBreakdownValue({ name: 'stakingRewardsEarned', ...await getAllTimeStakingRewards() })
-        } catch (err) {
-            console.log(`There was an error in refreshBreakdown: ${err}`)
-        }
-    }
-
-    async function registerOperatorWithCasimir(walletProvider: ProviderString, address: string, operatorId: BigNumberish, value: string) {
+    async function registerOperatorWithCasimir({ walletProvider, address, operatorId, collateral }: RegisterOperatorWithCasimirParams) {
         loadingRegisteredOperators.value = true
         try {
             const signerCreators = {
@@ -407,11 +147,11 @@ export default function useContracts() {
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer
             if (walletProvider === 'WalletConnect') {
-                signer = walletConnectSigner.value
+                signer = nonReactiveWalletConnectWeb3Provider
             } else {
                 signer = signerCreator(walletProvider)
             }
-            const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(value)})
+            const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral)})
             loadingRegisteredOperators.value = false
             // TODO: @shanejearley - How many confirmations do we want to wait?
             await result?.wait(1)
@@ -419,46 +159,6 @@ export default function useContracts() {
             console.error(`There was an error in registerOperatorWithCasimir function: ${JSON.stringify(err)}`)
             loadingRegisteredOperators.value = false
         }
-    }
-
-    function setBreakdownValue({ name, eth, usd }: { name: BreakdownString, eth: string, usd: string}) {
-        switch (name) {
-            case 'currentStaked':
-                currentStaked.value = {
-                    eth,
-                    usd
-                }
-            break
-            case 'totalWalletBalance':
-                totalWalletBalance.value = {
-                    eth,
-                    usd
-                }
-            break
-            case 'stakingRewardsEarned':
-                stakingRewards.value = {
-                    eth,
-                    usd
-                }
-            break
-        }
-    }
-
-    function _setOperators(operatorsArray: Operator[], type: 'nonregistered' | 'registered') {
-        switch (type) {
-            case 'nonregistered':
-                nonregisteredOperators.value = operatorsArray as Array<Operator>
-            break
-            case 'registered':
-                registeredOperators.value = operatorsArray as Array<Operator>
-            break
-        }
-    }
-
-    function stopListeningForContractEvents() {
-        manager.removeListener('StakeDeposited', stakeDepositedListener)
-        manager.removeListener('StakeRebalanced', stakeRebalancedListener)
-        manager.removeListener('WithdrawalInitiated', withdrawalInitiatedListener)
     }
 
     async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
@@ -471,7 +171,7 @@ export default function useContracts() {
         const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
         let signer
             if (walletProvider === 'WalletConnect') {
-                signer = walletConnectSigner.value
+                signer = nonReactiveWalletConnectWeb3Provider
             } else {
                 signer = signerCreator(walletProvider)
             }
@@ -483,23 +183,15 @@ export default function useContracts() {
     }
 
     return { 
-        currentStaked,
         loadingRegisteredOperators,
         manager,
         operators,
-        registeredOperators,
-        stakingRewards,
-        totalWalletBalance,
-        nonregisteredOperators,
+        registry,
+        views,
         deposit, 
-        getCurrentStaked,
         getDepositFees,
-        getUserOperators,
         getUserStake,
-        listenForContractEvents,
-        refreshBreakdown,
         registerOperatorWithCasimir,
-        stopListeningForContractEvents,
         withdraw 
     }
 }

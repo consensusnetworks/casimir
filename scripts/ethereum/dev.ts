@@ -63,7 +63,7 @@ void async function () {
     if (!process.env.VIEWS_ADDRESS) {
         process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
             from: wallet.address,
-            nonce: walletNonce + 2
+            nonce: walletNonce + 1
         })
     }
 

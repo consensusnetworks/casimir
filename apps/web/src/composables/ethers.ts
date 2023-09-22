@@ -3,9 +3,7 @@ import { EthersProvider } from '@casimir/types'
 import { Account, TransactionRequest, UserWithAccountsAndOperators } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
-import useContracts from '@/composables/contracts'
 import useEnvironment from '@/composables/environment'
-import useUsers from '@/composables/users'
 
 interface ethereumWindow extends Window {
   ethereum: any;
@@ -30,31 +28,6 @@ export default function useEthers() {
       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
     }
   }
-
-  async function blockListener(blockNumber: number) {
-    const { manager, refreshBreakdown } = useContracts()
-    const { user } = useUsers()
-
-    console.log('blockNumber :>> ', blockNumber)
-    const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
-    const block = await provider.getBlockWithTransactions(blockNumber)
-    
-    const txs = block.transactions.map(async (tx) => {
-        if (addresses.includes(tx.from.toLowerCase())) {
-            console.log('tx :>> ', tx)
-            try {
-                // const response = manager.interface.parseTransaction({ data: tx.data })
-                // console.log('response :>> ', response)
-                await refreshBreakdown()
-            } catch (error) {
-                console.error('Error parsing transaction:', error)
-            }
-        }
-    })
-
-    await Promise.all(txs)
-}
-
 
   /**
    * Estimate gas fee using EIP 1559 methodology
@@ -176,13 +149,6 @@ export default function useEthers() {
     return maxAfterFees
   }
 
-  async function listenForTransactions() {
-    provider.on('block', blockListener as ethers.providers.Listener)
-    await new Promise(() => {
-      // Wait indefinitely using a Promise that never resolves
-    })
-  }
-
   async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
     const { provider, address, currency } = loginCredentials
     const browserProvider = getBrowserProvider(provider)
@@ -191,7 +157,7 @@ export default function useEthers() {
       const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
       const signer = web3Provider.getSigner()
       const signedMessage = await signer.signMessage(message)
-      await signInWithEthereum({ 
+      await signInWithEthereum({
         address,
         currency,
         message, 
@@ -241,10 +207,6 @@ export default function useEthers() {
     return signature
   }
 
-  function stopListeningForTransactions() {
-    provider.off('block', blockListener as ethers.providers.Listener)
-  }
-
   async function switchEthersNetwork (providerString: ProviderString, chainId: string) {
     const provider = getBrowserProvider(providerString)
     const currentChainId = await provider.networkVersion
@@ -283,12 +245,10 @@ export default function useEthers() {
     getEthersBrowserSigner,
     getGasPriceAndLimit,
     getMaxETHAfterFees,
-    listenForTransactions,
     loginWithEthers,
     requestEthersAccount,
     sendEthersTransaction,
     signEthersMessage,
-    stopListeningForTransactions,
     switchEthersNetwork
   }
 }

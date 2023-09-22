@@ -23,11 +23,16 @@ export default function useFormat() {
         const scale = Math.pow(10, tier * 3)
         const scaled = number / scale
         return scaled.toFixed(2) + suffix
-      }
+    }
+
+    function trimAndLowercaseAddress(address: string) {
+        return address.trim().toLowerCase()
+    }
 
     return { 
         convertString, 
         formatDecimalString,
-        formatNumber
+        formatNumber,
+        trimAndLowercaseAddress,
     }
 }
