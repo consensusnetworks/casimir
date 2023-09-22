@@ -120,9 +120,6 @@ export default function useOperators() {
         listenForContractEvents(user)
         await getUserOperators(user)
     }
-    watchEffect( () => {
-        // 
-    })
 
     return { 
         nonregisteredOperators: readonly(nonregisteredOperators),

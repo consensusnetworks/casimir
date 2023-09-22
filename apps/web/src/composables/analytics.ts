@@ -179,10 +179,10 @@ export default function useAnalytics() {
         await getUserAnalytics()
     }
 
-    watchEffect(async () => {
+    async function initializeAnalyticsComposable() {
         resetUserAnalytics()
         await getUserAnalytics()
-    })
+    }
 
     function resetUserAnalytics() {
         getUserAnalyticsError.value = null
@@ -212,5 +212,6 @@ export default function useAnalytics() {
         getUserAnalyticsError: readonly(getUserAnalyticsError),
         updateAnalytics,
         rawUserAnalytics,
+        initializeAnalyticsComposable
     }
 }

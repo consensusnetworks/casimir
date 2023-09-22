@@ -137,7 +137,7 @@ watch(props, ()=> {
     } catch (error) {
         console.error('Watcher Error: Props ./LineCharJS', error)
     }
-}, {deep: true})
+})
 </script>
 
 <template>
