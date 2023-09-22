@@ -129,12 +129,8 @@ echo "USE_SECRETS=false" > .env
 | `VIEWS_ADDRESS` | Views contract address | (predicted views address) |
 | `CRYPTO_COMPARE_API_KEY` | CryptoCompare API key | `` |
 | `TUNNEL` | Whether to tunnel local network RPC URLs (for remote wallets) | `false` |
-| `EMULATE` | Whether to emulate wallets | `false` |
-| `LEDGER_APP` | Ledger app name | `ethereum` |
 | `MOCK_SERVICES` | Whether to mock backend services | `true` |
 | `BUILD_PREVIEW` | Whether to preview web app production build | `false` |
-
-  > 🚩 While running the Ledger Speculos emulator on MacOS (with EMULATORS=true), if you get a surprising error that port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
 
 ### Apps
 
@@ -192,7 +188,6 @@ The common packages provide shared code for the project:
 
 - [@casimir/aws](common/aws): AWS helpers
 - [@casimir/data](common/data): data schemas and operational workflows
-- [@casimir/speculos](common/speculos): Ledger emulator helpers
 - [@casimir/ssv](common/ssv): SSV helpers
 - [@casimir/types](common/types): shared types
 - [@casimir/uniswap](common/uniswap): Uniswap helpers

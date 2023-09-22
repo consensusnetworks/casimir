@@ -97,7 +97,7 @@ export async function deploymentFixture() {
     })
     const manager = await upgrades.deployProxy(managerFactory, Object.values(managerArgs), { unsafeAllow: ['constructor', 'external-library-linking'] }) as CasimirManager
     await manager.deployed()
-    
+
     const registryAddress = await manager.getRegistryAddress()
     const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
 

@@ -2,16 +2,12 @@ import { ethers } from 'ethers'
 // import Btc from '@ledgerhq/hw-app-btc'
 import Eth, { ledgerService } from '@ledgerhq/hw-app-eth'
 import Transport from '@ledgerhq/hw-transport'
-import { TransportSpeculosHTTP } from '@casimir/speculos'
 import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
-import { CryptoAddress, TransactionRequest } from '@casimir/types'
+import { CryptoAddress } from '@casimir/types'
 
 const transports = {
     'usb': async function createUSBTransport(): Promise<Transport> {
         return await TransportWebUSB.create()
-    },
-    'speculos': async function createSpeculosTransport(baseURL?: string): Promise<Transport> {
-        return await TransportSpeculosHTTP.open(baseURL)
     }
 }
 
@@ -126,7 +122,6 @@ export interface LedgerSignerOptions {
 export class EthersLedgerSigner extends ethers.Signer {
     readonly type: string = 'usb'
     readonly path: string = 'm/44\'/60\'/0\'/0/0'
-    readonly baseURL?: string
     readonly eth?: Promise<Eth>
 
     constructor(options: LedgerSignerOptions) {
@@ -134,7 +129,6 @@ export class EthersLedgerSigner extends ethers.Signer {
 
         if (options.type) this.type = options.type
         if (options.path) this.path = options.path        
-        this.baseURL = options.baseURL
 
         // Override readonly provider for ethers.Signer
         if (options.provider) {
@@ -145,7 +139,7 @@ export class EthersLedgerSigner extends ethers.Signer {
         const transportCreatorType = this.type as keyof typeof transports
         const transportCreator = transports[transportCreatorType]
         if (!transportCreator) console.log('Unknown or unsupported type', this.type)
-        ethers.utils.defineReadOnly(this, 'eth', transportCreator(this.baseURL).then(transport => {
+        ethers.utils.defineReadOnly(this, 'eth', transportCreator().then(transport => {
             return new Eth(transport)
         }))
     }
@@ -264,8 +258,7 @@ export class EthersLedgerSigner extends ethers.Signer {
         const options = {
             provider,
             type: this.type,
-            path: this.path,
-            baseURL: this.baseURL
+            path: this.path
         }
         return new EthersLedgerSigner(options)
     }
