@@ -41,15 +41,11 @@ Configure the following prerequisite global dependency versions.
 
 1. [Docker (v24.x)](https://docs.docker.com/engine/install/).
 
-2. [Git (v2.x)](https://git-scm.com/downloads)
+2. [Go (v1.18.x)](https://golang.org/doc/install).
 
-    > 🚩 GitHub submodule support: You also need to make sure to have at least one SSH authentication key on your GitHub account (for the git cloning of submodules in various scripts). See [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
+3. [Node.js (v18.x)](https://nodejs.org/en/download/).
 
-3. [Go (v1.18.x)](https://golang.org/doc/install).
-
-4. [Node.js (v18.x)](https://nodejs.org/en/download/).
-
-5. [Optional: AWS CLI (v2.x)](https://aws.amazon.com/cli/)
+4. [Optional: AWS CLI (v2.x)](https://aws.amazon.com/cli/)
 
     > 🚩 **Consensus Networks team only**: Create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
 
