@@ -1,13 +1,11 @@
 import { readonly, ref, watchEffect, watch } from 'vue'
 import useEnvironment from '@/composables/environment'
 import useContracts from '@/composables/contracts'
-// import useUser from '@/composables/user'
 import { Operator, Scanner } from '@casimir/ssv'
 import { RegisteredOperator, Pool, Account, UserWithAccountsAndOperators } from '@casimir/types'
 import { ethers } from 'ethers'
 
 export default function useOperators() {
-    // const { user } = useUser()
     const { ethereumUrl, ssvNetworkAddress, ssvNetworkViewsAddress, usersUrl } = useEnvironment()
     const { manager, registry, views } = useContracts()
 
@@ -108,10 +106,9 @@ export default function useOperators() {
         return pools
     }
 
-
-    function listenForContractEvents() {
+    function listenForContractEvents(user: UserWithAccountsAndOperators) {
         try {
-            registry.on('OperatorRegistered', getUserOperators)
+            registry.on('OperatorRegistered', () => getUserOperators(user))
             // registry.on('OperatorDeregistered', getUserOperators)
             // registry.on('DeregistrationRequested', getUserOperators)
         } catch (err) {
@@ -120,7 +117,7 @@ export default function useOperators() {
     }
 
     async function initializeComposable(user: UserWithAccountsAndOperators){
-        listenForContractEvents()
+        listenForContractEvents(user)
         await getUserOperators(user)
     }
     watchEffect( () => {
