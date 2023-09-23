@@ -6,7 +6,7 @@ import { CasimirPool } from '../build/@types'
 
 describe('Pools', async function () {
     it('Allows setting of operator IDs and reshares from owner', async function () {
-        const { manager } = await loadFixture(secondUserDepositFixture)
+        const { manager, daoOracle } = await loadFixture(secondUserDepositFixture)
         const [firstPoolId] = await manager.getStakedPoolIds()
         const firstPoolAddress = await manager.getPoolAddress(firstPoolId)
         const poolOwnerSigner = ethers.provider.getSigner(manager.address)
@@ -15,9 +15,39 @@ describe('Pools', async function () {
             params: [manager.address]
         })
         const pool = await ethers.getContractAt('CasimirPool', firstPoolAddress) as CasimirPool
+        
         const operatorIds = [1, 2, 3, 4]
         const setOperatorIds = await pool.connect(poolOwnerSigner).setOperatorIds(operatorIds)
         await setOperatorIds.wait()
+
+        const firstFailedReportReshare = manager.connect(daoOracle).reportReshare(
+            firstPoolId,
+            operatorIds,
+            operatorIds,
+            654,
+            654,
+            '0x',
+            {
+                validatorCount: 0,
+                networkFeeIndex: 0,
+                index: 0,
+                balance: 0,
+                active: false
+            },
+            {
+                validatorCount: 0,
+                networkFeeIndex: 0,
+                index: 0,
+                balance: 0,
+                active: false
+            },
+            0,
+            0,
+            false
+        )
+
+        await expect(firstFailedReportReshare).to.be.reverted
+
         const reshares = 2
         const setReshares = await pool.connect(poolOwnerSigner).setReshares(reshares)
         await setReshares.wait()
@@ -25,6 +55,66 @@ describe('Pools', async function () {
 
         expect(updatedPoolDetails.operatorIds.map(id => id.toNumber()).toString()).equal(operatorIds.toString())
         expect(updatedPoolDetails.reshares.toNumber()).equal(reshares)
+
+        const secondFailedReportReshare = manager.connect(daoOracle).reportReshare(
+            firstPoolId,
+            operatorIds,
+            operatorIds,
+            654,
+            654,
+            '0x',
+            {
+                validatorCount: 0,
+                networkFeeIndex: 0,
+                index: 0,
+                balance: 0,
+                active: false
+            },
+            {
+                validatorCount: 0,
+                networkFeeIndex: 0,
+                index: 0,
+                balance: 0,
+                active: false
+            },
+            0,
+            0,
+            false
+        )
+
+        await expect(secondFailedReportReshare).to.be.revertedWith('Pool already reshared twice')
+    })
+
+    it('Fails to reshare with wrong data', async function () {
+        const { manager, daoOracle } = await loadFixture(secondUserDepositFixture)
+        
+        const reportReshare = manager.connect(daoOracle).reportReshare(
+            1,
+            [1, 2, 3, 4],
+            [1, 2, 3, 4],
+            654,
+            654,
+            '0x',
+            {
+                validatorCount: 0,
+                networkFeeIndex: 0,
+                index: 0,
+                balance: 0,
+                active: false
+            },
+            {
+                validatorCount: 0,
+                networkFeeIndex: 0,
+                index: 0,
+                balance: 0,
+                active: false
+            },
+            0,
+            0,
+            false
+        )
+
+        await expect(reportReshare).to.be.reverted
     })
 
     it('Fails to deposit zero rewards', async function () {
@@ -41,6 +131,23 @@ describe('Pools', async function () {
         const depositRewards = pool.connect(ethers.provider.getSigner(manager.address)).depositRewards()
         
         await expect(depositRewards).to.be.revertedWith('No rewards to deposit')
+    })
+
+    it('Fails to withdraw pool not set as withdrawn', async function () {
+        const { manager } = await loadFixture(secondUserDepositFixture)
+
+        await network.provider.request({
+            method: 'hardhat_impersonateAccount',
+            params: [manager.address]
+        })
+
+        const [firstPoolId] = await manager.getStakedPoolIds()
+        const firstPoolAddress = await manager.getPoolAddress(firstPoolId)
+
+        const pool = await ethers.getContractAt('CasimirPool', firstPoolAddress) as CasimirPool
+        const withdrawBalance = pool.connect(ethers.provider.getSigner(manager.address)).withdrawBalance([0, 0, 0, 0])
+
+        await expect(withdrawBalance).to.be.revertedWith('Pool must be withdrawn')
     })
 
     it('Fails to deposit to manager not as pool', async function () {

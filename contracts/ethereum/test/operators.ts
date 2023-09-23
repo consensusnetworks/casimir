@@ -97,6 +97,9 @@ describe('Operators', async function () {
         expect(deregisteringOperator.resharing).equal(true)        
         expect(resharesRequestedEvents.length).equal(1)
         expect(resharesRequestedEvent.args?.operatorId.toNumber()).equal(deregisteringOperatorId.toNumber())
+
+        const failedRequestDeregistration = registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
+        await expect(failedRequestDeregistration).to.be.revertedWith('Operator is resharing')
     })
 
     it('Operator deregistration with 0 pools allows immediate collateral withdrawal', async function () {
@@ -119,35 +122,8 @@ describe('Operators', async function () {
         expect(deregisteringOperator.resharing).equal(false)        
         expect(resharesRequestedEvents.length).equal(0)
 
-        const operatorOwnerBalanceBefore = await ethers.provider.getBalance(operatorOwnerAddress)
-        const requestWithdrawal = await registry.connect(operatorOwnerSigner).requestWithdrawal(deregisteringOperatorId, ethers.utils.parseEther('10'))
-        await requestWithdrawal.wait()
-        const operatorOwnerBalanceAfter = await ethers.provider.getBalance(operatorOwnerAddress)
-        const deregisteredOperator = await registry.getOperator(deregisteringOperatorId)
-
-        expect(deregisteredOperator.collateral.toString()).equal('0')
-        expect(ethers.utils.formatEther(operatorOwnerBalanceAfter.sub(operatorOwnerBalanceBefore).toString())).contains('9.9')
-    })
-
-    it('Operator deregistration with 0 pools allows immediate collateral withdrawal', async function () {
-        const { manager, registry, ssvNetworkViews } = await loadFixture(readyStateFixture)
-
-        const operatorIds = await registry.getOperatorIds()
-        const deregisteringOperatorId = operatorIds[0]
-        const [ operatorOwnerAddress ] = await ssvNetworkViews.getOperatorById(deregisteringOperatorId)
-        const operatorOwnerSigner = ethers.provider.getSigner(operatorOwnerAddress)
-        await network.provider.request({
-            method: 'hardhat_impersonateAccount',
-            params: [operatorOwnerAddress]
-        })
-        const requestDeactivation = await registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
-        await requestDeactivation.wait()
-        const deregisteringOperator = await registry.getOperator(deregisteringOperatorId)
-        const resharesRequestedEvents = await manager.queryFilter(manager.filters.ResharesRequested(), -1)
-
-        expect(deregisteringOperator.active).equal(false)
-        expect(deregisteringOperator.resharing).equal(false)        
-        expect(resharesRequestedEvents.length).equal(0)
+        const failedRequestDeregistration = registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
+        await expect(failedRequestDeregistration).to.be.revertedWith('Operator is not active')
 
         const operatorOwnerBalanceBefore = await ethers.provider.getBalance(operatorOwnerAddress)
         const requestWithdrawal = await registry.connect(operatorOwnerSigner).requestWithdrawal(deregisteringOperatorId, ethers.utils.parseEther('10'))

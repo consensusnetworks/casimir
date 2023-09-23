@@ -1,4 +1,7 @@
 module.exports = {
+    mocha: {
+        enableTimeouts: false
+    },
     skipFiles: [
         'interfaces',
         'mock',

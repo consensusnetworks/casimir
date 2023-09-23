@@ -149,7 +149,7 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
     /**
      * In production, we get the completed exit order from the Beacon API (sorting by withdrawn epoch)
      * We check all validators using:
-     * const stakedPublicKeys = await views.getStakedPublicKeys(startIndex, endIndex)
+     * const validatorPublicKeys = await views.getValidatorPublicKeys(startIndex, endIndex)
      * Here, we're just grabbing the next exiting pool for each completed exit
      */
     const stakedPoolIds = await manager.getStakedPoolIds()
@@ -164,7 +164,7 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
             /**
              * In production, we use the SSV performance data to determine blame
              * We check all validators using:
-             * const stakedPublicKeys = await views.getStakedPublicKeys(startIndex, endIndex)
+             * const validatorPublicKeys = await views.getValidatorPublicKeys(startIndex, endIndex)
              * Here, we're just hardcoding blame to the first operator if less than 32 ETH
              */
             const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())

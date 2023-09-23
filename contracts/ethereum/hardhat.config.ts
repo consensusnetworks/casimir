@@ -81,6 +81,9 @@ const compilers = [...compilerVersions, ...externalCompilerVersions].map(version
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
+    mocha: {
+        timeout: 60000
+    },
     preprocess: {
         eachLine: () => ({
             transform: (line: string) => {

@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { ethers, network } from 'hardhat'
+import { ethers } from 'hardhat'
 import { loadFixture, setBalance, time } from '@nomicfoundation/hardhat-network-helpers'
 import { secondUserDepositFixture } from './fixtures/shared'
 import { Scanner } from '@casimir/ssv'
@@ -60,8 +60,6 @@ describe('Oracle', async function () {
 
     it('Allows cluster balance withdrawal from oracle and fund withdrawal from owner', async function () {
         const { manager, upkeep, views, ssvNetwork, ssvNetworkViews, functionsBillingRegistry, daoOracle, keeper, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
-
-        console.log('Setting up')
 
         const ssvTokenAddress = process.env.SSV_TOKEN_ADDRESS as string
         const ssvToken = await ethers.getContractAt('IERC20', ssvTokenAddress)
