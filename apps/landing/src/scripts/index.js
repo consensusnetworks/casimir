@@ -54,6 +54,6 @@ function newSlot() {
   slots.appendChild(slot);
 }
 
-// [...Array(12)].forEach((_, i) => {
-//   newSlot();
-// });
+[...Array(12)].forEach((_, i) => {
+  newSlot();
+});
