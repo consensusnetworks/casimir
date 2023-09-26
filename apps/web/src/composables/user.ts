@@ -107,7 +107,7 @@ export default function useUser() {
             initializeComposable.value = true
             const session = await Session.doesSessionExist()
             if (session) await getUser()
-            // await initializeWalletConnect()
+            await initializeWalletConnect()
         }
     })
     
