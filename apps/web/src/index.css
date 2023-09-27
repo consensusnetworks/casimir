@@ -5,11 +5,25 @@
 :root {
 font-family: 'IBM Plex Sans', sans-serif;
 font-synthesis: none;
+
+max-width: 1400px;
+margin: auto;
 text-rendering: optimizeLegibility;
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 -webkit-text-size-adjust: 100%;
 }
+
+:root::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 319px;
+    background-color: #000;
+    z-index: -1;
+  }
 
 .tooltip_container{
     position: relative;
