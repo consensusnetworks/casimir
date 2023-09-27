@@ -18,6 +18,10 @@ const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletCon
 const initializeComposable = ref(false)
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const user = ref<UserWithAccountsAndOperators | undefined>(undefined)
+const loadingSessionLogin = ref(false)
+const loadingSessionLoginError = ref(false)
+const loadingSessionLogout = ref(false)
+const loadingSessionLogoutError = ref(false)
 
 export default function useUser() {
     async function addAccountToUser({ provider, address, currency }: { provider: string, address: string, currency: string}) {
@@ -96,8 +100,16 @@ export default function useUser() {
     }
 
     async function logout() {
-        await Session.signOut()
-        user.value = undefined
+        // Loader
+        try {
+            loadingSessionLogout.value = true
+            await Session.signOut()
+            user.value = undefined
+            loadingSessionLogout.value = false
+        } catch (error) {
+            loadingSessionLogoutError.value = true
+            loadingSessionLogout.value = false
+        }
         // TODO: Fix bug that doesn't allow you to log in without refreshing page after a user logs out
         window.location.reload()
     }
@@ -105,8 +117,16 @@ export default function useUser() {
     onMounted(async () => {
         if (!initializeComposable.value) {
             initializeComposable.value = true
-            const session = await Session.doesSessionExist()
-            if (session) await getUser()
+            // Loader
+            try {
+                loadingSessionLogin.value = true
+                const session = await Session.doesSessionExist()
+                if (session) await getUser()
+                loadingSessionLogin.value = false
+            } catch (error) {
+                loadingSessionLoginError.value = true
+                console.log('error getting user :>> ', error)
+            }
             // await initializeWalletConnect()
         }
     })
@@ -192,8 +212,12 @@ export default function useUser() {
     return {
         user: readonly(user),
         addAccountToUser,
+        loadingSessionLogin,
+        loadingSessionLoginError,
+        loadingSessionLogout,
+        loadingSessionLogoutError,
         login,
         logout,
-        updateUserAgreement
+        updateUserAgreement,
     }
 }

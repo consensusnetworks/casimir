@@ -7,8 +7,6 @@ import useScreenDimensions from '@/composables/screenDimensions'
 import { AnalyticsData, ProviderString, UserAnalyticsData, UserWithAccountsAndOperators } from '@casimir/types'
 import useBreakdownMetrics from '@/composables/breakdownMetrics'
 
-import LoaderSpinner from '@/components/LoaderSpinner.vue'
-
 const {  user } = useUser()
 const { currentStaked, stakingRewards, totalWalletBalance, initializeComposable, uninitializeComposable } = useBreakdownMetrics()
 const { screenWidth } = useScreenDimensions()
@@ -132,7 +130,7 @@ watch(user, async () => {
 </script>
 
 <template>
-  <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap ">
+  <div class="card_container px-[32px] pt-[31px] pb-[77px] text-black  whitespace-nowrap relative">
     <div class="flex flex-wrap gap-[20px] justify-between mb-[52px]">
       <div :class="screenWidth < 450? 'w-full border-b pb-[10px] flex justify-between items-start gap-[5px]' : ''">
         <h6 class="balance_title mb-[15px] tooltip_container">
