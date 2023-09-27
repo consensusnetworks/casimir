@@ -2,7 +2,6 @@ const slots = document.querySelector(".slots");
 const newsletterInput = document.querySelector("#newsletter-input");
 const newsletterSubmit = document.querySelector("#newsletter-submit");
 
-
 if (newsletterInput && newsletterSubmit) {
   newsletterSubmit.addEventListener("click", (event) => {
     event.preventDefault();
@@ -54,6 +53,16 @@ function newSlot() {
   slots.appendChild(slot);
 }
 
-[...Array(12)].forEach((_, i) => {
-  newSlot();
-});
+// [...Array(12)].forEach((_, i) => {
+//   newSlot();
+// });
+
+const faqs = document.querySelectorAll(".faq__item");
+
+faqs.forEach((faq) => {
+  const a = faq.querySelector(".faq__item__a");
+  faq.addEventListener("click", () => {
+    a.classList.toggle("active");
+    console.log(faq)
+  });
+})

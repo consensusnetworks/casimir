@@ -13,10 +13,10 @@
 
 .btn-primary {
   @include base;
-  background-color: $slate-12;
+  background-color: $blue-11;
   border-radius: 5px;
-  border: 1px solid $slate-11;
-  color: $slate-1;
+  border: 1px solid $blue-12;
+  color: $slate-2;
   cursor: pointer;
   display: inline-flex;
   flex-wrap: nowrap;
