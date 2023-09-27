@@ -8,12 +8,12 @@ import BreakdownTable from './components/BreakdownTable.vue'
 import useUser from '@/composables/user'
 import useBreakdownMetrics from '@/composables/breakdownMetrics'
 import useAnalytics from '@/composables/analytics'
-import userOperators from '@/composables/operators'
+import useOperators from '@/composables/operators'
 
 const {loadingSessionLogin} = useUser()
 const {loadingInitializeBreakdownMetrics} = useBreakdownMetrics()
 const {loadingInitializeAnalytics} = useAnalytics()
-const {loadingInitializeOperators} = userOperators()
+const {loadingInitializeOperators} = useOperators()
 </script>
 
 <template>
