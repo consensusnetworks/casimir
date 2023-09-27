@@ -113,6 +113,7 @@ export default function useUser() {
     
     onUnmounted(() => {
         initializeComposable.value = false
+        uninitializeWalletConnect()
     })
 
     // TODO: Re-enable once we have a way to remove accounts in UI

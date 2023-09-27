@@ -26,6 +26,7 @@ void async function () {
     process.env.STAGE = process.env.STAGE || 'local'
     process.env.BIP39_SEED = process.env.USE_SECRETS !== 'false' ? process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') : process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
     process.env.CRYPTO_COMPARE_API_KEY = process.env.USE_SECRETS !== 'false' ? process.env.CRYPTO_COMPARE_API_KEY || await getSecret('casimir-crypto-compare-api-key') : process.env.CRYPTO_COMPARE_API_KEY || ''
+    process.env.WALLET_CONNECT_PROJECT_ID = await getSecret('casimir-wallet-connect-project-id')
     process.env.EMULATE = process.env.EMULATE || 'false'
     process.env.FORK = process.env.FORK || 'testnet'
     process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
@@ -148,6 +149,7 @@ void async function () {
     process.env.PUBLIC_LEDGER_APP = process.env.LEDGER_APP
     process.env.PUBLIC_SPECULOS_URL = process.env.SPECULOS_URL
     process.env.PUBLIC_ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK
+    process.env.PUBLIC_WALLET_CONNECT_PROJECT_ID = process.env.WALLET_CONNECT_PROJECT_ID
 
     if (process.env.BUILD_PREVIEW === 'true') {
         await run('npm run build --workspace @casimir/web')

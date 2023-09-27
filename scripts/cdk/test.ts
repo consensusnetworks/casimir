@@ -21,6 +21,7 @@ void async function () {
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
     process.env.PUBLIC_USERS_URL = process.env.USERS_URL
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
+    process.env.PUBLIC_WALLET_CONNECT_PROJECT_ID = await getSecret('casimir-wallet-connect-project-id')
 
     await run('npm run build --workspace @casimir/ethereum')
     await run('npm run build:docs --workspace @casimir/ethereum')

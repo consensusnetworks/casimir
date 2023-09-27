@@ -1,89 +1,78 @@
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import { providers } from 'ethers'
 import { EthereumProvider } from '@walletconnect/ethereum-provider'
 import { WalletConnectModal } from '@walletconnect/modal'
 import { PairingTypes, SessionTypes } from '@walletconnect/types'
 import useAuth from '@/composables/auth'
-// import useEthers from '@/composables/ethers'
-import { LoginCredentials } from '@casimir/types'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-
-const DEFAULT_PROJECT_ID = '8e6877b49198d7a9f9561b8712805726'
-const DEFAULT_RELAY_URL = 'wss://relay.walletconnect.com'
-const DEFAULT_LOGGER = 'warn'
+import useEthers from '@/composables/ethers'
+import useEnvironment from '@/composables/environment'
+import { CryptoAddress, LoginCredentials } from '@casimir/types'
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
-// const { getEthersBalance } = useEthers()
+const { walletConnectProjectId } = useEnvironment()
+const { getEthersBalance } = useEthers()
+
 let cleanupFunctions: Array<any> = [] // TODO: Potentially fix type here.
 const accounts = ref([])
 const ethereumProvider = ref()
 const pairings = ref([])
 const session = ref()
 const web3Modal = ref()
-const web3Provider = ref()
+const web3Provider = shallowRef()
+
+const checkedForPersistedSession = ref(false)
+const subscribedToProviderEvents = ref(false)
 
 const componentIsMounted = ref(false)
 const isInitializing = ref(false)
 
 export default function useWalletConnectV2() {
-  async function connect(chainId: '1' | '5' | '1337', pairing?: PairingTypes.Struct) {
+  async function connectWalletConnectV2(chainId: '1' | '5' | '1337', pairing?: PairingTypes.Struct): Promise<CryptoAddress[]> {
     try {
-        if (!ethereumProvider.value) {
-            throw new ReferenceError('WalletConnect Client is not initialized.')
-        }
-
-        console.log('Enabling EthereumProvider for chainId: ', chainId)
-
+        if (!ethereumProvider.value) throw new ReferenceError('WalletConnect Client is not initialized.')
+        
         const customRpcs = {
-            '1': `https://rpc.walletconnect.com?chainId=eip155:1&projectId=${DEFAULT_PROJECT_ID}`,
-            '5': `https://rpc.walletconnect.com?chainId=eip155:5&projectId=${DEFAULT_PROJECT_ID}`,
-            '1337': `https://rpc.walletconnect.com?chainId=eip155:1337&projectId=${DEFAULT_PROJECT_ID}`
+            '1': `https://rpc.walletconnect.com?chainId=eip155:1&projectId=${walletConnectProjectId}`,
+            '5': `https://rpc.walletconnect.com?chainId=eip155:5&projectId=${walletConnectProjectId}`,
+            '1337': `https://rpc.walletconnect.com?chainId=eip155:1337&projectId=${walletConnectProjectId}`
         }
-
         const rpcUrl = customRpcs[chainId]
-        console.log('rpcUrl :>> ', rpcUrl)
+        if (!rpcUrl) throw new Error(`RPC URL not found for chainId: ${chainId}`)
 
-        if (!rpcUrl) {
-            throw new Error(`RPC URL not found for chainId: ${chainId}`)
-        }
-        console.log('ethereumProvider.value :>> ', ethereumProvider.value)
-        const newSession = await ethereumProvider.value.connect()
-        // const newSession = await ethereumProvider.value.enable()
-
-        console.log('newSession :>> ', newSession)
+        await ethereumProvider.value.connect()
         createEthersProvider()
-        console.log('ethereumProvider.value :>> ', ethereumProvider.value)
         const _accounts = await ethereumProvider.value.enable()
-        console.log('_accounts', _accounts)
         accounts.value = _accounts
         session.value = session
-
         web3Modal.value?.closeModal()
+        const connectedAddress = _accounts[0].toLowerCase().trim() as string
+        const connectedAddressBalance = (await getEthersBalance(connectedAddress)).toString()
+
+        return [{ address: connectedAddress as string, balance: connectedAddressBalance }]
     } catch (error) {
         console.error('Failed to connect:', error)
+        throw error
     }
   }
 
   async function createClient() {
     try {
       isInitializing.value = true
-      if (!DEFAULT_PROJECT_ID) return
+      if (!walletConnectProjectId) return
 
       ethereumProvider.value = await EthereumProvider.init({
-        projectId: DEFAULT_PROJECT_ID,
+        projectId: walletConnectProjectId,
         chains: [5],
         showQrModal: true,
         methods: ['eth_sendTransaction', 'eth_signTransaction', 'eth_sign', 'personal_sign', 'eth_signTypedData']
       })
 
-      // web3Modal.value = new WalletConnectModal({
-      //   projectId: DEFAULT_PROJECT_ID,
-      // })
-      // console.log('ethereumProvider.value :>> ', ethereumProvider.value)
+      web3Modal.value = new WalletConnectModal({
+        projectId: walletConnectProjectId,
+      })
 
-      // _subscribeToProviderEvents()
-      // await _checkForPersistedSession()
+      if (!subscribedToProviderEvents.value) _subscribeToProviderEvents()
+      if (!checkedForPersistedSession.value) await _checkForPersistedSession()
     } catch (err) {
       console.error(err)
     } finally {
@@ -104,12 +93,28 @@ export default function useWalletConnectV2() {
     _resetApp()
   }
 
-  // async function getWalletConnectSignerV2(): Promise<ethers.Signer | null> {
-  //   await reinitializeWalletConnect()
-  //   // Create a new instance of the Web3Provider based on the current provider's connection
-  //   const newWeb3Provider = new providers.Web3Provider(nonReactiveWalletConnectWeb3Provider?.provider as providers.ExternalProvider)
-  //   return newWeb3Provider.getSigner() || null
-  // }
+  function getWalletConnectSignerV2() {
+    if (!web3Provider.value) {
+        throw new Error('Web3Provider is not initialized')
+    }
+    return web3Provider.value.getSigner()
+  }
+
+  async function initializeWalletConnect() {
+    if (componentIsMounted.value) return
+    console.log('initializing wallet connect')
+    componentIsMounted.value = true
+
+    // Check for persisted sessions & Subscribe to provider events
+    if (ethereumProvider.value) {
+      _subscribeToProviderEvents()
+      subscribedToProviderEvents.value = true
+      await _checkForPersistedSession()
+      checkedForPersistedSession.value = true
+    } else {
+      await createClient()
+    }
+  }
 
   async function loginWithWalletConnectV2(loginCredentials: LoginCredentials) {
     const { provider, address, currency } = loginCredentials
@@ -127,46 +132,30 @@ export default function useWalletConnectV2() {
       console.log('error in loginWithWalletConnect :>> ', err)
     }
   }
-
-  async function initializeWalletConnect() {
-    if (componentIsMounted.value) return
-    componentIsMounted.value = true
-
-    // Create the WalletConnect client
-    if (!ethereumProvider.value) await createClient()
-
-    // Check for persisted sessions
-    if (ethereumProvider.value) await _checkForPersistedSession()
   
-    // Subscribe to provider events
-    if (ethereumProvider.value) {
-      console.log('subscribing started')
-      _subscribeToProviderEvents()
+  async function signWalletConnectMessage(message: string) : Promise<string>{
+    try {
+      console.log('got to signWalletConnectMessage')
+      console.log('message :>> ', message)
+      const signer = await web3Provider.value?.getSigner()
+      return await signer?.signMessage(message) as string
+    } catch(err) {
+      console.error('error in signWalletConnectMessage :>> ', err)
+      throw err
+      return ''
     }
   }
-  
-  // async function signWalletConnectMessage(message: string) : Promise<string>{
-  //   try {
-  //     console.log('got to signWalletConnectMessage')
-  //     console.log('message :>> ', message)
-  //     const signer = nonReactiveWalletConnectWeb3Provider?.getSigner()
-  //     console.log('signer :>> ', signer)
-  //     return await signer?.signMessage(message) as string
-  //   } catch(err) {
-  //     console.error('error in signWalletConnectMessage :>> ', err)
-  //     throw err
-  //     return ''
-  //   }
-  // }
 
   function uninitializeWalletConnect() {
-    cleanupFunctions.forEach((cleanup) => cleanup())
+    cleanupFunctions.forEach((cleanup) => {
+      console.log('cleaning up')
+      cleanup()
+    })
     cleanupFunctions = [] // Reset the array
     componentIsMounted.value = false
   }
 
   async function _checkForPersistedSession() {
-    console.log('ethereumProvider.value :>> ', ethereumProvider.value)
     if (ethereumProvider.value?.session) {
         const _session = ethereumProvider.value?.session
         console.log('RESTORED SESSION:', _session)
@@ -181,9 +170,6 @@ export default function useWalletConnectV2() {
     }
     const allNamespaceAccounts = Object.values(_session.namespaces).map(namespace => namespace.accounts).flat()
     const allNamespaceChains = Object.keys(_session.namespaces)
-
-    const chainData = allNamespaceAccounts[0].split(':')
-    console.log('chainData :>> ', chainData)
 
     session.value = _session
     accounts.value = allNamespaceAccounts.map(account => account.split(':')[2])
@@ -250,8 +236,11 @@ export default function useWalletConnectV2() {
   }
 
   return {
+    connectWalletConnectV2,
+    getWalletConnectSignerV2,
     initializeWalletConnect,
     loginWithWalletConnectV2,
-    uninitializeWalletConnect
+    uninitializeWalletConnect,
+    web3Provider
   }
 }
