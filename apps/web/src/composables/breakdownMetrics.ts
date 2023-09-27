@@ -11,7 +11,6 @@ const { ethereumUrl } = useEnvironment()
 const { formatNumber } = useFormat()
 const { getCurrentPrice } = usePrice()
 
-
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 
 export default function useBreakdownMetrics() {
