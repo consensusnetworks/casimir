@@ -51,7 +51,7 @@ async function displayReleases(releases) {
 
     vupdate.classList.add("vupdate");
     tag.classList.add("vupdate__tag");
-    title.classList.add("text-6");
+    title.classList.add("text-5");
     title.classList.add("bold");
 
     body.classList.add("vupdate__body");

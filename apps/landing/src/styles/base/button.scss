@@ -15,16 +15,18 @@
   @include base;
   background-color: $blue-11;
   border-radius: 5px;
-  border: 1px solid $blue-12;
+  border: 1px solid $blue-11;
   color: $slate-2;
   cursor: pointer;
   display: inline-flex;
   flex-wrap: nowrap;
   padding: 8px 18px;
   font-size: 13px;
+  transition: all 0.22s ease;
+
   &:hover {
     color: $slate-1;
-    background-color: lighten($slate-12, 10%);
+    background-color: darken($blue-11, 5%);
   }
 }
 
@@ -39,8 +41,10 @@
   background-color: $slate-2;
   border: 1px solid $slate-6;
   padding: 8px 18px;
+  color: $slate-10;
   &:hover {
-    background-color: darken($slate-2, 5%);
+    background-color: darken($slate-2, 2%);
+    color: $slate-11;
     border: 1px solid $slate-7;
   }
 }

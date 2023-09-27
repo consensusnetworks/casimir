@@ -60,9 +60,12 @@ function newSlot() {
 const faqs = document.querySelectorAll(".faq__item");
 
 faqs.forEach((faq) => {
+  const q = faq.querySelector(".faq__item__q");
   const a = faq.querySelector(".faq__item__a");
   faq.addEventListener("click", () => {
     a.classList.toggle("active");
-    console.log(faq)
+    console.log(q)
+    q.children[1].textContent = a.classList.contains("active") ? "-" : "+";
+
   });
 })

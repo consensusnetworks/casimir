@@ -9,8 +9,8 @@
 @import "./base/newsletter.scss";
 
 .hero {
-  max-width: calc($max-width + 120px);
-  margin: 60px auto 0 auto;
+  max-width: $max-width;
+  margin: 40px auto 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -20,7 +20,6 @@
   text-align: left;
 
   .hero__container {
-    margin-top: 30px;
     min-width: 100%;
     display: flex;
     flex-direction: column;
@@ -46,13 +45,34 @@
     }
   }
 
-  .bento {
+  .mockup {
+    border-radius: 8px;
+    border: 1px solid $slate-6;
+
+    img {
+      border-radius: 8px;
+      -webkit-box-shadow: 10px 10px 131px 0px rgba(0, 0, 0, 0.07);
+      -moz-box-shadow: 10px 10px 131px 0px rgba(0, 0, 0, 0.07);
+      box-shadow: 10px 10px 131px 0px rgba(0, 0, 0, 0.07);
+    }
+  }
+}
+
+.bento {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 60px;
+
+  max-width: $max-width;
+  margin: 120px auto 0 auto;
+
+  .bento__container {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    // grid-template-rows: repeat(5, 1fr);
     gap: 25px;
     width: 100%;
-    margin-top: 20px;
 
     .bento__base__card {
       display: flex;
@@ -83,6 +103,7 @@
       width: 100%;
       height: 420px;
     }
+
     .bento__card__2 {
       grid-area: 2 / 1 / 3 / 3;
       background-color: $slate-3;
@@ -110,7 +131,7 @@
 }
 
 .features {
-  max-width: calc($max-width + 120px);
+  max-width: $max-width;
   margin: 120px auto 0 auto;
   width: 100%;
   display: flex;
@@ -227,34 +248,20 @@
 }
 
 .overview {
-  max-width: calc($max-width + 120px);
+  max-width: $max-width;
   margin: 120px auto 0 auto;
   width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  align-items: center;
-  text-align: center;
-  padding: 60px 40px;
-  background-color: #fff;
-  border: 1px solid #eaecf0;
-  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
-  border-radius: 10px;
-
-  .mock {
-    margin-top: 55px;
-    height: 520px;
-    background-color: $slate-9;
-    border-radius: 10px;
-    width: 100%;
-  }
+  align-items: flex-start;
 
   .overview__header {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 10px;
   }
 
   .overview__container {
@@ -282,7 +289,7 @@
 }
 
 .features {
-  max-width: calc($max-width + 120px);
+  max-width: $max-width;
   margin: 120px auto 0 auto;
   width: 100%;
   display: grid;
@@ -327,8 +334,8 @@
 }
 
 .faq {
-  max-width: calc($max-width + 120px);
-  margin: 165px auto 0 auto;
+  max-width: $max-width;
+  margin: 120px auto 0 auto;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -365,6 +372,10 @@
         justify-content: space-between;
         align-items: center;
         cursor: pointer;
+
+        span:nth-child(2) {
+          font-weight: 300;
+        }
       }
 
       .faq__item__a {
@@ -379,85 +390,74 @@
 }
 
 .roadmap {
-  max-width: calc($max-width + 120px);
+  max-width: $max-width;
   margin: 120px auto 0 auto;
   width: 100%;
-  text-align: center;
 
-  .roadmap__container {
+  .roadmap__header {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: flex-start;
-    margin-top: 45px;
-    border: 1px solid rgb(229, 229, 229);
-    // background-color: $slate-1;
-    border-radius: 8px;
-    padding: 30px;
-
-    .roadmap__header {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: flex-start;
-      text-align: left;
-      gap: 20px;
-
-      span {
-        width: 45%;
-      }
-    }
-
-    .roadmap__item__container {
-      // flex: 3;
-      // background-color: $slate-3;
-      // border: 1px solid $slate-7;
-      border-radius: 8px;
-      padding-top: 40px;
-
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: first baseline;
-      gap: 40px;
-      margin-top: -1px;
-
-      .roadmap__item {
-        // background-color: transparent;
-        // border-radius: 8px;
-        // border: 1px solid $slate-7;
-        padding: 1rem;
-        // margin-top: -1.5px;
-        color: black;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        flex-direction: column;
-        text-align: left;
-
-        // &.done {
-        //   .roadmap__item__point {
-        //     background-color: black;
-        //   }
-
-        //   .highlight,
-        //   .text-8 {
-        //     color: #007bff;
-        //   }
-        // }
-
-        .highlight,
-        .text-8 {
-          color: gray;
-        }
-
-        // .roadmap__item__point {
-        //   width: 5px;
-        //   height: 5px;
-        //   // background-color: rgb(0, 0, 0);
-        //   background-color: $slate-9;
-        // }
-      }
-    }
+    text-align: left;
+    gap: 10px;
   }
+
+  // .roadmap__container {
+  //   display: flex;
+  //   flex-direction: row;
+  //   justify-content: space-between;
+  //   align-items: flex-start;
+  //   margin-top: 45px;
+  //   border: 1px solid rgb(229, 229, 229);
+  //   border-radius: 8px;
+  //   padding: 30px;
+
+  //   .roadmap__header {
+  //     display: flex;
+  //     flex-direction: column;
+  //     justify-content: space-between;
+  //     align-items: flex-start;
+  //     text-align: left;
+  //     gap: 20px;
+
+  //     span {
+  //       width: 45%;
+  //     }
+  //   }
+
+  //   .roadmap__item__container {
+  //     display: flex;
+  //     justify-content: space-between;
+  //     align-items: flex-start;
+  //     flex-direction: row;
+  //     flex-wrap: wrap;
+  //     gap: 40px;
+  //     border-radius: 8px;
+  //     padding-top: 40px;
+
+  //     .roadmap__item {
+  //       padding: 1rem;
+  //       display: flex;
+  //       gap: 10px;
+  //       display: flex;
+  //       flex-direction: row;
+  //       justify-content: space-between;
+  //       flex-direction: row;
+  //       flex-wrap: wrap;
+
+  //       .highlight,
+  //       .text-8 {
+  //         color: gray;
+  //       }
+
+  //       // .roadmap__item__point {
+  //       //   width: 5px;
+  //       //   height: 5px;
+  //       //   // background-color: rgb(0, 0, 0);
+  //       //   background-color: $slate-9;
+  //       // }
+  //     }
+  //   }
+  // }
 }

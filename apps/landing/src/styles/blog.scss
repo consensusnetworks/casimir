@@ -5,16 +5,11 @@
 @import "./base/nav.scss";
 
 .blog__container {
-  max-width: 920px;
+  max-width: $max-width;
   margin: 60px auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
   gap: 40px;
-
-  .blog__content {
-    border: 1px solid green;
-    margin: 30px 0;
-  }
 }
