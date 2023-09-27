@@ -1,5 +1,5 @@
-import { ref } from 'vue'
-import { BigNumberish, ethers } from 'ethers'
+import { ref, readonly } from 'vue'
+import { ethers } from 'ethers'
 import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
@@ -19,15 +19,17 @@ const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, 
 const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
 
 const operators = ref<Operator[]>([])
+const { ethersProviderList, getEthersBrowserSigner } = useEthers()
+const { getEthersLedgerSigner } = useLedger()
+const { getEthersTrezorSigner } = useTrezor()
+const { getWalletConnectSignerV2, nonReactiveWalletConnectWeb3Provider } = useWalletConnectV2()
 
 export default function useContracts() {
-    const { ethersProviderList, getEthersBrowserSigner } = useEthers()
-    const { getEthersLedgerSigner } = useLedger()
-    const { getEthersTrezorSigner } = useTrezor()
-    const { getWalletConnectSignerV2, nonReactiveWalletConnectWeb3Provider } = useWalletConnectV2()
-    
+    const loadingOnDeposit = ref(false)
+    const loadingOnDepositError = ref(false)
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         try {
+            loadingOnDeposit.value = true
             const signerCreators = {
                 'Browser': getEthersBrowserSigner,
                 'Ledger': getEthersLedgerSigner,
@@ -54,10 +56,13 @@ export default function useContracts() {
             const result = await managerSigner.depositStake({ value, type: 2 })
             console.log('result :>> ', result)
             await result.wait(2)
+            loadingOnDeposit.value = false
             return true
         } catch (err) {
+            loadingOnDepositError.value = true
             console.log('err :>> ', err)
             console.error(`There was an error in deposit function: ${JSON.stringify(err)}`)
+            loadingOnDeposit.value = false
             return false
         }
     }
@@ -148,10 +153,12 @@ export default function useContracts() {
     }
 
     return { 
-        manager,
-        operators,
-        registry,
-        views,
+        loadingOnDeposit: readonly(loadingOnDeposit),
+        loadingOnDepositError: readonly(loadingOnDepositError),
+        manager: readonly(manager),
+        operators: readonly(operators),
+        registry: readonly(registry),
+        views: readonly(views),
         deposit, 
         getDepositFees,
         getUserStake,

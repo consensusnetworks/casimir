@@ -8,14 +8,13 @@ import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 
+const { manager, registry, views } = useContracts()
+const { ethereumUrl, ssvNetworkAddress, ssvNetworkViewsAddress, usersUrl } = useEnvironment()
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
 
 export default function useOperators() {
-    const { ethereumUrl, ssvNetworkAddress, ssvNetworkViewsAddress, usersUrl } = useEnvironment()
-    const { manager, registry, views } = useContracts()
-
     const loadingInitializeOperators = ref(false)
     const loadingInitializeOperatorsError = ref(false)
     const loadingAddOperator = ref(false)
