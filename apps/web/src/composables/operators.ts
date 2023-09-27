@@ -13,10 +13,10 @@ const { ethereumUrl, ssvNetworkAddress, ssvNetworkViewsAddress, usersUrl } = use
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
+const loadingInitializeOperators = ref(false)
+const loadingInitializeOperatorsError = ref(false)
 
 export default function useOperators() {
-    const loadingInitializeOperators = ref(false)
-    const loadingInitializeOperatorsError = ref(false)
     const loadingAddOperator = ref(false)
     const loadingAddOperatorError = ref(false)
     const loadingRegisteredOperators = ref(false)

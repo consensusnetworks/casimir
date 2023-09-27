@@ -13,9 +13,10 @@ const { getCurrentPrice } = usePrice()
 
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 
+const loadingInitializeBreakdownMetrics = ref(false)
+const loadingInitializeBreakdownMetricsError = ref(false)
+
 export default function useBreakdownMetrics() {
-    const loadingInitializeBreakdownMetrics = ref(false)
-    const loadingInitializeBreakdownMetricsError = ref(false)
 
     const userValue = ref()
 

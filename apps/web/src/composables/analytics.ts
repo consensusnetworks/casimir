@@ -5,11 +5,11 @@ import useTxData from '../mockData/mock_transaction_data'
 
 const { usersUrl } = useEnvironment()
 const { mockData, txData } = useTxData()
+const loadingInitializeAnalytics = ref(false)
+const loadingInitializeAnalyticsError = ref(false)
 
 export default function useAnalytics() {
     const finishedComputingUerAnalytics = ref(false)
-    const loadingInitializeAnalytics = ref(false)
-    const loadingInitializeAnalyticsError = ref(false)
     const rawUserAnalytics = ref<any>(null)
     const userAnalytics = ref<UserAnalyticsData>({
         oneMonth: {
