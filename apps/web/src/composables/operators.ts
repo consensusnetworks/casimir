@@ -1,20 +1,34 @@
-import { readonly, ref, watchEffect, watch } from 'vue'
+import { readonly, ref } from 'vue'
 import useEnvironment from '@/composables/environment'
 import useContracts from '@/composables/contracts'
 import { Operator, Scanner } from '@casimir/ssv'
-import { RegisteredOperator, Pool, Account, UserWithAccountsAndOperators } from '@casimir/types'
+import { Account, Pool, RegisteredOperator, RegisterOperatorWithCasimirParams, UserWithAccountsAndOperators } from '@casimir/types'
 import { ethers } from 'ethers'
+import useEthers from '@/composables/ethers'
+import useLedger from '@/composables/ledger'
+import useTrezor from '@/composables/trezor'
+
+const { ethersProviderList, getEthersBrowserSigner } = useEthers()
+const { getEthersLedgerSigner } = useLedger()
+const { getEthersTrezorSigner } = useTrezor()
 
 export default function useOperators() {
     const { ethereumUrl, ssvNetworkAddress, ssvNetworkViewsAddress, usersUrl } = useEnvironment()
     const { manager, registry, views } = useContracts()
 
+    const loadingInitializeOperators = ref(false)
+    const loadingInitializeOperatorsError = ref(false)
+    const loadingAddOperator = ref(false)
+    const loadingAddOperatorError = ref(false)
+    const loadingRegisteredOperators = ref(false)
+    const loadingRegisteredOperatorsError = ref(false)
 
     const nonregisteredOperators = ref<Operator[]>([])
     const registeredOperators = ref<Operator[]>([])
 
     async function addOperator({ address, nodeUrl }: { address: string, nodeUrl: string }) {
         try {
+            loadingAddOperator.value = true
             const requestOptions = {
                 method: 'POST',
                 headers: {
@@ -24,9 +38,11 @@ export default function useOperators() {
             }
             const response = await fetch(`${usersUrl}/user/add-operator`, requestOptions)
             const { error, message } = await response.json()
+            loadingAddOperator.value = false
             return { error, message }
         } catch (error: any) {
             throw new Error(error.message || 'Error adding operator')
+            loadingAddOperatorError.value = true
         }
     }
 
@@ -117,14 +133,55 @@ export default function useOperators() {
     }
 
     async function initializeComposable(user: UserWithAccountsAndOperators){
-        listenForContractEvents(user)
-        await getUserOperators(user)
+        try {
+            loadingInitializeOperators.value = true
+            listenForContractEvents(user)
+            await getUserOperators(user)
+            loadingInitializeOperators.value = false
+        } catch (error) {
+            loadingInitializeOperatorsError.value = true
+            console.log('Error initializing operators :>> ', error)
+            loadingInitializeOperators.value = false
+        }
+    }
+
+    // TODO: Move this to operators.ts to combine with AddOperator method
+    async function registerOperatorWithCasimir({ walletProvider, address, operatorId, collateral, nodeUrl }: RegisterOperatorWithCasimirParams) {
+        loadingRegisteredOperators.value = true
+        try {
+            const signerCreators = {
+                'Browser': getEthersBrowserSigner,
+                'Ledger': getEthersLedgerSigner,
+                'Trezor': getEthersTrezorSigner
+            }
+            const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
+            const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
+            let signer
+            if (walletProvider === 'WalletConnect') {
+                // signer = nonReactiveWalletConnectWeb3Provider
+            } else {
+                signer = signerCreator(walletProvider)
+            }
+            const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral)})
+            // TODO: @shanejearley - How many confirmations do we want to wait?
+            await result?.wait(1)
+            await addOperator({address, nodeUrl})
+            loadingRegisteredOperators.value = false
+        } catch (err) {
+            loadingRegisteredOperatorsError.value = true
+            console.error(`There was an error in registerOperatorWithCasimir function: ${JSON.stringify(err)}`)
+            loadingRegisteredOperators.value = false
+        }
     }
 
     return { 
         nonregisteredOperators: readonly(nonregisteredOperators),
         registeredOperators: readonly(registeredOperators),
-        addOperator,
-        initializeComposable
+        loadingAddOperator: readonly(loadingAddOperator),
+        loadingAddOperatorError: readonly(loadingAddOperatorError),
+        loadingInitializeOperators: readonly(loadingInitializeOperators),
+        loadingInitializeOperatorsError: readonly(loadingInitializeOperatorsError),
+        initializeComposable,
+        registerOperatorWithCasimir,
     }
 }

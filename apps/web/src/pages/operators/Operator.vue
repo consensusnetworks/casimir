@@ -2,7 +2,6 @@
 import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
 import { ProviderString } from '@casimir/types'
-import useContracts from '@/composables/contracts'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
 import useUser from '@/composables/user'
@@ -10,7 +9,6 @@ import useOperators from '@/composables/operators'
 import { UserWithAccountsAndOperators} from '@casimir/types'
 
 
-const { registerOperatorWithCasimir, loadingRegisteredOperators } = useContracts()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
 const { user,  } = useUser()
@@ -105,7 +103,7 @@ onMounted(async () => {
   }
 })
 
-const { addOperator, initializeComposable, nonregisteredOperators, registeredOperators } = useOperators()
+const {initializeComposable, nonregisteredOperators, registeredOperators, registerOperatorWithCasimir } = useOperators()
 
 watch(user, async () => {
   if (user.value) {
@@ -231,19 +229,14 @@ async function submitRegisterOperatorForm() {
       walletProvider: selectedWallet.value.wallet_provider as ProviderString, 
       address: selectedWallet.value.address,
       operatorId: parseInt(selectedOperatorID.value), 
-      collateral: selectedCollateral.value
+      collateral: selectedCollateral.value,
+      nodeUrl: selectedPublicNodeURL.value
     })
     openAddOperatorModal.value = false
   } catch (error) {
     console.log('Error in submitRegisterOperatorForm :>> ', error)
     openAddOperatorModal.value = false
   }
-
-  // Add the nodeUrl to the operator
-  await addOperator({
-    address: selectedWallet.value.address,
-    nodeUrl: selectedPublicNodeURL.value
-  })
 
   if (selectedWallet.value.address === '') {
       const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address})

@@ -12,13 +12,6 @@ import useWalletConnectV2 from './walletConnectV2'
 import { ProviderString } from '@casimir/types'
 import { Operator } from '@casimir/ssv'
 
-interface RegisterOperatorWithCasimirParams {
-    walletProvider: ProviderString
-    address: string
-    operatorId: BigNumberish
-    collateral: string
-}
-
 const { ethereumUrl, managerAddress, registryAddress, viewsAddress } = useEnvironment()
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, ICasimirManagerAbi, provider) as CasimirManager
@@ -26,8 +19,6 @@ const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, 
 const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
 
 const operators = ref<Operator[]>([])
-
-const loadingRegisteredOperators = ref(false)
 
 export default function useContracts() {
     const { ethersProviderList, getEthersBrowserSigner } = useEthers()
@@ -135,32 +126,6 @@ export default function useContracts() {
         }
     }
 
-    async function registerOperatorWithCasimir({ walletProvider, address, operatorId, collateral }: RegisterOperatorWithCasimirParams) {
-        loadingRegisteredOperators.value = true
-        try {
-            const signerCreators = {
-                'Browser': getEthersBrowserSigner,
-                'Ledger': getEthersLedgerSigner,
-                'Trezor': getEthersTrezorSigner
-            }
-            const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
-            const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
-            let signer
-            if (walletProvider === 'WalletConnect') {
-                signer = nonReactiveWalletConnectWeb3Provider
-            } else {
-                signer = signerCreator(walletProvider)
-            }
-            const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral)})
-            loadingRegisteredOperators.value = false
-            // TODO: @shanejearley - How many confirmations do we want to wait?
-            await result?.wait(1)
-        } catch (err) {
-            console.error(`There was an error in registerOperatorWithCasimir function: ${JSON.stringify(err)}`)
-            loadingRegisteredOperators.value = false
-        }
-    }
-
     async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         const signerCreators = {
             'Browser': getEthersBrowserSigner,
@@ -183,7 +148,6 @@ export default function useContracts() {
     }
 
     return { 
-        loadingRegisteredOperators,
         manager,
         operators,
         registry,
@@ -191,7 +155,6 @@ export default function useContracts() {
         deposit, 
         getDepositFees,
         getUserStake,
-        registerOperatorWithCasimir,
         withdraw 
     }
 }

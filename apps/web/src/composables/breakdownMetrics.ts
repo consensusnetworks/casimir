@@ -251,6 +251,8 @@ export default function useBreakdownMetrics() {
             loadingInitializeBreakdownMetrics.value = false
         } catch (error) {
             loadingInitializeBreakdownMetricsError.value = true
+            console.log('Error initializing breakdown metrics :>> ', error)
+            loadingInitializeBreakdownMetrics.value = false
         }
     }
 

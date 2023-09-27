@@ -108,6 +108,7 @@ export default function useUser() {
             loadingSessionLogout.value = false
         } catch (error) {
             loadingSessionLogoutError.value = true
+            console.log('Error logging out user :>> ', error)
             loadingSessionLogout.value = false
         }
         // TODO: Fix bug that doesn't allow you to log in without refreshing page after a user logs out
@@ -126,6 +127,7 @@ export default function useUser() {
             } catch (error) {
                 loadingSessionLoginError.value = true
                 console.log('error getting user :>> ', error)
+                loadingSessionLogin.value = false
             }
             // await initializeWalletConnect()
         }
