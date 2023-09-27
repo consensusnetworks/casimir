@@ -211,11 +211,11 @@ export default function useUser() {
 
     return {
         user: readonly(user),
+        loadingSessionLogin: readonly(loadingSessionLogin),
+        loadingSessionLoginError: readonly(loadingSessionLoginError),
+        loadingSessionLogout: readonly(loadingSessionLogout),
+        loadingSessionLogoutError: readonly(loadingSessionLogoutError),
         addAccountToUser,
-        loadingSessionLogin,
-        loadingSessionLoginError,
-        loadingSessionLogout,
-        loadingSessionLogoutError,
         login,
         logout,
         updateUserAgreement,
