@@ -13,7 +13,11 @@ const { getCurrentPrice } = usePrice()
 
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 
+const loadingInitializeBreakdownMetrics = ref(false)
+const loadingInitializeBreakdownMetricsError = ref(false)
+
 export default function useBreakdownMetrics() {
+
     const userValue = ref()
 
     const currentStaked = ref<BreakdownAmount>({
@@ -238,10 +242,18 @@ export default function useBreakdownMetrics() {
     
     async function initializeComposable(user: UserWithAccountsAndOperators){
         userValue.value = toValue(user)
-        provider.removeAllListeners('block')
-        provider.on('block', blockListener as ethers.providers.Listener)
-        listenForContractEvents()
-        await refreshBreakdown()
+        try {
+            loadingInitializeBreakdownMetrics.value = true
+            provider.removeAllListeners('block')
+            provider.on('block', blockListener as ethers.providers.Listener)
+            listenForContractEvents()
+            await refreshBreakdown()
+            loadingInitializeBreakdownMetrics.value = false
+        } catch (error) {
+            loadingInitializeBreakdownMetricsError.value = true
+            console.log('Error initializing breakdown metrics :>> ', error)
+            loadingInitializeBreakdownMetrics.value = false
+        }
     }
 
     async function uninitializeComposable(){
@@ -252,6 +264,8 @@ export default function useBreakdownMetrics() {
     
     return {
         currentStaked: readonly(currentStaked),
+        loadingInitializeBreakdownMetrics: readonly(loadingInitializeBreakdownMetrics),
+        loadingInitializeBreakdownMetricsError: readonly(loadingInitializeBreakdownMetricsError),
         stakingRewards: readonly(stakingRewards),
         totalWalletBalance: readonly(totalWalletBalance),
         initializeComposable,

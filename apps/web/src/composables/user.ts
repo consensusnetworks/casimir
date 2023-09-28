@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, readonly, ref, watch } from 'vue'
+import { onMounted, onUnmounted, readonly, ref } from 'vue'
 import * as Session from 'supertokens-web-js/recipe/session'
 import { ethers } from 'ethers'
 import { Account, LoginCredentials, UserWithAccountsAndOperators } from '@casimir/types'
@@ -18,6 +18,10 @@ const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletCon
 const initializeComposable = ref(false)
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const user = ref<UserWithAccountsAndOperators | undefined>(undefined)
+const loadingSessionLogin = ref(false)
+const loadingSessionLoginError = ref(false)
+const loadingSessionLogout = ref(false)
+const loadingSessionLogoutError = ref(false)
 
 export default function useUser() {
     async function addAccountToUser({ provider, address, currency }: { provider: string, address: string, currency: string}) {
@@ -96,8 +100,17 @@ export default function useUser() {
     }
 
     async function logout() {
-        await Session.signOut()
-        user.value = undefined
+        // Loader
+        try {
+            loadingSessionLogout.value = true
+            await Session.signOut()
+            user.value = undefined
+            loadingSessionLogout.value = false
+        } catch (error) {
+            loadingSessionLogoutError.value = true
+            console.log('Error logging out user :>> ', error)
+            loadingSessionLogout.value = false
+        }
         // TODO: Fix bug that doesn't allow you to log in without refreshing page after a user logs out
         window.location.reload()
     }
@@ -105,9 +118,18 @@ export default function useUser() {
     onMounted(async () => {
         if (!initializeComposable.value) {
             initializeComposable.value = true
-            const session = await Session.doesSessionExist()
-            if (session) await getUser()
-            await initializeWalletConnect()
+            // Loader
+            try {
+                loadingSessionLogin.value = true
+                const session = await Session.doesSessionExist()
+                if (session) await getUser()
+                await initializeWalletConnect()
+                loadingSessionLogin.value = false
+            } catch (error) {
+                loadingSessionLoginError.value = true
+                console.log('error getting user :>> ', error)
+                loadingSessionLogin.value = false
+            }
         }
     })
     
@@ -192,9 +214,13 @@ export default function useUser() {
 
     return {
         user: readonly(user),
+        loadingSessionLogin: readonly(loadingSessionLogin),
+        loadingSessionLoginError: readonly(loadingSessionLoginError),
+        loadingSessionLogout: readonly(loadingSessionLogout),
+        loadingSessionLogoutError: readonly(loadingSessionLogoutError),
         addAccountToUser,
         login,
         logout,
-        updateUserAgreement
+        updateUserAgreement,
     }
 }
