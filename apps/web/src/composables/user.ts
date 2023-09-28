@@ -123,18 +123,19 @@ export default function useUser() {
                 loadingSessionLogin.value = true
                 const session = await Session.doesSessionExist()
                 if (session) await getUser()
+                await initializeWalletConnect()
                 loadingSessionLogin.value = false
             } catch (error) {
                 loadingSessionLoginError.value = true
                 console.log('error getting user :>> ', error)
                 loadingSessionLogin.value = false
             }
-            // await initializeWalletConnect()
         }
     })
     
     onUnmounted(() => {
         initializeComposable.value = false
+        uninitializeWalletConnect()
     })
 
     // TODO: Re-enable once we have a way to remove accounts in UI

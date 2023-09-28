@@ -72,10 +72,10 @@ function checkIfAddressIsUsed (account: CryptoAddress): boolean {
  * @param currency 
 */
 async function selectProvider(provider: ProviderString, currency: Currency = 'ETH'): Promise<void> {
-  console.clear()
+  // console.clear()
   try {
     if (provider === 'WalletConnect') {
-      walletProviderAddresses.value = await connectWalletConnectV2('eip155:5') as CryptoAddress[]
+      walletProviderAddresses.value = await connectWalletConnectV2('5') as CryptoAddress[]
     } else if (ethersProviderList.includes(provider)) {
       walletProviderAddresses.value = await getEthersAddressWithBalance(provider) as CryptoAddress[]
     } else if (provider === 'Ledger') {
