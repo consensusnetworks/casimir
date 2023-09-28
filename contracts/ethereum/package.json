@@ -21,7 +21,6 @@
         "@uniswap/v3-periphery": "^1.4.3"
     },
     "devDependencies": {
-        "@nomicfoundation/hardhat-foundry": "^1.0.2",
         "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
         "@nomicfoundation/hardhat-toolbox": "^2.0.2",
         "@nomiclabs/hardhat-ethers": "^2.0.6",
@@ -36,6 +35,7 @@
         "esno": "^0.16.3",
         "hardhat": "^2.12.3",
         "hardhat-abi-exporter": "^2.10.1",
+        "hardhat-preprocessor": "^0.1.5",
         "localtunnel": "^2.0.2",
         "mocha": "^10.0.0",
         "typechain": "^8.1.0"

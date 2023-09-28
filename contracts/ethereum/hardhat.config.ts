@@ -1,12 +1,13 @@
-import localtunnel from 'localtunnel'
+import fs from 'fs'
 import os from 'os'
+import localtunnel from 'localtunnel'
 import { HardhatUserConfig } from 'hardhat/types'
-import '@nomicfoundation/hardhat-foundry'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
 import '@nomicfoundation/hardhat-toolbox'
 import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-abi-exporter'
+import 'hardhat-preprocessor'
 import { ETHEREUM_CONTRACTS } from '@casimir/env'
 
 // Seed is provided
@@ -94,6 +95,24 @@ const compilers = [...compilerVersions, ...externalCompilerVersions].map(version
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
+    mocha: {
+        timeout: 60000
+    },
+    preprocess: {
+        eachLine: () => ({
+            transform: (line: string) => {
+                if (line.match(/^\s*import /i)) {
+                    for (const [from, to] of getRemappings()) {
+                        if (line.includes(from)) {
+                            line = line.replace(from, to)
+                            break
+                        }
+                    }
+                }
+                return line
+            }
+        })
+    },
     solidity: {
         compilers,
     },
@@ -116,7 +135,7 @@ const config: HardhatUserConfig = {
     },
     networks: {
         hardhat: {
-            accounts: mnemonic ? { ...hid, accountsBalance: '1000000000000000000000' } : undefined,
+            accounts: mnemonic ? hid : undefined,
             chainId: forkChainId || 1337,
             forking: forkUrl ? forkConfig : undefined,
             mining: miningInterval ? mining : { auto: true },
@@ -143,6 +162,18 @@ const config: HardhatUserConfig = {
 
 // Start a local tunnel for using RPC over https (e.g. for Metamask on mobile)
 if (process.env.TUNNEL === 'true') {
+    runLocalTunnel()
+}
+
+function getRemappings() {
+    return fs
+        .readFileSync('remappings.txt', 'utf8')
+        .split('\n')
+        .filter(Boolean) // remove empty lines
+        .map((line) => line.trim().split('='))
+}
+
+function runLocalTunnel() {
     const localSubdomain = `local-hardhat-${os.userInfo().username.toLowerCase()}`
     const localUrl = `https://${localSubdomain}.loca.lt`
     localtunnel({ port: 8545, subdomain: localSubdomain }).then(
