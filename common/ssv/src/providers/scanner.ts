@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
-import { ISSVClusters, ISSVViews } from '@casimir/ethereum/build/@types'
+import { ISSVClusters, ISSVOperators, ISSVViews } from '@casimir/ethereum/build/@types'
 import ISSVClustersAbi from '@casimir/ethereum/build/abi/ISSVClusters.json'
+import ISSVOperatorsAbi from '@casimir/ethereum/build/abi/ISSVOperators.json'
 import ISSVViewsAbi from '@casimir/ethereum/build/abi/ISSVViews.json'
 import { GetClusterInput } from '../interfaces/GetClusterInput'
 import { Cluster } from '../interfaces/Cluster'
@@ -13,6 +14,7 @@ export class Scanner {
     MONTH = this.DAY * 30
     provider: ethers.providers.JsonRpcProvider
     ssvClusters: ISSVClusters & ethers.Contract
+    ssvOperators: ISSVOperators & ethers.Contract
     ssvViews: ISSVViews & ethers.Contract
 
     constructor(options: ScannerOptions) {
@@ -22,6 +24,7 @@ export class Scanner {
             this.provider = new ethers.providers.JsonRpcProvider(options.ethereumUrl)
         }
         this.ssvClusters = new ethers.Contract(options.ssvNetworkAddress, ISSVClustersAbi, this.provider) as ISSVClusters & ethers.Contract
+        this.ssvOperators = new ethers.Contract(options.ssvNetworkAddress, ISSVOperatorsAbi, this.provider) as ISSVOperators & ethers.Contract
         this.ssvViews = new ethers.Contract(options.ssvViewsAddress, ISSVViewsAbi, this.provider) as ISSVViews & ethers.Contract
     }
 
@@ -130,9 +133,9 @@ export class Scanner {
      * @returns {Promise<Operator[]>} The owner's operators
      */
     async getOperators(ownerAddress: string): Promise<Operator[]> {
-        const eventFilter = this.ssvClusters.filters.OperatorAdded(null, ownerAddress)
+        const eventFilter = this.ssvOperators.filters.OperatorAdded(null, ownerAddress)
         const operators: Operator[] = []
-        const items = await this.ssvClusters.queryFilter(eventFilter, 0, 'latest')
+        const items = await this.ssvOperators.queryFilter(eventFilter, 0, 'latest')
         for (const item of items) {
             const { args } = item
             const { operatorId } = args
