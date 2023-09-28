@@ -25,12 +25,9 @@ const { getEthersTrezorSigner } = useTrezor()
 const { getWalletConnectSignerV2 } = useWalletConnectV2()
 
 export default function useContracts() {
-    const loadingOnDeposit = ref(false)
-    const loadingOnDepositError = ref(false)
     
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         try {
-            loadingOnDeposit.value = true
             const signerCreators = {
                 'Browser': getEthersBrowserSigner,
                 'Ledger': getEthersLedgerSigner,
@@ -45,25 +42,13 @@ export default function useContracts() {
             } else {
                 signer = signerCreator(walletProvider)
             }
-            console.log('signer :>> ', signer)
             const managerSigner = manager.connect(signer as ethers.Signer)
-            console.log('managerSigner :>> ', managerSigner)
             const fees = await getDepositFees()
-            console.log('fees :>> ', fees)
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
-            console.log('depositAmount :>> ', depositAmount)
             const value = ethers.utils.parseEther(depositAmount.toString())
-            console.log('value :>> ', value)
-            const result = await managerSigner.depositStake({ value, type: 2 })
-            console.log('result :>> ', result)
-            await result.wait(2)
-            loadingOnDeposit.value = false
-            return true
+            return await managerSigner.depositStake({ value, type: 2 })
         } catch (err) {
-            loadingOnDepositError.value = true
-            console.log('err :>> ', err)
             console.error(`There was an error in deposit function: ${JSON.stringify(err)}`)
-            loadingOnDeposit.value = false
             return false
         }
     }
@@ -155,8 +140,6 @@ export default function useContracts() {
     }
 
     return { 
-        loadingOnDeposit: readonly(loadingOnDeposit),
-        loadingOnDepositError: readonly(loadingOnDepositError),
         manager,
         operators,
         registry,
