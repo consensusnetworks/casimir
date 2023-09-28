@@ -2,18 +2,15 @@
 import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
 import { ProviderString } from '@casimir/types'
-import useContracts from '@/composables/contracts'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
 import useUser from '@/composables/user'
 import useOperators from '@/composables/operators'
 import { UserWithAccountsAndOperators} from '@casimir/types'
 
-
-const { registerOperatorWithCasimir, loadingRegisteredOperators } = useContracts()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
-const { user,  } = useUser()
+const { user, loadingSessionLogin } = useUser()
 
 // Form inputs
 const selectedWallet = ref({address: '', wallet_provider: ''})
@@ -105,7 +102,7 @@ onMounted(async () => {
   }
 })
 
-const { addOperator, initializeComposable, nonregisteredOperators, registeredOperators } = useOperators()
+const {initializeComposable, nonregisteredOperators, registeredOperators, registerOperatorWithCasimir, loadingInitializeOperators } = useOperators()
 
 watch(user, async () => {
   if (user.value) {
@@ -231,19 +228,14 @@ async function submitRegisterOperatorForm() {
       walletProvider: selectedWallet.value.wallet_provider as ProviderString, 
       address: selectedWallet.value.address,
       operatorId: parseInt(selectedOperatorID.value), 
-      collateral: selectedCollateral.value
+      collateral: selectedCollateral.value,
+      nodeUrl: selectedPublicNodeURL.value
     })
     openAddOperatorModal.value = false
   } catch (error) {
     console.log('Error in submitRegisterOperatorForm :>> ', error)
     openAddOperatorModal.value = false
   }
-
-  // Add the nodeUrl to the operator
-  await addOperator({
-    address: selectedWallet.value.address,
-    nodeUrl: selectedPublicNodeURL.value
-  })
 
   if (selectedWallet.value.address === '') {
       const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address})
@@ -255,20 +247,42 @@ async function submitRegisterOperatorForm() {
   availableOperatorIDs.value = []
 }
 
+const showSkeleton = ref(true)
+
+watch([loadingSessionLogin || loadingInitializeOperators], () =>{
+  setTimeout(() => {
+    if(loadingSessionLogin || loadingInitializeOperators){
+      showSkeleton.value = false
+    }
+  }, 500)
+})
+
 </script>
 
 <template>
   <div class="px-[60px] 800s:px-[5%] pt-[51px]">
     <div class="flex items-start gap-[20px] justify-between flex-wrap mb-[30px]">
-      <h6 class="title">
+      <h6 class="title relative">
+        <div
+          v-show="showSkeleton"
+          class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+        >
+          <div class="skeleton_box" />
+        </div>
         Operators
       </h6>
 
       <button
-        class="flex items-center gap-[8px] export_button  hover:text-blue_3 hover:border-blue_3 h-[38px]"
+        class="flex items-center gap-[8px] export_button  hover:text-blue_3 hover:border-blue_3 h-[38px] relative"
         :disabled="!user?.accounts"
         @click="openAddOperatorModal = true"
       >
+        <div
+          v-show="showSkeleton"
+          class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+        >
+          <div class="skeleton_box" />
+        </div>
         <vue-feather
           type="plus"
           class="icon w-[17px] h-min"
@@ -280,9 +294,15 @@ async function submitRegisterOperatorForm() {
     <div
       v-if="!user?.address"
       class="card_container w-full px-[32px] py-[31px]
-       text-grey_4 flex items-center justify-center"
+       text-grey_4 flex items-center justify-center relative"
       style="min-height: calc(100vh - 420px);"
     >
+      <div
+        v-show="showSkeleton"
+        class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+      >
+        <div class="skeleton_box" />
+      </div>
       <div class="border rounded-[3px] border-grey_1 border-dashed p-[10%] text-center">
         <button
           class="text-primary underline"
@@ -298,6 +318,12 @@ async function submitRegisterOperatorForm() {
       class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap relative"
       style="min-height: calc(100vh - 320px); height: 500px;"
     >
+      <div
+        v-show="showSkeleton"
+        class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+      >
+        <div class="skeleton_box" />
+      </div>
       <!-- Form -->
       <div
         v-if="openAddOperatorModal"

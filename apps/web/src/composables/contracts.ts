@@ -1,5 +1,5 @@
-import { ref } from 'vue'
-import { BigNumberish, ethers } from 'ethers'
+import { ref, readonly } from 'vue'
+import { ethers } from 'ethers'
 import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 import CasimirManagerAbi from '@casimir/ethereum/build/abi/CasimirManager.json'
 import CasimirRegistryAbi from '@casimir/ethereum/build/abi/CasimirRegistry.json'
@@ -12,13 +12,6 @@ import useWalletConnectV2 from './walletConnectV2'
 import { ProviderString } from '@casimir/types'
 import { Operator } from '@casimir/ssv'
 
-interface RegisterOperatorWithCasimirParams {
-    walletProvider: ProviderString
-    address: string
-    operatorId: BigNumberish
-    collateral: string
-}
-
 const { ethereumUrl, managerAddress, registryAddress, viewsAddress } = useEnvironment()
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, CasimirManagerAbi, provider) as CasimirManager
@@ -26,14 +19,12 @@ const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, 
 const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, CasimirRegistryAbi, provider) as CasimirRegistry
 
 const operators = ref<Operator[]>([])
-
-const loadingRegisteredOperators = ref(false)
+const { ethersProviderList, getEthersBrowserSigner } = useEthers()
+const { getEthersLedgerSigner } = useLedger()
+const { getEthersTrezorSigner } = useTrezor()
+const { getWalletConnectSignerV2 } = useWalletConnectV2()
 
 export default function useContracts() {
-    const { ethersProviderList, getEthersBrowserSigner } = useEthers()
-    const { getEthersLedgerSigner } = useLedger()
-    const { getEthersTrezorSigner } = useTrezor()
-    const { getWalletConnectSignerV2, nonReactiveWalletConnectWeb3Provider } = useWalletConnectV2()
     
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         try {
@@ -51,21 +42,12 @@ export default function useContracts() {
             } else {
                 signer = signerCreator(walletProvider)
             }
-            console.log('signer :>> ', signer)
             const managerSigner = manager.connect(signer as ethers.Signer)
-            console.log('managerSigner :>> ', managerSigner)
             const fees = await getDepositFees()
-            console.log('fees :>> ', fees)
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
-            console.log('depositAmount :>> ', depositAmount)
             const value = ethers.utils.parseEther(depositAmount.toString())
-            console.log('value :>> ', value)
-            const result = await managerSigner.depositStake({ value, type: 2 })
-            console.log('result :>> ', result)
-            await result.wait(2)
-            return true
+            return await managerSigner.depositStake({ value, type: 2 })
         } catch (err) {
-            console.log('err :>> ', err)
             console.error(`There was an error in deposit function: ${JSON.stringify(err)}`)
             return false
         }
@@ -135,43 +117,18 @@ export default function useContracts() {
         }
     }
 
-    async function registerOperatorWithCasimir({ walletProvider, address, operatorId, collateral }: RegisterOperatorWithCasimirParams) {
-        loadingRegisteredOperators.value = true
-        try {
-            const signerCreators = {
-                'Browser': getEthersBrowserSigner,
-                'Ledger': getEthersLedgerSigner,
-                'Trezor': getEthersTrezorSigner
-            }
-            const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
-            const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
-            let signer
-            if (walletProvider === 'WalletConnect') {
-                signer = nonReactiveWalletConnectWeb3Provider
-            } else {
-                signer = signerCreator(walletProvider)
-            }
-            const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral)})
-            loadingRegisteredOperators.value = false
-            // TODO: @shanejearley - How many confirmations do we want to wait?
-            await result?.wait(1)
-        } catch (err) {
-            console.error(`There was an error in registerOperatorWithCasimir function: ${JSON.stringify(err)}`)
-            loadingRegisteredOperators.value = false
-        }
-    }
-
     async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         const signerCreators = {
             'Browser': getEthersBrowserSigner,
             'Ledger': getEthersLedgerSigner,
             'Trezor': getEthersTrezorSigner,
+            'WalletConnect': getWalletConnectSignerV2
         }
         const signerType = ['MetaMask', 'CoinbaseWallet'].includes(walletProvider) ? 'Browser' : walletProvider
         const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
         let signer
             if (walletProvider === 'WalletConnect') {
-                signer = nonReactiveWalletConnectWeb3Provider
+                signer = await signerCreator(walletProvider)
             } else {
                 signer = signerCreator(walletProvider)
             }
@@ -183,7 +140,6 @@ export default function useContracts() {
     }
 
     return { 
-        loadingRegisteredOperators,
         manager,
         operators,
         registry,
@@ -191,7 +147,6 @@ export default function useContracts() {
         deposit, 
         getDepositFees,
         getUserStake,
-        registerOperatorWithCasimir,
         withdraw 
     }
 }

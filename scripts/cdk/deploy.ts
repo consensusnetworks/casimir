@@ -34,6 +34,8 @@ void async function () {
     process.env.PUBLIC_VIEWS_ADDRESS = process.env.VIEWS_ADDRESS
     process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
     process.env.PUBLIC_SSV_VIEWS_ADDRESS = process.env.SSV_VIEWS_ADDRESS
+    process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
+    process.env.PUBLIC_WALLET_CONNECT_PROJECT_ID = await getSecret('casimir-wallet-connect-project-id')
     
     await run('npm run build --workspace @casimir/ethereum')
     await run('npm run build:docs --workspace @casimir/ethereum')

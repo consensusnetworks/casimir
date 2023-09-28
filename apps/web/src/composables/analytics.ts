@@ -1,14 +1,15 @@
-import { readonly, ref, watchEffect } from 'vue'
+import { readonly, ref } from 'vue'
 import { UserAnalyticsData } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useTxData from '../mockData/mock_transaction_data'
 
 const { usersUrl } = useEnvironment()
 const { mockData, txData } = useTxData()
+const loadingInitializeAnalytics = ref(false)
+const loadingInitializeAnalyticsError = ref(false)
 
 export default function useAnalytics() {
     const finishedComputingUerAnalytics = ref(false)
-    const getUserAnalyticsError = ref(null)
     const rawUserAnalytics = ref<any>(null)
     const userAnalytics = ref<UserAnalyticsData>({
         oneMonth: {
@@ -153,7 +154,6 @@ export default function useAnalytics() {
             // const { error, message, data: athenaData } = await response.json()
             // console.log('data from analytics :>> ', data)
             // userAnalytics.value = athenaData
-            // getUserAnalyticsError.value = error
             // if (error) throw new Error(`Error in getUserAnalytics: ${message}`)
 
             // TODO: Get events, actions, and contract data from the API
@@ -180,12 +180,19 @@ export default function useAnalytics() {
     }
 
     async function initializeAnalyticsComposable() {
-        resetUserAnalytics()
-        await getUserAnalytics()
+        try {
+            loadingInitializeAnalytics.value = true
+            resetUserAnalytics()
+            await getUserAnalytics()
+            loadingInitializeAnalytics.value = false
+        } catch (error) {
+            loadingInitializeAnalyticsError.value = true
+            loadingInitializeAnalytics.value = false
+            throw new Error('Error initializing analytics')
+        }
     }
 
     function resetUserAnalytics() {
-        getUserAnalyticsError.value = null
         userAnalytics.value = {
             oneMonth: {
                 labels: [],
@@ -208,10 +215,11 @@ export default function useAnalytics() {
 
     return { 
         finishedComputingUerAnalytics: readonly(finishedComputingUerAnalytics),
-        userAnalytics: readonly(userAnalytics),
-        getUserAnalyticsError: readonly(getUserAnalyticsError),
-        updateAnalytics,
+        loadingInitializeAnalytics: readonly(loadingInitializeAnalytics),
+        loadingInitializeAnalyticsError: readonly(loadingInitializeAnalyticsError),
         rawUserAnalytics,
-        initializeAnalyticsComposable
+        userAnalytics: readonly(userAnalytics),
+        initializeAnalyticsComposable,
+        updateAnalytics,
     }
 }

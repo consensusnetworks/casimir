@@ -28,6 +28,7 @@ import { ProviderString } from './interfaces/ProviderString'
 import { SignInWithEthereumCredentials } from './interfaces/SignInWithEthereumCredentials'
 import { TransactionRequest } from './interfaces/TransactionRequest'
 import { RegisteredOperator } from './interfaces/RegisteredOperator'
+import { RegisterOperatorWithCasimirParams } from './interfaces/RegisterOperatorWithCasimirParams'
 import { RemoveAccountOptions } from './interfaces/RemoveAccountOptions'
 import { Reshare } from './interfaces/Reshare'
 import { User } from './interfaces/User'
@@ -66,6 +67,7 @@ export type {
     SignInWithEthereumCredentials,
     TransactionRequest,
     RegisteredOperator,
+    RegisterOperatorWithCasimirParams,
     RemoveAccountOptions,
     Reshare,
     User,

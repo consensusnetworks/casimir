@@ -24,6 +24,7 @@ void async function () {
     process.env.PROJECT = process.env.PROJECT || 'casimir'
     process.env.STAGE = process.env.STAGE || 'local'
     process.env.CRYPTO_COMPARE_API_KEY = process.env.USE_SECRETS !== 'false' ? process.env.CRYPTO_COMPARE_API_KEY || await getSecret('casimir-crypto-compare-api-key') : process.env.CRYPTO_COMPARE_API_KEY || ''
+    process.env.WALLET_CONNECT_PROJECT_ID = process.env.USE_SECRETS !== 'false' ? await getSecret('casimir-wallet-connect-project-id') : '8e6877b49198d7a9f9561b8712805726'
     process.env.FORK = process.env.FORK || 'testnet'
     process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
     process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
@@ -141,6 +142,7 @@ void async function () {
     process.env.PUBLIC_SWAP_FACTORY_ADDRESS = process.env.SWAP_FACTORY_ADDRESS
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
     process.env.PUBLIC_ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK
+    process.env.PUBLIC_WALLET_CONNECT_PROJECT_ID = process.env.WALLET_CONNECT_PROJECT_ID
 
     if (process.env.BUILD_PREVIEW === 'true') {
         await run('npm run build --workspace @casimir/web')

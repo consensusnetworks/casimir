@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
 import useContracts from '@/composables/contracts'
@@ -189,37 +189,28 @@ watch(openTermsOfService, ()=>{
 })
 
 const handleDeposit = async () => {
-  stakingActionLoader.value = true
+  stakeButtonText.value = 'Staking...'
 
-  loading.value = true
-  const isSuccess = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedStakingProvider.value })
-  loading.value = false
-  if (isSuccess) {
-    success.value = true
-    stakeButtonText.value = 'Transaction Submitted'
-  } else {
-    failure.value = true
-    stakeButtonText.value = 'Transaction Failed'
+  const result = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedStakingProvider.value })
+
+  if (!result) stakeButtonText.value = 'Failed!'
+  stakeButtonText.value = 'Staked!'
+
+  setTimeout(() =>{
+    stakeButtonText.value = 'Stake'
+    formattedAmountToStake.value = ''
+  }, 1000)
+
+  if (result) {
+    const waitResponse = await result.wait(1)
+    if(waitResponse){
+      alert('Your Stake Has Been Deposited!')
+    }else {
+      alert('Your Stake Action Has Failed, Please Try Again Later!')
+    }
+    console.log('waitResponse :>> ', waitResponse)
   }
 
-  setTimeout(async () => {
-    success.value = false
-    failure.value = false
-    stakeButtonText.value = 'Stake'
-
-    const ethersBalance = await getEthersBalance(user.value?.address as string)
-    addressBalance.value = (Math.round(ethersBalance * 100) / 100) + ' ETH'
-    // empty out staking comp
-    // selectedStakingProvider.value = ''
-    // selectedWalletAddress.value = null
-    // addressBalance.value = await getEthersBalance(user.value?.address as string)
-    formattedAmountToStake.value = ''
-
-  }, 500)
-
-  setTimeout(() => {
-    stakingActionLoader.value = false
-  }, 1000)
 
   currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
@@ -396,19 +387,10 @@ const handleDeposit = async () => {
     <button
       class="card_button  h-[37px] w-full "
       :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
-      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)"
+      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage) || stakeButtonText !== 'Stake'"
       @click="handleDeposit()"
     >
       <div
-        v-if="loading"
-        class="dots_container flex justify-center items-center gap-[5px]"
-      >
-        <div class="dot" />
-        <div class="dot" />
-        <div class="dot" />
-      </div>
-      <div
-        v-else
         class="flex items-center justify-center gap-[5px]"
       >
         {{ stakeButtonText }}

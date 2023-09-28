@@ -11,10 +11,10 @@ export default function useEnvironment() {
     const ethereumUrl = import.meta.env.PUBLIC_ETHEREUM_RPC_URL || 'http://127.0.0.1:8545'
     const ledgerType = import.meta.env.PUBLIC_SPECULOS_URL ? 'speculos' : 'usb'
     const speculosUrl = import.meta.env.PUBLIC_SPECULOS_URL ? 'http://localhost:5001' : ''
-    const walletConnectUrl = 'https://bridge.walletconnect.org'
     const cryptoCompareApiKey = import.meta.env.PUBLIC_CRYPTO_COMPARE_API_KEY || ''
     const ssvNetworkAddress = import.meta.env.PUBLIC_SSV_NETWORK_ADDRESS
     const ssvViewsAddress = import.meta.env.PUBLIC_SSV_VIEWS_ADDRESS
+    const walletConnectProjectId = import.meta.env.PUBLIC_WALLET_CONNECT_PROJECT_ID
     
     return {
         domain,
@@ -29,6 +29,6 @@ export default function useEnvironment() {
         ssvViewsAddress,
         usersUrl,
         viewsAddress,
-        walletConnectUrl,
+        walletConnectProjectId
     }
 }
