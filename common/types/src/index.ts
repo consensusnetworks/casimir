@@ -29,6 +29,7 @@ import { SignInWithEthereumCredentials } from './interfaces/SignInWithEthereumCr
 import { TransactionRequest } from './interfaces/TransactionRequest'
 import { RegisteredOperator } from './interfaces/RegisteredOperator'
 import { RemoveAccountOptions } from './interfaces/RemoveAccountOptions'
+import { Reshare } from './interfaces/Reshare'
 import { User } from './interfaces/User'
 import { UserAddedSuccess } from './interfaces/UserAddedSuccess'
 import { UserWithAccountsAndOperators } from './interfaces/UserWithAccountsAndOperators'
@@ -66,11 +67,12 @@ export type {
     TransactionRequest,
     RegisteredOperator,
     RemoveAccountOptions,
+    Reshare,
     User,
     UserAddedSuccess,
     UserAnalyticsData,
     UserWithAccountsAndOperators,
-    Validator,
+    Validator
 }
 
 export {

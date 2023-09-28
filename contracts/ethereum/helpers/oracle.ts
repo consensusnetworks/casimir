@@ -1,10 +1,10 @@
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { CasimirManager, CasimirViews } from '../build/@types'
-import { PoolStatus, Validator } from '@casimir/types'
+import { PoolStatus, Reshare, Validator } from '@casimir/types'
 import { Scanner } from '@casimir/ssv'
 import { Factory } from '@casimir/uniswap'
-import { validatorStore } from '@casimir/data'
+import { validatorStore, reshareStore } from '@casimir/data'
 
 const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS as string
 if (!linkTokenAddress) throw new Error('No link token address provided')
@@ -79,6 +79,82 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         false
     )
     await initiateDeposit.wait()
+}
+
+export async function reportResharesHandler({ manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }) {
+    const { operatorId } = args
+    if (!operatorId) throw new Error('No operator id provided')
+    
+    const poolIds = [
+        ...await manager.getPendingPoolIds(),
+        ...await manager.getStakedPoolIds()
+    ]
+
+    for (const poolId of poolIds) {
+        const poolDetails = await views.getPool(poolId)
+        const oldOperatorIds = poolDetails.operatorIds.map(id => id.toNumber())
+        if (oldOperatorIds.includes(operatorId)) {
+            const mockReshares: Reshare[] = reshareStore[poolId as keyof typeof reshareStore]
+            const poolReshareCount = poolDetails.reshares.toNumber()
+            if (mockReshares.length && poolReshareCount < 2) {
+                const reshare = mockReshares.find((reshare) => {
+                    return JSON.stringify(reshare.oldOperatorIds) === JSON.stringify(oldOperatorIds)
+                })
+                if (!reshare) throw new Error(`No reshare found for pool ${poolId} with old operator ids ${oldOperatorIds}`)
+
+                const newOperatorId = reshare.operatorIds.find((id) => !oldOperatorIds.includes(id)) as number
+
+                const scanner = new Scanner({ 
+                    provider: ethers.provider,
+                    ssvNetworkAddress,
+                    ssvViewsAddress
+                })
+    
+                const oldCluster = await scanner.getCluster({
+                    operatorIds: oldOperatorIds,
+                    ownerAddress: manager.address
+                })
+            
+                const cluster = await scanner.getCluster({ 
+                    operatorIds: reshare.operatorIds,
+                    ownerAddress: manager.address
+                })
+                        
+                const requiredFee = await scanner.getRequiredFee(reshare.operatorIds)
+    
+                const uniswapFactory = new Factory({
+                    provider: ethers.provider,
+                    uniswapV3FactoryAddress
+                })
+            
+                const price = await uniswapFactory.getSwapPrice({ 
+                    tokenIn: wethTokenAddress,
+                    tokenOut: ssvTokenAddress,
+                    uniswapFeeTier: 3000
+                })
+            
+                const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * Number(price)).toPrecision(9))
+                const minimumTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * 0.99).toPrecision(9))
+
+                const reportReshare = await manager.connect(signer).reportReshare(
+                    poolId,
+                    reshare.operatorIds,
+                    oldOperatorIds,
+                    newOperatorId,
+                    operatorId,
+                    reshare.shares,
+                    cluster,
+                    oldCluster,
+                    feeAmount,
+                    minimumTokenAmount,
+                    false
+                )
+                await reportReshare.wait()
+            } else {
+                // Exit pool
+            }
+        }
+    }
 }
 
 export async function depositFunctionsBalanceHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {

@@ -2,9 +2,9 @@ import fs from 'fs'
 import { ethers } from 'ethers'
 import { fetchRetry } from '@casimir/fetch'
 import { run } from '@casimir/shell'
-import { Validator } from '@casimir/types'
+import { /*Reshare, */Validator } from '@casimir/types'
 import { Dkg } from '../src/providers/dkg'
-import { validatorStore } from '@casimir/data'
+import { /*reshareStore, */validatorStore } from '@casimir/data'
 
 /**
  * Generate validator keys for ethereum testing
@@ -22,8 +22,8 @@ void async function () {
     if (!process.env.MANAGER_ADDRESS) throw new Error('No manager address set')
     if (!process.env.VIEWS_ADDRESS) throw new Error('No views address set')
 
-    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [156, 157, 158, 159]
-    if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [200, 201, 202, 203, 156, 157, 158, 159]
+    if (preregisteredOperatorIds.length < 8) throw new Error('Not enough operator ids provided')
 
     const accountPath = 'm/44\'/60\'/0\'/0/1'
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, accountPath)
@@ -42,15 +42,17 @@ void async function () {
         let ownerNonce = 0
 
         const newValidators: Validator[] = []
+        // const newReshares: Reshare[] = []
 
         for (let i = 0; i < validatorCount; i++) {
+            const poolId = i + 1
 
             const poolAddress = ethers.utils.getContractAddress({
                 from: process.env.MANAGER_ADDRESS,
                 nonce: managerNonce
             })
 
-            const selectedOperatorIds = preregisteredOperatorIds.slice(0, 4)
+            const selectedOperatorIds = preregisteredOperatorIds.slice(4)
 
             const cli = new Dkg({
                 cliPath: process.env.CLI_PATH,
@@ -58,14 +60,30 @@ void async function () {
             })
 
             const validator = await cli.createValidator({
-                poolId: i + 1,
+                poolId,
                 operatorIds: selectedOperatorIds,
                 ownerAddress: process.env.MANAGER_ADDRESS,
                 ownerNonce,
                 withdrawalAddress: poolAddress
             })
-
             newValidators.push(validator)
+
+            // for (let j = 0; j < 2; j++) {
+            //     const oldOperatorIds = selectedOperatorIds.slice(1)
+            //     const reshareOperatorIds = preregisteredOperatorIds.slice(5).concat(preregisteredOperatorIds[0])
+
+            //     const reshare = await cli.reshareValidator({
+            //         oldOperatorIds,
+            //         operatorIds: reshareOperatorIds,
+            //         ownerAddress: process.env.MANAGER_ADDRESS,
+            //         ownerNonce,
+            //         poolId,
+            //         publicKey: validator.publicKey,
+            //         withdrawalAddress: poolAddress
+            //     })
+            //     newReshares.push(reshare)
+            // }
+            // reshareStore[poolId] = newReshares
 
             managerNonce++
             ownerNonce++
@@ -74,5 +92,6 @@ void async function () {
         validatorStore[wallet.address] = newValidators
 
         fs.writeFileSync(`${outputPath}/validator.store.json`, JSON.stringify(validatorStore, null, 4))
+        // fs.writeFileSync(`${outputPath}/reshare.store.json`, JSON.stringify(reshareStore, null, 4))
     }
 }()

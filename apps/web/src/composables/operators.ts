@@ -55,10 +55,10 @@ export default function useOperators() {
                 const pools = await _getPools(operator.id)
                 // TODO: Replace these Public Nodes URLs once we have this working again
                 const operatorStore = {
-                    '654': 'https://nodes.casimir.co/eth/goerli/dkg/1',
-                    '655': 'https://nodes.casimir.co/eth/goerli/dkg/2',
-                    '656': 'https://nodes.casimir.co/eth/goerli/dkg/3',
-                    '657': 'https://nodes.casimir.co/eth/goerli/dkg/4',
+                    '200': 'https://nodes.casimir.co/eth/goerli/dkg/1',
+                    '201': 'https://nodes.casimir.co/eth/goerli/dkg/2',
+                    '202': 'https://nodes.casimir.co/eth/goerli/dkg/3',
+                    '203': 'https://nodes.casimir.co/eth/goerli/dkg/4',
                     '156': 'https://nodes.casimir.co/eth/goerli/dkg/5',
                     '157': 'https://nodes.casimir.co/eth/goerli/dkg/6',
                     '158': 'https://nodes.casimir.co/eth/goerli/dkg/7',

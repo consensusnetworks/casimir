@@ -5,7 +5,7 @@ import {
     depositFunctionsBalanceHandler,
     depositUpkeepBalanceHandler,
     initiateDepositHandler,
-    initiateResharesHandler, 
+    reportResharesHandler, 
     // initiateExitsHandler, 
     // reportForcedExitsHandler,
     reportCompletedExitsHandler
@@ -20,7 +20,7 @@ const contracts = {
         address: config.managerAddress,
         events: {
             DepositRequested: initiateDepositHandler,
-            ResharesRequested: initiateResharesHandler,
+            ResharesRequested: reportResharesHandler,
             // ExitRequested: initiateExitsHandler,
             // ForcedExitReportsRequested: reportForcedExitsHandler,
             CompletedExitReportsRequested: reportCompletedExitsHandler

@@ -5,7 +5,7 @@ import { DkgOptions } from '../interfaces/DkgOptions'
 import { StartReshareInput } from '../interfaces/StartReshareInput'
 import { run, runRetry } from '@casimir/shell'
 import { CreateValidatorInput } from '../interfaces/CreateValidatorInput'
-import { Validator } from '@casimir/types'
+import { Reshare, Validator } from '@casimir/types'
 import { ReshareValidatorInput } from '../interfaces/ReshareValidatorInput'
 import { getOperatorUrls } from './registry'
 import { GetSharesInput } from '../interfaces/GetSharesInput'
@@ -67,26 +67,26 @@ export class Dkg {
             if (retries === 0) {
                 throw error
             }
-            await new Promise(resolve => setTimeout(resolve, 5000))
+            await new Promise(resolve => setTimeout(resolve, 2500))
             console.log(`Retrying create validator request ${retries} more times`)
             return await this.createValidator(input, retries - 1)
         }
     }
 
     /** 
-     * Reshare validator for new operator key shares and deposit data
+     * Reshare validator for new operator key IDs and key shares
      * @param {ReshareValidatorInput} input - Input for resharing a validator
      * @param {number} retries - Number of retries
-     * @returns {Promise<Validator>} Validator with operator key shares and deposit data
+     * @returns {Promise<Validator>} New operator IDs and key shares for a validator
      */
-    async reshareValidator(input: ReshareValidatorInput, retries: number | undefined = 25): Promise<Validator> {
+    async reshareValidator(input: ReshareValidatorInput, retries: number | undefined = 25): Promise<Reshare> {
         try {
             const operators = getOperatorUrls(input.operatorIds)
             const oldOperators = getOperatorUrls(input.oldOperatorIds)
             const requestId = await this.startReshare({ 
                 operators,
                 publicKey: input.publicKey,
-                oldOperators
+                oldOperators: oldOperators
             })
             
             console.log(`Started request ${requestId} for pool ${input.poolId}`)
@@ -100,26 +100,18 @@ export class Dkg {
                 ownerNonce: input.ownerNonce
             })
     
-            const depositData = await this.getDepositData({ 
-                requestId, 
-                withdrawalAddress: input.withdrawalAddress
-            })
-    
-            const validator: Validator = {
-                depositDataRoot: depositData.depositDataRoot,
-                publicKey: input.publicKey,
+            return {
                 operatorIds: input.operatorIds,
-                shares,
-                signature: depositData.signature,
-                withdrawalCredentials: depositData.withdrawalCredentials
-            }
-    
-            return validator
+                oldOperatorIds: input.oldOperatorIds,
+                poolId: input.poolId,
+                publicKey: input.publicKey,
+                shares
+            }    
         } catch (error) {
             if (retries === 0) {
                 throw error
             }
-            await new Promise(resolve => setTimeout(resolve, 5000))
+            await new Promise(resolve => setTimeout(resolve, 2500))
             console.log(`Retrying reshare validator request ${retries} more times`)
             return await this.reshareValidator(input, retries - 1)
         }
@@ -148,9 +140,9 @@ export class Dkg {
     async startReshare(input: StartReshareInput): Promise<string> {
         const operatorFlags = Object.entries(input.operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
         const thresholdFlag = `--threshold ${Object.keys(input.operators).length - 1}`
-        const publicKeyFlag = `--validator-public-key ${input.publicKey}`
+        const publicKeyFlag = `--validator-pk ${input.publicKey.split('0x')[1]}`
         const oldOperatorFlags = Object.entries(input.oldOperators).map(([id, url]) => `--old-operator ${id}=${url}`).join(' ')
-        const command = `${this.cliPath} reshare ${operatorFlags} ${thresholdFlag} ${publicKeyFlag} ${oldOperatorFlags}`
+        const command = `${this.cliPath} resharing ${operatorFlags} ${thresholdFlag} ${publicKeyFlag} ${oldOperatorFlags}`
         const request = await runRetry(`${command}`) as string
         return request.trim().split(' ').pop() as string
     }

@@ -125,7 +125,7 @@ export default function useContracts() {
     async function _querySSVOperators(address: string) {
         try {
             const network = 'prater'
-            const url = `https://api.ssv.network/api/v3/${network}/operators/owned_by/${address}`
+            const url = `https://api.ssv.network/api/v4/${network}/operators/owned_by/${address}`
             const response = await fetch(url)
             const { operators } = await response.json()
             return operators

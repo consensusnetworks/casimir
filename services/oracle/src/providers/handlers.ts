@@ -198,7 +198,7 @@ export async function initiateDepositHandler(input: ethers.utils.Result) {
     await initiateDeposit.wait()
 }
 
-export async function initiateResharesHandler(input: ethers.utils.Result) {
+export async function reportResharesHandler(input: ethers.utils.Result) {
     const { operatorId } = input
     if (!operatorId) throw new Error('No operator id provided')
 
@@ -237,10 +237,10 @@ export async function initiateResharesHandler(input: ethers.utils.Result) {
         
             const newOperatorId = smallestOperators.find((operator) => !oldOperatorIds.includes(operator.id.toNumber()))?.id.toNumber()
 
-            if (newOperatorId && poolDetails.reshares.toNumber() > 1) {
-                const newOperatorIds = oldOperatorIds.map((operatorId) => {
-                    if (operatorId === input.operatorId) return newOperatorId
-                    return operatorId
+            if (newOperatorId && poolDetails.reshares.toNumber() < 2) {
+                const operatorIds = oldOperatorIds.map((id) => {
+                    if (id === operatorId) return newOperatorId
+                    return id
                 })
     
                 const scanner = new Scanner({ 
@@ -255,28 +255,23 @@ export async function initiateResharesHandler(input: ethers.utils.Result) {
                 })
             
                 const cluster = await scanner.getCluster({ 
-                    operatorIds: newOperatorIds,
+                    operatorIds,
                     ownerAddress: manager.address
                 })
             
                 const ownerNonce = await scanner.getNonce(manager.address)
             
-                const requiredFee = await scanner.getRequiredFee(newOperatorIds)
+                const requiredFee = await scanner.getRequiredFee(operatorIds)
     
-                const validator = await cli.reshareValidator({ 
+                const reshare = await cli.reshareValidator({ 
                     publicKey: poolDetails.publicKey,
                     poolId,
                     oldOperatorIds,
-                    operatorIds: newOperatorIds,
+                    operatorIds,
                     ownerAddress: manager.address,
                     ownerNonce,
                     withdrawalAddress: poolAddress
                 })
-    
-                const {
-                    operatorIds,
-                    shares
-                } = validator
     
                 const uniswapFactory = new Factory({
                     ethereumUrl: config.ethereumUrl,
@@ -298,7 +293,7 @@ export async function initiateResharesHandler(input: ethers.utils.Result) {
                     oldOperatorIds,
                     newOperatorId,
                     operatorId,
-                    shares,
+                    reshare.shares,
                     cluster,
                     oldCluster,
                     feeAmount,
