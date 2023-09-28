@@ -215,6 +215,16 @@ const removeItemFromCheckedList = (item:any) => {
   }
 }
 
+const allInputsValid = ref(false)
+
+watch([selectedWallet, selectedOperatorID, selectedPublicNodeURL, selectedCollateral], ()=>{
+  if(selectedWallet.value.address !== '' && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== '' && selectedCollateral.value !== undefined) {
+    allInputsValid.value = true
+  } else {
+    allInputsValid.value = false
+  }
+})
+
 async function submitRegisterOperatorForm() {
   try {
     await registerOperatorWithCasimir({
@@ -333,7 +343,6 @@ async function submitRegisterOperatorForm() {
               >
                 <vue-feather
                   type="x"
-                  size=""
                   class="icon w-[12px] h-min"
                 />
               </button>
@@ -444,7 +453,6 @@ async function submitRegisterOperatorForm() {
               <button @click="selectedPublicNodeURL = ''">
                 <vue-feather
                   type="x"
-                  size=""
                   class="icon w-[12px] h-min"
                 />
               </button>
@@ -481,7 +489,6 @@ async function submitRegisterOperatorForm() {
               >
                 <vue-feather
                   type="x"
-                  size=""
                   class="icon w-[12px] h-min"
                 />
               </button>
@@ -494,7 +501,7 @@ async function submitRegisterOperatorForm() {
               <button
                 type="submit"
                 class="export_button"
-                @click="submitRegisterOperatorForm"
+                :disabled="!allInputsValid"
               >
                 <span v-if="loadingRegisteredOperators">Submitting</span>
                 <span v-else>Submit</span>

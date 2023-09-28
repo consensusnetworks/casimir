@@ -11,7 +11,7 @@
     "@heroicons/vue": "^1.0.6",
     "@walletconnect/sign-client": "^2.9.2",
     "@walletconnect/types": "^2.9.2",
-    "@walletconnect/universal-provider": "^2.9.2",
+    "@walletconnect/universal-provider": "^2.10.1",
     "@web3modal/standalone": "^2.4.3",
     "borsh": "^0.7.0",
     "buffer": "^6.0.3",

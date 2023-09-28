@@ -16,7 +16,6 @@ const { loginWithTrezor } = useTrezor()
 const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
 
 const initializeComposable = ref(false)
-const initializedUser = ref(false)
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const user = ref<UserWithAccountsAndOperators | undefined>(undefined)
 
@@ -106,18 +105,9 @@ export default function useUser() {
     onMounted(async () => {
         if (!initializeComposable.value) {
             initializeComposable.value = true
-            // listenForContractEvents()
-            watch(user, async () => {
-                if (user.value && !initializedUser.value) {
-                    initializedUser.value = true
-                    // await Promise.all([refreshBreakdown()])
-                } else if (!user.value) {
-                    // uninitializeUser()
-                }
-            })
             const session = await Session.doesSessionExist()
             if (session) await getUser()
-            await initializeWalletConnect()
+            // await initializeWalletConnect()
         }
     })
     

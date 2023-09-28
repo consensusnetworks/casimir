@@ -238,7 +238,6 @@ export default function useBreakdownMetrics() {
     
     async function initializeComposable(user: UserWithAccountsAndOperators){
         userValue.value = toValue(user)
-        console.log('User in initialize breakdown Metrics', userValue)
         provider.removeAllListeners('block')
         provider.on('block', blockListener as ethers.providers.Listener)
         listenForContractEvents()
