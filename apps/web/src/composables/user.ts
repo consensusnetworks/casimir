@@ -107,12 +107,13 @@ export default function useUser() {
             initializeComposable.value = true
             const session = await Session.doesSessionExist()
             if (session) await getUser()
-            // await initializeWalletConnect()
+            await initializeWalletConnect()
         }
     })
     
     onUnmounted(() => {
         initializeComposable.value = false
+        uninitializeWalletConnect()
     })
 
     // TODO: Re-enable once we have a way to remove accounts in UI

@@ -1,7 +1,7 @@
 [profile.default]
 src = 'src/v1'
 out = 'build/foundry'
-libs = ['lib', 'node_modules']
+libs = ['node_modules']
 test = 'test'
 cache_path  = 'build/foundry/cache'
 

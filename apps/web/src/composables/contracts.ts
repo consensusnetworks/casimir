@@ -33,7 +33,7 @@ export default function useContracts() {
     const { ethersProviderList, getEthersBrowserSigner } = useEthers()
     const { getEthersLedgerSigner } = useLedger()
     const { getEthersTrezorSigner } = useTrezor()
-    const { getWalletConnectSignerV2, nonReactiveWalletConnectWeb3Provider } = useWalletConnectV2()
+    const { getWalletConnectSignerV2 } = useWalletConnectV2()
     
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         try {
@@ -141,13 +141,14 @@ export default function useContracts() {
             const signerCreators = {
                 'Browser': getEthersBrowserSigner,
                 'Ledger': getEthersLedgerSigner,
-                'Trezor': getEthersTrezorSigner
+                'Trezor': getEthersTrezorSigner,
+                'WalletConnect': getWalletConnectSignerV2
             }
             const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
             const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer
             if (walletProvider === 'WalletConnect') {
-                signer = nonReactiveWalletConnectWeb3Provider
+                signer = await signerCreator(walletProvider)
             } else {
                 signer = signerCreator(walletProvider)
             }
@@ -166,12 +167,13 @@ export default function useContracts() {
             'Browser': getEthersBrowserSigner,
             'Ledger': getEthersLedgerSigner,
             'Trezor': getEthersTrezorSigner,
+            'WalletConnect': getWalletConnectSignerV2
         }
         const signerType = ['MetaMask', 'CoinbaseWallet'].includes(walletProvider) ? 'Browser' : walletProvider
         const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
         let signer
             if (walletProvider === 'WalletConnect') {
-                signer = nonReactiveWalletConnectWeb3Provider
+                signer = await signerCreator(walletProvider)
             } else {
                 signer = signerCreator(walletProvider)
             }
