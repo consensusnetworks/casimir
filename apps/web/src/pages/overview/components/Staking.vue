@@ -54,7 +54,7 @@ const handleInputOnAmountToStake = (event: any) => {
 }
 
 const selectAmountInput = () => {
-  const inputElement = document.getElementById('amount_input')
+  const inputElement = document.getElementById('amount_input') as HTMLInputElement
   
   if(inputElement){
 
