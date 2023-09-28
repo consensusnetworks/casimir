@@ -247,6 +247,16 @@ async function submitRegisterOperatorForm() {
   availableOperatorIDs.value = []
 }
 
+const showSkeleton = ref(true)
+
+watch([loadingSessionLogin || loadingInitializeOperators], () =>{
+  setTimeout(() => {
+    if(loadingSessionLogin || loadingInitializeOperators){
+      showSkeleton.value = false
+    }
+  }, 500)
+})
+
 </script>
 
 <template>
@@ -254,7 +264,7 @@ async function submitRegisterOperatorForm() {
     <div class="flex items-start gap-[20px] justify-between flex-wrap mb-[30px]">
       <h6 class="title relative">
         <div
-          v-show="loadingSessionLogin || loadingInitializeOperators"
+          v-show="showSkeleton"
           class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
         >
           <div class="skeleton_box" />
@@ -268,7 +278,7 @@ async function submitRegisterOperatorForm() {
         @click="openAddOperatorModal = true"
       >
         <div
-          v-show="loadingSessionLogin || loadingInitializeOperators"
+          v-show="showSkeleton"
           class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
         >
           <div class="skeleton_box" />
@@ -288,7 +298,7 @@ async function submitRegisterOperatorForm() {
       style="min-height: calc(100vh - 420px);"
     >
       <div
-        v-show="loadingSessionLogin || loadingInitializeOperators"
+        v-show="showSkeleton"
         class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
       >
         <div class="skeleton_box" />
@@ -309,7 +319,7 @@ async function submitRegisterOperatorForm() {
       style="min-height: calc(100vh - 320px); height: 500px;"
     >
       <div
-        v-show="loadingSessionLogin || loadingInitializeOperators"
+        v-show="showSkeleton"
         class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
       >
         <div class="skeleton_box" />
