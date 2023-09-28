@@ -23,6 +23,5 @@ if (stage !== 'prod') {
 } else {
     new DocsStack(app, config.getFullStackName('docs'), { env, certificate, hostedZone })
     new NodesStack(app, config.getFullStackName('nodes'), { env, hostedZone })
+    new LandingStack(app, config.getFullStackName('landing'), { env, certificate, hostedZone })
 }
-
-new LandingStack(app, config.getFullStackName('landing'), { env, certificate, hostedZone })
