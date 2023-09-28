@@ -13,7 +13,7 @@ const { walletConnectProjectId } = useEnvironment()
 const { getEthersBalance } = useEthers()
 
 let cleanupFunctions: Array<any> = [] // TODO: Potentially fix type here.
-const accounts = ref([])
+const accounts = ref<Array<string>>([])
 const ethereumProvider = ref()
 const pairings = ref([])
 const session = ref()
