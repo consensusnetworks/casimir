@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { firstUserDepositFixture, rewardsPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardsPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture, activeBalanceLossFixture, activeBalanceRecoveryFixture, thirdUserFullWithdrawalFixture } from './fixtures/shared'
+import { firstUserDepositFixture, rewardsPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardsPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture, beaconBalanceLossFixture, beaconBalanceRecoveryFixture, thirdUserFullWithdrawalFixture } from './fixtures/shared'
 
 describe('Integration', async function () {
 
@@ -23,7 +23,7 @@ describe('Integration', async function () {
     expect(stakedPoolIds.length).equal(1)
     
     const firstPoolId = stakedPoolIds[0]
-    const poolDetails = await views.getPoolDetails(firstPoolId)
+    const poolDetails = await views.getPool(firstPoolId)
     expect(poolDetails.publicKey).not.equal('0x')
     expect(poolDetails.operatorIds.length).equal(4)
   })
@@ -66,7 +66,7 @@ describe('Integration', async function () {
     expect(stakedPools.length).equal(2)
     
     const secondPoolId = stakedPools[1]
-    const poolDetails = await views.getPoolDetails(secondPoolId)
+    const poolDetails = await views.getPool(secondPoolId)
     expect(poolDetails.publicKey).not.equal('0x')
     expect(poolDetails.operatorIds.length).equal(4)
   })
@@ -123,26 +123,26 @@ describe('Integration', async function () {
     expect(stakedPools.length).equal(4)
     
     const thirdPoolId = stakedPools[2]
-    const thirdPoolDetails = await views.getPoolDetails(thirdPoolId)
+    const thirdPoolDetails = await views.getPool(thirdPoolId)
     expect(thirdPoolDetails.publicKey).not.equal('0x')
     expect(thirdPoolDetails.operatorIds.length).equal(4)
 
     const fourthPoolId = stakedPools[3]
-    const fourthPoolDetails = await views.getPoolDetails(fourthPoolId)
+    const fourthPoolDetails = await views.getPool(fourthPoolId)
     expect(fourthPoolDetails.publicKey).not.equal('0x')
     expect(fourthPoolDetails.operatorIds.length).equal(4)
   })
 
   it('A loss is reported and brings the active stake below expected', async function () {
-    const { manager } = await loadFixture(activeBalanceLossFixture)
-    const activeBalance = await manager.latestActiveBalance()
-    expect(ethers.utils.formatEther(activeBalance)).equal('126.0')
+    const { manager } = await loadFixture(beaconBalanceLossFixture)
+    const beaconBalance = await manager.latestBeaconBalance()
+    expect(ethers.utils.formatEther(beaconBalance)).equal('126.0')
   })
 
   it('Gains are reported and bring the active stake back to expected', async function () {
-    const { manager } = await loadFixture(activeBalanceRecoveryFixture)
-    const activeBalance = await manager.latestActiveBalance()
-    expect(ethers.utils.formatEther(activeBalance)).equal('128.0')
+    const { manager } = await loadFixture(beaconBalanceRecoveryFixture)
+    const beaconBalance = await manager.latestBeaconBalance()
+    expect(ethers.utils.formatEther(beaconBalance)).equal('128.0')
   })
 
   it('Third user full withdrawal is completed on exit report', async function () {

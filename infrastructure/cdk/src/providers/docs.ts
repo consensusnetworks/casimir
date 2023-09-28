@@ -8,7 +8,7 @@ import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment'
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
 import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins'
 import { DocsStackProps } from '../interfaces/StackProps'
-import { pascalCase } from '@casimir/helpers'
+import { pascalCase } from '@casimir/format'
 import { Config } from './config'
 
 /**

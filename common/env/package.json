@@ -1,0 +1,9 @@
+{
+    "name": "@casimir/env",
+    "private": "true",
+    "main": "src/index.ts",
+    "scripts": {
+        "build": "echo '@casimir/env build not specified. Disregard this warning and any listed errors above if @casimir/env is not needed for the current project build.' && exit 0",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    }
+}

@@ -1,9 +1,9 @@
 export interface ReshareValidatorInput {
-    publicKey: string
-    poolId: number
-    operatorIds: number[]
     oldOperatorIds: number[]
+    operatorIds: number[]
     ownerAddress: string
     ownerNonce: number
+    poolId: number
+    publicKey: string
     withdrawalAddress: string
 }

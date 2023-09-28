@@ -9,7 +9,7 @@ import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 
 const { manager, registry, views } = useContracts()
-const { ethereumUrl, ssvNetworkAddress, ssvNetworkViewsAddress, usersUrl } = useEnvironment()
+const { ethereumUrl, ssvNetworkAddress, ssvViewsAddress, usersUrl } = useEnvironment()
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
@@ -51,7 +51,7 @@ export default function useOperators() {
         const scanner = new Scanner({ 
             ethereumUrl,
             ssvNetworkAddress,
-            ssvNetworkViewsAddress
+            ssvViewsAddress
         })
 
         const ssvOperators: Operator[] = []
@@ -68,14 +68,14 @@ export default function useOperators() {
                 const pools = await _getPools(operator.id)
                 // TODO: Replace these Public Nodes URLs once we have this working again
                 const operatorStore = {
-                    '654': 'https://nodes.casimir.co/eth/goerli/dkg/1',
-                    '655': 'https://nodes.casimir.co/eth/goerli/dkg/2',
-                    '656': 'https://nodes.casimir.co/eth/goerli/dkg/3',
-                    '657': 'https://nodes.casimir.co/eth/goerli/dkg/4',
-                    '658': 'https://nodes.casimir.co/eth/goerli/dkg/5',
-                    '659': 'https://nodes.casimir.co/eth/goerli/dkg/6',
-                    '660': 'https://nodes.casimir.co/eth/goerli/dkg/7',
-                    '661': 'https://nodes.casimir.co/eth/goerli/dkg/8'
+                    '200': 'https://nodes.casimir.co/eth/goerli/dkg/1',
+                    '201': 'https://nodes.casimir.co/eth/goerli/dkg/2',
+                    '202': 'https://nodes.casimir.co/eth/goerli/dkg/3',
+                    '203': 'https://nodes.casimir.co/eth/goerli/dkg/4',
+                    '156': 'https://nodes.casimir.co/eth/goerli/dkg/5',
+                    '157': 'https://nodes.casimir.co/eth/goerli/dkg/6',
+                    '158': 'https://nodes.casimir.co/eth/goerli/dkg/7',
+                    '159': 'https://nodes.casimir.co/eth/goerli/dkg/8'
                 }
                 const url = operatorStore[operator.id.toString() as keyof typeof operatorStore]
                 casimirOperators.push({
@@ -108,7 +108,7 @@ export default function useOperators() {
         ]
     
         for (const poolId of poolIds) {
-            const poolDetails = await views.getPoolDetails(poolId)
+            const poolDetails = await views.getPool(poolId)
             const pool = {
                 ...poolDetails,
                 operatorIds: poolDetails.operatorIds.map(id => id.toNumber()),

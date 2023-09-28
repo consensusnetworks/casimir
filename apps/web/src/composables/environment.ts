@@ -13,7 +13,7 @@ export default function useEnvironment() {
     const speculosUrl = import.meta.env.PUBLIC_SPECULOS_URL ? 'http://localhost:5001' : ''
     const cryptoCompareApiKey = import.meta.env.PUBLIC_CRYPTO_COMPARE_API_KEY || ''
     const ssvNetworkAddress = import.meta.env.PUBLIC_SSV_NETWORK_ADDRESS
-    const ssvNetworkViewsAddress = import.meta.env.PUBLIC_SSV_NETWORK_VIEWS_ADDRESS
+    const ssvViewsAddress = import.meta.env.PUBLIC_SSV_VIEWS_ADDRESS
     const walletConnectProjectId = import.meta.env.PUBLIC_WALLET_CONNECT_PROJECT_ID
     
     return {
@@ -26,7 +26,7 @@ export default function useEnvironment() {
         registryAddress,
         speculosUrl,
         ssvNetworkAddress,
-        ssvNetworkViewsAddress,
+        ssvViewsAddress,
         usersUrl,
         viewsAddress,
         walletConnectProjectId

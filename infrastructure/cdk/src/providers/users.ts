@@ -8,7 +8,7 @@ import * as rds from 'aws-cdk-lib/aws-rds'
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
 import { UsersStackProps } from '../interfaces/StackProps'
 import { Config } from './config'
-import { kebabCase } from '@casimir/helpers'
+import { kebabCase } from '@casimir/format'
 
 /**
  * Users service stack

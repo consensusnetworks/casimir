@@ -1,9 +1,9 @@
 import { ref, readonly } from 'vue'
 import { ethers } from 'ethers'
 import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
-import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
-import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
-import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
+import CasimirManagerAbi from '@casimir/ethereum/build/abi/CasimirManager.json'
+import CasimirRegistryAbi from '@casimir/ethereum/build/abi/CasimirRegistry.json'
+import CasimirViewsAbi from '@casimir/ethereum/build/abi/CasimirViews.json'
 import useEnvironment from './environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
@@ -14,9 +14,9 @@ import { Operator } from '@casimir/ssv'
 
 const { ethereumUrl, managerAddress, registryAddress, viewsAddress } = useEnvironment()
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, ICasimirManagerAbi, provider) as CasimirManager
-const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
-const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
+const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, CasimirManagerAbi, provider) as CasimirManager
+const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as CasimirViews
+const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, CasimirRegistryAbi, provider) as CasimirRegistry
 
 const operators = ref<Operator[]>([])
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
@@ -107,7 +107,7 @@ export default function useContracts() {
     async function _querySSVOperators(address: string) {
         try {
             const network = 'prater'
-            const url = `https://api.ssv.network/api/v3/${network}/operators/owned_by/${address}`
+            const url = `https://api.ssv.network/api/v4/${network}/operators/owned_by/${address}`
             const response = await fetch(url)
             const { operators } = await response.json()
             return operators

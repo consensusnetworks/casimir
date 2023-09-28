@@ -1,4 +1,7 @@
-import { fetchRetry, run } from '@casimir/helpers'
+import { loadCredentials, getSecret } from '@casimir/aws'
+import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
+import { fetchRetry } from '@casimir/fetch'
+import { run } from '@casimir/shell'
 
 /**
  * Start development DAO oracle service
@@ -11,19 +14,40 @@ void async function () {
     process.env.MESSENGER_SRV_ADDR = process.env.MESSENGER_URL
     process.env.USE_HARDCODED_OPERATORS = 'false'
 
-    process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
-    process.env.BIP39_PATH_INDEX = process.env.BIP39_PATH_INDEX || '6'
-    if (!process.env.MANAGER_ADDRESS) throw new Error('Manager address not found')
-    if (!process.env.VIEWS_ADDRESS) throw new Error('Views address not found')
-    if (!process.env.REGISTRY_ADDRESS) throw new Error('Registry address not found')
-    if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error('Functions billing registry address not found')
-    if (!process.env.LINK_REGISTRY_ADDRESS) throw new Error('Link registry address not found')
-    process.env.LINK_TOKEN_ADDRESS = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
-    process.env.SSV_NETWORK_ADDRESS = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
-    process.env.SSV_NETWORK_VIEWS_ADDRESS = '0x8dB45282d7C4559fd093C26f677B3837a5598914'
-    process.env.SSV_TOKEN_ADDRESS = '0x3a9f01091C446bdE031E39ea8354647AFef091E7'
-    process.env.UNISWAP_V3_FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
-    process.env.WETH_TOKEN_ADDRESS = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
+    if (process.env.USE_SECRETS !== 'false') {
+        await loadCredentials()
+        process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') as string
+    } else {
+        process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
+    }
+
+    const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
+    if (process.env.NETWORK) {
+        process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
+        process.env.MANAGER_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.MANAGER_ADDRESS
+        process.env.REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.REGISTRY_ADDRESS
+        process.env.UPKEEP_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.UPKEEP_ADDRESS
+        process.env.VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.VIEWS_ADDRESS
+        process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FUNCTIONS_BILLING_REGISTRY_ADDRESS
+    }
+    process.env.KEEPER_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.KEEPER_REGISTRY_ADDRESS
+    process.env.LINK_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.LINK_TOKEN_ADDRESS
+    process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_NETWORK_ADDRESS
+    process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
+    process.env.SSV_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_TOKEN_ADDRESS
+    process.env.SWAP_FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SWAP_FACTORY_ADDRESS
+    process.env.WETH_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.WETH_TOKEN_ADDRESS
+    if (!process.env.ETHEREUM_RPC_URL) throw new Error(`No ethereum rpc url provided for ${networkKey}`)
+    if (!process.env.MANAGER_ADDRESS) throw new Error(`No manager address provided for ${networkKey}`)
+    if (!process.env.VIEWS_ADDRESS) throw new Error(`No views address provided for ${networkKey}`)
+    if (!process.env.REGISTRY_ADDRESS) throw new Error(`No registry address provided for ${networkKey}`)
+    if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error(`No functions billing registry address provided for ${networkKey}`)
+    if (!process.env.KEEPER_REGISTRY_ADDRESS) throw new Error(`No keeper registry address provided for ${networkKey}`)
+    if (!process.env.LINK_TOKEN_ADDRESS) throw new Error(`No link token address provided for ${networkKey}`)
+    if (!process.env.SSV_NETWORK_ADDRESS) throw new Error(`No ssv network address provided for ${networkKey}`)
+    if (!process.env.SSV_VIEWS_ADDRESS) throw new Error(`No ssv views address provided for ${networkKey}`)
+    if (!process.env.SSV_TOKEN_ADDRESS) throw new Error(`No ssv token address provided for ${networkKey}`)
+    if (!process.env.SWAP_FACTORY_ADDRESS) throw new Error(`No uniswap v3 factory address provided for ${networkKey}`)
 
     const dkg = await run(`which ${process.env.CLI_PATH}`) as string
     if (!dkg || dkg.includes('not found')) {
@@ -33,6 +57,7 @@ void async function () {
     const { message } = await ping.json()
     if (message !== 'pong') throw new Error('Dkg service is not running')
 
+    process.env.USE_LOGS = process.env.USE_LOGS || 'false'
     run('npx esno -r dotenv/config src/index.ts')
     console.log('🔮 Oracle service started')
 }()

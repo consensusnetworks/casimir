@@ -1,7 +1,7 @@
 import fs from 'fs'
 import os from 'os'
 import { JsonSchema, Schema, accountSchema, nonceSchema, operatorSchema, userAccountSchema, userSchema } from '@casimir/data'
-import { run } from '@casimir/helpers'
+import { run } from '@casimir/shell'
 import { getSecret } from '@casimir/aws'
 
 /**

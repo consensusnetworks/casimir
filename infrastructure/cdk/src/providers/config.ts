@@ -1,4 +1,4 @@
-import { pascalCase } from '@casimir/helpers'
+import { pascalCase } from '@casimir/format'
 import { ProjectConfig } from '../interfaces/ProjectConfig'
 import dataPackage from '@casimir/data/package.json'
 

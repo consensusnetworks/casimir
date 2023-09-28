@@ -22,19 +22,39 @@ interface ICasimirUpkeep is AutomationCompatibleInterface {
     /**********/
     /* Events */
     /**********/
-    
+
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
-    event RequestSet(bytes newRequestCBOR, uint32 newFulfillGasLimit);
-    event OracleAddressSet(address newOracleAddress);
+    event FunctionsRequestSet(
+        string newRequestSource,
+        string[] newRequestArgs,
+        uint32 newFulfillGasLimit
+    );
+    event FunctionsOracleAddressSet(address newFunctionsOracleAddress);
     event UpkeepPerformed(ReportStatus indexed status);
+    
+    /**********/
+    /* Errors */
+    /**********/
+
+    error InvalidAddress();
+    error InvalidRequest();
+    error NotNeeded();
 
     /*************/
     /* Mutations */
     /*************/
 
     function performUpkeep(bytes calldata performData) external;
-    function setRequest(bytes calldata newRequestCBOR, uint32 newFulfillGasLimit) external;
-    function setOracleAddress(address newOracleAddress) external;
+
+    function setFunctionsRequest(
+        string calldata newRequestSource,
+        string[] calldata newRequestArgs,
+        uint32 newFulfillGasLimit
+    ) external;
+
+    function setFunctionsOracleAddress(
+        address newFunctionsOracleAddress
+    ) external;
 
     /***********/
     /* Getters */

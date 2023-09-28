@@ -4,14 +4,15 @@ pragma solidity 0.8.18;
 import "./interfaces/ICasimirPool.sol";
 import "./interfaces/ICasimirManager.sol";
 import "./interfaces/ICasimirRegistry.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 /**
  * @title Pool contract that accepts deposits and stakes a validator
  */
-contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
+contract CasimirPool is ICasimirPool, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /*************/
     /* Constants */
     /*************/
@@ -19,21 +20,16 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     /** Pool capacity */
     uint256 private constant POOL_CAPACITY = 32 ether;
 
-    /*************/
-    /* Immutable */
-    /*************/
-
-    /** Manager contract */
-    ICasimirManager private immutable manager;
-    /** Registry contract */
-    ICasimirRegistry private immutable registry;
-
     /*********/
     /* State */
     /*********/
 
+    /** Manager contract */
+    ICasimirManager private manager;
+    /** Registry contract */
+    ICasimirRegistry private registry;
     /** Pool ID */
-    uint32 private immutable id;
+    uint32 private id;
     /** Validator public key */
     bytes private publicKey;
     /** Operator IDs */
@@ -42,22 +38,33 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
     uint256 private reshares;
     /** Status */
     PoolStatus private status;
+    /** Storage gap */
+    uint256[50] private __gap;
+
+    // @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
     /**
-     * @notice Constructor
+     * @notice Initialize the contract
      * @param registryAddress The registry address
      * @param _id The pool ID
      * @param _publicKey The validator public key
      * @param _operatorIds The operator IDs
      */
-    constructor(
+    function initialize(
         address registryAddress,
         uint32 _id,
         bytes memory _publicKey,
         uint64[] memory _operatorIds
-    ) {
-        require(registryAddress != address(0), "Missing registry address");
-
+    ) public initializer {
+        if (registryAddress == address(0)) {
+            revert InvalidAddress();
+        }
+        
+        __Ownable_init();
+        __ReentrancyGuard_init();
         manager = ICasimirManager(msg.sender);
         registry = ICasimirRegistry(registryAddress);
         id = _id;
@@ -69,7 +76,9 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
      * @notice Deposit rewards from a pool to the manager
      */
     function depositRewards() external onlyOwner {
-        require(status == PoolStatus.ACTIVE, "Pool must be active");
+        if (status != PoolStatus.ACTIVE) {
+            revert Inactive();
+        }
 
         uint256 balance = address(this).balance;
         manager.depositRewards{value: balance}(id);
@@ -80,7 +89,9 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
      * @param blamePercents The operator loss blame percents
      */
     function withdrawBalance(uint32[] memory blamePercents) external onlyOwner {
-        require(status == PoolStatus.WITHDRAWN, "Pool must be withdrawn");
+        if (status != PoolStatus.WITHDRAWN) {
+            revert NotWithdrawn();
+        }
 
         uint256 balance = address(this).balance;
         int256 rewards = int256(balance) - int256(POOL_CAPACITY);
@@ -91,7 +102,7 @@ contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
             uint256 blameAmount;
             if (rewards < 0) {
                 uint256 blamePercent = blamePercents[i];
-                blameAmount = Math.mulDiv(uint256(-rewards), blamePercent, 100);
+                blameAmount = MathUpgradeable.mulDiv(uint256(-rewards), blamePercent, 100);
             }
             registry.removeOperatorPool(operatorIds[i], id, blameAmount);
         }

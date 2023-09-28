@@ -125,17 +125,17 @@ Vendor contracts and interfaces are located in the [src/v1/vendor](./src/v1/vend
 
 | Contract | Description |
 | --- | --- |
-| AutomationRegistry | Subscribes and funds upkeeps |
+| AutomationRegistry | Provides upkeep funding operators |
 | DepositContract | Accepts Beacon deposits |
 | ERC20 | Standardizes tokens |
 | FunctionsClient | Calls Chainlink Functions |
-| KeeperRegistrar | Allows upkeep subscription registration |
+| KeeperRegistrar | Provides upkeep registration |
 | Math | Provides math helpers |
 | Ownable | Provides ownable access control |
 | ReentrancyGuard | Secures against reentrancy |
 | SSVNetwork | Registers SSV validators |
 | SSVNetworkCore | Provides base SSV logic and types |
-| SSVNetworkViews | Provides read-only access to SSV network state |
+| SSVViews | Provides read-only access to SSV network state |
 | SwapRouter | Routes token swaps |
 | UniswapV3Factory | Provides access to Uniswap V3 pools |
 | UniswapV3PoolState | Provides access to Uniswap V3 pool state |
@@ -157,7 +157,7 @@ Casimir distributes validator key shares to operators using SSV nodes with [Rock
 
 ## Oracles
 
-The contract uses two oracles to automate the Casimir staking experience and ensure the security of user funds. The [Casimir Beacon oracle](https://github.com/consensusnetworks/casimir/blob/master/services/functions) and the upkeep contract report total validator balance, swept balance, and validator actions once per day using [Chainlink Functions](https://docs.chain.link/chainlink-functions) and [Chainlink Automation](https://docs.chain.link/chainlink-automation/introduction). The [Casimir DAO oracle](https://github.com/consensusnetworks/casimir/blob/master/services/oracle) watches the manager contract events and automatically executes zero-coordination distributed key generation (DKG) operations: validator creation, validator resharing, and validator exiting. The DAO oracle also submits verifiable report details in response to reported validator actions (such as an SSV cluster and operator blame amounts for a completed validator exit).
+The contract uses two oracles to automate the Casimir staking experience and ensure the security of user funds. The automated upkeep contract reports total validator balance, swept balance, and validator actions once per day using [Chainlink Functions](https://docs.chain.link/chainlink-functions) and [Chainlink Automation](https://docs.chain.link/chainlink-automation/introduction). The [@chainlink/functions service](https://github.com/consensusnetworks/casimir/blob/master/services/functions) is used for two request types per report period, balances and details, to overcome the current Chainlink DON constraints. The [Casimir DAO oracle](https://github.com/consensusnetworks/casimir/blob/master/services/oracle) watches the manager contract events and automatically executes zero-coordination distributed key generation (DKG) operations: validator creation, validator resharing, and validator exiting. The DAO oracle also submits verifiable report details in response to reported validator details (such as one or more new exited validators).
 
 ## Users
 

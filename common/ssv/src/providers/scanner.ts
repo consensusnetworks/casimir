@@ -1,7 +1,8 @@
 import { ethers } from 'ethers'
-import { ISSVNetwork, ISSVNetworkViews } from '@casimir/ethereum/build/@types'
-import ISSVNetworkAbi from '@casimir/ethereum/build/abi/ISSVNetwork.json'
-import ISSVNetworkViewsAbi from '@casimir/ethereum/build/abi/ISSVNetworkViews.json'
+import { ISSVClusters, ISSVOperators, ISSVViews } from '@casimir/ethereum/build/@types'
+import ISSVClustersAbi from '@casimir/ethereum/build/abi/ISSVClusters.json'
+import ISSVOperatorsAbi from '@casimir/ethereum/build/abi/ISSVOperators.json'
+import ISSVViewsAbi from '@casimir/ethereum/build/abi/ISSVViews.json'
 import { GetClusterInput } from '../interfaces/GetClusterInput'
 import { Cluster } from '../interfaces/Cluster'
 import { Operator } from '../interfaces/Operator'
@@ -12,8 +13,9 @@ export class Scanner {
     WEEK = this.DAY * 7
     MONTH = this.DAY * 30
     provider: ethers.providers.JsonRpcProvider
-    ssvNetwork: ISSVNetwork & ethers.Contract
-    ssvNetworkViews: ISSVNetworkViews & ethers.Contract
+    ssvClusters: ISSVClusters & ethers.Contract
+    ssvOperators: ISSVOperators & ethers.Contract
+    ssvViews: ISSVViews & ethers.Contract
 
     constructor(options: ScannerOptions) {
         if (options.provider) {
@@ -21,8 +23,9 @@ export class Scanner {
         } else {
             this.provider = new ethers.providers.JsonRpcProvider(options.ethereumUrl)
         }
-        this.ssvNetwork = new ethers.Contract(options.ssvNetworkAddress, ISSVNetworkAbi, this.provider) as ISSVNetwork & ethers.Contract
-        this.ssvNetworkViews = new ethers.Contract(options.ssvNetworkViewsAddress, ISSVNetworkViewsAbi, this.provider) as ISSVNetworkViews & ethers.Contract
+        this.ssvClusters = new ethers.Contract(options.ssvNetworkAddress, ISSVClustersAbi, this.provider) as ISSVClusters & ethers.Contract
+        this.ssvOperators = new ethers.Contract(options.ssvNetworkAddress, ISSVOperatorsAbi, this.provider) as ISSVOperators & ethers.Contract
+        this.ssvViews = new ethers.Contract(options.ssvViewsAddress, ISSVViewsAbi, this.provider) as ISSVViews & ethers.Contract
     }
 
     /** 
@@ -32,13 +35,13 @@ export class Scanner {
      */
     async getCluster(input: GetClusterInput): Promise<Cluster> {
         const { ownerAddress, operatorIds } = input
-        const eventFilters = [
-            this.ssvNetwork.filters.ClusterDeposited(ownerAddress),
-            this.ssvNetwork.filters.ClusterWithdrawn(ownerAddress),
-            this.ssvNetwork.filters.ValidatorAdded(ownerAddress),
-            this.ssvNetwork.filters.ValidatorRemoved(ownerAddress),
-            this.ssvNetwork.filters.ClusterLiquidated(ownerAddress),
-            this.ssvNetwork.filters.ClusterReactivated(ownerAddress)
+        const contractFilters = [
+            this.ssvClusters.filters.ClusterDeposited(ownerAddress),
+            this.ssvClusters.filters.ClusterWithdrawn(ownerAddress),
+            this.ssvClusters.filters.ValidatorAdded(ownerAddress),
+            this.ssvClusters.filters.ValidatorRemoved(ownerAddress),
+            this.ssvClusters.filters.ClusterLiquidated(ownerAddress),
+            this.ssvClusters.filters.ClusterReactivated(ownerAddress)
         ]
         let step = this.MONTH
         const latestBlockNumber = await this.provider.getBlockNumber()
@@ -49,8 +52,8 @@ export class Scanner {
         while (!cluster && fromBlock > 0) {
             try {
                 const items = []
-                for (const filter of eventFilters) {
-                    const filteredItems = await this.ssvNetwork.queryFilter(filter, fromBlock, toBlock)
+                for (const filter of contractFilters) {
+                    const filteredItems = await this.ssvClusters.queryFilter(filter, fromBlock, toBlock)
                     items.push(...filteredItems)
                 }
                 for (const item of items) {
@@ -64,15 +67,15 @@ export class Scanner {
                             validatorCount,
                             networkFeeIndex,
                             index,
-                            balance,
-                            active
+                            active,
+                            balance
                         ] = args.cluster
                         cluster = {
                             validatorCount,
                             networkFeeIndex,
                             index,
-                            balance,
-                            active
+                            active,
+                            balance
                         }
                     }
                 }
@@ -90,8 +93,8 @@ export class Scanner {
             validatorCount: 0,
             networkFeeIndex: 0,
             index: 0,
-            balance: 0,
-            active: true
+            active: true,
+            balance: 0
         }
         return cluster
     }
@@ -102,10 +105,10 @@ export class Scanner {
      * @returns {Promise<number>} Owner validator nonce
      */
     async getNonce(ownerAddress: string): Promise<number> {
-        const eventFilter = this.ssvNetwork.filters.ValidatorAdded(ownerAddress)
+        const eventFilter = this.ssvClusters.filters.ValidatorAdded(ownerAddress)
         const fromBlock = 0
         const toBlock = 'latest'
-        const items = await this.ssvNetwork.queryFilter(eventFilter, fromBlock, toBlock)
+        const items = await this.ssvClusters.queryFilter(eventFilter, fromBlock, toBlock)
         return items.length
     }
 
@@ -115,13 +118,13 @@ export class Scanner {
      * @returns {Promise<ethers.BigNumber>} Validator fee
      */
     async getRequiredFee(operatorIds: number[]): Promise<ethers.BigNumber> {
-        const feeSum = await this.ssvNetworkViews.getNetworkFee()
+        let feeSum = await this.ssvViews.getNetworkFee()
         for (const operatorId of operatorIds) {
-            const operatorFee = await this.ssvNetworkViews.getOperatorFee(operatorId)
-            feeSum.add(operatorFee)
+            const operatorFee = await this.ssvViews.getOperatorFee(operatorId)
+            feeSum = feeSum.add(operatorFee)
         }
-        const liquidationThresholdPeriod = await this.ssvNetworkViews.getLiquidationThresholdPeriod()
-        return feeSum.mul(liquidationThresholdPeriod).mul(12)
+        const liquidationThresholdPeriod = await this.ssvViews.getLiquidationThresholdPeriod()
+        return feeSum.mul(liquidationThresholdPeriod).mul(6)
     }
 
     /**
@@ -130,13 +133,13 @@ export class Scanner {
      * @returns {Promise<Operator[]>} The owner's operators
      */
     async getOperators(ownerAddress: string): Promise<Operator[]> {
-        const eventFilter = this.ssvNetwork.filters.OperatorAdded(null, ownerAddress)
+        const eventFilter = this.ssvOperators.filters.OperatorAdded(null, ownerAddress)
         const operators: Operator[] = []
-        const items = await this.ssvNetwork.queryFilter(eventFilter, 0, 'latest')
+        const items = await this.ssvOperators.queryFilter(eventFilter, 0, 'latest')
         for (const item of items) {
             const { args } = item
             const { operatorId } = args
-            const { fee, validatorCount, isPrivate } = await this.ssvNetworkViews.getOperatorById(operatorId)
+            const { fee, validatorCount, isPrivate } = await this.ssvViews.getOperatorById(operatorId)
             operators.push({
                 id: operatorId.toNumber(),
                 fee,
