@@ -39,7 +39,7 @@ export async function fulfillRequestHandler(input: ethers.utils.Result): Promise
         )
         await fulfillAndBill.wait()
         if (process.env.USE_LOGS === 'true') {
-            updateExecutionLog('.log/execution.log', resultLog)
+            updateExecutionLog('execution.log', resultLog)
         }
     } else {
         throw new Error(resultLog)

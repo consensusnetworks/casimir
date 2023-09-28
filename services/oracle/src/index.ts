@@ -39,7 +39,7 @@ const contractFilters = Object.values(contracts).map((contract) => {
 
 let startBlock
 if (process.env.USE_LOGS === 'true') {
-    startBlock = getStartBlock('.log/block.log')
+    startBlock = getStartBlock('block.log')
 }
 
 const eventsIterable = getEventsIterable({
@@ -67,12 +67,12 @@ void async function () {
             await depositUpkeepBalanceHandler()
             await handler(input)
             if (process.env.USE_LOGS === 'true') {
-                updateStartBlock('.log/block.log', details.blockNumber)
+                updateStartBlock('block.log', details.blockNumber)
             }
         }
     } catch (error) {
         if (process.env.USE_LOGS === 'true') {
-            updateErrorLog('.log/error.log', (error as Error).message)
+            updateErrorLog('error.log', (error as Error).message)
         } else {
             console.log(error)
         }
