@@ -102,7 +102,7 @@ onMounted(async () => {
   }
 })
 
-const {initializeComposable, nonregisteredOperators, registeredOperators, registerOperatorWithCasimir, loadingInitializeOperators } = useOperators()
+const {initializeComposable, nonregisteredOperators, registeredOperators, registerOperatorWithCasimir, loadingInitializeOperators, loadingAddOperator } = useOperators()
 
 watch(user, async () => {
   if (user.value) {
@@ -529,7 +529,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 class="export_button"
                 :disabled="!allInputsValid"
               >
-                <span v-if="loadingRegisteredOperators">Submitting</span>
+                <span v-if="loadingAddOperator">Submitting</span>
                 <span v-else>Submit</span>
               </button>
             </div>
