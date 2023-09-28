@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, readonly, ref, watch } from 'vue'
+import { onMounted, onUnmounted, readonly, ref } from 'vue'
 import * as Session from 'supertokens-web-js/recipe/session'
 import { ethers } from 'ethers'
 import { Account, LoginCredentials, UserWithAccountsAndOperators } from '@casimir/types'
