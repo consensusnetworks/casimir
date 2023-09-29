@@ -1,11 +1,11 @@
 import { createWebHistory, createRouter } from 'vue-router'
-
+import Landing from '@/pages/landing/Landing.vue'
 const routes = [
-  // {
-  //     path: '/',
-  //     name: ,
-  //     component: ,
-  // },
+  {
+    path: '/',
+    name: Landing,
+    component: Landing,
+  },
 ]
 
 const router = createRouter({
