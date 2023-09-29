@@ -130,7 +130,6 @@ body {
   color: hsl(210, 12%, 12.5%);
 }
 
-/* Mixin base */
 body,
 h1,
 h2,
@@ -405,7 +404,47 @@ ul li {
   margin: 0 auto;
 }
 
-.btn-primary,
+/* base {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.22s ease;
+  -webkit-box-align: center;
+  -webkit-font-smoothing: antialiased;
+  font-size: $text-9-font-size;
+} */
+
+.btn-primary {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.22s ease;
+  -webkit-box-align: center;
+  -webkit-font-smoothing: antialiased;
+  font-size: 0.833rem;
+  background-color: hsl(211, 90%, 42%);
+  border-radius: 5px;
+  border: 1px solid hsl(211, 90%, 42%);
+  color: hsl(240, 20%, 98%);
+  cursor: pointer;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  padding: 8px 18px;
+  font-size: 13px;
+  transition: all 0.22s ease;
+}
+
+.btn-primary:hover {
+  color: rgb(252, 252, 253);
+  background-color: darken(hsl(220, 6%, 40%), 5%);
+}
+
 .btn-primary-sm {
   position: relative;
   display: inline-block;
@@ -417,26 +456,16 @@ ul li {
   -webkit-box-align: center;
   -webkit-font-smoothing: antialiased;
   font-size: 0.833rem;
-}
-
-.btn-primary {
-  background-color: hsl(210, 12%, 12.5%);
+  background-color: hsl(211, 90%, 42%);
   border-radius: 5px;
-  border: 1px solid hsl(220, 6%, 40%);
-  color: rgb(252, 252, 253);
+  border: 1px solid hsl(211, 90%, 42%);
+  color: hsl(240, 20%, 98%);
   cursor: pointer;
   display: inline-flex;
   flex-wrap: nowrap;
   padding: 8px 18px;
   font-size: 13px;
-}
-
-.btn-primary:hover {
-  color: rgb(252, 252, 253);
-  background-color: lighten(hsl(210, 12%, 12.5%), 10%);
-}
-
-.btn-primary-sm {
+  transition: all 0.22s ease;
   padding: 2px 14px;
   font-size: 12px;
 }
@@ -455,10 +484,12 @@ ul li {
   background-color: hsl(240, 20%, 98%);
   border: 1px solid hsl(236, 10.6%, 87.9%);
   padding: 8px 18px;
+  color: hsl(227, 5.2%, 51.8%);
 }
 
 .btn-secondary:hover {
-  background-color: darken(hsl(240, 20%, 98%), 5%);
+  background-color: darken(hsl(240, 20%, 98%), 2%);
+  color: hsl(220, 6%, 40%);
   border: 1px solid hsl(234, 10.4%, 84.4%);
 }
 
