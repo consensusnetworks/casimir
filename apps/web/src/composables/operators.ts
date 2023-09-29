@@ -1,8 +1,8 @@
 import { readonly, ref } from 'vue'
-import useEnvironment from '@/composables/environment'
 import { Operator, Scanner } from '@casimir/ssv'
 import { Account, Pool, RegisteredOperator, RegisterOperatorWithCasimirParams, UserWithAccountsAndOperators } from '@casimir/types'
 import { ethers } from 'ethers'
+import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
@@ -119,16 +119,6 @@ export default function useOperators() {
         return pools
     }
 
-    function listenForContractEvents(user: UserWithAccountsAndOperators) {
-        try {
-            registry.on('OperatorRegistered', () => getUserOperators(user))
-            // registry.on('OperatorDeregistered', getUserOperators)
-            // registry.on('DeregistrationRequested', getUserOperators)
-        } catch (err) {
-            console.log(`There was an error in listenForContractEvents: ${err}`)
-        }
-    }
-
     async function initializeComposable(user: UserWithAccountsAndOperators){
         try {
             loadingInitializeOperators.value = true
@@ -139,6 +129,16 @@ export default function useOperators() {
             loadingInitializeOperatorsError.value = true
             console.log('Error initializing operators :>> ', error)
             loadingInitializeOperators.value = false
+        }
+    }
+
+    function listenForContractEvents(user: UserWithAccountsAndOperators) {
+        try {
+            registry.on('OperatorRegistered', () => getUserOperators(user))
+            // registry.on('OperatorDeregistered', getUserOperators)
+            // registry.on('DeregistrationRequested', getUserOperators)
+        } catch (err) {
+            console.log(`There was an error in listenForContractEvents: ${err}`)
         }
     }
 

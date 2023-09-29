@@ -132,6 +132,7 @@ watch(user, async () => {
     selectedWalletAddress.value = user.value?.address as string
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    // estimatedFees.value = await getDepositFees()
   } else {
     selectedStakingProvider.value = ''
     selectedWalletAddress.value = null
@@ -144,8 +145,8 @@ watch(user, async () => {
 onMounted(async () => {
   aggregateAddressesByProvider()
   currentEthPrice.value = Math.round((await getCurrentPrice({ coin: 'ETH', currency: 'USD' })) * 100) / 100
-  estimatedFees.value = await getDepositFees()
   if (user.value?.id) {
+    // estimatedFees.value = await getDepositFees()
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     selectedWalletAddress.value = user.value?.address as string

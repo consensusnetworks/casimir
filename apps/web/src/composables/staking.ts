@@ -43,14 +43,16 @@ export default function useStaking() {
 
     async function getDepositFees(): Promise<number> {
         try {
-            const fees = await manager.FEE_PERCENT()
+            // TODO: Fix this bug
+            // const fees = await manager.FEE_PERCENT()
+            const fees = 5
             const feesRounded = Math.round(fees * 100) / 100
             return feesRounded
         } catch (err: any) {
             console.error(`There was an error in getDepositFees function: ${JSON.stringify(err)}`)
             throw new Error(err)
         }
-    }
+    }    
 
     async function getUserStake(address: string): Promise<number> {
         try {
