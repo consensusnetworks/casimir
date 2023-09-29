@@ -29,6 +29,6 @@ void async function() {
     process.env.ETHEREUM_BEACON_RPC_URL = process.env.ETHEREUM_BEACON_RPC_URL || 'http://127.0.0.1:5002'
 
     process.env.USE_LOGS = process.env.USE_LOGS || 'false'
-    run(`npx esno -r dotenv/config src/index.ts${process.env.USE_LOGS === 'true' ? ' >> functions.log' : ''}`)
+    run('npx esno -r dotenv/config src/index.ts')
     console.log('🔗 Functions service started')
 }()
