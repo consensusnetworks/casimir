@@ -147,10 +147,7 @@ export default function useWalletConnectV2() {
   }
 
   function uninitializeWalletConnect() {
-    cleanupFunctions.forEach((cleanup) => {
-      console.log('cleaning up')
-      cleanup()
-    })
+    cleanupFunctions.forEach((cleanup) => cleanup())
     cleanupFunctions = [] // Reset the array
     componentIsMounted.value = false
   }

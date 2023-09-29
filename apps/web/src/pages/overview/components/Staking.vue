@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
-import useContracts from '@/composables/contracts'
+import useStaking from '@/composables/staking'
 import useEthers from '@/composables/ethers'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
@@ -10,7 +10,7 @@ import useUser from '@/composables/user'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
-const { deposit, getDepositFees, getUserStake } = useContracts()
+const { deposit, getDepositFees, getUserStake } = useStaking()
 const { getEthersBalance } = useEthers()
 const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
@@ -576,4 +576,4 @@ const handleDeposit = async () => {
   box-shadow: 0px 0px 0px 4px rgba(237, 235, 255, 0.26);
   border-radius: 4px;
 }
-</style>@/composables/user
+</style>@/composables/user@/composables/staking
