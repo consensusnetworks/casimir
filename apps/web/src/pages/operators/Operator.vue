@@ -2,18 +2,20 @@
 import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
 import { ProviderString } from '@casimir/types'
+import useEthers from '@/composables/ethers'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
-import useUser from '@/composables/user'
 import useOperators from '@/composables/operators'
+import useUser from '@/composables/user'
 import { UserWithAccountsAndOperators} from '@casimir/types'
 
+const { detectActiveWalletAddress } = useEthers()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
 const { user, loadingSessionLogin } = useUser()
 
 // Form inputs
-const selectedWallet = ref({address: '', wallet_provider: ''})
+const selectedWallet = ref<{address: string, walletProvider: ProviderString}>({address: '', walletProvider: ''})
 const openSelectWalletOptions = ref(false)
 const onSelectWalletBlur = () => {
     setTimeout(() =>{
@@ -37,7 +39,7 @@ const itemsPerPage = ref(10)
 const currentPage = ref(1)
 const totalPages = ref(1)
 const searchInput = ref('')
-const selectedHeader = ref('wallet_provider')
+const selectedHeader = ref('walletProvider')
 const selectedOrientation = ref('ascending')
 const operatorTableHeaders = ref(
   [
@@ -139,7 +141,7 @@ watch(registeredOperators, () => {
 
 watch(openAddOperatorModal, () =>{
   if(openAddOperatorModal.value){
-    selectedWallet.value = {address: user.value?.address as string, wallet_provider: user.value?.walletProvider as string}
+    selectedWallet.value = {address: user.value?.address as string, walletProvider: user.value?.walletProvider as ProviderString}
   }
 })
 
@@ -180,7 +182,7 @@ const filterData = () => {
     filteredDataArray = tableData.value.filter((item: any) => {
       return (
         // Might need to modify to match types each variable
-        // item.wallet_provider?.toLowerCase().includes(searchTerm) 
+        // item.walletProvider?.toLowerCase().includes(searchTerm) 
         true
       )
     })
@@ -223,9 +225,17 @@ watch([selectedWallet, selectedOperatorID, selectedPublicNodeURL, selectedCollat
 })
 
 async function submitRegisterOperatorForm() {
+  const selectedAddress = selectedWallet.value.address
+  const selectedProvider = selectedWallet.value.walletProvider
+
+  const activeAddress = await detectActiveWalletAddress(selectedProvider)
+  if (activeAddress !== selectedAddress) {
+    return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
+  }
+  
   try {
     await registerOperatorWithCasimir({
-      walletProvider: selectedWallet.value.wallet_provider as ProviderString, 
+      walletProvider: selectedWallet.value.walletProvider as ProviderString, 
       address: selectedWallet.value.address,
       operatorId: parseInt(selectedOperatorID.value), 
       collateral: selectedCollateral.value,
@@ -239,7 +249,7 @@ async function submitRegisterOperatorForm() {
 
   if (selectedWallet.value.address === '') {
       const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address})
-      selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
+      selectedWallet.value = {address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString}
   }
   selectedOperatorID.value = ''
   selectedPublicNodeURL.value = ''
@@ -365,7 +375,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
               >
               <button
                 type="button"
-                @click="selectedWallet = { wallet_provider: '', address: ''}"
+                @click="selectedWallet = { walletProvider: '', address: ''}"
               >
                 <vue-feather
                   type="x"
@@ -385,7 +395,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                   type="button"
                   class="border-y border-y-grey_1 hover:border-y-grey_3
                    text-grey_4 my-[10px] w-full flex justify-between truncate"
-                  @click="selectedWallet = {address: act.address, wallet_provider: act.walletProvider}, openSelectWalletOptions = false"
+                  @click="selectedWallet = {address: act.address, walletProvider: act.walletProvider}, openSelectWalletOptions = false"
                 >
                   <span>{{ act.walletProvider }}</span>
                   <span>{{ convertString(act.address) }}</span>
