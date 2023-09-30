@@ -11,7 +11,7 @@ import useUser from '@/composables/user'
 import TermsOfService from '@/components/TermsOfService.vue'
 
 const { deposit, getDepositFees, getUserStake } = useStaking()
-const { getEthersBalance } = useEthers()
+const { detectActiveWalletAddress, getEthersBalance } = useEthers()
 const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
 const { user, updateUserAgreement } = useUser()
@@ -192,6 +192,12 @@ watch(openTermsOfService, ()=>{
 const handleDeposit = async () => {
   stakeButtonText.value = 'Staking...'
 
+  const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
+  if (activeAddress !== selectedWalletAddress.value) {
+    formattedAmountToStake.value = ''
+    return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
+  }
+
   const result = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedStakingProvider.value })
 
   if (!result) stakeButtonText.value = 'Failed!'
@@ -204,9 +210,9 @@ const handleDeposit = async () => {
 
   if (result) {
     const waitResponse = await result.wait(1)
-    if(waitResponse){
+    if (waitResponse){
       alert('Your Stake Has Been Deposited!')
-    }else {
+    } else {
       alert('Your Stake Action Has Failed, Please Try Again Later!')
     }
     console.log('waitResponse :>> ', waitResponse)
