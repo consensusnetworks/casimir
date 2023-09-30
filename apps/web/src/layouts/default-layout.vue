@@ -13,7 +13,7 @@ import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useWalletConnect from '@/composables/walletConnectV2'
 
-const { ethersProviderList, getEthersAddressWithBalance } = useEthers()
+const { ethersProviderList, detectActiveWalletAddress, getEthersAddressesWithBalances } = useEthers()
 const { convertString, trimAndLowercaseAddress } = useFormat()
 const { getLedgerAddress } = useLedger()
 const { getTrezorAddress } = useTrezor()
@@ -61,8 +61,13 @@ function checkIfAddressIsUsed (account: CryptoAddress): boolean {
       // Add account
       await addAccountToUser({provider: selectedProvider.value as ProviderString, address, currency: 'ETH'})
     } else {
-      // Login
-      await login({provider: selectedProvider.value as ProviderString, address, currency: 'ETH'})
+      // First check if address is the same as the one that is active in their wallet
+      const activeAddress = await detectActiveWalletAddress(selectedProvider.value as ProviderString)
+      if (activeAddress === address) {
+        await login({provider: selectedProvider.value as ProviderString, address, currency: 'ETH'})
+      } else {
+        alert(`The account you selected is not the same as the one that is active in your ${selectedProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
+      }
     }
   }
 
@@ -72,12 +77,12 @@ function checkIfAddressIsUsed (account: CryptoAddress): boolean {
  * @param currency 
 */
 async function selectProvider(provider: ProviderString, currency: Currency = 'ETH'): Promise<void> {
-  // console.clear()
+  console.clear()
   try {
     if (provider === 'WalletConnect') {
       walletProviderAddresses.value = await connectWalletConnectV2('5') as CryptoAddress[]
     } else if (ethersProviderList.includes(provider)) {
-      walletProviderAddresses.value = await getEthersAddressWithBalance(provider) as CryptoAddress[]
+      walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
     } else if (provider === 'Ledger') {
       walletProviderAddresses.value = await getLedgerAddress[currency]() as CryptoAddress[]
     } else if (provider === 'Trezor') {

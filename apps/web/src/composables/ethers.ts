@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
-import { EthersProvider } from '@casimir/types'
-import { Account, TransactionRequest, UserWithAccountsAndOperators } from '@casimir/types'
+import { CryptoAddress, EthersProvider } from '@casimir/types'
+import { TransactionRequest } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
@@ -26,6 +26,16 @@ export default function useEthers() {
       })
     } catch(error: any) {
       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
+    }
+  }
+
+  async function detectActiveWalletAddress(providerString: ProviderString) {
+    const provider = getBrowserProvider(providerString)
+    if (providerString === 'MetaMask') {
+      const accounts = await provider.request({ method: 'eth_accounts' })
+      if (accounts.length > 0) return accounts[0]
+    } else {
+      alert('detectActiveWalletAddress not yet implemented for this wallet provider')
     }
   }
 
@@ -98,13 +108,18 @@ export default function useEthers() {
     }
   }
 
-  async function getEthersAddressWithBalance (providerString: ProviderString) {
+  async function getEthersAddressesWithBalances (providerString: ProviderString): Promise<CryptoAddress[]> {
     const provider = getBrowserProvider(providerString)
     
     if (provider) {
-      const address = (await requestEthersAccount(provider as EthersProvider))[0]
-      const balance = (await getEthersBalance(address)).toString()
-      return [{ address, balance }]
+      const addresses = await provider.request({ method: 'eth_requestAccounts' })
+      const addressesWithBalance: CryptoAddress[] = []
+      for (const address of addresses) {
+        const balance = (await getEthersBalance(address)).toString()
+        const addressWithBalance = { address, balance }
+        addressesWithBalance.push(addressWithBalance)
+      }
+      return addressesWithBalance
     } else {
       throw new Error('Provider not yet connected to this dapp. Please connect and try again.')
     }
@@ -169,14 +184,6 @@ export default function useEthers() {
     }
   }
 
-  async function requestEthersAccount(provider: EthersProvider) {
-    if (provider?.request) {
-      return await provider.request({
-        method: 'eth_requestAccounts',
-      })
-    }
-  }
-
   async function sendEthersTransaction(
     { from, to, value, providerString }: TransactionRequest
   ) {
@@ -235,21 +242,13 @@ export default function useEthers() {
   }
 
   return { 
-    addEthersNetwork,
-    estimateEIP1559GasFee,
-    estimateLegacyGasFee,
     ethersProviderList,
-    getEthersAddressWithBalance,
+    detectActiveWalletAddress,
+    getEthersAddressesWithBalances,
     getEthersBalance,
-    getEthersBrowserProviderSelectedCurrency,
     getEthersBrowserSigner,
     getGasPriceAndLimit,
-    getMaxETHAfterFees,
     loginWithEthers,
-    requestEthersAccount,
-    sendEthersTransaction,
-    signEthersMessage,
-    switchEthersNetwork
   }
 }
 
