@@ -8,8 +8,8 @@ import useUser from '@/composables/user'
 // import useWalletConnect from '@/composables/walletConnectV2'
 import { Account, ApiResponse, LoginCredentials, ProviderString } from '@casimir/types'
 
-const { domain, origin, usersUrl } = useEnvironment()
-const { ethersProviderList, loginWithEthers } = useEthers()
+const { usersUrl } = useEnvironment()
+const { ethersProviderList, detectActiveWalletAddress, loginWithEthers } = useEthers()
 // const { loginWithLedger } = useLedger()
 // const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
@@ -103,6 +103,58 @@ export default function useAuth() {
         }
     }
 
+    async function newLogin(loginCredentials: LoginCredentials): Promise<string> {
+        const { address, provider } = loginCredentials
+        if (user.value) {
+            // If address already exists on user, do nothing
+            const addressExistsOnUser = user.value?.accounts?.some((account: Account | any) => account?.address === address)
+            if (addressExistsOnUser) return
+            
+            // Check if it exists as a primary address of a different user
+            const { data: { sameAddress, walletProvider } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
+              // If yes, ask user if they want to add it as a secondary to this account or if they want to log in with that account
+              if (sameAddress) {
+                return alert(`${address} already exists as a primary address on another account that used ${walletProvider}, would you like to add ${address} as a secondary address to your currently logged in account?`)
+                // If they want to add to account, addAccountToUser
+                // If they don't want to add to their account, cancel (or log them out and log in with other account)
+              } else {
+                // If no, check if it exists as a secondary address of a different user
+                  const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(address)
+                  // If yes, alert user that it already exists as a secondary address on another account and ask if they want to add it as a secondary to this account
+                  if (accountsIfSecondaryAddress.length) {
+                    return alert(`${address} already exists as a secondary address on this/these account(s): ${JSON.stringify(accountsIfSecondaryAddress)}. Would you like to add ${address} as a secondary address to your currently logged in account?`)
+                    // If yes, addAccountToUser
+                    // If no, cancel (or log them out and log in with other account)
+                  } else {
+                    // If no, addAccountToUser
+                    await addAccountToUser(loginCredentials)
+                  }
+              }
+          } else {
+            // Check if address is a primary address and log in if so
+            const { data: { sameAddress, walletProvider } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
+            console.log('sameAddress :>> ', sameAddress)
+            if (sameAddress) return await login(loginCredentials as LoginCredentials)
+            
+            // Then check if address is being used as a secondary account by another user
+            const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(address)
+            console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
+            if (accountsIfSecondaryAddress.length) return alert(`${address} already exists as a secondary address on this/these account(s): ${JSON.stringify(accountsIfSecondaryAddress)}`) 
+            
+            // Handle user interaction (do they want to sign in with another account?)
+            // If yes, log out (and/or log them in with the other account)
+            // If no, cancel/do nothing
+        
+            // Then check if address is the same as the one that is active in their wallet
+            const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
+            if (activeAddress === address) {
+              await login({ provider: provider as ProviderString, address, currency: 'ETH' })
+            } else {
+              alert(`The account you selected is not the same as the one that is active in your ${provider} wallet. Please open your browser extension and select the account that you want to log in with.`)
+            }
+          }
+    }
+
     /**
      * Uses appropriate provider composable to login or sign up
      * @param provider 
@@ -145,8 +197,6 @@ export default function useAuth() {
         // TODO: Fix bug that doesn't allow you to log in without refreshing page after a user logs out
         window.location.reload()
     }
-
-    
 
     onMounted(async () => {
         if (!initializedAuthComposable.value) {
@@ -216,10 +266,7 @@ export default function useAuth() {
         loadingSessionLoginError: readonly(loadingSessionLoginError),
         loadingSessionLogout: readonly(loadingSessionLogout),
         loadingSessionLogoutError: readonly(loadingSessionLogoutError),
-        addAccountToUser,
-        checkIfPrimaryUserExists,
-        checkIfSecondaryAddress,
-        login,
+        newLogin,
         logout
     }
 }
