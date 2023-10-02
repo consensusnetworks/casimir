@@ -2,7 +2,7 @@ import { ethers } from 'ethers'
 import { CryptoAddress, EthersProvider } from '@casimir/types'
 import { TransactionRequest } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
-import useAuth from '@/composables/auth'
+import useSiwe from '@/composables/siwe'
 import useEnvironment from '@/composables/environment'
 
 interface ethereumWindow extends Window {
@@ -10,7 +10,7 @@ interface ethereumWindow extends Window {
 }
 declare const window: ethereumWindow
 
-const { createSiweMessage, signInWithEthereum } = useAuth()
+const { createSiweMessage, signInWithEthereum } = useSiwe()
 const { ethereumUrl, provider } = useEnvironment()
 
 export default function useEthers() {

@@ -4,9 +4,9 @@ import { MessageRequest, TransactionRequest } from '@casimir/types'
 import { CryptoAddress, LoginCredentials } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
-import useAuth from '@/composables/auth'
+import useSiwe from '@/composables/siwe'
 
-const { createSiweMessage, signInWithEthereum } = useAuth()
+const { createSiweMessage, signInWithEthereum } = useSiwe()
 
 export default function useLedger() {
   const { ethereumUrl, ledgerType, speculosUrl } = useEnvironment()
