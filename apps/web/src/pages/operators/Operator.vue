@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
 import { ProviderString } from '@casimir/types'
+import useAuth from '@/composables/auth'
 import useEthers from '@/composables/ethers'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
@@ -9,10 +10,11 @@ import useOperators from '@/composables/operators'
 import useUser from '@/composables/user'
 import { UserWithAccountsAndOperators} from '@casimir/types'
 
+const { loadingSessionLogin } = useAuth()
 const { detectActiveWalletAddress } = useEthers()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
-const { user, loadingSessionLogin } = useUser()
+const { user } = useUser()
 
 // Form inputs
 const selectedWallet = ref<{address: string, walletProvider: ProviderString}>({address: '', walletProvider: ''})

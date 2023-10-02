@@ -4,6 +4,7 @@ import Carousel from '@/components/Carousel.vue'
 import Slide from '@/components/Slide.vue'
 import router from '@/composables/router'
 import VueFeather from 'vue-feather'
+import useAuth from '@/composables/auth'
 import useFormat from '@/composables/format'
 import useScreenDimensions from '@/composables/screenDimensions'
 import useUser from '@/composables/user'
@@ -35,14 +36,8 @@ const openRouterMenu = ref(false)
 const openWalletsModal = ref(false)
 const walletProviderAddresses = ref([] as CryptoAddress[])
 
-const {
-  user,
-  addAccountToUser,
-  checkIfPrimaryUserExists,
-  checkIfSecondaryAddress,
-  login,
-  logout,
-} = useUser()
+const { addAccountToUser, checkIfPrimaryUserExists, checkIfSecondaryAddress, login, logout } = useAuth()
+const { user } = useUser()
 
 function checkIfAddressIsUsed (account: CryptoAddress): boolean {
   const { address } = account
