@@ -2,6 +2,7 @@ import { createWebHistory, createRouter } from 'vue-router'
 import Landing from '@/pages/landing/Landing.vue'
 import Blog from '@/pages/blog/Blog.vue'
 import Changelog from '@/pages/changelog/Changelog.vue'
+import { defineAsyncComponent } from 'vue'
 const routes = [
   {
     path: '/',
@@ -12,7 +13,12 @@ const routes = [
     path: '/blog',
     name: Blog,
     component: Blog,
-    // children: []
+    children: [
+      {
+        path: 'announcemts',
+        component: defineAsyncComponent(() => import('../blogs/blog.md')),
+      },
+    ],
   },
   {
     path: '/changelog',
@@ -22,7 +28,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   routes,

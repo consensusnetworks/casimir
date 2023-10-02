@@ -1,4 +1,5 @@
-<script lang="ts" setup></script>
+<script setup>
+</script>
 
 <template>
   <div>
@@ -15,7 +16,7 @@
             <a href="https://github.com/consensusnetworks/casimir#casimir">API Reference</a>
           </li>
           <li>
-            <a href="/blog">Blog</a>
+            <a href="/blog/announcemts">Blog</a>
           </li>
           <li>
             <a href="/changelog">Changelog</a>
@@ -34,11 +35,10 @@
     </nav>
 
     <section class="blog">
-      <div class="blog__container">
-        <h1 class="text-2">
-          Blog
-        </h1>
-        <router-view />
+      <div class="">
+        <div class="markdown-content">
+          <router-view />
+        </div>
       </div>
     </section>
 
@@ -78,4 +78,21 @@
 </template>
 
 
-<style scoped></style>
+<style scoped>
+.markdown-content {
+  /* text-align: center; */
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+  color: red;
+  border: 1px solid red;
+}
+
+.markdown-content p {
+  color: green;
+}
+
+.markdown-content li {
+  color: red;
+}
+</style>

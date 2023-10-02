@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               API Reference
             </a>
           </li>
-          <li><a href="/blog">Blog</a></li>
+          <li><a href="/blog/announcemts">Blog</a></li>
           <li>
             <a
               class="active"
