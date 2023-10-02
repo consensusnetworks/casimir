@@ -38,6 +38,40 @@
         <h1 class="text-2">
           Blog
         </h1>
+        <router-view />
+      </div>
+    </section>
+
+
+    <section class="footer">
+      <div class="footer__container">
+        <span class="c">© 2023 Casimir. All rights reserved.</span>
+        <ul>
+          <li>
+            <a
+              href="https://api.casimir.co"
+              target="_blank"
+            >API Reference</a>
+          </li>
+          <li>
+            <a
+              href="/"
+              target="_blank"
+            >Discord</a>
+          </li>
+          <li>
+            <a
+              href="https://github.com/consensusnetworks/casimir"
+              target="_blank"
+            >GitHub</a>
+          </li>
+          <li>
+            <a
+              href="/"
+              target="_blank"
+            >Contact Us</a>
+          </li>
+        </ul>
       </div>
     </section>
   </div>

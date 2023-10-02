@@ -975,11 +975,11 @@ ul li {
 }
 
 .faq__item__a {
-  display: none;
+  /* display: none; */
 }
 
 .faq__item__a:active {
-  display: block;
+  /* display: block; */
 }
 
 .roadmap {
