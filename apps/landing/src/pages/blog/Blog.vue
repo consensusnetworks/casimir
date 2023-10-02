@@ -16,7 +16,7 @@
             <a href="https://github.com/consensusnetworks/casimir#casimir">API Reference</a>
           </li>
           <li>
-            <a href="/blog/announcements">Blog</a>
+            <a href="/blog">Blog</a>
           </li>
           <li>
             <a href="/changelog">Changelog</a>
@@ -79,4 +79,16 @@
 
 
 <style scoped>
+.markdown-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  text-align: center;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 0px;
+}
 </style>
