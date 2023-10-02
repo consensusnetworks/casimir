@@ -1,7 +1,7 @@
 import { onMounted, onUnmounted, readonly, ref } from 'vue'
 import * as Session from 'supertokens-web-js/recipe/session'
 import { ethers } from 'ethers'
-import { Account, LoginCredentials, UserWithAccountsAndOperators } from '@casimir/types'
+import { Account, ApiResponse, LoginCredentials, ProviderString, UserWithAccountsAndOperators } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
@@ -52,6 +52,40 @@ export default function useUser() {
             return { error, message, data: updatedUser }
         } catch (error: any) {
             throw new Error(error.message || 'Error adding account')
+        }
+    }
+
+    async function checkIfPrimaryUserExists(provider: ProviderString, address: string): Promise<ApiResponse> {
+        try {
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+            const response = await fetch(`${usersUrl}/user/check-if-primary-address-exists/${address}`, requestOptions)
+            const { error, message, data } = await response.json()
+            if (error) throw new Error(message)
+            return { error, message, data }
+        } catch (error: any) {
+            throw new Error(error.message || 'Error checking if primary user exists')
+        }
+    }
+
+    async function checkIfSecondaryAddress(address: string) : Promise<ApiResponse> {
+        try {
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+            const response = await fetch(`${usersUrl}/user/check-secondary-address/${address}`, requestOptions)
+            const { error, message, data } = await response.json()
+            if (error) throw new Error(message)
+            return { error, message, data }
+        } catch (error: any) {
+            throw new Error(error.message || 'Error checking if secondary address')
         }
     }
 
@@ -123,7 +157,7 @@ export default function useUser() {
                 loadingSessionLogin.value = true
                 const session = await Session.doesSessionExist()
                 if (session) await getUser()
-                await initializeWalletConnect()
+                await initializeWalletConnect() // Can potentially move this elsewhere
                 loadingSessionLogin.value = false
             } catch (error) {
                 loadingSessionLoginError.value = true
@@ -219,6 +253,8 @@ export default function useUser() {
         loadingSessionLogout: readonly(loadingSessionLogout),
         loadingSessionLogoutError: readonly(loadingSessionLogoutError),
         addAccountToUser,
+        checkIfPrimaryUserExists,
+        checkIfSecondaryAddress,
         login,
         logout,
         updateUserAgreement,

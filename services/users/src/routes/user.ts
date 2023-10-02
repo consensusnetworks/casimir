@@ -91,17 +91,15 @@ router.post('/add-operator', verifySession(), async (req: SessionRequest, res: e
     }
 })
 
-router.get('/check-if-primary-address-exists/:provider/:address', async (req: express.Request, res: express.Response) => {
+router.get('/check-if-primary-address-exists/:address', async (req: express.Request, res: express.Response) => {
     try {
         const { params } = req
-        const { address, provider } = params
-        console.log('getting user by address')
+        const { address } = params
         const user = await getUserByAddress(address)
         console.log('user in check-if-primary-.....:>> ', user)
         const userAddress = user?.address
         const userProvider = user?.walletProvider
         const sameAddress = userAddress === address
-        const sameProvider = userProvider === provider
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
@@ -109,7 +107,7 @@ router.get('/check-if-primary-address-exists/:provider/:address', async (req: ex
             message: 'Successfully checked if primary address exists',
             data: {
                 sameAddress,
-                sameProvider
+                walletProvider: userProvider
             }
         })
     } catch (error: any) {
