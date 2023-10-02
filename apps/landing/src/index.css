@@ -10,6 +10,115 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 }
+/* Import statements */
+/* Import statements for reset, variables, typography, button, nav, and footer go here */
+
+.changelog {
+  max-width: 960px;
+  margin: 60px auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+}
+
+.changelog__header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.changelog__container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0;
+  background-color: rgba(251, 251, 253, 0.8);
+  border: 1px solid rgb(216, 222, 228);
+  border-radius: 8px;
+  box-shadow: 8px -15px 54px 32px rgba(0, 0, 0, 0.023);
+}
+
+.vupdate__container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.vupdate {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid rgba(231, 231, 231, 0.8);
+  gap: 5px;
+  padding: 35px 45px;
+}
+
+.vupdate:last-child {
+  border-bottom: none;
+  /* padding-bottom: 0; */
+}
+
+.vupdate__read {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  margin: 0;
+  font-weight: 400;
+  padding-top: 20px;
+}
+
+.vupdate__tag {
+  display: inline-block;
+  width: auto;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 1px 6px;
+  color: white;
+  background-color: #0d5fff;
+}
+
+.vupdate__body {
+  font-weight: 400;
+  font-size: 15px;
+  letter-spacing: -0.2px;
+  color: #080808;
+}
+
+.vupdate__body ul {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  margin-top: 20px;
+}
+
+.vupdate__body li {
+  list-style: none;
+  font-weight: 400;
+  font-size: 15px;
+  letter-spacing: -0.2px;
+  color: #080808;
+}
+
+.vupdate__body li::before {
+  content: "-";
+  color: #51555f;
+  font-weight: bold;
+  display: inline-block;
+  width: 1em;
+  margin-left: -1em;
+}
+
 .bento {
   display: flex;
   flex-direction: column;

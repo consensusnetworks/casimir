@@ -1,6 +1,7 @@
 import { createWebHistory, createRouter } from 'vue-router'
 import Landing from '@/pages/landing/Landing.vue'
 import Blog from '@/pages/blog/Blog.vue'
+import Changelog from '@/pages/changelog/Changelog.vue'
 const routes = [
   {
     path: '/',
@@ -12,6 +13,11 @@ const routes = [
     name: Blog,
     component: Blog,
     // children: []
+  },
+  {
+    path: '/changelog',
+    name: Changelog,
+    component: Changelog,
   },
 ]
 
