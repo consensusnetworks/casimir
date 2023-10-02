@@ -16,7 +16,7 @@
             <a href="https://github.com/consensusnetworks/casimir#casimir">API Reference</a>
           </li>
           <li>
-            <a href="/blog/announcemts">Blog</a>
+            <a href="/blog/announcements">Blog</a>
           </li>
           <li>
             <a href="/changelog">Changelog</a>
@@ -34,9 +34,9 @@
       </div>
     </nav>
 
-    <section class="blog">
-      <div class="">
-        <div class="markdown-content">
+    <section>
+      <div>
+        <div>
           <router-view />
         </div>
       </div>
@@ -79,20 +79,4 @@
 
 
 <style scoped>
-.markdown-content {
-  /* text-align: center; */
-  max-width: 960px;
-  margin: 0 auto;
-  width: 100%;
-  color: red;
-  border: 1px solid red;
-}
-
-.markdown-content p {
-  color: green;
-}
-
-.markdown-content li {
-  color: red;
-}
 </style>

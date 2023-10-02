@@ -15,7 +15,7 @@ const routes = [
     component: Blog,
     children: [
       {
-        path: 'announcemts',
+        path: 'announcements',
         component: defineAsyncComponent(() => import('../blogs/blog.md')),
       },
     ],
