@@ -11,8 +11,7 @@ interface ethereumWindow extends Window {
 declare const window: ethereumWindow
 
 const { createSiweMessage, signInWithEthereum } = useAuth()
-const { ethereumUrl } = useEnvironment()
-const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
+const { ethereumUrl, provider } = useEnvironment()
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']

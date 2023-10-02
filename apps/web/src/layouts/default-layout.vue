@@ -14,11 +14,13 @@ import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useWalletConnect from '@/composables/walletConnectV2'
 
+const { addAccountToUser, checkIfPrimaryUserExists, checkIfSecondaryAddress, login, logout } = useAuth()
 const { ethersProviderList, detectActiveWalletAddress, getEthersAddressesWithBalances } = useEthers()
+const { screenWidth } = useScreenDimensions()
 const { convertString, trimAndLowercaseAddress } = useFormat()
 const { getLedgerAddress } = useLedger()
 const { getTrezorAddress } = useTrezor()
-const { screenWidth } = useScreenDimensions()
+const { user } = useUser()
 const { connectWalletConnectV2 } = useWalletConnect()
 
 const activeWallets = [
@@ -35,9 +37,6 @@ const selectedProvider = ref(null as ProviderString | null)
 const openRouterMenu = ref(false)
 const openWalletsModal = ref(false)
 const walletProviderAddresses = ref([] as CryptoAddress[])
-
-const { addAccountToUser, checkIfPrimaryUserExists, checkIfSecondaryAddress, login, logout } = useAuth()
-const { user } = useUser()
 
 function checkIfAddressIsUsed (account: CryptoAddress): boolean {
   const { address } = account

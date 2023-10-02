@@ -1,14 +1,13 @@
 import { onMounted, onUnmounted, readonly, ref } from 'vue'
-import { UserWithAccountsAndOperators } from '@casimir/types'
+import { Account, UserWithAccountsAndOperators } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import { ethers } from 'ethers'
 
 // Test address: 0xd557a5745d4560B24D36A68b52351ffF9c86A212
-const { ethereumUrl, usersUrl } = useEnvironment()
+const { provider, usersUrl } = useEnvironment()
 
 const initializeComposable = ref(false)
 const user = ref<UserWithAccountsAndOperators | undefined>(undefined)
-const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 
 export default function useUser() {
     // TODO: Move back to ethers composable
@@ -17,15 +16,15 @@ export default function useUser() {
         return parseFloat(ethers.utils.formatEther(balance))
     }
 
-    onMounted(async () => {
-        if (!initializeComposable.value) {
-            initializeComposable.value = true
-        }
-    })
+    // onMounted(async () => {
+    //     if (!initializeComposable.value) {
+    //         initializeComposable.value = true
+    //     }
+    // })
     
-    onUnmounted(() => {
-        initializeComposable.value = false
-    })
+    // onUnmounted(() => {
+    //     initializeComposable.value = false
+    // })
 
     async function setUser(newUserValue: UserWithAccountsAndOperators | undefined) {
         user.value = newUserValue

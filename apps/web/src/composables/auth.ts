@@ -2,18 +2,18 @@ import * as Session from 'supertokens-web-js/recipe/session'
 import { onMounted, onUnmounted, readonly, ref } from 'vue'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
-import useLedger from '@/composables/ledger'
-import useTrezor from '@/composables/trezor'
+// import useLedger from '@/composables/ledger'
+// import useTrezor from '@/composables/trezor'
 import useUser from '@/composables/user'
-import useWalletConnect from '@/composables/walletConnectV2'
+// import useWalletConnect from '@/composables/walletConnectV2'
 import { Account, ApiResponse, LoginCredentials, ProviderString, SignInWithEthereumCredentials } from '@casimir/types'
 
 const { domain, origin, usersUrl } = useEnvironment()
 const { ethersProviderList, loginWithEthers } = useEthers()
-const { loginWithLedger } = useLedger()
-const { loginWithTrezor } = useTrezor()
+// const { loginWithLedger } = useLedger()
+// const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
-const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
+// const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
 
 const initializedAuthComposable = ref(false)
 const loadingSessionLogin = ref(false)
@@ -97,7 +97,7 @@ export default function useAuth() {
             const response = await fetch(`${usersUrl}/user`, requestOptions)
             const { user: retrievedUser, error } = await response.json()
             if (error) throw new Error(error)
-            user.value = retrievedUser
+            await setUser(retrievedUser)
         } catch (error: any) {
             throw new Error('Error getting user from API route')
         }
@@ -116,11 +116,11 @@ export default function useAuth() {
             if (ethersProviderList.includes(provider)) {
                 await loginWithEthers(loginCredentials)
             } else if (provider === 'Ledger') {
-                await loginWithLedger(loginCredentials, JSON.stringify(pathIndex))
+                // await loginWithLedger(loginCredentials, JSON.stringify(pathIndex))
             } else if (provider === 'Trezor') {
-                await loginWithTrezor(loginCredentials, JSON.stringify(pathIndex))
+                // await loginWithTrezor(loginCredentials, JSON.stringify(pathIndex))
             } else if (provider === 'WalletConnect'){
-                await loginWithWalletConnectV2(loginCredentials)
+                // await loginWithWalletConnectV2(loginCredentials)
             } else {
                 console.log('Sign up not yet supported for this wallet provider')
             }
@@ -135,7 +135,7 @@ export default function useAuth() {
         try {
             loadingSessionLogout.value = true
             await Session.signOut()
-            user.value = undefined
+            await setUser(undefined)
             loadingSessionLogout.value = false
         } catch (error) {
             loadingSessionLogoutError.value = true

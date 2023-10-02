@@ -5,11 +5,9 @@ import useEnvironment from '@/composables/environment'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
 
-const { ethereumUrl, manager } = useEnvironment()
+const { manager, provider } = useEnvironment()
 const { formatNumber } = useFormat()
 const { getCurrentPrice } = usePrice()
-
-const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 
 const loadingInitializeBreakdownMetrics = ref(false)
 const loadingInitializeBreakdownMetricsError = ref(false)
