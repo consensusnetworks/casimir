@@ -13,7 +13,7 @@ const { ethersProviderList, detectActiveWalletAddress, loginWithEthers } = useEt
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
-const { loginWithWalletConnectV2, /* initializeWalletConnect, uninitializeWalletConnect */ } = useWalletConnect()
+const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
 
 const initializedAuthComposable = ref(false)
 const loadingSessionLogin = ref(false)
@@ -137,7 +137,6 @@ export default function useAuth() {
             } else {
                 // Check if address is a primary address and log in if so
                 const { data: { sameAddress, walletProvider } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
-                console.log('sameAddress :>> ', sameAddress)
                 if (sameAddress) {
                     await loginWithProvider(loginCredentials as LoginCredentials)
                     return 'Successfully logged in'
@@ -221,7 +220,7 @@ export default function useAuth() {
                 loadingSessionLogin.value = true
                 const session = await Session.doesSessionExist()
                 if (session) await getUser()
-                // await initializeWalletConnect() // Can potentially move this elsewhere
+                await initializeWalletConnect() // Can potentially move this elsewhere
                 loadingSessionLogin.value = false
             } catch (error) {
                 loadingSessionLoginError.value = true
@@ -233,7 +232,7 @@ export default function useAuth() {
 
     onUnmounted(() => {
         initializedAuthComposable.value = false
-        // uninitializeWalletConnect()
+        uninitializeWalletConnect()
     })
 
     // TODO: Re-enable once we have a way to remove accounts in UI
