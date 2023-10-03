@@ -8,7 +8,7 @@ import useAuth from '@/composables/auth'
 import useFormat from '@/composables/format'
 import useScreenDimensions from '@/composables/screenDimensions'
 import useUser from '@/composables/user'
-import { CryptoAddress, Currency, LoginCredentials, ProviderString } from '@casimir/types'
+import { CryptoAddress, Currency, LoginCredentials, ProviderString, UserAuthState } from '@casimir/types'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
@@ -36,7 +36,7 @@ const authFlowCardNumber = ref(1)
 const selectedProvider = ref(null as ProviderString | null)
 const openRouterMenu = ref(false)
 const openWalletsModal = ref(false)
-const userAuthState = ref(null)
+const userAuthState = ref<UserAuthState>('default')
 const walletProviderAddresses = ref([] as CryptoAddress[])
 
 function checkIfAddressIsUsed (account: CryptoAddress): boolean {
