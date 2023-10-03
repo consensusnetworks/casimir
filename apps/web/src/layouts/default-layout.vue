@@ -14,7 +14,7 @@ import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useWalletConnect from '@/composables/walletConnectV2'
 
-const { newLogin, logout } = useAuth()
+const { login, logout } = useAuth()
 const { ethersProviderList, getEthersAddressesWithBalances } = useEthers()
 const { screenWidth } = useScreenDimensions()
 const { convertString, trimAndLowercaseAddress } = useFormat()
@@ -55,10 +55,11 @@ function checkIfAddressIsUsed (account: CryptoAddress): boolean {
 async function selectAddress(address: string) {
   address = trimAndLowercaseAddress(address)
   const loginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: 'ETH' }
-  const response = await newLogin(loginCredentials as LoginCredentials)
-  // if (response) {
-  //   userAuthState.value = response
-  // }
+  const response = await login(loginCredentials as LoginCredentials)
+  if (response) {
+    userAuthState.value = response
+    console.log('userAuthState.value :>> ', userAuthState.value)
+  }
 }
 
 /**

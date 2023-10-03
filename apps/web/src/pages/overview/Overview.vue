@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import Staking from './components/Staking.vue'
 import StakingAvg from './components/StakingAvg.vue'
 import BreakdownChart from './components/BreakdownChart.vue'
@@ -16,6 +16,14 @@ const { loadingInitializeAnalytics } = useAnalytics()
 const { loadingInitializeOperators } = useOperators()
 
 const showSkeleton = ref(true)
+
+onMounted(() => {
+  setTimeout(() => {
+    if(loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators){
+      showSkeleton.value = false
+    }
+  }, 500)
+})
 
 watch([loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitializeAnalytics, loadingInitializeOperators], () =>{
   setTimeout(() => {

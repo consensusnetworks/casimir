@@ -2,18 +2,18 @@ import * as Session from 'supertokens-web-js/recipe/session'
 import { onMounted, onUnmounted, readonly, ref } from 'vue'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
-// import useLedger from '@/composables/ledger'
-// import useTrezor from '@/composables/trezor'
+import useLedger from '@/composables/ledger'
+import useTrezor from '@/composables/trezor'
 import useUser from '@/composables/user'
-// import useWalletConnect from '@/composables/walletConnectV2'
+import useWalletConnect from '@/composables/walletConnectV2'
 import { Account, ApiResponse, LoginCredentials, ProviderString, UserAuthState } from '@casimir/types'
 
 const { usersUrl } = useEnvironment()
 const { ethersProviderList, detectActiveWalletAddress, loginWithEthers } = useEthers()
-// const { loginWithLedger } = useLedger()
-// const { loginWithTrezor } = useTrezor()
+const { loginWithLedger } = useLedger()
+const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
-// const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
+const { loginWithWalletConnectV2, /* initializeWalletConnect, uninitializeWalletConnect */ } = useWalletConnect()
 
 const initializedAuthComposable = ref(false)
 const loadingSessionLogin = ref(false)
@@ -103,7 +103,7 @@ export default function useAuth() {
         }
     }
 
-    async function newLogin(loginCredentials: LoginCredentials): Promise<UserAuthState> {
+    async function login(loginCredentials: LoginCredentials): Promise<UserAuthState> {
         const { address, provider } = loginCredentials
         try {
             if (user.value) {
@@ -139,7 +139,7 @@ export default function useAuth() {
                 const { data: { sameAddress, walletProvider } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
                 console.log('sameAddress :>> ', sameAddress)
                 if (sameAddress) {
-                    await login(loginCredentials as LoginCredentials)
+                    await loginWithProvider(loginCredentials as LoginCredentials)
                     return 'Successfully logged in'
                 }
                 
@@ -158,7 +158,7 @@ export default function useAuth() {
                 // Then check if address is the same as the one that is active in their wallet
                 const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
                 if (activeAddress === address) {
-                    await login({ provider: provider as ProviderString, address, currency: 'ETH' })
+                    await loginWithProvider({ provider: provider as ProviderString, address, currency: 'ETH' })
                     return 'Successfully logged in'
                 } else {
                     alert(`The account you selected is not the same as the one that is active in your ${provider} wallet. Please open your browser extension and select the account that you want to log in with.`)
@@ -177,17 +177,17 @@ export default function useAuth() {
      * @param currency 
      * @returns 
      */
-    async function login(loginCredentials: LoginCredentials, pathIndex?: number) {
+    async function loginWithProvider(loginCredentials: LoginCredentials, pathIndex?: number) {
         const { provider } = loginCredentials
         try {
             if (ethersProviderList.includes(provider)) {
                 await loginWithEthers(loginCredentials)
             } else if (provider === 'Ledger') {
-                // await loginWithLedger(loginCredentials, JSON.stringify(pathIndex))
+                await loginWithLedger(loginCredentials, JSON.stringify(pathIndex))
             } else if (provider === 'Trezor') {
-                // await loginWithTrezor(loginCredentials, JSON.stringify(pathIndex))
+                await loginWithTrezor(loginCredentials, JSON.stringify(pathIndex))
             } else if (provider === 'WalletConnect'){
-                // await loginWithWalletConnectV2(loginCredentials)
+                await loginWithWalletConnectV2(loginCredentials)
             } else {
                 console.log('Sign up not yet supported for this wallet provider')
             }
@@ -215,7 +215,6 @@ export default function useAuth() {
 
     onMounted(async () => {
         if (!initializedAuthComposable.value) {
-            console.log('initializing auth composable')
             initializedAuthComposable.value = true
             // Loader
             try {
@@ -281,7 +280,7 @@ export default function useAuth() {
         loadingSessionLoginError: readonly(loadingSessionLoginError),
         loadingSessionLogout: readonly(loadingSessionLogout),
         loadingSessionLogoutError: readonly(loadingSessionLogoutError),
-        newLogin,
+        login,
         logout
     }
 }
