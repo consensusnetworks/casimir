@@ -22,8 +22,16 @@ app.get('/api/hackmd', async (req, res) => {
     requestOptions
   )
 
+  if (!response.ok) {
+    console.error(
+      `Express HackMD API Error Fetching Team Notes: ${response.status} ${response.statusText}`
+    )
+    res.status(response.status).send('API Error')
+    return
+  }
+
   const data = await response.json()
-  console.log('data:', data)
+  // console.log("data:", data);
   res.json(data)
 })
 
@@ -43,8 +51,16 @@ app.get('/api/hackmd/:id', async (req, res) => {
     requestOptions
   )
 
+  if (!response.ok) {
+    console.error(
+      `Express HackMD API Error Fetching Team Note: ${response.status} ${response.statusText}`
+    )
+    res.status(response.status).send('API Error')
+    return
+  }
+
   const data = await response.json()
-  console.log('data:', data)
+  // console.log("data:", data);
   res.json(data)
 })
 
