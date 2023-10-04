@@ -31,8 +31,13 @@ app.get('/api/hackmd', async (req, res) => {
   }
 
   const data = await response.json()
-  // console.log("data:", data);
-  res.json(data)
+
+  const filteredData = data.filter(
+    (item) => item.tags.includes('blog') && item.publishedAt
+  )
+
+  console.log('filteredData:', filteredData)
+  res.json(filteredData)
 })
 
 app.get('/api/hackmd/:id', async (req, res) => {
@@ -60,7 +65,7 @@ app.get('/api/hackmd/:id', async (req, res) => {
   }
 
   const data = await response.json()
-  // console.log("data:", data);
+  console.log('data:', data)
   res.json(data)
 })
 
