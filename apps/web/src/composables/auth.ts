@@ -9,7 +9,7 @@ import useWalletConnect from '@/composables/walletConnectV2'
 import { Account, ApiResponse, LoginCredentials, ProviderString, UserAuthState } from '@casimir/types'
 
 const { usersUrl } = useEnvironment()
-const { ethersProviderList, detectActiveWalletAddress, loginWithEthers } = useEthers()
+const { ethersProviderList, detectActiveEthersWalletAddress, loginWithEthers } = useEthers()
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
@@ -86,6 +86,17 @@ export default function useAuth() {
         }
     }
 
+    async function detectActiveWalletAddress(providerString: ProviderString) {
+        if (ethersProviderList.includes(providerString)) {
+          return await detectActiveEthersWalletAddress(providerString)
+        } else if (providerString === 'Ledger') {
+          
+          // await loginWithLedger(loginCredentials, JSON.stringify(pathIndex))
+        } else {
+          alert('detectActiveWalletAddress not yet implemented for this wallet provider')
+        }
+      }
+
     async function getUser() {
         try {
             const requestOptions = {
@@ -157,6 +168,8 @@ export default function useAuth() {
                 // TODO: Implement this for all providers
                 // Then check if address is the same as the one that is active in their wallet
                 const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
+                console.log('activeAddress :>> ', activeAddress)
+                console.log('address :>> ', address)
                 if (activeAddress === address) {
                     await loginWithProvider({ provider: provider as ProviderString, address, currency: 'ETH' })
                     return 'Successfully logged in'

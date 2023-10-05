@@ -28,13 +28,21 @@ export default function useEthers() {
     }
   }
 
-  async function detectActiveWalletAddress(providerString: ProviderString) {
+  async function detectActiveEthersWalletAddress(providerString: ProviderString): Promise<string> {
     const provider = getBrowserProvider(providerString)
-    if (ethersProviderList.includes(providerString)) {
-      const accounts = await provider.request({ method: 'eth_accounts' })
-      if (accounts.length > 0) return accounts[0]
-    } else {
-      alert('detectActiveWalletAddress not yet implemented for this wallet provider')
+    try {
+      if (provider) {
+        const accounts = await provider.request({ method: 'eth_accounts' })
+        if (accounts.length > 0) {
+          return accounts[0] as string
+        } 
+        return ''
+      } else {
+        return ''
+      }
+    } catch(err) {
+      console.error('There was an error in detectActiveEthersWalletAddress :>> ', err)
+      return ''
     }
   }
 
@@ -241,7 +249,7 @@ export default function useEthers() {
 
   return { 
     ethersProviderList,
-    detectActiveWalletAddress,
+    detectActiveEthersWalletAddress,
     getEthersAddressesWithBalances,
     getEthersBalance,
     getEthersBrowserSigner,
