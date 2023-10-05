@@ -141,7 +141,7 @@ describe('Operators', async function () {
 
         const stake = await manager.getTotalStake()
         const userStake = await manager.getUserStake(secondUser.address)
-        const blamedOperatorId = 156 // Hardcoded the first operator
+        const blamedOperatorId = 208 // Hardcoded the first operator
         const blamedOperator = await registry.getOperator(blamedOperatorId)
 
         expect(ethers.utils.formatEther(stake)).equal('16.0')

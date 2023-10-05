@@ -16,6 +16,7 @@
     },
     "include": [
         "./helpers/*.ts",
+        "./lib/*.ts",
         "./scripts/*.ts",
         "./test/*.ts"  
     ],

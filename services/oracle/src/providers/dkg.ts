@@ -1,57 +1,42 @@
 import fs from 'fs'
 import { StartKeygenInput } from '../interfaces/StartKeygenInput'
 import { DepositData } from '../interfaces/DepositData'
-import { DkgOptions } from '../interfaces/DkgOptions'
 import { StartReshareInput } from '../interfaces/StartReshareInput'
-import { run, runRetry } from '@casimir/shell'
+import { run } from '@casimir/shell'
 import { CreateValidatorInput } from '../interfaces/CreateValidatorInput'
 import { Reshare, Validator } from '@casimir/types'
 import { ReshareValidatorInput } from '../interfaces/ReshareValidatorInput'
-import { getOperatorUrls } from './registry'
-import { GetSharesInput } from '../interfaces/GetSharesInput'
-import { GetDepositDataInput } from '../interfaces/GetDepositDataInput'
 
 export class Dkg {
     cliPath: string
-    messengerUrl: string
 
-    constructor(options: DkgOptions) {
-        this.cliPath = options.cliPath
-        if (!options.messengerUrl) {
-            throw new Error('No messenger url provided')
-        }
-        this.messengerUrl = options.messengerUrl
+    constructor(cliPath: string) {
+        this.cliPath = cliPath
     }
 
     /** 
-     * Create validator with operator key shares and deposit data
-     * @param {CreateValidatorInput} input - Input for creating a validator
+     * Create a new validator
+     * @param {CreateValidatorInput} input - Create validator input
      * @param {number} retries - Number of retries
-     * @returns {Promise<Validator>} Validator with operator key shares and deposit data
+     * @returns {Promise<Validator>} New validator
      */
     async createValidator(input: CreateValidatorInput, retries: number | undefined = 25): Promise<Validator> {
         try {
-            const operators = getOperatorUrls(input.operatorIds)
             const requestId = await this.startKeygen({ 
-                operators, 
+                operatorIds: input.operatorIds,
+                ownerAddress: input.ownerAddress,
+                ownerNonce: input.ownerNonce,
+                poolId: input.poolId,
                 withdrawalAddress: input.withdrawalAddress 
             })
             
             console.log(`Started request ${requestId} for pool ${input.poolId}`)
     
-            await new Promise(resolve => setTimeout(resolve, 2500))
+            await new Promise(resolve => setTimeout(resolve, 5000))
     
-            const shares = await this.getShares({ 
-                requestId,
-                operators,
-                ownerAddress: input.ownerAddress,
-                ownerNonce: input.ownerNonce
-            })
+            const shares = await this.getShares(requestId)
     
-            const depositData = await this.getDepositData({ 
-                requestId, 
-                withdrawalAddress: input.withdrawalAddress
-            })
+            const depositData = await this.getDepositData(requestId)
 
             const validator: Validator = {
                 depositDataRoot: depositData.depositDataRoot,
@@ -74,35 +59,29 @@ export class Dkg {
     }
 
     /** 
-     * Reshare validator for new operator key IDs and key shares
-     * @param {ReshareValidatorInput} input - Input for resharing a validator
+     * Reshare a validator
+     * @param {ReshareValidatorInput} input - Reshare validator input
      * @param {number} retries - Number of retries
-     * @returns {Promise<Validator>} New operator IDs and key shares for a validator
+     * @returns {Promise<Reshare>} Reshared validator
      */
     async reshareValidator(input: ReshareValidatorInput, retries: number | undefined = 25): Promise<Reshare> {
         try {
-            const operators = getOperatorUrls(input.operatorIds)
-            const oldOperators = getOperatorUrls(input.oldOperatorIds)
             const requestId = await this.startReshare({ 
-                operators,
-                publicKey: input.publicKey,
-                oldOperators: oldOperators
+                oldOperatorIds: input.oldOperatorIds,
+                operatorIds: input.operatorIds,
+                poolId: input.poolId,
+                publicKey: input.publicKey
             })
             
             console.log(`Started request ${requestId} for pool ${input.poolId}`)
     
             await new Promise(resolve => setTimeout(resolve, 2500))
     
-            const shares = await this.getShares({
-                requestId,
-                operators,
-                ownerAddress: input.ownerAddress,
-                ownerNonce: input.ownerNonce
-            })
+            const shares = await this.getShares(requestId)
     
             return {
-                operatorIds: input.operatorIds,
                 oldOperatorIds: input.oldOperatorIds,
+                operatorIds: input.operatorIds,
                 poolId: input.poolId,
                 publicKey: input.publicKey,
                 shares
@@ -119,72 +98,79 @@ export class Dkg {
 
     /**
      * Start a keygen request
-     * @param {StartKeygenInput} input - Keygen input
-     * @returns {Promise<string>} Ceremony ID
+     * @param {StartKeygenInput} input - Start keygen input
+     * @returns {Promise<string>} Request ID
      */
     async startKeygen(input: StartKeygenInput): Promise<string> {
-        const operatorFlags = Object.entries(input.operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
-        const thresholdFlag = `--threshold ${Object.keys(input.operators).length - 1}`
-        const withdrawalCredentialsFlag = `--withdrawal-credentials ${'01' + '0'.repeat(22) + input.withdrawalAddress.split('0x')[1]}`
-        const forkVersionFlag = '--fork-version prater'
-        const command = `${this.cliPath} keygen ${operatorFlags} ${thresholdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
-        const request = await run(`${command}`) as string
-        return request.trim().split(' ').pop() as string
+        const requestId = `keygen-${input.poolId}-${Date.now()}`
+        const flags = [
+            `--operatorIDs ${input.operatorIds.join(',')}`,
+            '--operatorsInfoPath ./config/operators.info.json',
+            `--owner ${input.ownerAddress}`,
+            `--nonce ${input.ownerNonce}`,
+            `--withdrawAddress ${input.withdrawalAddress.split('0x')[1]}`,
+            '--fork 00001020',
+            `--depositResultsPath ./data/${requestId}-deposit.json`,
+            `--ssvPayloadResultsPath ./data/${requestId}-payload.json`
+        ]
+
+        const command = `${this.cliPath} init-dkg ${flags.join(' ')}`
+        const response = await run(`${command}`) as string
+        console.log(response)
+
+        return requestId
     }
 
     /**
      * Start a reshare request
-     * @param {StartReshareInput} input - Operator IDs, public key, and old operator IDs
-     * @returns {Promise<string>} Ceremony ID
+     * @param {StartReshareInput} input - Start reshare input
+     * @returns {Promise<string>} Request ID
      */
     async startReshare(input: StartReshareInput): Promise<string> {
-        const operatorFlags = Object.entries(input.operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
-        const thresholdFlag = `--threshold ${Object.keys(input.operators).length - 1}`
-        const publicKeyFlag = `--validator-pk ${input.publicKey.split('0x')[1]}`
-        const oldOperatorFlags = Object.entries(input.oldOperators).map(([id, url]) => `--old-operator ${id}=${url}`).join(' ')
-        const command = `${this.cliPath} resharing ${operatorFlags} ${thresholdFlag} ${publicKeyFlag} ${oldOperatorFlags}`
-        const request = await runRetry(`${command}`) as string
-        return request.trim().split(' ').pop() as string
+        const requestId = `reshare-${input.poolId}-${Date.now()}`
+        const flags = [
+            `--oldOperatorIDs ${input.oldOperatorIds.join(',')}`,
+            `--operatorIDs ${input.operatorIds.join(',')}`,
+            '--operatorsInfoPath ./config/operators.info.json',
+            '--fork 00001020',
+            `--ssvPayloadResultsPath ./data/${requestId}-payload.json`
+        ]
+
+        const command = `${this.cliPath} init-reshare ${flags.join(' ')}`
+        const response = await run(`${command}`) as string
+        console.log(response)
+
+        return requestId
     }
 
     /**
      * Get combined shares
-     * @param {GetSharesInput} input - Request ID, operator IDs, owner address, and owner nonce
+     * @param {string} requestId - Request ID
      * @returns {Promise<string>} Combined shares
      */
-    async getShares(input: GetSharesInput): Promise<string> {
-        const requestIdFlag = `--request-id ${input.requestId}`
-        const operatorFlags = Object.entries(input.operators).map(([id, url]) => `--operator ${id}=${url}`).join(' ')
-        const ownerAddressFlag = `--owner-address ${input.ownerAddress}`
-        const ownerNonceFlag = `--owner-nonce ${input.ownerNonce}`
-        const command = `${this.cliPath} get-keyshares ${requestIdFlag} ${operatorFlags} ${ownerAddressFlag} ${ownerNonceFlag}`
-        const download = await runRetry(`${command}`) as string
-        const file = download.trim().split(' ').pop() as string
-        const json = JSON.parse(fs.readFileSync(`${file}`, 'utf8'))
-        fs.rmSync(file)
-        return json.payload.readable.shares
+    async getShares(requestId: string): Promise<string> {
+        const filename = `./data/${requestId}-payload.json`
+        const { payload } = JSON.parse(fs.readFileSync(`${filename}`, 'utf8'))
+
+        return payload.readable.shares
     }
 
     /**
      * Get deposit data
-     * @param {GetDepositDataInput} input - Ceremony ID and withdrawal address
+     * @param {string} requestId - Request ID
      * @returns {Promise<DepositData>} Deposit data
      */
-    async getDepositData(input: GetDepositDataInput): Promise<DepositData> {
-        const requestIdFlag = `--request-id ${input.requestId}`
-        const withdrawalCredentialsFlag = `--withdrawal-credentials 01${'0'.repeat(22)}${input.withdrawalAddress.split('0x')[1]}`
-        const forkVersionFlag = '--fork-version prater'
-        const command = `${this.cliPath} generate-deposit-data ${requestIdFlag} ${withdrawalCredentialsFlag} ${forkVersionFlag}`
-        const download = await runRetry(`${command}`) as string
-        const file = download.trim().split(' ').pop() as string
-        const jsonArray = JSON.parse(fs.readFileSync(file, 'utf8'))
-        fs.rmSync(file)
+    async getDepositData(requestId: string): Promise<DepositData> {
+        const filename = `./data/${requestId}-deposit.json`
+        const deposit = JSON.parse(fs.readFileSync(filename, 'utf8'))
+
         const {
             deposit_data_root: depositDataRoot,
             pubkey: publicKey,
             signature,
             withdrawal_credentials: withdrawalCredentials
-        } = jsonArray[0]
+        } = deposit[0]
+
         return {
             depositDataRoot: `0x${depositDataRoot}`,
             publicKey: `0x${publicKey}`,

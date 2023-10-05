@@ -1,4 +1,7 @@
 export interface StartKeygenInput {
-    operators: Record<string, string>
+    operatorIds: number[]
+    ownerAddress: string
+    ownerNonce: number
+    poolId: number
     withdrawalAddress: string
 }

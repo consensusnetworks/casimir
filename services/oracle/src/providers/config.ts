@@ -4,8 +4,6 @@ import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json
 export function getConfig() {
     const cliPath = process.env.CLI_PATH
     if (!cliPath) throw new Error('No cli path provided')
-    const messengerUrl = process.env.MESSENGER_URL
-    if (!messengerUrl) throw new Error('No messenger url provided')
 
     const ethereumUrl = process.env.ETHEREUM_RPC_URL
     if (!ethereumUrl) throw new Error('No ethereum rpc url provided')
@@ -41,7 +39,6 @@ export function getConfig() {
 
     return {
         cliPath,
-        messengerUrl,
         ethereumUrl,
         wallet,
         managerAbi,

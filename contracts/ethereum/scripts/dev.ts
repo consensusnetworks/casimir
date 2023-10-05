@@ -127,9 +127,8 @@ void async function () {
     console.log(`CasimirViews contract deployed to ${views.address}`)
 
     const ssvViews = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
-    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [200, 201, 202, 203, 156, 157, 158, 159]
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [208, 209, 210, 211, 212, 213, 214, 215]
     if (preregisteredOperatorIds.length < 8) throw new Error('Not enough operator ids provided')
-    const messengerUrl = process.env.MESSENGER_URL || 'https://nodes.casimir.co/eth/goerli/dkg/messenger'
     const preregisteredBalance = ethers.utils.parseEther('10')
     for (const operatorId of preregisteredOperatorIds) {
         const [operatorOwnerAddress] = await ssvViews.getOperatorById(operatorId)
@@ -232,9 +231,6 @@ void async function () {
     }()
 
     setTimeout(async () => {
-        const ping = await fetchRetry(`${messengerUrl}/ping`)
-        const { message } = await ping.json()
-        if (message !== 'pong') throw new Error('DKG service is not running')
         const depositAmount = 64 * ((100 + await manager.FEE_PERCENT()) / 100)
         const depositStake = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await depositStake?.wait()

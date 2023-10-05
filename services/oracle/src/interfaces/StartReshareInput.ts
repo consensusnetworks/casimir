@@ -1,5 +1,6 @@
 export interface StartReshareInput {
-    operators: Record<string, string>
+    oldOperatorIds: number[]
+    operatorIds: number[]
+    poolId: number
     publicKey: string
-    oldOperators: Record<string, string>
 }

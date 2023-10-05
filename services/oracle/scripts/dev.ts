@@ -1,18 +1,12 @@
 import { loadCredentials, getSecret } from '@casimir/aws'
 import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
-import { fetchRetry } from '@casimir/fetch'
 import { run } from '@casimir/shell'
 
 /**
  * Start development DAO oracle service
  */
 void async function () {
-    const resourceDir = 'scripts/resources'
-
-    process.env.CLI_PATH = process.env.CLI_PATH || `./${resourceDir}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
-    process.env.MESSENGER_URL = process.env.MESSENGER_URL || 'https://nodes.casimir.co/eth/goerli/dkg/messenger'
-    process.env.MESSENGER_SRV_ADDR = process.env.MESSENGER_URL
-    process.env.USE_HARDCODED_OPERATORS = 'false'
+    process.env.CLI_PATH = process.env.CLI_PATH || './lib/dkg/bin/dkgcli'
 
     if (process.env.USE_SECRETS !== 'false') {
         await loadCredentials()
@@ -51,11 +45,8 @@ void async function () {
 
     const dkg = await run(`which ${process.env.CLI_PATH}`) as string
     if (!dkg || dkg.includes('not found')) {
-        await run(`GOWORK=off make -C ${resourceDir}/rockx-dkg-cli build`)
+        await run('GOWORK=off make -C lib/dkg build') 
     }
-    const ping = await fetchRetry(`${process.env.MESSENGER_URL}/ping`)
-    const { message } = await ping.json()
-    if (message !== 'pong') throw new Error('Dkg service is not running')
 
     process.env.USE_LOGS = process.env.USE_LOGS || 'false'
     run('npx esno -r dotenv/config src/index.ts')

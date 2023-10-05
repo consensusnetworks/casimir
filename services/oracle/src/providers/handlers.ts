@@ -13,10 +13,7 @@ import { Dkg } from './dkg'
 
 const config = getConfig()
 
-const cli = new Dkg({
-    cliPath: config.cliPath,
-    messengerUrl: config.messengerUrl
-})
+const cli = new Dkg(config.cliPath)
 
 export async function depositFunctionsBalanceHandler() {
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
@@ -264,13 +261,10 @@ export async function reportResharesHandler(input: ethers.utils.Result) {
                 const requiredFee = await scanner.getRequiredFee(operatorIds)
     
                 const reshare = await cli.reshareValidator({ 
-                    publicKey: poolDetails.publicKey,
-                    poolId,
                     oldOperatorIds,
                     operatorIds,
-                    ownerAddress: manager.address,
-                    ownerNonce,
-                    withdrawalAddress: poolAddress
+                    poolId,
+                    publicKey: poolDetails.publicKey
                 })
     
                 const uniswapFactory = new Factory({
