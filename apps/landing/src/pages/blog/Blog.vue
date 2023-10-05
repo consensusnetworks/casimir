@@ -95,13 +95,13 @@ onMounted(async () => {
       </div>
       <div class=" pr-10 w-[200px] h-full border-r sticky top-0 left-0">
         <h3>
-          Casimir Anncouncements
+          Anncouncements
         </h3>
         <div class="flex flex-col items-start content-start gap-5 mt-20">
           <button
             v-for="blog in htmlBlogList"
             :key="blog"
-            class="text-9 cursor-pointer text-left"
+            class="text-9 cursor-pointer text-left w-full"
             :class="blog.id === activeHTMLBlog ? 'bg-blue-100' : ' bg-none'"
             @click="activeHTMLBlog = blog.id"
           >
@@ -171,6 +171,7 @@ onMounted(async () => {
     padding: 0;
     margin: 0;
     margin-top: 20px;
+    margin-left: 20px;
   }
 
   h1 {

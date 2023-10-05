@@ -16,7 +16,7 @@ app.get('/api/hackmd', async (req, res) => {
       'Content-Type': 'application/json',
     },
   }
-  // lO0eXsOqSOqOp6p8r61GIA
+
   const response = await fetch(
     'https://api.hackmd.io/v1/teams/consensusnetworks/notes',
     requestOptions
@@ -36,7 +36,6 @@ app.get('/api/hackmd', async (req, res) => {
     (item) => item.tags.includes('blog') && item.publishedAt
   )
 
-  console.log('filteredData:', filteredData)
   res.json(filteredData)
 })
 
@@ -65,7 +64,6 @@ app.get('/api/hackmd/:id', async (req, res) => {
   }
 
   const data = await response.json()
-  console.log('data:', data)
   res.json(data)
 })
 
