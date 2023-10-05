@@ -53,7 +53,7 @@ const {
         v-for="blog in allBlogs"
         :key="blog"
         :to="`/blog/${blog.id}`"
-        class="blog_card flex flex-col"
+        class="blog_card flex flex-col mb-[50px]"
       >
         <div class="flex items-center gap-10 text-6 text-gray-400">
           <span>
