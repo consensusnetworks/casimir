@@ -4,9 +4,9 @@ import VueFeather from 'vue-feather'
 import useBlogs from '@/composables/blogs.ts'
 
 const {
-  activeBlog,
-  allBlogs,
-  loadingBlogs,
+    activeBlog,
+    allBlogs,
+    loadingBlogs,
 } = useBlogs()
 
 </script>
@@ -43,50 +43,11 @@ const {
         </a>
       </div>
     </nav>
-    <section class="max-w-[960px] mx-auto mt-[60px] min-h-[650px] relative overflow-auto">
-      <div
-        v-if="loadingBlogs"
-        class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
-      >
-        <div class="skeleton_box" />
+
+    <section>
+      <div>
+        single blog
       </div>
-      <router-link
-        v-for="blog in allBlogs"
-        :key="blog"
-        :to="`/blog/${blog.id}`"
-        class="blog_card flex flex-col"
-      >
-        <div class="flex items-center gap-10 text-6 text-gray-400">
-          <span>
-            {{ blog.type }} •
-          </span>
-          <span>
-            {{ new Date(blog.timestamp).toDateString() }}
-          </span>
-        </div>
-
-        <div class="text-1">
-          {{ blog.title }}
-        </div>
-
-
-        <div class="h-full  w-full overflow-hidden  pt-5">
-          <div
-            class="overview_blog_content"
-            v-html="blog.content"
-          />
-        </div>
-
-        <div class="h-[100px] flex items-end text-8 highlight ">
-          <div class="flex items-center">
-            Read More
-            <vue-feather
-              type="arrow-right"
-              class="h-[0.92rem]"
-            />
-          </div>
-        </div>
-      </router-link>
     </section>
 
     <section class="footer">
@@ -126,31 +87,31 @@ const {
 
 <style lang="scss">
 .blog_card {
-  background-color: rgb(242, 242, 245);
-  border: 1px solid hsl(236, 10.6%, 87.9%);
-  width: 100%;
-  height: 320px;
-  overflow: hidden;
-  cursor: pointer;
-  border-radius: 8px;
-  padding: 30px 30px 30px 30px;
+    background-color: rgb(242, 242, 245);
+    border: 1px solid hsl(236, 10.6%, 87.9%);
+    width: 100%;
+    height: 320px;
+    overflow: hidden;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 30px 30px 30px 30px;
 }
 
 .blog_card:hover {
-  box-shadow: inset 0px 1px 0px rgba(0, 0, 0, 0.1),
-    inset 0px -1px 0px 1px rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0px 1px 0px rgba(0, 0, 0, 0.1),
+        inset 0px -1px 0px 1px rgba(0, 0, 0, 0.1);
 }
 
 .overview_blog_content {
 
-  h1,
-  ul,
-  il,
-  img {
-    display: none;
-    width: 0;
-    height: 0;
-  }
+    h1,
+    ul,
+    il,
+    img {
+        display: none;
+        width: 0;
+        height: 0;
+    }
 
 }
 </style>

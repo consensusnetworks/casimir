@@ -1,9 +1,6 @@
 <script lang="ts" setup>
 import snarkdown from 'snarkdown'
 
-
-
-
 async function getReleases() {
   const url = 'https://api.github.com/repos/consensusnetworks/casimir/releases'
   const response = await fetch(url, {
