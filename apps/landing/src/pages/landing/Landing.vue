@@ -18,7 +18,7 @@
             >API Reference</a>
           </li>
           <li>
-            <a href="/blog">Blog</a>
+            <a href="/blogs">Blog</a>
           </li>
           <li>
             <a href="/changelog">Changelog</a>

@@ -1,13 +1,38 @@
 <script setup>
-import { onMounted, ref, computed, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
 import useBlogs from '@/composables/blogs.ts'
+import router from '@/composables/router.ts'
+
 
 const {
-    activeBlog,
     allBlogs,
     loadingBlogs,
 } = useBlogs()
+
+const activeBlog = ref(null)
+
+function findBlog(activeRoute) {
+    const blogItem = allBlogs.value.filter(item => item.id === activeRoute)[0]
+    activeBlog.value = blogItem
+}
+
+onMounted(() => {
+    let currentRoutes = router.currentRoute.value.fullPath.split('/')
+    let activeRoute = currentRoutes[currentRoutes.length - 1]
+
+    // Finds active blog based on route 
+    if (!loadingBlogs) findBlog(activeRoute)
+})
+
+watch([allBlogs, loadingBlogs], () => {
+
+    let currentRoutes = router.currentRoute.value.fullPath.split('/')
+    let activeRoute = currentRoutes[currentRoutes.length - 1]
+
+    // Finds active blog based on route 
+    findBlog(activeRoute)
+})
 
 </script>
 
@@ -26,7 +51,7 @@ const {
             <a href="https://github.com/consensusnetworks/casimir#casimir">API Reference</a>
           </li>
           <li>
-            <a href="/blog">Blog</a>
+            <a href="/blogs">Blog</a>
           </li>
           <li>
             <a href="/changelog">Changelog</a>
@@ -44,9 +69,57 @@ const {
       </div>
     </nav>
 
-    <section>
-      <div>
-        single blog
+    <section class="w-full max-w-[960px] mx-auto my-[60px] h-full min-h-[600px] relative">
+      <div
+        v-if="!activeBlog"
+        class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+      >
+        <div class="skeleton_box" />
+      </div>
+      <div
+        v-else
+        class="flex items-start min-h-[600px] h-full w-full"
+      >
+        <div class="h-full w-[200px] pr-[50px] min-h-[600px]">
+          <div class="mb-[20px]">
+            <router-link
+              to="/blogs"
+              class=""
+            >
+              <div class="text-[0.833rem;] font-[400] highlight flex items-center gap-5">
+                <vue-feather
+                  type="arrow-left"
+                  class="h-[0.92rem] mb-3"
+                />
+                Blogs
+              </div>
+            </router-link>
+          </div>
+          <div class="mb-[300px]">
+            <h5 class="text-7 text-gray-600 flex items-center">
+              ConsensusNetworks
+            </h5>
+            <h6 class="text-8 text-gray-400">
+              Team
+            </h6>
+          </div>
+
+          <div>
+            <h5 class="text-7 text-gray-600">
+              {{ activeBlog.type }}
+            </h5>
+            <h6 class="text-8 text-gray-400">
+              {{ new Date(activeBlog.timestamp).toDateString() }}
+            </h6>
+          </div>
+        </div>
+
+        <div class="w-full border-l h-full pl-[50px] min-h-[600px]">
+          <div
+            class="activeblog_content"
+            v-html="activeBlog.content"
+          />
+        </div>
       </div>
     </section>
 
@@ -85,33 +158,31 @@ const {
 </template>
 
 
-<style lang="scss">
-.blog_card {
-    background-color: rgb(242, 242, 245);
-    border: 1px solid hsl(236, 10.6%, 87.9%);
+<style>
+.activeblog_content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 50px;
+}
+
+.activeblog_content ul {
+    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.activeblog_content img {
     width: 100%;
-    height: 320px;
-    overflow: hidden;
-    cursor: pointer;
-    border-radius: 8px;
-    padding: 30px 30px 30px 30px;
+    height: 100%;
 }
 
-.blog_card:hover {
-    box-shadow: inset 0px 1px 0px rgba(0, 0, 0, 0.1),
-        inset 0px -1px 0px 1px rgba(0, 0, 0, 0.1);
-}
-
-.overview_blog_content {
-
-    h1,
-    ul,
-    il,
-    img {
-        display: none;
-        width: 0;
-        height: 0;
-    }
-
+.activeblog_content h1 {
+    font-size: 2.986rem;
+    font-weight: 400;
+    letter-spacing: -2px;
+    line-height: 1.38;
+    color: hsl(210, 12%, 12.5%);
 }
 </style>

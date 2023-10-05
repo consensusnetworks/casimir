@@ -4,7 +4,6 @@ import VueFeather from 'vue-feather'
 import useBlogs from '@/composables/blogs.ts'
 
 const {
-  activeBlog,
   allBlogs,
   loadingBlogs,
 } = useBlogs()
@@ -26,7 +25,7 @@ const {
             <a href="https://github.com/consensusnetworks/casimir#casimir">API Reference</a>
           </li>
           <li>
-            <a href="/blog">Blog</a>
+            <a href="/blogs">Blog</a>
           </li>
           <li>
             <a href="/changelog">Changelog</a>
