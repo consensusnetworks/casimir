@@ -52,14 +52,9 @@ function checkIfAddressIsUsed (account: CryptoAddress): boolean {
  * Checks if user is adding an account or logging in
  * @param address 
 */
-async function selectAddress(address: string) {
-  address = trimAndLowercaseAddress(address)
-  const loginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: 'ETH' }
-  const response = await login(loginCredentials as LoginCredentials)
-  if (response) {
-    userAuthState.value = response
-    console.log('userAuthState.value :>> ', userAuthState.value)
-  }
+async function selectAddress(address: string, pathIndex: number): Promise<void> {
+  const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: 'ETH', pathIndex }
+  userAuthState.value = await login(loginCredentials)
 }
 
 /**
@@ -385,11 +380,11 @@ onUnmounted(() =>{
               </div>
               <div v-else>
                 <button
-                  v-for="act in walletProviderAddresses"
+                  v-for="(act, pathIndex) in walletProviderAddresses"
                   :key="act.address"
                   class="w-full border rounded-[8px] px-[10px] py-[15px] flex flex-wrap gap-[10px] text-center items-center justify-between hover:border-blue_3 mb-[10px]"
                   :disable="checkIfAddressIsUsed(act)"
-                  @click="selectAddress(act.address), openWalletsModal = false, authFlowCardNumber = 1"
+                  @click="selectAddress(trimAndLowercaseAddress(act.address), pathIndex), openWalletsModal = false, authFlowCardNumber = 1"
                 >
                   <div>
                     {{ convertString(act.address) }} 

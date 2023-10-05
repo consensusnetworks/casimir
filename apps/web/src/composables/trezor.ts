@@ -69,12 +69,12 @@ export default function useTrezor() {
         return await signer.getAddresses()
     }
 
-    async function loginWithTrezor(loginCredentials: LoginCredentials, pathIndex: string) {
-        const { provider, address, currency } = loginCredentials
+    async function loginWithTrezor(loginCredentials: LoginCredentials) {
+        const { provider, address, currency, pathIndex } = loginCredentials
         try {
             const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
             const signer = getEthersTrezorSigner()
-            const signedMessage = await signer.signMessageWithIndex(message, pathIndex)
+            const signedMessage = await signer.signMessageWithIndex(message, pathIndex as number)
             await signInWithEthereum({ 
                 address, 
                 currency,

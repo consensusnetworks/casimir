@@ -89,9 +89,6 @@ export default function useAuth() {
     async function detectActiveWalletAddress(providerString: ProviderString) {
         if (ethersProviderList.includes(providerString)) {
           return await detectActiveEthersWalletAddress(providerString)
-        } else if (providerString === 'Ledger') {
-          
-          // await loginWithLedger(loginCredentials, JSON.stringify(pathIndex))
         } else {
           alert('detectActiveWalletAddress not yet implemented for this wallet provider')
         }
@@ -165,21 +162,27 @@ export default function useAuth() {
                 // If yes, log out (and/or log them in with the other account)
                 // If no, cancel/do nothing
             
-                // TODO: Implement this for all providers
-                // Then check if address is the same as the one that is active in their wallet
-                const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
-                console.log('activeAddress :>> ', activeAddress)
-                console.log('address :>> ', address)
-                if (activeAddress === address) {
-                    await loginWithProvider({ provider: provider as ProviderString, address, currency: 'ETH' })
+                const hardwareWallet = provider === 'Ledger' || provider === 'Trezor'
+                const browserWallet = ethersProviderList.includes(provider as ProviderString)
+                if (hardwareWallet) {
+                    await loginWithProvider(loginCredentials as LoginCredentials)
                     return 'Successfully logged in'
+                } else if (browserWallet) {
+                    const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
+                    if (activeAddress === address) {
+                        await loginWithProvider({ provider: provider as ProviderString, address, currency: 'ETH' })
+                        return 'Successfully logged in'
+                    } else {
+                        alert(`The account you selected is not the same as the one that is active in your ${provider} wallet. Please open your browser extension and select the account that you want to log in with.`)
+                        return 'Selected address is not active address in wallet'
+                    }
                 } else {
-                    alert(`The account you selected is not the same as the one that is active in your ${provider} wallet. Please open your browser extension and select the account that you want to log in with.`)
-                    return 'Selected address is not active address in wallet'
+                    alert('Login not yet supported for this wallet provider')
+                    return 'Error in userAuthState'
                 }
             }
         } catch (error: any) {
-            return 'Error'
+            return 'Error in userAuthState'
         }
     }
 
@@ -190,15 +193,15 @@ export default function useAuth() {
      * @param currency 
      * @returns 
      */
-    async function loginWithProvider(loginCredentials: LoginCredentials, pathIndex?: number) {
+    async function loginWithProvider(loginCredentials: LoginCredentials) {
         const { provider } = loginCredentials
         try {
             if (ethersProviderList.includes(provider)) {
                 await loginWithEthers(loginCredentials)
             } else if (provider === 'Ledger') {
-                await loginWithLedger(loginCredentials, JSON.stringify(pathIndex))
+                await loginWithLedger(loginCredentials)
             } else if (provider === 'Trezor') {
-                await loginWithTrezor(loginCredentials, JSON.stringify(pathIndex))
+                await loginWithTrezor(loginCredentials)
             } else if (provider === 'WalletConnect'){
                 await loginWithWalletConnectV2(loginCredentials)
             } else {
