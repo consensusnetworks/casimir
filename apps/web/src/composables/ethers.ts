@@ -2,16 +2,16 @@ import { ethers } from 'ethers'
 import { CryptoAddress, EthersProvider } from '@casimir/types'
 import { TransactionRequest } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
-import useSiwe from '@/composables/siwe'
 import useEnvironment from '@/composables/environment'
+import useSiwe from '@/composables/siwe'
 
 interface ethereumWindow extends Window {
   ethereum: any;
 }
 declare const window: ethereumWindow
 
-const { createSiweMessage, signInWithEthereum } = useSiwe()
 const { ethereumUrl, provider } = useEnvironment()
+const { createSiweMessage, signInWithEthereum } = useSiwe()
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
@@ -30,7 +30,7 @@ export default function useEthers() {
 
   async function detectActiveWalletAddress(providerString: ProviderString) {
     const provider = getBrowserProvider(providerString)
-    if (providerString === 'MetaMask') {
+    if (ethersProviderList.includes(providerString)) {
       const accounts = await provider.request({ method: 'eth_accounts' })
       if (accounts.length > 0) return accounts[0]
     } else {
@@ -108,9 +108,7 @@ export default function useEthers() {
   }
 
   async function getEthersAddressesWithBalances (providerString: ProviderString): Promise<CryptoAddress[]> {
-    console.log('providerString :>> ', providerString)
     const provider = getBrowserProvider(providerString)
-    console.log('provider :>> ', provider)
     if (provider) {
       const addresses = await provider.request({ method: 'eth_requestAccounts' })
       const addressesWithBalance: CryptoAddress[] = []

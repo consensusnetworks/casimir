@@ -154,6 +154,7 @@ export default function useAuth() {
                 // If yes, log out (and/or log them in with the other account)
                 // If no, cancel/do nothing
             
+                // TODO: Implement this for all providers
                 // Then check if address is the same as the one that is active in their wallet
                 const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
                 if (activeAddress === address) {
