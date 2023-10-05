@@ -55,21 +55,21 @@ const {
         :to="`/blog/${blog.id}`"
         class="blog_card flex flex-col mb-[50px]"
       >
-        <div class="flex items-center gap-10 text-6 text-gray-400">
-          <span>
+        <div class="flex items-center gap-5">
+          <span class="text-[0.833rem] font-[500]">
             {{ blog.type }} •
           </span>
-          <span>
+          <span class="text-8">
             {{ new Date(blog.timestamp).toDateString() }}
           </span>
         </div>
 
-        <div class="text-1">
+        <div class="text-[1.574rem] font-[600] py-10">
           {{ blog.title }}
         </div>
 
 
-        <div class="h-full  w-full overflow-hidden  pt-5">
+        <div class="h-full  w-full overflow-hidden  ">
           <div
             class="overview_blog_content"
             v-html="blog.content"
@@ -77,7 +77,7 @@ const {
         </div>
 
         <div class="h-[100px] flex items-end text-8 highlight ">
-          <div class="flex items-center">
+          <div class="flex items-center gap-3">
             Read More
             <vue-feather
               type="arrow-right"
@@ -141,6 +141,8 @@ const {
 }
 
 .overview_blog_content {
+  font-size: 1.074rem;
+  font-weight: 300;
 
   h1,
   ul,

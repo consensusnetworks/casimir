@@ -6,32 +6,32 @@ import router from '@/composables/router.ts'
 
 
 const {
-    allBlogs,
-    loadingBlogs,
+  allBlogs,
+  loadingBlogs,
 } = useBlogs()
 
 const activeBlog = ref(null)
 
 function findBlog(activeRoute) {
-    const blogItem = allBlogs.value.filter(item => item.id === activeRoute)[0]
-    activeBlog.value = blogItem
+  const blogItem = allBlogs.value.filter(item => item.id === activeRoute)[0]
+  activeBlog.value = blogItem
 }
 
 onMounted(() => {
-    let currentRoutes = router.currentRoute.value.fullPath.split('/')
-    let activeRoute = currentRoutes[currentRoutes.length - 1]
+  let currentRoutes = router.currentRoute.value.fullPath.split('/')
+  let activeRoute = currentRoutes[currentRoutes.length - 1]
 
-    // Finds active blog based on route 
-    if (!loadingBlogs) findBlog(activeRoute)
+  // Finds active blog based on route 
+  if (!loadingBlogs) findBlog(activeRoute)
 })
 
 watch([allBlogs, loadingBlogs], () => {
 
-    let currentRoutes = router.currentRoute.value.fullPath.split('/')
-    let activeRoute = currentRoutes[currentRoutes.length - 1]
+  let currentRoutes = router.currentRoute.value.fullPath.split('/')
+  let activeRoute = currentRoutes[currentRoutes.length - 1]
 
-    // Finds active blog based on route 
-    findBlog(activeRoute)
+  // Finds active blog based on route 
+  findBlog(activeRoute)
 })
 
 </script>
@@ -86,7 +86,7 @@ watch([allBlogs, loadingBlogs], () => {
               to="/blogs"
               class=""
             >
-              <div class="text-[0.833rem;] font-[400] highlight flex items-center gap-5">
+              <div class="text-[0.833rem;] font-[400] highlight flex items-center gap-5 tracking-wide">
                 <vue-feather
                   type="arrow-left"
                   class="h-[0.92rem] mb-3"
@@ -96,19 +96,19 @@ watch([allBlogs, loadingBlogs], () => {
             </router-link>
           </div>
           <div class="mb-[300px]">
-            <h5 class="text-7 text-gray-600 flex items-center">
+            <h5 class="text-[16px] font-[500] tracking-wide flex items-center">
               ConsensusNetworks
             </h5>
-            <h6 class="text-8 text-gray-400">
+            <h6 class="text-[16px] font-[400] tracking-wide opacity-[0.75]">
               Team
             </h6>
           </div>
 
           <div>
-            <h5 class="text-7 text-gray-600">
+            <h5 class="text-[16px] font-[500] tracking-wide flex items-center">
               {{ activeBlog.type }}
             </h5>
-            <h6 class="text-8 text-gray-400">
+            <h6 class="text-[16px] font-[400] tracking-wide opacity-[0.75]">
               {{ new Date(activeBlog.timestamp).toDateString() }}
             </h6>
           </div>
@@ -160,29 +160,32 @@ watch([allBlogs, loadingBlogs], () => {
 
 <style>
 .activeblog_content {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding-bottom: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 50px;
+
+  font-size: 1.074rem;
+  font-weight: 300;
 }
 
 .activeblog_content ul {
-    margin-left: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  margin-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .activeblog_content img {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 .activeblog_content h1 {
-    font-size: 2.986rem;
-    font-weight: 400;
-    letter-spacing: -2px;
-    line-height: 1.38;
-    color: hsl(210, 12%, 12.5%);
+
+  font-size: 1.574rem;
+  font-weight: 600;
+  letter-spacing: -0.75px;
+  color: hsl(210, 12%, 12.5%);
 }
 </style>
