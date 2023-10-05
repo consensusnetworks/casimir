@@ -108,8 +108,9 @@ export default function useEthers() {
   }
 
   async function getEthersAddressesWithBalances (providerString: ProviderString): Promise<CryptoAddress[]> {
+    console.log('providerString :>> ', providerString)
     const provider = getBrowserProvider(providerString)
-    
+    console.log('provider :>> ', provider)
     if (provider) {
       const addresses = await provider.request({ method: 'eth_requestAccounts' })
       const addressesWithBalance: CryptoAddress[] = []
@@ -252,18 +253,31 @@ export default function useEthers() {
 }
 
 function getBrowserProvider(providerString: ProviderString) {
-  if (providerString === 'MetaMask' || providerString === 'CoinbaseWallet') {
+  try {
     const { ethereum } = window
-    if (!ethereum.providerMap && ethereum.isMetaMask) {
-      return ethereum
+    if (providerString === 'CoinbaseWallet') {
+      if (ethereum?.providerMap.get(providerString)){
+        return ethereum.providerMap.get(providerString)
+      } else {
+        window.open('https://www.coinbase.com/wallet/downloads', '_blank')
+      }
+    } else if (providerString === 'MetaMask') {
+      if (ethereum.providerMap) {
+        return ethereum?.providerMap?.get(providerString) || undefined
+      } else if (ethereum.isMetaMask) {
+        return ethereum
+      } else {
+        window.open('https://metamask.io/download.html', '_blank')
+      }
+    } else if (providerString === 'BraveWallet') {
+      return getBraveWallet()
+    } else if (providerString === 'TrustWallet') {
+      return getTrustWallet()
+    } else if (providerString === 'OkxWallet') {
+      return getOkxWallet()
     }
-    return ethereum?.providerMap?.get(providerString) || undefined
-  } else if (providerString === 'BraveWallet') {
-    return getBraveWallet()
-  } else if (providerString === 'TrustWallet') {
-    return getTrustWallet()
-  } else if (providerString === 'OkxWallet') {
-    return getOkxWallet()
+  } catch(err) {
+    console.error('There was an error in getBrowserProvider :>> ', err)
   }
 }
 

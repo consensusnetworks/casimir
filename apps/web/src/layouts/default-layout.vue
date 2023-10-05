@@ -71,6 +71,7 @@ async function selectProvider(provider: ProviderString, currency: Currency = 'ET
   console.clear()
   try {
     if (provider === 'WalletConnect') {
+      // TODO: Clarify this.
       walletProviderAddresses.value = await connectWalletConnectV2('5') as CryptoAddress[]
     } else if (ethersProviderList.includes(provider)) {
       walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
@@ -78,6 +79,8 @@ async function selectProvider(provider: ProviderString, currency: Currency = 'ET
       walletProviderAddresses.value = await getLedgerAddress[currency]() as CryptoAddress[]
     } else if (provider === 'Trezor') {
       walletProviderAddresses.value = await getTrezorAddress[currency]() as CryptoAddress[]
+    } else {
+      throw new Error('Provider not supported')
     }
   } catch (error: any) {
     throw new Error(`Error selecting provider: ${error.message}`)
@@ -341,18 +344,18 @@ onUnmounted(() =>{
               </h6>
               <div class="flex flex-wrap justify-around gap-[20px] w-full mt-[20px]">
                 <button
-                  v-for="wallet in activeWallets"
-                  :key="wallet"
+                  v-for="walletProvider in activeWallets"
+                  :key="walletProvider"
                   class="w-[140px] h-[100px] border flex flex-col justify-center items-center rounded-[8px]"
-                  @click="selectProvider(wallet, 'ETH'), authFlowCardNumber = 2, selectedProvider = wallet"
+                  @click="selectProvider(walletProvider), authFlowCardNumber = 2, selectedProvider = walletProvider"
                 >
                   <img
-                    :src="`/${wallet.toLowerCase()}.svg`"
-                    :alt="`${wallet} logo`"
+                    :src="`/${walletProvider.toLowerCase()}.svg`"
+                    :alt="`${walletProvider} logo`"
                     class="w-[32px] h-[32px] rounded-[999px] mb-[10px]"
                   >
                   <h6>
-                    {{ wallet }}
+                    {{ walletProvider }}
                   </h6>
                 </button>
               </div> 
