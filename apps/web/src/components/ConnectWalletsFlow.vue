@@ -1,5 +1,6 @@
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+import { onMounted, ref, watch } from 'vue'
+import { CryptoAddress, Currency, LoginCredentials, ProviderString, UserAuthState } from '@casimir/types'
 import VueFeather from 'vue-feather'
 import useAuth from '@/composables/auth'
 import useFormat from '@/composables/format'
@@ -12,20 +13,28 @@ import useWalletConnect from '@/composables/walletConnectV2'
 import LoaderSpinner from '@/components/LoaderSpinner.vue'
 
 const activeWallets = [
-    'MetaMask',
-    'CoinbaseWallet',
-    'WalletConnect',
-    'Trezor',
-    'Ledger',
-    'TrustWallet',
-    // 'IoPay',
-]
+  'MetaMask',
+  'CoinbaseWallet',
+  'WalletConnect',
+  'Trezor',
+  'Ledger',
+  'TrustWallet',
+  // 'IoPay',
+] as ProviderString[]
 
-const flowState = ref('select_address')
+// eslint-disable-next-line no-undef
+const props = defineProps({
+  toggleModal: {
+    type: Function,
+    required: true,
+  },
+})
+
+const flowState = ref('select_provider')
 const errorMessage = ref(false)
-const walletProviderAddresses = ref([])
+const walletProviderAddresses = ref([] as CryptoAddress[])
 
-const selectedProvider = ref(null)
+const selectedProvider = ref(null as ProviderString | null)
 
 
 const { login, logout } = useAuth()
@@ -36,29 +45,81 @@ const { getLedgerAddress } = useLedger()
 const { getTrezorAddress } = useTrezor()
 const { user } = useUser()
 const { connectWalletConnectV2 } = useWalletConnect()
+
+
+function checkIfAddressIsUsed(account: CryptoAddress): boolean {
+  const { address } = account
+  if (user.value?.accounts) {
+    const accountAddresses = user.value.accounts.map((account: any) => account.address)
+    if (accountAddresses.includes(address)) return true
+  }
+  return false
+}
+
+/**
+ * Checks if user is adding an account or logging in
+ * @param address 
+*/
+async function selectAddress(address: string, pathIndex: number): Promise<void> {
+  flowState.value = 'loading'
+  const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: 'ETH', pathIndex }
+  const response = await login(loginCredentials)
+  if (response === 'Successfully logged in') {
+    flowState.value = 'success'
+    setTimeout(() => {
+      props.toggleModal(false)
+      flowState.value = 'select_provider'
+    }, 1000)
+  } else {
+    flowState.value = 'select_address'
+    errorMessage.value = true
+  }
+  console.log('loging response => handle animnation here:', response)
+}
+
+
 /**
  * Sets the selected provider and returns the set of addresses available for the selected provider
  * @param provider 
  * @param currency 
 */
-async function selectProvider(provider, currency = 'ETH') {
-    console.clear()
-    try {
-        if (provider === 'WalletConnect') {
-            walletProviderAddresses.value = await connectWalletConnectV2('5')
-        } else if (ethersProviderList.includes(provider)) {
-            walletProviderAddresses.value = await getEthersAddressesWithBalances(provider)
-        } else if (provider === 'Ledger') {
-            walletProviderAddresses.value = await getLedgerAddress[currency]()
-        } else if (provider === 'Trezor') {
-            walletProviderAddresses.value = await getTrezorAddress[currency]()
-        }
-        flowState.value = 'select_address'
-    } catch (error) {
-        errorMessage.value = true
-        throw new Error(`Error selecting provider: ${error.message}`)
+async function selectProvider(provider: ProviderString, currency: Currency = 'ETH'): Promise<void> {
+  console.clear()
+  try {
+    if (provider === 'WalletConnect') {
+      // TODO: Clarify this.
+      walletProviderAddresses.value = await connectWalletConnectV2('5') as CryptoAddress[]
+    } else if (ethersProviderList.includes(provider)) {
+      walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
+    } else if (provider === 'Ledger') {
+      walletProviderAddresses.value = await getLedgerAddress[currency]() as CryptoAddress[]
+    } else if (provider === 'Trezor') {
+      walletProviderAddresses.value = await getTrezorAddress[currency]() as CryptoAddress[]
+    } else {
+      throw new Error('Provider not supported')
     }
+
+    flowState.value = 'select_address'
+  } catch (error: any) {
+    errorMessage.value = true
+    throw new Error(`Error selecting provider: ${error.message}`)
+  }
 }
+
+watch(user, () => {
+  if (user.value && flowState.value === 'select_provider') {
+    flowState.value = 'add_account'
+  }
+})
+
+
+onMounted(() => {
+  if (user.value) {
+    flowState.value = 'add_account'
+  } else {
+    flowState.value = 'select_provider'
+  }
+})
 </script>
 
 <template>
@@ -77,7 +138,7 @@ async function selectProvider(provider, currency = 'ETH') {
         </p>
       </div>
 
-      <div v-if="flowState === 'add_account'">
+      <div v-else-if="flowState === 'add_account'">
         <h1 class="mb-[15px]">
           Add secondary account
         </h1>
@@ -95,6 +156,19 @@ async function selectProvider(provider, currency = 'ETH') {
           :key="wallet"
           class="flex items-center gap-5"
         >
+          <button
+            class="connect_wallet_btn"
+            @click="selectProvider(wallet, 'ETH')"
+          >
+            <img
+              :src="`/${wallet.toLowerCase()}.svg`"
+              :alt="`${wallet} logo`"
+              class=""
+            >
+            <h6>
+              {{ wallet }}
+            </h6>
+          </button>
           <!-- TODO: @Chris need a way to find out if the extenstion is not downloaded -->
           <div
             v-show="Math.random() < 0.5"
@@ -109,19 +183,6 @@ async function selectProvider(provider, currency = 'ETH') {
               to take you to the wallet provider extension page.
             </div>
           </div>
-          <button
-            class="connect_wallet_btn"
-            @click="selectProvider(wallet, 'ETH')"
-          >
-            <img
-              :src="`/${wallet.toLowerCase()}.svg`"
-              :alt="`${wallet} logo`"
-              class=""
-            >
-            <h6>
-              {{ wallet }}
-            </h6>
-          </button>
         </div>
       </div>
       <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">
@@ -183,8 +244,8 @@ async function selectProvider(provider, currency = 'ETH') {
         </button>
 
         <div
-          v-for="act in walletProviderAddresses"
-          :key="act"
+          v-for="(act, pathIndex) in walletProviderAddresses"
+          :key="pathIndex"
           class="flex items-center gap-5"
         >
           <div
@@ -202,7 +263,7 @@ async function selectProvider(provider, currency = 'ETH') {
           <button
             class="connect_wallet_btn"
             :disable="checkIfAddressIsUsed(act)"
-            @click="selectAddress(act.address)"
+            @click="selectAddress(trimAndLowercaseAddress(act.address), pathIndex)"
           >
             <div>
               {{ convertString(act.address) }}
@@ -307,124 +368,124 @@ async function selectProvider(provider, currency = 'ETH') {
 
 <style scoped>
 .action_button_cancel {
-    background-color: #f3f5f8;
-    border: 1px solid #ebebed;
-    border-radius: 5px;
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 600;
-    font-size: 12px;
-    line-height: 20px;
-    letter-spacing: 0.45px;
-    letter-spacing: -0.01em;
-    color: #5b5c5f;
-    padding: 4px 0px;
+  background-color: #f3f5f8;
+  border: 1px solid #ebebed;
+  border-radius: 5px;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 20px;
+  letter-spacing: 0.45px;
+  letter-spacing: -0.01em;
+  color: #5b5c5f;
+  padding: 4px 0px;
 }
 
 .action_button_cancel:hover {
-    border: 1px solid #e6e6e7;
-    box-shadow: 0px 0px 10px 0px rgba(116, 116, 123, 0.18);
+  border: 1px solid #e6e6e7;
+  box-shadow: 0px 0px 10px 0px rgba(116, 116, 123, 0.18);
 }
 
 .action_button {
-    background-color: #0D5FFF;
-    border: 1px solid #ebebed;
-    border-radius: 5px;
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 600;
-    font-size: 12px;
-    line-height: 20px;
-    letter-spacing: 0.45px;
-    color: #efefef;
-    padding: 4px 0px;
+  background-color: #0D5FFF;
+  border: 1px solid #ebebed;
+  border-radius: 5px;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 20px;
+  letter-spacing: 0.45px;
+  color: #efefef;
+  padding: 4px 0px;
 }
 
 .action_button:hover {
-    border: 1px solid #e6e6e7;
-    box-shadow: 0px 0px 10px 0px rgba(116, 116, 123, 0.28);
+  border: 1px solid #e6e6e7;
+  box-shadow: 0px 0px 10px 0px rgba(116, 116, 123, 0.28);
 }
 
 .connect_wallet_btn {
-    width: 100%;
-    border: 1px solid #ebebed;
-    background-color: #f3f5f8;
-    display: flex;
-    justify-content: space-between;
-    align-content: center;
-    align-items: center;
-    padding: 5px 8px;
-    border-radius: 5px;
+  width: 100%;
+  border: 1px solid #ebebed;
+  background-color: #f3f5f8;
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 5px;
 
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 400;
-    font-size: 12px;
-    line-height: 20px;
-    letter-spacing: -0.01em;
-    color: #5b5c5f;
-    margin: 0 0 10px 0;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  color: #5b5c5f;
+  margin: 0 0 10px 0;
 }
 
 .connect_wallet_btn:hover {
-    border: 1px solid #e6e6e7;
-    box-shadow: 0px 3px 6px 0px rgba(116, 116, 123, 0.18);
+  border: 1px solid #e6e6e7;
+  box-shadow: 0px 3px 6px 0px rgba(116, 116, 123, 0.18);
 }
 
 .connect_wallet_btn:disabled {
-    opacity: 0.5;
+  opacity: 0.5;
 }
 
 .connect_wallet_btn:disabled:hover {
-    opacity: 0.5;
-    cursor: not-allowed;
-    border: 1px solid #df2d2d24;
-    box-shadow: 0px 3px 6px 0px rgba(235, 67, 5, 0.18);
+  opacity: 0.5;
+  cursor: not-allowed;
+  border: 1px solid #df2d2d24;
+  box-shadow: 0px 3px 6px 0px rgba(235, 67, 5, 0.18);
 }
 
 .connect_wallet_btn img {
-    width: 20px;
-    height: 20px;
-    border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
 }
 
 .card {
-    background-color: white;
-    padding: 10px 20px 30px 20px;
-    width: 300px;
-    height: 446px;
-    border-radius: 5px;
-    box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  background-color: white;
+  padding: 10px 20px 30px 20px;
+  width: 300px;
+  height: 446px;
+  border-radius: 5px;
+  box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
 }
 
 .card h1 {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 12px;
-    line-height: 20px;
-    color: #344054;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 20px;
+  color: #344054;
 }
 
 .card p {
 
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 400;
-    font-size: 12px;
-    line-height: 20px;
-    letter-spacing: -0.01em;
-    color: #667085;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  color: #667085;
 }
 
 .card p span {
 
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 400;
-    font-size: 11px;
-    line-height: 14px;
-    letter-spacing: -0.01em;
-    color: #667085;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: -0.01em;
+  color: #667085;
 }
 </style>

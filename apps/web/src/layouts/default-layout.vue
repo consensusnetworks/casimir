@@ -41,23 +41,23 @@ const openWalletsModal = ref(false)
 const userAuthState = ref<UserAuthState>('default')
 const walletProviderAddresses = ref([] as CryptoAddress[])
 
-function checkIfAddressIsUsed(account: CryptoAddress): boolean {
-  const { address } = account
-  if (user.value?.accounts) {
-    const accountAddresses = user.value.accounts.map((account: any) => account.address)
-    if (accountAddresses.includes(address)) return true
-  }
-  return false
-}
+// function checkIfAddressIsUsed(account: CryptoAddress): boolean {
+//   const { address } = account
+//   if (user.value?.accounts) {
+//     const accountAddresses = user.value.accounts.map((account: any) => account.address)
+//     if (accountAddresses.includes(address)) return true
+//   }
+//   return false
+// }
 
 /**
  * Checks if user is adding an account or logging in
  * @param address 
 */
-async function selectAddress(address: string, pathIndex: number): Promise<void> {
-  const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: 'ETH', pathIndex }
-  userAuthState.value = await login(loginCredentials)
-}
+// async function selectAddress(address: string, pathIndex: number): Promise<void> {
+//   const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: 'ETH', pathIndex }
+//   userAuthState.value = await login(loginCredentials)
+// }
 
 /**
  * Sets the selected provider and returns the set of addresses available for the selected provider
@@ -122,6 +122,10 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('click', handleOutsideClick)
 })
+
+const toggleModal = (showModal: boolean) => {
+  openWalletsModal.value = showModal
+}
 </script>
 
 <template>
@@ -318,7 +322,7 @@ onUnmounted(() => {
       z-[20] top-0 left-0 flex items-center justify-center"
     >
       <div id="connect_wallet_card">
-        <ConnectWalletsFlow />
+        <ConnectWalletsFlow :toggle-modal="toggleModal" />
         <!-- <Carousel v-slot="{ currentSlide }" :current-slide="authFlowCardNumber"
           class="w-full h-full relative overflow-hidden">
           <Slide class="w-full h-full ">

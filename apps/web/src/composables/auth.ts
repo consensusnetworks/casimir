@@ -15,7 +15,8 @@ import {
 } from '@casimir/types'
 
 const { usersUrl } = useEnvironment()
-const { ethersProviderList, detectActiveEthersWalletAddress, loginWithEthers } = useEthers()
+const { ethersProviderList, detectActiveEthersWalletAddress, loginWithEthers } =
+  useEthers()
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
@@ -83,24 +84,26 @@ export default function useAuth() {
     if (ethersProviderList.includes(providerString)) {
       return await detectActiveEthersWalletAddress(providerString)
     } else {
-      alert('detectActiveWalletAddress not yet implemented for this wallet provider')
+      alert(
+        'detectActiveWalletAddress not yet implemented for this wallet provider'
+      )
     }
   }
 
   async function getUser() {
     try {
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }
-        const response = await fetch(`${usersUrl}/user`, requestOptions)
-        const { user: retrievedUser, error } = await response.json()
-        if (error) throw new Error(error)
-        await setUser(retrievedUser)
+      const requestOptions = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+      const response = await fetch(`${usersUrl}/user`, requestOptions)
+      const { user: retrievedUser, error } = await response.json()
+      if (error) throw new Error(error)
+      await setUser(retrievedUser)
     } catch (error: any) {
-        throw new Error('Error getting user from API route')
+      throw new Error('Error getting user from API route')
     }
   }
 
@@ -127,78 +130,114 @@ export default function useAuth() {
     }
   }
 
-  async function login(loginCredentials: LoginCredentials): Promise<UserAuthState> {
+  async function login(
+    loginCredentials: LoginCredentials
+  ): Promise<UserAuthState> {
     const { address, provider } = loginCredentials
     try {
-        if (user.value) {
-            // If address already exists on user, do nothing
-            const addressExistsOnUser = user.value?.accounts?.some((account: Account | any) => account?.address === address)
-            if (addressExistsOnUser) return 'Address already exists on this account'
-            
-            // Check if it exists as a primary address of a different user
-            const { data: { sameAddress, walletProvider } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
-              // If yes, ask user if they want to add it as a secondary to this account or if they want to log in with that account
-              if (sameAddress) {
-                alert(`${address} already exists as a primary address that used this provider: ${JSON.stringify(walletProvider)}`)
-                return 'Address already exists as a primary address on another account'
-                // If they want to add to account, addAccountToUser
-                // If they don't want to add to their account, cancel (or log them out and log in with other account)
-              } else {
-                // If no, check if it exists as a secondary address of a different user
-                  const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(address)
-                  // If yes, alert user that it already exists as a secondary address on another account and ask if they want to add it as a secondary to this account
-                  if (accountsIfSecondaryAddress.length) {
-                    console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
-                    return 'Address already exists as a secondary address on another account'
-                    // If yes, addAccountToUser
-                    // If no, cancel (or log them out and log in with other account)
-                  } else {
-                    // If no, addAccountToUser
-                    await addAccountToUser(loginCredentials)
-                    return 'Successfully added account to user'
-                  }
-              }
+      if (user.value) {
+        // If address already exists on user, do nothing
+        const addressExistsOnUser = user.value?.accounts?.some(
+          (account: Account | any) => account?.address === address
+        )
+        if (addressExistsOnUser)
+          return 'Address already exists on this account'
+
+        // Check if it exists as a primary address of a different user
+        const {
+          data: { sameAddress, walletProvider },
+        } = await checkIfPrimaryUserExists(provider as ProviderString, address)
+        // If yes, ask user if they want to add it as a secondary to this account or if they want to log in with that account
+        if (sameAddress) {
+          alert(
+            `${address} already exists as a primary address that used this provider: ${JSON.stringify(
+              walletProvider
+            )}`
+          )
+          return 'Address already exists as a primary address on another account'
+          // If they want to add to account, addAccountToUser
+          // If they don't want to add to their account, cancel (or log them out and log in with other account)
         } else {
-            // Check if address is a primary address and log in if so
-            const { data: { sameAddress, walletProvider } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
-            if (sameAddress) {
-                await loginWithProvider(loginCredentials as LoginCredentials)
-                return 'Successfully logged in'
-            }
-            
-            // Then check if address is being used as a secondary account by another user
-            const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(address)
-            console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
-            if (accountsIfSecondaryAddress.length) {
-                alert(`${address} already exists as a secondary address on this/these account(s): ${JSON.stringify(accountsIfSecondaryAddress)}`) 
-                return 'Address already exists as a secondary address on another account'
-            }
-        
-            // Handle user interaction (do they want to sign in with another account?)
-            // If yes, log out (and/or log them in with the other account)
-            // If no, cancel/do nothing
-        
-            const hardwareWallet = provider === 'Ledger' || provider === 'Trezor'
-            const browserWallet = ethersProviderList.includes(provider as ProviderString)
-            if (hardwareWallet) {
-                await loginWithProvider(loginCredentials as LoginCredentials)
-                return 'Successfully logged in'
-            } else if (browserWallet) {
-                const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
-                if (activeAddress === address) {
-                    await loginWithProvider({ provider: provider as ProviderString, address, currency: 'ETH' })
-                    return 'Successfully logged in'
-                } else {
-                    alert(`The account you selected is not the same as the one that is active in your ${provider} wallet. Please open your browser extension and select the account that you want to log in with.`)
-                    return 'Selected address is not active address in wallet'
-                }
-            } else {
-                alert('Login not yet supported for this wallet provider')
-                return 'Error in userAuthState'
-            }
+          // If no, check if it exists as a secondary address of a different user
+          const { data: accountsIfSecondaryAddress } =
+            await checkIfSecondaryAddress(address)
+          // If yes, alert user that it already exists as a secondary address on another account and ask if they want to add it as a secondary to this account
+          if (accountsIfSecondaryAddress.length) {
+            console.log(
+              'accountsIfSecondaryAddress :>> ',
+              accountsIfSecondaryAddress
+            )
+            return 'Address already exists as a secondary address on another account'
+            // If yes, addAccountToUser
+            // If no, cancel (or log them out and log in with other account)
+          } else {
+            // If no, addAccountToUser
+            await addAccountToUser(loginCredentials)
+            return 'Successfully added account to user'
+          }
         }
+      } else {
+        // Check if address is a primary address and log in if so
+        const {
+          data: { sameAddress, walletProvider },
+        } = await checkIfPrimaryUserExists(provider as ProviderString, address)
+        if (sameAddress) {
+          await loginWithProvider(loginCredentials as LoginCredentials)
+          return 'Successfully logged in'
+        }
+
+        // Then check if address is being used as a secondary account by another user
+        const { data: accountsIfSecondaryAddress } =
+          await checkIfSecondaryAddress(address)
+        console.log(
+          'accountsIfSecondaryAddress :>> ',
+          accountsIfSecondaryAddress
+        )
+        if (accountsIfSecondaryAddress.length) {
+          alert(
+            `${address} already exists as a secondary address on this/these account(s): ${JSON.stringify(
+              accountsIfSecondaryAddress
+            )}`
+          )
+          return 'Address already exists as a secondary address on another account'
+        }
+
+        // Handle user interaction (do they want to sign in with another account?)
+        // If yes, log out (and/or log them in with the other account)
+        // If no, cancel/do nothing
+
+        const hardwareWallet = provider === 'Ledger' || provider === 'Trezor'
+        const browserWallet = ethersProviderList.includes(
+          provider as ProviderString
+        )
+        if (hardwareWallet) {
+          await loginWithProvider(loginCredentials as LoginCredentials)
+          await getUser()
+          return 'Successfully logged in'
+        } else if (browserWallet) {
+          const activeAddress = await detectActiveWalletAddress(
+            provider as ProviderString
+          )
+          if (activeAddress === address) {
+            await loginWithProvider({
+              provider: provider as ProviderString,
+              address,
+              currency: 'ETH',
+            })
+            return 'Successfully logged in'
+          } else {
+            alert(
+              `The account you selected is not the same as the one that is active in your ${provider} wallet. Please open your browser extension and select the account that you want to log in with.`
+            )
+            return 'Selected address is not active address in wallet'
+          }
+        } else {
+          alert('Login not yet supported for this wallet provider')
+          return 'Error in userAuthState'
+        }
+      }
     } catch (error: any) {
-        return 'Error in userAuthState'
+      return 'Error in userAuthState'
     }
   }
 
@@ -226,28 +265,28 @@ export default function useAuth() {
 
   /**
    * Uses appropriate provider composable to login or sign up
-   * @param provider 
-   * @param address 
-   * @param currency 
-   * @returns 
+   * @param provider
+   * @param address
+   * @param currency
+   * @returns
    */
   async function loginWithProvider(loginCredentials: LoginCredentials) {
     const { provider } = loginCredentials
     try {
-        if (ethersProviderList.includes(provider)) {
-            await loginWithEthers(loginCredentials)
-        } else if (provider === 'Ledger') {
-            await loginWithLedger(loginCredentials)
-        } else if (provider === 'Trezor') {
-            await loginWithTrezor(loginCredentials)
-        } else if (provider === 'WalletConnect'){
-            await loginWithWalletConnectV2(loginCredentials)
-        } else {
-            console.log('Sign up not yet supported for this wallet provider')
-        }
-        await getUser()
+      if (ethersProviderList.includes(provider)) {
+        await loginWithEthers(loginCredentials)
+      } else if (provider === 'Ledger') {
+        await loginWithLedger(loginCredentials)
+      } else if (provider === 'Trezor') {
+        await loginWithTrezor(loginCredentials)
+      } else if (provider === 'WalletConnect') {
+        await loginWithWalletConnectV2(loginCredentials)
+      } else {
+        console.log('Sign up not yet supported for this wallet provider')
+      }
+      await getUser()
     } catch (error: any) {
-        throw new Error(error.message || 'There was an error logging in')
+      throw new Error(error.message || 'There was an error logging in')
     }
   }
 
@@ -274,6 +313,7 @@ export default function useAuth() {
       try {
         loadingSessionLogin.value = true
         const session = await Session.doesSessionExist()
+        console.log(session)
         if (session) await getUser()
         await initializeWalletConnect() // Can potentially move this elsewhere
         loadingSessionLogin.value = false
