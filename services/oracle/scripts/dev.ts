@@ -6,7 +6,8 @@ import { run } from '@casimir/shell'
  * Start development DAO oracle service
  */
 void async function () {
-    process.env.CLI_PATH = process.env.CLI_PATH || './lib/dkg/bin/dkgcli'
+    process.env.CLI_PATH = process.env.CLI_PATH || './lib/dkg/bin/ssv-dkg'
+    process.env.CONFIG_PATH = process.env.CONFIG_PATH || './config/example.dkg.initiator.yaml'
 
     if (process.env.USE_SECRETS !== 'false') {
         await loadCredentials()
@@ -43,10 +44,7 @@ void async function () {
     if (!process.env.SSV_TOKEN_ADDRESS) throw new Error(`No ssv token address provided for ${networkKey}`)
     if (!process.env.SWAP_FACTORY_ADDRESS) throw new Error(`No uniswap v3 factory address provided for ${networkKey}`)
 
-    const dkg = await run(`which ${process.env.CLI_PATH}`) as string
-    if (!dkg || dkg.includes('not found')) {
-        await run('GOWORK=off make -C lib/dkg build') 
-    }
+    await run('GOWORK=off make -C lib/dkg build')
 
     process.env.USE_LOGS = process.env.USE_LOGS || 'false'
     run('npx esno -r dotenv/config src/index.ts')

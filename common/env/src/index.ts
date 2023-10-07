@@ -1,3 +1,7 @@
+import MOCK_OPERATORS from './mock/operators.json'
+import MOCK_RESHARES from './mock/reshares.json'
+import MOCK_VALIDATORS from './mock/validators.json'
+
 const ETHEREUM_CONTRACTS = {
     TESTNET: {
         MANAGER_ADDRESS: '0xFBA09a098014b414A4aBD2C1Ca43383Ad63f8492',
@@ -36,4 +40,11 @@ enum ETHEREUM_RPC_URL {
     TESTNET = 'https://goerli.infura.io/v3/46a379ac6895489f812f33beb726b03b'
 }
 
-export { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL }
+export { 
+    ETHEREUM_CONTRACTS,
+    ETHEREUM_NETWORK_NAME,
+    ETHEREUM_RPC_URL,
+    MOCK_OPERATORS,
+    MOCK_RESHARES,
+    MOCK_VALIDATORS
+}

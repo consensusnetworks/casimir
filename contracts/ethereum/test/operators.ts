@@ -8,13 +8,13 @@ import { initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/
 import { fulfillReport, runUpkeep } from '../helpers/upkeep'
 
 describe('Operators', async function () {
-    it('Registration of operators 1 through 4 creates 4 eligible operators', async function () {
+    it('Registration of operators 1 through 8 creates 8 eligible operators', async function () {
         const { registry, views } = await loadFixture(deploymentFixture)
         const operatorIds = await registry.getOperatorIds()
         const startIndex = 0
         const endIndex = operatorIds.length
         const operators = await views.getOperators(startIndex, endIndex)
-        expect(operators.length).equal(4)
+        expect(operators.length).equal(8)
         expect(operators).to.satisfy((operators: ICasimirRegistry.OperatorStruct[]) => {
             const expectedActive = operators.every(operator => operator.active === true)
             const expectedCollateral = operators.every(operator => operator.collateral.toString() === ethers.utils.parseEther('10.0').toString())

@@ -1,4 +1,4 @@
-export interface ReshareValidatorInput {
+export interface ReshareInput {
     oldOperatorIds: number[]
     operatorIds: number[]
     poolId: number

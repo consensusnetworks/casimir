@@ -44,7 +44,7 @@ With the Poetry and the Jupyter VSCode Extension, we have a one-time setup.
     poetry run ipython kernel install --user --name=casimir-data
     ```
 
-    > 🚩 If you have node and npm already set up for this repo, you can run `npm run configure:python --workspace @casimir/data` from the root directory instead.
+    > 🚩 If you have node and npm already set up for this repo, you can run `npm run python --workspace @casimir/data` from the root directory instead.
 
 2. Restart VSCode (Jupyter needs this to see your new kernel).
 

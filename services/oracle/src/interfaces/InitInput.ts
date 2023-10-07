@@ -1,4 +1,4 @@
-export interface StartKeygenInput {
+export interface InitInput {
     operatorIds: number[]
     ownerAddress: string
     ownerNonce: number

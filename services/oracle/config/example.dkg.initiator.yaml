@@ -1,0 +1,6 @@
+fork: 'prater'
+depositOutputPath: ./data
+initiatorPrivKey: ./keys/example.encrypted.json
+initiatorPrivKeyPassword: ./keys/password.txt
+keysharesOutputPath: ./data
+operatorsInfoPath: ./data/operators.json

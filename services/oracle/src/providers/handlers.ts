@@ -13,7 +13,10 @@ import { Dkg } from './dkg'
 
 const config = getConfig()
 
-const cli = new Dkg(config.cliPath)
+const dkg = new Dkg({
+    cliPath: config.cliPath,
+    configPath: config.configPath
+})
 
 export async function depositFunctionsBalanceHandler() {
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
@@ -149,11 +152,11 @@ export async function initiateDepositHandler(input: ethers.utils.Result) {
 
     const requiredFee = await scanner.getRequiredFee(selectedOperatorIds)
 
-    const validator = await cli.createValidator({
-        poolId,
+    const validator = await dkg.init({
         operatorIds: selectedOperatorIds,
         ownerAddress: manager.address,
         ownerNonce,
+        poolId,
         withdrawalAddress: poolAddress
     })
 
@@ -233,6 +236,7 @@ export async function reportResharesHandler(input: ethers.utils.Result) {
             })
         
             const newOperatorId = smallestOperators.find((operator) => !oldOperatorIds.includes(operator.id.toNumber()))?.id.toNumber()
+            console.log('🤖 New selected operator', newOperatorId)
 
             if (newOperatorId && poolDetails.reshares.toNumber() < 2) {
                 const operatorIds = oldOperatorIds.map((id) => {
@@ -260,7 +264,7 @@ export async function reportResharesHandler(input: ethers.utils.Result) {
             
                 const requiredFee = await scanner.getRequiredFee(operatorIds)
     
-                const reshare = await cli.reshareValidator({ 
+                const reshare = await dkg.reshare({ 
                     oldOperatorIds,
                     operatorIds,
                     poolId,

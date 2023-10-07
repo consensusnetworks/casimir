@@ -4,7 +4,7 @@ import { CasimirManager, CasimirViews } from '../build/@types'
 import { PoolStatus, Reshare, Validator } from '@casimir/types'
 import { Scanner } from '@casimir/ssv'
 import { Factory } from '@casimir/uniswap'
-import { validatorStore, reshareStore } from '@casimir/data'
+import { MOCK_VALIDATORS, MOCK_RESHARES } from '@casimir/env'
 
 const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS as string
 if (!linkTokenAddress) throw new Error('No link token address provided')
@@ -20,14 +20,16 @@ const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS as string
 if (!wethTokenAddress) throw new Error('No weth token address provided')
 
 export async function initiateDepositHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
-    const mockValidators: Validator[] = validatorStore[signer.address as keyof typeof validatorStore]
+    const mockValidators: Validator[] = MOCK_VALIDATORS[signer.address as keyof typeof MOCK_VALIDATORS]
     const nonce = await ethers.provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
       from: manager.address,
       nonce
     })
     const poolWithdrawalCredentials = '0x' + '01' + '0'.repeat(22) + poolAddress.split('0x')[1]
-    const validator = mockValidators.find((validator) => validator.withdrawalCredentials === poolWithdrawalCredentials)
+    const validator = mockValidators.find((validator) => {
+        return validator.withdrawalCredentials.toLowerCase() === poolWithdrawalCredentials.toLowerCase()
+    })
     if (!validator) throw new Error(`No validator found for withdrawal credentials ${poolWithdrawalCredentials}`)
     
     const {
@@ -94,7 +96,7 @@ export async function reportResharesHandler({ manager, views, signer, args }: { 
         const poolDetails = await views.getPool(poolId)
         const oldOperatorIds = poolDetails.operatorIds.map(id => id.toNumber())
         if (oldOperatorIds.includes(operatorId)) {
-            const mockReshares: Reshare[] = reshareStore[poolId as keyof typeof reshareStore]
+            const mockReshares: Reshare[] = MOCK_RESHARES[poolId as keyof typeof MOCK_RESHARES]
             const poolReshareCount = poolDetails.reshares.toNumber()
             if (mockReshares.length && poolReshareCount < 2) {
                 const reshare = mockReshares.find((reshare) => {

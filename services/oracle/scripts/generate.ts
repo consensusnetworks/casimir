@@ -1,17 +1,18 @@
 import fs from 'fs'
 import { ethers } from 'ethers'
 import { run } from '@casimir/shell'
-import { /*Reshare, */Validator } from '@casimir/types'
 import { Dkg } from '../src/providers/dkg'
-import { /*reshareStore, */validatorStore } from '@casimir/data'
+import { MOCK_VALIDATORS/*, MOCK_RESHARES*/ } from '@casimir/env'
+import { Validator/*, Reshare*/ } from '@casimir/types'
 
 /**
  * Generate validator keys for ethereum testing
  */
 void async function () {
-    const outputPath = '../../common/data/src/mock'
+    const outputPath = '../../common/env/src/mock'
 
-    process.env.CLI_PATH = process.env.CLI_PATH || './lib/dkg/bin/dkgcli'
+    process.env.CLI_PATH = process.env.CLI_PATH || './lib/dkg/bin/ssv-dkg'
+    process.env.CONFIG_PATH = process.env.CONFIG_PATH || './config/example.dkg.initiator.yaml'
 
     process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
     if (!process.env.MANAGER_ADDRESS) throw new Error('No manager address set')
@@ -24,11 +25,8 @@ void async function () {
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, accountPath)
 
     const validatorCount = 4
-    if (!validatorStore[wallet.address] || Object.keys(validatorStore[wallet.address]).length < validatorCount) {
-        const dkg = await run(`which ${process.env.CLI_PATH}`) as string
-        if (!dkg || dkg.includes('not found')) {
-            await run('GOWORK=off make -C lib/dkg build') 
-        }
+    if (!MOCK_VALIDATORS[wallet.address] || Object.keys(MOCK_VALIDATORS[wallet.address]).length < validatorCount) {
+        await run('GOWORK=off make -C lib/dkg build') 
 
         let managerNonce = 3
         let ownerNonce = 0
@@ -38,6 +36,7 @@ void async function () {
 
         for (let i = 0; i < validatorCount; i++) {
             const poolId = i + 1
+            console.log('🤖 Creating deposit for', poolId)
 
             const poolAddress = ethers.utils.getContractAddress({
                 from: process.env.MANAGER_ADDRESS,
@@ -46,9 +45,12 @@ void async function () {
 
             const selectedOperatorIds = preregisteredOperatorIds.slice(0, 4)
 
-            const cli = new Dkg(process.env.CLI_PATH)
+            const dkg = new Dkg({
+                cliPath: process.env.CLI_PATH,
+                configPath: process.env.CONFIG_PATH,
+            })
 
-            const validator = await cli.createValidator({
+            const validator = await dkg.init({
                 poolId,
                 operatorIds: selectedOperatorIds,
                 ownerAddress: process.env.MANAGER_ADDRESS,
@@ -56,15 +58,13 @@ void async function () {
                 withdrawalAddress: poolAddress
             })
 
-            console.log('SHARES LENGTH', validator.shares.length)
-
             newValidators.push(validator)
 
             // for (let j = 0; j < 2; j++) {
             //     const oldOperatorIds = selectedOperatorIds.slice(1)
             //     const reshareOperatorIds = preregisteredOperatorIds.slice(0, 3).concat(preregisteredOperatorIds[4])
 
-            //     const reshare = await cli.reshareValidator({
+            //     const reshare = await dkg.reshare({
             //         oldOperatorIds,
             //         operatorIds: reshareOperatorIds,
             //         ownerAddress: process.env.MANAGER_ADDRESS,
@@ -81,9 +81,9 @@ void async function () {
             ownerNonce++
         }
 
-        validatorStore[wallet.address] = newValidators
+        MOCK_VALIDATORS[wallet.address] = newValidators
 
-        fs.writeFileSync(`${outputPath}/validator.store.json`, JSON.stringify(validatorStore, null, 4))
-        // fs.writeFileSync(`${outputPath}/reshare.store.json`, JSON.stringify(reshareStore, null, 4))
+        fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify(MOCK_VALIDATORS))
+        // fs.writeFileSync(`${outputPath}/reshares.json`, JSON.stringify(MOCK_RESHARES))
     }
 }()
