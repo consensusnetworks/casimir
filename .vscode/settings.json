@@ -1,26 +1,24 @@
 {
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": true
-    },
-    "[html]": {
-        "editor.defaultFormatter": "Vue.volar"
-    },
-    "[vue]": {
-        "editor.defaultFormatter": "Vue.volar"
-    },
-    "[javascript]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
-    },
-    "[json]": {
-        "editor.defaultFormatter": "vscode.json-language-features"
-    },
-    "eslint.validate": [
-        "vue",
-        "typescript"
-    ],
-    "css.lint.unknownAtRules": "ignore",
-    "jupyter.notebookFileRoot": "${fileDirname}",
-    "volar.inlayHints.eventArgumentInInlineHandlers": false,
-    "eslint.format.enable": true,
-    "eslint.run": "onType"
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "[html]": {
+    "editor.defaultFormatter": "Vue.volar"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "eslint.validate": ["vue", "typescript"],
+  "css.lint.unknownAtRules": "ignore",
+  "jupyter.notebookFileRoot": "${fileDirname}",
+  "volar.inlayHints.eventArgumentInInlineHandlers": false,
+  "eslint.format.enable": true,
+  "eslint.run": "onType",
+  "terminal.integrated.defaultProfile.windows": ""
 }
