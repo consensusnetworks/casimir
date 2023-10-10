@@ -1,88 +1,20 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import Carousel from '@/components/Carousel.vue'
-import Slide from '@/components/Slide.vue'
 import router from '@/composables/router'
 import VueFeather from 'vue-feather'
 import useAuth from '@/composables/auth'
-import useFormat from '@/composables/format'
 import useScreenDimensions from '@/composables/screenDimensions'
 import useUser from '@/composables/user'
-import { CryptoAddress, Currency, LoginCredentials, ProviderString, UserAuthState } from '@casimir/types'
-import useEthers from '@/composables/ethers'
-import useLedger from '@/composables/ledger'
-import useTrezor from '@/composables/trezor'
-import useWalletConnect from '@/composables/walletConnectV2'
 
 import ConnectWalletsFlow from '@/components/ConnectWalletsFlow.vue'
 
-const { login, logout } = useAuth()
-const { ethersProviderList, getEthersAddressesWithBalances } = useEthers()
 const { screenWidth } = useScreenDimensions()
-const { convertString, trimAndLowercaseAddress } = useFormat()
-const { getLedgerAddress } = useLedger()
-const { getTrezorAddress } = useTrezor()
+const { logout } = useAuth()
 const { user } = useUser()
-const { connectWalletConnectV2 } = useWalletConnect()
 
-const activeWallets = [
-  'MetaMask',
-  'CoinbaseWallet',
-  'WalletConnect',
-  'Trezor',
-  'Ledger',
-  'TrustWallet',
-  // 'IoPay',
-] as ProviderString[]
 const authFlowCardNumber = ref(1)
-const selectedProvider = ref(null as ProviderString | null)
 const openRouterMenu = ref(false)
 const openWalletsModal = ref(false)
-const userAuthState = ref<UserAuthState>('default')
-const walletProviderAddresses = ref([] as CryptoAddress[])
-
-// function checkIfAddressIsUsed(account: CryptoAddress): boolean {
-//   const { address } = account
-//   if (user.value?.accounts) {
-//     const accountAddresses = user.value.accounts.map((account: any) => account.address)
-//     if (accountAddresses.includes(address)) return true
-//   }
-//   return false
-// }
-
-/**
- * Checks if user is adding an account or logging in
- * @param address 
-*/
-// async function selectAddress(address: string, pathIndex: number): Promise<void> {
-//   const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: 'ETH', pathIndex }
-//   userAuthState.value = await login(loginCredentials)
-// }
-
-/**
- * Sets the selected provider and returns the set of addresses available for the selected provider
- * @param provider 
- * @param currency 
-*/
-async function selectProvider(provider: ProviderString, currency: Currency = 'ETH'): Promise<void> {
-  console.clear()
-  try {
-    if (provider === 'WalletConnect') {
-      // TODO: Clarify this.
-      walletProviderAddresses.value = await connectWalletConnectV2('5') as CryptoAddress[]
-    } else if (ethersProviderList.includes(provider)) {
-      walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
-    } else if (provider === 'Ledger') {
-      walletProviderAddresses.value = await getLedgerAddress[currency]() as CryptoAddress[]
-    } else if (provider === 'Trezor') {
-      walletProviderAddresses.value = await getTrezorAddress[currency]() as CryptoAddress[]
-    } else {
-      throw new Error('Provider not supported')
-    }
-  } catch (error: any) {
-    throw new Error(`Error selecting provider: ${error.message}`)
-  }
-}
 
 const show_setting_modal = ref(false)
 
@@ -254,36 +186,6 @@ const toggleModal = (showModal: boolean) => {
               Account
             </span>
           </button>
-          <!--<button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <vue-feather
-              type="layers"
-              size="36"
-              class="icon w-[17px] h-min"
-            />
-            <span>
-              Chanelog
-            </span>
-          </button>
-          <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <vue-feather
-              type="help-circle"
-              size="36"
-              class="icon w-[17px] h-min"
-            />
-            <span>
-              Support
-            </span>
-          </button>
-          <button class="flex items-center px-[16px] py-[10px] gap-[12px] w-full">
-            <vue-feather
-              type="code"
-              size="36"
-              class="icon w-[17px] h-min"
-            />
-            <span>
-              API
-            </span>
-          </button> -->
           <button
             class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full h-[41px]"
             :disabled="!user"
@@ -322,71 +224,10 @@ const toggleModal = (showModal: boolean) => {
       z-[20] top-0 left-0 flex items-center justify-center"
     >
       <div id="connect_wallet_card">
-        <ConnectWalletsFlow :toggle-modal="toggleModal" />
-        <!-- <Carousel v-slot="{ currentSlide }" :current-slide="authFlowCardNumber"
-          class="w-full h-full relative overflow-hidden">
-          <Slide class="w-full h-full ">
-            <div v-show="currentSlide === 1"
-              class="absolute top-0 left-0 w-full h-full bg-white card px-[50px] py-[25px]">
-              <h6 class="nav_items">
-                Select Provider
-              </h6>
-              <div class="flex flex-wrap justify-around gap-[20px] w-full mt-[20px]">
-                <button
-                  v-for="walletProvider in activeWallets"
-                  :key="walletProvider"
-                  class="w-[140px] h-[100px] border flex flex-col justify-center items-center rounded-[8px]"
-                  @click="selectProvider(walletProvider), authFlowCardNumber = 2, selectedProvider = walletProvider"
-                >
-                  <img
-                    :src="`/${walletProvider.toLowerCase()}.svg`"
-                    :alt="`${walletProvider} logo`"
-                    class="w-[32px] h-[32px] rounded-[999px] mb-[10px]"
-                  >
-                  <h6>
-                    {{ walletProvider }}
-                  </h6>
-                </button>
-              </div>
-            </div>
-          </Slide>
-          <Slide class="w-full h-full ">
-            <div v-show="currentSlide === 2"
-              class="absolute top-0 left-0 w-full h-full bg-white card px-[50px] py-[25px]">
-              <h6 class="nav_items flex items-center mb-[20px] h-[29px]">
-                <button @click="authFlowCardNumber = 1, selectedProvider = null">
-                  <vue-feather type="chevron-left"
-                    class="icon w-[20px] h-min text-primary hover:text-blue_3 mr-[10px] mt-[5px]" />
-                </button>
-                Select Address
-              </h6>
-              <div v-if="walletProviderAddresses.length === 0" class="flex items-center justify-center h-[90%]">
-                <h6 class="nav_items">
-                  Waiting on {{ selectedProvider }}...
-                </h6>
-              </div>
-              <div v-else>
-                <button
-                  v-for="(act, pathIndex) in walletProviderAddresses"
-                  :key="act.address"
-                  class="w-full border rounded-[8px] px-[10px] py-[15px] flex flex-wrap gap-[10px] text-center items-center justify-between hover:border-blue_3 mb-[10px]"
-                  :disable="checkIfAddressIsUsed(act)"
-                  @click="selectAddress(trimAndLowercaseAddress(act.address), pathIndex), openWalletsModal = false, authFlowCardNumber = 1"
-                >
-                  <div>
-                    {{ convertString(act.address) }}
-                  </div>
-                  <div>
-                    {{ parseFloat(parseFloat(act.balance).toFixed(2)) }} ETH
-                  </div>
-                  <p v-if="checkIfAddressIsUsed(act)" class="text-decline text-[12px] font-[400]">
-                    Address in use.
-                  </p>
-                </button>
-              </div>
-            </div>
-          </Slide>
-        </Carousel> -->
+        <ConnectWalletsFlow
+          :toggle-modal="toggleModal"
+          :open-wallets-modal="openWalletsModal"
+        />
       </div>
     </div>
   </div>
@@ -470,4 +311,4 @@ const toggleModal = (showModal: boolean) => {
   background: black;
   height: 36px;
 }
-</style>@/composables/user
+</style>

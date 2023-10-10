@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { CryptoAddress, Currency, LoginCredentials, ProviderString, UserAuthState } from '@casimir/types'
+import { CryptoAddress, Currency, LoginCredentials, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
 import useAuth from '@/composables/auth'
-import useFormat from '@/composables/format'
-import useScreenDimensions from '@/composables/screenDimensions'
-import useUser from '@/composables/user'
 import useEthers from '@/composables/ethers'
+import useFormat from '@/composables/format'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
+import useUser from '@/composables/user'
 import useWalletConnect from '@/composables/walletConnectV2'
-import LoaderSpinner from '@/components/LoaderSpinner.vue'
 
-const activeWallets = [
+type UserAuthFlowState = 'select_provider' | 'select_address' | 'loading' | 'success' | 'add_account' | 'confirm_signage_with_existing_secondary'
+
+const supportedWalletProviders = [
   'MetaMask',
   'CoinbaseWallet',
   'WalletConnect',
@@ -22,30 +22,33 @@ const activeWallets = [
   // 'IoPay',
 ] as ProviderString[]
 
-// eslint-disable-next-line no-undef
-const props = defineProps({
-  toggleModal: {
-    type: Function,
-    required: true,
-  },
-})
-
-const flowState = ref('select_provider')
-const errorMessage = ref(false)
-const walletProviderAddresses = ref([] as CryptoAddress[])
-
-const selectedProvider = ref(null as ProviderString | null)
-
-
-const { login, logout } = useAuth()
+const { login, loginWithSecondaryAddress } = useAuth()
 const { ethersProviderList, getEthersAddressesWithBalances } = useEthers()
-const { screenWidth } = useScreenDimensions()
 const { convertString, trimAndLowercaseAddress } = useFormat()
 const { getLedgerAddress } = useLedger()
 const { getTrezorAddress } = useTrezor()
 const { user } = useUser()
 const { connectWalletConnectV2 } = useWalletConnect()
 
+// eslint-disable-next-line no-undef
+const props = defineProps({
+  toggleModal: {
+    type: Function,
+    required: true,
+  },
+  openWalletsModal: {
+    type: Boolean,
+    require: true
+  }
+})
+
+const flowState = ref<UserAuthFlowState>('select_provider')
+const errorMessage = ref(false)
+const errorMassageText = ref('Something went wrong, please try again later.')
+const walletProviderAddresses = ref([] as CryptoAddress[])
+const selectProviderLoading = ref(false)
+const selectedProvider = ref(null as ProviderString | null)
+const selectedAddress = ref(null as string | null)
 
 function checkIfAddressIsUsed(account: CryptoAddress): boolean {
   const { address } = account
@@ -56,27 +59,57 @@ function checkIfAddressIsUsed(account: CryptoAddress): boolean {
   return false
 }
 
-/**
- * Checks if user is adding an account or logging in
- * @param address 
-*/
-async function selectAddress(address: string, pathIndex: number): Promise<void> {
+async function handleConfirmCreateAccountWithExistingSecondary() {
   flowState.value = 'loading'
-  const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: 'ETH', pathIndex }
-  const response = await login(loginCredentials)
-  if (response === 'Successfully logged in') {
+  const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address: selectedAddress.value as string, currency: 'ETH', pathIndex: 0 }
+  const response = await loginWithSecondaryAddress(loginCredentials)
+  if (response === 'Successfully created account and logged in') {
     flowState.value = 'success'
     setTimeout(() => {
       props.toggleModal(false)
       flowState.value = 'select_provider'
     }, 1000)
-  } else {
+  } else if (response === 'Selected address is not active address in wallet') {
     flowState.value = 'select_address'
     errorMessage.value = true
+    errorMassageText.value = 'Address selected is not active.'
+  } else {
+    errorMessage.value = true
+    errorMassageText.value = 'Something went wrong, please try again later.'
+  }
+  console.log('logging response => handle animnation here:', response)
+}
+
+/**
+ * Checks if user is adding an account or logging in
+ * @param address 
+*/
+async function selectAddress(address: string, pathIndex: number): Promise<void> {
+  selectedAddress.value = address
+  flowState.value = 'loading'
+  const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: 'ETH', pathIndex }
+  const response = await login(loginCredentials)
+  if (response === 'Successfully logged in' || response === 'Successfully added account to user') {
+    flowState.value = 'success'
+    setTimeout(() => {
+      props.toggleModal(false)
+      flowState.value = 'select_provider'
+    }, 1000)
+  } else if (
+    response === 'Address already exists as a primary address on another account' || 
+    response === 'Address already exists as a secondary address on another account'
+  ){
+    flowState.value = 'confirm_signage_with_existing_secondary'
+  } else if (response === 'Selected address is not active address in wallet'){
+    flowState.value = 'select_address'
+    errorMessage.value = true
+    errorMassageText.value = 'Address selected is not active.'
+  } else {
+    errorMessage.value = true
+    errorMassageText.value = 'Something went wrong, please try again later.'
   }
   console.log('loging response => handle animnation here:', response)
 }
-
 
 /**
  * Sets the selected provider and returns the set of addresses available for the selected provider
@@ -86,6 +119,8 @@ async function selectAddress(address: string, pathIndex: number): Promise<void> 
 async function selectProvider(provider: ProviderString, currency: Currency = 'ETH'): Promise<void> {
   console.clear()
   try {
+    selectedProvider.value = provider
+    selectProviderLoading.value = true
     if (provider === 'WalletConnect') {
       // TODO: Clarify this.
       walletProviderAddresses.value = await connectWalletConnectV2('5') as CryptoAddress[]
@@ -98,18 +133,18 @@ async function selectProvider(provider: ProviderString, currency: Currency = 'ET
     } else {
       throw new Error('Provider not supported')
     }
-
+    selectProviderLoading.value = false
     flowState.value = 'select_address'
   } catch (error: any) {
     errorMessage.value = true
+    errorMassageText.value = 'Something went wrong, please try again later.'
+    selectProviderLoading.value = false
     throw new Error(`Error selecting provider: ${error.message}`)
   }
 }
 
-watch(user, () => {
-  if (user.value && flowState.value === 'select_provider') {
-    flowState.value = 'add_account'
-  }
+watch(props, () => {
+  if (user.value) flowState.value = 'add_account'
 })
 
 
@@ -152,21 +187,24 @@ onMounted(() => {
 
       <div class="mt-15">
         <div
-          v-for="wallet in activeWallets"
-          :key="wallet"
+          v-for="walletProvider in supportedWalletProviders"
+          :key="walletProvider"
           class="flex items-center gap-5"
         >
           <button
-            class="connect_wallet_btn"
-            @click="selectProvider(wallet, 'ETH')"
+            class="connect_wallet_btn relative"
+            @click="selectProvider(walletProvider, 'ETH')"
           >
+            <div 
+              :class="selectedProvider === walletProvider && selectProviderLoading? 'loading' : 'hidden'"
+            />
             <img
-              :src="`/${wallet.toLowerCase()}.svg`"
-              :alt="`${wallet} logo`"
+              :src="`/${walletProvider.toLowerCase()}.svg`"
+              :alt="`${walletProvider} logo`"
               class=""
             >
             <h6>
-              {{ wallet }}
+              {{ walletProvider }}
             </h6>
           </button>
           <!-- TODO: @Chris need a way to find out if the extenstion is not downloaded -->
@@ -213,7 +251,7 @@ onMounted(() => {
         </p>
       </div>
 
-      <div class="mt-15 h-[250px] overflow-y-auto overflow-x-hidden">
+      <div class="mt-15 h-[240px] overflow-y-auto overflow-x-hidden">
         <div
           v-if="walletProviderAddresses.length === 0"
           class="text-[16px] font-[500]"
@@ -262,7 +300,7 @@ onMounted(() => {
           </div>
           <button
             class="connect_wallet_btn"
-            :disable="checkIfAddressIsUsed(act)"
+            :disabled="checkIfAddressIsUsed(act)"
             @click="selectAddress(trimAndLowercaseAddress(act.address), pathIndex)"
           >
             <div>
@@ -277,7 +315,7 @@ onMounted(() => {
 
       <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">
         <span v-show="errorMessage">
-          Something went wrong, please try again later.
+          {{ errorMassageText }}
         </span>
       </div>
       <div>
@@ -288,8 +326,6 @@ onMounted(() => {
         </p>
       </div>
     </section>
-
-
 
     <!-- SECTION: LOADING -->
     <section
@@ -307,7 +343,6 @@ onMounted(() => {
         </p>
       </div>
     </section>
-
 
     <!-- SECTION: SUCCESS -->
     <section
@@ -335,19 +370,25 @@ onMounted(() => {
           Confirm Signage
         </h1>
         <p class="">
-          The current wallet you are trying to connect exists under another primary wallet.
+          The current wallet you are trying to connect exists under another primary wallet or is a primary account.
         </p>
       </div>
 
-      <div class="mt-15 h-[230px] w-full flex items-center justify-center gap-5">
-        <button class="action_button_cancel flex items-center justify-center gap-5 w-full">
+      <div class="mt-15 h-[220px] w-full flex items-center justify-center gap-5">
+        <button
+          class="action_button_cancel flex items-center justify-center gap-5 w-full"
+          @click="flowState = 'select_address'"
+        >
           <vue-feather
             type="arrow-left-circle"
             class="icon w-[16px] h-min"
           />
           Back
         </button>
-        <button class="action_button w-full">
+        <button
+          class="action_button w-full"
+          @click="handleConfirmCreateAccountWithExistingSecondary"
+        >
           Confirm
         </button>
       </div>
@@ -367,6 +408,25 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.loading {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+      background-position: -200% 0;
+  }
+  100% {
+      background-position: 200% 0;
+  }
+}
 .action_button_cancel {
   background-color: #f3f5f8;
   border: 1px solid #ebebed;

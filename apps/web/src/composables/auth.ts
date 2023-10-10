@@ -140,8 +140,7 @@ export default function useAuth() {
         const addressExistsOnUser = user.value?.accounts?.some(
           (account: Account | any) => account?.address === address
         )
-        if (addressExistsOnUser)
-          return 'Address already exists on this account'
+        if (addressExistsOnUser) return 'Address already exists on this account'
 
         // Check if it exists as a primary address of a different user
         const {
@@ -149,27 +148,16 @@ export default function useAuth() {
         } = await checkIfPrimaryUserExists(provider as ProviderString, address)
         // If yes, ask user if they want to add it as a secondary to this account or if they want to log in with that account
         if (sameAddress) {
-          alert(
-            `${address} already exists as a primary address that used this provider: ${JSON.stringify(
-              walletProvider
-            )}`
-          )
           return 'Address already exists as a primary address on another account'
           // If they want to add to account, addAccountToUser
           // If they don't want to add to their account, cancel (or log them out and log in with other account)
         } else {
           // If no, check if it exists as a secondary address of a different user
-          const { data: accountsIfSecondaryAddress } =
-            await checkIfSecondaryAddress(address)
+          const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(address)
           // If yes, alert user that it already exists as a secondary address on another account and ask if they want to add it as a secondary to this account
           if (accountsIfSecondaryAddress.length) {
-            console.log(
-              'accountsIfSecondaryAddress :>> ',
-              accountsIfSecondaryAddress
-            )
+            console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
             return 'Address already exists as a secondary address on another account'
-            // If yes, addAccountToUser
-            // If no, cancel (or log them out and log in with other account)
           } else {
             // If no, addAccountToUser
             await addAccountToUser(loginCredentials)
@@ -178,9 +166,7 @@ export default function useAuth() {
         }
       } else {
         // Check if address is a primary address and log in if so
-        const {
-          data: { sameAddress, walletProvider },
-        } = await checkIfPrimaryUserExists(provider as ProviderString, address)
+        const { data: { sameAddress, walletProvider } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
         if (sameAddress) {
           await loginWithProvider(loginCredentials as LoginCredentials)
           return 'Successfully logged in'
@@ -189,16 +175,8 @@ export default function useAuth() {
         // Then check if address is being used as a secondary account by another user
         const { data: accountsIfSecondaryAddress } =
           await checkIfSecondaryAddress(address)
-        console.log(
-          'accountsIfSecondaryAddress :>> ',
-          accountsIfSecondaryAddress
-        )
+        console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
         if (accountsIfSecondaryAddress.length) {
-          alert(
-            `${address} already exists as a secondary address on this/these account(s): ${JSON.stringify(
-              accountsIfSecondaryAddress
-            )}`
-          )
           return 'Address already exists as a secondary address on another account'
         }
 
@@ -226,9 +204,6 @@ export default function useAuth() {
             })
             return 'Successfully logged in'
           } else {
-            alert(
-              `The account you selected is not the same as the one that is active in your ${provider} wallet. Please open your browser extension and select the account that you want to log in with.`
-            )
             return 'Selected address is not active address in wallet'
           }
         } else {
@@ -237,6 +212,29 @@ export default function useAuth() {
         }
       }
     } catch (error: any) {
+      return 'Error in userAuthState'
+    }
+  }
+
+  async function loginWithSecondaryAddress(loginCredentials: LoginCredentials) {
+    const { address, provider } = loginCredentials
+    try {
+      const hardwareWallet = provider === 'Ledger' || provider === 'Trezor'
+      const browserWallet = ethersProviderList.includes(provider as ProviderString)
+      if (hardwareWallet) {
+        await loginWithProvider(loginCredentials as LoginCredentials)
+        await getUser()
+        return 'Successfully created account and logged in'
+      } else if (browserWallet) {
+        const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
+        if (activeAddress === address) {
+          await loginWithProvider({ provider: provider as ProviderString, address,currency: 'ETH' })
+          return 'Successfully created account and logged in'
+        } else {
+          return 'Selected address is not active address in wallet'
+        }
+      }
+    } catch(err) {
       return 'Error in userAuthState'
     }
   }
@@ -272,6 +270,7 @@ export default function useAuth() {
    */
   async function loginWithProvider(loginCredentials: LoginCredentials) {
     const { provider } = loginCredentials
+    console.log('loginCredentials in loginWithProvider :>> ', loginCredentials)
     try {
       if (ethersProviderList.includes(provider)) {
         await loginWithEthers(loginCredentials)
@@ -378,6 +377,7 @@ export default function useAuth() {
     loadingSessionLogout: readonly(loadingSessionLogout),
     loadingSessionLogoutError: readonly(loadingSessionLogoutError),
     login,
+    loginWithSecondaryAddress,
     logout,
   }
 }
