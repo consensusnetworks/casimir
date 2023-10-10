@@ -1,4 +1,60 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { ref } from 'vue'
+
+const faqItems = ref(
+  [
+    {
+      question: 'Are there ways I can use my staked ETH for additional yield?',
+      answer: 'Although Casimir is not launching an LSD, there are opportunities for stakers to provide their native staked ETH as liquidity providers (e.g., to support a DAO). Additionally, we will be introducing restaking mechanisms like EigenLayer that will enable users to natively restake their ETH to maximize their APR, if desired.',
+      open: false,
+    },
+    {
+      question: 'Am I giving up custody of my staked ETH?',
+      answer: 'No! Keys created and held across validators with distributed key generation (DKG). You will always be able to withdraw your staked ETH from the Casimir smart contract.',
+      open: false,
+    },
+    {
+      question: 'How frequently do I get my rewards?',
+      answer: 'Rewards will be distributed as they are awarded by the Ethereum protocol, at least daily.',
+      open: false,
+    },
+    {
+      question: 'Where are my rewards distributed, is there a secondary token?',
+      answer: 'Your rewards will be distributed to the wallet you staked with; you won\'t need to deal with the hassle of swapping a token to get your rewards.',
+      open: false,
+    },
+    {
+      question: 'Which wallets are supported?',
+      answer: 'Today we natively support Metamask, Coinbase Wallet, Trust Wallet, Ledger, and Trezor. We also support most other providers through the WalletConnect protocol.',
+      open: false,
+    },
+    {
+      question: 'Is there a lockup period or waiting period for withdrawals?',
+      answer: 'Since you are staking native ETH, there may be a wait time for a validator to exit to receive your withdrawal. If you desire a quicker exit, we will soon be launching a native ETH liquidity pool, which will enable instant withdrawals.',
+      open: false,
+    },
+    {
+      question: 'Where is my stake going, who is running the validators?',
+      answer: 'Casimir is launching with a small set of vatted validator partners, but we will soon allow anyone with at least 1 ETH collateral to run a validator. Validator performance is overseen by a decentralized oracle network with performance specs used in operator selection.',
+      open: false,
+    },
+    {
+      question: 'What are the staking fees?',
+      answer: 'The Casimir smart contract charges a user a 5% fee on deposits and rewards to cover operational expenses including payments to the distributed set of independently owned and operated validators.',
+      open: false,
+    },
+    {
+      question: 'Can I run a validator?',
+      answer: 'If you have the technical ability and interest, you\'ll soon have the chance to become a validator in our protocol. While we\'re initially launching with a small group of white-listed validators, we\'ll soon open up to everyone. Stay updated by joining our Discord.',
+      open: false,
+    },
+  ],
+)
+
+const toggleQuestionItem = (index: number) => {
+  faqItems.value[index].open = !faqItems.value[index].open
+} 
+</script>
 
 <template>
   <div>
@@ -244,143 +300,26 @@
     <section class="faq">
       <h2>Frequently Asked Questions</h2>
 
-      <div class="faq__container">
-        <div class="faq__item">
-          <div class="faq__item__q">
-            <span class="text-7">Are there ways I can use my staked ETH for additional
-              yield?</span>
-            <span class="text-5">+</span>
-          </div>
-          <div class="faq__item__a">
-            <span class="text-r">
-              Although Casimir is not launching an LSD, there are opportunities
-              for stakers to provide their native staked ETH as liquidity
-              providers (e.g., to support a DAO). Additionally, we will be
-              introducing restaking mechanisms like EigenLayer that will enable
-              users to natively restake their ETH to maximize their APR, if
-              desired.
+      <div class="faq__container w-full">
+        <div
+          v-for="(item, index) in faqItems"
+          :key="index"
+          class="faq__item"
+        >
+          <div
+            class="faq__item__q"
+            @click="toggleQuestionItem(index)"
+          >
+            <span class="text-7">{{ item.question }}</span>
+            <span :class="{ 'text-5': !item.open, 'text-6': item.open }">
+              {{ item.open ? '-' : '+' }}
             </span>
           </div>
-        </div>
-
-        <div class="faq__item">
-          <div class="faq__item__q">
-            <span class="text-7">Am I giving up custody of my staked ETH?</span>
-            <span class="text-5">+</span>
-          </div>
-          <div class="faq__item__a">
-            <span class="text-r">No! Keys created and held across validators with distributed key
-              generation (DKG). You will always be able to withdraw your staked
-              ETH from the Casimir smart contract.
-            </span>
-          </div>
-        </div>
-
-        <div class="faq__item">
-          <div class="faq__item__q">
-            <span class="text-7">How frequently do I get my rewards?</span>
-            <span class="text-5">+</span>
-          </div>
-          <div class="faq__item__a">
-            <span class="text-r">Rewards will be distributed as they are awarded by the Ethereum
-              protocol, at least daily.
-            </span>
-          </div>
-        </div>
-
-        <div class="faq__item">
-          <div class="faq__item__q">
-            <span class="text-7">Where are my rewards distributed, is there a secondary
-              token?</span>
-            <span class="text-5">+</span>
-          </div>
-          <div class="faq__item__a">
-            <span class="text-r">Your rewards will be distributed to the wallet you staked with;
-              you won't need to deal with the hassle of swapping a token to get
-              your rewards.
-            </span>
-          </div>
-        </div>
-
-        <div class="faq__item">
-          <div class="faq__item__q">
-            <span class="text-7">Which wallets are supported?</span>
-            <span class="text-5">+</span>
-          </div>
-          <div class="faq__item__a">
-            <span class="text-r faq__item__answer">
-              Today we natively support Metamask, Coinbase Wallet, Trust Wallet,
-              Ledger, and Trezor. We also support most other providers through
-              the
-              <a
-                href="https://walletconnect.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >WalletConnect
-                protocol</a>.
-            </span>
-          </div>
-        </div>
-
-        <div class="faq__item">
-          <div class="faq__item__q">
-            <span class="text-7">Is there a lockup period or waiting period for withdrawals?</span>
-            <span class="text-5">+</span>
-          </div>
-
-          <div class="faq__item__a">
-            <span class="text-r faq__item__answer">Since you are staking native ETH, there may be a wait time
-              for a
-              validator to exit to receive your withdrawal. If you desire a
-              quicker exit, we will soon be launching a native ETH liquidity
-              pool, which will enable instant withdrawals.
-            </span>
-          </div>
-        </div>
-
-        <div class="faq__item">
-          <div class="faq__item__q">
-            <span class="text-7">Where is my stake going, who is running the validators?</span>
-            <span class="text-5">+</span>
-          </div>
-          <div class="faq__item__a">
-            <span class="text-r faq__item__answer">Casimir is launching with a small set of vatted validator
-              partners, but we will soon allow anyone with at least 1 ETH
-              collateral to run a validator. Validator performance is overseen
-              by a decentralized oracle network with performance specs used in
-              operator selection.
-            </span>
-          </div>
-        </div>
-
-        <div class="faq__item">
-          <div class="faq__item__q">
-            <span class="text-7">What are the staking fees?</span>
-            <span class="text-5">+</span>
-          </div>
-
-          <div class="faq__item__a">
-            <span class="text-r faq__item__answer">The Casimir smart contract charges a user a 5% fee on
-              deposits
-              and rewards to cover operational expenses including payments to
-              the distributed set of independently owned and operated
-              validators.
-            </span>
-          </div>
-        </div>
-
-        <div class="faq__item">
-          <div class="faq__item__q">
-            <span class="text-7">Can I run a validator?</span>
-            <span class="text-5">+</span>
-          </div>
-          <div class="faq__item__a">
-            <span class="text-r">If you have the technical ability and interest, you'll soon have
-              the chance to become a validator in our protocol. While we're
-              initially launching with a small group of white-listed validators,
-              we'll soon open up to everyone. Stay updated by joining our
-              Discord.
-            </span>
+          <div
+            v-if="item.open"
+            class="faq__item__a"
+          >
+            <span class="text-r">{{ item.answer }}</span>
           </div>
         </div>
       </div>
