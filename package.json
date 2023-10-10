@@ -16,6 +16,7 @@
     "dev": "npx esno -r dotenv/config scripts/root/dev.ts",
     "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts",
     "dev:landing": "npm run dev --workspace @casimir/landing",
+    "dev:blogs": "npm run dev --workspace @casimir/blogs",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "migrations:users": "npx esno -r dotenv/config scripts/migrations/users.ts",
@@ -54,11 +55,12 @@
     "eslint-plugin-vue": "^8.7.1",
     "esno": "^0.16.3",
     "ethers": "^5.7.2",
-    "express": "^4.18.1",
     "http-proxy-middleware": "^2.0.6",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.0",
     "release-it": "^15.6.0",
+    "vite-plugin-md": "^0.22.5",
+    "vite-plugin-vue-markdown": "^0.23.8",
     "zx": "^7.1.1"
   },
   "lint-staged": {
@@ -80,5 +82,6 @@
     "hooks": {
       "after:bump": "npx auto-changelog -p"
     }
-  }
+  },
+  "dependencies": {}
 }
