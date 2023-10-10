@@ -25,6 +25,7 @@
         "semi": ["error", "never"],
         "quotes": ["error", "single"],
         "vue/multi-word-component-names": "off",
+        "max-len": ["error", { "code": 150 }],
     },
     "ignorePatterns": [
         "contracts/**/scripts/resources",
