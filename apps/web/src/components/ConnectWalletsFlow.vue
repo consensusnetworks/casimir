@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, onUnmounted } from 'vue'
 import { CryptoAddress, Currency, LoginCredentials, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
 import useAuth from '@/composables/auth'
@@ -10,7 +10,7 @@ import useTrezor from '@/composables/trezor'
 import useUser from '@/composables/user'
 import useWalletConnect from '@/composables/walletConnectV2'
 
-type UserAuthFlowState = 'select_provider' | 'select_address' | 'loading' | 'success' | 'add_account' | 'confirm_signage_with_existing_secondary' | 'Error in userAuthState'
+type UserAuthFlowState = 'select_provider' | 'select_address' | 'loading' | 'success' | 'add_account' | 'confirm_signage_with_existing_secondary' | 'connection_failed'
 
 const supportedWalletProviders = [
   'MetaMask',
@@ -73,11 +73,16 @@ async function handleConfirmCreateAccountWithExistingSecondary() {
     flowState.value = 'select_address'
     errorMessage.value = true
     errorMassageText.value = 'Address selected is not active.'
+  } else if (response === 'Error in userAuthState') {
+    flowState.value = 'connection_failed'
+    setTimeout(() => {
+      props.toggleModal(false)
+      flowState.value = 'select_provider'
+    }, 1000)
   } else {
     errorMessage.value = true
     errorMassageText.value = 'Something went wrong, please try again later.'
   }
-  console.log('logging response => handle animnation here:', response)
 }
 
 /**
@@ -96,19 +101,24 @@ async function selectAddress(address: string, pathIndex: number): Promise<void> 
       flowState.value = 'select_provider'
     }, 1000)
   } else if (
-    response === 'Address already exists as a primary address on another account' || 
+    response === 'Address already exists as a primary address on another account' ||
     response === 'Address already exists as a secondary address on another account'
-  ){
+  ) {
     flowState.value = 'confirm_signage_with_existing_secondary'
-  } else if (response === 'Selected address is not active address in wallet'){
+  } else if (response === 'Selected address is not active address in wallet') {
     flowState.value = 'select_address'
     errorMessage.value = true
     errorMassageText.value = 'Address selected is not active.'
+  } else if (response === 'Error in userAuthState') {
+    flowState.value = 'connection_failed'
+    setTimeout(() => {
+      // props.toggleModal(false)
+      flowState.value = 'select_provider'
+    }, 1500)
   } else {
     errorMessage.value = true
     errorMassageText.value = 'Something went wrong, please try again later.'
   }
-  console.log('logging response => handle animnation here:', response)
 }
 
 /**
@@ -155,6 +165,14 @@ onMounted(() => {
     flowState.value = 'select_provider'
   }
 })
+
+onUnmounted(() => {
+  if (user.value) {
+    flowState.value = 'add_account'
+  } else {
+    flowState.value = 'select_provider'
+  }
+})
 </script>
 
 <template>
@@ -192,12 +210,11 @@ onMounted(() => {
           class="flex items-center gap-5"
         >
           <button
-            class="connect_wallet_btn relative"
+            class="connect_wallet_btn_provider relative"
+            :disabled="selectProviderLoading"
             @click="selectProvider(walletProvider, 'ETH')"
           >
-            <div 
-              :class="selectedProvider === walletProvider && selectProviderLoading? 'loading' : 'hidden'"
-            />
+            <div :class="selectedProvider === walletProvider && selectProviderLoading ? 'loading' : 'hidden'" />
             <img
               :src="`/${walletProvider.toLowerCase()}.svg`"
               :alt="`${walletProvider} logo`"
@@ -360,6 +377,22 @@ onMounted(() => {
       </div>
     </section>
 
+    <!-- SECTION: CONNECTION FAILED -->
+    <section
+      v-else-if="flowState === 'connection_failed'"
+      class="w-full h-full"
+    >
+      <div class="flex flex-col items-center justify-center h-full w-full gap-5">
+        <vue-feather
+          type="x-circle"
+          class="icon w-[45px] h-min text-decline"
+        />
+        <p>
+          Connection Failed, Please try again.
+        </p>
+      </div>
+    </section>
+
     <!-- SECTION: CONFIRMING SIGNAGE WITH AN EXISTING SECONDARY ACCOUNT -->
     <section
       v-else-if="flowState === 'confirm_signage_with_existing_secondary'"
@@ -421,12 +454,14 @@ onMounted(() => {
 
 @keyframes shimmer {
   0% {
-      background-position: -200% 0;
+    background-position: -200% 0;
   }
+
   100% {
-      background-position: 200% 0;
+    background-position: 200% 0;
   }
 }
+
 .action_button_cancel {
   background-color: #f3f5f8;
   border: 1px solid #ebebed;
@@ -464,6 +499,42 @@ onMounted(() => {
 .action_button:hover {
   border: 1px solid #e6e6e7;
   box-shadow: 0px 0px 10px 0px rgba(116, 116, 123, 0.28);
+}
+
+.connect_wallet_btn_provider {
+  width: 100%;
+  border: 1px solid #ebebed;
+  background-color: #f3f5f8;
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 5px;
+
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  color: #5b5c5f;
+  margin: 0 0 10px 0;
+}
+
+.connect_wallet_btn_provider:hover {
+  border: 1px solid #e6e6e7;
+  box-shadow: 0px 3px 6px 0px rgba(116, 116, 123, 0.18);
+}
+
+.connect_wallet_btn_provider:disabled {
+  opacity: 0.5;
+}
+
+.connect_wallet_btn_provider img {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
 }
 
 .connect_wallet_btn {
