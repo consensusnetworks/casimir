@@ -10,7 +10,7 @@ import useTrezor from '@/composables/trezor'
 import useUser from '@/composables/user'
 import useWalletConnect from '@/composables/walletConnectV2'
 
-type UserAuthFlowState = 'select_provider' | 'select_address' | 'loading' | 'success' | 'add_account' | 'confirm_signage_with_existing_secondary'
+type UserAuthFlowState = 'select_provider' | 'select_address' | 'loading' | 'success' | 'add_account' | 'confirm_signage_with_existing_secondary' | 'Error in userAuthState'
 
 const supportedWalletProviders = [
   'MetaMask',
@@ -108,7 +108,7 @@ async function selectAddress(address: string, pathIndex: number): Promise<void> 
     errorMessage.value = true
     errorMassageText.value = 'Something went wrong, please try again later.'
   }
-  console.log('loging response => handle animnation here:', response)
+  console.log('logging response => handle animnation here:', response)
 }
 
 /**

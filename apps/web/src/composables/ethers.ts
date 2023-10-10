@@ -172,7 +172,6 @@ export default function useEthers() {
 
   async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
     const { provider, address, currency } = loginCredentials
-    console.log('address in loginWithEthers :>> ', address)
     const browserProvider = getBrowserProvider(provider)
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     try {

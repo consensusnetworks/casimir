@@ -207,7 +207,6 @@ export default function useAuth() {
             return 'Selected address is not active address in wallet'
           }
         } else {
-          alert('Login not yet supported for this wallet provider')
           return 'Error in userAuthState'
         }
       }
@@ -270,7 +269,6 @@ export default function useAuth() {
    */
   async function loginWithProvider(loginCredentials: LoginCredentials) {
     const { provider } = loginCredentials
-    console.log('loginCredentials in loginWithProvider :>> ', loginCredentials)
     try {
       if (ethersProviderList.includes(provider)) {
         await loginWithEthers(loginCredentials)
