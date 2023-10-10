@@ -59,7 +59,6 @@
     "husky": "^8.0.1",
     "lint-staged": "^13.0.0",
     "release-it": "^15.6.0",
-    "sass": "^1.68.0",
     "vite-plugin-md": "^0.22.5",
     "vite-plugin-vue-markdown": "^0.23.8",
     "zx": "^7.1.1"
@@ -84,7 +83,5 @@
       "after:bump": "npx auto-changelog -p"
     }
   },
-  "dependencies": {
-    "snarkdown": "^2.0.0"
-  }
+  "dependencies": {}
 }
