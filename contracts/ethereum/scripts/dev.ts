@@ -231,11 +231,15 @@ void async function () {
     }()
 
     setTimeout(async () => {
-        const depositAmount = 64 * ((100 + await manager.FEE_PERCENT()) / 100)
+        const depositAmount = 32 * ((100 + await manager.FEE_PERCENT()) / 100)
         const depositStake = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
-        await depositStake?.wait()
+        await depositStake.wait()
     }, 2500)
 
+    process.env.MANAGER_ADDRESS = manager.address
+    process.env.REGISTRY_ADDRESS = registry.address
+    process.env.UPKEEP_ADDRESS = upkeep.address
+    process.env.VIEWS_ADDRESS = views.address
     process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = functionsBillingRegistry.address
     process.env.FUNCTIONS_ORACLE_ADDRESS = functionsOracle.address
     run('npm run dev --workspace @casimir/oracle')

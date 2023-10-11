@@ -8,7 +8,8 @@ import '@nomicfoundation/hardhat-toolbox'
 import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-abi-exporter'
 import 'hardhat-preprocessor'
-import { ETHEREUM_CONTRACTS } from '@casimir/env'
+import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL, ETHEREUM_SIGNERS, HARDHAT_NETWORK_KEY } from '@casimir/env'
+import './tasks/query'
 
 // Seed is provided
 const mnemonic = process.env.BIP39_SEED as string
@@ -18,8 +19,6 @@ const hid = { mnemonic, count: 10 }
 const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
 const mining = { auto: false, interval: miningInterval * 1000 } // miningInterval in ms
 
-// Live network rpc is provided with url and name
-const hardhatUrl = process.env.ETHEREUM_RPC_URL as string
 const hardhatNetwork = process.env.HARDHAT_NETWORK as string
 
 // Local network fork rpc url overrides live network
@@ -28,53 +27,31 @@ const forkNetwork = forkUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
 const forkChainId = { mainnet: 1, goerli: 5 }[forkNetwork]
 const forkConfig = { url: forkUrl, blockNumber: parseInt(process.env.ETHEREUM_FORK_BLOCK || '0') || undefined }
 
-const externalEnv = {
-    mainnet: {
-        BEACON_DEPOSIT_ADDRESS: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
-        DAO_ORACLE_ADDRESS: '',
-        FUNCTIONS_BILLING_REGISTRY_ADDRESS: '',
-        FUNCTIONS_ORACLE_ADDRESS: '',
-        KEEPER_REGISTRAR_ADDRESS: '	0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d',
-        KEEPER_REGISTRY_ADDRESS: '0x02777053d6764996e594c3E88AF1D58D5363a2e6',
-        LINK_ETH_FEED_ADDRESS: '0xDC530D9457755926550b59e8ECcdaE7624181557',
-        LINK_TOKEN_ADDRESS: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-        POOL_BEACON_ADDRESS: '',
-        REGISTRY_BEACON_ADDRESS: '',
-        SSV_NETWORK_ADDRESS: '',
-        SSV_TOKEN_ADDRESS: '0x9D65fF81a3c488d585bBfb0Bfe3c7707c7917f54',
-        SSV_VIEWS_ADDRESS: '',
-        SWAP_FACTORY_ADDRESS: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
-        SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
-        UPKEEP_BEACON_ADDRESS: '',
-        WETH_TOKEN_ADDRESS: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-    },
-    goerli: {
-        BEACON_DEPOSIT_ADDRESS: ETHEREUM_CONTRACTS.TESTNET.BEACON_DEPOSIT_ADDRESS,
-        DAO_ORACLE_ADDRESS: '',
-        FUNCTIONS_BILLING_REGISTRY_ADDRESS: '',
-        FUNCTIONS_ORACLE_ADDRESS: '',
-        KEEPER_REGISTRAR_ADDRESS: ETHEREUM_CONTRACTS.TESTNET.KEEPER_REGISTRAR_ADDRESS,
-        KEEPER_REGISTRY_ADDRESS: ETHEREUM_CONTRACTS.TESTNET.KEEPER_REGISTRY_ADDRESS,
-        LINK_ETH_FEED_ADDRESS: ETHEREUM_CONTRACTS.TESTNET.LINK_ETH_FEED_ADDRESS,
-        LINK_TOKEN_ADDRESS: ETHEREUM_CONTRACTS.TESTNET.LINK_TOKEN_ADDRESS,
-        POOL_BEACON_ADDRESS: '',
-        REGISTRY_BEACON_ADDRESS: '',
-        SSV_NETWORK_ADDRESS: ETHEREUM_CONTRACTS.TESTNET.SSV_NETWORK_ADDRESS,
-        SSV_TOKEN_ADDRESS: ETHEREUM_CONTRACTS.TESTNET.SSV_TOKEN_ADDRESS,
-        SSV_VIEWS_ADDRESS: ETHEREUM_CONTRACTS.TESTNET.SSV_VIEWS_ADDRESS,
-        SWAP_FACTORY_ADDRESS: ETHEREUM_CONTRACTS.TESTNET.SWAP_FACTORY_ADDRESS,
-        SWAP_ROUTER_ADDRESS: ETHEREUM_CONTRACTS.TESTNET.SWAP_ROUTER_ADDRESS,
-        UPKEEP_BEACON_ADDRESS: '',
-        WETH_TOKEN_ADDRESS: ETHEREUM_CONTRACTS.TESTNET.WETH_TOKEN_ADDRESS
-    }
-}
+const hardhatKey = hardhatNetwork?.toUpperCase() as keyof typeof HARDHAT_NETWORK_KEY
+const networkKey = HARDHAT_NETWORK_KEY[hardhatKey] || 'TESTNET'
 
-const network = forkNetwork || hardhatNetwork
-if (network) {
-    const args = externalEnv[network]
-    for (const key in args) {
-        process.env[key] = args[key as keyof typeof args]
-    }
+process.env.BEACON_DEPOSIT_ADDRESS = ETHEREUM_CONTRACTS[networkKey].BEACON_DEPOSIT_ADDRESS
+process.env.KEEPER_REGISTRAR_ADDRESS = ETHEREUM_CONTRACTS[networkKey].KEEPER_REGISTRAR_ADDRESS
+process.env.KEEPER_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].KEEPER_REGISTRY_ADDRESS
+process.env.LINK_ETH_FEED_ADDRESS = ETHEREUM_CONTRACTS[networkKey].LINK_ETH_FEED_ADDRESS
+process.env.LINK_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey].LINK_TOKEN_ADDRESS
+process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SSV_NETWORK_ADDRESS
+process.env.SSV_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SSV_TOKEN_ADDRESS
+process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SSV_VIEWS_ADDRESS
+process.env.SWAP_FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SWAP_FACTORY_ADDRESS
+process.env.SWAP_ROUTER_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SWAP_ROUTER_ADDRESS
+process.env.WETH_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey].WETH_TOKEN_ADDRESS
+
+if (hardhatNetwork !== 'localhost') {
+    process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || ETHEREUM_RPC_URL[networkKey]
+    process.env.OWNER_ADDRESS = ETHEREUM_SIGNERS[networkKey].OWNER_ADDRESS
+    process.env.DAO_ORACLE_ADDRESS = ETHEREUM_SIGNERS[networkKey].DAO_ORACLE_ADDRESS
+    process.env.MANAGER_ADDRESS = ETHEREUM_CONTRACTS[networkKey].MANAGER_ADDRESS
+    process.env.REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].REGISTRY_ADDRESS
+    process.env.UPKEEP_ADDRESS = ETHEREUM_CONTRACTS[networkKey].UPKEEP_ADDRESS
+    process.env.VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey].VIEWS_ADDRESS
+    process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_BILLING_REGISTRY_ADDRESS
+    process.env.FUNCTIONS_ORACLE_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_ORACLE_ADDRESS
 }
 
 const compilerSettings = {
@@ -145,14 +122,14 @@ const config: HardhatUserConfig = {
         },
         mainnet: {
             accounts: mnemonic ? hid : undefined,
-            url: hardhatUrl || '',
+            url: process.env.ETHEREUM_RPC_URL || '',
             allowUnlimitedContractSize: true,
             gas: 'auto',
             gasPrice: 'auto'
         },
         goerli: {
             accounts: mnemonic ? hid : undefined,
-            url: hardhatUrl || '',
+            url: process.env.ETHEREUM_RPC_URL || '',
             allowUnlimitedContractSize: true,
             gas: 'auto',
             gasPrice: 'auto'

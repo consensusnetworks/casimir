@@ -1,5 +1,4 @@
 import { ethers } from 'ethers'
-import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 
 export function getConfig() {
     const cliPath = process.env.CLI_PATH
@@ -15,7 +14,6 @@ export function getConfig() {
     const accountPath = 'm/44\'/60\'/0\'/0/1'
     const wallet = ethers.Wallet.fromMnemonic(mnemonic, accountPath)
 
-    const managerAbi = ICasimirManagerAbi
     const managerAddress = process.env.MANAGER_ADDRESS
     if (!managerAddress) throw new Error('No manager address provided')
     const registryAddress = process.env.REGISTRY_ADDRESS
@@ -44,7 +42,6 @@ export function getConfig() {
         configPath,
         ethereumUrl,
         wallet,
-        managerAbi,
         managerAddress,
         registryAddress,
         viewsAddress,

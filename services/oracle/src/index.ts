@@ -1,6 +1,7 @@
 import { getConfig } from './providers/config'
 import { getEventsIterable } from '@casimir/events'
 import { getStartBlock, updateErrorLog, updateStartBlock } from '@casimir/logs'
+import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 import {
     depositFunctionsBalanceHandler,
     depositUpkeepBalanceHandler,
@@ -16,7 +17,7 @@ const config = getConfig()
 
 const contracts = {
     CasimirManager: {
-        abi: config.managerAbi,
+        abi: ICasimirManagerAbi,
         address: config.managerAddress,
         events: {
             DepositRequested: initiateDepositHandler,

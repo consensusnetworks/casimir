@@ -48,8 +48,8 @@ void async function () {
 
     if (!process.env.REGISTRY_ADDRESS) {
         process.env.REGISTRY_ADDRESS = ethers.utils.getContractAddress({
-          from: process.env.MANAGER_ADDRESS,
-          nonce: 1
+            from: process.env.MANAGER_ADDRESS,
+            nonce: 1
         })
     }
 

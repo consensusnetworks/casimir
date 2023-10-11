@@ -10,6 +10,7 @@
         "dev:docs": "DEV=true npx esno scripts/docs.ts",
         "node": "npx hardhat node",
         "postinstall": "npx esno scripts/foundryup.ts",
+        "query": "npx hardhat query",
         "test": "npx esno scripts/test.ts",
         "upgrade": "npx hardhat run scripts/upgrade.ts"
     },
