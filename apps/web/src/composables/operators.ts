@@ -1,15 +1,13 @@
 import { readonly, ref } from 'vue'
-import useEnvironment from '@/composables/environment'
-import useContracts from '@/composables/contracts'
 import { Operator, Scanner } from '@casimir/ssv'
 import { Account, Pool, RegisteredOperator, RegisterOperatorWithCasimirParams, UserWithAccountsAndOperators } from '@casimir/types'
 import { ethers } from 'ethers'
+import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 
-const { manager, registry, views } = useContracts()
-const { ethereumUrl, ssvNetworkAddress, ssvViewsAddress, usersUrl } = useEnvironment()
+const { ethereumUrl, manager, registry, ssvNetworkAddress, ssvViewsAddress, usersUrl, views } = useEnvironment()
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
@@ -121,16 +119,6 @@ export default function useOperators() {
         return pools
     }
 
-    function listenForContractEvents(user: UserWithAccountsAndOperators) {
-        try {
-            registry.on('OperatorRegistered', () => getUserOperators(user))
-            // registry.on('OperatorDeregistered', getUserOperators)
-            // registry.on('DeregistrationRequested', getUserOperators)
-        } catch (err) {
-            console.log(`There was an error in listenForContractEvents: ${err}`)
-        }
-    }
-
     async function initializeComposable(user: UserWithAccountsAndOperators){
         try {
             loadingInitializeOperators.value = true
@@ -141,6 +129,16 @@ export default function useOperators() {
             loadingInitializeOperatorsError.value = true
             console.log('Error initializing operators :>> ', error)
             loadingInitializeOperators.value = false
+        }
+    }
+
+    function listenForContractEvents(user: UserWithAccountsAndOperators) {
+        try {
+            registry.on('OperatorRegistered', () => getUserOperators(user))
+            // registry.on('OperatorDeregistered', getUserOperators)
+            // registry.on('DeregistrationRequested', getUserOperators)
+        } catch (err) {
+            console.log(`There was an error in listenForContractEvents: ${err}`)
         }
     }
 
@@ -184,3 +182,45 @@ export default function useOperators() {
         registerOperatorWithCasimir,
     }
 }
+
+// async function _getSSVOperators(): Promise<SSVOperator[]> {
+//     const ownerAddresses = (user?.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+//     // const ownerAddressesTest = ['0x9725Dc287005CB8F11CA628Bb769E4A4Fc8f0309']
+//     try {
+//         // const promises = ownerAddressesTest.map((address) => _querySSVOperators(address))
+//         const promises = ownerAddresses.map((address) => _querySSVOperators(address))
+//         const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<any>>
+//         const operators = settledPromises
+//             .filter((result) => result.status === 'fulfilled')
+//             .map((result) => result.value)
+
+//         const ssvOperators = (operators[0] as Array<any>).map((operator) => {
+//             const { id, fee, name, owner_address, performance } = operator
+//             return {
+//                 id: id.toString(),
+//                 fee: ethers.utils.formatEther(fee),
+//                 name,
+//                 ownerAddress: owner_address,
+//                 performance
+//             } as SSVOperator
+//         })
+        
+//         return ssvOperators
+//     } catch (err) {
+//         console.error(`There was an error in _getSSVOperators function: ${JSON.stringify(err)}`)
+//         return []
+//     }
+// }
+
+// async function _querySSVOperators(address: string) {
+//     try {
+//         const network = 'prater'
+//         const url = `https://api.ssv.network/api/v4/${network}/operators/owned_by/${address}`
+//         const response = await fetch(url)
+//         const { operators } = await response.json()
+//         return operators
+//     } catch (err) {
+//         console.error(`There was an error in _querySSVOperators function: ${JSON.stringify(err)}`)
+//         return []
+//     }
+// }

@@ -3,12 +3,12 @@ import { providers } from 'ethers'
 import { EthereumProvider } from '@walletconnect/ethereum-provider'
 import { WalletConnectModal } from '@walletconnect/modal'
 import { PairingTypes, SessionTypes } from '@walletconnect/types'
-import useAuth from '@/composables/auth'
+import useSiwe from '@/composables/siwe'
 import useEthers from '@/composables/ethers'
 import useEnvironment from '@/composables/environment'
 import { CryptoAddress, LoginCredentials } from '@casimir/types'
 
-const { createSiweMessage, signInWithEthereum } = useAuth()
+const { createSiweMessage, signInWithEthereum } = useSiwe()
 const { walletConnectProjectId } = useEnvironment()
 const { getEthersBalance } = useEthers()
 
@@ -147,10 +147,7 @@ export default function useWalletConnectV2() {
   }
 
   function uninitializeWalletConnect() {
-    cleanupFunctions.forEach((cleanup) => {
-      console.log('cleaning up')
-      cleanup()
-    })
+    cleanupFunctions.forEach((cleanup) => cleanup())
     cleanupFunctions = [] // Reset the array
     componentIsMounted.value = false
   }

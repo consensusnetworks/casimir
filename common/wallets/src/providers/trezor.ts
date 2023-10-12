@@ -71,7 +71,7 @@ export class EthersTrezorSigner extends ethers.Signer {
         return signature
     }
 
-    async signMessageWithIndex(message: ethers.utils.Bytes | string, pathIndex: string): Promise<string> {
+    async signMessageWithIndex(message: ethers.utils.Bytes | string, pathIndex: number): Promise<string> {
         if (typeof (message) === 'string') message = ethers.utils.toUtf8Bytes(message)
         const messageHex = ethers.utils.hexlify(message).substring(2)
         const path = `m/44'/60'/${pathIndex}'/0/0`
