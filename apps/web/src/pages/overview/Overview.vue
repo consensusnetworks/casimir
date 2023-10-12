@@ -27,7 +27,7 @@ onMounted(() => {
 
 watch([loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitializeAnalytics, loadingInitializeOperators], () =>{
   setTimeout(() => {
-    if(loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators){
+    if (loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators) {
       showSkeleton.value = false
     }
   }, 500)
@@ -69,13 +69,13 @@ watch([loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitialize
         <div class="w-[0px] 1000s:w-full">
           <div class="sr-only 1000s:not-sr-only">
             <div class="w-full mb-[37px] relative">
-              <div 
+              <div
                 v-show="showSkeleton"
                 class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
               >
                 <div class="skeleton_box" />
               </div>
-              <StakingAvg view-id="small_view" /> 
+              <StakingAvg view-id="small_view" />
             </div>
           </div>
         </div>
@@ -95,9 +95,9 @@ watch([loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitialize
       <div class="1000s:sr-only not-sr-only">
         <div class="w-[300px]">
           <div class="w-full mb-[37px] relative">
-            <StakingAvg view-id="full_view" /> 
+            <StakingAvg view-id="full_view" />
             <div
-              v-show="loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators"
+              v-show="showSkeleton"
               class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
             >
               <div class="skeleton_box" />
@@ -110,20 +110,23 @@ watch([loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitialize
 </template>
 
 <style scoped>
-.title{
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 24px;
-    line-height: 31px;
-    letter-spacing: -0.03em;
-    color: #FFFFFF;
+.title {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 31px;
+  letter-spacing: -0.03em;
+  color: #FFFFFF;
 }
 
-.dynamic_width{
+.dynamic_width {
   width: calc(100% - 363px);
+
   @media (max-width: 1000px) {
-      width: 100%
-  };
+    width: 100%
+  }
+
+  ;
 }
 </style>

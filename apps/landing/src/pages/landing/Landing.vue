@@ -1,162 +1,363 @@
 <script lang="ts" setup>
-import useScreenDimentions from '@/composables/screenDimenstions'
-import DummyBreakdown from './comoponents/DummyBreakdown.vue'
-import DummyStaking from './comoponents/DummyStaking.vue'
-import DummyChart from './comoponents/DummyChart.vue'
-import Footer from './comoponents/Footer.vue'
-import QuestionsAndAnswers from './comoponents/QuestionsAndAnswers.vue'
-import Content from './comoponents/Content.vue'
-import Roadmap from './comoponents/Roadmap.vue'
-import Features from './comoponents/Features.vue'
+import { ref } from 'vue'
 
-const { screenWidth } = useScreenDimentions()
+const faqItems = ref(
+  [
+    {
+      question: 'Are there ways I can use my staked ETH for additional yield?',
+      answer: 'Although Casimir is not launching an LSD, there are opportunities for stakers to provide their native staked ETH as liquidity providers (e.g., to support a DAO). Additionally, we will be introducing restaking mechanisms like EigenLayer that will enable users to natively restake their ETH to maximize their APR, if desired.',
+      open: false,
+    },
+    {
+      question: 'Am I giving up custody of my staked ETH?',
+      answer: 'No! Keys created and held across validators with distributed key generation (DKG). You will always be able to withdraw your staked ETH from the Casimir smart contract.',
+      open: false,
+    },
+    {
+      question: 'How frequently do I get my rewards?',
+      answer: 'Rewards will be distributed as they are awarded by the Ethereum protocol, at least daily.',
+      open: false,
+    },
+    {
+      question: 'Where are my rewards distributed, is there a secondary token?',
+      answer: 'Your rewards will be distributed to the wallet you staked with; you won\'t need to deal with the hassle of swapping a token to get your rewards.',
+      open: false,
+    },
+    {
+      question: 'Which wallets are supported?',
+      answer: 'Today we natively support Metamask, Coinbase Wallet, Trust Wallet, Ledger, and Trezor. We also support most other providers through the WalletConnect protocol.',
+      open: false,
+    },
+    {
+      question: 'Is there a lockup period or waiting period for withdrawals?',
+      answer: 'Since you are staking native ETH, there may be a wait time for a validator to exit to receive your withdrawal. If you desire a quicker exit, we will soon be launching a native ETH liquidity pool, which will enable instant withdrawals.',
+      open: false,
+    },
+    {
+      question: 'Where is my stake going, who is running the validators?',
+      answer: 'Casimir is launching with a small set of vatted validator partners, but we will soon allow anyone with at least 1 ETH collateral to run a validator. Validator performance is overseen by a decentralized oracle network with performance specs used in operator selection.',
+      open: false,
+    },
+    {
+      question: 'What are the staking fees?',
+      answer: 'The Casimir smart contract charges a user a 5% fee on deposits and rewards to cover operational expenses including payments to the distributed set of independently owned and operated validators.',
+      open: false,
+    },
+    {
+      question: 'Can I run a validator?',
+      answer: 'If you have the technical ability and interest, you\'ll soon have the chance to become a validator in our protocol. While we\'re initially launching with a small group of white-listed validators, we\'ll soon open up to everyone. Stay updated by joining our Discord.',
+      open: false,
+    },
+  ],
+)
+
+const toggleQuestionItem = (index: number) => {
+  faqItems.value[index].open = !faqItems.value[index].open
+} 
 </script>
 
 <template>
-  <div class=" text-center pt-[40px] pb-[40px]">
-    <!-- Page Header -->
-    <h1 class="page_header">
-      Ethereum Staking
-    </h1>
-    <h1 class="page_header">
-      Made Simple
-    </h1>
+  <div>
+    <nav class="nav">
+      <div class="nav__container">
+        <a href="/">
+          <img
+            class="logo"
+            src="/logo.svg"
+          >
+        </a>
+        <ul class="nav__links">
+          <li>
+            <a
+              href="https://github.com/consensusnetworks/casimir#casimir"
+              target="_blank"
+            >API Reference</a>
+          </li>
+          <li>
+            <a href="/blogs">Blog</a>
+          </li>
+          <li>
+            <a href="/changelog">Changelog</a>
+          </li>
+          <li>
+            <a
+              href="https://consensusnetworks.com"
+              target="_blank"
+            >Company</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
-    <h2 class="page_subheader my-[20px]">
-      A simple, self-custody staking platform
-    </h2>
-
-    <div class="flex justify-center mb-[40px]">
-      <a
-        href="https://app.dev.casimir.co/"
-        class="rounded-[3px] bg-white text-black text-[13px] 
-        font-[400] px-[20px] py-[6px] flex items-center gap-[5px] w-min whitespace-nowrap"
-        style="box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);"
-      >
-        Launch App
-        <vue-feather
-          type="arrow-up-right"
-          class="icon h-[14px]"
-        />
-      </a>
-    </div>
-
-    <!-- Screenshots -->
-    <div
-      class="w-full flex items-center justify-between gap-[20px]"
-      :class="screenWidth <= 1370? 'flex-wrap' :''"
-    >
-      <div
-        class=" w-[60%] flex items-center justify-between gap-[20px]" 
-        :style="screenWidth <= 1370? 'width: 100%' :'width: 60%'"
-        :class="screenWidth <= 870? 'flex-wrap-reverse' :''"
-      >
-        <div
-          class="screenshot_card w-full h-[530px]"
-          :class="screenWidth <= 870? 'w-full' :'max-w-[300px]'"
-        >
-          <DummyStaking />
+    <section class="hero">
+      <div class="hero__container">
+        <div class="text__container">
+          <span class="pill">Beta</span>
+          <h1 class="text-1">
+            Stake and earn Ethereum <br>
+            without giving up custody
+          </h1>
+          <!-- <span class="text-r">
+            Casimir allows you to natively stake any amount of Ethereum to a decentralized
+            set<br />of validators and earn native ETH (no LSDs/LSTs) without
+            giving up custody.
+          </span> -->
         </div>
-        <div class="w-full h-[530px] flex flex-col gap-[20px]">
-          <div class="screenshot_card h-full w-full relative">
-            <img
-              src="https://ethereum.org/static/eth-diamond-purple.svg"
-              alt="Ethereum Icon"
-              class="absolute top-[50% - 50px] h-[200px] z-[2]"
-              :style="'top: calc(50% - 100px); left: calc(50% - 100px)'"
-            >
+        <div class="cta__container">
+          <a
+            href="https://app.dev.casimir.co"
+            class="btn-primary"
+          >
+            Launch App
+          </a>
+          <a
+            href="https://drive.google.com/file/d/1giIojTS-4gf0xWXUirmd2AaqalFmgA72/view"
+            class="btn-secondary"
+          >
+            Read the Whitepaper
+          </a>
+        </div>
+      </div>
+      <div class="mockup">
+        <img src="/hero.png">
+      </div>
+    </section>
+
+    <section class="overview">
+      <div class="overview__header">
+        <span class="highlight text-8">Minimized Risk & Maximized Rewards</span>
+        <h2>
+          Casimir is built to maximize your rewards <br>
+          without compromising security.
+        </h2>
+      </div>
+      <!-- <div class="mock"><img src="/hero.png" /></div> -->
+      <div class="overview__container">
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img
+                src="/key.svg"
+                width="17"
+              >
+            </div>
+            <span class="text-7 bold">No Single Points of Failure</span>
+          </div>
+          <span class="text-r">
+            Distributed validator technology (DVT) greatly mitigates loss of
+            funds.
+          </span>
+        </div>
+
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img
+                src="/disc.svg"
+                width="17"
+              >
+            </div>
+            <span class="text-7 bold">Non-Custodial (DKG)</span>
+          </div>
+          <span class="text-r">
+            Keys created and held across validators with distributed key
+            generation (DKG).
+          </span>
+        </div>
+
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img
+                src="/flash.svg"
+                width="17"
+              >
+            </div>
+            <span class="text-7 bold">You're In Control</span>
+          </div>
+          <span class="text-r">
+            You can stake any amount and withdraw at any time, no lockup period.
+          </span>
+        </div>
+
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img
+                src="/credit-card.svg"
+                width="17"
+              >
+            </div>
+            <span class="text-7 bold">Incentives Drive Rewards</span>
+          </div>
+          <span class="text-r">
+            Validators are incentivized to provide the best service to earn your
+            stake.
+          </span>
+        </div>
+
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img
+                src="/users.svg"
+                width="17"
+              >
+            </div>
+            <span class="text-7 bold">Permissionless & Auditable</span>
+          </div>
+          <span class="text-r">
+            Casimir is open-sourced; anyone can use and review the service.
+          </span>
+        </div>
+
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img
+                src="/disc.svg"
+                width="17"
+              >
+            </div>
+            <span class="text-7 bold">Finds You Other Ways to Earn</span>
+          </div>
+          <span class="text-r">
+            Our architecture allows us to integrate crypto-native features like
+            Eigenlayer.
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="bento">
+      <h2 class="">
+        Staking. Analytics. We've got you covered.
+      </h2>
+      <div class="bento__container">
+        <div class="bento__base__card bento__card__1">
+          <h2 class="text-6">
+            Simple self-custodial <br>Ethereum staking
+          </h2>
+          <div><img src="/tx.png"></div>
+        </div>
+        <div class="bento__base__card bento__card__2">
+          <h2 class="text-6">
+            Connect multiple wallets to stake
+          </h2>
+          <div><img src="/tx.png"></div>
+        </div>
+        <div class="bento__base__card bento__card__3">
+          <h2 class="text-6">
+            Simple self-custodial <br>Ethereum staking
+          </h2>
+          <div><img src="/tx.png"></div>
+        </div>
+        <div class="bento__base__card bento__card__4">
+          <h2 class="text-6">
+            Connect multiple wallets to stake
+          </h2>
+          <div><img src="/stake.png"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- <section class="roadmap">
+      <div class="roadmap__header">
+        <span class="highlight text-8">Minimized Risk & Maximized Rewards</span>
+        <h2>
+          Casimir is built to maximize your rewards <br />
+          without compromising security.
+        </h2>
+      </div>
+      <div class="roadmap__item__container">
+        <div class="roadmap__item done">
+          <div class="roadmap__item__point">1</div>
+          <span class="text-7">Internal Testnet</span>
+        </div>
+
+        <div class="roadmap__item done">
+          <div class="roadmap__item__point">2</div>
+          <span class="highlight">Goerli Launch</span>
+        </div>
+
+        <div class="roadmap__item done">
+          <div class="roadmap__item__point">3</div>
+          <span class="highlight">Mainnet Beta</span>
+        </div>
+
+        <div class="roadmap__item">
+          <div class="roadmap__item__point">4</div>
+          <span class="highlight">Mainnet Launch</span>
+        </div>
+
+        <div class="roadmap__item">
+          <div class="roadmap__item__point">5</div>
+          <span class="highlight">Eigenlayer Restaking</span>
+        </div>
+      </div>
+    </section> -->
+
+    <section class="faq">
+      <h2>Frequently Asked Questions</h2>
+
+      <div class="faq__container w-full">
+        <div
+          v-for="(item, index) in faqItems"
+          :key="index"
+          class="faq__item"
+        >
+          <div
+            class="faq__item__q"
+            @click="toggleQuestionItem(index)"
+          >
+            <span class="text-7">{{ item.question }}</span>
+            <span :class="{ 'text-5': !item.open, 'text-6': item.open }">
+              {{ item.open ? '-' : '+' }}
+            </span>
           </div>
           <div
-            v-if="screenWidth >= 500"
-            class="h-full flex items-center justify-between gap-[20px]"
+            v-if="item.open"
+            class="faq__item__a"
           >
-            <div class="screenshot_card h-full w-full">
-              <DummyBreakdown
-                :title="'Available Balance'"
-                :amount="'1.98 ETH'"
-                :exchange="'$ 15.12 K'"
-              />
-              <div class="relative h-[80px] mt-[50px]">
-                <img
-                  src="/walletIcon.svg"
-                  alt="Wallet Illustration"
-                  class="h-full absolute top-0 z-[1]"
-                  :style="'left: calc(50% - 40px)'"
-                >
-              </div>
-            </div>
-            <div class="w-full h-full flex flex-col gap-[20px]">
-              <div class="screenshot_card h-full">
-                <DummyBreakdown
-                  :title="'Currently Staked'"
-                  :amount="'4.32 ETH'"
-                  :exchange="'$ 10.21 K'"
-                />
-              </div>
-              <div class="screenshot_card h-full">
-                <DummyBreakdown
-                  :title="'Rewards Earned'"
-                  :amount="'14.2 ETH'"
-                  :exchange="'$ 2.32 K'"
-                />
-              </div>
-            </div>
+            <span class="text-r">{{ item.answer }}</span>
           </div>
         </div>
       </div>
-      <div
-        class="screenshot_card w-[40%] h-[530px]" 
-        :style="screenWidth <= 1370? 'width: 100%' :'width: 40%'"
-      >
-        <DummyChart />
+    </section>
+
+    <section class="footer">
+      <div class="footer__container">
+        <span class="c">© 2023 Casimir. All rights reserved.</span>
+        <ul>
+          <li>
+            <a
+              href="https://api.casimir.co"
+              target="_blank"
+            >API Reference</a>
+          </li>
+          <li>
+            <a
+              href="/"
+              target="_blank"
+            >Discord</a>
+          </li>
+          <li>
+            <a
+              href="https://github.com/consensusnetworks/casimir"
+              target="_blank"
+            >GitHub</a>
+          </li>
+          <li>
+            <a
+              href="/"
+              target="_blank"
+            >Contact Us</a>
+          </li>
+        </ul>
       </div>
-    </div>
-
-    <!-- Features -->
-    <Features class="my-[15px] w-full" />  
-    
-    <!-- Litepaper Content -->
-    <Content class="mt-[250px] w-full" />
-
-    <!-- Roadmap -->
-    <Roadmap class="mb-[150px] w-full" />
-
-    <!-- Q&As -->
-    <QuestionsAndAnswers class="my-[15px] w-full" />
-
-    <!-- Footer -->
-    <Footer class="my-[15px] w-full" />
+    </section>
   </div>
 </template>
 
 
-<style scoped>
-
-.screenshot_card{
-    border-radius: 8px;
-    border: 1px solid var(--gray-300, #D0D5DD);
-    background: #FFF;
-    box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
-    overflow: hidden;
-}
-
-.page_header{
-    color: #FFF;
-    text-align: center;
-    font-family: IBM Plex Sans;
-    font-size: 84px;
-    font-style: normal;
-    font-weight: 500;
-    line-height: 77px;
-    letter-spacing: -3.25px;
-}
-.page_subheader {
-    color: #CECECE;
-    text-align: center;
-    font-family: IBM Plex Sans;
-    font-size: 18px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 20px;
-}
-</style>
+<style scoped></style>
