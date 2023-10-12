@@ -262,13 +262,11 @@ function getBrowserProvider(providerString: ProviderString) {
   try {
     const { ethereum } = window
     if (providerString === 'CoinbaseWallet') {
-      if (ethereum?.providerMap.get(providerString)){
-        return ethereum.providerMap.get(providerString)
-      } else {
-        window.open('https://www.coinbase.com/wallet/downloads', '_blank')
-      }
+      if (!ethereum.providerMap) return alert('TrustWallet or another wallet may be interfering with CoinbaseWallet. Please disable other wallets and try again.')
+      if (ethereum?.providerMap.get(providerString)) return ethereum.providerMap.get(providerString)
+        else window.open('https://www.coinbase.com/wallet/downloads', '_blank')
     } else if (providerString === 'MetaMask') {
-      if (ethereum.providerMap) {
+      if (ethereum.providerMap && ethereum.providerMap.get('MetaMask')) {
         return ethereum?.providerMap?.get(providerString) || undefined
       } else if (ethereum.isMetaMask) {
         return ethereum
@@ -305,6 +303,7 @@ function getOkxWallet() {
 function getTrustWallet() {
   const { ethereum } = window as any
   const providers = ethereum?.providers
+  if (ethereum.isTrust) return ethereum
   if (providers) {
     for (const provider of providers) {
       if (provider.isTrustWallet) return provider

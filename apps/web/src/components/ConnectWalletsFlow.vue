@@ -9,6 +9,7 @@ import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useUser from '@/composables/user'
 import useWalletConnect from '@/composables/walletConnectV2'
+// import useWallets from '@/composables/wallets'
 
 type UserAuthFlowState = 'select_provider' | 'select_address' | 'loading' | 'success' | 'add_account' | 'confirm_signage_with_existing_secondary' | 'connection_failed'
 
@@ -29,6 +30,7 @@ const { getLedgerAddress } = useLedger()
 const { getTrezorAddress } = useTrezor()
 const { user } = useUser()
 const { connectWalletConnectV2 } = useWalletConnect()
+// const { installedWallets, detectInstalledWalletProviders } = useWallets()
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
@@ -157,7 +159,6 @@ watch(props, () => {
   if (user.value) flowState.value = 'add_account'
 })
 
-
 onMounted(() => {
   if (user.value) {
     flowState.value = 'add_account'
@@ -225,7 +226,7 @@ onUnmounted(() => {
             </h6>
           </button>
           <!-- TODO: @Chris need a way to find out if the extenstion is not downloaded -->
-          <div
+          <!-- <div
             v-show="Math.random() < 0.5"
             class="tooltip_container text-white"
           >
@@ -237,7 +238,7 @@ onUnmounted(() => {
               You currently do not have the extension for this wallet provider connected, click the button
               to take you to the wallet provider extension page.
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
       <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">

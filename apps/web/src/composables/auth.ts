@@ -310,7 +310,6 @@ export default function useAuth() {
       try {
         loadingSessionLogin.value = true
         const session = await Session.doesSessionExist()
-        console.log(session)
         if (session) await getUser()
         await initializeWalletConnect() // Can potentially move this elsewhere
         loadingSessionLogin.value = false

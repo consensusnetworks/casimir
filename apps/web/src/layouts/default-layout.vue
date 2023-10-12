@@ -5,18 +5,25 @@ import VueFeather from 'vue-feather'
 import useAuth from '@/composables/auth'
 import useScreenDimensions from '@/composables/screenDimensions'
 import useUser from '@/composables/user'
+import useWallets from '@/composables/wallets'
 
 import ConnectWalletsFlow from '@/components/ConnectWalletsFlow.vue'
 
 const { screenWidth } = useScreenDimensions()
 const { logout } = useAuth()
 const { user } = useUser()
+const { detectInstalledWalletProviders } = useWallets()
 
 const authFlowCardNumber = ref(1)
 const openRouterMenu = ref(false)
 const openWalletsModal = ref(false)
 
 const show_setting_modal = ref(false)
+
+async function handleConnectWalletButtonClick() {
+  openWalletsModal.value = true
+  await detectInstalledWalletProviders()
+}
 
 const handleOutsideClick = (event: any) => {
   const setting_modal = document.getElementById('setting_modal')
@@ -163,7 +170,7 @@ const toggleModal = (showModal: boolean) => {
             <button
               id="connect_wallet_button"
               class="connect_wallet flex justify-between items-center gap-[8px] whitespace-nowrap"
-              @click="openWalletsModal = true"
+              @click="handleConnectWalletButtonClick"
             >
               Connect Wallet
             </button>
