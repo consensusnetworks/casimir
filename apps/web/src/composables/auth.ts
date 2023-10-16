@@ -1,18 +1,18 @@
-import * as Session from 'supertokens-web-js/recipe/session'
-import { onMounted, onUnmounted, readonly, ref } from 'vue'
-import useEnvironment from '@/composables/environment'
-import useEthers from '@/composables/ethers'
-import useLedger from '@/composables/ledger'
-import useTrezor from '@/composables/trezor'
-import useUser from '@/composables/user'
-import useWalletConnect from '@/composables/walletConnectV2'
+import * as Session from "supertokens-web-js/recipe/session"
+import { onMounted, onUnmounted, readonly, ref } from "vue"
+import useEnvironment from "@/composables/environment"
+import useEthers from "@/composables/ethers"
+import useLedger from "@/composables/ledger"
+import useTrezor from "@/composables/trezor"
+import useUser from "@/composables/user"
+import useWalletConnect from "@/composables/walletConnectV2"
 import {
   Account,
   ApiResponse,
   LoginCredentials,
   ProviderString,
   UserAuthState,
-} from '@casimir/types'
+} from "@casimir/types"
 
 const { usersUrl } = useEnvironment()
 const { ethersProviderList, detectActiveEthersWalletAddress, loginWithEthers } =
@@ -48,19 +48,19 @@ export default function useAuth() {
         account?.walletProvider === provider &&
         account?.currency === currency
     )
-    if (userAccountExists) return 'Account already exists for this user'
+    if (userAccountExists) return "Account already exists for this user"
     const account = {
       userId: user?.value?.id,
       address: address.toLowerCase() as string,
-      currency: currency || 'ETH',
+      currency: currency || "ETH",
       ownerAddress: user?.value?.address.toLowerCase() as string,
       walletProvider: provider,
     }
 
     const requestOptions = {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ account, id: user?.value?.id }),
     }
@@ -72,11 +72,11 @@ export default function useAuth() {
       )
       const { error, message, data: updatedUser } = await response.json()
       if (error)
-        throw new Error(message || 'There was an error adding the account')
+        throw new Error(message || "There was an error adding the account")
       setUser(updatedUser)
       return { error, message, data: updatedUser }
     } catch (error: any) {
-      throw new Error(error.message || 'Error adding account')
+      throw new Error(error.message || "Error adding account")
     }
   }
 
@@ -85,7 +85,7 @@ export default function useAuth() {
       return await detectActiveEthersWalletAddress(providerString)
     } else {
       alert(
-        'detectActiveWalletAddress not yet implemented for this wallet provider'
+        "detectActiveWalletAddress not yet implemented for this wallet provider"
       )
     }
   }
@@ -93,9 +93,9 @@ export default function useAuth() {
   async function getUser() {
     try {
       const requestOptions = {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }
       const response = await fetch(`${usersUrl}/user`, requestOptions)
@@ -103,7 +103,7 @@ export default function useAuth() {
       if (error) throw new Error(error)
       await setUser(retrievedUser)
     } catch (error: any) {
-      throw new Error('Error getting user from API route')
+      throw new Error("Error getting user from API route")
     }
   }
 
@@ -113,9 +113,9 @@ export default function useAuth() {
   ): Promise<ApiResponse> {
     try {
       const requestOptions = {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }
       const response = await fetch(
@@ -126,7 +126,7 @@ export default function useAuth() {
       if (error) throw new Error(message)
       return { error, message, data }
     } catch (error: any) {
-      throw new Error(error.message || 'Error checking if primary user exists')
+      throw new Error(error.message || "Error checking if primary user exists")
     }
   }
 
@@ -140,7 +140,7 @@ export default function useAuth() {
         const addressExistsOnUser = user.value?.accounts?.some(
           (account: Account | any) => account?.address === address
         )
-        if (addressExistsOnUser) return 'Address already exists on this account'
+        if (addressExistsOnUser) return "Address already exists on this account"
 
         // Check if it exists as a primary address of a different user
         const {
@@ -148,7 +148,7 @@ export default function useAuth() {
         } = await checkIfPrimaryUserExists(provider as ProviderString, address)
         // If yes, ask user if they want to add it as a secondary to this account or if they want to log in with that account
         if (sameAddress) {
-          return 'Address already exists as a primary address on another account'
+          return "Address already exists as a primary address on another account"
           // If they want to add to account, addAccountToUser
           // If they don't want to add to their account, cancel (or log them out and log in with other account)
         } else {
@@ -156,12 +156,12 @@ export default function useAuth() {
           const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(address)
           // If yes, alert user that it already exists as a secondary address on another account and ask if they want to add it as a secondary to this account
           if (accountsIfSecondaryAddress.length) {
-            console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
-            return 'Address already exists as a secondary address on another account'
+            console.log("accountsIfSecondaryAddress :>> ", accountsIfSecondaryAddress)
+            return "Address already exists as a secondary address on another account"
           } else {
             // If no, addAccountToUser
             await addAccountToUser(loginCredentials)
-            return 'Successfully added account to user'
+            return "Successfully added account to user"
           }
         }
       } else {
@@ -169,29 +169,29 @@ export default function useAuth() {
         const { data: { sameAddress, walletProvider } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
         if (sameAddress) {
           await loginWithProvider(loginCredentials as LoginCredentials)
-          return 'Successfully logged in'
+          return "Successfully logged in"
         }
 
         // Then check if address is being used as a secondary account by another user
         const { data: accountsIfSecondaryAddress } =
           await checkIfSecondaryAddress(address)
-        console.log('accountsIfSecondaryAddress :>> ', accountsIfSecondaryAddress)
+        console.log("accountsIfSecondaryAddress :>> ", accountsIfSecondaryAddress)
         if (accountsIfSecondaryAddress.length) {
-          return 'Address already exists as a secondary address on another account'
+          return "Address already exists as a secondary address on another account"
         }
 
         // Handle user interaction (do they want to sign in with another account?)
         // If yes, log out (and/or log them in with the other account)
         // If no, cancel/do nothing
 
-        const hardwareWallet = provider === 'Ledger' || provider === 'Trezor'
+        const hardwareWallet = provider === "Ledger" || provider === "Trezor"
         const browserWallet = ethersProviderList.includes(
           provider as ProviderString
         )
         if (hardwareWallet) {
           await loginWithProvider(loginCredentials as LoginCredentials)
           await getUser()
-          return 'Successfully logged in'
+          return "Successfully logged in"
         } else if (browserWallet) {
           const activeAddress = await detectActiveWalletAddress(
             provider as ProviderString
@@ -200,41 +200,41 @@ export default function useAuth() {
             await loginWithProvider({
               provider: provider as ProviderString,
               address,
-              currency: 'ETH',
+              currency: "ETH",
             })
-            return 'Successfully logged in'
+            return "Successfully logged in"
           } else {
-            return 'Selected address is not active address in wallet'
+            return "Selected address is not active address in wallet"
           }
         } else {
-          return 'Error in userAuthState'
+          return "Error in userAuthState"
         }
       }
     } catch (error: any) {
-      return 'Error in userAuthState'
+      return "Error in userAuthState"
     }
   }
 
   async function loginWithSecondaryAddress(loginCredentials: LoginCredentials) {
     const { address, provider } = loginCredentials
     try {
-      const hardwareWallet = provider === 'Ledger' || provider === 'Trezor'
+      const hardwareWallet = provider === "Ledger" || provider === "Trezor"
       const browserWallet = ethersProviderList.includes(provider as ProviderString)
       if (hardwareWallet) {
         await loginWithProvider(loginCredentials as LoginCredentials)
         await getUser()
-        return 'Successfully created account and logged in'
+        return "Successfully created account and logged in"
       } else if (browserWallet) {
         const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
         if (activeAddress === address) {
-          await loginWithProvider({ provider: provider as ProviderString, address,currency: 'ETH' })
-          return 'Successfully created account and logged in'
+          await loginWithProvider({ provider: provider as ProviderString, address,currency: "ETH" })
+          return "Successfully created account and logged in"
         } else {
-          return 'Selected address is not active address in wallet'
+          return "Selected address is not active address in wallet"
         }
       }
     } catch(err) {
-      return 'Error in userAuthState'
+      return "Error in userAuthState"
     }
   }
 
@@ -243,9 +243,9 @@ export default function useAuth() {
   ): Promise<ApiResponse> {
     try {
       const requestOptions = {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }
       const response = await fetch(
@@ -256,7 +256,7 @@ export default function useAuth() {
       if (error) throw new Error(message)
       return { error, message, data }
     } catch (error: any) {
-      throw new Error(error.message || 'Error checking if secondary address')
+      throw new Error(error.message || "Error checking if secondary address")
     }
   }
 
@@ -272,18 +272,18 @@ export default function useAuth() {
     try {
       if (ethersProviderList.includes(provider)) {
         await loginWithEthers(loginCredentials)
-      } else if (provider === 'Ledger') {
+      } else if (provider === "Ledger") {
         await loginWithLedger(loginCredentials)
-      } else if (provider === 'Trezor') {
+      } else if (provider === "Trezor") {
         await loginWithTrezor(loginCredentials)
-      } else if (provider === 'WalletConnect') {
+      } else if (provider === "WalletConnect") {
         await loginWithWalletConnectV2(loginCredentials)
       } else {
-        console.log('Sign up not yet supported for this wallet provider')
+        console.log("Sign up not yet supported for this wallet provider")
       }
       await getUser()
     } catch (error: any) {
-      throw new Error(error.message || 'There was an error logging in')
+      throw new Error(error.message || "There was an error logging in")
     }
   }
 
@@ -296,7 +296,7 @@ export default function useAuth() {
       loadingSessionLogout.value = false
     } catch (error) {
       loadingSessionLogoutError.value = true
-      console.log('Error logging out user :>> ', error)
+      console.log("Error logging out user :>> ", error)
       loadingSessionLogout.value = false
     }
     // TODO: Fix bug that doesn't allow you to log in without refreshing page after a user logs out
@@ -315,7 +315,7 @@ export default function useAuth() {
         loadingSessionLogin.value = false
       } catch (error) {
         loadingSessionLoginError.value = true
-        console.log('error getting user :>> ', error)
+        console.log("error getting user :>> ", error)
         loadingSessionLogin.value = false
       }
     }
@@ -356,9 +356,9 @@ export default function useAuth() {
   async function updatePrimaryAddress(updatedAddress: string) {
     const userId = user?.value?.id
     const requestOptions = {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ userId, updatedAddress }),
     }

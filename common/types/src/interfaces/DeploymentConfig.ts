@@ -1,4 +1,4 @@
-import { ContractConfig } from './ContractConfig'
+import { ContractConfig } from "./ContractConfig"
 
 export interface DeploymentConfig {
     CasimirManager: ContractConfig

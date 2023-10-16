@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, onUnmounted } from 'vue'
-import { CryptoAddress, Currency, LoginCredentials, ProviderString } from '@casimir/types'
-import VueFeather from 'vue-feather'
-import useAuth from '@/composables/auth'
-import useEthers from '@/composables/ethers'
-import useFormat from '@/composables/format'
-import useLedger from '@/composables/ledger'
-import useTrezor from '@/composables/trezor'
-import useUser from '@/composables/user'
-import useWalletConnect from '@/composables/walletConnectV2'
+import { onMounted, ref, watch, onUnmounted } from "vue"
+import { CryptoAddress, Currency, LoginCredentials, ProviderString } from "@casimir/types"
+import VueFeather from "vue-feather"
+import useAuth from "@/composables/auth"
+import useEthers from "@/composables/ethers"
+import useFormat from "@/composables/format"
+import useLedger from "@/composables/ledger"
+import useTrezor from "@/composables/trezor"
+import useUser from "@/composables/user"
+import useWalletConnect from "@/composables/walletConnectV2"
 // import useWallets from '@/composables/wallets'
 
-type UserAuthFlowState = 'select_provider' | 'select_address' | 'loading' | 'success' | 'add_account' | 'confirm_signage_with_existing_secondary' | 'connection_failed'
+type UserAuthFlowState = "select_provider" | "select_address" | "loading" | "success" | "add_account" | "confirm_signage_with_existing_secondary" | "connection_failed"
 
 const supportedWalletProviders = [
-  'MetaMask',
-  'CoinbaseWallet',
-  'WalletConnect',
-  'Trezor',
-  'Ledger',
-  'TrustWallet',
+  "MetaMask",
+  "CoinbaseWallet",
+  "WalletConnect",
+  "Trezor",
+  "Ledger",
+  "TrustWallet",
   // 'IoPay',
 ] as ProviderString[]
 
@@ -44,9 +44,9 @@ const props = defineProps({
   }
 })
 
-const flowState = ref<UserAuthFlowState>('select_provider')
+const flowState = ref<UserAuthFlowState>("select_provider")
 const errorMessage = ref(false)
-const errorMassageText = ref('Something went wrong, please try again later.')
+const errorMassageText = ref("Something went wrong, please try again later.")
 const walletProviderAddresses = ref([] as CryptoAddress[])
 const selectProviderLoading = ref(false)
 const selectedProvider = ref(null as ProviderString | null)
@@ -62,28 +62,28 @@ function checkIfAddressIsUsed(account: CryptoAddress): boolean {
 }
 
 async function handleConfirmCreateAccountWithExistingSecondary() {
-  flowState.value = 'loading'
-  const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address: selectedAddress.value as string, currency: 'ETH', pathIndex: 0 }
+  flowState.value = "loading"
+  const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address: selectedAddress.value as string, currency: "ETH", pathIndex: 0 }
   const response = await loginWithSecondaryAddress(loginCredentials)
-  if (response === 'Successfully created account and logged in') {
-    flowState.value = 'success'
+  if (response === "Successfully created account and logged in") {
+    flowState.value = "success"
     setTimeout(() => {
       props.toggleModal(false)
-      flowState.value = 'select_provider'
+      flowState.value = "select_provider"
     }, 1000)
-  } else if (response === 'Selected address is not active address in wallet') {
-    flowState.value = 'select_address'
+  } else if (response === "Selected address is not active address in wallet") {
+    flowState.value = "select_address"
     errorMessage.value = true
-    errorMassageText.value = 'Address selected is not active.'
-  } else if (response === 'Error in userAuthState') {
-    flowState.value = 'connection_failed'
+    errorMassageText.value = "Address selected is not active."
+  } else if (response === "Error in userAuthState") {
+    flowState.value = "connection_failed"
     setTimeout(() => {
       props.toggleModal(false)
-      flowState.value = 'select_provider'
+      flowState.value = "select_provider"
     }, 1000)
   } else {
     errorMessage.value = true
-    errorMassageText.value = 'Something went wrong, please try again later.'
+    errorMassageText.value = "Something went wrong, please try again later."
   }
 }
 
@@ -93,33 +93,33 @@ async function handleConfirmCreateAccountWithExistingSecondary() {
 */
 async function selectAddress(address: string, pathIndex: number): Promise<void> {
   selectedAddress.value = address
-  flowState.value = 'loading'
-  const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: 'ETH', pathIndex }
+  flowState.value = "loading"
+  const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: "ETH", pathIndex }
   const response = await login(loginCredentials)
-  if (response === 'Successfully logged in' || response === 'Successfully added account to user') {
-    flowState.value = 'success'
+  if (response === "Successfully logged in" || response === "Successfully added account to user") {
+    flowState.value = "success"
     setTimeout(() => {
       props.toggleModal(false)
-      flowState.value = 'select_provider'
+      flowState.value = "select_provider"
     }, 1000)
   } else if (
-    response === 'Address already exists as a primary address on another account' ||
-    response === 'Address already exists as a secondary address on another account'
+    response === "Address already exists as a primary address on another account" ||
+    response === "Address already exists as a secondary address on another account"
   ) {
-    flowState.value = 'confirm_signage_with_existing_secondary'
-  } else if (response === 'Selected address is not active address in wallet') {
-    flowState.value = 'select_address'
+    flowState.value = "confirm_signage_with_existing_secondary"
+  } else if (response === "Selected address is not active address in wallet") {
+    flowState.value = "select_address"
     errorMessage.value = true
-    errorMassageText.value = 'Address selected is not active.'
-  } else if (response === 'Error in userAuthState') {
-    flowState.value = 'connection_failed'
+    errorMassageText.value = "Address selected is not active."
+  } else if (response === "Error in userAuthState") {
+    flowState.value = "connection_failed"
     setTimeout(() => {
       // props.toggleModal(false)
-      flowState.value = 'select_provider'
+      flowState.value = "select_provider"
     }, 1500)
   } else {
     errorMessage.value = true
-    errorMassageText.value = 'Something went wrong, please try again later.'
+    errorMassageText.value = "Something went wrong, please try again later."
   }
 }
 
@@ -128,50 +128,50 @@ async function selectAddress(address: string, pathIndex: number): Promise<void> 
  * @param provider 
  * @param currency 
 */
-async function selectProvider(provider: ProviderString, currency: Currency = 'ETH'): Promise<void> {
+async function selectProvider(provider: ProviderString, currency: Currency = "ETH"): Promise<void> {
   console.clear()
   try {
     selectedProvider.value = provider
     selectProviderLoading.value = true
-    if (provider === 'WalletConnect') {
+    if (provider === "WalletConnect") {
       // TODO: Clarify this.
-      walletProviderAddresses.value = await connectWalletConnectV2('5') as CryptoAddress[]
+      walletProviderAddresses.value = await connectWalletConnectV2("5") as CryptoAddress[]
     } else if (ethersProviderList.includes(provider)) {
       walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
-    } else if (provider === 'Ledger') {
+    } else if (provider === "Ledger") {
       walletProviderAddresses.value = await getLedgerAddress[currency]() as CryptoAddress[]
-    } else if (provider === 'Trezor') {
+    } else if (provider === "Trezor") {
       walletProviderAddresses.value = await getTrezorAddress[currency]() as CryptoAddress[]
     } else {
-      throw new Error('Provider not supported')
+      throw new Error("Provider not supported")
     }
     selectProviderLoading.value = false
-    flowState.value = 'select_address'
+    flowState.value = "select_address"
   } catch (error: any) {
     errorMessage.value = true
-    errorMassageText.value = 'Something went wrong, please try again later.'
+    errorMassageText.value = "Something went wrong, please try again later."
     selectProviderLoading.value = false
     throw new Error(`Error selecting provider: ${error.message}`)
   }
 }
 
 watch(props, () => {
-  if (user.value) flowState.value = 'add_account'
+  if (user.value) flowState.value = "add_account"
 })
 
 onMounted(() => {
   if (user.value) {
-    flowState.value = 'add_account'
+    flowState.value = "add_account"
   } else {
-    flowState.value = 'select_provider'
+    flowState.value = "select_provider"
   }
 })
 
 onUnmounted(() => {
   if (user.value) {
-    flowState.value = 'add_account'
+    flowState.value = "add_account"
   } else {
-    flowState.value = 'select_provider'
+    flowState.value = "select_provider"
   }
 })
 </script>

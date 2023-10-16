@@ -1,5 +1,5 @@
-import { Operator } from '@casimir/ssv'
-import { Pool } from './Pool'
+import { Operator } from "@casimir/ssv"
+import { Pool } from "./Pool"
 
 export interface RegisteredOperator extends Operator {
     active: boolean

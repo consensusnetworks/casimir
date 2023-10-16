@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue'
-import VueFeather from 'vue-feather'
-import { ProviderString } from '@casimir/types'
-import useAuth from '@/composables/auth'
-import useEthers from '@/composables/ethers'
-import useFiles from '@/composables/files'
-import useFormat from '@/composables/format'
-import useOperators from '@/composables/operators'
-import useUser from '@/composables/user'
-import { UserWithAccountsAndOperators} from '@casimir/types'
+import { onMounted, ref, watch } from "vue"
+import VueFeather from "vue-feather"
+import { ProviderString } from "@casimir/types"
+import useAuth from "@/composables/auth"
+import useEthers from "@/composables/ethers"
+import useFiles from "@/composables/files"
+import useFormat from "@/composables/format"
+import useOperators from "@/composables/operators"
+import useUser from "@/composables/user"
+import { UserWithAccountsAndOperators} from "@casimir/types"
 
 const { loadingSessionLogin } = useAuth()
 const { detectActiveWalletAddress } = useEthers()
@@ -17,65 +17,65 @@ const { convertString } = useFormat()
 const { user } = useUser()
 
 // Form inputs
-const selectedWallet = ref<{address: string, walletProvider: ProviderString}>({address: '', walletProvider: ''})
+const selectedWallet = ref<{address: string, walletProvider: ProviderString}>({address: "", walletProvider: ""})
 const openSelectWalletOptions = ref(false)
 const onSelectWalletBlur = () => {
-    setTimeout(() =>{
-        openSelectWalletOptions.value = false
-    }, 200)
+  setTimeout(() =>{
+    openSelectWalletOptions.value = false
+  }, 200)
 }
 const selectedOperatorID = ref()
 const openSelectOperatorID = ref(false)
 const onSelectOperatorIDBlur = () => {
-    setTimeout(() => {
-        openSelectOperatorID.value = false
-    }, 200)
+  setTimeout(() => {
+    openSelectOperatorID.value = false
+  }, 200)
 }
 
 const availableOperatorIDs = ref([] as string[])
-const selectedPublicNodeURL = ref('')
+const selectedPublicNodeURL = ref("")
 const selectedCollateral = ref()
 
 const openAddOperatorModal = ref(false)
 const itemsPerPage = ref(10)
 const currentPage = ref(1)
 const totalPages = ref(1)
-const searchInput = ref('')
-const selectedHeader = ref('walletProvider')
-const selectedOrientation = ref('ascending')
+const searchInput = ref("")
+const selectedHeader = ref("walletProvider")
+const selectedOrientation = ref("ascending")
 const operatorTableHeaders = ref(
   [
     {
-        title: '',
-        value: 'blank_column'
+      title: "",
+      value: "blank_column"
     },
     {
-        title: 'Operator ID',
-        value: 'id'
+      title: "Operator ID",
+      value: "id"
     },
     {
-        title: 'Wallet Address',
-        value: 'walletAddress'
+      title: "Wallet Address",
+      value: "walletAddress"
     },
     {
-        title: 'Collateral',
-        value: 'collateral'
+      title: "Collateral",
+      value: "collateral"
     },
     {
-        title: 'Active Validators',
-        value: 'poolCount'
+      title: "Active Validators",
+      value: "poolCount"
     },
     {
-        title: 'Node URL',
-        value: 'nodeURL'
+      title: "Node URL",
+      value: "nodeURL"
     },
     {
-        title: '',
-        value: 'deactivate'
+      title: "",
+      value: "deactivate"
     },
     {
-        title: '',
-        value: 'withdraw_collateral'
+      title: "",
+      value: "withdraw_collateral"
     },
   ]
 )
@@ -85,7 +85,7 @@ const filteredData = ref(tableData.value)
 const checkedItems = ref([] as any)
 
 const loading = ref(false)
-const submitButtonTxt = ref('Submit')
+const submitButtonTxt = ref("Submit")
 
 onMounted(async () => {
   if (user.value) {
@@ -94,13 +94,13 @@ onMounted(async () => {
 
     // Autofill disable
     const disableAutofill = () => {
-      let inputs = document.getElementsByTagName('input')
+      let inputs = document.getElementsByTagName("input")
       for (let i = 0; i < inputs.length; i++) {
-          inputs[i].setAttribute('autocomplete', 'off')
+        inputs[i].setAttribute("autocomplete", "off")
       }
     }
 
-    document.addEventListener('DOMContentLoaded', disableAutofill)
+    document.addEventListener("DOMContentLoaded", disableAutofill)
 
     filterData()
   }
@@ -117,11 +117,11 @@ watch(user, async () => {
 })
 
 watch(selectedWallet, async () =>{
-  selectedOperatorID.value = ''
-  selectedPublicNodeURL.value = ''
-  selectedCollateral.value = ''
+  selectedOperatorID.value = ""
+  selectedPublicNodeURL.value = ""
+  selectedCollateral.value = ""
 
-  if (selectedWallet.value.address === '') {
+  if (selectedWallet.value.address === "") {
     availableOperatorIDs.value = []
   } else if(nonregisteredOperators.value && nonregisteredOperators.value.length > 0) {
     availableOperatorIDs.value = [...nonregisteredOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)}
@@ -133,7 +133,7 @@ watch(registeredOperators, () => {
     return {
       id: operator.id,
       walletAddress: operator.ownerAddress,
-      collateral: operator.collateral + ' ETH',
+      collateral: operator.collateral + " ETH",
       poolCount: operator.poolCount,
       nodeURL: operator.url
     }
@@ -154,30 +154,30 @@ watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
 
 
 const openWalletsModal = () => {
-  const el = document.getElementById('connect_wallet_button')
+  const el = document.getElementById("connect_wallet_button")
   if (el) {
     el.click()
   }
 }
 
 const handleInputChangeCollateral = (event: any) => {
-    const value = event.target.value.replace(/[^\d.]/g, '')
-    const parts = value.split('.')
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  const value = event.target.value.replace(/[^\d.]/g, "")
+  const parts = value.split(".")
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
-    // Limit to two decimal places
-    if (parts[1] && parts[1].length > 2) {
-        parts[1] = parts[1].slice(0, 2)
-    }
+  // Limit to two decimal places
+  if (parts[1] && parts[1].length > 2) {
+    parts[1] = parts[1].slice(0, 2)
+  }
 
-    // Update the model value
-    selectedCollateral.value = parts.join('.')
+  // Update the model value
+  selectedCollateral.value = parts.join(".")
 }
 
 const filterData = () => {
   let filteredDataArray
 
-  if (searchInput.value === '') {
+  if (searchInput.value === "") {
     filteredDataArray = tableData.value
   } else {
     const searchTerm = searchInput.value
@@ -190,12 +190,12 @@ const filterData = () => {
     })
   }
 
-  if(selectedHeader.value !== '' && selectedOrientation.value !== '') {
+  if(selectedHeader.value !== "" && selectedOrientation.value !== "") {
     filteredDataArray = filteredDataArray.sort((a: any, b: any) => {
       const valA = a[selectedHeader.value]
       const valB = b[selectedHeader.value]
 
-      if (selectedOrientation.value === 'ascending') {
+      if (selectedOrientation.value === "ascending") {
         return valA < valB ? -1 : valA > valB ? 1 : 0
       } else {
         return valA > valB ? -1 : valA < valB ? 1 : 0
@@ -219,7 +219,7 @@ const removeItemFromCheckedList = (item:any) => {
 const allInputsValid = ref(false)
 
 watch([selectedWallet, selectedOperatorID, selectedPublicNodeURL, selectedCollateral], ()=>{
-  if(selectedWallet.value.address !== '' && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== '' && selectedCollateral.value !== undefined) {
+  if(selectedWallet.value.address !== "" && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== "" && selectedCollateral.value !== undefined) {
     allInputsValid.value = true
   } else {
     allInputsValid.value = false
@@ -245,17 +245,17 @@ async function submitRegisterOperatorForm() {
     })
     openAddOperatorModal.value = false
   } catch (error) {
-    console.log('Error in submitRegisterOperatorForm :>> ', error)
+    console.log("Error in submitRegisterOperatorForm :>> ", error)
     openAddOperatorModal.value = false
   }
 
-  if (selectedWallet.value.address === '') {
-      const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address})
-      selectedWallet.value = {address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString}
+  if (selectedWallet.value.address === "") {
+    const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address})
+    selectedWallet.value = {address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString}
   }
-  selectedOperatorID.value = ''
-  selectedPublicNodeURL.value = ''
-  selectedCollateral.value = ''
+  selectedOperatorID.value = ""
+  selectedPublicNodeURL.value = ""
+  selectedCollateral.value = ""
   availableOperatorIDs.value = []
 }
 

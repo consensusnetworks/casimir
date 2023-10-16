@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 // Initalize blogs here for least amount of fetch calls
-import useBlogs from '@/composables/blogs.ts'
+import useBlogs from "@/composables/blogs.ts"
 
 const {
   activeBlog,

@@ -1,7 +1,7 @@
-import { onMounted, onUnmounted, readonly, ref, watch } from 'vue'
-import { Account, UserWithAccountsAndOperators } from '@casimir/types'
-import useEnvironment from '@/composables/environment'
-import { ethers } from 'ethers'
+import { onMounted, onUnmounted, readonly, ref, watch } from "vue"
+import { Account, UserWithAccountsAndOperators } from "@casimir/types"
+import useEnvironment from "@/composables/environment"
+import { ethers } from "ethers"
 
 // Test address: 0xd557a5745d4560B24D36A68b52351ffF9c86A212
 const { provider, usersUrl } = useEnvironment()
@@ -49,15 +49,15 @@ export default function useUser() {
         user.value.accounts = accountsWithBalances
       }
     } catch (error) {
-      throw new Error('Error setting user account balances')
+      throw new Error("Error setting user account balances")
     }
   }
 
   async function updateUserAgreement(agreed: boolean) {
     const requestOptions = {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ agreed }),
     }

@@ -1,7 +1,7 @@
-import * as cdk from 'aws-cdk-lib'
-import * as certmgr from 'aws-cdk-lib/aws-certificatemanager'
-import * as ec2 from 'aws-cdk-lib/aws-ec2'
-import * as route53 from 'aws-cdk-lib/aws-route53'
+import * as cdk from "aws-cdk-lib"
+import * as certmgr from "aws-cdk-lib/aws-certificatemanager"
+import * as ec2 from "aws-cdk-lib/aws-ec2"
+import * as route53 from "aws-cdk-lib/aws-route53"
 
 export type DnsStackProps = cdk.StackProps
 export type AnalyticsStackProps = cdk.StackProps

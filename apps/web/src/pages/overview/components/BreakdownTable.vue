@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ref, watch, onMounted } from 'vue'
-import * as XLSX from 'xlsx'
-import VueFeather from 'vue-feather'
-import useUser from '@/composables/user'
-import useFormat from '@/composables/format'
-import useAnalytics from '@/composables/analytics'
+import { ref, watch, onMounted } from "vue"
+import * as XLSX from "xlsx"
+import VueFeather from "vue-feather"
+import useUser from "@/composables/user"
+import useFormat from "@/composables/format"
+import useAnalytics from "@/composables/analytics"
 
 const { convertString } = useFormat()
 
@@ -12,11 +12,11 @@ const itemsPerPage = ref(7)
 const currentPage = ref(1)
 const totalPages = ref(1)
 
-const searchInput = ref('')
-const tableView = ref('Wallets')
+const searchInput = ref("")
+const tableView = ref("Wallets")
 
-const selectedHeader = ref('wallet_provider')
-const selectedOrientation = ref('ascending')
+const selectedHeader = ref("wallet_provider")
+const selectedOrientation = ref("ascending")
 
 const checkedItems = ref([] as any)
 
@@ -25,92 +25,92 @@ const tableHeaderOptions = ref(
     Wallets: {
       headers: [
         {
-          title: '',
-          value: 'blank_column'
+          title: "",
+          value: "blank_column"
         },
         {
-          title: 'Wallet Provider',
-          value: 'wallet_provider'
+          title: "Wallet Provider",
+          value: "wallet_provider"
         },
         {
-          title: 'Account',
-          value: 'act'
+          title: "Account",
+          value: "act"
         },
         {
-          title: 'Wallet Balance',
-          value: 'bal'
+          title: "Wallet Balance",
+          value: "bal"
         },
         {
-          title: 'Stake Balance',
-          value: 'stk_amt'
+          title: "Stake Balance",
+          value: "stk_amt"
         }, // Need to fetch based on wallet (FE SIDE)
         {
-          title: 'Stake Rewards (All-Time)',
-          value: 'stk_rwd'
+          title: "Stake Rewards (All-Time)",
+          value: "stk_rwd"
         }, // Need to fetch based on wallet (FE SIDE)
       ]
     },
     Transactions: {
       headers: [
         {
-          title: '',
-          value: 'blank_column'
+          title: "",
+          value: "blank_column"
         },
         {
-          title: 'Date',
-          value: 'date'
+          title: "Date",
+          value: "date"
         },
         {
-          title: 'Type',
-          value: 'tx_type'
+          title: "Type",
+          value: "tx_type"
         },
         {
-          title: 'Amount',
-          value: 'stk_amt'
+          title: "Amount",
+          value: "stk_amt"
         },
         {
-          title: 'Status',
-          value: 'status'
+          title: "Status",
+          value: "status"
         },
         {
-          title: 'Hash',
-          value: 'tx_hash'
+          title: "Hash",
+          value: "tx_hash"
         }
       ]
     },
     Staking: {
       headers: [
         {
-          title: '',
-          value: 'blank_column'
+          title: "",
+          value: "blank_column"
         },
         {
-          title: 'Date',
-          value: 'date'
+          title: "Date",
+          value: "date"
         },
         {
-          title: 'Account',
-          value: 'act'
+          title: "Account",
+          value: "act"
         },
         {
-          title: 'Type',
-          value: 'type'
+          title: "Type",
+          value: "type"
         },
         {
-          title: 'Amount',
-          value: 'amount'
+          title: "Amount",
+          value: "amount"
         },
         {
-          title: 'Staking Fees',
-          value: 'staking_fees'
+          title: "Staking Fees",
+          value: "staking_fees"
         },
         {
-          title: 'Status',
-          value: 'status'
+          title: "Status",
+          value: "status"
         },
         {
-          title: 'Hash',
-          value: 'tx_hash'
+          title: "Hash",
+          value: "tx_hash"
         },
       ]
     },
@@ -130,7 +130,7 @@ const filteredData = ref(tableData.value[tableView.value as keyof typeof tableDa
 const filterData = () => {
   let filteredDataArray
 
-  if (searchInput.value === '') {
+  if (searchInput.value === "") {
     filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
   } else {
     const searchTerm = searchInput.value.toLocaleLowerCase()
@@ -156,12 +156,12 @@ const filterData = () => {
     })
   }
 
-  if(selectedHeader.value !== '' && selectedOrientation.value !== '') {
+  if(selectedHeader.value !== "" && selectedOrientation.value !== "") {
     filteredDataArray = filteredDataArray.sort((a, b) => {
       const valA = a[selectedHeader.value]
       const valB = b[selectedHeader.value]
 
-      if (selectedOrientation.value === 'ascending') {
+      if (selectedOrientation.value === "ascending") {
         return valA < valB ? -1 : valA > valB ? 1 : 0
       } else {
         return valA > valB ? -1 : valA < valB ? 1 : 0
@@ -180,15 +180,15 @@ watch([searchInput, tableView, selectedHeader, selectedOrientation, currentPage]
 })
 
 const convertJsonToCsv = (jsonData: any[]) => {
-  const separator = ','
+  const separator = ","
   const csvRows = []
 
   if (!Array.isArray(jsonData)) {
-    return ''
+    return ""
   }
 
   if (jsonData.length === 0) {
-    return ''
+    return ""
   }
 
   const keys = Object.keys(jsonData[0])
@@ -202,14 +202,14 @@ const convertJsonToCsv = (jsonData: any[]) => {
     csvRows.push(values.join(separator))
   })
 
-  return csvRows.join('\n')
+  return csvRows.join("\n")
 }
 
 const convertJsonToExcelBuffer = (jsonData: unknown[]) => {
   const worksheet = XLSX.utils.json_to_sheet(jsonData)
   const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
-  const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1")
+  const excelBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" })
 
   return excelBuffer
 }
@@ -217,7 +217,7 @@ const convertJsonToExcelBuffer = (jsonData: unknown[]) => {
 const downloadFile = (content: any, filename: string, mimeType: any) => {
   const blob = new Blob([content], { type: mimeType })
   const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
+  const link = document.createElement("a")
   link.href = url
   link.download = filename
   link.click()
@@ -230,15 +230,15 @@ const exportFile = () => {
 
   const jsonData = checkedItems.value.length > 0? checkedItems.value : filteredData.value
 
-  const isMac = navigator.userAgent.indexOf('Mac') !== -1
-  const fileExtension = isMac ? 'csv' : 'xlsx'
+  const isMac = navigator.userAgent.indexOf("Mac") !== -1
+  const fileExtension = isMac ? "csv" : "xlsx"
 
-  if (fileExtension === 'csv') {
+  if (fileExtension === "csv") {
     const csvContent = convertJsonToCsv(jsonData)
-    downloadFile(csvContent, `${tableView.value}.csv`, 'text/csv')
+    downloadFile(csvContent, `${tableView.value}.csv`, "text/csv")
   } else {
     const excelBuffer = convertJsonToExcelBuffer(jsonData)
-    downloadFile(excelBuffer, `${tableView.value}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    downloadFile(excelBuffer, `${tableView.value}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
   }
 }
 
@@ -264,11 +264,11 @@ const setTableData = () =>{
 
   newTable.Transactions = sortedTransactions.map((item: any) =>{
     return {
-        tx_hash: item.txId,
-        stk_amt: item.amount,
-        tx_type: item.txDirection,
-        date: item.receivedAt,
-        status: item.status,
+      tx_hash: item.txId,
+      stk_amt: item.amount,
+      tx_type: item.txDirection,
+      date: item.receivedAt,
+      status: item.status,
     }
   })
 
@@ -285,7 +285,7 @@ const setTableData = () =>{
       let provider = user.value?.accounts.find(i => i.address.toLocaleLowerCase() === item.walletAddress.toLocaleLowerCase())?.walletProvider
       filteredWallets.push(
         {
-          wallet_provider: provider? provider : 'Unknown',
+          wallet_provider: provider? provider : "Unknown",
           act: item.walletAddress,
           bal: item.walletBalance,
           stk_amt: item.amount,

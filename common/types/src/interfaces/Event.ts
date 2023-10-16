@@ -1,12 +1,12 @@
 export interface Event {
     // The chain which the event belongs to (e.g. iotex, ethereum)
-    chain: 'etheruem' | 'iotex';
+    chain: "etheruem" | "iotex";
     // The network which the event was received on (e.g. mainnet, testnet)
-    network: 'mainnet' | 'testnet' | 'goerli';
+    network: "mainnet" | "testnet" | "goerli";
     // The provider used to source the event (e.g. infura, consensus)
-    provider: 'alchemy' | 'consensus';
+    provider: "alchemy" | "consensus";
     // The type of event (e.g. block, transaction)
-    type: 'block' | 'transaction';
+    type: "block" | "transaction";
     // The height of the block the event belongs to
     height: number;
     // The block hash

@@ -1,7 +1,7 @@
 <script setup>
-import { onMounted, ref, computed, watch } from 'vue'
-import VueFeather from 'vue-feather'
-import useBlogs from '@/composables/blogs.ts'
+import { onMounted, ref, computed, watch } from "vue"
+import VueFeather from "vue-feather"
+import useBlogs from "@/composables/blogs.ts"
 
 const {
   allBlogs,

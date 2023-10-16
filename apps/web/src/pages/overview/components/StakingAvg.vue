@@ -1,26 +1,26 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import VueFeather from 'vue-feather'
+import { ref, onMounted, onUnmounted } from "vue"
+import VueFeather from "vue-feather"
 
-const avgAPY = ref('5.2%')
+const avgAPY = ref("5.2%")
 const openTimeFrameOptions = ref(false)
-const selectedTimeframe = ref('Last Week')
+const selectedTimeframe = ref("Last Week")
 
 const timeframeOptions = ref(
   [
-    'Last Week',
-    '1 Month',
-    '6 Months',
-    '12 Months',
-    'Historical'
+    "Last Week",
+    "1 Month",
+    "6 Months",
+    "12 Months",
+    "Historical"
   ]
 )
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
   viewId: {
-      type: String,
-      required: true,
+    type: String,
+    required: true,
   }
 })
 
@@ -40,11 +40,11 @@ const handleOutsideClick = (event: any) => {
 }
 
 onMounted(() => {
-  window.addEventListener('click', handleOutsideClick)
+  window.addEventListener("click", handleOutsideClick)
 })
 
 onUnmounted(() =>{
-  window.removeEventListener('click', handleOutsideClick)
+  window.removeEventListener("click", handleOutsideClick)
 })
 
 </script>
@@ -64,7 +64,9 @@ onUnmounted(() =>{
       >
         <button
           :id="`${props.viewId}_staking_avg_timeframe_button`"
-          class="flex justify-between items-center gap-[8px] px-[10px] py-[8px] card_input w-[120px] outline-none h-[38px]"
+          class="
+          flex justify-between items-center gap-[8px] px-[10px] py-[8px] card_input w-[120px] outline-none h-[38px]
+          "
           @click="openTimeFrameOptions = !openTimeFrameOptions"
         >
           {{ selectedTimeframe }}
@@ -77,7 +79,10 @@ onUnmounted(() =>{
         <div
           v-show="openTimeFrameOptions"
           :id="`${props.viewId}_staking_avg_timeframe_options`"
-          class="absolute z-[20] w-full top-[110%] left-0 rounded-[8px] px-[10px] py-[14px] bg-white border h-max flex flex-wrap"
+          class="
+          absolute z-[20] w-full top-[110%] left-0 rounded-[8px] px-[10px] py-[14px] bg-white border h-max flex 
+          flex-wrap
+          "
         >
           <button
             v-for="item in timeframeOptions"

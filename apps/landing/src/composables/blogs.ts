@@ -1,5 +1,5 @@
-import { onMounted, onUnmounted, readonly, ref } from 'vue'
-import snarkdown from 'snarkdown'
+import { onMounted, onUnmounted, readonly, ref } from "vue"
+import snarkdown from "snarkdown"
 
 const initializeComposable = ref(false)
 
@@ -27,7 +27,7 @@ export default function useBlogs() {
     if (!initializeComposable.value) {
       loadingBlogs.value = true
       try {
-        const response = await fetch('http://localhost:3003/api/hackmd')
+        const response = await fetch("http://localhost:3003/api/hackmd")
         const jsonList = await response.json()
         const blogList = []
 
@@ -40,7 +40,7 @@ export default function useBlogs() {
             title: title,
             content: content,
             timestamp: timestamp,
-            type: 'Blog',
+            type: "Blog",
             id: id,
           })
         }
@@ -48,7 +48,7 @@ export default function useBlogs() {
         allBlogs.value = blogList
         loadingBlogs.value = false
       } catch (error) {
-        console.error('Error trying to fetch:', error)
+        console.error("Error trying to fetch:", error)
         loadingBlogs.value = false
       }
 

@@ -1,5 +1,5 @@
-import { ProviderString } from '@casimir/types'
-import { BigNumberish } from 'ethers'
+import { ProviderString } from "@casimir/types"
+import { BigNumberish } from "ethers"
 
 export interface RegisterOperatorWithCasimirParams {
     walletProvider: ProviderString

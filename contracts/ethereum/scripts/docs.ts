@@ -1,40 +1,40 @@
-import fs from 'fs'
-import { run } from '@casimir/shell'
+import fs from "fs"
+import { run } from "@casimir/shell"
 
 void async function () {
-    const cargo = await run('which cargo') as string
-    if (!cargo || cargo.includes('not found')) {
-        throw new Error('🚩 Please install rust (see https://www.rust-lang.org/tools/install)')
-    }
+  const cargo = await run("which cargo") as string
+  if (!cargo || cargo.includes("not found")) {
+    throw new Error("🚩 Please install rust (see https://www.rust-lang.org/tools/install)")
+  }
 
-    const mdbookKatex = await run('cargo install --list | grep mdbook-katex') as string
-    if (!mdbookKatex) {
-        await run('cargo install mdbook-katex')
-    }
+  const mdbookKatex = await run("cargo install --list | grep mdbook-katex") as string
+  if (!mdbookKatex) {
+    await run("cargo install mdbook-katex")
+  }
 
-    const mdbookMermaid = await run('cargo install --list | grep mdbook-mermaid') as string
-    if (!mdbookMermaid) {
-        await run('cargo install mdbook-mermaid')
-    }
+  const mdbookMermaid = await run("cargo install --list | grep mdbook-mermaid") as string
+  if (!mdbookMermaid) {
+    await run("cargo install mdbook-mermaid")
+  }
 
-    const config = await run('forge config') as string
+  const config = await run("forge config") as string
     
-    const outDir = config.match(/\[doc\]\nout = "(.*)"/)?.[1] as string
-    if (!fs.existsSync(outDir)) {
-        fs.mkdirSync(outDir, { recursive: true })
-    }
+  const outDir = config.match(/\[doc\]\nout = "(.*)"/)?.[1] as string
+  if (!fs.existsSync(outDir)) {
+    fs.mkdirSync(outDir, { recursive: true })
+  }
     
-    const publicDir = fs.readdirSync('public')
-    for (const file of publicDir) {
-        fs.copyFileSync(`public/${file}`, `${outDir}/${file}`)
-    }
+  const publicDir = fs.readdirSync("public")
+  for (const file of publicDir) {
+    fs.copyFileSync(`public/${file}`, `${outDir}/${file}`)
+  }
 
-    let command = 'forge doc'
-    if (process.env.DEV === 'true') {
-        command += ' --serve --port=5458'
-    } else {
-        command += ' --build'
-    }
+  let command = "forge doc"
+  if (process.env.DEV === "true") {
+    command += " --serve --port=5458"
+  } else {
+    command += " --build"
+  }
 
-    await run(command)
+  await run(command)
 }()

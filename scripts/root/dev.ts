@@ -1,11 +1,11 @@
-import { ethers } from 'ethers'
-import { loadCredentials, getSecret } from '@casimir/aws'
+import { ethers } from "ethers"
+import { loadCredentials, getSecret } from "@casimir/aws"
 import {
   ETHEREUM_CONTRACTS,
   ETHEREUM_NETWORK_NAME,
   ETHEREUM_RPC_URL,
-} from '@casimir/env'
-import { run, runSync } from '@casimir/shell'
+} from "@casimir/env"
+import { run, runSync } from "@casimir/shell"
 
 /**
  * Run an integrated development environment
@@ -20,39 +20,39 @@ void (async function () {
     },
   }
 
-  if (process.env.USE_SECRETS !== 'false') {
+  if (process.env.USE_SECRETS !== "false") {
     await loadCredentials()
     process.env.BIP39_SEED =
       process.env.BIP39_SEED ||
-      ((await getSecret('consensus-networks-bip39-seed')) as string)
+      ((await getSecret("consensus-networks-bip39-seed")) as string)
   } else {
     process.env.BIP39_SEED =
       process.env.BIP39_SEED ||
-      'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
+      "inflict ball claim confirm cereal cost note dad mix donate traffic patient"
   }
 
-  process.env.PROJECT = process.env.PROJECT || 'casimir'
-  process.env.STAGE = process.env.STAGE || 'local'
+  process.env.PROJECT = process.env.PROJECT || "casimir"
+  process.env.STAGE = process.env.STAGE || "local"
   process.env.CRYPTO_COMPARE_API_KEY =
-    process.env.USE_SECRETS !== 'false'
+    process.env.USE_SECRETS !== "false"
       ? process.env.CRYPTO_COMPARE_API_KEY ||
-        (await getSecret('casimir-crypto-compare-api-key'))
-      : process.env.CRYPTO_COMPARE_API_KEY || ''
+        (await getSecret("casimir-crypto-compare-api-key"))
+      : process.env.CRYPTO_COMPARE_API_KEY || ""
   process.env.WALLET_CONNECT_PROJECT_ID =
-    process.env.USE_SECRETS !== 'false'
-      ? await getSecret('casimir-wallet-connect-project-id')
-      : '8e6877b49198d7a9f9561b8712805726'
-  process.env.FORK = process.env.FORK || 'testnet'
-  process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
-  process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
+    process.env.USE_SECRETS !== "false"
+      ? await getSecret("casimir-wallet-connect-project-id")
+      : "8e6877b49198d7a9f9561b8712805726"
+  process.env.FORK = process.env.FORK || "testnet"
+  process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || "true"
+  process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || "false"
 
-  if (process.env.BUILD_PREVIEW === 'true') {
-    process.env.WEB_URL = process.env.WEB_URL || 'http://localhost:4173'
+  if (process.env.BUILD_PREVIEW === "true") {
+    process.env.WEB_URL = process.env.WEB_URL || "http://localhost:4173"
   } else {
-    process.env.WEB_URL = process.env.WEB_URL || 'http://localhost:3001'
+    process.env.WEB_URL = process.env.WEB_URL || "http://localhost:3001"
   }
 
-  if (process.env.MOCK_SERVICES === 'true') {
+  if (process.env.MOCK_SERVICES === "true") {
     for (const service of Object.keys(services)) {
       const existingProcess = await run(
         `lsof -i :${services[service].port} | grep LISTEN | awk '{print $2}'`
@@ -73,7 +73,7 @@ void (async function () {
   const networkKey =
     process.env.NETWORK?.toUpperCase() ||
     process.env.FORK?.toUpperCase() ||
-    'TESTNET'
+    "TESTNET"
   process.env.SSV_NETWORK_ADDRESS =
     ETHEREUM_CONTRACTS[networkKey]?.SSV_NETWORK_ADDRESS
   process.env.SSV_VIEWS_ADDRESS =
@@ -127,7 +127,7 @@ void (async function () {
       throw new Error(`Ethereum ${process.env.FORK} is not supported`)
     }
 
-    process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
+    process.env.ETHEREUM_RPC_URL = "http://127.0.0.1:8545"
 
     const provider = new ethers.providers.JsonRpcProvider(
       process.env.ETHEREUM_FORK_RPC_URL
@@ -170,7 +170,7 @@ void (async function () {
       })
     }
 
-    run('npm run dev:ethereum')
+    run("npm run dev:ethereum")
   }
 
   process.env.PUBLIC_STAGE = process.env.STAGE
@@ -189,26 +189,26 @@ void (async function () {
   process.env.PUBLIC_WALLET_CONNECT_PROJECT_ID =
     process.env.WALLET_CONNECT_PROJECT_ID
 
-  if (process.env.BUILD_PREVIEW === 'true') {
-    await run('npm run build --workspace @casimir/web')
-    run('npm run preview --workspace @casimir/web')
+  if (process.env.BUILD_PREVIEW === "true") {
+    await run("npm run build --workspace @casimir/web")
+    run("npm run preview --workspace @casimir/web")
   } else {
-    run('npm run dev --workspace @casimir/web')
+    run("npm run dev --workspace @casimir/web")
   }
 
-  if (process.env.MOCK_SERVICES === 'true') {
-    process.on('SIGINT', () => {
+  if (process.env.MOCK_SERVICES === "true") {
+    process.on("SIGINT", () => {
       const mocked: string[] = []
-      if (process.env.MOCK_SERVICES === 'true')
+      if (process.env.MOCK_SERVICES === "true")
         mocked.push(...Object.keys(services))
       const cleaners = mocked
         .map((mock) => `npm run clean --workspace @casimir/${mock}`)
-        .join(' & ')
+        .join(" & ")
       if (cleaners.length) {
         console.log(
           `\n🧹 Cleaning up: ${mocked
             .map((mock) => `@casimir/${mock}`)
-            .join(', ')}`
+            .join(", ")}`
         )
         runSync(`${cleaners}`)
       }

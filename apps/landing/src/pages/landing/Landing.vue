@@ -1,51 +1,51 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref } from "vue"
 
 const faqItems = ref(
   [
     {
-      question: 'Are there ways I can use my staked ETH for additional yield?',
-      answer: 'Although Casimir is not launching an LSD, there are opportunities for stakers to provide their native staked ETH as liquidity providers (e.g., to support a DAO). Additionally, we will be introducing restaking mechanisms like EigenLayer that will enable users to natively restake their ETH to maximize their APR, if desired.',
+      question: "Are there ways I can use my staked ETH for additional yield?",
+      answer: "Although Casimir is not launching an LSD, there are opportunities for stakers to provide their native staked ETH as liquidity providers (e.g., to support a DAO). Additionally, we will be introducing restaking mechanisms like EigenLayer that will enable users to natively restake their ETH to maximize their APR, if desired.",
       open: false,
     },
     {
-      question: 'Am I giving up custody of my staked ETH?',
-      answer: 'No! Keys created and held across validators with distributed key generation (DKG). You will always be able to withdraw your staked ETH from the Casimir smart contract.',
+      question: "Am I giving up custody of my staked ETH?",
+      answer: "No! Keys created and held across validators with distributed key generation (DKG). You will always be able to withdraw your staked ETH from the Casimir smart contract.",
       open: false,
     },
     {
-      question: 'How frequently do I get my rewards?',
-      answer: 'Rewards will be distributed as they are awarded by the Ethereum protocol, at least daily.',
+      question: "How frequently do I get my rewards?",
+      answer: "Rewards will be distributed as they are awarded by the Ethereum protocol, at least daily.",
       open: false,
     },
     {
-      question: 'Where are my rewards distributed, is there a secondary token?',
-      answer: 'Your rewards will be distributed to the wallet you staked with; you won\'t need to deal with the hassle of swapping a token to get your rewards.',
+      question: "Where are my rewards distributed, is there a secondary token?",
+      answer: "Your rewards will be distributed to the wallet you staked with; you won't need to deal with the hassle of swapping a token to get your rewards.",
       open: false,
     },
     {
-      question: 'Which wallets are supported?',
-      answer: 'Today we natively support Metamask, Coinbase Wallet, Trust Wallet, Ledger, and Trezor. We also support most other providers through the WalletConnect protocol.',
+      question: "Which wallets are supported?",
+      answer: "Today we natively support Metamask, Coinbase Wallet, Trust Wallet, Ledger, and Trezor. We also support most other providers through the WalletConnect protocol.",
       open: false,
     },
     {
-      question: 'Is there a lockup period or waiting period for withdrawals?',
-      answer: 'Since you are staking native ETH, there may be a wait time for a validator to exit to receive your withdrawal. If you desire a quicker exit, we will soon be launching a native ETH liquidity pool, which will enable instant withdrawals.',
+      question: "Is there a lockup period or waiting period for withdrawals?",
+      answer: "Since you are staking native ETH, there may be a wait time for a validator to exit to receive your withdrawal. If you desire a quicker exit, we will soon be launching a native ETH liquidity pool, which will enable instant withdrawals.",
       open: false,
     },
     {
-      question: 'Where is my stake going, who is running the validators?',
-      answer: 'Casimir is launching with a small set of vatted validator partners, but we will soon allow anyone with at least 1 ETH collateral to run a validator. Validator performance is overseen by a decentralized oracle network with performance specs used in operator selection.',
+      question: "Where is my stake going, who is running the validators?",
+      answer: "Casimir is launching with a small set of vatted validator partners, but we will soon allow anyone with at least 1 ETH collateral to run a validator. Validator performance is overseen by a decentralized oracle network with performance specs used in operator selection.",
       open: false,
     },
     {
-      question: 'What are the staking fees?',
-      answer: 'The Casimir smart contract charges a user a 5% fee on deposits and rewards to cover operational expenses including payments to the distributed set of independently owned and operated validators.',
+      question: "What are the staking fees?",
+      answer: "The Casimir smart contract charges a user a 5% fee on deposits and rewards to cover operational expenses including payments to the distributed set of independently owned and operated validators.",
       open: false,
     },
     {
-      question: 'Can I run a validator?',
-      answer: 'If you have the technical ability and interest, you\'ll soon have the chance to become a validator in our protocol. While we\'re initially launching with a small group of white-listed validators, we\'ll soon open up to everyone. Stay updated by joining our Discord.',
+      question: "Can I run a validator?",
+      answer: "If you have the technical ability and interest, you'll soon have the chance to become a validator in our protocol. While we're initially launching with a small group of white-listed validators, we'll soon open up to everyone. Stay updated by joining our Discord.",
       open: false,
     },
   ],

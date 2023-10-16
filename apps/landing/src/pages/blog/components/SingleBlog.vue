@@ -1,8 +1,8 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
-import VueFeather from 'vue-feather'
-import useBlogs from '@/composables/blogs.ts'
-import router from '@/composables/router.ts'
+import { onMounted, ref, watch } from "vue"
+import VueFeather from "vue-feather"
+import useBlogs from "@/composables/blogs.ts"
+import router from "@/composables/router.ts"
 
 
 const {
@@ -18,7 +18,7 @@ function findBlog(activeRoute) {
 }
 
 onMounted(() => {
-  let currentRoutes = router.currentRoute.value.fullPath.split('/')
+  let currentRoutes = router.currentRoute.value.fullPath.split("/")
   let activeRoute = currentRoutes[currentRoutes.length - 1]
 
   // Finds active blog based on route 
@@ -27,7 +27,7 @@ onMounted(() => {
 
 watch([allBlogs, loadingBlogs], () => {
 
-  let currentRoutes = router.currentRoute.value.fullPath.split('/')
+  let currentRoutes = router.currentRoute.value.fullPath.split("/")
   let activeRoute = currentRoutes[currentRoutes.length - 1]
 
   // Finds active blog based on route 

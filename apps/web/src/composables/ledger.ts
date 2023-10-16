@@ -1,10 +1,10 @@
-import { /*BitcoinLedgerSigner, */EthersLedgerSigner } from '@casimir/wallets'
-import { ethers } from 'ethers'
-import { MessageRequest, TransactionRequest } from '@casimir/types'
-import { CryptoAddress, LoginCredentials } from '@casimir/types'
-import useEnvironment from '@/composables/environment'
-import useEthers from '@/composables/ethers'
-import useSiwe from '@/composables/siwe'
+import { /*BitcoinLedgerSigner, */EthersLedgerSigner } from "@casimir/wallets"
+import { ethers } from "ethers"
+import { MessageRequest, TransactionRequest } from "@casimir/types"
+import { CryptoAddress, LoginCredentials } from "@casimir/types"
+import useEnvironment from "@/composables/environment"
+import useEthers from "@/composables/ethers"
+import useSiwe from "@/composables/siwe"
 
 const { createSiweMessage, signInWithEthereum } = useSiwe()
 
@@ -21,7 +21,7 @@ export default function useLedger() {
   // }
 
   function getEthersLedgerSigner(pathIndex?: number) {
-    const path = pathIndex ? `m/44'/60'/0'/0/${pathIndex}` : 'm/44\'/60\'/0\'/0/0'
+    const path = pathIndex ? `m/44'/60'/0'/0/${pathIndex}` : "m/44'/60'/0'/0/0"
     const options = {
       provider: new ethers.providers.JsonRpcProvider(ethereumUrl),
       type: ledgerType,
@@ -33,29 +33,29 @@ export default function useLedger() {
 
   const getLedgerAddress = {
     // 'BTC': getBitcoinLedgerAddress,
-    'ETH': getEthersLedgerAddresses,
-    'IOTX': () => {
+    "ETH": getEthersLedgerAddresses,
+    "IOTX": () => {
       return new Promise((resolve, reject) => {
-        console.log('IOTX is not yet supported on Ledger')
-        resolve('IOTX is not yet supported on Ledger')
+        console.log("IOTX is not yet supported on Ledger")
+        resolve("IOTX is not yet supported on Ledger")
       }) as Promise<string>
     },
-    'SOL': () => {
+    "SOL": () => {
       return new Promise((resolve, reject) => {
-        console.log('SOL is not yet supported on Ledger')
-        resolve('SOL is not yet supported on Ledger')
+        console.log("SOL is not yet supported on Ledger")
+        resolve("SOL is not yet supported on Ledger")
       }) as Promise<string>
     },
-    '': () => {
+    "": () => {
       return new Promise((resolve, reject) => {
-        console.log('No currency selected')
-        resolve('No currency selected')
+        console.log("No currency selected")
+        resolve("No currency selected")
       }) as Promise<string>
     },
-    'USD': () => {
+    "USD": () => {
       return new Promise((resolve, reject) => {
-        console.log('USD is not yet supported on Ledger')
-        resolve('USD is not yet supported on Ledger')
+        console.log("USD is not yet supported on Ledger")
+        resolve("USD is not yet supported on Ledger")
       }) as Promise<string>
     }
   }
@@ -77,7 +77,7 @@ export default function useLedger() {
     // Derivation path m/44\'/60\'/0\'/0/1: 0x1a16ae0F5cf84CaE346a1D586d00366bBA69bccc
     const { provider, address, currency, pathIndex } = loginCredentials
     try {
-      const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
+      const message = await createSiweMessage(address, "Sign in with Ethereum to the app.")
       const signer = getEthersLedgerSigner(pathIndex)
       const signedMessage = await signer.signMessageWithIndex(message, pathIndex as number)
       await signInWithEthereum({ 
@@ -88,13 +88,13 @@ export default function useLedger() {
         signedMessage
       })
     } catch (err) {
-      console.log('Error logging in: ', err)
+      console.log("Error logging in: ", err)
       return err
     }
   }
 
   async function sendLedgerTransaction({ from, to, value, currency }: TransactionRequest) {
-    if (currency === 'ETH') {
+    if (currency === "ETH") {
       const signer = getEthersLedgerSigner()
       const provider = signer.provider as ethers.providers.Provider
       const unsignedTransaction = {
@@ -107,8 +107,8 @@ export default function useLedger() {
       const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumUrl, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
       const balance = await provider.getBalance(from)
       const required = gasPrice.mul(gasLimit).add(ethers.utils.parseEther(value))
-      console.log('Balance', ethers.utils.formatEther(balance))
-      console.log('Required', ethers.utils.formatEther(required))
+      console.log("Balance", ethers.utils.formatEther(balance))
+      console.log("Required", ethers.utils.formatEther(required))
   
       return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
     }/* else if (currency === 'BTC') {
@@ -117,7 +117,7 @@ export default function useLedger() {
   }
 
   async function signLedgerMessage(messageRequest: MessageRequest): Promise<string> {
-    if (messageRequest.currency === 'ETH') {
+    if (messageRequest.currency === "ETH") {
       const { message } = messageRequest
       const signer = getEthersLedgerSigner()
       return await signer.signMessage(message)
@@ -126,7 +126,7 @@ export default function useLedger() {
       const signer = getBitcoinLedgerSigner()
       return await signer.signMessage(message)
     } */else {
-      return ''
+      return ""
     }
   }
 

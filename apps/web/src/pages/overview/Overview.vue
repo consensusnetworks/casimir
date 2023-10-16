@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import Staking from './components/Staking.vue'
-import StakingAvg from './components/StakingAvg.vue'
-import BreakdownChart from './components/BreakdownChart.vue'
-import BreakdownTable from './components/BreakdownTable.vue'
+import { ref, onMounted, watch } from "vue"
+import Staking from "./components/Staking.vue"
+import StakingAvg from "./components/StakingAvg.vue"
+import BreakdownChart from "./components/BreakdownChart.vue"
+import BreakdownTable from "./components/BreakdownTable.vue"
 
-import useAuth from '@/composables/auth'
-import useBreakdownMetrics from '@/composables/breakdownMetrics'
-import useAnalytics from '@/composables/analytics'
-import useOperators from '@/composables/operators'
+import useAuth from "@/composables/auth"
+import useBreakdownMetrics from "@/composables/breakdownMetrics"
+import useAnalytics from "@/composables/analytics"
+import useOperators from "@/composables/operators"
 
 const { loadingSessionLogin } = useAuth()
 const { loadingInitializeBreakdownMetrics } = useBreakdownMetrics()

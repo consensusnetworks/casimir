@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import VueFeather from 'vue-feather'
+import { ref, onMounted, onUnmounted } from "vue"
+import VueFeather from "vue-feather"
 
-const message = ref('We\'ve just announced our series A!')
+const message = ref("We've just announced our series A!")
 const openReadUpdate = ref(false)
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
   viewId: {
-      type: String,
-      required: true,
+    type: String,
+    required: true,
   }
 })
 
@@ -24,11 +24,11 @@ const handleOutsideClick = (event: any) => {
 }
 
 onMounted(() => {
-  window.addEventListener('click', handleOutsideClick)
+  window.addEventListener("click", handleOutsideClick)
 })
 
 onUnmounted(() =>{
-  window.removeEventListener('click', handleOutsideClick)
+  window.removeEventListener("click", handleOutsideClick)
 })
 </script>
 
