@@ -23,9 +23,9 @@
     "rules": {
         "indent": ["error", 2],
         "semi": ["error", "never"],
-        "quotes": ["error", "single"],
+        "quotes": ["error", "double"],
         "vue/multi-word-component-names": "off",
-        "max-len": ["error", { "code": 180 }]
+        "max-len": ["error", { "code": 150 }]
     },
     "ignorePatterns": [
         "contracts/**/scripts/resources",
