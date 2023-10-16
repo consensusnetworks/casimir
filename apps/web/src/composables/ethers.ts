@@ -1,18 +1,17 @@
 import { ethers } from 'ethers'
-import { EthersProvider } from '@casimir/types'
-import { Account, TransactionRequest, UserWithAccountsAndOperators } from '@casimir/types'
+import { CryptoAddress, EthersProvider } from '@casimir/types'
+import { TransactionRequest } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
-import useAuth from '@/composables/auth'
 import useEnvironment from '@/composables/environment'
+import useSiwe from '@/composables/siwe'
 
 interface ethereumWindow extends Window {
   ethereum: any;
 }
 declare const window: ethereumWindow
 
-const { createSiweMessage, signInWithEthereum } = useAuth()
-const { ethereumUrl } = useEnvironment()
-const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
+const { ethereumUrl, provider } = useEnvironment()
+const { createSiweMessage, signInWithEthereum } = useSiwe()
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
@@ -26,6 +25,24 @@ export default function useEthers() {
       })
     } catch(error: any) {
       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
+    }
+  }
+
+  async function detectActiveEthersWalletAddress(providerString: ProviderString): Promise<string> {
+    const provider = getBrowserProvider(providerString)
+    try {
+      if (provider) {
+        const accounts = await provider.request({ method: 'eth_accounts' })
+        if (accounts.length > 0) {
+          return accounts[0] as string
+        } 
+        return ''
+      } else {
+        return ''
+      }
+    } catch(err) {
+      console.error('There was an error in detectActiveEthersWalletAddress :>> ', err)
+      return ''
     }
   }
 
@@ -98,13 +115,17 @@ export default function useEthers() {
     }
   }
 
-  async function getEthersAddressWithBalance (providerString: ProviderString) {
+  async function getEthersAddressesWithBalances (providerString: ProviderString): Promise<CryptoAddress[]> {
     const provider = getBrowserProvider(providerString)
-    
     if (provider) {
-      const address = (await requestEthersAccount(provider as EthersProvider))[0]
-      const balance = (await getEthersBalance(address)).toString()
-      return [{ address, balance }]
+      const addresses = await provider.request({ method: 'eth_requestAccounts' })
+      const addressesWithBalance: CryptoAddress[] = []
+      for (const address of addresses) {
+        const balance = (await getEthersBalance(address)).toString()
+        const addressWithBalance = { address, balance }
+        addressesWithBalance.push(addressWithBalance)
+      }
+      return addressesWithBalance
     } else {
       throw new Error('Provider not yet connected to this dapp. Please connect and try again.')
     }
@@ -169,14 +190,6 @@ export default function useEthers() {
     }
   }
 
-  async function requestEthersAccount(provider: EthersProvider) {
-    if (provider?.request) {
-      return await provider.request({
-        method: 'eth_requestAccounts',
-      })
-    }
-  }
-
   async function sendEthersTransaction(
     { from, to, value, providerString }: TransactionRequest
   ) {
@@ -235,37 +248,40 @@ export default function useEthers() {
   }
 
   return { 
-    addEthersNetwork,
-    estimateEIP1559GasFee,
-    estimateLegacyGasFee,
     ethersProviderList,
-    getEthersAddressWithBalance,
+    detectActiveEthersWalletAddress,
+    getEthersAddressesWithBalances,
     getEthersBalance,
-    getEthersBrowserProviderSelectedCurrency,
     getEthersBrowserSigner,
     getGasPriceAndLimit,
-    getMaxETHAfterFees,
     loginWithEthers,
-    requestEthersAccount,
-    sendEthersTransaction,
-    signEthersMessage,
-    switchEthersNetwork
   }
 }
 
 function getBrowserProvider(providerString: ProviderString) {
-  if (providerString === 'MetaMask' || providerString === 'CoinbaseWallet') {
+  try {
     const { ethereum } = window
-    if (!ethereum.providerMap && ethereum.isMetaMask) {
-      return ethereum
+    if (providerString === 'CoinbaseWallet') {
+      if (!ethereum.providerMap) return alert('TrustWallet or another wallet may be interfering with CoinbaseWallet. Please disable other wallets and try again.')
+      if (ethereum?.providerMap.get(providerString)) return ethereum.providerMap.get(providerString)
+        else window.open('https://www.coinbase.com/wallet/downloads', '_blank')
+    } else if (providerString === 'MetaMask') {
+      if (ethereum.providerMap && ethereum.providerMap.get('MetaMask')) {
+        return ethereum?.providerMap?.get(providerString) || undefined
+      } else if (ethereum.isMetaMask) {
+        return ethereum
+      } else {
+        window.open('https://metamask.io/download.html', '_blank')
+      }
+    } else if (providerString === 'BraveWallet') {
+      return getBraveWallet()
+    } else if (providerString === 'TrustWallet') {
+      return getTrustWallet()
+    } else if (providerString === 'OkxWallet') {
+      return getOkxWallet()
     }
-    return ethereum?.providerMap?.get(providerString) || undefined
-  } else if (providerString === 'BraveWallet') {
-    return getBraveWallet()
-  } else if (providerString === 'TrustWallet') {
-    return getTrustWallet()
-  } else if (providerString === 'OkxWallet') {
-    return getOkxWallet()
+  } catch(err) {
+    console.error('There was an error in getBrowserProvider :>> ', err)
   }
 }
 
@@ -287,6 +303,7 @@ function getOkxWallet() {
 function getTrustWallet() {
   const { ethereum } = window as any
   const providers = ethereum?.providers
+  if (ethereum.isTrust) return ethereum
   if (providers) {
     for (const provider of providers) {
       if (provider.isTrustWallet) return provider

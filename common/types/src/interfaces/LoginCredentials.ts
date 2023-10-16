@@ -5,4 +5,5 @@ export interface LoginCredentials {
     address: string
     provider: ProviderString
     currency: Currency
+    pathIndex?: number
 }

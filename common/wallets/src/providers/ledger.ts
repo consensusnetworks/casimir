@@ -207,13 +207,13 @@ export class EthersLedgerSigner extends ethers.Signer {
         return ethers.utils.joinSignature(signature)
     }
     
-    async signMessageWithIndex(message: ethers.utils.Bytes | string, index: string): Promise<string> {
+    async signMessageWithIndex(message: ethers.utils.Bytes | string, pathIndex: number): Promise<string> {
         if (typeof (message) === 'string') {
             console.log('message :>> ', message)
             message = ethers.utils.toUtf8Bytes(message)
         }
         const messageHex = ethers.utils.hexlify(message).substring(2)
-        const path = `m/44'/60'/${index}'/0/0`
+        const path = `m/44'/60'/${pathIndex}'/0/0`
         const signature = await this.retry((eth) => eth.signPersonalMessage(path, messageHex))
         console.log('signature :>> ', signature)
         signature.r = '0x' + signature.r

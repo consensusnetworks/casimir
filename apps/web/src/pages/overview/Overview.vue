@@ -1,24 +1,31 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import Staking from './components/Staking.vue'
-import Announcements from './components/Announcements.vue'
 import StakingAvg from './components/StakingAvg.vue'
 import BreakdownChart from './components/BreakdownChart.vue'
 import BreakdownTable from './components/BreakdownTable.vue'
 
-import useUser from '@/composables/user'
+import useAuth from '@/composables/auth'
 import useBreakdownMetrics from '@/composables/breakdownMetrics'
 import useAnalytics from '@/composables/analytics'
 import useOperators from '@/composables/operators'
 
-const { loadingSessionLogin } = useUser()
+const { loadingSessionLogin } = useAuth()
 const { loadingInitializeBreakdownMetrics } = useBreakdownMetrics()
 const { loadingInitializeAnalytics } = useAnalytics()
 const { loadingInitializeOperators } = useOperators()
 
 const showSkeleton = ref(true)
 
-watch([loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitializeAnalytics, loadingInitializeOperators], () => {
+onMounted(() => {
+  setTimeout(() => {
+    if(loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators){
+      showSkeleton.value = false
+    }
+  }, 500)
+})
+
+watch([loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitializeAnalytics, loadingInitializeOperators], () =>{
   setTimeout(() => {
     if (loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators) {
       showSkeleton.value = false
