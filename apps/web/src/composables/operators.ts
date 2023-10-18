@@ -119,7 +119,7 @@ export default function useOperators() {
     return pools
   }
 
-  async function initializeComposable(user: UserWithAccountsAndOperators){
+  async function initializeComposable(user: UserWithAccountsAndOperators) {
     try {
       loadingInitializeOperators.value = true
       listenForContractEvents(user)
@@ -163,10 +163,10 @@ export default function useOperators() {
       }
       const result = 
       await registry.connect(signer as ethers.Signer)
-        .registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral)})
+        .registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral) })
       // TODO: @shanejearley - How many confirmations do we want to wait?
       await result?.wait(1)
-      await addOperator({address, nodeUrl})
+      await addOperator({ address, nodeUrl })
       loadingRegisteredOperators.value = false
     } catch (err) {
       loadingRegisteredOperatorsError.value = true

@@ -199,7 +199,7 @@ void (async function () {
   if (process.env.MOCK_SERVICES === "true") {
     process.on("SIGINT", () => {
       const mocked: string[] = []
-      if (process.env.MOCK_SERVICES === "true"){
+      if (process.env.MOCK_SERVICES === "true") {
         mocked.push(...Object.keys(services))
         // TODO: @shanejearley Add clean script for @casimir/blogs and then remove splice?
         mocked.splice(mocked.indexOf("blogs"), 1)

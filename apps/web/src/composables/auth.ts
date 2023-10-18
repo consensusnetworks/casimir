@@ -233,7 +233,7 @@ export default function useAuth() {
           return "Selected address is not active address in wallet"
         }
       }
-    } catch(err) {
+    } catch (err) {
       return "Error in userAuthState"
     }
   }

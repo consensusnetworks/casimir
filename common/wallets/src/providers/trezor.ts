@@ -68,7 +68,7 @@ export class EthersTrezorSigner extends ethers.Signer {
   async signMessage(message: ethers.utils.Bytes | string): Promise<string> {
     if (typeof(message) === "string") message = ethers.utils.toUtf8Bytes(message)
     const messageHex = ethers.utils.hexlify(message).substring(2)
-    const { payload } = await this.eth.ethereumSignMessage({ path: this.path, message: messageHex, hex: true})
+    const { payload } = await this.eth.ethereumSignMessage({ path: this.path, message: messageHex, hex: true })
     const { signature } = payload as TrezorMessageSignature
     return signature
   }
@@ -77,7 +77,7 @@ export class EthersTrezorSigner extends ethers.Signer {
     if (typeof (message) === "string") message = ethers.utils.toUtf8Bytes(message)
     const messageHex = ethers.utils.hexlify(message).substring(2)
     const path = `m/44'/60'/${pathIndex}'/0/0`
-    const { payload } = await this.eth.ethereumSignMessage({ path, message: messageHex, hex: true})
+    const { payload } = await this.eth.ethereumSignMessage({ path, message: messageHex, hex: true })
     const { signature } = payload as TrezorMessageSignature
     const convertedSignature = convertSignature(signature)
     return convertedSignature

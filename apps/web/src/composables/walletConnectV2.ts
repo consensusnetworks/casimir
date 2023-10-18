@@ -133,13 +133,13 @@ export default function useWalletConnectV2() {
     }
   }
   
-  async function signWalletConnectMessage(message: string) : Promise<string>{
+  async function signWalletConnectMessage(message: string) : Promise<string> {
     try {
       console.log("got to signWalletConnectMessage")
       console.log("message :>> ", message)
       const signer = await web3Provider.value?.getSigner()
       return await signer?.signMessage(message) as string
-    } catch(err) {
+    } catch (err) {
       console.error("error in signWalletConnectMessage :>> ", err)
       throw err
       return ""

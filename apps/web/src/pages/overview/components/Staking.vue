@@ -56,7 +56,7 @@ const handleInputOnAmountToStake = (event: any) => {
 const selectAmountInput = () => {
   const inputElement = document.getElementById("amount_input") as HTMLInputElement
   
-  if(inputElement){
+  if (inputElement) {
 
     inputElement.setSelectionRange(0, inputElement.value.length)
   
@@ -160,7 +160,7 @@ const handleOutsideClickForWalletInput = (event: any) => {
   const selectWalletInputContainer = document.getElementById("selectWalletInputContainer")
   const selectWalletInputButton = document.getElementById("selectWalletInputButton")
 
-  if(!selectWalletInputContainer?.contains(event.target) && !selectWalletInputButton?.contains(event.target)){
+  if (!selectWalletInputContainer?.contains(event.target) && !selectWalletInputButton?.contains(event.target)) {
     openSelectWalletInput.value = false
   }
 }
@@ -170,23 +170,23 @@ const handleOutsideClickForTermsOfService = (event: any) => {
   const termsOfServiceButton = document.getElementById("termsOfServiceButton")
 
 
-  if(!termsOfServiceContainer?.contains(event.target) && !termsOfServiceButton?.contains(event.target)){
+  if (!termsOfServiceContainer?.contains(event.target) && !termsOfServiceButton?.contains(event.target)) {
     openTermsOfService.value = false
   }
 }
 
 watch(openSelectWalletInput, ()=>{
-  if(openSelectWalletInput.value){
+  if (openSelectWalletInput.value) {
     window.addEventListener("click", handleOutsideClickForWalletInput)
-  }else {
+  } else {
     window.removeEventListener("click", handleOutsideClickForWalletInput)
   }
 })
 
 watch(openTermsOfService, ()=>{
-  if(openTermsOfService.value){
+  if (openTermsOfService.value) {
     window.addEventListener("click", handleOutsideClickForTermsOfService)
-  }else {
+  } else {
     window.removeEventListener("click", handleOutsideClickForTermsOfService)
   }
 })
@@ -213,7 +213,7 @@ const handleDeposit = async () => {
 
   if (result) {
     const waitResponse = await result.wait(1)
-    if (waitResponse){
+    if (waitResponse) {
       alert("Your Stake Has Been Deposited!")
     } else {
       alert("Your Stake Action Has Failed, Please Try Again Later!")

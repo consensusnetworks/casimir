@@ -8,7 +8,7 @@ import useFiles from "@/composables/files"
 import useFormat from "@/composables/format"
 import useOperators from "@/composables/operators"
 import useUser from "@/composables/user"
-import { UserWithAccountsAndOperators} from "@casimir/types"
+import { UserWithAccountsAndOperators } from "@casimir/types"
 
 const { loadingSessionLogin } = useAuth()
 // const { detectActiveWalletAddress } = useEthers()
@@ -17,7 +17,7 @@ const { convertString } = useFormat()
 const { user } = useUser()
 
 // Form inputs
-const selectedWallet = ref<{address: string, walletProvider: ProviderString}>({address: "", walletProvider: ""})
+const selectedWallet = ref<{address: string, walletProvider: ProviderString}>({ address: "", walletProvider: "" })
 const openSelectWalletOptions = ref(false)
 const onSelectWalletBlur = () => {
   setTimeout(() =>{
@@ -130,7 +130,7 @@ watch(selectedWallet, async () =>{
 
   if (selectedWallet.value.address === "") {
     availableOperatorIDs.value = []
-  } else if(nonregisteredOperators.value && nonregisteredOperators.value.length > 0) {
+  } else if (nonregisteredOperators.value && nonregisteredOperators.value.length > 0) {
     availableOperatorIDs.value = 
     [...nonregisteredOperators.value]
       .filter((operator: any) => operator.ownerAddress === selectedWallet.value.address)
@@ -153,7 +153,7 @@ watch(registeredOperators, () => {
 })
 
 watch(openAddOperatorModal, () =>{
-  if(openAddOperatorModal.value){
+  if (openAddOperatorModal.value) {
     selectedWallet.value = {
       address: user.value?.address as string,
       walletProvider: user.value?.walletProvider as ProviderString
@@ -204,7 +204,7 @@ const filterData = () => {
     })
   }
 
-  if(selectedHeader.value !== "" && selectedOrientation.value !== "") {
+  if (selectedHeader.value !== "" && selectedOrientation.value !== "") {
     filteredDataArray = filteredDataArray.sort((a: any, b: any) => {
       const valA = a[selectedHeader.value]
       const valB = b[selectedHeader.value]
@@ -233,7 +233,7 @@ const removeItemFromCheckedList = (item:any) => {
 const allInputsValid = ref(false)
 
 watch([selectedWallet, selectedOperatorID, selectedPublicNodeURL, selectedCollateral], ()=>{
-  if(selectedWallet.value.address !== "" && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== "" && selectedCollateral.value !== undefined) {
+  if (selectedWallet.value.address !== "" && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== "" && selectedCollateral.value !== undefined) {
     allInputsValid.value = true
   } else {
     allInputsValid.value = false
@@ -281,7 +281,7 @@ const showSkeleton = ref(true)
 
 watch([loadingSessionLogin || loadingInitializeOperators], () =>{
   setTimeout(() => {
-    if(loadingSessionLogin || loadingInitializeOperators){
+    if (loadingSessionLogin || loadingInitializeOperators) {
       showSkeleton.value = false
     }
   }, 500)

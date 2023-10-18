@@ -18,7 +18,7 @@ export default function useWallets() {
           // Check if TrustWallet
           if (provider.isTrust) installedWallets.value.push("TrustWallet")
         }
-      } else if(ethereum.providerMap) { // This will not show Trust Wallet even if it is installed
+      } else if (ethereum.providerMap) { // This will not show Trust Wallet even if it is installed
         // MetaMask & CoinbaseWallet
         // Check if MetaMask
         const isMetaMask = ethereum.providerMap.has("MetaMask")

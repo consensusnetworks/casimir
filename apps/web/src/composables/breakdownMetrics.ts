@@ -243,7 +243,7 @@ export default function useBreakdownMetrics() {
     await Promise.all(txs)
   }
     
-  async function initializeComposable(user: UserWithAccountsAndOperators){
+  async function initializeComposable(user: UserWithAccountsAndOperators) {
     userValue.value = toValue(user)
     try {
       loadingInitializeBreakdownMetrics.value = true
@@ -259,7 +259,7 @@ export default function useBreakdownMetrics() {
     }
   }
 
-  async function uninitializeComposable(){
+  async function uninitializeComposable() {
     userValue.value = undefined
     provider.removeAllListeners("block")
     stopListeningForContractEvents()

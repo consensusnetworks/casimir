@@ -158,7 +158,7 @@ const filterData = () => {
       })
   }
 
-  if(selectedHeader.value !== "" && selectedOrientation.value !== "") {
+  if (selectedHeader.value !== "" && selectedOrientation.value !== "") {
     filteredDataArray = filteredDataArray.sort((a, b) => {
       const valA = a[selectedHeader.value]
       const valB = b[selectedHeader.value]
@@ -251,12 +251,12 @@ const removeItemFromCheckedList = (item:any) => {
   }
 }
 
-const {rawUserAnalytics } = useAnalytics()
+const { rawUserAnalytics } = useAnalytics()
 
 
 const setTableData = () =>{
 
-  if(!rawUserAnalytics.value) return 
+  if (!rawUserAnalytics.value) return 
 
   const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
     new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
@@ -279,8 +279,8 @@ const setTableData = () =>{
   sortedTransactions.forEach((item: any) => {
     const index = filteredWallets.findIndex((i: any)=> i.act === item.walletAddress)
 
-    if(index > -1) {
-      if(new Date(filteredWallets[index].date).getTime() < new Date(item.receivedAt).getTime()){
+    if (index > -1) {
+      if (new Date(filteredWallets[index].date).getTime() < new Date(item.receivedAt).getTime()) {
         filteredWallets[index].bal === item.walletBalance
       }
     } else {
@@ -297,7 +297,7 @@ const setTableData = () =>{
       )
     }
 
-    if(item.type){
+    if (item.type) {
       filteredStakingTransactions.push({
         date: item.receivedAt,
         act: item.walletAddress,
@@ -319,9 +319,9 @@ const setTableData = () =>{
 const checkAll = ref(false)
 watch(checkAll, () =>{
   filteredData.value.map(item =>{
-    if(checkAll.value && !checkedItems.value.includes(item)){
+    if (checkAll.value && !checkedItems.value.includes(item)) {
       checkedItems.value.push(item)
-    }else if(!checkAll && checkedItems.value.includes(item)){
+    } else if (!checkAll && checkedItems.value.includes(item)) {
       removeItemFromCheckedList(item)
     }
   })

@@ -23,7 +23,7 @@ export default function useEthers() {
         method: "wallet_addEthereumChain",
         params: [network]
       })
-    } catch(error: any) {
+    } catch (error: any) {
       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
     }
   }
@@ -40,7 +40,7 @@ export default function useEthers() {
       } else {
         return ""
       }
-    } catch(err) {
+    } catch (err) {
       console.error("There was an error in detectActiveEthersWalletAddress :>> ", err)
       return ""
     }
@@ -183,7 +183,7 @@ export default function useEthers() {
     return maxAfterFees
   }
 
-  async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
+  async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void> {
     const { provider, address, currency } = loginCredentials
     const browserProvider = getBrowserProvider(provider)
     const web3Provider: ethers.providers.Web3Provider = 
@@ -243,15 +243,15 @@ export default function useEthers() {
     } else if (chainId === "4690") {
       chainId = ethers.utils.hexlify(4690)
     }
-    if (currentChainId.toString() != chainId){
+    if (currentChainId.toString() != chainId) {
       try {
         await provider.request({
           method:"wallet_switchEthereumChain",
-          params: [{chainId: chainId}]
+          params: [{ chainId: chainId }]
         })
       } catch (err: any) {
         console.log(`Error occurred while switching chain to chainId ${chainId}, err: ${err.message} code: ${err.code}`)
-        if (err.code === 4902){
+        if (err.code === 4902) {
           if (chainId === "5") {
             addEthersNetwork(providerString, goerliNetwork)
           } else if (chainId === "0x1252") {
@@ -295,7 +295,7 @@ function getBrowserProvider(providerString: ProviderString) {
     } else if (providerString === "OkxWallet") {
       return getOkxWallet()
     }
-  } catch(err) {
+  } catch (err) {
     console.error("There was an error in getBrowserProvider :>> ", err)
   }
 }

@@ -93,7 +93,7 @@ const questionsAndAnswers = ref([
   
 export default function useQuestionsAndAnswers() {
   onMounted(() => {
-    if(!initializeComposable.value){
+    if (!initializeComposable.value) {
       initializeComposable.value = true
     }
         

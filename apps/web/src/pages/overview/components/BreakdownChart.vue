@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import LineChartJS from "@/components/charts/LineChartJS.vue"
-import { onMounted, ref, watch} from "vue"
+import { onMounted, ref, watch } from "vue"
 import useAnalytics from "@/composables/analytics"
 import useUser from "@/composables/user"
 import useScreenDimensions from "@/composables/screenDimensions"
@@ -23,9 +23,9 @@ const chartData = ref({} as any)
 
 const getAccountColor = (address: string) => {
   const walletProvider = user.value?.accounts
-    .find( item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase())?.walletProvider as ProviderString
+    .find(item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase())?.walletProvider as ProviderString
 
-  switch (walletProvider){
+  switch (walletProvider) {
   case "MetaMask":
     return "#F6851B"
   case "CoinbaseWallet":
@@ -41,7 +41,7 @@ const getAccountColor = (address: string) => {
   case "TrustWallet":
     return "#0B65C6"
   default:
-    return"#80ABFF"
+    return "#80ABFF"
   }
     
 }
@@ -104,13 +104,13 @@ const setChartData = (userAnalytics: UserAnalyticsData) => {
 }
 
 
-const {userAnalytics, updateAnalytics, initializeAnalyticsComposable } = useAnalytics()
+const { userAnalytics, updateAnalytics, initializeAnalyticsComposable } = useAnalytics()
 
 onMounted(() => {
-  if(user.value){
+  if (user.value) {
     initializeComposable(user.value as UserWithAccountsAndOperators)
     initializeAnalyticsComposable()
-  }else{
+  } else {
     uninitializeComposable()
   }
   setChartData(userAnalytics.value as UserAnalyticsData)

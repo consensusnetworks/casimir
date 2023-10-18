@@ -47,7 +47,7 @@ const roadmapItems = ref([
   
 export default function useRoadmap() {
   onMounted(() => {
-    if(!initializeComposable.value){
+    if (!initializeComposable.value) {
       initializeComposable.value = true
     }
         

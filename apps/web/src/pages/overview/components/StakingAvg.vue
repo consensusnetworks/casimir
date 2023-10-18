@@ -28,10 +28,10 @@ const handleOutsideClick = (event: any) => {
   const staking_avg_timeframe_button = document.getElementById(`${props.viewId}_staking_avg_timeframe_button`)
   const staking_avg_timeframe_options = document.getElementById(`${props.viewId}_staking_avg_timeframe_options`)
 
-  if(staking_avg_timeframe_options && staking_avg_timeframe_button){
-    if(openTimeFrameOptions.value) {
-      if(!staking_avg_timeframe_options.contains(event.target)){
-        if(!staking_avg_timeframe_button.contains(event.target)){
+  if (staking_avg_timeframe_options && staking_avg_timeframe_button) {
+    if (openTimeFrameOptions.value) {
+      if (!staking_avg_timeframe_options.contains(event.target)) {
+        if (!staking_avg_timeframe_button.contains(event.target)) {
           openTimeFrameOptions.value = false
         }
       }
