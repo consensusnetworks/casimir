@@ -14,7 +14,11 @@ const { ethereumUrl, provider } = useEnvironment()
 const { createSiweMessage, signInWithEthereum } = useSiwe()
 
 export default function useEthers() {
-  const ethersProviderList = ["BraveWallet", "CoinbaseWallet", "MetaMask", "OkxWallet", "TrustWallet"]
+  const ethersProviderList = ["BraveWallet",
+    "CoinbaseWallet",
+    "MetaMask",
+    "OkxWallet",
+    "TrustWallet"]
 
   async function addEthersNetwork (providerString: ProviderString, network: any) {
     const provider = getBrowserProvider(providerString)

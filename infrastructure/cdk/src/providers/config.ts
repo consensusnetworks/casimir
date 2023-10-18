@@ -13,7 +13,10 @@ export class Config implements ProjectConfig {
   public readonly subdomains
   public readonly dataVersion
 
-  public readonly requiredEnvVars = ["PROJECT", "STAGE", "AWS_ACCOUNT", "AWS_REGION"]
+  public readonly requiredEnvVars = ["PROJECT",
+    "STAGE",
+    "AWS_ACCOUNT",
+    "AWS_REGION"]
 
   constructor() {
     this.checkEnvVars()

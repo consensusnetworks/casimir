@@ -60,8 +60,14 @@ export async function fulfillReport({
 
   const detailsRequestId = requestIds[1]
   const detailsResponse = ethers.utils.defaultAbiCoder.encode(
-    ["uint32", "uint32", "uint32", "uint32[5]"],
-    [activatedDeposits, forcedExits, completedExits, compoundablePoolIds]
+    ["uint32",
+      "uint32",
+      "uint32",
+      "uint32[5]"],
+    [activatedDeposits,
+      forcedExits,
+      completedExits,
+      compoundablePoolIds]
   )
 
   await fulfillFunctionsRequest({

@@ -17,7 +17,10 @@ app.use(
   cors({
     origin: process.env.WEB_URL || "http://localhost:3001",
     allowedHeaders: ["content-type", ...supertokens.getAllCORSHeaders()],
-    methods: ["GET", "PUT", "POST", "DELETE"],
+    methods: ["GET",
+      "PUT",
+      "POST",
+      "DELETE"],
     credentials: true
   })
 )

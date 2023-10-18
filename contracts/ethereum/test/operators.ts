@@ -136,7 +136,11 @@ describe("Operators", async function () {
       activatedDeposits: 0,
       forcedExits: 0,
       completedExits: 1,
-      compoundablePoolIds: [0, 0, 0, 0, 0]
+      compoundablePoolIds: [0,
+        0,
+        0,
+        0,
+        0]
     }
 
     await fulfillReport({

@@ -39,7 +39,11 @@ export default function useDB() {
       if (!createdAt) createdAt = new Date().toISOString()
       const { address, currency, userId, walletProvider } = account
       const text = "INSERT INTO accounts (address, currency, user_id, wallet_provider, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;"
-      const params = [address, currency, userId, walletProvider, createdAt]
+      const params = [address,
+        currency,
+        userId,
+        walletProvider,
+        createdAt]
       const rows = await postgres.query(text, params)
       const accountAdded = rows[0]
       const accountId = accountAdded.id
@@ -63,7 +67,11 @@ export default function useDB() {
     try {
       const created_at = new Date().toISOString()
       const text = "INSERT INTO operators (user_id, account_id, node_url, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;"
-      const params = [userId, accountId, nodeUrl, created_at, created_at]
+      const params = [userId,
+        accountId,
+        nodeUrl,
+        created_at,
+        created_at]
       const rows = await postgres.query(text, params)
       const addedOperator = rows[0]
       return formatResult(addedOperator)
@@ -82,7 +90,10 @@ export default function useDB() {
   async function addUser(user: User, account: Account) : Promise<UserAddedSuccess | undefined> {
     const { address, createdAt, updatedAt, walletProvider } = user
     const text = "INSERT INTO users (address, created_at, updated_at, wallet_provider) VALUES ($1, $2, $3, $4) RETURNING *;"
-    const params = [address, createdAt, updatedAt, walletProvider]
+    const params = [address,
+      createdAt,
+      updatedAt,
+      walletProvider]
     const rows = await postgres.query(text, params)
     const addedUser = rows[0]
     account.userId = addedUser.id
@@ -102,7 +113,9 @@ export default function useDB() {
   async function addUserAccount(user_id: number, account_id: number) {
     const createdAt = new Date().toISOString()
     const text = "INSERT INTO user_accounts (user_id, account_id, created_at) VALUES ($1, $2, $3) RETURNING *;"
-    const params = [user_id, account_id, createdAt]
+    const params = [user_id,
+      account_id,
+      createdAt]
     const rows = await postgres.query(text, params)
     return rows[0]
   }
@@ -253,7 +266,10 @@ export default function useDB() {
      */
   async function removeAccount({ address, currency, ownerAddress, walletProvider } : RemoveAccountOptions) {
     const text = "DELETE FROM accounts WHERE address = $1 AND owner_address = $2 AND wallet_provider = $3 AND currency = $4 RETURNING *;"
-    const params = [address, ownerAddress, walletProvider, currency]
+    const params = [address,
+      ownerAddress,
+      walletProvider,
+      currency]
     const rows = await postgres.query(text, params)
     return rows[0] as Account
   }
@@ -270,7 +286,9 @@ export default function useDB() {
     try {
       const updated_at = new Date().toISOString()
       const text = "UPDATE users SET address = $1, updated_at = $2 WHERE id = $3 RETURNING *;"
-      const params = [address, updated_at, userId]
+      const params = [address,
+        updated_at,
+        userId]
       const rows = await postgres.query(text, params)
       const user = rows[0]
       if (!user) throw new Error("User not found.")
@@ -294,7 +312,9 @@ export default function useDB() {
     try {
       const updated_at = new Date().toISOString()
       const text = "UPDATE users SET agreed_to_terms_of_service = $1, updated_at = $2 WHERE id = $3 RETURNING *;"
-      const params = [agreedToTermsOfService, updated_at, userId]
+      const params = [agreedToTermsOfService,
+        updated_at,
+        userId]
       const rows = await postgres.query(text, params)
       const user = rows[0]
       if (!user) throw new Error("User not found.")

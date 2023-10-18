@@ -234,8 +234,7 @@ export async function reportResharesHandler(input: ethers.utils.Result) {
   ) as ethers.Contract & CasimirRegistry
 
   const poolIds = [
-    ...await manager.getPendingPoolIds(),
-    ...await manager.getStakedPoolIds()
+    ...await manager.getPendingPoolIds(), ...await manager.getStakedPoolIds()
   ]
 
   for (const poolId of poolIds) {
@@ -422,9 +421,15 @@ export async function reportCompletedExitsHandler(input: ethers.utils.Result) {
              * Here, we're just hardcoding blame to the first operator if less than 32 ETH
              */
       const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())
-      let blamePercents = [0, 0, 0, 0]
+      let blamePercents = [0,
+        0,
+        0,
+        0]
       if (poolDetails.balance.lt(ethers.utils.parseEther("32"))) {
-        blamePercents = [100, 0, 0, 0]
+        blamePercents = [100,
+          0,
+          0,
+          0]
       }
 
       const scanner = new Scanner({

@@ -64,7 +64,11 @@ export default function useWalletConnectV2() {
         projectId: walletConnectProjectId,
         chains: [5],
         showQrModal: true,
-        methods: ["eth_sendTransaction", "eth_signTransaction", "eth_sign", "personal_sign", "eth_signTypedData"]
+        methods: ["eth_sendTransaction",
+          "eth_signTransaction",
+          "eth_sign",
+          "personal_sign",
+          "eth_signTypedData"]
       })
 
       web3Modal.value = new WalletConnectModal({

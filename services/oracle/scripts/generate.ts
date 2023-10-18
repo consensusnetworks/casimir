@@ -22,7 +22,14 @@ void async function () {
   if (!process.env.MANAGER_ADDRESS) throw new Error("No manager address set")
   if (!process.env.VIEWS_ADDRESS) throw new Error("No views address set")
 
-  const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(",").map(id => parseInt(id)) || [200, 201, 202, 203, 156, 157, 158, 159]
+  const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(",").map(id => parseInt(id)) || [200,
+    201,
+    202,
+    203,
+    156,
+    157,
+    158,
+    159]
   if (preregisteredOperatorIds.length < 8) throw new Error("Not enough operator ids provided")
 
   const accountPath = "m/44'/60'/0'/0/1"

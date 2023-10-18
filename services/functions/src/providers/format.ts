@@ -48,7 +48,9 @@ export function addCBORMapDelimiters(buffer: Buffer): Buffer {
      */
   const endIndefiniteLengthMap = Buffer.from([0xff])
   return Buffer.concat(
-    [startIndefiniteLengthMap, buffer, endIndefiniteLengthMap],
+    [startIndefiniteLengthMap,
+      buffer,
+      endIndefiniteLengthMap],
     buffer.length + 2,
   )
 }

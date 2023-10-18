@@ -7,8 +7,7 @@ const routes = [
     path: "/", 
     name: Overview,
     component: Overview,
-  },
-  { 
+  }, { 
     path: "/operator", 
     name: Operator,
     component: Operator,

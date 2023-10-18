@@ -161,7 +161,10 @@ watch(openAddOperatorModal, () =>{
   }
 })
 
-watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
+watch([searchInput,
+  selectedHeader,
+  selectedOrientation,
+  currentPage], ()=>{
   filterData()
 })
 
@@ -232,7 +235,10 @@ const removeItemFromCheckedList = (item:any) => {
 
 const allInputsValid = ref(false)
 
-watch([selectedWallet, selectedOperatorID, selectedPublicNodeURL, selectedCollateral], ()=>{
+watch([selectedWallet,
+  selectedOperatorID,
+  selectedPublicNodeURL,
+  selectedCollateral], ()=>{
   if (selectedWallet.value.address !== "" && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== "" && selectedCollateral.value !== undefined) {
     allInputsValid.value = true
   } else {

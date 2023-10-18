@@ -15,7 +15,9 @@ upgrades.silenceWarnings()
  * Deploy contracts to local network and run local events and oracle handling
  */
 void async function () {
-  const [, daoOracle, donTransmitter, firstUser] = await ethers.getSigners()
+  const [, daoOracle,
+    donTransmitter,
+    firstUser] = await ethers.getSigners()
 
   const functionsOracleFactoryFactory = await ethers.getContractFactory("FunctionsOracleFactory")
   const functionsOracleFactory = await functionsOracleFactoryFactory.deploy() as FunctionsOracleFactory
@@ -128,7 +130,14 @@ void async function () {
   console.log(`CasimirViews contract deployed to ${views.address}`)
 
   const ssvViews = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
-  const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(",").map(id => parseInt(id)) || [200, 201, 202, 203, 156, 157, 158, 159]
+  const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(",").map(id => parseInt(id)) || [200,
+    201,
+    202,
+    203,
+    156,
+    157,
+    158,
+    159]
   if (preregisteredOperatorIds.length < 8) throw new Error("Not enough operator ids provided")
   const messengerUrl = process.env.MESSENGER_URL || "https://nodes.casimir.co/eth/goerli/dkg/messenger"
   const preregisteredBalance = ethers.utils.parseEther("10")

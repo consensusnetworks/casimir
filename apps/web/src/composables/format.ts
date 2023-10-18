@@ -16,7 +16,13 @@ export default function useFormat() {
   }
 
   function formatNumber(number: number) {
-    const SI_SYMBOL = ["", "K", "M", "B", "T", "P", "E"]
+    const SI_SYMBOL = ["",
+      "K",
+      "M",
+      "B",
+      "T",
+      "P",
+      "E"]
     const tier = Math.log10(Math.abs(number)) / 3 | 0
     if (tier === 0) return number.toFixed(2)
     const suffix = SI_SYMBOL[tier]

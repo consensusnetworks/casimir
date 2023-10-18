@@ -31,7 +31,10 @@ onMounted(() => {
 })
 
 watch([
-  loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitializeAnalytics, loadingInitializeOperators
+  loadingSessionLogin,
+  loadingInitializeBreakdownMetrics,
+  loadingInitializeAnalytics,
+  loadingInitializeOperators
 ], () => {
   setTimeout(() => {
     if (

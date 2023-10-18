@@ -9,8 +9,7 @@ export default defineConfig({
   plugins: [
     vue({
       include: [/\.vue$/, /\.md$/],
-    }),
-    Markdown(),
+    }), Markdown(),
   ],
   define: {
     global: "globalThis",
@@ -20,7 +19,13 @@ export default defineConfig({
       "@": path.resolve(path.dirname(fileURLToPath(import.meta.url)), "src"),
       "./runtimeConfig": "./runtimeConfig.browser",
     },
-    extensions: [".js", ".json", ".jsx", ".mjs", ".ts", ".tsx", ".vue"],
+    extensions: [".js",
+      ".json",
+      ".jsx",
+      ".mjs",
+      ".ts",
+      ".tsx",
+      ".vue"],
   },
   envPrefix: "PUBLIC_",
 })

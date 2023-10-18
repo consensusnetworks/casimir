@@ -29,7 +29,8 @@
         "space-before-blocks": ["error", "always"],
         "object-curly-spacing": ["error", "always"],
         "space-in-parens": ["error", "never"],
-        "keyword-spacing": ["error", { "before": true, "after": true }]
+        "keyword-spacing": ["error", { "before": true, "after": true }],
+        "array-element-newline": ["error", { "minItems": 3 }]
     },
     "ignorePatterns": [
         "contracts/**/scripts/resources",

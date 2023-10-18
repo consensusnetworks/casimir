@@ -93,8 +93,7 @@ export async function reportResharesHandler(
   if (!operatorId) throw new Error("No operator id provided")
     
   const poolIds = [
-    ...await manager.getPendingPoolIds(),
-    ...await manager.getStakedPoolIds()
+    ...await manager.getPendingPoolIds(), ...await manager.getStakedPoolIds()
   ]
 
   for (const poolId of poolIds) {
@@ -264,9 +263,15 @@ export async function reportCompletedExitsHandler(
              */
       const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())
 
-      let blamePercents = [0, 0, 0, 0]
+      let blamePercents = [0,
+        0,
+        0,
+        0]
       if (poolDetails.balance.lt(ethers.utils.parseEther("32"))) {
-        blamePercents = [100, 0, 0, 0]
+        blamePercents = [100,
+          0,
+          0,
+          0]
       }
 
       const scanner = new Scanner({

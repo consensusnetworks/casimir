@@ -101,8 +101,7 @@ export default function useOperators() {
     const pools: Pool[] = []
     
     const poolIds = [
-      ...await manager.getPendingPoolIds(),
-      ...await manager.getStakedPoolIds()
+      ...await manager.getPendingPoolIds(), ...await manager.getStakedPoolIds()
     ]
     
     for (const poolId of poolIds) {

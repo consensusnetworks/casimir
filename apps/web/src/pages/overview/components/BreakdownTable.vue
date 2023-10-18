@@ -177,7 +177,11 @@ const filterData = () => {
   filteredData.value = filteredDataArray.slice(start, end) as any
 }
 
-watch([searchInput, tableView, selectedHeader, selectedOrientation, currentPage], ()=>{
+watch([searchInput,
+  tableView,
+  selectedHeader,
+  selectedOrientation,
+  currentPage], ()=>{
   filterData()
 })
 

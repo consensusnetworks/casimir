@@ -52,8 +52,7 @@ export class WebStack extends cdk.Stack {
           responseHttpStatus: 200,
           responsePagePath: "/index.html",
           ttl: cdk.Duration.minutes(30)
-        },
-        {
+        }, {
           httpStatus: 404,
           responseHttpStatus: 200,
           responsePagePath: "/index.html",

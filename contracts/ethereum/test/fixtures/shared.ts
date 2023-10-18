@@ -11,7 +11,8 @@ upgrades.silenceWarnings()
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
-  const [, daoOracle, donTransmitter] = await ethers.getSigners()
+  const [, daoOracle,
+    donTransmitter] = await ethers.getSigners()
 
   const functionsOracleFactoryFactory = await ethers.getContractFactory("FunctionsOracleFactory")
   const functionsOracleFactory = await functionsOracleFactoryFactory.deploy() as FunctionsOracleFactory
@@ -114,7 +115,14 @@ export async function deploymentFixture() {
   await views.deployed()
 
   const ssvViews = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
-  const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(",").map(id => parseInt(id)) || [200, 201, 202, 203, 156, 157, 158, 159]
+  const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(",").map(id => parseInt(id)) || [200,
+    201,
+    202,
+    203,
+    156,
+    157,
+    158,
+    159]
   if (preregisteredOperatorIds.length < 8) throw new Error("Not enough operator ids provided")
   const preregisteredBalance = ethers.utils.parseEther("10")
   for (const operatorId of preregisteredOperatorIds) {
@@ -192,7 +200,11 @@ export async function secondUserDepositFixture() {
     activatedDeposits: 1,
     forcedExits: 0,
     completedExits: 0,
-    compoundablePoolIds: [0, 0, 0, 0, 0]
+    compoundablePoolIds: [0,
+      0,
+      0,
+      0,
+      0]
   }
 
   await fulfillReport({
@@ -234,7 +246,11 @@ export async function rewardsPostSecondUserDepositFixture() {
     activatedDeposits: 0,
     forcedExits: 0,
     completedExits: 0,
-    compoundablePoolIds: [0, 0, 0, 0, 0]
+    compoundablePoolIds: [0,
+      0,
+      0,
+      0,
+      0]
   }
 
   await fulfillReport({
@@ -287,7 +303,11 @@ export async function sweepPostSecondUserDepositFixture() {
     const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
     await setBalance(poolAddress, nextBalance)
   }
-  const compoundablePoolIds = [1, 0, 0, 0, 0]
+  const compoundablePoolIds = [1,
+    0,
+    0,
+    0,
+    0]
   const reportValues = {
     beaconBalance: 32,
     sweptBalance: sweptRewards,
@@ -345,7 +365,11 @@ export async function thirdUserDepositFixture() {
     activatedDeposits: 1,
     forcedExits: 0,
     completedExits: 0,
-    compoundablePoolIds: [0, 0, 0, 0, 0]
+    compoundablePoolIds: [0,
+      0,
+      0,
+      0,
+      0]
   }
 
   await fulfillReport({
@@ -397,7 +421,11 @@ export async function rewardsPostThirdUserDepositFixture() {
     activatedDeposits: 0,
     forcedExits: 0,
     completedExits: 0,
-    compoundablePoolIds: [0, 0, 0, 0, 0]
+    compoundablePoolIds: [0,
+      0,
+      0,
+      0,
+      0]
   }
 
   await fulfillReport({
@@ -452,7 +480,11 @@ export async function sweepPostThirdUserDepositFixture() {
     const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
     await setBalance(poolAddress, nextBalance)
   }
-  const compoundablePoolIds = [1, 2, 0, 0, 0]
+  const compoundablePoolIds = [1,
+    2,
+    0,
+    0,
+    0]
   const reportValues = {
     beaconBalance: 64,
     sweptBalance: sweptRewards,
@@ -516,7 +548,11 @@ export async function firstUserPartialWithdrawalFixture() {
     activatedDeposits: 0,
     forcedExits: 0,
     completedExits: 0,
-    compoundablePoolIds: [0, 0, 0, 0, 0]
+    compoundablePoolIds: [0,
+      0,
+      0,
+      0,
+      0]
   }
 
   await fulfillReport({
@@ -579,7 +615,11 @@ export async function fourthUserDepositFixture() {
     activatedDeposits: 2,
     forcedExits: 0,
     completedExits: 0,
-    compoundablePoolIds: [0, 0, 0, 0, 0]
+    compoundablePoolIds: [0,
+      0,
+      0,
+      0,
+      0]
   }
 
   await fulfillReport({
@@ -633,7 +673,11 @@ export async function beaconBalanceLossFixture() {
     activatedDeposits: 0,
     forcedExits: 0,
     completedExits: 0,
-    compoundablePoolIds: [0, 0, 0, 0, 0]
+    compoundablePoolIds: [0,
+      0,
+      0,
+      0,
+      0]
   }
 
   await fulfillReport({
@@ -689,7 +733,11 @@ export async function beaconBalanceRecoveryFixture() {
       activatedDeposits: 0,
       forcedExits: 0,
       completedExits: 0,
-      compoundablePoolIds: [0, 0, 0, 0, 0]
+      compoundablePoolIds: [0,
+        0,
+        0,
+        0,
+        0]
     }
 
     await fulfillReport({
@@ -752,7 +800,11 @@ export async function thirdUserFullWithdrawalFixture() {
     activatedDeposits: 0,
     forcedExits: 0,
     completedExits: 1,
-    compoundablePoolIds: [0, 0, 0, 0, 0]
+    compoundablePoolIds: [0,
+      0,
+      0,
+      0,
+      0]
   }
 
   await fulfillReport({
@@ -822,7 +874,11 @@ export async function simulationFixture() {
       activatedDeposits: 0,
       forcedExits: 0,
       completedExits: 0,
-      compoundablePoolIds: [0, 0, 0, 0, 0]
+      compoundablePoolIds: [0,
+        0,
+        0,
+        0,
+        0]
     }
 
     await fulfillReport({
@@ -848,7 +904,11 @@ export async function simulationFixture() {
     const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
     await setBalance(poolAddress, nextBalance)
   }
-  const compoundablePoolIds = [2, 3, 4, 0, 0]
+  const compoundablePoolIds = [2,
+    3,
+    4,
+    0,
+    0]
   const reportValues = {
     beaconBalance: 96,
     sweptBalance: sweptRewards,
