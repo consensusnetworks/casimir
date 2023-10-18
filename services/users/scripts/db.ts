@@ -8,7 +8,6 @@ import { JsonSchema, Schema, accountSchema, nonceSchema, operatorSchema, userSch
  * Run a local users database and service
  */
 void async function () {
-
   if (process.env.STAGE !== "local") {
     await loadCredentials()
     const dbCredentials = await getSecret(`${process.env.PROJECT}-users-db-credentials-${process.env.STAGE}`)
@@ -64,8 +63,7 @@ void async function () {
       throw new Error("Please install atlas using `curl -sSf https://atlasgo.sh | sh`")
     }
   }
-    
   await run(
-    `atlas schema apply --url "postgres://postgres:password@localhost:5432/users?sslmode=disable" --to "file://
-    ${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`)
+    `atlas schema apply --url "postgres://postgres:password@localhost:5432/users?sslmode=disable" --to "file://${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`
+  )
 }()

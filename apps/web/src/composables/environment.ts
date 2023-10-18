@@ -23,9 +23,12 @@ if (!viewsAddress) throw new Error("No views address provided")
 const registryAddress = import.meta.env.PUBLIC_REGISTRY_ADDRESS
 if (!registryAddress) throw new Error("No registry address provided")
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-const manager: CasimirManager & ethers.Contract = new ethers.Contract(managerAddress, CasimirManagerAbi, provider) as CasimirManager
-const views: CasimirViews & ethers.Contract = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as CasimirViews
-const registry: CasimirRegistry & ethers.Contract = new ethers.Contract(registryAddress, CasimirRegistryAbi, provider) as CasimirRegistry
+const manager: CasimirManager & ethers.Contract = 
+  new ethers.Contract(managerAddress, CasimirManagerAbi, provider) as CasimirManager
+const views: CasimirViews & ethers.Contract = 
+  new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as CasimirViews
+const registry: CasimirRegistry & ethers.Contract = 
+  new ethers.Contract(registryAddress, CasimirRegistryAbi, provider) as CasimirRegistry
 
 export default function useEnvironment() {
   return {

@@ -8,7 +8,13 @@ import { AnalyticsData, ProviderString, UserAnalyticsData, UserWithAccountsAndOp
 import useBreakdownMetrics from "@/composables/breakdownMetrics"
 
 const {  user } = useUser()
-const { currentStaked, stakingRewards, totalWalletBalance, initializeComposable, uninitializeComposable } = useBreakdownMetrics()
+const { 
+  currentStaked,
+  stakingRewards,
+  totalWalletBalance,
+  initializeComposable,
+  uninitializeComposable
+} = useBreakdownMetrics()
 const { screenWidth } = useScreenDimensions()
 
 const chardId = ref("cross_provider_chart")
@@ -16,7 +22,8 @@ const selectedTimeframe = ref("historical")
 const chartData = ref({} as any)
 
 const getAccountColor = (address: string) => {
-  const walletProvider = user.value?.accounts.find( item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase())?.walletProvider as ProviderString
+  const walletProvider = user.value?.accounts
+    .find( item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase())?.walletProvider as ProviderString
 
   switch (walletProvider){
   case "MetaMask":
@@ -170,7 +177,8 @@ watch(user, async () => {
         <h6 class="balance_title mb-[15px] tooltip_container">
           Rewards Earned
           <div class="tooltip w-[200px] right-0">
-            Total rewards earned from ethereum that is currently or has ever been staked through Casimir. Includes withdrawn and restaked earnings. 
+            Total rewards earned from ethereum that is currently or has ever been staked through Casimir.
+            Includes withdrawn and restaked earnings. 
           </div>
         </h6>
         <div class="flex items-end gap-[12px]">

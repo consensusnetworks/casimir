@@ -51,7 +51,8 @@ export default function useAnalytics() {
     sortedTransactions.forEach((tx: any) => {
       const { receivedAt, walletAddress, walletBalance } = tx
       /* Historical */
-      let historicalDataIndex = userAnalytics.value.historical.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
+      let historicalDataIndex = 
+        userAnalytics.value.historical.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
       if (historicalDataIndex === -1) {
         const dataLength = userAnalytics.value.historical.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
         historicalDataIndex = dataLength - 1
@@ -63,31 +64,42 @@ export default function useAnalytics() {
 
       /* One Year */
       if (new Date(receivedAt).getTime() > oneYear) {
-        let oneYearDataIndex = userAnalytics.value.oneYear.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
+        let oneYearDataIndex = 
+          userAnalytics.value.oneYear.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
         if (oneYearDataIndex === -1) {
           const dataLength = userAnalytics.value.oneYear.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
           oneYearDataIndex = dataLength - 1
         }
-        const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+        const monthsAgo = (
+          new Date().getFullYear()
+          - new Date(receivedAt).getFullYear())
+          * 12 
+          + (new Date().getMonth() - new Date(receivedAt).getMonth())
         const intervalIndex = 11 - monthsAgo
         userAnalytics.value.oneYear.data[oneYearDataIndex].walletBalance[intervalIndex] = walletBalance
       }
 
       /* Six Months */
       if (new Date(receivedAt).getTime() > sixMonths) {
-        let sixMonthDataIndex = userAnalytics.value.sixMonth.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
+        let sixMonthDataIndex = 
+          userAnalytics.value.sixMonth.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
         if (sixMonthDataIndex === -1) {
           const dataLength = userAnalytics.value.sixMonth.data.push({ walletAddress, walletBalance: Array(6).fill(0) })
           sixMonthDataIndex = dataLength - 1
         }
-        const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+        const monthsAgo = (
+          new Date().getFullYear() 
+          - new Date(receivedAt).getFullYear()) 
+          * 12 
+          + (new Date().getMonth() - new Date(receivedAt).getMonth())
         const intervalIndex = 5 - monthsAgo
         userAnalytics.value.sixMonth.data[sixMonthDataIndex].walletBalance[intervalIndex] = walletBalance
       }
 
       /* One Month */
       if (new Date(receivedAt).getTime() > oneMonth) {
-        let oneMonthDataIndex = userAnalytics.value.oneMonth.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
+        let oneMonthDataIndex = 
+          userAnalytics.value.oneMonth.data.findIndex((obj: any) => obj.walletAddress === walletAddress)
         if (oneMonthDataIndex === -1) {
           const dataLength = userAnalytics.value.oneMonth.data.push({ walletAddress, walletBalance: Array(30).fill(0) })
           oneMonthDataIndex = dataLength - 1

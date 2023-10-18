@@ -10,8 +10,8 @@ import useUser from "@/composables/user"
 
 import TermsOfService from "@/components/TermsOfService.vue"
 
-const { deposit, getDepositFees, getUserStake } = useStaking()
-const { detectActiveWalletAddress, getEthersBalance } = useEthers()
+const { deposit, getUserStake } = useStaking()
+const { getEthersBalance } = useEthers()
 const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
 const { user, updateUserAgreement } = useUser()
@@ -74,7 +74,9 @@ const aggregateAddressesByProvider = () => {
     const providers = accounts.map((account) => account.walletProvider)
     const uniqueProviders = [...new Set(providers)] as Array<ProviderString>
     uniqueProviders.forEach((provider) => {
-      const addresses = accounts.filter((account) => account.walletProvider === provider).map((account) => account.address)
+      const addresses = accounts
+        .filter((account) => account.walletProvider === provider)
+        .map((account) => account.address)
       formattedWalletOptions.value.push({
         provider,
         addresses
@@ -192,11 +194,12 @@ watch(openTermsOfService, ()=>{
 const handleDeposit = async () => {
   stakeButtonText.value = "Staking..."
 
-  const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
-  if (activeAddress !== selectedWalletAddress.value) {
-    formattedAmountToStake.value = ""
-    return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
-  }
+  // TODO: @ccali11 - Uncomment this.
+  // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
+  // if (activeAddress !== selectedWalletAddress.value) {
+  //   formattedAmountToStake.value = ""
+  //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
+  // }
 
   const result = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedStakingProvider.value })
 
@@ -263,7 +266,8 @@ const handleDeposit = async () => {
       <div
         v-show="openSelectWalletInput"
         id="selectWalletInputContainer"
-        class="absolute top-[110%] w-full bg-white rounded-[8px] border border-[#D0D5DD] px-[10px] py-[14px] max-h-[250px] overflow-auto"
+        class="absolute top-[110%] w-full bg-white rounded-[8px] border border-[#D0D5DD] px-[10px] py-[14px] 
+        max-h-[250px] overflow-auto"
       >
         <div
           v-if="formattedWalletOptions.length === 0"
@@ -291,7 +295,9 @@ const handleDeposit = async () => {
             :key="address"
             class="w-full text-left rounded-[8px] py-[10px] px-[14px]
             hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
-            @click="selectedWalletAddress = address, openSelectWalletInput = false, selectedStakingProvider = item.provider"
+            @click="
+              selectedWalletAddress = address, openSelectWalletInput = false, selectedStakingProvider = item.provider
+            "
           >
             {{ convertString(address) }}
             <vue-feather
@@ -394,7 +400,9 @@ const handleDeposit = async () => {
     <button
       class="card_button  h-[37px] w-full "
       :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
-      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage) || stakeButtonText !== 'Stake'"
+      :disabled="
+        !(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)
+          || stakeButtonText !== 'Stake'"
       @click="handleDeposit()"
     >
       <div

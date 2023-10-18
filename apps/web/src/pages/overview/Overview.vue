@@ -19,15 +19,27 @@ const showSkeleton = ref(true)
 
 onMounted(() => {
   setTimeout(() => {
-    if(loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators){
+    if (
+      loadingSessionLogin 
+      || loadingInitializeBreakdownMetrics 
+      || loadingInitializeAnalytics 
+      || loadingInitializeOperators
+    ) {
       showSkeleton.value = false
     }
   }, 500)
 })
 
-watch([loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitializeAnalytics, loadingInitializeOperators], () =>{
+watch([
+  loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitializeAnalytics, loadingInitializeOperators
+], () => {
   setTimeout(() => {
-    if (loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators) {
+    if (
+      loadingSessionLogin 
+      || loadingInitializeBreakdownMetrics 
+      || loadingInitializeAnalytics 
+      || loadingInitializeOperators
+    ) {
       showSkeleton.value = false
     }
   }, 500)
@@ -56,7 +68,11 @@ watch([loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitialize
         </div>
         <BreakdownChart />
       </div>
-      <div class="w-full max-w-[300px] 1000s:max-w-none 1000s:flex 700s:flex-wrap justify-between gap-[63px] items-start">
+      <div
+        class="
+        w-full max-w-[300px] 1000s:max-w-none 1000s:flex 700s:flex-wrap justify-between gap-[63px] items-start
+      "
+      >
         <div class="w-full relative">
           <Staking view-id="full_view" />
           <div

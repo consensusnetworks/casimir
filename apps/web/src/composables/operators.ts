@@ -143,7 +143,9 @@ export default function useOperators() {
   }
 
   // TODO: Move this to operators.ts to combine with AddOperator method
-  async function registerOperatorWithCasimir({ walletProvider, address, operatorId, collateral, nodeUrl }: RegisterOperatorWithCasimirParams) {
+  async function registerOperatorWithCasimir(
+    { walletProvider, address, operatorId, collateral, nodeUrl }: RegisterOperatorWithCasimirParams
+  ) {
     loadingRegisteredOperators.value = true
     try {
       const signerCreators = {
@@ -159,7 +161,9 @@ export default function useOperators() {
       } else {
         signer = signerCreator(walletProvider)
       }
-      const result = await registry.connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral)})
+      const result = 
+      await registry.connect(signer as ethers.Signer)
+        .registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral)})
       // TODO: @shanejearley - How many confirmations do we want to wait?
       await result?.wait(1)
       await addOperator({address, nodeUrl})

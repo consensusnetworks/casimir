@@ -50,7 +50,10 @@ export default function useEthers() {
    * Estimate gas fee using EIP 1559 methodology
    * @returns string in ETH
    */
-  async function estimateEIP1559GasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) : Promise<GasEstimate> {
+  async function estimateEIP1559GasFee(
+    rpcUrl: string, 
+    unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+  ) : Promise<GasEstimate> {
     try {
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
       const gasPrice = await provider.getFeeData() as ethers.providers.FeeData
@@ -94,11 +97,16 @@ export default function useEthers() {
    * @deprecated
    * @see estimateEIP1559GasFee
   */
-  async function estimateLegacyGasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) : Promise<GasEstimate> {
+  async function estimateLegacyGasFee(
+    rpcUrl: string, 
+    unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+  ) : Promise<GasEstimate> {
     try {
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
       const gasPrice = await provider.getGasPrice()
-      const gasEstimate = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+      const gasEstimate = await provider.estimateGas(
+        unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+      )
       const fee = gasPrice.mul(gasEstimate)
       const feeInWei = ethers.utils.formatEther(fee)
       const feeInEth = (parseFloat(feeInWei) / 10**18).toFixed(8).toString()
@@ -139,7 +147,8 @@ export default function useEthers() {
   async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
     // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
     const browserProvider = getBrowserProvider(providerString)
-    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const web3Provider: ethers.providers.Web3Provider = 
+      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const network = await web3Provider.getNetwork()
     // console.log('network.chainId :>> ', network.chainId)
     const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
@@ -159,11 +168,15 @@ export default function useEthers() {
   ) {
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
     const gasPrice = await provider.getGasPrice()
-    const gasLimit = await provider.estimateGas(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    const gasLimit = await provider.estimateGas(
+      unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+    )
     return { gasPrice, gasLimit }
   }
 
-  async function getMaxETHAfterFees(rpcUrl: string, unsignedTx: ethers.utils.Deferrable<ethers.providers.TransactionRequest>, totalAmount: string) {
+  async function getMaxETHAfterFees(
+    rpcUrl: string, unsignedTx: ethers.utils.Deferrable<ethers.providers.TransactionRequest>, totalAmount: string
+  ) {
     const { fee } = await estimateEIP1559GasFee(rpcUrl, unsignedTx)
     const total = parseFloat(totalAmount) - parseFloat(fee)
     const maxAfterFees = ethers.utils.formatEther(total).toString()
@@ -173,7 +186,8 @@ export default function useEthers() {
   async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
     const { provider, address, currency } = loginCredentials
     const browserProvider = getBrowserProvider(provider)
-    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const web3Provider: ethers.providers.Web3Provider = 
+      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     try {
       const message = await createSiweMessage(address, "Sign in with Ethereum to the app.")
       const signer = web3Provider.getSigner()
@@ -214,7 +228,8 @@ export default function useEthers() {
   async function signEthersMessage(messageRequest: MessageRequest): Promise<string> {
     const { providerString, message } = messageRequest
     const browserProvider = getBrowserProvider(providerString)
-    const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
+    const web3Provider: ethers.providers.Web3Provider = 
+      new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     const signer = web3Provider.getSigner()
     const signature = await signer.signMessage(message)
     return signature

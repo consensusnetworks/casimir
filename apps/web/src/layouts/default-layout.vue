@@ -43,7 +43,11 @@ const handleOutsideClick = (event: any) => {
   const connect_wallet_container = document.getElementById("connect_wallet_container")
   const connect_wallet_card = document.getElementById("connect_wallet_card")
   if (connect_wallet_container && connect_wallet_card) {
-    if (openWalletsModal.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
+    if (
+      openWalletsModal.value 
+      && connect_wallet_container.contains(event.target) 
+      && !connect_wallet_card.contains(event.target)
+    ) {
       openWalletsModal.value = false
       authFlowCardNumber.value = 1
     }
@@ -71,7 +75,10 @@ const toggleModal = (showModal: boolean) => {
   <div class="min-w-[360px]">
     <div :class="openWalletsModal ? 'flex flex-col h-screen' : ''">
       <div
-        class="px-[60px] 800s:px-[5%]  pt-[17px] pb-[19px] flex flex-wrap gap-[20px] justify-between items-center bg-black relative"
+        class="
+          px-[60px] 800s:px-[5%]  pt-[17px] pb-[19px] flex flex-wrap gap-[20px]
+          justify-between items-center bg-black relative
+        "
         :class="openWalletsModal && doesScrollBarExist ? 'pr-[75px]' : ''"
       >
         <img

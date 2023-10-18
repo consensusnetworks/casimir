@@ -166,7 +166,7 @@ export default function useAuth() {
         }
       } else {
         // Check if address is a primary address and log in if so
-        const { data: { sameAddress, walletProvider } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
+        const { data: { sameAddress } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
         if (sameAddress) {
           await loginWithProvider(loginCredentials as LoginCredentials)
           return "Successfully logged in"

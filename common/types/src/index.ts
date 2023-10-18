@@ -6,6 +6,7 @@ import { ApiResponse } from "./interfaces/ApiResponse"
 import { BalanceSnapshot } from "./interfaces/BalanceSnapshot"
 import { BreakdownAmount } from "./interfaces/BreakdownAmount"
 import { BreakdownString } from "./interfaces/BreakdownString"
+import { BreakdownTableData } from "./interfaces/BreakdownTableData"
 import { BrowserProviders } from "./interfaces/BrowserProviders"
 import { ContractArgs } from "./interfaces/ContractArgs"
 import { ContractConfig } from "./interfaces/ContractConfig"
@@ -47,6 +48,7 @@ export type {
   BalanceSnapshot,
   BreakdownAmount,
   BreakdownString,
+  BreakdownTableData,
   BrowserProviders,
   ContractArgs,
   ContractConfig,

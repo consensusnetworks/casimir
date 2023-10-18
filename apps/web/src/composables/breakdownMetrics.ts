@@ -34,10 +34,12 @@ export default function useBreakdownMetrics() {
   async function getAllTimeStakingRewards() : Promise<BreakdownAmount> {
     try {
       /* Get User's Current Stake */
-      const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+      const addresses = (userValue.value as UserWithAccountsAndOperators).accounts
+        .map((account: Account) => account.address) as string[]
       const currentUserStakePromises = [] as Array<Promise<ethers.BigNumber>>
       addresses.forEach(address => currentUserStakePromises.push(manager.getUserStake(address)))
-      const settledCurrentUserStakePromises = await Promise.allSettled(currentUserStakePromises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
+      const settledCurrentUserStakePromises = 
+        await Promise.allSettled(currentUserStakePromises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
       const currentUserStake = settledCurrentUserStakePromises.filter(result => result.status === "fulfilled").map(result => result.value)
       const currentUserStakeSum = currentUserStake.reduce((acc, curr) => acc.add(curr), ethers.BigNumber.from(0))
       const currentUserStakeETH = parseFloat(ethers.utils.formatEther(currentUserStakeSum))
@@ -59,7 +61,8 @@ export default function useBreakdownMetrics() {
       const withdrawalInitiatedETH = userEventTotalsSum.WithdrawalInitiated
 
       /* Get User's All Time Rewards by Subtracting (StakeDeposited + WithdrawalInitiated) from CurrentStake */
-      const currentUserStakeMinusEvents = currentUserStakeETH - (stakedDepositedETH as number) - (withdrawalInitiatedETH as number)
+      const currentUserStakeMinusEvents = 
+        currentUserStakeETH - (stakedDepositedETH as number) - (withdrawalInitiatedETH as number)
       return {
         eth: `${formatNumber(currentUserStakeMinusEvents)} ETH`,
         usd: `$${formatNumber(currentUserStakeMinusEvents * (await getCurrentPrice({ coin: "ETH", currency: "USD" })))}`
@@ -115,7 +118,8 @@ export default function useBreakdownMetrics() {
   }
 
   async function getCurrentStaked(): Promise<BreakdownAmount> {
-    const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+    const addresses = (userValue.value as UserWithAccountsAndOperators).accounts
+      .map((account: Account) => account.address) as string[]
     try {
       const promises = addresses.map((address) => manager.getUserStake(address))
       const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
@@ -123,7 +127,8 @@ export default function useBreakdownMetrics() {
         .filter((result) => result.status === "fulfilled")
         .map((result) => result.value)
     
-      const totalStaked = currentStaked.reduce((accumulator, currentValue) => accumulator.add(currentValue), ethers.BigNumber.from(0))
+      const totalStaked = 
+        currentStaked.reduce((accumulator, currentValue) => accumulator.add(currentValue), ethers.BigNumber.from(0))
       const totalStakedUSD = parseFloat(ethers.utils.formatEther(totalStaked)) * (await getCurrentPrice({ coin: "ETH", currency: "USD" }))
       const totalStakedETH = parseFloat(ethers.utils.formatEther(totalStaked))
       const formattedTotalStakedUSD = formatNumber(totalStakedUSD)
@@ -148,7 +153,8 @@ export default function useBreakdownMetrics() {
 
   async function getTotalWalletBalance() : Promise<BreakdownAmount> {
     const promises = [] as Array<Promise<any>>
-    const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+    const addresses = 
+      (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
     addresses.forEach((address) => { promises.push(getEthersBalance(address)) })
     const totalWalletBalance = (await Promise.all(promises)).reduce((acc, curr) => acc + curr, 0)
     const totalWalletBalanceUSD = totalWalletBalance * (await getCurrentPrice({ coin: "ETH", currency: "USD" }))
@@ -217,7 +223,8 @@ export default function useBreakdownMetrics() {
   async function blockListener(blockNumber: number) {
     if (!userValue.value) return
     console.log("blockNumber :>> ", blockNumber)
-    const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+    const addresses = (userValue.value as UserWithAccountsAndOperators).accounts
+      .map((account: Account) => account.address) as string[]
     const block = await provider.getBlockWithTransactions(blockNumber)
         
     const txs = block.transactions.map(async (tx: any) => {

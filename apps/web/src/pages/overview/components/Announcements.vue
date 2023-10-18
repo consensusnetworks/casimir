@@ -17,7 +17,10 @@ const handleOutsideClick = (event: any) => {
   const announcement_container = document.getElementById(`${props.viewId}_announcement_container`)
   const announcement_card = document.getElementById(`${props.viewId}_announcement_card`)
   if(announcement_container && announcement_card){
-    if(openReadUpdate.value && announcement_container.contains(event.target) && !announcement_card.contains(event.target)) {
+    if(openReadUpdate.value 
+      && announcement_container.contains(event.target)
+      && !announcement_card.contains(event.target)) 
+    {
       openReadUpdate.value = false
     }
   }

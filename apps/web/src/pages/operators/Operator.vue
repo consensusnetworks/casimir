@@ -11,7 +11,7 @@ import useUser from "@/composables/user"
 import { UserWithAccountsAndOperators} from "@casimir/types"
 
 const { loadingSessionLogin } = useAuth()
-const { detectActiveWalletAddress } = useEthers()
+// const { detectActiveWalletAddress } = useEthers()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
 const { user } = useUser()
@@ -106,7 +106,14 @@ onMounted(async () => {
   }
 })
 
-const {initializeComposable, nonregisteredOperators, registeredOperators, registerOperatorWithCasimir, loadingInitializeOperators, loadingAddOperator } = useOperators()
+const {
+  nonregisteredOperators,
+  registeredOperators,
+  loadingInitializeOperators,
+  loadingAddOperator,
+  initializeComposable,
+  registerOperatorWithCasimir,
+} = useOperators()
 
 watch(user, async () => {
   if (user.value) {
@@ -124,7 +131,11 @@ watch(selectedWallet, async () =>{
   if (selectedWallet.value.address === "") {
     availableOperatorIDs.value = []
   } else if(nonregisteredOperators.value && nonregisteredOperators.value.length > 0) {
-    availableOperatorIDs.value = [...nonregisteredOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)}
+    availableOperatorIDs.value = 
+    [...nonregisteredOperators.value]
+      .filter((operator: any) => operator.ownerAddress === selectedWallet.value.address)
+      .map((operator: any) => operator.id)
+  }
 })
 
 watch(registeredOperators, () => {
@@ -143,7 +154,10 @@ watch(registeredOperators, () => {
 
 watch(openAddOperatorModal, () =>{
   if(openAddOperatorModal.value){
-    selectedWallet.value = {address: user.value?.address as string, walletProvider: user.value?.walletProvider as ProviderString}
+    selectedWallet.value = {
+      address: user.value?.address as string,
+      walletProvider: user.value?.walletProvider as ProviderString
+    }
   }
 })
 
@@ -230,10 +244,11 @@ async function submitRegisterOperatorForm() {
   const selectedAddress = selectedWallet.value.address
   const selectedProvider = selectedWallet.value.walletProvider
 
-  const activeAddress = await detectActiveWalletAddress(selectedProvider)
-  if (activeAddress !== selectedAddress) {
-    return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
-  }
+  // TODO: @ccali11 - Comment back in
+  // const activeAddress = await detectActiveWalletAddress(selectedProvider)
+  // if (activeAddress !== selectedAddress) {
+  //   return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
+  // }
   
   try {
     await registerOperatorWithCasimir({
@@ -251,7 +266,10 @@ async function submitRegisterOperatorForm() {
 
   if (selectedWallet.value.address === "") {
     const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address})
-    selectedWallet.value = {address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString}
+    selectedWallet.value = {
+      address: primaryAccount?.address as string, 
+      walletProvider: primaryAccount?.walletProvider as ProviderString
+    }
   }
   selectedOperatorID.value = ""
   selectedPublicNodeURL.value = ""
@@ -386,7 +404,10 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
               </button>
               <div
                 v-show="openSelectWalletOptions"
-                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
+                class="
+                  z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px]
+                bg-white max-h-[200px] overflow-auto
+                "
               >
                 <h6 class="text-[12px]">
                   Your Connected Wallets
@@ -397,7 +418,10 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                   type="button"
                   class="border-y border-y-grey_1 hover:border-y-grey_3
                    text-grey_4 my-[10px] w-full flex justify-between truncate"
-                  @click="selectedWallet = {address: act.address, walletProvider: act.walletProvider}, openSelectWalletOptions = false"
+                  @click="selectedWallet = {
+                            address: act.address, walletProvider: act.walletProvider
+                          }, 
+                          openSelectWalletOptions = false"
                 >
                   <span>{{ act.walletProvider }}</span>
                   <span>{{ convertString(act.address) }}</span>
@@ -438,7 +462,10 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
               </button> -->
               <div
                 v-show="openSelectOperatorID"
-                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
+                class="
+                  z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD]
+                  p-[15px] bg-white max-h-[200px] overflow-auto
+                "
               >
                 <h6 class="text-[12px]">
                   Avaliable Operators
@@ -597,7 +624,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                     v-show="header.value != 'blank_column'"
                     class="ml-[4px] flex flex-col items-center justify-between"
                     :class="selectedHeader === header.value? 'opacity-100' : 'opacity-25'"
-                    @click="selectedHeader = header.value, selectedOrientation === 'ascending'? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
+                    @click="
+                      selectedHeader = header.value, 
+                      selectedOrientation === 'ascending' 
+                        ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'
+                    "
                   >
                     <vue-feather
                       type="arrow-up"
@@ -678,7 +709,10 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
 
         <div
           v-else
-          class="border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] whitespace-normal text-[14px] text-grey_3"
+          class="
+              border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] 
+              whitespace-normal text-[14px] text-grey_3
+            "
         >
           You currently do not have operators registed under your account.
           

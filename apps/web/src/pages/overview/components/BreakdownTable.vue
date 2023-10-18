@@ -5,6 +5,7 @@ import VueFeather from "vue-feather"
 import useUser from "@/composables/user"
 import useFormat from "@/composables/format"
 import useAnalytics from "@/composables/analytics"
+import { BreakdownTableData } from "@casimir/types"
 
 const { convertString } = useFormat()
 
@@ -120,9 +121,9 @@ const tableHeaderOptions = ref(
 const {  user } = useUser()
 
 const tableData = ref({
-  Wallets: [] as {tx_hash: string, wallet_provider: string,  status: string, staking_fees: string, type: string, amount: string, bal: string,  act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
-  Transactions: [] as {tx_hash: string, wallet_provider: string,  status: string, staking_fees: string, type: string, amount: string, bal: string,  act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
-  Staking: [] as {tx_hash: string, wallet_provider: string,  status: string, staking_fees: string, type: string, amount: string, bal: string,  act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
+  Wallets: [] as BreakdownTableData[],
+  Transactions: [] as BreakdownTableData[],
+  Staking: [] as BreakdownTableData[],
 })
 
 const filteredData = ref(tableData.value[tableView.value as keyof typeof tableData.value])
@@ -134,14 +135,15 @@ const filterData = () => {
     filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
   } else {
     const searchTerm = searchInput.value.toLocaleLowerCase()
-    filteredDataArray = (tableData.value[tableView.value as keyof typeof tableData.value] as Array<any>).filter(item => {
-      return (
+    filteredDataArray = (tableData.value[tableView.value as keyof typeof tableData.value] as Array<any>)
+      .filter(item => {
+        return (
         // Might need to modify to match types each variable
         // {tx_hash: string, wallet_provider: string,  status: string, 
         // staking_fees: string, type: string, amount: string, bal: string,
         // act: string, date: string, blank_column: any, stk_amt: string, 
         // tx_type: string, stk_rwd: string }
-        item.wallet_provider?.toString().toLocaleLowerCase().includes(searchTerm) ||
+          item.wallet_provider?.toString().toLocaleLowerCase().includes(searchTerm) ||
         item.act?.toString().toLocaleLowerCase().includes(searchTerm) ||
         item.bal?.toString().toLocaleLowerCase().includes(searchTerm) ||
         item.stk_amt?.toString().toLocaleLowerCase().includes(searchTerm) ||
@@ -152,8 +154,8 @@ const filterData = () => {
         item.status?.toString().toLocaleLowerCase().includes(searchTerm) || 
         item.type?.toString().toLocaleLowerCase().includes(searchTerm) ||
         item.staking_fees?.toString().toLocaleLowerCase().includes(searchTerm)
-      )
-    })
+        )
+      })
   }
 
   if(selectedHeader.value !== "" && selectedOrientation.value !== "") {
@@ -282,7 +284,8 @@ const setTableData = () =>{
         filteredWallets[index].bal === item.walletBalance
       }
     } else {
-      let provider = user.value?.accounts.find(i => i.address.toLocaleLowerCase() === item.walletAddress.toLocaleLowerCase())?.walletProvider
+      let provider = user.value?.accounts
+        .find(i => i.address.toLocaleLowerCase() === item.walletAddress.toLocaleLowerCase())?.walletProvider
       filteredWallets.push(
         {
           wallet_provider: provider? provider : "Unknown",
@@ -370,21 +373,28 @@ onMounted(() =>{
           <button
             class="timeframe_button"
             :class="tableView === 'Wallets'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Wallets', selectedHeader = 'wallet_provider', checkedItems = [], selectedOrientation = 'ascending'"
+            @click="
+              tableView = 'Wallets', selectedHeader = 'wallet_provider', checkedItems = [], 
+              selectedOrientation = 'ascending'
+            "
           >
             Wallets
           </button>
           <button
             class="timeframe_button border-l border-l-[#D0D5DD] " 
             :class="tableView === 'Transactions'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Transactions', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'descending'"
+            @click="
+              tableView = 'Transactions', selectedHeader = 'date', checkedItems = [],
+              selectedOrientation = 'descending'
+            "
           >
             Transactions
           </button>
           <button
             class="timeframe_button border-l border-l-[#D0D5DD]"
             :class="tableView === 'Staking'? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-            @click="tableView = 'Staking', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'descending'"
+            @click="
+              tableView = 'Staking', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'descending'"
           >
             Staking Actions
           </button>
@@ -464,7 +474,8 @@ onMounted(() =>{
                   Stake Balance
 
                   <div class="tooltip w-[200px] left-0">
-                    Ethereum actively staked through Casimir from specified wallet address. Does not include withdrawn stake.
+                    Ethereum actively staked through Casimir from specified wallet address. 
+                    Does not include withdrawn stake.
                   </div>
                 </div>
                 <div
@@ -474,7 +485,8 @@ onMounted(() =>{
                   Stake Rewards (All-Time)
 
                   <div class="tooltip w-[200px] right-0">
-                    Total rewards earned from ethereum that is currently or has ever been staked through Casimir from specified wallet address. Includes withdrawn and restaked earnings.
+                    Total rewards earned from ethereum that is currently or has ever been staked 
+                    through Casimir from specified wallet address. Includes withdrawn and restaked earnings.
                   </div>
                 </div>
 
@@ -486,7 +498,8 @@ onMounted(() =>{
 
                   <div class="tooltip w-[200px] left-0">
                     Staking Fees (in staking actions table)
-                    Total fees charged covering Casimir maintenance fee, operator fees, SSV network fee, and the cost of oracle transactions. 
+                    Total fees charged covering Casimir maintenance fee, 
+                    operator fees, SSV network fee, and the cost of oracle transactions. 
                   </div>
                 </div>
                 
@@ -502,7 +515,9 @@ onMounted(() =>{
                 <button 
                   class="ml-[4px] h-min"
                   :class="selectedHeader === header.value? 'opacity-100 text-primary' : 'opacity-90 text-grey_4'"
-                  @click="selectedHeader = header.value, selectedOrientation === 'ascending'? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
+                  @click="
+                    selectedHeader = header.value, selectedOrientation === 'ascending'
+                      ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
                 >
                   <vue-feather
                     type="arrow-up"

@@ -101,7 +101,10 @@ export default function useTrezor() {
       value: ethers.utils.parseUnits(value),
       type: 0
     } as ethers.UnsignedTransaction
-    const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumUrl, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    const { gasPrice, gasLimit } = 
+      await getGasPriceAndLimit(
+        ethereumUrl, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+      )
     unsignedTransaction.gasPrice = gasPrice
     unsignedTransaction.gasLimit = gasLimit
 
@@ -110,7 +113,9 @@ export default function useTrezor() {
     const required = gasPrice.mul(gasLimit).add(ethers.utils.parseEther(value))
     console.log("Balance", ethers.utils.formatEther(balance))
     console.log("Required", ethers.utils.formatEther(required))
-    return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    return await signer.sendTransaction(
+        unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+    )
   }
 
   async function signTrezorMessage(messageRequest: MessageRequest): Promise<string> {
