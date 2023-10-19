@@ -180,7 +180,7 @@ void async function () {
 
     const ssvViews = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
     const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [208, 209, 210, 211, 212, 213, 214, 215]
-    if (preregisteredOperatorIds.length < 8) throw new Error('Not enough operator ids provided')
+    if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
     const preregisteredBalance = ethers.utils.parseEther('10')
     for (const operatorId of preregisteredOperatorIds) {
         const [operatorOwnerAddress] = await ssvViews.getOperatorById(operatorId)

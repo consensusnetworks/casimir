@@ -19,7 +19,7 @@ void async function () {
     if (!process.env.FACTORY_ADDRESS) throw new Error('No factory address provided')
 
     const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [208, 209, 210, 211, 212, 213, 214, 215]
-    if (preregisteredOperatorIds.length < 8) throw new Error('Not enough operator ids provided')
+    if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
 
     const accountPath = 'm/44\'/60\'/0\'/0/1'
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, accountPath)

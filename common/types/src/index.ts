@@ -33,8 +33,9 @@ import { RemoveAccountOptions } from './interfaces/RemoveAccountOptions'
 import { Reshare } from './interfaces/Reshare'
 import { User } from './interfaces/User'
 import { UserAddedSuccess } from './interfaces/UserAddedSuccess'
-import { UserWithAccountsAndOperators } from './interfaces/UserWithAccountsAndOperators'
 import { UserAnalyticsData } from './interfaces/UserAnalyticsData'
+import { UserAuthState } from './interfaces/UserAuthState'
+import { UserWithAccountsAndOperators } from './interfaces/UserWithAccountsAndOperators'
 import { Validator } from './interfaces/Validator'
 
 export type {
@@ -73,6 +74,7 @@ export type {
     User,
     UserAddedSuccess,
     UserAnalyticsData,
+    UserAuthState,
     UserWithAccountsAndOperators,
     Validator
 }

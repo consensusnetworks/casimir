@@ -1,17 +1,13 @@
 import { readonly, ref, toValue } from 'vue'
 import { ethers } from 'ethers'
 import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, UserWithAccountsAndOperators } from '@casimir/types'
-import useContracts from '@/composables/contracts'
 import useEnvironment from '@/composables/environment'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
 
-const { manager } = useContracts()
-const { ethereumUrl } = useEnvironment()
+const { manager, provider } = useEnvironment()
 const { formatNumber } = useFormat()
 const { getCurrentPrice } = usePrice()
-
-const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 
 const loadingInitializeBreakdownMetrics = ref(false)
 const loadingInitializeBreakdownMetricsError = ref(false)

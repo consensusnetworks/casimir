@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
-import useContracts from '@/composables/contracts'
+import useStaking from '@/composables/staking'
 import useEthers from '@/composables/ethers'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
@@ -10,8 +10,8 @@ import useUser from '@/composables/user'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
-const { deposit, getDepositFees, getUserStake } = useContracts()
-const { getEthersBalance } = useEthers()
+const { deposit, getDepositFees, getUserStake } = useStaking()
+const { detectActiveWalletAddress, getEthersBalance } = useEthers()
 const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
 const { user, updateUserAgreement } = useUser()
@@ -132,6 +132,7 @@ watch(user, async () => {
     selectedWalletAddress.value = user.value?.address as string
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    // estimatedFees.value = await getDepositFees()
   } else {
     selectedStakingProvider.value = ''
     selectedWalletAddress.value = null
@@ -144,8 +145,8 @@ watch(user, async () => {
 onMounted(async () => {
   aggregateAddressesByProvider()
   currentEthPrice.value = Math.round((await getCurrentPrice({ coin: 'ETH', currency: 'USD' })) * 100) / 100
-  estimatedFees.value = await getDepositFees()
   if (user.value?.id) {
+    // estimatedFees.value = await getDepositFees()
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     selectedWalletAddress.value = user.value?.address as string
@@ -191,6 +192,12 @@ watch(openTermsOfService, ()=>{
 const handleDeposit = async () => {
   stakeButtonText.value = 'Staking...'
 
+  const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
+  if (activeAddress !== selectedWalletAddress.value) {
+    formattedAmountToStake.value = ''
+    return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
+  }
+
   const result = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedStakingProvider.value })
 
   if (!result) stakeButtonText.value = 'Failed!'
@@ -203,9 +210,9 @@ const handleDeposit = async () => {
 
   if (result) {
     const waitResponse = await result.wait(1)
-    if(waitResponse){
+    if (waitResponse){
       alert('Your Stake Has Been Deposited!')
-    }else {
+    } else {
       alert('Your Stake Action Has Failed, Please Try Again Later!')
     }
     console.log('waitResponse :>> ', waitResponse)
@@ -576,4 +583,4 @@ const handleDeposit = async () => {
   box-shadow: 0px 0px 0px 4px rgba(237, 235, 255, 0.26);
   border-radius: 4px;
 }
-</style>@/composables/user
+</style>@/composables/user@/composables/staking

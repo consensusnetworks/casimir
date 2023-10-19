@@ -7,23 +7,25 @@ import { run, runSync } from '@casimir/shell'
  * Run an integrated development environment
  */
 void async function () {
-
     const services = {
         users: {
-            port: 4000
+            port: 4000,
+        },
+        blogs: {
+            port: 3003,
         }
     }
 
     if (process.env.USE_SECRETS !== 'false') {
         await loadCredentials()
-        process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') as string
+        process.env.BIP39_SEED = process.env.BIP39_SEED || ((await getSecret('consensus-networks-bip39-seed')) as string)
     } else {
         process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
     }
 
     process.env.PROJECT = process.env.PROJECT || 'casimir'
     process.env.STAGE = process.env.STAGE || 'local'
-    process.env.CRYPTO_COMPARE_API_KEY = process.env.USE_SECRETS !== 'false' ? process.env.CRYPTO_COMPARE_API_KEY || await getSecret('casimir-crypto-compare-api-key') : process.env.CRYPTO_COMPARE_API_KEY || ''
+    process.env.CRYPTO_COMPARE_API_KEY = process.env.USE_SECRETS !== 'false' ? process.env.CRYPTO_COMPARE_API_KEY || (await getSecret('casimir-crypto-compare-api-key')) : process.env.CRYPTO_COMPARE_API_KEY || ''
     process.env.WALLET_CONNECT_PROJECT_ID = process.env.USE_SECRETS !== 'false' ? await getSecret('casimir-wallet-connect-project-id') : '8e6877b49198d7a9f9561b8712805726'
     process.env.FORK = process.env.FORK || 'testnet'
     process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
@@ -37,10 +39,13 @@ void async function () {
 
     if (process.env.MOCK_SERVICES === 'true') {
         for (const service of Object.keys(services)) {
-
-            const existingProcess = await run(`lsof -i :${services[service].port} | grep LISTEN | awk '{print $2}'`)
+            const existingProcess = await run(
+                `lsof -i :${services[service].port} | grep LISTEN | awk '{print $2}'`
+            )
             if (existingProcess) {
-                throw new Error(`Port ${services[service].port} is already in use by process ${existingProcess}, but is required by ${service}.`)
+                throw new Error(
+                    `Port ${services[service].port} is already in use by process ${existingProcess}, but is required by ${service}.`
+                )
             }
 
             process.env[`${service.toUpperCase()}_URL`] = `http://localhost:${services[service].port}`
