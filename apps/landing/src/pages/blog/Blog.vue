@@ -24,7 +24,7 @@ const {
             <a href="https://github.com/consensusnetworks/casimir#casimir">API Reference</a>
           </li>
           <li>
-            <a href="/blogs">Blog</a>
+            <a href="/blog">Blog</a>
           </li>
           <li>
             <a href="/changelog">Changelog</a>

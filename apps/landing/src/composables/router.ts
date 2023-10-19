@@ -10,7 +10,7 @@ const routes = [
         component: Landing,
     },
     {
-        path: '/blogs',
+        path: '/blog',
         name: Blog,
         component: Blog,
     },

@@ -50,7 +50,7 @@ watch([articles, loadingArticles], () => {
             <a href="https://github.com/consensusnetworks/casimir#casimir">API Reference</a>
           </li>
           <li>
-            <a href="/blogs">Blog</a>
+            <a href="/blog">Blog</a>
           </li>
           <li>
             <a href="/changelog">Changelog</a>
@@ -82,7 +82,7 @@ watch([articles, loadingArticles], () => {
         <div class="h-full w-[200px] pr-[50px] min-h-[600px]">
           <div class="mb-[20px]">
             <router-link
-              to="/blogs"
+              to="/blog"
               class=""
             >
               <div class="text-[0.833rem;] font-[400] highlight flex items-center gap-5 tracking-wide">

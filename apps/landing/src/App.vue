@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// Initalize blogs here for least amount of fetch calls
+// Initalize blog here for least amount of fetch calls
 import useBlog from '@/composables/blog'
 useBlog()
 </script>
