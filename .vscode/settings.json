@@ -19,6 +19,5 @@
         "typescript"
     ],
     "css.lint.unknownAtRules": "ignore",
-    "jupyter.notebookFileRoot": "${fileDirname}",
     "volar.inlayHints.eventArgumentInInlineHandlers": false
 }

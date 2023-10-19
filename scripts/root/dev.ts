@@ -62,28 +62,11 @@ void async function () {
             throw new Error(`Ethereum ${process.env.NETWORK} is not supported`)
         }
 
-        process.env.MANAGER_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.MANAGER_ADDRESS
-        if (!process.env.MANAGER_ADDRESS) {
-            throw new Error(`No manager address provided for ${process.env.NETWORK} ethereum network.`)
+        process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FACTORY_ADDRESS
+        if (!process.env.FACTORY_ADDRESS) {
+            throw new Error(`No factory address provided for ${process.env.NETWORK} ethereum network.`)
         }
-
-        process.env.REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.REGISTRY_ADDRESS
-        if (!process.env.REGISTRY_ADDRESS) {
-            throw new Error(`No registry address provided for ${process.env.NETWORK} ethereum network.`)
-        }
-
-        process.env.UPKEEP_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.UPKEEP_ADDRESS
-        if (!process.env.UPKEEP_ADDRESS) {
-            throw new Error(`No upkeep address provided for ${process.env.NETWORK} ethereum network.`)
-        }
-
-        process.env.VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.VIEWS_ADDRESS
-        if (!process.env.VIEWS_ADDRESS) {
-            throw new Error(`No views address provided for ${process.env.NETWORK} ethereum network.`)
-        }
-
     } else {
-
         process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_RPC_URL[networkKey]
         if (!process.env.ETHEREUM_FORK_RPC_URL) {
             throw new Error(`Ethereum ${process.env.FORK} is not supported`)
@@ -97,33 +80,12 @@ void async function () {
         const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
 
         // Account for the mock, beacon, and library deployments
-        const walletNonce = await provider.getTransactionCount(wallet.address) + 11
+        const walletNonce = await provider.getTransactionCount(wallet.address) + 17
 
-        if (!process.env.MANAGER_ADDRESS) {
-            process.env.MANAGER_ADDRESS = ethers.utils.getContractAddress({
+        if (!process.env.FACTORY_ADDRESS) {
+            process.env.FACTORY_ADDRESS = ethers.utils.getContractAddress({
                 from: wallet.address,
                 nonce: walletNonce
-            })
-        }
-
-        if (!process.env.REGISTRY_ADDRESS) {
-            process.env.REGISTRY_ADDRESS = ethers.utils.getContractAddress({
-                from: process.env.MANAGER_ADDRESS,
-                nonce: 1
-            })
-        }
-
-        if (!process.env.UPKEEP_ADDRESS) {
-            process.env.UPKEEP_ADDRESS = ethers.utils.getContractAddress({
-                from: process.env.MANAGER_ADDRESS,
-                nonce: 2
-            })
-        }
-
-        if (!process.env.VIEWS_ADDRESS) {
-            process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
-                from: wallet.address,
-                nonce: walletNonce + 1
             })
         }
 
@@ -133,10 +95,7 @@ void async function () {
     process.env.PUBLIC_STAGE = process.env.STAGE
     process.env.PUBLIC_USERS_URL = process.env.USERS_URL
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
-    process.env.PUBLIC_MANAGER_ADDRESS = process.env.MANAGER_ADDRESS
-    process.env.PUBLIC_VIEWS_ADDRESS = process.env.VIEWS_ADDRESS
-    process.env.PUBLIC_REGISTRY_ADDRESS = process.env.REGISTRY_ADDRESS
-    process.env.PUBLIC_UPKEEP_ADDRESS = process.env.UPKEEP_ADDRESS
+    process.env.PUBLIC_FACTORY_ADDRESS = process.env.FACTORY_ADDRESS
     process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
     process.env.PUBLIC_SSV_VIEWS_ADDRESS = process.env.SSV_VIEWS_ADDRESS
     process.env.PUBLIC_SWAP_FACTORY_ADDRESS = process.env.SWAP_FACTORY_ADDRESS

@@ -15,8 +15,8 @@ void async function () {
     process.env.CONFIG_PATH = process.env.CONFIG_PATH || './config/example.dkg.initiator.yaml'
 
     process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
-    if (!process.env.MANAGER_ADDRESS) throw new Error('No manager address set')
-    if (!process.env.VIEWS_ADDRESS) throw new Error('No views address set')
+    
+    if (!process.env.FACTORY_ADDRESS) throw new Error('No factory address provided')
 
     const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [208, 209, 210, 211, 212, 213, 214, 215]
     if (preregisteredOperatorIds.length < 8) throw new Error('Not enough operator ids provided')
@@ -28,6 +28,10 @@ void async function () {
     if (!MOCK_VALIDATORS[wallet.address] || Object.keys(MOCK_VALIDATORS[wallet.address]).length < validatorCount) {
         await run('GOWORK=off make -C lib/dkg build') 
 
+        const managerAddress = ethers.utils.getContractAddress({
+            from: process.env.FACTORY_ADDRESS,
+            nonce: 1
+        })
         let managerNonce = 3
         let ownerNonce = 0
 
@@ -39,7 +43,7 @@ void async function () {
             console.log('🤖 Creating deposit for', poolId)
 
             const poolAddress = ethers.utils.getContractAddress({
-                from: process.env.MANAGER_ADDRESS,
+                from: managerAddress,
                 nonce: managerNonce
             })
 
@@ -53,7 +57,7 @@ void async function () {
             const validator = await dkg.init({
                 poolId,
                 operatorIds: selectedOperatorIds,
-                ownerAddress: process.env.MANAGER_ADDRESS,
+                ownerAddress: managerAddress,
                 ownerNonce,
                 withdrawalAddress: poolAddress
             })
@@ -67,7 +71,7 @@ void async function () {
             //     const reshare = await dkg.reshare({
             //         oldOperatorIds,
             //         operatorIds: reshareOperatorIds,
-            //         ownerAddress: process.env.MANAGER_ADDRESS,
+            //         ownerAddress: managerAddress,
             //         ownerNonce,
             //         poolId,
             //         publicKey: validator.publicKey,

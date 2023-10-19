@@ -3,7 +3,7 @@ import { loadFixture, setBalance, time } from '@nomicfoundation/hardhat-network-
 import { expect } from 'chai'
 import { deploymentFixture } from './fixtures/shared'
 import { round } from '../helpers/math'
-import { depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
+import { activatePoolHandler, depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiatePoolHandler, reportCompletedExitsHandler } from '../helpers/oracle'
 import { fulfillReport, runUpkeep } from '../helpers/upkeep'
 
 describe('Users', async function () {
@@ -11,7 +11,7 @@ describe('Users', async function () {
         const { manager } = await loadFixture(deploymentFixture)
         const [firstUser] = await ethers.getSigners()
 
-        const depositAmount = round(16 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
+        const depositAmount = round(16 * ((100 + await manager.userFee()) / 100), 10)
         const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
@@ -38,19 +38,15 @@ describe('Users', async function () {
         const { manager, upkeep, views, functionsBillingRegistry, daoOracle, donTransmitter } = await loadFixture(deploymentFixture)
         const [firstUser] = await ethers.getSigners()
 
-        const depositAmount = round(64 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
+        const depositAmount = round(64 * ((100 + await manager.userFee()) / 100), 10)
         const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
-        if ((await manager.functionsId()).toNumber() === 0) {
-            await depositFunctionsBalanceHandler({ manager, signer: daoOracle })
-        }
-        if ((await manager.upkeepId()).toNumber() === 0) {
-            await depositUpkeepBalanceHandler({ manager, signer: daoOracle })
-        }
+        await depositFunctionsBalanceHandler({ manager, signer: daoOracle })
+        await depositUpkeepBalanceHandler({ manager, signer: daoOracle })
 
-        await initiateDepositHandler({ manager, signer: daoOracle })
-        await initiateDepositHandler({ manager, signer: daoOracle })
+        await initiatePoolHandler({ manager, signer: daoOracle })
+        await initiatePoolHandler({ manager, signer: daoOracle })
 
         const pendingPoolIds = await manager.getPendingPoolIds()
 
@@ -74,6 +70,9 @@ describe('Users', async function () {
             functionsBillingRegistry,
             values: firstReportValues
         })
+
+        await activatePoolHandler({ manager, views, signer: daoOracle })
+        await activatePoolHandler({ manager, views, signer: daoOracle })
 
         await runUpkeep({ donTransmitter, upkeep })
 

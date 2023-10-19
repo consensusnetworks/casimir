@@ -1,10 +1,10 @@
 import { ethers } from 'ethers'
 
-export interface Pool {
-    id: number;
+export interface PoolConfig {
+    poolAddress: string;
     balance: ethers.BigNumber;
-    publicKey: string;
     operatorIds: number[];
+    publicKey: string;
     reshares: number;
     status: number;
 }

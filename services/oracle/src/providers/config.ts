@@ -14,12 +14,8 @@ export function getConfig() {
     const accountPath = 'm/44\'/60\'/0\'/0/1'
     const wallet = ethers.Wallet.fromMnemonic(mnemonic, accountPath)
 
-    const managerAddress = process.env.MANAGER_ADDRESS
-    if (!managerAddress) throw new Error('No manager address provided')
-    const registryAddress = process.env.REGISTRY_ADDRESS
-    if (!registryAddress) throw new Error('No registry address provided')
-    const viewsAddress = process.env.VIEWS_ADDRESS
-    if (!viewsAddress) throw new Error('No views address provided')
+    const factoryAddress = process.env.FACTORY_ADDRESS
+    if (!factoryAddress) throw new Error('No factory address provided')
     const functionsBillingRegistryAddress = process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS
     if (!functionsBillingRegistryAddress) throw new Error('No functions billing registry address provided')
     const keeperRegistryAddress = process.env.KEEPER_REGISTRY_ADDRESS
@@ -42,9 +38,7 @@ export function getConfig() {
         configPath,
         ethereumUrl,
         wallet,
-        managerAddress,
-        registryAddress,
-        viewsAddress,
+        factoryAddress,
         functionsBillingRegistryAddress,
         keeperRegistryAddress,
         linkTokenAddress,

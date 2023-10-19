@@ -11,6 +11,7 @@
         "node": "npx hardhat node",
         "postinstall": "npx esno scripts/foundryup.ts",
         "query": "npx hardhat query",
+        "size": "npx hardhat size-contracts",
         "test": "npx esno scripts/test.ts",
         "upgrade": "npx hardhat run scripts/upgrade.ts"
     },
@@ -36,6 +37,7 @@
         "esno": "^0.16.3",
         "hardhat": "^2.12.3",
         "hardhat-abi-exporter": "^2.10.1",
+        "hardhat-contract-sizer": "^2.10.0",
         "hardhat-preprocessor": "^0.1.5",
         "localtunnel": "^2.0.2",
         "mocha": "^10.0.0",

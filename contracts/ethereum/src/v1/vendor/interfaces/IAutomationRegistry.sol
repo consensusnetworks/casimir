@@ -16,6 +16,8 @@ struct UpkeepInfo {
 
 interface IAutomationRegistry {
     function getUpkeep(uint256 id) external view returns (UpkeepInfo memory);
+
     function addFunds(uint256 id, uint96 amount) external;
+
     function cancelUpkeep(uint256 id) external;
 }

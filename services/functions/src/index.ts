@@ -9,7 +9,7 @@ const config = getConfig()
 const contracts = {
     FunctionsOracle: {
         abi: config.functionsOracleAbi,
-        address: config.functionsOracleAddress,
+        addresses: [config.functionsOracleAddress],
         events: {
             OracleRequest: fulfillRequestHandler
         }
@@ -19,7 +19,7 @@ const contracts = {
 const contractFilters = Object.values(contracts).map((contract) => {
     return {
         abi: contract.abi,
-        address: contract.address,
+        addresses: contract.addresses,
         events: Object.keys(contract.events)
     }
 })

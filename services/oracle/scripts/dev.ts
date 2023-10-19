@@ -19,10 +19,7 @@ void async function () {
     const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
     
     process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || ETHEREUM_RPC_URL[networkKey]
-    process.env.MANAGER_ADDRESS = process.env.MANAGER_ADDRESS || ETHEREUM_CONTRACTS[networkKey]?.MANAGER_ADDRESS
-    process.env.REGISTRY_ADDRESS = process.env.REGISTRY_ADDRESS || ETHEREUM_CONTRACTS[networkKey]?.REGISTRY_ADDRESS
-    process.env.UPKEEP_ADDRESS = process.env.UPKEEP_ADDRESS || ETHEREUM_CONTRACTS[networkKey]?.UPKEEP_ADDRESS
-    process.env.VIEWS_ADDRESS = process.env.VIEWS_ADDRESS || ETHEREUM_CONTRACTS[networkKey]?.VIEWS_ADDRESS
+    process.env.FACTORY_ADDRESS = process.env.FACTORY_ADDRESS || ETHEREUM_CONTRACTS[networkKey]?.FACTORY_ADDRESS
     process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS || ETHEREUM_CONTRACTS[networkKey]?.FUNCTIONS_BILLING_REGISTRY_ADDRESS
 
     process.env.KEEPER_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.KEEPER_REGISTRY_ADDRESS
@@ -34,9 +31,7 @@ void async function () {
     process.env.WETH_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.WETH_TOKEN_ADDRESS
     
     if (!process.env.ETHEREUM_RPC_URL) throw new Error(`No ethereum rpc url provided for ${networkKey}`)
-    if (!process.env.MANAGER_ADDRESS) throw new Error(`No manager address provided for ${networkKey}`)
-    if (!process.env.VIEWS_ADDRESS) throw new Error(`No views address provided for ${networkKey}`)
-    if (!process.env.REGISTRY_ADDRESS) throw new Error(`No registry address provided for ${networkKey}`)
+    if (!process.env.FACTORY_ADDRESS) throw new Error(`No factory address provided for ${networkKey}`)
     if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error(`No functions billing registry address provided for ${networkKey}`)
     if (!process.env.KEEPER_REGISTRY_ADDRESS) throw new Error(`No keeper registry address provided for ${networkKey}`)
     if (!process.env.LINK_TOKEN_ADDRESS) throw new Error(`No link token address provided for ${networkKey}`)

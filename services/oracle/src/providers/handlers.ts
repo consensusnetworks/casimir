@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { CasimirManager, CasimirRegistry, CasimirViews, IFunctionsBillingRegistry, IAutomationRegistry } from '@casimir/ethereum/build/@types'
-import CasimirManagerAbi from '@casimir/ethereum/build/abi/CasimirManager.json'
+import ICasimirManagerAbi from '@casimir/ethereum/build/abi/CasimirManager.json'
 import CasimirViewsAbi from '@casimir/ethereum/build/abi/CasimirViews.json'
 import CasimirRegistryAbi from '@casimir/ethereum/build/abi/CasimirRegistry.json'
 import IFunctionsBillingRegistryAbi from '@casimir/ethereum/build/abi/IFunctionsBillingRegistry.json'
@@ -10,6 +10,7 @@ import { PoolStatus } from '@casimir/types'
 import { Factory } from '@casimir/uniswap'
 import { getConfig } from './config'
 import { Dkg } from './dkg'
+import { HandlerInput } from '../interfaces/HandlerInput'
 
 const config = getConfig()
 
@@ -18,10 +19,13 @@ const dkg = new Dkg({
     configPath: config.configPath
 })
 
-export async function depositFunctionsBalanceHandler() {
+export async function depositFunctionsBalanceHandler(input: HandlerInput) {
+    const { managerConfig } = input
+    const { managerAddress } = managerConfig
+
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
     const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, IFunctionsBillingRegistryAbi, provider) as ethers.Contract & IFunctionsBillingRegistry
 
     const minimumBalance = 0.2
@@ -49,21 +53,24 @@ export async function depositFunctionsBalanceHandler() {
         })
 
         const feeAmount = ethers.utils.parseEther((refundBalance * price).toPrecision(9))
-        const minimumTokenAmount = ethers.utils.parseEther((refundBalance * 0.99).toPrecision(9))
+        const minTokenAmount = ethers.utils.parseEther((refundBalance * 0.99).toPrecision(9))
 
         const depositFunctionsBalance = await manager.connect(signer).depositFunctionsBalance(
             feeAmount,
-            minimumTokenAmount,
+            minTokenAmount,
             false
         )
         await depositFunctionsBalance.wait()
     }
 }
 
-export async function depositUpkeepBalanceHandler() {
+export async function depositUpkeepBalanceHandler(input: HandlerInput) {
+    const { managerConfig } = input
+    const { managerAddress } = managerConfig
+
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
     const keeperRegistry = new ethers.Contract(config.keeperRegistryAddress, IAutomationRegistryAbi, provider) as ethers.Contract & IAutomationRegistry
 
     const minimumBalance = 0.2
@@ -91,26 +98,28 @@ export async function depositUpkeepBalanceHandler() {
         })
 
         const feeAmount = ethers.utils.parseEther((refundBalance * price).toPrecision(9))
-        const minimumTokenAmount = ethers.utils.parseEther((refundBalance * 0.99).toPrecision(9))    
+        const minTokenAmount = ethers.utils.parseEther((refundBalance * 0.99).toPrecision(9))    
 
         const depositUpkeepBalance = await manager.connect(signer).depositUpkeepBalance(
             feeAmount,
-            minimumTokenAmount,
+            minTokenAmount,
             false
         )
         await depositUpkeepBalance.wait()
     }
 }
 
-export async function initiateDepositHandler(input: ethers.utils.Result) {
-    const { poolId } = input
+export async function initiatePoolHandler(input: HandlerInput) {
+    const { managerConfig, args } = input    
+    const { managerAddress, registryAddress, viewsAddress } = managerConfig
+    const poolId = args?.poolId
     if (!poolId) throw new Error('No pool id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
-    const registry = new ethers.Contract(config.registryAddress, CasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
+    const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const registry = new ethers.Contract(registryAddress, CasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
 
     const managerNonce = await provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
@@ -143,14 +152,7 @@ export async function initiateDepositHandler(input: ethers.utils.Result) {
         ssvViewsAddress: config.ssvViewsAddress
     })
 
-    const cluster = await scanner.getCluster({ 
-        operatorIds: selectedOperatorIds,
-        ownerAddress: manager.address
-    })
-
     const ownerNonce = await scanner.getNonce(manager.address)
-
-    const requiredFee = await scanner.getRequiredFee(selectedOperatorIds)
 
     const validator = await dkg.init({
         operatorIds: selectedOperatorIds,
@@ -168,45 +170,83 @@ export async function initiateDepositHandler(input: ethers.utils.Result) {
         operatorIds,
         shares
     } = validator
-    
-    const uniswapFactory = new Factory({
-        ethereumUrl: config.ethereumUrl,
-        uniswapV3FactoryAddress: config.uniswapV3FactoryAddress
-    })
 
-    const price = await uniswapFactory.getSwapPrice({ 
-        tokenIn: config.wethTokenAddress,
-        tokenOut: config.ssvTokenAddress,
-        uniswapFeeTier: 3000
-    })
-
-    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * Number(price)).toPrecision(9))
-    const minimumTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
-
-    const initiateDeposit = await manager.initiateDeposit(
+    const initiatePool = await manager.initiatePool(
         depositDataRoot,
         publicKey,
         signature,
         withdrawalCredentials,
         operatorIds,
-        shares,
-        cluster,
-        feeAmount,
-        minimumTokenAmount,
-        false
+        shares
     )
-    await initiateDeposit.wait()
+    await initiatePool.wait()
 }
 
-export async function reportResharesHandler(input: ethers.utils.Result) {
-    const { operatorId } = input
+export async function activatePoolsHandler(input: HandlerInput) {
+    const { managerConfig, args } = input
+    const { managerAddress, viewsAddress } = managerConfig
+    const count = args?.count
+    if (!count) throw new Error('No count provided')
+
+    const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
+    const signer = config.wallet.connect(provider)
+    const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+
+    const activatePoolIds = (await manager.getPendingPoolIds()).slice(0, count)
+    for (const [index, poolId] of activatePoolIds.entries()) {
+        const poolConfig = await views.getPoolConfig(poolId)
+        const operatorIds = poolConfig.operatorIds.map((operatorId) => operatorId.toNumber())
+    
+        const scanner = new Scanner({
+            ethereumUrl: config.ethereumUrl,
+            ssvNetworkAddress: config.ssvNetworkAddress,
+            ssvViewsAddress: config.ssvViewsAddress
+        })
+    
+        const cluster = await scanner.getCluster({ 
+            ownerAddress: manager.address,
+            operatorIds
+        })
+    
+        const requiredFee = await scanner.getRequiredFee(operatorIds)
+    
+        const uniswapFactory = new Factory({
+            ethereumUrl: config.ethereumUrl,
+            uniswapV3FactoryAddress: config.uniswapV3FactoryAddress
+        })
+    
+        const price = await uniswapFactory.getSwapPrice({ 
+            tokenIn: config.wethTokenAddress,
+            tokenOut: config.ssvTokenAddress,
+            uniswapFeeTier: 3000
+        })
+    
+        const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * price).toPrecision(9))
+        const minTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
+    
+        const activatePool = await manager.connect(signer).activatePool(
+            index,
+            cluster,
+            feeAmount,
+            minTokenAmount,
+            false
+        )
+        await activatePool.wait()
+    }
+}
+
+export async function resharePoolsHandler(input: HandlerInput) {
+    const { args, managerConfig } = input
+    const { managerAddress, registryAddress, viewsAddress } = managerConfig
+    const operatorId = args?.operatorId
     if (!operatorId) throw new Error('No operator id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
-    const registry = new ethers.Contract(config.registryAddress, CasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
+    const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const registry = new ethers.Contract(registryAddress, CasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
 
     const poolIds = [
         ...await manager.getPendingPoolIds(),
@@ -214,8 +254,8 @@ export async function reportResharesHandler(input: ethers.utils.Result) {
     ]
 
     for (const poolId of poolIds) {
-        const poolDetails = await views.getPool(poolId)
-        const oldOperatorIds = poolDetails.operatorIds.map(id => id.toNumber())
+        const poolConfig = await views.getPoolConfig(poolId)
+        const oldOperatorIds = poolConfig.operatorIds.map(id => id.toNumber())
         if (oldOperatorIds.includes(operatorId)) {
             const poolAddress = await manager.getPoolAddress(poolId)
 
@@ -238,7 +278,7 @@ export async function reportResharesHandler(input: ethers.utils.Result) {
             const newOperatorId = smallestOperators.find((operator) => !oldOperatorIds.includes(operator.id.toNumber()))?.id.toNumber()
             console.log('🤖 New selected operator', newOperatorId)
 
-            if (newOperatorId && poolDetails.reshares.toNumber() < 2) {
+            if (newOperatorId && poolConfig.reshares.toNumber() < 2) {
                 const operatorIds = oldOperatorIds.map((id) => {
                     if (id === operatorId) return newOperatorId
                     return id
@@ -268,7 +308,7 @@ export async function reportResharesHandler(input: ethers.utils.Result) {
                     oldOperatorIds,
                     operatorIds,
                     poolId,
-                    publicKey: poolDetails.publicKey
+                    publicKey: poolConfig.publicKey
                 })
     
                 const uniswapFactory = new Factory({
@@ -283,19 +323,18 @@ export async function reportResharesHandler(input: ethers.utils.Result) {
                 })
             
                 const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * Number(price)).toPrecision(9))
-                const minimumTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * 0.99).toPrecision(9))
+                const minTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * 0.99).toPrecision(9))
 
                 const reportReshare = await manager.reportReshare(
                     poolId,
                     operatorIds,
-                    oldOperatorIds,
                     newOperatorId,
                     operatorId,
                     reshare.shares,
                     cluster,
                     oldCluster,
                     feeAmount,
-                    minimumTokenAmount,
+                    minTokenAmount,
                     false
                 )
                 await reportReshare.wait()
@@ -306,36 +345,40 @@ export async function reportResharesHandler(input: ethers.utils.Result) {
     }
 }
 
-export async function initiateExitsHandler(input: ethers.utils.Result) {
-    const { poolId } = input
+export async function initiateExitsHandler(input: HandlerInput) {
+    const { managerConfig, args } = input
+    const { managerAddress, viewsAddress } = managerConfig
+    const poolId = args?.poolId
     if (!poolId) throw new Error('No pool id provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, provider) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, provider) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     // Get pool to exit
-    const poolDetails = await views.getPool(poolId)
+    const poolConfig = await views.getPoolConfig(poolId)
 
     // Get operators to sign exit
 }
 
-export async function reportForcedExitsHandler(input: ethers.utils.Result) {
-    const { count } = input
+export async function reportForcedExitsHandler(input: HandlerInput) {
+    const { managerConfig, args } = input
+    const { managerAddress, viewsAddress } = managerConfig
+    const count = args?.count
     if (!count) throw new Error('No count provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     const stakedPoolIds = await manager.getStakedPoolIds()
     let poolIndex = 0
     let remaining = count
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
-        const poolDetails = await views.getPool(poolId)
-        if (poolDetails.status === PoolStatus.ACTIVE) {
+        const poolConfig = await views.getPoolConfig(poolId)
+        if (poolConfig.status === PoolStatus.ACTIVE) {
             remaining--
             const reportForcedExit = await manager.reportForcedExit(
                 poolIndex
@@ -346,14 +389,16 @@ export async function reportForcedExitsHandler(input: ethers.utils.Result) {
     }
 }
 
-export async function reportCompletedExitsHandler(input: ethers.utils.Result) {
-    const { count } = input
+export async function reportCompletedExitsHandler(input: HandlerInput) {
+    const { managerConfig, args } = input
+    const { managerAddress, viewsAddress } = managerConfig
+    const count = args?.count
     if (!count) throw new Error('No count provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
-    const manager = new ethers.Contract(config.managerAddress, CasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-    const views = new ethers.Contract(config.viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
+    const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
+    const views = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
     /**
      * In production, we get the completed exit order from the Beacon API (sorting by withdrawn epoch)
@@ -366,8 +411,8 @@ export async function reportCompletedExitsHandler(input: ethers.utils.Result) {
     let poolIndex = 0
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
-        const poolDetails = await views.getPool(poolId)
-        if (poolDetails.status === PoolStatus.EXITING_FORCED || poolDetails.status === PoolStatus.EXITING_REQUESTED) {
+        const poolConfig = await views.getPoolConfig(poolId)
+        if (poolConfig.status === PoolStatus.EXITING_FORCED || poolConfig.status === PoolStatus.EXITING_REQUESTED) {
             remaining--
             
             /**
@@ -376,9 +421,9 @@ export async function reportCompletedExitsHandler(input: ethers.utils.Result) {
              * const stakedPublicKeys = await views.getStakedPublicKeys(startIndex, endIndex)
              * Here, we're just hardcoding blame to the first operator if less than 32 ETH
              */
-            const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())
+            const operatorIds = poolConfig.operatorIds.map((operatorId) => operatorId.toNumber())
             let blamePercents = [0, 0, 0, 0]
-            if (poolDetails.balance.lt(ethers.utils.parseEther('32'))) {
+            if (poolConfig.balance.lt(ethers.utils.parseEther('32'))) {
                 blamePercents = [100, 0, 0, 0]
             }
 

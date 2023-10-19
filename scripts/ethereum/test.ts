@@ -31,35 +31,16 @@ void async function () {
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
 
     // Account for the mock, beacon, and library deployments
-    const walletNonce = await provider.getTransactionCount(wallet.address) + 11
+    const walletNonce = await provider.getTransactionCount(wallet.address) + 17
 
-    if (!process.env.MANAGER_ADDRESS) {
-        process.env.MANAGER_ADDRESS = ethers.utils.getContractAddress({
+    if (!process.env.FACTORY_ADDRESS) {
+        process.env.FACTORY_ADDRESS = ethers.utils.getContractAddress({
             from: wallet.address,
             nonce: walletNonce
         })
     }
 
-    if (!process.env.REGISTRY_ADDRESS) {
-        process.env.REGISTRY_ADDRESS = ethers.utils.getContractAddress({
-            from: process.env.MANAGER_ADDRESS,
-            nonce: 1
-        })
-    }
-
-    if (!process.env.UPKEEP_ADDRESS) {
-        process.env.UPKEEP_ADDRESS = ethers.utils.getContractAddress({
-            from: process.env.MANAGER_ADDRESS,
-            nonce: 2
-        })
-    }
-
-    if (!process.env.VIEWS_ADDRESS) {
-        process.env.VIEWS_ADDRESS = ethers.utils.getContractAddress({
-            from: wallet.address,
-            nonce: walletNonce + 1
-        })
-    }
+    console.log(`Using factory address ${process.env.FACTORY_ADDRESS}`)
 
     process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[process.env.FORK.toUpperCase()]?.SSV_NETWORK_ADDRESS
     process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[process.env.FORK.toUpperCase()]?.SSV_VIEWS_ADDRESS

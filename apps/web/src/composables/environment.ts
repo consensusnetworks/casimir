@@ -1,12 +1,8 @@
 export default function useEnvironment() {
     const domain = window.location.host
     const origin = window.location.origin
-    const managerAddress = import.meta.env.PUBLIC_MANAGER_ADDRESS
-    if (!managerAddress) throw new Error('No manager address provided')
-    const viewsAddress = import.meta.env.PUBLIC_VIEWS_ADDRESS
-    if (!viewsAddress) throw new Error('No views address provided')
-    const registryAddress = import.meta.env.PUBLIC_REGISTRY_ADDRESS
-    if (!registryAddress) throw new Error('No registry address provided')
+    const factoryAddress = import.meta.env.PUBLIC_FACTORY_ADDRESS
+    if (!factoryAddress) throw new Error('No factory address provided')
     const usersUrl = import.meta.env.PUBLIC_USERS_URL || 'http://localhost:4000'
     const ethereumUrl = import.meta.env.PUBLIC_ETHEREUM_RPC_URL || 'http://127.0.0.1:8545'
     const ledgerType = import.meta.env.PUBLIC_SPECULOS_URL ? 'speculos' : 'usb'
@@ -22,13 +18,11 @@ export default function useEnvironment() {
         ethereumUrl,
         origin,
         ledgerType,
-        managerAddress,
-        registryAddress,
+        factoryAddress,
         speculosUrl,
         ssvNetworkAddress,
         ssvViewsAddress,
         usersUrl,
-        viewsAddress,
         walletConnectProjectId
     }
 }

@@ -108,11 +108,11 @@ export default function useOperators() {
         ]
     
         for (const poolId of poolIds) {
-            const poolDetails = await views.getPool(poolId)
+            const poolConfig = await views.getPoolConfig(poolId)
             const pool = {
-                ...poolDetails,
-                operatorIds: poolDetails.operatorIds.map(id => id.toNumber()),
-                reshares: poolDetails.reshares.toNumber()
+                ...poolConfig,
+                operatorIds: poolConfig.operatorIds.map(id => id.toNumber()),
+                reshares: poolConfig.reshares.toNumber()
             }
             if (pool.operatorIds.includes(operatorId)) {
                 pools.push(pool)

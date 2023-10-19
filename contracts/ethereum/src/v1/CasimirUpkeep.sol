@@ -1,147 +1,105 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "./interfaces/ICasimirUpkeep.sol";
+import "./interfaces/ICasimirFactory.sol";
 import "./interfaces/ICasimirManager.sol";
+import "./interfaces/ICasimirUpkeep.sol";
 import "./vendor/FunctionsClient.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
-/**
- * @title Upkeep contract that automates reporting operations
- */
-contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, FunctionsClient {
-    /*************/
-    /* Libraries */
-    /*************/
-
-    /** Use Chainlink functions request library */
+/// @title Upkeep contract that automates reporting operations
+contract CasimirUpkeep is
+    ICasimirUpkeep,
+    Initializable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    FunctionsClient
+{
     using Functions for Functions.Request;
 
-    /*************/
-    /* Constants */
-    /*************/
-
-    /** Report-to-report heartbeat duration */
+    /// @inheritdoc ICasimirUpkeep
+    bool public compoundStake;
+    /// @dev Report-to-report heartbeat duration
     uint256 private constant REPORT_HEARTBEAT = 1 days;
-
-
-    /*********/
-    /* State */
-    /*********/
-
-    /** Manager contract */
+    /// @dev Factory contract
+    ICasimirFactory private factory;
+    /// @dev Manager contract
     ICasimirManager private manager;
-    /** Previous report timestamp */
+    /// @dev Previous report timestamp
     uint256 private previousReportTimestamp;
-    /** Current report status */
+    /// @dev Current report status
     ReportStatus private reportStatus;
-    /** Current report period */
+    /// @dev Current report period
     uint32 private reportPeriod;
-    /** Current report remaining request count */
+    /// @dev Current report remaining request count
     uint256 private reportRemainingRequests;
-    /** Current report block */
+    /// @dev Current report block
     uint256 private reportRequestBlock;
-    /** Current report request timestamp */
+    /// @dev Current report request timestamp
     uint256 private reportTimestamp;
-    /** Current report swept balance */
+    /// @dev Current report swept balance
     uint256 private reportSweptBalance;
-    /** Current report beacon chain balance */
+    /// @dev Current report beacon chain balance
     uint256 private reportBeaconBalance;
-    /** Current report deposit activations */
+    /// @dev Current report deposit activations
     uint256 private reportActivatedDeposits;
-    /** Current report unexpected exits */
+    /// @dev Current report unexpected exits
     uint256 private reportForcedExits;
-    /** Current report completed exits */
+    /// @dev Current report completed exits
     uint256 private reportCompletedExits;
-    /** Current report compoundable pools */
+    /// @dev Current report compoundable pools
     uint32[5] private reportCompoundablePoolIds;
-    /** Finalizable activated deposits */
-    uint256 private finalizableActivatedDeposits;
-    /** Finalizable compoundable pools */
+    /// @dev Finalizable compoundable pools
     uint32[5] private finalizableCompoundablePoolIds;
-    /** Current report request */
+    /// @dev Current report request
     mapping(bytes32 => RequestType) private reportRequests;
-    /** Current report response error */
+    /// @dev Current report response error
     bytes private reportResponseError;
-    /** Request source */
-    string requestSource;
-    /** Default request arguments */
-    string[] public defaultRequestArgs;
-    /** Fulfillment gas limit */
-    uint32 public fulfillGasLimit;
-    /** Storage gap */
+    /// @dev Request source
+    string private requestSource;
+    /// @dev Default request arguments
+    string[] private defaultRequestArgs;
+    /// @dev Fulfillment gas limit
+    uint32 private fulfillGasLimit;
+    /// @dev Storage gap
     uint256[50] private __gap;
 
-    // @custom:oz-upgrades-unsafe-allow constructor
+    /**
+     * @dev Constructor
+     * @custom:oz-upgrades-unsafe-allow constructor
+     */
     constructor() FunctionsClient(address(0)) {
         _disableInitializers();
     }
 
     /**
      * Initialize the contract
-     * @param functionsOracleAddress The Chainlink functions oracle address
+     * @param factoryAddress Factory address
+     * @param functionsOracleAddress Chainlink functions oracle address
+     * @param compoundStake_ Whether compound stake is enabled
      */
     function initialize(
-        address functionsOracleAddress
+        address factoryAddress,
+        address functionsOracleAddress,
+        bool compoundStake_
     ) public initializer {
-        if (functionsOracleAddress == address(0)) {
-            revert InvalidAddress();
-        }
-
         __Ownable_init();
         __ReentrancyGuard_init();
-        setOracle(functionsOracleAddress);
+        factory = ICasimirFactory(factoryAddress);
         manager = ICasimirManager(msg.sender);
+        compoundStake = compoundStake_;
+        setOracle(functionsOracleAddress);
     }
 
-    /**
-     * @notice Set a new Chainlink functions oracle address
-     * @param newFunctionsOracleAddress New Chainlink functions oracle address
-     */
-    function setFunctionsOracleAddress(address newFunctionsOracleAddress) external onlyOwner {
-        if (newFunctionsOracleAddress == address(0)) {
-            revert InvalidAddress();
-        }
-
-        setOracle(newFunctionsOracleAddress);
-
-        emit FunctionsOracleAddressSet(newFunctionsOracleAddress);
-    }
-
-    /**
-     * Set a new Chainlink functions request
-     * @param newRequestSource JavaScript source code
-     * @param newRequestArgs List of arguments accessible from within the source code
-     * @param newFulfillGasLimit The new Chainlink functions fulfill gas limit 
-     */
-    function setFunctionsRequest(
-        string calldata newRequestSource,
-        string[] calldata newRequestArgs,
-        uint32 newFulfillGasLimit
-    ) external onlyOwner {
-        requestSource = newRequestSource;
-        defaultRequestArgs = newRequestArgs;
-        fulfillGasLimit = newFulfillGasLimit;
-
-        emit FunctionsRequestSet(
-            newRequestSource, 
-            newRequestArgs,
-            newFulfillGasLimit
-        );
-    }
-
-    /**
-     * @notice Perform the upkeep
-     */
+    /// @inheritdoc ICasimirUpkeep
     function performUpkeep(bytes calldata) external override {
         (bool upkeepNeeded, ) = checkUpkeep("");
         if (!upkeepNeeded) {
-            revert NotNeeded();
+            revert UpkeepNotNeeded();
         }
-
         if (reportStatus == ReportStatus.FINALIZED) {
             previousReportTimestamp = reportTimestamp;
             reportStatus = ReportStatus.REQUESTING;
@@ -149,11 +107,7 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
             reportTimestamp = block.timestamp;
             reportPeriod = manager.reportPeriod();
             Functions.Request memory request;
-            request.initializeRequest(
-                Functions.Location.Inline,
-                Functions.CodeLanguage.JavaScript,
-                requestSource
-            );
+            request.initializeRequest(Functions.Location.Inline, Functions.CodeLanguage.JavaScript, requestSource);
             string[] memory requestArgs = defaultRequestArgs;
             requestArgs[7] = StringsUpgradeable.toString(previousReportTimestamp);
             requestArgs[8] = StringsUpgradeable.toString(reportTimestamp);
@@ -168,12 +122,7 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
             ) {
                 manager.fulfillWithdrawals(5);
             }
-            if (finalizableActivatedDeposits > 0) {
-                uint256 maxActivatedDeposits = finalizableActivatedDeposits > 5 ? 5 : finalizableActivatedDeposits;
-                finalizableActivatedDeposits -= maxActivatedDeposits;
-                manager.activateDeposits(maxActivatedDeposits);
-            }
-            if (!manager.getPendingWithdrawalEligibility(0, reportPeriod) && finalizableActivatedDeposits == 0) {
+            if (!manager.getPendingWithdrawalEligibility(0, reportPeriod)) {
                 reportStatus = ReportStatus.FINALIZED;
                 manager.rebalanceStake({
                     beaconBalance: reportBeaconBalance,
@@ -189,59 +138,60 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
                 reportCompoundablePoolIds = [0, 0, 0, 0, 0];
             }
         }
-
         emit UpkeepPerformed(reportStatus);
     }
 
-    /**
-     * @notice Check if the upkeep is needed
-     * @return upkeepNeeded True if the upkeep is needed
-     */
-    function checkUpkeep(
-        bytes memory
-    )
-        public
-        view
-        override
-        returns (bool upkeepNeeded, bytes memory checkData)
-    {
+    /// @inheritdoc ICasimirUpkeep
+    function setFunctionsOracle(address newFunctionsOracleAddress) external {
+        onlyFactoryOwner();
+        setOracle(newFunctionsOracleAddress);
+        emit FunctionsOracleAddressSet(newFunctionsOracleAddress);
+    }
+
+    /// @inheritdoc ICasimirUpkeep
+    function setFunctionsRequest(
+        string calldata newRequestSource,
+        string[] calldata newRequestArgs,
+        uint32 newFulfillGasLimit
+    ) external {
+        onlyFactoryOwner();
+        requestSource = newRequestSource;
+        defaultRequestArgs = newRequestArgs;
+        fulfillGasLimit = newFulfillGasLimit;
+        emit FunctionsRequestSet(newRequestSource, newRequestArgs, newFulfillGasLimit);
+    }
+
+    /// @inheritdoc ICasimirUpkeep
+    function checkUpkeep(bytes memory) public view override returns (bool upkeepNeeded, bytes memory checkData) {
         if (reportStatus == ReportStatus.FINALIZED) {
             bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
             bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= REPORT_HEARTBEAT;
             upkeepNeeded = checkActive && heartbeatLapsed;
         } else if (reportStatus == ReportStatus.PROCESSING) {
-            bool finalizeReport = reportCompletedExits == manager.finalizableCompletedExits();
+            bool finalizeReport = reportActivatedDeposits == manager.finalizableActivations() &&
+                reportCompletedExits == manager.finalizableCompletedExits();
             upkeepNeeded = finalizeReport;
         }
         return (upkeepNeeded, checkData);
     }
 
     /**
-     * @notice Callback that is invoked once the DON has resolved the request or hit an error
-     * @param requestId The request ID, returned by sendRequest()
+     * @dev Callback that is invoked once the DON has resolved the request or hit an error
+     * @param requestId Request ID, returned by sendRequest()
      * @param response Aggregated response from the DON
      * @param executionError Aggregated error from the code execution
-     * Either response or error parameter will be set, but never both
      */
-    function fulfillRequest(
-        bytes32 requestId,
-        bytes memory response,
-        bytes memory executionError
-    ) internal override {
+    function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory executionError) internal override {
         RequestType requestType = reportRequests[requestId];
         if (requestType == RequestType.NONE) {
             revert InvalidRequest();
         }
-
         reportResponseError = executionError;
         if (executionError.length == 0) {
             delete reportRequests[requestId];
             reportRemainingRequests--;
             if (requestType == RequestType.BALANCES) {
-                (
-                    uint128 beaconBalance,
-                    uint128 sweptBalance
-                ) = abi.decode(response, (uint128, uint128));
+                (uint128 beaconBalance, uint128 sweptBalance) = abi.decode(response, (uint128, uint128));
                 reportBeaconBalance = uint256(beaconBalance);
                 reportSweptBalance = uint256(sweptBalance);
             } else {
@@ -249,34 +199,35 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
                     uint32 activatedDeposits,
                     uint32 forcedExits,
                     uint32 completedExits,
-                    uint32[5] memory compoundablePoolIds 
+                    uint32[5] memory compoundablePoolIds
                 ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
                 reportActivatedDeposits = activatedDeposits;
                 reportForcedExits = forcedExits;
                 reportCompletedExits = completedExits;
                 reportCompoundablePoolIds = compoundablePoolIds;
-                finalizableActivatedDeposits = activatedDeposits;
                 finalizableCompoundablePoolIds = compoundablePoolIds;
+                if (reportActivatedDeposits > 0) {
+                    emit ActivationsRequested(activatedDeposits);
+                }
+                if (reportForcedExits > 0) {
+                    emit ForcedExitReportsRequested(forcedExits);
+                }
+                if (reportCompletedExits > 0) {
+                    emit CompletedExitReportsRequested(completedExits);
+                }
             }
             if (reportRemainingRequests == 0) {
                 reportStatus = ReportStatus.PROCESSING;
-                if (reportForcedExits > 0) {
-                    manager.requestForcedExitReports(reportForcedExits);
-                }
-                if (reportCompletedExits > 0) {
-                    manager.requestCompletedExitReports(reportCompletedExits);
-                }
             }
         }
-
         emit OCRResponse(requestId, response, executionError);
     }
 
     /**
-     * @notice Send a Chainlink functions request
-     * @param request The Chainlink functions request
-     * @param requestArgs The Chainlink functions request arguments
-     * @param requestType The Chainlink functions request type
+     * @dev Send a Chainlink functions request
+     * @param request Chainlink functions request
+     * @param requestArgs Chainlink functions request arguments
+     * @param requestType Chainlink functions request type
      */
     function sendFunctionsRequest(
         Functions.Request memory request,
@@ -288,5 +239,12 @@ contract CasimirUpkeep is ICasimirUpkeep, Initializable, OwnableUpgradeable, Ree
         bytes32 requestId = sendRequest(request, manager.functionsId(), fulfillGasLimit);
         reportRequests[requestId] = requestType;
         reportRemainingRequests++;
+    }
+
+    /// @dev Validate the caller is the factory owner
+    function onlyFactoryOwner() private view {
+        if (msg.sender != factory.getOwner()) {
+            revert Unauthorized();
+        }
     }
 }

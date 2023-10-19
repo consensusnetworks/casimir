@@ -1,72 +1,97 @@
-import { getConfig } from './providers/config'
+import { ethers } from 'ethers'
 import { getEventsIterable } from '@casimir/events'
 import { getStartBlock, updateErrorLog, updateStartBlock } from '@casimir/logs'
+import ICasimirFactoryAbi from '@casimir/ethereum/build/abi/ICasimirFactory.json'
 import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
+import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
+import ICasimirUpkeepAbi from '@casimir/ethereum/build/abi/ICasimirUpkeep.json'
+import { ICasimirFactory } from '@casimir/ethereum/build/@types'
+import { HandlerInput } from './interfaces/HandlerInput'
+import { getConfig } from './providers/config'
 import {
     depositFunctionsBalanceHandler,
     depositUpkeepBalanceHandler,
-    initiateDepositHandler,
-    reportResharesHandler, 
-    // initiateExitsHandler, 
+    initiatePoolHandler,
+    activatePoolsHandler,
+    resharePoolsHandler,
+    // exitPoolHandler, 
     // reportForcedExitsHandler,
     reportCompletedExitsHandler
 } from './providers/handlers'
-import { ethers } from 'ethers'
 
 const config = getConfig()
 
-const contracts = {
-    CasimirManager: {
-        abi: ICasimirManagerAbi,
-        address: config.managerAddress,
-        events: {
-            DepositRequested: initiateDepositHandler,
-            ResharesRequested: reportResharesHandler,
-            // ExitRequested: initiateExitsHandler,
-            // ForcedExitReportsRequested: reportForcedExitsHandler,
-            CompletedExitReportsRequested: reportCompletedExitsHandler
-            
-        }
-    }
-}
-
-const contractFilters = Object.values(contracts).map((contract) => {
-    return {
-        abi: contract.abi,
-        address: contract.address,
-        events: Object.keys(contract.events)
-    }
-})
-
-let startBlock
-if (process.env.USE_LOGS === 'true') {
-    startBlock = getStartBlock('block.log')
-}
-
-const eventsIterable = getEventsIterable({
-    contractFilters,
-    ethereumUrl: config.ethereumUrl,
-    startBlock
-})
-
-const handlers: Record<string, (input: ethers.utils.Result) => Promise<void>> = {}
-for (const contractName in contracts) {
-    const contract = contracts[contractName as keyof typeof contracts]
-    for (const [event, handler] of Object.entries(contract.events)) {
-        handlers[event as keyof typeof handlers] = handler
-    }
-}
-
 void async function () {
     try {
+        const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
+        const factory = new ethers.Contract(config.factoryAddress, ICasimirFactoryAbi, provider) as ICasimirFactory
+        const managerConfigs = await Promise.all((await factory.getManagerIds()).map(async (id) => {
+            return await factory.getManagerConfig(id)
+        }))
+
+        const contracts = {
+            CasimirManager: {
+                abi: ICasimirManagerAbi,
+                addresses: managerConfigs.map(({ managerAddress }) => managerAddress),
+                events: {
+                    InitiationRequested: initiatePoolHandler
+                    // ExitRequested: exitPoolHandler
+                }
+            },
+            CasimirRegistry: {
+                abi: ICasimirRegistryAbi,
+                addresses: managerConfigs.map(({ registryAddress }) => registryAddress),
+                events: {
+                    DeactivationRequested: resharePoolsHandler
+                }
+            },
+            CasimirUpkeep: {
+                abi: ICasimirUpkeepAbi,
+                addresses: managerConfigs.map(({ upkeepAddress }) => upkeepAddress),
+                events: {
+                    ActivationsRequested: activatePoolsHandler,
+                    // ForcedExitReportsRequested: reportForcedExitsHandler,
+                    CompletedExitReportsRequested: reportCompletedExitsHandler
+                }
+            }
+        }
+
+        const contractFilters = Object.values(contracts).map((contract) => {
+            return {
+                abi: contract.abi,
+                addresses: contract.addresses,
+                events: Object.keys(contract.events)
+            }
+        })
+
+        let startBlock
+        if (process.env.USE_LOGS === 'true') {
+            startBlock = getStartBlock('block.log')
+        }
+
+        const eventsIterable = getEventsIterable({
+            contractFilters,
+            ethereumUrl: config.ethereumUrl,
+            startBlock
+        })
+
+        const handlers: Record<string, (input: HandlerInput) => Promise<void>> = {}
+        for (const contractName in contracts) {
+            const contract = contracts[contractName as keyof typeof contracts]
+            for (const [event, handler] of Object.entries(contract.events)) {
+                handlers[event as keyof typeof handlers] = handler
+            }
+        }
         for await (const event of eventsIterable) {
             const details = event?.[event.length - 1] as ethers.Event
-            const input = details.args as ethers.utils.Result
+            const managerConfig = managerConfigs.find(({ managerAddress }) => managerAddress === details.address)
+            if (!managerConfig) throw new Error(`No manager config found for address ${details.address}`)
+            const args = details.args as ethers.utils.Result
             const handler = handlers[details.event as keyof typeof handlers]
             if (!handler) throw new Error(`No handler found for event ${details.event}`)
-            await depositFunctionsBalanceHandler()
-            await depositUpkeepBalanceHandler()
-            await handler(input)
+            await depositFunctionsBalanceHandler({ managerConfig })
+            await depositUpkeepBalanceHandler({ managerConfig })
+            await handler({ managerConfig, args })
             if (process.env.USE_LOGS === 'true') {
                 updateStartBlock('block.log', details.blockNumber)
             }

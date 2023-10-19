@@ -22,7 +22,7 @@ import { LoginCredentials } from './interfaces/LoginCredentials'
 import { MessageRequest } from './interfaces/MessageRequest'
 import { Operator } from './interfaces/Operator'
 import { OperatorAddedSuccess } from './interfaces/OperatorAddedSuccess'
-import { Pool } from './interfaces/Pool'
+import { PoolConfig } from './interfaces/PoolConfig'
 import { PoolStatus } from './interfaces/PoolStatus'
 import { ProviderString } from './interfaces/ProviderString'
 import { SignInWithEthereumCredentials } from './interfaces/SignInWithEthereumCredentials'
@@ -62,7 +62,7 @@ export type {
     MessageRequest,
     Operator,
     OperatorAddedSuccess,
-    Pool,
+    PoolConfig,
     ProviderString,
     SignInWithEthereumCredentials,
     TransactionRequest,

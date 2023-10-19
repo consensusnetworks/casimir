@@ -1,5 +1,6 @@
 import { ethers, upgrades } from 'hardhat'
 import requestConfig from '@casimir/functions/Functions-request-config'
+import { CasimirFactory, CasimirUpkeep } from '../build/@types'
 
 upgrades.silenceWarnings()
 
@@ -7,6 +8,17 @@ upgrades.silenceWarnings()
  * Deploy ethereum contracts
 */
 void async function () {
+    if (!process.env.DEPOSIT_CONTRACT_ADDRESS) throw new Error('No deposit contract address provided')
+    if (!process.env.KEEPER_REGISTRAR_ADDRESS) throw new Error('No keeper registrar address provided')
+    if (!process.env.KEEPER_REGISTRY_ADDRESS) throw new Error('No keeper registry address provided')
+    if (!process.env.LINK_TOKEN_ADDRESS) throw new Error('No link token address provided')
+    if (!process.env.LINK_ETH_FEED_ADDRESS) throw new Error('No link eth feed address provided')
+    if (!process.env.SSV_NETWORK_ADDRESS) throw new Error('No ssv network address provided')
+    if (!process.env.SSV_TOKEN_ADDRESS) throw new Error('No ssv token address provided')
+    if (!process.env.SWAP_FACTORY_ADDRESS) throw new Error('No swap factory address provided')
+    if (!process.env.SWAP_ROUTER_ADDRESS) throw new Error('No swap router address provided')
+    if (!process.env.WETH_TOKEN_ADDRESS) throw new Error('No weth token address provided')
+
     const [, daoOracle, donTransmitter] = await ethers.getSigners()
 
     const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')
@@ -52,74 +64,108 @@ void async function () {
         functionsBillingRegistryConfig.requestTimeoutSeconds
     )
 
-    const arrayFactory = await ethers.getContractFactory('CasimirArray')
-    const arrayLibrary = await arrayFactory.deploy()
+    const beaconLibraryFactory = await ethers.getContractFactory('CasimirBeacon')
+    const beaconLibrary = await beaconLibraryFactory.deploy()
+    console.log(`CasimirBeacon library deployed at ${beaconLibrary.address}`)
 
-    const factoryFactory = await ethers.getContractFactory('CasimirFactory')
-    const factoryLibrary = await factoryFactory.deploy()
-
-    const poolFactory = await ethers.getContractFactory('CasimirPool')
-    const poolBeacon = await upgrades.deployBeacon(poolFactory, { unsafeAllow: ['constructor'] })
-    await poolBeacon.deployed()
-    console.log(`CasimirPool beacon deployed to ${poolBeacon.address}`)
-
-    const registryFactory = await ethers.getContractFactory('CasimirRegistry')
-    const registryBeacon = await upgrades.deployBeacon(registryFactory, { unsafeAllow: ['constructor'] })
-    await registryBeacon.deployed()
-    console.log(`CasimirRegistry beacon deployed to ${registryBeacon.address}`)
-
-    const upkeepFactory = await ethers.getContractFactory('CasimirUpkeep')
-    const upkeepBeacon = await upgrades.deployBeacon(upkeepFactory, { unsafeAllow: ['constructor'] })
-    await upkeepBeacon.deployed()
-    console.log(`CasimirUpkeep beacon deployed to ${upkeepBeacon.address}`)
-
-    const managerArgs = {
-        beaconDepositAddress: process.env.BEACON_DEPOSIT_ADDRESS,
-        daoOracleAddress: daoOracle.address,
-        functionsBillingRegistryAddress: functionsBillingRegistry.address,
-        functionsOracleAddress: functionsOracle.address,
-        keeperRegistrarAddress: process.env.KEEPER_REGISTRAR_ADDRESS,
-        keeperRegistryAddress: process.env.KEEPER_REGISTRY_ADDRESS,
-        linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
-        poolBeaconAddress: poolBeacon.address,
-        registryBeaconAddress: registryBeacon.address,
-        ssvNetworkAddress: process.env.SSV_NETWORK_ADDRESS,
-        ssvTokenAddress: process.env.SSV_TOKEN_ADDRESS,
-        ssvViewsAddress: process.env.SSV_VIEWS_ADDRESS,
-        swapFactoryAddress: process.env.SWAP_FACTORY_ADDRESS,
-        swapRouterAddress: process.env.SWAP_ROUTER_ADDRESS,
-        upkeepBeaconAddress: upkeepBeacon.address,
-        wethTokenAddress: process.env.WETH_TOKEN_ADDRESS
-    }
-    const managerFactory = await ethers.getContractFactory('CasimirManager', {
+    const managerBeaconFactory = await ethers.getContractFactory('CasimirManager', {
         libraries: {
-            CasimirArray: arrayLibrary.address,
-            CasimirFactory: factoryLibrary.address
+            CasimirBeacon: beaconLibrary.address
         }
     })
-    const manager = await upgrades.deployProxy(managerFactory, Object.values(managerArgs), { unsafeAllow: ['constructor', 'external-library-linking'] })
-    await manager.deployed()
-    console.log(`CasimirManager contract deployed to ${manager.address}`)
+    const managerBeacon = await upgrades.deployBeacon(managerBeaconFactory, { 
+        constructorArgs: [
+            functionsBillingRegistry.address,
+            process.env.KEEPER_REGISTRAR_ADDRESS as string,
+            process.env.KEEPER_REGISTRY_ADDRESS as string,
+            process.env.LINK_TOKEN_ADDRESS as string,
+            process.env.SSV_NETWORK_ADDRESS as string,
+            process.env.SSV_TOKEN_ADDRESS as string,
+            process.env.SWAP_FACTORY_ADDRESS as string,
+            process.env.SWAP_ROUTER_ADDRESS as string,
+            process.env.WETH_TOKEN_ADDRESS as string
+        ],
+        unsafeAllow: ['external-library-linking'] 
+    })
+    await managerBeacon.deployed()
+    console.log(`CasimirManager beacon deployed at ${managerBeacon.address}`)
 
-    const registry = await ethers.getContractAt('CasimirRegistry', await manager.getRegistryAddress())
-    console.log(`CasimirRegistry contract deployed to ${registry.address}`)
+    const poolBeaconFactory = await ethers.getContractFactory('CasimirPool')
+    const poolBeacon = await upgrades.deployBeacon(poolBeaconFactory, { 
+        constructorArgs: [
+            process.env.DEPOSIT_CONTRACT_ADDRESS as string
+        ] 
+    })
+    await poolBeacon.deployed()
+    console.log(`CasimirPool beacon deployed at ${poolBeacon.address}`)
 
-    const upkeep = await ethers.getContractAt('CasimirUpkeep', await manager.getUpkeepAddress())
-    console.log(`CasimirUpkeep contract deployed to ${upkeep.address}`)
+    const registryBeaconFactory = await ethers.getContractFactory('CasimirRegistry')
+    const registryBeacon = await upgrades.deployBeacon(registryBeaconFactory, { 
+        constructorArgs: [
+            process.env.SSV_VIEWS_ADDRESS as string
+        ]
+    })
+    await registryBeacon.deployed()
+    console.log(`CasimirRegistry beacon deployed at ${registryBeacon.address}`)
 
-    const viewsArgs = {
-        managerAddress: manager.address,
-        registryAddress: registry.address
+    const upkeepBeaconFactory = await ethers.getContractFactory('CasimirUpkeep')
+    const upkeepBeacon = await upgrades.deployBeacon(upkeepBeaconFactory)
+    await upkeepBeacon.deployed()
+    console.log(`CasimirUpkeep beacon deployed at ${upkeepBeacon.address}`)
+
+    const viewsBeaconFactory = await ethers.getContractFactory('CasimirViews')
+    const viewsBeacon = await upgrades.deployBeacon(viewsBeaconFactory)
+    await viewsBeacon.deployed()
+    console.log(`CasimirViews beacon deployed at ${viewsBeacon.address}`)
+
+    const factoryFactory = await ethers.getContractFactory('CasimirFactory', {
+        libraries: {
+            CasimirBeacon: beaconLibrary.address
+        }
+    })
+    const factory = await upgrades.deployProxy(factoryFactory, undefined, {
+        constructorArgs: [
+            managerBeacon.address,
+            poolBeacon.address,
+            registryBeacon.address,
+            upkeepBeacon.address,
+            viewsBeacon.address
+        ],
+        unsafeAllow: ['external-library-linking'] 
+    }) as CasimirFactory
+    await factory.deployed()
+    console.log(`CasimirFactory contract deployed at ${factory.address}`)
+
+    const defaultStrategy = {
+        minCollateral: ethers.utils.parseEther('1.0'),
+        lockPeriod: 0,
+        userFee: 5,
+        compoundStake: true,
+        eigenStake: false,
+        liquidStake: false,
+        privateOperators: false,
+        verifiedOperators: false
     }
-    const viewsFactory = await ethers.getContractFactory('CasimirViews')
-    const views = await upgrades.deployProxy(viewsFactory, Object.values(viewsArgs), { unsafeAllow: ['constructor'] })
-    console.log(`CasimirViews contract deployed to ${views.address}`)
-
-    requestConfig.args[1] = views.address
-    const setRequest = await manager.setFunctionsRequest(requestConfig.source, requestConfig.args, 300000)
+    const deployDefaultManager = await factory.deployManager(
+        daoOracle.address,
+        functionsOracle.address,
+        defaultStrategy
+    )
+    await deployDefaultManager.wait()
+    const [managerId] = await factory.getManagerIds()
+    const [managerAddress, registryAddress, upkeepAddress, viewsAddress] = await factory.getManagerConfig(managerId)
+    console.log(`Default CasimirManager contract deployed to ${managerAddress}`)
+    console.log(`Default CasimirRegistry contract deployed to ${registryAddress}`)
+    console.log(`Default CasimirUpkeep contract deployed to ${upkeepAddress}`)
+    console.log(`Default CasimirViews contract deployed to ${viewsAddress}`)
+    const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
+    
+    requestConfig.args[1] = viewsAddress
+    const fulfillGasLimit = 300000
+    const setRequest = await upkeep.setFunctionsRequest(requestConfig.source, requestConfig.args, fulfillGasLimit)
     await setRequest.wait()
 
     await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, functionsOracle.address])
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
-    await functionsOracle.addAuthorizedSenders([donTransmitter.address, manager.address])
+    await functionsOracle.addAuthorizedSenders([donTransmitter.address, managerAddress])
 }()

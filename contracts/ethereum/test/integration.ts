@@ -23,9 +23,9 @@ describe('Integration', async function () {
     expect(stakedPoolIds.length).equal(1)
     
     const firstPoolId = stakedPoolIds[0]
-    const poolDetails = await views.getPool(firstPoolId)
-    expect(poolDetails.publicKey).not.equal('0x')
-    expect(poolDetails.operatorIds.length).equal(4)
+    const poolConfig = await views.getPoolConfig(firstPoolId)
+    expect(poolConfig.publicKey).not.equal('0x')
+    expect(poolConfig.operatorIds.length).equal(4)
   })
 
   it('Second user\'s 24.0 stake increases the total stake to 40.0', async function () {
@@ -66,9 +66,9 @@ describe('Integration', async function () {
     expect(stakedPools.length).equal(2)
     
     const secondPoolId = stakedPools[1]
-    const poolDetails = await views.getPool(secondPoolId)
-    expect(poolDetails.publicKey).not.equal('0x')
-    expect(poolDetails.operatorIds.length).equal(4)
+    const poolConfig = await views.getPoolConfig(secondPoolId)
+    expect(poolConfig.publicKey).not.equal('0x')
+    expect(poolConfig.operatorIds.length).equal(4)
   })
 
   it('Third user\'s 24.0 stake increases the total stake to 64.1', async function () {
@@ -123,14 +123,14 @@ describe('Integration', async function () {
     expect(stakedPools.length).equal(4)
     
     const thirdPoolId = stakedPools[2]
-    const thirdPoolDetails = await views.getPool(thirdPoolId)
-    expect(thirdPoolDetails.publicKey).not.equal('0x')
-    expect(thirdPoolDetails.operatorIds.length).equal(4)
+    const thirdPoolConfig = await views.getPoolConfig(thirdPoolId)
+    expect(thirdPoolConfig.publicKey).not.equal('0x')
+    expect(thirdPoolConfig.operatorIds.length).equal(4)
 
     const fourthPoolId = stakedPools[3]
-    const fourthPoolDetails = await views.getPool(fourthPoolId)
-    expect(fourthPoolDetails.publicKey).not.equal('0x')
-    expect(fourthPoolDetails.operatorIds.length).equal(4)
+    const fourthPoolConfig = await views.getPoolConfig(fourthPoolId)
+    expect(fourthPoolConfig.publicKey).not.equal('0x')
+    expect(fourthPoolConfig.operatorIds.length).equal(4)
   })
 
   it('A loss is reported and brings the active stake below expected', async function () {

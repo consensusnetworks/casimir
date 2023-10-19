@@ -19,12 +19,12 @@ if (!uniswapV3FactoryAddress) throw new Error('No uniswap v3 factory address pro
 const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS as string
 if (!wethTokenAddress) throw new Error('No weth token address provided')
 
-export async function initiateDepositHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
+export async function initiatePoolHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
     const mockValidators: Validator[] = MOCK_VALIDATORS[signer.address as keyof typeof MOCK_VALIDATORS]
     const nonce = await ethers.provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
-      from: manager.address,
-      nonce
+        from: manager.address,
+        nonce
     })
     const poolWithdrawalCredentials = '0x' + '01' + '0'.repeat(22) + poolAddress.split('0x')[1]
     const validator = mockValidators.find((validator) => {
@@ -40,6 +40,23 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
         operatorIds,
         shares,
     } = validator
+
+    const initiatePool = await manager.connect(signer).initiatePool(
+        depositDataRoot,
+        publicKey,
+        signature,
+        withdrawalCredentials,
+        operatorIds,
+        shares
+    )
+    await initiatePool.wait()
+}
+
+export async function activatePoolHandler({ manager, views, signer }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress }) {
+    const pendingPoolIndex = 0
+    const [pendingPoolId] = await manager.getPendingPoolIds()
+    const poolConfig = await views.getPoolConfig(pendingPoolId)
+    const operatorIds = poolConfig.operatorIds.map((operatorId) => operatorId.toNumber())
 
     const scanner = new Scanner({
         provider: ethers.provider,
@@ -66,24 +83,19 @@ export async function initiateDepositHandler({ manager, signer }: { manager: Cas
     })
 
     const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * price).toPrecision(9))
-    const minimumTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
+    const minTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
 
-    const initiateDeposit = await manager.connect(signer).initiateDeposit(
-        depositDataRoot,
-        publicKey,
-        signature,
-        withdrawalCredentials,
-        operatorIds,
-        shares,
+    const activatePool = await manager.connect(signer).activatePool(
+        pendingPoolIndex,
         cluster,
         feeAmount,
-        minimumTokenAmount,
+        minTokenAmount,
         false
     )
-    await initiateDeposit.wait()
+    await activatePool.wait()
 }
 
-export async function reportResharesHandler({ manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }) {
+export async function resharePoolHandler({ manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }) {
     const { operatorId } = args
     if (!operatorId) throw new Error('No operator id provided')
     
@@ -93,11 +105,11 @@ export async function reportResharesHandler({ manager, views, signer, args }: { 
     ]
 
     for (const poolId of poolIds) {
-        const poolDetails = await views.getPool(poolId)
-        const oldOperatorIds = poolDetails.operatorIds.map(id => id.toNumber())
+        const poolConfig = await views.getPoolConfig(poolId)
+        const oldOperatorIds = poolConfig.operatorIds.map(id => id.toNumber())
         if (oldOperatorIds.includes(operatorId)) {
             const mockReshares: Reshare[] = MOCK_RESHARES[poolId as keyof typeof MOCK_RESHARES]
-            const poolReshareCount = poolDetails.reshares.toNumber()
+            const poolReshareCount = poolConfig.reshares.toNumber()
             if (mockReshares.length && poolReshareCount < 2) {
                 const reshare = mockReshares.find((reshare) => {
                     return JSON.stringify(reshare.oldOperatorIds) === JSON.stringify(oldOperatorIds)
@@ -136,19 +148,18 @@ export async function reportResharesHandler({ manager, views, signer, args }: { 
                 })
             
                 const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * Number(price)).toPrecision(9))
-                const minimumTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * 0.99).toPrecision(9))
+                const minTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * 0.99).toPrecision(9))
 
-                const reportReshare = await manager.connect(signer).reportReshare(
+                const reportReshare = await manager.connect(signer).resharePool(
                     poolId,
                     reshare.operatorIds,
-                    oldOperatorIds,
                     newOperatorId,
                     operatorId,
                     reshare.shares,
                     cluster,
                     oldCluster,
                     feeAmount,
-                    minimumTokenAmount,
+                    minTokenAmount,
                     false
                 )
                 await reportReshare.wait()
@@ -179,11 +190,11 @@ export async function depositFunctionsBalanceHandler({ manager, signer }: { mana
     })
 
     const feeAmount = ethers.utils.parseEther((requiredBalance * price).toPrecision(9))
-    const minimumTokenAmount = ethers.utils.parseEther((requiredBalance * 0.99).toPrecision(9))
+    const minTokenAmount = ethers.utils.parseEther((requiredBalance * 0.99).toPrecision(9))
 
     const depositFunctionsBalance = await manager.connect(signer).depositFunctionsBalance(
         feeAmount,
-        minimumTokenAmount,
+        minTokenAmount,
         false
     )
     await depositFunctionsBalance.wait()
@@ -210,11 +221,11 @@ export async function depositUpkeepBalanceHandler({ manager, signer }: { manager
     })
     
     const feeAmount = ethers.utils.parseEther((requiredBalance * price).toPrecision(9))
-    const minimumTokenAmount = ethers.utils.parseEther((requiredBalance * 0.99).toPrecision(9))
+    const minTokenAmount = ethers.utils.parseEther((requiredBalance * 0.99).toPrecision(9))
 
     const depositUpkeepBalance = await manager.connect(signer).depositUpkeepBalance(
         feeAmount,
-        minimumTokenAmount,
+        minTokenAmount,
         false
     )
     await depositUpkeepBalance.wait()
@@ -234,8 +245,8 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
     let poolIndex = 0
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
-        const poolDetails = await views.getPool(poolId)
-        if (poolDetails.status === PoolStatus.EXITING_FORCED || poolDetails.status === PoolStatus.EXITING_REQUESTED) {
+        const poolConfig = await views.getPoolConfig(poolId)
+        if (poolConfig.status === PoolStatus.EXITING_FORCED || poolConfig.status === PoolStatus.EXITING_REQUESTED) {
             remaining--
             
             /**
@@ -244,10 +255,10 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
              * const stakedPublicKeys = await views.getStakedPublicKeys(startIndex, endIndex)
              * Here, we're just hardcoding blame to the first operator if less than 32 ETH
              */
-            const operatorIds = poolDetails.operatorIds.map((operatorId) => operatorId.toNumber())
+            const operatorIds = poolConfig.operatorIds.map((operatorId) => operatorId.toNumber())
 
             let blamePercents = [0, 0, 0, 0]
-            if (poolDetails.balance.lt(ethers.utils.parseEther('32'))) {
+            if (poolConfig.balance.lt(ethers.utils.parseEther('32'))) {
                 blamePercents = [100, 0, 0, 0]
             }
 

@@ -18,20 +18,14 @@ void async function () {
 
     const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
     process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
-    process.env.MANAGER_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.MANAGER_ADDRESS
-    process.env.REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.REGISTRY_ADDRESS
-    process.env.UPKEEP_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.UPKEEP_ADDRESS
-    process.env.VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.VIEWS_ADDRESS
+    process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FACTORY_ADDRESS
     process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_NETWORK_ADDRESS
     process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
     
     process.env.PUBLIC_USERS_URL = process.env.USERS_URL
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
-    process.env.PUBLIC_MANAGER_ADDRESS = process.env.MANAGER_ADDRESS
-    process.env.PUBLIC_REGISTRY_ADDRESS = process.env.REGISTRY_ADDRESS
-    process.env.PUBLIC_UPKEEP_ADDRESS = process.env.UPKEEP_ADDRESS
-    process.env.PUBLIC_VIEWS_ADDRESS = process.env.VIEWS_ADDRESS
+    process.env.PUBLIC_FACTORY_ADDRESS = process.env.FACTORY_ADDRESS
     process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
     process.env.PUBLIC_SSV_VIEWS_ADDRESS = process.env.SSV_VIEWS_ADDRESS
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')

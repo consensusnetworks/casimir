@@ -7,6 +7,7 @@ import '@nomiclabs/hardhat-ethers'
 import '@nomicfoundation/hardhat-toolbox'
 import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-abi-exporter'
+import 'hardhat-contract-sizer'
 import 'hardhat-preprocessor'
 import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL, ETHEREUM_SIGNERS, HARDHAT_NETWORK_KEY } from '@casimir/env'
 import './tasks/query'
@@ -30,7 +31,7 @@ const forkConfig = { url: forkUrl, blockNumber: parseInt(process.env.ETHEREUM_FO
 const hardhatKey = hardhatNetwork?.toUpperCase() as keyof typeof HARDHAT_NETWORK_KEY
 const networkKey = HARDHAT_NETWORK_KEY[hardhatKey] || 'TESTNET'
 
-process.env.BEACON_DEPOSIT_ADDRESS = ETHEREUM_CONTRACTS[networkKey].BEACON_DEPOSIT_ADDRESS
+process.env.DEPOSIT_CONTRACT_ADDRESS = ETHEREUM_CONTRACTS[networkKey].DEPOSIT_CONTRACT_ADDRESS
 process.env.KEEPER_REGISTRAR_ADDRESS = ETHEREUM_CONTRACTS[networkKey].KEEPER_REGISTRAR_ADDRESS
 process.env.KEEPER_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].KEEPER_REGISTRY_ADDRESS
 process.env.LINK_ETH_FEED_ADDRESS = ETHEREUM_CONTRACTS[networkKey].LINK_ETH_FEED_ADDRESS
@@ -46,10 +47,7 @@ if (hardhatNetwork !== 'localhost') {
     process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || ETHEREUM_RPC_URL[networkKey]
     process.env.OWNER_ADDRESS = ETHEREUM_SIGNERS[networkKey].OWNER_ADDRESS
     process.env.DAO_ORACLE_ADDRESS = ETHEREUM_SIGNERS[networkKey].DAO_ORACLE_ADDRESS
-    process.env.MANAGER_ADDRESS = ETHEREUM_CONTRACTS[networkKey].MANAGER_ADDRESS
-    process.env.REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].REGISTRY_ADDRESS
-    process.env.UPKEEP_ADDRESS = ETHEREUM_CONTRACTS[networkKey].UPKEEP_ADDRESS
-    process.env.VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey].VIEWS_ADDRESS
+    process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FACTORY_ADDRESS
     process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_BILLING_REGISTRY_ADDRESS
     process.env.FUNCTIONS_ORACLE_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_ORACLE_ADDRESS
 }

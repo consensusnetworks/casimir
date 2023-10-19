@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "../interfaces/ICasimirManager.sol";
+import "../interfaces/ICasimirCore.sol";
 
-
+/// @title Library to extend array functionality
 library CasimirArray {
-    
     error IndexOutOfBounds();
     error EmptyArray();
 
-    function removeUint32Item(uint32[] storage uint32Array, uint index) public {
+    function removeUint32Item(uint32[] storage uint32Array, uint index) internal {
         if (uint32Array.length == 0) {
             revert EmptyArray();
         }
@@ -22,7 +21,7 @@ library CasimirArray {
         uint32Array.pop();
     }
 
-    function removeBytesItem(bytes[] storage bytesArray, uint index) public {
+    function removeBytesItem(bytes[] storage bytesArray, uint index) internal {
         if (bytesArray.length == 0) {
             revert EmptyArray();
         }
@@ -35,10 +34,7 @@ library CasimirArray {
         bytesArray.pop();
     }
 
-    function removeWithdrawalItem(
-        ICasimirManager.Withdrawal[] storage withdrawals,
-        uint index
-    ) public {
+    function removeWithdrawalItem(ICasimirCore.Withdrawal[] storage withdrawals, uint index) internal {
         if (withdrawals.length == 0) {
             revert EmptyArray();
         }

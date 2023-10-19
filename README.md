@@ -121,8 +121,7 @@ echo "USE_SECRETS=false" > .env
 | `ETHEREUM_RPC_URL` | Ethereum RPC network URL | `http://127.0.0.1:8545` |
 | `NETWORK` | Network name (`mainnet || testnet || hardhat || localhost`) | `localhost` |
 | `FORK` | Fork network name (`mainnet || testnet || hardhat`) | `testnet` |
-| `MANAGER_ADDRESS` | Manager contract address | (predicted manager address) |
-| `VIEWS_ADDRESS` | Views contract address | (predicted views address) |
+| `FACTORY_ADDRESS` | Base factory contract address | (predicted factory address) |
 | `CRYPTO_COMPARE_API_KEY` | CryptoCompare API key | `` |
 | `TUNNEL` | Whether to tunnel local network RPC URLs (for remote wallets) | `false` |
 | `MOCK_SERVICES` | Whether to mock backend services | `true` |

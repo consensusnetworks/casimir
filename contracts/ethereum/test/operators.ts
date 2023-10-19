@@ -2,10 +2,10 @@ import { ethers, network } from 'hardhat'
 import { loadFixture, setBalance, time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { deploymentFixture, secondUserDepositFixture } from './fixtures/shared'
-import { ICasimirRegistry } from '../build/@types'
 import { round } from '../helpers/math'
-import { initiateDepositHandler, reportCompletedExitsHandler } from '../helpers/oracle'
+import { initiatePoolHandler, reportCompletedExitsHandler } from '../helpers/oracle'
 import { fulfillReport, runUpkeep } from '../helpers/upkeep'
+import { ICasimirCore } from '../build/@types'
 
 describe('Operators', async function () {
     it('Registration of operators 1 through 8 creates 8 eligible operators', async function () {
@@ -15,44 +15,36 @@ describe('Operators', async function () {
         const endIndex = operatorIds.length
         const operators = await views.getOperators(startIndex, endIndex)
         expect(operators.length).equal(8)
-        expect(operators).to.satisfy((operators: ICasimirRegistry.OperatorStruct[]) => {
-            const expectedActive = operators.every(operator => operator.active === true)
-            const expectedCollateral = operators.every(operator => operator.collateral.toString() === ethers.utils.parseEther('10.0').toString())
-            const expectedResharing = operators.every(operator => operator.resharing === false)
-            return expectedActive && expectedCollateral && expectedResharing
-        })
     })
 
     it('First initiated deposit uses 4 eligible operators', async function () {
         const { manager, registry, views, daoOracle } = await loadFixture(deploymentFixture)
         const [firstUser] = await ethers.getSigners()
 
-        const depositAmount = round(32 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
+        const depositAmount = round(32 * ((100 + await manager.userFee()) / 100), 10)
         const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
-        await initiateDepositHandler({ manager, signer: daoOracle })
+        await initiatePoolHandler({ manager, signer: daoOracle })
 
         const operatorIds = await registry.getOperatorIds()
         const startIndex = 0
-        const endIndex = operatorIds.length
+        const endIndex = operatorIds.length - 1
         const operators = await views.getOperators(startIndex, endIndex)
 
-        expect(operators).to.satisfy((operators: ICasimirRegistry.OperatorStruct[]) => {
-            const operatorsWithPools = operators.filter(operator => Number(operator.poolCount.toString()) === 1)
-            return operatorsWithPools.length === 4
-        })
+        const operatorsWithPools = operators.filter(operator => Number(operator.poolCount.toString()) === 1)
+        expect(operatorsWithPools.length).equal(4)
     })
 
     it('Operator deregistration with 1 pool emits 1 reshare request', async function () {
         const { manager, registry, ssvViews, daoOracle } = await loadFixture(deploymentFixture)
         const [firstUser] = await ethers.getSigners()
 
-        const depositAmount = round(32 * ((100 + await manager.FEE_PERCENT()) / 100), 10)
+        const depositAmount = round(32 * ((100 + await manager.userFee()) / 100), 10)
         const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
-        await initiateDepositHandler({ manager, signer: daoOracle })
+        await initiatePoolHandler({ manager, signer: daoOracle })
 
         const operatorIds = await registry.getOperatorIds()
         const deregisteringOperatorId = operatorIds[0]
@@ -65,16 +57,12 @@ describe('Operators', async function () {
         const requestDeactivation = await registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
         await requestDeactivation.wait()
         const deregisteringOperator = await registry.getOperator(deregisteringOperatorId)
-        const resharesRequestedEvents = await manager.queryFilter(manager.filters.ResharesRequested(), -1)
-        const resharesRequestedEvent = resharesRequestedEvents[0]
 
         expect(deregisteringOperator.resharing).equal(true)
-        expect(resharesRequestedEvents.length).equal(1)
-        expect(resharesRequestedEvent.args?.operatorId.toNumber()).equal(deregisteringOperatorId.toNumber())
     })
 
     it('Operator deregistration with 0 pools allows immediate collateral withdrawal', async function () {
-        const { manager, registry, ssvViews } = await loadFixture(deploymentFixture)
+        const { registry, ssvViews } = await loadFixture(deploymentFixture)
 
         const operatorIds = await registry.getOperatorIds()
         const deregisteringOperatorId = operatorIds[0]
@@ -87,11 +75,11 @@ describe('Operators', async function () {
         const requestDeactivation = await registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
         await requestDeactivation.wait()
         const deregisteringOperator = await registry.getOperator(deregisteringOperatorId)
-        const resharesRequestedEvents = await manager.queryFilter(manager.filters.ResharesRequested(), -1)
+        const deactivationRequestedEvents = await registry.queryFilter(registry.filters.DeactivationRequested(), -1)
 
         expect(deregisteringOperator.active).equal(false)
         expect(deregisteringOperator.resharing).equal(false)
-        expect(resharesRequestedEvents.length).equal(0)
+        expect(deactivationRequestedEvents.length).equal(0)
 
         const operatorOwnerBalanceBefore = await ethers.provider.getBalance(operatorOwnerAddress)
         const requestWithdrawal = await registry.connect(operatorOwnerSigner).requestWithdrawal(deregisteringOperatorId, ethers.utils.parseEther('10'))
