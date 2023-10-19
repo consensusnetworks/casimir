@@ -114,17 +114,4 @@ void async function () {
     } else {
         run('npm run dev --workspace @casimir/web')
     }
-
-    if (process.env.MOCK_SERVICES === 'true') {
-        process.on('SIGINT', () => {
-            const mocked: string[] = []
-            if (process.env.MOCK_SERVICES === 'true') mocked.push(...Object.keys(services))
-            const cleaners = mocked.map(mock => `npm run clean --workspace @casimir/${mock}`).join(' & ')
-            if (cleaners.length) {
-                console.log(`\n🧹 Cleaning up: ${mocked.map(mock => `@casimir/${mock}`).join(', ')}`)
-                runSync(`${cleaners}`)
-            }
-            process.exit()
-        })
-    }
 }()
