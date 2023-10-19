@@ -77,14 +77,14 @@ export default function useOperators() {
                 const pools = await _getPools(operator.id)
                 // TODO: Replace these Public Nodes URLs once we have this working again
                 const operatorStore = {
-                    '200': 'https://nodes.casimir.co/eth/goerli/dkg/1',
-                    '201': 'https://nodes.casimir.co/eth/goerli/dkg/2',
-                    '202': 'https://nodes.casimir.co/eth/goerli/dkg/3',
-                    '203': 'https://nodes.casimir.co/eth/goerli/dkg/4',
-                    '156': 'https://nodes.casimir.co/eth/goerli/dkg/5',
-                    '157': 'https://nodes.casimir.co/eth/goerli/dkg/6',
-                    '158': 'https://nodes.casimir.co/eth/goerli/dkg/7',
-                    '159': 'https://nodes.casimir.co/eth/goerli/dkg/8'
+                    '208': 'https://nodes.casimir.co/eth/goerli/dkg/1',
+                    '209': 'https://nodes.casimir.co/eth/goerli/dkg/2',
+                    '210': 'https://nodes.casimir.co/eth/goerli/dkg/3',
+                    '211': 'https://nodes.casimir.co/eth/goerli/dkg/4',
+                    '212': 'https://nodes.casimir.co/eth/goerli/dkg/5',
+                    '213': 'https://nodes.casimir.co/eth/goerli/dkg/6',
+                    '214': 'https://nodes.casimir.co/eth/goerli/dkg/7',
+                    '215': 'https://nodes.casimir.co/eth/goerli/dkg/8'
                 }
                 const url = operatorStore[operator.id.toString() as keyof typeof operatorStore]
                 casimirOperators.push({
