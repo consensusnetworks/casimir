@@ -1,18 +1,29 @@
 import { readonly, ref } from 'vue'
 import { Operator, Scanner } from '@casimir/ssv'
-import { Account, Pool, RegisteredOperator, RegisterOperatorWithCasimirParams, UserWithAccountsAndOperators } from '@casimir/types'
+import { Account, RegisteredOperator, RegisterOperatorWithCasimirParams, UserWithAccountsAndOperators } from '@casimir/types'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
+import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
+import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
+import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
+import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 
-const { ethereumUrl, manager, registry, ssvNetworkAddress, ssvViewsAddress, usersUrl, views } = useEnvironment()
+const { ethereumUrl, provider, factory, ssvNetworkAddress, ssvViewsAddress, usersUrl } = useEnvironment()
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
 const loadingInitializeOperators = ref(false)
 const loadingInitializeOperatorsError = ref(false)
+
+const managerConfigs = await Promise.all((await factory.getManagerIds()).map(async (id: number) => {
+    return await factory.getManagerConfig(id)
+}))
+const manager = new ethers.Contract(managerConfigs[0].managerAddress, ICasimirManagerAbi, provider) as CasimirManager
+const registry = new ethers.Contract(managerConfigs[0].registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
+const views = new ethers.Contract(managerConfigs[0].viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
 
 export default function useOperators() {
     const loadingAddOperator = ref(false)

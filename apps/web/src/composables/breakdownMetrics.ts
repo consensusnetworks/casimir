@@ -4,13 +4,20 @@ import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Use
 import useEnvironment from '@/composables/environment'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
+import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
+import { CasimirManager } from '@casimir/ethereum/build/@types'
 
-const { manager, provider } = useEnvironment()
+const { factory, provider } = useEnvironment()
 const { formatNumber } = useFormat()
 const { getCurrentPrice } = usePrice()
 
 const loadingInitializeBreakdownMetrics = ref(false)
 const loadingInitializeBreakdownMetricsError = ref(false)
+
+const managerConfigs = await Promise.all((await factory.getManagerIds()).map(async (id: number) => {
+    return await factory.getManagerConfig(id)
+}))
+const manager = new ethers.Contract(managerConfigs[0].managerAddress, ICasimirManagerAbi, provider) as CasimirManager
 
 export default function useBreakdownMetrics() {
 
