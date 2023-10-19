@@ -6,7 +6,7 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-const hackMdUrl = 'https://api.hackmd.io/v1/teams'
+const hackmdUrl = 'https://api.hackmd.io/v1/teams'
 
 app.get('/articles', async (_req, res) => {
     const options = {
@@ -16,7 +16,7 @@ app.get('/articles', async (_req, res) => {
             'Content-Type': 'application/json',
         }
     }
-    const response = await fetch(`${hackMdUrl}/consensusnetworks/notes`, options)
+    const response = await fetch(`${hackmdUrl}/consensusnetworks/notes`, options)
     if (!response.ok) {
         res.status(response.status).send('Error fetching articles')
     } else {
@@ -35,7 +35,7 @@ app.get('/articles/:id', async (req, res) => {
             'Content-Type': 'application/json',
         },
     }
-    const response = await fetch(`${hackMdUrl}/consensusnetworks/notes/${notesId}`, options)
+    const response = await fetch(`${hackmdUrl}/consensusnetworks/notes/${notesId}`, options)
     if (!response.ok) {
         res.status(response.status).send(`Error fetching article ${notesId}`)
     } else {

@@ -25,7 +25,7 @@ export class Config implements ProjectConfig {
         }
         this.rootDomain = `${this.stage === 'prod' ? '' : `${this.stage}.`}casimir.co`
         this.subdomains = {
-            docsEthereum: 'docs.ethereum',
+            blog: 'blog',
             nodes: 'nodes',
             landing: 'www',
             users: 'users',

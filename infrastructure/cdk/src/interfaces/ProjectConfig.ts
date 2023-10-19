@@ -7,7 +7,7 @@ export interface ProjectConfig {
     stage: string
     rootDomain: string
     subdomains: {
-        docsEthereum: string
+        blog: string
         landing: string
         nodes: string
         users: string
