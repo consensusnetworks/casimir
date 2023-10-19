@@ -6,7 +6,7 @@ import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns'
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
 import { BlogStackProps } from '../interfaces/StackProps'
 import { Config } from './config'
-import { kebabCase } from '@casimir/format'
+import { kebabCase, pascalCase } from '@casimir/format'
 
 /**
  * Blog service stack
@@ -30,8 +30,9 @@ export class BlogStack extends cdk.Stack {
             ignoreMode: cdk.IgnoreMode.GIT
         })
 
+        const hackmdTokenKey = 'casimir-blog-hackmd-token'
         const hackmdToken = ecs.Secret.fromSecretsManager(
-            secretsmanager.Secret.fromSecretNameV2(this, config.getFullStackResourceName(this.name, 'hackmd-token'), kebabCase(config.getFullStackResourceName(this.name, 'hackmd-token')))
+            secretsmanager.Secret.fromSecretNameV2(this, pascalCase(hackmdTokenKey), kebabCase(hackmdTokenKey))
         )
         const fargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, config.getFullStackResourceName(this.name, 'fargate'), {
             assignPublicIp: true,

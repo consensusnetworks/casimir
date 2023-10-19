@@ -36,15 +36,19 @@ void async function () {
 
     if (process.env.USE_SECRETS !== 'false') {
         await loadCredentials()
-        process.env.BIP39_SEED = process.env.BIP39_SEED || ((await getSecret('consensus-networks-bip39-seed')) as string)
+        process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret('consensus-networks-bip39-seed') || ''
+        process.env.CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY || await getSecret('casimir-crypto-compare-api-key') || ''
+        process.env.HACKMD_TOKEN = process.env.HACKMD_TOKEN || await getSecret('casimir-blog-hackmd-token') || ''
+        process.env.WALLET_CONNECT_PROJECT_ID = process.env.WALLET_CONNECT_PROJECT_ID || await getSecret('casimir-wallet-connect-project-id') || ''
     } else {
         process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
+        process.env.CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY || ''
+        process.env.HACKMD_TOKEN = process.env.HACKMD_TOKEN || ''
+        process.env.WALLET_CONNECT_PROJECT_ID = process.env.WALLET_CONNECT_PROJECT_ID || '8e6877b49198d7a9f9561b8712805726'
     }
 
     process.env.PROJECT = process.env.PROJECT || 'casimir'
     process.env.STAGE = process.env.STAGE || 'local'
-    process.env.CRYPTO_COMPARE_API_KEY = process.env.USE_SECRETS !== 'false' ? process.env.CRYPTO_COMPARE_API_KEY || (await getSecret('casimir-crypto-compare-api-key')) : process.env.CRYPTO_COMPARE_API_KEY || ''
-    process.env.WALLET_CONNECT_PROJECT_ID = process.env.USE_SECRETS !== 'false' ? await getSecret('casimir-wallet-connect-project-id') : '8e6877b49198d7a9f9561b8712805726'
     process.env.FORK = process.env.FORK || 'testnet'
     process.env.MOCK_SERVICES = process.env.MOCK_SERVICES || 'true'
     process.env.BUILD_PREVIEW = process.env.BUILD_PREVIEW || 'false'
