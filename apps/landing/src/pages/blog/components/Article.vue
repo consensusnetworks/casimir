@@ -1,37 +1,36 @@
-<script setup>
+<script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
-import useBlogs from '@/composables/blogs.ts'
+import useBlog from '@/composables/blog.ts'
 import router from '@/composables/router.ts'
 
-
 const {
-  allBlogs,
-  loadingBlogs,
-} = useBlogs()
+    articles,
+    loadingArticles,
+} = useBlog()
 
-const activeBlog = ref(null)
+const article = ref(null)
 
-function findBlog(activeRoute) {
-  const blogItem = allBlogs.value.filter(item => item.id === activeRoute)[0]
-  activeBlog.value = blogItem
+function getActiveArticle(activeRoute) {
+    const activeArticle = articles.value.filter(item => item.id === activeRoute)[0]
+    article.value = activeArticle
 }
 
 onMounted(() => {
-  let currentRoutes = router.currentRoute.value.fullPath.split('/')
-  let activeRoute = currentRoutes[currentRoutes.length - 1]
+    let currentRoutes = router.currentRoute.value.fullPath.split('/')
+    let activeRoute = currentRoutes[currentRoutes.length - 1]
 
-  // Finds active blog based on route 
-  if (!loadingBlogs) findBlog(activeRoute)
+    // Finds active blog based on route 
+    if (!loadingArticles) getActiveArticle(activeRoute)
 })
 
-watch([allBlogs, loadingBlogs], () => {
+watch([articles, loadingArticles], () => {
 
-  let currentRoutes = router.currentRoute.value.fullPath.split('/')
-  let activeRoute = currentRoutes[currentRoutes.length - 1]
+    let currentRoutes = router.currentRoute.value.fullPath.split('/')
+    let activeRoute = currentRoutes[currentRoutes.length - 1]
 
-  // Finds active blog based on route 
-  findBlog(activeRoute)
+    // Finds active blog based on route 
+    getActiveArticle(activeRoute)
 })
 
 </script>
@@ -71,7 +70,7 @@ watch([allBlogs, loadingBlogs], () => {
 
     <section class="w-full max-w-[960px] mx-auto my-[60px] h-full min-h-[600px] relative">
       <div
-        v-if="!activeBlog"
+        v-if="!article"
         class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
       >
         <div class="skeleton_box" />
@@ -106,10 +105,10 @@ watch([allBlogs, loadingBlogs], () => {
 
           <div>
             <h5 class="text-[16px] font-[500] tracking-wide flex items-center">
-              {{ activeBlog.type }}
+              {{ article.type }}
             </h5>
             <h6 class="text-[16px] font-[400] tracking-wide opacity-[0.75]">
-              {{ new Date(activeBlog.timestamp).toDateString() }}
+              {{ new Date(article.timestamp).toDateString() }}
             </h6>
           </div>
         </div>
@@ -117,7 +116,7 @@ watch([allBlogs, loadingBlogs], () => {
         <div class="w-full border-l h-full pl-[50px] min-h-[600px]">
           <div
             class="activeblog_content"
-            v-html="activeBlog.content"
+            v-html="article.content"
           />
         </div>
       </div>
@@ -160,32 +159,32 @@ watch([allBlogs, loadingBlogs], () => {
 
 <style>
 .activeblog_content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 50px;
 
-  font-size: 1.074rem;
-  font-weight: 300;
+    font-size: 1.074rem;
+    font-weight: 300;
 }
 
 .activeblog_content ul {
-  margin-left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .activeblog_content img {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 .activeblog_content h1 {
 
-  font-size: 1.574rem;
-  font-weight: 600;
-  letter-spacing: -0.75px;
-  color: hsl(210, 12%, 12.5%);
+    font-size: 1.574rem;
+    font-weight: 600;
+    letter-spacing: -0.75px;
+    color: hsl(210, 12%, 12.5%);
 }
 </style>

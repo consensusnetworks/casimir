@@ -13,6 +13,7 @@ void async function () {
     await loadCredentials()
     process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')
 
+    process.env.BLOG_URL = `https://blog.${process.env.STAGE}.casimir.co`
     process.env.USERS_URL = `https://users.${process.env.STAGE}.casimir.co`
     process.env.CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
 
@@ -22,6 +23,7 @@ void async function () {
     process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_NETWORK_ADDRESS
     process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
     
+    process.env.PUBLIC_BLOG_URL = process.env.BLOG_URL
     process.env.PUBLIC_USERS_URL = process.env.USERS_URL
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL

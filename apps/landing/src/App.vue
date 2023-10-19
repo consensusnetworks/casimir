@@ -1,12 +1,7 @@
 <script lang="ts" setup>
 // Initalize blogs here for least amount of fetch calls
-import useBlogs from '@/composables/blogs.ts'
-
-const {
-  activeBlog,
-  allBlogs,
-  loadingBlogs,
-} = useBlogs()
+import useBlog from '@/composables/blog'
+useBlog()
 </script>
 
 <template>
@@ -16,4 +11,4 @@ const {
 </template>
 
 
-<style scoped></style>
+<style scoped></style>@/composables/blog

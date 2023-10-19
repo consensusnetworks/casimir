@@ -1,6 +1,6 @@
 {
     "name": "@casimir/oracle",
-    "version": "0.0.1",
+    "private": "true",
     "description": "Casimir oracle service",
     "main": "dist/index.js",
     "scripts": {

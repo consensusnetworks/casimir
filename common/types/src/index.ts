@@ -3,6 +3,7 @@ import { AccountWithStakingAndOperatorInfo } from './interfaces/AccountWithStaki
 import { AddAccountOptions } from './interfaces/AddAccountOptions'
 import { AnalyticsData } from './interfaces/AnalyticsData'
 import { ApiResponse } from './interfaces/ApiResponse'
+import { Article } from './interfaces/Article'
 import { BalanceSnapshot } from './interfaces/BalanceSnapshot'
 import { BreakdownAmount } from './interfaces/BreakdownAmount'
 import { BreakdownString } from './interfaces/BreakdownString'
@@ -44,6 +45,7 @@ export type {
     ApiResponse,
     AddAccountOptions,
     AnalyticsData,
+    Article,
     BalanceSnapshot,
     BreakdownAmount,
     BreakdownString,
