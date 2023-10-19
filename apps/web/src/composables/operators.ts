@@ -1,6 +1,6 @@
 import { readonly, ref } from 'vue'
 import { Operator, Scanner } from '@casimir/ssv'
-import { Account, RegisteredOperator, RegisterOperatorWithCasimirParams, UserWithAccountsAndOperators } from '@casimir/types'
+import { Account, PoolConfig, RegisteredOperator, RegisterOperatorWithCasimirParams, UserWithAccountsAndOperators } from '@casimir/types'
 import { ethers } from 'ethers'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
@@ -108,8 +108,8 @@ export default function useOperators() {
         registeredOperators.value = casimirOperators as Array<RegisteredOperator>
     }
 
-    async function _getPools(operatorId: number): Promise<Pool[]> {
-        const pools: Pool[] = []
+    async function _getPools(operatorId: number): Promise<PoolConfig[]> {
+        const pools: PoolConfig[] = []
     
         const poolIds = [
             ...await manager.getPendingPoolIds(),
