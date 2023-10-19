@@ -3,7 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
 import { ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
-import useEthers from '@/composables/ethers'
+// import useEthers from '@/composables/ethers'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
 import useOperators from '@/composables/operators'
@@ -11,7 +11,7 @@ import useUser from '@/composables/user'
 import { UserWithAccountsAndOperators} from '@casimir/types'
 
 const { loadingSessionLogin } = useAuth()
-const { detectActiveWalletAddress } = useEthers()
+// const { detectActiveWalletAddress } = useEthers()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
 const { user } = useUser()
@@ -230,10 +230,10 @@ async function submitRegisterOperatorForm() {
   const selectedAddress = selectedWallet.value.address
   const selectedProvider = selectedWallet.value.walletProvider
 
-  const activeAddress = await detectActiveWalletAddress(selectedProvider)
-  if (activeAddress !== selectedAddress) {
-    return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
-  }
+  // const activeAddress = await detectActiveWalletAddress(selectedProvider)
+  // if (activeAddress !== selectedAddress) {
+  //   return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
+  // }
   
   try {
     await registerOperatorWithCasimir({

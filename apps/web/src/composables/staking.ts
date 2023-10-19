@@ -5,39 +5,31 @@ import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useWalletConnectV2 from './walletConnectV2'
-import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 import { CasimirManager } from '@casimir/ethereum/build/@types'
 
-const { factory, provider } = useEnvironment()
+const { manager } = useEnvironment()
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
 const { getWalletConnectSignerV2 } = useWalletConnectV2()
 
-const managerConfigs = await Promise.all((await factory.getManagerIds()).map(async (id: number) => {
-    return await factory.getManagerConfig(id)
-}))
-const manager = new ethers.Contract(managerConfigs[0].managerAddress, ICasimirManagerAbi, provider) as CasimirManager
-
 export default function useStaking() {
     
     async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
         try {
-            const signerCreators = {
-                'Browser': getEthersBrowserSigner,
-                'Ledger': getEthersLedgerSigner,
-                'Trezor': getEthersTrezorSigner,
-                'WalletConnect': getWalletConnectSignerV2
-            }
-            const signerType = ethersProviderList.includes(walletProvider) ? 'Browser' : walletProvider
-            const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
             let signer
-            if (walletProvider === 'WalletConnect') {
-                signer = await signerCreator(walletProvider)
+            if (ethersProviderList.includes(walletProvider)) {
+                signer = getEthersBrowserSigner(walletProvider)
+            } else if (walletProvider === 'WalletConnect') {
+                await getWalletConnectSignerV2()
+            } else if (walletProvider === 'Ledger') {
+                getEthersLedgerSigner()
+            } else if (walletProvider === 'Trezor') {
+                getEthersTrezorSigner()
             } else {
-                signer = signerCreator(walletProvider)
+                throw new Error(`Invalid wallet provider: ${walletProvider}`)
             }
-            const managerSigner = manager.connect(signer as ethers.Signer)
+            const managerSigner = (manager.value as CasimirManager).connect(signer as ethers.Signer)
             const fees = await getDepositFees()
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
             const value = ethers.utils.parseEther(depositAmount.toString())
@@ -51,7 +43,7 @@ export default function useStaking() {
     async function getDepositFees(): Promise<number> {
         try {
             // TODO: Fix this bug
-            // const fees = await manager.FEE_PERCENT()
+            // const fees = await (manager.value as CasimirManager).FEE_PERCENT()
             const fees = 5
             const feesRounded = Math.round(fees * 100) / 100
             return feesRounded
@@ -63,7 +55,7 @@ export default function useStaking() {
 
     async function getUserStake(address: string): Promise<number> {
         try {
-            const bigNumber = await manager.getUserStake(address)
+            const bigNumber = await (manager.value as CasimirManager).getUserStake(address)
             const number = parseFloat(ethers.utils.formatEther(bigNumber))
             return number
         } catch (err) {
@@ -73,23 +65,21 @@ export default function useStaking() {
     }
 
     async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
-        const signerCreators = {
-            'Browser': getEthersBrowserSigner,
-            'Ledger': getEthersLedgerSigner,
-            'Trezor': getEthersTrezorSigner,
-            'WalletConnect': getWalletConnectSignerV2
-        }
-        const signerType = ['MetaMask', 'CoinbaseWallet'].includes(walletProvider) ? 'Browser' : walletProvider
-        const signerCreator = signerCreators[signerType as keyof typeof signerCreators]
         let signer
-            if (walletProvider === 'WalletConnect') {
-                signer = await signerCreator(walletProvider)
-            } else {
-                signer = signerCreator(walletProvider)
-            }
-        const managerSigner = manager.connect(signer as ethers.Signer)
+        if (ethersProviderList.includes(walletProvider)) {
+            signer = getEthersBrowserSigner(walletProvider)
+        } else if (walletProvider === 'WalletConnect') {
+            await getWalletConnectSignerV2()
+        } else if (walletProvider === 'Ledger') {
+            getEthersLedgerSigner()
+        } else if (walletProvider === 'Trezor') {
+            getEthersTrezorSigner()
+        } else {
+            throw new Error(`Invalid wallet provider: ${walletProvider}`)
+        }
+        const managerSigner = (manager.value as CasimirManager).connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
-        // const withdrawableBalance = await manager.getWithdrawableBalance()
+        // const withdrawableBalance = await (manager.value as CasimirManager).getWithdrawableBalance()
         const result = await managerSigner.requestWithdrawal(value)
         return await result.wait()
     }

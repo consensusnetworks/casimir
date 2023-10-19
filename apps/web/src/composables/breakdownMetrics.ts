@@ -4,20 +4,14 @@ import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, Use
 import useEnvironment from '@/composables/environment'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
-import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
 import { CasimirManager } from '@casimir/ethereum/build/@types'
 
-const { factory, provider } = useEnvironment()
+const { manager, provider } = useEnvironment()
 const { formatNumber } = useFormat()
 const { getCurrentPrice } = usePrice()
 
 const loadingInitializeBreakdownMetrics = ref(false)
 const loadingInitializeBreakdownMetricsError = ref(false)
-
-const managerConfigs = await Promise.all((await factory.getManagerIds()).map(async (id: number) => {
-    return await factory.getManagerConfig(id)
-}))
-const manager = new ethers.Contract(managerConfigs[0].managerAddress, ICasimirManagerAbi, provider) as CasimirManager
 
 export default function useBreakdownMetrics() {
 
@@ -43,7 +37,7 @@ export default function useBreakdownMetrics() {
             /* Get User's Current Stake */
             const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
             const currentUserStakePromises = [] as Array<Promise<ethers.BigNumber>>
-            addresses.forEach(address => currentUserStakePromises.push(manager.getUserStake(address)))
+            addresses.forEach(address => currentUserStakePromises.push((manager.value as CasimirManager).getUserStake(address)))
             const settledCurrentUserStakePromises = await Promise.allSettled(currentUserStakePromises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
             const currentUserStake = settledCurrentUserStakePromises.filter(result => result.status === 'fulfilled').map(result => result.value)
             const currentUserStakeSum = currentUserStake.reduce((acc, curr) => acc.add(curr), ethers.BigNumber.from(0))
@@ -88,13 +82,13 @@ export default function useBreakdownMetrics() {
                 'WithdrawalInitiated'
             ]
             const eventFilters = eventList.map(event => {
-                if (event === 'StakeRebalanced') return manager.filters[event]()
-                return manager.filters[event](address)
+                if (event === 'StakeRebalanced') return (manager.value as CasimirManager).filters[event]()
+                return ((manager.value as CasimirManager).filters as any)[event](address)
             })
 
-            // const items = (await Promise.all(eventFilters.map(async eventFilter => await manager.queryFilter(eventFilter, 0, 'latest'))))
+            // const items = (await Promise.all(eventFilters.map(async eventFilter => await (manager.value as CasimirManager).queryFilter(eventFilter, 0, 'latest'))))
             // Use Promise.allSettled to avoid errors when a filter returns no results
-            const items = (await Promise.allSettled(eventFilters.map(async eventFilter => await manager.queryFilter(eventFilter, 0, 'latest')))).map(result => result.status === 'fulfilled' ? result.value : [])
+            const items = (await Promise.allSettled(eventFilters.map(async eventFilter => await (manager.value as CasimirManager).queryFilter(eventFilter, 0, 'latest')))).map(result => result.status === 'fulfilled' ? result.value : [])
     
             const userEventTotals = eventList.reduce((acc, event) => {
                 acc[event] = 0
@@ -124,7 +118,7 @@ export default function useBreakdownMetrics() {
     async function getCurrentStaked(): Promise<BreakdownAmount> {
         const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         try {
-            const promises = addresses.map((address) => manager.getUserStake(address))
+            const promises = addresses.map((address) => (manager.value as CasimirManager).getUserStake(address))
             const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
             const currentStaked = settledPromises
                 .filter((result) => result.status === 'fulfilled')
@@ -203,18 +197,18 @@ export default function useBreakdownMetrics() {
     function listenForContractEvents() {
         stopListeningForContractEvents() // Clear old listeners
         try {
-            manager.on('StakeDeposited', stakeDepositedListener)
-            manager.on('StakeRebalanced', stakeRebalancedListener)
-            manager.on('WithdrawalInitiated', withdrawalInitiatedListener)
+            (manager.value as CasimirManager).on('StakeDeposited', stakeDepositedListener);
+            (manager.value as CasimirManager).on('StakeRebalanced', stakeRebalancedListener);
+            (manager.value as CasimirManager).on('WithdrawalInitiated', withdrawalInitiatedListener)
         } catch (err) {
             console.log(`There was an error in listenForContractEvents: ${err}`)
         }
     }
 
     function stopListeningForContractEvents() {
-        manager.removeListener('StakeDeposited', stakeDepositedListener)
-        manager.removeListener('StakeRebalanced', stakeRebalancedListener)
-        manager.removeListener('WithdrawalInitiated', withdrawalInitiatedListener)
+        (manager.value as CasimirManager).removeListener('StakeDeposited', stakeDepositedListener);
+        (manager.value as CasimirManager).removeListener('StakeRebalanced', stakeRebalancedListener);
+        (manager.value as CasimirManager).removeListener('WithdrawalInitiated', withdrawalInitiatedListener)
     }
 
     const stakeDepositedListener = async () => await refreshBreakdown()
@@ -231,7 +225,7 @@ export default function useBreakdownMetrics() {
             if (addresses.includes(tx.from.toLowerCase())) {
                 console.log('tx :>> ', tx)
                 try {
-                    // const response = manager.interface.parseTransaction({ data: tx.data })
+                    // const response = (manager.value as CasimirManager).interface.parseTransaction({ data: tx.data })
                     // console.log('response :>> ', response)
                     await refreshBreakdown()
                 } catch (error) {
