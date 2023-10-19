@@ -187,14 +187,23 @@ export async function activatePoolsHandler(input: HandlerInput) {
     const { managerAddress, viewsAddress } = managerConfig
     const count = args?.count
     if (!count) throw new Error('No count provided')
+    console.log('🤖 Activate pools', count)
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
     const signer = config.wallet.connect(provider)
     const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
     const views = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
 
-    const activatePoolIds = (await manager.getPendingPoolIds()).slice(0, count)
-    for (const [index, poolId] of activatePoolIds.entries()) {
+    for (let i = 0; i < count; i++) {
+        const pendingPoolIds = await manager.getPendingPoolIds()
+        if (!pendingPoolIds.length) throw new Error('No pending pools')
+
+        /**
+         * In production, we check the pending pool status on Beacon before activating
+         * Here, we're just grabbing the next pending pool
+         */
+        const pendingPoolIndex = 0
+        const poolId = pendingPoolIds[pendingPoolIndex]
         const poolConfig = await views.getPoolConfig(poolId)
         const operatorIds = poolConfig.operatorIds.map((operatorId) => operatorId.toNumber())
     
@@ -226,7 +235,7 @@ export async function activatePoolsHandler(input: HandlerInput) {
         const minTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
     
         const activatePool = await manager.connect(signer).activatePool(
-            index,
+            pendingPoolIndex,
             cluster,
             feeAmount,
             minTokenAmount,

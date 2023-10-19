@@ -76,24 +76,26 @@ void async function () {
         })
 
         const handlers: Record<string, (input: HandlerInput) => Promise<void>> = {}
-        for (const contractName in contracts) {
-            const contract = contracts[contractName as keyof typeof contracts]
+        for (const contract of Object.values(contracts)) {
             for (const [event, handler] of Object.entries(contract.events)) {
                 handlers[event as keyof typeof handlers] = handler
             }
         }
+
         for await (const event of eventsIterable) {
-            const details = event?.[event.length - 1] as ethers.Event
-            const managerConfig = managerConfigs.find(({ managerAddress }) => managerAddress === details.address)
-            if (!managerConfig) throw new Error(`No manager config found for address ${details.address}`)
-            const args = details.args as ethers.utils.Result
-            const handler = handlers[details.event as keyof typeof handlers]
-            if (!handler) throw new Error(`No handler found for event ${details.event}`)
+            console.log(`Received ${event.event} event from ${event.address}`)
+            const managerConfig = managerConfigs.find(({ managerAddress, registryAddress, upkeepAddress }) => {
+                return [managerAddress, registryAddress, upkeepAddress].includes(event.address)
+            })
+            if (!managerConfig) throw new Error(`No manager config found for address ${event.address}`)
+            const args = event.args as ethers.utils.Result
+            const handler = handlers[event.event as keyof typeof handlers]
+            if (!handler) throw new Error(`No handler found for event ${event.event}`)
             await depositFunctionsBalanceHandler({ managerConfig })
             await depositUpkeepBalanceHandler({ managerConfig })
             await handler({ managerConfig, args })
             if (process.env.USE_LOGS === 'true') {
-                updateStartBlock('block.log', details.blockNumber)
+                updateStartBlock('block.log', event.blockNumber)
             }
         }
     } catch (error) {

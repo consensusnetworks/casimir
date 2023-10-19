@@ -10,7 +10,6 @@ import 'hardhat-abi-exporter'
 import 'hardhat-contract-sizer'
 import 'hardhat-preprocessor'
 import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL, ETHEREUM_SIGNERS, HARDHAT_NETWORK_KEY } from '@casimir/env'
-import './tasks/query'
 
 // Seed is provided
 const mnemonic = process.env.BIP39_SEED as string

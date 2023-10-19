@@ -3,7 +3,7 @@ import { loadFixture, setBalance, time } from '@nomicfoundation/hardhat-network-
 import { expect } from 'chai'
 import { deploymentFixture } from './fixtures/shared'
 import { round } from '../helpers/math'
-import { activatePoolHandler, depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiatePoolHandler, reportCompletedExitsHandler } from '../helpers/oracle'
+import { activatePoolsHandler, depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiatePoolHandler, reportCompletedExitsHandler } from '../helpers/oracle'
 import { fulfillReport, runUpkeep } from '../helpers/upkeep'
 
 describe('Users', async function () {
@@ -71,8 +71,7 @@ describe('Users', async function () {
             values: firstReportValues
         })
 
-        await activatePoolHandler({ manager, views, signer: daoOracle })
-        await activatePoolHandler({ manager, views, signer: daoOracle })
+        await activatePoolsHandler({ manager, views, signer: daoOracle, args: { count: 2 } })
 
         await runUpkeep({ donTransmitter, upkeep })
 

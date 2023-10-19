@@ -52,51 +52,63 @@ export async function initiatePoolHandler({ manager, signer }: { manager: Casimi
     await initiatePool.wait()
 }
 
-export async function activatePoolHandler({ manager, views, signer }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress }) {
-    const pendingPoolIndex = 0
-    const [pendingPoolId] = await manager.getPendingPoolIds()
-    const poolConfig = await views.getPoolConfig(pendingPoolId)
-    const operatorIds = poolConfig.operatorIds.map((operatorId) => operatorId.toNumber())
+export async function activatePoolsHandler({ manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }) {
+    const count = args.count as number
+    if (!count) throw new Error('No count provided')
 
-    const scanner = new Scanner({
-        provider: ethers.provider,
-        ssvNetworkAddress,
-        ssvViewsAddress
-    })
+    for (let i = 0; i < count; i++) {
+        const pendingPoolIds = await manager.getPendingPoolIds()
+        if (!pendingPoolIds.length) throw new Error('No pending pools')
 
-    const cluster = await scanner.getCluster({ 
-        ownerAddress: manager.address,
-        operatorIds
-    })
+        /**
+         * In production, we check the pending pool status on Beacon before activating
+         * Here, we're just grabbing the next pending pool
+         */
+        const pendingPoolIndex = 0
+        const poolId = pendingPoolIds[pendingPoolIndex]
+        const poolConfig = await views.getPoolConfig(poolId)
+        const operatorIds = poolConfig.operatorIds.map((operatorId) => operatorId.toNumber())
 
-    const requiredFee = await scanner.getRequiredFee(operatorIds)
+        const scanner = new Scanner({
+            provider: ethers.provider,
+            ssvNetworkAddress,
+            ssvViewsAddress
+        })
 
-    const uniswapFactory = new Factory({
-        provider: ethers.provider,
-        uniswapV3FactoryAddress
-    })
+        const cluster = await scanner.getCluster({ 
+            ownerAddress: manager.address,
+            operatorIds
+        })
 
-    const price = await uniswapFactory.getSwapPrice({ 
-        tokenIn: wethTokenAddress,
-        tokenOut: ssvTokenAddress,
-        uniswapFeeTier: 3000
-    })
+        const requiredFee = await scanner.getRequiredFee(operatorIds)
 
-    const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * price).toPrecision(9))
-    const minTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
+        const uniswapFactory = new Factory({
+            provider: ethers.provider,
+            uniswapV3FactoryAddress
+        })
 
-    const activatePool = await manager.connect(signer).activatePool(
-        pendingPoolIndex,
-        cluster,
-        feeAmount,
-        minTokenAmount,
-        false
-    )
-    await activatePool.wait()
+        const price = await uniswapFactory.getSwapPrice({ 
+            tokenIn: wethTokenAddress,
+            tokenOut: ssvTokenAddress,
+            uniswapFeeTier: 3000
+        })
+
+        const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * price).toPrecision(9))
+        const minTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
+
+        const activatePool = await manager.connect(signer).activatePool(
+            pendingPoolIndex,
+            cluster,
+            feeAmount,
+            minTokenAmount,
+            false
+        )
+        await activatePool.wait()
+    }
 }
 
 export async function resharePoolHandler({ manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }) {
-    const { operatorId } = args
+    const operatorId = args.operatorId as number
     if (!operatorId) throw new Error('No operator id provided')
     
     const poolIds = [
@@ -235,7 +247,7 @@ export async function reportCompletedExitsHandler({ manager, views, signer, args
     const { count } = args
 
     /**
-     * In production, we get the completed exit order from the Beacon API (sorting by withdrawn epoch)
+     * In production, we get the completed exit order from Beacon (sorting by withdrawn epoch)
      * We check all validators using:
      * const stakedPublicKeys = await views.getStakedPublicKeys(startIndex, endIndex)
      * Here, we're just grabbing the next exiting pool for each completed exit

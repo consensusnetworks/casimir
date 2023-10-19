@@ -2,7 +2,7 @@ import { ethers, network, upgrades } from 'hardhat'
 import { loadFixture, time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import { CasimirFactory, CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, FunctionsBillingRegistry, FunctionsOracle, FunctionsOracleFactory, ISSVViews } from '../../build/@types'
 import { fulfillReport, runUpkeep } from '../../helpers/upkeep'
-import { activatePoolHandler, depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiatePoolHandler, reportCompletedExitsHandler } from '../../helpers/oracle'
+import { activatePoolsHandler, depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiatePoolHandler, reportCompletedExitsHandler } from '../../helpers/oracle'
 import { round } from '../../helpers/math'
 import ISSVViewsAbi from '../../build/abi/ISSVViews.json'
 import requestConfig from '@casimir/functions/Functions-request-config'
@@ -227,7 +227,7 @@ export async function secondUserDepositFixture() {
         values: reportValues
     })
 
-    await activatePoolHandler({ manager, views, signer: daoOracle })
+    await activatePoolsHandler({ manager, views, signer: daoOracle, args: { count: 1 } })
 
     await runUpkeep({ donTransmitter, upkeep })
 
@@ -330,7 +330,7 @@ export async function thirdUserDepositFixture() {
         values: reportValues
     })
 
-    await activatePoolHandler({ manager, views, signer: daoOracle })
+    await activatePoolsHandler({ manager, views, signer: daoOracle, args: { count: 1 } })
 
     await runUpkeep({ donTransmitter, upkeep })
 
@@ -466,8 +466,7 @@ export async function fourthUserDepositFixture() {
         values: reportValues
     })
 
-    await activatePoolHandler({ manager, views, signer: daoOracle })
-    await activatePoolHandler({ manager, views, signer: daoOracle })
+    await activatePoolsHandler({ manager, views, signer: daoOracle, args: { count: 2 } })
 
     await runUpkeep({ donTransmitter, upkeep })
 
