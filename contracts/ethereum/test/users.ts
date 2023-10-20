@@ -1,14 +1,14 @@
 import { ethers } from 'hardhat'
 import { loadFixture, setBalance, time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { deploymentFixture } from './fixtures/shared'
+import { preregistrationFixture } from './fixtures/shared'
 import { round } from '../helpers/math'
 import { activatePoolsHandler, depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiatePoolHandler, reportCompletedExitsHandler } from '../helpers/oracle'
 import { fulfillReport, runUpkeep } from '../helpers/upkeep'
 
 describe('Users', async function () {
     it('User\'s 16.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
-        const { manager } = await loadFixture(deploymentFixture)
+        const { manager } = await loadFixture(preregistrationFixture)
         const [firstUser] = await ethers.getSigners()
 
         const depositAmount = round(16 * ((100 + await manager.userFee()) / 100), 10)
@@ -35,7 +35,7 @@ describe('Users', async function () {
     })
 
     it('User\'s 64.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
-        const { manager, upkeep, views, functionsBillingRegistry, daoOracle, donTransmitter } = await loadFixture(deploymentFixture)
+        const { manager, upkeep, views, functionsBillingRegistry, daoOracle, donTransmitter } = await loadFixture(preregistrationFixture)
         const [firstUser] = await ethers.getSigners()
 
         const depositAmount = round(64 * ((100 + await manager.userFee()) / 100), 10)
