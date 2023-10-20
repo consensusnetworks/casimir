@@ -1,16 +1,14 @@
 import { ref } from 'vue'
 import { ethers } from 'ethers'
-import { ManagerConfig, ProviderString } from '@casimir/types'
-import useEnvironment from './environment'
+import { ProviderString } from '@casimir/types'
+import useContracts from '@/composables/contracts'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useWalletConnectV2 from './walletConnectV2'
-import { CasimirManager, CasimirFactory } from '@casimir/ethereum/build/@types'
-import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
-import ICasimirFactoryAbi from '@casimir/ethereum/build/abi/ICasimirFactory.json'
+import { CasimirManager } from '@casimir/ethereum/build/@types'
 
-const { provider } = useEnvironment()
+const { getContracts } = useContracts()
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
@@ -25,15 +23,8 @@ export default function useStaking() {
     async function initializeStakingComposable(){
         if (stakingComposableInitialized.value) return
         try {
-            /* Contracts */
-            const factoryAddress = import.meta.env.PUBLIC_FACTORY_ADDRESS
-            if (!factoryAddress) throw new Error('No manager address provided')
-            const factory = new ethers.Contract(factoryAddress, ICasimirFactoryAbi, provider) as CasimirFactory
-            const managerConfigs = ref<ManagerConfig[]>([])
-            managerConfigs.value = await Promise.all((await factory.getManagerIds()).map(async (id: number) => {
-                return await factory.getManagerConfig(id)
-            }))
-            manager = new ethers.Contract(managerConfigs.value[0].managerAddress, ICasimirManagerAbi, provider) as CasimirManager
+            /* Get Manager */
+            manager = (await getContracts()).manager
             stakingComposableInitialized.value = true
         } catch (error) {
             console.log('Error initializing staking component :>> ', error)

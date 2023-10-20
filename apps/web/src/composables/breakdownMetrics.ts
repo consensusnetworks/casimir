@@ -1,13 +1,13 @@
 import { readonly, ref, toValue } from 'vue'
 import { ethers } from 'ethers'
-import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, ManagerConfig, UserWithAccountsAndOperators } from '@casimir/types'
+import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, UserWithAccountsAndOperators } from '@casimir/types'
+import useContracts from '@/composables/contracts'
 import useEnvironment from '@/composables/environment'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
-import { CasimirManager, CasimirFactory } from '@casimir/ethereum/build/@types'
-import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
-import ICasimirFactoryAbi from '@casimir/ethereum/build/abi/ICasimirFactory.json'
+import { CasimirManager } from '@casimir/ethereum/build/@types'
 
+const { getContracts } = useContracts()
 const { provider } = useEnvironment()
 const { formatNumber } = useFormat()
 const { getCurrentPrice } = usePrice()
@@ -242,27 +242,15 @@ export default function useBreakdownMetrics() {
     }
     
     async function initializeComposable(user: UserWithAccountsAndOperators){
-
-        /* Contracts */
-        const factoryAddress = import.meta.env.PUBLIC_FACTORY_ADDRESS
-        if (!factoryAddress) throw new Error('No manager address provided')
-        const factory = new ethers.Contract(factoryAddress, ICasimirFactoryAbi, provider) as CasimirFactory
-        const managerConfigs = ref<ManagerConfig[]>([])
-        managerConfigs.value = await Promise.all((await factory.getManagerIds()).map(async (id: number) => {
-            return await factory.getManagerConfig(id)
-        }))
-        manager = new ethers.Contract(managerConfigs.value[0].managerAddress, ICasimirManagerAbi, provider) as CasimirManager
-        // registry = new ethers.Contract(managerConfigs.value[0].registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
-        // views = new ethers.Contract(managerConfigs.value[0].viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
-
-
         userValue.value = toValue(user)
+        manager = (await getContracts()).manager
+
         try {
             loadingInitializeBreakdownMetrics.value = true
             provider.removeAllListeners('block')
             provider.on('block', blockListener as ethers.providers.Listener)
             listenForContractEvents()
-            await refreshBreakdown()
+            if (userValue.value) await refreshBreakdown()
             loadingInitializeBreakdownMetrics.value = false
         } catch (error) {
             loadingInitializeBreakdownMetricsError.value = true
@@ -272,16 +260,7 @@ export default function useBreakdownMetrics() {
     }
 
     async function uninitializeComposable(){
-        /* Contracts */
-        const factoryAddress = import.meta.env.PUBLIC_FACTORY_ADDRESS
-        if (!factoryAddress) throw new Error('No manager address provided')
-        const factory = new ethers.Contract(factoryAddress, ICasimirFactoryAbi, provider) as CasimirFactory
-        const managerConfigs = ref<ManagerConfig[]>([])
-        managerConfigs.value = await Promise.all((await factory.getManagerIds()).map(async (id: number) => {
-            return await factory.getManagerConfig(id)
-        }))
-        manager = new ethers.Contract(managerConfigs.value[0].managerAddress, ICasimirManagerAbi, provider) as CasimirManager
-
+        manager = (await getContracts()).manager
         userValue.value = undefined
         provider.removeAllListeners('block')
         stopListeningForContractEvents()

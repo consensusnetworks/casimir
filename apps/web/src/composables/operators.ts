@@ -1,22 +1,20 @@
 import { readonly, ref } from 'vue'
 import { Operator, Scanner } from '@casimir/ssv'
-import { Account, ManagerConfig, PoolConfig, RegisteredOperator, RegisterOperatorWithCasimirParams, UserWithAccountsAndOperators } from '@casimir/types'
+import { Account, PoolConfig, RegisteredOperator, RegisterOperatorWithCasimirParams, UserWithAccountsAndOperators } from '@casimir/types'
 import { ethers } from 'ethers'
+import useContracts from '@/composables/contracts'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useWalletConnectV2 from '@/composables/walletConnectV2'
-import { CasimirManager, CasimirRegistry, CasimirViews, CasimirFactory } from '@casimir/ethereum/build/@types'
-import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
-import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
-import ICasimirViewsAbi from '@casimir/ethereum/build/abi/ICasimirViews.json'
-import ICasimirFactoryAbi from '@casimir/ethereum/build/abi/ICasimirFactory.json'
+import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 
 let manager: CasimirManager
 let registry: CasimirRegistry
 let views: CasimirViews
 
+const { getContracts } = useContracts()
 const { ethereumUrl, provider, ssvNetworkAddress, ssvViewsAddress, usersUrl } = useEnvironment()
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
@@ -132,17 +130,11 @@ export default function useOperators() {
 
     async function initializeComposable(user: UserWithAccountsAndOperators){
         try {
-            /* Contracts */
-            const factoryAddress = import.meta.env.PUBLIC_FACTORY_ADDRESS
-            if (!factoryAddress) throw new Error('No manager address provided')
-            const factory = new ethers.Contract(factoryAddress, ICasimirFactoryAbi, provider) as CasimirFactory
-            const managerConfigs = ref<ManagerConfig[]>([])
-            managerConfigs.value = await Promise.all((await factory.getManagerIds()).map(async (id: number) => {
-                return await factory.getManagerConfig(id)
-            }))
-            manager = new ethers.Contract(managerConfigs.value[0].managerAddress, ICasimirManagerAbi, provider) as CasimirManager
-            registry = new ethers.Contract(managerConfigs.value[0].registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
-            views = new ethers.Contract(managerConfigs.value[0].viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
+            /* Get Manager, Views, and Registry */
+            const { manager: managerContract, registry: registryContract, views: viewsContract } = await getContracts()
+            manager = managerContract
+            registry = registryContract
+            views = viewsContract
 
             loadingInitializeOperators.value = true
             listenForContractEvents(user)
