@@ -20,6 +20,7 @@ import { ExistingUserCheck } from './interfaces/ExistingUserCheck'
 import { FormattedWalletOption } from './interfaces/FormattedWalletOption'
 import { GasEstimate } from './interfaces/GasEstimate'
 import { LoginCredentials } from './interfaces/LoginCredentials'
+import { ManagerConfig } from './interfaces/ManagerConfig'
 import { MessageRequest } from './interfaces/MessageRequest'
 import { Operator } from './interfaces/Operator'
 import { OperatorAddedSuccess } from './interfaces/OperatorAddedSuccess'
@@ -62,6 +63,7 @@ export type {
     FormattedWalletOption,
     GasEstimate,
     LoginCredentials,
+    ManagerConfig,
     MessageRequest,
     Operator,
     OperatorAddedSuccess,

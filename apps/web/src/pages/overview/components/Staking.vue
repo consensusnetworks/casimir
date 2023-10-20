@@ -10,7 +10,7 @@ import useUser from '@/composables/user'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
-const { deposit, getDepositFees, getUserStake } = useStaking()
+const { stakingComposableInitialized, deposit, getDepositFees, getUserStake, initializeStakingComposable } = useStaking()
 const { getEthersBalance } = useEthers()
 const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
@@ -19,7 +19,7 @@ const { user, updateUserAgreement } = useUser()
 // Staking Component Refs
 const addressBalance = ref<string | null>(null)
 const currentEthPrice = ref(0)
-const currentUserStake = ref(0)
+// const currentUserStake = ref(0)
 const estimatedFees = ref<number | string>('-')
 const formattedAmountToStake = ref('')
 const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
@@ -86,7 +86,7 @@ const aggregateAddressesByProvider = () => {
     selectedWalletAddress.value = null
     formattedAmountToStake.value = ''
     addressBalance.value = null
-    currentUserStake.value = 0
+    // currentUserStake.value = 0
   }
 }
 
@@ -115,34 +115,38 @@ watch(formattedAmountToStake, async () => {
 })
 
 watch(selectedWalletAddress, async () => {
+  if (!stakingComposableInitialized.value) return
   if (selectedWalletAddress.value) {
     addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + ' ETH'
-    currentUserStake.value = await getUserStake(selectedWalletAddress.value)
+    // currentUserStake.value = await getUserStake(selectedWalletAddress.value)
   } else {
     addressBalance.value = null
-    currentUserStake.value = 0
+    // currentUserStake.value = 0
   }
 })
 
 watch(user, async () => {
+  if (!stakingComposableInitialized.value) return
   if (user.value?.id) {
     aggregateAddressesByProvider()
     termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     selectedWalletAddress.value = user.value?.address as string
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
-    currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
     // estimatedFees.value = await getDepositFees()
   } else {
     selectedStakingProvider.value = ''
     selectedWalletAddress.value = null
     formattedAmountToStake.value = ''
     addressBalance.value = null
-    currentUserStake.value = 0
+    // currentUserStake.value = 0
   }
 })
 
 onMounted(async () => {
+  // TODO: @ccali11 - Want to make sure this is non-blocking
+  await initializeStakingComposable()
   aggregateAddressesByProvider()
   currentEthPrice.value = Math.round((await getCurrentPrice({ coin: 'ETH', currency: 'USD' })) * 100) / 100
   if (user.value?.id) {
@@ -150,7 +154,8 @@ onMounted(async () => {
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     selectedWalletAddress.value = user.value?.address as string
-    currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    if (!stakingComposableInitialized.value) return
+    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
   }
 })
 
@@ -218,8 +223,7 @@ const handleDeposit = async () => {
     console.log('waitResponse :>> ', waitResponse)
   }
 
-
-  currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+  // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
 </script>
 
@@ -239,7 +243,7 @@ const handleDeposit = async () => {
       {{ addressBalance ? addressBalance : '- - -' }}
     </h5>
     <div class="text-[12px] mb-[13px] text-blue-400">
-      <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked
+      <!-- <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked -->
     </div>
     <h6 class="card_title mb-[11px]">
       Wallet

@@ -18,40 +18,18 @@ const ssvViewsAddress = import.meta.env.PUBLIC_SSV_VIEWS_ADDRESS
 const walletConnectProjectId = import.meta.env.PUBLIC_WALLET_CONNECT_PROJECT_ID
 
 /* Contracts */
-type ManagerConfig = {
-    managerAddress: string;
-    registryAddress: string;
-    viewsAddress: string;
-};
 const factoryAddress = import.meta.env.PUBLIC_FACTORY_ADDRESS
 if (!factoryAddress) throw new Error('No manager address provided')
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const factory = new ethers.Contract(factoryAddress, ICasimirFactoryAbi, provider) as CasimirFactory
-const managerConfigs = ref<ManagerConfig[]>([])
-const manager = ref<CasimirManager>()
-const registry = ref<CasimirRegistry>()
-const views = ref<CasimirViews>()
 
 export default function useEnvironment() {
-
-    onMounted(async () => {
-        managerConfigs.value = await Promise.all((await factory.getManagerIds()).map(async (id: number) => {
-            return await factory.getManagerConfig(id)
-        }))
-
-        manager.value = new ethers.Contract(managerConfigs.value[0].managerAddress, ICasimirManagerAbi, provider) as CasimirManager
-        registry.value = new ethers.Contract(managerConfigs.value[0].registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
-        views.value = new ethers.Contract(managerConfigs.value[0].viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
-    })
 
     return {
         domain,
         cryptoCompareApiKey,
         ethereumUrl,
         factory,
-        manager,
-        registry,
-        views,
         provider,
         origin,
         ledgerType,

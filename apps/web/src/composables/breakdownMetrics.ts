@@ -1,17 +1,21 @@
 import { readonly, ref, toValue } from 'vue'
 import { ethers } from 'ethers'
-import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, UserWithAccountsAndOperators } from '@casimir/types'
+import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, ManagerConfig, UserWithAccountsAndOperators } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
-import { CasimirManager } from '@casimir/ethereum/build/@types'
+import { CasimirManager, CasimirFactory } from '@casimir/ethereum/build/@types'
+import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
+import ICasimirFactoryAbi from '@casimir/ethereum/build/abi/ICasimirFactory.json'
 
-const { manager, provider } = useEnvironment()
+const { provider } = useEnvironment()
 const { formatNumber } = useFormat()
 const { getCurrentPrice } = usePrice()
 
 const loadingInitializeBreakdownMetrics = ref(false)
 const loadingInitializeBreakdownMetricsError = ref(false)
+
+let manager: CasimirManager
 
 export default function useBreakdownMetrics() {
 
@@ -37,7 +41,7 @@ export default function useBreakdownMetrics() {
             /* Get User's Current Stake */
             const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
             const currentUserStakePromises = [] as Array<Promise<ethers.BigNumber>>
-            addresses.forEach(address => currentUserStakePromises.push((manager.value as CasimirManager).getUserStake(address)))
+            addresses.forEach(address => currentUserStakePromises.push((manager as CasimirManager).getUserStake(address)))
             const settledCurrentUserStakePromises = await Promise.allSettled(currentUserStakePromises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
             const currentUserStake = settledCurrentUserStakePromises.filter(result => result.status === 'fulfilled').map(result => result.value)
             const currentUserStakeSum = currentUserStake.reduce((acc, curr) => acc.add(curr), ethers.BigNumber.from(0))
@@ -82,13 +86,13 @@ export default function useBreakdownMetrics() {
                 'WithdrawalInitiated'
             ]
             const eventFilters = eventList.map(event => {
-                if (event === 'StakeRebalanced') return (manager.value as CasimirManager).filters[event]()
-                return ((manager.value as CasimirManager).filters as any)[event](address)
+                if (event === 'StakeRebalanced') return (manager as CasimirManager).filters[event]()
+                return ((manager as CasimirManager).filters as any)[event](address)
             })
 
-            // const items = (await Promise.all(eventFilters.map(async eventFilter => await (manager.value as CasimirManager).queryFilter(eventFilter, 0, 'latest'))))
+            // const items = (await Promise.all(eventFilters.map(async eventFilter => await (manager as CasimirManager).queryFilter(eventFilter, 0, 'latest'))))
             // Use Promise.allSettled to avoid errors when a filter returns no results
-            const items = (await Promise.allSettled(eventFilters.map(async eventFilter => await (manager.value as CasimirManager).queryFilter(eventFilter, 0, 'latest')))).map(result => result.status === 'fulfilled' ? result.value : [])
+            const items = (await Promise.allSettled(eventFilters.map(async eventFilter => await (manager as CasimirManager).queryFilter(eventFilter, 0, 'latest')))).map(result => result.status === 'fulfilled' ? result.value : [])
     
             const userEventTotals = eventList.reduce((acc, event) => {
                 acc[event] = 0
@@ -118,7 +122,7 @@ export default function useBreakdownMetrics() {
     async function getCurrentStaked(): Promise<BreakdownAmount> {
         const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         try {
-            const promises = addresses.map((address) => (manager.value as CasimirManager).getUserStake(address))
+            const promises = addresses.map((address) => (manager as CasimirManager).getUserStake(address))
             const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
             const currentStaked = settledPromises
                 .filter((result) => result.status === 'fulfilled')
@@ -197,18 +201,18 @@ export default function useBreakdownMetrics() {
     function listenForContractEvents() {
         stopListeningForContractEvents() // Clear old listeners
         try {
-            (manager.value as CasimirManager).on('StakeDeposited', stakeDepositedListener);
-            (manager.value as CasimirManager).on('StakeRebalanced', stakeRebalancedListener);
-            (manager.value as CasimirManager).on('WithdrawalInitiated', withdrawalInitiatedListener)
+            (manager as CasimirManager).on('StakeDeposited', stakeDepositedListener);
+            (manager as CasimirManager).on('StakeRebalanced', stakeRebalancedListener);
+            (manager as CasimirManager).on('WithdrawalInitiated', withdrawalInitiatedListener)
         } catch (err) {
             console.log(`There was an error in listenForContractEvents: ${err}`)
         }
     }
 
     function stopListeningForContractEvents() {
-        (manager.value as CasimirManager).removeListener('StakeDeposited', stakeDepositedListener);
-        (manager.value as CasimirManager).removeListener('StakeRebalanced', stakeRebalancedListener);
-        (manager.value as CasimirManager).removeListener('WithdrawalInitiated', withdrawalInitiatedListener)
+        (manager as CasimirManager).removeListener('StakeDeposited', stakeDepositedListener);
+        (manager as CasimirManager).removeListener('StakeRebalanced', stakeRebalancedListener);
+        (manager as CasimirManager).removeListener('WithdrawalInitiated', withdrawalInitiatedListener)
     }
 
     const stakeDepositedListener = async () => await refreshBreakdown()
@@ -225,7 +229,7 @@ export default function useBreakdownMetrics() {
             if (addresses.includes(tx.from.toLowerCase())) {
                 console.log('tx :>> ', tx)
                 try {
-                    // const response = (manager.value as CasimirManager).interface.parseTransaction({ data: tx.data })
+                    // const response = (manager as CasimirManager).interface.parseTransaction({ data: tx.data })
                     // console.log('response :>> ', response)
                     await refreshBreakdown()
                 } catch (error) {
@@ -238,6 +242,20 @@ export default function useBreakdownMetrics() {
     }
     
     async function initializeComposable(user: UserWithAccountsAndOperators){
+
+        /* Contracts */
+        const factoryAddress = import.meta.env.PUBLIC_FACTORY_ADDRESS
+        if (!factoryAddress) throw new Error('No manager address provided')
+        const factory = new ethers.Contract(factoryAddress, ICasimirFactoryAbi, provider) as CasimirFactory
+        const managerConfigs = ref<ManagerConfig[]>([])
+        managerConfigs.value = await Promise.all((await factory.getManagerIds()).map(async (id: number) => {
+            return await factory.getManagerConfig(id)
+        }))
+        manager = new ethers.Contract(managerConfigs.value[0].managerAddress, ICasimirManagerAbi, provider) as CasimirManager
+        // registry = new ethers.Contract(managerConfigs.value[0].registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
+        // views = new ethers.Contract(managerConfigs.value[0].viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
+
+
         userValue.value = toValue(user)
         try {
             loadingInitializeBreakdownMetrics.value = true
@@ -254,6 +272,16 @@ export default function useBreakdownMetrics() {
     }
 
     async function uninitializeComposable(){
+        /* Contracts */
+        const factoryAddress = import.meta.env.PUBLIC_FACTORY_ADDRESS
+        if (!factoryAddress) throw new Error('No manager address provided')
+        const factory = new ethers.Contract(factoryAddress, ICasimirFactoryAbi, provider) as CasimirFactory
+        const managerConfigs = ref<ManagerConfig[]>([])
+        managerConfigs.value = await Promise.all((await factory.getManagerIds()).map(async (id: number) => {
+            return await factory.getManagerConfig(id)
+        }))
+        manager = new ethers.Contract(managerConfigs.value[0].managerAddress, ICasimirManagerAbi, provider) as CasimirManager
+
         userValue.value = undefined
         provider.removeAllListeners('block')
         stopListeningForContractEvents()
