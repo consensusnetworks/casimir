@@ -22,8 +22,8 @@ export async function deploymentFixture() {
     if (!process.env.SWAP_ROUTER_ADDRESS) throw new Error('No swap router address provided')
     if (!process.env.WETH_TOKEN_ADDRESS) throw new Error('No weth token address provided')
 
-    const [, daoOracle, donTransmitter] = await ethers.getSigners()
-
+    const [owner, daoOracle, donTransmitter] = await ethers.getSigners()
+    
     const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')
     const functionsOracleFactory = await functionsOracleFactoryFactory.deploy() as FunctionsOracleFactory
     await functionsOracleFactory.deployed()
@@ -162,7 +162,47 @@ export async function deploymentFixture() {
     await functionsOracle.addAuthorizedSenders([donTransmitter.address, managerAddress])
 
     const ssvViews = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
-    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [208, 209, 210, 211, 212, 213, 214, 215]
+
+    return {
+        managerBeacon,
+        poolBeacon,
+        registryBeacon,
+        upkeepBeacon,
+        viewsBeacon,
+        factory,
+        manager,
+        registry,
+        upkeep,
+        views,
+        functionsBillingRegistry,
+        functionsOracle,
+        ssvViews,
+        daoOracle,
+        donTransmitter
+    }
+}
+
+/** Fixture to preregister operators */
+export async function preregistrationFixture() {
+    const {      
+        managerBeacon,
+        poolBeacon,
+        registryBeacon,
+        upkeepBeacon,
+        viewsBeacon,
+        factory,
+        manager,
+        registry,
+        upkeep,
+        views,
+        functionsBillingRegistry,
+        functionsOracle,
+        ssvViews,
+        daoOracle,
+        donTransmitter 
+    } = await loadFixture(deploymentFixture)
+
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [208, 209, 210, 211/*, 212, 213, 214, 215*/]
     if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
     const preregisteredBalance = ethers.utils.parseEther('10')
     for (const operatorId of preregisteredOperatorIds) {
@@ -179,12 +219,28 @@ export async function deploymentFixture() {
         await result.wait()
     }
 
-    return { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter }
+    return {
+        managerBeacon,
+        poolBeacon,
+        registryBeacon,
+        upkeepBeacon,
+        viewsBeacon,
+        factory,
+        manager,
+        registry,
+        upkeep,
+        views,
+        functionsBillingRegistry,
+        functionsOracle,
+        ssvViews,
+        daoOracle,
+        donTransmitter
+    }
 }
 
 /** Fixture to stake 16 for the first user */
 export async function firstUserDepositFixture() {
-    const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter } = await loadFixture(deploymentFixture)
+    const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter } = await loadFixture(preregistrationFixture)
     const [, , , firstUser] = await ethers.getSigners()
 
     const depositAmount = round(16 * ((100 + await manager.userFee()) / 100), 10)

@@ -31,7 +31,7 @@ void async function () {
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
 
     // Account for the mock, beacon, and library deployments
-    const walletNonce = await provider.getTransactionCount(wallet.address) + 17
+    const walletNonce = await provider.getTransactionCount(wallet.address) + 13
 
     if (!process.env.FACTORY_ADDRESS) {
         process.env.FACTORY_ADDRESS = ethers.utils.getContractAddress({
