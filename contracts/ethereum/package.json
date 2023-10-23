@@ -3,10 +3,10 @@
     "version": "1.0.0-beta.0",
     "scripts": {
         "build": "npx hardhat compile",
-        "clean": "npx esno scripts/clean.ts",
+        "clean": "npx hardhat clean",
         "deploy": "npx hardhat run scripts/deploy.ts",
         "dev": "npx hardhat run scripts/dev.ts",
-        "generate": "npx hardhat docgen",
+        "docgen": "npx hardhat docgen",
         "node": "npx hardhat node",
         "postinstall": "npx esno scripts/foundryup.ts",
         "size": "npx hardhat size-contracts",
@@ -39,6 +39,7 @@
         "hardhat-preprocessor": "^0.1.5",
         "localtunnel": "^2.0.2",
         "mocha": "^10.0.0",
+        "solidity-docgen": "^0.6.0-beta.36",
         "typechain": "^8.1.0"
     }
 }

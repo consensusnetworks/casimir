@@ -70,16 +70,6 @@ const compilers = [...compilerVersions, ...externalCompilerVersions].map(version
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
-    docgen: {
-        exclude: [
-            'dev',
-            'mock',
-            'vendor'
-        ],
-        outputDir: process.env.DOCS_OUTPUT_DIR || './build/docs',
-        templates: process.env.DOCS_TEMPLATE_DIR,
-        pages: () => 'solidity-api.md'
-    },
     mocha: {
         timeout: 60000
     },
@@ -117,6 +107,16 @@ const config: HardhatUserConfig = {
     },
     typechain: {
         outDir: './build/@types'
+    },
+    docgen: {
+        exclude: [
+            'dev',
+            'mock',
+            'vendor'
+        ],
+        outputDir: process.env.DOCS_OUTPUT_DIR || './build/docs',
+        templates: process.env.DOCS_TEMPLATE_DIR,
+        pages: () => 'solidity-api.md'
     },
     networks: {
         hardhat: {

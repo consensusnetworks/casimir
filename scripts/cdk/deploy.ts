@@ -34,7 +34,8 @@ void async function () {
     process.env.PUBLIC_WALLET_CONNECT_PROJECT_ID = await getSecret('casimir-wallet-connect-project-id')
     
     await run('npm run build --workspace @casimir/ethereum')
-    await run('npm run build:docs --workspace @casimir/ethereum')
+    await run('npm run docgen --workspace @casimir/docs')
+    await run('npm run build --workspace @casimir/docs')
     await run('npm run build --workspace @casimir/landing')
     await run('npm run build --workspace @casimir/users')
     await run('npm run build --workspace @casimir/web')
