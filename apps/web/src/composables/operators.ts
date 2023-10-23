@@ -10,12 +10,16 @@ import useTrezor from '@/composables/trezor'
 import useWalletConnectV2 from '@/composables/walletConnectV2'
 import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 
-let manager: CasimirManager
-let registry: CasimirRegistry
-let views: CasimirViews
+let defaultManager: CasimirManager
+let defaultRegistry: CasimirRegistry
+let defaultViews: CasimirViews
+
+// let eigenManager: CasimirManager
+// let eigenRegistry: CasimirRegistry
+// let eigenViews: CasimirViews
 
 const { getContracts } = useContracts()
-const { ethereumUrl, provider, ssvNetworkAddress, ssvViewsAddress, usersUrl } = useEnvironment()
+const { ethereumUrl, ssvNetworkAddress, ssvViewsAddress, usersUrl } = useEnvironment()
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
@@ -69,7 +73,7 @@ export default function useOperators() {
 
         const casimirOperators: RegisteredOperator[] = []
         for (const operator of ssvOperators) {
-            const { active, collateral, poolCount, resharing } = await (registry as CasimirRegistry).getOperator(operator.id)
+            const { active, collateral, poolCount, resharing } = await (defaultRegistry as CasimirRegistry).getOperator(operator.id)
             const registered = active || collateral.gt(0) || poolCount.gt(0) || resharing
             if (registered) {
                 const pools = await _getPools(operator.id)
@@ -110,12 +114,12 @@ export default function useOperators() {
         const pools: PoolConfig[] = []
     
         const poolIds = [
-            ...await (manager as CasimirManager).getPendingPoolIds(),
-            ...await (manager as CasimirManager).getStakedPoolIds()
+            ...await (defaultManager as CasimirManager).getPendingPoolIds(),
+            ...await (defaultManager as CasimirManager).getStakedPoolIds()
         ]
     
         for (const poolId of poolIds) {
-            const poolConfig = await (views as CasimirViews).getPoolConfig(poolId)
+            const poolConfig = await (defaultViews as CasimirViews).getPoolConfig(poolId)
             const pool = {
                 ...poolConfig,
                 operatorIds: poolConfig.operatorIds.map(id => id.toNumber()),
@@ -131,10 +135,10 @@ export default function useOperators() {
     async function initializeComposable(user: UserWithAccountsAndOperators){
         try {
             /* Get Manager, Views, and Registry */
-            const { manager: managerContract, registry: registryContract, views: viewsContract } = await getContracts()
-            manager = managerContract
-            registry = registryContract
-            views = viewsContract
+            const { defaultManager: managerContract, defaultRegistry: registryContract, defaultViews: viewsContract } = await getContracts()
+            defaultManager = managerContract
+            defaultRegistry = registryContract
+            defaultViews = viewsContract
 
             loadingInitializeOperators.value = true
             listenForContractEvents(user)
@@ -149,7 +153,7 @@ export default function useOperators() {
 
     function listenForContractEvents(user: UserWithAccountsAndOperators) {
         try {
-            (registry as CasimirRegistry).on('OperatorRegistered', () => getUserOperators(user))
+            (defaultRegistry as CasimirRegistry).on('OperatorRegistered', () => getUserOperators(user))
             // (registry as CasimirRegistry).on('OperatorDeregistered', getUserOperators)
             // (registry as CasimirRegistry).on('DeregistrationRequested', getUserOperators)
         } catch (err) {
@@ -173,7 +177,7 @@ export default function useOperators() {
             } else {
                 throw new Error(`Invalid wallet provider: ${walletProvider}`)
             }
-            const result = await (registry as CasimirRegistry).connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral)})
+            const result = await (defaultRegistry as CasimirRegistry).connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral)})
             // TODO: @shanejearley - How many confirmations do we want to wait?
             await result?.wait(1)
             await addOperator({address, nodeUrl})
