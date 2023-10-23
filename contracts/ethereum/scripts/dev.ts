@@ -7,6 +7,7 @@ import ISSVViewsAbi from '../build/abi/ISSVViews.json'
 import { run } from '@casimir/shell'
 import { PoolStatus } from '@casimir/types'
 import requestConfig from '@casimir/functions/Functions-request-config'
+import { activatePoolsHandler } from '../helpers/oracle'
 
 upgrades.silenceWarnings()
 
@@ -238,7 +239,8 @@ void async function () {
                 const stakedPoolIds = await manager.getStakedPoolIds()
                 if (pendingPoolIds.length + stakedPoolIds.length) {
                     console.log('🧾 Submitting report')
-                    const activatedBalance = pendingPoolIds.length * 32
+                    const activatedPoolCount = pendingPoolIds.length
+                    const activatedBalance = activatedPoolCount * 32
                     const sweptRewardBalance = rewardPerValidator * lastStakedPoolIds.length
                     const exitingPoolCount = await manager.requestedExits()
                     const sweptExitedBalance = exitingPoolCount.toNumber() * 32
@@ -270,6 +272,7 @@ void async function () {
                         functionsBillingRegistry,
                         values: reportValues
                     })
+                    await activatePoolsHandler({ manager, views, signer: daoOracle, args: { count: activatedPoolCount } })
                     let remaining = exitingPoolCount.toNumber()
                     if (remaining) {
                         for (const poolId of stakedPoolIds) {

@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "SafeCast",
+  "sourceName": "@chainlink/contracts/src/v0.8/dev/vendor/openzeppelin-solidity/v.4.8.0/contracts/utils/SafeCast.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea26469706673582212208770f77f0bf44bb2ac90a244a665e89d5d69ea30ee79d1f7acf802c977e9e5e964736f6c63430008120033",
+  "deployedBytecode": "0x6080604052600080fdfea26469706673582212208770f77f0bf44bb2ac90a244a665e89d5d69ea30ee79d1f7acf802c977e9e5e964736f6c63430008120033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

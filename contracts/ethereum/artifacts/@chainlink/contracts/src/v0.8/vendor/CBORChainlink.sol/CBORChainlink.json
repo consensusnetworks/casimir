@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "CBORChainlink",
+  "sourceName": "@chainlink/contracts/src/v0.8/vendor/CBORChainlink.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea2646970667358221220b3a04b4c970bfefbcc14ad55b87198c5cf89f4b1134084ad260e019f188d149164736f6c63430008120033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220b3a04b4c970bfefbcc14ad55b87198c5cf89f4b1134084ad260e019f188d149164736f6c63430008120033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

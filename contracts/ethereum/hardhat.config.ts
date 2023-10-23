@@ -93,9 +93,7 @@ const config: HardhatUserConfig = {
     },
     paths: {
         tests: './test',
-        sources: './src/v1',
-        artifacts: './build/hardhat/artifacts',
-        cache: './build/hardhat/cache'
+        sources: './src/v1'
     },
     abiExporter: {
         path: './build/abi',

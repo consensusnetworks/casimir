@@ -1,0 +1,5798 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/CasimirCore.sol": {
+      "lastModificationDate": 1697754752827,
+      "contentHash": "fe7b7a2da427b29dec11f1c7a42c3059",
+      "sourceName": "src/v1/CasimirCore.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirCore"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/interfaces/ICasimirCore.sol": {
+      "lastModificationDate": 1697731790441,
+      "contentHash": "09728af1e88744699274274e58c7d74f",
+      "sourceName": "src/v1/interfaces/ICasimirCore.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirCore"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/CasimirRegistry.sol": {
+      "lastModificationDate": 1697754752953,
+      "contentHash": "4c5c8817f6abdf5f5db083f923517003",
+      "sourceName": "src/v1/CasimirRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./CasimirCore.sol",
+        "./interfaces/ICasimirRegistry.sol",
+        "./interfaces/ICasimirManager.sol",
+        "./vendor/interfaces/ISSVViews.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirRegistry"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/vendor/interfaces/ISSVViews.sol": {
+      "lastModificationDate": 1697731790443,
+      "contentHash": "74313e82fd96dfd05279b3d253c37bbd",
+      "sourceName": "src/v1/vendor/interfaces/ISSVViews.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../../../lib/ssv-network/contracts/interfaces/ISSVViews.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/interfaces/ICasimirRegistry.sol": {
+      "lastModificationDate": 1697731790441,
+      "contentHash": "a820cb6e8011b3ed252b754351b53c45",
+      "sourceName": "src/v1/interfaces/ICasimirRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirRegistry"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/interfaces/ICasimirManager.sol": {
+      "lastModificationDate": 1697731790441,
+      "contentHash": "2d17606498db28516335f2c1237d78a0",
+      "sourceName": "src/v1/interfaces/ICasimirManager.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ICasimirCore.sol",
+        "../vendor/interfaces/ISSVNetworkCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirManager"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol": {
+      "lastModificationDate": 1698091287732,
+      "contentHash": "efeffcf5034292d7ea635de588c95995",
+      "sourceName": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../proxy/utils/Initializable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ReentrancyGuardUpgradeable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol": {
+      "lastModificationDate": 1698091287721,
+      "contentHash": "db24b956904575cc79d02867ec03263c",
+      "sourceName": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../utils/ContextUpgradeable.sol",
+        "../proxy/utils/Initializable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "OwnableUpgradeable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol": {
+      "lastModificationDate": 1698091287680,
+      "contentHash": "b0970a564d121abf9adfff8d1a01eb16",
+      "sourceName": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../utils/AddressUpgradeable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.2"
+      ],
+      "artifacts": [
+        "Initializable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/lib/ssv-network/contracts/interfaces/ISSVViews.sol": {
+      "lastModificationDate": 1698091303132,
+      "contentHash": "3876e693e86acc3332fa16990c5d0a14",
+      "sourceName": "lib/ssv-network/contracts/interfaces/ISSVViews.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ISSVNetworkCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ISSVViews"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/lib/ssv-network/contracts/interfaces/ISSVNetworkCore.sol": {
+      "lastModificationDate": 1698091303132,
+      "contentHash": "40f37e113a5ffdf530789264b6ddd8fd",
+      "sourceName": "lib/ssv-network/contracts/interfaces/ISSVNetworkCore.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ISSVNetworkCore"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/vendor/interfaces/ISSVNetworkCore.sol": {
+      "lastModificationDate": 1697731790443,
+      "contentHash": "aaefa0826fd13cdeba8eb382eed2db2c",
+      "sourceName": "src/v1/vendor/interfaces/ISSVNetworkCore.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../../../lib/ssv-network/contracts/interfaces/ISSVNetworkCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol": {
+      "lastModificationDate": 1698091286658,
+      "contentHash": "c30c805386fda8a42ff515da963d3a95",
+      "sourceName": "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.1"
+      ],
+      "artifacts": [
+        "AddressUpgradeable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol": {
+      "lastModificationDate": 1698091286757,
+      "contentHash": "6200b84950eb05b4a92a39fd1d6e0f9b",
+      "sourceName": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../proxy/utils/Initializable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ContextUpgradeable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/libraries/CasimirBeacon.sol": {
+      "lastModificationDate": 1697731790442,
+      "contentHash": "0d164c8347d7eae2eece3991619f644c",
+      "sourceName": "src/v1/libraries/CasimirBeacon.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../CasimirManager.sol",
+        "../CasimirPool.sol",
+        "../CasimirRegistry.sol",
+        "../CasimirUpkeep.sol",
+        "../CasimirViews.sol",
+        "../interfaces/ICasimirCore.sol",
+        "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirBeacon"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/CasimirManager.sol": {
+      "lastModificationDate": 1697754752871,
+      "contentHash": "5790cb391358f33fb4a1c07ca41f7e55",
+      "sourceName": "src/v1/CasimirManager.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./CasimirCore.sol",
+        "./interfaces/ICasimirFactory.sol",
+        "./interfaces/ICasimirManager.sol",
+        "./interfaces/ICasimirPool.sol",
+        "./interfaces/ICasimirRegistry.sol",
+        "./interfaces/ICasimirUpkeep.sol",
+        "./libraries/CasimirArray.sol",
+        "./libraries/CasimirBeacon.sol",
+        "./vendor/interfaces/ISSVNetwork.sol",
+        "./vendor/interfaces/IWETH9.sol",
+        "./vendor/interfaces/IFunctionsBillingRegistry.sol",
+        "./vendor/interfaces/IKeeperRegistrar.sol",
+        "./vendor/interfaces/IAutomationRegistry.sol",
+        "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/beacon/IBeaconUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol",
+        "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol",
+        "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol",
+        "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirManager"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/CasimirPool.sol": {
+      "lastModificationDate": 1697754752931,
+      "contentHash": "644750ec131e519c80cc1951382713fa",
+      "sourceName": "src/v1/CasimirPool.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./CasimirCore.sol",
+        "./interfaces/ICasimirPool.sol",
+        "./interfaces/ICasimirManager.sol",
+        "./interfaces/ICasimirRegistry.sol",
+        "./vendor/interfaces/IDepositContract.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirPool"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/CasimirViews.sol": {
+      "lastModificationDate": 1697754753000,
+      "contentHash": "900b2f9d1997a23c6a51e82a7b71c799",
+      "sourceName": "src/v1/CasimirViews.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/ICasimirManager.sol",
+        "./interfaces/ICasimirPool.sol",
+        "./interfaces/ICasimirRegistry.sol",
+        "./interfaces/ICasimirUpkeep.sol",
+        "./interfaces/ICasimirViews.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirViews"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/CasimirUpkeep.sol": {
+      "lastModificationDate": 1697754752977,
+      "contentHash": "08173d12cc3b2f6a8517084396d93de9",
+      "sourceName": "src/v1/CasimirUpkeep.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/ICasimirFactory.sol",
+        "./interfaces/ICasimirManager.sol",
+        "./interfaces/ICasimirUpkeep.sol",
+        "./vendor/FunctionsClient.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirUpkeep"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol": {
+      "lastModificationDate": 1698091286762,
+      "contentHash": "dc9dcb6e542154d9cfbfaece646c1092",
+      "sourceName": "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IBeacon.sol",
+        "../Proxy.sol",
+        "../ERC1967/ERC1967Upgrade.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "BeaconProxy"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/interfaces/ICasimirFactory.sol": {
+      "lastModificationDate": 1697731790441,
+      "contentHash": "231f496ede9f96c81971709bc5781ee9",
+      "sourceName": "src/v1/interfaces/ICasimirFactory.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirFactory"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/interfaces/ICasimirPool.sol": {
+      "lastModificationDate": 1697731790441,
+      "contentHash": "75ff4ca64d29d79a0e580fb2bfbf79a8",
+      "sourceName": "src/v1/interfaces/ICasimirPool.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirPool"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/libraries/CasimirArray.sol": {
+      "lastModificationDate": 1697731790442,
+      "contentHash": "8c9ef1a5fddd1eee42a218c79128ba8e",
+      "sourceName": "src/v1/libraries/CasimirArray.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirArray"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/interfaces/ICasimirUpkeep.sol": {
+      "lastModificationDate": 1697731790442,
+      "contentHash": "c228f9bab4c92ec89b54f99d660ff665",
+      "sourceName": "src/v1/interfaces/ICasimirUpkeep.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ICasimirCore.sol",
+        "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirUpkeep"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/vendor/interfaces/ISSVNetwork.sol": {
+      "lastModificationDate": 1697731790443,
+      "contentHash": "d2d127c91f35690606ae1d344c4c76fe",
+      "sourceName": "src/v1/vendor/interfaces/ISSVNetwork.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../../../lib/ssv-network/contracts/interfaces/ISSVNetwork.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/vendor/interfaces/IWETH9.sol": {
+      "lastModificationDate": 1697731790443,
+      "contentHash": "5d25cc09eb92430d0e3565b57eb1fe0c",
+      "sourceName": "src/v1/vendor/interfaces/IWETH9.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "IWETH9"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/vendor/interfaces/IFunctionsBillingRegistry.sol": {
+      "lastModificationDate": 1697731790443,
+      "contentHash": "01790862f897350280898eb4f4373a74",
+      "sourceName": "src/v1/vendor/interfaces/IFunctionsBillingRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "IFunctionsBillingRegistry"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/vendor/interfaces/IAutomationRegistry.sol": {
+      "lastModificationDate": 1697731790442,
+      "contentHash": "1f3b2e083272fc30f47cab1e4213e81d",
+      "sourceName": "src/v1/vendor/interfaces/IAutomationRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "IAutomationRegistry"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/vendor/interfaces/IKeeperRegistrar.sol": {
+      "lastModificationDate": 1697731790443,
+      "contentHash": "17d3895e1c83fc3b706c7b5b3c6d4096",
+      "sourceName": "src/v1/vendor/interfaces/IKeeperRegistrar.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "IKeeperRegistrar"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol": {
+      "lastModificationDate": 1698091287560,
+      "contentHash": "9a9398a7dbda9d014f04d5eb0fb581fd",
+      "sourceName": "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC20Upgradeable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/proxy/beacon/IBeaconUpgradeable.sol": {
+      "lastModificationDate": 1698091287450,
+      "contentHash": "21bffd733b4ca013e125a0ffe2e52254",
+      "sourceName": "@openzeppelin/contracts-upgradeable/proxy/beacon/IBeaconUpgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IBeaconUpgradeable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol": {
+      "lastModificationDate": 1698091287714,
+      "contentHash": "5a2a749b45b6a8eb035f4bf75addcb27",
+      "sourceName": "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "MathUpgradeable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol": {
+      "lastModificationDate": 1698091285201,
+      "contentHash": "f0eeb76e5ae42bcbacc8efc10e091716",
+      "sourceName": "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "IUniswapV3Factory"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol": {
+      "lastModificationDate": 1698091286992,
+      "contentHash": "ffd42687b3db01d30c24213d961fcf9f",
+      "sourceName": "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol"
+      ],
+      "versionPragmas": [
+        ">=0.7.5"
+      ],
+      "artifacts": [
+        "ISwapRouter"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol": {
+      "lastModificationDate": 1698091287749,
+      "contentHash": "f6d59fee2d6fafaea5a33717dfba1260",
+      "sourceName": "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../IERC20Upgradeable.sol",
+        "../extensions/IERC20PermitUpgradeable.sol",
+        "../../../utils/AddressUpgradeable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "SafeERC20Upgradeable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol": {
+      "lastModificationDate": 1698091285455,
+      "contentHash": "0488495ef9087b4513d3b43634035ef9",
+      "sourceName": "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "IUniswapV3PoolState"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol": {
+      "lastModificationDate": 1698091288953,
+      "contentHash": "da5a0c3bd86c896f6a407f909c57edf3",
+      "sourceName": "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "LinkTokenInterface"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol": {
+      "lastModificationDate": 1698091288210,
+      "contentHash": "c52969cee392918edbf23f914e01c0dc",
+      "sourceName": "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "AutomationCompatibleInterface"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/lib/ssv-network/contracts/interfaces/ISSVNetwork.sol": {
+      "lastModificationDate": 1698091303132,
+      "contentHash": "bf642bca90d623c4fcbccf633d5c1913",
+      "sourceName": "lib/ssv-network/contracts/interfaces/ISSVNetwork.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ISSVNetworkCore.sol",
+        "./ISSVOperators.sol",
+        "./ISSVClusters.sol",
+        "./ISSVDAO.sol",
+        "./ISSVViews.sol",
+        "../libraries/SSVStorage.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ISSVNetwork"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/lib/ssv-network/contracts/interfaces/ISSVOperators.sol": {
+      "lastModificationDate": 1698091303132,
+      "contentHash": "acc96a40a597c37c25bc6c6ce3675267",
+      "sourceName": "lib/ssv-network/contracts/interfaces/ISSVOperators.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ISSVNetworkCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ISSVOperators"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/lib/ssv-network/contracts/interfaces/ISSVClusters.sol": {
+      "lastModificationDate": 1698091303131,
+      "contentHash": "0dc7aa9d96a729dd17c85bbb2547288e",
+      "sourceName": "lib/ssv-network/contracts/interfaces/ISSVClusters.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ISSVNetworkCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ISSVClusters"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/lib/ssv-network/contracts/libraries/SSVStorage.sol": {
+      "lastModificationDate": 1698091303134,
+      "contentHash": "561b14d34c04854a89378434927fc860",
+      "sourceName": "lib/ssv-network/contracts/libraries/SSVStorage.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/ISSVNetworkCore.sol",
+        "@openzeppelin/contracts/utils/Counters.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "SSVStorage"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/lib/ssv-network/contracts/interfaces/ISSVDAO.sol": {
+      "lastModificationDate": 1698091303132,
+      "contentHash": "a9745103c8de4190dae4c6bd382be8b8",
+      "sourceName": "lib/ssv-network/contracts/interfaces/ISSVDAO.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ISSVNetworkCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ISSVDAO"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+      "lastModificationDate": 1698091287530,
+      "contentHash": "df36f7051335cd1e748b1b6463b7fdd3",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC20"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts/utils/Counters.sol": {
+      "lastModificationDate": 1698091286826,
+      "contentHash": "74654e3ae5d7f39555055dfe244dab7a",
+      "sourceName": "@openzeppelin/contracts/utils/Counters.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Counters"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol": {
+      "lastModificationDate": 1698091285462,
+      "contentHash": "a8ba2d37b0107911ae0e3b0e123cbd83",
+      "sourceName": "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "IUniswapV3SwapCallback"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20PermitUpgradeable.sol": {
+      "lastModificationDate": 1698091287545,
+      "contentHash": "30ef13e9a1b22e74e5e4ce5ab2a247e4",
+      "sourceName": "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20PermitUpgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC20PermitUpgradeable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/vendor/interfaces/IDepositContract.sol": {
+      "lastModificationDate": 1697731790442,
+      "contentHash": "eb7e6e73218ef170a9e19ac5e58fd9f3",
+      "sourceName": "src/v1/vendor/interfaces/IDepositContract.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "IDepositContract"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/interfaces/ICasimirViews.sol": {
+      "lastModificationDate": 1697731790442,
+      "contentHash": "6b13570962c3dd2d19145a1b7d78c579",
+      "sourceName": "src/v1/interfaces/ICasimirViews.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirViews"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/vendor/FunctionsClient.sol": {
+      "lastModificationDate": 1697731790442,
+      "contentHash": "c082cb3680c39e075f73fd42e1d9b8fe",
+      "sourceName": "src/v1/vendor/FunctionsClient.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@chainlink/contracts/src/v0.8/dev/functions/Functions.sol",
+        "@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsClientInterface.sol",
+        "@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsOracleInterface.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "FunctionsClient"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol": {
+      "lastModificationDate": 1698091287766,
+      "contentHash": "c221361be1c4953f5b71f47475b90266",
+      "sourceName": "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./math/MathUpgradeable.sol",
+        "./math/SignedMathUpgradeable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "StringsUpgradeable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/functions/Functions.sol": {
+      "lastModificationDate": 1698091288839,
+      "contentHash": "f04835ddc41d13adaa0b01da6b200920",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/functions/Functions.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../vendor/CBORChainlink.sol",
+        "../../vendor/BufferChainlink.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "Functions"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsOracleInterface.sol": {
+      "lastModificationDate": 1698091288860,
+      "contentHash": "21a5c842bdc96a6653614d2f849db540",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsOracleInterface.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./FunctionsBillingRegistryInterface.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "FunctionsOracleInterface"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsClientInterface.sol": {
+      "lastModificationDate": 1698091288854,
+      "contentHash": "dfac0f91964148ddd21bee85eee2a831",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsClientInterface.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "FunctionsClientInterface"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/vendor/CBORChainlink.sol": {
+      "lastModificationDate": 1698091288481,
+      "contentHash": "99b3ee2c29bc0d1a5cba583d9e8d835e",
+      "sourceName": "@chainlink/contracts/src/v0.8/vendor/CBORChainlink.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./BufferChainlink.sol"
+      ],
+      "versionPragmas": [
+        ">=0.4.19"
+      ],
+      "artifacts": [
+        "CBORChainlink"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/vendor/BufferChainlink.sol": {
+      "lastModificationDate": 1698091288463,
+      "contentHash": "52ac6f99fb0635751ae4ed11139878fd",
+      "sourceName": "@chainlink/contracts/src/v0.8/vendor/BufferChainlink.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "BufferChainlink"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsBillingRegistryInterface.sol": {
+      "lastModificationDate": 1698091288846,
+      "contentHash": "dccf51427056f43cbbbc1a661489a20e",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsBillingRegistryInterface.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "FunctionsBillingRegistryInterface"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts-upgradeable/utils/math/SignedMathUpgradeable.sol": {
+      "lastModificationDate": 1698091287761,
+      "contentHash": "2a6b819b2e241091ada6d645df3e3929",
+      "sourceName": "@openzeppelin/contracts-upgradeable/utils/math/SignedMathUpgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "SignedMathUpgradeable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts/proxy/Proxy.sol": {
+      "lastModificationDate": 1698091287722,
+      "contentHash": "40b3d81a836d50ff47e03893dcaaf204",
+      "sourceName": "@openzeppelin/contracts/proxy/Proxy.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Proxy"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts/proxy/beacon/IBeacon.sol": {
+      "lastModificationDate": 1698091287444,
+      "contentHash": "b6bd23bf19e90b771337037706470933",
+      "sourceName": "@openzeppelin/contracts/proxy/beacon/IBeacon.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IBeacon"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol": {
+      "lastModificationDate": 1698091287158,
+      "contentHash": "a127706394bead18392601a20d44867a",
+      "sourceName": "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../beacon/IBeacon.sol",
+        "../../interfaces/IERC1967.sol",
+        "../../interfaces/draft-IERC1822.sol",
+        "../../utils/Address.sol",
+        "../../utils/StorageSlot.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.2"
+      ],
+      "artifacts": [
+        "ERC1967Upgrade"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts/utils/StorageSlot.sol": {
+      "lastModificationDate": 1698091287765,
+      "contentHash": "682f7dd1f2e1147c8390e7575deceb2d",
+      "sourceName": "@openzeppelin/contracts/utils/StorageSlot.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "StorageSlot"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts/utils/Address.sol": {
+      "lastModificationDate": 1698091286735,
+      "contentHash": "211ffd288c1588ba8c10eae668ca3c66",
+      "sourceName": "@openzeppelin/contracts/utils/Address.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.1"
+      ],
+      "artifacts": [
+        "Address"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts/interfaces/draft-IERC1822.sol": {
+      "lastModificationDate": 1698091286980,
+      "contentHash": "2858d98e74e67987ec81b39605230b74",
+      "sourceName": "@openzeppelin/contracts/interfaces/draft-IERC1822.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC1822Proxiable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts/interfaces/IERC1967.sol": {
+      "lastModificationDate": 1698091287528,
+      "contentHash": "d0d060231a45da7a1eecbb5cd286fa40",
+      "sourceName": "@openzeppelin/contracts/interfaces/IERC1967.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC1967"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/libraries/CasimirBeacon.sol": {
+      "lastModificationDate": 1697756732179,
+      "contentHash": "ea1ebdc88df4927517e6a2d2381a3503",
+      "sourceName": "src/v1/dev/libraries/CasimirBeacon.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../CasimirManager.sol",
+        "../CasimirPool.sol",
+        "../CasimirRegistry.sol",
+        "../CasimirUpkeep.sol",
+        "../CasimirViews.sol",
+        "../interfaces/ICasimirCore.sol",
+        "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirBeaconDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/CasimirManager.sol": {
+      "lastModificationDate": 1697756760721,
+      "contentHash": "fff68ffb704a1f75a3e56d58fb038dc8",
+      "sourceName": "src/v1/dev/CasimirManager.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./CasimirCore.sol",
+        "./interfaces/ICasimirFactory.sol",
+        "./interfaces/ICasimirManager.sol",
+        "./interfaces/ICasimirPool.sol",
+        "./interfaces/ICasimirRegistry.sol",
+        "./interfaces/ICasimirUpkeep.sol",
+        "./libraries/CasimirArray.sol",
+        "./libraries/CasimirBeacon.sol",
+        "./vendor/interfaces/ISSVNetwork.sol",
+        "./vendor/interfaces/IWETH9.sol",
+        "./vendor/interfaces/IFunctionsBillingRegistry.sol",
+        "./vendor/interfaces/IKeeperRegistrar.sol",
+        "./vendor/interfaces/IAutomationRegistry.sol",
+        "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/beacon/IBeaconUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol",
+        "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol",
+        "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol",
+        "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirManagerDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/CasimirPool.sol": {
+      "lastModificationDate": 1697756189672,
+      "contentHash": "360b4f762ca7ca91656620952cc8eae3",
+      "sourceName": "src/v1/dev/CasimirPool.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./CasimirCore.sol",
+        "./interfaces/ICasimirPool.sol",
+        "./interfaces/ICasimirManager.sol",
+        "./interfaces/ICasimirRegistry.sol",
+        "./vendor/interfaces/IDepositContract.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirPoolDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/CasimirUpkeep.sol": {
+      "lastModificationDate": 1697756265678,
+      "contentHash": "8b6cb753fff3f3686dd1886bfba6b271",
+      "sourceName": "src/v1/dev/CasimirUpkeep.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./CasimirCore.sol",
+        "./interfaces/ICasimirFactory.sol",
+        "./interfaces/ICasimirManager.sol",
+        "./interfaces/ICasimirUpkeep.sol",
+        "./vendor/FunctionsClient.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirUpkeepDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/CasimirViews.sol": {
+      "lastModificationDate": 1697756355933,
+      "contentHash": "3776bfeeba53cf3703608b92d9c8671c",
+      "sourceName": "src/v1/dev/CasimirViews.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/ICasimirManager.sol",
+        "./interfaces/ICasimirPool.sol",
+        "./interfaces/ICasimirRegistry.sol",
+        "./interfaces/ICasimirUpkeep.sol",
+        "./interfaces/ICasimirViews.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirViewsDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/interfaces/ICasimirCore.sol": {
+      "lastModificationDate": 1697755113099,
+      "contentHash": "cb28d08944837adbce234e192a839194",
+      "sourceName": "src/v1/dev/interfaces/ICasimirCore.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirCoreDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/CasimirRegistry.sol": {
+      "lastModificationDate": 1697758173630,
+      "contentHash": "facc0772d1f39ccd972411961d08048c",
+      "sourceName": "src/v1/dev/CasimirRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./CasimirCore.sol",
+        "./interfaces/ICasimirRegistry.sol",
+        "./interfaces/ICasimirManager.sol",
+        "./vendor/interfaces/ISSVViews.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirRegistryDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/interfaces/ICasimirFactory.sol": {
+      "lastModificationDate": 1697755113099,
+      "contentHash": "76aafc5620ba8b5b38679a903615ad86",
+      "sourceName": "src/v1/dev/interfaces/ICasimirFactory.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirFactoryDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/CasimirCore.sol": {
+      "lastModificationDate": 1697755164180,
+      "contentHash": "ca923aa4f2082a93e17bd21d07399e00",
+      "sourceName": "src/v1/dev/CasimirCore.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirCoreDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/interfaces/ICasimirRegistry.sol": {
+      "lastModificationDate": 1697758188220,
+      "contentHash": "295667d4f89009dddd8fb670e299bae8",
+      "sourceName": "src/v1/dev/interfaces/ICasimirRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirRegistryDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/interfaces/ICasimirUpkeep.sol": {
+      "lastModificationDate": 1697755152049,
+      "contentHash": "3ff8eadeac0d7d9871ebb10daac0e122",
+      "sourceName": "src/v1/dev/interfaces/ICasimirUpkeep.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ICasimirCore.sol",
+        "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirUpkeepDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/vendor/interfaces/IWETH9.sol": {
+      "lastModificationDate": 1697754762668,
+      "contentHash": "5d25cc09eb92430d0e3565b57eb1fe0c",
+      "sourceName": "src/v1/dev/vendor/interfaces/IWETH9.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "IWETH9"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/interfaces/ICasimirPool.sol": {
+      "lastModificationDate": 1697755122431,
+      "contentHash": "7041cd2c9808b4314cc50f2548c7fa54",
+      "sourceName": "src/v1/dev/interfaces/ICasimirPool.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirPoolDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/vendor/interfaces/ISSVNetwork.sol": {
+      "lastModificationDate": 1697756111176,
+      "contentHash": "95eacefa62bff44a4a5f6f950620b3f7",
+      "sourceName": "src/v1/dev/vendor/interfaces/ISSVNetwork.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../../../../lib/ssv-network/contracts/interfaces/ISSVNetwork.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/vendor/interfaces/IFunctionsBillingRegistry.sol": {
+      "lastModificationDate": 1697754762665,
+      "contentHash": "01790862f897350280898eb4f4373a74",
+      "sourceName": "src/v1/dev/vendor/interfaces/IFunctionsBillingRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "IFunctionsBillingRegistry"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/vendor/interfaces/IAutomationRegistry.sol": {
+      "lastModificationDate": 1697754762665,
+      "contentHash": "1f3b2e083272fc30f47cab1e4213e81d",
+      "sourceName": "src/v1/dev/vendor/interfaces/IAutomationRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "IAutomationRegistry"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/vendor/interfaces/IKeeperRegistrar.sol": {
+      "lastModificationDate": 1697754762667,
+      "contentHash": "17d3895e1c83fc3b706c7b5b3c6d4096",
+      "sourceName": "src/v1/dev/vendor/interfaces/IKeeperRegistrar.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "IKeeperRegistrar"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/interfaces/ICasimirManager.sol": {
+      "lastModificationDate": 1697755117691,
+      "contentHash": "ab47be5a50664c7a49405f26765d3006",
+      "sourceName": "src/v1/dev/interfaces/ICasimirManager.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ICasimirCore.sol",
+        "../vendor/interfaces/ISSVNetworkCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirManagerDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/libraries/CasimirArray.sol": {
+      "lastModificationDate": 1697756735500,
+      "contentHash": "63c7d722a49613d29542fe4a78256dac",
+      "sourceName": "src/v1/dev/libraries/CasimirArray.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirArrayDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/vendor/interfaces/ISSVNetworkCore.sol": {
+      "lastModificationDate": 1697756111176,
+      "contentHash": "cd499c985b21111e83dc98329ed892e0",
+      "sourceName": "src/v1/dev/vendor/interfaces/ISSVNetworkCore.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../../../../lib/ssv-network/contracts/interfaces/ISSVNetworkCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/vendor/interfaces/IDepositContract.sol": {
+      "lastModificationDate": 1697754762665,
+      "contentHash": "eb7e6e73218ef170a9e19ac5e58fd9f3",
+      "sourceName": "src/v1/dev/vendor/interfaces/IDepositContract.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "IDepositContract"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/vendor/FunctionsClient.sol": {
+      "lastModificationDate": 1697754762664,
+      "contentHash": "c082cb3680c39e075f73fd42e1d9b8fe",
+      "sourceName": "src/v1/dev/vendor/FunctionsClient.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@chainlink/contracts/src/v0.8/dev/functions/Functions.sol",
+        "@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsClientInterface.sol",
+        "@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsOracleInterface.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "FunctionsClient"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/interfaces/ICasimirViews.sol": {
+      "lastModificationDate": 1697755157310,
+      "contentHash": "f91bef0d69c0e89c81073bad63cff48c",
+      "sourceName": "src/v1/dev/interfaces/ICasimirViews.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ICasimirCore.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "ICasimirViewsDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/vendor/interfaces/ISSVViews.sol": {
+      "lastModificationDate": 1697756111176,
+      "contentHash": "d5931c94862f24b6064d4cfebb49dbdc",
+      "sourceName": "src/v1/dev/vendor/interfaces/ISSVViews.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../../../../lib/ssv-network/contracts/interfaces/ISSVViews.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/functions/FunctionsBillingRegistry.sol": {
+      "lastModificationDate": 1698091288843,
+      "contentHash": "504e0cc0142c800142d21792336f58f4",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/functions/FunctionsBillingRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../interfaces/LinkTokenInterface.sol",
+        "../../interfaces/AggregatorV3Interface.sol",
+        "../interfaces/FunctionsBillingRegistryInterface.sol",
+        "../interfaces/FunctionsOracleInterface.sol",
+        "../interfaces/FunctionsClientInterface.sol",
+        "../../interfaces/TypeAndVersionInterface.sol",
+        "../../interfaces/ERC677ReceiverInterface.sol",
+        "../interfaces/AuthorizedOriginReceiverInterface.sol",
+        "../../ConfirmedOwner.sol",
+        "../AuthorizedReceiver.sol",
+        "../vendor/openzeppelin-solidity/v.4.8.0/contracts/utils/SafeCast.sol",
+        "../vendor/openzeppelin-solidity/v.4.8.0/contracts/security/Pausable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "FunctionsBillingRegistry"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/interfaces/ERC677ReceiverInterface.sol": {
+      "lastModificationDate": 1698091288768,
+      "contentHash": "26d371857fda5a1bf087572b40bc1538",
+      "sourceName": "@chainlink/contracts/src/v0.8/interfaces/ERC677ReceiverInterface.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "ERC677ReceiverInterface"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/ConfirmedOwner.sol": {
+      "lastModificationDate": 1698091288600,
+      "contentHash": "16d64572b0310127fc8a771e63be6d20",
+      "sourceName": "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ConfirmedOwnerWithProposal.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ConfirmedOwner"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/interfaces/TypeAndVersionInterface.sol": {
+      "lastModificationDate": 1698091289346,
+      "contentHash": "99239ca600c3a8878735c8c17d46981a",
+      "sourceName": "@chainlink/contracts/src/v0.8/interfaces/TypeAndVersionInterface.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "TypeAndVersionInterface"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol": {
+      "lastModificationDate": 1698091288021,
+      "contentHash": "d9654a0fc044a31d4106ee6bca772add",
+      "sourceName": "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "AggregatorV3Interface"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/AuthorizedReceiver.sol": {
+      "lastModificationDate": 1698091288186,
+      "contentHash": "765ab9d88200370a0ed9f57959a6940a",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/AuthorizedReceiver.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/utils/structs/EnumerableSet.sol",
+        "./interfaces/AuthorizedReceiverInterface.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "AuthorizedReceiver"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/interfaces/AuthorizedOriginReceiverInterface.sol": {
+      "lastModificationDate": 1698091288182,
+      "contentHash": "8047fbe233b997896767755b2b0f68ca",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/interfaces/AuthorizedOriginReceiverInterface.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "AuthorizedOriginReceiverInterface"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/vendor/openzeppelin-solidity/v.4.8.0/contracts/utils/SafeCast.sol": {
+      "lastModificationDate": 1698091289277,
+      "contentHash": "0d88f157e1f9c5da0d0ff8d398760bbd",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/vendor/openzeppelin-solidity/v.4.8.0/contracts/utils/SafeCast.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "SafeCast"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/vendor/openzeppelin-solidity/v.4.8.0/contracts/security/Pausable.sol": {
+      "lastModificationDate": 1698091289127,
+      "contentHash": "fff2ed3af7ca6f9aad21b56a3ec8a8ab",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/vendor/openzeppelin-solidity/v.4.8.0/contracts/security/Pausable.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../utils/Context.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Pausable"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/ConfirmedOwnerWithProposal.sol": {
+      "lastModificationDate": 1698091288606,
+      "contentHash": "8b1c5f02622cd87472493bda6595d1be",
+      "sourceName": "@chainlink/contracts/src/v0.8/ConfirmedOwnerWithProposal.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/OwnableInterface.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ConfirmedOwnerWithProposal"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/interfaces/OwnableInterface.sol": {
+      "lastModificationDate": 1698091289100,
+      "contentHash": "2e814c8a9f77897f6995436d97c23d99",
+      "sourceName": "@chainlink/contracts/src/v0.8/interfaces/OwnableInterface.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "OwnableInterface"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@openzeppelin/contracts/utils/structs/EnumerableSet.sol": {
+      "lastModificationDate": 1698091287018,
+      "contentHash": "e029f029abc1fd2d85d54fd69086f076",
+      "sourceName": "@openzeppelin/contracts/utils/structs/EnumerableSet.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "EnumerableSet"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/interfaces/AuthorizedReceiverInterface.sol": {
+      "lastModificationDate": 1698091288188,
+      "contentHash": "28560e9fb31f8b123eb92248a4523a06",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/interfaces/AuthorizedReceiverInterface.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "AuthorizedReceiverInterface"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/vendor/openzeppelin-solidity/v.4.8.0/contracts/utils/Context.sol": {
+      "lastModificationDate": 1698091288625,
+      "contentHash": "1e1cb702810ab17e9aa437c9b18c5cfe",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/vendor/openzeppelin-solidity/v.4.8.0/contracts/utils/Context.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Context"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/functions/FunctionsOracle.sol": {
+      "lastModificationDate": 1698091288856,
+      "contentHash": "04e594a55d61c1f6af957edae49c8a46",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/functions/FunctionsOracle.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/FunctionsOracleInterface.sol",
+        "../ocr2/OCR2Base.sol",
+        "./AuthorizedOriginReceiver.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "FunctionsOracle"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/functions/AuthorizedOriginReceiver.sol": {
+      "lastModificationDate": 1698091288179,
+      "contentHash": "76dc3c46ef1b730702ae69cc32655e09",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/functions/AuthorizedOriginReceiver.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../vendor/openzeppelin-solidity/v.4.8.0/contracts/utils/structs/EnumerableSet.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "AuthorizedOriginReceiver"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/ocr2/OCR2Base.sol": {
+      "lastModificationDate": 1698091289040,
+      "contentHash": "34cf19a1bf7b077cf638d1a26b867dcd",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/ocr2/OCR2Base.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../ConfirmedOwner.sol",
+        "./OCR2Abstract.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "OCR2Base"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/vendor/openzeppelin-solidity/v.4.8.0/contracts/utils/structs/EnumerableSet.sol": {
+      "lastModificationDate": 1698091288741,
+      "contentHash": "26787abe77a8626e89fb583b47541562",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/vendor/openzeppelin-solidity/v.4.8.0/contracts/utils/structs/EnumerableSet.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "EnumerableSet"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/ocr2/OCR2Abstract.sol": {
+      "lastModificationDate": 1698091289039,
+      "contentHash": "331e55d871598a477a738241fc74a3c0",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/ocr2/OCR2Abstract.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../interfaces/TypeAndVersionInterface.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "OCR2Abstract"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/node_modules/@chainlink/contracts/src/v0.8/dev/functions/FunctionsOracleFactory.sol": {
+      "lastModificationDate": 1698091288858,
+      "contentHash": "ef7fed7bf9354031a6a85abdf46dd56d",
+      "sourceName": "@chainlink/contracts/src/v0.8/dev/functions/FunctionsOracleFactory.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./FunctionsOracle.sol",
+        "../../interfaces/TypeAndVersionInterface.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.6"
+      ],
+      "artifacts": [
+        "FunctionsOracleFactory"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/mock/FunctionsOracleFactory.sol": {
+      "lastModificationDate": 1695343056628,
+      "contentHash": "9c2c21a794442739987b9db56eb5e75b",
+      "sourceName": "src/v1/mock/FunctionsOracleFactory.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@chainlink/contracts/src/v0.8/dev/functions/FunctionsOracleFactory.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/mock/FunctionsOracleFactory.sol": {
+      "lastModificationDate": 1697754762660,
+      "contentHash": "9c2c21a794442739987b9db56eb5e75b",
+      "sourceName": "src/v1/dev/mock/FunctionsOracleFactory.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@chainlink/contracts/src/v0.8/dev/functions/FunctionsOracleFactory.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/mock/FunctionsOracle.sol": {
+      "lastModificationDate": 1695343056627,
+      "contentHash": "d4453359c0a2460242659ecb618ab5d4",
+      "sourceName": "src/v1/mock/FunctionsOracle.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@chainlink/contracts/src/v0.8/dev/functions/FunctionsOracle.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/mock/FunctionsOracle.sol": {
+      "lastModificationDate": 1697754762660,
+      "contentHash": "d4453359c0a2460242659ecb618ab5d4",
+      "sourceName": "src/v1/dev/mock/FunctionsOracle.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@chainlink/contracts/src/v0.8/dev/functions/FunctionsOracle.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/CasimirFactory.sol": {
+      "lastModificationDate": 1697756779691,
+      "contentHash": "35fc01f31a9b29a8c2fd3c9d68a26c0a",
+      "sourceName": "src/v1/dev/CasimirFactory.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./CasimirCore.sol",
+        "./interfaces/ICasimirFactory.sol",
+        "./interfaces/ICasimirManager.sol",
+        "./interfaces/ICasimirRegistry.sol",
+        "./interfaces/ICasimirUpkeep.sol",
+        "./libraries/CasimirBeacon.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirFactoryDev"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/CasimirFactory.sol": {
+      "lastModificationDate": 1697754752844,
+      "contentHash": "2eaf38fecb3c0c459f16cc5d9ef69f98",
+      "sourceName": "src/v1/CasimirFactory.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "./CasimirCore.sol",
+        "./interfaces/ICasimirFactory.sol",
+        "./interfaces/ICasimirManager.sol",
+        "./interfaces/ICasimirRegistry.sol",
+        "./interfaces/ICasimirUpkeep.sol",
+        "./libraries/CasimirBeacon.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": [
+        "CasimirFactory"
+      ]
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/mock/FunctionsBillingRegistry.sol": {
+      "lastModificationDate": 1695343056627,
+      "contentHash": "f09d0d62be42daa115600eec9ec66373",
+      "sourceName": "src/v1/mock/FunctionsBillingRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@chainlink/contracts/src/v0.8/dev/functions/FunctionsBillingRegistry.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    },
+    "/Users/shane/Developer/consensusnetworks/casimir/contracts/ethereum/src/v1/dev/mock/FunctionsBillingRegistry.sol": {
+      "lastModificationDate": 1697754762659,
+      "contentHash": "f09d0d62be42daa115600eec9ec66373",
+      "sourceName": "src/v1/dev/mock/FunctionsBillingRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "viaIR": true,
+          "optimizer": {
+            "enabled": true,
+            "runs": 1,
+            "details": {
+              "yulDetails": {
+                "optimizerSteps": "u"
+              }
+            }
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "libraries": {
+            "": {
+              "__CACHE_BREAKER__": "0x0000000000000031363938313034303535343738"
+            }
+          }
+        }
+      },
+      "imports": [
+        "@chainlink/contracts/src/v0.8/dev/functions/FunctionsBillingRegistry.sol"
+      ],
+      "versionPragmas": [
+        "0.8.18"
+      ],
+      "artifacts": []
+    }
+  }
+}

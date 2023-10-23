@@ -1,0 +1,31 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "Functions",
+  "sourceName": "@chainlink/contracts/src/v0.8/dev/functions/Functions.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "EmptyArgs",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EmptySecrets",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EmptySource",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EmptyUrl",
+      "type": "error"
+    }
+  ],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea2646970667358221220a08c51b8a3dca571a6b790a45ba875b4eddcd002f629aa3cdf98022fd10d560464736f6c63430008120033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220a08c51b8a3dca571a6b790a45ba875b4eddcd002f629aa3cdf98022fd10d560464736f6c63430008120033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

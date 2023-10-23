@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MathUpgradeable",
+  "sourceName": "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea2646970667358221220d1ebd6125bc8e2c82c7e6b6b3cb807c9b76ca88302aac1cabbc52806758a9d5264736f6c63430008120033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220d1ebd6125bc8e2c82c7e6b6b3cb807c9b76ca88302aac1cabbc52806758a9d5264736f6c63430008120033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

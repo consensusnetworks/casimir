@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "SSVStorage",
+  "sourceName": "lib/ssv-network/contracts/libraries/SSVStorage.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea26469706673582212209d2bf62b8a88db0b8409d4f44aa99ea45fc18d6aa597a7b75f38e1524e5f627564736f6c63430008120033",
+  "deployedBytecode": "0x6080604052600080fdfea26469706673582212209d2bf62b8a88db0b8409d4f44aa99ea45fc18d6aa597a7b75f38e1524e5f627564736f6c63430008120033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
