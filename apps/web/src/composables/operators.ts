@@ -1,12 +1,13 @@
 import { readonly, ref } from 'vue'
 import { Operator, Scanner } from '@casimir/ssv'
-import { Account, PoolConfig, RegisteredOperator, RegisterOperatorWithCasimirParams, UserWithAccountsAndOperators } from '@casimir/types'
+import { Account, PoolConfig, RegisteredOperator, RegisterOperatorWithCasimirParams } from '@casimir/types'
 import { ethers } from 'ethers'
 import useContracts from '@/composables/contracts'
 import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
+import useUser from '@/composables/user'
 import useWalletConnectV2 from '@/composables/walletConnectV2'
 import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 
@@ -23,6 +24,7 @@ const { ethereumUrl, ssvNetworkAddress, ssvViewsAddress, usersUrl } = useEnviron
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
+const { user } = useUser()
 const { getWalletConnectSignerV2 } = useWalletConnectV2()
 const loadingInitializeOperators = ref(false)
 const loadingInitializeOperatorsError = ref(false)
@@ -56,8 +58,8 @@ export default function useOperators() {
         }
     }
 
-    async function getUserOperators(user: UserWithAccountsAndOperators): Promise<void> {
-        const userAddresses = user?.accounts.map((account: Account) => account.address) as string[]
+    async function getUserOperators(): Promise<void> {
+        const userAddresses = user.value?.accounts.map((account: Account) => account.address) as string[]
 
         const scanner = new Scanner({ 
             ethereumUrl,
@@ -132,7 +134,7 @@ export default function useOperators() {
         return pools
     }
 
-    async function initializeComposable(user: UserWithAccountsAndOperators){
+    async function initializeOperatorComposable(){
         try {
             /* Get Manager, Views, and Registry */
             const { defaultManager: managerContract, defaultRegistry: registryContract, defaultViews: viewsContract } = await getContracts()
@@ -141,8 +143,8 @@ export default function useOperators() {
             defaultViews = viewsContract
 
             loadingInitializeOperators.value = true
-            listenForContractEvents(user)
-            await getUserOperators(user)
+            listenForContractEvents()
+            await getUserOperators()
             loadingInitializeOperators.value = false
         } catch (error) {
             loadingInitializeOperatorsError.value = true
@@ -151,9 +153,9 @@ export default function useOperators() {
         }
     }
 
-    function listenForContractEvents(user: UserWithAccountsAndOperators) {
+    function listenForContractEvents() {
         try {
-            (defaultRegistry as CasimirRegistry).on('OperatorRegistered', () => getUserOperators(user))
+            (defaultRegistry as CasimirRegistry).on('OperatorRegistered', () => getUserOperators())
             // (registry as CasimirRegistry).on('OperatorDeregistered', getUserOperators)
             // (registry as CasimirRegistry).on('DeregistrationRequested', getUserOperators)
         } catch (err) {
@@ -196,7 +198,7 @@ export default function useOperators() {
         loadingAddOperatorError: readonly(loadingAddOperatorError),
         loadingInitializeOperators: readonly(loadingInitializeOperators),
         loadingInitializeOperatorsError: readonly(loadingInitializeOperatorsError),
-        initializeComposable,
+        initializeOperatorComposable,
         registerOperatorWithCasimir,
     }
 }

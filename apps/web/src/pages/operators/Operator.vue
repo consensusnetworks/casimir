@@ -8,12 +8,12 @@ import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
 import useOperators from '@/composables/operators'
 import useUser from '@/composables/user'
-import { UserWithAccountsAndOperators} from '@casimir/types'
 
 const { loadingSessionLogin } = useAuth()
 // const { detectActiveWalletAddress } = useEthers()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
+const {initializeOperatorComposable, nonregisteredOperators, registeredOperators, registerOperatorWithCasimir, loadingInitializeOperators, loadingAddOperator } = useOperators()
 const { user } = useUser()
 
 // Form inputs
@@ -90,7 +90,7 @@ const submitButtonTxt = ref('Submit')
 onMounted(async () => {
   if (user.value) {
 
-    await initializeComposable(user.value as UserWithAccountsAndOperators)
+    await initializeOperatorComposable()
 
     // Autofill disable
     const disableAutofill = () => {
@@ -106,11 +106,9 @@ onMounted(async () => {
   }
 })
 
-const {initializeComposable, nonregisteredOperators, registeredOperators, registerOperatorWithCasimir, loadingInitializeOperators, loadingAddOperator } = useOperators()
-
 watch(user, async () => {
   if (user.value) {
-    await initializeComposable(user.value as UserWithAccountsAndOperators)
+    await initializeOperatorComposable()
 
     filterData()
   }
