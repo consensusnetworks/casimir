@@ -19,7 +19,8 @@ const { user, updateUserAgreement } = useUser()
 // Staking Component Refs
 const addressBalance = ref<string | null>(null)
 const currentEthPrice = ref(0)
-// const currentUserStake = ref(0)
+const stakeType = ref<'default' | 'eigen'>('default')
+const currentUserStake = ref(0)
 const estimatedFees = ref<number | string>('-')
 const formattedAmountToStake = ref('')
 const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
@@ -86,7 +87,7 @@ const aggregateAddressesByProvider = () => {
     selectedWalletAddress.value = null
     formattedAmountToStake.value = ''
     addressBalance.value = null
-    // currentUserStake.value = 0
+    currentUserStake.value = 0
   }
 }
 
@@ -118,10 +119,10 @@ watch(selectedWalletAddress, async () => {
   if (!stakingComposableInitialized.value) return
   if (selectedWalletAddress.value) {
     addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + ' ETH'
-    // currentUserStake.value = await getUserStake(selectedWalletAddress.value)
+    currentUserStake.value = await getUserStake(selectedWalletAddress.value)
   } else {
     addressBalance.value = null
-    // currentUserStake.value = 0
+    currentUserStake.value = 0
   }
 })
 
@@ -133,14 +134,14 @@ watch(user, async () => {
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     selectedWalletAddress.value = user.value?.address as string
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
-    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
     // estimatedFees.value = await getDepositFees()
   } else {
     selectedStakingProvider.value = ''
     selectedWalletAddress.value = null
     formattedAmountToStake.value = ''
     addressBalance.value = null
-    // currentUserStake.value = 0
+    currentUserStake.value = 0
   }
 })
 
@@ -155,7 +156,7 @@ onMounted(async () => {
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     selectedWalletAddress.value = user.value?.address as string
     if (!stakingComposableInitialized.value) return
-    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
   }
 })
 
@@ -203,7 +204,11 @@ const handleDeposit = async () => {
   //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
   // }
 
-  const result = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedStakingProvider.value })
+  const result = await deposit({ 
+    amount: formattedAmountToStake.value,
+    walletProvider: selectedStakingProvider.value,
+    type: stakeType.value 
+  })
 
   if (!result) stakeButtonText.value = 'Failed!'
   stakeButtonText.value = 'Staked!'
@@ -223,7 +228,7 @@ const handleDeposit = async () => {
     console.log('waitResponse :>> ', waitResponse)
   }
 
-  // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+  currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
 </script>
 
@@ -243,7 +248,7 @@ const handleDeposit = async () => {
       {{ addressBalance ? addressBalance : '- - -' }}
     </h5>
     <div class="text-[12px] mb-[13px] text-blue-400">
-      <!-- <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked -->
+      <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked
     </div>
     <h6 class="card_title mb-[11px]">
       Wallet
@@ -355,7 +360,8 @@ const handleDeposit = async () => {
         </h6>
       </div>
       <h6 class="card_analytics_amount">
-        {{ estimatedFees }}.00%
+        <!-- {{ estimatedFees }}.00% -->
+        5.00%
       </h6>
     </div>
     <div class="flex justify-between items-center my-[10px]">

@@ -1,17 +1,20 @@
-import { readonly, ref, toValue } from 'vue'
+import { readonly, ref, onMounted, watch } from 'vue'
 import { ethers } from 'ethers'
 import { Account, BreakdownAmount, BreakdownString, ContractEventsByAddress, UserWithAccountsAndOperators } from '@casimir/types'
 import useContracts from '@/composables/contracts'
 import useEnvironment from '@/composables/environment'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
+import useUser from '@/composables/user'
 import { CasimirManager } from '@casimir/ethereum/build/@types'
 
 const { getContracts } = useContracts()
 const { provider } = useEnvironment()
 const { formatNumber } = useFormat()
 const { getCurrentPrice } = usePrice()
+const { user } = useUser()
 
+const isInitialized = ref(false)
 const loadingInitializeBreakdownMetrics = ref(false)
 const loadingInitializeBreakdownMetricsError = ref(false)
 
@@ -19,8 +22,15 @@ let defaultManager: CasimirManager
 let eigenManager: CasimirManager
 
 export default function useBreakdownMetrics() {
-
-    const userValue = ref()
+    onMounted(() => {
+        if (user.value) initializeBreakdownMetricsComposable()
+            else uninitializeBreakdownMetricsComposable()
+    })
+      
+    watch(user, async () => {
+        if (user.value) initializeBreakdownMetricsComposable()
+            else uninitializeBreakdownMetricsComposable()
+    })
 
     const currentStaked = ref<BreakdownAmount>({
         eth: '0 ETH',
@@ -40,7 +50,7 @@ export default function useBreakdownMetrics() {
     async function getAllTimeStakingRewards() : Promise<BreakdownAmount> {
         try {
             /* Get User's Current Stake */
-            const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+            const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
             const currentUserStakePromises = [] as Array<Promise<ethers.BigNumber>>
             addresses.forEach(address => currentUserStakePromises.push((defaultManager as CasimirManager).getUserStake(address)))
             addresses.forEach(address => currentUserStakePromises.push((eigenManager as CasimirManager).getUserStake(address)))
@@ -123,7 +133,7 @@ export default function useBreakdownMetrics() {
     }
 
     async function getCurrentStaked(): Promise<BreakdownAmount> {
-        const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+        const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         try {
             const defaultManagerPromises = addresses.map((address) => (defaultManager as CasimirManager).getUserStake(address))
             const eigenManagerPromises = addresses.map((address) => (eigenManager as CasimirManager).getUserStake(address))
@@ -158,7 +168,7 @@ export default function useBreakdownMetrics() {
 
     async function getTotalWalletBalance() : Promise<BreakdownAmount> {
         const promises = [] as Array<Promise<any>>
-        const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+        const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         addresses.forEach((address) => { promises.push(getEthersBalance(address)) })
         const totalWalletBalance = (await Promise.all(promises)).reduce((acc, curr) => acc + curr, 0)
         const totalWalletBalanceUSD = totalWalletBalance * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' }))
@@ -231,9 +241,9 @@ export default function useBreakdownMetrics() {
     const withdrawalInitiatedListener = async () => await refreshBreakdown()
 
     async function blockListener(blockNumber: number) {
-        if (!userValue.value) return
+        if (!user.value) return
         console.log('blockNumber :>> ', blockNumber)
-        const addresses = (userValue.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
+        const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         const block = await provider.getBlockWithTransactions(blockNumber)
         
         const txs = block.transactions.map(async (tx: any) => {
@@ -252,18 +262,20 @@ export default function useBreakdownMetrics() {
         await Promise.all(txs)
     }
     
-    async function initializeComposable(user: UserWithAccountsAndOperators){
-        userValue.value = toValue(user)
-        defaultManager = (await getContracts()).defaultManager
-        eigenManager = (await getContracts()).eigenManager
+    async function initializeBreakdownMetricsComposable(){
+        if (isInitialized.value) return
+        const { defaultManager: defaultManagerFromContracts, eigenManager: eigenManagerFromContracts } = await getContracts()
+        defaultManager = defaultManagerFromContracts
+        eigenManager = eigenManagerFromContracts
 
         try {
             loadingInitializeBreakdownMetrics.value = true
             provider.removeAllListeners('block')
             provider.on('block', blockListener as ethers.providers.Listener)
             listenForContractEvents()
-            if (userValue.value) await refreshBreakdown()
+            await refreshBreakdown()
             loadingInitializeBreakdownMetrics.value = false
+            isInitialized.value = true
         } catch (error) {
             loadingInitializeBreakdownMetricsError.value = true
             console.log('Error initializing breakdown metrics :>> ', error)
@@ -271,12 +283,13 @@ export default function useBreakdownMetrics() {
         }
     }
 
-    async function uninitializeComposable(){
-        defaultManager = (await getContracts()).defaultManager
-        eigenManager = (await getContracts()).eigenManager
-        userValue.value = undefined
+    async function uninitializeBreakdownMetricsComposable(){
+        const { defaultManager: defaultManagerFromContracts, eigenManager: eigenManagerFromContracts } = await getContracts()
+        defaultManager = defaultManagerFromContracts
+        eigenManager = eigenManagerFromContracts
         provider.removeAllListeners('block')
         stopListeningForContractEvents()
+        isInitialized.value = false
     }
     
     return {
@@ -285,7 +298,7 @@ export default function useBreakdownMetrics() {
         loadingInitializeBreakdownMetricsError: readonly(loadingInitializeBreakdownMetricsError),
         stakingRewards: readonly(stakingRewards),
         totalWalletBalance: readonly(totalWalletBalance),
-        initializeComposable,
-        uninitializeComposable
+        initializeBreakdownMetricsComposable,
+        uninitializeBreakdownMetricsComposable
     }
 }

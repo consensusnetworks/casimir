@@ -16,22 +16,25 @@ const { getWalletConnectSignerV2 } = useWalletConnectV2()
 
 const stakingComposableInitialized = ref(false)
 
-let manager: CasimirManager
+let defaultManager: CasimirManager
+let eigenManager: CasimirManager
 
 export default function useStaking() {
 
     async function initializeStakingComposable(){
         if (stakingComposableInitialized.value) return
         try {
-            /* Get Manager */
-            manager = (await getContracts()).manager
+            /* Get Managers */
+            const { defaultManager: defaultManagerFromContracts, eigenManager: eigenManagerFromContracts } = await getContracts()
+            defaultManager = defaultManagerFromContracts
+            eigenManager = eigenManagerFromContracts
             stakingComposableInitialized.value = true
         } catch (error) {
             console.log('Error initializing staking component :>> ', error)
         }
     }
     
-    async function deposit({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
+    async function deposit({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: 'default' | 'eigen' }) {
         try {
             let signer
             if (ethersProviderList.includes(walletProvider)) {
@@ -45,6 +48,7 @@ export default function useStaking() {
             } else {
                 throw new Error(`Invalid wallet provider: ${walletProvider}`)
             }
+            const manager = type === 'default' ? defaultManager : eigenManager
             const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
             const fees = await getDepositFees()
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
@@ -72,9 +76,12 @@ export default function useStaking() {
     async function getUserStake(address: string): Promise<number> {
         if (!stakingComposableInitialized.value) return 0
         try {
-            const bigNumber = await (manager as CasimirManager).getUserStake(address)
-            const number = parseFloat(ethers.utils.formatEther(bigNumber))
-            return number
+            const defaultManagerBigNumber = await (defaultManager as CasimirManager).getUserStake(address)
+            const number = parseFloat(ethers.utils.formatEther(defaultManagerBigNumber))
+            const eigenManagerBigNumber = await (eigenManager as CasimirManager).getUserStake(address)
+            const number2 = parseFloat(ethers.utils.formatEther(eigenManagerBigNumber))
+            const total = number + number2
+            return total
         } catch (err) {
             console.error(`There was an error in getUserStake function: ${JSON.stringify(err)}`)
             return 0

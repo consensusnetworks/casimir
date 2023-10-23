@@ -8,7 +8,7 @@ import { AnalyticsData, ProviderString, UserAnalyticsData, UserWithAccountsAndOp
 import useBreakdownMetrics from '@/composables/breakdownMetrics'
 
 const {  user } = useUser()
-const { currentStaked, stakingRewards, totalWalletBalance, initializeComposable, uninitializeComposable } = useBreakdownMetrics()
+const { currentStaked, stakingRewards, totalWalletBalance, initializeBreakdownMetricsComposable, uninitializeBreakdownMetricsComposable } = useBreakdownMetrics()
 const { screenWidth } = useScreenDimensions()
 
 const chardId = ref('cross_provider_chart')
@@ -96,16 +96,13 @@ const setChartData = (userAnalytics: UserAnalyticsData) => {
   }
 }
 
-
 const {userAnalytics, updateAnalytics, initializeAnalyticsComposable } = useAnalytics()
 
+watch(userAnalytics, () => {
+  setChartData(userAnalytics.value as UserAnalyticsData)
+})
+
 onMounted(() => {
-  if(user.value){
-    initializeComposable(user.value as UserWithAccountsAndOperators)
-    initializeAnalyticsComposable()
-  }else{
-    uninitializeComposable()
-  }
   setChartData(userAnalytics.value as UserAnalyticsData)
 })
 
@@ -113,16 +110,7 @@ watch(selectedTimeframe, () => {
   setChartData(userAnalytics.value as UserAnalyticsData)
 })
 
-watch(userAnalytics, () => {
-  setChartData(userAnalytics.value as UserAnalyticsData)
-})
-
 watch(user, async () => {
-  if (user.value) {
-    initializeComposable(user.value as UserWithAccountsAndOperators)
-  } else {
-    uninitializeComposable()
-  }
   await updateAnalytics()
   setChartData(userAnalytics.value as UserAnalyticsData)
 })
