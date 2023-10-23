@@ -9,6 +9,7 @@ import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-abi-exporter'
 import 'hardhat-contract-sizer'
 import 'hardhat-preprocessor'
+import 'solidity-docgen'
 import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL, ETHEREUM_SIGNERS, HARDHAT_NETWORK_KEY } from '@casimir/env'
 
 // Seed is provided
@@ -106,6 +107,16 @@ const config: HardhatUserConfig = {
     },
     typechain: {
         outDir: './build/@types'
+    },
+    docgen: {
+        exclude: [
+            'dev',
+            'mock',
+            'vendor'
+        ],
+        outputDir: process.env.DOCS_OUTPUT_DIR || './build/docs',
+        templates: process.env.DOCS_TEMPLATE_DIR,
+        pages: () => 'solidity-api.md'
     },
     networks: {
         hardhat: {

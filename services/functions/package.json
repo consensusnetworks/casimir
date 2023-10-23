@@ -10,16 +10,6 @@
         "functions-simulate-javascript": "node scripts/simulateFunctionsJavaScript.js",
         "functions-gen-keys": "node scripts/generateKeypair.js"
     },
-    "devDependencies": {
-        "@ethersproject/abi": "^5.7.0",
-        "@ethersproject/providers": "^5.7.1",
-        "cbor": "^9.0.1",
-        "chai": "^4.3.6",
-        "dotenv": "^16.0.3",
-        "esno": "^0.17.0",
-        "eth-crypto": "^2.4.0",
-        "ethers": "^5.7.2"
-    },
     "dependencies": {
         "@chainlink/env-enc": "^1.0.5",
         "axios": "^1.1.3",
@@ -29,5 +19,15 @@
         "ora": "5.4.1",
         "readline": "^1.3.0",
         "vm2": "^3.9.18"
+    },
+    "devDependencies": {
+        "@ethersproject/abi": "^5.7.0",
+        "@ethersproject/providers": "^5.7.1",
+        "cbor": "^9.0.1",
+        "chai": "^4.3.6",
+        "dotenv": "^16.3.1",
+        "esno": "^0.17.0",
+        "eth-crypto": "^2.4.0",
+        "ethers": "^5.7.2"
     }
 }

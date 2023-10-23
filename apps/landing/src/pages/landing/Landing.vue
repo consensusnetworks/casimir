@@ -331,9 +331,9 @@ const toggleQuestionItem = (index: number) => {
         <ul>
           <li>
             <a
-              href="https://api.casimir.co"
+              href="https://docs.casimir.co"
               target="_blank"
-            >API Reference</a>
+            >Documentation</a>
           </li>
           <li>
             <a
