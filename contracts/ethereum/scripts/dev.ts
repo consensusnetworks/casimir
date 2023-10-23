@@ -197,6 +197,28 @@ void async function () {
     }
 
     /**
+     * Deploy a second manager with Eigen stake enabled
+     * Note, this manager is not functional
+     * It is only deployed to test a list of multiple managers
+     */
+    const eigenStrategy = {
+        minCollateral: ethers.utils.parseEther('1.0'),
+        lockPeriod: 0,
+        userFee: 5,
+        compoundStake: true,
+        eigenStake: true,
+        liquidStake: false,
+        privateOperators: false,
+        verifiedOperators: false
+    }
+    const deployEigenManager = await factory.deployManager(
+        daoOracle.address,
+        functionsOracle.address,
+        eigenStrategy
+    )
+    await deployEigenManager.wait()
+
+    /**
      * We are simulating the oracle reporting on a more frequent basis
      * We also do not sweep or compound the rewards in this script
      * Exit balances are swept as needed
