@@ -5,11 +5,12 @@ import { simulateRequest } from '../../FunctionsSandboxLibrary'
 import { getConfig } from './config'
 import { FunctionsBillingRegistry } from '@casimir/ethereum/build/@types'
 import { updateExecutionLog } from '@casimir/logs'
+import { HandlerInput } from '../interfaces/HandlerInput'
 
 const config = getConfig()
 
-export async function fulfillRequestHandler(input: ethers.utils.Result): Promise<void> {
-    const { requestId, data } = input
+export async function fulfillRequestHandler(input: HandlerInput): Promise<void> {
+    const { requestId, data } = input.args as ethers.utils.Result
     if (!requestId) throw new Error('No request id provided')
     if (!data) throw new Error('No data provided')
 

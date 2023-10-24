@@ -55,13 +55,7 @@ if (hardhatNetwork !== 'localhost') {
 const compilerSettings = {
     viaIR: true,
     optimizer: {
-        enabled: true,
-        runs: 1,
-        details: {
-            yulDetails: {
-                optimizerSteps: 'u'
-            }
-        }
+        enabled: true
     }
 }
 const compilerVersions = ['0.8.18']
@@ -93,7 +87,9 @@ const config: HardhatUserConfig = {
     },
     paths: {
         tests: './test',
-        sources: './src/v1'
+        sources: './src/v1',
+        artifacts: './build/hardhat/artifacts',
+        cache: './build/hardhat/cache'
     },
     abiExporter: {
         path: './build/abi',

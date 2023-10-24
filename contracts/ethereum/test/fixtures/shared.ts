@@ -22,7 +22,7 @@ export async function deploymentFixture() {
     if (!process.env.SWAP_ROUTER_ADDRESS) throw new Error('No swap router address provided')
     if (!process.env.WETH_TOKEN_ADDRESS) throw new Error('No weth token address provided')
 
-    const [owner, daoOracle, donTransmitter] = await ethers.getSigners()
+    const [, daoOracle, donTransmitter] = await ethers.getSigners()
     
     const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')
     const functionsOracleFactory = await functionsOracleFactoryFactory.deploy() as FunctionsOracleFactory

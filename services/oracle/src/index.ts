@@ -18,6 +18,7 @@ import {
     // reportForcedExitsHandler,
     reportCompletedExitsHandler
 } from './providers/handlers'
+import { ManagerConfig } from '@casimir/types'
 
 const config = getConfig()
 
