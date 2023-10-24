@@ -40,6 +40,19 @@ const stakingActionLoader = ref(false)
 const success = ref(false)
 const failure = ref(false)
 
+const isShining = ref(true) // Determines if the shine effect is active
+const isToggled = ref(false) // Determines the toggle state
+const toggleBackgroundColor = ref('#eee')  // Initial color
+
+const toggleShineEffect = () => {
+  isToggled.value = !isToggled.value
+  isShining.value = isToggled.value
+
+  // Change the color based on the toggle state
+  toggleBackgroundColor.value = isToggled.value ? 'green' : '#eee'
+}
+
+
 const handleInputOnAmountToStake = (event: any) => {
   const value = event.target.value.replace(/[^\d.]/g, '')
   const parts = value.split('.')
@@ -119,10 +132,10 @@ watch(selectedWalletAddress, async () => {
   if (!stakingComposableInitialized.value) return
   if (selectedWalletAddress.value) {
     addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + ' ETH'
-    currentUserStake.value = await getUserStake(selectedWalletAddress.value)
+    // currentUserStake.value = await getUserStake(selectedWalletAddress.value)
   } else {
     addressBalance.value = null
-    currentUserStake.value = 0
+    // currentUserStake.value = 0
   }
 })
 
@@ -134,14 +147,14 @@ watch(user, async () => {
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     selectedWalletAddress.value = user.value?.address as string
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
-    currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
     // estimatedFees.value = await getDepositFees()
   } else {
     selectedStakingProvider.value = ''
     selectedWalletAddress.value = null
     formattedAmountToStake.value = ''
     addressBalance.value = null
-    currentUserStake.value = 0
+    // currentUserStake.value = 0
   }
 })
 
@@ -156,7 +169,7 @@ onMounted(async () => {
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     selectedWalletAddress.value = user.value?.address as string
     if (!stakingComposableInitialized.value) return
-    currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
   }
 })
 
@@ -228,7 +241,7 @@ const handleDeposit = async () => {
     console.log('waitResponse :>> ', waitResponse)
   }
 
-  currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+  // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
 </script>
 
@@ -248,7 +261,7 @@ const handleDeposit = async () => {
       {{ addressBalance ? addressBalance : '- - -' }}
     </h5>
     <div class="text-[12px] mb-[13px] text-blue-400">
-      <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked
+      <!-- <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked -->
     </div>
     <h6 class="card_title mb-[11px]">
       Wallet
@@ -349,9 +362,9 @@ const handleDeposit = async () => {
       </div>
     </button>
 
-    <p class="card_message">
+    <!-- <p class="card_message">
       The amount to stake in set currency
-    </p>
+    </p> -->
 
     <div class="flex justify-between items-center mt-[22px]">
       <div class="flex items-center gap-[12px]">
@@ -374,7 +387,7 @@ const handleDeposit = async () => {
         ${{ currentEthPrice }}/ETH
       </h6>
     </div>
-    <div class="flex justify-between items-center mb-[39px]">
+    <div class="flex justify-between items-center mb-[26px]">
       <div class="flex items-center gap-[12px]">
         <h6 class="card_analytics_label">
           Estimated APY
@@ -399,6 +412,25 @@ const handleDeposit = async () => {
       >
         I agree to the terms of service
       </button>
+    </div>
+
+    <!-- Eigen Boggle -->
+    <div
+      class="toggle-container"
+      @click="toggleShineEffect"
+    >
+      Enable Eigen Layer
+      <span
+        v-if="isShining"
+        class="shine-effect"
+      />
+      <div
+        class="toggle-button"
+        :style="{ 'background-color': toggleBackgroundColor }"
+        :class="{ 'toggle-on': isToggled }"
+      >
+        <div class="toggle-circle" />
+      </div>
     </div>
 
     <button
@@ -551,6 +583,8 @@ const handleDeposit = async () => {
   line-height: 18px;
   letter-spacing: -0.03em;
   color: #FFFFFF;
+  height: 44px;
+  margin-top: 10px;
 }
 
 :disabled {
@@ -593,4 +627,80 @@ const handleDeposit = async () => {
   box-shadow: 0px 0px 0px 4px rgba(237, 235, 255, 0.26);
   border-radius: 4px;
 }
+
+/* Eigen Button */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 10px; /* space from the left edge */
+  position: relative;
+  width: 100%; /* takes full width of parent container */
+  height: 44px; /* adjust as needed if required */
+  background-color: purple; /* bright purple background */
+  overflow: hidden;
+  text-align: center;
+  color: #fff; /* or any suitable color for better visibility */
+  font-size: 14px; /* adjust based on preference */
+  border-radius: 8px;
+}
+
+.shine-effect {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -150%;
+  width: 200%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: rotate(30deg);
+  pointer-events: none;
+  animation: shine 2.5s infinite;
+}
+
+@keyframes shine {
+  0% {
+    left: -150%;
+  }
+  50% {
+    left: 150%;
+  }
+  100% {
+    left: 150%;
+  }
+}
+
+.toggle-button {
+  position: absolute;
+  top: 50%;
+  right: 10px; /* space from the right edge */
+  transform: translateY(-50%);
+  width: 50px;
+  height: 25px;
+  background-color: #eee;
+  border-radius: 15px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.card_container .toggle-container.toggle-on .toggle-button {
+    background-color: green !important;
+}
+
+.toggle-circle {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: left 0.3s;
+}
+
+.toggle-on .toggle-circle {
+  left: calc(100% - 30px);
+}
+
 </style>@/composables/user@/composables/staking
