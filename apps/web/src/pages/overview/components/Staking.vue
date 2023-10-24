@@ -74,7 +74,6 @@ const triggerConfetti = () => {
   }
 }
 
-
 const handleInputOnAmountToStake = (event: any) => {
   const value = event.target.value.replace(/[^\d.]/g, '')
   const parts = value.split('.')
@@ -154,6 +153,7 @@ watch(selectedWalletAddress, async () => {
   if (!stakingComposableInitialized.value) return
   if (selectedWalletAddress.value) {
     addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + ' ETH'
+    isShining.value = true
     // currentUserStake.value = await getUserStake(selectedWalletAddress.value)
   } else {
     addressBalance.value = null
@@ -192,6 +192,7 @@ onMounted(async () => {
     selectedWalletAddress.value = user.value?.address as string
     if (!stakingComposableInitialized.value) return
     // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    isShining.value = true
   }
 })
 
@@ -416,7 +417,7 @@ const handleDeposit = async () => {
         </h6>
       </div>
       <h6 class="card_analytics_amount">
-        $0.04
+        5.50%
       </h6>
     </div>
 
@@ -437,12 +438,17 @@ const handleDeposit = async () => {
     </div>
 
     <!-- Eigen Boggle -->
-    <div
+    <button
       ref="confettiButton"
       class="toggle-container"
+      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)"
       @click="toggleShineEffect"
     >
-      Enable Eigen Layer
+      <img
+        class="eigen-logo"
+        src="/eigen.svg"
+      >
+      Enable EigenLayer
       <span
         v-if="isShining"
         class="shine-effect"
@@ -451,10 +457,11 @@ const handleDeposit = async () => {
         class="toggle-button"
         :style="{ 'background-color': toggleBackgroundColor }"
         :class="{ 'toggle-on': isToggled }"
+        :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)"
       >
         <div class="toggle-circle" />
       </div>
-    </div>
+    </button>
 
     <button
       class="card_button  h-[37px] w-full "
@@ -660,12 +667,18 @@ const handleDeposit = async () => {
   position: relative;
   width: 100%; /* takes full width of parent container */
   height: 44px; /* adjust as needed if required */
-  background-color: purple; /* bright purple background */
+  background-color: rgb(26 12 109);
   overflow: hidden;
   text-align: center;
   color: #fff; /* or any suitable color for better visibility */
   font-size: 14px; /* adjust based on preference */
   border-radius: 8px;
+  transition: background-color 0.3s; /* This will animate the color change */
+}
+
+.toggle-container:disabled {
+    background-color: rgba(26, 12, 109, 0.5); /* This makes the purple color lighter (grayed out) */
+    /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
 }
 
 .shine-effect {
@@ -724,6 +737,11 @@ const handleDeposit = async () => {
 
 .toggle-on .toggle-circle {
   left: calc(100% - 30px);
+}
+
+.eigen-logo {
+  height: 20px;
+  margin-right: 10px;
 }
 
 </style>@/composables/user@/composables/staking
