@@ -3,10 +3,8 @@
     "private": true,
     "main": "src/index.ts",
     "scripts": {
-        "compile": "hardhat compile",
+        "build": "",
         "dev": "npx esno -r dotenv/config scripts/dev.ts",
-        "test": "npm run test:unit",
-        "test:unit": "hardhat test test/unit/*.spec.js",
         "functions-simulate-javascript": "node scripts/simulateFunctionsJavaScript.js",
         "functions-gen-keys": "node scripts/generateKeypair.js"
     },
