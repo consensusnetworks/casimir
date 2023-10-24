@@ -43,7 +43,7 @@ function toggleEigenLayerSupport() {
   eigenIsToggled.value = !eigenIsToggled.value
   toggleBackgroundColor.value = eigenIsToggled.value ? 'green' : '#eee'
   operatorType.value = eigenIsToggled.value ? 'eigen' : 'default'
-  
+
   console.log('nonregisteredDefaultOperators.value :>> ', nonregisteredDefaultOperators.value)
   console.log('registeredDefaultOperators.value :>> ', registeredDefaultOperators.value)
   
@@ -392,10 +392,34 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
         class="absolute top-0 left-0 w-full h-full bg-black/[0.2] rounded-[3px] flex items-center justify-center z-[2]"
       >
         <div class="card_container w-[80%] h-[90%] overflow-auto px-[30px] py-[20px]">
-          <div class="flex items-center gap-[10px] flex-wrap justify-between">
-            <h6 class="card_title">
-              Register Operator
-            </h6>
+          <div class="flex gap-[10px] flex-wrap justify-between">
+            <div class="flex flex-col">
+              <h6 class="card_title">
+                Register Operator
+              </h6>
+
+              <!-- Even Better Link to Operator Docs -->
+              <div
+                class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-15 py-9 mt-12 mb-4 w-[400px]"
+                role="alert"
+              >
+                <p class="text-sm">
+                  Learn how to set up a Casimir operator using
+                  <a
+                    href="https://docs.dev.casimir.co/"
+                    target="_blank"
+                    class="text-primary underline"
+                  >
+                    our docs
+                    <vue-feather
+                      type="external-link"
+                      size="14"
+                    />
+                  </a>.
+                </p>
+              </div>
+            </div>
+
             <div class="">
               <button
                 type="button"
@@ -411,17 +435,17 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
           </div>
           <form @submit.prevent="submitRegisterOperatorForm">
             <!-- Wallet address input -->
-            <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
               Wallet
             </h6>
-            <div class="card_input w-full max-w-[400px] relative">
+            <div class="card_input w-full max-w-[400px]">
               <input
                 id="walletAddress"
                 v-model="selectedWallet.address"
                 readonly
                 type="text"
                 placeholder="Wallet Address.."
-                class="outline-none text-grey_4 text-[12px] w-full cursor-pointer"
+                class="outline-none text-grey_4 text-[14px] w-full cursor-pointer"
                 @focus="openSelectWalletOptions = true"
                 @blur="onSelectWalletBlur"
               >
@@ -438,8 +462,8 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 v-show="openSelectWalletOptions"
                 class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
-                <h6 class="text-[12px]">
-                  Your Connected Wallets
+                <h6 class="text-[16px]">
+                  Your Connected4Wallets
                 </h6>
                 <button
                   v-for="act in user.accounts"
@@ -454,10 +478,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 </button>
               </div>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
-              Select your SSV owner address 
-            </div>
 
+            <!-- Enable Eigen Support -->
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
+              Add Eigen Support to Your Validator (Optional)
+            </h6>
             <div
               ref="confettiButton"
               class="toggle_container mt-10  w-full max-w-[400px] relative"
@@ -482,7 +507,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
             </div>
 
             <!-- operator id input -->
-            <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
               Operator ID
             </h6>
             <div
@@ -494,7 +519,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 type="text"
                 readonly
                 placeholder="Operator ID.."
-                class=" outline-none text-grey_4 text-[12px] w-full bg-white cursor-pointer"
+                class=" outline-none text-grey_4 text-[14px] w-full bg-white cursor-pointer"
                 autocomplete="off"
                 @focus="openSelectOperatorID = true"
                 @blur="onSelectOperatorIDBlur"
@@ -513,8 +538,8 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 v-show="openSelectOperatorID"
                 class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
-                <h6 class="text-[12px]">
-                  Avaliable Operators
+                <h6 class="text-[16px]">
+                  Avaliable Operators34
                 </h6>
                 <div
                   v-if="availableOperatorIDs.length === 0" 
@@ -536,20 +561,19 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 </button>
               </div>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
-              <!-- @chris `here` text needs a link to the ssv operator registry-->
+            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
               If no operators found with your SSV owner address, register one 
               <a
                 href=""
                 target="_blank"
                 class="text-primary underline"
               >here</a>.
-            </div>
+            </div> -->
 
-            <hr class="my-[20px]">
+            <!-- <hr class="my-[20px]"> -->
 
             <!-- public node url-->
-            <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
               Public Node URL
             </h6>
             <div class="card_input w-full max-w-[400px] relative">
@@ -559,7 +583,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 type="text"
                 placeholder="URL.."
                 autocomplete="off"
-                class=" outline-none text-grey_4 text-[12px] w-full"
+                class=" outline-none text-grey_4 text-[14px] w-full"
               >
               <button @click="selectedPublicNodeURL = ''">
                 <vue-feather
@@ -568,20 +592,19 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 />
               </button>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]  whitespace-normal">
-              <!-- @chris `here` text needs a link to the correct page-->
+            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px]  whitespace-normal">
               Add RockX DKG support to your node as documented
               <a
                 href=""
                 target="_blank"
                 class="text-primary underline"
               >here</a>.
-            </div>
+            </div> -->
 
-            <hr class="my-[20px]">
+            <!-- <hr class="my-[20px]"> -->
 
             <!-- Collateral-->
-            <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
               Collateral
             </h6>
             <div class="card_input w-full max-w-[400px] relative">
@@ -591,7 +614,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 type="text"
                 placeholder="0.00"
                 autocomplete="off"
-                class=" outline-none text-grey_4 text-[12px] w-full"
+                class=" outline-none text-grey_4 text-[14px] w-full"
                 @input="handleInputChangeCollateral"
               >
               <button
@@ -604,11 +627,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 />
               </button>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
+            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px]">
               Deposit at least 1 ETH per validator you plan to run.
-            </div>
+            </div> -->
 
-            <div class="flex justify-end mt-[20px]">
+            <div class="flex justify-end mt-[10px]">
               <button
                 type="submit"
                 class="export_button"
@@ -790,7 +813,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
 
 <style scoped>
 .card_input {
-    padding: 4px 10px;
+    padding: 0px 12px;
     background: #FFFFFF;
     border: 1px solid #D0D5DD;
     box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
@@ -805,7 +828,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
     line-height: 24px;
     letter-spacing: -0.01em;
     color: #101828;
-    margin-bottom: 6px;
+    /* margin-bottom: 6px; */
     height: 34px;
 }
 .dynamic_padding{
@@ -972,6 +995,8 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
     font-size: 18px;
     line-height: 0px;
     color: #101828;
+    margin-top: 16px;
+    margin-bottom: 16px;
 }
 .card_container{
     background: #FFFFFF;
@@ -979,7 +1004,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
     box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
     border-radius: 3px;
 }
-.title{
+.title {
     font-family: 'IBM Plex Sans';
     font-style: normal;
     font-weight: 500;
@@ -1035,8 +1060,6 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
     left: 150%;
   }
 }
-
-/* Eigen Button */
 .toggle-button {
   position: absolute;
   top: 50%;
