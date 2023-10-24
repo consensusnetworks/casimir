@@ -42,6 +42,7 @@ const stakingActionLoader = ref(false)
 const success = ref(false)
 const failure = ref(false)
 
+const eigenDisabled = ref(true) // Keeps eigen disabled until Casimir is ready to support it.
 const isShining = ref(true) // Determines if the shine effect is active
 const isToggled = ref(false) // Determines the toggle state
 const toggleBackgroundColor = ref('#eee')  // Initial color
@@ -453,7 +454,7 @@ const handleDeposit = async () => {
     <button
       ref="confettiButton"
       class="toggle_container"
-      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)"
+      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage && !eigenDisabled)"
       @click="toggleShineEffect"
     >
       <img
