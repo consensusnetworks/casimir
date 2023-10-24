@@ -15,9 +15,9 @@ let defaultManager: CasimirManager
 let defaultRegistry: CasimirRegistry
 let defaultViews: CasimirViews
 
-// let eigenManager: CasimirManager
-// let eigenRegistry: CasimirRegistry
-// let eigenViews: CasimirViews
+let eigenManager: CasimirManager
+let eigenRegistry: CasimirRegistry
+let eigenViews: CasimirViews
 
 const { getContracts } = useContracts()
 const { ethereumUrl, ssvNetworkAddress, ssvViewsAddress, usersUrl } = useEnvironment()
@@ -35,8 +35,10 @@ export default function useOperators() {
     const loadingRegisteredOperators = ref(false)
     const loadingRegisteredOperatorsError = ref(false)
 
-    const nonregisteredOperators = ref<Operator[]>([])
-    const registeredOperators = ref<Operator[]>([])
+    const nonregisteredDefaultOperators = ref<Operator[]>([])
+    const nonregisteredEigenOperators = ref<Operator[]>([])
+    const registeredDefaultOperators = ref<Operator[]>([])
+    const registeredEigenOperators = ref<Operator[]>([])
 
     async function addOperator({ address, nodeUrl }: { address: string, nodeUrl: string }) {
         try {
@@ -73,12 +75,32 @@ export default function useOperators() {
             ssvOperators.push(...userOperators)
         }
 
+        const defaultCasimirOperators = await _getRegisteredOperators(ssvOperators, 'default')
+        const eigenCasimirOperators = await _getRegisteredOperators(ssvOperators, 'eigen')
+        
+        const nonregDefaultOperators = ssvOperators.filter((operator: any) => {
+            const idRegistered = defaultCasimirOperators.find((registeredOperator: any) => registeredOperator.id === operator.id)
+            return !idRegistered
+        })
+        const nonregEigenOperators = ssvOperators.filter((operator: any) => {
+            const idRegistered = eigenCasimirOperators.find((registeredOperator: any) => registeredOperator.id === operator.id)
+            return !idRegistered
+        })
+
+        nonregisteredDefaultOperators.value = nonregDefaultOperators as Array<Operator>
+        nonregisteredEigenOperators.value = nonregEigenOperators as Array<Operator>
+        registeredDefaultOperators.value = defaultCasimirOperators as Array<RegisteredOperator>
+        registeredEigenOperators.value = eigenCasimirOperators as Array<RegisteredOperator>
+    }
+
+    async function _getRegisteredOperators(ssvOperators: Operator[], type: 'default' | 'eigen'): Promise<RegisteredOperator[]> {
         const casimirOperators: RegisteredOperator[] = []
+        const registry = type === 'default' ? defaultRegistry : eigenRegistry
         for (const operator of ssvOperators) {
-            const { active, collateral, poolCount, resharing } = await (defaultRegistry as CasimirRegistry).getOperator(operator.id)
+            const { active, collateral, poolCount, resharing } = await (registry as CasimirRegistry).getOperator(operator.id)
             const registered = active || collateral.gt(0) || poolCount.gt(0) || resharing
             if (registered) {
-                const pools = await _getPools(operator.id)
+                const pools = await _getPools(operator.id, type)
                 // TODO: Replace these Public Nodes URLs once we have this working again
                 const operatorStore = {
                     '208': 'https://nodes.casimir.co/eth/goerli/dkg/1',
@@ -102,26 +124,26 @@ export default function useOperators() {
                 })
             }
         }
-        
-        const nonregOperators = ssvOperators.filter((operator: any) => {
-            const idRegistered = casimirOperators.find((registeredOperator: any) => registeredOperator.id === operator.id)
-            return !idRegistered
-        })
-
-        nonregisteredOperators.value = nonregOperators as Array<Operator>
-        registeredOperators.value = casimirOperators as Array<RegisteredOperator>
+        return casimirOperators
     }
 
-    async function _getPools(operatorId: number): Promise<PoolConfig[]> {
+    async function _getPools(operatorId: number, type: 'default' | 'eigen'): Promise<PoolConfig[]> {
         const pools: PoolConfig[] = []
     
-        const poolIds = [
+        const defaultPoolIds = [
             ...await (defaultManager as CasimirManager).getPendingPoolIds(),
             ...await (defaultManager as CasimirManager).getStakedPoolIds()
         ]
+        const eigenPoolIds = [
+            ...await (eigenManager as CasimirManager).getPendingPoolIds(),
+            ...await (eigenManager as CasimirManager).getStakedPoolIds()
+        ]
+
+        const poolIds = type === 'default' ? defaultPoolIds : eigenPoolIds
+        const views = type === 'default' ? defaultViews : eigenViews
     
         for (const poolId of poolIds) {
-            const poolConfig = await (defaultViews as CasimirViews).getPoolConfig(poolId)
+            const poolConfig = await (views as CasimirViews).getPoolConfig(poolId)
             const pool = {
                 ...poolConfig,
                 operatorIds: poolConfig.operatorIds.map(id => id.toNumber()),
@@ -138,9 +160,13 @@ export default function useOperators() {
         try {
             /* Get Manager, Views, and Registry */
             const { defaultManager: managerContract, defaultRegistry: registryContract, defaultViews: viewsContract } = await getContracts()
+            const { eigenManager: eigenManagerContract, eigenRegistry: eigenRegistryContract, eigenViews: eigenViewsContract } = await getContracts()
             defaultManager = managerContract
             defaultRegistry = registryContract
             defaultViews = viewsContract
+            eigenManager = eigenManagerContract
+            eigenRegistry = eigenRegistryContract
+            eigenViews = eigenViewsContract
 
             loadingInitializeOperators.value = true
             listenForContractEvents()
@@ -155,7 +181,9 @@ export default function useOperators() {
 
     function listenForContractEvents() {
         try {
-            (defaultRegistry as CasimirRegistry).on('OperatorRegistered', () => getUserOperators())
+            (defaultRegistry as CasimirRegistry).on('OperatorRegistered', () => getUserOperators());
+            (eigenRegistry as CasimirRegistry).on('OperatorRegistered', () => getUserOperators())
+
             // (registry as CasimirRegistry).on('OperatorDeregistered', getUserOperators)
             // (registry as CasimirRegistry).on('DeregistrationRequested', getUserOperators)
         } catch (err) {
@@ -192,8 +220,10 @@ export default function useOperators() {
     }
 
     return { 
-        nonregisteredOperators: readonly(nonregisteredOperators),
-        registeredOperators: readonly(registeredOperators),
+        nonregisteredDefaultOperators: readonly(nonregisteredDefaultOperators),
+        nonregisteredEigenOperators: readonly(nonregisteredEigenOperators),
+        registeredDefaultOperators: readonly(registeredDefaultOperators),
+        registeredEigenOperators: readonly(registeredEigenOperators),
         loadingAddOperator: readonly(loadingAddOperator),
         loadingAddOperatorError: readonly(loadingAddOperatorError),
         loadingInitializeOperators: readonly(loadingInitializeOperators),

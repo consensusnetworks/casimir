@@ -452,26 +452,26 @@ const handleDeposit = async () => {
     <!-- Eigen Boggle -->
     <button
       ref="confettiButton"
-      class="toggle-container"
+      class="toggle_container"
       :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)"
       @click="toggleShineEffect"
     >
       <img
-        class="eigen-logo"
+        class="eigen_logo"
         src="/eigen.svg"
       >
       Enable EigenLayer
       <span
         v-if="isShining"
-        class="shine-effect"
+        class="shine_effect"
       />
       <div
-        class="toggle-button"
+        class="toggle_button"
         :style="{ 'background-color': toggleBackgroundColor }"
         :class="{ 'toggle-on': isToggled }"
         :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)"
       >
-        <div class="toggle-circle" />
+        <div class="toggle_circle" />
       </div>
     </button>
 
@@ -671,7 +671,7 @@ const handleDeposit = async () => {
 }
 
 /* Eigen Button */
-.toggle-container {
+.toggle_container {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -688,12 +688,12 @@ const handleDeposit = async () => {
   transition: background-color 0.3s; /* This will animate the color change */
 }
 
-.toggle-container:disabled {
+.toggle_container:disabled {
     background-color: rgba(26, 12, 109, 0.5); /* This makes the purple color lighter (grayed out) */
     /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
 }
 
-.shine-effect {
+.shine_effect {
   content: '';
   position: absolute;
   top: -50%;
@@ -718,7 +718,7 @@ const handleDeposit = async () => {
   }
 }
 
-.toggle-button {
+.toggle_button {
   position: absolute;
   top: 50%;
   right: 10px; /* space from the right edge */
@@ -731,11 +731,11 @@ const handleDeposit = async () => {
   overflow: hidden;
 }
 
-.card_container .toggle-container.toggle-on .toggle-button {
+.card_container .toggle_container.toggle-on .toggle_button {
     background-color: green !important;
 }
 
-.toggle-circle {
+.toggle_circle {
   position: absolute;
   top: 50%;
   left: 0;
@@ -747,11 +747,11 @@ const handleDeposit = async () => {
   transition: left 0.3s;
 }
 
-.toggle-on .toggle-circle {
+.toggle-on .toggle_circle {
   left: calc(100% - 30px);
 }
 
-.eigen-logo {
+.eigen_logo {
   height: 20px;
   margin-right: 10px;
 }

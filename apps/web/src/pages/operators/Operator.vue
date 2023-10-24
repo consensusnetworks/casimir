@@ -13,7 +13,16 @@ const { loadingSessionLogin } = useAuth()
 // const { detectActiveWalletAddress } = useEthers()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
-const {initializeOperatorComposable, nonregisteredOperators, registeredOperators, registerOperatorWithCasimir, loadingInitializeOperators, loadingAddOperator } = useOperators()
+const { 
+  initializeOperatorComposable,
+  registerOperatorWithCasimir,
+  nonregisteredDefaultOperators,
+  nonregisteredEigenOperators,
+  registeredDefaultOperators,
+  registeredEigenOperators,
+  loadingInitializeOperators,
+  loadingAddOperator 
+} = useOperators()
 const { user } = useUser()
 
 // Form inputs
@@ -24,6 +33,28 @@ const onSelectWalletBlur = () => {
         openSelectWalletOptions.value = false
     }, 200)
 }
+
+const operatorType = ref<'default' | 'eigen'>('default')
+const eigenIsShining = ref(true) // Determines if the shine effect is active
+const eigenIsToggled = ref(false) // Determines the toggle state
+const toggleBackgroundColor = ref('#eee')  // Initial color
+
+function toggleEigenLayerSupport() {
+  eigenIsToggled.value = !eigenIsToggled.value
+  toggleBackgroundColor.value = eigenIsToggled.value ? 'green' : '#eee'
+  operatorType.value = eigenIsToggled.value ? 'eigen' : 'default'
+  
+  console.log('nonregisteredDefaultOperators.value :>> ', nonregisteredDefaultOperators.value)
+  console.log('registeredDefaultOperators.value :>> ', registeredDefaultOperators.value)
+  
+  console.log('nonregisteredEigenOperators.value :>> ', nonregisteredEigenOperators.value)
+  console.log('registeredEigenOperators.value :>> ', registeredEigenOperators.value)
+  
+  console.log('operatorType.value :>> ', operatorType.value)
+  // Update stakeType
+  // stakeType.value = eigenIsToggled.value ? 'eigen' : 'default'
+}
+
 const selectedOperatorID = ref()
 const openSelectOperatorID = ref(false)
 const onSelectOperatorIDBlur = () => {
@@ -121,13 +152,34 @@ watch(selectedWallet, async () =>{
 
   if (selectedWallet.value.address === '') {
     availableOperatorIDs.value = []
-  } else if(nonregisteredOperators.value && nonregisteredOperators.value.length > 0) {
-    availableOperatorIDs.value = [...nonregisteredOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)}
+  } else if(operatorType.value === 'default') {
+    if (nonregisteredDefaultOperators.value && nonregisteredDefaultOperators.value.length > 0) {
+      availableOperatorIDs.value = [...nonregisteredDefaultOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
+    } else if (nonregisteredEigenOperators.value && nonregisteredEigenOperators.value.length > 0) {
+      availableOperatorIDs.value = [...nonregisteredEigenOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
+    } else {
+      availableOperatorIDs.value = []
+    }
+  }
 })
 
-watch(registeredOperators, () => {
+watch(registeredDefaultOperators, () => {
   openAddOperatorModal.value = false
-  tableData.value = [...registeredOperators.value].map((operator: any) => {
+  tableData.value = [...registeredDefaultOperators.value].map((operator: any) => {
+    return {
+      id: operator.id,
+      walletAddress: operator.ownerAddress,
+      collateral: operator.collateral + ' ETH',
+      poolCount: operator.poolCount,
+      nodeURL: operator.url
+    }
+  })
+  filterData()
+})
+
+watch(registeredEigenOperators, () => {
+  openAddOperatorModal.value = false
+  tableData.value = [...registeredEigenOperators.value].map((operator: any) => {
     return {
       id: operator.id,
       walletAddress: operator.ownerAddress,
@@ -404,6 +456,29 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
             </div>
             <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
               Select your SSV owner address 
+            </div>
+
+            <div
+              ref="confettiButton"
+              class="toggle_container mt-10  w-full max-w-[400px] relative"
+              @click="toggleEigenLayerSupport"
+            >
+              <img
+                class="eigen-logo"
+                src="/eigen.svg"
+              >
+              Enable EigenLayer Support
+              <span
+                v-if="eigenIsShining"
+                class="shine-effect"
+              />
+              <div
+                class="toggle-button"
+                :style="{ 'background-color': toggleBackgroundColor }"
+                :class="{ 'toggle-on': eigenIsToggled }"
+              >
+                <div class="toggle-circle" />
+              </div>
             </div>
 
             <!-- operator id input -->
@@ -912,5 +987,91 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
     line-height: 31px;
     letter-spacing: -0.03em;
     color: #FFFFFF;
+}
+
+/* Eigen Button */
+.toggle_container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 10px; /* space from the left edge */
+  position: relative;
+  height: 44px; /* adjust as needed if required */
+  background-color: rgb(26 12 109);
+  overflow: hidden;
+  text-align: center;
+  color: #fff; /* or any suitable color for better visibility */
+  font-size: 14px; /* adjust based on preference */
+  border-radius: 8px;
+  transition: background-color 0.3s; /* This will animate the color change */
+}
+
+.toggle_container:disabled {
+    background-color: rgba(26, 12, 109, 0.5); /* This makes the purple color lighter (grayed out) */
+    /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
+}
+
+.shine-effect {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -150%;
+  width: 200%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: rotate(30deg);
+  pointer-events: none;
+  animation: shine 2.5s infinite;
+}
+
+@keyframes shine {
+  0% {
+    left: -150%;
+  }
+  50% {
+    left: 150%;
+  }
+  100% {
+    left: 150%;
+  }
+}
+
+/* Eigen Button */
+.toggle-button {
+  position: absolute;
+  top: 50%;
+  right: 10px; /* space from the right edge */
+  transform: translateY(-50%);
+  width: 50px;
+  height: 25px;
+  background-color: #eee;
+  border-radius: 15px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.card_container .toggle_container.toggle-on .toggle-button {
+    background-color: green !important;
+}
+
+.toggle-circle {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: left 0.3s;
+}
+
+.toggle-on .toggle-circle {
+  left: calc(100% - 30px);
+}
+
+.eigen-logo {
+  height: 20px;
+  margin-right: 10px;
 }
 </style>@/composables/files@/composables/user
