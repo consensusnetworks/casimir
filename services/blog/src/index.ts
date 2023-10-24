@@ -44,6 +44,10 @@ app.get('/articles/:id', async (req, res) => {
     }
 })
 
+app.get('/health', (_req, res) => {
+    res.status(200).send('OK')
+})
+
 app.listen(4001, () => {
     console.log('Blog server listening on port 4001')
 })
