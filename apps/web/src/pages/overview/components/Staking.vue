@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Ref, ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
 import useStaking from '@/composables/staking'
@@ -23,6 +23,7 @@ const currentEthPrice = ref(0)
 const stakeType = ref<'default' | 'eigen'>('default')
 const currentUserStake = ref(0)
 const estimatedFees = ref<number | string>('-')
+const estimatedAPY = ref<string>('4.00')
 const formattedAmountToStake = ref('')
 const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
 const selectedStakingProvider = ref<ProviderString>('')
@@ -48,6 +49,7 @@ const toggleBackgroundColor = ref('#eee')  // Initial color
 const toggleShineEffect = () => {
   isToggled.value = !isToggled.value
   isShining.value = isToggled.value
+  // toggleEstimatedAPY()
 
   // Change the color based on the toggle state
   toggleBackgroundColor.value = isToggled.value ? 'green' : '#eee'
@@ -71,6 +73,14 @@ const triggerConfetti = () => {
       spread: 100,
       origin: { x: x, y: y }
     })
+  }
+}
+
+function toggleEstimatedAPY() {
+  if (estimatedAPY.value === '5.50') {
+    estimatedAPY.value = '10.00'
+  } else {
+    estimatedAPY.value = '5.50'
   }
 }
 
@@ -256,6 +266,8 @@ const handleDeposit = async () => {
 
   if (result) {
     const waitResponse = await result.wait(1)
+    isToggled.value = false
+    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     if (waitResponse){
       alert('Your Stake Has Been Deposited!')
     } else {
@@ -417,7 +429,7 @@ const handleDeposit = async () => {
         </h6>
       </div>
       <h6 class="card_analytics_amount">
-        5.50%
+        {{ estimatedAPY }}%
       </h6>
     </div>
 
