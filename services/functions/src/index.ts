@@ -3,6 +3,7 @@ import { getEventsIterable } from '@casimir/events'
 import { getStartBlock, updateErrorLog, updateStartBlock } from '@casimir/logs'
 import { fulfillRequestHandler } from './providers/handlers'
 import { ethers } from 'ethers'
+import { HandlerInput } from './interfaces/HandlerInput'
 
 const config = getConfig()
 
@@ -35,9 +36,8 @@ const eventsIterable = getEventsIterable({
     startBlock
 })
 
-const handlers: Record<string, (input: ethers.utils.Result) => Promise<void>> = {}
-for (const contractName in contracts) {
-    const contract = contracts[contractName as keyof typeof contracts]
+const handlers: Record<string, (input: HandlerInput) => Promise<void>> = {}
+for (const contract of Object.values(contracts)) {
     for (const [event, handler] of Object.entries(contract.events)) {
         handlers[event as keyof typeof handlers] = handler
     }
@@ -46,13 +46,13 @@ for (const contractName in contracts) {
 void async function () {
     try {
         for await (const event of eventsIterable) {
-            const details = event?.[event.length - 1] as ethers.Event
-            const input = details.args as ethers.utils.Result
-            const handler = handlers[details.event as string]
-            if (!handler) throw new Error(`No handler found for event ${details.event}`)
-            await handler(input)
+            console.log(`Received ${event.event} event from ${event.address}`)
+            const args = event.args as ethers.utils.Result
+            const handler = handlers[event.event as string]
+            if (!handler) throw new Error(`No handler found for event ${event.event}`)
+            await handler({ args })
             if (process.env.USE_LOGS === 'true') {
-                updateStartBlock('block.log', details.blockNumber)
+                updateStartBlock('block.log', event.blockNumber)
             }
         }
     } catch (error) {

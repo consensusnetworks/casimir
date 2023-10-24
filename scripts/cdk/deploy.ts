@@ -13,8 +13,9 @@ void async function () {
     await loadCredentials()
     process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')
 
-    process.env.BLOG_URL = `https://blog.${process.env.STAGE}.casimir.co`
-    process.env.USERS_URL = `https://users.${process.env.STAGE}.casimir.co`
+    process.env.BLOG_URL = process.env.STAGE === 'prod' ? 'https://blog.casimir.co' : `https://blog.${process.env.STAGE}.casimir.co`
+    process.env.DOCS_URL = process.env.STAGE === 'prod' ? 'https://docs.casimir.co' : `https://docs.${process.env.STAGE}.casimir.co`
+    process.env.USERS_URL = process.env.STAGE === 'prod' ? 'https://users.casimir.co' : `https://users.${process.env.STAGE}.casimir.co`
     process.env.CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
 
     const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'

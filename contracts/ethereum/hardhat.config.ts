@@ -55,13 +55,7 @@ if (hardhatNetwork !== 'localhost') {
 const compilerSettings = {
     viaIR: true,
     optimizer: {
-        enabled: true,
-        runs: 1,
-        details: {
-            yulDetails: {
-                optimizerSteps: 'u'
-            }
-        }
+        enabled: true
     }
 }
 const compilerVersions = ['0.8.18']

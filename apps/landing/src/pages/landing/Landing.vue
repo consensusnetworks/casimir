@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL
 const faqItems = ref(
   [
     {
@@ -331,7 +331,7 @@ const toggleQuestionItem = (index: number) => {
         <ul>
           <li>
             <a
-              href="https://docs.casimir.co"
+              :href="docsUrl"
               target="_blank"
             >Documentation</a>
           </li>
