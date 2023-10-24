@@ -88,7 +88,7 @@ export default function useStaking() {
         }
     }
 
-    async function withdraw({ amount, walletProvider }: { amount: string, walletProvider: ProviderString }) {
+    async function withdraw({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: 'default' | 'eigen' }) {
         let signer
         if (ethersProviderList.includes(walletProvider)) {
             signer = getEthersBrowserSigner(walletProvider)
@@ -101,6 +101,7 @@ export default function useStaking() {
         } else {
             throw new Error(`Invalid wallet provider: ${walletProvider}`)
         }
+        const manager = type === 'default' ? defaultManager : eigenManager
         const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
         // const withdrawableBalance = await (manager as CasimirManager).getWithdrawableBalance()

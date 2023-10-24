@@ -64,7 +64,7 @@ export class DocsStack extends cdk.Stack {
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 origin: new cloudfrontOrigins.S3Origin(bucket, { originAccessIdentity })
             },
-            domainNames: [`${subdomains.web}.${rootDomain}`]
+            domainNames: [`${subdomains.docs}.${rootDomain}`]
         })
 
         new s3Deployment.BucketDeployment(this, config.getFullStackResourceName(this.name, 'bucket-deployment'), {

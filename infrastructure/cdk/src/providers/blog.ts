@@ -40,7 +40,7 @@ export class BlogStack extends cdk.Stack {
             domainName: `${subdomains.blog}.${rootDomain}`, // e.g. blog.casimir.co or blog.dev.casimir.co
             domainZone: hostedZone,
             taskImageOptions: {
-                containerPort: 4000,
+                containerPort: 4001,
                 image: ecs.ContainerImage.fromDockerImageAsset(imageAsset),
                 environment: {
                     PROJECT: project,

@@ -23,7 +23,7 @@ export async function deploymentFixture() {
     if (!process.env.WETH_TOKEN_ADDRESS) throw new Error('No weth token address provided')
 
     const [, daoOracle, donTransmitter] = await ethers.getSigners()
-    
+
     const functionsOracleFactoryFactory = await ethers.getContractFactory('FunctionsOracleFactory')
     const functionsOracleFactory = await functionsOracleFactoryFactory.deploy() as FunctionsOracleFactory
     await functionsOracleFactory.deployed()
