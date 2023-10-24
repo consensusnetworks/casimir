@@ -457,6 +457,11 @@ const handleDeposit = async () => {
       :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage && !eigenDisabled)"
       @click="toggleShineEffect"
     >
+      <div class="tooltip_container">
+        Coming Soon!
+        <div class="tooltip_triangle" />
+      </div>
+
       <img
         class="eigen_logo"
         src="/eigen.svg"
@@ -681,7 +686,7 @@ const handleDeposit = async () => {
   width: 100%; /* takes full width of parent container */
   height: 44px; /* adjust as needed if required */
   background-color: rgb(26 12 109);
-  overflow: hidden;
+  /* overflow: hidden; */
   text-align: center;
   color: #fff; /* or any suitable color for better visibility */
   font-size: 14px; /* adjust based on preference */
@@ -694,7 +699,7 @@ const handleDeposit = async () => {
     /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
 }
 
-.shine_effect {
+/* .shine_effect {
   content: '';
   position: absolute;
   top: -50%;
@@ -717,7 +722,7 @@ const handleDeposit = async () => {
   100% {
     left: 150%;
   }
-}
+} */
 
 .toggle_button {
   position: absolute;
@@ -757,4 +762,36 @@ const handleDeposit = async () => {
   margin-right: 10px;
 }
 
+.tooltip_container {
+  position: absolute;
+  bottom: 100%; /* position it above the button */
+  left: 50%; /* center it horizontally */
+  transform: translateX(-50%); /* shift it back by half its width to truly center it */
+  padding: 8px 12px; /* space around the text */
+  background-color: #000; /* or any desired tooltip color */
+  color: #fff; /* text color */
+  border-radius: 4px; /* round the corners */
+  opacity: 0; /* starts hidden */
+  transition: opacity 0.3s; /* smooth fade in */
+  white-space: nowrap; /* prevents the text from wrapping */
+  font-size: 12px;
+  pointer-events: none; /* ensures it doesn't block any interactions */
+  z-index: 10; /* positions it above other elements */
+}
+
+.toggle_container:hover .tooltip_container {
+  opacity: 1; /* show on hover */
+}
+
+.tooltip_triangle {
+  position: absolute;
+  bottom: -5px; /* position at the bottom of the tooltip */
+  left: 50%; /* center it horizontally */
+  transform: translateX(-50%); /* shift it back by half its width to truly center it */
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #000; /* same color as the tooltip background */
+}
 </style>@/composables/user@/composables/staking
