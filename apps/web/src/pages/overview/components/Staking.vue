@@ -50,6 +50,9 @@ const toggleShineEffect = () => {
 
   // Change the color based on the toggle state
   toggleBackgroundColor.value = isToggled.value ? 'green' : '#eee'
+
+  // Update stakeType
+  stakeType.value = isToggled.value ? 'eigen' : 'default'
 }
 
 
