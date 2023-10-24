@@ -2,20 +2,22 @@
 import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
 import { ProviderString } from '@casimir/types'
-import useContracts from '@/composables/contracts'
+import useAuth from '@/composables/auth'
+// import useEthers from '@/composables/ethers'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
-import useUsers from '@/composables/users'
-import useWallets from '@/composables/wallet'
+import useOperators from '@/composables/operators'
+import useUser from '@/composables/user'
 
-const { getUserOperators, registerOperatorWithCasimir, loadingRegisteredOperators, nonregisteredOperators, registeredOperators } = useContracts()
+const { loadingSessionLogin } = useAuth()
+// const { detectActiveWalletAddress } = useEthers()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
-const { openWalletsModal } = useWallets()
-const { user } = useUsers()
+const {initializeOperatorComposable, nonregisteredOperators, registeredOperators, registerOperatorWithCasimir, loadingInitializeOperators, loadingAddOperator } = useOperators()
+const { user } = useUser()
 
 // Form inputs
-const selectedWallet = ref({address: '', wallet_provider: ''})
+const selectedWallet = ref<{address: string, walletProvider: ProviderString}>({address: '', walletProvider: ''})
 const openSelectWalletOptions = ref(false)
 const onSelectWalletBlur = () => {
     setTimeout(() =>{
@@ -29,7 +31,7 @@ const onSelectOperatorIDBlur = () => {
         openSelectOperatorID.value = false
     }, 200)
 }
-// @chris need a way to find out possible operators on selecting a wallet address
+
 const availableOperatorIDs = ref([] as string[])
 const selectedPublicNodeURL = ref('')
 const selectedCollateral = ref()
@@ -39,7 +41,7 @@ const itemsPerPage = ref(10)
 const currentPage = ref(1)
 const totalPages = ref(1)
 const searchInput = ref('')
-const selectedHeader = ref('wallet_provider')
+const selectedHeader = ref('walletProvider')
 const selectedOrientation = ref('ascending')
 const operatorTableHeaders = ref(
   [
@@ -87,10 +89,8 @@ const submitButtonTxt = ref('Submit')
 
 onMounted(async () => {
   if (user.value) {
-    await getUserOperators()
-    const primaryAccount = user.value.accounts.find(item => { return item.address === user.value?.address})
-    selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
 
+    await initializeOperatorComposable()
 
     // Autofill disable
     const disableAutofill = () => {
@@ -101,7 +101,6 @@ onMounted(async () => {
     }
 
     document.addEventListener('DOMContentLoaded', disableAutofill)
-    //
 
     filterData()
   }
@@ -109,11 +108,8 @@ onMounted(async () => {
 
 watch(user, async () => {
   if (user.value) {
-    await getUserOperators()
-    if (selectedWallet.value.address === ''){
-      const primaryAccount = user.value.accounts.find(item => { item.address === user.value?.address})
-      selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
-    }
+    await initializeOperatorComposable()
+
     filterData()
   }
 })
@@ -123,11 +119,9 @@ watch(selectedWallet, async () =>{
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
 
-  await getUserOperators()
-
   if (selectedWallet.value.address === '') {
     availableOperatorIDs.value = []
-  } else {
+  } else if(nonregisteredOperators.value && nonregisteredOperators.value.length > 0) {
     availableOperatorIDs.value = [...nonregisteredOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)}
 })
 
@@ -145,9 +139,24 @@ watch(registeredOperators, () => {
   filterData()
 })
 
+watch(openAddOperatorModal, () =>{
+  if(openAddOperatorModal.value){
+    selectedWallet.value = {address: user.value?.address as string, walletProvider: user.value?.walletProvider as ProviderString}
+  }
+})
+
 watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
   filterData()
 })
+
+
+
+const openWalletsModal = () => {
+  const el = document.getElementById('connect_wallet_button')
+  if (el) {
+    el.click()
+  }
+}
 
 const handleInputChangeCollateral = (event: any) => {
     const value = event.target.value.replace(/[^\d.]/g, '')
@@ -173,7 +182,7 @@ const filterData = () => {
     filteredDataArray = tableData.value.filter((item: any) => {
       return (
         // Might need to modify to match types each variable
-        // item.wallet_provider?.toLowerCase().includes(searchTerm) 
+        // item.walletProvider?.toLowerCase().includes(searchTerm) 
         true
       )
     })
@@ -205,14 +214,33 @@ const removeItemFromCheckedList = (item:any) => {
   }
 }
 
+const allInputsValid = ref(false)
+
+watch([selectedWallet, selectedOperatorID, selectedPublicNodeURL, selectedCollateral], ()=>{
+  if(selectedWallet.value.address !== '' && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== '' && selectedCollateral.value !== undefined) {
+    allInputsValid.value = true
+  } else {
+    allInputsValid.value = false
+  }
+})
+
 async function submitRegisterOperatorForm() {
+  const selectedAddress = selectedWallet.value.address
+  const selectedProvider = selectedWallet.value.walletProvider
+
+  // const activeAddress = await detectActiveWalletAddress(selectedProvider)
+  // if (activeAddress !== selectedAddress) {
+  //   return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
+  // }
+  
   try {
-    await registerOperatorWithCasimir(
-      selectedWallet.value.wallet_provider as ProviderString, 
-      selectedWallet.value.address, 
-      parseInt(selectedOperatorID.value), 
-      selectedCollateral.value 
-    )
+    await registerOperatorWithCasimir({
+      walletProvider: selectedWallet.value.walletProvider as ProviderString, 
+      address: selectedWallet.value.address,
+      operatorId: parseInt(selectedOperatorID.value), 
+      collateral: selectedCollateral.value,
+      nodeUrl: selectedPublicNodeURL.value
+    })
     openAddOperatorModal.value = false
   } catch (error) {
     console.log('Error in submitRegisterOperatorForm :>> ', error)
@@ -221,7 +249,7 @@ async function submitRegisterOperatorForm() {
 
   if (selectedWallet.value.address === '') {
       const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address})
-      selectedWallet.value = {address: primaryAccount?.address as string, wallet_provider: primaryAccount?.walletProvider as string}
+      selectedWallet.value = {address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString}
   }
   selectedOperatorID.value = ''
   selectedPublicNodeURL.value = ''
@@ -229,20 +257,42 @@ async function submitRegisterOperatorForm() {
   availableOperatorIDs.value = []
 }
 
+const showSkeleton = ref(true)
+
+watch([loadingSessionLogin || loadingInitializeOperators], () =>{
+  setTimeout(() => {
+    if(loadingSessionLogin || loadingInitializeOperators){
+      showSkeleton.value = false
+    }
+  }, 500)
+})
+
 </script>
 
 <template>
   <div class="px-[60px] 800s:px-[5%] pt-[51px]">
     <div class="flex items-start gap-[20px] justify-between flex-wrap mb-[30px]">
-      <h6 class="title">
+      <h6 class="title relative">
+        <div
+          v-show="showSkeleton"
+          class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+        >
+          <div class="skeleton_box" />
+        </div>
         Operators
       </h6>
 
       <button
-        class="flex items-center gap-[8px] export_button  hover:text-blue_3 hover:border-blue_3"
+        class="flex items-center gap-[8px] export_button  hover:text-blue_3 hover:border-blue_3 h-[38px] relative"
         :disabled="!user?.accounts"
         @click="openAddOperatorModal = true"
       >
+        <div
+          v-show="showSkeleton"
+          class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+        >
+          <div class="skeleton_box" />
+        </div>
         <vue-feather
           type="plus"
           class="icon w-[17px] h-min"
@@ -254,13 +304,19 @@ async function submitRegisterOperatorForm() {
     <div
       v-if="!user?.address"
       class="card_container w-full px-[32px] py-[31px]
-       text-grey_4 flex items-center justify-center"
+       text-grey_4 flex items-center justify-center relative"
       style="min-height: calc(100vh - 420px);"
     >
+      <div
+        v-show="showSkeleton"
+        class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+      >
+        <div class="skeleton_box" />
+      </div>
       <div class="border rounded-[3px] border-grey_1 border-dashed p-[10%] text-center">
         <button
           class="text-primary underline"
-          @click="openWalletsModal = true"
+          @click="openWalletsModal"
         >
           Connect wallet
         </button> to view and register operators... 
@@ -272,6 +328,12 @@ async function submitRegisterOperatorForm() {
       class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap relative"
       style="min-height: calc(100vh - 320px); height: 500px;"
     >
+      <div
+        v-show="showSkeleton"
+        class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+      >
+        <div class="skeleton_box" />
+      </div>
       <!-- Form -->
       <div
         v-if="openAddOperatorModal"
@@ -313,17 +375,16 @@ async function submitRegisterOperatorForm() {
               >
               <button
                 type="button"
-                @click="selectedWallet = { wallet_provider: '', address: ''}"
+                @click="selectedWallet = { walletProvider: '', address: ''}"
               >
                 <vue-feather
                   type="x"
-                  size=""
                   class="icon w-[12px] h-min"
                 />
               </button>
               <div
                 v-show="openSelectWalletOptions"
-                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white"
+                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
                 <h6 class="text-[12px]">
                   Your Connected Wallets
@@ -334,16 +395,10 @@ async function submitRegisterOperatorForm() {
                   type="button"
                   class="border-y border-y-grey_1 hover:border-y-grey_3
                    text-grey_4 my-[10px] w-full flex justify-between truncate"
-                  @click="selectedWallet = {address: act.address, wallet_provider: act.walletProvider}"
+                  @click="selectedWallet = {address: act.address, walletProvider: act.walletProvider}, openSelectWalletOptions = false"
                 >
                   <span>{{ act.walletProvider }}</span>
                   <span>{{ convertString(act.address) }}</span>
-                </button>
-                <button
-                  class="text-primary underline"
-                  @click="openWalletsModal = true"
-                >
-                  Connect Wallet
                 </button>
               </div>
             </div>
@@ -381,7 +436,7 @@ async function submitRegisterOperatorForm() {
               </button> -->
               <div
                 v-show="openSelectOperatorID"
-                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white"
+                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
                 <h6 class="text-[12px]">
                   Avaliable Operators
@@ -434,7 +489,6 @@ async function submitRegisterOperatorForm() {
               <button @click="selectedPublicNodeURL = ''">
                 <vue-feather
                   type="x"
-                  size=""
                   class="icon w-[12px] h-min"
                 />
               </button>
@@ -471,7 +525,6 @@ async function submitRegisterOperatorForm() {
               >
                 <vue-feather
                   type="x"
-                  size=""
                   class="icon w-[12px] h-min"
                 />
               </button>
@@ -484,8 +537,9 @@ async function submitRegisterOperatorForm() {
               <button
                 type="submit"
                 class="export_button"
+                :disabled="!allInputsValid"
               >
-                <span v-if="loadingRegisteredOperators">Submitting</span>
+                <span v-if="loadingAddOperator">Submitting</span>
                 <span v-else>Submit</span>
               </button>
             </div>
@@ -507,7 +561,7 @@ async function submitRegisterOperatorForm() {
         </div>
         <div class="flex items-start gap-[12px]">
           <button
-            class="flex items-center gap-[8px] export_button"
+            class="flex items-center gap-[8px] export_button h-[38px]"
             @click="exportFile(checkedItems, filteredData)"
           >
             <vue-feather
@@ -677,6 +731,7 @@ async function submitRegisterOperatorForm() {
     letter-spacing: -0.01em;
     color: #101828;
     margin-bottom: 6px;
+    height: 34px;
 }
 .dynamic_padding{
   padding: 12px 24px;
@@ -858,4 +913,4 @@ async function submitRegisterOperatorForm() {
     letter-spacing: -0.03em;
     color: #FFFFFF;
 }
-</style>@/composables/files
+</style>@/composables/files@/composables/user

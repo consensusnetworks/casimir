@@ -26,8 +26,19 @@ export interface NodesStackProps extends cdk.StackProps {
     hostedZone: route53.HostedZone
 }
 
+export interface BlogStackProps extends cdk.StackProps {
+    certificate: certmgr.Certificate
+    hostedZone: route53.HostedZone
+    vpc: ec2.Vpc
+}
+
 export interface UsersStackProps extends cdk.StackProps {
     certificate: certmgr.Certificate
     hostedZone: route53.HostedZone
     vpc: ec2.Vpc
+}
+
+export interface DocsStackProps extends cdk.StackProps {
+    certificate: certmgr.Certificate
+    hostedZone: route53.HostedZone
 }

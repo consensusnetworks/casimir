@@ -8,21 +8,25 @@
             "type": "integer",
             "description": "The ID of the account the operator belongs to (FK)"
         },
-        "id": {
-            "type": "serial",
-            "description": "The operator ID (PK)"
-        },
-        "user_id": {
-            "type": "integer",
-            "description": "The ID of the user who is an operator (FK)"
-        },
         "created_at": {
             "type": "string",
             "description": "The operator creation date in ISO 8601 format"
         },
+        "id": {
+            "type": "serial",
+            "description": "The operator ID (PK)"
+        },
+        "node_url": {
+            "type": "string",
+            "description": "The operator node URL submitted by user"
+        },
         "updated_at": {
             "type": "string",
             "description": "The operator last update date in ISO 8601 format"
+        },
+        "user_id": {
+            "type": "integer",
+            "description": "The ID of the user who is an operator (FK)"
         }
     },
     "required": [

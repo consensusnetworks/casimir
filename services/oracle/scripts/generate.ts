@@ -1,83 +1,93 @@
 import fs from 'fs'
 import { ethers } from 'ethers'
-import { fetchRetry, run } from '@casimir/helpers'
-import { Validator } from '@casimir/types'
+import { run } from '@casimir/shell'
 import { Dkg } from '../src/providers/dkg'
-import { validatorStore } from '@casimir/data'
+import { MOCK_VALIDATORS/*, MOCK_RESHARES*/ } from '@casimir/env'
+import { Validator/*, Reshare*/ } from '@casimir/types'
 
 /**
  * Generate validator keys for ethereum testing
  */
 void async function () {
-    const outputPath = '../../common/data/src/mock'
-    const resourceDir = 'scripts/resources'
+    const outputPath = '../../common/env/src/mock'
 
-    process.env.CLI_PATH = process.env.CLI_PATH || `./${resourceDir}/rockx-dkg-cli/build/bin/rockx-dkg-cli`
-    process.env.MESSENGER_URL = process.env.MESSENGER_URL || 'https://nodes.casimir.co/eth/goerli/dkg/messenger'
-    process.env.MESSENGER_SRV_ADDR = process.env.MESSENGER_URL
-    process.env.USE_HARDCODED_OPERATORS = 'false'
+    process.env.CLI_PATH = process.env.CLI_PATH || './lib/dkg/bin/ssv-dkg'
+    process.env.CONFIG_PATH = process.env.CONFIG_PATH || './config/example.dkg.initiator.yaml'
 
     process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
-    if (!process.env.MANAGER_ADDRESS) throw new Error('No manager address set')
-    if (!process.env.VIEWS_ADDRESS) throw new Error('No views address set')
-    process.env.LINK_TOKEN_ADDRESS = '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
-    process.env.SSV_NETWORK_ADDRESS = '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3'
-    process.env.SSV_NETWORK_VIEWS_ADDRESS = '0x8dB45282d7C4559fd093C26f677B3837a5598914'
-    process.env.SSV_TOKEN_ADDRESS = '0x3a9f01091C446bdE031E39ea8354647AFef091E7'
-    process.env.UNISWAP_V3_FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
-    process.env.WETH_TOKEN_ADDRESS = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
+    
+    if (!process.env.FACTORY_ADDRESS) throw new Error('No factory address provided')
 
-    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [654, 655, 656, 657]
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [208, 209, 210, 211/*, 212, 213, 214, 215*/]
     if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
 
-    const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, 'm/44\'/60\'/0\'/0/6')
-    const daoOracleAddress = wallet.address
+    const accountPath = 'm/44\'/60\'/0\'/0/1'
+    const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, accountPath)
 
     const validatorCount = 4
-    if (!validatorStore[daoOracleAddress] || Object.keys(validatorStore[daoOracleAddress]).length < validatorCount) {
-        const dkg = await run(`which ${process.env.CLI_PATH}`) as string
-        if (!dkg || dkg.includes('not found')) {
-            await run(`GOWORK=off make -C ${resourceDir}/rockx-dkg-cli build`)
-        }
-        const ping = await fetchRetry(`${process.env.MESSENGER_URL}/ping`)
-        const { message } = await ping.json()
-        if (message !== 'pong') throw new Error('Dkg service is not running')
+    if (!MOCK_VALIDATORS[wallet.address] || Object.keys(MOCK_VALIDATORS[wallet.address]).length < validatorCount) {
+        await run('GOWORK=off make -C lib/dkg build') 
 
+        const managerAddress = ethers.utils.getContractAddress({
+            from: process.env.FACTORY_ADDRESS,
+            nonce: 1
+        })
         let managerNonce = 3
         let ownerNonce = 0
 
         const newValidators: Validator[] = []
+        // const newReshares: Reshare[] = []
 
         for (let i = 0; i < validatorCount; i++) {
+            const poolId = i + 1
+            console.log('🤖 Creating deposit for', poolId)
 
             const poolAddress = ethers.utils.getContractAddress({
-                from: process.env.MANAGER_ADDRESS,
+                from: managerAddress,
                 nonce: managerNonce
             })
 
             const selectedOperatorIds = preregisteredOperatorIds.slice(0, 4)
 
-            const cli = new Dkg({
+            const dkg = new Dkg({
                 cliPath: process.env.CLI_PATH,
-                messengerUrl: process.env.MESSENGER_URL
+                configPath: process.env.CONFIG_PATH,
             })
 
-            const validator = await cli.createValidator({
-                poolId: i + 1,
+            const validator = await dkg.init({
+                poolId,
                 operatorIds: selectedOperatorIds,
-                ownerAddress: process.env.MANAGER_ADDRESS,
+                ownerAddress: managerAddress,
                 ownerNonce,
                 withdrawalAddress: poolAddress
             })
 
             newValidators.push(validator)
 
+            // for (let j = 0; j < 2; j++) {
+            //     const oldOperatorIds = selectedOperatorIds.slice(1)
+            //     const reshareOperatorIds = preregisteredOperatorIds.slice(0, 3).concat(preregisteredOperatorIds[4])
+
+            //     const reshare = await dkg.reshare({
+            //         oldOperatorIds,
+            //         operatorIds: reshareOperatorIds,
+            //         ownerAddress: managerAddress,
+            //         ownerNonce,
+            //         poolId,
+            //         publicKey: validator.publicKey,
+            //         withdrawalAddress: poolAddress
+            //     })
+            //     newReshares.push(reshare)
+            // }
+            // reshareStore[poolId] = newReshares
+
             managerNonce++
             ownerNonce++
         }
 
-        validatorStore[daoOracleAddress] = newValidators
+        MOCK_VALIDATORS[wallet.address] = newValidators
 
-        fs.writeFileSync(`${outputPath}/validator.store.json`, JSON.stringify(validatorStore, null, 4))
+        fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify(MOCK_VALIDATORS))
+        // fs.writeFileSync(`${outputPath}/reshares.json`, JSON.stringify(MOCK_RESHARES))
     }
 }()

@@ -50,5 +50,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     })
 })
 
-app.listen(4000)
-console.log('Users server listening on port 4000')
+app.listen(4000, () => {
+    console.log('Users server listening on port 4000')
+})

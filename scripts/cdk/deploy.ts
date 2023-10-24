@@ -1,5 +1,6 @@
 import { getSecret, loadCredentials } from '@casimir/aws'
-import { run } from '@casimir/helpers'
+import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
+import { run } from '@casimir/shell'
 
 /**
  * Deploy CDK stacks
@@ -12,18 +13,30 @@ void async function () {
     await loadCredentials()
     process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')
 
-    process.env.ETHEREUM_RPC_URL = 'https://nodes.casimir.co/eth/hardhat'
-    process.env.USERS_URL = `https://users.${process.env.STAGE}.casimir.co`
+    process.env.BLOG_URL = process.env.STAGE === 'prod' ? 'https://blog.casimir.co' : `https://blog.${process.env.STAGE}.casimir.co`
+    process.env.DOCS_URL = process.env.STAGE === 'prod' ? 'https://docs.casimir.co' : `https://docs.${process.env.STAGE}.casimir.co`
+    process.env.USERS_URL = process.env.STAGE === 'prod' ? 'https://users.casimir.co' : `https://users.${process.env.STAGE}.casimir.co`
+    process.env.CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
 
-    process.env.PUBLIC_MANAGER_ADDRESS = '0x5d35a44Db8a390aCfa997C9a9Ba3a2F878595630'
-    process.env.PUBLIC_VIEWS_ADDRESS = '0xC88C4022347305336E344e624E5Fa4fB8e61c21E'
-    process.env.PUBLIC_REGISTRY_ADDRESS = '0xB567C0E87Ec176177E44C91577704267C24Fbd83'
-    process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
+    const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
+    process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
+    process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FACTORY_ADDRESS
+    process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_NETWORK_ADDRESS
+    process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
+    
+    process.env.PUBLIC_BLOG_URL = process.env.BLOG_URL
     process.env.PUBLIC_USERS_URL = process.env.USERS_URL
+    process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
+    process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
+    process.env.PUBLIC_FACTORY_ADDRESS = process.env.FACTORY_ADDRESS
+    process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
+    process.env.PUBLIC_SSV_VIEWS_ADDRESS = process.env.SSV_VIEWS_ADDRESS
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
+    process.env.PUBLIC_WALLET_CONNECT_PROJECT_ID = await getSecret('casimir-wallet-connect-project-id')
     
     await run('npm run build --workspace @casimir/ethereum')
-    await run('npm run build:docs --workspace @casimir/ethereum')
+    await run('npm run docgen --workspace @casimir/docs')
+    await run('npm run build --workspace @casimir/docs')
     await run('npm run build --workspace @casimir/landing')
     await run('npm run build --workspace @casimir/users')
     await run('npm run build --workspace @casimir/web')

@@ -1,6 +1,6 @@
 import * as glue from '@aws-cdk/aws-glue-alpha'
 import { JsonSchema } from '../interfaces/JsonSchema'
-import { snakeCase } from '@casimir/helpers'
+import { snakeCase } from '@casimir/format'
 
 export type JsonType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null'
 export type GlueType = glue.Type

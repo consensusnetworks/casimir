@@ -1,131 +1,119 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "./interfaces/ICasimirUpkeep.sol";
+import "./interfaces/ICasimirFactory.sol";
 import "./interfaces/ICasimirManager.sol";
+import "./interfaces/ICasimirUpkeep.sol";
 import "./vendor/FunctionsClient.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
-/**
- * @title Upkeep contract that automates and handles reports
- */
-contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
-    /*************/
-    /* Libraries */
-    /*************/
-
-    /** Use Chainlink functions request library */
+/// @title Upkeep contract that automates reporting operations
+contract CasimirUpkeep is
+    ICasimirUpkeep,
+    Initializable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    FunctionsClient
+{
     using Functions for Functions.Request;
 
-    /*************/
-    /* Constants */
-    /*************/
-
-    /** Oracle heartbeat */
+    /// @inheritdoc ICasimirUpkeep
+    bool public compoundStake;
+    /// @dev Report-to-report heartbeat duration
     uint256 private constant REPORT_HEARTBEAT = 1 days;
-
-    /*************/
-    /* Immutable */
-    /*************/
-
-    /** Manager contract */
-    ICasimirManager private immutable manager;
-
-    /*********/
-    /* State */
-    /*********/
-
-    /** Current report status */
+    /// @dev Factory contract
+    ICasimirFactory private factory;
+    /// @dev Manager contract
+    ICasimirManager private manager;
+    /// @dev Previous report timestamp
+    uint256 private previousReportTimestamp;
+    /// @dev Current report status
     ReportStatus private reportStatus;
-    /** Current report period */
+    /// @dev Current report period
     uint32 private reportPeriod;
-    /** Current report remaining request count */
+    /// @dev Current report remaining request count
     uint256 private reportRemainingRequests;
-    /** Current report block */
+    /// @dev Current report block
     uint256 private reportRequestBlock;
-    /** Current report request timestamp */
+    /// @dev Current report request timestamp
     uint256 private reportTimestamp;
-    /** Current report swept balance */
+    /// @dev Current report swept balance
     uint256 private reportSweptBalance;
-    /** Current report active balance */
-    uint256 private reportActiveBalance;
-    /** Current report deposit activations */
+    /// @dev Current report beacon chain balance
+    uint256 private reportBeaconBalance;
+    /// @dev Current report deposit activations
     uint256 private reportActivatedDeposits;
-    /** Current report unexpected exits */
+    /// @dev Current report unexpected exits
     uint256 private reportForcedExits;
-    /** Current report completed exits */
+    /// @dev Current report completed exits
     uint256 private reportCompletedExits;
-    /** Current report compoundable pools */
+    /// @dev Current report compoundable pools
     uint32[5] private reportCompoundablePoolIds;
-    /** Finalizable activated deposits */
-    uint256 private finalizableActivatedDeposits;
-    /** Finalizable compoundable pools */
+    /// @dev Finalizable compoundable pools
     uint32[5] private finalizableCompoundablePoolIds;
-    /** Current report request */
+    /// @dev Current report request
     mapping(bytes32 => RequestType) private reportRequests;
-    /** Current report response error */
+    /// @dev Current report response error
     bytes private reportResponseError;
-    /** Binary request source code */
-    bytes private requestCBOR;
-    /** Fulfillment gas limit */
+    /// @dev Request source
+    string private requestSource;
+    /// @dev Default request arguments
+    string[] private defaultRequestArgs;
+    /// @dev Fulfillment gas limit
     uint32 private fulfillGasLimit;
-
-    /***************/
-    /* Constructor */
-    /***************/
+    /// @dev Storage gap
+    uint256[50] private __gap;
 
     /**
-     * Constructor
-     * @param functionsOracleAddress The Chainlink functions oracle address
+     * @dev Constructor
+     * @custom:oz-upgrades-unsafe-allow constructor
      */
-    constructor(
-        address functionsOracleAddress
-    ) FunctionsClient(functionsOracleAddress) {
-        require(
-            functionsOracleAddress != address(0),
-            "Missing functions oracle address"
-        );
+    constructor() FunctionsClient(address(0)) {
+        _disableInitializers();
+    }
 
+    /**
+     * Initialize the contract
+     * @param factoryAddress Factory address
+     * @param functionsOracleAddress Chainlink functions oracle address
+     * @param compoundStake_ Whether compound stake is enabled
+     */
+    function initialize(
+        address factoryAddress,
+        address functionsOracleAddress,
+        bool compoundStake_
+    ) public initializer {
+        __Ownable_init();
+        __ReentrancyGuard_init();
+        factory = ICasimirFactory(factoryAddress);
         manager = ICasimirManager(msg.sender);
+        compoundStake = compoundStake_;
+        setOracle(functionsOracleAddress);
     }
 
-    /**
-     * Set a new Chainlink functions request
-     * @param newRequestCBOR The new Chainlink functions request CBOR
-     * @param newFulfillGasLimit The new Chainlink functions fulfill gas limit 
-     */
-    function setRequest(
-        bytes calldata  newRequestCBOR,
-        uint32 newFulfillGasLimit
-    ) external onlyOwner {
-        requestCBOR = newRequestCBOR;
-        fulfillGasLimit = newFulfillGasLimit;
-
-        emit RequestSet(newRequestCBOR, newFulfillGasLimit);
-    }
-
-    /**
-     * @notice Perform the upkeep
-     */
+    /// @inheritdoc ICasimirUpkeep
     function performUpkeep(bytes calldata) external override {
         (bool upkeepNeeded, ) = checkUpkeep("");
-        require(upkeepNeeded, "Upkeep not needed");
-
+        if (!upkeepNeeded) {
+            revert UpkeepNotNeeded();
+        }
         if (reportStatus == ReportStatus.FINALIZED) {
+            previousReportTimestamp = reportTimestamp;
             reportStatus = ReportStatus.REQUESTING;
             reportRequestBlock = block.number;
             reportTimestamp = block.timestamp;
             reportPeriod = manager.reportPeriod();
-            uint64 functionsId = manager.functionsId();
-            reportRemainingRequests = 2;
-            for (uint256 i = 0; i < reportRemainingRequests; i++) {
-                bytes32 requestId = s_oracle.sendRequest(functionsId, requestCBOR, fulfillGasLimit);
-                s_pendingRequests[requestId] = s_oracle.getRegistry();
-                reportRequests[requestId] = RequestType(i + 1);
-                
-                emit RequestSent(requestId);
-            }
+            Functions.Request memory request;
+            request.initializeRequest(Functions.Location.Inline, Functions.CodeLanguage.JavaScript, requestSource);
+            string[] memory requestArgs = defaultRequestArgs;
+            requestArgs[7] = StringsUpgradeable.toString(previousReportTimestamp);
+            requestArgs[8] = StringsUpgradeable.toString(reportTimestamp);
+            requestArgs[9] = StringsUpgradeable.toString(reportRequestBlock);
+            sendFunctionsRequest(request, requestArgs, RequestType.BALANCES);
+            sendFunctionsRequest(request, requestArgs, RequestType.DETAILS);
         } else {
             if (
                 manager.requestedWithdrawalBalance() > 0 &&
@@ -134,145 +122,129 @@ contract CasimirUpkeep is ICasimirUpkeep, FunctionsClient, Ownable {
             ) {
                 manager.fulfillWithdrawals(5);
             }
-            if (finalizableActivatedDeposits > 0) {
-                uint256 maxActivatedDeposits = finalizableActivatedDeposits > 5 ? 5 : finalizableActivatedDeposits;
-                finalizableActivatedDeposits -= maxActivatedDeposits;
-                manager.activateDeposits(maxActivatedDeposits);
-            }
-            if (!manager.getPendingWithdrawalEligibility(0, reportPeriod) && finalizableActivatedDeposits == 0) {
+            if (!manager.getPendingWithdrawalEligibility(0, reportPeriod)) {
                 reportStatus = ReportStatus.FINALIZED;
                 manager.rebalanceStake({
-                    activeBalance: reportActiveBalance,
+                    beaconBalance: reportBeaconBalance,
                     sweptBalance: reportSweptBalance,
                     activatedDeposits: reportActivatedDeposits,
                     completedExits: reportCompletedExits
                 });
                 manager.compoundRewards(reportCompoundablePoolIds);
-                reportActiveBalance = 0;
+                reportBeaconBalance = 0;
                 reportActivatedDeposits = 0;
                 reportForcedExits = 0;
                 reportCompletedExits = 0;
                 reportCompoundablePoolIds = [0, 0, 0, 0, 0];
             }
         }
-
         emit UpkeepPerformed(reportStatus);
     }
 
-    /**
-     * @notice Set a new Chainlink functions oracle address
-     * @param newOracleAddress New Chainlink functions oracle address
-     */
-    function setOracleAddress(address newOracleAddress) external onlyOwner {
-        require (
-            newOracleAddress != address(0),
-            "Missing oracle address"
-        );
-
-        setOracle(newOracleAddress);
-
-        emit OracleAddressSet(newOracleAddress);
+    /// @inheritdoc ICasimirUpkeep
+    function setFunctionsOracle(address newFunctionsOracleAddress) external {
+        onlyFactoryOwner();
+        setOracle(newFunctionsOracleAddress);
+        emit FunctionsOracleAddressSet(newFunctionsOracleAddress);
     }
 
-    /**
-     * @notice Generate a new Functions.Request(off-chain, saving gas)
-     * @param source JavaScript source code
-     * @param secrets Encrypted secrets payload
-     * @param args List of arguments accessible from within the source code
-     */
-    function generateRequest(
-        string calldata source,
-        bytes calldata secrets,
-        string[] calldata args
-    ) external pure returns (bytes memory) {
-        Functions.Request memory req;
-        req.initializeRequest(
-            Functions.Location.Inline,
-            Functions.CodeLanguage.JavaScript,
-            source
-        );
-        if (secrets.length > 0) {
-            req.addRemoteSecrets(secrets);
-        }
-        if (args.length > 0) {
-            req.addArgs(args);
-        }
-        return req.encodeCBOR();
+    /// @inheritdoc ICasimirUpkeep
+    function setFunctionsRequest(
+        string calldata newRequestSource,
+        string[] calldata newRequestArgs,
+        uint32 newFulfillGasLimit
+    ) external {
+        onlyFactoryOwner();
+        requestSource = newRequestSource;
+        defaultRequestArgs = newRequestArgs;
+        fulfillGasLimit = newFulfillGasLimit;
+        emit FunctionsRequestSet(newRequestSource, newRequestArgs, newFulfillGasLimit);
     }
 
-    /**
-     * @notice Check if the upkeep is needed
-     * @return upkeepNeeded True if the upkeep is needed
-     */
-    function checkUpkeep(
-        bytes memory
-    )
-        public
-        view
-        override
-        returns (bool upkeepNeeded, bytes memory)
-    {
+    /// @inheritdoc ICasimirUpkeep
+    function checkUpkeep(bytes memory) public view override returns (bool upkeepNeeded, bytes memory checkData) {
         if (reportStatus == ReportStatus.FINALIZED) {
             bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
             bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= REPORT_HEARTBEAT;
             upkeepNeeded = checkActive && heartbeatLapsed;
         } else if (reportStatus == ReportStatus.PROCESSING) {
-            bool finalizeReport = reportCompletedExits == manager.finalizableCompletedExits();
+            bool finalizeReport = reportActivatedDeposits == manager.finalizableActivations() &&
+                reportCompletedExits == manager.finalizableCompletedExits();
             upkeepNeeded = finalizeReport;
         }
+        return (upkeepNeeded, checkData);
     }
 
     /**
-     * @notice Callback that is invoked once the DON has resolved the request or hit an error
-     * @param requestId The request ID, returned by sendRequest()
-     * @param response Aggregated response from the user code
-     * @param _error Aggregated error from the user code or from the sweptStake pipeline
-     * Either response or error parameter will be set, but never both
+     * @dev Callback that is invoked once the DON has resolved the request or hit an error
+     * @param requestId Request ID, returned by sendRequest()
+     * @param response Aggregated response from the DON
+     * @param executionError Aggregated error from the code execution
      */
-    function fulfillRequest(
-        bytes32 requestId,
-        bytes memory response,
-        bytes memory _error
-    ) internal override {
+    function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory executionError) internal override {
         RequestType requestType = reportRequests[requestId];
-        require(requestType != RequestType.NONE, "Invalid request ID");
-
-        reportResponseError = _error;
-        if (_error.length == 0) {
+        if (requestType == RequestType.NONE) {
+            revert InvalidRequest();
+        }
+        reportResponseError = executionError;
+        if (executionError.length == 0) {
             delete reportRequests[requestId];
             reportRemainingRequests--;
             if (requestType == RequestType.BALANCES) {
-                (
-                    uint128 activeBalance,
-                    uint128 sweptBalance
-                ) = abi.decode(response, (uint128, uint128));
-                reportActiveBalance = uint256(activeBalance);
+                (uint128 beaconBalance, uint128 sweptBalance) = abi.decode(response, (uint128, uint128));
+                reportBeaconBalance = uint256(beaconBalance);
                 reportSweptBalance = uint256(sweptBalance);
             } else {
                 (
                     uint32 activatedDeposits,
                     uint32 forcedExits,
                     uint32 completedExits,
-                    uint32[5] memory compoundablePoolIds 
+                    uint32[5] memory compoundablePoolIds
                 ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
                 reportActivatedDeposits = activatedDeposits;
                 reportForcedExits = forcedExits;
                 reportCompletedExits = completedExits;
                 reportCompoundablePoolIds = compoundablePoolIds;
-                finalizableActivatedDeposits = activatedDeposits;
                 finalizableCompoundablePoolIds = compoundablePoolIds;
+                if (reportActivatedDeposits > 0) {
+                    emit ActivationsRequested(activatedDeposits);
+                }
+                if (reportForcedExits > 0) {
+                    emit ForcedExitReportsRequested(forcedExits);
+                }
+                if (reportCompletedExits > 0) {
+                    emit CompletedExitReportsRequested(completedExits);
+                }
             }
             if (reportRemainingRequests == 0) {
                 reportStatus = ReportStatus.PROCESSING;
-                if (reportForcedExits > 0) {
-                    manager.requestForcedExitReports(reportForcedExits);
-                }
-                if (reportCompletedExits > 0) {
-                    manager.requestCompletedExitReports(reportCompletedExits);
-                }
             }
         }
+        emit OCRResponse(requestId, response, executionError);
+    }
 
-        emit OCRResponse(requestId, response, _error);
+    /**
+     * @dev Send a Chainlink functions request
+     * @param request Chainlink functions request
+     * @param requestArgs Chainlink functions request arguments
+     * @param requestType Chainlink functions request type
+     */
+    function sendFunctionsRequest(
+        Functions.Request memory request,
+        string[] memory requestArgs,
+        RequestType requestType
+    ) private {
+        requestArgs[10] = StringsUpgradeable.toString(uint256(requestType));
+        request.addArgs(requestArgs);
+        bytes32 requestId = sendRequest(request, manager.functionsId(), fulfillGasLimit);
+        reportRequests[requestId] = requestType;
+        reportRemainingRequests++;
+    }
+
+    /// @dev Validate the caller is the factory owner
+    function onlyFactoryOwner() private view {
+        if (msg.sender != factory.getOwner()) {
+            revert Unauthorized();
+        }
     }
 }

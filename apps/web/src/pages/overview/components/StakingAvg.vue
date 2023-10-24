@@ -64,7 +64,7 @@ onUnmounted(() =>{
       >
         <button
           :id="`${props.viewId}_staking_avg_timeframe_button`"
-          class="flex justify-between items-center gap-[8px] px-[10px] py-[8px] card_input w-[120px] outline-none"
+          class="flex justify-between items-center gap-[8px] px-[10px] py-[8px] card_input w-[120px] outline-none h-[38px]"
           @click="openTimeFrameOptions = !openTimeFrameOptions"
         >
           {{ selectedTimeframe }}

@@ -8,15 +8,15 @@ import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment'
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
 import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins'
 import { DocsStackProps } from '../interfaces/StackProps'
-import { pascalCase } from '@casimir/helpers'
+import { pascalCase } from '@casimir/format'
 import { Config } from './config'
 
 /**
- * Documentation sites stack
+ * Docs app stack
  */
 export class DocsStack extends cdk.Stack {
     public readonly name = pascalCase('docs')
-    public readonly assetPath = '../../contracts/ethereum/build/foundry/docs/book'
+    public readonly assetPath = '../../apps/docs/dist'
 
     constructor(scope: Construct, id: string, props: DocsStackProps) {
         super(scope, id, props)
@@ -28,6 +28,7 @@ export class DocsStack extends cdk.Stack {
         const bucket = new s3.Bucket(this, config.getFullStackResourceName(this.name, 'bucket'), {
             accessControl: s3.BucketAccessControl.PRIVATE
         })
+
         const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, config.getFullStackResourceName(this.name, 'origin-access-identity'))
         bucket.grantRead(originAccessIdentity)
 
@@ -36,7 +37,7 @@ export class DocsStack extends cdk.Stack {
             /** Replace deprecated method when cross-region support is out of beta */
             return new certmgr.DnsValidatedCertificate(this, config.getFullStackResourceName(this.name, 'cert'), {
                 domainName: rootDomain,
-                subjectAlternativeNames: [`${subdomains.docsEthereum}.${rootDomain}`],
+                subjectAlternativeNames: [`${subdomains.docs}.${rootDomain}`],
                 hostedZone,
                 region: 'us-east-1'
             })
@@ -63,7 +64,7 @@ export class DocsStack extends cdk.Stack {
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 origin: new cloudfrontOrigins.S3Origin(bucket, { originAccessIdentity })
             },
-            domainNames: [`${subdomains.docsEthereum}.${rootDomain}`]
+            domainNames: [`${subdomains.docs}.${rootDomain}`]
         })
 
         new s3Deployment.BucketDeployment(this, config.getFullStackResourceName(this.name, 'bucket-deployment'), {
@@ -74,7 +75,7 @@ export class DocsStack extends cdk.Stack {
         })
 
         new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record-docs'), {
-            recordName: `${subdomains.docsEthereum}.${rootDomain}`,
+            recordName: `${subdomains.docs}.${rootDomain}`,
             zone: hostedZone as route53.IHostedZone,
             target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
             ttl: cdk.Duration.minutes(1),

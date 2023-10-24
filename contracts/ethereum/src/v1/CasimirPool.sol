@@ -1,149 +1,159 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
+import "./CasimirCore.sol";
 import "./interfaces/ICasimirPool.sol";
 import "./interfaces/ICasimirManager.sol";
 import "./interfaces/ICasimirRegistry.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./vendor/interfaces/IDepositContract.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-/**
- * @title Pool contract that accepts deposits and stakes a validator
- */
-contract CasimirPool is ICasimirPool, Ownable, ReentrancyGuard {
-    /*************/
-    /* Constants */
-    /*************/
-
-    /** Pool capacity */
+/// @title Pool that accepts deposits and stakes a validator
+contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+    /// @inheritdoc ICasimirPool
+    bytes public publicKey;
+    /// @inheritdoc ICasimirPool
+    uint256 public reshares;
+    /// @inheritdoc ICasimirPool
+    PoolStatus public status;
+    /** 
+     * @dev Beacon deposit contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    IDepositContract private immutable depositContract;
+    /// @dev Pool deposit capacity
     uint256 private constant POOL_CAPACITY = 32 ether;
-
-    /*************/
-    /* Immutable */
-    /*************/
-
-    /** Manager contract */
-    ICasimirManager private immutable manager;
-    /** Registry contract */
-    ICasimirRegistry private immutable registry;
-
-    /*********/
-    /* State */
-    /*********/
-
-    /** Pool ID */
-    uint32 private immutable id;
-    /** Validator public key */
-    bytes private publicKey;
-    /** Operator IDs */
+    /// @dev Operator IDs
     uint64[] private operatorIds;
-    /** Reshares */
-    uint256 private reshares;
-    /** Status */
-    PoolStatus private status;
+    /// @dev Pool ID
+    uint32 private poolId;
+    /// @dev Operator key shares
+    bytes private shares;
+    /// @dev Manager contract
+    ICasimirManager private manager;
+    /// @dev Registry contract
+    ICasimirRegistry private registry;
+
+    /// @dev Storage gap
+    uint256[50] private __gap;
 
     /**
-     * @notice Constructor
-     * @param registryAddress The registry address
-     * @param _id The pool ID
-     * @param _publicKey The validator public key
-     * @param _operatorIds The operator IDs
+     * @dev Constructor
+     * @param depositContract_ Beacon deposit contract
+     * @custom:oz-upgrades-unsafe-allow constructor
      */
-    constructor(
-        address registryAddress,
-        uint32 _id,
-        bytes memory _publicKey,
-        uint64[] memory _operatorIds
-    ) {
-        require(registryAddress != address(0), "Missing registry address");
+    constructor(IDepositContract depositContract_) {
+        onlyAddress(address(depositContract_));
+        depositContract = depositContract_;
+        _disableInitializers();
+    }
 
+    /**
+     * @notice Initialize the contract
+     * @param registry_ Registry contract
+     * @param operatorIds_ The operator IDs
+     * @param poolId_ Pool ID
+     * @param publicKey_ The validator public key
+     */
+    function initialize(
+        ICasimirRegistry registry_,
+        uint64[] memory operatorIds_,
+        uint32 poolId_,
+        bytes memory publicKey_,
+        bytes memory shares_
+    ) public initializer {
+        __Ownable_init();
+        __ReentrancyGuard_init();
         manager = ICasimirManager(msg.sender);
-        registry = ICasimirRegistry(registryAddress);
-        id = _id;
-        publicKey = _publicKey;
-        operatorIds = _operatorIds;
+        registry = registry_;
+        poolId = poolId_;
+        operatorIds = operatorIds_;
+        publicKey = publicKey_;
+        shares = shares_;
     }
 
-    /**
-     * @notice Deposit rewards from a pool to the manager
-     */
+    /// @inheritdoc ICasimirPool
+    function depositStake(
+        bytes32 depositDataRoot,
+        bytes memory signature,
+        bytes memory withdrawalCredentials
+    ) external payable onlyOwner {
+        if (status != PoolStatus.READY) {
+            revert PoolAlreadyInitiated();
+        }
+        if (msg.value != POOL_CAPACITY) {
+            revert InvalidDepositAmount();
+        }
+        bytes memory computedWithdrawalCredentials = abi.encodePacked(bytes1(uint8(1)), bytes11(0), address(this));
+        if (keccak256(computedWithdrawalCredentials) != keccak256(withdrawalCredentials)) {
+            revert InvalidWithdrawalCredentials();
+        }
+        status = PoolStatus.PENDING;
+        depositContract.deposit{value: msg.value}(publicKey, withdrawalCredentials, signature, depositDataRoot);
+    }
+
+    /// @inheritdoc ICasimirPool
     function depositRewards() external onlyOwner {
-        require(status == PoolStatus.ACTIVE, "Pool must be active");
-
-        uint256 balance = address(this).balance;
-        manager.depositRewards{value: balance}(id);
-    }
-
-    /**
-     * @notice Withdraw balance from a pool to the manager
-     * @param blamePercents The operator loss blame percents
-     */
-    function withdrawBalance(uint32[] memory blamePercents) external onlyOwner {
-        require(status == PoolStatus.WITHDRAWN, "Pool must be withdrawn");
-
-        uint256 balance = address(this).balance;
-        int256 rewards = int256(balance) - int256(POOL_CAPACITY);
-        if (rewards > 0) {
-            manager.depositRewards{value: uint256(rewards)}(id);
+        if (status != PoolStatus.ACTIVE) {
+            revert PoolNotActive();
         }
-        for (uint256 i = 0; i < blamePercents.length; i++) {
-            uint256 blameAmount;
-            if (rewards < 0) {
-                uint256 blamePercent = blamePercents[i];
-                blameAmount = Math.mulDiv(uint256(-rewards), blamePercent, 100);
-            }
-            registry.removeOperatorPool(operatorIds[i], id, blameAmount);
-        }
-        manager.depositExitedBalance{value: balance}(id);
+        uint256 balance = address(this).balance;
+        manager.depositRewards{value: balance}(poolId);
     }
 
-    /**
-     * @notice Set the operator IDs
-     * @param _operatorIds The operator IDs
-     */
-    function setOperatorIds(uint64[] memory _operatorIds) external onlyOwner {
-        operatorIds = _operatorIds;
-
-        emit OperatorIdsSet(_operatorIds);
+    /// @inheritdoc ICasimirPool
+    function setOperatorIds(uint64[] memory newOperatorIds) external onlyOwner {
+        operatorIds = newOperatorIds;
+        emit OperatorIdsSet(newOperatorIds);
     }
 
-    /**
-     * @notice Set the reshare count
-     * @param newReshares The new reshare count
-     */
+    /// @inheritdoc ICasimirPool
     function setReshares(uint256 newReshares) external onlyOwner {
         reshares = newReshares;
-
         emit ResharesSet(newReshares);
     }
 
-    /**
-     * @notice Set the pool status
-     * @param newStatus The new pool status
-     */
+    /// @inheritdoc ICasimirPool
     function setStatus(PoolStatus newStatus) external onlyOwner {
         status = newStatus;
-
         emit StatusSet(newStatus);
     }
 
-    /**
-     * @notice Get the pool details
-     * @return poolDetails The pool details
-     */
-    function getDetails()
-        external
-        view
-        returns (PoolDetails memory poolDetails)
-    {
-        poolDetails = PoolDetails({
-            id: id,
-            balance: address(this).balance,
-            publicKey: publicKey,
-            operatorIds: operatorIds,
-            reshares: reshares,
-            status: status
-        });
+    /// @inheritdoc ICasimirPool
+    function withdrawBalance(uint32[] memory blamePercents) external onlyOwner {
+        if (status != PoolStatus.EXITING_FORCED && status != PoolStatus.EXITING_REQUESTED) {
+            revert PoolNotExiting();
+        }
+        if (status == PoolStatus.WITHDRAWN) {
+            revert PoolAlreadyWithdrawn();
+        }
+        status = PoolStatus.WITHDRAWN;
+        uint256 balance = address(this).balance;
+        int256 rewards = int256(balance) - int256(POOL_CAPACITY);
+        if (rewards > 0) {
+            manager.depositRewards{value: uint256(rewards)}(poolId);
+        }
+        for (uint256 i; i < blamePercents.length; i++) {
+            uint256 blameAmount;
+            if (rewards < 0) {
+                uint256 blamePercent = blamePercents[i];
+                blameAmount = MathUpgradeable.mulDiv(uint256(-rewards), blamePercent, 100);
+            }
+            registry.removeOperatorPool(operatorIds[i], poolId, blameAmount);
+        }
+        manager.depositExitedBalance{value: balance}(poolId);
+    }
+
+    /// @inheritdoc ICasimirPool
+    function getOperatorIds() external view returns (uint64[] memory) {
+        return operatorIds;
+    }
+
+    /// @inheritdoc ICasimirPool
+    function getRegistration() external view returns (PoolRegistration memory) {
+        return PoolRegistration({operatorIds: operatorIds, publicKey: publicKey, shares: shares, status: status});
     }
 }

@@ -1,7 +1,7 @@
+import { ethers } from 'ethers'
+import { ManagerConfig } from '@casimir/types'
+
 export interface HandlerInput {
-    args: {
-        poolId?: number
-        operatorId?: number
-        count?: number
-    }
+    managerConfig: ManagerConfig
+    args?: ethers.utils.Result
 }

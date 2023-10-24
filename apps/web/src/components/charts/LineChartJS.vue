@@ -112,27 +112,31 @@ onMounted(() => {
 })
 
 watch(props, ()=> {
-    if(line_chart.data !== props.data){
-        line_chart.data = props.data as ChartData
+    try {
+        if (!line_chart) return
+        if(line_chart.data !== props.data){
+            line_chart.data = props.data as ChartData
 
-        if(props.gradient){
-            
-            for (let i = 0; i < line_chart.data.datasets.length; i++) {
-                if(line_chart.data.datasets[i].backgroundColor){
-                    let gradient = ctx? ctx.createLinearGradient(0, 0, 0, 400): 'black'
-                    let rgb = hexToRGB(line_chart.data.datasets[i].backgroundColor)
+            if(props.gradient){
+                
+                for (let i = 0; i < line_chart.data.datasets.length; i++) {
+                    if(line_chart.data.datasets[i].backgroundColor){
+                        let gradient = ctx? ctx.createLinearGradient(0, 0, 0, 400): 'black'
+                        let rgb = hexToRGB(line_chart.data.datasets[i].backgroundColor)
 
-                    gradient.addColorStop(0, `rgba(${rgb?.r},${rgb?.g},${rgb?.b}, 0.28)`) 
-                    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.0)') 
+                        gradient.addColorStop(0, `rgba(${rgb?.r},${rgb?.g},${rgb?.b}, 0.28)`) 
+                        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.0)') 
 
-                    line_chart.data.datasets[i].backgroundColor = gradient
+                        line_chart.data.datasets[i].backgroundColor = gradient
+                    }
                 }
             }
-        }
 
-        line_chart.update()
+            line_chart.update()
+        }
+    } catch (error) {
+        console.error('Watcher Error: Props ./LineCharJS', error)
     }
-    
 })
 </script>
 

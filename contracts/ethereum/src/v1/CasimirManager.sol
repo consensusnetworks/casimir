@@ -1,264 +1,246 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "./CasimirPool.sol";
-import "./CasimirRegistry.sol";
-import "./CasimirUpkeep.sol";
+import "./CasimirCore.sol";
+import "./interfaces/ICasimirFactory.sol";
 import "./interfaces/ICasimirManager.sol";
-import "./libraries/Types.sol";
-import "./vendor/interfaces/IDepositContract.sol";
+import "./interfaces/ICasimirPool.sol";
+import "./interfaces/ICasimirRegistry.sol";
+import "./interfaces/ICasimirUpkeep.sol";
+import "./libraries/CasimirArray.sol";
+import "./libraries/CasimirBeacon.sol";
 import "./vendor/interfaces/ISSVNetwork.sol";
 import "./vendor/interfaces/IWETH9.sol";
 import "./vendor/interfaces/IFunctionsBillingRegistry.sol";
 import "./vendor/interfaces/IKeeperRegistrar.sol";
 import "./vendor/interfaces/IAutomationRegistry.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/beacon/IBeaconUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
-/**
- * @title Manager contract that accepts and distributes deposits
- */
-contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
-    /*************/
-    /* Libraries */
-    /*************/
+/// @title Manager that accepts and distributes deposits
+contract CasimirManager is ICasimirManager, CasimirCore, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+    using CasimirArray for uint32[];
+    using CasimirArray for bytes[];
+    using CasimirArray for Withdrawal[];
 
-    /** Use math for precise division */
-    using Math for uint256;
-    /** Use internal type for uint32 array */
-    using Types32Array for uint32[];
-    /** Use internal type for bytes array */
-    using TypesBytesArray for bytes[];
-    /** Use internal type for withdrawal array */
-    using TypesWithdrawalArray for Withdrawal[];
-    /** Use internal type for address */
-    using TypesAddress for address;
-
-    /*************/
-    /* Constants */
-    /*************/
-
-    /** User action period */
-    uint256 private constant ACTION_PERIOD = 1 days;
-    /** Max user actions per period */
-    uint256 private constant MAX_ACTIONS_PER_PERIOD = 5;
-    /** Compound minimum (0.1 ETH) */
-    uint256 private constant COMPOUND_MINIMUM = 100000000 gwei;
-    /** Scale factor for each rewards to stake ratio */
-    uint256 private constant SCALE_FACTOR = 1 ether;
-    /** Uniswap 0.3% fee tier */
-    uint24 private constant UNISWAP_FEE_TIER = 3000;
-    /** Pool capacity */
-    uint256 private constant POOL_CAPACITY = 32 ether;
-    /** Total fee percentage */
-    uint32 public constant FEE_PERCENT = 5;
-    
-    /*************/
-    /* Immutable */
-    /*************/
-
-    /** DAO oracle address */
-    address private immutable oracleAddress;
-    /** Registry contract */
-    ICasimirRegistry private immutable registry;
-    /** Upkeep contract */
-    ICasimirUpkeep private immutable upkeep;
-    /** Beacon deposit contract */
-    IDepositContract private immutable beaconDeposit;
-    /** Chainlink functions billing registry contract */
-    IFunctionsBillingRegistry private immutable functionsBillingRegistry;
-    /** Keeper registrar contract */
-    IKeeperRegistrar private immutable linkRegistrar;
-    /** Automation registry contract */
-    IAutomationRegistry private immutable linkRegistry;
-    /** LINK ERC-20 token contract */
-    LinkTokenInterface private immutable linkToken;
-    /** SSV network contract */
-    ISSVNetwork private immutable ssvNetwork;
-    /** SSV ERC-20 token contract */
-    IERC20 private immutable ssvToken;
-    /** Uniswap factory contract */
-    IUniswapV3Factory private immutable swapFactory;
-    /** Uniswap router contract  */
-    ISwapRouter private immutable swapRouter;
-
-    /*********/
-    /* State */
-    /*********/
-
-    /** Last pool ID created */
-    uint32 private lastPoolId;
-    /** Current report period */
+    /// @inheritdoc ICasimirManager
+    uint256 public lockPeriod;
+    /// @inheritdoc ICasimirManager
+    uint32 public userFee;
+    /// @inheritdoc ICasimirManager
+    bool public eigenStake;
+    /// @inheritdoc ICasimirManager
+    bool public liquidStake;
+    /// @inheritdoc ICasimirManager
     uint32 public reportPeriod;
-    /** Chainlink functions subscription ID */
+    /// @inheritdoc ICasimirManager
     uint64 public functionsId;
-    /** Chainlink upkeep subscription ID */
+    /// @inheritdoc ICasimirManager
     uint256 public upkeepId;
-    /** Latest active balance */
-    uint256 public latestActiveBalance;
-    /** Latest active balance after fees */
-    uint256 private latestActiveBalanceAfterFees;
-    /** Latest active rewards */
-    int256 private latestActiveRewardBalance;
-    /** Exited pool count */
+    /// @inheritdoc ICasimirManager
+    uint256 public latestBeaconBalance;
+    /// @inheritdoc ICasimirManager
+    uint256 public finalizableActivations;
+    /// @inheritdoc ICasimirManager
     uint256 public finalizableCompletedExits;
-    /** Report finalizable exited balance */
-    uint256 private finalizableExitedBalance;
-    /** Report finalizable recovered balance */
-    uint256 private finalizableRecoveredBalance;
-    /** Token addresses */
-    mapping(Token => address) private tokenAddresses;
-    /** All users */
-    mapping(address => User) private users;
-    /** Sum of scaled rewards to balance ratios (intial value required) */
-    uint256 private stakeRatioSum = 1000 ether;
-    /** Total pending withdrawals count */
-    uint256 private requestedWithdrawals;
-    /** Total pending withdrawal amount */
+    /// @inheritdoc ICasimirManager
     uint256 public requestedWithdrawalBalance;
-    /** Pending withdrawals */
-    Withdrawal[] private requestedWithdrawalQueue;
-    /** All pool addresses */
-    mapping(uint32 => address) private poolAddresses;
-    /** Validator tip balance */
-    uint256 private tipBalance;
-    /** Pool recovered balances */
-    mapping(uint32 => uint256) private recoveredBalances;
-    /** Total deposits not yet in pools */
-    uint256 private prepoolBalance;
-    /** Total exited deposits */
-    uint256 private exitedBalance;
-    /** Total reserved fees */
+    /// @inheritdoc ICasimirManager
     uint256 public reservedFeeBalance;
-    /** IDs of pools ready for initiation */
-    uint32[] private readyPoolIds;
-    /** IDS of pools pending deposit confirmation */
-    uint32[] private pendingPoolIds;
-    /** IDs of pools staked */
-    uint32[] private stakedPoolIds;
-    /** Exiting pool count */
+    /// @inheritdoc ICasimirManager
     uint256 public requestedExits;
-    /** Slashed pool count */
+    /** 
+     * @dev Chainlink functions billing registry contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    IFunctionsBillingRegistry private immutable functionsBillingRegistry;
+    /** 
+     * @dev LINK ERC-20 token contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    LinkTokenInterface private immutable linkToken;
+    /** 
+     * @dev Keeper registrar contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    IKeeperRegistrar private immutable keeperRegistrar;
+    /** 
+     * @dev Automation registry contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    IAutomationRegistry private immutable keeperRegistry;
+    /** 
+     * @dev SSV clusters contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    ISSVClusters private immutable ssvClusters;
+    /** 
+     * @dev SSV ERC-20 token contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    IERC20Upgradeable private immutable ssvToken;
+    /** 
+     * @dev Uniswap factory contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    IUniswapV3Factory private immutable swapFactory;
+    /** 
+     * @dev Uniswap router contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    ISwapRouter private immutable swapRouter;
+    /** 
+     * @dev WETH9 ERC-20 token contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    IWETH9 private immutable wethToken;
+    /// @dev Compound minimum (0.1 ETH)
+    uint256 private constant COMPOUND_MINIMUM = 100000000 gwei;
+    /// @dev Scale factor for each rewards to stake ratio
+    uint256 private constant SCALE_FACTOR = 1 ether;
+    /// @dev Uniswap 0.3% fee tier
+    uint24 private constant UNISWAP_FEE_TIER = 3000;
+    /// @dev Pool capacity
+    uint256 private constant POOL_CAPACITY = 32 ether;
+    /// @dev DAO oracle address
+    address private daoOracleAddress;
+    /// @dev Factory contract
+    ICasimirFactory private factory;
+    /// @dev Registry contract
+    ICasimirRegistry private registry;
+    /// @dev Upkeep contract
+    ICasimirUpkeep private upkeep;
+    /// @dev Last pool ID created
+    uint32 private lastPoolId;
+    /// @dev Latest beacon chain balance after fees
+    uint256 private latestBeaconBalanceAfterFees;
+    /// @dev Latest active rewards
+    int256 private latestActiveRewardBalance;
+    /// @dev Report finalizable exited balance
+    uint256 private finalizableExitedBalance;
+    /// @dev Report finalizable recovered balance
+    uint256 private finalizableRecoveredBalance;
+    /// @dev All users
+    mapping(address => User) private users;
+    /// @dev Sum of scaled rewards to balance ratios
+    uint256 private stakeRatioSum;
+    /// @dev Total pending withdrawals count
+    uint256 private requestedWithdrawals;
+    /// @dev Pending withdrawals
+    Withdrawal[] private requestedWithdrawalQueue;
+    /// @dev All pool addresses
+    mapping(uint32 => address) private poolAddresses;
+    /// @dev Validator tip balance
+    uint256 private tipBalance;
+    /// @dev Pool recovered balances
+    mapping(uint32 => uint256) private recoveredBalances;
+    /// @dev Total deposits not yet in pools
+    uint256 private prepoolBalance;
+    /// @dev Total exited deposits
+    uint256 private exitedBalance;
+    /// @dev IDs of pools ready for initiation
+    uint32[] private readyPoolIds;
+    /// @dev IDS of pools pending deposit confirmation
+    uint32[] private pendingPoolIds;
+    /// @dev IDs of pools staked
+    uint32[] private stakedPoolIds;
+    /// @dev Slashed pool count
     uint256 private forcedExits;
-
-    /*************/
-    /* Modifiers */
-    /*************/
+    /// @dev Storage gap
+    uint256[50] private __gap;
 
     /**
-     * @dev Validate the caller is the authorized pool
-     */
-    modifier onlyPool(uint32 poolId) {
-        require(msg.sender == poolAddresses[poolId], "Not pool");
-        _;
-    }
-
-    /**
-     * @dev Validate the caller is the oracle
-     */
-    modifier onlyOracle() {
-        require(msg.sender == oracleAddress, "Not oracle");
-        _;
-    }
-
-    /**
-     * @dev Validate the caller is the oracle or registry
-     */
-    modifier onlyOracleOrRegistry() {
-        require(
-            msg.sender == oracleAddress || msg.sender == address(registry),
-            "Not oracle or registry"
-        );
-        _;
-    }
-
-    /**
-     * @dev Validate the caller is the registry
-     */
-    modifier onlyRegistry() {
-        require(msg.sender == address(registry), "Not registry");
-        _;
-    }
-
-    /**
-     * @dev Validate the caller is the upkeep contract
-     */
-    modifier onlyUpkeep() {
-        require(msg.sender == address(upkeep), "Not upkeep");
-        _;
-    }
-
-    /**
-     * @notice Constructor
-     * @param daoOracleAddress The DAO oracle address
-     * @param beaconDepositAddress The Beacon deposit address
-     * @param functionsBillingRegistryAddress The Chainlink functions billing registry address
-     * @param functionsOracleAddress The Chainlink functions oracle address
-     * @param linkRegistrarAddress The Chainlink keeper registrar address
-     * @param linkRegistryAddress The Chainlink keeper registry address
-     * @param linkTokenAddress The Chainlink token address
-     * @param ssvNetworkAddress The SSV network address
-     * @param ssvNetworkViewsAddress The SSV network views address
-     * @param ssvTokenAddress The SSV token address
-     * @param swapFactoryAddress The Uniswap factory address
-     * @param swapRouterAddress The Uniswap router address
-     * @param wethTokenAddress The WETH contract address
+     * @dev Constructor
+     * @param functionsBillingRegistry_ Chainlink functions billing registry contract
+     * @param keeperRegistrar_ Chainlink keeper registrar contract
+     * @param keeperRegistry_ Chainlink keeper registry contract
+     * @param linkToken_ Chainlink token contract
+     * @param ssvNetwork_ SSV network contract
+     * @param ssvToken_ SSV token contract
+     * @param swapFactory_ Uniswap factory contract
+     * @param swapRouter_ Uniswap router contract
+     * @param wethToken_ WETH9 token contract
+     * @custom:oz-upgrades-unsafe-allow constructor
      */
     constructor(
-        address daoOracleAddress,
-        address beaconDepositAddress,
-        address functionsBillingRegistryAddress,
-        address functionsOracleAddress,
-        address linkRegistrarAddress,
-        address linkRegistryAddress,
-        address linkTokenAddress,
-        address ssvNetworkAddress,
-        address ssvNetworkViewsAddress,
-        address ssvTokenAddress,
-        address swapFactoryAddress,
-        address swapRouterAddress,
-        address wethTokenAddress
+        IFunctionsBillingRegistry functionsBillingRegistry_,
+        IKeeperRegistrar keeperRegistrar_,
+        IAutomationRegistry keeperRegistry_,
+        LinkTokenInterface linkToken_,
+        ISSVClusters ssvNetwork_,
+        IERC20Upgradeable ssvToken_,
+        IUniswapV3Factory swapFactory_,
+        ISwapRouter swapRouter_,
+        IWETH9 wethToken_
     ) {
-        require(daoOracleAddress != address(0), "Missing oracle address");
-        require(beaconDepositAddress != address(0), "Missing beacon deposit address");
-        require(functionsBillingRegistryAddress != address(0), "Missing functions billing registry address");
-        require(linkRegistrarAddress != address(0), "Missing link registrar address");
-        require(linkRegistryAddress != address(0), "Missing link registry address");
-        require(linkTokenAddress != address(0), "Missing link token address");
-        require(ssvNetworkAddress != address(0), "Missing SSV network address");
-        require(ssvTokenAddress != address(0), "Missing SSV token address");
-        require(swapFactoryAddress != address(0), "Missing Uniswap factory address");
-        require(swapRouterAddress != address(0), "Missing Uniswap router address");
-        require(wethTokenAddress != address(0), "Missing WETH token address");
-
-        oracleAddress = daoOracleAddress;
-        beaconDeposit = IDepositContract(beaconDepositAddress);
-        functionsBillingRegistry = IFunctionsBillingRegistry(functionsBillingRegistryAddress);
-        linkRegistrar = IKeeperRegistrar(linkRegistrarAddress);
-        linkRegistry = IAutomationRegistry(linkRegistryAddress);
-        linkToken = LinkTokenInterface(linkTokenAddress);
-        tokenAddresses[Token.LINK] = linkTokenAddress;
-        ssvNetwork = ISSVNetwork(ssvNetworkAddress);
-        tokenAddresses[Token.SSV] = ssvTokenAddress;
-        ssvToken = IERC20(ssvTokenAddress);
-        swapFactory = IUniswapV3Factory(swapFactoryAddress);
-        swapRouter = ISwapRouter(swapRouterAddress);
-        tokenAddresses[Token.WETH] = wethTokenAddress;
-
-        registry = new CasimirRegistry(ssvNetworkViewsAddress);
-        upkeep = new CasimirUpkeep(functionsOracleAddress);
+        onlyAddress(address(functionsBillingRegistry_));
+        onlyAddress(address(keeperRegistrar_));
+        onlyAddress(address(keeperRegistry_));
+        onlyAddress(address(linkToken_));
+        onlyAddress(address(ssvNetwork_));
+        onlyAddress(address(ssvToken_));
+        onlyAddress(address(swapFactory_));
+        onlyAddress(address(swapRouter_));
+        onlyAddress(address(wethToken_));
+        functionsBillingRegistry = functionsBillingRegistry_;
+        keeperRegistrar = keeperRegistrar_;
+        keeperRegistry = keeperRegistry_;
+        linkToken = linkToken_;
+        ssvClusters = ssvNetwork_;
+        ssvToken = ssvToken_;
+        swapFactory = swapFactory_;
+        swapRouter = swapRouter_;
+        wethToken = wethToken_;
+        _disableInitializers();
     }
 
     /**
-     * @notice Receive and deposit validator tips
+     * @notice Initialize the contract
+     * @param daoOracleAddress_ DAO oracle address
+     * @param functionsOracleAddress Chainlink functions oracle address
+     * @param strategy Staking strategy configuration
      */
+    function initialize(
+        address daoOracleAddress_,
+        address functionsOracleAddress,
+        Strategy memory strategy
+    ) public initializer {
+        __Ownable_init();
+        __ReentrancyGuard_init();
+        daoOracleAddress = daoOracleAddress_;
+        factory = ICasimirFactory(msg.sender);
+        registry = ICasimirRegistry(
+            CasimirBeacon.createRegistry(
+                factory.registryBeaconAddress(),
+                strategy.minCollateral,
+                strategy.privateOperators,
+                strategy.verifiedOperators
+            )
+        );
+        upkeep = ICasimirUpkeep(
+            CasimirBeacon.createUpkeep(
+                factory.upkeepBeaconAddress(),
+                msg.sender,
+                functionsOracleAddress,
+                strategy.compoundStake
+            )
+        );
+        userFee = strategy.userFee;
+        eigenStake = strategy.eigenStake;
+        liquidStake = strategy.liquidStake;
+        stakeRatioSum = 1000 ether;
+    }
+
+    /// @notice Receive and deposit validator tips
     receive() external payable {
         tipBalance += msg.value;
         if (tipBalance >= COMPOUND_MINIMUM) {
@@ -266,12 +248,8 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         }
     }
 
-    /**
-     * @notice Deposit user stake
-     */
+    /// @inheritdoc ICasimirManager
     function depositStake() external payable nonReentrant {
-        setActionCount(msg.sender);
-
         User storage user = users[msg.sender];
         uint256 depositAfterFees = subtractFees(msg.value);
         reservedFeeBalance += msg.value - depositAfterFees;
@@ -281,137 +259,79 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         user.stakeRatioSum0 = stakeRatioSum;
         user.stake0 += depositAfterFees;
         distributeStake(depositAfterFees);
-
         emit StakeDeposited(msg.sender, depositAfterFees);
     }
 
-    /**
-     * @notice Deposit a given amount of rewards from a pool
-     * @param poolId The pool ID
-     */
+    /// @inheritdoc ICasimirManager
     function depositRewards(uint32 poolId) external payable {
-        require(msg.value > 0, "No rewards to deposit");
-        address poolAddress = poolAddresses[poolId];
-        require(msg.sender == poolAddress, "Not pool");
-
+        if (msg.value == 0) {
+            revert InvalidAmount();
+        }
+        onlyPool(poolAddresses[poolId]);
         uint256 rewardsAfterFees = subtractFees(msg.value);
         reservedFeeBalance += msg.value - rewardsAfterFees;
         distributeStake(rewardsAfterFees);
-
         emit RewardsDeposited(rewardsAfterFees);
     }
 
-    /**
-     * @notice Deposit exited balance from a given pool ID
-     * @param poolId The pool ID
-     */
-    function depositExitedBalance(
-        uint32 poolId
-    ) external payable onlyPool(poolId) {
+    /// @inheritdoc ICasimirManager
+    function depositExitedBalance(uint32 poolId) external payable {
+        onlyPool(poolAddresses[poolId]);
         uint256 balance = msg.value + recoveredBalances[poolId];
         delete recoveredBalances[poolId];
         delete poolAddresses[poolId];
         exitedBalance += balance;
         finalizableExitedBalance += balance;
         finalizableCompletedExits++;
-
         emit ExitedBalanceDeposited(poolId, msg.value);
     }
 
-    /**
-     * @notice Deposit recovered balance for a given pool from an operator
-     * @param poolId The pool ID
-     */
-    function depositRecoveredBalance(
-        uint32 poolId
-    ) external payable onlyRegistry {
+    /// @inheritdoc ICasimirManager
+    function depositRecoveredBalance(uint32 poolId) external payable {
+        if (msg.sender != address(registry)) {
+            revert Unauthorized();
+        }
         recoveredBalances[poolId] += msg.value;
         finalizableRecoveredBalance += msg.value;
-
         emit RecoveredBalanceDeposited(poolId, msg.value);
     }
 
-    /**
-     * @notice Deposit to a cluster balance
-     * @param operatorIds The operator IDs
-     * @param cluster The SSV cluster snapshot
-     * @param feeAmount The fee amount to deposit
-     * @param minimumTokenAmount The minimum SSV token amount out after processing fees
-     * @param processed Whether the fee amount is already processed
-     */
+    /// @inheritdoc ICasimirManager
     function depositClusterBalance(
         uint64[] memory operatorIds,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount,
-        uint256 minimumTokenAmount,
+        uint256 minTokenAmount,
         bool processed
-    ) external onlyOracle {
-        uint256 ssvAmount = retrieveFees(
-            feeAmount,
-            minimumTokenAmount,
-            tokenAddresses[Token.SSV],
-            processed
-        );
-        ssvToken.approve(address(ssvNetwork), ssvAmount);
-        ssvNetwork.deposit(address(this), operatorIds, ssvAmount, cluster);
-
+    ) external {
+        onlyOracle();
+        uint256 ssvAmount = retrieveFees(feeAmount, minTokenAmount, address(ssvToken), processed);
+        ssvToken.approve(address(ssvClusters), ssvAmount);
+        ssvClusters.deposit(address(this), operatorIds, ssvAmount, cluster);
         emit ClusterBalanceDeposited(ssvAmount);
     }
 
-    /**
-     * @notice Deposit to the functions balance
-     * @param feeAmount The fee amount to deposit
-     * @param minimumTokenAmount The minimum LINK token amount out after processing fees
-     * @param processed Whether the fee amount is already processed
-     */
-    function depositFunctionsBalance(
-        uint256 feeAmount,
-        uint256 minimumTokenAmount,
-        bool processed
-    ) external onlyOracle {
-        uint256 linkAmount = retrieveFees(
-            feeAmount,
-            minimumTokenAmount,
-            tokenAddresses[Token.LINK],
-            processed
-        );
+    /// @inheritdoc ICasimirManager
+    function depositFunctionsBalance(uint256 feeAmount, uint256 minTokenAmount, bool processed) external {
+        onlyOracle();
+        uint256 linkAmount = retrieveFees(feeAmount, minTokenAmount, address(linkToken), processed);
         if (functionsId == 0) {
-            
             functionsId = functionsBillingRegistry.createSubscription();
             functionsBillingRegistry.addConsumer(functionsId, address(upkeep));
         }
-        require(
-            linkToken.transferAndCall(
-                address(functionsBillingRegistry),
-                linkAmount,
-                abi.encode(functionsId)
-            ),
-            "Transfer failed"
-        );
-
+        if (!linkToken.transferAndCall(address(functionsBillingRegistry), linkAmount, abi.encode(functionsId))) {
+            revert TransferFailed();
+        }
         emit FunctionsBalanceDeposited(linkAmount);
     }
 
-    /**
-     * @notice Deposit to the upkeep balance
-     * @param feeAmount The fee amount to deposit
-     * @param minimumTokenAmount The minimum LINK token amount out after processing fees
-     * @param processed Whether the fee amount is already processed
-     */
-    function depositUpkeepBalance(
-        uint256 feeAmount,
-        uint256 minimumTokenAmount,
-        bool processed
-    ) external onlyOracle {
-        uint256 linkAmount = retrieveFees(
-            feeAmount,
-            minimumTokenAmount,
-            tokenAddresses[Token.LINK],
-            processed
-        );
-        linkToken.approve(address(linkRegistrar), linkAmount);
+    /// @inheritdoc ICasimirManager
+    function depositUpkeepBalance(uint256 feeAmount, uint256 minTokenAmount, bool processed) external {
+        onlyOracle();
+        uint256 linkAmount = retrieveFees(feeAmount, minTokenAmount, address(linkToken), processed);
+        linkToken.approve(address(keeperRegistrar), linkAmount);
         if (upkeepId == 0) {
-            upkeepId = linkRegistrar.registerUpkeep(
+            upkeepId = keeperRegistrar.registerUpkeep(
                 IKeeperRegistrar.RegistrationParams({
                     name: string("CasimirV1Upkeep"),
                     encryptedEmail: new bytes(0),
@@ -424,101 +344,83 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 })
             );
         } else {
-            linkRegistry.addFunds(upkeepId, uint96(linkAmount));
+            keeperRegistry.addFunds(upkeepId, uint96(linkAmount));
         }
-
         emit UpkeepBalanceDeposited(linkAmount);
     }
 
-    /**
-     * @notice Deposit reserved fees
-     */
-    function depositReservedFees() external payable onlyOwner {
+    /// @inheritdoc ICasimirManager
+    function depositReservedFees() external payable {
+        onlyFactoryOwner();
         reservedFeeBalance += msg.value;
-
         emit ReservedFeesDeposited(msg.value);
     }
 
-    /**
-     * @notice Withdraw a given amount of reserved fees
-     * @param amount The amount of fees to withdraw
-     */
-    function withdrawReservedFees(uint256 amount) external onlyOwner {
-        require(amount <= reservedFeeBalance, "Withdrawing more than reserved");
-
+    /// @inheritdoc ICasimirManager
+    function withdrawReservedFees(uint256 amount) external {
+        onlyFactoryOwner();
+        if (amount > reservedFeeBalance) {
+            revert InvalidAmount();
+        }
         reservedFeeBalance -= amount;
-        owner().send(amount);
-
+        (bool success, ) = msg.sender.call{value: amount}("");
+        if (!success) {
+            revert TransferFailed();
+        }
         emit ReservedFeesWithdrawn(amount);
     }
 
-    /**
-     * @notice Rebalance the rewards to stake ratio and redistribute swept rewards
-     * @param activeBalance The active balance
-     * @param sweptBalance The swept balance
-     * @param activatedDeposits The count of activated deposits
-     * @param completedExits The count of withdrawn exits
-     */
+    /// @inheritdoc ICasimirManager
     function rebalanceStake(
-        uint256 activeBalance,
+        uint256 beaconBalance,
         uint256 sweptBalance,
         uint256 activatedDeposits,
         uint256 completedExits
-    ) external onlyUpkeep {
+    ) external {
+        onlyUpkeep();
         reportPeriod++;
         uint256 expectedActivatedBalance = activatedDeposits * POOL_CAPACITY;
         uint256 expectedExitedBalance = completedExits * POOL_CAPACITY;
         uint256 expectedEffectiveBalance = stakedPoolIds.length * POOL_CAPACITY;
-        int256 rewards = int256(activeBalance + sweptBalance + finalizableRecoveredBalance) - int256(expectedEffectiveBalance + expectedExitedBalance);
+        int256 rewards = int256(beaconBalance + sweptBalance + finalizableRecoveredBalance) -
+            int256(expectedEffectiveBalance + expectedExitedBalance);
         int256 change = rewards - latestActiveRewardBalance;
         if (change > 0) {
             uint256 gain = uint256(change);
             if (rewards > 0) {
                 uint256 gainAfterFees = subtractFees(gain);
-                stakeRatioSum += Math.mulDiv(
-                    stakeRatioSum,
-                    gainAfterFees,
-                    getTotalStake()
-                );
-                latestActiveBalanceAfterFees += gainAfterFees;
-
+                stakeRatioSum += MathUpgradeable.mulDiv(stakeRatioSum, gainAfterFees, getTotalStake());
+                latestBeaconBalanceAfterFees += gainAfterFees;
                 emit StakeRebalanced(gainAfterFees);
             } else {
-                stakeRatioSum += Math.mulDiv(
-                    stakeRatioSum,
-                    gain,
-                    getTotalStake()
-                );
-                latestActiveBalanceAfterFees += gain;
-
+                stakeRatioSum += MathUpgradeable.mulDiv(stakeRatioSum, gain, getTotalStake());
+                latestBeaconBalanceAfterFees += gain;
                 emit StakeRebalanced(gain);
             }
         } else if (change < 0) {
             uint256 loss = uint256(-change);
-            stakeRatioSum -= Math.mulDiv(stakeRatioSum, loss, getTotalStake());
-            latestActiveBalanceAfterFees -= loss;
-
+            stakeRatioSum -= MathUpgradeable.mulDiv(stakeRatioSum, loss, getTotalStake());
+            latestBeaconBalanceAfterFees -= loss;
             emit StakeRebalanced(loss);
         }
         int256 sweptRewards = int256(sweptBalance + finalizableRecoveredBalance) - int256(finalizableExitedBalance);
         if (sweptRewards > 0) {
-            latestActiveBalanceAfterFees -= subtractFees(uint256(sweptRewards));
+            latestBeaconBalanceAfterFees -= subtractFees(uint256(sweptRewards));
         }
-        latestActiveBalanceAfterFees -= finalizableExitedBalance;
-        latestActiveBalanceAfterFees += expectedActivatedBalance;
+        latestBeaconBalanceAfterFees -= finalizableExitedBalance;
+        latestBeaconBalanceAfterFees += expectedActivatedBalance;
         latestActiveRewardBalance = rewards - sweptRewards;
-        latestActiveBalance = activeBalance;
+        latestBeaconBalance = beaconBalance;
         finalizableExitedBalance = 0;
         finalizableRecoveredBalance = 0;
+        finalizableActivations = 0;
         finalizableCompletedExits = 0;
     }
 
-    /**
-     * @notice Compound rewards given a list of pool IDs
-     * @param poolIds The list of pool IDs
-     */
-    function compoundRewards(uint32[5] memory poolIds) external onlyUpkeep {
-        for (uint256 i = 0; i < poolIds.length; i++) {
+    /// @inheritdoc ICasimirManager
+    function compoundRewards(uint32[5] memory poolIds) external {
+        onlyUpkeep();
+        for (uint256 i; i < poolIds.length; i++) {
             uint32 poolId = poolIds[i];
             if (poolId == 0) {
                 break;
@@ -528,22 +430,15 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         }
     }
 
-    /**
-     * @notice Request to withdraw user stake
-     * @param amount The amount of stake to withdraw
-     */
-    function requestWithdrawal(
-        uint256 amount
-    ) external nonReentrant {
-        setActionCount(msg.sender);
-
+    /// @inheritdoc ICasimirManager
+    function requestWithdrawal(uint256 amount) external nonReentrant {
         User storage user = users[msg.sender];
         user.stake0 = getUserStake(msg.sender);
-        require(user.stake0 >= amount, "Withdrawing more than user stake");
-
+        if (user.stake0 < amount) {
+            revert InvalidAmount();
+        }
         user.stakeRatioSum0 = stakeRatioSum;
         user.stake0 -= amount;
-
         if (amount <= getWithdrawableBalance()) {
             if (amount <= exitedBalance) {
                 exitedBalance -= amount;
@@ -554,39 +449,24 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             }
             fulfillWithdrawal(msg.sender, amount);
         } else {
-            requestedWithdrawalQueue.push(
-                Withdrawal({
-                    user: msg.sender,
-                    amount: amount,
-                    period: reportPeriod
-                })
-            );
+            requestedWithdrawalQueue.push(Withdrawal({userAddress: msg.sender, amount: amount, period: reportPeriod}));
             requestedWithdrawalBalance += amount;
             requestedWithdrawals++;
-
             uint256 coveredExitBalance = requestedExits * POOL_CAPACITY;
             if (requestedWithdrawalBalance > coveredExitBalance) {
-                uint256 exitsRequired = (requestedWithdrawalBalance -
-                    coveredExitBalance) / POOL_CAPACITY;
-                if (
-                    (requestedWithdrawalBalance - coveredExitBalance) %
-                        POOL_CAPACITY >
-                    0
-                ) {
+                uint256 exitsRequired = (requestedWithdrawalBalance - coveredExitBalance) / POOL_CAPACITY;
+                if ((requestedWithdrawalBalance - coveredExitBalance) % POOL_CAPACITY > 0) {
                     exitsRequired++;
                 }
                 requestExits(exitsRequired);
             }
-
             emit WithdrawalInitiated(msg.sender, amount);
         }
     }
 
-    /**
-     * @notice Fulfill a given count of pending withdrawals
-     * @param count The number of withdrawals to complete
-     */
-    function fulfillWithdrawals(uint256 count) external onlyUpkeep {
+    /// @inheritdoc ICasimirManager
+    function fulfillWithdrawals(uint256 count) external {
+        onlyUpkeep();
         uint256 withdrawalAmount;
         uint256 withdrawalCount;
         while (count > 0) {
@@ -598,11 +478,10 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
             if (withdrawal.period > reportPeriod) {
                 break;
             }
-            requestedWithdrawalQueue.remove(0);
+            requestedWithdrawalQueue.removeWithdrawalItem(0);
             withdrawalAmount += withdrawal.amount;
             withdrawalCount++;
-
-            fulfillWithdrawal(withdrawal.user, withdrawal.amount);
+            fulfillWithdrawal(withdrawal.userAddress, withdrawal.amount);
         }
         if (withdrawalAmount <= exitedBalance) {
             exitedBalance -= withdrawalAmount;
@@ -615,461 +494,265 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
         requestedWithdrawals -= withdrawalCount;
     }
 
-    /**
-     * @notice Initiate the next ready pool
-     * @param depositDataRoot The deposit data root
-     * @param publicKey The validator public key
-     * @param signature The signature
-     * @param withdrawalCredentials The withdrawal credentials
-     * @param operatorIds The operator IDs
-     * @param shares The operator shares
-     * @param feeAmount The fee amount to deposit
-     * @param minimumTokenAmount The minimum SSV token amount out after processing fees
-     * @param cluster The SSV cluster snapshot
-     */
-    function initiateDeposit(
+    /// @inheritdoc ICasimirManager
+    function initiatePool(
         bytes32 depositDataRoot,
         bytes memory publicKey,
         bytes memory signature,
         bytes memory withdrawalCredentials,
         uint64[] memory operatorIds,
-        bytes memory shares,
+        bytes memory shares
+    ) external {
+        onlyOracle();
+        if (readyPoolIds.length == 0) {
+            revert NoReadyPools();
+        }
+        uint32 poolId = readyPoolIds[0];
+        readyPoolIds.removeUint32Item(0);
+        pendingPoolIds.push(poolId);
+        poolAddresses[poolId] = CasimirBeacon.createPool(
+            factory.poolBeaconAddress(),
+            address(registry),
+            operatorIds,
+            poolId,
+            publicKey,
+            shares
+        );
+        {
+            ICasimirPool(poolAddresses[poolId]).depositStake{value: POOL_CAPACITY}(
+                depositDataRoot,
+                signature,
+                withdrawalCredentials
+            );
+            for (uint256 i; i < operatorIds.length; i++) {
+                registry.addOperatorPool(operatorIds[i], poolId);
+            }
+        }
+        emit PoolInitiated(poolId);
+    }
+
+    /// @inheritdoc ICasimirManager
+    function activatePool(
+        uint256 pendingPoolIndex,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount,
-        uint256 minimumTokenAmount,
+        uint256 minTokenAmount,
         bool processed
-    ) external onlyOracle {
-        require(readyPoolIds.length > 0, "No ready pools");
-
-        uint32 poolId = readyPoolIds[0];
-        readyPoolIds.remove(0);
-        pendingPoolIds.push(poolId);
-
-        poolAddresses[poolId] = address(
-            new CasimirPool(
-                address(registry),
-                poolId,
-                publicKey,
-                operatorIds
-            )
-        );
-
-        bytes memory computedWithdrawalCredentials = abi.encodePacked(
-            bytes1(uint8(1)),
-            bytes11(0),
-            poolAddresses[poolId]
-        );
-
-        require(
-            keccak256(computedWithdrawalCredentials) ==
-                keccak256(withdrawalCredentials),
-            "Invalid withdrawal credentials"
-        );
-
-        registerPool(
-            poolId,
-            depositDataRoot,
-            publicKey,
-            signature,
-            withdrawalCredentials,
-            operatorIds,
-            shares,
-            cluster,
-            feeAmount,
-            minimumTokenAmount,
-            processed
-        );
-
-        emit DepositInitiated(poolId);
-    }
-
-    /**
-     * @notice Activate a given count of the next pending pools
-     * @param count The number of pools to activate
-     */
-    function activateDeposits(uint256 count) external onlyUpkeep {
-        require(pendingPoolIds.length >= count, "Not enough pending pools");
-
-        while (count > 0) {
-            count--;
-            uint32 poolId = pendingPoolIds[0];
-            ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
-            require(
-                poolDetails.status == ICasimirPool.PoolStatus.PENDING,
-                "Pool not pending"
-            );
-
-            pool.setStatus(ICasimirPool.PoolStatus.ACTIVE);
-            pendingPoolIds.remove(0);
-            stakedPoolIds.push(poolId);
-
-            emit DepositActivated(poolId);
-        }
-    }
-
-    /**
-     * @notice Request reports a given count of forced exits
-     * @param count The number of forced exits
-     */
-    function requestForcedExitReports(uint256 count) external onlyUpkeep {
-        emit ForcedExitReportsRequested(count);
-    }
-
-    /**
-     * @notice Request reports for a given count of completed exits
-     * @param count The number of completed exits
-     */
-    function requestCompletedExitReports(uint256 count) external onlyUpkeep {
-        emit CompletedExitReportsRequested(count);
-    }
-
-    /**
-     * @notice Request reshares for an operator
-     * @param operatorId The operator ID
-     */
-    function requestReshares(uint64 operatorId) external onlyOracleOrRegistry {
-        emit ResharesRequested(operatorId);
-    }
-
-    /**
-     * @notice Report pool forced (unrequested) exits
-     * @param poolIds The pool IDs
-     */
-    function reportForcedExits(uint32[] memory poolIds) external onlyOracle {
-        uint256 newForcedExits;
-        uint256 newRequestedExits;
-        for (uint256 i = 0; i < poolIds.length; i++) {
-            uint32 poolId = poolIds[i];
-            ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
-            require(
-                poolDetails.status != ICasimirPool.PoolStatus.EXITING_FORCED,
-                "Forced exit already reported"
-            );
-
-            newForcedExits++;
-            if (poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
-                newRequestedExits++;
-            }
-            pool.setStatus(ICasimirPool.PoolStatus.EXITING_FORCED);
-        }
-        forcedExits += newForcedExits;
-        requestedExits -= newRequestedExits;
-
-        emit ForcedExitsReported(poolIds);
-    }
-
-    /**
-     * @notice Report a completed exit
-     * @param poolIndex The staked pool index
-     * @param blamePercents The operator blame percents (0 if balance is 32 ether)
-     * @param cluster The SSV cluster snapshot
-     */
-    function reportCompletedExit(
-        uint256 poolIndex,
-        uint32[] memory blamePercents,
-        ISSVNetworkCore.Cluster memory cluster
-    ) external onlyOracle {
-        uint32 poolId = stakedPoolIds[poolIndex];
+    ) external {
+        onlyOracle();
+        uint32 poolId = pendingPoolIds[pendingPoolIndex];
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-        ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
-        require(
-            poolDetails.status == ICasimirPool.PoolStatus.EXITING_FORCED ||
-            poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED,
-            "Pool not exiting"
-        );
-
-        stakedPoolIds.remove(poolIndex);
-
-        if (poolDetails.status == ICasimirPool.PoolStatus.EXITING_REQUESTED) {
-            requestedExits--;
-        } else if (
-            poolDetails.status == ICasimirPool.PoolStatus.EXITING_FORCED
-        ) {
-            forcedExits--;
+        PoolRegistration memory poolRegistration = pool.getRegistration();
+        if (poolRegistration.status != PoolStatus.PENDING) {
+            revert PoolNotPending();
         }
-
-        pool.setStatus(ICasimirPool.PoolStatus.WITHDRAWN);
-        pool.withdrawBalance(blamePercents);
-        ssvNetwork.removeValidator(poolDetails.publicKey, poolDetails.operatorIds, cluster);
-
-        emit ExitCompleted(poolId);
+        finalizableActivations++;
+        pool.setStatus(PoolStatus.ACTIVE);
+        uint256 ssvAmount = retrieveFees(feeAmount, minTokenAmount, address(ssvToken), processed);
+        ssvToken.approve(address(ssvClusters), ssvAmount);
+        ssvClusters.registerValidator(
+            poolRegistration.publicKey,
+            poolRegistration.operatorIds,
+            poolRegistration.shares,
+            ssvAmount,
+            cluster
+        );
+        pendingPoolIds.removeUint32Item(pendingPoolIndex);
+        stakedPoolIds.push(poolId);
+        emit PoolActivated(poolId);
     }
 
-    /**
-     * @notice Report a reshare
-     * @param poolId The pool ID
-     * @param operatorIds The operator IDs
-     * @param oldOperatorIds The old operator IDs
-     * @param newOperatorId The new operator ID
-     * @param oldOperatorId The old operator ID
-     * @param shares The operator shares
-     * @param cluster The SSV cluster snapshot
-     * @param oldCluster The old SSV cluster snapshot
-     * @param feeAmount The fee amount to deposit
-     * @param minimumTokenAmount The minimum SSV token amount out after processing fees
-     * @param processed Whether the fee amount is already processed
-     */
-    function reportReshare(
+    /// @inheritdoc ICasimirManager
+    function resharePool(
         uint32 poolId,
         uint64[] memory operatorIds,
-        uint64[] memory oldOperatorIds,
         uint64 newOperatorId,
         uint64 oldOperatorId,
         bytes memory shares,
         ISSVNetworkCore.Cluster memory cluster,
         ISSVNetworkCore.Cluster memory oldCluster,
         uint256 feeAmount,
-        uint256 minimumTokenAmount,
+        uint256 minTokenAmount,
         bool processed
-    ) external onlyOracle {
+    ) external {
+        onlyOracle();
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-        ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
-        require(
-            poolDetails.status == ICasimirPool.PoolStatus.PENDING ||
-            poolDetails.status == ICasimirPool.PoolStatus.ACTIVE,
-            "Pool not active"
-        );
-        require(poolDetails.reshares < 2, "Pool already reshared twice");
-
-        pool.setReshares(poolDetails.reshares + 1);
-
+        PoolStatus poolStatus = pool.status();
+        if (poolStatus != PoolStatus.ACTIVE && poolStatus != PoolStatus.PENDING) {
+            revert PoolNotActive();
+        }
+        uint256 poolReshares = pool.reshares();
+        if (poolReshares >= 2) {
+            revert PoolMaxReshared();
+        }
+        bytes memory poolPublicKey = pool.publicKey();
+        uint256 ssvAmount = retrieveFees(feeAmount, minTokenAmount, address(ssvToken), processed);
+        ssvToken.approve(address(ssvClusters), ssvAmount);
+        ssvClusters.removeValidator(poolPublicKey, pool.getOperatorIds(), oldCluster);
+        ssvClusters.registerValidator(poolPublicKey, operatorIds, shares, ssvAmount, cluster);
+        pool.setOperatorIds(operatorIds);
+        pool.setReshares(poolReshares + 1);
         registry.removeOperatorPool(oldOperatorId, poolId, 0);
         registry.addOperatorPool(newOperatorId, poolId);
-
-        uint256 ssvAmount = retrieveFees(
-            feeAmount,
-            minimumTokenAmount,
-            tokenAddresses[Token.SSV],
-            processed
-        );
-        ssvToken.approve(address(ssvNetwork), ssvAmount);
-
-        ssvNetwork.removeValidator(
-            poolDetails.publicKey,
-            oldOperatorIds,
-            oldCluster
-        );
-
-        ssvNetwork.registerValidator(
-            poolDetails.publicKey,
-            operatorIds,
-            shares,
-            ssvAmount,
-            cluster
-        );
-
-        emit ReshareCompleted(poolId);
+        emit PoolReshared(poolId);
     }
 
-    /**
-     * @notice Withdraw a given amount of a cluster balance
-     * @param operatorIds The operator IDs
-     * @param cluster The SSV cluster snapshot
-     * @param amount The amount to withdraw
-     */
+    /// @inheritdoc ICasimirManager
+    function reportForcedExits(uint32[] memory poolIds) external {
+        onlyOracle();
+        uint256 newForcedExits;
+        uint256 newRequestedExits;
+        for (uint256 i; i < poolIds.length; i++) {
+            uint32 poolId = poolIds[i];
+            ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
+            PoolStatus poolStatus = pool.status();
+            if (poolStatus == PoolStatus.EXITING_FORCED) {
+                revert ForcedExitAlreadyReported();
+            }
+            newForcedExits++;
+            if (poolStatus == PoolStatus.EXITING_REQUESTED) {
+                newRequestedExits++;
+            }
+            pool.setStatus(PoolStatus.EXITING_FORCED);
+        }
+        forcedExits += newForcedExits;
+        requestedExits -= newRequestedExits;
+        emit ForcedExitsReported(poolIds);
+    }
+
+    /// @inheritdoc ICasimirManager
+    function reportCompletedExit(
+        uint256 stakedPoolIndex,
+        uint32[] memory blamePercents,
+        ISSVNetworkCore.Cluster memory cluster
+    ) external {
+        onlyOracle();
+        uint32 poolId = stakedPoolIds[stakedPoolIndex];
+        ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
+        PoolStatus poolStatus = pool.status();
+        if (poolStatus != PoolStatus.EXITING_FORCED && poolStatus != PoolStatus.EXITING_REQUESTED) {
+            revert PoolNotExiting();
+        }
+        stakedPoolIds.removeUint32Item(stakedPoolIndex);
+        if (poolStatus == PoolStatus.EXITING_REQUESTED) {
+            requestedExits--;
+        } else if (poolStatus == PoolStatus.EXITING_FORCED) {
+            forcedExits--;
+        }
+        pool.withdrawBalance(blamePercents);
+        ssvClusters.removeValidator(pool.publicKey(), pool.getOperatorIds(), cluster);
+        emit ExitCompleted(poolId);
+    }
+
+    /// @inheritdoc ICasimirManager
     function withdrawClusterBalance(
         uint64[] memory operatorIds,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 amount
-    ) external onlyOracle {
-        ssvNetwork.withdraw(operatorIds, amount, cluster);
+    ) external {
+        onlyOracle();
+        ssvClusters.withdraw(operatorIds, amount, cluster);
     }
 
-    /**
-     * @notice Cancel the Chainlink functions subscription
-     */
-    function cancelFunctions() external onlyOracle {
+    /// @inheritdoc ICasimirManager
+    function cancelFunctions() external {
+        onlyFactoryOwner();
         functionsBillingRegistry.cancelSubscription(functionsId, address(this));
         functionsId = 0;
-
         emit FunctionsCancelled();
     }
 
-    /**
-     * @notice Cancel the Chainlink upkeep subscription
-     */
-    function cancelUpkeep() external onlyOracle {
-        linkRegistry.cancelUpkeep(upkeepId);
+    /// @inheritdoc ICasimirManager
+    function cancelUpkeep() external {
+        onlyFactoryOwner();
+        keeperRegistry.cancelUpkeep(upkeepId);
         upkeepId = 0;
-
         emit UpkeepCancelled();
     }
 
-    /**
-     * @notice Withdraw a given amount from the LINK balance
-     * @param amount The amount to withdraw
-     */
-    function withdrawLINKBalance(uint256 amount) external onlyOwner {
-        require(linkToken.transfer(owner(), amount), "Transfer failed");
-
+    /// @inheritdoc ICasimirManager
+    function withdrawLINKBalance(uint256 amount) external {
+        onlyFactoryOwner();
+        if (!linkToken.transfer(msg.sender, amount)) {
+            revert TransferFailed();
+        }
         emit LINKBalanceWithdrawn(amount);
     }
 
-    /**
-     * @notice Withdraw a given amount from the SSV balance
-     * @param amount The amount to withdraw
-     */
-    function withdrawSSVBalance(uint256 amount) external onlyOwner {
-        SafeERC20.safeTransfer(ssvToken, owner(), amount);
-
+    /// @inheritdoc ICasimirManager
+    function withdrawSSVBalance(uint256 amount) external {
+        onlyFactoryOwner();
+        SafeERC20Upgradeable.safeTransfer(ssvToken, msg.sender, amount);
         emit SSVBalanceWithdrawn(amount);
     }
 
-    /**
-     * Set a new Chainlink functions request
-     * @param newRequestCBOR The new Chainlink functions request CBOR
-     * @param newFulfillGasLimit The new Chainlink functions fulfill gas limit 
-     */
-    function setFunctionsRequest(
-        bytes calldata  newRequestCBOR,
-        uint32 newFulfillGasLimit
-    ) external onlyOwner {
-        upkeep.setRequest(newRequestCBOR, newFulfillGasLimit);
-
-        emit FunctionsRequestSet(newRequestCBOR, newFulfillGasLimit);
-    }
-
-    /**
-     * @notice Set a new Chainlink functions oracle address
-     * @param newFunctionsOracleAddress New Chainlink functions oracle address
-     */
-    function setFunctionsOracleAddress(address newFunctionsOracleAddress) external onlyOwner {
-        upkeep.setOracleAddress(newFunctionsOracleAddress);
-
-        emit FunctionsOracleAddressSet(newFunctionsOracleAddress);
-    }
-
-    /**
-     * @notice Get the ready pool IDs
-     * @return readyPoolIds The ready pool IDs
-     */
-    function getReadyPoolIds() external view returns (uint32[] memory) {
-        return readyPoolIds;
-    }
-
-    /**
-     * @notice Get the pending pool IDs
-     * @return pendingPoolIds The pending pool IDs
-     */
-    function getPendingPoolIds() external view returns (uint32[] memory) {
-        return pendingPoolIds;
-    }
-
-    /**
-     * @notice Get the staked pool IDs
-     * @return stakedPoolIds The staked pool IDs
-     */
-    function getStakedPoolIds() external view returns (uint32[] memory) {
-        return stakedPoolIds;
-    }
-
-    /**
-     * @notice Get a pool's address by ID
-     * @param poolId The pool ID
-     * @return poolAddress The pool address
-     */
-    function getPoolAddress(uint32 poolId) external view returns (address) {
-        return poolAddresses[poolId];
-    }
-
-    /**
-     * @notice Get the registry address
-     * @return registryAddress The registry address
-     */
-    function getRegistryAddress() external view returns (address registryAddress) {
-        registryAddress = address(registry);
-    }
-
-    /**
-     * @notice Get the upkeep address
-     * @return upkeepAddress The upkeep address
-     */
-    function getUpkeepAddress() external view returns (address upkeepAddress) {
-        upkeepAddress = address(upkeep);
-    }
-
-    /**
-     * @notice Get the total user stake for a given user address
-     * @param userAddress The user address
-     * @return userStake The total user stake
-     */
-    function getUserStake(
-        address userAddress
-    ) public view returns (uint256 userStake) {
-        userStake = Math.mulDiv(
-            users[userAddress].stake0,
-            stakeRatioSum,
-            users[userAddress].stakeRatioSum0
-        );
-    }
-
-    /**
-     * @notice Get the total stake
-     * @return totalStake The total stake
-     */
-    function getTotalStake() public view returns (uint256 totalStake) {
-        totalStake =
-            getBufferedBalance() +
-            latestActiveBalanceAfterFees -
-            requestedWithdrawalBalance;
-    }
-
-    /**
-     * @notice Get the buffered balance
-     * @return bufferedBalance The buffered balance
-     */
-    function getBufferedBalance() public view returns (uint256 bufferedBalance) {
-        bufferedBalance = getWithdrawableBalance() + getReadyBalance();
-    }
-
-    /**
-     * @notice Get the ready balance
-     * @return readyBalance The ready balance
-     */
-    function getReadyBalance() public view returns (uint256 readyBalance) {
-        readyBalance = readyPoolIds.length * POOL_CAPACITY;
-    }
-
-    /**
-     * @notice Get the withdrawable balanace
-     * @return withdrawableBalance The withdrawable balanace
-     */
-    function getWithdrawableBalance() public view returns (uint256) {
-        return prepoolBalance + exitedBalance;
-    }
-
-    /**
-     * @notice Get the eligibility of a pending withdrawal
-     * @param index The index of the pending withdrawal
-     * @param period The period to check
-     * @return pendingWithdrawalEligibility The eligibility of a pending withdrawal
-     */
+    /// @inheritdoc ICasimirManager
     function getPendingWithdrawalEligibility(
         uint256 index,
         uint256 period
-    ) public view returns (bool pendingWithdrawalEligibility) {
+    ) external view returns (bool pendingWithdrawalEligibility) {
         if (requestedWithdrawals > index) {
             pendingWithdrawalEligibility = requestedWithdrawalQueue[index].period <= period;
         }
     }
 
-    /**
-     * @notice Deposit the current tip balance
-     */
+    /// @inheritdoc ICasimirManager
+    function getPendingPoolIds() external view returns (uint32[] memory) {
+        return pendingPoolIds;
+    }
+
+    /// @inheritdoc ICasimirManager
+    function getStakedPoolIds() external view returns (uint32[] memory) {
+        return stakedPoolIds;
+    }
+
+    /// @inheritdoc ICasimirManager
+    function getPoolAddress(uint32 poolId) external view returns (address poolAddress) {
+        poolAddress = poolAddresses[poolId];
+    }
+
+    /// @inheritdoc ICasimirManager
+    function getRegistryAddress() external view returns (address registryAddress) {
+        registryAddress = address(registry);
+    }
+
+    /// @inheritdoc ICasimirManager
+    function getUpkeepAddress() external view returns (address upkeepAddress) {
+        upkeepAddress = address(upkeep);
+    }
+
+    /// @inheritdoc ICasimirManager
+    function getUserStake(address userAddress) public view returns (uint256 userStake) {
+        userStake = MathUpgradeable.mulDiv(users[userAddress].stake0, stakeRatioSum, users[userAddress].stakeRatioSum0);
+    }
+
+    /// @inheritdoc ICasimirManager
+    function getTotalStake() public view returns (uint256 totalStake) {
+        totalStake = getBufferedBalance() + latestBeaconBalanceAfterFees - requestedWithdrawalBalance;
+    }
+
+    /// @inheritdoc ICasimirManager
+    function getBufferedBalance() public view returns (uint256 bufferedBalance) {
+        bufferedBalance = getWithdrawableBalance() + readyPoolIds.length * POOL_CAPACITY;
+    }
+
+    /// @inheritdoc ICasimirManager
+    function getWithdrawableBalance() public view returns (uint256 withdrawableBalance) {
+        withdrawableBalance = prepoolBalance + exitedBalance;
+    }
+
+    /// @notice Deposit the current tip balance
     function depositTips() private {
         uint256 tipsAfterFees = subtractFees(tipBalance);
         reservedFeeBalance += tipBalance - tipsAfterFees;
         tipBalance = 0;
         distributeStake(tipsAfterFees);
-
         emit TipsDeposited(tipsAfterFees);
     }
 
     /**
-     * @dev Distribute a given amount of stake
-     * @param amount The amount of stake to distribute
+     * @dev Distribute stake to new pools
+     * @param amount Stake amount to distribute
      */
     function distributeStake(uint256 amount) private {
         while (amount > 0) {
@@ -1078,125 +761,42 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
                 prepoolBalance += amount;
                 amount = 0;
             } else {
-                lastPoolId++;
-                uint32 poolId = lastPoolId;
                 prepoolBalance = 0;
                 amount -= remainingCapacity;
-                readyPoolIds.push(poolId);
-
-                emit DepositRequested(poolId);
+                readyPoolIds.push(++lastPoolId);
+                emit InitiationRequested(lastPoolId);
             }
         }
     }
 
     /**
-     * @notice Fulfill a withdrawal
-     * @param sender The withdrawal sender
-     * @param amount The withdrawal amount
+     * @notice Fulfill a user withdrawal
+     * @param userAddress User address
+     * @param amount Withdrawal amount
      */
-    function fulfillWithdrawal(address sender, uint256 amount) private {
-        sender.send(amount);
-
-        emit WithdrawalFulfilled(sender, amount);
-    }
-
-    /**
-     * Check and set a user's action count
-     * @param userAddress The user address to check
-     */
-    function setActionCount(address userAddress) private {
-        User storage user = users[userAddress];
-        require(
-            user.actionPeriodTimestamp == 0 ||
-                user.actionCount < MAX_ACTIONS_PER_PERIOD ||
-                block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD,
-            "Action period maximum reached"
-        );
-        if (block.timestamp >= user.actionPeriodTimestamp + ACTION_PERIOD) {
-            user.actionPeriodTimestamp = block.timestamp;
-            user.actionCount = 1;
-        } else {
-            user.actionCount++;
+    function fulfillWithdrawal(address userAddress, uint256 amount) private {
+        (bool success, ) = userAddress.call{value: amount}("");
+        if (!success) {
+            revert TransferFailed();
         }
-    }
-
-    /**
-     * @dev Register a pool with Beacon and SSV
-     * @param poolId The pool ID
-     * @param depositDataRoot The deposit data root
-     * @param publicKey The validator public key
-     * @param signature The signature
-     * @param withdrawalCredentials The withdrawal credentials
-     * @param operatorIds The operator IDs
-     * @param shares The operator shares
-     * @param cluster The SSV cluster snapshot
-     * @param feeAmount The fee amount to deposit
-     * @param minimumTokenAmount The minimum SSV token amount out after processing fees
-     * @param processed Whether the fee amount is already processed
-     */
-    function registerPool(
-        uint32 poolId,
-        bytes32 depositDataRoot,
-        bytes memory publicKey,
-        bytes memory signature,
-        bytes memory withdrawalCredentials,
-        uint64[] memory operatorIds,
-        bytes memory shares,
-        ISSVNetworkCore.Cluster memory cluster,
-        uint256 feeAmount,
-        uint256 minimumTokenAmount,
-        bool processed
-    ) private {
-        for (uint256 i = 0; i < operatorIds.length; i++) {
-            registry.addOperatorPool(operatorIds[i], poolId);
-        }
-
-        beaconDeposit.deposit{value: POOL_CAPACITY}(
-            publicKey,
-            withdrawalCredentials,
-            signature,
-            depositDataRoot
-        );
-
-        uint256 ssvAmount = retrieveFees(
-            feeAmount,
-            minimumTokenAmount,
-            tokenAddresses[Token.SSV],
-            processed
-        );
-        ssvToken.approve(address(ssvNetwork), ssvAmount);
-
-        ssvNetwork.registerValidator(
-            publicKey,
-            operatorIds,
-            shares,
-            ssvAmount,
-            cluster
-        );
-
-        emit PoolRegistered(poolId);
+        emit WithdrawalFulfilled(userAddress, amount);
     }
 
     /**
      * @notice Request a given count of staked pool exits
-     * @param count The number of exits to request
+     * @param count Count of exits to request
      */
     function requestExits(uint256 count) private {
         uint256 index = 0;
         while (count > 0) {
             uint32 poolId = stakedPoolIds[index];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            ICasimirPool.PoolDetails memory poolDetails = pool.getDetails();
-            if (
-                poolDetails.status == ICasimirPool.PoolStatus.PENDING ||
-                poolDetails.status == ICasimirPool.PoolStatus.ACTIVE
-            ) {
+            PoolStatus poolStatus = pool.status();
+            if (poolStatus == PoolStatus.PENDING || poolStatus == PoolStatus.ACTIVE) {
                 count--;
                 index++;
-
-                pool.setStatus(ICasimirPool.PoolStatus.EXITING_REQUESTED);
+                pool.setStatus(PoolStatus.EXITING_REQUESTED);
                 requestedExits++;
-
                 emit ExitRequested(poolId);
             }
         }
@@ -1204,75 +804,77 @@ contract CasimirManager is ICasimirManager, Ownable, ReentrancyGuard {
 
     /**
      * @dev Retrieve fees for a given amount of a given token
-     * @param amount The amount to retrieve
-     * @param minimumTokenAmount The minimum token amount out after processing fees
-     * @param token The token address
+     * @param amount Amount to retrieve
+     * @param minTokenAmount Minimum token amount out after processing fees
+     * @param token Token address
      * @param processed Whether the amount is already processed
      */
     function retrieveFees(
         uint256 amount,
-        uint256 minimumTokenAmount,
+        uint256 minTokenAmount,
         address token,
         bool processed
     ) private returns (uint256 amountOut) {
-        if (!processed) {
-            amountOut = processFees(amount, minimumTokenAmount, token);
-        } else {
+        if (processed) {
             amountOut = amount;
-        }
-    }
-
-    /**
-     * @dev Process reserved fees to a given token
-     * @param amount The amount to process
-     * @param minimumTokenAmount The minimum token amount out after processing fees
-     * @param tokenOut The output token address
-     * @return amountOut The output token amount out
-     */
-    function processFees(
-        uint256 amount,
-        uint256 minimumTokenAmount,
-        address tokenOut
-    ) private returns (uint256 amountOut) {
-        reservedFeeBalance -= amount;
-        IWETH9 wethToken = IWETH9(tokenAddresses[Token.WETH]);
-        wethToken.deposit{value: amount}();
-        wethToken.approve(
-            address(swapRouter),
-            wethToken.balanceOf(address(this))
-        );
-
-        IUniswapV3PoolState swapPool = IUniswapV3PoolState(
-            swapFactory.getPool(
-                tokenAddresses[Token.WETH],
-                tokenOut,
-                UNISWAP_FEE_TIER
-            )
-        );
-        require(swapPool.liquidity() >= amount, "Not enough liquidity");
-
-        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
-            .ExactInputSingleParams({
-                tokenIn: tokenAddresses[Token.WETH],
-                tokenOut: tokenOut,
+        } else {
+            reservedFeeBalance -= amount;
+            wethToken.deposit{value: amount}();
+            wethToken.approve(address(swapRouter), wethToken.balanceOf(address(this)));
+            IUniswapV3PoolState swapPool = IUniswapV3PoolState(
+                swapFactory.getPool(address(wethToken), token, UNISWAP_FEE_TIER)
+            );
+            if (swapPool.liquidity() < amount) {
+                revert InsufficientLiquidity();
+            }
+            ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+                tokenIn: address(wethToken),
+                tokenOut: token,
                 fee: UNISWAP_FEE_TIER,
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: amount,
-                amountOutMinimum: minimumTokenAmount,
+                amountOutMinimum: minTokenAmount,
                 sqrtPriceLimitX96: 0
             });
-        amountOut = swapRouter.exactInputSingle(params);
+            amountOut = swapRouter.exactInputSingle(params);
+        }
     }
 
     /**
-     * @dev Get reservable fees from a given amount
-     * @param amount The amount to reserve fees from
-     * @return amountAfterFees The amount after fees
+     * @dev Subtract fees from a given amount
+     * @param amount Original amount
+     * @return amountAfterFees Amount after fees
      */
-    function subtractFees(
-        uint256 amount
-    ) private pure returns (uint256 amountAfterFees) {
-        amountAfterFees = Math.mulDiv(amount, 100, 100 + FEE_PERCENT);
+    function subtractFees(uint256 amount) private view returns (uint256 amountAfterFees) {
+        amountAfterFees = MathUpgradeable.mulDiv(amount, 100, 100 + userFee);
+    }
+
+    /// @dev Validate the caller is the factory owner
+    function onlyFactoryOwner() private view {
+        if (msg.sender != factory.getOwner()) {
+            revert Unauthorized();
+        }
+    }
+
+    /// @dev Validate the caller is the oracle
+    function onlyOracle() private view {
+        if (msg.sender != daoOracleAddress) {
+            revert Unauthorized();
+        }
+    }
+
+    /// @dev Validate the caller is the pool
+    function onlyPool(address poolAddress) private view {
+        if (msg.sender != poolAddress) {
+            revert Unauthorized();
+        }
+    }
+
+    /// @dev Validate the caller is the upkeep
+    function onlyUpkeep() private view {
+        if (msg.sender != address(upkeep)) {
+            revert Unauthorized();
+        }
     }
 }

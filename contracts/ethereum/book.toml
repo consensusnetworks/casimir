@@ -1,9 +1,0 @@
-[output.html]
-mathjax-support = true
-additional-js = ['mermaid.min.js', 'mermaid-init.js']
-
-[preprocessor.katex]
-after = ['links']
-
-[preprocessor.mermaid]
-command = 'mdbook-mermaid'

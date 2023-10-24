@@ -3,8 +3,5 @@ src = 'src/v1'
 out = 'build/foundry'
 libs = ['lib', 'node_modules']
 test = 'test'
-cache_path  = 'build/foundry/cache'
-
-[doc]
-title = 'Casimir Ethereum Docs'
-out = 'build/foundry/docs'
+cache_path = 'build/foundry/cache'
+solc_version = 'none'

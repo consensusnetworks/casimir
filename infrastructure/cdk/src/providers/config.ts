@@ -1,4 +1,4 @@
-import { pascalCase } from '@casimir/helpers'
+import { pascalCase } from '@casimir/format'
 import { ProjectConfig } from '../interfaces/ProjectConfig'
 import dataPackage from '@casimir/data/package.json'
 
@@ -25,7 +25,8 @@ export class Config implements ProjectConfig {
         }
         this.rootDomain = `${this.stage === 'prod' ? '' : `${this.stage}.`}casimir.co`
         this.subdomains = {
-            docsEthereum: 'docs.ethereum',
+            blog: 'blog',
+            docs: 'docs',
             nodes: 'nodes',
             landing: 'www',
             users: 'users',

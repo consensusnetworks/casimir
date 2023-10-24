@@ -1,1 +1,8 @@
-.out
+.env
+.log
+/config/*
+!/config/example.*
+data
+DS_Store
+/keys/*
+!/keys/example.*

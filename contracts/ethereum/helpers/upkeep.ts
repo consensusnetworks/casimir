@@ -3,17 +3,18 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { CasimirUpkeep, FunctionsBillingRegistry } from '../build/@types'
 
 export async function runUpkeep({
-    upkeep, keeper
+    donTransmitter, upkeep,
 }: {
-    upkeep: CasimirUpkeep, keeper: SignerWithAddress
+    donTransmitter: SignerWithAddress,
+    upkeep: CasimirUpkeep,
 }) {
     let ranUpkeep = false
     const checkData = ethers.utils.toUtf8Bytes('')
-    const { ...check } = await upkeep.connect(keeper).checkUpkeep(checkData)
+    const { ...check } = await upkeep.connect(donTransmitter).checkUpkeep(checkData)
     const { upkeepNeeded } = check
     if (upkeepNeeded) {
         const performData = ethers.utils.toUtf8Bytes('')
-        const performUpkeep = await upkeep.connect(keeper).performUpkeep(performData)
+        const performUpkeep = await upkeep.connect(donTransmitter).performUpkeep(performData)
         await performUpkeep.wait()
         ranUpkeep = true
     }
@@ -21,7 +22,7 @@ export async function runUpkeep({
 }
 
 export interface ReportValues {
-    activeBalance: number
+    beaconBalance: number
     sweptBalance: number
     activatedDeposits: number
     forcedExits: number
@@ -30,66 +31,66 @@ export interface ReportValues {
 }
 
 export async function fulfillReport({
-    keeper,
+    donTransmitter,
     upkeep,
     functionsBillingRegistry,
     values
 }: {
-    keeper: SignerWithAddress,
+    donTransmitter: SignerWithAddress,
     upkeep: CasimirUpkeep,
     functionsBillingRegistry: FunctionsBillingRegistry,
     values: ReportValues
 }) {
-    const { activeBalance, sweptBalance, activatedDeposits, forcedExits, completedExits, compoundablePoolIds } = values
+    const { beaconBalance, sweptBalance, activatedDeposits, forcedExits, completedExits, compoundablePoolIds } = values
 
     const requestIds = (await upkeep.queryFilter(upkeep.filters.RequestSent())).slice(-2).map((event) => event.args.id)
     
     const balancesRequestId = requestIds[0]
-    const balancesResponseBytes = ethers.utils.defaultAbiCoder.encode(
+    const balancesResponse = ethers.utils.defaultAbiCoder.encode(
         ['uint128', 'uint128'],
-        [ethers.utils.parseEther(activeBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
+        [ethers.utils.parseEther(beaconBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
     )
     
     await fulfillFunctionsRequest({
-        keeper,
+        donTransmitter,
         functionsBillingRegistry,
         requestId: balancesRequestId,
-        responseBytes: balancesResponseBytes
+        response: balancesResponse
     })
 
     const detailsRequestId = requestIds[1]
-    const detailsResponseBytes = ethers.utils.defaultAbiCoder.encode(
+    const detailsResponse = ethers.utils.defaultAbiCoder.encode(
         ['uint32', 'uint32', 'uint32', 'uint32[5]'],
         [activatedDeposits, forcedExits, completedExits, compoundablePoolIds]
     )
 
     await fulfillFunctionsRequest({
-        keeper,
+        donTransmitter,
         functionsBillingRegistry,
         requestId: detailsRequestId,
-        responseBytes: detailsResponseBytes
+        response: detailsResponse
     })
 }
 
 export async function fulfillFunctionsRequest({
-    keeper,
+    donTransmitter,
     functionsBillingRegistry,
     requestId,
-    responseBytes
+    response
 }: {
-    keeper: SignerWithAddress,
+    donTransmitter: SignerWithAddress,
     functionsBillingRegistry: FunctionsBillingRegistry,
     requestId: string,
-    responseBytes: string
+    response: string
 }) {
-    const dummyTransmitter = keeper.address
+    const dummyTransmitter = donTransmitter.address
     const dummySigners = Array(31).fill(dummyTransmitter)
 
     // const { success, result, resultLog } = await simulateRequest(requestConfig)
     
-    const fulfillAndBill = await functionsBillingRegistry.connect(keeper).fulfillAndBill(
+    const fulfillAndBill = await functionsBillingRegistry.connect(donTransmitter).fulfillAndBill(
         requestId,
-        responseBytes,
+        response,
         '0x',
         dummyTransmitter,
         dummySigners,

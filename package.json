@@ -1,6 +1,6 @@
 {
   "name": "casimir",
-  "version": "0.0.4",
+  "version": "1.0.0-beta.0",
   "description": "Decentralized staking and asset management",
   "workspaces": [
     "apps/*",
@@ -12,9 +12,10 @@
   "scripts": {
     "clean": "npx esno scripts/root/clean.ts",
     "deploy:cdk": "npx esno -r dotenv/config scripts/cdk/deploy.ts",
+    "deploy:ethereum": "npx esno -r dotenv/config scripts/ethereum/deploy.ts",
     "dev": "npx esno -r dotenv/config scripts/root/dev.ts",
     "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts",
-    "dev:landing": "npm run dev --workspace @casimir/landing",
+    "dev:landing": "APP=landing npm run dev",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "migrations:users": "npx esno -r dotenv/config scripts/migrations/users.ts",
@@ -48,16 +49,17 @@
     "@typescript-eslint/parser": "^5.30.5",
     "@vue/eslint-config-typescript": "^10.0.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.3.1",
     "eslint": "^8.19.0",
     "eslint-plugin-vue": "^8.7.1",
-    "esno": "^0.16.3",
+    "esno": "^0.17.0",
     "ethers": "^5.7.2",
-    "express": "^4.18.1",
     "http-proxy-middleware": "^2.0.6",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.0",
     "release-it": "^15.6.0",
+    "vite-plugin-md": "^0.22.5",
+    "vite-plugin-vue-markdown": "^0.23.8",
     "zx": "^7.1.1"
   },
   "lint-staged": {
@@ -79,5 +81,6 @@
     "hooks": {
       "after:bump": "npx auto-changelog -p"
     }
-  }
+  },
+  "dependencies": {}
 }

@@ -15,6 +15,9 @@ export async function getSecret(id: string) {
             }
         )
     )
+    if (!SecretString) {
+        throw new Error(`No secret found for ${id}`)
+    }
     return SecretString
 }
 

@@ -13,7 +13,5 @@ interface IKeeperRegistrar {
         uint96 amount;
     }
 
-    function registerUpkeep(
-        RegistrationParams calldata requestParams
-    ) external returns (uint256);
+    function registerUpkeep(RegistrationParams calldata requestParams) external returns (uint256);
 }

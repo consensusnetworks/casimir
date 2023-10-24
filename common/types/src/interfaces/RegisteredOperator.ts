@@ -1,11 +1,11 @@
+import { PoolConfig } from './PoolConfig'
 import { Operator } from '@casimir/ssv'
-import { Pool } from './Pool'
 
 export interface RegisteredOperator extends Operator {
     active: boolean
     collateral: string
     poolCount: number
-    pools: Pool[]
-    url: string
+    pools: PoolConfig[]
     resharing: boolean
+    url: string
 }

@@ -1,4 +1,4 @@
-<img width="50px" alt="Casimir logo" src="common/images/casimir.png">
+<img width="50px" alt="Casimir logo" src="casimir.png">
 
 # Casimir
 
@@ -41,15 +41,11 @@ Configure the following prerequisite global dependency versions.
 
 1. [Docker (v24.x)](https://docs.docker.com/engine/install/).
 
-2. [Git (v2.x)](https://git-scm.com/downloads)
+2. [Go (v1.18.x)](https://golang.org/doc/install).
 
-    > 🚩 GitHub submodule support: You also need to make sure to have at least one SSH authentication key on your GitHub account (for the git cloning of submodules in various scripts). See [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
+3. [Node.js (v18.x)](https://nodejs.org/en/download/).
 
-3. [Go (v1.18.x)](https://golang.org/doc/install).
-
-4. [Node.js (v18.x)](https://nodejs.org/en/download/).
-
-5. [Optional: AWS CLI (v2.x)](https://aws.amazon.com/cli/)
+4. [Optional: AWS CLI (v2.x)](https://aws.amazon.com/cli/)
 
     > 🚩 **Consensus Networks team only**: Create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
 
@@ -125,16 +121,11 @@ echo "USE_SECRETS=false" > .env
 | `ETHEREUM_RPC_URL` | Ethereum RPC network URL | `http://127.0.0.1:8545` |
 | `NETWORK` | Network name (`mainnet || testnet || hardhat || localhost`) | `localhost` |
 | `FORK` | Fork network name (`mainnet || testnet || hardhat`) | `testnet` |
-| `MANAGER_ADDRESS` | Manager contract address | (predicted manager address) |
-| `VIEWS_ADDRESS` | Views contract address | (predicted views address) |
+| `FACTORY_ADDRESS` | Base factory contract address | (predicted factory address) |
 | `CRYPTO_COMPARE_API_KEY` | CryptoCompare API key | `` |
 | `TUNNEL` | Whether to tunnel local network RPC URLs (for remote wallets) | `false` |
-| `EMULATE` | Whether to emulate wallets | `false` |
-| `LEDGER_APP` | Ledger app name | `ethereum` |
 | `MOCK_SERVICES` | Whether to mock backend services | `true` |
 | `BUILD_PREVIEW` | Whether to preview web app production build | `false` |
-
-  > 🚩 While running the Ledger Speculos emulator on MacOS (with EMULATORS=true), if you get a surprising error that port 5000 is in use, go to  > System Preferences... > Sharing and uncheck Airplay Receiver.
 
 ### Apps
 
@@ -192,8 +183,6 @@ The common packages provide shared code for the project:
 
 - [@casimir/aws](common/aws): AWS helpers
 - [@casimir/data](common/data): data schemas and operational workflows
-- [@casimir/helpers](common/helpers): general utilities
-- [@casimir/speculos](common/speculos): Ledger emulator helpers
 - [@casimir/ssv](common/ssv): SSV helpers
 - [@casimir/types](common/types): shared types
 - [@casimir/uniswap](common/uniswap): Uniswap helpers

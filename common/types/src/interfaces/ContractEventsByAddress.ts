@@ -1,8 +1,8 @@
 export interface ContractEventsByAddress {
     CompletedExitReportsRequested?: number;
-    DepositActivated?: number;
-    DepositInitiated?: number;
-    DepositRequested?: number;
+    PoolActivated?: number;
+    PoolInitiated?: number;
+    InitiationRequested?: number;
     ExitCompleted?: number;
     ExitRequested?: number;
     ForcedExitReportsRequested?: number;

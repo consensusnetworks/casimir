@@ -1,24 +1,25 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
-import useContracts from '@/composables/contracts'
+import useStaking from '@/composables/staking'
 import useEthers from '@/composables/ethers'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
-import useUsers from '@/composables/users'
+import useUser from '@/composables/user'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
-const { deposit, getDepositFees, getUserStake } = useContracts()
+const { stakingComposableInitialized, deposit, getDepositFees, getUserStake, initializeStakingComposable } = useStaking()
 const { getEthersBalance } = useEthers()
 const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
-const { user, updateUserAgreement } = useUsers()
+const { user, updateUserAgreement } = useUser()
 
 // Staking Component Refs
 const addressBalance = ref<string | null>(null)
 const currentEthPrice = ref(0)
+const stakeType = ref<'default' | 'eigen'>('default')
 const currentUserStake = ref(0)
 const estimatedFees = ref<number | string>('-')
 const formattedAmountToStake = ref('')
@@ -53,34 +54,17 @@ const handleInputOnAmountToStake = (event: any) => {
   formattedAmountToStake.value = parts.join('.')
 }
 
-const handleOutsideClick = (event: any) => {
-  const selectWalletInputContainer = document.getElementById('selectWalletInputContainer')
-  const selectWalletOptionsCard = document.getElementById('selectWalletOptionsCard')
-  const selectWalletInputButton = document.getElementById('selectWalletInputButton')
-  if (selectWalletInputContainer && selectWalletOptionsCard && selectWalletInputButton) {
-    if (openSelectWalletInput.value) {
-      if (!selectWalletInputContainer.contains(event.target)) {
-        if (!selectWalletInputButton.contains(event.target)) {
-          openSelectWalletInput.value = false
-        }
-      }
-    }
+const selectAmountInput = () => {
+  const inputElement = document.getElementById('amount_input') as HTMLInputElement
+  
+  if(inputElement){
+
+    inputElement.setSelectionRange(0, inputElement.value.length)
+  
+    // For mobile devices
+    inputElement.select()
   }
-
-  const termsOfServiceContainer = document.getElementById('termsOfServiceContainer')
-  const termsOfServiceCard = document.getElementById('termsOfServiceCard')
-  const termsOfServiceButton = document.getElementById('termsOfServiceButton')
-
-
-  if (termsOfServiceCard && termsOfServiceButton && termsOfServiceContainer) {
-    if (openTermsOfService.value) {
-      if (!termsOfServiceCard.contains(event.target)) {
-        if (!termsOfServiceButton.contains(event.target)) {
-          openTermsOfService.value = false
-        }
-      }
-    }
-  }
+  
 }
 
 const aggregateAddressesByProvider = () => {
@@ -132,6 +116,7 @@ watch(formattedAmountToStake, async () => {
 })
 
 watch(selectedWalletAddress, async () => {
+  if (!stakingComposableInitialized.value) return
   if (selectedWalletAddress.value) {
     addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + ' ETH'
     currentUserStake.value = await getUserStake(selectedWalletAddress.value)
@@ -142,6 +127,7 @@ watch(selectedWalletAddress, async () => {
 })
 
 watch(user, async () => {
+  if (!stakingComposableInitialized.value) return
   if (user.value?.id) {
     aggregateAddressesByProvider()
     termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
@@ -149,6 +135,7 @@ watch(user, async () => {
     selectedWalletAddress.value = user.value?.address as string
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    // estimatedFees.value = await getDepositFees()
   } else {
     selectedStakingProvider.value = ''
     selectedWalletAddress.value = null
@@ -159,54 +146,87 @@ watch(user, async () => {
 })
 
 onMounted(async () => {
-  window.addEventListener('click', handleOutsideClick)
+  // TODO: @ccali11 - Want to make sure this is non-blocking
+  await initializeStakingComposable()
   aggregateAddressesByProvider()
   currentEthPrice.value = Math.round((await getCurrentPrice({ coin: 'ETH', currency: 'USD' })) * 100) / 100
-  estimatedFees.value = await getDepositFees()
   if (user.value?.id) {
+    // estimatedFees.value = await getDepositFees()
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     selectedWalletAddress.value = user.value?.address as string
+    if (!stakingComposableInitialized.value) return
     currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
   }
 })
 
-onUnmounted(() => {
-  window.removeEventListener('click', handleOutsideClick)
+const handleOutsideClickForWalletInput = (event: any) => {
+  const selectWalletInputContainer = document.getElementById('selectWalletInputContainer')
+  const selectWalletInputButton = document.getElementById('selectWalletInputButton')
+
+  if(!selectWalletInputContainer?.contains(event.target) && !selectWalletInputButton?.contains(event.target)){
+    openSelectWalletInput.value = false
+  }
+}
+
+const handleOutsideClickForTermsOfService = (event: any) => {
+  const termsOfServiceContainer = document.getElementById('termsOfServiceContainer')
+  const termsOfServiceButton = document.getElementById('termsOfServiceButton')
+
+
+  if(!termsOfServiceContainer?.contains(event.target) && !termsOfServiceButton?.contains(event.target)){
+    openTermsOfService.value = false
+  }
+}
+
+watch(openSelectWalletInput, ()=>{
+  if(openSelectWalletInput.value){
+    window.addEventListener('click', handleOutsideClickForWalletInput)
+  }else {
+    window.removeEventListener('click', handleOutsideClickForWalletInput)
+  }
+})
+
+watch(openTermsOfService, ()=>{
+  if(openTermsOfService.value){
+    window.addEventListener('click', handleOutsideClickForTermsOfService)
+  }else {
+    window.removeEventListener('click', handleOutsideClickForTermsOfService)
+  }
 })
 
 const handleDeposit = async () => {
-  stakingActionLoader.value = true
+  stakeButtonText.value = 'Staking...'
 
-  loading.value = true
-  const isSuccess = await deposit({ amount: formattedAmountToStake.value, walletProvider: selectedStakingProvider.value })
-  loading.value = false
-  if (isSuccess) {
-    success.value = true
-    stakeButtonText.value = 'Transaction Submitted'
-  } else {
-    failure.value = true
-    stakeButtonText.value = 'Transaction Failed'
-  }
+  // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
+  // if (activeAddress !== selectedWalletAddress.value) {
+  //   formattedAmountToStake.value = ''
+  //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
+  // }
 
-  setTimeout(async () => {
-    success.value = false
-    failure.value = false
+  const result = await deposit({ 
+    amount: formattedAmountToStake.value,
+    walletProvider: selectedStakingProvider.value,
+    type: stakeType.value 
+  })
+
+  if (!result) stakeButtonText.value = 'Failed!'
+  stakeButtonText.value = 'Staked!'
+
+  setTimeout(() =>{
     stakeButtonText.value = 'Stake'
-
-    const ethersBalance = await getEthersBalance(user.value?.address as string)
-    addressBalance.value = (Math.round(ethersBalance * 100) / 100) + ' ETH'
-    // empty out staking comp
-    // selectedStakingProvider.value = ''
-    // selectedWalletAddress.value = null
-    // addressBalance.value = await getEthersBalance(user.value?.address as string)
     formattedAmountToStake.value = ''
-
-  }, 500)
-
-  setTimeout(() => {
-    stakingActionLoader.value = false
   }, 1000)
+
+  if (result) {
+    const waitResponse = await result.wait(1)
+    if (waitResponse){
+      alert('Your Stake Has Been Deposited!')
+    } else {
+      alert('Your Stake Action Has Failed, Please Try Again Later!')
+    }
+    console.log('waitResponse :>> ', waitResponse)
+  }
 
   currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
@@ -221,7 +241,10 @@ const handleDeposit = async () => {
     <h6 class="addressBalance mb-[12px]">
       Wallet Balance
     </h6>
-    <h5 class="addressBalance_amount mb-[5px]">
+    <h5
+      class="addressBalance_amount mb-[5px]"
+      :class="addressBalance? 'font-[500]' : 'font-[300]'"
+    >
       {{ addressBalance ? addressBalance : '- - -' }}
     </h5>
     <div class="text-[12px] mb-[13px] text-blue-400">
@@ -301,13 +324,16 @@ const handleDeposit = async () => {
     </div>
 
 
-    <div class="card_input text-black px-[10px] py-[14px]">
+    <button
+      class="card_input text-black px-[10px] py-[14px] cursor-text"
+      @click="selectAmountInput"
+    >
       <div class="flex items-center gap-[8px]">
         <!-- <h6 class="text-[#667085]">
           $
         </h6> -->
         <input
-          id="amount"
+          id="amount_input"
           v-model="formattedAmountToStake"
           type="text"
           pattern="^\d{1,3}(,\d{3})*(\.\d+)?$"
@@ -321,7 +347,7 @@ const handleDeposit = async () => {
           ETH
         </h6>
       </div>
-    </div>
+    </button>
 
     <p class="card_message">
       The amount to stake in set currency
@@ -334,7 +360,8 @@ const handleDeposit = async () => {
         </h6>
       </div>
       <h6 class="card_analytics_amount">
-        {{ estimatedFees }}.00%
+        <!-- {{ estimatedFees }}.00% -->
+        5.00%
       </h6>
     </div>
     <div class="flex justify-between items-center my-[10px]">
@@ -377,19 +404,10 @@ const handleDeposit = async () => {
     <button
       class="card_button  h-[37px] w-full "
       :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
-      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)"
+      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage) || stakeButtonText !== 'Stake'"
       @click="handleDeposit()"
     >
       <div
-        v-if="loading"
-        class="dots_container flex justify-center items-center gap-[5px]"
-      >
-        <div class="dot" />
-        <div class="dot" />
-        <div class="dot" />
-      </div>
-      <div
-        v-else
         class="flex items-center justify-center gap-[5px]"
       >
         {{ stakeButtonText }}
@@ -459,7 +477,6 @@ const handleDeposit = async () => {
 
 .addressBalance_amount {
   font-style: normal;
-  font-weight: 500;
   font-size: 28px;
   line-height: 20px;
   letter-spacing: -0.01em;
@@ -576,4 +593,4 @@ const handleDeposit = async () => {
   box-shadow: 0px 0px 0px 4px rgba(237, 235, 255, 0.26);
   border-radius: 4px;
 }
-</style>
+</style>@/composables/user@/composables/staking

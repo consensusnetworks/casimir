@@ -5,6 +5,5 @@ export interface LoginCredentials {
     address: string
     provider: ProviderString
     currency: Currency
-    message: string
-    signedMessage: string
+    pathIndex?: number
 }

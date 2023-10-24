@@ -1,5 +1,5 @@
 import { Postgres } from './postgres'
-import { camelCase } from '@casimir/helpers'
+import { camelCase } from '@casimir/format'
 import { Account, OperatorAddedSuccess, RemoveAccountOptions, User, UserAddedSuccess, UserWithAccountsAndOperators } from '@casimir/types'
 import useEthers from './ethers'
 
@@ -16,6 +16,7 @@ const postgres = new Postgres({
 interface AddOperatorOptions {
     userId: number
     accountId: number
+    nodeUrl: string
 }
 
 export default function useDB() {
@@ -49,13 +50,18 @@ export default function useDB() {
      * @returns Promise<OperatorAddedSuccess | undefined>
      */
     // TODO: Need some check to make sure operator is properly registered
-    async function addOperator({userId, accountId}: AddOperatorOptions) : Promise<OperatorAddedSuccess | undefined> {
-        const created_at = new Date().toISOString()
-        const text = 'INSERT INTO operators (user_id, account_id, created_at) VALUES ($1, $2, $3) RETURNING *;'
-        const params = [userId, accountId, created_at]
-        const rows = await postgres.query(text, params)
-        const addedOperator = rows[0]
-        return formatResult(addedOperator)
+    async function addOperator({ userId, accountId, nodeUrl }: AddOperatorOptions) : Promise<OperatorAddedSuccess | undefined> {
+        try {
+            const created_at = new Date().toISOString()
+            const text = 'INSERT INTO operators (user_id, account_id, node_url, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;'
+            const params = [userId, accountId, nodeUrl, created_at, created_at]
+            const rows = await postgres.query(text, params)
+            const addedOperator = rows[0]
+            return formatResult(addedOperator)
+        } catch (error) {
+            console.error(`There was an error in addOperator in useDB.ts: ${error}`)
+            throw new Error('There was an error adding the operator to the database')
+        }
     }
 
     /**

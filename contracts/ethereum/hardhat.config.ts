@@ -1,22 +1,25 @@
-import localtunnel from 'localtunnel'
+import fs from 'fs'
 import os from 'os'
+import localtunnel from 'localtunnel'
 import { HardhatUserConfig } from 'hardhat/types'
-import '@nomicfoundation/hardhat-foundry'
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
 import '@nomicfoundation/hardhat-toolbox'
+import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-abi-exporter'
+import 'hardhat-contract-sizer'
+import 'hardhat-preprocessor'
+import 'solidity-docgen'
+import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL, ETHEREUM_SIGNERS, HARDHAT_NETWORK_KEY } from '@casimir/env'
 
 // Seed is provided
 const mnemonic = process.env.BIP39_SEED as string
-const hid = { mnemonic, count: 10, accountsBalance: '1000000000000000000000' }
+const hid = { mnemonic, count: 10 }
 
 // Mining interval is provided in seconds
 const miningInterval = parseInt(process.env.MINING_INTERVAL as string)
 const mining = { auto: false, interval: miningInterval * 1000 } // miningInterval in ms
 
-// Live network rpc is provided with url and name
-const hardhatUrl = process.env.ETHEREUM_RPC_URL as string
 const hardhatNetwork = process.env.HARDHAT_NETWORK as string
 
 // Local network fork rpc url overrides live network
@@ -25,59 +28,34 @@ const forkNetwork = forkUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
 const forkChainId = { mainnet: 1, goerli: 5 }[forkNetwork]
 const forkConfig = { url: forkUrl, blockNumber: parseInt(process.env.ETHEREUM_FORK_BLOCK || '0') || undefined }
 
-const externalEnv = {
-    mainnet: {
-        DAO_ORACLE_ADDRESS: '',
-        BEACON_DEPOSIT_ADDRESS: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
-        FUNCTIONS_BILLING_REGISTRY_ADDRESS: '',
-        FUNCTIONS_ORACLE_ADDRESS: '',
-        LINK_ETH_FEED_ADDRESS: '0xDC530D9457755926550b59e8ECcdaE7624181557',
-        LINK_REGISTRAR_ADDRESS: '	0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d',
-        LINK_REGISTRY_ADDRESS: '0x02777053d6764996e594c3E88AF1D58D5363a2e6',
-        LINK_TOKEN_ADDRESS: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-        SSV_NETWORK_ADDRESS: '',
-        SSV_NETWORK_VIEWS_ADDRESS: '',
-        SSV_TOKEN_ADDRESS: '0x9D65fF81a3c488d585bBfb0Bfe3c7707c7917f54',
-        SWAP_FACTORY_ADDRESS: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
-        SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
-        WETH_TOKEN_ADDRESS: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-    },
-    goerli: {
-        DAO_ORACLE_ADDRESS: '',
-        BEACON_DEPOSIT_ADDRESS: '0x07b39F4fDE4A38bACe212b546dAc87C58DfE3fDC',
-        FUNCTIONS_BILLING_REGISTRY_ADDRESS: '',
-        FUNCTIONS_ORACLE_ADDRESS: '',
-        LINK_ETH_FEED_ADDRESS: '0xb4c4a493AB6356497713A78FFA6c60FB53517c63',
-        LINK_REGISTRAR_ADDRESS: '0x57A4a13b35d25EE78e084168aBaC5ad360252467',
-        LINK_REGISTRY_ADDRESS: '0xE16Df59B887e3Caa439E0b29B42bA2e7976FD8b2',
-        LINK_TOKEN_ADDRESS: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB',
-        SSV_NETWORK_ADDRESS: '0xAfdb141Dd99b5a101065f40e3D7636262dce65b3',
-        SSV_NETWORK_VIEWS_ADDRESS: '0x8dB45282d7C4559fd093C26f677B3837a5598914',
-        SSV_TOKEN_ADDRESS: '0x3a9f01091C446bdE031E39ea8354647AFef091E7',
-        SWAP_FACTORY_ADDRESS: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
-        SWAP_ROUTER_ADDRESS: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
-        WETH_TOKEN_ADDRESS: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
-    }
-}
+const hardhatKey = hardhatNetwork?.toUpperCase() as keyof typeof HARDHAT_NETWORK_KEY
+const networkKey = HARDHAT_NETWORK_KEY[hardhatKey] || 'TESTNET'
 
-const network = forkNetwork || hardhatNetwork
-if (network) {
-    const args = externalEnv[network]
-    for (const key in args) {
-        process.env[key] = args[key as keyof typeof args]
-    }
+process.env.DEPOSIT_CONTRACT_ADDRESS = ETHEREUM_CONTRACTS[networkKey].DEPOSIT_CONTRACT_ADDRESS
+process.env.KEEPER_REGISTRAR_ADDRESS = ETHEREUM_CONTRACTS[networkKey].KEEPER_REGISTRAR_ADDRESS
+process.env.KEEPER_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].KEEPER_REGISTRY_ADDRESS
+process.env.LINK_ETH_FEED_ADDRESS = ETHEREUM_CONTRACTS[networkKey].LINK_ETH_FEED_ADDRESS
+process.env.LINK_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey].LINK_TOKEN_ADDRESS
+process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SSV_NETWORK_ADDRESS
+process.env.SSV_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SSV_TOKEN_ADDRESS
+process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SSV_VIEWS_ADDRESS
+process.env.SWAP_FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SWAP_FACTORY_ADDRESS
+process.env.SWAP_ROUTER_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SWAP_ROUTER_ADDRESS
+process.env.WETH_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey].WETH_TOKEN_ADDRESS
+
+if (hardhatNetwork !== 'localhost') {
+    process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || ETHEREUM_RPC_URL[networkKey]
+    process.env.OWNER_ADDRESS = ETHEREUM_SIGNERS[networkKey].OWNER_ADDRESS
+    process.env.DAO_ORACLE_ADDRESS = ETHEREUM_SIGNERS[networkKey].DAO_ORACLE_ADDRESS
+    process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FACTORY_ADDRESS
+    process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_BILLING_REGISTRY_ADDRESS
+    process.env.FUNCTIONS_ORACLE_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_ORACLE_ADDRESS
 }
 
 const compilerSettings = {
     viaIR: true,
     optimizer: {
-        enabled: true,
-        runs: 1,
-        details: {
-            yulDetails: {
-                optimizerSteps: 'u'
-            }
-        }
+        enabled: true
     }
 }
 const compilerVersions = ['0.8.18']
@@ -86,6 +64,24 @@ const compilers = [...compilerVersions, ...externalCompilerVersions].map(version
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
+    mocha: {
+        timeout: 60000
+    },
+    preprocess: {
+        eachLine: () => ({
+            transform: (line: string) => {
+                if (line.match(/^\s*import /i)) {
+                    for (const [from, to] of getRemappings()) {
+                        if (line.includes(from)) {
+                            line = line.replace(from, to)
+                            break
+                        }
+                    }
+                }
+                return line
+            }
+        })
+    },
     solidity: {
         compilers,
     },
@@ -106,6 +102,16 @@ const config: HardhatUserConfig = {
     typechain: {
         outDir: './build/@types'
     },
+    docgen: {
+        exclude: [
+            'dev',
+            'mock',
+            'vendor'
+        ],
+        outputDir: process.env.DOCS_OUTPUT_DIR || './build/docs',
+        templates: process.env.DOCS_TEMPLATE_DIR,
+        pages: () => 'solidity-api.md'
+    },
     networks: {
         hardhat: {
             accounts: mnemonic ? hid : undefined,
@@ -118,14 +124,14 @@ const config: HardhatUserConfig = {
         },
         mainnet: {
             accounts: mnemonic ? hid : undefined,
-            url: hardhatUrl || '',
+            url: process.env.ETHEREUM_RPC_URL || '',
             allowUnlimitedContractSize: true,
             gas: 'auto',
             gasPrice: 'auto'
         },
         goerli: {
             accounts: mnemonic ? hid : undefined,
-            url: hardhatUrl || '',
+            url: process.env.ETHEREUM_RPC_URL || '',
             allowUnlimitedContractSize: true,
             gas: 'auto',
             gasPrice: 'auto'
@@ -135,6 +141,18 @@ const config: HardhatUserConfig = {
 
 // Start a local tunnel for using RPC over https (e.g. for Metamask on mobile)
 if (process.env.TUNNEL === 'true') {
+    runLocalTunnel()
+}
+
+function getRemappings() {
+    return fs
+        .readFileSync('remappings.txt', 'utf8')
+        .split('\n')
+        .filter(Boolean) // remove empty lines
+        .map((line) => line.trim().split('='))
+}
+
+function runLocalTunnel() {
     const localSubdomain = `local-hardhat-${os.userInfo().username.toLowerCase()}`
     const localUrl = `https://${localSubdomain}.loca.lt`
     localtunnel({ port: 8545, subdomain: localSubdomain }).then(

@@ -1,53 +1,67 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-interface ICasimirPool {
-    /***************/
-    /* Enumerators */
-    /***************/
+import "../interfaces/ICasimirCore.sol";
 
-    enum PoolStatus {
-        PENDING,
-        ACTIVE,
-        EXITING_FORCED,
-        EXITING_REQUESTED,
-        WITHDRAWN
-    }
-
-    /**********/
-    /* Events */
-    /**********/
-
+interface ICasimirPool is ICasimirCore {
     event OperatorIdsSet(uint64[] operatorIds);
     event ResharesSet(uint256 reshares);
     event StatusSet(PoolStatus status);
 
-    /***********/
-    /* Structs */
-    /***********/
+    error InvalidDepositAmount();
+    error InvalidWithdrawalCredentials();
 
-    struct PoolDetails {
-        uint32 id;
-        uint256 balance;
-        bytes publicKey;
-        uint64[] operatorIds;
-        uint256 reshares;
-        ICasimirPool.PoolStatus status;
-    }
+    /**
+     * @notice Deposit pool stake
+     * @param depositDataRoot Deposit data root
+     * @param signature Deposit signature
+     * @param withdrawalCredentials Validator withdrawal credentials
+     */
+    function depositStake(
+        bytes32 depositDataRoot,
+        bytes memory signature,
+        bytes memory withdrawalCredentials
+    ) external payable;
 
-    /*************/
-    /* Mutations */
-    /*************/
-
+    /// @notice Deposit pool rewards
     function depositRewards() external;
-    function withdrawBalance(uint32[] memory blamePercents) external;
-    function setOperatorIds(uint64[] memory operatorIds) external;
+
+    /**
+     * @notice Set the operator IDs
+     * @param newOperatorIds New operator IDs
+     */
+    function setOperatorIds(uint64[] memory newOperatorIds) external;
+
+    /**
+     * @notice Set the reshare count
+     * @param newReshares New reshare count
+     */
     function setReshares(uint256 newReshares) external;
+
+    /**
+     * @notice Set the pool status
+     * @param newStatus New status
+     */
     function setStatus(PoolStatus newStatus) external;
 
-    /***********/
-    /* Getters */
-    /***********/
+    /**
+     * @notice Withdraw pool balance to the manager
+     * @param blamePercents Operator loss blame percents
+     */
+    function withdrawBalance(uint32[] memory blamePercents) external;
 
-    function getDetails() external view returns (PoolDetails memory);
+    /// @notice Validator public key
+    function publicKey() external view returns (bytes memory);
+
+    /// @notice Reshare count
+    function reshares() external view returns (uint256);
+
+    /// @notice Pool status
+    function status() external view returns (PoolStatus);
+
+    /// @notice Get the pool operator IDs
+    function getOperatorIds() external view returns (uint64[] memory);
+
+    /// @notice Get the pool registration
+    function getRegistration() external view returns (PoolRegistration memory);
 }

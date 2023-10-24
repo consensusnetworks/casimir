@@ -4,7 +4,7 @@ import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
 
 const router = express.Router()
-const { addAccount, getAccounts, getUserByAddress, getUserById, updateUserAddress, updateUserAgreedToTermsOfService, removeAccount } = useDB()
+const { addAccount, addOperator, getAccounts, getUserByAddress, getUserById, updateUserAddress, updateUserAgreedToTermsOfService, removeAccount } = useDB()
 
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
@@ -13,12 +13,11 @@ router.get('/', verifySession(), async (req: SessionRequest, res: express.Respon
         const user = await getUserById(id)
         console.log('user in user home route :>> ', user)
         const message = user ? 'User found' : 'User not found'
-        const error = user ? false : true
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
             message,
-            error,
+            error: false,
             user
         })
     } catch (err) {
@@ -68,17 +67,39 @@ router.post('/add-sub-account', verifySession(), async (req: SessionRequest, res
     }
 })
 
-router.get('/check-if-primary-address-exists/:provider/:address', async (req: express.Request, res: express.Response) => {
+router.post('/add-operator', verifySession(), async (req: SessionRequest, res: express.Response) => {
+    try {
+        console.log('ADDING OPERATOR!')
+        const { address, nodeUrl } = req.body
+        const userId = parseInt(req.session?.getUserId() as string)
+        const accounts = await getAccounts(address)
+        const userAccount = accounts.find(account => parseInt(account.userId) === userId)
+        const accountId = userAccount?.id as number
+        await addOperator({ accountId, nodeUrl, userId })
+        res.setHeader('Content-Type', 'application/json')
+        res.status(200)
+        res.json({
+            message: 'Operator added',
+            error: false
+        })
+    } catch (err) {
+        res.status(500)
+        res.json({
+            message: 'Error adding operator',
+            error: true
+        })
+    }
+})
+
+router.get('/check-if-primary-address-exists/:address', async (req: express.Request, res: express.Response) => {
     try {
         const { params } = req
-        const { address, provider } = params
-        console.log('getting user by address')
+        const { address } = params
         const user = await getUserByAddress(address)
         console.log('user in check-if-primary-.....:>> ', user)
         const userAddress = user?.address
         const userProvider = user?.walletProvider
         const sameAddress = userAddress === address
-        const sameProvider = userProvider === provider
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
         res.json({
@@ -86,7 +107,7 @@ router.get('/check-if-primary-address-exists/:provider/:address', async (req: ex
             message: 'Successfully checked if primary address exists',
             data: {
                 sameAddress,
-                sameProvider
+                walletProvider: userProvider
             }
         })
     } catch (error: any) {

@@ -1,7 +1,6 @@
 import { BalanceSnapshot } from './BalanceSnapshot'
 import { ProviderString } from './ProviderString'
 import { Currency } from './Currency'
-import { Pool } from './Pool'
 
 export interface Account {
     /** The address of the current account */
@@ -15,7 +14,7 @@ export interface Account {
     /** The unique account id */
     id: number
     /** The account snapshots */
-    snapshots?: BalanceSnapshot[]
+    // snapshots?: BalanceSnapshot[]
     /** The account transactions */
     // transactions?: Transaction[]
     /** The user id associated with the account */
