@@ -290,46 +290,32 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
 
 <template>
   <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black h-full relative">
+    <!-- Move the Stake | Withdraw Toggle to the top -->
+    <div class="button-container mt-6 mb-[20px]">
+      <div
+        class="action-button stake"
+        :class="{active: stakeOrWithdraw === 'stake'}"
+        @click="setStakeOrWithdraw('stake')"
+      >
+        Stake
+      </div>
+      <div
+        class="action-button withdraw"
+        :class="{active: stakeOrWithdraw === 'withdraw'}"
+        @click="setStakeOrWithdraw('withdraw')"
+      >
+        Withdraw
+      </div>
+    </div>
+
     <div
       v-if="stakingActionLoader"
       class="absolute w-full h-full bg-black/[.1] top-0 left-0 rounded-[3px] z-[10]"
     />
-    <div class="flex">
-      <div class="w-1/2">
-        <div>
-          <h6 class="addressBalance mb-[12px]">
-            Wallet Balance
-          </h6>
-          <h5
-            class="addressBalance_amount mb-[5px]"
-            :class="addressBalance? 'font-[500]' : 'font-[300]'"
-          >
-            {{ addressBalance ? addressBalance : '- - -' }}
-          </h5>
-        </div>
-      </div>
-      <!-- Stake | Withdraw Toggle -->
-      <div class="stake_withdraw_container">
-        <div 
-          class="stake_withdraw_box" 
-          :class="{active: stakeOrWithdraw === 'stake'}" 
-          @click="setStakeOrWithdraw('stake')"
-        >
-          Stake
-        </div>
-        <div 
-          class="stake_withdraw_box" 
-          :class="{active: stakeOrWithdraw === 'withdraw'}" 
-          @click="setStakeOrWithdraw('withdraw')"
-        >
-          Withdraw
-        </div>
-      </div>
-    </div>
     <div class="text-[12px] mb-[13px] text-blue-400">
       <!-- <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked -->
     </div>
-    <h6 class="card_title mb-[11px]">
+    <h6 class="card_title my-[11px]">
       Wallet
     </h6>
     <div class="card_input text-black mb-[22px] relative">
@@ -339,14 +325,17 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
         :class="selectedWalletAddress ? 'text-black' : 'text-grey_4'"
         @click="openSelectWalletInput = !openSelectWalletInput"
       >
-        <h6>
-          {{ selectedWalletAddress ? convertString(selectedWalletAddress) : 'Select wallet' }}
-        </h6>
-        <vue-feather
-          :type="openSelectWalletInput ? 'chevron-up' : 'chevron-down'"
-          size="36"
-          class="icon w-[20px]"
-        />
+        <div class="flex justify-between w-full">
+          <div>{{ selectedWalletAddress ? convertString(selectedWalletAddress) : 'Select wallet' }}</div> 
+          <div class="flex gap-10 font-[400]">
+            {{ addressBalance ? addressBalance : '' }}
+            <vue-feather
+              :type="openSelectWalletInput ? 'chevron-up' : 'chevron-down'"
+              size="36"
+              class="icon w-[20px]"
+            />
+          </div>
+        </div>
       </button>
       <div
         v-show="openSelectWalletInput"
@@ -825,28 +814,40 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
   border-top: 5px solid #000; /* same color as the tooltip background */
 }
 
-.stake_withdraw_container {
+.button-container {
     display: flex;
-    border: 1px solid #333;
-    width: 150px;
-    height: 30px;
-    border-radius: 5px;
-    overflow: hidden;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
 }
 
-.stake_withdraw_box {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.action-button {
+    padding: 8px 36px;
+    background-color: white;
     cursor: pointer;
+    border: 1px solid #333;
     transition: background-color 0.3s;
 }
 
-.stake_withdraw_box.active {
-    background-color: #333;
-    color: white;
+.action-button.stake {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-right: none;
 }
 
+.action-button.withdraw {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-left: none;
+}
+
+.action-button:hover {
+    background-color: #ddd;
+}
+
+.action-button.active {
+    background-color: #4063FF; /* Assuming this is the blue from the screenshot */
+    color: white; /* Set text color to white for better contrast */
+}
 
 </style>@/composables/user@/composables/staking
