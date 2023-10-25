@@ -290,31 +290,11 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
 
 <template>
   <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black h-full relative">
-    <!-- Move the Stake | Withdraw Toggle to the top -->
-    <div class="button-container mt-6 mb-[20px]">
-      <div
-        class="action-button stake"
-        :class="{active: stakeOrWithdraw === 'stake'}"
-        @click="setStakeOrWithdraw('stake')"
-      >
-        Stake
-      </div>
-      <div
-        class="action-button withdraw"
-        :class="{active: stakeOrWithdraw === 'withdraw'}"
-        @click="setStakeOrWithdraw('withdraw')"
-      >
-        Withdraw
-      </div>
-    </div>
-
     <div
       v-if="stakingActionLoader"
       class="absolute w-full h-full bg-black/[.1] top-0 left-0 rounded-[3px] z-[10]"
     />
-    <div class="text-[12px] mb-[13px] text-blue-400">
-      <!-- <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked -->
-    </div>
+    <div class="text-[12px] mb-[13px] text-blue-400" />
     <h6 class="card_title my-[11px]">
       Wallet
     </h6>
@@ -472,7 +452,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
     <!-- Eigen Boggle -->
     <button
       ref="confettiButton"
-      class="toggle_container"
+      class="eigen-toggle-container"
       :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage && !eigenDisabled)"
       @click="toggleShineEffect"
     >
@@ -500,8 +480,27 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
       </div>
     </button>
 
+    <!-- Stake | Withdraw Selector -->
+    <div class="stake-withdraw-selector mt-[12px] mb-[12px]">
+      <div
+        class="action-button stake"
+        :class="{active: stakeOrWithdraw === 'stake'}"
+        @click="setStakeOrWithdraw('stake')"
+      >
+        Stake
+      </div>
+      <div
+        class="action-button withdraw"
+        :class="{active: stakeOrWithdraw === 'withdraw'}"
+        @click="setStakeOrWithdraw('withdraw')"
+      >
+        Withdraw
+      </div>
+    </div>
+
+    <!-- Submit Button -->
     <button
-      class="card_button  h-[37px] w-full "
+      class="submit-button  h-[37px] w-full "
       :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
       :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage) || stakeButtonText !== 'Stake'"
       @click="handleDeposit()"
@@ -640,7 +639,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
   color: #667085;
 }
 
-.card_button {
+.submit-button {
   /* background: #0F6AF2; */
   border-radius: 5px;
   font-family: 'IBM Plex Sans';
@@ -651,7 +650,6 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
   letter-spacing: -0.03em;
   color: #FFFFFF;
   height: 44px;
-  margin-top: 10px;
 }
 
 :disabled {
@@ -696,7 +694,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
 }
 
 /* Eigen Button */
-.toggle_container {
+.eigen-toggle-container {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -713,7 +711,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
   transition: background-color 0.3s; /* This will animate the color change */
 }
 
-.toggle_container:disabled {
+.eigen-toggle-container:disabled {
     background-color: rgba(26, 12, 109, 0.5); /* This makes the purple color lighter (grayed out) */
     /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
 }
@@ -756,7 +754,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
   overflow: hidden;
 }
 
-.card_container .toggle_container.toggle-on .toggle_button {
+.card_container .eigen-toggle-container.toggle-on .toggle_button {
     background-color: green !important;
 }
 
@@ -798,7 +796,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
   z-index: 10; /* positions it above other elements */
 }
 
-.toggle_container:hover .tooltip_container {
+.eigen-toggle-container:hover .tooltip_container {
   opacity: 1; /* show on hover */
 }
 
@@ -814,7 +812,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
   border-top: 5px solid #000; /* same color as the tooltip background */
 }
 
-.button-container {
+.stake-withdraw-selector {
     display: flex;
     justify-content: center;
     align-items: center;
