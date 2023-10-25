@@ -45,8 +45,14 @@ export class DocsStack extends cdk.Stack {
 
         const distribution = new cloudfront.Distribution(this, config.getFullStackResourceName(this.name, 'distribution'), {
             certificate: distributionCertificate,
-            defaultRootObject: 'introduction/what-is-casimir.html',
+            defaultRootObject: 'index.html',
             errorResponses: [
+                {
+                    httpStatus: 403,
+                    responseHttpStatus: 200,
+                    responsePagePath: '/index.html',
+                    ttl: cdk.Duration.minutes(30)
+                },
                 {
                     httpStatus: 404,
                     responseHttpStatus: 200,

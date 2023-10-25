@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import VueFeather from 'vue-feather'
-import useBlog from '@/composables/blog.ts'
+import useBlog from '@/composables/blog'
 
 const {
     articles,
-    loadingArticle,
+    loadingArticles,
 } = useBlog()
 
 </script>
@@ -43,14 +43,14 @@ const {
     </nav>
     <section class="max-w-[960px] mx-auto mt-[60px] min-h-[650px] relative overflow-auto">
       <div
-        v-if="loadingArticle"
+        v-if="loadingArticles"
         class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
       >
         <div class="skeleton_box" />
       </div>
       <router-link
         v-for="article in articles"
-        :key="article"
+        :key="article.id"
         :to="`/blog/${article.id}`"
         class="blog_card flex flex-col mb-[50px]"
       >
@@ -91,12 +91,6 @@ const {
       <div class="footer__container">
         <span class="c">© 2023 Casimir. All rights reserved.</span>
         <ul>
-          <li>
-            <a
-              href="https://api.casimir.co"
-              target="_blank"
-            >API Reference</a>
-          </li>
           <li>
             <a
               href="/"

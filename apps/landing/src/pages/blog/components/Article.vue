@@ -1,17 +1,18 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
-import useBlog from '@/composables/blog.ts'
-import router from '@/composables/router.ts'
+import useBlog from '@/composables/blog'
+import router from '@/composables/router'
+import { Article } from '@casimir/types'
 
 const {
     articles,
     loadingArticles,
 } = useBlog()
 
-const article = ref(null)
+const article = ref<Article>()
 
-function getActiveArticle(activeRoute) {
+function getActiveArticle(activeRoute: string) {
     const activeArticle = articles.value.filter(item => item.id === activeRoute)[0]
     article.value = activeArticle
 }

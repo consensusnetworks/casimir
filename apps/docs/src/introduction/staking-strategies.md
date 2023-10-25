@@ -2,4 +2,4 @@
 This page is incomplete.
 :::
 
-# Accounts
+# Staking Strategies

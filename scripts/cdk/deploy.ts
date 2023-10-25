@@ -25,6 +25,7 @@ void async function () {
     process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
     
     process.env.PUBLIC_BLOG_URL = process.env.BLOG_URL
+    process.env.PUBLIC_DOCS_URL = process.env.DOCS_URL
     process.env.PUBLIC_USERS_URL = process.env.USERS_URL
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
