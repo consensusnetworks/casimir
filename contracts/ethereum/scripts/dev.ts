@@ -159,25 +159,25 @@ void async function () {
         defaultStrategy
     )
     await deployDefaultManager.wait()
-    const [managerId] = await factory.getManagerIds()
-    const [managerAddress, registryAddress, upkeepAddress, viewsAddress] = await factory.getManagerConfig(managerId)
-    console.log(`Default CasimirManager contract deployed to ${managerAddress}`)
-    console.log(`Default CasimirRegistry contract deployed to ${registryAddress}`)
-    console.log(`Default CasimirUpkeep contract deployed to ${upkeepAddress}`)
-    console.log(`Default CasimirViews contract deployed to ${viewsAddress}`)
-    const manager = await ethers.getContractAt('CasimirManager', managerAddress) as CasimirManager
-    const registry = await ethers.getContractAt('CasimirRegistry', registryAddress) as CasimirRegistry
-    const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
-    const views = await ethers.getContractAt('CasimirViews', viewsAddress) as CasimirViews
+    const [defaultManagerId] = await factory.getManagerIds()
+    const defaultManagerConfig = await factory.getManagerConfig(defaultManagerId)
+    const manager = await ethers.getContractAt('CasimirManager', defaultManagerConfig.managerAddress) as CasimirManager
+    const registry = await ethers.getContractAt('CasimirRegistry', defaultManagerConfig.registryAddress) as CasimirRegistry
+    const upkeep = await ethers.getContractAt('CasimirUpkeep', defaultManagerConfig.upkeepAddress) as CasimirUpkeep
+    const views = await ethers.getContractAt('CasimirViews', defaultManagerConfig.viewsAddress) as CasimirViews
+    console.log(`Default manager contract deployed to ${manager.address}`)
+    console.log(`Default registry contract deployed to ${registry.address}`)
+    console.log(`Default upkeep contract deployed to ${upkeep.address}`)
+    console.log(`Default views contract deployed to ${views.address}`)
 
-    requestConfig.args[1] = viewsAddress
-    const fulfillGasLimit = 300000
-    const setRequest = await upkeep.setFunctionsRequest(requestConfig.source, requestConfig.args, fulfillGasLimit)
-    await setRequest.wait()
+    requestConfig.args[1] = views.address
+    await (await upkeep.setFunctionsRequest(
+        requestConfig.source, requestConfig.args, 300000
+    )).wait()
 
     await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, functionsOracle.address])
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
-    await functionsOracle.addAuthorizedSenders([donTransmitter.address, managerAddress])
+    await functionsOracle.addAuthorizedSenders([donTransmitter.address, manager.address])
 
     const ssvViews = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
     const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [208, 209, 210, 211/*, 212, 213, 214, 215*/]
@@ -218,6 +218,25 @@ void async function () {
         eigenStrategy
     )
     await deployEigenManager.wait()
+    const [, eigenManagerId] = await factory.getManagerIds()
+    const eigenManagerConfig = await factory.getManagerConfig(eigenManagerId)
+    const eigenManager = await ethers.getContractAt('CasimirManager', eigenManagerConfig.managerAddress) as CasimirManager
+    const eigenRegistry = await ethers.getContractAt('CasimirRegistry', eigenManagerConfig.registryAddress) as CasimirRegistry
+    const eigenUpkeep = await ethers.getContractAt('CasimirUpkeep', eigenManagerConfig.upkeepAddress) as CasimirUpkeep
+    const eigenViews = await ethers.getContractAt('CasimirViews', eigenManagerConfig.viewsAddress) as CasimirViews
+    console.log(`Eigen manager contract deployed to ${eigenManager.address}`)
+    console.log(`Eigen registry contract deployed to ${eigenRegistry.address}`)
+    console.log(`Eigen upkeep contract deployed to ${eigenUpkeep.address}`)
+    console.log(`Eigen views contract deployed to ${eigenViews.address}`)
+
+    requestConfig.args[1] = eigenViews.address
+    await (await eigenUpkeep.setFunctionsRequest(
+        requestConfig.source, requestConfig.args, 300000
+    )).wait()
+
+    await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, functionsOracle.address])
+    await functionsOracle.setRegistry(functionsBillingRegistry.address)
+    await functionsOracle.addAuthorizedSenders([donTransmitter.address, eigenManager.address])
 
     /**
      * We are simulating the oracle reporting on a more frequent basis
