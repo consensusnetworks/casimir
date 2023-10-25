@@ -93,14 +93,14 @@ const operatorTableHeaders = ref(
         title: 'Node URL',
         value: 'nodeURL'
     },
-    {
-        title: '',
-        value: 'deactivate'
-    },
-    {
-        title: '',
-        value: 'withdraw_collateral'
-    },
+    // {
+    //     title: '',
+    //     value: 'deactivate'
+    // },
+    // {
+    //     title: '',
+    //     value: 'withdraw_collateral'
+    // },
   ]
 )
 
@@ -157,23 +157,9 @@ watch(selectedWallet, async () =>{
   }
 })
 
-watch(registeredDefaultOperators, () => {
+watch([registeredDefaultOperators, registeredEigenOperators], () => {
   openAddOperatorModal.value = false
-  tableData.value = [...registeredDefaultOperators.value].map((operator: any) => {
-    return {
-      id: operator.id,
-      walletAddress: operator.ownerAddress,
-      collateral: operator.collateral + ' ETH',
-      poolCount: operator.poolCount,
-      nodeURL: operator.url
-    }
-  })
-  filterData()
-})
-
-watch(registeredEigenOperators, () => {
-  openAddOperatorModal.value = false
-  tableData.value = [...registeredEigenOperators.value].map((operator: any) => {
+  tableData.value = [...registeredDefaultOperators.value, ...registeredEigenOperators.value].map((operator: any) => {
     return {
       id: operator.id,
       walletAddress: operator.ownerAddress,
@@ -742,6 +728,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                   <!-- TODO: @Chris, wanna hook up this button? -->
                   <button
                     class="bg-decline text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500]"
+                    disabled
                   >
                     Deactivate
                   </button>
