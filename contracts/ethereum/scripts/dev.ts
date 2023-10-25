@@ -291,7 +291,9 @@ void async function () {
                         functionsBillingRegistry,
                         values: reportValues
                     })
-                    await activatePoolsHandler({ manager, views, signer: daoOracle, args: { count: activatedPoolCount } })
+                    if (activatedPoolCount) {
+                        await activatePoolsHandler({ manager, views, signer: daoOracle, args: { count: activatedPoolCount } })
+                    }
                     let remaining = exitingPoolCount.toNumber()
                     if (remaining) {
                         for (const poolId of stakedPoolIds) {

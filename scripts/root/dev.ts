@@ -136,8 +136,9 @@ void async function () {
         run(`npm run dev --workspace @casimir/${app}`)
     }
 
-    if (process.env.MOCK_SERVICES === 'true') {
+    if (process.env.MOCK_SERVICES === 'true' && app === 'web') {
         process.on('SIGINT', () => {
+            console.log('🧹 Cleaning up users service')
             runSync('npm run clean --workspace @casimir/users')
             process.exit()
         })
