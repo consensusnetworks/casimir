@@ -3,6 +3,7 @@ import { onMounted, ref, watch, onUnmounted } from 'vue'
 import { CryptoAddress, Currency, LoginCredentials, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
 import useAuth from '@/composables/auth'
+import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useFormat from '@/composables/format'
 import useLedger from '@/composables/ledger'
@@ -24,6 +25,7 @@ const supportedWalletProviders = [
 ] as ProviderString[]
 
 const { login, loginWithSecondaryAddress } = useAuth()
+const { requiredNetwork } = useEnvironment()
 const { ethersProviderList, getEthersAddressesWithBalances } = useEthers()
 const { convertString, trimAndLowercaseAddress } = useFormat()
 const { getLedgerAddress } = useLedger()
@@ -134,8 +136,8 @@ async function selectProvider(provider: ProviderString, currency: Currency = 'ET
     selectedProvider.value = provider
     selectProviderLoading.value = true
     if (provider === 'WalletConnect') {
-      // TODO: Clarify this.
-      walletProviderAddresses.value = await connectWalletConnectV2('5') as CryptoAddress[]
+      // TODO: @@cali1 - pass in the network id dynamically
+      walletProviderAddresses.value = await connectWalletConnectV2(requiredNetwork) as CryptoAddress[]
     } else if (ethersProviderList.includes(provider)) {
       walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
     } else if (provider === 'Ledger') {
