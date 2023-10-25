@@ -42,21 +42,22 @@ const stakingActionLoader = ref(false)
 const success = ref(false)
 const failure = ref(false)
 
+const stakeOrWithdraw = ref<'stake' | 'withdraw'>('stake')
 const eigenDisabled = ref(true) // Keeps eigen disabled until Casimir is ready to support it.
 const isShining = ref(true) // Determines if the shine effect is active
-const isToggled = ref(false) // Determines the toggle state
+const eigenIsToggled = ref(false) // Determines the toggle state
 const toggleBackgroundColor = ref('#eee')  // Initial color
 
 const toggleShineEffect = () => {
-  isToggled.value = !isToggled.value
-  isShining.value = isToggled.value
+  eigenIsToggled.value = !eigenIsToggled.value
+  isShining.value = eigenIsToggled.value
   // toggleEstimatedAPY()
 
   // Change the color based on the toggle state
-  toggleBackgroundColor.value = isToggled.value ? 'green' : '#eee'
+  toggleBackgroundColor.value = eigenIsToggled.value ? 'green' : '#eee'
 
   // Update stakeType
-  stakeType.value = isToggled.value ? 'eigen' : 'default'
+  stakeType.value = eigenIsToggled.value ? 'eigen' : 'default'
   if (stakeType.value === 'eigen') {
     triggerConfetti()
   }
@@ -267,7 +268,7 @@ const handleDeposit = async () => {
 
   if (result) {
     const waitResponse = await result.wait(1)
-    isToggled.value = false
+    eigenIsToggled.value = false
     addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
     if (waitResponse){
       alert('Your Stake Has Been Deposited!')
@@ -279,23 +280,52 @@ const handleDeposit = async () => {
 
   // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
+
+function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
+    stakeOrWithdraw.value = option
+}
+
+
 </script>
 
 <template>
   <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black h-full relative">
     <div
       v-if="stakingActionLoader"
-      class="absolute w-full h-full bg-black/[.1] top-0 left-0 rounded-[3px] z-[10] "
+      class="absolute w-full h-full bg-black/[.1] top-0 left-0 rounded-[3px] z-[10]"
     />
-    <h6 class="addressBalance mb-[12px]">
-      Wallet Balance
-    </h6>
-    <h5
-      class="addressBalance_amount mb-[5px]"
-      :class="addressBalance? 'font-[500]' : 'font-[300]'"
-    >
-      {{ addressBalance ? addressBalance : '- - -' }}
-    </h5>
+    <div class="flex">
+      <div class="w-1/2">
+        <div>
+          <h6 class="addressBalance mb-[12px]">
+            Wallet Balance
+          </h6>
+          <h5
+            class="addressBalance_amount mb-[5px]"
+            :class="addressBalance? 'font-[500]' : 'font-[300]'"
+          >
+            {{ addressBalance ? addressBalance : '- - -' }}
+          </h5>
+        </div>
+      </div>
+      <!-- Stake | Withdraw Toggle -->
+      <div class="stake_withdraw_container">
+        <div 
+          class="stake_withdraw_box" 
+          :class="{active: stakeOrWithdraw === 'stake'}" 
+          @click="setStakeOrWithdraw('stake')"
+        >
+          Stake
+        </div>
+        <div 
+          class="stake_withdraw_box" 
+          :class="{active: stakeOrWithdraw === 'withdraw'}" 
+          @click="setStakeOrWithdraw('withdraw')"
+        >
+          Withdraw
+        </div>
+      </div>
+    </div>
     <div class="text-[12px] mb-[13px] text-blue-400">
       <!-- <span class=" font-[900]">{{ currentUserStake }}</span> ETH Currently Staked -->
     </div>
@@ -557,7 +587,7 @@ const handleDeposit = async () => {
 
 .addressBalance_amount {
   font-style: normal;
-  font-size: 28px;
+  font-size: 22px; /* Temporary */
   line-height: 20px;
   letter-spacing: -0.01em;
   color: #344054;
@@ -794,4 +824,29 @@ const handleDeposit = async () => {
   border-right: 5px solid transparent;
   border-top: 5px solid #000; /* same color as the tooltip background */
 }
+
+.stake_withdraw_container {
+    display: flex;
+    border: 1px solid #333;
+    width: 150px;
+    height: 30px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.stake_withdraw_box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.stake_withdraw_box.active {
+    background-color: #333;
+    color: white;
+}
+
+
 </style>@/composables/user@/composables/staking
