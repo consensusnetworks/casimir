@@ -62,7 +62,7 @@ export default function useOperators() {
 
     async function getUserOperators(): Promise<void> {
         const userAddresses = user.value?.accounts.map((account: Account) => account.address) as string[]
-
+        console.log('ethereumUrl :>> ', ethereumUrl)
         const scanner = new Scanner({ 
             ethereumUrl,
             ssvNetworkAddress,

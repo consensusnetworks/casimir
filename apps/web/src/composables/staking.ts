@@ -105,8 +105,9 @@ export default function useStaking() {
         const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
         // const withdrawableBalance = await (manager as CasimirManager).getWithdrawableBalance()
-        const result = await managerSigner.requestWithdrawal(value)
-        return await result.wait()
+        const withdrawableBalance = await managerSigner.getBufferedBalance()
+        console.log('withdrawableBalance :>> ', withdrawableBalance)
+        return await managerSigner.requestWithdrawal(value)
     }
 
     return { 

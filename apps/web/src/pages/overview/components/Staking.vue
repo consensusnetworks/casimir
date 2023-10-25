@@ -11,7 +11,7 @@ import confetti from 'canvas-confetti'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
-const { stakingComposableInitialized, deposit, getDepositFees, getUserStake, initializeStakingComposable } = useStaking()
+const { stakingComposableInitialized, deposit, initializeStakingComposable, withdraw } = useStaking()
 const { getEthersBalance } = useEthers()
 const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
@@ -281,20 +281,77 @@ const handleDeposit = async () => {
   // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
 
-function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
-    stakeOrWithdraw.value = option
+const handleWithdraw = async () => {
+  stakeButtonText.value = 'Withdrawing...'
+
+  // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
+  // if (activeAddress !== selectedWalletAddress.value) {
+  //   formattedAmountToStake.value = ''
+  //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
+  // }
+
+  const result = await withdraw({ 
+    amount: formattedAmountToStake.value,
+    walletProvider: selectedStakingProvider.value,
+    type: stakeType.value 
+  })
+
+  if (!result) stakeButtonText.value = 'Failed!'
+  stakeButtonText.value = 'Withdrawn!'
+
+  setTimeout(() =>{
+    stakeButtonText.value = 'Withdraw'
+    formattedAmountToStake.value = ''
+  }, 1000)
+
+  if (result) {
+    const waitResponse = await result.wait(1)
+    eigenIsToggled.value = false
+    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
+    if (waitResponse){
+      alert('Your Stake Has Been Withdrawn!')
+    } else {
+      alert('Your Stake Action Has Failed, Please Try Again Later!')
+    }
+  }
+
+  // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
 
-
+function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
+    stakeOrWithdraw.value = option
+    formattedAmountToStake.value = ''
+    stakeButtonText.value = option === 'stake' ? 'Stake' : 'Withdraw'
+}
 </script>
 
 <template>
   <div class="card_container px-[21px] pt-[15px] pb-[19px] text-black h-full relative">
+    <!-- Stake | Withdraw Selector -->
+    <div class="stake-withdraw-selector mt-[12px] mb-[12px]">
+      <div
+        class="action-button stake"
+        :class="{active: stakeOrWithdraw === 'stake'}"
+        @click="setStakeOrWithdraw('stake')"
+      >
+        Stake
+      </div>
+      <div
+        class="action-button withdraw"
+        :class="{active: stakeOrWithdraw === 'withdraw'}"
+        @click="setStakeOrWithdraw('withdraw')"
+      >
+        Withdraw
+      </div>
+    </div>
+
     <div
       v-if="stakingActionLoader"
       class="absolute w-full h-full bg-black/[.1] top-0 left-0 rounded-[3px] z-[10]"
     />
     <div class="text-[12px] mb-[13px] text-blue-400" />
+
+    <!-- Select Wallet Address -->
     <h6 class="card_title my-[11px]">
       Wallet
     </h6>
@@ -361,6 +418,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
       </div>
     </div>
 
+    <!-- Amount to Stake/Withdraw -->
     <div class="flex justify-between items-center gap-[8px] mb-[11px] mt-[22px]">
       <h6 class="card_title">
         Amount
@@ -371,15 +429,11 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
       </span>
     </div>
 
-
     <button
       class="card_input text-black px-[10px] py-[14px] cursor-text"
       @click="selectAmountInput"
     >
       <div class="flex items-center gap-[8px]">
-        <!-- <h6 class="text-[#667085]">
-          $
-        </h6> -->
         <input
           id="amount_input"
           v-model="formattedAmountToStake"
@@ -397,10 +451,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
       </div>
     </button>
 
-    <!-- <p class="card_message">
-      The amount to stake in set currency
-    </p> -->
-
+    <!-- Fees, Exchange Rate, Estimated APY -->
     <div class="flex justify-between items-center mt-[22px]">
       <div class="flex items-center gap-[12px]">
         <h6 class="card_analytics_label">
@@ -433,6 +484,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
       </h6>
     </div>
 
+    <!-- Terms of Service -->
     <div class="flex items-center gap-[18px] mb-[27px]">
       <input
         v-model="termsOfServiceCheckbox"
@@ -452,7 +504,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
     <!-- Eigen Boggle -->
     <button
       ref="confettiButton"
-      class="eigen-toggle-container"
+      class="eigen-toggle-container mb-[12px]"
       :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage && !eigenDisabled)"
       @click="toggleShineEffect"
     >
@@ -473,37 +525,19 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
       <div
         class="toggle_button"
         :style="{ 'background-color': toggleBackgroundColor }"
-        :class="{ 'toggle-on': isToggled }"
+        :class="{ 'toggle-on': eigenIsToggled }"
         :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)"
       >
         <div class="toggle_circle" />
       </div>
     </button>
 
-    <!-- Stake | Withdraw Selector -->
-    <div class="stake-withdraw-selector mt-[12px] mb-[12px]">
-      <div
-        class="action-button stake"
-        :class="{active: stakeOrWithdraw === 'stake'}"
-        @click="setStakeOrWithdraw('stake')"
-      >
-        Stake
-      </div>
-      <div
-        class="action-button withdraw"
-        :class="{active: stakeOrWithdraw === 'withdraw'}"
-        @click="setStakeOrWithdraw('withdraw')"
-      >
-        Withdraw
-      </div>
-    </div>
-
     <!-- Submit Button -->
     <button
       class="submit-button  h-[37px] w-full "
       :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
       :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage) || stakeButtonText !== 'Stake'"
-      @click="handleDeposit()"
+      @click="stakeOrWithdraw === 'stake' ? handleDeposit() : handleWithdraw()"
     >
       <div
         class="flex items-center justify-center gap-[5px]"
@@ -706,7 +740,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
   /* overflow: hidden; */
   text-align: center;
   color: #fff; /* or any suitable color for better visibility */
-  font-size: 14px; /* adjust based on preference */
+  font-size: 14px;
   border-radius: 8px;
   transition: background-color 0.3s; /* This will animate the color change */
 }
@@ -820,11 +854,12 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
 }
 
 .action-button {
-    padding: 8px 36px;
-    background-color: white;
-    cursor: pointer;
-    border: 1px solid #333;
-    transition: background-color 0.3s;
+  font-size: 14px;
+  padding: 8px 36px;
+  background-color: white;
+  cursor: pointer;
+  border: 1px solid #D0D5DD;
+  transition: background-color 0.3s;
 }
 
 .action-button.stake {
@@ -844,7 +879,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
 }
 
 .action-button.active {
-    background-color: #4063FF; /* Assuming this is the blue from the screenshot */
+    background-color: rgb(13, 95, 255); /* Assuming this is the blue from the screenshot */
     color: white; /* Set text color to white for better contrast */
 }
 
