@@ -4,6 +4,7 @@ import { TransactionRequest } from '@casimir/types'
 import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
 import useEnvironment from '@/composables/environment'
 import useSiwe from '@/composables/siwe'
+import useWallets from '@/composables/wallets'
 
 interface ethereumWindow extends Window {
   ethereum: any;
@@ -12,6 +13,7 @@ declare const window: ethereumWindow
 
 const { ethereumUrl, provider } = useEnvironment()
 const { createSiweMessage, signInWithEthereum } = useSiwe()
+const { installedWallets } = useWallets()
 
 export default function useEthers() {
   const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
@@ -261,9 +263,10 @@ export default function useEthers() {
 function getBrowserProvider(providerString: ProviderString) {
   try {
     const { ethereum } = window
+    const isInstalled = installedWallets.value.includes(providerString)
     if (providerString === 'CoinbaseWallet') {
-      if (!ethereum.providerMap) return alert('TrustWallet or another wallet may be interfering with CoinbaseWallet. Please disable other wallets and try again.')
-      if (ethereum?.providerMap.get(providerString)) return ethereum.providerMap.get(providerString)
+      if (!ethereum.providerMap && isInstalled) return alert('TrustWallet or another wallet may be interfering with CoinbaseWallet. Please disable other wallets and try again.')
+      if (ethereum?.providerMap) return ethereum.providerMap.get(providerString)
         else window.open('https://www.coinbase.com/wallet/downloads', '_blank')
     } else if (providerString === 'MetaMask') {
       if (ethereum.providerMap && ethereum.providerMap.get('MetaMask')) {
@@ -308,6 +311,8 @@ function getTrustWallet() {
     for (const provider of providers) {
       if (provider.isTrustWallet) return provider
     }
+  } else {
+    window.open('https://trustwallet.com/download', '_blank')
   }
 }
 
