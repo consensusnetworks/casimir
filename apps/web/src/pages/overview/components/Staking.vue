@@ -290,11 +290,13 @@ const handleWithdraw = async () => {
   //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
   // }
 
-  const result = await withdraw({ 
+  const { result, bufferedBalance } = await withdraw({ 
     amount: formattedAmountToStake.value,
     walletProvider: selectedStakingProvider.value,
     type: stakeType.value 
   })
+  console.log('result :>> ', result)
+  console.log('bufferedBalance :>> ', bufferedBalance)
 
   if (!result) stakeButtonText.value = 'Failed!'
   stakeButtonText.value = 'Withdrawn!'
@@ -536,7 +538,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
     <button
       class="submit-button  h-[37px] w-full "
       :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
-      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage) || stakeButtonText !== 'Stake'"
+      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage) || (stakeButtonText !== 'Stake' && stakeButtonText !== 'Withdraw')"
       @click="stakeOrWithdraw === 'stake' ? handleDeposit() : handleWithdraw()"
     >
       <div

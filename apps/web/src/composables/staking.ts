@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { ethers } from 'ethers'
 import { ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
+import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
@@ -9,6 +10,7 @@ import useWalletConnectV2 from './walletConnectV2'
 import { CasimirManager } from '@casimir/ethereum/build/@types'
 
 const { getContracts } = useContracts()
+const { provider } = useEnvironment()
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
@@ -105,9 +107,13 @@ export default function useStaking() {
         const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
         // const withdrawableBalance = await (manager as CasimirManager).getWithdrawableBalance()
-        const withdrawableBalance = await managerSigner.getBufferedBalance()
-        console.log('withdrawableBalance :>> ', withdrawableBalance)
-        return await managerSigner.requestWithdrawal(value)
+        const bufferedBalance = await managerSigner.getBufferedBalance()
+        const bufferedBalanceNumber = parseFloat(ethers.utils.formatEther(bufferedBalance))
+        const result = await managerSigner.requestWithdrawal(value)
+        return {
+            result,
+            bufferedBalance: bufferedBalanceNumber
+        }
     }
 
     return { 
