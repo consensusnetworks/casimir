@@ -11,7 +11,7 @@ import confetti from 'canvas-confetti'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
-const { stakingComposableInitialized, deposit, initializeStakingComposable, withdraw } = useStaking()
+const { stakingComposableInitialized, deposit, initializeStakingComposable, withdraw, getWithdrawableBalance } = useStaking()
 const { getEthersBalance } = useEthers()
 const { convertString } = useFormat()
 const { getCurrentPrice } = usePrice()
@@ -24,7 +24,7 @@ const stakeType = ref<'default' | 'eigen'>('default')
 const currentUserStake = ref(0)
 const estimatedFees = ref<number | string>('-')
 const estimatedAPY = ref<string>('4.00')
-const formattedAmountToStake = ref('')
+const formattedAmountToStakeOrWithdraw = ref('')
 const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
 const selectedStakingProvider = ref<ProviderString>('')
 const selectedWalletAddress = ref(null as null | string)
@@ -97,7 +97,7 @@ const handleInputOnAmountToStake = (event: any) => {
   }
 
   // Update the model value
-  formattedAmountToStake.value = parts.join('.')
+  formattedAmountToStakeOrWithdraw.value = parts.join('.')
 }
 
 const selectAmountInput = () => {
@@ -131,15 +131,15 @@ const aggregateAddressesByProvider = () => {
     // empty out staking comp
     selectedStakingProvider.value = ''
     selectedWalletAddress.value = null
-    formattedAmountToStake.value = ''
+    formattedAmountToStakeOrWithdraw.value = ''
     addressBalance.value = null
     currentUserStake.value = 0
   }
 }
 
-watch(formattedAmountToStake, async () => {
-  if (formattedAmountToStake.value) {
-    const floatAmount = parseFloat(formattedAmountToStake.value?.replace(/,/g, ''))
+watch(formattedAmountToStakeOrWithdraw, async () => {
+  if (formattedAmountToStakeOrWithdraw.value) {
+    const floatAmount = parseFloat(formattedAmountToStakeOrWithdraw.value?.replace(/,/g, ''))
     let maxAmount
     // minAmount is 0.0001 ETH
     let minAmount = 0.0001
@@ -186,7 +186,7 @@ watch(user, async () => {
   } else {
     selectedStakingProvider.value = ''
     selectedWalletAddress.value = null
-    formattedAmountToStake.value = ''
+    formattedAmountToStakeOrWithdraw.value = ''
     addressBalance.value = null
     // currentUserStake.value = 0
   }
@@ -248,12 +248,12 @@ const handleDeposit = async () => {
 
   // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
   // if (activeAddress !== selectedWalletAddress.value) {
-  //   formattedAmountToStake.value = ''
+  //   formattedAmountToStakeOrWithdraw.value = ''
   //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
   // }
 
   const result = await deposit({ 
-    amount: formattedAmountToStake.value,
+    amount: formattedAmountToStakeOrWithdraw.value,
     walletProvider: selectedStakingProvider.value,
     type: stakeType.value 
   })
@@ -263,7 +263,7 @@ const handleDeposit = async () => {
 
   setTimeout(() =>{
     stakeButtonText.value = 'Stake'
-    formattedAmountToStake.value = ''
+    formattedAmountToStakeOrWithdraw.value = ''
   }, 1000)
 
   if (result) {
@@ -286,24 +286,33 @@ const handleWithdraw = async () => {
 
   // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
   // if (activeAddress !== selectedWalletAddress.value) {
-  //   formattedAmountToStake.value = ''
+  //   formattedAmountToStakeOrWithdraw.value = ''
   //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
   // }
 
-  const { result, bufferedBalance } = await withdraw({ 
-    amount: formattedAmountToStake.value,
+  const withdrawableBalance = await getWithdrawableBalance({
+    walletProvider: selectedStakingProvider.value,
+    type: stakeType.value
+  })
+
+  if (withdrawableBalance < formattedAmountToStakeOrWithdraw.value) {
+    stakeButtonText.value = 'Withdraw'
+    formattedAmountToStakeOrWithdraw.value = ''
+    return alert(`You can currently withdraw up to ${withdrawableBalance} ETH. Please try again with a smaller amount.`)
+  }
+
+  const result = await withdraw({ 
+    amount: formattedAmountToStakeOrWithdraw.value,
     walletProvider: selectedStakingProvider.value,
     type: stakeType.value 
   })
-  console.log('result :>> ', result)
-  console.log('bufferedBalance :>> ', bufferedBalance)
 
   if (!result) stakeButtonText.value = 'Failed!'
   stakeButtonText.value = 'Withdrawn!'
 
   setTimeout(() =>{
     stakeButtonText.value = 'Withdraw'
-    formattedAmountToStake.value = ''
+    formattedAmountToStakeOrWithdraw.value = ''
   }, 1000)
 
   if (result) {
@@ -322,7 +331,7 @@ const handleWithdraw = async () => {
 
 function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
     stakeOrWithdraw.value = option
-    formattedAmountToStake.value = ''
+    formattedAmountToStakeOrWithdraw.value = ''
     stakeButtonText.value = option === 'stake' ? 'Stake' : 'Withdraw'
 }
 </script>
@@ -438,7 +447,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
       <div class="flex items-center gap-[8px]">
         <input
           id="amount_input"
-          v-model="formattedAmountToStake"
+          v-model="formattedAmountToStakeOrWithdraw"
           type="text"
           pattern="^\d{1,3}(,\d{3})*(\.\d+)?$"
           placeholder="0.00"
@@ -507,7 +516,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
     <button
       ref="confettiButton"
       class="eigen-toggle-container mb-[12px]"
-      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage && !eigenDisabled)"
+      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage && !eigenDisabled)"
       @click="toggleShineEffect"
     >
       <div class="tooltip_container">
@@ -528,7 +537,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
         class="toggle_button"
         :style="{ 'background-color': toggleBackgroundColor }"
         :class="{ 'toggle-on': eigenIsToggled }"
-        :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage)"
+        :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage)"
       >
         <div class="toggle_circle" />
       </div>
@@ -538,7 +547,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
     <button
       class="submit-button  h-[37px] w-full "
       :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
-      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStake && !errorMessage) || (stakeButtonText !== 'Stake' && stakeButtonText !== 'Withdraw')"
+      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage) || (stakeButtonText !== 'Stake' && stakeButtonText !== 'Withdraw')"
       @click="stakeOrWithdraw === 'stake' ? handleDeposit() : handleWithdraw()"
     >
       <div

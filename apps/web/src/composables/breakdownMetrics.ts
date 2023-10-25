@@ -65,19 +65,25 @@ export default function useBreakdownMetrics() {
             addresses.forEach(address => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address, eigenManager))})
             const userEventTotals = await Promise.all(userEventTotalsPromises) as Array<ContractEventsByAddress>
             const userEventTotalsSum = userEventTotals.reduce((acc, curr) => {
-                const { StakeDeposited, WithdrawalInitiated } = curr
+                const { StakeDeposited, WithdrawalInitiated, WithdrawalRequested, WithdrawalFulfilled } = curr
                 return {
                   StakeDeposited: acc.StakeDeposited + (StakeDeposited || 0),
                   WithdrawalInitiated: acc.WithdrawalInitiated + (WithdrawalInitiated || 0),
+                  WithdrawalRequested: acc.WithdrawalRequested + (WithdrawalRequested || 0),
+                    WithdrawalFulfilled: acc.WithdrawalFulfilled + (WithdrawalFulfilled || 0)
                 }
-              }, { StakeDeposited: 0, WithdrawalInitiated: 0 } as { StakeDeposited: number; WithdrawalInitiated: number })
+              }, { StakeDeposited: 0, WithdrawalInitiated: 0, WithdrawalRequested: 0, WithdrawalFulfilled: 0 } as { StakeDeposited: number; WithdrawalInitiated: number, WithdrawalRequested: number, WithdrawalFulfilled: number })
               
               
             const stakedDepositedETH = userEventTotalsSum.StakeDeposited
             const withdrawalInitiatedETH = userEventTotalsSum.WithdrawalInitiated
+            const withdrawalRequestedETH = userEventTotalsSum.WithdrawalRequested
+            const withdrawalFulfilledETH = userEventTotalsSum.WithdrawalFulfilled
+            
 
-            /* Get User's All Time Rewards by Subtracting (StakeDeposited + WithdrawalInitiated) from CurrentStake */
-            const currentUserStakeMinusEvents = currentUserStakeETH - (stakedDepositedETH as number) - (withdrawalInitiatedETH as number)
+            /* Get User's All Time Rewards */
+            const currentUserStakeMinusEvents = currentUserStakeETH - stakedDepositedETH + ((withdrawalInitiatedETH) + (withdrawalRequestedETH) + (withdrawalFulfilledETH))
+
             return {
                 eth: `${formatNumber(currentUserStakeMinusEvents)} ETH`,
                 usd: `$${formatNumber(currentUserStakeMinusEvents * (await getCurrentPrice({ coin: 'ETH', currency: 'USD' })))}`
@@ -96,7 +102,9 @@ export default function useBreakdownMetrics() {
             const eventList = [
                 'StakeDeposited',
                 'StakeRebalanced',
-                'WithdrawalInitiated'
+                'WithdrawalInitiated',
+                'WithdrawalRequested',
+                'WithdrawalFulfilled'
             ]
             const eventFilters = eventList.map(event => {
                 if (event === 'StakeRebalanced') return (manager as CasimirManager).filters[event]()
@@ -120,14 +128,15 @@ export default function useBreakdownMetrics() {
                     userEventTotals[event as string] += amountInEth
                 }
             }
-    
-            return userEventTotals
+            return userEventTotals as ContractEventsByAddress
         } catch (err) {
             console.error(`There was an error in getContractEventsTotalsByAddress: ${err}`)
             return {
                 StakeDeposited: 0,
                 StakeRebalanced: 0,
-                WithdrawalInitiated: 0
+                WithdrawalInitiated: 0,
+                WithdrawalRequested: 0,
+                WithdrawalFulfilled: 0
             }
         }
     }

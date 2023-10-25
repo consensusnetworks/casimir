@@ -90,6 +90,26 @@ export default function useStaking() {
         }
     }
 
+    async function getWithdrawableBalance({walletProvider, type}: {walletProvider: ProviderString, type: 'default' | 'eigen'}) {
+        let signer
+        if (ethersProviderList.includes(walletProvider)) {
+            signer = getEthersBrowserSigner(walletProvider)
+        } else if (walletProvider === 'WalletConnect') {
+            await getWalletConnectSignerV2()
+        } else if (walletProvider === 'Ledger') {
+            getEthersLedgerSigner()
+        } else if (walletProvider === 'Trezor') {
+            getEthersTrezorSigner()
+        } else {
+            throw new Error(`Invalid wallet provider: ${walletProvider}`)
+        }
+        const manager = type === 'default' ? defaultManager : eigenManager
+        const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
+        const withdrawableBalance = await managerSigner.getWithdrawableBalance()
+        const withdrawableBalanceEther = ethers.utils.formatEther(withdrawableBalance)
+        return withdrawableBalanceEther
+    }
+
     async function withdraw({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: 'default' | 'eigen' }) {
         let signer
         if (ethersProviderList.includes(walletProvider)) {
@@ -106,14 +126,7 @@ export default function useStaking() {
         const manager = type === 'default' ? defaultManager : eigenManager
         const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
-        // const withdrawableBalance = await (manager as CasimirManager).getWithdrawableBalance()
-        const bufferedBalance = await managerSigner.getBufferedBalance()
-        const bufferedBalanceNumber = parseFloat(ethers.utils.formatEther(bufferedBalance))
-        const result = await managerSigner.requestWithdrawal(value)
-        return {
-            result,
-            bufferedBalance: bufferedBalanceNumber
-        }
+        return await managerSigner.requestWithdrawal(value)
     }
 
     return { 
@@ -122,6 +135,7 @@ export default function useStaking() {
         deposit, 
         getDepositFees,
         getUserStake,
+        getWithdrawableBalance,
         withdraw 
     }
 }

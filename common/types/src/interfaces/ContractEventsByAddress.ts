@@ -16,5 +16,6 @@ export interface ContractEventsByAddress {
     TipsDeposited?: number;
     WithdrawalInitiated?: number;
     WithdrawalRequested?: number;
+    WithdrawalFulfilled?: number;
   }
   
