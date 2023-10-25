@@ -44,13 +44,6 @@ function toggleEigenLayerSupport() {
   toggleBackgroundColor.value = eigenIsToggled.value ? 'green' : '#eee'
   operatorType.value = eigenIsToggled.value ? 'eigen' : 'default'
 
-  console.log('nonregisteredDefaultOperators.value :>> ', nonregisteredDefaultOperators.value)
-  console.log('registeredDefaultOperators.value :>> ', registeredDefaultOperators.value)
-  
-  console.log('nonregisteredEigenOperators.value :>> ', nonregisteredEigenOperators.value)
-  console.log('registeredEigenOperators.value :>> ', registeredEigenOperators.value)
-  
-  console.log('operatorType.value :>> ', operatorType.value)
   // Update stakeType
   // stakeType.value = eigenIsToggled.value ? 'eigen' : 'default'
 }
@@ -111,6 +104,7 @@ const operatorTableHeaders = ref(
   ]
 )
 
+const allInputsValid = ref(false)
 const tableData = ref<any>([])
 const filteredData = ref(tableData.value)
 const checkedItems = ref([] as any)
@@ -201,8 +195,6 @@ watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
   filterData()
 })
 
-
-
 const openWalletsModal = () => {
   const el = document.getElementById('connect_wallet_button')
   if (el) {
@@ -265,8 +257,6 @@ const removeItemFromCheckedList = (item:any) => {
     checkedItems.value.splice(index, 1)
   }
 }
-
-const allInputsValid = ref(false)
 
 watch([selectedWallet, selectedOperatorID, selectedPublicNodeURL, selectedCollateral], ()=>{
   if(selectedWallet.value.address !== '' && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== '' && selectedCollateral.value !== undefined) {
@@ -483,11 +473,15 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
             <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
               Add Eigen Support to Your Validator (Optional)
             </h6>
-            <div
-              ref="confettiButton"
+            <button
               class="toggle_container mt-10  w-full max-w-[400px] relative"
+              :disabled="true"
               @click="toggleEigenLayerSupport"
             >
+              <div class="tooltip_container">
+                COMING SOON!
+                <div class="tooltip_triangle" />
+              </div>
               <img
                 class="eigen-logo"
                 src="/eigen.svg"
@@ -504,7 +498,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
               >
                 <div class="toggle-circle" />
               </div>
-            </div>
+            </button>
 
             <!-- operator id input -->
             <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
@@ -1021,12 +1015,13 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
   justify-content: flex-start;
   padding-left: 10px; /* space from the left edge */
   position: relative;
+  width: 100%; /* takes full width of parent container */
   height: 44px; /* adjust as needed if required */
   background-color: rgb(26 12 109);
-  overflow: hidden;
+  /* overflow: hidden; */
   text-align: center;
   color: #fff; /* or any suitable color for better visibility */
-  font-size: 14px; /* adjust based on preference */
+  font-size: 14px;
   border-radius: 8px;
   transition: background-color 0.3s; /* This will animate the color change */
 }
@@ -1036,7 +1031,40 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
     /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
 }
 
-.shine-effect {
+.tooltip_container {
+  position: absolute;
+  bottom: 100%; /* position it above the button */
+  left: 50%; /* center it horizontally */
+  transform: translateX(-50%); /* shift it back by half its width to truly center it */
+  padding: 8px 12px; /* space around the text */
+  background-color: #000; /* or any desired tooltip color */
+  color: #fff; /* text color */
+  border-radius: 4px; /* round the corners */
+  opacity: 0; /* starts hidden */
+  transition: opacity 0.3s; /* smooth fade in */
+  white-space: nowrap; /* prevents the text from wrapping */
+  font-size: 12px;
+  pointer-events: none; /* ensures it doesn't block any interactions */
+  z-index: 10; /* positions it above other elements */
+}
+
+.toggle_container:hover .tooltip_container {
+  opacity: 1; /* show on hover */
+}
+
+.tooltip_triangle {
+  position: absolute;
+  bottom: -5px; /* position at the bottom of the tooltip */
+  left: 50%; /* center it horizontally */
+  transform: translateX(-50%); /* shift it back by half its width to truly center it */
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #000; /* same color as the tooltip background */
+}
+
+/* .shine-effect {
   content: '';
   position: absolute;
   top: -50%;
@@ -1047,9 +1075,9 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
   transform: rotate(30deg);
   pointer-events: none;
   animation: shine 2.5s infinite;
-}
+} */
 
-@keyframes shine {
+/* @keyframes shine {
   0% {
     left: -150%;
   }
@@ -1059,7 +1087,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
   100% {
     left: 150%;
   }
-}
+} */
 .toggle-button {
   position: absolute;
   top: 50%;
