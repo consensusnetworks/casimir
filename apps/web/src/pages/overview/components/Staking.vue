@@ -7,7 +7,6 @@ import useEthers from '@/composables/ethers'
 import useFormat from '@/composables/format'
 import usePrice from '@/composables/price'
 import useUser from '@/composables/user'
-import confetti from 'canvas-confetti'
 
 import TermsOfService from '@/components/TermsOfService.vue'
 
@@ -58,24 +57,6 @@ const toggleShineEffect = () => {
 
   // Update stakeType
   stakeType.value = eigenIsToggled.value ? 'eigen' : 'default'
-  if (stakeType.value === 'eigen') {
-    triggerConfetti()
-  }
-}
-
-const confettiButton = ref<HTMLElement | null>(null)
-const triggerConfetti = () => {
-  if (confettiButton.value) {
-    const rect = confettiButton.value.getBoundingClientRect()
-    const x = (rect.left + rect.right) / 2 / window.innerWidth
-    const y = (rect.top + rect.bottom) / 2 / window.innerHeight
-    
-    confetti({
-      particleCount: 250,
-      spread: 100,
-      origin: { x: x, y: y }
-    })
-  }
 }
 
 function toggleEstimatedAPY() {
@@ -514,7 +495,6 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
 
     <!-- Eigen Boggle -->
     <button
-      ref="confettiButton"
       class="eigen-toggle-container mb-[12px]"
       :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage && !eigenDisabled)"
       @click="toggleShineEffect"
