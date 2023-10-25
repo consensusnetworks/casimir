@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { ethers } from 'ethers'
 import { ProviderString } from '@casimir/types'
 import useContracts from '@/composables/contracts'
+import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
@@ -9,6 +10,7 @@ import useWalletConnectV2 from './walletConnectV2'
 import { CasimirManager } from '@casimir/ethereum/build/@types'
 
 const { getContracts } = useContracts()
+const { provider } = useEnvironment()
 const { ethersProviderList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
@@ -88,6 +90,26 @@ export default function useStaking() {
         }
     }
 
+    async function getWithdrawableBalance({walletProvider, type}: {walletProvider: ProviderString, type: 'default' | 'eigen'}) {
+        let signer
+        if (ethersProviderList.includes(walletProvider)) {
+            signer = getEthersBrowserSigner(walletProvider)
+        } else if (walletProvider === 'WalletConnect') {
+            await getWalletConnectSignerV2()
+        } else if (walletProvider === 'Ledger') {
+            getEthersLedgerSigner()
+        } else if (walletProvider === 'Trezor') {
+            getEthersTrezorSigner()
+        } else {
+            throw new Error(`Invalid wallet provider: ${walletProvider}`)
+        }
+        const manager = type === 'default' ? defaultManager : eigenManager
+        const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
+        const withdrawableBalance = await managerSigner.getWithdrawableBalance()
+        const withdrawableBalanceEther = ethers.utils.formatEther(withdrawableBalance)
+        return withdrawableBalanceEther
+    }
+
     async function withdraw({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: 'default' | 'eigen' }) {
         let signer
         if (ethersProviderList.includes(walletProvider)) {
@@ -104,9 +126,7 @@ export default function useStaking() {
         const manager = type === 'default' ? defaultManager : eigenManager
         const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
-        // const withdrawableBalance = await (manager as CasimirManager).getWithdrawableBalance()
-        const result = await managerSigner.requestWithdrawal(value)
-        return await result.wait()
+        return await managerSigner.requestWithdrawal(value)
     }
 
     return { 
@@ -115,6 +135,7 @@ export default function useStaking() {
         deposit, 
         getDepositFees,
         getUserStake,
+        getWithdrawableBalance,
         withdraw 
     }
 }
