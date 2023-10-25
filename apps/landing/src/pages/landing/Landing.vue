@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
+
 const docsUrl = import.meta.env.PUBLIC_DOCS_URL
 const faqItems = ref(
   [

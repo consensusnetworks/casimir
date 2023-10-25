@@ -2,6 +2,7 @@
 import VueFeather from 'vue-feather'
 import useBlog from '@/composables/blog'
 
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL
 const {
     articles,
     loadingArticles,
@@ -21,9 +22,6 @@ const {
         </a>
         <ul class="nav__links">
           <li>
-            <a href="https://github.com/consensusnetworks/casimir#casimir">API Reference</a>
-          </li>
-          <li>
             <a href="/blog">Blog</a>
           </li>
           <li>
@@ -31,6 +29,9 @@ const {
           </li>
           <li>
             <a href="https://consensusnetworks.com">Company</a>
+          </li>
+          <li>
+            <a :href="docsUrl">Docs</a>
           </li>
         </ul>
         <a

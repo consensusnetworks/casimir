@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import snarkdown from 'snarkdown'
 
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL
+
 async function getReleases() {
   const url = 'https://api.github.com/repos/consensusnetworks/casimir/releases'
   const response = await fetch(url, {
@@ -84,14 +86,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           >
         </a>
         <ul class="nav__links">
-          <li>
-            <a
-              class="text-9"
-              href="https://github.com/consensusnetworks/casimir#casimir"
-            >
-              API Reference
-            </a>
-          </li>
           <li><a href="/blog">Blog</a></li>
           <li>
             <a
@@ -101,6 +95,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           </li>
           <li>
             <a href="https://consensusnetworks.com">Company</a>
+          </li>
+          <li>
+            <a
+              :href="docsUrl"
+              target="_blank"
+            >Docs</a>
           </li>
         </ul>
         <a
