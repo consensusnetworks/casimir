@@ -127,17 +127,11 @@ export default function useOperators() {
 
     async function _getPools(operatorId: number, type: 'base' | 'eigen'): Promise<PoolConfig[]> {
         const pools: PoolConfig[] = []
-    
-        const basePoolIds = [
-            ...await (baseManager as CasimirManager).getPendingPoolIds(),
-            ...await (baseManager as CasimirManager).getStakedPoolIds()
+        const manager = type === 'base' ? baseManager : eigenManager
+        const poolIds = [
+            ...await (manager as CasimirManager).getPendingPoolIds(),
+            ...await (manager as CasimirManager).getStakedPoolIds()
         ]
-        const eigenPoolIds = [
-            ...await (eigenManager as CasimirManager).getPendingPoolIds(),
-            ...await (eigenManager as CasimirManager).getStakedPoolIds()
-        ]
-
-        const poolIds = type === 'base' ? basePoolIds : eigenPoolIds
         const views = type === 'base' ? baseViews : eigenViews
     
         for (const poolId of poolIds) {
