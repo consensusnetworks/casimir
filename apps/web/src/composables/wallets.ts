@@ -67,17 +67,17 @@ export default function useWallets() {
         try {
             await provider.request({
                 method:'wallet_switchEthereumChain',
-                params: [{chainId: chainId}]
+                params: [{ chainId }]
             })
         } catch (err: any) {
             console.log(`Error occurred while switching chain to chainId ${chainId}, err: ${err.message} code: ${err.code}`)
-            if (err.code === 4902){
-                if (chainId === '5') {
-                    addEthersNetwork(providerString, goerliNetwork)
-                } else if (chainId === '0x1252') {
-                    addEthersNetwork(providerString, iotexNetwork)
-                }
-            }
+            // if (err.code === 4902){
+            //     if (chainId === '5') {
+            //         addEthersNetwork(providerString, goerliNetwork)
+            //     } else if (chainId === '0x1252') {
+            //         addEthersNetwork(providerString, iotexNetwork)
+            //     }
+            // }
         }
     }
 
@@ -90,14 +90,14 @@ export default function useWallets() {
     }
 }
 
-async function addEthersNetwork (providerString: ProviderString, network: any) {
-    const provider = getBrowserProvider(providerString)
-    try {
-      await provider.request({
-        method: 'wallet_addEthereumChain',
-        params: [network]
-      })
-    } catch(error: any) {
-      console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
-    }
-  }
+// async function addEthersNetwork (providerString: ProviderString, network: any) {
+//     const provider = getBrowserProvider(providerString)
+//     try {
+//       await provider.request({
+//         method: 'wallet_addEthereumChain',
+//         params: [network]
+//       })
+//     } catch(error: any) {
+//       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
+//     }
+//   }

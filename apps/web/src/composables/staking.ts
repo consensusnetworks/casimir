@@ -6,6 +6,7 @@ import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
+import useWallets from '@/composables/wallets'
 import useWalletConnectV2 from './walletConnectV2'
 import { CasimirManager } from '@casimir/ethereum/build/@types'
 
@@ -14,6 +15,7 @@ const { provider } = useEnvironment()
 const { browserProvidersList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
+const { detectActiveNetwork, switchEthersNetwork } = useWallets()
 const { getWalletConnectSignerV2 } = useWalletConnectV2()
 
 const stakingComposableInitialized = ref(false)
@@ -38,6 +40,12 @@ export default function useStaking() {
     
     async function deposit({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: 'default' | 'eigen' }) {
         try {
+            const activeNetwork = await detectActiveNetwork(walletProvider)
+            if (activeNetwork !== 5) {
+                await switchEthersNetwork(walletProvider, '0x5')
+                return window.location.reload()
+            }
+
             let signer
             if (browserProvidersList.includes(walletProvider)) {
                 signer = getEthersBrowserSigner(walletProvider)
@@ -111,6 +119,12 @@ export default function useStaking() {
     }
 
     async function withdraw({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: 'default' | 'eigen' }) {
+        const activeNetwork = await detectActiveNetwork(walletProvider)
+        if (activeNetwork !== 5) {
+            await switchEthersNetwork(walletProvider, '0x5')
+            return window.location.reload()
+        }
+
         let signer
         if (browserProvidersList.includes(walletProvider)) {
             signer = getEthersBrowserSigner(walletProvider)
