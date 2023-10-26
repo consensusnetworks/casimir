@@ -21,7 +21,7 @@ let eigenViews: CasimirViews
 
 const { getContracts } = useContracts()
 const { ethereumUrl, ssvNetworkAddress, ssvViewsAddress, usersUrl } = useEnvironment()
-const { ethersProviderList, getEthersBrowserSigner } = useEthers()
+const { browserProvidersList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
 const { user } = useUser()
@@ -196,7 +196,7 @@ export default function useOperators() {
         loadingRegisteredOperators.value = true
         try {
             let signer
-            if (ethersProviderList.includes(walletProvider)) {
+            if (browserProvidersList.includes(walletProvider)) {
                 signer = getEthersBrowserSigner(walletProvider)
             } else if (walletProvider === 'WalletConnect') {
                 await getWalletConnectSignerV2()

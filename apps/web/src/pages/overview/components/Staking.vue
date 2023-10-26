@@ -275,8 +275,8 @@ const handleWithdraw = async () => {
     walletProvider: selectedStakingProvider.value,
     type: stakeType.value
   })
-
-  if (withdrawableBalance < formattedAmountToStakeOrWithdraw.value) {
+  
+  if (parseFloat(withdrawableBalance) < parseFloat(formattedAmountToStakeOrWithdraw.value)) {
     stakeButtonText.value = 'Withdraw'
     formattedAmountToStakeOrWithdraw.value = ''
     return alert(`You can currently withdraw up to ${withdrawableBalance} ETH. Please try again with a smaller amount.`)

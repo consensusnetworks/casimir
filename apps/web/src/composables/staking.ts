@@ -11,7 +11,7 @@ import { CasimirManager } from '@casimir/ethereum/build/@types'
 
 const { getContracts } = useContracts()
 const { provider } = useEnvironment()
-const { ethersProviderList, getEthersBrowserSigner } = useEthers()
+const { browserProvidersList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
 const { getWalletConnectSignerV2 } = useWalletConnectV2()
@@ -39,7 +39,7 @@ export default function useStaking() {
     async function deposit({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: 'default' | 'eigen' }) {
         try {
             let signer
-            if (ethersProviderList.includes(walletProvider)) {
+            if (browserProvidersList.includes(walletProvider)) {
                 signer = getEthersBrowserSigner(walletProvider)
             } else if (walletProvider === 'WalletConnect') {
                 await getWalletConnectSignerV2()
@@ -92,7 +92,7 @@ export default function useStaking() {
 
     async function getWithdrawableBalance({walletProvider, type}: {walletProvider: ProviderString, type: 'default' | 'eigen'}) {
         let signer
-        if (ethersProviderList.includes(walletProvider)) {
+        if (browserProvidersList.includes(walletProvider)) {
             signer = getEthersBrowserSigner(walletProvider)
         } else if (walletProvider === 'WalletConnect') {
             await getWalletConnectSignerV2()
@@ -112,7 +112,7 @@ export default function useStaking() {
 
     async function withdraw({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: 'default' | 'eigen' }) {
         let signer
-        if (ethersProviderList.includes(walletProvider)) {
+        if (browserProvidersList.includes(walletProvider)) {
             signer = getEthersBrowserSigner(walletProvider)
         } else if (walletProvider === 'WalletConnect') {
             await getWalletConnectSignerV2()

@@ -15,20 +15,16 @@ const { ethereumUrl, provider } = useEnvironment()
 const { createSiweMessage, signInWithEthereum } = useSiwe()
 const { installedWallets } = useWallets()
 
-export default function useEthers() {
-  const ethersProviderList = ['BraveWallet', 'CoinbaseWallet', 'MetaMask', 'OkxWallet', 'TrustWallet']
 
-  async function addEthersNetwork (providerString: ProviderString, network: any) {
-    const provider = getBrowserProvider(providerString)
-    try {
-      await provider.request({
-        method: 'wallet_addEthereumChain',
-        params: [network]
-      })
-    } catch(error: any) {
-      console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
-    }
-  }
+export default function useEthers() {
+  
+  const browserProvidersList = [
+    'BraveWallet',
+    'CoinbaseWallet',
+    'MetaMask',
+    'OkxWallet',
+    'TrustWallet'
+  ]
 
   async function detectActiveEthersWalletAddress(providerString: ProviderString): Promise<string> {
     const provider = getBrowserProvider(providerString)
@@ -45,6 +41,34 @@ export default function useEthers() {
     } catch(err) {
       console.error('There was an error in detectActiveEthersWalletAddress :>> ', err)
       return ''
+    }
+  }
+
+  function getBrowserProvider(providerString: ProviderString) {
+    try {
+      const { ethereum } = window
+      const isInstalled = installedWallets.value.includes(providerString)
+      if (providerString === 'CoinbaseWallet') {
+        if (!ethereum.providerMap && isInstalled) return alert('TrustWallet or another wallet may be interfering with CoinbaseWallet. Please disable other wallets and try again.')
+        if (ethereum?.providerMap) return ethereum.providerMap.get(providerString)
+          else window.open('https://www.coinbase.com/wallet/downloads', '_blank')
+      } else if (providerString === 'MetaMask') {
+        if (ethereum.providerMap && ethereum.providerMap.get('MetaMask')) {
+          return ethereum?.providerMap?.get(providerString) || undefined
+        } else if (ethereum.isMetaMask) {
+          return ethereum
+        } else {
+          window.open('https://metamask.io/download.html', '_blank')
+        }
+      } else if (providerString === 'BraveWallet') {
+        return getBraveWallet()
+      } else if (providerString === 'TrustWallet') {
+        return getTrustWallet()
+      } else if (providerString === 'OkxWallet') {
+        return getOkxWallet()
+      }
+    } catch(err) {
+      console.error('There was an error in getBrowserProvider :>> ', err)
     }
   }
 
@@ -222,69 +246,15 @@ export default function useEthers() {
     return signature
   }
 
-  async function switchEthersNetwork (providerString: ProviderString, chainId: string) {
-    const provider = getBrowserProvider(providerString)
-    const currentChainId = await provider.networkVersion
-    if (chainId === '5') {
-      chainId = '0x5'
-    } else if (chainId === '4690') {
-      chainId = ethers.utils.hexlify(4690)
-    }
-    if (currentChainId.toString() != chainId){
-        try {
-          await provider.request({
-            method:'wallet_switchEthereumChain',
-            params: [{chainId: chainId}]
-          })
-        } catch (err: any) {
-            console.log(`Error occurred while switching chain to chainId ${chainId}, err: ${err.message} code: ${err.code}`)
-            if (err.code === 4902){
-              if (chainId === '5') {
-                addEthersNetwork(providerString, goerliNetwork)
-              } else if (chainId === '0x1252') {
-                addEthersNetwork(providerString, iotexNetwork)
-            }
-          }
-        }
-    }
-  }
-
   return { 
-    ethersProviderList,
+    browserProvidersList,
     detectActiveEthersWalletAddress,
+    getBrowserProvider,
     getEthersAddressesWithBalances,
     getEthersBalance,
     getEthersBrowserSigner,
     getGasPriceAndLimit,
     loginWithEthers,
-  }
-}
-
-function getBrowserProvider(providerString: ProviderString) {
-  try {
-    const { ethereum } = window
-    const isInstalled = installedWallets.value.includes(providerString)
-    if (providerString === 'CoinbaseWallet') {
-      if (!ethereum.providerMap && isInstalled) return alert('TrustWallet or another wallet may be interfering with CoinbaseWallet. Please disable other wallets and try again.')
-      if (ethereum?.providerMap) return ethereum.providerMap.get(providerString)
-        else window.open('https://www.coinbase.com/wallet/downloads', '_blank')
-    } else if (providerString === 'MetaMask') {
-      if (ethereum.providerMap && ethereum.providerMap.get('MetaMask')) {
-        return ethereum?.providerMap?.get(providerString) || undefined
-      } else if (ethereum.isMetaMask) {
-        return ethereum
-      } else {
-        window.open('https://metamask.io/download.html', '_blank')
-      }
-    } else if (providerString === 'BraveWallet') {
-      return getBraveWallet()
-    } else if (providerString === 'TrustWallet') {
-      return getTrustWallet()
-    } else if (providerString === 'OkxWallet') {
-      return getOkxWallet()
-    }
-  } catch(err) {
-    console.error('There was an error in getBrowserProvider :>> ', err)
   }
 }
 
