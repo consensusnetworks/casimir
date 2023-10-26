@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
 import { ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
+import useEnvironment from '@/composables/environment'
 // import useEthers from '@/composables/ethers'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
@@ -10,6 +11,7 @@ import useOperators from '@/composables/operators'
 import useUser from '@/composables/user'
 
 const { loadingSessionLogin } = useAuth()
+const { docsUrl } = useEnvironment()
 // const { detectActiveWalletAddress } = useEthers()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
@@ -382,7 +384,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 <p class="text-sm">
                   Learn how to set up a Casimir operator using
                   <a
-                    href="https://docs.dev.casimir.co/"
+                    :href="docsUrl"
                     target="_blank"
                     class="text-primary underline"
                   >
