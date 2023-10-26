@@ -127,7 +127,7 @@ export default function useOperators() {
 
     async function _getPools(operatorId: number, type: 'base' | 'eigen'): Promise<PoolConfig[]> {
         const pools: PoolConfig[] = []
-        const manager = type === 'base' ? baseManager : eigenManbaseManager
+        const manager = type === 'base' ? baseManager : eigenManager
         const poolIds = [
             ...await (manager as CasimirManager).getPendingPoolIds(),
             ...await (manager as CasimirManager).getStakedPoolIds()
