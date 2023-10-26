@@ -96,7 +96,8 @@ void async function () {
             await depositUpkeepBalanceHandler({ managerConfig })
             await handler({ managerConfig, args })
             if (process.env.USE_LOGS === 'true') {
-                updateStartBlock('block.log', event.blockNumber)
+                // Todo check if this possibly misses events
+                updateStartBlock('block.log', event.blockNumber + 1)
             }
         }
     } catch (error) {
