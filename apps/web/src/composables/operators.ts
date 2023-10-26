@@ -8,6 +8,7 @@ import useEthers from '@/composables/ethers'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useUser from '@/composables/user'
+import useWallets from '@/composables/wallets'
 import useWalletConnectV2 from '@/composables/walletConnectV2'
 import { CasimirManager, CasimirRegistry, CasimirViews } from '@casimir/ethereum/build/@types'
 
@@ -21,10 +22,11 @@ let eigenViews: CasimirViews
 
 const { getContracts } = useContracts()
 const { ethereumUrl, ssvNetworkAddress, ssvViewsAddress, usersUrl } = useEnvironment()
-const { ethersProviderList, getEthersBrowserSigner } = useEthers()
+const { browserProvidersList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
 const { user } = useUser()
+const { detectActiveNetwork, switchEthersNetwork } = useWallets()
 const { getWalletConnectSignerV2 } = useWalletConnectV2()
 const loadingInitializeOperators = ref(false)
 const loadingInitializeOperatorsError = ref(false)
@@ -193,10 +195,15 @@ export default function useOperators() {
 
     // TODO: Move this to operators.ts to combine with AddOperator method
     async function registerOperatorWithCasimir({ walletProvider, address, operatorId, collateral, nodeUrl }: RegisterOperatorWithCasimirParams) {
+        const activeNetwork = await detectActiveNetwork(walletProvider)
+        if (activeNetwork !== 5) {
+            await switchEthersNetwork(walletProvider, '0x5')
+            return window.location.reload()
+        }
         loadingRegisteredOperators.value = true
         try {
             let signer
-            if (ethersProviderList.includes(walletProvider)) {
+            if (browserProvidersList.includes(walletProvider)) {
                 signer = getEthersBrowserSigner(walletProvider)
             } else if (walletProvider === 'WalletConnect') {
                 await getWalletConnectSignerV2()

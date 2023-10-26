@@ -166,6 +166,8 @@ const toggleModal = (showModal: boolean) => {
             />
           </button>
 
+          <button>Goerli Testnet</button>
+
           <div class="connect_wallet_gradient">
             <button
               id="connect_wallet_button"

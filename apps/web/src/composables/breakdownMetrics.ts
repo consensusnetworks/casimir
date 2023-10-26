@@ -251,13 +251,12 @@ export default function useBreakdownMetrics() {
 
     async function blockListener(blockNumber: number) {
         if (!user.value) return
-        console.log('blockNumber :>> ', blockNumber)
+        if (import.meta.env.MODE === 'development') console.log('blockNumber :>> ', blockNumber)
         const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         const block = await provider.getBlockWithTransactions(blockNumber)
         
         const txs = block.transactions.map(async (tx: any) => {
             if (addresses.includes(tx.from.toLowerCase())) {
-                console.log('tx :>> ', tx)
                 try {
                     // const response = (manager as CasimirManager).interface.parseTransaction({ data: tx.data })
                     // console.log('response :>> ', response)
