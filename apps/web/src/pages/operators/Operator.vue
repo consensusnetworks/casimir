@@ -116,7 +116,7 @@ const submitButtonTxt = ref('Submit')
 
 onMounted(async () => {
   if (user.value) {
-
+    loading.value = true
     await initializeOperatorComposable()
 
     // Autofill disable
@@ -135,6 +135,7 @@ onMounted(async () => {
 
 watch(user, async () => {
   if (user.value) {
+    loading.value = true
     await initializeOperatorComposable()
 
     filterData()
@@ -160,6 +161,7 @@ watch(selectedWallet, async () => {
 })
 
 watch([registeredBaseOperators, registeredEigenOperators], () => {
+  loading.value = true
   openAddOperatorModal.value = false
   tableData.value = [...registeredBaseOperators.value, ...registeredEigenOperators.value].map((operator: any) => {
     return {
@@ -205,6 +207,7 @@ const handleInputChangeCollateral = (event: any) => {
 }
 
 const filterData = () => {
+  loading.value = true
   let filteredDataArray
 
   if (searchInput.value === '') {
@@ -237,6 +240,7 @@ const filterData = () => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   filteredData.value = filteredDataArray.slice(start, end) as any
+  loading.value = false
 }
 
 const removeItemFromCheckedList = (item: any) => {
@@ -303,7 +307,8 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
   <div class="px-[60px] 800s:px-[5%] pt-[51px]">
     <div class="flex items-start gap-[20px] justify-between flex-wrap mb-[30px]">
       <h6 class="title relative">
-        <div v-show="showSkeleton" class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
+        <div v-show="showSkeleton || loading"
+          class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
           <div class="skeleton_box" />
         </div>
         Operators
