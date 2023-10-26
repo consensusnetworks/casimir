@@ -2,6 +2,7 @@ import express from 'express'
 import { verifySession } from 'supertokens-node/recipe/session/framework/express'
 import { SessionRequest } from 'supertokens-node/framework/express'
 import useDB from '../providers/db'
+import { UserWithAccountsAndOperators } from '@casimir/types'
 
 const router = express.Router()
 const { addAccount, addOperator, getAccounts, getUserByAddress, getUserById, updateUserAddress, updateUserAgreedToTermsOfService, removeAccount } = useDB()
@@ -9,9 +10,7 @@ const { addAccount, addOperator, getAccounts, getUserByAddress, getUserById, upd
 router.get('/', verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
         const id = req.session?.getUserId() as string
-        console.log('getting user by id :>> ', id)
         const user = await getUserById(id)
-        console.log('user in user home route :>> ', user)
         const message = user ? 'User found' : 'User not found'
         res.setHeader('Content-Type', 'application/json')
         res.status(200)
@@ -129,7 +128,7 @@ router.get('/check-secondary-address/:address', async (req: express.Request, res
         const users = await Promise.all(accounts.map(async account => {
             const { userId } = account
             const user = await getUserById(userId)
-            const { address, walletProvider } = user
+            const { address, walletProvider } = user as UserWithAccountsAndOperators
             return { 
                 address: maskAddress(address),
                 walletProvider,

@@ -1,9 +1,36 @@
 import { ref, readonly } from 'vue'
 import { ProviderString } from '@casimir/types'
+import useEthers from '@/composables/ethers'
 
 const installedWallets = ref([] as ProviderString[])
+const { browserProvidersList, getBrowserProvider } = useEthers()
 
 export default function useWallets() {
+    async function detectActiveNetwork(providerString: ProviderString) {
+        try {
+          if (browserProvidersList.includes(providerString)) {
+            const provider = getBrowserProvider(providerString)
+            const chainId = parseInt(await provider.request({ method: 'eth_chainId' }), 16)
+            return chainId
+          } else if (providerString === 'WalletConnect') {
+            const provider = getBrowserProvider(providerString)
+            const chainId = parseInt(await provider.request({ method: 'eth_chainId' }), 16)
+            return chainId
+          } else if (providerString === 'Ledger') {
+            // TODO: Implement Ledger
+            alert('detectActiveNetwork not yet implemented')
+            return '0'
+          } else if (providerString === 'Trezor') {
+            // TODO: Implement Trezor
+            alert('detectActiveNetwork not yet implemented')
+            return '0'
+          }
+        } catch (err) {
+          console.log('Error in detectActiveNetwork: ', err)
+        }
+      }
+      
+    
     async function detectInstalledWalletProviders() {
         const ethereum = (window as any).ethereum
         if (ethereum) {
@@ -34,8 +61,43 @@ export default function useWallets() {
             console.log('No ethereum browser provider found')
         }
     }
+
+    async function switchEthersNetwork (providerString: ProviderString, chainId: string) {
+        const provider = getBrowserProvider(providerString)
+        try {
+            await provider.request({
+                method:'wallet_switchEthereumChain',
+                params: [{ chainId }]
+            })
+        } catch (err: any) {
+            console.log(`Error occurred while switching chain to chainId ${chainId}, err: ${err.message} code: ${err.code}`)
+            // if (err.code === 4902){
+            //     if (chainId === '5') {
+            //         addEthersNetwork(providerString, goerliNetwork)
+            //     } else if (chainId === '0x1252') {
+            //         addEthersNetwork(providerString, iotexNetwork)
+            //     }
+            // }
+        }
+    }
+
+
     return {
         installedWallets: readonly(installedWallets),
-        detectInstalledWalletProviders
+        detectActiveNetwork,
+        detectInstalledWalletProviders,
+        switchEthersNetwork
     }
 }
+
+// async function addEthersNetwork (providerString: ProviderString, network: any) {
+//     const provider = getBrowserProvider(providerString)
+//     try {
+//       await provider.request({
+//         method: 'wallet_addEthereumChain',
+//         params: [network]
+//       })
+//     } catch(error: any) {
+//       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
+//     }
+//   }

@@ -3,11 +3,13 @@ import { onMounted, ref, watch, onUnmounted } from 'vue'
 import { CryptoAddress, Currency, LoginCredentials, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
 import useAuth from '@/composables/auth'
+import useEnvironment from '@/composables/environment'
 import useEthers from '@/composables/ethers'
 import useFormat from '@/composables/format'
 import useLedger from '@/composables/ledger'
 import useTrezor from '@/composables/trezor'
 import useUser from '@/composables/user'
+import useWallets from '@/composables/wallets'
 import useWalletConnect from '@/composables/walletConnectV2'
 // import useWallets from '@/composables/wallets'
 
@@ -24,11 +26,13 @@ const supportedWalletProviders = [
 ] as ProviderString[]
 
 const { login, loginWithSecondaryAddress } = useAuth()
-const { ethersProviderList, getEthersAddressesWithBalances } = useEthers()
+const { requiredNetwork } = useEnvironment()
+const { browserProvidersList, getEthersAddressesWithBalances } = useEthers()
 const { convertString, trimAndLowercaseAddress } = useFormat()
 const { getLedgerAddress } = useLedger()
 const { getTrezorAddress } = useTrezor()
 const { user } = useUser()
+const { detectActiveNetwork, switchEthersNetwork } = useWallets()
 const { connectWalletConnectV2 } = useWalletConnect()
 // const { installedWallets, detectInstalledWalletProviders } = useWallets()
 
@@ -133,10 +137,19 @@ async function selectProvider(provider: ProviderString, currency: Currency = 'ET
   try {
     selectedProvider.value = provider
     selectProviderLoading.value = true
+    
+    // Hard Goerli Check
+    // TODO: Make this dynamic
+    const activeNetwork = await detectActiveNetwork(selectedProvider.value as ProviderString)
+    if (activeNetwork !== 5) {
+      await switchEthersNetwork(selectedProvider.value, '0x5')
+      return window.location.reload()
+    }
+
     if (provider === 'WalletConnect') {
-      // TODO: Clarify this.
-      walletProviderAddresses.value = await connectWalletConnectV2('5') as CryptoAddress[]
-    } else if (ethersProviderList.includes(provider)) {
+      // TODO: @@cali1 - pass in the network id dynamically
+      walletProviderAddresses.value = await connectWalletConnectV2(requiredNetwork) as CryptoAddress[]
+    } else if (browserProvidersList.includes(provider)) {
       walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
     } else if (provider === 'Ledger') {
       walletProviderAddresses.value = await getLedgerAddress[currency]() as CryptoAddress[]

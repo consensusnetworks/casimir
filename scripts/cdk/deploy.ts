@@ -13,9 +13,12 @@ void async function () {
     await loadCredentials()
     process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')
 
+    // Hardcode app url to dev in prod to link goerli testnet
+    process.env.APP_URL = process.env.STAGE === 'prod' ? /*'https://app.casimir.co'*/'https://app.dev.casimir.co' : `https://app.${process.env.STAGE}.casimir.co`
     process.env.BLOG_URL = process.env.STAGE === 'prod' ? 'https://blog.casimir.co' : `https://blog.${process.env.STAGE}.casimir.co`
     process.env.DOCS_URL = process.env.STAGE === 'prod' ? 'https://docs.casimir.co' : `https://docs.${process.env.STAGE}.casimir.co`
     process.env.USERS_URL = process.env.STAGE === 'prod' ? 'https://users.casimir.co' : `https://users.${process.env.STAGE}.casimir.co`
+    process.env.WEBSITE_URL = process.env.STAGE === 'prod' ? 'https://casimir.co' : `https://${process.env.STAGE}.casimir.co`
     process.env.CRYPTO_COMPARE_API_KEY = await getSecret('casimir-crypto-compare-api-key')
 
     const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
@@ -24,8 +27,11 @@ void async function () {
     process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_NETWORK_ADDRESS
     process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
     
+    process.env.PUBLIC_APP_URL = process.env.APP_URL
     process.env.PUBLIC_BLOG_URL = process.env.BLOG_URL
+    process.env.PUBLIC_DOCS_URL = process.env.DOCS_URL
     process.env.PUBLIC_USERS_URL = process.env.USERS_URL
+    process.env.PUBLIC_WEBSITE_URL = process.env.WEBSITE_URL
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
     process.env.PUBLIC_FACTORY_ADDRESS = process.env.FACTORY_ADDRESS

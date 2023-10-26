@@ -105,6 +105,7 @@ const config: HardhatUserConfig = {
     docgen: {
         exclude: [
             'dev',
+            'libraries',
             'mock',
             'vendor'
         ],

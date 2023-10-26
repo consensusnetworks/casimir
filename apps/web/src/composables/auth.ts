@@ -15,7 +15,7 @@ import {
 } from '@casimir/types'
 
 const { usersUrl } = useEnvironment()
-const { ethersProviderList, detectActiveEthersWalletAddress, loginWithEthers } =
+const { browserProvidersList, detectActiveEthersWalletAddress, loginWithEthers } =
   useEthers()
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
@@ -81,7 +81,7 @@ export default function useAuth() {
   }
 
   async function detectActiveWalletAddress(providerString: ProviderString) {
-    if (ethersProviderList.includes(providerString)) {
+    if (browserProvidersList.includes(providerString)) {
       return await detectActiveEthersWalletAddress(providerString)
     } else {
       alert(
@@ -185,7 +185,7 @@ export default function useAuth() {
         // If no, cancel/do nothing
 
         const hardwareWallet = provider === 'Ledger' || provider === 'Trezor'
-        const browserWallet = ethersProviderList.includes(
+        const browserWallet = browserProvidersList.includes(
           provider as ProviderString
         )
         if (hardwareWallet) {
@@ -219,7 +219,7 @@ export default function useAuth() {
     const { address, provider } = loginCredentials
     try {
       const hardwareWallet = provider === 'Ledger' || provider === 'Trezor'
-      const browserWallet = ethersProviderList.includes(provider as ProviderString)
+      const browserWallet = browserProvidersList.includes(provider as ProviderString)
       if (hardwareWallet) {
         await loginWithProvider(loginCredentials as LoginCredentials)
         await getUser()
@@ -270,7 +270,7 @@ export default function useAuth() {
   async function loginWithProvider(loginCredentials: LoginCredentials) {
     const { provider } = loginCredentials
     try {
-      if (ethersProviderList.includes(provider)) {
+      if (browserProvidersList.includes(provider)) {
         await loginWithEthers(loginCredentials)
       } else if (provider === 'Ledger') {
         await loginWithLedger(loginCredentials)
@@ -333,7 +333,7 @@ export default function useAuth() {
   //     }
   //     if (selectedAddress.value === primaryAddress.value) {
   //       return alert('Cannot remove primary account')
-  //     } else if (ethersProviderList.includes(selectedProvider.value)) {
+  //     } else if (browserProvidersList.includes(selectedProvider.value)) {
   //       const opts = {
   //         address: selectedAddress.value,
   //         currency: selectedCurrency.value,

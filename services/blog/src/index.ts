@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { Article } from '@casimir/types'
+import { HackmdArticle } from '@casimir/types'
 
 const app = express()
 app.use(cors())
@@ -20,9 +20,9 @@ app.get('/articles', async (_req, res) => {
     if (!response.ok) {
         res.status(response.status).send('Error fetching articles')
     } else {
-        const data = await response.json() as Article[]
-        const articles = data.filter((item) => item.tags.includes('blog') && item.publishedAt)
-        res.json(articles)
+        const data = await response.json() as HackmdArticle[]
+        const hackmdArticles = data.filter((item) => item.tags.includes('blog') && item.publishedAt)
+        res.json(hackmdArticles)
     }
 })
 
@@ -39,8 +39,8 @@ app.get('/articles/:id', async (req, res) => {
     if (!response.ok) {
         res.status(response.status).send(`Error fetching article ${notesId}`)
     } else {
-        const article = await response.json() as Article
-        res.json(article)
+        const hackmdArticle = await response.json() as HackmdArticle
+        res.json(hackmdArticle)
     }
 })
 

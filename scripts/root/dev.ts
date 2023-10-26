@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 import { loadCredentials, getSecret } from '@casimir/aws'
 import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from '@casimir/env'
-import { run } from '@casimir/shell'
+import { run, runSync } from '@casimir/shell'
 
 /**
  * Run an integrated development environment
@@ -134,5 +134,13 @@ void async function () {
         run(`npm run preview --workspace @casimir/${app}`)
     } else {
         run(`npm run dev --workspace @casimir/${app}`)
+    }
+
+    if (process.env.MOCK_SERVICES === 'true' && app === 'web') {
+        process.on('SIGINT', () => {
+            console.log('🧹 Cleaning up users service')
+            runSync('npm run clean --workspace @casimir/users')
+            process.exit()
+        })
     }
 }()

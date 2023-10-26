@@ -1,27 +1,38 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-const docsUrl = import.meta.env.PUBLIC_DOCS_URL
+
+const appUrl = import.meta.env.PUBLIC_APP_URL || 'https://app.dev.casimir.co'
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL || 'https://docs.dev.casimir.co'
 const faqItems = ref(
   [
     {
       question: 'Are there ways I can use my staked ETH for additional yield?',
-      answer: 'Although Casimir is not launching an LSD, there are opportunities for stakers to provide their native staked ETH as liquidity providers (e.g., to support a DAO). Additionally, we will be introducing restaking mechanisms like EigenLayer that will enable users to natively restake their ETH to maximize their APR, if desired.',
+      answer: 'We will be introducing restaking mechanisms like EigenLayer that will enable users to natively restake their ETH to maximize their APR, if desired.',
       open: false,
     },
     {
       question: 'Am I giving up custody of my staked ETH?',
-      answer: 'No! Keys created and held across validators with distributed key generation (DKG). You will always be able to withdraw your staked ETH from the Casimir smart contract.',
+      answer: 'No! Validator keys are generated with distributed key generation (DKG) and split between operators. You will always be able to withdraw your staked ETH from the Casimir smart contract.',
       open: false,
     },
     {
       question: 'How frequently do I get my rewards?',
-      answer: 'Rewards will be distributed as they are awarded by the Ethereum protocol, at least daily.',
+      answer: 'Rewards are accumulated at least daily when they are validated by a decentralized oracle network.',
       open: false,
     },
     {
-      question: 'Where are my rewards distributed, is there a secondary token?',
-      answer: 'Your rewards will be distributed to the wallet you staked with; you won\'t need to deal with the hassle of swapping a token to get your rewards.',
+      question: 'How can I withdraw my stake or rewards?',
+      answer: 'You can request a partial or full withdrawal of your stake plus rewards any time. The amount will be sent from your contract stake account to your wallet.',
       open: false,
+    },
+    {
+      question: 'Is there a waiting period for withdrawals?',
+      answer: 'Most smaller withdrawals can be made near-instantly. Medium withdrawals may take up to a day. Larger withdrawals (>32 ETH) may take up to four days depending on the Ethereum Beacon chain exit queue.',
+      open: false,
+    },
+    {
+      question: 'Is there a secondary token?',
+      answer: 'No, by default you can manage your stake with native ETH. We will provide opt-in staking strategies for secondary features, like a token, in the near future.'
     },
     {
       question: 'Which wallets are supported?',
@@ -29,23 +40,18 @@ const faqItems = ref(
       open: false,
     },
     {
-      question: 'Is there a lockup period or waiting period for withdrawals?',
-      answer: 'Since you are staking native ETH, there may be a wait time for a validator to exit to receive your withdrawal. If you desire a quicker exit, we will soon be launching a native ETH liquidity pool, which will enable instant withdrawals.',
-      open: false,
-    },
-    {
-      question: 'Where is my stake going, who is running the validators?',
-      answer: 'Casimir is launching with a small set of vatted validator partners, but we will soon allow anyone with at least 1 ETH collateral to run a validator. Validator performance is overseen by a decentralized oracle network with performance specs used in operator selection.',
-      open: false,
-    },
-    {
       question: 'What are the staking fees?',
-      answer: 'The Casimir smart contract charges a user a 5% fee on deposits and rewards to cover operational expenses including payments to the distributed set of independently owned and operated validators.',
+      answer: 'The Casimir smart contract charges a user a 5% fee on deposits and rewards to cover operational expenses including oracle gas fees and payments to the distributed set of independently owned operators.',
       open: false,
     },
     {
-      question: 'Can I run a validator?',
-      answer: 'If you have the technical ability and interest, you\'ll soon have the chance to become a validator in our protocol. While we\'re initially launching with a small group of white-listed validators, we\'ll soon open up to everyone. Stay updated by joining our Discord.',
+      question: 'Who is running the validators?',
+      answer: 'Casimir validators are run with a diverse group of independently owned operators using distributed validator technology (DVT). We are launching with a small set of vetted operator partners, but we will soon allow anyone with at least 1 ETH collateral to run an operator. Operator performance is overseen by a decentralized oracle network with performance specs used in operator selection.',
+      open: false,
+    },
+    {
+      question: 'Can I run an operator?',
+      answer: 'If you have the technical ability and interest, you\'ll soon have the chance to register as a Casimir operator. While we\'re initially launching with a small group of white-listed operators, we\'ll soon open up to everyone. Stay updated by joining our Discord.',
       open: false,
     },
   ],
@@ -68,12 +74,6 @@ const toggleQuestionItem = (index: number) => {
         </a>
         <ul class="nav__links">
           <li>
-            <a
-              href="https://github.com/consensusnetworks/casimir#casimir"
-              target="_blank"
-            >API Reference</a>
-          </li>
-          <li>
             <a href="/blog">Blog</a>
           </li>
           <li>
@@ -84,6 +84,12 @@ const toggleQuestionItem = (index: number) => {
               href="https://consensusnetworks.com"
               target="_blank"
             >Company</a>
+          </li>
+          <li>
+            <a
+              :href="docsUrl"
+              target="_blank"
+            >Docs</a>
           </li>
         </ul>
       </div>
@@ -105,7 +111,7 @@ const toggleQuestionItem = (index: number) => {
         </div>
         <div class="cta__container">
           <a
-            href="https://app.dev.casimir.co"
+            :href="appUrl"
             class="btn-primary"
           >
             Launch App
@@ -160,7 +166,7 @@ const toggleQuestionItem = (index: number) => {
             <span class="text-7 bold">Non-Custodial (DKG)</span>
           </div>
           <span class="text-r">
-            Keys created and held across validators with distributed key
+            Validator keys created and held across operators with distributed key
             generation (DKG).
           </span>
         </div>
@@ -191,7 +197,7 @@ const toggleQuestionItem = (index: number) => {
             <span class="text-7 bold">Incentives Drive Rewards</span>
           </div>
           <span class="text-r">
-            Validators are incentivized to provide the best service to earn your
+            Operators are incentivized to provide the best service to earn your
             stake.
           </span>
         </div>
@@ -329,12 +335,6 @@ const toggleQuestionItem = (index: number) => {
       <div class="footer__container">
         <span class="c">© 2023 Casimir. All rights reserved.</span>
         <ul>
-          <li>
-            <a
-              :href="docsUrl"
-              target="_blank"
-            >Documentation</a>
-          </li>
           <li>
             <a
               href="/"

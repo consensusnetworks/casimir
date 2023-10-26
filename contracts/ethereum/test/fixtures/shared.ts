@@ -139,12 +139,12 @@ export async function deploymentFixture() {
         privateOperators: false,
         verifiedOperators: false
     }
-    const deployDefaultManager = await factory.deployManager(
+    const deployBaseManager = await factory.deployManager(
         daoOracle.address,
         functionsOracle.address,
         defaultStrategy
     )
-    await deployDefaultManager.wait()
+    await deployBaseManager.wait()
     const [managerId] = await factory.getManagerIds()
     const [managerAddress, registryAddress, upkeepAddress, viewsAddress] = await factory.getManagerConfig(managerId)
     const manager = await ethers.getContractAt('CasimirManager', managerAddress) as CasimirManager

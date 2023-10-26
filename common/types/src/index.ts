@@ -19,6 +19,7 @@ import { Event } from './interfaces/Event'
 import { ExistingUserCheck } from './interfaces/ExistingUserCheck'
 import { FormattedWalletOption } from './interfaces/FormattedWalletOption'
 import { GasEstimate } from './interfaces/GasEstimate'
+import { HackmdArticle } from './interfaces/HackmdArticle'
 import { LoginCredentials } from './interfaces/LoginCredentials'
 import { ManagerConfig } from './interfaces/ManagerConfig'
 import { MessageRequest } from './interfaces/MessageRequest'
@@ -62,6 +63,7 @@ export type {
     ExistingUserCheck,
     FormattedWalletOption,
     GasEstimate,
+    HackmdArticle,
     LoginCredentials,
     ManagerConfig,
     MessageRequest,

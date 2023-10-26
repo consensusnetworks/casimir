@@ -1,0 +1,17 @@
+{{#unless abstract}}
+
+{{>common}}
+
+{{#each items}}
+
+{{#if (notInternal visibility)}}
+
+{{#hsection}}
+{{>item}}
+{{/hsection}}
+
+{{/if}}
+
+{{/each}}
+
+{{/unless}}

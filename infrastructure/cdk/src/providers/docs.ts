@@ -56,7 +56,7 @@ export class DocsStack extends cdk.Stack {
                 {
                     httpStatus: 404,
                     responseHttpStatus: 200,
-                    responsePagePath: '/index.html',
+                    responsePagePath: '/404.html',
                     ttl: cdk.Duration.minutes(30)
                 }
             ],
