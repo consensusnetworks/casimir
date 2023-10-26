@@ -5,6 +5,8 @@ import useBlog from '@/composables/blog'
 import router from '@/composables/router'
 import { Article } from '@casimir/types'
 
+const appUrl = import.meta.env.PUBLIC_APP_URL || 'https://app.dev.casimir.co'
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL || 'https://docs.dev.casimir.co'
 const {
     articles,
     loadingArticles,
@@ -48,9 +50,6 @@ watch([articles, loadingArticles], () => {
         </a>
         <ul class="nav__links">
           <li>
-            <a href="https://github.com/consensusnetworks/casimir#casimir">API Reference</a>
-          </li>
-          <li>
             <a href="/blog">Blog</a>
           </li>
           <li>
@@ -59,9 +58,12 @@ watch([articles, loadingArticles], () => {
           <li>
             <a href="https://consensusnetworks.com">Company</a>
           </li>
+          <li>
+            <a :href="docsUrl">Docs</a>
+          </li>
         </ul>
         <a
-          href="https://app.dev.casimir.co"
+          :href="appUrl"
           class="btn-primary-sm"
         >
           Launch App
@@ -127,12 +129,6 @@ watch([articles, loadingArticles], () => {
       <div class="footer__container">
         <span class="c">© 2023 Casimir. All rights reserved.</span>
         <ul>
-          <li>
-            <a
-              href="https://api.casimir.co"
-              target="_blank"
-            >API Reference</a>
-          </li>
           <li>
             <a
               href="/"

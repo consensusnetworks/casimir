@@ -2,7 +2,8 @@
 import VueFeather from 'vue-feather'
 import useBlog from '@/composables/blog'
 
-const docsUrl = import.meta.env.PUBLIC_DOCS_URL
+const appUrl = import.meta.env.PUBLIC_APP_URL || 'https://app.dev.casimir.co'
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL || 'https://docs.dev.casimir.co'
 const {
     articles,
     loadingArticles,
@@ -35,7 +36,7 @@ const {
           </li>
         </ul>
         <a
-          href="https://app.dev.casimir.co"
+          :href="appUrl"
           class="btn-primary-sm"
         >
           Launch App

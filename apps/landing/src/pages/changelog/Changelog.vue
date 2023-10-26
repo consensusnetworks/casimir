@@ -1,7 +1,20 @@
 <script lang="ts" setup>
 import snarkdown from 'snarkdown'
 
-const docsUrl = import.meta.env.PUBLIC_DOCS_URL
+const appUrl = import.meta.env.PUBLIC_APP_URL || 'https://app.dev.casimir.co'
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL || 'https://docs.dev.casimir.co'
+
+type Release = {
+  htmlURL: string
+  tagName: string
+  publishedAt: string
+  body: string
+  author: {
+    name: string
+    avatar: string
+    htmlURL: string
+  }
+}
 
 async function getReleases() {
   const url = 'https://api.github.com/repos/consensusnetworks/casimir/releases'
@@ -12,7 +25,7 @@ async function getReleases() {
   const json = await response.json()
 
   if (!Array.isArray(json) || json.length === 0) {
-    return null
+    return []
   }
 
   const releases = json.map((r) => {
@@ -24,15 +37,15 @@ async function getReleases() {
       author: {
         name: r.author.login,
         avatar: r.author.avatar_url,
-        htmlURL: r.author.html_url,
-      },
-    }
+        htmlURL: r.author.html_url
+      }
+    } as Release
   })
 
   return releases
 }
 
-async function displayReleases(releases) {
+async function displayReleases(releases: Release[]) {
   releases.shift()
   const changelogs = document.querySelector('.vupdate__container')
   releases.forEach((r) => {
@@ -63,7 +76,7 @@ async function displayReleases(releases) {
     vupdate.appendChild(title)
     vupdate.appendChild(body)
     vupdate.appendChild(releaseURL)
-    changelogs.appendChild(vupdate)
+    changelogs?.appendChild(vupdate)
   })
 }
 
@@ -104,7 +117,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </li>
         </ul>
         <a
-          href="https://app.dev.casimir.co"
+          :href="appUrl"
           class="btn-primary-sm"
         >
           Launch App
@@ -129,12 +142,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         <ul>
           <li>
             <a
-              href="https://api.casimir.co"
-              target="_blank"
-            >API Reference</a>
-          </li>
-          <li>
-            <a
               href="/"
               target="_blank"
             >Discord</a>
@@ -150,6 +157,12 @@ document.addEventListener('DOMContentLoaded', async () => {
               href="/"
               target="_blank"
             >Contact Us</a>
+          </li>
+          <li>
+            <a
+              :href="docsUrl"
+              target="_blank"
+            >Docs</a>
           </li>
         </ul>
       </div>

@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 
-const docsUrl = import.meta.env.PUBLIC_DOCS_URL
+const appUrl = import.meta.env.PUBLIC_APP_URL || 'https://app.dev.casimir.co'
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL || 'https://docs.dev.casimir.co'
 const faqItems = ref(
   [
     {
@@ -39,13 +40,13 @@ const faqItems = ref(
       open: false,
     },
     {
-      question: 'Who is running the validators?',
-      answer: 'Casimir validators are run with a diverse group of independently owned operators using distributed validator technology (DVT). We are launching with a small set of vetted operator partners, but we will soon allow anyone with at least 1 ETH collateral to run an operator. Operator performance is overseen by a decentralized oracle network with performance specs used in operator selection.',
+      question: 'What are the staking fees?',
+      answer: 'The Casimir smart contract charges a user a 5% fee on deposits and rewards to cover operational expenses including oracle gas fees and payments to the distributed set of independently owned operators.',
       open: false,
     },
     {
-      question: 'What are the staking fees?',
-      answer: 'The Casimir smart contract charges a user a 5% fee on deposits and rewards to cover operational expenses including oracle gas fees and payments to the distributed set of independently owned operators.',
+      question: 'Who is running the validators?',
+      answer: 'Casimir validators are run with a diverse group of independently owned operators using distributed validator technology (DVT). We are launching with a small set of vetted operator partners, but we will soon allow anyone with at least 1 ETH collateral to run an operator. Operator performance is overseen by a decentralized oracle network with performance specs used in operator selection.',
       open: false,
     },
     {
@@ -110,7 +111,7 @@ const toggleQuestionItem = (index: number) => {
         </div>
         <div class="cta__container">
           <a
-            href="https://app.dev.casimir.co"
+            :href="appUrl"
             class="btn-primary"
           >
             Launch App
@@ -165,7 +166,7 @@ const toggleQuestionItem = (index: number) => {
             <span class="text-7 bold">Non-Custodial (DKG)</span>
           </div>
           <span class="text-r">
-            Keys created and held across validators with distributed key
+            Validator keys created and held across operators with distributed key
             generation (DKG).
           </span>
         </div>
@@ -196,7 +197,7 @@ const toggleQuestionItem = (index: number) => {
             <span class="text-7 bold">Incentives Drive Rewards</span>
           </div>
           <span class="text-r">
-            Validators are incentivized to provide the best service to earn your
+            Operators are incentivized to provide the best service to earn your
             stake.
           </span>
         </div>
@@ -334,12 +335,6 @@ const toggleQuestionItem = (index: number) => {
       <div class="footer__container">
         <span class="c">© 2023 Casimir. All rights reserved.</span>
         <ul>
-          <li>
-            <a
-              :href="docsUrl"
-              target="_blank"
-            >Documentation</a>
-          </li>
           <li>
             <a
               href="/"

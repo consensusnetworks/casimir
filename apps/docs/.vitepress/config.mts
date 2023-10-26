@@ -12,6 +12,7 @@ export default withMermaid({
     outDir: './dist',
     themeConfig: {
         nav: [
+            { text: 'App', link: process.env.APP_URL || 'https://app.dev.casimir.co' },
             { text: 'Website', link: process.env.WEBSITE_URL || 'https://dev.casimir.co' },
         ],
         logo: '/casimir.svg',

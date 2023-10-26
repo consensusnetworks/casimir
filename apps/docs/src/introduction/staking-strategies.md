@@ -3,3 +3,9 @@ This page is incomplete.
 :::
 
 # Staking Strategies
+
+The standard Casimir staking strategy provides secure and reliable defaults for native ETH rewards. We also plan to provide alterative (DAO-curated) staking strategies, for stakers and operators to enable when depositing stake or collateral, respectively. The first of these opt-in features is EigenLayer, which allows stakers and operators to participate in creating and managing native EigenPods with less than 32 ETH.
+
+## Standard Strategy
+
+## EigenLayer Strategy
