@@ -42,7 +42,8 @@ export default withMermaid({
                 items: [
                     { text: 'Address Registry', link: '/reference/address-registry' },
                     { text: 'Solidity API', link: '/reference/solidity-api' },
-                    { text: 'Contract Source', link: 'https://github.com/consensusnetworks/casimir/tree/master/contracts/ethereum/src/v1' }
+                    { text: 'Contract Source', link: 'https://github.com/consensusnetworks/casimir/tree/master/contracts/ethereum/src/v1' },
+                    { text: 'Hacken Audit', link: `${process.env.DOCS_URL}/hacken-audit.pdf` }
                 ]
             }
         ],

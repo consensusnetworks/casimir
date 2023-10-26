@@ -37,9 +37,9 @@ export default function useOperators() {
     const loadingRegisteredOperators = ref(false)
     const loadingRegisteredOperatorsError = ref(false)
 
-    const nonregisteredDefaultOperators = ref<Operator[]>([])
+    const nonregisteredBaseOperators = ref<Operator[]>([])
     const nonregisteredEigenOperators = ref<Operator[]>([])
-    const registeredDefaultOperators = ref<Operator[]>([])
+    const registeredBaseOperators = ref<Operator[]>([])
     const registeredEigenOperators = ref<Operator[]>([])
 
     async function addOperator({ address, nodeUrl }: { address: string, nodeUrl: string }) {
@@ -57,14 +57,14 @@ export default function useOperators() {
             loadingAddOperator.value = false
             return { error, message }
         } catch (error: any) {
-            throw new Error(error.message || 'Error adding operator')
             loadingAddOperatorError.value = true
+            throw new Error(error.message || 'Error adding operator')
         }
     }
 
     async function getUserOperators(): Promise<void> {
         const userAddresses = user.value?.accounts.map((account: Account) => account.address) as string[]
-        
+
         const scanner = new Scanner({ 
             ethereumUrl,
             ssvNetworkAddress,
@@ -77,27 +77,23 @@ export default function useOperators() {
             ssvOperators.push(...userOperators)
         }
 
-        const defaultCasimirOperators = await _getRegisteredOperators(ssvOperators, 'default')
-        const eigenCasimirOperators = await _getRegisteredOperators(ssvOperators, 'eigen')
+        registeredBaseOperators.value = await _getRegisteredOperators(ssvOperators, 'base') as Array<RegisteredOperator>
+        registeredEigenOperators.value = await _getRegisteredOperators(ssvOperators, 'eigen') as Array<RegisteredOperator>
         
-        const nonregDefaultOperators = ssvOperators.filter((operator: any) => {
-            const idRegistered = defaultCasimirOperators.find((registeredOperator: any) => registeredOperator.id === operator.id)
+        nonregisteredBaseOperators.value = ssvOperators.filter((operator: any) => {
+            const idRegistered = registeredBaseOperators.value.find((registeredOperator: any) => registeredOperator.id === operator.id)
             return !idRegistered
-        })
-        const nonregEigenOperators = ssvOperators.filter((operator: any) => {
-            const idRegistered = eigenCasimirOperators.find((registeredOperator: any) => registeredOperator.id === operator.id)
+        }) as Array<Operator>
+        nonregisteredEigenOperators.value = ssvOperators.filter((operator: any) => {
+            const idRegistered = registeredEigenOperators.value.find((registeredOperator: any) => registeredOperator.id === operator.id)
             return !idRegistered
-        })
-
-        nonregisteredDefaultOperators.value = nonregDefaultOperators as Array<Operator>
-        nonregisteredEigenOperators.value = nonregEigenOperators as Array<Operator>
-        registeredDefaultOperators.value = defaultCasimirOperators as Array<RegisteredOperator>
-        registeredEigenOperators.value = eigenCasimirOperators as Array<RegisteredOperator>
+        }) as Array<Operator>
     }
 
-    async function _getRegisteredOperators(ssvOperators: Operator[], type: 'default' | 'eigen'): Promise<RegisteredOperator[]> {
+    async function _getRegisteredOperators(ssvOperators: Operator[], type: 'base' | 'eigen'): Promise<RegisteredOperator[]> {
         const casimirOperators: RegisteredOperator[] = []
-        const registry = type === 'default' ? baseRegistry : eigenRegistry
+        const registry = type === 'base' ? baseRegistry : eigenRegistry
+        if (registry.address === ethers.constants.AddressZero) return casimirOperators
         for (const operator of ssvOperators) {
             const { active, collateral, poolCount, resharing } = await (registry as CasimirRegistry).getOperator(operator.id)
             const registered = active || collateral.gt(0) || poolCount.gt(0) || resharing
@@ -129,10 +125,10 @@ export default function useOperators() {
         return casimirOperators
     }
 
-    async function _getPools(operatorId: number, type: 'default' | 'eigen'): Promise<PoolConfig[]> {
+    async function _getPools(operatorId: number, type: 'base' | 'eigen'): Promise<PoolConfig[]> {
         const pools: PoolConfig[] = []
     
-        const defaultPoolIds = [
+        const basePoolIds = [
             ...await (baseManager as CasimirManager).getPendingPoolIds(),
             ...await (baseManager as CasimirManager).getStakedPoolIds()
         ]
@@ -141,8 +137,8 @@ export default function useOperators() {
             ...await (eigenManager as CasimirManager).getStakedPoolIds()
         ]
 
-        const poolIds = type === 'default' ? defaultPoolIds : eigenPoolIds
-        const views = type === 'default' ? baseViews : eigenViews
+        const poolIds = type === 'base' ? basePoolIds : eigenPoolIds
+        const views = type === 'base' ? baseViews : eigenViews
     
         for (const poolId of poolIds) {
             const poolConfig = await (views as CasimirViews).getPoolConfig(poolId)
@@ -227,9 +223,9 @@ export default function useOperators() {
     }
 
     return { 
-        nonregisteredDefaultOperators: readonly(nonregisteredDefaultOperators),
+        nonregisteredBaseOperators: readonly(nonregisteredBaseOperators),
         nonregisteredEigenOperators: readonly(nonregisteredEigenOperators),
-        registeredDefaultOperators: readonly(registeredDefaultOperators),
+        registeredBaseOperators: readonly(registeredBaseOperators),
         registeredEigenOperators: readonly(registeredEigenOperators),
         loadingAddOperator: readonly(loadingAddOperator),
         loadingAddOperatorError: readonly(loadingAddOperatorError),

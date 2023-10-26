@@ -18,9 +18,9 @@ const { convertString } = useFormat()
 const { 
   initializeOperatorComposable,
   registerOperatorWithCasimir,
-  nonregisteredDefaultOperators,
+  nonregisteredBaseOperators,
   nonregisteredEigenOperators,
-  registeredDefaultOperators,
+  registeredBaseOperators,
   registeredEigenOperators,
   loadingInitializeOperators,
   loadingAddOperator 
@@ -36,7 +36,7 @@ const onSelectWalletBlur = () => {
     }, 200)
 }
 
-const operatorType = ref<'default' | 'eigen'>('default')
+const operatorType = ref<'base' | 'eigen'>('base')
 const eigenIsShining = ref(true) // Determines if the shine effect is active
 const eigenIsToggled = ref(false) // Determines the toggle state
 const toggleBackgroundColor = ref('#eee')  // Initial color
@@ -44,10 +44,10 @@ const toggleBackgroundColor = ref('#eee')  // Initial color
 function toggleEigenLayerSupport() {
   eigenIsToggled.value = !eigenIsToggled.value
   toggleBackgroundColor.value = eigenIsToggled.value ? 'green' : '#eee'
-  operatorType.value = eigenIsToggled.value ? 'eigen' : 'default'
+  operatorType.value = eigenIsToggled.value ? 'eigen' : 'base'
 
   // Update stakeType
-  // stakeType.value = eigenIsToggled.value ? 'eigen' : 'default'
+  // stakeType.value = eigenIsToggled.value ? 'eigen' : 'base'
 }
 
 const selectedOperatorID = ref()
@@ -148,9 +148,9 @@ watch(selectedWallet, async () =>{
 
   if (selectedWallet.value.address === '') {
     availableOperatorIDs.value = []
-  } else if(operatorType.value === 'default') {
-    if (nonregisteredDefaultOperators.value && nonregisteredDefaultOperators.value.length > 0) {
-      availableOperatorIDs.value = [...nonregisteredDefaultOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
+  } else if(operatorType.value === 'base') {
+    if (nonregisteredBaseOperators.value && nonregisteredBaseOperators.value.length > 0) {
+      availableOperatorIDs.value = [...nonregisteredBaseOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
     } else if (nonregisteredEigenOperators.value && nonregisteredEigenOperators.value.length > 0) {
       availableOperatorIDs.value = [...nonregisteredEigenOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
     } else {
@@ -159,9 +159,9 @@ watch(selectedWallet, async () =>{
   }
 })
 
-watch([registeredDefaultOperators, registeredEigenOperators], () => {
+watch([registeredBaseOperators, registeredEigenOperators], () => {
   openAddOperatorModal.value = false
-  tableData.value = [...registeredDefaultOperators.value, ...registeredEigenOperators.value].map((operator: any) => {
+  tableData.value = [...registeredBaseOperators.value, ...registeredEigenOperators.value].map((operator: any) => {
     return {
       id: operator.id,
       walletAddress: operator.ownerAddress,
@@ -384,7 +384,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 <p class="text-sm">
                   Learn how to set up a Casimir operator using
                   <a
-                    :href="docsUrl"
+                    :href="`${docsUrl}/guide/operating`"
                     target="_blank"
                     class="text-primary underline"
                   >
@@ -441,7 +441,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
                 <h6 class="text-[16px]">
-                  Your Connected4Wallets
+                  Your Connected Wallets
                 </h6>
                 <button
                   v-for="act in user.accounts"
@@ -521,7 +521,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
                 <h6 class="text-[16px]">
-                  Avaliable Operators34
+                  Available Operators
                 </h6>
                 <div
                   v-if="availableOperatorIDs.length === 0" 
