@@ -95,14 +95,14 @@ const operatorTableHeaders = ref(
         title: 'Node URL',
         value: 'nodeURL'
     },
-    // {
-    //     title: '',
-    //     value: 'deactivate'
-    // },
-    // {
-    //     title: '',
-    //     value: 'withdraw_collateral'
-    // },
+    {
+        title: '',
+        value: 'deactivate'
+    },
+    {
+        title: '',
+        value: 'withdraw_collateral'
+    },
   ]
 )
 
@@ -639,7 +639,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
             List of operators according to their performance 
           </div>
         </div>
-        <div class="flex items-start gap-[12px]">
+        <!-- <div class="flex items-start gap-[12px]">
           <button
             class="flex items-center gap-[8px] export_button h-[38px]"
             @click="exportFile(checkedItems, filteredData)"
@@ -651,7 +651,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
             />
             Export
           </button>
-        </div>
+        </div> -->
       </div>
 
       <!-- Table -->
@@ -729,9 +729,13 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 >
                   <!-- TODO: @Chris, wanna hook up this button? -->
                   <button
-                    class="bg-decline text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500]"
+                    class="bg-decline text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] relative"
                     disabled
                   >
+                    <div class="tooltip_container">
+                      Coming Soon!
+                      <div class="tooltip_triangle" />
+                    </div>
                     Deactivate
                   </button>
                 </div>
@@ -741,9 +745,13 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 >
                   <!-- TODO: @Chris, wanna hook up this button? -->
                   <button
-                    class="bg-primary text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] opacity-50"
+                    class="action-button bg-primary text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] opacity-50 relative"
                     disabled
                   >
+                    <div class="tooltip_container">
+                      Coming Soon!
+                      <div class="tooltip_triangle" />
+                    </div>
                     Withdraw
                   </button>
                 </div>
@@ -1051,6 +1059,10 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
   border-top: 5px solid #000; /* same color as the tooltip background */
+}
+
+button:hover .tooltip_container {
+  opacity: 1; /* show on hover */
 }
 
 /* .shine-effect {

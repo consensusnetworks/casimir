@@ -351,7 +351,7 @@ onMounted(() =>{
             List of transactions by wallet and staking actions
           </div>
         </div>
-        <div class="flex items-start gap-[12px]">
+        <!-- <div class="flex items-start gap-[12px]">
           <button
             class="flex items-center gap-[8px] export_button h-[38px]"
             @click="exportFile()"
@@ -363,7 +363,7 @@ onMounted(() =>{
             />
             Export
           </button>
-        </div>
+        </div> -->
       </div>
       <div class="flex flex-wrap gap-[20px] justify-between py-[20px] items-center border-b border-b-[#EAECF0]">
         <div class="grouped_buttons flex flex-nowrap overflow-hidden w-[261px]">
