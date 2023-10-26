@@ -18,7 +18,7 @@ const isInitialized = ref(false)
 const loadingInitializeBreakdownMetrics = ref(false)
 const loadingInitializeBreakdownMetricsError = ref(false)
 
-let defaultManager: CasimirManager
+let baseManager: CasimirManager
 let eigenManager: CasimirManager
 
 export default function useBreakdownMetrics() {
@@ -52,7 +52,7 @@ export default function useBreakdownMetrics() {
             /* Get User's Current Stake */
             const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
             const currentUserStakePromises = [] as Array<Promise<ethers.BigNumber>>
-            addresses.forEach(address => currentUserStakePromises.push((defaultManager as CasimirManager).getUserStake(address)))
+            addresses.forEach(address => currentUserStakePromises.push((baseManager as CasimirManager).getUserStake(address)))
             addresses.forEach(address => currentUserStakePromises.push((eigenManager as CasimirManager).getUserStake(address)))
             const settledCurrentUserStakePromises = await Promise.allSettled(currentUserStakePromises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
             const currentUserStake = settledCurrentUserStakePromises.filter(result => result.status === 'fulfilled').map(result => result.value)
@@ -61,7 +61,7 @@ export default function useBreakdownMetrics() {
 
             /* Get User's All Time Deposits and Withdrawals */
             const userEventTotalsPromises = [] as Array<Promise<ContractEventsByAddress>>
-            addresses.forEach(address => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address, defaultManager))})
+            addresses.forEach(address => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address, baseManager))})
             addresses.forEach(address => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address, eigenManager))})
             const userEventTotals = await Promise.all(userEventTotalsPromises) as Array<ContractEventsByAddress>
             const userEventTotalsSum = userEventTotals.reduce((acc, curr) => {
@@ -144,9 +144,9 @@ export default function useBreakdownMetrics() {
     async function getCurrentStaked(): Promise<BreakdownAmount> {
         const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
         try {
-            const defaultManagerPromises = addresses.map((address) => (defaultManager as CasimirManager).getUserStake(address))
+            const baseManagerPromises = addresses.map((address) => (baseManager as CasimirManager).getUserStake(address))
             const eigenManagerPromises = addresses.map((address) => (eigenManager as CasimirManager).getUserStake(address))
-            const promises = [...defaultManagerPromises, ...eigenManagerPromises]
+            const promises = [...baseManagerPromises, ...eigenManagerPromises]
             const settledPromises = await Promise.allSettled(promises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
             const currentStaked = settledPromises
                 .filter((result) => result.status === 'fulfilled')
@@ -225,9 +225,9 @@ export default function useBreakdownMetrics() {
     function listenForContractEvents() {
         stopListeningForContractEvents() // Clear old listeners
         try {
-            (defaultManager as CasimirManager).on('StakeDeposited', stakeDepositedListener);
-            (defaultManager as CasimirManager).on('StakeRebalanced', stakeRebalancedListener);
-            (defaultManager as CasimirManager).on('WithdrawalInitiated', withdrawalInitiatedListener);
+            (baseManager as CasimirManager).on('StakeDeposited', stakeDepositedListener);
+            (baseManager as CasimirManager).on('StakeRebalanced', stakeRebalancedListener);
+            (baseManager as CasimirManager).on('WithdrawalInitiated', withdrawalInitiatedListener);
             (eigenManager as CasimirManager).on('StakeDeposited', stakeDepositedListener);
             (eigenManager as CasimirManager).on('StakeRebalanced', stakeRebalancedListener);
             (eigenManager as CasimirManager).on('WithdrawalInitiated', withdrawalInitiatedListener)
@@ -237,9 +237,9 @@ export default function useBreakdownMetrics() {
     }
 
     function stopListeningForContractEvents() {
-        (defaultManager as CasimirManager).removeListener('StakeDeposited', stakeDepositedListener);
-        (defaultManager as CasimirManager).removeListener('StakeRebalanced', stakeRebalancedListener);
-        (defaultManager as CasimirManager).removeListener('WithdrawalInitiated', withdrawalInitiatedListener);
+        (baseManager as CasimirManager).removeListener('StakeDeposited', stakeDepositedListener);
+        (baseManager as CasimirManager).removeListener('StakeRebalanced', stakeRebalancedListener);
+        (baseManager as CasimirManager).removeListener('WithdrawalInitiated', withdrawalInitiatedListener);
         (eigenManager as CasimirManager).removeListener('StakeDeposited', stakeDepositedListener);
         (eigenManager as CasimirManager).removeListener('StakeRebalanced', stakeRebalancedListener);
         (eigenManager as CasimirManager).removeListener('WithdrawalInitiated', withdrawalInitiatedListener)
@@ -272,8 +272,8 @@ export default function useBreakdownMetrics() {
     
     async function initializeBreakdownMetricsComposable(){
         if (isInitialized.value) return
-        const { defaultManager: defaultManagerFromContracts, eigenManager: eigenManagerFromContracts } = await getContracts()
-        defaultManager = defaultManagerFromContracts
+        const { baseManager: baseManagerFromContracts, eigenManager: eigenManagerFromContracts } = await getContracts()
+        baseManager = baseManagerFromContracts
         eigenManager = eigenManagerFromContracts
 
         try {
@@ -292,8 +292,8 @@ export default function useBreakdownMetrics() {
     }
 
     async function uninitializeBreakdownMetricsComposable(){
-        const { defaultManager: defaultManagerFromContracts, eigenManager: eigenManagerFromContracts } = await getContracts()
-        defaultManager = defaultManagerFromContracts
+        const { baseManager: baseManagerFromContracts, eigenManager: eigenManagerFromContracts } = await getContracts()
+        baseManager = baseManagerFromContracts
         eigenManager = eigenManagerFromContracts
         provider.removeAllListeners('block')
         stopListeningForContractEvents()

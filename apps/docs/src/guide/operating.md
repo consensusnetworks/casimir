@@ -15,7 +15,7 @@ This quickstart is still under development and does not yet run Ethereum clients
 
 ## Registration
 
-For any new operator, you need to first register with SSV. As a registered SSV operator, you may now register and deposit collateral to one of Casimir's staking strategies (i.e., standard or EigenLayer-enabled). Your SSV operator ID, DKG server URL, and initial collateral deposit (minimum of 1 ETH) need to be provided during registration.
+For any new operator, you need to first register with SSV. As a registered SSV operator, you may now register and deposit collateral to one of Casimir's staking strategies (i.e., base or EigenLayer). Your SSV operator ID, DKG server URL, and initial collateral deposit (minimum of 1 ETH) need to be provided during registration.
 
 ### Collateral
 

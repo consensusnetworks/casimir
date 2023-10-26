@@ -20,7 +20,7 @@ const { getWalletConnectSignerV2 } = useWalletConnectV2()
 
 const stakingComposableInitialized = ref(false)
 
-let defaultManager: CasimirManager
+let baseManager: CasimirManager
 let eigenManager: CasimirManager
 
 export default function useStaking() {
@@ -29,8 +29,8 @@ export default function useStaking() {
         if (stakingComposableInitialized.value) return
         try {
             /* Get Managers */
-            const { defaultManager: defaultManagerFromContracts, eigenManager: eigenManagerFromContracts } = await getContracts()
-            defaultManager = defaultManagerFromContracts
+            const { baseManager: baseManagerFromContracts, eigenManager: eigenManagerFromContracts } = await getContracts()
+            baseManager = baseManagerFromContracts
             eigenManager = eigenManagerFromContracts
             stakingComposableInitialized.value = true
         } catch (error) {
@@ -58,7 +58,7 @@ export default function useStaking() {
             } else {
                 throw new Error(`Invalid wallet provider: ${walletProvider}`)
             }
-            const manager = type === 'default' ? defaultManager : eigenManager
+            const manager = type === 'default' ? baseManager : eigenManager
             const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
             const fees = await getDepositFees()
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
@@ -86,8 +86,8 @@ export default function useStaking() {
     async function getUserStake(address: string): Promise<number> {
         if (!stakingComposableInitialized.value) return 0
         try {
-            const defaultManagerBigNumber = await (defaultManager as CasimirManager).getUserStake(address)
-            const number = parseFloat(ethers.utils.formatEther(defaultManagerBigNumber))
+            const baseManagerBigNumber = await (baseManager as CasimirManager).getUserStake(address)
+            const number = parseFloat(ethers.utils.formatEther(baseManagerBigNumber))
             const eigenManagerBigNumber = await (eigenManager as CasimirManager).getUserStake(address)
             const number2 = parseFloat(ethers.utils.formatEther(eigenManagerBigNumber))
             const total = number + number2
@@ -111,7 +111,7 @@ export default function useStaking() {
         } else {
             throw new Error(`Invalid wallet provider: ${walletProvider}`)
         }
-        const manager = type === 'default' ? defaultManager : eigenManager
+        const manager = type === 'default' ? baseManager : eigenManager
         const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
         const withdrawableBalance = await managerSigner.getWithdrawableBalance()
         const withdrawableBalanceEther = ethers.utils.formatEther(withdrawableBalance)
@@ -137,7 +137,7 @@ export default function useStaking() {
         } else {
             throw new Error(`Invalid wallet provider: ${walletProvider}`)
         }
-        const manager = type === 'default' ? defaultManager : eigenManager
+        const manager = type === 'default' ? baseManager : eigenManager
         const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
         const value = ethers.utils.parseEther(amount)
         return await managerSigner.requestWithdrawal(value)

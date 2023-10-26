@@ -146,12 +146,12 @@ void async function () {
         privateOperators: false,
         verifiedOperators: false
     }
-    const deployDefaultManager = await factory.deployManager(
+    const deployBaseManager = await factory.deployManager(
         daoOracle.address,
         functionsOracle.address,
         defaultStrategy
     )
-    await deployDefaultManager.wait()
+    await deployBaseManager.wait()
     const [managerId] = await factory.getManagerIds()
     const [managerAddress, registryAddress, upkeepAddress, viewsAddress] = await factory.getManagerConfig(managerId)
     console.log(`Default CasimirManager contract deployed to ${managerAddress}`)

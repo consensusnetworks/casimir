@@ -153,22 +153,22 @@ void async function () {
         privateOperators: false,
         verifiedOperators: false
     }
-    const deployDefaultManager = await factory.deployManager(
+    const deployBaseManager = await factory.deployManager(
         daoOracle.address,
         functionsOracle.address,
         defaultStrategy
     )
-    await deployDefaultManager.wait()
-    const [defaultManagerId] = await factory.getManagerIds()
-    const defaultManagerConfig = await factory.getManagerConfig(defaultManagerId)
-    const manager = await ethers.getContractAt('CasimirManager', defaultManagerConfig.managerAddress) as CasimirManager
-    const registry = await ethers.getContractAt('CasimirRegistry', defaultManagerConfig.registryAddress) as CasimirRegistry
-    const upkeep = await ethers.getContractAt('CasimirUpkeep', defaultManagerConfig.upkeepAddress) as CasimirUpkeep
-    const views = await ethers.getContractAt('CasimirViews', defaultManagerConfig.viewsAddress) as CasimirViews
-    console.log(`Default manager contract deployed to ${manager.address}`)
-    console.log(`Default registry contract deployed to ${registry.address}`)
-    console.log(`Default upkeep contract deployed to ${upkeep.address}`)
-    console.log(`Default views contract deployed to ${views.address}`)
+    await deployBaseManager.wait()
+    const [baseManagerId] = await factory.getManagerIds()
+    const baseManagerConfig = await factory.getManagerConfig(baseManagerId)
+    const manager = await ethers.getContractAt('CasimirManager', baseManagerConfig.managerAddress) as CasimirManager
+    const registry = await ethers.getContractAt('CasimirRegistry', baseManagerConfig.registryAddress) as CasimirRegistry
+    const upkeep = await ethers.getContractAt('CasimirUpkeep', baseManagerConfig.upkeepAddress) as CasimirUpkeep
+    const views = await ethers.getContractAt('CasimirViews', baseManagerConfig.viewsAddress) as CasimirViews
+    console.log(`Base manager contract deployed to ${manager.address}`)
+    console.log(`Base registry contract deployed to ${registry.address}`)
+    console.log(`Base upkeep contract deployed to ${upkeep.address}`)
+    console.log(`Base views contract deployed to ${views.address}`)
 
     requestConfig.args[1] = views.address
     await (await upkeep.setFunctionsRequest(
