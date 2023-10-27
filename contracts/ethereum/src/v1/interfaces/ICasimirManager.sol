@@ -208,6 +208,11 @@ interface ICasimirManager is ICasimirCore {
     ) external;
 
     /**
+     * @notice Reset functions subscription
+     */
+    function resetFunctions() external;
+
+    /**
      * @notice Withdraw cluster balance
      * @param operatorIds Operator IDs
      * @param cluster Cluster snapshot

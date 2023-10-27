@@ -1275,7 +1275,7 @@
             "label": "manager",
             "offset": 2,
             "slot": "0",
-            "type": "t_contract(ICasimirManager)20047",
+            "type": "t_contract(ICasimirManager)12379",
             "contract": "CasimirViews",
             "src": "src/v1/CasimirViews.sol:18"
           },
@@ -1297,7 +1297,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(ICasimirManager)20047": {
+          "t_contract(ICasimirManager)12379": {
             "label": "contract ICasimirManager",
             "numberOfBytes": "20"
           },
@@ -2447,7 +2447,7 @@
             "label": "s_oracle",
             "offset": 0,
             "slot": "151",
-            "type": "t_contract(FunctionsOracleInterface)4175",
+            "type": "t_contract(FunctionsOracleInterface)548",
             "contract": "FunctionsClient",
             "src": "src/v1/vendor/FunctionsClient.sol:13"
           },
@@ -2471,7 +2471,7 @@
             "label": "factory",
             "offset": 1,
             "slot": "153",
-            "type": "t_contract(ICasimirFactory)19567",
+            "type": "t_contract(ICasimirFactory)11895",
             "contract": "CasimirUpkeep",
             "src": "src/v1/CasimirUpkeep.sol:28"
           },
@@ -2479,7 +2479,7 @@
             "label": "manager",
             "offset": 0,
             "slot": "154",
-            "type": "t_contract(ICasimirManager)20047",
+            "type": "t_contract(ICasimirManager)12379",
             "contract": "CasimirUpkeep",
             "src": "src/v1/CasimirUpkeep.sol:30"
           },
@@ -2495,7 +2495,7 @@
             "label": "reportStatus",
             "offset": 0,
             "slot": "156",
-            "type": "t_enum(ReportStatus)20301",
+            "type": "t_enum(ReportStatus)12633",
             "contract": "CasimirUpkeep",
             "src": "src/v1/CasimirUpkeep.sol:34"
           },
@@ -2591,7 +2591,7 @@
             "label": "reportRequests",
             "offset": 0,
             "slot": "167",
-            "type": "t_mapping(t_bytes32,t_enum(RequestType)20297)",
+            "type": "t_mapping(t_bytes32,t_enum(RequestType)12629)",
             "contract": "CasimirUpkeep",
             "src": "src/v1/CasimirUpkeep.sol:58"
           },
@@ -2677,19 +2677,19 @@
             "label": "bytes",
             "numberOfBytes": "32"
           },
-          "t_contract(FunctionsOracleInterface)4175": {
+          "t_contract(FunctionsOracleInterface)548": {
             "label": "contract FunctionsOracleInterface",
             "numberOfBytes": "20"
           },
-          "t_contract(ICasimirFactory)19567": {
+          "t_contract(ICasimirFactory)11895": {
             "label": "contract ICasimirFactory",
             "numberOfBytes": "20"
           },
-          "t_contract(ICasimirManager)20047": {
+          "t_contract(ICasimirManager)12379": {
             "label": "contract ICasimirManager",
             "numberOfBytes": "20"
           },
-          "t_enum(ReportStatus)20301": {
+          "t_enum(ReportStatus)12633": {
             "label": "enum ICasimirUpkeep.ReportStatus",
             "members": [
               "FINALIZED",
@@ -2698,7 +2698,7 @@
             ],
             "numberOfBytes": "1"
           },
-          "t_enum(RequestType)20297": {
+          "t_enum(RequestType)12629": {
             "label": "enum ICasimirUpkeep.RequestType",
             "members": [
               "NONE",
@@ -2711,7 +2711,7 @@
             "label": "mapping(bytes32 => address)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_bytes32,t_enum(RequestType)20297)": {
+          "t_mapping(t_bytes32,t_enum(RequestType)12629)": {
             "label": "mapping(bytes32 => enum ICasimirUpkeep.RequestType)",
             "numberOfBytes": "32"
           },
@@ -3459,6 +3459,1073 @@
           "t_uint32": {
             "label": "uint32",
             "numberOfBytes": "4"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    },
+    "e3d82e02956af4328f9ee517e2251da0f18092c782acb5041a5c08e9efc957fe": {
+      "address": "0xc65f10e7057C5754398e86f8e6d02281F442F1EC",
+      "txHash": "0x6f7200ed6833bffa68efe2ef8fabad606ce724783c5e127a63af1582c34517cd",
+      "layout": {
+        "solcVersion": "0.8.18",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:88"
+          },
+          {
+            "label": "lockPeriod",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:36"
+          },
+          {
+            "label": "userFee",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_uint32",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:38"
+          },
+          {
+            "label": "eigenStake",
+            "offset": 4,
+            "slot": "152",
+            "type": "t_bool",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:40"
+          },
+          {
+            "label": "liquidStake",
+            "offset": 5,
+            "slot": "152",
+            "type": "t_bool",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:42"
+          },
+          {
+            "label": "reportPeriod",
+            "offset": 6,
+            "slot": "152",
+            "type": "t_uint32",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:44"
+          },
+          {
+            "label": "functionsId",
+            "offset": 10,
+            "slot": "152",
+            "type": "t_uint64",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:46"
+          },
+          {
+            "label": "upkeepId",
+            "offset": 0,
+            "slot": "153",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:48"
+          },
+          {
+            "label": "latestBeaconBalance",
+            "offset": 0,
+            "slot": "154",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:50"
+          },
+          {
+            "label": "finalizableActivations",
+            "offset": 0,
+            "slot": "155",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:52"
+          },
+          {
+            "label": "finalizableCompletedExits",
+            "offset": 0,
+            "slot": "156",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:54"
+          },
+          {
+            "label": "requestedWithdrawalBalance",
+            "offset": 0,
+            "slot": "157",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:56"
+          },
+          {
+            "label": "reservedFeeBalance",
+            "offset": 0,
+            "slot": "158",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:58"
+          },
+          {
+            "label": "requestedExits",
+            "offset": 0,
+            "slot": "159",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:60"
+          },
+          {
+            "label": "daoOracleAddress",
+            "offset": 0,
+            "slot": "160",
+            "type": "t_address",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:115"
+          },
+          {
+            "label": "factory",
+            "offset": 0,
+            "slot": "161",
+            "type": "t_contract(ICasimirFactory)15748",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:117"
+          },
+          {
+            "label": "registry",
+            "offset": 0,
+            "slot": "162",
+            "type": "t_contract(ICasimirRegistry)16466",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:119"
+          },
+          {
+            "label": "upkeep",
+            "offset": 0,
+            "slot": "163",
+            "type": "t_contract(ICasimirUpkeep)16570",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:121"
+          },
+          {
+            "label": "lastPoolId",
+            "offset": 20,
+            "slot": "163",
+            "type": "t_uint32",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:123"
+          },
+          {
+            "label": "latestBeaconBalanceAfterFees",
+            "offset": 0,
+            "slot": "164",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:125"
+          },
+          {
+            "label": "latestActiveRewardBalance",
+            "offset": 0,
+            "slot": "165",
+            "type": "t_int256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:127"
+          },
+          {
+            "label": "finalizableExitedBalance",
+            "offset": 0,
+            "slot": "166",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:129"
+          },
+          {
+            "label": "finalizableRecoveredBalance",
+            "offset": 0,
+            "slot": "167",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:131"
+          },
+          {
+            "label": "users",
+            "offset": 0,
+            "slot": "168",
+            "type": "t_mapping(t_address,t_struct(User)15623_storage)",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:133"
+          },
+          {
+            "label": "stakeRatioSum",
+            "offset": 0,
+            "slot": "169",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:135"
+          },
+          {
+            "label": "requestedWithdrawals",
+            "offset": 0,
+            "slot": "170",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:137"
+          },
+          {
+            "label": "requestedWithdrawalQueue",
+            "offset": 0,
+            "slot": "171",
+            "type": "t_array(t_struct(Withdrawal)15630_storage)dyn_storage",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:139"
+          },
+          {
+            "label": "poolAddresses",
+            "offset": 0,
+            "slot": "172",
+            "type": "t_mapping(t_uint32,t_address)",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:141"
+          },
+          {
+            "label": "tipBalance",
+            "offset": 0,
+            "slot": "173",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:143"
+          },
+          {
+            "label": "recoveredBalances",
+            "offset": 0,
+            "slot": "174",
+            "type": "t_mapping(t_uint32,t_uint256)",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:145"
+          },
+          {
+            "label": "prepoolBalance",
+            "offset": 0,
+            "slot": "175",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:147"
+          },
+          {
+            "label": "exitedBalance",
+            "offset": 0,
+            "slot": "176",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:149"
+          },
+          {
+            "label": "readyPoolIds",
+            "offset": 0,
+            "slot": "177",
+            "type": "t_array(t_uint32)dyn_storage",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:151"
+          },
+          {
+            "label": "pendingPoolIds",
+            "offset": 0,
+            "slot": "178",
+            "type": "t_array(t_uint32)dyn_storage",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:153"
+          },
+          {
+            "label": "stakedPoolIds",
+            "offset": 0,
+            "slot": "179",
+            "type": "t_array(t_uint32)dyn_storage",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:155"
+          },
+          {
+            "label": "forcedExits",
+            "offset": 0,
+            "slot": "180",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:157"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "181",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:159"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_struct(Withdrawal)15630_storage)dyn_storage": {
+            "label": "struct ICasimirCore.Withdrawal[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_array(t_uint32)dyn_storage": {
+            "label": "uint32[]",
+            "numberOfBytes": "32"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(ICasimirFactory)15748": {
+            "label": "contract ICasimirFactory",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ICasimirRegistry)16466": {
+            "label": "contract ICasimirRegistry",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ICasimirUpkeep)16570": {
+            "label": "contract ICasimirUpkeep",
+            "numberOfBytes": "20"
+          },
+          "t_int256": {
+            "label": "int256",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(User)15623_storage)": {
+            "label": "mapping(address => struct ICasimirCore.User)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint32,t_address)": {
+            "label": "mapping(uint32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint32,t_uint256)": {
+            "label": "mapping(uint32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(User)15623_storage": {
+            "label": "struct ICasimirCore.User",
+            "members": [
+              {
+                "label": "stake0",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "stakeRatioSum0",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Withdrawal)15630_storage": {
+            "label": "struct ICasimirCore.Withdrawal",
+            "members": [
+              {
+                "label": "userAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "period",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    },
+    "bc324f7e8d7b2211cb8cb7a959bee1ba6ccb87ac230cfa011b83bb63b3b653e4": {
+      "address": "0x14C356a7d837Fb21f6420Dfd285B806A407B2607",
+      "txHash": "0x9149ea7de6bc6bce6c6eb403c000090ae7590a3d4378815228eff174568f1da5",
+      "layout": {
+        "solcVersion": "0.8.18",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:88"
+          },
+          {
+            "label": "managerAddresses",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_mapping(t_uint32,t_address)",
+            "contract": "CasimirFactory",
+            "src": "src/v1/CasimirFactory.sol:42"
+          },
+          {
+            "label": "viewsAddresses",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_mapping(t_uint32,t_address)",
+            "contract": "CasimirFactory",
+            "src": "src/v1/CasimirFactory.sol:44"
+          },
+          {
+            "label": "lastManagerId",
+            "offset": 0,
+            "slot": "153",
+            "type": "t_uint32",
+            "contract": "CasimirFactory",
+            "src": "src/v1/CasimirFactory.sol:46"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "154",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "CasimirFactory",
+            "src": "src/v1/CasimirFactory.sol:48"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_uint32,t_address)": {
+            "label": "mapping(uint32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    },
+    "2dc62d7cef1601798922e01541bc2c69151be28d032568453c5113835380d2e0": {
+      "address": "0xE7232300e7fb7f5D7D4D11a33C1B59af77cf7Eae",
+      "txHash": "0xcec08aaea6b78549e37d4cdac59dd279704b05875365c6f352fa531060d76a1c",
+      "layout": {
+        "solcVersion": "0.8.18",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:88"
+          },
+          {
+            "label": "lockPeriod",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:36"
+          },
+          {
+            "label": "userFee",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_uint32",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:38"
+          },
+          {
+            "label": "eigenStake",
+            "offset": 4,
+            "slot": "152",
+            "type": "t_bool",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:40"
+          },
+          {
+            "label": "liquidStake",
+            "offset": 5,
+            "slot": "152",
+            "type": "t_bool",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:42"
+          },
+          {
+            "label": "reportPeriod",
+            "offset": 6,
+            "slot": "152",
+            "type": "t_uint32",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:44"
+          },
+          {
+            "label": "functionsId",
+            "offset": 10,
+            "slot": "152",
+            "type": "t_uint64",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:46"
+          },
+          {
+            "label": "upkeepId",
+            "offset": 0,
+            "slot": "153",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:48"
+          },
+          {
+            "label": "latestBeaconBalance",
+            "offset": 0,
+            "slot": "154",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:50"
+          },
+          {
+            "label": "finalizableActivations",
+            "offset": 0,
+            "slot": "155",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:52"
+          },
+          {
+            "label": "finalizableCompletedExits",
+            "offset": 0,
+            "slot": "156",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:54"
+          },
+          {
+            "label": "requestedWithdrawalBalance",
+            "offset": 0,
+            "slot": "157",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:56"
+          },
+          {
+            "label": "reservedFeeBalance",
+            "offset": 0,
+            "slot": "158",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:58"
+          },
+          {
+            "label": "requestedExits",
+            "offset": 0,
+            "slot": "159",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:60"
+          },
+          {
+            "label": "daoOracleAddress",
+            "offset": 0,
+            "slot": "160",
+            "type": "t_address",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:115"
+          },
+          {
+            "label": "factory",
+            "offset": 0,
+            "slot": "161",
+            "type": "t_contract(ICasimirFactory)11894",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:117"
+          },
+          {
+            "label": "registry",
+            "offset": 0,
+            "slot": "162",
+            "type": "t_contract(ICasimirRegistry)12612",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:119"
+          },
+          {
+            "label": "upkeep",
+            "offset": 0,
+            "slot": "163",
+            "type": "t_contract(ICasimirUpkeep)12716",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:121"
+          },
+          {
+            "label": "lastPoolId",
+            "offset": 20,
+            "slot": "163",
+            "type": "t_uint32",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:123"
+          },
+          {
+            "label": "latestBeaconBalanceAfterFees",
+            "offset": 0,
+            "slot": "164",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:125"
+          },
+          {
+            "label": "latestActiveRewardBalance",
+            "offset": 0,
+            "slot": "165",
+            "type": "t_int256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:127"
+          },
+          {
+            "label": "finalizableExitedBalance",
+            "offset": 0,
+            "slot": "166",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:129"
+          },
+          {
+            "label": "finalizableRecoveredBalance",
+            "offset": 0,
+            "slot": "167",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:131"
+          },
+          {
+            "label": "users",
+            "offset": 0,
+            "slot": "168",
+            "type": "t_mapping(t_address,t_struct(User)11769_storage)",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:133"
+          },
+          {
+            "label": "stakeRatioSum",
+            "offset": 0,
+            "slot": "169",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:135"
+          },
+          {
+            "label": "requestedWithdrawals",
+            "offset": 0,
+            "slot": "170",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:137"
+          },
+          {
+            "label": "requestedWithdrawalQueue",
+            "offset": 0,
+            "slot": "171",
+            "type": "t_array(t_struct(Withdrawal)11776_storage)dyn_storage",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:139"
+          },
+          {
+            "label": "poolAddresses",
+            "offset": 0,
+            "slot": "172",
+            "type": "t_mapping(t_uint32,t_address)",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:141"
+          },
+          {
+            "label": "tipBalance",
+            "offset": 0,
+            "slot": "173",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:143"
+          },
+          {
+            "label": "recoveredBalances",
+            "offset": 0,
+            "slot": "174",
+            "type": "t_mapping(t_uint32,t_uint256)",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:145"
+          },
+          {
+            "label": "prepoolBalance",
+            "offset": 0,
+            "slot": "175",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:147"
+          },
+          {
+            "label": "exitedBalance",
+            "offset": 0,
+            "slot": "176",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:149"
+          },
+          {
+            "label": "readyPoolIds",
+            "offset": 0,
+            "slot": "177",
+            "type": "t_array(t_uint32)dyn_storage",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:151"
+          },
+          {
+            "label": "pendingPoolIds",
+            "offset": 0,
+            "slot": "178",
+            "type": "t_array(t_uint32)dyn_storage",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:153"
+          },
+          {
+            "label": "stakedPoolIds",
+            "offset": 0,
+            "slot": "179",
+            "type": "t_array(t_uint32)dyn_storage",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:155"
+          },
+          {
+            "label": "forcedExits",
+            "offset": 0,
+            "slot": "180",
+            "type": "t_uint256",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:157"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "181",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "CasimirManager",
+            "src": "src/v1/CasimirManager.sol:159"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_struct(Withdrawal)11776_storage)dyn_storage": {
+            "label": "struct ICasimirCore.Withdrawal[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_array(t_uint32)dyn_storage": {
+            "label": "uint32[]",
+            "numberOfBytes": "32"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(ICasimirFactory)11894": {
+            "label": "contract ICasimirFactory",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ICasimirRegistry)12612": {
+            "label": "contract ICasimirRegistry",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ICasimirUpkeep)12716": {
+            "label": "contract ICasimirUpkeep",
+            "numberOfBytes": "20"
+          },
+          "t_int256": {
+            "label": "int256",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(User)11769_storage)": {
+            "label": "mapping(address => struct ICasimirCore.User)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint32,t_address)": {
+            "label": "mapping(uint32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint32,t_uint256)": {
+            "label": "mapping(uint32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(User)11769_storage": {
+            "label": "struct ICasimirCore.User",
+            "members": [
+              {
+                "label": "stake0",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "stakeRatioSum0",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Withdrawal)11776_storage": {
+            "label": "struct ICasimirCore.Withdrawal",
+            "members": [
+              {
+                "label": "userAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "period",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
           },
           "t_uint8": {
             "label": "uint8",

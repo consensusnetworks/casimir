@@ -3,14 +3,14 @@ pragma solidity 0.8.18;
 
 import "@chainlink/contracts/src/v0.8/dev/interfaces/FunctionsOracleInterface.sol";
 import "@chainlink/contracts/src/v0.8/dev/ocr2/OCR2Base.sol";
-import "./AuthorizedOriginReceiver.sol";
+import "@chainlink/contracts/src/v0.8/dev/AuthorizedReceiver.sol";
 
 /**
  * @title Functions Oracle contract
  * @notice Contract that nodes of a Decentralized Oracle Network (DON) interact with
  * @dev THIS CONTRACT HAS NOT GONE THROUGH ANY SECURITY REVIEW. DO NOT USE IN PROD.
  */
-contract FunctionsOraclePatched is FunctionsOracleInterface, OCR2Base, AuthorizedOriginReceiver {
+contract FunctionsOracle is FunctionsOracleInterface, OCR2Base, AuthorizedReceiver {
     event OracleRequest(
         bytes32 indexed requestId,
         address requestingContract,

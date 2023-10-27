@@ -8,6 +8,7 @@ import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-abi-exporter'
 import 'hardhat-contract-sizer'
 import 'solidity-docgen'
+// import '@tenderly/hardhat-tenderly'
 import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL, ETHEREUM_SIGNERS, HARDHAT_NETWORK_KEY } from '@casimir/env'
 
 // Seed is provided
@@ -45,6 +46,7 @@ if (hardhatNetwork !== 'localhost') {
     process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || ETHEREUM_RPC_URL[networkKey]
     process.env.OWNER_ADDRESS = ETHEREUM_SIGNERS[networkKey].OWNER_ADDRESS
     process.env.DAO_ORACLE_ADDRESS = ETHEREUM_SIGNERS[networkKey].DAO_ORACLE_ADDRESS
+    process.env.BEACON_LIBRARY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].BEACON_LIBRARY_ADDRESS
     process.env.MANAGER_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].MANAGER_BEACON_ADDRESS
     process.env.POOL_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].POOL_BEACON_ADDRESS
     process.env.REGISTRY_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].REGISTRY_BEACON_ADDRESS
@@ -70,6 +72,11 @@ const config: HardhatUserConfig = {
     etherscan: {
         apiKey: 'DS62I9VXK4IEGYHG2RRMMX8H17KI9HANBI'
     },
+    // tenderly: {
+    //     username: 'shanejearley',
+    //     project: 'casimir',
+    //     accessKey: 'Nym3yVsVN2vCrXC95PiEjmMux5fApdok'
+    // },
     mocha: {
         timeout: 60000
     },

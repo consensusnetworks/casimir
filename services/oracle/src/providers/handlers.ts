@@ -53,7 +53,7 @@ export async function depositFunctionsBalanceHandler(input: HandlerInput) {
         })
 
         const feeAmount = ethers.utils.parseEther((refundBalance * price).toPrecision(9))
-        const minTokenAmount = ethers.utils.parseEther((refundBalance * 0.99).toPrecision(9))
+        const minTokenAmount = ethers.utils.parseEther((refundBalance * 0.9).toPrecision(9))
 
         const depositFunctionsBalance = await manager.connect(signer).depositFunctionsBalance(
             feeAmount,
@@ -73,8 +73,8 @@ export async function depositUpkeepBalanceHandler(input: HandlerInput) {
     const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
     const keeperRegistry = new ethers.Contract(config.keeperRegistryAddress, IAutomationRegistryAbi, provider) as ethers.Contract & IAutomationRegistry
 
-    const minimumBalance = 0.2
-    const refundBalance = 5
+    const minimumBalance = 6.5
+    const refundBalance = 13
     const upkeepId = await manager.upkeepId()
     let balance = 0
     if (upkeepId.gt(0)) {
@@ -98,7 +98,7 @@ export async function depositUpkeepBalanceHandler(input: HandlerInput) {
         })
 
         const feeAmount = ethers.utils.parseEther((refundBalance * price).toPrecision(9))
-        const minTokenAmount = ethers.utils.parseEther((refundBalance * 0.99).toPrecision(9))    
+        const minTokenAmount = ethers.utils.parseEther((refundBalance * 0.9).toPrecision(9))    
 
         const depositUpkeepBalance = await manager.connect(signer).depositUpkeepBalance(
             feeAmount,
