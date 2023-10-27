@@ -336,15 +336,15 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
       </div>
     </div>
 
-    <div v-else class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap relative"
+    <div v-else class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap"
       style="min-height: calc(100vh - 320px); height: 500px;">
       <div v-show="showSkeleton" class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
         <div class="skeleton_box" />
       </div>
       <!-- Form -->
       <div v-if="openAddOperatorModal"
-        class="absolute top-0 left-0 w-full h-full bg-black/[0.2] rounded-[3px] flex items-center justify-center z-[2]">
-        <div class="card_container w-[80%] h-[90%] overflow-auto px-[30px] py-[20px]">
+        class="absolute top-0 left-0 w-full h-[100vh] bg-black/[0.3] rounded-[3px] flex items-center justify-center z-[2] overflow-hidden">
+        <div class="card_container w-[80%] overflow-auto px-[30px] py-[20px]">
           <div class="flex gap-[10px] flex-wrap justify-between">
             <div class="flex flex-col">
               <h6 class="card_title">
