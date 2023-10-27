@@ -325,7 +325,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
       </button>
     </div>
 
-    <div v-if="!user?.address" class="card_container w-full px-[32px] py-[31px]
+    <div v-if="!user?.address" class="card_container w-full px-[32px] py-[31px]  h-[600px]
        text-grey_4 flex items-center justify-center relative" style="min-height: calc(100vh - 420px);">
       <div v-show="showSkeleton || loading"
         class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
@@ -338,7 +338,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
       </div>
     </div>
 
-    <div v-else class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap"
+    <div v-else class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap h-[600px]"
       style="min-height: calc(100vh - 320px); height: 500px;">
       <div v-show="showSkeleton || loading"
         class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
