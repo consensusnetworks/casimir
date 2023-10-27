@@ -100,8 +100,8 @@ const toggleQuestionItem = (index: number) => {
         <div class="text__container">
           <span class="pill">Beta</span>
           <h1 class="text-1">
-            Stake and earn Ethereum <br>
-            without giving up custody
+            Get the most from your staked Ethereum
+            <br>
           </h1>
           <!-- <span class="text-r">
             Casimir allows you to natively stake any amount of Ethereum to a decentralized
@@ -114,7 +114,7 @@ const toggleQuestionItem = (index: number) => {
             :href="appUrl"
             class="btn-primary"
           >
-            Launch App
+            Launch Staking App
           </a>
           <a
             href="https://drive.google.com/file/d/1giIojTS-4gf0xWXUirmd2AaqalFmgA72/view"
@@ -125,7 +125,7 @@ const toggleQuestionItem = (index: number) => {
         </div>
       </div>
       <div class="mockup">
-        <img src="/hero.png">
+        <img src="/hero-new.png">
       </div>
     </section>
 
@@ -143,6 +143,21 @@ const toggleQuestionItem = (index: number) => {
           <div class="overview__item__header">
             <div class="icon">
               <img
+                src="/disc.svg"
+                width="17"
+              >
+            </div>
+            <span class="text-7 bold">Maximize your Yield</span>
+          </div>
+          <span class="text-r">
+            Integrate with features like Restaking on EigenLayer to increase your stake yield.
+          </span>
+        </div>
+
+        <div class="overview__item">
+          <div class="overview__item__header">
+            <div class="icon">
+              <img
                 src="/key.svg"
                 width="17"
               >
@@ -151,7 +166,7 @@ const toggleQuestionItem = (index: number) => {
           </div>
           <span class="text-r">
             Distributed validator technology (DVT) greatly mitigates loss of
-            funds.
+            funds due to slashing.
           </span>
         </div>
 
@@ -182,7 +197,7 @@ const toggleQuestionItem = (index: number) => {
             <span class="text-7 bold">You're In Control</span>
           </div>
           <span class="text-r">
-            You can stake any amount and withdraw at any time, no lockup period.
+            You can stake any amount and withdraw at any time.
           </span>
         </div>
 
@@ -216,53 +231,40 @@ const toggleQuestionItem = (index: number) => {
             Casimir is open-sourced; anyone can use and review the service.
           </span>
         </div>
-
-        <div class="overview__item">
-          <div class="overview__item__header">
-            <div class="icon">
-              <img
-                src="/disc.svg"
-                width="17"
-              >
-            </div>
-            <span class="text-7 bold">Finds You Other Ways to Earn</span>
-          </div>
-          <span class="text-r">
-            Our architecture allows us to integrate crypto-native features like
-            Eigenlayer.
-          </span>
-        </div>
       </div>
     </section>
 
     <section class="bento">
       <h2 class="">
-        Staking. Analytics. We've got you covered.
+        One place to connect your <br>wallets, stake, and see your analytics.
       </h2>
       <div class="bento__container">
         <div class="bento__base__card bento__card__1">
           <h2 class="text-6">
-            Simple self-custodial <br>Ethereum staking
+            Track all of your historical balances, rewards, and  <br> withdrawals in one dashboard.
           </h2>
-          <div><img src="/tx.png"></div>
+          <div><img src="/analytics-chart.png"></div>
         </div>
-        <div class="bento__base__card bento__card__2">
-          <h2 class="text-6">
-            Connect multiple wallets to stake
-          </h2>
-          <div><img src="/tx.png"></div>
-        </div>
-        <div class="bento__base__card bento__card__3">
-          <h2 class="text-6">
-            Simple self-custodial <br>Ethereum staking
-          </h2>
-          <div><img src="/tx.png"></div>
-        </div>
+
         <div class="bento__base__card bento__card__4">
           <h2 class="text-6">
-            Connect multiple wallets to stake
+            Natively stake or withdraw ETH.
           </h2>
-          <div><img src="/stake.png"></div>
+          <div><img src="/staking-component.png"></div>
+        </div>
+
+        <div class="bento__base__card bento__card__3">
+          <h2 class="text-6">
+            Get your transaction history <br> for any connected address.
+          </h2>
+          <div><img src="/tx.png"></div>
+        </div>
+
+        <div class="bento__base__card bento__card__2">
+          <h2 class="text-6">
+            Connect any number of wallets at the same time.
+          </h2>
+          <div><img src="/multi-wallet.png"></div>
         </div>
       </div>
     </section>
@@ -333,7 +335,7 @@ const toggleQuestionItem = (index: number) => {
 
     <section class="footer">
       <div class="footer__container">
-        <span class="c">© 2023 Casimir. All rights reserved.</span>
+        <span class="c">© 2023 Consensus Networks. All rights reserved.</span>
         <ul>
           <li>
             <a
