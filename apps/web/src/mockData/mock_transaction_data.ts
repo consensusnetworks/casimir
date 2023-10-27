@@ -1,11 +1,20 @@
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 const txData = ref(null as any)
 
 export default function useTxData () {
 
-  function generateRandomBalance() {
-    // Generate a random balance between 0 and 100
-    return Math.floor(Math.random() * 101)
+  function generateRandomBalance(index: number, walletAddress: string) {
+    if(
+      walletAddress === '0xd557a5745d4560B24D36A68b52351ffF9c86A212'
+    ) {
+      const lowBound = 100 + index * 1.06
+      const highBound = 200 + index * 1.06
+      return Math.random() * (highBound - lowBound) + lowBound
+    } else if(walletAddress === '0x728474D29c2F81eb17a669a7582A2C17f1042b57') {
+      const lowBound = 180 + index * 1.15
+      const highBound = 300 + index * 1.15
+      return Math.random() * (highBound - lowBound) + lowBound
+    }
   }
   
   function generateRandomDate() {
@@ -29,7 +38,7 @@ export default function useTxData () {
   function generateMockTransactionData(numTransactions: number) {
     const walletAddresses = [
       '0xd557a5745d4560B24D36A68b52351ffF9c86A212',
-      // '0x728474D29c2F81eb17a669a7582A2C17f1042b57',
+      '0x728474D29c2F81eb17a669a7582A2C17f1042b57',
       // '0x84725c8f954f18709aDcA150a0635D2fBE94fDfF',
       // '0x2EFD9900b748EbFfe658662c1ED853982Bf86ED9',
       // '0x9347155C4586f25306462EbA8BB8df7f06Bb5247',
@@ -45,7 +54,7 @@ export default function useTxData () {
     for (let i = 0; i < numTransactions; i++) {
       const transaction = {
         walletAddress: walletAddresses[i % walletAddresses.length],
-        walletBalance: String(generateRandomBalance()),
+        walletBalance: i,
         txDirection: Math.random() < 0.5? 'incoming': 'outgoing',
         txId: '0xf46d39ca96e489fb0eb2097f073bfde2dc7960bf8358e0692fa79cc8597d283e',
         receivedAt: generateRandomDate(),
@@ -59,12 +68,20 @@ export default function useTxData () {
       }
       data.push(transaction)
     }
+
+    data.sort((a, b) => {
+      return new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
+    })
+
+    for (let i = 0; i < data.length; i++) {
+      data[i].walletBalance = generateRandomBalance(i, data[i].walletAddress)
+    }
   
     return data
   }
 
   const mockData = () => {
-    const numTransactions = 400 // Number of transactions to generate
+    const numTransactions = 720 // Number of transactions to generate
     const data = generateMockTransactionData(numTransactions)
     // const jsonData = JSON.stringify(data, null, 2)
 

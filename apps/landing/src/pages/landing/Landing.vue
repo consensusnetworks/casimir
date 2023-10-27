@@ -125,7 +125,7 @@ const toggleQuestionItem = (index: number) => {
         </div>
       </div>
       <div class="mockup">
-        <img src="/hero.png">
+        <img src="/hero-new.png">
       </div>
     </section>
 
@@ -257,7 +257,7 @@ const toggleQuestionItem = (index: number) => {
           <h2 class="text-6">
             Track all of your historical balances, rewards, and  <br> withdrawals in one dashboard.
           </h2>
-          <div><img src="/tx.png"></div>
+          <div><img src="/analytics-chart.png"></div>
         </div>
 
         <div class="bento__base__card bento__card__2">

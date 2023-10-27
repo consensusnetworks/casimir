@@ -307,43 +307,72 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
   <div class="px-[60px] 800s:px-[5%] pt-[51px]">
     <div class="flex items-start gap-[20px] justify-between flex-wrap mb-[30px]">
       <h6 class="title relative">
-        <div v-show="showSkeleton || loading"
-          class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
+        <div
+          v-show="showSkeleton || loading"
+          class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+        >
           <div class="skeleton_box" />
         </div>
         Operators
       </h6>
 
-      <button class="flex items-center gap-[8px] export_button  hover:text-blue_3 hover:border-blue_3 h-[38px] relative"
-        :disabled="!user?.accounts" @click="openAddOperatorModal = true">
-        <div v-show="showSkeleton" class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
+      <button
+        class="flex items-center gap-[8px] export_button  hover:text-blue_3 hover:border-blue_3 h-[38px] relative"
+        :disabled="!user?.accounts"
+        @click="openAddOperatorModal = true"
+      >
+        <div
+          v-show="showSkeleton"
+          class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+        >
           <div class="skeleton_box" />
         </div>
-        <vue-feather type="plus" class="icon w-[17px] h-min" />
+        <vue-feather
+          type="plus"
+          class="icon w-[17px] h-min"
+        />
         Add Operator
       </button>
     </div>
 
-    <div v-if="!user?.address" class="card_container w-full px-[32px] py-[31px]
-       text-grey_4 flex items-center justify-center relative" style="min-height: calc(100vh - 420px);">
-      <div v-show="showSkeleton" class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
+    <div
+      v-if="!user?.address"
+      class="card_container w-full px-[32px] py-[31px]
+       text-grey_4 flex items-center justify-center relative"
+      style="min-height: calc(100vh - 420px);"
+    >
+      <div
+        v-show="showSkeleton"
+        class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+      >
         <div class="skeleton_box" />
       </div>
       <div class="border rounded-[3px] border-grey_1 border-dashed p-[10%] text-center">
-        <button class="text-primary underline" @click="openWalletsModal">
+        <button
+          class="text-primary underline"
+          @click="openWalletsModal"
+        >
           Connect wallet
         </button> to view and register operators...
       </div>
     </div>
 
-    <div v-else class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap relative"
-      style="min-height: calc(100vh - 320px); height: 500px;">
-      <div v-show="showSkeleton" class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
+    <div
+      v-else
+      class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap relative"
+      style="min-height: calc(100vh - 320px); height: 500px;"
+    >
+      <div
+        v-show="showSkeleton"
+        class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
+      >
         <div class="skeleton_box" />
       </div>
       <!-- Form -->
-      <div v-if="openAddOperatorModal"
-        class="absolute top-0 left-0 w-full h-full bg-black/[0.2] rounded-[3px] flex items-center justify-center z-[2]">
+      <div
+        v-if="openAddOperatorModal"
+        class="absolute top-0 left-0 w-full h-full bg-black/[0.2] rounded-[3px] flex items-center justify-center z-[2]"
+      >
         <div class="card_container w-[80%] h-[90%] overflow-auto px-[30px] py-[20px]">
           <div class="flex gap-[10px] flex-wrap justify-between">
             <div class="flex flex-col">
@@ -352,21 +381,37 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               </h6>
 
               <!-- Even Better Link to Operator Docs -->
-              <div class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-15 py-9 mt-12 mb-4 w-[400px]"
-                role="alert">
+              <div
+                class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-15 py-9 mt-12 mb-4 w-[400px]"
+                role="alert"
+              >
                 <p class="text-sm">
                   Learn how to set up a Casimir operator using
-                  <a :href="`${docsUrl}/guide/operating`" target="_blank" class="text-primary underline">
+                  <a
+                    :href="`${docsUrl}/guide/operating`"
+                    target="_blank"
+                    class="text-primary underline"
+                  >
                     our docs
-                    <vue-feather type="external-link" size="14" />
+                    <vue-feather
+                      type="external-link"
+                      size="14"
+                    />
                   </a>.
                 </p>
               </div>
             </div>
 
             <div class="">
-              <button type="button" class="card_title" @click="openAddOperatorModal = false">
-                <vue-feather type="x" class="icon w-[17px] h-min" />
+              <button
+                type="button"
+                class="card_title"
+                @click="openAddOperatorModal = false"
+              >
+                <vue-feather
+                  type="x"
+                  class="icon w-[17px] h-min"
+                />
               </button>
             </div>
           </div>
@@ -376,20 +421,40 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               Wallet
             </h6>
             <div class="card_input w-full max-w-[400px] relative">
-              <input id="walletAddress" v-model="selectedWallet.address" readonly type="text"
-                placeholder="Wallet Address.." class="outline-none text-grey_4 text-[14px] w-full cursor-pointer"
-                @focus="openSelectWalletOptions = true" @blur="onSelectWalletBlur">
-              <button type="button" @click="selectedWallet = { walletProvider: '', address: '' }">
-                <vue-feather type="x" class="icon w-[12px] h-min" />
+              <input
+                id="walletAddress"
+                v-model="selectedWallet.address"
+                readonly
+                type="text"
+                placeholder="Wallet Address.."
+                class="outline-none text-grey_4 text-[14px] w-full cursor-pointer"
+                @focus="openSelectWalletOptions = true"
+                @blur="onSelectWalletBlur"
+              >
+              <button
+                type="button"
+                @click="selectedWallet = { walletProvider: '', address: '' }"
+              >
+                <vue-feather
+                  type="x"
+                  class="icon w-[12px] h-min"
+                />
               </button>
-              <div v-show="openSelectWalletOptions"
-                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto">
+              <div
+                v-show="openSelectWalletOptions"
+                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
+              >
                 <h6 class="text-[16px]">
                   Your Connected Wallets
                 </h6>
-                <button v-for="act in user.accounts" :key="act.address" type="button" class="border-y border-y-grey_1 hover:border-y-grey_3
+                <button
+                  v-for="act in user.accounts"
+                  :key="act.address"
+                  type="button"
+                  class="border-y border-y-grey_1 hover:border-y-grey_3
                    text-grey_4 my-[10px] w-full flex justify-between truncate"
-                  @click="selectedWallet = { address: act.address, walletProvider: act.walletProvider }, openSelectWalletOptions = false">
+                  @click="selectedWallet = { address: act.address, walletProvider: act.walletProvider }, openSelectWalletOptions = false"
+                >
                   <span>{{ act.walletProvider }}</span>
                   <span>{{ convertString(act.address) }}</span>
                 </button>
@@ -400,17 +465,29 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
             <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
               Add Eigen Support to Your Validator (Optional)
             </h6>
-            <button class="toggle_container mt-10  w-full max-w-[400px] relative" :disabled="true"
-              @click="toggleEigenLayerSupport">
+            <button
+              class="toggle_container mt-10  w-full max-w-[400px] relative"
+              :disabled="true"
+              @click="toggleEigenLayerSupport"
+            >
               <div class="tooltip_container">
                 COMING SOON!
                 <div class="tooltip_triangle" />
               </div>
-              <img class="eigen-logo" src="/eigen.svg">
+              <img
+                class="eigen-logo"
+                src="/eigen.svg"
+              >
               Enable EigenLayer Support
-              <span v-if="eigenIsShining" class="shine-effect" />
-              <div class="toggle-button" :style="{ 'background-color': toggleBackgroundColor }"
-                :class="{ 'toggle-on': eigenIsToggled }">
+              <span
+                v-if="eigenIsShining"
+                class="shine-effect"
+              />
+              <div
+                class="toggle-button"
+                :style="{ 'background-color': toggleBackgroundColor }"
+                :class="{ 'toggle-on': eigenIsToggled }"
+              >
                 <div class="toggle-circle" />
               </div>
             </button>
@@ -420,9 +497,17 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               Operator ID
             </h6>
             <div class="card_input w-full max-w-[400px] relative">
-              <input id="operator_id" v-model="selectedOperatorID" type="text" readonly placeholder="Operator ID.."
-                class=" outline-none text-grey_4 text-[14px] w-full bg-white cursor-pointer" autocomplete="off"
-                @focus="openSelectOperatorID = true" @blur="onSelectOperatorIDBlur">
+              <input
+                id="operator_id"
+                v-model="selectedOperatorID"
+                type="text"
+                readonly
+                placeholder="Operator ID.."
+                class=" outline-none text-grey_4 text-[14px] w-full bg-white cursor-pointer"
+                autocomplete="off"
+                @focus="openSelectOperatorID = true"
+                @blur="onSelectOperatorIDBlur"
+              >
               <!-- <button
                 type="button"
                 @click="selectedOperatorID = ''"
@@ -433,17 +518,29 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                   class="icon w-[12px] h-min"
                 />
               </button> -->
-              <div v-show="openSelectOperatorID"
-                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto">
+              <div
+                v-show="openSelectOperatorID"
+                class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
+              >
                 <h6 class="text-[16px]">
                   Available Operators
                 </h6>
-                <div v-if="availableOperatorIDs.length === 0" class="border-y border-y-grey_1
-                   text-grey_4 my-[10px] text-center truncate">
+                <div
+                  v-if="availableOperatorIDs.length === 0"
+                  class="border-y border-y-grey_1
+                   text-grey_4 my-[10px] text-center truncate"
+                >
                   No Operators Found
                 </div>
-                <button v-for="operator in availableOperatorIDs" v-else :key="operator" type="button" class="border-y border-y-grey_1 hover:border-y-grey_3
-                   text-grey_4 my-[10px] w-full flex justify-between truncate" @click="selectedOperatorID = operator">
+                <button
+                  v-for="operator in availableOperatorIDs"
+                  v-else
+                  :key="operator"
+                  type="button"
+                  class="border-y border-y-grey_1 hover:border-y-grey_3
+                   text-grey_4 my-[10px] w-full flex justify-between truncate"
+                  @click="selectedOperatorID = operator"
+                >
                   {{ operator }}
                 </button>
               </div>
@@ -464,10 +561,19 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               Public Node URL
             </h6>
             <div class="card_input w-full max-w-[400px] relative">
-              <input id="operator_id" v-model="selectedPublicNodeURL" type="text" placeholder="URL.." autocomplete="off"
-                class=" outline-none text-grey_4 text-[14px] w-full">
+              <input
+                id="operator_id"
+                v-model="selectedPublicNodeURL"
+                type="text"
+                placeholder="URL.."
+                autocomplete="off"
+                class=" outline-none text-grey_4 text-[14px] w-full"
+              >
               <button @click="selectedPublicNodeURL = ''">
-                <vue-feather type="x" class="icon w-[12px] h-min" />
+                <vue-feather
+                  type="x"
+                  class="icon w-[12px] h-min"
+                />
               </button>
             </div>
             <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px]  whitespace-normal">
@@ -486,10 +592,23 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               Collateral
             </h6>
             <div class="card_input w-full max-w-[400px] relative">
-              <input id="operator_id" v-model="selectedCollateral" type="text" placeholder="0.00" autocomplete="off"
-                class=" outline-none text-grey_4 text-[14px] w-full" @input="handleInputChangeCollateral">
-              <button type="button" @click="selectedCollateral = ''">
-                <vue-feather type="x" class="icon w-[12px] h-min" />
+              <input
+                id="operator_id"
+                v-model="selectedCollateral"
+                type="text"
+                placeholder="0.00"
+                autocomplete="off"
+                class=" outline-none text-grey_4 text-[14px] w-full"
+                @input="handleInputChangeCollateral"
+              >
+              <button
+                type="button"
+                @click="selectedCollateral = ''"
+              >
+                <vue-feather
+                  type="x"
+                  class="icon w-[12px] h-min"
+                />
               </button>
             </div>
             <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px]">
@@ -497,7 +616,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
             </div> -->
 
             <div class="flex justify-end mt-[10px]">
-              <button type="submit" class="export_button" :disabled="!allInputsValid">
+              <button
+                type="submit"
+                class="export_button"
+                :disabled="!allInputsValid"
+              >
                 <span v-if="loadingAddOperator">Submitting</span>
                 <span v-else>Submit</span>
               </button>
@@ -535,42 +658,80 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
 
       <!-- Table -->
       <div class="w-full overflow-x-scroll">
-        <table v-if="tableData.length > 0" class="w-full">
+        <table
+          v-if="tableData.length > 0"
+          class="w-full"
+        >
           <thead>
             <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
-              <th v-for="header in operatorTableHeaders" :key="header.title" class="table_header ">
+              <th
+                v-for="header in operatorTableHeaders"
+                :key="header.title"
+                class="table_header "
+              >
                 <div class="flex items-center gap-[5px]">
                   <div>
                     {{ header.title }}
                   </div>
-                  <button v-show="header.value != 'blank_column'"
+                  <button
+                    v-show="header.value != 'blank_column'"
                     class="ml-[4px] flex flex-col items-center justify-between"
                     :class="selectedHeader === header.value ? 'opacity-100' : 'opacity-25'"
-                    @click="selectedHeader = header.value, selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'">
-                    <vue-feather type="arrow-up" size="20" class="icon h-min "
-                      :class="selectedOrientation === 'ascending' ? 'w-[10px]' : 'w-[8px] opacity-50'" />
-                    <vue-feather type="arrow-down" size="20" class="icon h-min"
-                      :class="selectedOrientation === 'descending' ? 'w-[10px]' : 'w-[8px] opacity-50'" />
+                    @click="selectedHeader = header.value, selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
+                  >
+                    <vue-feather
+                      type="arrow-up"
+                      size="20"
+                      class="icon h-min "
+                      :class="selectedOrientation === 'ascending' ? 'w-[10px]' : 'w-[8px] opacity-50'"
+                    />
+                    <vue-feather
+                      type="arrow-down"
+                      size="20"
+                      class="icon h-min"
+                      :class="selectedOrientation === 'descending' ? 'w-[10px]' : 'w-[8px] opacity-50'"
+                    />
                   </button>
                 </div>
               </th>
             </tr>
           </thead>
           <tbody class="w-full">
-            <tr v-for="item in filteredData" :key="item"
-              class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]">
-              <td v-for="header in operatorTableHeaders" :key="header.title" class="dynamic_padding">
-                <div v-if="header.value === 'blank_column'" class="flex items-center gap-[12px]">
-                  <button class="checkbox_button"
-                    @click="checkedItems.includes(item) ? removeItemFromCheckedList(item) : checkedItems.push(item)">
-                    <vue-feather v-show="checkedItems.includes(item)" type="check" size="20"
-                      class="icon w-[14px] h-min" />
+            <tr
+              v-for="item in filteredData"
+              :key="item"
+              class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
+            >
+              <td
+                v-for="header in operatorTableHeaders"
+                :key="header.title"
+                class="dynamic_padding"
+              >
+                <div
+                  v-if="header.value === 'blank_column'"
+                  class="flex items-center gap-[12px]"
+                >
+                  <button
+                    class="checkbox_button"
+                    @click="checkedItems.includes(item) ? removeItemFromCheckedList(item) : checkedItems.push(item)"
+                  >
+                    <vue-feather
+                      v-show="checkedItems.includes(item)"
+                      type="check"
+                      size="20"
+                      class="icon w-[14px] h-min"
+                    />
                   </button>
                 </div>
-                <div v-if="header.value === 'deactivate'" class="flex items-center gap-[12px]">
+                <div
+                  v-if="header.value === 'deactivate'"
+                  class="flex items-center gap-[12px]"
+                >
                   <!-- TODO: @Chris, wanna hook up this button? -->
-                  <button class="bg-decline text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] relative"
-                    disabled>
+                  <button
+                    class="bg-decline text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] relative"
+                    disabled
+                  >
                     <div class="tooltip_container">
                       Coming Soon!
                       <div class="tooltip_triangle" />
@@ -578,11 +739,15 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                     Deactivate
                   </button>
                 </div>
-                <div v-if="header.value === 'withdraw_collateral'" class="flex items-center gap-[12px]">
+                <div
+                  v-if="header.value === 'withdraw_collateral'"
+                  class="flex items-center gap-[12px]"
+                >
                   <!-- TODO: @Chris, wanna hook up this button? -->
                   <button
                     class="action-button bg-primary text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] opacity-50 relative"
-                    disabled>
+                    disabled
+                  >
                     <div class="tooltip_container">
                       Coming Soon!
                       <div class="tooltip_triangle" />
@@ -598,8 +763,10 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
           </tbody>
         </table>
 
-        <div v-else
-          class="border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] whitespace-normal text-[14px] text-grey_3">
+        <div
+          v-else
+          class="border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] whitespace-normal text-[14px] text-grey_3"
+        >
           You currently do not have operators registed under your account.
 
           <p class="mt-[30px]">
@@ -607,17 +774,26 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
           </p>
         </div>
       </div>
-      <div v-if="tableData.length > 0" class="flex justify-between items-center mt-[12px]">
+      <div
+        v-if="tableData.length > 0"
+        class="flex justify-between items-center mt-[12px]"
+      >
         <div class="page_number ml-[56px]">
           Page {{ currentPage }} of {{ totalPages }}
         </div>
         <div class="flex items-center gap-[12px]">
-          <button class="pagination_button" :disabled="currentPage === 1"
-            @click="currentPage > 1 ? currentPage = currentPage - 1 : ''">
+          <button
+            class="pagination_button"
+            :disabled="currentPage === 1"
+            @click="currentPage > 1 ? currentPage = currentPage - 1 : ''"
+          >
             Previous
           </button>
-          <button class="pagination_button mr-[33px]" :disabled="currentPage === totalPages"
-            @click="currentPage < totalPages ? currentPage = currentPage + 1 : ''">
+          <button
+            class="pagination_button mr-[33px]"
+            :disabled="currentPage === totalPages"
+            @click="currentPage < totalPages ? currentPage = currentPage + 1 : ''"
+          >
             Next
           </button>
         </div>
