@@ -461,7 +461,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
 
             <!-- public node url-->
             <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              Public Node URL
+              DKG Node URL
             </h6>
             <div class="card_input w-full max-w-[400px] relative">
               <input id="operator_id" v-model="selectedPublicNodeURL" type="text" placeholder="URL.." autocomplete="off"
