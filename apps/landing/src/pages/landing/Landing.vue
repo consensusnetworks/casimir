@@ -241,9 +241,9 @@ const toggleQuestionItem = (index: number) => {
       <div class="bento__container">
         <div class="bento__base__card bento__card__1">
           <h2 class="text-6">
-            Simple self-custodial <br>Ethereum staking
+            Track all of your historical balances, rewards, and  <br> withdrawals in one dashboard.
           </h2>
-          <div><img src="/tx.png"></div>
+          <div><img src="/analytics-chart.png"></div>
         </div>
 
         <div class="bento__base__card bento__card__4">
@@ -255,9 +255,9 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="bento__base__card bento__card__3">
           <h2 class="text-6">
-            Track all of your historical balances, rewards, and  <br> withdrawals in one dashboard.
+            Get your transaction history <br> for any connected address.
           </h2>
-          <div><img src="/analytics-chart.png"></div>
+          <div><img src="/tx.png"></div>
         </div>
 
         <div class="bento__base__card bento__card__2">
