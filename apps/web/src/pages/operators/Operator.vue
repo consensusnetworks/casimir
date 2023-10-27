@@ -492,7 +492,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                 <h6 class="text-[16px]">
                   Your Connected Wallets
                 </h6>
-                <button v-for="act in user.accounts" :key="act.address" type="button" class="border-y border-y-grey_1 hover:border-y-grey_3
+                <button v-for="act in user?.accounts" :key="act.address" type="button" class="border-y border-y-grey_1 hover:border-y-grey_3
                    text-grey_4 my-[10px] w-full flex justify-between truncate"
                   @click="selectedWallet = { address: act.address, walletProvider: act.walletProvider }, openSelectWalletOptions = false">
                   <span>{{ act.walletProvider }}</span>
