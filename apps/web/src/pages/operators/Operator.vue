@@ -316,7 +316,8 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
 
       <button class="flex items-center gap-[8px] export_button  hover:text-blue_3 hover:border-blue_3 h-[38px] relative"
         :disabled="!user?.accounts" @click="openAddOperatorModal = true">
-        <div v-show="showSkeleton" class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
+        <div v-show="showSkeleton || loading"
+          class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
           <div class="skeleton_box" />
         </div>
         <vue-feather type="plus" class="icon w-[17px] h-min" />
@@ -326,7 +327,8 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
 
     <div v-if="!user?.address" class="card_container w-full px-[32px] py-[31px]
        text-grey_4 flex items-center justify-center relative" style="min-height: calc(100vh - 420px);">
-      <div v-show="showSkeleton" class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
+      <div v-show="showSkeleton || loading"
+        class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
         <div class="skeleton_box" />
       </div>
       <div class="border rounded-[3px] border-grey_1 border-dashed p-[10%] text-center">
@@ -338,7 +340,8 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
 
     <div v-else class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap"
       style="min-height: calc(100vh - 320px); height: 500px;">
-      <div v-show="showSkeleton" class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
+      <div v-show="showSkeleton || loading"
+        class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
         <div class="skeleton_box" />
       </div>
       <!-- Form -->
