@@ -246,7 +246,7 @@ async function getSweptBalance(startIndex, endIndex) {
 
 async function getValidators(validatorPublicKeys) {
 	const request = await Functions.makeHttpRequest({
-		url: `${ethereumBeaconUrl}/eth/v1/beacon/states/${reportSlot}/validators?id=${validatorPublicKeys.join(',')}`
+		url: `${ethereumBeaconUrl}/eth/v1/beacon/states/finalized/validators?id=${validatorPublicKeys.join(',')}`
 	})
 	if (request.error) throw new Error('Failed to get validators')
 	return request.data.data
