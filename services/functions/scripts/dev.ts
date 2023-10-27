@@ -26,7 +26,7 @@ void async function() {
     if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error(`No functions billing registry address provided for ${networkKey}`)
     if (!process.env.FUNCTIONS_ORACLE_ADDRESS) throw new Error('No functions oracle address provided')
     
-    process.env.ETHEREUM_BEACON_RPC_URL = process.env.ETHEREUM_BEACON_RPC_URL || 'http://127.0.0.1:5002'
+    process.env.ETHEREUM_BEACON_RPC_URL = process.env.ETHEREUM_BEACON_RPC_URL || 'http://127.0.0.1:5052'
 
     process.env.USE_LOGS = process.env.USE_LOGS || 'false'
     run('npx esno -r dotenv/config src/index.ts')
