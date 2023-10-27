@@ -47,6 +47,8 @@ void async function () {
         process.env.WALLET_CONNECT_PROJECT_ID = process.env.WALLET_CONNECT_PROJECT_ID || '8e6877b49198d7a9f9561b8712805726'
     }
 
+    console.log(process.env.BIP39_SEED)
+
     process.env.PROJECT = process.env.PROJECT || 'casimir'
     process.env.STAGE = process.env.STAGE || 'local'
     process.env.FORK = process.env.FORK || 'testnet'

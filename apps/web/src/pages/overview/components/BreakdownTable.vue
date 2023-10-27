@@ -24,10 +24,10 @@ const tableHeaderOptions = ref(
   {
     Wallets: {
       headers: [
-        {
-          title: '',
-          value: 'blank_column'
-        },
+        // {
+        //   title: '',
+        //   value: 'blank_column'
+        // },
         {
           title: 'Wallet Provider',
           value: 'wallet_provider'
@@ -52,10 +52,10 @@ const tableHeaderOptions = ref(
     },
     Transactions: {
       headers: [
-        {
-          title: '',
-          value: 'blank_column'
-        },
+        // {
+        //   title: '',
+        //   value: 'blank_column'
+        // },
         {
           title: 'Hash',
           value: 'tx_hash'
@@ -88,10 +88,10 @@ const tableHeaderOptions = ref(
     },
     Staking: {
       headers: [
-        {
-          title: '',
-          value: 'blank_column'
-        },
+        // {
+        //   title: '',
+        //   value: 'blank_column'
+        // },
         {
           title: 'Date',
           value: 'date'
@@ -364,25 +364,18 @@ onMounted(() => {
 
         <div class="flex flex-wrap gap-[20px] justify-betwee items-center ">
           <div class="grouped_buttons flex flex-nowrap overflow-hidden w-[261px]">
-            <button
-              class="timeframe_button"
-              :class="tableView === 'Wallets' ? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-              @click="tableView = 'Wallets', selectedHeader = 'wallet_provider', checkedItems = [], selectedOrientation = 'ascending'"
-            >
+            <button class="timeframe_button" :class="tableView === 'Wallets' ? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
+              @click="tableView = 'Wallets', selectedHeader = 'wallet_provider', checkedItems = [], selectedOrientation = 'ascending'">
               Wallets
             </button>
-            <button
-              class="timeframe_button border-l border-l-[#D0D5DD] "
+            <button class="timeframe_button border-l border-l-[#D0D5DD] "
               :class="tableView === 'Transactions' ? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-              @click="tableView = 'Transactions', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'descending'"
-            >
+              @click="tableView = 'Transactions', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'descending'">
               Transactions
             </button>
-            <button
-              class="timeframe_button border-l border-l-[#D0D5DD]"
+            <button class="timeframe_button border-l border-l-[#D0D5DD]"
               :class="tableView === 'Staking' ? 'bg-[#F3F3F3]' : 'bg-[#FFFFFF]'"
-              @click="tableView = 'Staking', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'descending'"
-            >
+              @click="tableView = 'Staking', selectedHeader = 'date', checkedItems = [], selectedOrientation = 'descending'">
               Staking Actions
             </button>
           </div>
@@ -393,42 +386,22 @@ onMounted(() => {
       <table class="w-full min-h-[200px] ">
         <thead>
           <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
-            <th
-              v-for="header in tableHeaderOptions[tableView as keyof typeof tableHeaderOptions].headers"
-              :key="header.title"
-              class="table_header "
-            >
+            <th v-for="header in tableHeaderOptions[tableView as keyof typeof tableHeaderOptions].headers"
+              :key="header.title" class="table_header ">
               <div class="flex items-center gap-[5px]">
-                <div
-                  v-if="header.value === 'blank_column'"
-                  class="flex items-center"
-                >
-                  <button
-                    class="checkbox_button"
-                    @click="checkAll = !checkAll"
-                  >
-                    <vue-feather
-                      v-show="checkAll"
-                      type="check"
-                      size="20"
-                      class="icon w-[14px] h-min"
-                    />
+                <div v-if="header.value === 'blank_column'" class="flex items-center">
+                  <button class="checkbox_button" @click="checkAll = !checkAll">
+                    <vue-feather v-show="checkAll" type="check" size="20" class="icon w-[14px] h-min" />
                   </button>
                 </div>
-                <div
-                  v-if="header.value === 'bal'"
-                  class="flex items-center tooltip_container"
-                >
+                <div v-if="header.value === 'bal'" class="flex items-center tooltip_container">
                   Wallet Balance
 
                   <div class="tooltip w-[200px] left-0">
                     Total value of [ethereum] held in the connected wallet addresses. Does not include staked assets.
                   </div>
                 </div>
-                <div
-                  v-else-if="header.value === 'stk_amt'"
-                  class="flex items-center tooltip_container"
-                >
+                <div v-else-if="header.value === 'stk_amt'" class="flex items-center tooltip_container">
                   Amount
 
                   <div class="tooltip w-[200px] left-0">
@@ -436,10 +409,7 @@ onMounted(() => {
                     stake.
                   </div>
                 </div>
-                <div
-                  v-else-if="header.value === 'stk_rwd'"
-                  class="flex items-center tooltip_container"
-                >
+                <div v-else-if="header.value === 'stk_rwd'" class="flex items-center tooltip_container">
                   Stake Rewards (All-Time)
 
                   <div class="tooltip w-[200px] right-0">
@@ -448,10 +418,7 @@ onMounted(() => {
                   </div>
                 </div>
 
-                <div
-                  v-else-if="header.value === 'staking_fees'"
-                  class="flex items-center tooltip_container"
-                >
+                <div v-else-if="header.value === 'staking_fees'" class="flex items-center tooltip_container">
                   Staking Fees
 
                   <div class="tooltip w-[200px] left-0">
@@ -461,143 +428,78 @@ onMounted(() => {
                   </div>
                 </div>
 
-                <div
-                  v-else-if="header.value === 'tx_hash'"
-                  class="flex items-center"
-                >
+                <div v-else-if="header.value === 'tx_hash'" class="flex items-center">
                   Tx Hash
                 </div>
                 <div v-else>
                   {{ header.title }}
                 </div>
-                <button
-                  v-show="header.value != 'blank_column'"
-                  class="ml-[4px] h-min"
+                <button v-show="header.value != 'blank_column'" class="ml-[4px] h-min"
                   :class="selectedHeader === header.value ? 'opacity-100 text-primary' : 'opacity-90 text-grey_4'"
-                  @click="selectedHeader = header.value, selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
-                >
-                  <vue-feather
-                    type="arrow-up"
-                    size="20"
-                    class="icon h-[8px]"
-                    :class="selectedOrientation === 'ascending' ? 'w-[10px]' : 'w-[8px] opacity-50'"
-                  />
+                  @click="selectedHeader = header.value, selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'">
+                  <vue-feather type="arrow-up" size="20" class="icon h-[8px]"
+                    :class="selectedOrientation === 'ascending' ? 'w-[10px]' : 'w-[8px] opacity-50'" />
                   <br>
-                  <vue-feather
-                    type="arrow-down"
-                    size="20"
-                    class="icon h-[8px]"
-                    :class="selectedOrientation === 'descending' ? 'w-[10px]' : 'w-[8px] opacity-50'"
-                  />
+                  <vue-feather type="arrow-down" size="20" class="icon h-[8px]"
+                    :class="selectedOrientation === 'descending' ? 'w-[10px]' : 'w-[8px] opacity-50'" />
                 </button>
               </div>
             </th>
           </tr>
         </thead>
         <tbody class="w-full">
-          <tr
-            v-for="(item, i) in filteredData"
-            :key="i"
-            class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
-          >
-            <td
-              v-for="header in tableHeaderOptions[tableView as keyof typeof tableHeaderOptions].headers"
-              :key="header.title"
-              class="dynamic_padding"
-            >
-              <div
-                v-if="header.value === 'blank_column'"
-                class="flex items-center gap-[12px]"
-              >
-                <button
-                  class="checkbox_button"
-                  @click="checkedItems.includes(item) ? removeItemFromCheckedList(item) : checkedItems.push(item)"
-                >
-                  <vue-feather
-                    v-show="checkedItems.includes(item)"
-                    type="check"
-                    size="20"
-                    class="icon w-[14px] h-min"
-                  />
+          <tr v-for="(item, i) in filteredData" :key="i"
+            class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]">
+            <td v-for="header in tableHeaderOptions[tableView as keyof typeof tableHeaderOptions].headers"
+              :key="header.title" class="dynamic_padding">
+              <div v-if="header.value === 'blank_column'" class="flex items-center gap-[12px]">
+                <button class="checkbox_button"
+                  @click="checkedItems.includes(item) ? removeItemFromCheckedList(item) : checkedItems.push(item)">
+                  <vue-feather v-show="checkedItems.includes(item)" type="check" size="20" class="icon w-[14px] h-min" />
                 </button>
               </div>
-              <div
-                v-if="header.value === 'wallet_provider'"
-                class="flex items-center gap-[12px]"
-              >
-                <img
-                  v-if="item[header.value] != 'Unknown'"
-                  :src="`/${item[header.value].toLocaleLowerCase()}.svg`"
-                  alt="Avatar "
-                  class="w-[20px] h-[20px]"
-                >
+              <div v-if="header.value === 'wallet_provider'" class="flex items-center gap-[12px]">
+                <img v-if="item[header.value] != 'Unknown'" :src="`/${item[header.value].toLocaleLowerCase()}.svg`"
+                  alt="Avatar " class="w-[20px] h-[20px]">
                 <h6 class="title_name 800s:w-[20px]">
                   {{ item[header.value] }}
                 </h6>
               </div>
-              <div
-                v-else-if="header.value === 'act'"
-                class="flex items-center gap-[12px] underline"
-              >
+              <div v-else-if="header.value === 'act'" class="flex items-center gap-[12px] underline">
                 <a href="">
                   {{ convertString(item[header.value]) }}
                 </a>
               </div>
-              <div
-                v-else-if="header.value === 'tx_hash'"
-                class="flex items-center gap-[12px]"
-              >
+              <div v-else-if="header.value === 'tx_hash'" class="flex items-center gap-[12px]">
                 <a class="">
                   {{ convertString(item[header.value]) }}
                 </a>
               </div>
-              <div
-                v-else-if="header.value === 'status'"
-                class="flex items-center gap-[12px]"
-              >
-                <div
-                  v-if="item[header.value] === 'Active'"
-                  class="flex items-center gap-[8px] status_pill bg-[#ECFDF3] text-[#027A48]"
-                >
+              <div v-else-if="header.value === 'status'" class="flex items-center gap-[12px]">
+                <div v-if="item[header.value] === 'Active'"
+                  class="flex items-center gap-[8px] status_pill bg-[#ECFDF3] text-[#027A48]">
                   <div class="bg-[#027A48] rounded-[999px] w-[8px] h-[8px]" />
                   Staked
                 </div>
-                <div
-                  v-else-if="item[header.value] === 'Pending'"
-                  class="flex items-center gap-[8px] status_pill bg-[#FFFAEB] text-[#B54708]"
-                >
+                <div v-else-if="item[header.value] === 'Pending'"
+                  class="flex items-center gap-[8px] status_pill bg-[#FFFAEB] text-[#B54708]">
                   <div class="bg-[#F79009] rounded-[999px] w-[8px] h-[8px]" />
                   Pending
                 </div>
               </div>
-              <div
-                v-else-if="header.value === 'bal'"
-                class="flex items-center gap-[12px] pl-[20px]"
-              >
+              <div v-else-if="header.value === 'bal'" class="flex items-center gap-[12px] pl-[20px]">
                 {{ item[header.value] }} ETH
               </div>
-              <div
-                v-else-if="header.value === 'stk_amt'"
-                class="flex items-center gap-[12px] pl-[20px]"
-              >
+              <div v-else-if="header.value === 'stk_amt'" class="flex items-center gap-[12px] pl-[20px]">
                 {{ item[header.value] }} ETH
               </div>
-              <div
-                v-else-if="header.value === 'stk_rwd'"
-                class="flex items-center gap-[12px] pl-[20px]"
-              >
+              <div v-else-if="header.value === 'stk_rwd'" class="flex items-center gap-[12px] pl-[20px]">
                 {{ item[header.value] }} ETH
               </div>
-              <div
-                v-else-if="header.value === 'amount'"
-                class="flex items-center gap-[12px] pl-[20px]"
-              >
+              <div v-else-if="header.value === 'amount'" class="flex items-center gap-[12px] pl-[20px]">
                 {{ item[header.value] }} ETH
               </div>
-              <div
-                v-else-if="header.value === 'staking_fees'"
-                class="flex items-center gap-[12px] pl-[20px]"
-              >
+              <div v-else-if="header.value === 'staking_fees'" class="flex items-center gap-[12px] pl-[20px]">
                 {{ item[header.value] }} ETH
               </div>
               <div v-else>
@@ -613,18 +515,12 @@ onMounted(() => {
         Page {{ totalPages === 0 ? 0 : currentPage }} of {{ totalPages }}
       </div>
       <div class="flex items-center gap-[12px]">
-        <button
-          class="pagination_button"
-          :disabled="currentPage === 1"
-          @click="currentPage > 1 ? currentPage = currentPage - 1 : ''"
-        >
+        <button class="pagination_button" :disabled="currentPage === 1"
+          @click="currentPage > 1 ? currentPage = currentPage - 1 : ''">
           Previous
         </button>
-        <button
-          class="pagination_button mr-[33px]"
-          :disabled="currentPage === totalPages"
-          @click="currentPage < totalPages ? currentPage = currentPage + 1 : ''"
-        >
+        <button class="pagination_button mr-[33px]" :disabled="currentPage === totalPages"
+          @click="currentPage < totalPages ? currentPage = currentPage + 1 : ''">
           Next
         </button>
       </div>
