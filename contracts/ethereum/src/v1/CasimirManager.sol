@@ -645,6 +645,12 @@ contract CasimirManager is ICasimirManager, CasimirCore, Initializable, OwnableU
     }
 
     /// @inheritdoc ICasimirManager
+    function resetFunctions() external {
+        onlyFactoryOwner();
+        functionsId = 0;
+    }
+
+    /// @inheritdoc ICasimirManager
     function withdrawClusterBalance(
         uint64[] memory operatorIds,
         ISSVNetworkCore.Cluster memory cluster,

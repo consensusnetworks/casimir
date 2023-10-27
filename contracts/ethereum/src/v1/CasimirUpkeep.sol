@@ -64,6 +64,8 @@ contract CasimirUpkeep is
     string[] private defaultRequestArgs;
     /// @dev Fulfillment gas limit
     uint32 private fulfillGasLimit;
+    /// @dev Whether a report has been requested
+    bool private reportRequested;
     /// @dev Storage gap
     uint256[50] private __gap;
 
@@ -123,6 +125,9 @@ contract CasimirUpkeep is
                 manager.fulfillWithdrawals(5);
             }
             if (!manager.getPendingWithdrawalEligibility(0, reportPeriod)) {
+                if (reportRequested) {
+                    reportRequested = false;
+                }
                 reportStatus = ReportStatus.FINALIZED;
                 manager.rebalanceStake({
                     beaconBalance: reportBeaconBalance,
@@ -139,6 +144,13 @@ contract CasimirUpkeep is
             }
         }
         emit UpkeepPerformed(reportStatus);
+    }
+
+    /// @inheritdoc ICasimirUpkeep
+    function requestReport() external {
+        onlyFactoryOwner();
+        reportRequested = true;
+        emit ReportRequested();
     }
 
     /// @inheritdoc ICasimirUpkeep
@@ -166,7 +178,7 @@ contract CasimirUpkeep is
         if (reportStatus == ReportStatus.FINALIZED) {
             bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
             bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= REPORT_HEARTBEAT;
-            upkeepNeeded = checkActive && heartbeatLapsed;
+            upkeepNeeded = (checkActive && heartbeatLapsed) || (checkActive && reportRequested);
         } else if (reportStatus == ReportStatus.PROCESSING) {
             bool finalizeReport = reportActivatedDeposits == manager.finalizableActivations() &&
                 reportCompletedExits == manager.finalizableCompletedExits();

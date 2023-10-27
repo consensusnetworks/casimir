@@ -3,6 +3,8 @@ import { loadCredentials, getSecret } from '@casimir/aws'
 import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from '@casimir/env'
 import { run, runSync } from '@casimir/shell'
 
+console.log(ETHEREUM_CONTRACTS['TESTNET'].FUNCTIONS_BILLING_REGISTRY_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].KEEPER_REGISTRAR_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].KEEPER_REGISTRY_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].LINK_TOKEN_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SSV_NETWORK_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SSV_TOKEN_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SWAP_FACTORY_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SWAP_ROUTER_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].WETH_TOKEN_ADDRESS)
+
 /**
  * Run an integrated development environment
  */
@@ -106,7 +108,7 @@ void async function () {
             const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
     
             // Account for the mock, beacon, and library deployments
-            const walletNonce = await provider.getTransactionCount(wallet.address) + 13
+            const walletNonce = await provider.getTransactionCount(wallet.address) + 14
     
             if (!process.env.FACTORY_ADDRESS) {
                 process.env.FACTORY_ADDRESS = ethers.utils.getContractAddress({

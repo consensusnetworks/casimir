@@ -20,11 +20,12 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
     }
 
     event ActivationsRequested(uint256 count);
-    event ForcedExitReportsRequested(uint256 count);
     event CompletedExitReportsRequested(uint256 count);
-    event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
-    event FunctionsRequestSet(string newRequestSource, string[] newRequestArgs, uint32 newFulfillGasLimit);
+    event ForcedExitReportsRequested(uint256 count);
     event FunctionsOracleAddressSet(address newFunctionsOracleAddress);
+    event FunctionsRequestSet(string newRequestSource, string[] newRequestArgs, uint32 newFulfillGasLimit);
+    event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
+    event ReportRequested();
     event UpkeepPerformed(ReportStatus indexed status);
 
     error InvalidRequest();
@@ -32,6 +33,9 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
 
     /// @notice Perform the upkeep
     function performUpkeep(bytes calldata) external;
+
+    /// @notice Request an early report
+    function requestReport() external;
 
     /**
      * @notice Set a new Chainlink functions request

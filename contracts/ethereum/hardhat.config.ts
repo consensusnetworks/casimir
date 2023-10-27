@@ -1,4 +1,3 @@
-import fs from 'fs'
 import os from 'os'
 import localtunnel from 'localtunnel'
 import { HardhatUserConfig } from 'hardhat/types'
@@ -8,8 +7,8 @@ import '@nomicfoundation/hardhat-toolbox'
 import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-abi-exporter'
 import 'hardhat-contract-sizer'
-import 'hardhat-preprocessor'
 import 'solidity-docgen'
+// import '@tenderly/hardhat-tenderly'
 import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL, ETHEREUM_SIGNERS, HARDHAT_NETWORK_KEY } from '@casimir/env'
 
 // Seed is provided
@@ -47,6 +46,12 @@ if (hardhatNetwork !== 'localhost') {
     process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || ETHEREUM_RPC_URL[networkKey]
     process.env.OWNER_ADDRESS = ETHEREUM_SIGNERS[networkKey].OWNER_ADDRESS
     process.env.DAO_ORACLE_ADDRESS = ETHEREUM_SIGNERS[networkKey].DAO_ORACLE_ADDRESS
+    process.env.BEACON_LIBRARY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].BEACON_LIBRARY_ADDRESS
+    process.env.MANAGER_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].MANAGER_BEACON_ADDRESS
+    process.env.POOL_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].POOL_BEACON_ADDRESS
+    process.env.REGISTRY_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].REGISTRY_BEACON_ADDRESS
+    process.env.UPKEEP_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].UPKEEP_BEACON_ADDRESS
+    process.env.VIEWS_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].VIEWS_BEACON_ADDRESS
     process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FACTORY_ADDRESS
     process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_BILLING_REGISTRY_ADDRESS
     process.env.FUNCTIONS_ORACLE_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_ORACLE_ADDRESS
@@ -64,23 +69,16 @@ const compilers = [...compilerVersions, ...externalCompilerVersions].map(version
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
+    etherscan: {
+        apiKey: 'DS62I9VXK4IEGYHG2RRMMX8H17KI9HANBI'
+    },
+    // tenderly: {
+    //     username: 'shanejearley',
+    //     project: 'casimir',
+    //     accessKey: 'Nym3yVsVN2vCrXC95PiEjmMux5fApdok'
+    // },
     mocha: {
         timeout: 60000
-    },
-    preprocess: {
-        eachLine: () => ({
-            transform: (line: string) => {
-                if (line.match(/^\s*import /i)) {
-                    for (const [from, to] of getRemappings()) {
-                        if (line.includes(from)) {
-                            line = line.replace(from, to)
-                            break
-                        }
-                    }
-                }
-                return line
-            }
-        })
     },
     solidity: {
         compilers,
@@ -88,8 +86,8 @@ const config: HardhatUserConfig = {
     paths: {
         tests: './test',
         sources: './src/v1',
-        artifacts: './build/hardhat/artifacts',
-        cache: './build/hardhat/cache'
+        artifacts: './build/artifacts',
+        cache: './build/cache'
     },
     abiExporter: {
         path: './build/abi',
@@ -143,14 +141,6 @@ const config: HardhatUserConfig = {
 // Start a local tunnel for using RPC over https (e.g. for Metamask on mobile)
 if (process.env.TUNNEL === 'true') {
     runLocalTunnel()
-}
-
-function getRemappings() {
-    return fs
-        .readFileSync('remappings.txt', 'utf8')
-        .split('\n')
-        .filter(Boolean) // remove empty lines
-        .map((line) => line.trim().split('='))
 }
 
 function runLocalTunnel() {

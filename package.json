@@ -1,6 +1,6 @@
 {
   "name": "casimir",
-  "version": "1.0.0-beta.0",
+  "version": "1.0.0-beta.1",
   "description": "Decentralized staking and asset management",
   "workspaces": [
     "apps/*",
@@ -22,11 +22,13 @@
     "postinstall": "npx esno scripts/root/check.ts && npm run build --workspace @casimir/ethereum",
     "preinstall": "git submodule sync && git submodule update --init --recursive",
     "prepare": "husky install",
+    "release": "release-it",
+    "report:ethereum": "npx esno -r dotenv/config scripts/ethereum/report.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:actions": "npx esno -r dotenv/config scripts/actions/test.ts",
     "test:cdk": "npx esno -r dotenv/config scripts/cdk/test.ts",
     "test:ethereum": "npx esno -r dotenv/config scripts/ethereum/test.ts",
-    "release": "release-it"
+    "upgrade:ethereum": "npx esno -r dotenv/config scripts/ethereum/upgrade.ts"
   },
   "repository": {
     "type": "git",
