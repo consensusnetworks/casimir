@@ -9,9 +9,11 @@
         "docgen": "npx hardhat docgen",
         "node": "npx hardhat node",
         "postinstall": "npx esno scripts/foundryup.ts",
+        "report": "npx hardhat run scripts/report.ts",
         "size": "npx hardhat size-contracts",
         "test": "npx hardhat test",
-        "upgrade": "npx hardhat run scripts/upgrade.ts"
+        "upgrade": "npx hardhat run scripts/upgrade.ts",
+        "verify": "npx hardhat verify"
     },
     "dependencies": {
         "@chainlink/contracts": "^0.6.1",
@@ -36,7 +38,6 @@
         "hardhat": "^2.12.3",
         "hardhat-abi-exporter": "^2.10.1",
         "hardhat-contract-sizer": "^2.10.0",
-        "hardhat-preprocessor": "^0.1.5",
         "localtunnel": "^2.0.2",
         "mocha": "^10.0.0",
         "solidity-docgen": "^0.6.0-beta.36",

@@ -30,7 +30,7 @@ void async function () {
     const deployNewOracleReceipt = await deployNewOracle.wait()
     if (!deployNewOracleReceipt.events) throw new Error('Functions oracle deployment failed')
     const functionsOracleAddress = deployNewOracleReceipt.events[1].args?.don as string
-    const functionsOracle = await ethers.getContractAt('FunctionsOracle', functionsOracleAddress)
+    const functionsOracle = await ethers.getContractAt('FunctionsOraclePatched', functionsOracleAddress)
     const acceptOwnership = await functionsOracle.acceptOwnership()
     await acceptOwnership.wait()
     console.log(`FunctionsOracle contract deployed to ${functionsOracle.address}`)
@@ -167,5 +167,5 @@ void async function () {
 
     await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, functionsOracle.address])
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
-    await functionsOracle.addAuthorizedSenders([donTransmitter.address, managerAddress])
+    await functionsOracle.addAuthorizedSenders([donTransmitter.address, upkeepAddress])
 }()

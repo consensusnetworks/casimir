@@ -20,5 +20,5 @@ void async function () {
     
     console.log(`Using ${networkName} network from ${process.env.ETHEREUM_RPC_URL}`)
 
-    run(`npm run upgrade --workspace @casimir/ethereum -- --network ${networkName}`)
+    run(`npm run report --workspace @casimir/ethereum -- --network ${networkName}`)
 }()
