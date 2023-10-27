@@ -74,7 +74,7 @@ export default function useTxData () {
     })
 
     for (let i = 0; i < data.length; i++) {
-      data[i].walletBalance = generateRandomBalance(i, data[i].walletAddress)
+      data[i].walletBalance = generateRandomBalance(i, data[i].walletAddress) as number
     }
   
     return data
