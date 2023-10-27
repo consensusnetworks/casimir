@@ -24,10 +24,10 @@ const tableHeaderOptions = ref(
   {
     Wallets: {
       headers: [
-        {
-          title: '',
-          value: 'blank_column'
-        },
+        // {
+        //   title: '',
+        //   value: 'blank_column'
+        // },
         {
           title: 'Wallet Provider',
           value: 'wallet_provider'
@@ -52,10 +52,10 @@ const tableHeaderOptions = ref(
     },
     Transactions: {
       headers: [
-        {
-          title: '',
-          value: 'blank_column'
-        },
+        // {
+        //   title: '',
+        //   value: 'blank_column'
+        // },
         {
           title: 'Hash',
           value: 'tx_hash'
@@ -88,10 +88,10 @@ const tableHeaderOptions = ref(
     },
     Staking: {
       headers: [
-        {
-          title: '',
-          value: 'blank_column'
-        },
+        // {
+        //   title: '',
+        //   value: 'blank_column'
+        // },
         {
           title: 'Date',
           value: 'date'
