@@ -95,14 +95,14 @@ const operatorTableHeaders = ref(
       title: 'Node URL',
       value: 'nodeURL'
     },
-    {
-      title: '',
-      value: 'deactivate'
-    },
-    {
-      title: '',
-      value: 'withdraw_collateral'
-    },
+    // {
+    //   title: '',
+    //   value: 'deactivate'
+    // },
+    // {
+    //   title: '',
+    //   value: 'withdraw_collateral'
+    // },
   ]
 )
 
@@ -325,8 +325,8 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
       </button>
     </div>
 
-    <div v-if="!user?.address" class="card_container w-full px-[32px] py-[31px]  h-[600px]
-       text-grey_4 flex items-center justify-center relative" style="min-height: calc(100vh - 420px);">
+    <div v-if="!user?.address" class="card_container w-full px-[32px] py-[31px]
+       text-grey_4 flex items-center justify-center relative">
       <div v-show="showSkeleton || loading"
         class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
         <div class="skeleton_box" />
@@ -338,15 +338,117 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
       </div>
     </div>
 
-    <div v-else class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap h-[600px]"
-      style="min-height: calc(100vh - 320px); height: 500px;">
+    <div v-else class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap relative">
       <div v-show="showSkeleton || loading"
         class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden">
         <div class="skeleton_box" />
       </div>
-      <!-- Form -->
-      <div v-if="openAddOperatorModal"
-        class="absolute top-0 left-0 w-full h-[100vh] bg-black/[0.3] rounded-[3px] flex items-center justify-center z-[2] overflow-hidden">
+
+      <div class="flex flex-wrap gap-[20px] justify-between items-start pb-[20px] border-b border-b-[#EAECF0] ">
+        <div>
+          <div class="flex items-center gap-[8px]">
+            <h6 class="card_title">
+              Operators
+            </h6>
+          </div>
+          <div class="card_subtitle mt-[20px]">
+            List of operators according to their performance
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full overflow-x-scroll pb-20">
+        <table v-if="tableData.length > 0" class="w-full">
+          <thead>
+            <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
+              <th v-for="header in operatorTableHeaders" :key="header.title" class="table_header ">
+                <div class="flex items-center gap-[5px]">
+                  <div>
+                    {{ header.title }}
+                  </div>
+                  <button v-show="header.value != 'blank_column'"
+                    class="ml-[4px] flex flex-col items-center justify-between"
+                    :class="selectedHeader === header.value ? 'opacity-100' : 'opacity-25'"
+                    @click="selectedHeader = header.value, selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'">
+                    <vue-feather type="arrow-up" size="20" class="icon h-min "
+                      :class="selectedOrientation === 'ascending' ? 'w-[10px]' : 'w-[8px] opacity-50'" />
+                    <vue-feather type="arrow-down" size="20" class="icon h-min"
+                      :class="selectedOrientation === 'descending' ? 'w-[10px]' : 'w-[8px] opacity-50'" />
+                  </button>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="w-full">
+            <tr v-for="item in filteredData" :key="item"
+              class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]">
+              <td v-for="header in operatorTableHeaders" :key="header.title" class="dynamic_padding">
+                <div v-if="header.value === 'blank_column'" class="flex items-center gap-[12px]">
+                  <button class="checkbox_button"
+                    @click="checkedItems.includes(item) ? removeItemFromCheckedList(item) : checkedItems.push(item)">
+                    <vue-feather v-show="checkedItems.includes(item)" type="check" size="20"
+                      class="icon w-[14px] h-min" />
+                  </button>
+                </div>
+                <div v-if="header.value === 'deactivate'" class="flex items-center gap-[12px]">
+                  <button class="bg-decline text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] relative"
+                    disabled>
+                    <div class="tooltip_container">
+                      Coming Soon!
+                      <div class="tooltip_triangle" />
+                    </div>
+                    Deactivate
+                  </button>
+                </div>
+                <div v-if="header.value === 'withdraw_collateral'" class="flex items-center gap-[12px]">
+                  <button
+                    class="action-button bg-primary text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] opacity-50 relative"
+                    disabled>
+                    <div class="tooltip_container">
+                      Coming Soon!
+                      <div class="tooltip_triangle" />
+                    </div>
+                    Withdraw
+                  </button>
+                </div>
+                <div v-else>
+                  {{ item[header.value] }}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div v-else
+          class="border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] whitespace-normal text-[14px] text-grey_3">
+          You currently do not have operators registed under your account.
+
+          <p class="mt-[30px]">
+            Connect wallet or register operators to view their performance.
+          </p>
+        </div>
+
+        <div v-if="tableData.length > 0" class="flex justify-between items-center mt-[12px]">
+          <div class="page_number ml-[56px]">
+            Page {{ currentPage }} of {{ totalPages }}
+          </div>
+          <div class="flex items-center gap-[12px]">
+            <button class="pagination_button" :disabled="currentPage === 1"
+              @click="currentPage > 1 ? currentPage = currentPage - 1 : ''">
+              Previous
+            </button>
+            <button class="pagination_button mr-[33px]" :disabled="currentPage === totalPages"
+              @click="currentPage < totalPages ? currentPage = currentPage + 1 : ''">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div v-if="openAddOperatorModal" class="fixed top-0 left-0 w-[100%] h-[100vh] bg-black/[0.3] rounded-[3px] z-[2]">
+      <div class="flex items-center justify-center w-full h-full">
         <div class="card_container w-[80%] overflow-auto px-[30px] py-[20px]">
           <div class="flex gap-[10px] flex-wrap justify-between">
             <div class="flex flex-col">
@@ -506,123 +608,6 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               </button>
             </div>
           </form>
-        </div>
-      </div>
-
-      <!-- Page header -->
-      <div class="flex flex-wrap gap-[20px] justify-between items-start pb-[20px] border-b border-b-[#EAECF0] ">
-        <div>
-          <div class="flex items-center gap-[8px]">
-            <h6 class="card_title">
-              Operators
-            </h6>
-          </div>
-          <div class="card_subtitle mt-[20px]">
-            List of operators according to their performance
-          </div>
-        </div>
-        <!-- <div class="flex items-start gap-[12px]">
-          <button
-            class="flex items-center gap-[8px] export_button h-[38px]"
-            @click="exportFile(checkedItems, filteredData)"
-          >
-            <vue-feather
-              type="upload-cloud"
-              size="36"
-              class="icon w-[17px] h-min"
-            />
-            Export
-          </button>
-        </div> -->
-      </div>
-
-      <!-- Table -->
-      <div class="w-full overflow-x-scroll">
-        <table v-if="tableData.length > 0" class="w-full">
-          <thead>
-            <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
-              <th v-for="header in operatorTableHeaders" :key="header.title" class="table_header ">
-                <div class="flex items-center gap-[5px]">
-                  <div>
-                    {{ header.title }}
-                  </div>
-                  <button v-show="header.value != 'blank_column'"
-                    class="ml-[4px] flex flex-col items-center justify-between"
-                    :class="selectedHeader === header.value ? 'opacity-100' : 'opacity-25'"
-                    @click="selectedHeader = header.value, selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'">
-                    <vue-feather type="arrow-up" size="20" class="icon h-min "
-                      :class="selectedOrientation === 'ascending' ? 'w-[10px]' : 'w-[8px] opacity-50'" />
-                    <vue-feather type="arrow-down" size="20" class="icon h-min"
-                      :class="selectedOrientation === 'descending' ? 'w-[10px]' : 'w-[8px] opacity-50'" />
-                  </button>
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody class="w-full">
-            <tr v-for="item in filteredData" :key="item"
-              class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]">
-              <td v-for="header in operatorTableHeaders" :key="header.title" class="dynamic_padding">
-                <div v-if="header.value === 'blank_column'" class="flex items-center gap-[12px]">
-                  <button class="checkbox_button"
-                    @click="checkedItems.includes(item) ? removeItemFromCheckedList(item) : checkedItems.push(item)">
-                    <vue-feather v-show="checkedItems.includes(item)" type="check" size="20"
-                      class="icon w-[14px] h-min" />
-                  </button>
-                </div>
-                <div v-if="header.value === 'deactivate'" class="flex items-center gap-[12px]">
-                  <!-- TODO: @Chris, wanna hook up this button? -->
-                  <button class="bg-decline text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] relative"
-                    disabled>
-                    <div class="tooltip_container">
-                      Coming Soon!
-                      <div class="tooltip_triangle" />
-                    </div>
-                    Deactivate
-                  </button>
-                </div>
-                <div v-if="header.value === 'withdraw_collateral'" class="flex items-center gap-[12px]">
-                  <!-- TODO: @Chris, wanna hook up this button? -->
-                  <button
-                    class="action-button bg-primary text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] opacity-50 relative"
-                    disabled>
-                    <div class="tooltip_container">
-                      Coming Soon!
-                      <div class="tooltip_triangle" />
-                    </div>
-                    Withdraw
-                  </button>
-                </div>
-                <div v-else>
-                  {{ item[header.value] }}
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div v-else
-          class="border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] whitespace-normal text-[14px] text-grey_3">
-          You currently do not have operators registed under your account.
-
-          <p class="mt-[30px]">
-            Connect wallet or register operators to view their performance.
-          </p>
-        </div>
-      </div>
-      <div v-if="tableData.length > 0" class="flex justify-between items-center mt-[12px]">
-        <div class="page_number ml-[56px]">
-          Page {{ currentPage }} of {{ totalPages }}
-        </div>
-        <div class="flex items-center gap-[12px]">
-          <button class="pagination_button" :disabled="currentPage === 1"
-            @click="currentPage > 1 ? currentPage = currentPage - 1 : ''">
-            Previous
-          </button>
-          <button class="pagination_button mr-[33px]" :disabled="currentPage === totalPages"
-            @click="currentPage < totalPages ? currentPage = currentPage + 1 : ''">
-            Next
-          </button>
         </div>
       </div>
     </div>
