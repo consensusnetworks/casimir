@@ -71,10 +71,10 @@ const selectedHeader = ref('walletProvider')
 const selectedOrientation = ref('ascending')
 const operatorTableHeaders = ref(
   [
-    {
-      title: '',
-      value: 'blank_column'
-    },
+    // {
+    //   title: '',
+    //   value: 'blank_column'
+    // },
     {
       title: 'Operator ID',
       value: 'id'
