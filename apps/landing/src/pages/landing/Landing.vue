@@ -100,8 +100,8 @@ const toggleQuestionItem = (index: number) => {
         <div class="text__container">
           <span class="pill">Beta</span>
           <h1 class="text-1">
-            Stake and earn Ethereum <br>
-            without giving up custody
+            Get the most from your staked Ethereum
+            <br>
           </h1>
           <!-- <span class="text-r">
             Casimir allows you to natively stake any amount of Ethereum to a decentralized
@@ -114,7 +114,7 @@ const toggleQuestionItem = (index: number) => {
             :href="appUrl"
             class="btn-primary"
           >
-            Launch App
+            Launch Staking App
           </a>
           <a
             href="https://drive.google.com/file/d/1giIojTS-4gf0xWXUirmd2AaqalFmgA72/view"
@@ -248,9 +248,9 @@ const toggleQuestionItem = (index: number) => {
         </div>
         <div class="bento__base__card bento__card__2">
           <h2 class="text-6">
-            Connect multiple wallets to stake
+            Connect any number of wallets at the same time.
           </h2>
-          <div><img src="/tx.png"></div>
+          <div><img src="/multi-wallet.png"></div>
         </div>
         <div class="bento__base__card bento__card__3">
           <h2 class="text-6">
