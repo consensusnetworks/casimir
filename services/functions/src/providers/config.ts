@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import CasimirUpkeepAbi from '@casimir/ethereum/build/abi/CasimirUpkeep.json'
+import CasimirFactoryAbi from '@casimir/ethereum/build/abi/CasimirFactory.json'
 import FunctionsOracleAbi from '@casimir/ethereum/build/abi/FunctionsOracle.json'
 import FunctionsBillingRegistryAbi from '@casimir/ethereum/build/abi/FunctionsBillingRegistry.json'
 
@@ -12,25 +12,19 @@ export function getConfig() {
     const accountPath = 'm/44\'/60\'/0\'/0/2'
     const wallet = ethers.Wallet.fromMnemonic(mnemonic, accountPath)
 
-    const upkeepAbi = CasimirUpkeepAbi
-    const upkeepAddress = process.env.UPKEEP_ADDRESS
-    if (!upkeepAddress) throw new Error('No upkeep address provided')
+    const factoryAddress = process.env.FACTORY_ADDRESS
+    if (!factoryAddress) throw new Error('No factory address provided')
 
-    const functionsBillingRegistryAbi = FunctionsBillingRegistryAbi
     const functionsBillingRegistryAddress = process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS
     if (!functionsBillingRegistryAddress) throw new Error('No functions billing registry address provided')
     
-    const functionsOracleAbi = FunctionsOracleAbi
     const functionsOracleAddress = process.env.FUNCTIONS_ORACLE_ADDRESS
     if (!functionsOracleAddress) throw new Error('No functions oracle address provided')
 
     return {
         ethereumUrl,
-        upkeepAbi,
-        upkeepAddress,
-        functionsBillingRegistryAbi,
+        factoryAddress,
         functionsBillingRegistryAddress,
-        functionsOracleAbi,
         functionsOracleAddress,
         wallet
     }

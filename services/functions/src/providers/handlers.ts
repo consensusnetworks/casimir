@@ -3,9 +3,12 @@ import { decodeDietCBOR } from './format'
 import requestConfig from '@casimir/functions/Functions-request-config'
 import { simulateRequest } from '../../FunctionsSandboxLibrary'
 import { getConfig } from './config'
-import { CasimirUpkeep/*, FunctionsBillingRegistry*/ } from '@casimir/ethereum/build/@types'
+import { CasimirFactory, CasimirUpkeep/*, FunctionsBillingRegistry*/ } from '@casimir/ethereum/build/@types'
 import { updateExecutionLog } from '@casimir/logs'
 import { HandlerInput } from '../interfaces/HandlerInput'
+import CasimirFactoryAbi from '@casimir/ethereum/build/abi/CasimirFactory.json'
+import CasimirUpkeepAbi from '@casimir/ethereum/build/abi/CasimirUpkeep.json'
+// import FunctionsBillingRegistryAbi from '@casimir/ethereum/build/abi/FunctionsBillingRegistry.json'
 
 const config = getConfig()
 
@@ -15,9 +18,13 @@ export async function fulfillRequestHandler(input: HandlerInput): Promise<void> 
     if (!data) throw new Error('No data provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
+    const factory = new ethers.Contract(config.factoryAddress, CasimirFactoryAbi, provider) as CasimirFactory
+    const [managerId] = await factory.getManagerIds()
+    const managerConfig = await factory.getManagerConfig(managerId)
+    const upkeep = new ethers.Contract(managerConfig.upkeepAddress, CasimirUpkeepAbi, provider) as CasimirUpkeep
+    // const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, FunctionsBillingRegistryAbi, provider) as ethers.Contract & FunctionsBillingRegistry
     const signer = config.wallet.connect(provider)
-    const upkeep = new ethers.Contract(config.upkeepAddress, config.upkeepAbi, signer) as ethers.Contract & CasimirUpkeep
-    // const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, config.functionsBillingRegistryAbi, signer) as ethers.Contract & FunctionsBillingRegistry
+
     const { args } = decodeDietCBOR(data)
     const currentRequestConfig = {
         ...requestConfig,

@@ -4,12 +4,13 @@ import { getStartBlock, updateErrorLog, updateStartBlock } from '@casimir/logs'
 import { fulfillRequestHandler } from './providers/handlers'
 import { ethers } from 'ethers'
 import { HandlerInput } from './interfaces/HandlerInput'
+import FunctionsOracleAbi from '@casimir/ethereum/build/abi/FunctionsOracle.json'
 
 const config = getConfig()
 
 const contracts = {
     FunctionsOracle: {
-        abi: config.functionsOracleAbi,
+        abi: FunctionsOracleAbi,
         addresses: [config.functionsOracleAddress],
         events: {
             OracleRequest: fulfillRequestHandler
