@@ -164,6 +164,8 @@ void async function () {
     const fulfillGasLimit = 300000
     const setRequest = await upkeep.setFunctionsRequest(requestConfig.source, requestConfig.args, fulfillGasLimit)
     await setRequest.wait()
+    const setTransmitter = await upkeep.setTransmitter(donTransmitter.address)
+    await setTransmitter.wait()
 
     await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, functionsOracle.address])
     await functionsOracle.setRegistry(functionsBillingRegistry.address)

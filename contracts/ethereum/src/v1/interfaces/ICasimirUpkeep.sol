@@ -26,6 +26,7 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
     event FunctionsRequestSet(string newRequestSource, string[] newRequestArgs, uint32 newFulfillGasLimit);
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
     event ReportRequested();
+    event ReportRequestsSent(uint32, uint256, uint256, uint256, uint256);
     event UpkeepPerformed(ReportStatus indexed status);
 
     error InvalidRequest();
@@ -34,8 +35,36 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
     /// @notice Perform the upkeep
     function performUpkeep(bytes calldata) external;
 
+    /**
+     * @notice Fulfill the request directly without functions billing
+     * @param requestId Request ID
+     * @param response Response
+     * @param err Execution error
+     */
+    function fulfillRequestDirect(
+        bytes32 requestId,
+        bytes memory response,
+        bytes memory err
+    ) external;
+
     /// @notice Request an early report
     function requestReport() external;
+
+    /**
+     * @notice Reset the report
+     * @param resetReportPeriod Reset report period
+     * @param resetReportBlock Reset report block 
+     * @param resetReportTimestamp Reset report timestamp
+     * @param resetPreviousReportBlock Reset previous report block
+     * @param resetPreviousReportTimestamp Reset previous report timestamp
+     */
+    function resetReport(
+        uint32 resetReportPeriod,
+        uint256 resetReportBlock,
+        uint256 resetReportTimestamp,
+        uint256 resetPreviousReportBlock,
+        uint256 resetPreviousReportTimestamp
+    ) external;
 
     /**
      * @notice Set a new Chainlink functions request
@@ -54,6 +83,9 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
      * @param newFunctionsOracleAddress New Chainlink functions oracle address
      */
     function setFunctionsOracle(address newFunctionsOracleAddress) external;
+
+    /// @notice Set the transmitter address
+    function setTransmitter(address newTransmitterAddress) external;
 
     /// @notice Check if the upkeep is needed
     function checkUpkeep(bytes calldata checkData) external view returns (bool upkeepNeeded, bytes memory);

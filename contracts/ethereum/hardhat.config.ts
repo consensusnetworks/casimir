@@ -70,13 +70,8 @@ const compilers = [...compilerVersions, ...externalCompilerVersions].map(version
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
     etherscan: {
-        apiKey: 'DS62I9VXK4IEGYHG2RRMMX8H17KI9HANBI'
+        apiKey: 'XZCVTJSMVTZ78RYAHDAUXDPRSFW8NKIGW9'
     },
-    // tenderly: {
-    //     username: 'shanejearley',
-    //     project: 'casimir',
-    //     accessKey: 'Nym3yVsVN2vCrXC95PiEjmMux5fApdok'
-    // },
     mocha: {
         timeout: 60000
     },

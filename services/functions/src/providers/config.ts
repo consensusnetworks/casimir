@@ -12,6 +12,10 @@ export function getConfig() {
     const accountPath = 'm/44\'/60\'/0\'/0/2'
     const wallet = ethers.Wallet.fromMnemonic(mnemonic, accountPath)
 
+    const upkeepAbi = CasimirUpkeepAbi
+    const upkeepAddress = process.env.UPKEEP_ADDRESS
+    if (!upkeepAddress) throw new Error('No upkeep address provided')
+
     const functionsBillingRegistryAbi = FunctionsBillingRegistryAbi
     const functionsBillingRegistryAddress = process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS
     if (!functionsBillingRegistryAddress) throw new Error('No functions billing registry address provided')
@@ -22,6 +26,8 @@ export function getConfig() {
 
     return {
         ethereumUrl,
+        upkeepAbi,
+        upkeepAddress,
         functionsBillingRegistryAbi,
         functionsBillingRegistryAddress,
         functionsOracleAbi,

@@ -66,8 +66,12 @@ contract CasimirUpkeep is
     uint32 private fulfillGasLimit;
     /// @dev Whether a report has been requested
     bool private reportRequested;
+    /// @dev Previous report block
+    uint256 private previousReportBlock;
+    /// @dev DON transmitter address
+    address private transmitterAddress;
     /// @dev Storage gap
-    uint256[50] private __gap;
+    uint256[48] private __gap;
 
     /**
      * @dev Constructor
@@ -103,8 +107,9 @@ contract CasimirUpkeep is
             revert UpkeepNotNeeded();
         }
         if (reportStatus == ReportStatus.FINALIZED) {
-            previousReportTimestamp = reportTimestamp;
             reportStatus = ReportStatus.REQUESTING;
+            previousReportBlock = reportRequestBlock;
+            previousReportTimestamp = reportTimestamp;
             reportRequestBlock = block.number;
             reportTimestamp = block.timestamp;
             reportPeriod = manager.reportPeriod();
@@ -116,6 +121,7 @@ contract CasimirUpkeep is
             requestArgs[9] = StringsUpgradeable.toString(reportRequestBlock);
             sendFunctionsRequest(request, requestArgs, RequestType.BALANCES);
             sendFunctionsRequest(request, requestArgs, RequestType.DETAILS);
+            emit ReportRequestsSent(reportPeriod, reportRequestBlock, reportTimestamp, previousReportBlock, previousReportTimestamp);
         } else {
             if (
                 manager.requestedWithdrawalBalance() > 0 &&
@@ -147,10 +153,40 @@ contract CasimirUpkeep is
     }
 
     /// @inheritdoc ICasimirUpkeep
+    function fulfillRequestDirect(
+        bytes32 requestId,
+        bytes memory response,
+        bytes memory err
+    ) external {
+        onlyTransmitter();
+        fulfillRequest(requestId, response, err);
+    }
+
+    /// @inheritdoc ICasimirUpkeep
     function requestReport() external {
         onlyFactoryOwner();
         reportRequested = true;
         emit ReportRequested();
+    }
+
+    /// @inheritdoc ICasimirUpkeep
+    function resetReport(
+        uint32 resetReportPeriod,
+        uint256 resetReportBlock,
+        uint256 resetReportTimestamp,
+        uint256 resetPreviousReportBlock,
+        uint256 resetPreviousReportTimestamp
+    ) external {
+        onlyFactoryOwner();
+        reportStatus = ReportStatus.FINALIZED;
+        reportRequested = false;
+        reportPeriod = resetReportPeriod;
+        reportRequestBlock = resetReportBlock;
+        reportTimestamp = resetReportTimestamp;
+        previousReportBlock = resetPreviousReportBlock;
+        previousReportTimestamp = resetPreviousReportTimestamp;
+        reportRemainingRequests = 0;
+        reportRequestBlock = 0;
     }
 
     /// @inheritdoc ICasimirUpkeep
@@ -174,6 +210,12 @@ contract CasimirUpkeep is
     }
 
     /// @inheritdoc ICasimirUpkeep
+    function setTransmitter(address newTransmitterAddress) external {
+        onlyFactoryOwner();
+        transmitterAddress = newTransmitterAddress;
+    }
+
+    /// @inheritdoc ICasimirUpkeep
     function checkUpkeep(bytes memory) public view override returns (bool upkeepNeeded, bytes memory checkData) {
         if (reportStatus == ReportStatus.FINALIZED) {
             bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
@@ -191,15 +233,15 @@ contract CasimirUpkeep is
      * @dev Callback that is invoked once the DON has resolved the request or hit an error
      * @param requestId Request ID, returned by sendRequest()
      * @param response Aggregated response from the DON
-     * @param executionError Aggregated error from the code execution
+     * @param err Aggregated error from the code execution
      */
-    function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory executionError) internal override {
+    function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err) internal override {
         RequestType requestType = reportRequests[requestId];
         if (requestType == RequestType.NONE) {
             revert InvalidRequest();
         }
-        reportResponseError = executionError;
-        if (executionError.length == 0) {
+        reportResponseError = err;
+        if (err.length == 0) {
             delete reportRequests[requestId];
             reportRemainingRequests--;
             if (requestType == RequestType.BALANCES) {
@@ -232,7 +274,7 @@ contract CasimirUpkeep is
                 reportStatus = ReportStatus.PROCESSING;
             }
         }
-        emit OCRResponse(requestId, response, executionError);
+        emit OCRResponse(requestId, response, err);
     }
 
     /**
@@ -256,6 +298,13 @@ contract CasimirUpkeep is
     /// @dev Validate the caller is the factory owner
     function onlyFactoryOwner() private view {
         if (msg.sender != factory.getOwner()) {
+            revert Unauthorized();
+        }
+    }
+
+    /// @dev Validate the caller is the transmitter
+    function onlyTransmitter() private view {
+        if (msg.sender != transmitterAddress) {
             revert Unauthorized();
         }
     }
