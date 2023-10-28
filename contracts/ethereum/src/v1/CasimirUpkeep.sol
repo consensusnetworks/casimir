@@ -121,7 +121,13 @@ contract CasimirUpkeep is
             requestArgs[9] = StringsUpgradeable.toString(reportRequestBlock);
             sendFunctionsRequest(request, requestArgs, RequestType.BALANCES);
             sendFunctionsRequest(request, requestArgs, RequestType.DETAILS);
-            emit ReportRequestsSent(reportPeriod, reportRequestBlock, reportTimestamp, previousReportBlock, previousReportTimestamp);
+            emit ReportRequestsSent(
+                reportPeriod,
+                reportRequestBlock,
+                reportTimestamp,
+                previousReportBlock,
+                previousReportTimestamp
+            );
         } else {
             if (
                 manager.requestedWithdrawalBalance() > 0 &&
@@ -153,13 +159,14 @@ contract CasimirUpkeep is
     }
 
     /// @inheritdoc ICasimirUpkeep
-    function fulfillRequestDirect(
-        bytes32 requestId,
-        bytes memory response,
-        bytes memory err
-    ) external {
+    function fulfillRequestDirect(bytes32 requestId, bytes memory response) external {
         onlyTransmitter();
-        fulfillRequest(requestId, response, err);
+        RequestType requestType = reportRequests[requestId];
+        if (requestType == RequestType.NONE) {
+            revert InvalidRequest();
+        }
+        handleResponse(requestId, requestType, response);
+        emit DirectResponseReceived(requestId, requestType, response);
     }
 
     /// @inheritdoc ICasimirUpkeep
@@ -242,39 +249,49 @@ contract CasimirUpkeep is
         }
         reportResponseError = err;
         if (err.length == 0) {
-            delete reportRequests[requestId];
-            reportRemainingRequests--;
-            if (requestType == RequestType.BALANCES) {
-                (uint128 beaconBalance, uint128 sweptBalance) = abi.decode(response, (uint128, uint128));
-                reportBeaconBalance = uint256(beaconBalance);
-                reportSweptBalance = uint256(sweptBalance);
-            } else {
-                (
-                    uint32 activatedDeposits,
-                    uint32 forcedExits,
-                    uint32 completedExits,
-                    uint32[5] memory compoundablePoolIds
-                ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
-                reportActivatedDeposits = activatedDeposits;
-                reportForcedExits = forcedExits;
-                reportCompletedExits = completedExits;
-                reportCompoundablePoolIds = compoundablePoolIds;
-                finalizableCompoundablePoolIds = compoundablePoolIds;
-                if (reportActivatedDeposits > 0) {
-                    emit ActivationsRequested(activatedDeposits);
-                }
-                if (reportForcedExits > 0) {
-                    emit ForcedExitReportsRequested(forcedExits);
-                }
-                if (reportCompletedExits > 0) {
-                    emit CompletedExitReportsRequested(completedExits);
-                }
-            }
-            if (reportRemainingRequests == 0) {
-                reportStatus = ReportStatus.PROCESSING;
-            }
+            handleResponse(requestId, requestType, response);
         }
         emit OCRResponse(requestId, response, err);
+    }
+
+    /**
+     * @dev Handle a fulfilled request
+     * @param requestId Request ID
+     * @param requestType Request type
+     * @param response Response
+     */
+    function handleResponse(bytes32 requestId, RequestType requestType, bytes memory response) private {
+        delete reportRequests[requestId];
+        reportRemainingRequests--;
+        if (requestType == RequestType.BALANCES) {
+            (uint128 beaconBalance, uint128 sweptBalance) = abi.decode(response, (uint128, uint128));
+            reportBeaconBalance = uint256(beaconBalance);
+            reportSweptBalance = uint256(sweptBalance);
+        } else {
+            (
+                uint32 activatedDeposits,
+                uint32 forcedExits,
+                uint32 completedExits,
+                uint32[5] memory compoundablePoolIds
+            ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
+            reportActivatedDeposits = activatedDeposits;
+            reportForcedExits = forcedExits;
+            reportCompletedExits = completedExits;
+            reportCompoundablePoolIds = compoundablePoolIds;
+            finalizableCompoundablePoolIds = compoundablePoolIds;
+            if (reportActivatedDeposits > 0) {
+                emit ActivationsRequested(activatedDeposits);
+            }
+            if (reportForcedExits > 0) {
+                emit ForcedExitReportsRequested(forcedExits);
+            }
+            if (reportCompletedExits > 0) {
+                emit CompletedExitReportsRequested(completedExits);
+            }
+        }
+        if (reportRemainingRequests == 0) {
+            reportStatus = ReportStatus.PROCESSING;
+        }
     }
 
     /**

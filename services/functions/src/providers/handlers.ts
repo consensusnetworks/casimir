@@ -47,7 +47,7 @@ export async function fulfillRequestHandler(input: HandlerInput): Promise<void> 
         //     }
         // )
         // await fulfillAndBill.wait()
-        const fulfillRequestDirect = await upkeep.fulfillRequestDirect(requestId, result, '0x')
+        const fulfillRequestDirect = await upkeep.fulfillRequestDirect(requestId, result)
         await fulfillRequestDirect.wait()
         if (process.env.USE_LOGS === 'true') {
             updateExecutionLog('execution.log', resultLog)

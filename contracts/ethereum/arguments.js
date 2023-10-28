@@ -3,6 +3,8 @@
  * npm run verify --workspace @casimir/ethereum -- --constructor-args arguments.js --network goerli CONTRACT_ADDRESS
  */
 
+const { ETHEREUM_CONTRACTS } = require("@casimir/env");
+
 // const { ETHEREUM_CONTRACTS } = require("@casimir/env");
 
 module.exports = [
@@ -21,4 +23,11 @@ module.exports = [
     // ETHEREUM_CONTRACTS['TESTNET'].LINK_TOKEN_ADDRESS,
     // ETHEREUM_CONTRACTS['TESTNET'].LINK_ETH_FEED_ADDRESS,
     // ETHEREUM_CONTRACTS['TESTNET'].FUNCTIONS_ORACLE_ADDRESS
+
+    // factoryAddress,
+    // functionsOracleAddress,
+    // compoundStake
+    ETHEREUM_CONTRACTS['TESTNET'].FACTORY_ADDRESS,
+    ETHEREUM_CONTRACTS['TESTNET'].FUNCTIONS_ORACLE_ADDRESS,
+    true
 ]

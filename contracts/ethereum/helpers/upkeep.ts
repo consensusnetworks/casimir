@@ -51,7 +51,7 @@ export async function fulfillReport({
         [ethers.utils.parseEther(beaconBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
     )
     
-    const fulfillBalances = await upkeep.connect(donTransmitter).fulfillRequestDirect(balancesRequestId, balancesResponse, '0x')
+    const fulfillBalances = await upkeep.connect(donTransmitter).fulfillRequestDirect(balancesRequestId, balancesResponse)
     await fulfillBalances.wait()
     // await fulfillFunctionsRequest({
     //     donTransmitter,
@@ -66,7 +66,7 @@ export async function fulfillReport({
         [activatedDeposits, forcedExits, completedExits, compoundablePoolIds]
     )
 
-    const fulfillDetails = await upkeep.connect(donTransmitter).fulfillRequestDirect(detailsRequestId, detailsResponse, '0x')
+    const fulfillDetails = await upkeep.connect(donTransmitter).fulfillRequestDirect(detailsRequestId, detailsResponse)
     await fulfillDetails.wait()
     // await fulfillFunctionsRequest({
     //     donTransmitter,

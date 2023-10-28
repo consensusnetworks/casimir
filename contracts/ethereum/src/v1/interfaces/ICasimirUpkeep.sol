@@ -21,6 +21,7 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
 
     event ActivationsRequested(uint256 count);
     event CompletedExitReportsRequested(uint256 count);
+    event DirectResponseReceived(bytes32 indexed requestId, RequestType requestType, bytes result);
     event ForcedExitReportsRequested(uint256 count);
     event FunctionsOracleAddressSet(address newFunctionsOracleAddress);
     event FunctionsRequestSet(string newRequestSource, string[] newRequestArgs, uint32 newFulfillGasLimit);
@@ -39,12 +40,10 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
      * @notice Fulfill the request directly without functions billing
      * @param requestId Request ID
      * @param response Response
-     * @param err Execution error
      */
     function fulfillRequestDirect(
         bytes32 requestId,
-        bytes memory response,
-        bytes memory err
+        bytes memory response
     ) external;
 
     /// @notice Request an early report
