@@ -1,7 +1,4 @@
 import { ethers } from 'ethers'
-import CasimirFactoryAbi from '@casimir/ethereum/build/abi/CasimirFactory.json'
-import FunctionsOracleAbi from '@casimir/ethereum/build/abi/FunctionsOracle.json'
-import FunctionsBillingRegistryAbi from '@casimir/ethereum/build/abi/FunctionsBillingRegistry.json'
 
 export function getConfig() {
     const ethereumUrl = process.env.ETHEREUM_RPC_URL

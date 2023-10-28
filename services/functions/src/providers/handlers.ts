@@ -6,8 +6,8 @@ import { getConfig } from './config'
 import { CasimirFactory, CasimirUpkeep/*, FunctionsBillingRegistry*/ } from '@casimir/ethereum/build/@types'
 import { updateExecutionLog } from '@casimir/logs'
 import { HandlerInput } from '../interfaces/HandlerInput'
-import CasimirFactoryAbi from '@casimir/ethereum/build/abi/CasimirFactory.json'
-import CasimirUpkeepAbi from '@casimir/ethereum/build/abi/CasimirUpkeep.json'
+import ICasimirFactoryAbi from '@casimir/ethereum/build/abi/CasimirFactory.json'
+import ICasimirUpkeepAbi from '@casimir/ethereum/build/abi/CasimirUpkeep.json'
 // import FunctionsBillingRegistryAbi from '@casimir/ethereum/build/abi/FunctionsBillingRegistry.json'
 
 const config = getConfig()
@@ -18,12 +18,12 @@ export async function fulfillRequestHandler(input: HandlerInput): Promise<void> 
     if (!data) throw new Error('No data provided')
 
     const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
-    const factory = new ethers.Contract(config.factoryAddress, CasimirFactoryAbi, provider) as CasimirFactory
+    const signer = config.wallet.connect(provider)
+    const factory = new ethers.Contract(config.factoryAddress, ICasimirFactoryAbi, signer) as CasimirFactory
     const [managerId] = await factory.getManagerIds()
     const managerConfig = await factory.getManagerConfig(managerId)
-    const upkeep = new ethers.Contract(managerConfig.upkeepAddress, CasimirUpkeepAbi, provider) as CasimirUpkeep
-    // const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, FunctionsBillingRegistryAbi, provider) as ethers.Contract & FunctionsBillingRegistry
-    const signer = config.wallet.connect(provider)
+    const upkeep = new ethers.Contract(managerConfig.upkeepAddress, ICasimirUpkeepAbi, signer) as CasimirUpkeep
+    // const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, FunctionsBillingRegistryAbi, signer) as ethers.Contract & FunctionsBillingRegistry
 
     const { args } = decodeDietCBOR(data)
     const currentRequestConfig = {
@@ -47,7 +47,7 @@ export async function fulfillRequestHandler(input: HandlerInput): Promise<void> 
         //     }
         // )
         // await fulfillAndBill.wait()
-        const fulfillRequestDirect = await upkeep.connect(signer).fulfillRequestDirect(requestId, result, '0x')
+        const fulfillRequestDirect = await upkeep.fulfillRequestDirect(requestId, result, '0x')
         await fulfillRequestDirect.wait()
         if (process.env.USE_LOGS === 'true') {
             updateExecutionLog('execution.log', resultLog)
