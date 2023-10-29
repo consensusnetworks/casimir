@@ -46,19 +46,23 @@ export async function fulfillReport({
     const requestIds = (await upkeep.queryFilter(upkeep.filters.RequestSent())).slice(-2).map((event) => event.args.id)
     
     const balancesRequestId = requestIds[0]
+
     const balancesResponse = ethers.utils.defaultAbiCoder.encode(
         ['uint128', 'uint128'],
         [ethers.utils.parseEther(beaconBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
     )
     
-    const fulfillBalances = await upkeep.connect(donTransmitter).fulfillRequestDirect(balancesRequestId, balancesResponse)
-    await fulfillBalances.wait()
-    // await fulfillFunctionsRequest({
-    //     donTransmitter,
-    //     functionsBillingRegistry,
-    //     requestId: balancesRequestId,
-    //     response: balancesResponse
-    // })
+    await fulfillFunctionsRequest({
+        donTransmitter,
+        functionsBillingRegistry,
+        requestId: balancesRequestId,
+        response: balancesResponse
+    })
+
+    console.log(ethers.utils.defaultAbiCoder.encode(['uint32'], [activatedDeposits]))
+    console.log(ethers.utils.defaultAbiCoder.encode(['uint32'], [forcedExits]))
+    console.log(ethers.utils.defaultAbiCoder.encode(['uint32'], [completedExits]))
+    console.log(ethers.utils.defaultAbiCoder.encode(['uint32[5]'], [compoundablePoolIds]))
 
     const detailsRequestId = requestIds[1]
     const detailsResponse = ethers.utils.defaultAbiCoder.encode(
@@ -66,44 +70,43 @@ export async function fulfillReport({
         [activatedDeposits, forcedExits, completedExits, compoundablePoolIds]
     )
 
-    const fulfillDetails = await upkeep.connect(donTransmitter).fulfillRequestDirect(detailsRequestId, detailsResponse)
-    await fulfillDetails.wait()
-    // await fulfillFunctionsRequest({
-    //     donTransmitter,
-    //     functionsBillingRegistry,
-    //     requestId: detailsRequestId,
-    //     response: detailsResponse
-    // })
+    console.log('DETAILS', JSON.stringify({ detailsRequestId, detailsResponse }))
+    await fulfillFunctionsRequest({
+        donTransmitter,
+        functionsBillingRegistry,
+        requestId: detailsRequestId,
+        response: detailsResponse
+    })
 }
 
-// export async function fulfillFunctionsRequest({
-//     donTransmitter,
-//     functionsBillingRegistry,
-//     requestId,
-//     response
-// }: {
-//     donTransmitter: SignerWithAddress,
-//     functionsBillingRegistry: FunctionsBillingRegistry,
-//     requestId: string,
-//     response: string
-// }) {
-//     const dummyTransmitter = donTransmitter.address
-//     const dummySigners = Array(31).fill(dummyTransmitter)
+export async function fulfillFunctionsRequest({
+    donTransmitter,
+    functionsBillingRegistry,
+    requestId,
+    response
+}: {
+    donTransmitter: SignerWithAddress,
+    functionsBillingRegistry: FunctionsBillingRegistry,
+    requestId: string,
+    response: string
+}) {
+    const dummyTransmitter = donTransmitter.address
+    const dummySigners = Array(31).fill(dummyTransmitter)
 
-//     // const { success, result, resultLog } = await simulateRequest(requestConfig)
+    // const { success, result, resultLog } = await simulateRequest(requestConfig)
     
-//     const fulfillAndBill = await functionsBillingRegistry.connect(donTransmitter).fulfillAndBill(
-//         requestId,
-//         response,
-//         '0x',
-//         dummyTransmitter,
-//         dummySigners,
-//         4,
-//         100_000,
-//         500_000,
-//         {
-//             gasLimit: 500_000,
-//         }
-//     )
-//     await fulfillAndBill.wait()
-// }
+    const fulfillAndBill = await functionsBillingRegistry.connect(donTransmitter).fulfillAndBill(
+        requestId,
+        response,
+        '0x',
+        dummyTransmitter,
+        dummySigners,
+        4,
+        100_000,
+        500_000,
+        {
+            gasLimit: 500_000,
+        }
+    )
+    await fulfillAndBill.wait()
+}

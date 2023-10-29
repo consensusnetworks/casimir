@@ -4,7 +4,6 @@ import { ethers, upgrades } from 'hardhat'
  * Upgrade ethereum contracts
  */
 void async function () {
-    // Redeploying functions billing registry for updates
     if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error('No functions billing registry address provided')
     if (!process.env.BEACON_LIBRARY_ADDRESS) throw new Error('No beacon library address provided')
     if (!process.env.MANAGER_BEACON_ADDRESS) throw new Error('No manager beacon address provided')

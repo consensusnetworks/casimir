@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "./ICasimirCore.sol";
+import "../../interfaces/ICasimirCore.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
 
-interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
+interface ICasimirUpkeepDev is ICasimirCore, AutomationCompatibleInterface {
     /// @dev Functions request type
     enum RequestType {
         NONE,
@@ -71,6 +71,15 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
      * @param newFunctionsOracleAddress New Chainlink functions oracle address
      */
     function setFunctionsOracle(address newFunctionsOracleAddress) external;
+
+    /// @notice Get the report remaining requests
+    function getReportRemainingRequests() external view returns (uint256);
+
+    /**
+     * @notice Get a request type by ID
+     * @param requestId Request ID
+     */
+    function getRequestType(bytes32 requestId) external view returns (RequestType);
 
     /// @notice Check if the upkeep is needed
     function checkUpkeep(bytes calldata checkData) external view returns (bool upkeepNeeded, bytes memory);

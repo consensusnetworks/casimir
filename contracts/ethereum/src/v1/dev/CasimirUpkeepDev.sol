@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "./interfaces/ICasimirFactory.sol";
-import "./interfaces/ICasimirManager.sol";
-import "./interfaces/ICasimirUpkeep.sol";
-import "./vendor/FunctionsClient.sol";
+import "../interfaces/ICasimirFactory.sol";
+import "../interfaces/ICasimirManager.sol";
+import "./interfaces/ICasimirUpkeepDev.sol";
+import "../vendor/FunctionsClient.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 /// @title Upkeep contract that automates reporting operations
-contract CasimirUpkeep is
-    ICasimirUpkeep,
+contract CasimirUpkeepDev is
+    ICasimirUpkeepDev,
     Initializable,
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable,
@@ -20,7 +20,7 @@ contract CasimirUpkeep is
 {
     using Functions for Functions.Request;
 
-    /// @inheritdoc ICasimirUpkeep
+    /// @inheritdoc ICasimirUpkeepDev
     bool public compoundStake;
     /// @dev Report-to-report heartbeat duration
     uint256 private constant REPORT_HEARTBEAT = 1 days;
@@ -100,7 +100,7 @@ contract CasimirUpkeep is
         setOracle(functionsOracleAddress);
     }
 
-    /// @inheritdoc ICasimirUpkeep
+    /// @inheritdoc ICasimirUpkeepDev
     function performUpkeep(bytes calldata) external override {
         (bool upkeepNeeded, ) = checkUpkeep("");
         if (!upkeepNeeded) {
@@ -158,14 +158,14 @@ contract CasimirUpkeep is
         emit UpkeepPerformed(reportStatus);
     }
 
-    /// @inheritdoc ICasimirUpkeep
+    /// @inheritdoc ICasimirUpkeepDev
     function requestReport() external {
         onlyFactoryOwner();
         reportRequested = true;
         emit ReportRequested();
     }
 
-    /// @inheritdoc ICasimirUpkeep
+    /// @inheritdoc ICasimirUpkeepDev
     function resetReport(
         uint32 resetReportPeriod,
         uint256 resetReportBlock,
@@ -182,22 +182,17 @@ contract CasimirUpkeep is
         previousReportBlock = resetPreviousReportBlock;
         previousReportTimestamp = resetPreviousReportTimestamp;
         reportRemainingRequests = 0;
-        reportBeaconBalance = 0;
-        reportSweptBalance = 0;
-        reportActivatedDeposits = 0;
-        reportForcedExits = 0;
-        reportCompletedExits = 0;
-        reportCompoundablePoolIds = [0, 0, 0, 0, 0];
+        reportRequestBlock = 0;
     }
 
-    /// @inheritdoc ICasimirUpkeep
+    /// @inheritdoc ICasimirUpkeepDev
     function setFunctionsOracle(address newFunctionsOracleAddress) external {
         onlyFactoryOwner();
         setOracle(newFunctionsOracleAddress);
         emit FunctionsOracleAddressSet(newFunctionsOracleAddress);
     }
 
-    /// @inheritdoc ICasimirUpkeep
+    /// @inheritdoc ICasimirUpkeepDev
     function setFunctionsRequest(
         string calldata newRequestSource,
         string[] calldata newRequestArgs,
@@ -210,7 +205,17 @@ contract CasimirUpkeep is
         emit FunctionsRequestSet(newRequestSource, newRequestArgs, newFulfillGasLimit);
     }
 
-    /// @inheritdoc ICasimirUpkeep
+    /// @inheritdoc ICasimirUpkeepDev
+    function getReportRemainingRequests() external view returns (uint256) {
+        return reportRemainingRequests;
+    }
+
+    /// @inheritdoc ICasimirUpkeepDev
+    function getRequestType(bytes32 requestId) external view returns (RequestType) {
+        return reportRequests[requestId];
+    }
+
+    /// @inheritdoc ICasimirUpkeepDev
     function checkUpkeep(bytes memory) public view override returns (bool upkeepNeeded, bytes memory checkData) {
         if (reportStatus == ReportStatus.FINALIZED) {
             bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;

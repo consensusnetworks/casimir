@@ -9,9 +9,6 @@ export function getConfig() {
     const accountPath = 'm/44\'/60\'/0\'/0/2'
     const wallet = ethers.Wallet.fromMnemonic(mnemonic, accountPath)
 
-    const factoryAddress = process.env.FACTORY_ADDRESS
-    if (!factoryAddress) throw new Error('No factory address provided')
-
     const functionsBillingRegistryAddress = process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS
     if (!functionsBillingRegistryAddress) throw new Error('No functions billing registry address provided')
     
@@ -20,7 +17,6 @@ export function getConfig() {
 
     return {
         ethereumUrl,
-        factoryAddress,
         functionsBillingRegistryAddress,
         functionsOracleAddress,
         wallet

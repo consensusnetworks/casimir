@@ -17,12 +17,10 @@ void async function() {
     const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
     if (process.env.NETWORK) {
         process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
-        process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FACTORY_ADDRESS
         process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FUNCTIONS_BILLING_REGISTRY_ADDRESS
         process.env.FUNCTIONS_ORACLE_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FUNCTIONS_ORACLE_ADDRESS
     }
     if (!process.env.ETHEREUM_RPC_URL) throw new Error(`No ethereum rpc url provided for ${networkKey}`)
-    if (!process.env.FACTORY_ADDRESS) throw new Error(`No factory address provided for ${networkKey}`)
     if (!process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) throw new Error(`No functions billing registry address provided for ${networkKey}`)
     if (!process.env.FUNCTIONS_ORACLE_ADDRESS) throw new Error('No functions oracle address provided')
     

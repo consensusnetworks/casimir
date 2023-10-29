@@ -1,9 +1,9 @@
 import { loadCredentials, getSecret } from '@casimir/aws'
-import { ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from '@casimir/env'
+import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME } from '@casimir/env'
 import { run } from '@casimir/shell'
 
 /**
- * Upgrade ethereum contracts
+ * Run an ethereum development environment
  */
 void async function () {
     if (process.env.USE_SECRETS !== 'false') {
@@ -14,11 +14,9 @@ void async function () {
     }
     console.log(`Your mnemonic seed is ${process.env.BIP39_SEED}`)
 
-    process.env.NETWORK = process.env.NETWORK || 'testnet'
-    process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[process.env.NETWORK.toUpperCase()]
-    const networkName = ETHEREUM_NETWORK_NAME[process.env.NETWORK.toUpperCase()]
-    
-    console.log(`Using ${networkName} network from ${process.env.ETHEREUM_RPC_URL}`)
+    process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS['TESTNET'].SSV_NETWORK_ADDRESS
+    process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS['TESTNET'].SSV_VIEWS_ADDRESS
+    process.env.SWAP_FACTORY_ADDRESS = ETHEREUM_CONTRACTS['TESTNET'].SWAP_FACTORY_ADDRESS
 
-    run(`npm run report --workspace @casimir/ethereum -- --network ${networkName}`)
+    run(`npm run report --workspace @casimir/ethereum -- --network ${ETHEREUM_NETWORK_NAME['TESTNET']}`)
 }()

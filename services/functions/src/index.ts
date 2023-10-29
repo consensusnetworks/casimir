@@ -31,6 +31,8 @@ if (process.env.USE_LOGS === 'true') {
     startBlock = getStartBlock('block.log')
 }
 
+console.log(config.ethereumUrl)
+
 const eventsIterable = getEventsIterable({
     contractFilters,
     ethereumUrl: config.ethereumUrl,

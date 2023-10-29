@@ -35,12 +35,12 @@ async function balancesHandler() {
 	const depositedPoolPublicKeys = await getDepositedPoolPublicKeys(startIndex, endIndex)
 	const validators = await getValidators(depositedPoolPublicKeys)
 
-	const beaconBalance = validators.reduce((accumulator, { balance }) => {
+	const beaconBalance = Functions.gweiToWei(validators.reduce((accumulator, { balance }) => {
 		accumulator += parseFloat(balance)
 		return accumulator
-	}, 0)
+	}, 0))
 
-	const sweptBalance = await getSweptBalance(startIndex, endIndex)
+	const sweptBalance = Functions.gweiToWei(await getSweptBalance(startIndex, endIndex))
 
 	console.log("Results", {
 		beaconBalance,
@@ -48,8 +48,8 @@ async function balancesHandler() {
 	})
 
 	return Buffer.concat([
-		encodeUint128(beaconBalance),
-		encodeUint128(sweptBalance)
+		Functions.encodeUint128(beaconBalance),
+		Functions.encodeUint128(sweptBalance)
 	])
 }
 
@@ -252,22 +252,16 @@ async function getValidators(validatorPublicKeys) {
 	return request.data.data
 }
 
-function encodeUint128(value) {
-	const buffer = Buffer.alloc(16)
-	buffer.writeBigUInt64BE(BigInt(value))
-	return buffer
-}
-
 function encodeUint32(value) {
-	const buffer = Buffer.alloc(4)
-	buffer.writeUInt32BE(value)
-	return buffer
+    const buffer = Buffer.alloc(32)
+    buffer.writeUInt32BE(value, 28)
+    return buffer
 }
 
 function encodeUint32Array(values) {
-	const buffer = Buffer.alloc(20)
-	for (let i = 0; i < values.length; i++) {
-		buffer.writeUInt32BE(values[i], i * 4)
-	}
-	return buffer
+    const buffer = Buffer.alloc(32 * values.length)
+    for (let i = 0; i < values.length; i++) {
+        buffer.writeUInt32BE(values[i], i * 32 + 28)
+    }
+    return buffer
 }
