@@ -26,26 +26,25 @@ export async function fulfillRequestHandler(input: HandlerInput): Promise<void> 
 
     const { result, resultLog, success } = await simulateRequest(currentRequestConfig)
     if (success) {
-        console.log('RES', JSON.stringify({ requestId, result }))
-        // const signer = config.wallet.connect(provider)        
-        // const dummySigners = Array(31).fill(signer.address)    
-        // const fulfillAndBill = await functionsBillingRegistry.connect(signer).fulfillAndBill(
-        //     requestId,
-        //     result,
-        //     '0x',
-        //     signer.address,
-        //     dummySigners,
-        //     4,
-        //     100_000,
-        //     500_000,
-        //     {
-        //         gasLimit: 500_000,
-        //     }
-        // )
-        // await fulfillAndBill.wait()
-        // if (process.env.USE_LOGS === 'true') {
-        //     updateExecutionLog('execution.log', resultLog)
-        // }
+        const signer = config.wallet.connect(provider)        
+        const dummySigners = Array(31).fill(signer.address)    
+        const fulfillAndBill = await functionsBillingRegistry.connect(signer).fulfillAndBill(
+            requestId,
+            result,
+            '0x',
+            signer.address,
+            dummySigners,
+            4,
+            100_000,
+            500_000,
+            {
+                gasLimit: 500_000,
+            }
+        )
+        await fulfillAndBill.wait()
+        if (process.env.USE_LOGS === 'true') {
+            updateExecutionLog('execution.log', resultLog)
+        }
     } else {
         throw new Error(resultLog)
     }

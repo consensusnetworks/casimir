@@ -16,7 +16,7 @@ void async function() {
 
     const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
     if (process.env.NETWORK) {
-        process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
+        process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || ETHEREUM_RPC_URL[networkKey]
         process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FUNCTIONS_BILLING_REGISTRY_ADDRESS
         process.env.FUNCTIONS_ORACLE_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FUNCTIONS_ORACLE_ADDRESS
     }
