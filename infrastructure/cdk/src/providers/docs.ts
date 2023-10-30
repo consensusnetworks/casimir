@@ -7,6 +7,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment'
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
 import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins'
+import * as lambda from 'aws-cdk-lib/aws-lambda'
 import { DocsStackProps } from '../interfaces/StackProps'
 import { pascalCase } from '@casimir/format'
 import { Config } from './config'
@@ -17,6 +18,7 @@ import { Config } from './config'
 export class DocsStack extends cdk.Stack {
     public readonly name = pascalCase('docs')
     public readonly assetPath = '../../apps/docs/dist'
+    public readonly lambdaPath = '../../services/redirect/dist'
 
     constructor(scope: Construct, id: string, props: DocsStackProps) {
         super(scope, id, props)
@@ -47,9 +49,27 @@ export class DocsStack extends cdk.Stack {
             certificate: distributionCertificate,
             defaultRootObject: 'index.html',
             defaultBehavior: {
+                edgeLambdas: [
+                    {
+                        eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
+                        functionVersion: new cloudfront.experimental.EdgeFunction(this, config.getFullStackResourceName(this.name, 'redirect'), {
+                            runtime: lambda.Runtime.NODEJS_18_X,
+                            handler: 'index.handler',
+                            code: lambda.Code.fromAsset(this.lambdaPath)
+                        })
+                    }
+                ],
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 origin: new cloudfrontOrigins.S3Origin(bucket, { originAccessIdentity })
             },
+            errorResponses: [
+                {
+                    httpStatus: 404,
+                    responseHttpStatus: 200,
+                    responsePagePath: '/404.html',
+                    ttl: cdk.Duration.minutes(30)
+                }
+            ],
             domainNames: [`${subdomains.docs}.${rootDomain}`]
         })
 
@@ -57,7 +77,7 @@ export class DocsStack extends cdk.Stack {
             destinationBucket: bucket,
             sources: [s3Deployment.Source.asset(this.assetPath)],
             distribution,
-            distributionPaths: ['/*']
+            distributionPaths: ['/*'],
         })
 
         new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record-docs'), {
