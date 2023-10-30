@@ -48,7 +48,10 @@ export class DocsStack extends cdk.Stack {
         const redirectLambda = new cloudfront.experimental.EdgeFunction(this, config.getFullStackResourceName(this.name, 'redirect'), {
             runtime: lambda.Runtime.NODEJS_18_X,
             handler: 'index.handler',
-            code: lambda.Code.fromAsset(this.functionPath)
+            code: lambda.Code.fromAsset(this.functionPath),
+            environment: {
+                region: 'us-east-1'
+            }
         })
 
         const distribution = new cloudfront.Distribution(this, config.getFullStackResourceName(this.name, 'distribution'), {

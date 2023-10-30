@@ -4,7 +4,7 @@ layout: home
 hero:
   name: Casimir
   text: Docs
-  tagline: Stake and earn Ethereum without giving up custody
+  tagline: Official documentation for Casimir staking
   image:
     src: /casimir.svg
     alt: Casimir
