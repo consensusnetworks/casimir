@@ -1,3 +1,7 @@
+::: warning
+This page is incomplete.
+:::
+
 # Operating
 
 As a Casimir operator, you will be selected to share validator duties with other operators in clusters of 4, using threshold signatures on the [Secret Shared Validator (SSV) network](https://ssv.network). You'll need an SSV operator extended with distributed key generation (DKG) support to participate in on-demand validator key generation and resharing ceremonies. Once set up, you'll be able to register your operator with SSV and deposit collateral to one of Casimir's [staking strategies](../introduction/staking-strategies.md) to become eligible for selection. You are able to set your operational fee with SSV, which dictates the amount you get paid per-block per-validator.
@@ -20,10 +24,6 @@ As a Casimir operator, you must first register with SSV. Once registered with SS
 1. Your SSV operator ID
 2. Your public DKG node URL
 3. An initial collateral deposit (minimum of 1 ETH)
-
-### SSV Operator ID
-
-### Public DKG Node URL
 
 ### Collateral
 
