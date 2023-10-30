@@ -18,7 +18,7 @@ import { Config } from './config'
 export class DocsStack extends cdk.Stack {
     public readonly name = pascalCase('docs')
     public readonly assetPath = '../../apps/docs/dist'
-    public readonly lambdaPath = '../../services/redirect/dist'
+    public readonly functionPath = '../../services/redirect/dist'
 
     constructor(scope: Construct, id: string, props: DocsStackProps) {
         super(scope, id, props)
@@ -45,6 +45,12 @@ export class DocsStack extends cdk.Stack {
             })
         })()
 
+        const redirectLambda = new cloudfront.experimental.EdgeFunction(this, config.getFullStackResourceName(this.name, 'redirect'), {
+            runtime: lambda.Runtime.NODEJS_18_X,
+            handler: 'index.handler',
+            code: lambda.Code.fromAsset(this.functionPath)
+        })
+
         const distribution = new cloudfront.Distribution(this, config.getFullStackResourceName(this.name, 'distribution'), {
             certificate: distributionCertificate,
             defaultRootObject: 'index.html',
@@ -52,11 +58,7 @@ export class DocsStack extends cdk.Stack {
                 edgeLambdas: [
                     {
                         eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
-                        functionVersion: new cloudfront.experimental.EdgeFunction(this, config.getFullStackResourceName(this.name, 'redirect'), {
-                            runtime: lambda.Runtime.NODEJS_18_X,
-                            handler: 'index.handler',
-                            code: lambda.Code.fromAsset(this.lambdaPath)
-                        })
+                        functionVersion: redirectLambda.currentVersion
                     }
                 ],
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,

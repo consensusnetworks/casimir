@@ -4,18 +4,29 @@ This page is incomplete.
 
 # Architecture
 
-The Casimir staking architecture consists of the following components:
+Todo. Explain stakeholders and their entrypoints. Internal contracts, external contracts, operators, oracles, etc.
 
-- An [Ethereum RPC Node](#ethereum-rpc-node) that connects the SSV DVT node to the Ethereum network.
-- An [SSV Node](#ssv-node) that performs cluster duties for validators.
-- An [SSV DKG server](#ssv-dkg-server) that participates in key generation and resharing ceremonies.
+## Contracts
+
+Casimir deploys the following contracts:
+
+- A [Casimir factory](#casimir-factory) that configures and deploys staking strategies.
+- For each staking strategy:
+  - A [Casimir manager](#casimir-manager) that is the entrypoint for stakers and deploys and distributes to validator pools.
+  - A [Casimir registry](#casimir-registry) that is the entrypoint for operators and binds collateral to validators pools. 
+  - A [Casimir upkeep](#casimir-upkeep) that automates distributed consensus layer reports.
+  - A [Casimir views](#casimir-views) that provides a read-only interface to the strategy.
+  - For each validator pool:
+    - A [Casimir pool](#casimir-pool) that either serves as the withdrawal address for a validator or provides a proxy to the withdrawal address.
+- A [Casimir oracle](#casimir-oracle) that executes operator selection, triggers DKG ceremonies, submits verifiable validator creation, resharing, and exit reports, and allocates reserved operational fees to operators.
+
+As we add new strategies and features leading up to our mainnet release, the contracts will require upgrades. Accordingly, the Casimir factory is deployed as a transparent proxy, while the other contracts are deployed as beacon proxies.
 
 ```mermaid
 %%{
     init: {
         'theme': 'base',
         'themeVariables': {
-            'fontFamily': 'Inter',
             'lineColor': '#E2E2E3',
             'primaryColor': '#F6F6F7',
             'primaryTextColor': '#3C3C43',
@@ -61,7 +72,11 @@ graph TB
     end
 ```
 
-<!-- The Casimir staking system consists of the following components:
+### External Contracts
 
-- A [factory contract](#factory-contract) that manages the creation of [staking strategies](#staking-strategies), each with a distinct [manager contract](#manager-contract), [registry contract](#registry-contract), [upkeep contract](#upkeep-contract), and [views contract](#views-contract).
--  -->
+The Casimir contracts integrate with the following external contracts:
+
+- The [Ethereum deposit contract](#ethereum-deposit-contract) that is the entrypoint for validator deposits to the consensus layer.
+- The [SSV network](#ssv-network) that provides DVT validators with permissionless operators.
+- Todo finish.
+
