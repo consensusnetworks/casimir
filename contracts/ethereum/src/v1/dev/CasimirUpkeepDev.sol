@@ -206,6 +206,11 @@ contract CasimirUpkeepDev is
     }
 
     /// @inheritdoc ICasimirUpkeepDev
+    function getReportBeaconBalance() external view returns (uint256) {
+        return reportBeaconBalance;
+    }
+
+    /// @inheritdoc ICasimirUpkeepDev
     function getReportRemainingRequests() external view returns (uint256) {
         return reportRemainingRequests;
     }

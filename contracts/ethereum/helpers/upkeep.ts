@@ -59,18 +59,12 @@ export async function fulfillReport({
         response: balancesResponse
     })
 
-    console.log(ethers.utils.defaultAbiCoder.encode(['uint32'], [activatedDeposits]))
-    console.log(ethers.utils.defaultAbiCoder.encode(['uint32'], [forcedExits]))
-    console.log(ethers.utils.defaultAbiCoder.encode(['uint32'], [completedExits]))
-    console.log(ethers.utils.defaultAbiCoder.encode(['uint32[5]'], [compoundablePoolIds]))
-
     const detailsRequestId = requestIds[1]
     const detailsResponse = ethers.utils.defaultAbiCoder.encode(
         ['uint32', 'uint32', 'uint32', 'uint32[5]'],
         [activatedDeposits, forcedExits, completedExits, compoundablePoolIds]
     )
 
-    console.log('DETAILS', JSON.stringify({ detailsRequestId, detailsResponse }))
     await fulfillFunctionsRequest({
         donTransmitter,
         functionsBillingRegistry,

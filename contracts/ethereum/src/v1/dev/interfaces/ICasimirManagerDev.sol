@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "./ICasimirCore.sol";
-import "../vendor/interfaces/ISSVNetworkCore.sol";
+import "../../interfaces/ICasimirCore.sol";
+import "../../vendor/interfaces/ISSVNetworkCore.sol";
 
-interface ICasimirManager is ICasimirCore {
+interface ICasimirManagerDev is ICasimirCore {
     event ClusterBalanceDeposited(uint256 amount);
     event PoolActivated(uint32 indexed poolId);
     event PoolInitiated(uint32 indexed poolId);

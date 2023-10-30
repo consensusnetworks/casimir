@@ -72,6 +72,9 @@ interface ICasimirUpkeepDev is ICasimirCore, AutomationCompatibleInterface {
      */
     function setFunctionsOracle(address newFunctionsOracleAddress) external;
 
+    /// @notice Get the report beacon balance
+    function getReportBeaconBalance() external view returns (uint256);
+
     /// @notice Get the report remaining requests
     function getReportRemainingRequests() external view returns (uint256);
 

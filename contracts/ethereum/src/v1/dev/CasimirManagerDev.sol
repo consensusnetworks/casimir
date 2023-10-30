@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "./CasimirCore.sol";
-import "./interfaces/ICasimirFactory.sol";
-import "./interfaces/ICasimirManager.sol";
-import "./interfaces/ICasimirPool.sol";
-import "./interfaces/ICasimirRegistry.sol";
-import "./interfaces/ICasimirUpkeep.sol";
-import "./libraries/CasimirArray.sol";
-import "./libraries/CasimirBeacon.sol";
-import "./vendor/interfaces/ISSVNetwork.sol";
-import "./vendor/interfaces/IWETH9.sol";
-import "./vendor/interfaces/IFunctionsBillingRegistry.sol";
-import "./vendor/interfaces/IKeeperRegistrar.sol";
-import "./vendor/interfaces/IAutomationRegistry.sol";
+import "../CasimirCore.sol";
+import "../interfaces/ICasimirFactory.sol";
+import "./interfaces/ICasimirManagerDev.sol";
+import "../interfaces/ICasimirPool.sol";
+import "../interfaces/ICasimirRegistry.sol";
+import "../interfaces/ICasimirUpkeep.sol";
+import "../libraries/CasimirArray.sol";
+import "../libraries/CasimirBeacon.sol";
+import "../vendor/interfaces/ISSVNetwork.sol";
+import "../vendor/interfaces/IWETH9.sol";
+import "../vendor/interfaces/IFunctionsBillingRegistry.sol";
+import "../vendor/interfaces/IKeeperRegistrar.sol";
+import "../vendor/interfaces/IAutomationRegistry.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/beacon/IBeaconUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -27,8 +27,8 @@ import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
 /// @title Manager that accepts and distributes deposits
-contract CasimirManager is
-    ICasimirManager,
+contract CasimirManagerDev is
+    ICasimirManagerDev,
     CasimirCore,
     Initializable,
     OwnableUpgradeable,
@@ -38,31 +38,31 @@ contract CasimirManager is
     using CasimirArray for bytes[];
     using CasimirArray for Withdrawal[];
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     uint256 public lockPeriod;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     uint32 public userFee;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     bool public eigenStake;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     bool public liquidStake;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     uint32 public reportPeriod;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     uint64 public functionsId;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     uint256 public upkeepId;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     uint256 public latestBeaconBalance;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     uint256 public finalizableActivations;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     uint256 public finalizableCompletedExits;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     uint256 public requestedWithdrawalBalance;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     uint256 public reservedFeeBalance;
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     uint256 public requestedExits;
     /**
      * @dev Chainlink functions billing registry contract
@@ -254,7 +254,7 @@ contract CasimirManager is
         }
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function depositStake() external payable nonReentrant {
         User storage user = users[msg.sender];
         uint256 depositAfterFees = subtractFees(msg.value);
@@ -268,7 +268,7 @@ contract CasimirManager is
         emit StakeDeposited(msg.sender, depositAfterFees);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function depositRewards(uint32 poolId) external payable {
         if (msg.value == 0) {
             revert InvalidAmount();
@@ -280,7 +280,7 @@ contract CasimirManager is
         emit RewardsDeposited(rewardsAfterFees);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function depositExitedBalance(uint32 poolId) external payable {
         onlyPool(poolAddresses[poolId]);
         uint256 balance = msg.value + recoveredBalances[poolId];
@@ -292,7 +292,7 @@ contract CasimirManager is
         emit ExitedBalanceDeposited(poolId, msg.value);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function depositRecoveredBalance(uint32 poolId) external payable {
         if (msg.sender != address(registry)) {
             revert Unauthorized();
@@ -302,7 +302,7 @@ contract CasimirManager is
         emit RecoveredBalanceDeposited(poolId, msg.value);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function depositClusterBalance(
         uint64[] memory operatorIds,
         ISSVNetworkCore.Cluster memory cluster,
@@ -317,7 +317,7 @@ contract CasimirManager is
         emit ClusterBalanceDeposited(ssvAmount);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function depositFunctionsBalance(uint256 feeAmount, uint256 minTokenAmount, bool processed) external {
         onlyOracle();
         uint256 linkAmount = retrieveFees(feeAmount, minTokenAmount, address(linkToken), processed);
@@ -331,7 +331,7 @@ contract CasimirManager is
         emit FunctionsBalanceDeposited(linkAmount);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function depositUpkeepBalance(uint256 feeAmount, uint256 minTokenAmount, bool processed) external {
         onlyOracle();
         uint256 linkAmount = retrieveFees(feeAmount, minTokenAmount, address(linkToken), processed);
@@ -355,14 +355,14 @@ contract CasimirManager is
         emit UpkeepBalanceDeposited(linkAmount);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function depositReservedFees() external payable {
         onlyFactoryOwner();
         reservedFeeBalance += msg.value;
         emit ReservedFeesDeposited(msg.value);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function withdrawReservedFees(uint256 amount) external {
         onlyFactoryOwner();
         if (amount > reservedFeeBalance) {
@@ -376,7 +376,7 @@ contract CasimirManager is
         emit ReservedFeesWithdrawn(amount);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function rebalanceStake(
         uint256 beaconBalance,
         uint256 sweptBalance,
@@ -425,7 +425,7 @@ contract CasimirManager is
         finalizableCompletedExits = 0;
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function compoundRewards(uint32[5] memory poolIds) external {
         onlyUpkeep();
         for (uint256 i; i < poolIds.length; i++) {
@@ -438,7 +438,7 @@ contract CasimirManager is
         }
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function requestWithdrawal(uint256 amount) external nonReentrant {
         User storage user = users[msg.sender];
         user.stake0 = getUserStake(msg.sender);
@@ -472,7 +472,7 @@ contract CasimirManager is
         }
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function fulfillWithdrawals(uint256 count) external {
         onlyUpkeep();
         uint256 withdrawalAmount;
@@ -502,7 +502,7 @@ contract CasimirManager is
         requestedWithdrawals -= withdrawalCount;
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function initiatePool(
         bytes32 depositDataRoot,
         bytes memory publicKey,
@@ -539,7 +539,7 @@ contract CasimirManager is
         emit PoolInitiated(poolId);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function activatePool(
         uint256 pendingPoolIndex,
         ISSVNetworkCore.Cluster memory cluster,
@@ -570,7 +570,7 @@ contract CasimirManager is
         emit PoolActivated(poolId);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function resharePool(
         uint32 poolId,
         uint64[] memory operatorIds,
@@ -605,7 +605,7 @@ contract CasimirManager is
         emit PoolReshared(poolId);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function reportForcedExits(uint32[] memory poolIds) external {
         onlyOracle();
         uint256 newForcedExits;
@@ -628,7 +628,7 @@ contract CasimirManager is
         emit ForcedExitsReported(poolIds);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function reportCompletedExit(
         uint256 stakedPoolIndex,
         uint32[] memory blamePercents,
@@ -652,13 +652,13 @@ contract CasimirManager is
         emit ExitCompleted(poolId);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function resetFunctions() external {
         onlyFactoryOwner();
         functionsId = 0;
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function withdrawClusterBalance(
         uint64[] memory operatorIds,
         ISSVNetworkCore.Cluster memory cluster,
@@ -668,7 +668,7 @@ contract CasimirManager is
         ssvClusters.withdraw(operatorIds, amount, cluster);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function cancelFunctions() external {
         onlyFactoryOwner();
         functionsBillingRegistry.cancelSubscription(functionsId, address(this));
@@ -676,7 +676,7 @@ contract CasimirManager is
         emit FunctionsCancelled();
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function cancelUpkeep() external {
         onlyFactoryOwner();
         keeperRegistry.cancelUpkeep(upkeepId);
@@ -684,7 +684,7 @@ contract CasimirManager is
         emit UpkeepCancelled();
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function withdrawLINKBalance(uint256 amount) external {
         onlyFactoryOwner();
         if (!linkToken.transfer(msg.sender, amount)) {
@@ -693,14 +693,14 @@ contract CasimirManager is
         emit LINKBalanceWithdrawn(amount);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function withdrawSSVBalance(uint256 amount) external {
         onlyFactoryOwner();
         SafeERC20Upgradeable.safeTransfer(ssvToken, msg.sender, amount);
         emit SSVBalanceWithdrawn(amount);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function getPendingWithdrawalEligibility(
         uint256 index,
         uint256 period
@@ -710,37 +710,37 @@ contract CasimirManager is
         }
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function getPendingPoolIds() external view returns (uint32[] memory) {
         return pendingPoolIds;
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function getStakedPoolIds() external view returns (uint32[] memory) {
         return stakedPoolIds;
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function getPoolAddress(uint32 poolId) external view returns (address poolAddress) {
         poolAddress = poolAddresses[poolId];
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function getRegistryAddress() external view returns (address registryAddress) {
         registryAddress = address(registry);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function getUpkeepAddress() external view returns (address upkeepAddress) {
         upkeepAddress = address(upkeep);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function getUserStake(address userAddress) public view returns (uint256 userStake) {
         userStake = MathUpgradeable.mulDiv(users[userAddress].stake0, stakeRatioSum, users[userAddress].stakeRatioSum0);
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function getTotalStake() public view returns (uint256 totalStake) {
         totalStake =
             getWithdrawableBalance() +
@@ -750,7 +750,7 @@ contract CasimirManager is
             requestedWithdrawalBalance;
     }
 
-    /// @inheritdoc ICasimirManager
+    /// @inheritdoc ICasimirManagerDev
     function getWithdrawableBalance() public view returns (uint256 withdrawableBalance) {
         withdrawableBalance = prepoolBalance + exitedBalance;
     }
