@@ -46,20 +46,6 @@ export class DocsStack extends cdk.Stack {
         const distribution = new cloudfront.Distribution(this, config.getFullStackResourceName(this.name, 'distribution'), {
             certificate: distributionCertificate,
             defaultRootObject: 'index.html',
-            errorResponses: [
-                {
-                    httpStatus: 403,
-                    responseHttpStatus: 200,
-                    responsePagePath: '/index.html',
-                    ttl: cdk.Duration.minutes(30)
-                },
-                {
-                    httpStatus: 404,
-                    responseHttpStatus: 200,
-                    responsePagePath: '/404.html',
-                    ttl: cdk.Duration.minutes(30)
-                }
-            ],
             defaultBehavior: {
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 origin: new cloudfrontOrigins.S3Origin(bucket, { originAccessIdentity })
