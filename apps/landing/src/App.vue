@@ -11,4 +11,4 @@ useBlog()
 </template>
 
 
-<style scoped></style>@/composables/blog
+<style scoped></style>

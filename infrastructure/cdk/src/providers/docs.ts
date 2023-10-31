@@ -16,7 +16,6 @@ import { Config } from './config'
  */
 export class DocsStack extends cdk.Stack {
     public readonly name = pascalCase('docs')
-    public readonly assetPath = '../../apps/docs/dist'
 
     constructor(scope: Construct, id: string, props: DocsStackProps) {
         super(scope, id, props)
@@ -43,9 +42,21 @@ export class DocsStack extends cdk.Stack {
             })
         })()
 
+        const redirectFunction = new cloudfront.Function(this, config.getFullStackResourceName(this.name, 'redirect'), {
+            code: cloudfront.FunctionCode.fromFile({ filePath: '../../services/redirect/dist/index.js' })
+        })
+
         const distribution = new cloudfront.Distribution(this, config.getFullStackResourceName(this.name, 'distribution'), {
             certificate: distributionCertificate,
             defaultRootObject: 'index.html',
+            defaultBehavior: {
+                functionAssociations: [{
+                    function: redirectFunction,
+                    eventType: cloudfront.FunctionEventType.VIEWER_REQUEST
+                }],
+                viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                origin: new cloudfrontOrigins.S3Origin(bucket, { originAccessIdentity })
+            },
             errorResponses: [
                 {
                     httpStatus: 403,
@@ -60,18 +71,14 @@ export class DocsStack extends cdk.Stack {
                     ttl: cdk.Duration.minutes(30)
                 }
             ],
-            defaultBehavior: {
-                viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                origin: new cloudfrontOrigins.S3Origin(bucket, { originAccessIdentity })
-            },
             domainNames: [`${subdomains.docs}.${rootDomain}`]
         })
 
         new s3Deployment.BucketDeployment(this, config.getFullStackResourceName(this.name, 'bucket-deployment'), {
             destinationBucket: bucket,
-            sources: [s3Deployment.Source.asset(this.assetPath)],
+            sources: [s3Deployment.Source.asset('../../apps/docs/dist')],
             distribution,
-            distributionPaths: ['/*']
+            distributionPaths: ['/*'],
         })
 
         new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record-docs'), {

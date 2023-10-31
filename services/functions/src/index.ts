@@ -4,12 +4,13 @@ import { getStartBlock, updateErrorLog, updateStartBlock } from '@casimir/logs'
 import { fulfillRequestHandler } from './providers/handlers'
 import { ethers } from 'ethers'
 import { HandlerInput } from './interfaces/HandlerInput'
+import FunctionsOracleAbi from '@casimir/ethereum/build/abi/FunctionsOracle.json'
 
 const config = getConfig()
 
 const contracts = {
     FunctionsOracle: {
-        abi: config.functionsOracleAbi,
+        abi: FunctionsOracleAbi,
         addresses: [config.functionsOracleAddress],
         events: {
             OracleRequest: fulfillRequestHandler
@@ -52,7 +53,8 @@ void async function () {
             if (!handler) throw new Error(`No handler found for event ${event.event}`)
             await handler({ args })
             if (process.env.USE_LOGS === 'true') {
-                updateStartBlock('block.log', event.blockNumber)
+                // Todo check if this possibly misses events
+                updateStartBlock('block.log', event.blockNumber + 1)
             }
         }
     } catch (error) {

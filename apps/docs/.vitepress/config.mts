@@ -1,20 +1,20 @@
 import { withMermaid } from 'vitepress-plugin-mermaid'
 
-// https://vitepress.dev/reference/site-config
 export default withMermaid({
     title: "Casimir Docs",
     head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
-    rewrites: {
-        'index.md': 'introduction/what-is-casimir.md',
-    },
     cleanUrls: true,
+    lastUpdated: true,
     markdown: {
         math: true
     },
     srcDir: 'src',
     outDir: './dist',
     themeConfig: {
-        // https://vitepress.dev/reference/default-theme-config
+        nav: [
+            { text: 'App', link: process.env.APP_URL || 'https://app.dev.casimir.co' },
+            { text: 'Website', link: process.env.WEBSITE_URL || 'https://dev.casimir.co' },
+        ],
         logo: '/casimir.svg',
         search: {
             provider: 'local'
@@ -22,35 +22,28 @@ export default withMermaid({
         sidebar: [
             {
                 text: 'Introduction',
-                base: '/introduction',
                 items: [
-                    { text: 'What is Casimir?', link: '/what-is-casimir' },
-                    { text: 'Architecture', link: '/architecture' }
+                    { text: 'What is Casimir?', link: '/introduction/what-is-casimir' },
+                    { text: 'Architecture', link: '/introduction/architecture' },
+                    { text: 'Staking Strategies', link: '/introduction/staking-strategies' },
+                    { text: 'User Accounts', link: '/introduction/user-accounts' }
                 ]
             },
             {
                 text: 'Guide',
-                base: '/guide',
                 items: [
-                    { text: 'Accounts', link: '/accounts' },
-                    { text: 'Staking', link: '/staking' },
-                    { text: 'Operating', link: '/operating' }
+                    { text: 'Staking', link: '/guide/staking' },
+                    { text: 'Operating', link: '/guide/operating' },
+                    { text: 'Troubleshooting', link: '/guide/troubleshooting' }
                 ]
             },
             {
                 text: 'Reference',
-                base: '/reference',
                 items: [
-                    { text: 'Contract Addresses', link: '/contract-addresses' },
-                    { text: 'Solidity API', link: '/solidity-api' }
-                ]
-            },
-            {
-                text: 'Troubleshooting',
-                base: '/troubleshooting',
-                items: [
-                    { text: 'Operator Issues', link: '/operator-issues' },
-                    { text: 'Wallet Issues', link: '/wallet-issues' }
+                    { text: 'Address Registry', link: '/reference/address-registry' },
+                    { text: 'Solidity API', link: '/reference/solidity-api' },
+                    { text: 'Contract Source', link: 'https://github.com/consensusnetworks/casimir/tree/master/contracts/ethereum/src/v1' },
+                    { text: 'Hacken Audit', link: `${process.env.DOCS_URL}/hacken-audit.pdf` }
                 ]
             }
         ],

@@ -16,7 +16,6 @@ import { Config } from './config'
  */
 export class LandingStack extends cdk.Stack {
     public readonly name = pascalCase('landing')
-    public readonly assetPath = '../../apps/landing/dist'
 
     constructor(scope: Construct, id: string, props: LandingStackProps) {
         super(scope, id, props)
@@ -69,7 +68,7 @@ export class LandingStack extends cdk.Stack {
 
         new s3Deployment.BucketDeployment(this, config.getFullStackResourceName(this.name, 'bucket-deployment'), {
             destinationBucket: bucket,
-            sources: [s3Deployment.Source.asset(this.assetPath)],
+            sources: [s3Deployment.Source.asset('../../apps/landing/dist')],
             distribution,
             distributionPaths: ['/*']
         })

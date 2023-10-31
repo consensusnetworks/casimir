@@ -13,20 +13,9 @@ export function getEventsIterable(input: {
     const provider = input.provider || new ethers.providers.JsonRpcProvider(input.ethereumUrl)
     return (async function* () {
         const queue: ethers.Event[] = []
-        let currentResolve: (value: ethers.Event | PromiseLike<ethers.Event>) => void
-        let currentPromise = new Promise<ethers.Event>(resolve => {
-            currentResolve = resolve
-        })
         const enqueueEvent = (...args: ethers.Event[]) => {
             const e = args[args.length - 1] as ethers.Event
-            if (currentResolve) {
-                currentResolve(e)
-                currentPromise = new Promise<ethers.Event>(resolve => {
-                    currentResolve = resolve
-                })
-            } else {
-                queue.push(e)
-            }
+            queue.push(e)
         }
         const latestBlock = await provider.getBlockNumber()
         for (const filter of input.contractFilters) {
@@ -65,7 +54,7 @@ export function getEventsIterable(input: {
                     yield nextEvent
                 }
             } else {
-                yield await currentPromise
+                await new Promise((resolve) => setTimeout(resolve, 1000))
             }
         }
     })()

@@ -1,6 +1,6 @@
 # @casimir/oracle
 
-Casimir DAO oracle service
+> DAO oracle node service
 
 ## About
 

@@ -1,7 +1,9 @@
 import { ethers } from 'ethers'
 import { loadCredentials, getSecret } from '@casimir/aws'
 import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from '@casimir/env'
-import { run } from '@casimir/shell'
+import { run, runSync } from '@casimir/shell'
+
+console.log(ETHEREUM_CONTRACTS['TESTNET'].FUNCTIONS_BILLING_REGISTRY_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].KEEPER_REGISTRAR_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].KEEPER_REGISTRY_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].LINK_TOKEN_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SSV_NETWORK_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SSV_TOKEN_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SWAP_FACTORY_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SWAP_ROUTER_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].WETH_TOKEN_ADDRESS)
 
 /**
  * Run an integrated development environment
@@ -46,6 +48,8 @@ void async function () {
         process.env.HACKMD_TOKEN = process.env.HACKMD_TOKEN || ''
         process.env.WALLET_CONNECT_PROJECT_ID = process.env.WALLET_CONNECT_PROJECT_ID || '8e6877b49198d7a9f9561b8712805726'
     }
+
+    console.log(process.env.BIP39_SEED)
 
     process.env.PROJECT = process.env.PROJECT || 'casimir'
     process.env.STAGE = process.env.STAGE || 'local'
@@ -134,5 +138,13 @@ void async function () {
         run(`npm run preview --workspace @casimir/${app}`)
     } else {
         run(`npm run dev --workspace @casimir/${app}`)
+    }
+
+    if (process.env.MOCK_SERVICES === 'true' && app === 'web') {
+        process.on('SIGINT', () => {
+            console.log('🧹 Cleaning up users service')
+            runSync('npm run clean --workspace @casimir/users')
+            process.exit()
+        })
     }
 }()

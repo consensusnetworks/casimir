@@ -30,7 +30,7 @@ void async function () {
     const deployNewOracleReceipt = await deployNewOracle.wait()
     if (!deployNewOracleReceipt.events) throw new Error('Functions oracle deployment failed')
     const functionsOracleAddress = deployNewOracleReceipt.events[1].args?.don as string
-    const functionsOracle = await ethers.getContractAt('FunctionsOracle', functionsOracleAddress)
+    const functionsOracle = await ethers.getContractAt('FunctionsOraclePatched', functionsOracleAddress)
     const acceptOwnership = await functionsOracle.acceptOwnership()
     await acceptOwnership.wait()
     console.log(`FunctionsOracle contract deployed to ${functionsOracle.address}`)
@@ -136,7 +136,7 @@ void async function () {
     await factory.deployed()
     console.log(`CasimirFactory contract deployed at ${factory.address}`)
 
-    const defaultStrategy = {
+    const baseStrategy = {
         minCollateral: ethers.utils.parseEther('1.0'),
         lockPeriod: 0,
         userFee: 5,
@@ -146,26 +146,26 @@ void async function () {
         privateOperators: false,
         verifiedOperators: false
     }
-    const deployDefaultManager = await factory.deployManager(
+    const deployBaseManager = await factory.deployManager(
         daoOracle.address,
         functionsOracle.address,
-        defaultStrategy
+        baseStrategy
     )
-    await deployDefaultManager.wait()
+    await deployBaseManager.wait()
     const [managerId] = await factory.getManagerIds()
-    const [managerAddress, registryAddress, upkeepAddress, viewsAddress] = await factory.getManagerConfig(managerId)
-    console.log(`Default CasimirManager contract deployed to ${managerAddress}`)
-    console.log(`Default CasimirRegistry contract deployed to ${registryAddress}`)
-    console.log(`Default CasimirUpkeep contract deployed to ${upkeepAddress}`)
-    console.log(`Default CasimirViews contract deployed to ${viewsAddress}`)
-    const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
+    const managerConfig = await factory.getManagerConfig(managerId)
+    console.log(`Base CasimirManager contract deployed to ${managerConfig.managerAddress}`)
+    console.log(`Base CasimirRegistry contract deployed to ${managerConfig.registryAddress}`)
+    console.log(`Base CasimirUpkeep contract deployed to ${managerConfig.upkeepAddress}`)
+    console.log(`Base CasimirViews contract deployed to ${managerConfig.viewsAddress}`)
+    const upkeep = await ethers.getContractAt('CasimirUpkeep', managerConfig.upkeepAddress) as CasimirUpkeep
     
-    requestConfig.args[1] = viewsAddress
+    requestConfig.args[1] = managerConfig.viewsAddress
     const fulfillGasLimit = 300000
     const setRequest = await upkeep.setFunctionsRequest(requestConfig.source, requestConfig.args, fulfillGasLimit)
     await setRequest.wait()
-
-    await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, functionsOracle.address])
+    await upkeep.setFunctionsOracle(functionsOracle.address)
+    await functionsBillingRegistry.setAuthorizedSenders([functionsOracle.address, donTransmitter.address])
+    await functionsOracle.setAuthorizedSenders([donTransmitter.address, managerConfig.managerAddress, managerConfig.upkeepAddress])
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
-    await functionsOracle.addAuthorizedSenders([donTransmitter.address, managerAddress])
 }()

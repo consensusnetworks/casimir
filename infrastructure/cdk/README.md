@@ -1,6 +1,6 @@
 # Casimir CDK
 
-TypeScript infrastructure-as-code with CDK.
+> AWS CDK infrastructure-as-code
 
 ## Configuration
 

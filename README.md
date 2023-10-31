@@ -175,8 +175,6 @@ npm run dev:ethereum
 
 See the [@casimir/ethereum README.md](contracts/ethereum/README.md) for detailed documentation.
 
-  > 🚩 You may need to manually [install Foundry](https://book.getfoundry.sh/getting-started/installation).
-
 ### Common
 
 The common packages provide shared code for the project:

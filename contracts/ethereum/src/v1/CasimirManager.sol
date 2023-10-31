@@ -27,7 +27,13 @@ import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
 /// @title Manager that accepts and distributes deposits
-contract CasimirManager is ICasimirManager, CasimirCore, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract CasimirManager is
+    ICasimirManager,
+    CasimirCore,
+    Initializable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable
+{
     using CasimirArray for uint32[];
     using CasimirArray for bytes[];
     using CasimirArray for Withdrawal[];
@@ -58,47 +64,47 @@ contract CasimirManager is ICasimirManager, CasimirCore, Initializable, OwnableU
     uint256 public reservedFeeBalance;
     /// @inheritdoc ICasimirManager
     uint256 public requestedExits;
-    /** 
+    /**
      * @dev Chainlink functions billing registry contract
      * @custom:oz-upgrades-unsafe-allow state-variable-immutable
      */
     IFunctionsBillingRegistry private immutable functionsBillingRegistry;
-    /** 
+    /**
      * @dev LINK ERC-20 token contract
      * @custom:oz-upgrades-unsafe-allow state-variable-immutable
      */
     LinkTokenInterface private immutable linkToken;
-    /** 
+    /**
      * @dev Keeper registrar contract
      * @custom:oz-upgrades-unsafe-allow state-variable-immutable
      */
     IKeeperRegistrar private immutable keeperRegistrar;
-    /** 
+    /**
      * @dev Automation registry contract
      * @custom:oz-upgrades-unsafe-allow state-variable-immutable
      */
     IAutomationRegistry private immutable keeperRegistry;
-    /** 
+    /**
      * @dev SSV clusters contract
      * @custom:oz-upgrades-unsafe-allow state-variable-immutable
      */
     ISSVClusters private immutable ssvClusters;
-    /** 
+    /**
      * @dev SSV ERC-20 token contract
      * @custom:oz-upgrades-unsafe-allow state-variable-immutable
      */
     IERC20Upgradeable private immutable ssvToken;
-    /** 
+    /**
      * @dev Uniswap factory contract
      * @custom:oz-upgrades-unsafe-allow state-variable-immutable
      */
     IUniswapV3Factory private immutable swapFactory;
-    /** 
+    /**
      * @dev Uniswap router contract
      * @custom:oz-upgrades-unsafe-allow state-variable-immutable
      */
     ISwapRouter private immutable swapRouter;
-    /** 
+    /**
      * @dev WETH9 ERC-20 token contract
      * @custom:oz-upgrades-unsafe-allow state-variable-immutable
      */
@@ -385,31 +391,33 @@ contract CasimirManager is ICasimirManager, CasimirCore, Initializable, OwnableU
         int256 rewards = int256(beaconBalance + sweptBalance + finalizableRecoveredBalance) -
             int256(expectedEffectiveBalance + expectedExitedBalance);
         int256 change = rewards - latestActiveRewardBalance;
-        if (change > 0) {
-            uint256 gain = uint256(change);
-            if (rewards > 0) {
-                uint256 gainAfterFees = subtractFees(gain);
-                stakeRatioSum += MathUpgradeable.mulDiv(stakeRatioSum, gainAfterFees, getTotalStake());
-                latestBeaconBalanceAfterFees += gainAfterFees;
-                emit StakeRebalanced(gainAfterFees);
-            } else {
-                stakeRatioSum += MathUpgradeable.mulDiv(stakeRatioSum, gain, getTotalStake());
-                latestBeaconBalanceAfterFees += gain;
-                emit StakeRebalanced(gain);
+        if (latestBeaconBalanceAfterFees > 0) {
+            if (change > 0) {
+                uint256 gain = uint256(change);
+                if (rewards > 0) {
+                    uint256 gainAfterFees = subtractFees(gain);
+                    stakeRatioSum += MathUpgradeable.mulDiv(stakeRatioSum, gainAfterFees, getTotalStake());
+                    latestBeaconBalanceAfterFees += gainAfterFees;
+                    emit StakeRebalanced(gainAfterFees);
+                } else {
+                    stakeRatioSum += MathUpgradeable.mulDiv(stakeRatioSum, gain, getTotalStake());
+                    latestBeaconBalanceAfterFees += gain;
+                    emit StakeRebalanced(gain);
+                }
+            } else if (change < 0) {
+                uint256 loss = uint256(-change);
+                stakeRatioSum -= MathUpgradeable.mulDiv(stakeRatioSum, loss, getTotalStake());
+                latestBeaconBalanceAfterFees -= loss;
+                emit StakeRebalanced(loss);
             }
-        } else if (change < 0) {
-            uint256 loss = uint256(-change);
-            stakeRatioSum -= MathUpgradeable.mulDiv(stakeRatioSum, loss, getTotalStake());
-            latestBeaconBalanceAfterFees -= loss;
-            emit StakeRebalanced(loss);
+            int256 sweptRewards = int256(sweptBalance + finalizableRecoveredBalance) - int256(finalizableExitedBalance);
+            if (sweptRewards > 0) {
+                latestBeaconBalanceAfterFees -= subtractFees(uint256(sweptRewards));
+            }
+            latestBeaconBalanceAfterFees -= finalizableExitedBalance;
+            latestActiveRewardBalance = rewards - sweptRewards;
         }
-        int256 sweptRewards = int256(sweptBalance + finalizableRecoveredBalance) - int256(finalizableExitedBalance);
-        if (sweptRewards > 0) {
-            latestBeaconBalanceAfterFees -= subtractFees(uint256(sweptRewards));
-        }
-        latestBeaconBalanceAfterFees -= finalizableExitedBalance;
         latestBeaconBalanceAfterFees += expectedActivatedBalance;
-        latestActiveRewardBalance = rewards - sweptRewards;
         latestBeaconBalance = beaconBalance;
         finalizableExitedBalance = 0;
         finalizableRecoveredBalance = 0;
@@ -645,6 +653,12 @@ contract CasimirManager is ICasimirManager, CasimirCore, Initializable, OwnableU
     }
 
     /// @inheritdoc ICasimirManager
+    function resetFunctions() external {
+        onlyFactoryOwner();
+        functionsId = 0;
+    }
+
+    /// @inheritdoc ICasimirManager
     function withdrawClusterBalance(
         uint64[] memory operatorIds,
         ISSVNetworkCore.Cluster memory cluster,
@@ -728,12 +742,12 @@ contract CasimirManager is ICasimirManager, CasimirCore, Initializable, OwnableU
 
     /// @inheritdoc ICasimirManager
     function getTotalStake() public view returns (uint256 totalStake) {
-        totalStake = getBufferedBalance() + latestBeaconBalanceAfterFees - requestedWithdrawalBalance;
-    }
-
-    /// @inheritdoc ICasimirManager
-    function getBufferedBalance() public view returns (uint256 bufferedBalance) {
-        bufferedBalance = getWithdrawableBalance() + readyPoolIds.length * POOL_CAPACITY;
+        totalStake =
+            getWithdrawableBalance() +
+            (readyPoolIds.length + pendingPoolIds.length) *
+            POOL_CAPACITY +
+            latestBeaconBalanceAfterFees -
+            requestedWithdrawalBalance;
     }
 
     /// @inheritdoc ICasimirManager

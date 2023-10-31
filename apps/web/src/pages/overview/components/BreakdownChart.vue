@@ -1,4 +1,4 @@
-b<script lang="ts" setup>
+<script lang="ts" setup>
 import LineChartJS from '@/components/charts/LineChartJS.vue'
 import { onMounted, ref, watch} from 'vue'
 import useAnalytics from '@/composables/analytics'
@@ -174,7 +174,7 @@ watch(user, async () => {
     <div class="flex flex-wrap gap-[20px] justify-between items-start">
       <div>
         <h6 class="card_title">
-          Ethereum Balance
+          Staking History
         </h6>
         <div class="flex flex-wrap items-center gap-[22px]">
           <div

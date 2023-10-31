@@ -11,11 +11,11 @@ void async function () {
 
     await loadCredentials()
     process.env.AWS_ACCOUNT = await getSecret('casimir-aws-account')
-    process.env.USERS_URL = `https://users.${process.env.STAGE}.casimir.co`
 
     await run('npm run build --workspace @casimir/ethereum')
     await run('npm run docgen --workspace @casimir/docs')
     await run('npm run build --workspace @casimir/docs')
+    await run('npm run build --workspace @casimir/redirect')
     await run('npm run build --workspace @casimir/landing')
     await run('npm run build --workspace @casimir/users')
     await run('npm run build --workspace @casimir/web')

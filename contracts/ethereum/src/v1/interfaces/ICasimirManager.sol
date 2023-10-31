@@ -208,6 +208,11 @@ interface ICasimirManager is ICasimirCore {
     ) external;
 
     /**
+     * @notice Reset functions subscription
+     */
+    function resetFunctions() external;
+
+    /**
      * @notice Withdraw cluster balance
      * @param operatorIds Operator IDs
      * @param cluster Cluster snapshot
@@ -284,9 +289,6 @@ interface ICasimirManager is ICasimirCore {
 
     /// @notice Get the staked pool IDs
     function getStakedPoolIds() external view returns (uint32[] memory);
-
-    /// @notice Get the buffered balance (prepool + exited + ready)
-    function getBufferedBalance() external view returns (uint256);
 
     /**
      * @notice Get the eligibility of a pending withdrawal

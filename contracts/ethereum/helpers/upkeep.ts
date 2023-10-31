@@ -46,6 +46,7 @@ export async function fulfillReport({
     const requestIds = (await upkeep.queryFilter(upkeep.filters.RequestSent())).slice(-2).map((event) => event.args.id)
     
     const balancesRequestId = requestIds[0]
+
     const balancesResponse = ethers.utils.defaultAbiCoder.encode(
         ['uint128', 'uint128'],
         [ethers.utils.parseEther(beaconBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]

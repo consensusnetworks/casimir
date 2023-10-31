@@ -1,17 +1,20 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
-import useBlog from '@/composables/blog.ts'
-import router from '@/composables/router.ts'
+import useBlog from '@/composables/blog'
+import router from '@/composables/router'
+import { Article } from '@casimir/types'
 
+const appUrl = import.meta.env.PUBLIC_APP_URL || 'https://app.dev.casimir.co'
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL || 'https://docs.dev.casimir.co'
 const {
     articles,
     loadingArticles,
 } = useBlog()
 
-const article = ref(null)
+const article = ref<Article>()
 
-function getActiveArticle(activeRoute) {
+function getActiveArticle(activeRoute: string) {
     const activeArticle = articles.value.filter(item => item.id === activeRoute)[0]
     article.value = activeArticle
 }
@@ -47,9 +50,6 @@ watch([articles, loadingArticles], () => {
         </a>
         <ul class="nav__links">
           <li>
-            <a href="https://github.com/consensusnetworks/casimir#casimir">API Reference</a>
-          </li>
-          <li>
             <a href="/blog">Blog</a>
           </li>
           <li>
@@ -58,9 +58,12 @@ watch([articles, loadingArticles], () => {
           <li>
             <a href="https://consensusnetworks.com">Company</a>
           </li>
+          <li>
+            <a :href="docsUrl">Docs</a>
+          </li>
         </ul>
         <a
-          href="https://app.dev.casimir.co"
+          :href="appUrl"
           class="btn-primary-sm"
         >
           Launch App
@@ -126,12 +129,6 @@ watch([articles, loadingArticles], () => {
       <div class="footer__container">
         <span class="c">© 2023 Casimir. All rights reserved.</span>
         <ul>
-          <li>
-            <a
-              href="https://api.casimir.co"
-              target="_blank"
-            >API Reference</a>
-          </li>
           <li>
             <a
               href="/"

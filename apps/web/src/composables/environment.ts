@@ -11,8 +11,12 @@ const ethereumUrl = import.meta.env.PUBLIC_ETHEREUM_RPC_URL || 'http://127.0.0.1
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 
 /* Casimir environment */
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL || 'https://docs.dev.casimir.co'
 const usersUrl = import.meta.env.PUBLIC_USERS_URL || 'http://localhost:4000'
 const walletConnectProjectId = import.meta.env.PUBLIC_WALLET_CONNECT_PROJECT_ID
+
+/** Network */
+const requiredNetwork: '1' | '5' = origin.includes('localhost') ? '5' : origin.includes('app.dev') ? '5' : '1'
 
 /* Addresses */
 const factoryAddress = import.meta.env.PUBLIC_FACTORY_ADDRESS
@@ -37,9 +41,11 @@ export default function useEnvironment() {
         provider,
         origin,
         ledgerType,
+        requiredNetwork,
         speculosUrl,
         ssvNetworkAddress,
         ssvViewsAddress,
+        docsUrl,
         usersUrl,
         walletConnectProjectId
     }

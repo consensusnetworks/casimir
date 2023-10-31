@@ -1,6 +1,6 @@
 import { ethers, network, upgrades } from 'hardhat'
 import { loadFixture, time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
-import { CasimirFactory, CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, FunctionsBillingRegistry, FunctionsOracle, FunctionsOracleFactory, ISSVViews } from '../../build/@types'
+import { AuthorizedReceiver, CasimirFactory, CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, FunctionsBillingRegistry, FunctionsOracle, FunctionsOracleFactory, ISSVViews } from '../../build/@types'
 import { fulfillReport, runUpkeep } from '../../helpers/upkeep'
 import { activatePoolsHandler, depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiatePoolHandler, reportCompletedExitsHandler } from '../../helpers/oracle'
 import { round } from '../../helpers/math'
@@ -32,7 +32,7 @@ export async function deploymentFixture() {
     const deployNewOracleReceipt = await deployNewOracle.wait()
     if (!deployNewOracleReceipt.events) throw new Error('Functions oracle deployment failed')
     const functionsOracleAddress = deployNewOracleReceipt.events[1].args?.don as string
-    const functionsOracle = await ethers.getContractAt('FunctionsOracle', functionsOracleAddress) as FunctionsOracle
+    const functionsOracle = await ethers.getContractAt('FunctionsOracle', functionsOracleAddress) as FunctionsOracle & AuthorizedReceiver
     const acceptOwnership = await functionsOracle.acceptOwnership()
     await acceptOwnership.wait()
 
@@ -139,12 +139,12 @@ export async function deploymentFixture() {
         privateOperators: false,
         verifiedOperators: false
     }
-    const deployDefaultManager = await factory.deployManager(
+    const deployBaseManager = await factory.deployManager(
         daoOracle.address,
         functionsOracle.address,
         defaultStrategy
     )
-    await deployDefaultManager.wait()
+    await deployBaseManager.wait()
     const [managerId] = await factory.getManagerIds()
     const [managerAddress, registryAddress, upkeepAddress, viewsAddress] = await factory.getManagerConfig(managerId)
     const manager = await ethers.getContractAt('CasimirManager', managerAddress) as CasimirManager
@@ -159,7 +159,7 @@ export async function deploymentFixture() {
 
     await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, functionsOracle.address])
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
-    await functionsOracle.addAuthorizedSenders([donTransmitter.address, managerAddress])
+    await functionsOracle.setAuthorizedSenders([donTransmitter.address, manager.address, upkeep.address])
 
     const ssvViews = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
 

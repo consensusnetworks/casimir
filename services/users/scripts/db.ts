@@ -1,6 +1,6 @@
 import fs from 'fs'
 import os from 'os'
-import { run, runSync } from '@casimir/shell'
+import { run } from '@casimir/shell'
 import { getSecret, loadCredentials } from '@casimir/aws'
 import { JsonSchema, Schema, accountSchema, nonceSchema, operatorSchema, userSchema, userAccountSchema } from '@casimir/data'
 
@@ -65,11 +65,4 @@ void async function () {
     }
     
     await run(`atlas schema apply --url "postgres://postgres:password@localhost:5432/users?sslmode=disable" --to "file://${sqlDir}/schema.sql" --dev-url "docker://postgres/15" --auto-approve`)
-
-    if (process.env.MOCK_SERVICES === 'true') {
-        process.on('SIGINT', () => {
-            runSync('npm run clean --workspace @casimir/users')
-            process.exit()
-        })
-    }
 }()

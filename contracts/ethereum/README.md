@@ -1,6 +1,6 @@
 # @casimir/ethereum
 
-Solidity contracts for decentralized staking on Ethereum
+> Solidity contracts for decentralized staking on Ethereum
 
 ## Development
 

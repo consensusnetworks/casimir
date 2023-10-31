@@ -52,7 +52,7 @@ contract CasimirUpkeep is
     uint256 private reportCompletedExits;
     /// @dev Current report compoundable pools
     uint32[5] private reportCompoundablePoolIds;
-    /// @dev Finalizable compoundable pools
+    /// @dev Finalizable compoundable pools (not used, will be removed in future version)
     uint32[5] private finalizableCompoundablePoolIds;
     /// @dev Current report request
     mapping(bytes32 => RequestType) private reportRequests;
@@ -64,8 +64,14 @@ contract CasimirUpkeep is
     string[] private defaultRequestArgs;
     /// @dev Fulfillment gas limit
     uint32 private fulfillGasLimit;
+    /// @dev Whether a report has been requested
+    bool private reportRequested;
+    /// @dev Previous report block
+    uint256 private previousReportBlock;
+    /// @dev DON transmitter address (not used, will be removed in future version)
+    address private transmitterAddress;
     /// @dev Storage gap
-    uint256[50] private __gap;
+    uint256[48] private __gap;
 
     /**
      * @dev Constructor
@@ -101,8 +107,9 @@ contract CasimirUpkeep is
             revert UpkeepNotNeeded();
         }
         if (reportStatus == ReportStatus.FINALIZED) {
-            previousReportTimestamp = reportTimestamp;
             reportStatus = ReportStatus.REQUESTING;
+            previousReportBlock = reportRequestBlock;
+            previousReportTimestamp = reportTimestamp;
             reportRequestBlock = block.number;
             reportTimestamp = block.timestamp;
             reportPeriod = manager.reportPeriod();
@@ -114,6 +121,13 @@ contract CasimirUpkeep is
             requestArgs[9] = StringsUpgradeable.toString(reportRequestBlock);
             sendFunctionsRequest(request, requestArgs, RequestType.BALANCES);
             sendFunctionsRequest(request, requestArgs, RequestType.DETAILS);
+            emit ReportRequestsSent(
+                reportPeriod,
+                reportRequestBlock,
+                reportTimestamp,
+                previousReportBlock,
+                previousReportTimestamp
+            );
         } else {
             if (
                 manager.requestedWithdrawalBalance() > 0 &&
@@ -123,6 +137,9 @@ contract CasimirUpkeep is
                 manager.fulfillWithdrawals(5);
             }
             if (!manager.getPendingWithdrawalEligibility(0, reportPeriod)) {
+                if (reportRequested) {
+                    reportRequested = false;
+                }
                 reportStatus = ReportStatus.FINALIZED;
                 manager.rebalanceStake({
                     beaconBalance: reportBeaconBalance,
@@ -139,6 +156,38 @@ contract CasimirUpkeep is
             }
         }
         emit UpkeepPerformed(reportStatus);
+    }
+
+    /// @inheritdoc ICasimirUpkeep
+    function requestReport() external {
+        onlyFactoryOwner();
+        reportRequested = true;
+        emit ReportRequested();
+    }
+
+    /// @inheritdoc ICasimirUpkeep
+    function resetReport(
+        uint32 resetReportPeriod,
+        uint256 resetReportBlock,
+        uint256 resetReportTimestamp,
+        uint256 resetPreviousReportBlock,
+        uint256 resetPreviousReportTimestamp
+    ) external {
+        onlyFactoryOwner();
+        reportStatus = ReportStatus.FINALIZED;
+        reportRequested = false;
+        reportPeriod = resetReportPeriod;
+        reportRequestBlock = resetReportBlock;
+        reportTimestamp = resetReportTimestamp;
+        previousReportBlock = resetPreviousReportBlock;
+        previousReportTimestamp = resetPreviousReportTimestamp;
+        reportRemainingRequests = 0;
+        reportBeaconBalance = 0;
+        reportSweptBalance = 0;
+        reportActivatedDeposits = 0;
+        reportForcedExits = 0;
+        reportCompletedExits = 0;
+        reportCompoundablePoolIds = [0, 0, 0, 0, 0];
     }
 
     /// @inheritdoc ICasimirUpkeep
@@ -166,7 +215,7 @@ contract CasimirUpkeep is
         if (reportStatus == ReportStatus.FINALIZED) {
             bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
             bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= REPORT_HEARTBEAT;
-            upkeepNeeded = checkActive && heartbeatLapsed;
+            upkeepNeeded = (checkActive && heartbeatLapsed) || (checkActive && reportRequested);
         } else if (reportStatus == ReportStatus.PROCESSING) {
             bool finalizeReport = reportActivatedDeposits == manager.finalizableActivations() &&
                 reportCompletedExits == manager.finalizableCompletedExits();
@@ -179,48 +228,57 @@ contract CasimirUpkeep is
      * @dev Callback that is invoked once the DON has resolved the request or hit an error
      * @param requestId Request ID, returned by sendRequest()
      * @param response Aggregated response from the DON
-     * @param executionError Aggregated error from the code execution
+     * @param err Aggregated error from the code execution
      */
-    function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory executionError) internal override {
+    function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err) internal override {
         RequestType requestType = reportRequests[requestId];
         if (requestType == RequestType.NONE) {
             revert InvalidRequest();
         }
-        reportResponseError = executionError;
-        if (executionError.length == 0) {
-            delete reportRequests[requestId];
-            reportRemainingRequests--;
-            if (requestType == RequestType.BALANCES) {
-                (uint128 beaconBalance, uint128 sweptBalance) = abi.decode(response, (uint128, uint128));
-                reportBeaconBalance = uint256(beaconBalance);
-                reportSweptBalance = uint256(sweptBalance);
-            } else {
-                (
-                    uint32 activatedDeposits,
-                    uint32 forcedExits,
-                    uint32 completedExits,
-                    uint32[5] memory compoundablePoolIds
-                ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
-                reportActivatedDeposits = activatedDeposits;
-                reportForcedExits = forcedExits;
-                reportCompletedExits = completedExits;
-                reportCompoundablePoolIds = compoundablePoolIds;
-                finalizableCompoundablePoolIds = compoundablePoolIds;
-                if (reportActivatedDeposits > 0) {
-                    emit ActivationsRequested(activatedDeposits);
-                }
-                if (reportForcedExits > 0) {
-                    emit ForcedExitReportsRequested(forcedExits);
-                }
-                if (reportCompletedExits > 0) {
-                    emit CompletedExitReportsRequested(completedExits);
-                }
+        reportResponseError = err;
+        if (err.length == 0) {
+            handleResponse(requestId, requestType, response);
+        }
+        emit OCRResponse(requestId, response, err);
+    }
+
+    /**
+     * @dev Handle a fulfilled request
+     * @param requestId Request ID
+     * @param requestType Request type
+     * @param response Response
+     */
+    function handleResponse(bytes32 requestId, RequestType requestType, bytes memory response) private {
+        delete reportRequests[requestId];
+        reportRemainingRequests--;
+        if (requestType == RequestType.BALANCES) {
+            (uint128 beaconBalance, uint128 sweptBalance) = abi.decode(response, (uint128, uint128));
+            reportBeaconBalance = uint256(beaconBalance);
+            reportSweptBalance = uint256(sweptBalance);
+        } else {
+            (
+                uint32 activatedDeposits,
+                uint32 forcedExits,
+                uint32 completedExits,
+                uint32[5] memory compoundablePoolIds
+            ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
+            reportActivatedDeposits = activatedDeposits;
+            reportForcedExits = forcedExits;
+            reportCompletedExits = completedExits;
+            reportCompoundablePoolIds = compoundablePoolIds;
+            if (reportActivatedDeposits > 0) {
+                emit ActivationsRequested(activatedDeposits);
             }
-            if (reportRemainingRequests == 0) {
-                reportStatus = ReportStatus.PROCESSING;
+            if (reportForcedExits > 0) {
+                emit ForcedExitReportsRequested(forcedExits);
+            }
+            if (reportCompletedExits > 0) {
+                emit CompletedExitReportsRequested(completedExits);
             }
         }
-        emit OCRResponse(requestId, response, executionError);
+        if (reportRemainingRequests == 0) {
+            reportStatus = ReportStatus.PROCESSING;
+        }
     }
 
     /**

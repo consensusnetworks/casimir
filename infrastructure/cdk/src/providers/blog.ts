@@ -13,8 +13,6 @@ import { kebabCase, pascalCase } from '@casimir/format'
  */
 export class BlogStack extends cdk.Stack {
     public readonly name = 'blog'
-    public readonly assetPath = 'services/blog/Dockerfile'
-    public readonly contextPath = '../../'
 
     constructor(scope: Construct, id: string, props: BlogStackProps) {
         super(scope, id, props)
@@ -24,8 +22,8 @@ export class BlogStack extends cdk.Stack {
         const { certificate, hostedZone, vpc } = props
 
         const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
-            directory: this.contextPath,
-            file: this.assetPath,
+            directory: '../../',
+            file: 'services/blog/Dockerfile',
             platform: ecrAssets.Platform.LINUX_AMD64,
             ignoreMode: cdk.IgnoreMode.GIT
         })
@@ -40,7 +38,7 @@ export class BlogStack extends cdk.Stack {
             domainName: `${subdomains.blog}.${rootDomain}`, // e.g. blog.casimir.co or blog.dev.casimir.co
             domainZone: hostedZone,
             taskImageOptions: {
-                containerPort: 4000,
+                containerPort: 4001,
                 image: ecs.ContainerImage.fromDockerImageAsset(imageAsset),
                 environment: {
                     PROJECT: project,

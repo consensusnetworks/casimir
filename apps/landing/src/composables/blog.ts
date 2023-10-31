@@ -41,7 +41,7 @@ export default function useBlog() {
                 articles.value = articleList
                 loadingArticles.value = false
             } catch (error) {
-                console.log('Error fetching article', error)
+                console.log('Error fetching articles', error)
                 loadingArticles.value = false
             }
 

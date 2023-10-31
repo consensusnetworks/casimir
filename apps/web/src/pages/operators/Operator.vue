@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import VueFeather from 'vue-feather'
 import { ProviderString } from '@casimir/types'
 import useAuth from '@/composables/auth'
+import useEnvironment from '@/composables/environment'
 // import useEthers from '@/composables/ethers'
 import useFiles from '@/composables/files'
 import useFormat from '@/composables/format'
@@ -10,26 +11,51 @@ import useOperators from '@/composables/operators'
 import useUser from '@/composables/user'
 
 const { loadingSessionLogin } = useAuth()
+const { docsUrl } = useEnvironment()
 // const { detectActiveWalletAddress } = useEthers()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
-const {initializeOperatorComposable, nonregisteredOperators, registeredOperators, registerOperatorWithCasimir, loadingInitializeOperators, loadingAddOperator } = useOperators()
+const {
+  initializeOperatorComposable,
+  registerOperatorWithCasimir,
+  nonregisteredBaseOperators,
+  nonregisteredEigenOperators,
+  registeredBaseOperators,
+  registeredEigenOperators,
+  loadingInitializeOperators,
+  loadingAddOperator
+} = useOperators()
 const { user } = useUser()
 
 // Form inputs
-const selectedWallet = ref<{address: string, walletProvider: ProviderString}>({address: '', walletProvider: ''})
+const selectedWallet = ref<{ address: string, walletProvider: ProviderString }>({ address: '', walletProvider: '' })
 const openSelectWalletOptions = ref(false)
 const onSelectWalletBlur = () => {
-    setTimeout(() =>{
-        openSelectWalletOptions.value = false
-    }, 200)
+  setTimeout(() => {
+    openSelectWalletOptions.value = false
+  }, 200)
 }
+
+const operatorType = ref<'base' | 'eigen'>('base')
+const eigenIsShining = ref(true) // Determines if the shine effect is active
+const eigenIsToggled = ref(false) // Determines the toggle state
+const toggleBackgroundColor = ref('#eee')  // Initial color
+
+function toggleEigenLayerSupport() {
+  eigenIsToggled.value = !eigenIsToggled.value
+  toggleBackgroundColor.value = eigenIsToggled.value ? 'green' : '#eee'
+  operatorType.value = eigenIsToggled.value ? 'eigen' : 'base'
+
+  // Update stakeType
+  // stakeType.value = eigenIsToggled.value ? 'eigen' : 'base'
+}
+
 const selectedOperatorID = ref()
 const openSelectOperatorID = ref(false)
 const onSelectOperatorIDBlur = () => {
-    setTimeout(() => {
-        openSelectOperatorID.value = false
-    }, 200)
+  setTimeout(() => {
+    openSelectOperatorID.value = false
+  }, 200)
 }
 
 const availableOperatorIDs = ref([] as string[])
@@ -45,41 +71,42 @@ const selectedHeader = ref('walletProvider')
 const selectedOrientation = ref('ascending')
 const operatorTableHeaders = ref(
   [
+    // {
+    //   title: '',
+    //   value: 'blank_column'
+    // },
     {
-        title: '',
-        value: 'blank_column'
+      title: 'Operator ID',
+      value: 'id'
     },
     {
-        title: 'Operator ID',
-        value: 'id'
+      title: 'Wallet Address',
+      value: 'walletAddress'
     },
     {
-        title: 'Wallet Address',
-        value: 'walletAddress'
+      title: 'Collateral',
+      value: 'collateral'
     },
     {
-        title: 'Collateral',
-        value: 'collateral'
+      title: 'Active Validators',
+      value: 'poolCount'
     },
     {
-        title: 'Active Validators',
-        value: 'poolCount'
+      title: 'Node URL',
+      value: 'nodeURL'
     },
-    {
-        title: 'Node URL',
-        value: 'nodeURL'
-    },
-    {
-        title: '',
-        value: 'deactivate'
-    },
-    {
-        title: '',
-        value: 'withdraw_collateral'
-    },
+    // {
+    //   title: '',
+    //   value: 'deactivate'
+    // },
+    // {
+    //   title: '',
+    //   value: 'withdraw_collateral'
+    // },
   ]
 )
 
+const allInputsValid = ref(false)
 const tableData = ref<any>([])
 const filteredData = ref(tableData.value)
 const checkedItems = ref([] as any)
@@ -89,14 +116,14 @@ const submitButtonTxt = ref('Submit')
 
 onMounted(async () => {
   if (user.value) {
-
+    loading.value = true
     await initializeOperatorComposable()
 
     // Autofill disable
     const disableAutofill = () => {
       let inputs = document.getElementsByTagName('input')
       for (let i = 0; i < inputs.length; i++) {
-          inputs[i].setAttribute('autocomplete', 'off')
+        inputs[i].setAttribute('autocomplete', 'off')
       }
     }
 
@@ -108,26 +135,35 @@ onMounted(async () => {
 
 watch(user, async () => {
   if (user.value) {
+    loading.value = true
     await initializeOperatorComposable()
 
     filterData()
   }
 })
 
-watch(selectedWallet, async () =>{
+watch(selectedWallet, async () => {
   selectedOperatorID.value = ''
   selectedPublicNodeURL.value = ''
   selectedCollateral.value = ''
 
   if (selectedWallet.value.address === '') {
     availableOperatorIDs.value = []
-  } else if(nonregisteredOperators.value && nonregisteredOperators.value.length > 0) {
-    availableOperatorIDs.value = [...nonregisteredOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)}
+  } else if (operatorType.value === 'base') {
+    if (nonregisteredBaseOperators.value && nonregisteredBaseOperators.value.length > 0) {
+      availableOperatorIDs.value = [...nonregisteredBaseOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
+    } else if (nonregisteredEigenOperators.value && nonregisteredEigenOperators.value.length > 0) {
+      availableOperatorIDs.value = [...nonregisteredEigenOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
+    } else {
+      availableOperatorIDs.value = []
+    }
+  }
 })
 
-watch(registeredOperators, () => {
+watch([registeredBaseOperators, registeredEigenOperators], () => {
+  loading.value = true
   openAddOperatorModal.value = false
-  tableData.value = [...registeredOperators.value].map((operator: any) => {
+  tableData.value = [...registeredBaseOperators.value, ...registeredEigenOperators.value].map((operator: any) => {
     return {
       id: operator.id,
       walletAddress: operator.ownerAddress,
@@ -139,17 +175,15 @@ watch(registeredOperators, () => {
   filterData()
 })
 
-watch(openAddOperatorModal, () =>{
-  if(openAddOperatorModal.value){
-    selectedWallet.value = {address: user.value?.address as string, walletProvider: user.value?.walletProvider as ProviderString}
+watch(openAddOperatorModal, () => {
+  if (openAddOperatorModal.value) {
+    selectedWallet.value = { address: user.value?.address as string, walletProvider: user.value?.walletProvider as ProviderString }
   }
 })
 
-watch([searchInput, selectedHeader, selectedOrientation, currentPage], ()=>{
+watch([searchInput, selectedHeader, selectedOrientation, currentPage], () => {
   filterData()
 })
-
-
 
 const openWalletsModal = () => {
   const el = document.getElementById('connect_wallet_button')
@@ -159,20 +193,21 @@ const openWalletsModal = () => {
 }
 
 const handleInputChangeCollateral = (event: any) => {
-    const value = event.target.value.replace(/[^\d.]/g, '')
-    const parts = value.split('.')
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  const value = event.target.value.replace(/[^\d.]/g, '')
+  const parts = value.split('.')
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 
-    // Limit to two decimal places
-    if (parts[1] && parts[1].length > 2) {
-        parts[1] = parts[1].slice(0, 2)
-    }
+  // Limit to two decimal places
+  if (parts[1] && parts[1].length > 2) {
+    parts[1] = parts[1].slice(0, 2)
+  }
 
-    // Update the model value
-    selectedCollateral.value = parts.join('.')
+  // Update the model value
+  selectedCollateral.value = parts.join('.')
 }
 
 const filterData = () => {
+  loading.value = true
   let filteredDataArray
 
   if (searchInput.value === '') {
@@ -188,7 +223,7 @@ const filterData = () => {
     })
   }
 
-  if(selectedHeader.value !== '' && selectedOrientation.value !== '') {
+  if (selectedHeader.value !== '' && selectedOrientation.value !== '') {
     filteredDataArray = filteredDataArray.sort((a: any, b: any) => {
       const valA = a[selectedHeader.value]
       const valB = b[selectedHeader.value]
@@ -205,19 +240,18 @@ const filterData = () => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   filteredData.value = filteredDataArray.slice(start, end) as any
+  loading.value = false
 }
 
-const removeItemFromCheckedList = (item:any) => {
+const removeItemFromCheckedList = (item: any) => {
   const index = checkedItems.value.indexOf(item)
   if (index > -1) {
     checkedItems.value.splice(index, 1)
   }
 }
 
-const allInputsValid = ref(false)
-
-watch([selectedWallet, selectedOperatorID, selectedPublicNodeURL, selectedCollateral], ()=>{
-  if(selectedWallet.value.address !== '' && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== '' && selectedCollateral.value !== undefined) {
+watch([selectedWallet, selectedOperatorID, selectedPublicNodeURL, selectedCollateral], () => {
+  if (selectedWallet.value.address !== '' && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== '' && selectedCollateral.value !== undefined) {
     allInputsValid.value = true
   } else {
     allInputsValid.value = false
@@ -232,12 +266,12 @@ async function submitRegisterOperatorForm() {
   // if (activeAddress !== selectedAddress) {
   //   return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
   // }
-  
+
   try {
     await registerOperatorWithCasimir({
-      walletProvider: selectedWallet.value.walletProvider as ProviderString, 
+      walletProvider: selectedWallet.value.walletProvider as ProviderString,
       address: selectedWallet.value.address,
-      operatorId: parseInt(selectedOperatorID.value), 
+      operatorId: parseInt(selectedOperatorID.value),
       collateral: selectedCollateral.value,
       nodeUrl: selectedPublicNodeURL.value
     })
@@ -248,8 +282,8 @@ async function submitRegisterOperatorForm() {
   }
 
   if (selectedWallet.value.address === '') {
-      const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address})
-      selectedWallet.value = {address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString}
+    const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address })
+    selectedWallet.value = { address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString }
   }
   selectedOperatorID.value = ''
   selectedPublicNodeURL.value = ''
@@ -259,9 +293,9 @@ async function submitRegisterOperatorForm() {
 
 const showSkeleton = ref(true)
 
-watch([loadingSessionLogin || loadingInitializeOperators], () =>{
+watch([loadingSessionLogin || loadingInitializeOperators], () => {
   setTimeout(() => {
-    if(loadingSessionLogin || loadingInitializeOperators){
+    if (loadingSessionLogin || loadingInitializeOperators) {
       showSkeleton.value = false
     }
   }, 500)
@@ -274,7 +308,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
     <div class="flex items-start gap-[20px] justify-between flex-wrap mb-[30px]">
       <h6 class="title relative">
         <div
-          v-show="showSkeleton"
+          v-show="showSkeleton || loading"
           class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
         >
           <div class="skeleton_box" />
@@ -288,7 +322,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
         @click="openAddOperatorModal = true"
       >
         <div
-          v-show="showSkeleton"
+          v-show="showSkeleton || loading"
           class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
         >
           <div class="skeleton_box" />
@@ -300,15 +334,14 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
         Add Operator
       </button>
     </div>
-    
+
     <div
       v-if="!user?.address"
       class="card_container w-full px-[32px] py-[31px]
        text-grey_4 flex items-center justify-center relative"
-      style="min-height: calc(100vh - 420px);"
     >
       <div
-        v-show="showSkeleton"
+        v-show="showSkeleton || loading"
         class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
       >
         <div class="skeleton_box" />
@@ -319,31 +352,211 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
           @click="openWalletsModal"
         >
           Connect wallet
-        </button> to view and register operators... 
+        </button> to view and register operators...
       </div>
     </div>
 
     <div
       v-else
       class="card_container w-full px-[32px] py-[31px] text-black  whitespace-nowrap relative"
-      style="min-height: calc(100vh - 320px); height: 500px;"
     >
       <div
-        v-show="showSkeleton"
+        v-show="showSkeleton || loading"
         class="absolute top-0 left-0 w-full h-full z-[2] rounded-[3px] overflow-hidden"
       >
         <div class="skeleton_box" />
       </div>
-      <!-- Form -->
-      <div
-        v-if="openAddOperatorModal"
-        class="absolute top-0 left-0 w-full h-full bg-black/[0.2] rounded-[3px] flex items-center justify-center z-[2]"
-      >
-        <div class="card_container w-[80%] h-[90%] overflow-auto px-[30px] py-[20px]">
-          <div class="flex items-center gap-[10px] flex-wrap justify-between">
+
+      <div class="flex flex-wrap gap-[20px] justify-between items-start pb-[20px] border-b border-b-[#EAECF0] ">
+        <div>
+          <div class="flex items-center gap-[8px]">
             <h6 class="card_title">
-              Register Operator
+              Operators
             </h6>
+          </div>
+          <div class="card_subtitle mt-[20px]">
+            List of operators according to their performance
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full overflow-x-scroll pb-20">
+        <table
+          v-if="tableData.length > 0"
+          class="w-full"
+        >
+          <thead>
+            <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
+              <th
+                v-for="header in operatorTableHeaders"
+                :key="header.title"
+                class="table_header "
+              >
+                <div class="flex items-center gap-[5px]">
+                  <div>
+                    {{ header.title }}
+                  </div>
+                  <button
+                    v-show="header.value != 'blank_column'"
+                    class="ml-[4px] flex flex-col items-center justify-between"
+                    :class="selectedHeader === header.value ? 'opacity-100' : 'opacity-25'"
+                    @click="selectedHeader = header.value, selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
+                  >
+                    <vue-feather
+                      type="arrow-up"
+                      size="20"
+                      class="icon h-min "
+                      :class="selectedOrientation === 'ascending' ? 'w-[10px]' : 'w-[8px] opacity-50'"
+                    />
+                    <vue-feather
+                      type="arrow-down"
+                      size="20"
+                      class="icon h-min"
+                      :class="selectedOrientation === 'descending' ? 'w-[10px]' : 'w-[8px] opacity-50'"
+                    />
+                  </button>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="w-full">
+            <tr
+              v-for="item in filteredData"
+              :key="item"
+              class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
+            >
+              <td
+                v-for="header in operatorTableHeaders"
+                :key="header.title"
+                class="dynamic_padding"
+              >
+                <div
+                  v-if="header.value === 'blank_column'"
+                  class="flex items-center gap-[12px]"
+                >
+                  <button
+                    class="checkbox_button"
+                    @click="checkedItems.includes(item) ? removeItemFromCheckedList(item) : checkedItems.push(item)"
+                  >
+                    <vue-feather
+                      v-show="checkedItems.includes(item)"
+                      type="check"
+                      size="20"
+                      class="icon w-[14px] h-min"
+                    />
+                  </button>
+                </div>
+                <div
+                  v-if="header.value === 'deactivate'"
+                  class="flex items-center gap-[12px]"
+                >
+                  <button
+                    class="bg-decline text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] relative"
+                    disabled
+                  >
+                    <div class="tooltip_container">
+                      Coming Soon!
+                      <div class="tooltip_triangle" />
+                    </div>
+                    Deactivate
+                  </button>
+                </div>
+                <div
+                  v-if="header.value === 'withdraw_collateral'"
+                  class="flex items-center gap-[12px]"
+                >
+                  <button
+                    class="action-button bg-primary text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] opacity-50 relative"
+                    disabled
+                  >
+                    <div class="tooltip_container">
+                      Coming Soon!
+                      <div class="tooltip_triangle" />
+                    </div>
+                    Withdraw
+                  </button>
+                </div>
+                <div v-else>
+                  {{ item[header.value] }}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div
+          v-else
+          class="border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] whitespace-normal text-[14px] text-grey_3"
+        >
+          You currently do not have operators registed under your account.
+
+          <p class="mt-[30px]">
+            Connect wallet or register operators to view their performance.
+          </p>
+        </div>
+
+        <div
+          v-if="tableData.length > 0"
+          class="flex justify-between items-center mt-[12px]"
+        >
+          <div class="page_number ml-[56px]">
+            Page {{ currentPage }} of {{ totalPages }}
+          </div>
+          <div class="flex items-center gap-[12px]">
+            <button
+              class="pagination_button"
+              :disabled="currentPage === 1"
+              @click="currentPage > 1 ? currentPage = currentPage - 1 : ''"
+            >
+              Previous
+            </button>
+            <button
+              class="pagination_button mr-[33px]"
+              :disabled="currentPage === totalPages"
+              @click="currentPage < totalPages ? currentPage = currentPage + 1 : ''"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div
+      v-if="openAddOperatorModal"
+      class="fixed top-0 left-0 w-[100%] h-[100vh] bg-black/[0.3] rounded-[3px] z-[2]"
+    >
+      <div class="flex items-center justify-center w-full h-full">
+        <div class="card_container w-[80%] overflow-auto px-[30px] py-[20px]">
+          <div class="flex gap-[10px] flex-wrap justify-between">
+            <div class="flex flex-col">
+              <h6 class="card_title">
+                Register Operator
+              </h6>
+
+              <!-- Even Better Link to Operator Docs -->
+              <div
+                class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-15 py-9 mt-12 mb-4 w-[400px]"
+                role="alert"
+              >
+                <p class="text-sm">
+                  Learn how to set up a Casimir operator using
+                  <a
+                    :href="`${docsUrl}/guide/operating`"
+                    target="_blank"
+                    class="text-primary underline"
+                  >
+                    our docs
+                    <vue-feather
+                      type="external-link"
+                      size="14"
+                    />
+                  </a>.
+                </p>
+              </div>
+            </div>
+
             <div class="">
               <button
                 type="button"
@@ -359,7 +572,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
           </div>
           <form @submit.prevent="submitRegisterOperatorForm">
             <!-- Wallet address input -->
-            <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
               Wallet
             </h6>
             <div class="card_input w-full max-w-[400px] relative">
@@ -369,13 +582,13 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 readonly
                 type="text"
                 placeholder="Wallet Address.."
-                class="outline-none text-grey_4 text-[12px] w-full cursor-pointer"
+                class="outline-none text-grey_4 text-[14px] w-full cursor-pointer"
                 @focus="openSelectWalletOptions = true"
                 @blur="onSelectWalletBlur"
               >
               <button
                 type="button"
-                @click="selectedWallet = { walletProvider: '', address: ''}"
+                @click="selectedWallet = { walletProvider: '', address: '' }"
               >
                 <vue-feather
                   type="x"
@@ -386,40 +599,66 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 v-show="openSelectWalletOptions"
                 class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
-                <h6 class="text-[12px]">
+                <h6 class="text-[16px]">
                   Your Connected Wallets
                 </h6>
                 <button
-                  v-for="act in user.accounts"
+                  v-for="act in user?.accounts"
                   :key="act.address"
                   type="button"
                   class="border-y border-y-grey_1 hover:border-y-grey_3
                    text-grey_4 my-[10px] w-full flex justify-between truncate"
-                  @click="selectedWallet = {address: act.address, walletProvider: act.walletProvider}, openSelectWalletOptions = false"
+                  @click="selectedWallet = { address: act.address, walletProvider: act.walletProvider }, openSelectWalletOptions = false"
                 >
                   <span>{{ act.walletProvider }}</span>
                   <span>{{ convertString(act.address) }}</span>
                 </button>
               </div>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
-              Select your SSV owner address 
-            </div>
+
+            <!-- Enable Eigen Support -->
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
+              Add Eigen Support to Your Validator (Optional)
+            </h6>
+            <button
+              class="toggle_container mt-10  w-full max-w-[400px] relative"
+              :disabled="true"
+              @click="toggleEigenLayerSupport"
+            >
+              <div class="tooltip_container">
+                COMING SOON!
+                <div class="tooltip_triangle" />
+              </div>
+              <img
+                class="eigen-logo"
+                src="/eigen.svg"
+              >
+              Enable EigenLayer Support
+              <span
+                v-if="eigenIsShining"
+                class="shine-effect"
+              />
+              <div
+                class="toggle-button"
+                :style="{ 'background-color': toggleBackgroundColor }"
+                :class="{ 'toggle-on': eigenIsToggled }"
+              >
+                <div class="toggle-circle" />
+              </div>
+            </button>
 
             <!-- operator id input -->
-            <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
               Operator ID
             </h6>
-            <div
-              class="card_input w-full max-w-[400px] relative"
-            >
+            <div class="card_input w-full max-w-[400px] relative">
               <input
                 id="operator_id"
                 v-model="selectedOperatorID"
                 type="text"
                 readonly
                 placeholder="Operator ID.."
-                class=" outline-none text-grey_4 text-[12px] w-full bg-white cursor-pointer"
+                class=" outline-none text-grey_4 text-[14px] w-full bg-white cursor-pointer"
                 autocomplete="off"
                 @focus="openSelectOperatorID = true"
                 @blur="onSelectOperatorIDBlur"
@@ -438,11 +677,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 v-show="openSelectOperatorID"
                 class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
-                <h6 class="text-[12px]">
-                  Avaliable Operators
+                <h6 class="text-[16px]">
+                  Available Operators
                 </h6>
                 <div
-                  v-if="availableOperatorIDs.length === 0" 
+                  v-if="availableOperatorIDs.length === 0"
                   class="border-y border-y-grey_1
                    text-grey_4 my-[10px] text-center truncate"
                 >
@@ -461,21 +700,20 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 </button>
               </div>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
-              <!-- @chris `here` text needs a link to the ssv operator registry-->
+            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
               If no operators found with your SSV owner address, register one 
               <a
                 href=""
                 target="_blank"
                 class="text-primary underline"
               >here</a>.
-            </div>
+            </div> -->
 
-            <hr class="my-[20px]">
+            <!-- <hr class="my-[20px]"> -->
 
             <!-- public node url-->
-            <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
-              Public Node URL
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
+              DKG Node URL
             </h6>
             <div class="card_input w-full max-w-[400px] relative">
               <input
@@ -484,7 +722,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 type="text"
                 placeholder="URL.."
                 autocomplete="off"
-                class=" outline-none text-grey_4 text-[12px] w-full"
+                class=" outline-none text-grey_4 text-[14px] w-full"
               >
               <button @click="selectedPublicNodeURL = ''">
                 <vue-feather
@@ -493,20 +731,19 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 />
               </button>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]  whitespace-normal">
-              <!-- @chris `here` text needs a link to the correct page-->
+            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px]  whitespace-normal">
               Add RockX DKG support to your node as documented
               <a
                 href=""
                 target="_blank"
                 class="text-primary underline"
               >here</a>.
-            </div>
+            </div> -->
 
-            <hr class="my-[20px]">
+            <!-- <hr class="my-[20px]"> -->
 
             <!-- Collateral-->
-            <h6 class="text-[12px] font-[500] mt-[15px] mb-[4px] pl-[5px]">
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
               Collateral
             </h6>
             <div class="card_input w-full max-w-[400px] relative">
@@ -516,7 +753,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 type="text"
                 placeholder="0.00"
                 autocomplete="off"
-                class=" outline-none text-grey_4 text-[12px] w-full"
+                class=" outline-none text-grey_4 text-[14px] w-full"
                 @input="handleInputChangeCollateral"
               >
               <button
@@ -529,11 +766,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
                 />
               </button>
             </div>
-            <div class="text-[12px] mt-[4px] text-grey_4 pl-[5px]">
+            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px]">
               Deposit at least 1 ETH per validator you plan to run.
-            </div>
+            </div> -->
 
-            <div class="flex justify-end mt-[20px]">
+            <div class="flex justify-end mt-[10px]">
               <button
                 type="submit"
                 class="export_button"
@@ -546,194 +783,32 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
           </form>
         </div>
       </div>
-
-      <!-- Page header -->
-      <div class="flex flex-wrap gap-[20px] justify-between items-start pb-[20px] border-b border-b-[#EAECF0] ">
-        <div>
-          <div class="flex items-center gap-[8px]">
-            <h6 class="card_title">
-              Operators
-            </h6>
-          </div>
-          <div class="card_subtitle mt-[20px]">
-            List of operators according to their performance 
-          </div>
-        </div>
-        <div class="flex items-start gap-[12px]">
-          <button
-            class="flex items-center gap-[8px] export_button h-[38px]"
-            @click="exportFile(checkedItems, filteredData)"
-          >
-            <vue-feather
-              type="upload-cloud"
-              size="36"
-              class="icon w-[17px] h-min"
-            />
-            Export
-          </button>
-        </div>
-      </div>
-
-      <!-- Table -->
-      <div class="w-full overflow-x-scroll">
-        <table
-          v-if="tableData.length > 0"
-          class="w-full"
-        >
-          <thead>
-            <tr class="bg-[#FCFCFD] border-b border-b-[#EAECF0] whitespace-nowrap">
-              <th
-                v-for="header in operatorTableHeaders"
-                :key="header.title"
-                class="table_header "
-              >
-                <div class="flex items-center gap-[5px]">
-                  <div>
-                    {{ header.title }}
-                  </div>
-                  <button 
-                    v-show="header.value != 'blank_column'"
-                    class="ml-[4px] flex flex-col items-center justify-between"
-                    :class="selectedHeader === header.value? 'opacity-100' : 'opacity-25'"
-                    @click="selectedHeader = header.value, selectedOrientation === 'ascending'? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
-                  >
-                    <vue-feather
-                      type="arrow-up"
-                      size="20"
-                      class="icon h-min "
-                      :class="selectedOrientation === 'ascending'? 'w-[10px]' : 'w-[8px] opacity-50'"
-                    />
-                    <vue-feather
-                      type="arrow-down"
-                      size="20"
-                      class="icon h-min"
-                      :class="selectedOrientation === 'descending'? 'w-[10px]' : 'w-[8px] opacity-50'"
-                    />
-                  </button>
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody
-            class="w-full"
-          >
-            <tr
-              v-for="item in filteredData"
-              :key="item"
-              class="w-full text-grey_5 text-body border-b border-grey_2 h-[72px]"
-            >
-              <td
-                v-for="header in operatorTableHeaders"
-                :key="header.title"
-                class="dynamic_padding"
-              >
-                <div
-                  v-if="header.value === 'blank_column'"
-                  class="flex items-center gap-[12px]"
-                >
-                  <button
-                    class="checkbox_button"
-                    @click="checkedItems.includes(item)? removeItemFromCheckedList(item) : checkedItems.push(item)"
-                  >
-                    <vue-feather
-                      v-show="checkedItems.includes(item)"
-                      type="check"
-                      size="20"
-                      class="icon w-[14px] h-min"
-                    />
-                  </button>
-                </div>
-                <div
-                  v-if="header.value === 'deactivate'"
-                  class="flex items-center gap-[12px]"
-                >
-                  <!-- TODO: @Chris, wanna hook up this button? -->
-                  <button
-                    class="bg-decline text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500]"
-                  >
-                    Deactivate
-                  </button>
-                </div>
-                <div
-                  v-if="header.value === 'withdraw_collateral'"
-                  class="flex items-center gap-[12px]"
-                >
-                  <!-- TODO: @Chris, wanna hook up this button? -->
-                  <button
-                    class="bg-primary text-white rounded-[3px] px-[8px] py-[4px] text-[14px] font-[500] opacity-50"
-                    disabled
-                  >
-                    Withdraw
-                  </button>
-                </div>
-                <div v-else>
-                  {{ item[header.value] }}
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div
-          v-else
-          class="border border-dashed rounded-[3px] my-[20px] text-center py-[20px] px-[5%] whitespace-normal text-[14px] text-grey_3"
-        >
-          You currently do not have operators registed under your account.
-          
-          <p class="mt-[30px]">
-            Connect wallet or register operators to view their performance.
-          </p>
-        </div>
-      </div>
-      <div
-        v-if="tableData.length > 0"
-        class="flex justify-between items-center mt-[12px]"
-      >
-        <div class="page_number ml-[56px]">
-          Page {{ currentPage }} of {{ totalPages }}
-        </div>
-        <div class="flex items-center gap-[12px]">
-          <button
-            class="pagination_button"
-            :disabled="currentPage === 1"
-            @click="currentPage > 1? currentPage = currentPage - 1 : ''"
-          >
-            Previous
-          </button>
-          <button
-            class="pagination_button mr-[33px]"
-            :disabled="currentPage === totalPages"
-            @click="currentPage < totalPages? currentPage = currentPage + 1 : ''"
-          >
-            Next
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .card_input {
-    padding: 4px 10px;
-    background: #FFFFFF;
-    border: 1px solid #D0D5DD;
-    box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 24px;
-    letter-spacing: -0.01em;
-    color: #101828;
-    margin-bottom: 6px;
-    height: 34px;
+  padding: 0px 12px;
+  background: #FFFFFF;
+  border: 1px solid #D0D5DD;
+  box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 24px;
+  letter-spacing: -0.01em;
+  color: #101828;
+  /* margin-bottom: 6px; */
+  height: 34px;
 }
-.dynamic_padding{
+
+.dynamic_padding {
   padding: 12px 24px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -742,175 +817,340 @@ watch([loadingSessionLogin || loadingInitializeOperators], () =>{
     padding: 12px 0px 12px 12px;
   } */
 }
-.checkbox_button{
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: 20px;
-    height: 20px;
-    background: #F5F8FF;
-    border: 1px solid #ACBFDC;
-    border-radius: 6px;
-    color: #7D8398;
+
+.checkbox_button {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+  background: #F5F8FF;
+  border: 1px solid #ACBFDC;
+  border-radius: 6px;
+  color: #7D8398;
 }
-.table_header{
-    padding: 12px 24px;
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 12px;
-    line-height: 18px;
-    color: #667085;
-    text-align: left;
-    /* @media (max-width: 800px) {
+
+.table_header {
+  padding: 12px 24px;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 18px;
+  color: #667085;
+  text-align: left;
+  /* @media (max-width: 800px) {
       padding: 12px 0px 12px 12px;
     } */
 }
-.pagination_button{
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 20px;
-    color: #344054;
-    padding: 6px 12px;
-    background: #FFFFFF;
-    border: 1px solid #D0D5DD;
-    box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
-    border-radius: 8px;
+
+.pagination_button {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #344054;
+  padding: 6px 12px;
+  background: #FFFFFF;
+  border: 1px solid #D0D5DD;
+  box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
+  border-radius: 8px;
 }
-.page_number{
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 20px;
-    color: #344054;
+
+.page_number {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #344054;
 }
+
 .filters_button {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 20px;
-    color: #344054;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 10px 16px;
-    gap: 8px;
-    width: 101px;
-    height: 40px;
-    background: #FFFFFF;
-    border: 1px solid #D0D5DD;
-    box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
-    border-radius: 8px;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #344054;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 8px;
+  width: 101px;
+  height: 40px;
+  background: #FFFFFF;
+  border: 1px solid #D0D5DD;
+  box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
+  border-radius: 8px;
 }
-.search_bar{
-    width: 316px;
-    height: 34px;
-    background: #FFFFFF;
-    border: 1px solid #D0D5DD;
-    box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
-    border-radius: 8px;
-    padding: 5px 12px;
+
+.search_bar {
+  width: 316px;
+  height: 34px;
+  background: #FFFFFF;
+  border: 1px solid #D0D5DD;
+  box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
+  border-radius: 8px;
+  padding: 5px 12px;
 }
-.search_bar input{
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 24px;
-    color: #667085;
+
+.search_bar input {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 24px;
+  color: #667085;
 }
-.timeframe_button{
-    padding: 5px 10px;
-    /* background: #FFFFFF; */
-    align-items: center;
+
+.timeframe_button {
+  padding: 5px 10px;
+  /* background: #FFFFFF; */
+  align-items: center;
 }
-.grouped_buttons{
-    border: 1px solid #D0D5DD;
-    filter: drop-shadow(0px 1px 2px rgba(16, 24, 40, 0.05));
-    border-radius: 8px;
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 12px;
-    line-height: 20px;
-    color: #344054;
+
+.grouped_buttons {
+  border: 1px solid #D0D5DD;
+  filter: drop-shadow(0px 1px 2px rgba(16, 24, 40, 0.05));
+  border-radius: 8px;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 20px;
+  color: #344054;
 }
-.add_vendor_button{
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 20px;
-    color: #FFFFFF;
-    padding: 8px 10px;
-    background: #0F6AF2;
-    border: 1px solid #0F6AF2;
-    box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
-    border-radius: 8px;
+
+.add_vendor_button {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #FFFFFF;
+  padding: 8px 10px;
+  background: #0F6AF2;
+  border: 1px solid #0F6AF2;
+  box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
+  border-radius: 8px;
 }
-.export_button{
-    background: #FFFFFF;
-    border: 1px solid #D0D5DD;
-    box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
-    border-radius: 8px;
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 20px;
-    color: #344054;
-    padding: 8px 10px;
+
+.export_button {
+  background: #FFFFFF;
+  border: 1px solid #D0D5DD;
+  box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
+  border-radius: 8px;
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #344054;
+  padding: 8px 10px;
 }
-.card_subtitle{
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 20px;
-    color: #667085;
+
+.card_subtitle {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #667085;
 }
-.provider_amount_pill{
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 12px;
-    line-height: 18px;
-    color: #344054;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 2px 8px;
-    background: #F2F4F7;
-    border-radius: 16px;
+
+.provider_amount_pill {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 18px;
+  color: #344054;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 8px;
+  background: #F2F4F7;
+  border-radius: 16px;
 }
-.card_title{
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 18px;
-    line-height: 0px;
-    color: #101828;
+
+.card_title {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 0px;
+  color: #101828;
+  margin-top: 16px;
+  margin-bottom: 16px;
 }
-.card_container{
-    background: #FFFFFF;
-    border: 1px solid #D0D5DD;
-    box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
-    border-radius: 3px;
+
+.card_container {
+  background: #FFFFFF;
+  border: 1px solid #D0D5DD;
+  box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
+  border-radius: 3px;
 }
-.title{
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 24px;
-    line-height: 31px;
-    letter-spacing: -0.03em;
-    color: #FFFFFF;
+
+.title {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 31px;
+  letter-spacing: -0.03em;
+  color: #FFFFFF;
+}
+
+/* Eigen Button */
+.toggle_container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 10px;
+  /* space from the left edge */
+  position: relative;
+  width: 100%;
+  /* takes full width of parent container */
+  height: 44px;
+  /* adjust as needed if required */
+  background-color: rgb(26 12 109);
+  /* overflow: hidden; */
+  text-align: center;
+  color: #fff;
+  /* or any suitable color for better visibility */
+  font-size: 14px;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+  /* This will animate the color change */
+}
+
+.toggle_container:disabled {
+  background-color: rgba(26, 12, 109, 0.5);
+  /* This makes the purple color lighter (grayed out) */
+  /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
+}
+
+.tooltip_container {
+  position: absolute;
+  bottom: 100%;
+  /* position it above the button */
+  left: 50%;
+  /* center it horizontally */
+  transform: translateX(-50%);
+  /* shift it back by half its width to truly center it */
+  padding: 8px 12px;
+  /* space around the text */
+  background-color: #000;
+  /* or any desired tooltip color */
+  color: #fff;
+  /* text color */
+  border-radius: 4px;
+  /* round the corners */
+  opacity: 0;
+  /* starts hidden */
+  transition: opacity 0.3s;
+  /* smooth fade in */
+  white-space: nowrap;
+  /* prevents the text from wrapping */
+  font-size: 12px;
+  pointer-events: none;
+  /* ensures it doesn't block any interactions */
+  z-index: 10;
+  /* positions it above other elements */
+}
+
+.toggle_container:hover .tooltip_container {
+  opacity: 1;
+  /* show on hover */
+}
+
+.tooltip_triangle {
+  position: absolute;
+  bottom: -5px;
+  /* position at the bottom of the tooltip */
+  left: 50%;
+  /* center it horizontally */
+  transform: translateX(-50%);
+  /* shift it back by half its width to truly center it */
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #000;
+  /* same color as the tooltip background */
+}
+
+button:hover .tooltip_container {
+  opacity: 1;
+  /* show on hover */
+}
+
+/* .shine-effect {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -150%;
+  width: 200%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: rotate(30deg);
+  pointer-events: none;
+  animation: shine 2.5s infinite;
+} */
+
+/* @keyframes shine {
+  0% {
+    left: -150%;
+  }
+  50% {
+    left: 150%;
+  }
+  100% {
+    left: 150%;
+  }
+} */
+.toggle-button {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  /* space from the right edge */
+  transform: translateY(-50%);
+  width: 50px;
+  height: 25px;
+  background-color: #eee;
+  border-radius: 15px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.card_container .toggle_container.toggle-on .toggle-button {
+  background-color: green !important;
+}
+
+.toggle-circle {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: left 0.3s;
+}
+
+.toggle-on .toggle-circle {
+  left: calc(100% - 30px);
+}
+
+.eigen-logo {
+  height: 20px;
+  margin-right: 10px;
 }
 </style>@/composables/files@/composables/user
