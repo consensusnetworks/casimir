@@ -7,7 +7,6 @@ import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment'
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
 import * as cloudfrontOrigins from 'aws-cdk-lib/aws-cloudfront-origins'
-import * as lambda from 'aws-cdk-lib/aws-lambda'
 import { DocsStackProps } from '../interfaces/StackProps'
 import { pascalCase } from '@casimir/format'
 import { Config } from './config'
@@ -17,8 +16,6 @@ import { Config } from './config'
  */
 export class DocsStack extends cdk.Stack {
     public readonly name = pascalCase('docs')
-    public readonly assetPath = '../../apps/docs/dist'
-    public readonly functionPath = '../../services/redirect/dist'
 
     constructor(scope: Construct, id: string, props: DocsStackProps) {
         super(scope, id, props)
@@ -46,7 +43,7 @@ export class DocsStack extends cdk.Stack {
         })()
 
         const redirectFunction = new cloudfront.Function(this, config.getFullStackResourceName(this.name, 'redirect'), {
-            code: cloudfront.FunctionCode.fromFile({ filePath: this.functionPath })
+            code: cloudfront.FunctionCode.fromFile({ filePath: '../../services/redirect/dist/index.js' })
         })
 
         const distribution = new cloudfront.Distribution(this, config.getFullStackResourceName(this.name, 'distribution'), {
@@ -73,7 +70,7 @@ export class DocsStack extends cdk.Stack {
 
         new s3Deployment.BucketDeployment(this, config.getFullStackResourceName(this.name, 'bucket-deployment'), {
             destinationBucket: bucket,
-            sources: [s3Deployment.Source.asset(this.assetPath)],
+            sources: [s3Deployment.Source.asset('../../apps/docs/dist')],
             distribution,
             distributionPaths: ['/*'],
         })

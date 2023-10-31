@@ -15,8 +15,6 @@ import { kebabCase } from '@casimir/format'
  */
 export class UsersStack extends cdk.Stack {
     public readonly name = 'users'
-    public readonly assetPath = 'services/users/Dockerfile'
-    public readonly contextPath = '../../'
 
     constructor(scope: Construct, id: string, props: UsersStackProps) {
         super(scope, id, props)
@@ -79,8 +77,8 @@ export class UsersStack extends cdk.Stack {
         })
 
         const imageAsset = new ecrAssets.DockerImageAsset(this, config.getFullStackResourceName(this.name, 'image'), {
-            directory: this.contextPath,
-            file: this.assetPath,
+            directory: '../../',
+            file: 'services/users/Dockerfile',
             platform: ecrAssets.Platform.LINUX_AMD64,
             ignoreMode: cdk.IgnoreMode.GIT
         })

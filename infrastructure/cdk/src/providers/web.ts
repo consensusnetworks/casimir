@@ -16,7 +16,6 @@ import { Config } from './config'
  */
 export class WebStack extends cdk.Stack {
     public readonly name = pascalCase('web')
-    public readonly assetPath = '../../apps/web/dist'
 
     constructor(scope: Construct, id: string, props: WebStackProps) {
         super(scope, id, props)
@@ -69,7 +68,7 @@ export class WebStack extends cdk.Stack {
 
         new s3Deployment.BucketDeployment(this, config.getFullStackResourceName(this.name, 'bucket-deployment'), {
             destinationBucket: bucket,
-            sources: [s3Deployment.Source.asset(this.assetPath)],
+            sources: [s3Deployment.Source.asset('../../apps/web/dist')],
             distribution,
             distributionPaths: ['/*']
         })
