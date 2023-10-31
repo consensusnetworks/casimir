@@ -153,19 +153,19 @@ void async function () {
     )
     await deployBaseManager.wait()
     const [managerId] = await factory.getManagerIds()
-    const [managerAddress, registryAddress, upkeepAddress, viewsAddress] = await factory.getManagerConfig(managerId)
-    console.log(`Base CasimirManager contract deployed to ${managerAddress}`)
-    console.log(`Base CasimirRegistry contract deployed to ${registryAddress}`)
-    console.log(`Base CasimirUpkeep contract deployed to ${upkeepAddress}`)
-    console.log(`Base CasimirViews contract deployed to ${viewsAddress}`)
-    const upkeep = await ethers.getContractAt('CasimirUpkeep', upkeepAddress) as CasimirUpkeep
+    const managerConfig = await factory.getManagerConfig(managerId)
+    console.log(`Base CasimirManager contract deployed to ${managerConfig.managerAddress}`)
+    console.log(`Base CasimirRegistry contract deployed to ${managerConfig.registryAddress}`)
+    console.log(`Base CasimirUpkeep contract deployed to ${managerConfig.upkeepAddress}`)
+    console.log(`Base CasimirViews contract deployed to ${managerConfig.viewsAddress}`)
+    const upkeep = await ethers.getContractAt('CasimirUpkeep', managerConfig.upkeepAddress) as CasimirUpkeep
     
-    requestConfig.args[1] = viewsAddress
+    requestConfig.args[1] = managerConfig.viewsAddress
     const fulfillGasLimit = 300000
     const setRequest = await upkeep.setFunctionsRequest(requestConfig.source, requestConfig.args, fulfillGasLimit)
     await setRequest.wait()
-
-    await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, functionsOracle.address])
+    await upkeep.setFunctionsOracle(functionsOracle.address)
+    await functionsBillingRegistry.setAuthorizedSenders([functionsOracle.address, donTransmitter.address])
+    await functionsOracle.setAuthorizedSenders([donTransmitter.address, managerConfig.managerAddress, managerConfig.upkeepAddress])
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
-    await functionsOracle.addAuthorizedSenders([donTransmitter.address, upkeepAddress])
 }()

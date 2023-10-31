@@ -144,7 +144,7 @@ void async function () {
     const managerConfig = await factory.getManagerConfig(managerId)
     const upkeep = await ethers.getContractAt('CasimirUpkeep', managerConfig.upkeepAddress)
     await upkeep.setFunctionsOracle(functionsOracle.address)
-    await functionsOracle.setAuthorizedSenders([donTransmitter.address, managerConfig.managerAddress, managerConfig.upkeepAddress])
     await functionsBillingRegistry.setAuthorizedSenders([functionsOracle.address, donTransmitter.address])
+    await functionsOracle.setAuthorizedSenders([donTransmitter.address, managerConfig.managerAddress, managerConfig.upkeepAddress])
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
 }()
