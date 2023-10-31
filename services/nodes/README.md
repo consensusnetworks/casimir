@@ -1,6 +1,6 @@
 # Casimir Nodes
 
-Nodes and RPC/WS APIs
+> Ethereum RPC nodes and proxy server
 
 ## Execution Clients
 

@@ -1,3 +1,3 @@
 # @casimir/redirect
 
-> Casimir cloudfront functions redirect service
+> CloudFront Functions redirect service

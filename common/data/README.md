@@ -1,6 +1,6 @@
 # Casimir Data
 
-Casimir database JSON schemas
+> Database JSON schemas
 
 ## Schemas
 

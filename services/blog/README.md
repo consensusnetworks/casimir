@@ -1,3 +1,3 @@
 # @casimir/blog
 
-Casimir blog service
+> Hackmd blog service

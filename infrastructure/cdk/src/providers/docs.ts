@@ -52,16 +52,22 @@ export class DocsStack extends cdk.Stack {
             defaultBehavior: {
                 functionAssociations: [{
                     function: redirectFunction,
-                    eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+                    eventType: cloudfront.FunctionEventType.VIEWER_REQUEST
                 }],
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 origin: new cloudfrontOrigins.S3Origin(bucket, { originAccessIdentity })
             },
             errorResponses: [
                 {
+                    httpStatus: 403,
+                    responseHttpStatus: 200,
+                    responsePagePath: '/index.html',
+                    ttl: cdk.Duration.minutes(30)
+                },
+                {
                     httpStatus: 404,
                     responseHttpStatus: 200,
-                    responsePagePath: '/404.html',
+                    responsePagePath: '/index.html',
                     ttl: cdk.Duration.minutes(30)
                 }
             ],
