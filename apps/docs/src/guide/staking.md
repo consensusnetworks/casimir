@@ -4,7 +4,7 @@ This page is incomplete.
 
 # Staking
 
-Users can deposit any amount of ETH to a Casimir manager of their choice (i.e., standard or EigenLayer-enabled). Staking rewards are auto-compounded, and user can request a withdrawal their principal plus any earned proportion of new stake (or a partial amount of their choice) at any time.
+As a Casimir staker, you can deposit any amount of ETH to a staking strategy of your choice (i.e., base or EigenLayer) through the strategy's respective manager contract. Your staking rewards are auto-compounded at an optimal rate, and you can request a withdrawal of your deposit plus any earned proportion of new stake (or a partial amount of your choice) at any time.
 
 ## Staking Fees
 
@@ -34,7 +34,7 @@ Where:
 
 ## Stake Balances
 
-A manager contract adjusts a user's stake balance using the change in the total reward-to-stake ratio sum since their last interaction (deposit or withdrawal) with the contract. Each time new rewards are reported, the ratio sum is updated to include the new rewards-to-stake ratio. The ratio sum is used to calculate a user's current stake balance.
+Your stake balance is calculated on-chain using the change in the total reward-to-stake ratio sum since your last interaction (deposit or withdrawal) with the manager contract. Each time new rewards are reported, the total ratio sum is updated to include the new rewards-to-stake ratio. The total ratio sum is used to calculate your current stake balance.
 
 **Current Stake Balance:**
 
@@ -57,4 +57,4 @@ Where:
 
 ## Stake Withdrawals
 
-Users can request a withdrawal of any amount of their stake at any time. If the requested amount is available in the buffered balance (prepooled balance plus withdrawn balance), the withdrawal is fulfilled immediately. Otherwise, the withdrawal is added to the pending withdrawals queue and fulfilled when the requested amount is available (usually within 1-4 days, depending on the amount).
+You can request a withdrawal of any amount of your stake at any time. If the requested amount is available in the manager's withdrawable balance (prepooled balance plus withdrawn balance), the withdrawal is fulfilled immediately. Otherwise, the withdrawal is added to the pending withdrawals queue and fulfilled when the requested amount is available (usually within 1-4 days, depending on the amount).

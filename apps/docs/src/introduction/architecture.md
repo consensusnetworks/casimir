@@ -12,8 +12,8 @@ Casimir deploys the following contracts:
 
 - A [Casimir factory](#casimir-factory) that configures and deploys staking strategies.
 - For each staking strategy:
-  - A [Casimir manager](#casimir-manager) that is the entrypoint for stakers and deploys and distributes to validator pools.
-  - A [Casimir registry](#casimir-registry) that is the entrypoint for operators and binds collateral to validators pools. 
+  - A [Casimir manager](#casimir-manager) that accepts any amount of stake and distributes it to validator pools.
+  - A [Casimir registry](#casimir-registry) that registers operators and binds collateral to validators pools. 
   - A [Casimir upkeep](#casimir-upkeep) that automates distributed consensus layer reports.
   - A [Casimir views](#casimir-views) that provides a read-only interface to the strategy.
   - For each validator pool:
@@ -71,12 +71,4 @@ graph TB
         EigenLayerPool1(CasimirPool) -.- EigenLayerPool2(CasimirPool) -.- EigenLayerPool3(CasimirPool) -.- EigenLayerPool4(CasimirPool) -.- EigenLayerPoolN(...)
     end
 ```
-
-### External Contracts
-
-The Casimir contracts integrate with the following external contracts:
-
-- The [Ethereum deposit contract](#ethereum-deposit-contract) that is the entrypoint for validator deposits to the consensus layer.
-- The [SSV network](#ssv-network) that provides DVT validators with permissionless operators.
-- Todo finish.
 

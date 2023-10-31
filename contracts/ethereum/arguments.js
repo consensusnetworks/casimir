@@ -5,4 +5,4 @@
 
 // const { ETHEREUM_CONTRACTS } = require("@casimir/env");
 
-// module.exports = []
+module.exports = []
