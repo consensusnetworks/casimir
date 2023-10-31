@@ -341,7 +341,7 @@ const toggleQuestionItem = (index: number) => {
         <ul>
           <li>
             <a
-              href="https://discord.com/channels/976524855279226880/978757663821271120"
+              href="https://discord.gg/mBYs8FsY"
               target="_blank"
             >Discord</a>
           </li>
