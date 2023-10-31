@@ -131,7 +131,7 @@ const toggleQuestionItem = (index: number) => {
 
     <section class="overview">
       <div class="overview__header">
-        <span class="highlight text-8">Minimized Risk & Maximized Rewards</span>
+        <!-- <span class="highlight text-8">Minimized Risk & Maximized Rewards</span> -->
         <h2>
           Casimir is built to maximize your rewards <br>
           without compromising security.
@@ -228,16 +228,18 @@ const toggleQuestionItem = (index: number) => {
             <span class="text-7 bold">Permissionless & Auditable</span>
           </div>
           <span class="text-r">
-            Casimir is open-sourced; anyone can use and review the service.
+            Casimir is open-sourced; anyone can use and review the code.
           </span>
         </div>
       </div>
     </section>
 
     <section class="bento">
-      <h2 class="">
-        One place to connect your <br>wallets, stake, and see your analytics.
-      </h2>
+      <div class="overview__header">
+        <h2>
+          One place to connect your wallets, <br> stake, withdraw, and see your analytics.
+        </h2>
+      </div>
       <div class="bento__container">
         <div class="bento__base__card bento__card__1">
           <h2 class="text-6">
@@ -339,7 +341,7 @@ const toggleQuestionItem = (index: number) => {
         <ul>
           <li>
             <a
-              href="/"
+              href="https://discord.com/channels/976524855279226880/978757663821271120"
               target="_blank"
             >Discord</a>
           </li>
