@@ -5,7 +5,7 @@ esbuild.build({
     entryPoints: ['src/index.ts'],
     outfile: 'dist/index.js',
     minify: false,
-    sourcemap: true,
+    sourcemap: false,
     platform: 'node',
     target: 'esnext'
 })

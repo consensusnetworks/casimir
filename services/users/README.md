@@ -1,6 +1,6 @@
 # @casimir/users
 
-Casimir users service
+> Casimir users service and database
 
 ## Development
 
