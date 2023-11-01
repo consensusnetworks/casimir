@@ -27,10 +27,12 @@ const formattedAmountToStakeOrWithdraw = ref('')
 const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
 const selectedStakingProvider = ref<ProviderString>('')
 const selectedWalletAddress = ref(null as null | string)
+const selectedOperatorGroup = ref(null as null | 'Default' | 'Eigen')
 
 // Wallet Select Refs
 const errorMessage = ref(null as null | string)
 const openSelectWalletInput = ref(false)
+const openSelectOperatorGroupInput = ref(false)
 const openTermsOfService = ref(false)
 const termsOfServiceCheckbox = ref(false)
 
@@ -67,14 +69,14 @@ function toggleEstimatedAPY() {
   }
 }
 
-const handleInputOnAmountToStake = (event: any) => {
+const handleInputOnAmountToStakeOrWithdraw = (event: any) => {
   const value = event.target.value.replace(/[^\d.]/g, '')
   const parts = value.split('.')
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 
-  // Limit to two decimal places
-  if (parts[1] && parts[1].length > 2) {
-    parts[1] = parts[1].slice(0, 2)
+  // Limit to 18 decimal places
+  if (parts[1] && parts[1].length > 18) {
+    parts[1] = parts[1].slice(0, 18)
   }
 
   // Update the model value
@@ -122,8 +124,6 @@ watch(formattedAmountToStakeOrWithdraw, async () => {
   if (formattedAmountToStakeOrWithdraw.value) {
     const floatAmount = parseFloat(formattedAmountToStakeOrWithdraw.value?.replace(/,/g, ''))
     let maxAmount
-    // minAmount is 0.0001 ETH
-    let minAmount = 0.0001
     if (selectedWalletAddress.value) {
       maxAmount = await getEthersBalance(selectedWalletAddress.value)
     } else {
@@ -132,8 +132,6 @@ watch(formattedAmountToStakeOrWithdraw, async () => {
 
     if (floatAmount > maxAmount) {
       errorMessage.value = 'Insufficient Funds'
-    } else if (floatAmount < minAmount) {
-      errorMessage.value = 'Minimun Staking is 0.0001 ETH'
     } else {
       errorMessage.value = null
     }
@@ -198,6 +196,15 @@ const handleOutsideClickForWalletInput = (event: any) => {
   }
 }
 
+const handleOutsideClickForOperatorGroupInput = (event: any) => {
+  const selectOperatorGroupInputContainer = document.getElementById('selectOperatorGroupInputContainer')
+  const selectOperatorGroupInputButton = document.getElementById('selectOperatorGroupInputButton')
+
+  if(!selectOperatorGroupInputContainer?.contains(event.target) && !selectOperatorGroupInputButton?.contains(event.target)){
+    openSelectOperatorGroupInput.value = false
+  }
+}
+
 const handleOutsideClickForTermsOfService = (event: any) => {
   const termsOfServiceContainer = document.getElementById('termsOfServiceContainer')
   const termsOfServiceButton = document.getElementById('termsOfServiceButton')
@@ -213,6 +220,14 @@ watch(openSelectWalletInput, ()=>{
     window.addEventListener('click', handleOutsideClickForWalletInput)
   }else {
     window.removeEventListener('click', handleOutsideClickForWalletInput)
+  }
+})
+
+watch(openSelectOperatorGroupInput, ()=>{
+  if(openSelectWalletInput.value){
+    window.addEventListener('click', handleOutsideClickForOperatorGroupInput)
+  }else {
+    window.removeEventListener('click', handleOutsideClickForOperatorGroupInput)
   }
 })
 
@@ -239,8 +254,8 @@ const handleDeposit = async () => {
     type: stakeType.value 
   })
 
-  if (!result) stakeButtonText.value = 'Failed!'
-  stakeButtonText.value = 'Staked!'
+  if (result === false) stakeButtonText.value = 'User Rejected Signature'
+    else stakeButtonText.value = 'Staked!'
 
   setTimeout(() =>{
     stakeButtonText.value = 'Stake'
@@ -264,7 +279,7 @@ const handleDeposit = async () => {
 
 const handleWithdraw = async () => {
   stakeButtonText.value = 'Withdrawing...'
-
+  selectedOperatorGroup.value = null
   // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
   // if (activeAddress !== selectedWalletAddress.value) {
   //   formattedAmountToStakeOrWithdraw.value = ''
@@ -289,7 +304,7 @@ const handleWithdraw = async () => {
   })
 
   if (!result) stakeButtonText.value = 'Failed!'
-  stakeButtonText.value = 'Withdrawn!'
+    else stakeButtonText.value = 'Withdrawn!'
 
   setTimeout(() =>{
     stakeButtonText.value = 'Withdraw'
@@ -430,10 +445,10 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
           id="amount_input"
           v-model="formattedAmountToStakeOrWithdraw"
           type="text"
-          pattern="^\d{1,3}(,\d{3})*(\.\d+)?$"
+          pattern="^\d{1,3}(,\d{3})*(\.\d{1,18})?$"
           placeholder="0.00"
-          class=" outline-none"
-          @input="handleInputOnAmountToStake"
+          class="outline-none"
+          @input="handleInputOnAmountToStakeOrWithdraw"
         >
       </div>
       <div class="flex items-center gap-[4px]">
@@ -443,41 +458,119 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
       </div>
     </button>
 
-    <!-- Fees, Exchange Rate, Estimated APY -->
-    <div class="flex justify-between items-center mt-[22px]">
-      <div class="flex items-center gap-[12px]">
-        <h6 class="card_analytics_label">
-          Fees
+    <!-- Fees, Exchange Rate, Estimated APY (for stake only)-->
+    <div v-if="stakeOrWithdraw === 'stake'">
+      <div class="flex justify-between items-center mt-[22px]">
+        <div class="flex items-center gap-[12px]">
+          <h6 class="card_analytics_label">
+            Fees
+          </h6>
+        </div>
+        <h6 class="card_analytics_amount">
+          <!-- {{ estimatedFees }}.00% -->
+          5.00%
         </h6>
       </div>
-      <h6 class="card_analytics_amount">
-        <!-- {{ estimatedFees }}.00% -->
-        5.00%
-      </h6>
+      <div class="flex justify-between items-center my-[10px]">
+        <div class="flex items-center gap-[12px]">
+          <h6 class="card_analytics_label">
+            Exchange Rate
+          </h6>
+        </div>
+        <h6 class="card_analytics_amount">
+          ${{ currentEthPrice }}/ETH
+        </h6>
+      </div>
+      <div class="flex justify-between items-center mb-[26px]">
+        <div class="flex items-center gap-[12px]">
+          <h6 class="card_analytics_label">
+            Estimated APY
+          </h6>
+        </div>
+        <h6 class="card_analytics_amount">
+          {{ estimatedAPY }}%
+        </h6>
+      </div>
     </div>
-    <div class="flex justify-between items-center my-[10px]">
-      <div class="flex items-center gap-[12px]">
-        <h6 class="card_analytics_label">
-          Exchange Rate
-        </h6>
-      </div>
-      <h6 class="card_analytics_amount">
-        ${{ currentEthPrice }}/ETH
+
+    <!-- Operator Group Selector (for withdraw only) -->
+    <div
+      v-else
+      class="my-[22px]"
+    >
+      <h6 class="card_title my-[11px]">
+        Operator Group
       </h6>
-    </div>
-    <div class="flex justify-between items-center mb-[26px]">
-      <div class="flex items-center gap-[12px]">
-        <h6 class="card_analytics_label">
-          Estimated APY
-        </h6>
+      <div class="card_input text-black mb-[22px] relative">
+        <button
+          id="selectOperatorGroupInputButton"
+          class="flex items-center justify-between gap-[8px] w-full h-full px-[10px] py-[14px]"
+          :class="selectedOperatorGroup ? 'text-black' : 'text-grey_4'"
+          @click="openSelectOperatorGroupInput = !openSelectOperatorGroupInput"
+        >
+          <div class="flex justify-between w-full">
+            <div>{{ selectedOperatorGroup ? selectedOperatorGroup : 'Select Operator Group' }}</div> 
+            <div class="flex gap-10 font-[400]">
+              <!-- {{ addressBalance ? addressBalance : '' }} -->
+              <!-- TODO: This needs to be the amount available to withdraw -->
+              <vue-feather
+                :type="openSelectOperatorGroupInput ? 'chevron-up' : 'chevron-down'"
+                size="36"
+                class="icon w-[20px]"
+              />
+            </div>
+          </div>
+        </button>
+        <div
+          v-show="openSelectOperatorGroupInput"
+          id="selectOperatorGroupInputContainer"
+          class="absolute top-[110%] w-full bg-white rounded-[8px] border border-[#D0D5DD] px-[10px] py-[14px] max-h-[250px] overflow-auto"
+        >
+          <!-- TODO: Update this to only show if user has staked -->
+          <!-- <div
+            class="flex justify-center items-center text-grey_4 py-[10px]"
+          >
+            Nothing to withdraw
+          </div> -->
+          <!-- TODO: Update this to iterate over the contracts user has staked to -->
+          <div
+            id="selectOperatorGroupOptionsCard"
+            class="mt-[5px] mb-[10px]"
+          >
+            <button
+              class="w-full text-left rounded-[8px] py-[10px] px-[14px]
+            hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
+              @click="selectedOperatorGroup = 'Default', openSelectOperatorGroupInput = false, stakeType='default'"
+            >
+              Default
+              <vue-feather
+                type="chevron-right"
+                size="36"
+                class="icon w-[20px]"
+              />
+            </button>
+            <button
+              class="w-full text-left rounded-[8px] py-[10px] px-[14px]
+            hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
+              @click="selectedOperatorGroup = 'Eigen', openSelectOperatorGroupInput = false, stakeType='eigen'"
+            >
+              Eigen
+              <vue-feather
+                type="chevron-right"
+                size="36"
+                class="icon w-[20px]"
+              />
+            </button>
+          </div>
+        </div>
       </div>
-      <h6 class="card_analytics_amount">
-        {{ estimatedAPY }}%
-      </h6>
     </div>
 
     <!-- Terms of Service -->
-    <div class="flex items-center gap-[18px] mb-[27px]">
+    <div
+      v-if="stakeOrWithdraw === 'stake'"
+      class="flex items-center gap-[18px] mb-[27px]"
+    >
       <input
         v-model="termsOfServiceCheckbox"
         type="checkbox"
@@ -495,6 +588,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
 
     <!-- Eigen Boggle -->
     <button
+      v-if="stakeOrWithdraw === 'stake'"
       class="eigen-toggle-container mb-[12px]"
       :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage && !eigenDisabled)"
       @click="toggleShineEffect"
@@ -525,9 +619,9 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
 
     <!-- Submit Button -->
     <button
-      class="submit-button  h-[37px] w-full "
+      class="submit-button  h-[37px] w-full"
       :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
-      :disabled="!(termsOfServiceCheckbox && selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage) || (stakeButtonText !== 'Stake' && stakeButtonText !== 'Withdraw')"
+      :disabled="!(selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage) || (stakeButtonText !== 'Stake' && stakeButtonText !== 'Withdraw') || parseFloat(formattedAmountToStakeOrWithdraw) <= 0 || (stakeOrWithdraw === 'stake' && !termsOfServiceCheckbox)"
       @click="stakeOrWithdraw === 'stake' ? handleDeposit() : handleWithdraw()"
     >
       <div
@@ -623,6 +717,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
   border: 1px solid #D0D5DD;
   box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
   border-radius: 3px;
+  min-height: 542px;
 }
 
 .card_title {
@@ -666,6 +761,9 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
 
 .submit-button {
   /* background: #0F6AF2; */
+  position: absolute;
+  bottom: 20px;
+  max-width: 256px;
   border-radius: 5px;
   font-family: 'IBM Plex Sans';
   font-style: normal;
