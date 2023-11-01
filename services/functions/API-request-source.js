@@ -223,7 +223,7 @@ async function getDepositedPoolStatuses(startIndex, endIndex) {
 		let status = parseInt(rawStatuses.slice(start, end), 16)
 		statuses.push(status)
 	}
-	return [1, 2]
+	return [2, 2]
 }
 
 async function getSweptBalance(startIndex, endIndex) {
