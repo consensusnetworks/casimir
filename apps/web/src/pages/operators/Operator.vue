@@ -528,7 +528,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
       class="fixed top-0 left-0 w-[100%] h-[100vh] bg-black/[0.3] rounded-[3px] z-[2]"
     >
       <div class="flex items-center justify-center w-full h-full">
-        <div class="card_container w-[80%] overflow-auto px-[30px] py-[20px] ">
+        <div class="card_container w-[80%] overflow-auto px-[30px] py-[20px]">
           <div class="flex justify-between items-start">
             <div class="flex-grow text-center">
               <h5 class="card_title inline-block align-middle">
@@ -572,12 +572,15 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
             </div>
           </div>
 
-          <form @submit.prevent="submitRegisterOperatorForm">
+          <form
+            class="grid grid-cols-2 gap-4 items-center"
+            @submit.prevent="submitRegisterOperatorForm"
+          >
             <!-- Wallet address input -->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              Choose the wallet address you used to register your SSV operator:
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] col-span-1">
+              Wallet Address:
             </h6>
-            <div class="card_input w-full max-w-[400px] relative">
+            <div class="card_input w-full col-span-1 relative">
               <input
                 id="walletAddress"
                 v-model="selectedWallet.address"
@@ -590,6 +593,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               >
               <button
                 type="button"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2"
                 @click="selectedWallet = { walletProvider: '', address: '' }"
               >
                 <vue-feather
@@ -618,49 +622,18 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               </div>
             </div>
 
-            <!-- Enable Eigen Support -->
-            <!-- <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              Add Eigen Support to Your Validator (Optional)
+            <!-- Operator ID input -->
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] col-span-1">
+              Operator ID:
             </h6>
-            <button
-              class="toggle_container mt-10  w-full max-w-[400px] relative"
-              :disabled="true"
-              @click="toggleEigenLayerSupport"
-            >
-              <div class="tooltip_container">
-                COMING SOON!
-                <div class="tooltip_triangle" />
-              </div>
-              <img
-                class="eigen-logo"
-                src="/eigen.svg"
-              >
-              Enable EigenLayer Support
-              <span
-                v-if="eigenIsShining"
-                class="shine-effect"
-              />
-              <div
-                class="toggle-button"
-                :style="{ 'background-color': toggleBackgroundColor }"
-                :class="{ 'toggle-on': eigenIsToggled }"
-              >
-                <div class="toggle-circle" />
-              </div>
-            </button> -->
-
-            <!-- operator id input -->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              Operator ID
-            </h6>
-            <div class="card_input w-full max-w-[400px] relative">
+            <div class="card_input w-full col-span-1 relative">
               <input
                 id="operator_id"
                 v-model="selectedOperatorID"
                 type="text"
                 readonly
                 placeholder="Operator ID.."
-                class=" outline-none text-grey_4 text-[14px] w-full bg-white cursor-pointer"
+                class="outline-none text-grey_4 text-[14px] w-full bg-white cursor-pointer"
                 autocomplete="off"
                 @focus="openSelectOperatorID = true"
                 @blur="onSelectOperatorIDBlur"
@@ -702,64 +675,48 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                 </button>
               </div>
             </div>
-            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
-              If no operators found with your SSV owner address, register one 
-              <a
-                href=""
-                target="_blank"
-                class="text-primary underline"
-              >here</a>.
-            </div> -->
 
-            <!-- <hr class="my-[20px]"> -->
-
-            <!-- public node url-->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              DKG Node URL
+            <!-- Public node URL input -->
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] col-span-1">
+              DKG Node URL:
             </h6>
-            <div class="card_input w-full max-w-[400px] relative">
+            <div class="card_input w-full col-span-1 relative">
               <input
-                id="operator_id"
+                id="publicNodeURL"
                 v-model="selectedPublicNodeURL"
                 type="text"
                 placeholder="URL.."
                 autocomplete="off"
-                class=" outline-none text-grey_4 text-[14px] w-full"
+                class="outline-none text-grey_4 text-[14px] w-full"
               >
-              <button @click="selectedPublicNodeURL = ''">
+              <button
+                class="absolute right-3 top-1/2 transform -translate-y-1/2"
+                @click="selectedPublicNodeURL = ''"
+              >
                 <vue-feather
                   type="x"
                   class="icon w-[12px] h-min"
                 />
               </button>
             </div>
-            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px]  whitespace-normal">
-              Add RockX DKG support to your node as documented
-              <a
-                href=""
-                target="_blank"
-                class="text-primary underline"
-              >here</a>.
-            </div> -->
 
-            <!-- <hr class="my-[20px]"> -->
-
-            <!-- Collateral-->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              Collateral
+            <!-- Collateral input -->
+            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] col-span-1">
+              Collateral:
             </h6>
-            <div class="card_input w-full max-w-[400px] relative">
+            <div class="card_input w-full col-span-1 relative">
               <input
-                id="operator_id"
+                id="collateral"
                 v-model="selectedCollateral"
                 type="text"
                 placeholder="0.00"
                 autocomplete="off"
-                class=" outline-none text-grey_4 text-[14px] w-full"
+                class="outline-none text-grey_4 text-[14px] w-full"
                 @input="handleInputChangeCollateral"
               >
               <button
                 type="button"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2"
                 @click="selectedCollateral = ''"
               >
                 <vue-feather
@@ -768,11 +725,9 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                 />
               </button>
             </div>
-            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px]">
-              Deposit at least 1 ETH per validator you plan to run.
-            </div> -->
 
-            <div class="flex justify-end mt-[10px]">
+            <!-- Submit button -->
+            <div class="flex justify-end mt-[10px] col-span-2">
               <button
                 type="submit"
                 class="export_button"
@@ -997,6 +952,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
   border: 1px solid #D0D5DD;
   box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
   border-radius: 3px;
+  min-height: 500px;
 }
 
 .title {
