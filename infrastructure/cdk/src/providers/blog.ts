@@ -32,6 +32,7 @@ export class BlogStack extends cdk.Stack {
         const hackmdToken = ecs.Secret.fromSecretsManager(
             secretsmanager.Secret.fromSecretNameV2(this, pascalCase(hackmdTokenKey), kebabCase(hackmdTokenKey))
         )
+        
         const fargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, config.getFullStackResourceName(this.name, 'fargate'), {
             assignPublicIp: true,
             certificate,
