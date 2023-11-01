@@ -617,7 +617,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
             </div>
 
             <!-- Enable Eigen Support -->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
+            <!-- <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
               Add Eigen Support to Your Validator (Optional)
             </h6>
             <button
@@ -645,7 +645,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               >
                 <div class="toggle-circle" />
               </div>
-            </button>
+            </button> -->
 
             <!-- operator id input -->
             <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
