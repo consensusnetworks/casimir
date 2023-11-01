@@ -28,20 +28,20 @@ export async function fulfillRequestHandler(input: HandlerInput): Promise<void> 
     if (success) {
         const signer = config.wallet.connect(provider)        
         const dummySigners = Array(31).fill(signer.address)    
-        const fulfillAndBill = await functionsBillingRegistry.connect(signer).fulfillAndBill(
-            requestId,
-            result,
-            '0x',
-            signer.address,
-            dummySigners,
-            4,
-            100_000,
-            500_000,
-            {
-                gasLimit: 500_000,
-            }
-        )
-        await fulfillAndBill.wait()
+        // const fulfillAndBill = await functionsBillingRegistry.connect(signer).fulfillAndBill(
+        //     requestId,
+        //     result,
+        //     '0x',
+        //     signer.address,
+        //     dummySigners,
+        //     4,
+        //     100_000,
+        //     500_000,
+        //     {
+        //         gasLimit: 500_000,
+        //     }
+        // )
+        // await fulfillAndBill.wait()
         if (process.env.USE_LOGS === 'true') {
             updateExecutionLog('execution.log', resultLog)
         }

@@ -6,6 +6,7 @@ import ICasimirRegistryAbi from '../build/abi/ICasimirRegistry.json'
 import ICasimirUpkeepAbi from '../build/abi/ICasimirUpkeep.json'
 import ICasimirViewsAbi from '../build/abi/ICasimirViews.json'
 import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from '@casimir/env'
+import { run } from '@casimir/shell'
 
 void async function() {
     process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL['TESTNET']
@@ -18,10 +19,12 @@ void async function() {
     const managerConfig = await factory.getManagerConfig(managerId)
     // const manager = new ethers.Contract(managerConfig.managerAddress, ICasimirManagerAbi, provider) as CasimirManager
     // const registry = new ethers.Contract(managerConfig.registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
-    // const upkeep = new ethers.Contract(managerConfig.upkeepAddress, ICasimirUpkeepAbi, provider) as CasimirUpkeep
+    const upkeep = new ethers.Contract(managerConfig.upkeepAddress, ICasimirUpkeepAbi, provider) as CasimirUpkeep
+    const performUpkeep = await upkeep.connect(owner).performUpkeep('0x')
+    await performUpkeep.wait()
     // const views = new ethers.Contract(managerConfig.viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
-    // // const resetReport = await upkeep.connect(owner).resetReport(0, 0, 0, 0, 0)
-    // // await resetReport.wait()
+    // console.log(await views.getDepositedPoolStatuses(0, 2))
     // const requestReport = await upkeep.connect(owner).requestReport()
     // await requestReport.wait()
+    // run('npm run dev --workspace @casimir/functions')
 }()

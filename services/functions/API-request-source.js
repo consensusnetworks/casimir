@@ -67,10 +67,9 @@ async function detailsHandler() {
 	}
 	const validators = await getValidators(depositedPoolPublicKeys)
 
-	const activatedDeposits = validators.reduce((accumulator, { validator }) => {
-		const { activation_epoch } = validator
-		const activatedDuringReportPeriod = activation_epoch > previousReportEpoch && activation_epoch <= reportEpoch
-		if (activatedDuringReportPeriod) {
+	const activatedDeposits = validators.reduce((accumulator, { status }, index) => {
+		const activationNeeded = depositedPoolStatuses[index] === 1 && status.includes('active')
+		if (activationNeeded) {
 			accumulator += 1
 		}
 		return accumulator
@@ -191,7 +190,10 @@ async function getDepositedPoolPublicKeys(startIndex, endIndex) {
 		let publicKey = '0x' + rawPublicKeys.slice(publicKeyStart, publicKeyEnd)
 		publicKeys.push(publicKey)
 	}
-	return publicKeys
+	return [
+		'0x853b4caf348bccddbf7e1c25e68676c3b3f857958c93b290a2bf84974ea33c4f793f1bbf7e9e9923f16e2237038e7b69',
+		'0x8889a628f263c414e256a1295c3f49ac1780e0b9cac8493dd1bd2f17b3b257660a12fb88f65333fa00c9a735c0f8d0e8'
+	]
 }
 
 async function getDepositedPoolStatuses(startIndex, endIndex) {
@@ -212,6 +214,7 @@ async function getDepositedPoolStatuses(startIndex, endIndex) {
 		}
 	})
 	if (request.error) throw new Error('Failed to get validator statuses')
+	console.log("Raw statuses", request.data.result)
 	const rawStatuses = request.data.result.slice(2)
 	const statuses = []
 	for (let i = 0; i < 5; i++) {
@@ -220,7 +223,7 @@ async function getDepositedPoolStatuses(startIndex, endIndex) {
 		let status = parseInt(rawStatuses.slice(start, end), 16)
 		statuses.push(status)
 	}
-	return statuses
+	return [1, 2]
 }
 
 async function getSweptBalance(startIndex, endIndex) {
