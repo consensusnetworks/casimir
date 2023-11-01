@@ -19,13 +19,14 @@ export class NodesStack extends cdk.Stack {
         const { rootDomain, subdomains } = config
         const { hostedZone } = props
 
-        const nodesIp = secretsmanager.Secret.fromSecretNameV2(this, config.getFullStackResourceName(this.name, 'nodes-ip'), kebabCase(config.getFullStackResourceName(this.name, 'nodes-ip')))
+        const nodesIpKey = 'casimir-nodes-ip'
+        const nodesIp = secretsmanager.Secret.fromSecretNameV2(this, pascalCase(nodesIpKey), kebabCase(nodesIpKey))
 
         new route53.ARecord(this, config.getFullStackResourceName(this.name, 'a-record-api'), {
             recordName: `${subdomains.nodes}.${rootDomain}`,
             zone: hostedZone as route53.IHostedZone,
             target: route53.RecordTarget.fromIpAddresses(nodesIp.secretValue.unsafeUnwrap()),
-            ttl: cdk.Duration.minutes(1),
+            ttl: cdk.Duration.minutes(1)
         })
     }
 }
