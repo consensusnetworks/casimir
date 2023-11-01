@@ -528,16 +528,14 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
       class="fixed top-0 left-0 w-[100%] h-[100vh] bg-black/[0.3] rounded-[3px] z-[2]"
     >
       <div class="flex items-center justify-center w-full h-full">
-        <div class="card_container w-[80%] overflow-auto px-[30px] py-[20px]">
-          <div class="flex gap-[10px] flex-wrap justify-between">
-            <div class="flex flex-col">
-              <h6 class="card_title">
+        <div class="card_container w-[80%] overflow-auto px-[30px] py-[20px] ">
+          <div class="flex justify-between items-start">
+            <div class="flex-grow text-center">
+              <h5 class="card_title inline-block align-middle">
                 Register Operator
-              </h6>
-
-              <!-- Even Better Link to Operator Docs -->
+              </h5>
               <div
-                class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-15 py-9 mt-12 mb-4 w-[400px]"
+                class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-15 py-9 mt-12 mb-4 w-full"
                 role="alert"
               >
                 <p class="text-sm">
@@ -556,8 +554,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                 </p>
               </div>
             </div>
-
-            <div class="">
+            <!-- An 'X' to cancel out of the modal -->
+            <div
+              class="shrink-0 relative"
+              style="top: -0.5rem;"
+            >
               <button
                 type="button"
                 class="card_title"
@@ -570,10 +571,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               </button>
             </div>
           </div>
+
           <form @submit.prevent="submitRegisterOperatorForm">
             <!-- Wallet address input -->
             <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              Wallet
+              Choose the wallet address you used to register your SSV operator:
             </h6>
             <div class="card_input w-full max-w-[400px] relative">
               <input
@@ -983,7 +985,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 500;
-  font-size: 18px;
+  font-size: 24px;
   line-height: 0px;
   color: #101828;
   margin-top: 16px;
