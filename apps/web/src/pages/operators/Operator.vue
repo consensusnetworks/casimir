@@ -528,17 +528,17 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
       class="fixed top-0 left-0 w-[100%] h-[100vh] bg-black/[0.3] rounded-[3px] z-[2]"
     >
       <div class="flex items-center justify-center w-full h-full">
-        <div class="card_container w-[80%] overflow-auto px-[30px] py-[20px]">
+        <div class="modal_card_container w-[80%] overflow-auto px-[30px] py-[20px]">
           <div class="flex justify-between items-start">
             <div class="flex-grow text-center">
               <h5 class="card_title inline-block align-middle">
                 Register Operator
               </h5>
               <div
-                class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-15 py-9 mt-12 mb-4 w-full"
+                class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-15 py-6 my-2 w-full"
                 role="alert"
               >
-                <p class="text-sm">
+                <p class="text-lg">
                   Learn how to set up a Casimir operator using
                   <a
                     :href="`${docsUrl}/guide/operating`"
@@ -573,11 +573,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
           </div>
 
           <form
-            class="grid grid-cols-2 gap-4 items-center"
+            class="grid grid-cols-2 grid-rows-4 gap-x-4 gap-y-6 items-center h-[75%] px-40"
             @submit.prevent="submitRegisterOperatorForm"
           >
             <!-- Wallet address input -->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] col-span-1">
+            <h6 class="font-[400] mt-[15px] mb-[4px] col-span-1">
               Wallet Address:
             </h6>
             <div class="card_input w-full col-span-1 relative">
@@ -605,7 +605,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                 v-show="openSelectWalletOptions"
                 class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
-                <h6 class="text-[16px]">
+                <h6 class="">
                   Your Connected Wallets
                 </h6>
                 <button
@@ -623,7 +623,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
             </div>
 
             <!-- Operator ID input -->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] col-span-1">
+            <h6 class="font-[400] mt-[15px] mb-[4px] col-span-1">
               Operator ID:
             </h6>
             <div class="card_input w-full col-span-1 relative">
@@ -652,7 +652,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                 v-show="openSelectOperatorID"
                 class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
-                <h6 class="text-[16px]">
+                <h6>
                   Available Operators
                 </h6>
                 <div
@@ -677,7 +677,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
             </div>
 
             <!-- Public node URL input -->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] col-span-1">
+            <h6 class="font-[400] mt-[15px] mb-[4px] col-span-1">
               DKG Node URL:
             </h6>
             <div class="card_input w-full col-span-1 relative">
@@ -701,7 +701,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
             </div>
 
             <!-- Collateral input -->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] col-span-1">
+            <h6 class="font-[400] mt-[15px] mb-[4px] col-span-1">
               Collateral:
             </h6>
             <div class="card_input w-full col-span-1 relative">
@@ -746,7 +746,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
 
 <style scoped>
 .card_input {
-  padding: 0px 12px;
+  padding: 0px 8px; /* Adjust as needed */
   background: #FFFFFF;
   border: 1px solid #D0D5DD;
   box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
@@ -937,14 +937,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
 }
 
 .card_title {
-  font-family: 'IBM Plex Sans';
-  font-style: normal;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-weight: 500;
   font-size: 24px;
-  line-height: 0px;
   color: #101828;
-  margin-top: 16px;
-  margin-bottom: 16px;
+  margin: 14px 0;
 }
 
 .card_container {
@@ -953,6 +950,22 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
   box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
   border-radius: 3px;
   min-height: 500px;
+}
+
+.modal_card_container {
+  background: #FFFFFF;
+  border: 1px solid #D0D5DD;
+  box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
+  border-radius: 8px;
+  height: 500px;
+  max-width: 1000px; /* Adjust as needed */
+  overflow: auto;
+}
+
+/* the form h6 tags */
+.modal_card_container h6 {
+  font-size: 18px;
+  padding-bottom: 10px;
 }
 
 .title {
