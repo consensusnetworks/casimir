@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { FormattedWalletOption, ProviderString } from '@casimir/types'
 import VueFeather from 'vue-feather'
 import useStaking from '@/composables/staking'
@@ -12,7 +12,7 @@ import TermsOfService from '@/components/TermsOfService.vue'
 
 const { stakingComposableInitialized, deposit, initializeStakingComposable, withdraw, getWithdrawableBalance } = useStaking()
 const { getEthersBalance } = useEthers()
-const { convertString } = useFormat()
+const { convertString, formatNumber } = useFormat()
 const { getCurrentPrice } = usePrice()
 const { user, updateUserAgreement } = useUser()
 
@@ -48,6 +48,32 @@ const eigenDisabled = ref(true) // Keeps eigen disabled until Casimir is ready t
 const isShining = ref(true) // Determines if the shine effect is active
 const eigenIsToggled = ref(false) // Determines the toggle state
 const toggleBackgroundColor = ref('#eee')  // Initial color
+
+const balances = ref<{ [key: string]: string | null }>({})
+
+const fetchBalances = async () => {
+  const balancePromises = formattedWalletOptions.value.map(async (walletOption) => {
+    for (const address of walletOption.addresses) {
+      balances.value[address] = formatNumber(await getEthersBalance(address))
+    }
+  })
+
+  await Promise.all(balancePromises)
+}
+
+watch(formattedWalletOptions, async () => {
+  await fetchBalances()
+})
+
+// const walletOptionsWithBalances = computed(() => {
+//   return formattedWalletOptions.value.map(walletOption => ({
+//     ...walletOption,
+//     addresses: walletOption.addresses.map(address => ({
+//       address,
+//       balance: balances.value[address]
+//     }))
+//   }))
+// })
 
 const toggleShineEffect = () => {
   eigenIsToggled.value = !eigenIsToggled.value
@@ -185,6 +211,7 @@ onMounted(async () => {
     // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
     isShining.value = true
   }
+  await fetchBalances()
 })
 
 const handleOutsideClickForWalletInput = (event: any) => {
@@ -414,12 +441,13 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
             hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
             @click="selectedWalletAddress = address, openSelectWalletInput = false, selectedStakingProvider = item.provider"
           >
-            {{ convertString(address) }}
-            <vue-feather
+            <span>{{ convertString(address) }}</span>
+            <span>{{ balances[address] !== null ? `~${balances[address]} ETH` : 'Loading...' }}</span>
+            <!-- <vue-feather
               type="chevron-right"
               size="36"
               class="icon w-[20px]"
-            />
+            /> -->
           </button>
         </div>
       </div>
@@ -524,7 +552,7 @@ function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
         <div
           v-show="openSelectOperatorGroupInput"
           id="selectOperatorGroupInputContainer"
-          class="absolute top-[110%] w-full bg-white rounded-[8px] border border-[#D0D5DD] px-[10px] py-[14px] max-h-[250px] overflow-auto"
+          class="absolute top-[110%] w-full bg-white rounded-[8px] border border-[#D0D5DD] px-[10px] py-[8px] max-h-[250px] overflow-auto"
         >
           <!-- TODO: Update this to only show if user has staked -->
           <!-- <div
