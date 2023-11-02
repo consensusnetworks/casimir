@@ -43,7 +43,7 @@ void async function () {
             const goNumberSplit = goNumber.split('.')
             const goMajor = parseInt(goNumberSplit[0])
             const goMinor = parseInt(goNumberSplit[1])
-            if (goMajor < 1 || goMinor < 18) {
+            if (goMajor < 1 || goMinor < 20) {
                 throw new Error('🚩 Incompatible go version')
             }
         } catch (error) {
