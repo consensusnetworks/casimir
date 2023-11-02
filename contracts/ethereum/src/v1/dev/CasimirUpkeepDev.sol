@@ -52,7 +52,7 @@ contract CasimirUpkeepDev is
     uint256 private reportCompletedExits;
     /// @dev Current report compoundable pools
     uint32[5] private reportCompoundablePoolIds;
-    /// @dev Finalizable compoundable pools (not used, will be removed in future version)
+    /// @dev Finalizable compoundable pools (will be removed in the next release)
     uint32[5] private finalizableCompoundablePoolIds;
     /// @dev Current report request
     mapping(bytes32 => RequestType) private reportRequests;
@@ -68,7 +68,7 @@ contract CasimirUpkeepDev is
     bool private reportRequested;
     /// @dev Previous report block
     uint256 private previousReportBlock;
-    /// @dev DON transmitter address (not used, will be removed in future version)
+    /// @dev DON transmitter address (will be removed in the next release)
     address private transmitterAddress;
     /// @dev Storage gap
     uint256[48] private __gap;

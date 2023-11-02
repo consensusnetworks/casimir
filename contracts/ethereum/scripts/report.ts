@@ -17,13 +17,13 @@ void async function() {
     const factory = new ethers.Contract(ETHEREUM_CONTRACTS['TESTNET'].FACTORY_ADDRESS, ICasimirFactoryAbi, provider) as CasimirFactory
     const [managerId] = await factory.getManagerIds()
     const managerConfig = await factory.getManagerConfig(managerId)
-    // const manager = new ethers.Contract(managerConfig.managerAddress, ICasimirManagerAbi, provider) as CasimirManager
+    const manager = new ethers.Contract(managerConfig.managerAddress, ICasimirManagerAbi, provider) as CasimirManager
     // const registry = new ethers.Contract(managerConfig.registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
-    const upkeep = new ethers.Contract(managerConfig.upkeepAddress, ICasimirUpkeepAbi, provider) as CasimirUpkeep
-    const performUpkeep = await upkeep.connect(owner).performUpkeep('0x')
-    await performUpkeep.wait()
+    // const upkeep = new ethers.Contract(managerConfig.upkeepAddress, ICasimirUpkeepAbi, provider) as CasimirUpkeep
     // const views = new ethers.Contract(managerConfig.viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
-    // console.log(await views.getDepositedPoolStatuses(0, 2))
+
+    const pause = await manager.connect(owner).setPaused(false)
+    await pause.wait()
     // const requestReport = await upkeep.connect(owner).requestReport()
     // await requestReport.wait()
     // run('npm run dev --workspace @casimir/functions')

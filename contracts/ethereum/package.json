@@ -11,6 +11,7 @@
         "report": "npx hardhat run scripts/report.ts",
         "size": "npx hardhat size-contracts",
         "test": "npx hardhat test",
+        "test:debug": "npx hardhat test test/debug.ts",
         "upgrade:all": "npx hardhat run scripts/upgrade-all.ts",
         "upgrade:proxies": "npx hardhat run scripts/upgrade-proxies.ts",
         "verify": "npx hardhat verify"

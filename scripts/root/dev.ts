@@ -103,7 +103,7 @@ void async function () {
             process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
     
             const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
-            process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 5}`
+            process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 10}`
     
             const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
     

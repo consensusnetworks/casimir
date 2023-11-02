@@ -31,7 +31,7 @@ void async function () {
     console.log(`Serving local fork at ${process.env.ETHEREUM_RPC_URL}`)
 
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
-    process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 5}`
+    process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 10}`
     console.log(`📍 Forking started at ${process.env.ETHEREUM_FORK_BLOCK}`)
 
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
