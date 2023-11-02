@@ -31,6 +31,18 @@ export default function useDB() {
         try {
             if (!createdAt) createdAt = new Date().toISOString()
             const { address, currency, userId, walletProvider } = account
+    
+            // Check if the account already exists for the user
+            const checkText = 'SELECT * FROM accounts WHERE user_id = $1 AND address = $2;'
+            const checkParams = [userId, address]
+            const checkResultRows = await postgres.query(checkText, checkParams)
+    
+            if (checkResultRows[0]) {
+                // Account with this address already exists for the user
+                throw new Error('Account with this address already exists for the user')
+            }
+    
+            // Proceed to add the account
             const text = 'INSERT INTO accounts (address, currency, user_id, wallet_provider, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;'
             const params = [address, currency, userId, walletProvider, createdAt]
             const rows = await postgres.query(text, params)
@@ -38,10 +50,10 @@ export default function useDB() {
             const accountId = accountAdded.id
             await addUserAccount(parseInt(userId), accountId)
             return accountAdded as Account
-        } catch (error) {
-            throw new Error('There was an error adding the account to the database')
+        } catch (error: any) {
+            throw new Error('There was an error adding the account to the database: ' + error.message)
         }
-    }
+    }    
 
     /**
      * Adds operator to operator table

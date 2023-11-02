@@ -106,6 +106,10 @@ async function selectAddress(address: string, pathIndex: number): Promise<void> 
       props.toggleModal(false)
       flowState.value = 'select_provider'
     }, 1000)
+  } else if (response === 'Address already exists on this account') {
+    flowState.value = 'select_address'
+    errorMessage.value = true
+    errorMassageText.value = 'Address selected is already connected to your account.'
   } else if (
     response === 'Address already exists as a primary address on another account' ||
     response === 'Address already exists as a secondary address on another account'
