@@ -25,8 +25,16 @@ interface ICasimirUpkeepDev is ICasimirCore, AutomationCompatibleInterface {
     event FunctionsOracleAddressSet(address newFunctionsOracleAddress);
     event FunctionsRequestSet(string newRequestSource, string[] newRequestArgs, uint32 newFulfillGasLimit);
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
-    event ReportRequested();
-    event ReportRequestsSent(uint32, uint256, uint256, uint256, uint256);
+    event NewReportRequested();
+    event ReportRequestSent(
+        bytes32 requestId,
+        string[] requestArgs,
+        uint32 reportPeriod,
+        uint256 reportRequestBlock,
+        uint256 reportTimestamp,
+        uint256 previousReportBlock,
+        uint256 previousReportTimestamp
+    );
     event UpkeepPerformed(ReportStatus indexed status);
 
     error InvalidRequest();
@@ -41,7 +49,7 @@ interface ICasimirUpkeepDev is ICasimirCore, AutomationCompatibleInterface {
     /**
      * @notice Reset the report
      * @param resetReportPeriod Reset report period
-     * @param resetReportBlock Reset report block 
+     * @param resetReportBlock Reset report block
      * @param resetReportTimestamp Reset report timestamp
      * @param resetPreviousReportBlock Reset previous report block
      * @param resetPreviousReportTimestamp Reset previous report timestamp

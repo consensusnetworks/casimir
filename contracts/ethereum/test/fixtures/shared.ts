@@ -129,7 +129,7 @@ export async function deploymentFixture() {
     }) as CasimirFactory
     await factory.deployed()
 
-    const defaultStrategy = {
+    const simpleStrategy = {
         minCollateral: ethers.utils.parseEther('1.0'),
         lockPeriod: 0,
         userFee: 5,
@@ -139,12 +139,12 @@ export async function deploymentFixture() {
         privateOperators: false,
         verifiedOperators: false
     }
-    const deployBaseManager = await factory.deployManager(
+    const deploySimpleManager = await factory.deployManager(
         daoOracle.address,
         functionsOracle.address,
-        defaultStrategy
+        simpleStrategy
     )
-    await deployBaseManager.wait()
+    await deploySimpleManager.wait()
     const [managerId] = await factory.getManagerIds()
     const [managerAddress, registryAddress, upkeepAddress, viewsAddress] = await factory.getManagerConfig(managerId)
     const manager = await ethers.getContractAt('CasimirManager', managerAddress) as CasimirManager

@@ -3,12 +3,26 @@ import { loadCredentials, getSecret } from '@casimir/aws'
 import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from '@casimir/env'
 import { run, runSync } from '@casimir/shell'
 
-console.log(ETHEREUM_CONTRACTS['TESTNET'].FUNCTIONS_BILLING_REGISTRY_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].KEEPER_REGISTRAR_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].KEEPER_REGISTRY_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].LINK_TOKEN_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SSV_NETWORK_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SSV_TOKEN_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SWAP_FACTORY_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].SWAP_ROUTER_ADDRESS, ETHEREUM_CONTRACTS['TESTNET'].WETH_TOKEN_ADDRESS)
-
 /**
- * Run an integrated development environment
+ * Root script used to run an integrated development environment
+ * You can override the following configuration environment variables:
+ * - PROJECT: casimir
+ * - STAGE: local | dev | sandbox | prod
+ * - APP: web | landing
+ * - NETWORK: mainnet | testnet
+ * - FORK: mainnet | testnet
+ * - USE_SECRETS: true | false
+ * - BUILD_PREVIEW: true | false
+ * - MOCK_SERVICES: true | false
+ * - BIP39_SEED: string
+ * - CRYPTO_COMPARE_API_KEY: string
+ * - HACKMD_TOKEN: string
+ * - WALLET_CONNECT_PROJECT_ID: string
+ * - ETHEREUM_RPC_URL: string
+ * - ETHEREUM_FORK_RPC_URL: string
+ * - ETHEREUM_FORK_BLOCK: string
  */
-void async function () {
+async function root() {
     const apps = {
         landing: {
             contracts: false,
@@ -76,48 +90,32 @@ void async function () {
     }
 
     const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || 'TESTNET'
+    process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FACTORY_ADDRESS
     process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_NETWORK_ADDRESS
     process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
     process.env.SWAP_FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SWAP_FACTORY_ADDRESS
     if (apps[app].contracts) {
         if (process.env.NETWORK) {
-            process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
             const networkName = ETHEREUM_NETWORK_NAME[networkKey]
-    
-            console.log(`Using ${networkName} network from ${process.env.ETHEREUM_RPC_URL}`)
-    
-            if (!process.env.ETHEREUM_RPC_URL) {
-                throw new Error(`Ethereum ${process.env.NETWORK} is not supported`)
-            }
-    
-            process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FACTORY_ADDRESS
-            if (!process.env.FACTORY_ADDRESS) {
-                throw new Error(`No factory address provided for ${process.env.NETWORK} ethereum network.`)
-            }
+            process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
+            console.log(`Connecting to ${networkName} network at ${process.env.ETHEREUM_RPC_URL}`)
         } else {
+            const networkName = ETHEREUM_NETWORK_NAME[networkKey]
             process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_RPC_URL[networkKey]
-            if (!process.env.ETHEREUM_FORK_RPC_URL) {
-                throw new Error(`Ethereum ${process.env.FORK} is not supported`)
-            }
-    
             process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
-    
+            console.log(`Connecting to ${networkName} network fork at ${process.env.ETHEREUM_RPC_URL}`)
+
             const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
             process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 10}`
-    
-            const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
-    
-            // Account for the mock, beacon, and library deployments
-            const walletNonce = await provider.getTransactionCount(wallet.address) + 13
-    
-            if (!process.env.FACTORY_ADDRESS) {
-                process.env.FACTORY_ADDRESS = ethers.utils.getContractAddress({
-                    from: wallet.address,
-                    nonce: walletNonce
-                })
-            }
-    
-            run('npm run dev:ethereum')
+            console.log(`📍 Forking started at ${process.env.ETHEREUM_FORK_BLOCK}`)
+        
+            process.env.TUNNEL = process.env.TUNNEL || 'false'
+            process.env.MINING_INTERVAL = '12'
+            run('npm run node --workspace @casimir/ethereum')
+            await new Promise(resolve => setTimeout(resolve, 2500))
+
+            console.log(`Serving local fork at ${process.env.ETHEREUM_RPC_URL}`)
+            run('npm run dev --workspace @casimir/ethereum -- --network localhost')
         }
     }
 
@@ -147,4 +145,9 @@ void async function () {
             process.exit()
         })
     }
-}()
+}
+
+root().catch(error => {
+    console.error(error)
+    process.exit(1)
+})

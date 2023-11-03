@@ -121,13 +121,6 @@ contract CasimirUpkeep is
             requestArgs[9] = StringsUpgradeable.toString(reportRequestBlock);
             sendFunctionsRequest(request, requestArgs, RequestType.BALANCES);
             sendFunctionsRequest(request, requestArgs, RequestType.DETAILS);
-            emit ReportRequestsSent(
-                reportPeriod,
-                reportRequestBlock,
-                reportTimestamp,
-                previousReportBlock,
-                previousReportTimestamp
-            );
         } else {
             if (
                 manager.requestedWithdrawalBalance() > 0 &&
@@ -162,7 +155,7 @@ contract CasimirUpkeep is
     function requestReport() external {
         onlyFactoryOwner();
         reportRequested = true;
-        emit ReportRequested();
+        emit NewReportRequested();
     }
 
     /// @inheritdoc ICasimirUpkeep
@@ -297,6 +290,15 @@ contract CasimirUpkeep is
         bytes32 requestId = sendRequest(request, manager.functionsId(), fulfillGasLimit);
         reportRequests[requestId] = requestType;
         reportRemainingRequests++;
+        emit ReportRequestSent(
+            requestId,
+            requestArgs,
+            reportPeriod,
+            reportRequestBlock,
+            reportTimestamp,
+            previousReportBlock,
+            previousReportTimestamp
+        );
     }
 
     /// @dev Validate the caller is the factory owner

@@ -179,21 +179,18 @@ async function getDepositedPoolPublicKeys(startIndex, endIndex) {
 		}
 	})
 	if (request.error) throw new Error('Failed to get validator public keys')
-	const rawPublicKeys = request.data.result.slice(2)
-	const numKeys = parseInt(rawPublicKeys.slice(64, 128), 16)
-	const publicKeys = []
-	for (let i = 0; i < numKeys; i++) {
-		let offset = 64 * 3 + i * 96
-		let length = parseInt(rawPublicKeys.slice(offset, offset + 64), 16) * 2
-		let publicKeyStart = offset + 64
-		let publicKeyEnd = publicKeyStart + length
-		let publicKey = '0x' + rawPublicKeys.slice(publicKeyStart, publicKeyEnd)
-		publicKeys.push(publicKey)
-	}
-	return [
-		'0x853b4caf348bccddbf7e1c25e68676c3b3f857958c93b290a2bf84974ea33c4f793f1bbf7e9e9923f16e2237038e7b69',
-		'0x8889a628f263c414e256a1295c3f49ac1780e0b9cac8493dd1bd2f17b3b257660a12fb88f65333fa00c9a735c0f8d0e8'
-	]
+    const rawPublicKeys = request.data.result.slice(2)
+    const dataOffset = parseInt(rawPublicKeys.slice(0, 64), 16)
+    const numKeys = parseInt(rawPublicKeys.slice(dataOffset * 2, dataOffset * 2 + 64), 16)
+    const publicKeys = []
+    let keysStartPosition = dataOffset * 2 + 64
+    for (let i = 0; i < numKeys; i++) {
+        let keyStart = keysStartPosition + i * 128
+        let keyEnd = keyStart + 128
+        let key = '0x' + rawPublicKeys.slice(keyStart, keyEnd)
+        publicKeys.push(key)
+    }
+    return publicKeys
 }
 
 async function getDepositedPoolStatuses(startIndex, endIndex) {
