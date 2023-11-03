@@ -26,15 +26,7 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
     event FunctionsRequestSet(string newRequestSource, string[] newRequestArgs, uint32 newFulfillGasLimit);
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
     event NewReportRequested();
-    event ReportRequestSent(
-        bytes32 requestId,
-        string[] requestArgs,
-        uint32 reportPeriod,
-        uint256 reportRequestBlock,
-        uint256 reportTimestamp,
-        uint256 previousReportBlock,
-        uint256 previousReportTimestamp
-    );
+    event ReportRequestSent(bytes32 requestId, string[] requestArgs);
     event UpkeepPerformed(ReportStatus indexed status);
 
     error InvalidRequest();

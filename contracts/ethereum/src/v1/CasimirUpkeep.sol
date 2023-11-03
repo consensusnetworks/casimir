@@ -290,15 +290,7 @@ contract CasimirUpkeep is
         bytes32 requestId = sendRequest(request, manager.functionsId(), fulfillGasLimit);
         reportRequests[requestId] = requestType;
         reportRemainingRequests++;
-        emit ReportRequestSent(
-            requestId,
-            requestArgs,
-            reportPeriod,
-            reportRequestBlock,
-            reportTimestamp,
-            previousReportBlock,
-            previousReportTimestamp
-        );
+        emit ReportRequestSent(requestId, requestArgs);
     }
 
     /// @dev Validate the caller is the factory owner
