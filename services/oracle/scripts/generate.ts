@@ -25,7 +25,8 @@ void async function () {
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, accountPath)
 
     const validatorCount = 4
-    if (!MOCK_VALIDATORS[wallet.address] || Object.keys(MOCK_VALIDATORS[wallet.address]).length < validatorCount) {
+    const mockValidators = MOCK_VALIDATORS || {}
+    if (!mockValidators[wallet.address] || Object.keys(mockValidators[wallet.address]).length < validatorCount) {
         await run('GOWORK=off make -C lib/dkg build') 
 
         const managerAddress = ethers.utils.getContractAddress({
@@ -85,9 +86,9 @@ void async function () {
             ownerNonce++
         }
 
-        MOCK_VALIDATORS[wallet.address] = newValidators
+        mockValidators[wallet.address] = newValidators
 
-        fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify(MOCK_VALIDATORS))
+        fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify(mockValidators))
         // fs.writeFileSync(`${outputPath}/reshares.json`, JSON.stringify(MOCK_RESHARES))
     }
 }()

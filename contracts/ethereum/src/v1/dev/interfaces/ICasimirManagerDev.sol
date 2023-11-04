@@ -31,6 +31,8 @@ interface ICasimirManagerDev is ICasimirCore {
     event WithdrawalRequested(address indexed sender, uint256 amount);
     event WithdrawalInitiated(address indexed sender, uint256 amount);
 
+    error Paused();
+    error InvalidRebalance();
     error ForcedExitAlreadyReported();
     error InsufficientLiquidity();
     error NoReadyPools();
@@ -104,6 +106,18 @@ interface ICasimirManagerDev is ICasimirCore {
         uint256 activatedDeposits,
         uint256 completedExits
     ) external;
+
+    /**
+     * @notice Undo or redo a rebalance of the rewards to stake ratio (will be removed in the next release)
+     * @param rebalance Rebalance amount
+     */
+    function unbalanceStake(int256 rebalance) external;
+
+    /**
+     * @notice Set the latest beacon chain balance after fees (will be removed in the next release)
+     * @param newLatestBeaconBalanceAfterFees New latest beacon chain balance after fees
+     */
+    function setLatestBeaconBalanceAfterFees(uint256 newLatestBeaconBalanceAfterFees) external;
 
     /**
      * @notice Compound pool rewards
@@ -213,6 +227,12 @@ interface ICasimirManagerDev is ICasimirCore {
     function resetFunctions() external;
 
     /**
+     * @notice Pause or unpause the contract
+     * @param paused Whether the contract is paused
+     */
+    function setPaused(bool paused) external;
+
+    /**
      * @notice Withdraw cluster balance
      * @param operatorIds Operator IDs
      * @param cluster Cluster snapshot
@@ -284,11 +304,17 @@ interface ICasimirManagerDev is ICasimirCore {
     /// @notice Get the total stake (buffered + beacon - requested withdrawals)
     function getTotalStake() external view returns (uint256);
 
+    /// @notice Get the latest active reward balance
+    function getLatestActiveRewardBalance() external view returns (int256);
+
     /// @notice Get the pending pool IDs
     function getPendingPoolIds() external view returns (uint32[] memory);
 
     /// @notice Get the staked pool IDs
     function getStakedPoolIds() external view returns (uint32[] memory);
+
+    /// @notice Get the stake ratio sum
+    function getStakeRatioSum() external view returns (uint256);
 
     /**
      * @notice Get the eligibility of a pending withdrawal

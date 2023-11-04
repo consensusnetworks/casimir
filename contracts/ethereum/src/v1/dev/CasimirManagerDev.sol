@@ -161,8 +161,10 @@ contract CasimirManagerDev is
     uint32[] private stakedPoolIds;
     /// @dev Slashed pool count
     uint256 private forcedExits;
+    /// @dev Whether the contract is paused
+    bool private paused;
     /// @dev Storage gap
-    uint256[50] private __gap;
+    uint256[49] private __gap;
 
     /**
      * @dev Constructor
@@ -255,7 +257,14 @@ contract CasimirManagerDev is
     }
 
     /// @inheritdoc ICasimirManagerDev
+    function setPaused(bool paused_) external {
+        onlyFactoryOwner();
+        paused = paused_;
+    }
+
+    /// @inheritdoc ICasimirManagerDev
     function depositStake() external payable nonReentrant {
+        onlyUnpaused();
         User storage user = users[msg.sender];
         uint256 depositAfterFees = subtractFees(msg.value);
         reservedFeeBalance += msg.value - depositAfterFees;
@@ -391,6 +400,10 @@ contract CasimirManagerDev is
         int256 rewards = int256(beaconBalance + sweptBalance + finalizableRecoveredBalance) -
             int256(expectedEffectiveBalance + expectedExitedBalance);
         int256 change = rewards - latestActiveRewardBalance;
+        uint256 absoluteChange = change > 0 ? uint256(change) : uint256(-change);
+        if (absoluteChange > (stakedPoolIds.length * POOL_CAPACITY) / 2) {
+            revert InvalidRebalance();
+        }
         if (latestBeaconBalanceAfterFees > 0) {
             if (change > 0) {
                 uint256 gain = uint256(change);
@@ -426,6 +439,22 @@ contract CasimirManagerDev is
     }
 
     /// @inheritdoc ICasimirManagerDev
+    function unbalanceStake(int256 rebalance) external {
+        onlyFactoryOwner();
+        if (rebalance > 0) {
+            stakeRatioSum += uint256(rebalance);
+        } else if (rebalance < 0) {
+            stakeRatioSum -= uint256(-rebalance);
+        }
+    }
+
+    /// @inheritdoc ICasimirManagerDev
+    function setLatestBeaconBalanceAfterFees(uint256 latestBeaconBalanceAfterFees_) external {
+        onlyFactoryOwner();
+        latestBeaconBalanceAfterFees = latestBeaconBalanceAfterFees_;
+    }
+
+    /// @inheritdoc ICasimirManagerDev
     function compoundRewards(uint32[5] memory poolIds) external {
         onlyUpkeep();
         for (uint256 i; i < poolIds.length; i++) {
@@ -440,6 +469,7 @@ contract CasimirManagerDev is
 
     /// @inheritdoc ICasimirManagerDev
     function requestWithdrawal(uint256 amount) external nonReentrant {
+        onlyUnpaused();
         User storage user = users[msg.sender];
         user.stake0 = getUserStake(msg.sender);
         if (user.stake0 < amount) {
@@ -751,6 +781,16 @@ contract CasimirManagerDev is
     }
 
     /// @inheritdoc ICasimirManagerDev
+    function getLatestActiveRewardBalance() external view returns (int256) {
+        return latestActiveRewardBalance;
+    }
+
+    /// @inheritdoc ICasimirManagerDev
+    function getStakeRatioSum() external view returns (uint256) {
+        return stakeRatioSum;
+    }
+
+    /// @inheritdoc ICasimirManagerDev
     function getWithdrawableBalance() public view returns (uint256 withdrawableBalance) {
         withdrawableBalance = prepoolBalance + exitedBalance;
     }
@@ -882,6 +922,13 @@ contract CasimirManagerDev is
     function onlyPool(address poolAddress) private view {
         if (msg.sender != poolAddress) {
             revert Unauthorized();
+        }
+    }
+
+    /// @dev Validate the contract is unpaused
+    function onlyUnpaused() private view {
+        if (paused) {
+            revert Paused();
         }
     }
 

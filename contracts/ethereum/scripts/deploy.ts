@@ -136,7 +136,7 @@ void async function () {
     await factory.deployed()
     console.log(`CasimirFactory contract deployed at ${factory.address}`)
 
-    const baseStrategy = {
+    const simpleStrategy = {
         minCollateral: ethers.utils.parseEther('1.0'),
         lockPeriod: 0,
         userFee: 5,
@@ -146,18 +146,18 @@ void async function () {
         privateOperators: false,
         verifiedOperators: false
     }
-    const deployBaseManager = await factory.deployManager(
+    const deploySimpleManager = await factory.deployManager(
         daoOracle.address,
         functionsOracle.address,
-        baseStrategy
+        simpleStrategy
     )
-    await deployBaseManager.wait()
+    await deploySimpleManager.wait()
     const [managerId] = await factory.getManagerIds()
     const managerConfig = await factory.getManagerConfig(managerId)
-    console.log(`Base CasimirManager contract deployed to ${managerConfig.managerAddress}`)
-    console.log(`Base CasimirRegistry contract deployed to ${managerConfig.registryAddress}`)
-    console.log(`Base CasimirUpkeep contract deployed to ${managerConfig.upkeepAddress}`)
-    console.log(`Base CasimirViews contract deployed to ${managerConfig.viewsAddress}`)
+    console.log(`Simple CasimirManager contract deployed to ${managerConfig.managerAddress}`)
+    console.log(`Simple CasimirRegistry contract deployed to ${managerConfig.registryAddress}`)
+    console.log(`Simple CasimirUpkeep contract deployed to ${managerConfig.upkeepAddress}`)
+    console.log(`Simple CasimirViews contract deployed to ${managerConfig.viewsAddress}`)
     const upkeep = await ethers.getContractAt('CasimirUpkeep', managerConfig.upkeepAddress) as CasimirUpkeep
     
     requestConfig.args[1] = managerConfig.viewsAddress

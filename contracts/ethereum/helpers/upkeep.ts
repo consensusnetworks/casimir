@@ -9,11 +9,11 @@ export async function runUpkeep({
     upkeep: CasimirUpkeep,
 }) {
     let ranUpkeep = false
-    const checkData = ethers.utils.toUtf8Bytes('')
+    const checkData = ethers.utils.toUtf8Bytes('0x')
     const { ...check } = await upkeep.connect(donTransmitter).checkUpkeep(checkData)
     const { upkeepNeeded } = check
     if (upkeepNeeded) {
-        const performData = ethers.utils.toUtf8Bytes('')
+        const performData = ethers.utils.toUtf8Bytes('0x')
         const performUpkeep = await upkeep.connect(donTransmitter).performUpkeep(performData)
         await performUpkeep.wait()
         ranUpkeep = true
@@ -43,7 +43,7 @@ export async function fulfillReport({
 }) {
     const { beaconBalance, sweptBalance, activatedDeposits, forcedExits, completedExits, compoundablePoolIds } = values
 
-    const requestIds = (await upkeep.queryFilter(upkeep.filters.RequestSent())).slice(-2).map((event) => event.args.id)
+    const requestIds = (await upkeep.queryFilter(upkeep.filters.ReportRequestSent(), -2)).map((event) => event.args.requestId)
     
     const balancesRequestId = requestIds[0]
 

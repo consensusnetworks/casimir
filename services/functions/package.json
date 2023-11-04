@@ -6,7 +6,8 @@
         "build": "",
         "dev": "npx esno -r dotenv/config scripts/dev.ts",
         "functions-simulate-javascript": "node scripts/simulateFunctionsJavaScript.js",
-        "functions-gen-keys": "node scripts/generateKeypair.js"
+        "functions-gen-keys": "node scripts/generateKeypair.js",
+        "simulate": "npx esno -r dotenv/config scripts/simulate.ts"
     },
     "dependencies": {
         "@chainlink/env-enc": "^1.0.5",

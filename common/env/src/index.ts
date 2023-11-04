@@ -57,7 +57,8 @@ enum ETHEREUM_WS_URL {
 
 enum HARDHAT_NETWORK_KEY {
     GOERLI = 'TESTNET',
-    HARDHAT = 'TESTNET'
+    HARDHAT = 'TESTNET',
+    LOCALHOST = 'TESTNET'
 }
 
 export { 

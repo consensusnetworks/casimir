@@ -1,6 +1,6 @@
 {
   "name": "casimir",
-  "version": "1.0.0-beta.0",
+  "version": "1.0.0-beta.3",
   "description": "Decentralized staking and asset management",
   "workspaces": [
     "apps/*",
@@ -11,10 +11,10 @@
   ],
   "scripts": {
     "clean": "npx esno scripts/root/clean.ts",
+    "debug:ethereum": "npx esno -r dotenv/config scripts/ethereum/debug.ts",
     "deploy:cdk": "npx esno -r dotenv/config scripts/cdk/deploy.ts",
     "deploy:ethereum": "npx esno -r dotenv/config scripts/ethereum/deploy.ts",
     "dev": "npx esno -r dotenv/config scripts/root/dev.ts",
-    "dev:ethereum": "npx esno -r dotenv/config scripts/ethereum/dev.ts",
     "dev:landing": "APP=landing npm run dev",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
@@ -27,7 +27,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:actions": "npx esno -r dotenv/config scripts/actions/test.ts",
     "test:cdk": "npx esno -r dotenv/config scripts/cdk/test.ts",
-    "test:ethereum": "npx esno -r dotenv/config scripts/ethereum/test.ts",
     "upgrade:ethereum": "npx esno -r dotenv/config scripts/ethereum/upgrade.ts"
   },
   "repository": {

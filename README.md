@@ -163,14 +163,14 @@ Test the Ethereum contracts.
 
 ```zsh
 # From the root directory
-npm run test:ethereum
+npm run test --workspace @casimir/ethereum
 ```
 
-Deploy the Ethereum contracts to local network and simulate events and oracle handling.
+Fork the Ethereum contracts to local network and simulate events and oracle handling.
 
 ```zsh
 # From the root directory
-npm run dev:ethereum
+npm run dev --workspace @casimir/ethereum
 ```
 
 See the [@casimir/ethereum README.md](contracts/ethereum/README.md) for detailed documentation.

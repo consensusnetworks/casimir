@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "./interfaces/ICasimirManager.sol";
-import "./interfaces/ICasimirPool.sol";
-import "./interfaces/ICasimirRegistry.sol";
-import "./interfaces/ICasimirUpkeep.sol";
-import "./interfaces/ICasimirViews.sol";
+import "../interfaces/ICasimirManager.sol";
+import "../interfaces/ICasimirPool.sol";
+import "../interfaces/ICasimirRegistry.sol";
+import "../interfaces/ICasimirUpkeep.sol";
+import "./interfaces/ICasimirViewsDev.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title Views contract that provides read-only access to the state
  */
-contract CasimirViews is ICasimirViews, Initializable {
+contract CasimirViewsDev is ICasimirViewsDev, Initializable {
     /// @dev Compound minimum (0.1 ETH)
     uint256 private constant COMPOUND_MINIMUM = 100000000 gwei;
     /// @dev Manager contract
@@ -35,7 +35,7 @@ contract CasimirViews is ICasimirViews, Initializable {
         manager = ICasimirManager(managerAddress);
     }
 
-    /// @inheritdoc ICasimirViews
+    /// @inheritdoc ICasimirViewsDev
     function getCompoundablePoolIds(
         uint256 startIndex,
         uint256 endIndex
@@ -60,12 +60,12 @@ contract CasimirViews is ICasimirViews, Initializable {
         }
     }
 
-    /// @inheritdoc ICasimirViews
+    /// @inheritdoc ICasimirViewsDev
     function getDepositedPoolCount() external view returns (uint256 depositedPoolCount) {
         depositedPoolCount = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length;
     }
 
-    /// @inheritdoc ICasimirViews
+    /// @inheritdoc ICasimirViewsDev
     function getDepositedPoolPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[] memory) {
         bytes[] memory publicKeys = new bytes[](endIndex - startIndex);
         uint32[] memory pendingPoolIds = manager.getPendingPoolIds();
@@ -84,7 +84,7 @@ contract CasimirViews is ICasimirViews, Initializable {
         return publicKeys;
     }
 
-    /// @inheritdoc ICasimirViews
+    /// @inheritdoc ICasimirViewsDev
     function getDepositedPoolStatuses(
         uint256 startIndex,
         uint256 endIndex
@@ -106,7 +106,7 @@ contract CasimirViews is ICasimirViews, Initializable {
         return statuses;
     }
 
-    /// @inheritdoc ICasimirViews
+    /// @inheritdoc ICasimirViewsDev
     function getOperators(
         uint256 startIndex,
         uint256 endIndex
@@ -123,7 +123,7 @@ contract CasimirViews is ICasimirViews, Initializable {
         return operators;
     }
 
-    /// @inheritdoc ICasimirViews
+    /// @inheritdoc ICasimirViewsDev
     function getPoolConfig(uint32 poolId) external view returns (PoolConfig memory poolConfig) {
         address poolAddress = manager.getPoolAddress(poolId);
         ICasimirPool pool = ICasimirPool(poolAddress);
@@ -137,7 +137,7 @@ contract CasimirViews is ICasimirViews, Initializable {
         });
     }
 
-    /// @inheritdoc ICasimirViews
+    /// @inheritdoc ICasimirViewsDev
     function getSweptBalance(uint256 startIndex, uint256 endIndex) external view returns (uint128 sweptBalance) {
         uint32[] memory pendingPoolIds = manager.getPendingPoolIds();
         uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
