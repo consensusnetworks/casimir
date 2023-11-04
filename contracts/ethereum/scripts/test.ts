@@ -24,7 +24,6 @@ async function test() {
     console.log(`Using ${networkName} fork from ${process.env.ETHEREUM_FORK_RPC_URL}`)
 
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
-    
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
 
     // Account for the mock, beacon, and library deployments

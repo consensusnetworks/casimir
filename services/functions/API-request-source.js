@@ -1,4 +1,4 @@
-const [ 
+const [
 	genesisTimestamp,
 	viewsAddress,
 	getCompoundablePoolIdsSignature,
@@ -31,7 +31,7 @@ async function balancesHandler() {
 	const depositedPoolCount = await getDepositedPoolCount()
 	const startIndex = BigInt(0).toString(16).padStart(64, '0')
 	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
-	
+
 	const depositedPoolPublicKeys = await getDepositedPoolPublicKeys(startIndex, endIndex)
 	const validators = await getValidators(depositedPoolPublicKeys)
 
@@ -57,19 +57,15 @@ async function detailsHandler() {
 	const depositedPoolCount = await getDepositedPoolCount()
 	const startIndex = BigInt(0).toString(16).padStart(64, '0')
 	const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, '0')
-	
+
 	const depositedPoolPublicKeys = await getDepositedPoolPublicKeys(startIndex, endIndex)
-	const depositedPoolStatuses = await getDepositedPoolStatuses(startIndex, endIndex)
-	for (let i = 0; i < depositedPoolCount; i++) {
-		console.log("* Pool")
-		console.log("-- Public key", depositedPoolPublicKeys[i])
-		console.log("-- Status", depositedPoolStatuses[i])
-	}
+	// const depositedPoolStatuses = await getDepositedPoolStatuses(startIndex, endIndex) // Not used yet
 	const validators = await getValidators(depositedPoolPublicKeys)
 
-	const activatedDeposits = validators.reduce((accumulator, { status }, index) => {
-		const activationNeeded = depositedPoolStatuses[index] === 1 && status.includes('active')
-		if (activationNeeded) {
+	const activatedDeposits = validators.reduce((accumulator, { validator }) => {
+		const { activation_epoch } = validator
+		const activatedDuringReportPeriod = activation_epoch > previousReportEpoch && activation_epoch <= reportEpoch
+		if (activatedDuringReportPeriod) {
 			accumulator += 1
 		}
 		return accumulator
@@ -122,19 +118,17 @@ async function getCompoundablePoolIds(startIndex, endIndex) {
 			params: [
 				{
 					to: viewsAddress,
-					data: getCompoundablePoolIdsSignature + '0'.repeat(24) + startIndex + endIndex
+					data: getCompoundablePoolIdsSignature + startIndex + endIndex
 				},
 				{ blockNumber: '0x' + parseInt(reportBlockNumber).toString(16) }
 			]
 		}
 	})
 	if (request.error) throw new Error('Failed to get compoundable pool IDs')
-	const rawPoolIds = request.data.result.slice(2)
+	const data = request.data.result.slice(2).match(/.{1,64}/g)
 	let poolIds = []
-	for (let i = 0; i < 5; i++) {
-		let start = i * 8
-		let end = start + 8
-		let poolId = parseInt(rawPoolIds.slice(start, end), 16)
+	for (const item of data) {
+		let poolId = parseInt(item, 16)
 		poolIds.push(poolId)
 	}
 	return poolIds
@@ -179,18 +173,29 @@ async function getDepositedPoolPublicKeys(startIndex, endIndex) {
 		}
 	})
 	if (request.error) throw new Error('Failed to get validator public keys')
-    const rawPublicKeys = request.data.result.slice(2)
-    const dataOffset = parseInt(rawPublicKeys.slice(0, 64), 16)
-    const numKeys = parseInt(rawPublicKeys.slice(dataOffset * 2, dataOffset * 2 + 64), 16)
-    const publicKeys = []
-    let keysStartPosition = dataOffset * 2 + 64
-    for (let i = 0; i < numKeys; i++) {
-        let keyStart = keysStartPosition + i * 128
-        let keyEnd = keyStart + 128
-        let key = '0x' + rawPublicKeys.slice(keyStart, keyEnd)
-        publicKeys.push(key)
-    }
-    return publicKeys
+	const data = request.data.result.slice(2).match(/.{1,64}/g)
+	// '0000000000000000000000000000000000000000000000000000000000000020', // Chunk size?
+	// '0000000000000000000000000000000000000000000000000000000000000002', // Array size
+	// '0000000000000000000000000000000000000000000000000000000000000040', // Item size
+	// '00000000000000000000000000000000000000000000000000000000000000a0', // Array start
+	// '0000000000000000000000000000000000000000000000000000000000000030', // Item 1 data size
+	// '8889a628f263c414e256a1295c3f49ac1780e0b9cac8493dd1bd2f17b3b25766', // Item 1 data
+	// '0a12fb88f65333fa00c9a735c0f8d0e800000000000000000000000000000000', // Item 1 data
+	// '0000000000000000000000000000000000000000000000000000000000000030', // Item 2 data size
+	// '853b4caf348bccddbf7e1c25e68676c3b3f857958c93b290a2bf84974ea33c4f', // Item 2 data
+	// '793f1bbf7e9e9923f16e2237038e7b6900000000000000000000000000000000' // Item 2 data
+	const itemCount = parseInt(data[1], 16)
+	const publicKeys = []
+	let itemIndex = 4
+	for (let i = 0; i < itemCount; i++) {
+		const publicKey = '0x'.concat(
+			data[itemIndex + 1],
+			data[itemIndex + 2].slice(0, 32)
+		)
+		publicKeys.push(publicKey)
+		itemIndex += 3
+	}
+	return publicKeys
 }
 
 async function getDepositedPoolStatuses(startIndex, endIndex) {
@@ -204,23 +209,23 @@ async function getDepositedPoolStatuses(startIndex, endIndex) {
 			params: [
 				{
 					to: viewsAddress,
-					data: getDepositedPoolStatusesSignature + '0'.repeat(24) + startIndex + endIndex
+					data: getDepositedPoolStatusesSignature + startIndex + endIndex
 				},
 				{ blockNumber: '0x' + parseInt(reportBlockNumber).toString(16) }
 			]
 		}
 	})
 	if (request.error) throw new Error('Failed to get validator statuses')
-	console.log("Raw statuses", request.data.result)
-	const rawStatuses = request.data.result.slice(2)
+	const data = request.data.result.slice(2).match(/.{1,64}/g)
+	const itemCount = parseInt(data[1], 16)
 	const statuses = []
-	for (let i = 0; i < 5; i++) {
-		let start = i * 8
-		let end = start + 8
-		let status = parseInt(rawStatuses.slice(start, end), 16)
+	let itemIndex = 2
+	for (let i = 0; i < itemCount; i++) {
+		let status = parseInt(data[itemIndex], 16)
 		statuses.push(status)
+		itemIndex += 1
 	}
-	return [2, 2]
+	return statuses
 }
 
 async function getSweptBalance(startIndex, endIndex) {
@@ -234,14 +239,15 @@ async function getSweptBalance(startIndex, endIndex) {
 			params: [
 				{
 					to: viewsAddress,
-					data: getSweptBalanceSignature + '0'.repeat(24) + startIndex + endIndex
+					data: getSweptBalanceSignature + startIndex + endIndex
 				},
 				{ blockNumber: '0x' + parseInt(reportBlockNumber).toString(16) }
 			]
 		}
 	})
 	if (request.error) throw new Error('Failed to get swept balance')
-	return parseFloat(request.data.result.slice(0, -9))
+	const data = request.data.result.slice(2)
+	return parseInt(data, 16)
 }
 
 async function getValidators(validatorPublicKeys) {
@@ -253,15 +259,15 @@ async function getValidators(validatorPublicKeys) {
 }
 
 function encodeUint32(value) {
-    const buffer = Buffer.alloc(32)
-    buffer.writeUInt32BE(value, 28)
-    return buffer
+	const buffer = Buffer.alloc(32)
+	buffer.writeUInt32BE(value, 28)
+	return buffer
 }
 
 function encodeUint32Array(values) {
-    const buffer = Buffer.alloc(32 * values.length)
-    for (let i = 0; i < values.length; i++) {
-        buffer.writeUInt32BE(values[i], i * 32 + 28)
-    }
-    return buffer
+	const buffer = Buffer.alloc(32 * values.length)
+	for (let i = 0; i < values.length; i++) {
+		buffer.writeUInt32BE(values[i], i * 32 + 28)
+	}
+	return buffer
 }

@@ -1,26 +1,22 @@
-import { CasimirFactoryDev, CasimirManagerDev, CasimirRegistry, CasimirUpkeepDev, CasimirViews, FunctionsOracle, FunctionsBillingRegistry } from '../build/@types'
-import ICasimirManagerDevAbi from '../build/abi/ICasimirManagerDev.json'
-import ICasimirRegistryAbi from '../build/abi/ICasimirRegistry.json'
-import ICasimirUpkeepDevAbi from '../build/abi/ICasimirUpkeepDev.json'
-import ICasimirViewsAbi from '../build/abi/ICasimirViews.json'
-import FunctionsBillingRegistryAbi from '../build/abi/FunctionsBillingRegistry.json'
-import FunctionsOracleAbi from '../build/abi/FunctionsOracle.json'
+import { CasimirFactoryDev, CasimirManagerDev, CasimirRegistryDev, CasimirUpkeepDev, CasimirViewsDev, FunctionsOracle, FunctionsBillingRegistry } from '../build/@types'
 import { ethers, upgrades } from 'hardhat'
-import { fulfillReport, runUpkeep } from '@casimir/ethereum/helpers/upkeep'
-import { round } from '@casimir/ethereum/helpers/math'
 import { time, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import { PoolStatus } from '@casimir/types'
 import requestConfig from '@casimir/functions/Functions-request-config'
-import { activatePoolsHandler } from '../helpers/oracle'
 import { run } from '@casimir/shell'
-
-upgrades.silenceWarnings()
+import { round } from '../helpers/math'
+import { waitForNetwork } from '../helpers/network'
+import { activatePoolsHandler } from '../helpers/oracle'
+import { fulfillReport, runUpkeep } from '../helpers/upkeep'
 
 /**
  * Fork contracts to local network and run local events and oracle handling
+ * You can override the following configuration environment variables:
+ * - SIMULATE_UPGRADES: true | false
+ * - SIMULATE_EIGEN: true | false
+ * - SIMULATE_REWARDS: true | false
  */
 async function dev() {
-    if (!process.env.ETHEREUM_RPC_URL) throw new Error('No ethereum rpc url provided')
     if (!process.env.FACTORY_ADDRESS) throw new Error('No factory address provided')
     if (!process.env.MANAGER_BEACON_ADDRESS) throw new Error('No manager beacon address provided')
     if (!process.env.POOL_BEACON_ADDRESS) throw new Error('No pool beacon address provided')
@@ -41,117 +37,143 @@ async function dev() {
     if (!process.env.SWAP_ROUTER_ADDRESS) throw new Error('No swap router address provided')
     if (!process.env.WETH_TOKEN_ADDRESS) throw new Error('No weth token address provided')
 
+    await waitForNetwork(ethers.provider)
+
     const [owner, daoOracle, donTransmitter] = await ethers.getSigners()
 
-    const functionsOracle = new ethers.Contract(process.env.FUNCTIONS_ORACLE_ADDRESS, FunctionsOracleAbi, ethers.provider) as FunctionsOracle
-    const functionsBillingRegistry = new ethers.Contract(process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS, FunctionsBillingRegistryAbi, ethers.provider) as FunctionsBillingRegistry
+    const functionsOracle = await ethers.getContractAt('FunctionsOracle', process.env.FUNCTIONS_ORACLE_ADDRESS) as FunctionsOracle
+    const functionsBillingRegistry = await ethers.getContractAt('FunctionsBillingRegistry', process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS) as FunctionsBillingRegistry
 
-    const factoryDevFactory = await ethers.getContractFactory('CasimirFactoryDev', {
-        libraries: {
-            CasimirBeacon: process.env.BEACON_LIBRARY_ADDRESS
-        }
-    })
-    const factory = await upgrades.upgradeProxy(process.env.FACTORY_ADDRESS, factoryDevFactory, {
-        constructorArgs: [
-            process.env.MANAGER_BEACON_ADDRESS,
-            process.env.POOL_BEACON_ADDRESS,
-            process.env.REGISTRY_BEACON_ADDRESS,
-            process.env.UPKEEP_BEACON_ADDRESS,
-            process.env.VIEWS_BEACON_ADDRESS
-        ],
-        unsafeAllow: ['external-library-linking'] 
-    }) as CasimirFactoryDev
-    await factory.deployed()
+    /**
+     * Deploy in-development contract upgrades
+     * Helpful also for adding hardhat/console to debug existing methods
+     */
+    if (process.env.SIMULATE_UPGRADES === 'true') {
+        upgrades.silenceWarnings()
+
+        const factoryProxyFactory = await ethers.getContractFactory('CasimirFactoryDev', {
+            libraries: {
+                CasimirBeacon: process.env.BEACON_LIBRARY_ADDRESS
+            }
+        })
+        const factoryProxy = await upgrades.upgradeProxy(process.env.FACTORY_ADDRESS, factoryProxyFactory, {
+            constructorArgs: [
+                process.env.MANAGER_BEACON_ADDRESS,
+                process.env.POOL_BEACON_ADDRESS,
+                process.env.REGISTRY_BEACON_ADDRESS,
+                process.env.UPKEEP_BEACON_ADDRESS,
+                process.env.VIEWS_BEACON_ADDRESS
+            ],
+            unsafeAllow: ['external-library-linking'] 
+        })
+        await factoryProxy.deployed()
+
+        const managerBeaconFactory = await ethers.getContractFactory('CasimirManagerDev', {
+            libraries: {
+                CasimirBeacon: process.env.BEACON_LIBRARY_ADDRESS
+            }
+        })
+        const managerBeacon = await upgrades.upgradeBeacon(process.env.MANAGER_BEACON_ADDRESS, managerBeaconFactory, {
+            constructorArgs: [
+                process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS,
+                process.env.KEEPER_REGISTRAR_ADDRESS,
+                process.env.KEEPER_REGISTRY_ADDRESS,
+                process.env.LINK_TOKEN_ADDRESS,
+                process.env.SSV_NETWORK_ADDRESS,
+                process.env.SSV_TOKEN_ADDRESS,
+                process.env.SWAP_FACTORY_ADDRESS,
+                process.env.SWAP_ROUTER_ADDRESS,
+                process.env.WETH_TOKEN_ADDRESS
+            ],
+            unsafeAllow: ['external-library-linking']
+        })
+        await managerBeacon.deployed()
+
+        const registryBeaconFactory = await ethers.getContractFactory('CasimirRegistryDev')
+        const registryBeacon = await upgrades.upgradeBeacon(process.env.REGISTRY_BEACON_ADDRESS, registryBeaconFactory, { 
+            constructorArgs: [
+                process.env.SSV_VIEWS_ADDRESS
+            ]
+        })
+        await registryBeacon.deployed()
+
+        const upkeepBeaconFactory = await ethers.getContractFactory('CasimirUpkeepDev')
+        const upkeepBeacon = await upgrades.upgradeBeacon(process.env.UPKEEP_BEACON_ADDRESS, upkeepBeaconFactory)
+        await upkeepBeacon.deployed()
+
+        const viewsBeaconFactory = await ethers.getContractFactory('CasimirViewsDev')
+        const viewsBeacon = await upgrades.upgradeBeacon(process.env.VIEWS_BEACON_ADDRESS, viewsBeaconFactory)
+        await viewsBeacon.deployed()
+    }
+    const factory = await ethers.getContractAt('CasimirFactoryDev', process.env.FACTORY_ADDRESS) as CasimirFactoryDev
     console.log(`Casimir factory ${factory.address}`)
 
     const [managerId] = await factory.getManagerIds()
     const managerConfig = await factory.getManagerConfig(managerId)
-    const managerDevFactory = await ethers.getContractFactory('CasimirManagerDev', {
-        libraries: {
-            CasimirBeacon: process.env.BEACON_LIBRARY_ADDRESS
-        }
-    })
-    const managerBeacon = await upgrades.upgradeBeacon(process.env.MANAGER_BEACON_ADDRESS, managerDevFactory, {
-        constructorArgs: [
-            process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS,
-            process.env.KEEPER_REGISTRAR_ADDRESS,
-            process.env.KEEPER_REGISTRY_ADDRESS,
-            process.env.LINK_TOKEN_ADDRESS,
-            process.env.SSV_NETWORK_ADDRESS,
-            process.env.SSV_TOKEN_ADDRESS,
-            process.env.SWAP_FACTORY_ADDRESS,
-            process.env.SWAP_ROUTER_ADDRESS,
-            process.env.WETH_TOKEN_ADDRESS
-        ],
-        unsafeAllow: ['external-library-linking']
-    })
-    await managerBeacon.deployed()
 
-    const manager = new ethers.Contract(managerConfig.managerAddress, ICasimirManagerDevAbi, ethers.provider) as CasimirManagerDev
+    const manager = await ethers.getContractAt('CasimirManagerDev', managerConfig.managerAddress) as CasimirManagerDev
     console.log(`Casimir simple manager ${manager.address}`)
 
-    const registry = new ethers.Contract(managerConfig.registryAddress, ICasimirRegistryAbi, ethers.provider) as CasimirRegistry
+    const registry = await ethers.getContractAt('CasimirRegistryDev', managerConfig.registryAddress) as CasimirRegistryDev
     console.log(`Casimir simple registry ${registry.address}`)
 
-    const upkeepDevFactory = await ethers.getContractFactory('CasimirUpkeepDev')
-    const upkeepBeacon = await upgrades.upgradeBeacon(process.env.UPKEEP_BEACON_ADDRESS, upkeepDevFactory)
-    await upkeepBeacon.deployed()
-
-    const upkeep = new ethers.Contract(managerConfig.upkeepAddress, ICasimirUpkeepDevAbi, ethers.provider) as CasimirUpkeepDev
+    const upkeep = await ethers.getContractAt('CasimirUpkeepDev', managerConfig.upkeepAddress) as CasimirUpkeepDev
     console.log(`Casimir simple upkeep ${upkeep.address}`)
 
-    const views = new ethers.Contract(managerConfig.viewsAddress, ICasimirViewsAbi, ethers.provider) as CasimirViews
+    const views = await ethers.getContractAt('CasimirViewsDev', managerConfig.viewsAddress) as CasimirViewsDev
     console.log(`Casimir simple views ${views.address}`)
+    
     /**
      * Deploy a second operator groups with Casimir Eigen stake enabled
      * Note, this operator group is not functional it only deployed for testing purposes
      */
-    const deployEigenManager = await factory.connect(owner).deployManager(
-        daoOracle.address,
-        functionsOracle.address,
-        {
-            minCollateral: ethers.utils.parseEther('1.0'),
-            lockPeriod: ethers.BigNumber.from('0'),
-            userFee: ethers.BigNumber.from('5'),
-            compoundStake: true,
-            eigenStake: true,
-            liquidStake: false,
-            privateOperators: false,
-            verifiedOperators: false
-        }
-    )
-    await deployEigenManager.wait()
-    const [, eigenManagerId] = await factory.getManagerIds()
-    const eigenManagerConfig = await factory.getManagerConfig(eigenManagerId)
+    if (process.env.SIMULATE_EIGEN === 'true') {
+        const deployEigenManager = await factory.connect(owner).deployManager(
+            daoOracle.address,
+            functionsOracle.address,
+            {
+                minCollateral: ethers.utils.parseEther('1.0'),
+                lockPeriod: ethers.BigNumber.from('0'),
+                userFee: ethers.BigNumber.from('5'),
+                compoundStake: true,
+                eigenStake: true,
+                liquidStake: false,
+                privateOperators: false,
+                verifiedOperators: false
+            }
+        )
+        await deployEigenManager.wait()
+        const [, eigenManagerId] = await factory.getManagerIds()
+        const eigenManagerConfig = await factory.getManagerConfig(eigenManagerId)
 
-    const eigenManager = new ethers.Contract(eigenManagerConfig.managerAddress, ICasimirManagerDevAbi, ethers.provider) as CasimirManagerDev
-    console.log(`Casimir Eigen manager ${eigenManager.address}`)
-    const eigenRegistry = new ethers.Contract(eigenManagerConfig.registryAddress, ICasimirRegistryAbi, ethers.provider) as CasimirRegistry
-    console.log(`Casimir Eigen registry ${eigenRegistry.address}`)
-    const eigenUpkeep = new ethers.Contract(eigenManagerConfig.upkeepAddress, ICasimirUpkeepDevAbi, ethers.provider) as CasimirUpkeepDev
-    console.log(`Casimir Eigen upkeep ${eigenUpkeep.address}`)
-    const eigenViews = new ethers.Contract(eigenManagerConfig.viewsAddress, ICasimirViewsAbi, ethers.provider) as CasimirViews
-    console.log(`Casimir Eigen views ${eigenViews.address}`)
+        const eigenManager = await ethers.getContractAt('CasimirManagerDev', eigenManagerConfig.managerAddress) as CasimirManagerDev
+        console.log(`Casimir Eigen manager ${eigenManager.address}`)
+        const eigenRegistry = await ethers.getContractAt('CasimirRegistryDev', eigenManagerConfig.registryAddress) as CasimirRegistryDev
+        console.log(`Casimir Eigen registry ${eigenRegistry.address}`)
+        const eigenUpkeep = await ethers.getContractAt('CasimirUpkeepDev', eigenManagerConfig.upkeepAddress) as CasimirUpkeepDev
+        console.log(`Casimir Eigen upkeep ${eigenUpkeep.address}`)
+        const eigenViews = await ethers.getContractAt('CasimirViewsDev', eigenManagerConfig.viewsAddress) as CasimirViewsDev
+        console.log(`Casimir Eigen views ${eigenViews.address}`)
 
-    requestConfig.args[1] = eigenViews.address
-    await (await eigenUpkeep.connect(owner).setFunctionsRequest(
-        requestConfig.source, requestConfig.args, 300000
-    )).wait()
+        requestConfig.args[1] = eigenViews.address
+        await (await eigenUpkeep.connect(owner).setFunctionsRequest(
+            requestConfig.source, requestConfig.args, 300000
+        )).wait()
 
-    const functionsOracleSenders = await functionsOracle.getAuthorizedSenders()
-    const newFunctionsOracleSenders = [...functionsOracleSenders, eigenManager.address, eigenUpkeep.address]
-    await functionsOracle.connect(owner).setAuthorizedSenders(newFunctionsOracleSenders)
+        const functionsOracleSenders = await functionsOracle.getAuthorizedSenders()
+        const newFunctionsOracleSenders = [...functionsOracleSenders, eigenManager.address, eigenUpkeep.address]
+        await functionsOracle.connect(owner).setAuthorizedSenders(newFunctionsOracleSenders)
+    }
 
     /**
-     * We are simulating the oracle reporting on a more frequent basis
-     * We also do not sweep or compound the rewards in this script
+     * Simulate oracle reporting on a higher than average rate
      * Exit balances are swept as needed
      */
-    const blocksPerReport = 10
-    const rewardPerValidator = 0.105
-    let lastReportBlock = await ethers.provider.getBlockNumber()
-    let lastStakedPoolIds: number[] = []
-    void function () {
+    if (process.env.SIMULATE_REWARDS === 'true') {
+        const blocksPerReport = 10
+        const rewardPerValidator = 0.105
+        let lastReportBlock = await ethers.provider.getBlockNumber()
+        let lastStakedPoolIds: number[] = []
         ethers.provider.on('block', async (block) => {
             if (block - blocksPerReport >= lastReportBlock) {
                 await time.increase(time.duration.days(1))
@@ -222,7 +244,7 @@ async function dev() {
                 lastStakedPoolIds = stakedPoolIds
             }
         })
-    }()
+    }
 
     run('npm run dev --workspace @casimir/oracle')
 }

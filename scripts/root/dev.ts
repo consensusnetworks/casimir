@@ -105,16 +105,15 @@ async function root() {
             process.env.ETHEREUM_RPC_URL = 'http://127.0.0.1:8545'
             console.log(`Connecting to ${networkName} network fork at ${process.env.ETHEREUM_RPC_URL}`)
 
-            const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
-            process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await provider.getBlockNumber() - 10}`
+            const forkProvider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
+            process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await forkProvider.getBlockNumber() - 10}`
             console.log(`📍 Forking started at ${process.env.ETHEREUM_FORK_BLOCK}`)
         
             process.env.TUNNEL = process.env.TUNNEL || 'false'
             process.env.MINING_INTERVAL = '12'
-            run('npm run node --workspace @casimir/ethereum')
-            await new Promise(resolve => setTimeout(resolve, 2500))
+            process.env.SIMULATE_EIGENS = 'true'
+            process.env.SIMULATE_REWARDS = 'true'
 
-            console.log(`Serving local fork at ${process.env.ETHEREUM_RPC_URL}`)
             run('npm run dev --workspace @casimir/ethereum -- --network localhost')
         }
     }
