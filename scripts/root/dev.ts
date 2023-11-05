@@ -93,7 +93,6 @@ async function root() {
     process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FACTORY_ADDRESS
     process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_NETWORK_ADDRESS
     process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
-    process.env.SWAP_FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SWAP_FACTORY_ADDRESS
     if (apps[app].contracts) {
         if (process.env.NETWORK) {
             const networkName = ETHEREUM_NETWORK_NAME[networkKey]
@@ -111,7 +110,7 @@ async function root() {
         
             process.env.TUNNEL = process.env.TUNNEL || 'false'
             process.env.MINING_INTERVAL = '12'
-            process.env.SIMULATE_EIGENS = 'true'
+            process.env.SIMULATE_EIGEN = 'true'
             process.env.SIMULATE_REWARDS = 'true'
 
             run('npm run dev --workspace @casimir/ethereum -- --network localhost')
@@ -125,7 +124,6 @@ async function root() {
     process.env.PUBLIC_FACTORY_ADDRESS = process.env.FACTORY_ADDRESS
     process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
     process.env.PUBLIC_SSV_VIEWS_ADDRESS = process.env.SSV_VIEWS_ADDRESS
-    process.env.PUBLIC_SWAP_FACTORY_ADDRESS = process.env.SWAP_FACTORY_ADDRESS
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
     process.env.PUBLIC_ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK
     process.env.PUBLIC_WALLET_CONNECT_PROJECT_ID = process.env.WALLET_CONNECT_PROJECT_ID

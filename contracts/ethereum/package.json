@@ -7,7 +7,7 @@
         "deploy": "npx hardhat run scripts/deploy.ts",
         "dev": "npx hardhat run scripts/dev.ts",
         "docgen": "npx hardhat docgen",
-        "predev": "npx hardhat node",
+        "predev": "npx hardhat node &",
         "report": "npx hardhat run scripts/report.ts",
         "size": "npx hardhat size-contracts",
         "test": "npx esno -r dotenv/config -r scripts/test.ts",

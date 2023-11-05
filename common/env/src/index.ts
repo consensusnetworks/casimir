@@ -40,7 +40,7 @@ enum ETHEREUM_NETWORK_NAME {
 }
 
 enum ETHEREUM_RPC_URL {
-    TESTNET = 'https://goerli.infura.io/v3/46a379ac6895489f812f33beb726b03b'
+    TESTNET = 'https://goerli.infura.io/v3/46a379ac6895489f812f33beb726b03b' // 'https://nodes.casimir.co/eth/goerli/limited'
 }
 
 const ETHEREUM_SIGNERS = {
@@ -49,10 +49,6 @@ const ETHEREUM_SIGNERS = {
         DON_TRANSMITTER_ADDRESS: '0x84725c8f954f18709aDcA150a0635D2fBE94fDfF',
         OWNER_ADDRESS: '0xd557a5745d4560B24D36A68b52351ffF9c86A212'
     }
-}
-
-enum ETHEREUM_WS_URL {
-    TESTNET = 'wss://goerli.infura.io/ws/v3/46a379ac6895489f812f33beb726b03b'
 }
 
 enum HARDHAT_NETWORK_KEY {
@@ -66,7 +62,6 @@ export {
     ETHEREUM_NETWORK_NAME,
     ETHEREUM_RPC_URL,
     ETHEREUM_SIGNERS,
-    ETHEREUM_WS_URL,
     HARDHAT_NETWORK_KEY,
     MOCK_OPERATORS,
     MOCK_RESHARES,
