@@ -230,6 +230,13 @@ const toggleModal = (showModal: boolean) => {
               <div class="ml-6">
                 {{ convertString(account.address) }}
               </div>
+              <vue-feather
+                v-if="index === 0"
+                type="star"
+                class="ml-auto mr-6"
+                size="20"
+                title="Your Account's Primary Address"
+              />
             </li>
             <li
               class="flex justify-center align-center items-center py-4 cursor-pointer w-full"
