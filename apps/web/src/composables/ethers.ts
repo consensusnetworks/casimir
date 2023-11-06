@@ -1,10 +1,10 @@
-import { ethers } from 'ethers'
-import { CryptoAddress, EthersProvider } from '@casimir/types'
-import { TransactionRequest } from '@casimir/types'
-import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from '@casimir/types'
-import useEnvironment from '@/composables/environment'
-import useSiwe from '@/composables/siwe'
-import useWallets from '@/composables/wallets'
+import { ethers } from "ethers"
+import { CryptoAddress, EthersProvider } from "@casimir/types"
+import { TransactionRequest } from "@casimir/types"
+import { GasEstimate, LoginCredentials, MessageRequest, ProviderString } from "@casimir/types"
+import useEnvironment from "@/composables/environment"
+import useSiwe from "@/composables/siwe"
+import useWallets from "@/composables/wallets"
 
 interface ethereumWindow extends Window {
   ethereum: any;
@@ -19,28 +19,28 @@ const { installedWallets } = useWallets()
 export default function useEthers() {
   
   const browserProvidersList = [
-    'BraveWallet',
-    'CoinbaseWallet',
-    'MetaMask',
-    'OkxWallet',
-    'TrustWallet'
+    "BraveWallet",
+    "CoinbaseWallet",
+    "MetaMask",
+    "OkxWallet",
+    "TrustWallet"
   ]
 
   async function detectActiveEthersWalletAddress(providerString: ProviderString): Promise<string> {
     const provider = getBrowserProvider(providerString)
     try {
       if (provider) {
-        const accounts = await provider.request({ method: 'eth_accounts' })
+        const accounts = await provider.request({ method: "eth_accounts" })
         if (accounts.length > 0) {
           return accounts[0] as string
         } 
-        return ''
+        return ""
       } else {
-        return ''
+        return ""
       }
-    } catch(err) {
-      console.error('There was an error in detectActiveEthersWalletAddress :>> ', err)
-      return ''
+    } catch (err) {
+      console.error("There was an error in detectActiveEthersWalletAddress :>> ", err)
+      return ""
     }
   }
 
@@ -48,27 +48,27 @@ export default function useEthers() {
     try {
       const { ethereum } = window
       const isInstalled = installedWallets.value.includes(providerString)
-      if (providerString === 'CoinbaseWallet') {
-        if (!ethereum.providerMap && isInstalled) return alert('TrustWallet or another wallet may be interfering with CoinbaseWallet. Please disable other wallets and try again.')
+      if (providerString === "CoinbaseWallet") {
+        if (!ethereum.providerMap && isInstalled) return alert("TrustWallet or another wallet may be interfering with CoinbaseWallet. Please disable other wallets and try again.")
         if (ethereum?.providerMap) return ethereum.providerMap.get(providerString)
-          else window.open('https://www.coinbase.com/wallet/downloads', '_blank')
-      } else if (providerString === 'MetaMask') {
-        if (ethereum.providerMap && ethereum.providerMap.get('MetaMask')) {
+        else window.open("https://www.coinbase.com/wallet/downloads", "_blank")
+      } else if (providerString === "MetaMask") {
+        if (ethereum.providerMap && ethereum.providerMap.get("MetaMask")) {
           return ethereum?.providerMap?.get(providerString) || undefined
         } else if (ethereum.isMetaMask) {
           return ethereum
         } else {
-          window.open('https://metamask.io/download.html', '_blank')
+          window.open("https://metamask.io/download.html", "_blank")
         }
-      } else if (providerString === 'BraveWallet') {
+      } else if (providerString === "BraveWallet") {
         return getBraveWallet()
-      } else if (providerString === 'TrustWallet') {
+      } else if (providerString === "TrustWallet") {
         return getTrustWallet()
-      } else if (providerString === 'OkxWallet') {
+      } else if (providerString === "OkxWallet") {
         return getOkxWallet()
       }
-    } catch(err) {
-      console.error('There was an error in getBrowserProvider :>> ', err)
+    } catch (err) {
+      console.error("There was an error in getBrowserProvider :>> ", err)
     }
   }
 
@@ -76,15 +76,17 @@ export default function useEthers() {
    * Estimate gas fee using EIP 1559 methodology
    * @returns string in ETH
    */
-  async function estimateEIP1559GasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) : Promise<GasEstimate> {
+  async function estimateEIP1559GasFee(
+    rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+  ) : Promise<GasEstimate> {
     try {
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
       const gasPrice = await provider.getFeeData() as ethers.providers.FeeData
       const { maxFeePerGas, maxPriorityFeePerGas } = gasPrice
-      const maxFeePerGasInWei = maxFeePerGas ? ethers.utils.parseEther(maxFeePerGas.toString()) : '0'
-      const maxPriorityFeePerGasInWei = maxPriorityFeePerGas ? ethers.utils.parseEther(maxPriorityFeePerGas.toString()) : '0'
-      if (maxFeePerGasInWei === '0') throw new Error('maxFeePerGasInWei is zero')
-      if (maxPriorityFeePerGasInWei === '0') throw new Error('maxPriorityFeePerGasInWei is zero')
+      const maxFeePerGasInWei = maxFeePerGas ? ethers.utils.parseEther(maxFeePerGas.toString()) : "0"
+      const maxPriorityFeePerGasInWei = maxPriorityFeePerGas ? ethers.utils.parseEther(maxPriorityFeePerGas.toString()) : "0"
+      if (maxFeePerGasInWei === "0") throw new Error("maxFeePerGasInWei is zero")
+      if (maxPriorityFeePerGasInWei === "0") throw new Error("maxPriorityFeePerGasInWei is zero")
 
       const { to, from, value } = unsignedTransaction
       const tx = {
@@ -106,10 +108,10 @@ export default function useEthers() {
         fee: feeInEth
       }
     } catch (err) {
-      console.error('There was an error in estimateGasFee :>> ', err)
+      console.error("There was an error in estimateGasFee :>> ", err)
       return {
-        gasLimit: '0',
-        fee: '0'
+        gasLimit: "0",
+        fee: "0"
       }
     }
   }
@@ -120,7 +122,9 @@ export default function useEthers() {
    * @deprecated
    * @see estimateEIP1559GasFee
   */
-  async function estimateLegacyGasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) : Promise<GasEstimate> {
+  async function estimateLegacyGasFee(
+    rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+  ) : Promise<GasEstimate> {
     try {
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
       const gasPrice = await provider.getGasPrice()
@@ -133,10 +137,10 @@ export default function useEthers() {
         fee: feeInEth
       }
     } catch (err) {
-      console.error('There was an error in estimateGasFee :>> ', err)
+      console.error("There was an error in estimateGasFee :>> ", err)
       return {
-        gasLimit: '0',
-        fee: '0'
+        gasLimit: "0",
+        fee: "0"
       }
     }
   }
@@ -144,7 +148,7 @@ export default function useEthers() {
   async function getEthersAddressesWithBalances (providerString: ProviderString): Promise<CryptoAddress[]> {
     const provider = getBrowserProvider(providerString)
     if (provider) {
-      const addresses = await provider.request({ method: 'eth_requestAccounts' })
+      const addresses = await provider.request({ method: "eth_requestAccounts" })
       const addressesWithBalance: CryptoAddress[] = []
       for (const address of addresses) {
         const balance = (await getEthersBalance(address)).toString()
@@ -153,7 +157,7 @@ export default function useEthers() {
       }
       return addressesWithBalance
     } else {
-      throw new Error('Provider not yet connected to this dapp. Please connect and try again.')
+      throw new Error("Provider not yet connected to this dapp. Please connect and try again.")
     }
   }
 
@@ -196,12 +200,12 @@ export default function useEthers() {
     return maxAfterFees
   }
 
-  async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void>{
+  async function loginWithEthers(loginCredentials: LoginCredentials): Promise<void> {
     const { provider, address, currency } = loginCredentials
     const browserProvider = getBrowserProvider(provider)
     const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
     try {
-      const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
+      const message = await createSiweMessage(address, "Sign in with Ethereum to the app.")
       const signer = web3Provider.getSigner()
       const signedMessage = await signer.signMessage(message)
       await signInWithEthereum({
@@ -231,7 +235,7 @@ export default function useEthers() {
     const requiredBalance = parseFloat(value) + parseFloat(fee)
     const balance = await getEthersBalance(from)
     if (balance < requiredBalance) {
-      throw new Error('Insufficient balance')
+      throw new Error("Insufficient balance")
     }
     console.log(`Sending ${value} ETH to ${to} with estimated ${fee} ETH in fees using ~${gasLimit.toString()} in gas.`)
     return await signer.sendTransaction(tx)
@@ -263,7 +267,7 @@ function getBraveWallet() {
   if (ethereum?.isBraveWallet) {
     return ethereum
   } else {
-    window.open('https://brave.com/download/', '_blank')
+    window.open("https://brave.com/download/", "_blank")
   }
 }
 
@@ -282,81 +286,81 @@ function getTrustWallet() {
       if (provider.isTrustWallet) return provider
     }
   } else {
-    window.open('https://trustwallet.com/download', '_blank')
+    window.open("https://trustwallet.com/download", "_blank")
   }
 }
 
 const currenciesByChainId = {
-  '1': {
-    name: 'Mainnet ETH',
-    currency: 'ETH',
+  "1": {
+    name: "Mainnet ETH",
+    currency: "ETH",
   },
-  '3': {
-    name: 'Ropsten ETH',
-    currency: 'ETH',
+  "3": {
+    name: "Ropsten ETH",
+    currency: "ETH",
   },
-  '4': {
-    name: 'Rinkeby ETH',
-    currency: 'ETH',
+  "4": {
+    name: "Rinkeby ETH",
+    currency: "ETH",
   },
-  '5': {
-    name: 'Goerli ETH',
-    currency: 'ETH',
+  "5": {
+    name: "Goerli ETH",
+    currency: "ETH",
   },
-  '42': {
-    name: 'Kovan ETH',
-    currency: 'ETH',
+  "42": {
+    name: "Kovan ETH",
+    currency: "ETH",
   },
-  '56': {
-    name: 'Binance Smart Chain',
-    currency: 'BNB',
+  "56": {
+    name: "Binance Smart Chain",
+    currency: "BNB",
   },
-  '97': {
-    name: 'Binance Smart Chain Testnet',
-    currency: 'BNB',
+  "97": {
+    name: "Binance Smart Chain Testnet",
+    currency: "BNB",
   },
-  '137': {
-    name: 'Polygon',
-    currency: 'MATIC',
+  "137": {
+    name: "Polygon",
+    currency: "MATIC",
   },
-  '31337': {
-    name: 'Localhost Network',
-    currency: 'ETH',
+  "31337": {
+    name: "Localhost Network",
+    currency: "ETH",
   },
-  '80001': {
-    name: 'Polygon Testnet',
-    currency: 'MATIC',
+  "80001": {
+    name: "Polygon Testnet",
+    currency: "MATIC",
   },
-  '4690': {
-    name: 'IoTeX',
-    currency: 'IOTX',
+  "4690": {
+    name: "IoTeX",
+    currency: "IOTX",
   },
-  '4691': {
-    name: 'IoTeX Testnet',
-    currency: 'IOTX',
+  "4691": {
+    name: "IoTeX Testnet",
+    currency: "IOTX",
   },
 }
 
 const iotexNetwork = {
   chainId: ethers.utils.hexlify(4690),
-  chainName: 'IoTeX',
+  chainName: "IoTeX",
   nativeCurrency: {
-      name: 'IoTeX',
-      symbol: 'IOTX',
-      decimals: 18
+    name: "IoTeX",
+    symbol: "IOTX",
+    decimals: 18
   },
-  rpcUrls: ['https://api.testnet.iotex.one:80', 'http://api.testnet.iotex.one:80'],
-  blockExplorerUrls: ['https://iotexscan.io']
+  rpcUrls: ["https://api.testnet.iotex.one:80", "http://api.testnet.iotex.one:80"],
+  blockExplorerUrls: ["https://iotexscan.io"]
 }
 
 const goerliNetwork = {
-  chainId: '0x5',
-  chainName: 'Goerli Testnet',
+  chainId: "0x5",
+  chainName: "Goerli Testnet",
   nativeCurrency: {
-      name: 'Goerli',
-      symbol: 'GÖETH',
-      decimals: 18
+    name: "Goerli",
+    symbol: "GÖETH",
+    decimals: 18
   },
-  rpcUrls: ['https://goerli.infura.io/v3/6b9f3a5d3d5e4c8e9b5d1f0c3e5f1e4a'],
-  blockExplorerUrls: ['https://goerli.etherscan.io']
+  rpcUrls: ["https://goerli.infura.io/v3/6b9f3a5d3d5e4c8e9b5d1f0c3e5f1e4a"],
+  blockExplorerUrls: ["https://goerli.etherscan.io"]
 }

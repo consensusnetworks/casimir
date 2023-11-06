@@ -1,12 +1,12 @@
 
 <script setup lang="ts">
-    // eslint-disable-next-line no-undef
-    const props = defineProps({
-        currentSlide: {
-            type: Number,
-            required: true
-        }
-    })
+// eslint-disable-next-line no-undef
+const props = defineProps({
+  currentSlide: {
+    type: Number,
+    required: true
+  }
+})
 </script>
 
 <template>

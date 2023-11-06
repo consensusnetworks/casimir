@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ref, watch, onMounted } from 'vue'
-import * as XLSX from 'xlsx'
-import VueFeather from 'vue-feather'
-import useUser from '@/composables/user'
-import useFormat from '@/composables/format'
-import useAnalytics from '@/composables/analytics'
+import { ref, watch, onMounted } from "vue"
+import * as XLSX from "xlsx"
+import VueFeather from "vue-feather"
+import useUser from "@/composables/user"
+import useFormat from "@/composables/format"
+import useAnalytics from "@/composables/analytics"
 
 const { convertString } = useFormat()
 
@@ -12,11 +12,11 @@ const itemsPerPage = ref(7)
 const currentPage = ref(1)
 const totalPages = ref(1)
 
-const searchInput = ref('')
-const tableView = ref('Wallets')
+const searchInput = ref("")
+const tableView = ref("Wallets")
 
-const selectedHeader = ref('wallet_provider')
-const selectedOrientation = ref('ascending')
+const selectedHeader = ref("wallet_provider")
+const selectedOrientation = ref("ascending")
 
 const checkedItems = ref([] as any)
 
@@ -29,24 +29,24 @@ const tableHeaderOptions = ref(
         //   value: 'blank_column'
         // },
         {
-          title: 'Wallet Provider',
-          value: 'wallet_provider'
+          title: "Wallet Provider",
+          value: "wallet_provider"
         },
         {
-          title: 'Account',
-          value: 'act'
+          title: "Account",
+          value: "act"
         },
         {
-          title: 'Wallet Balance',
-          value: 'bal'
+          title: "Wallet Balance",
+          value: "bal"
         },
         {
-          title: 'Stake Balance',
-          value: 'stk_amt'
+          title: "Stake Balance",
+          value: "stk_amt"
         }, // Need to fetch based on wallet (FE SIDE)
         {
-          title: 'Stake Rewards (All-Time)',
-          value: 'stk_rwd'
+          title: "Stake Rewards (All-Time)",
+          value: "stk_rwd"
         }, // Need to fetch based on wallet (FE SIDE)
       ]
     },
@@ -57,32 +57,32 @@ const tableHeaderOptions = ref(
         //   value: 'blank_column'
         // },
         {
-          title: 'Hash',
-          value: 'tx_hash'
+          title: "Hash",
+          value: "tx_hash"
         },
         {
-          title: 'Type',
-          value: 'tx_type'
+          title: "Type",
+          value: "tx_type"
         },
         {
-          title: 'Date',
-          value: 'date'
+          title: "Date",
+          value: "date"
         },
         {
-          title: 'Amount',
-          value: 'stk_amt'
+          title: "Amount",
+          value: "stk_amt"
         },
         {
-          title: 'Price',
-          value: 'price'
+          title: "Price",
+          value: "price"
         },
         {
-          title: 'From',
-          value: 'from'
+          title: "From",
+          value: "from"
         },
         {
-          title: 'To',
-          value: 'to'
+          title: "To",
+          value: "to"
         },
       ]
     },
@@ -93,32 +93,32 @@ const tableHeaderOptions = ref(
         //   value: 'blank_column'
         // },
         {
-          title: 'Date',
-          value: 'date'
+          title: "Date",
+          value: "date"
         },
         {
-          title: 'Wallet Address',
-          value: 'wallet_address'
+          title: "Wallet Address",
+          value: "wallet_address"
         },
         {
-          title: 'Type',
-          value: 'type'
+          title: "Type",
+          value: "type"
         },
         {
-          title: 'Amount',
-          value: 'amount'
+          title: "Amount",
+          value: "amount"
         },
         {
-          title: 'Fees',
-          value: 'fees'
+          title: "Fees",
+          value: "fees"
         },
         {
-          title: 'Status',
-          value: 'status'
+          title: "Status",
+          value: "status"
         },
         {
-          title: 'Hash',
-          value: 'tx_hash'
+          title: "Hash",
+          value: "tx_hash"
         },
       ]
     },
@@ -128,9 +128,51 @@ const tableHeaderOptions = ref(
 const { user } = useUser()
 
 const tableData = ref({
-  Wallets: [] as { tx_hash: string, wallet_provider: string, status: string, staking_fees: string, type: string, amount: string, bal: string, act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
-  Transactions: [] as { tx_hash: string, wallet_provider: string, status: string, staking_fees: string, type: string, amount: string, bal: string, act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
-  Staking: [] as { tx_hash: string, wallet_provider: string, status: string, staking_fees: string, type: string, amount: string, bal: string, act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
+  Wallets: [] as { 
+    tx_hash: string, 
+    wallet_provider: string, 
+    status: string,
+     staking_fees: string,
+     type: string,
+     amount: string,
+     bal: string,
+     act: string,
+     date: string,
+     blank_column: any,
+     stk_amt: string,
+     tx_type: string,
+     stk_rwd: string 
+    }[],
+  Transactions: [] as { 
+    tx_hash: string,
+     wallet_provider: string,
+     status: string,
+     staking_fees: string,
+     type: string,
+     amount: string,
+     bal: string,
+     act: string,
+     date: string,
+     blank_column: any,
+     stk_amt: string,
+     tx_type: string,
+     stk_rwd: string 
+    }[],
+  Staking: [] as { 
+    tx_hash: string,
+     wallet_provider: string,
+     status: string,
+     staking_fees: string,
+     type: string,
+     amount: string,
+     bal: string,
+     act: string,
+     date: string,
+     blank_column: any,
+     stk_amt: string,
+     tx_type: string,
+     stk_rwd: string 
+    }[],
 })
 
 const filteredData = ref(tableData.value[tableView.value as keyof typeof tableData.value])
@@ -139,7 +181,7 @@ const filterData = () => {
   let filteredDataArray
 
   filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
-  if (searchInput.value === '') {
+  if (searchInput.value === "") {
     filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
   } else {
     const searchTerm = searchInput.value.toLocaleLowerCase()
@@ -166,12 +208,12 @@ const filterData = () => {
     })
   }
 
-  if (selectedHeader.value !== '' && selectedOrientation.value !== '') {
+  if (selectedHeader.value !== "" && selectedOrientation.value !== "") {
     filteredDataArray = filteredDataArray.sort((a, b) => {
       const valA = a[selectedHeader.value]
       const valB = b[selectedHeader.value]
 
-      if (selectedOrientation.value === 'ascending') {
+      if (selectedOrientation.value === "ascending") {
         return valA < valB ? -1 : valA > valB ? 1 : 0
       } else {
         return valA > valB ? -1 : valA < valB ? 1 : 0
@@ -185,20 +227,24 @@ const filterData = () => {
   filteredData.value = filteredDataArray.slice(start, end) as any
 }
 
-watch([searchInput, tableView, selectedHeader, selectedOrientation, currentPage], () => {
+watch([searchInput,
+  tableView,
+  selectedHeader,
+  selectedOrientation,
+  currentPage], () => {
   filterData()
 })
 
 const convertJsonToCsv = (jsonData: any[]) => {
-  const separator = ','
+  const separator = ","
   const csvRows = []
 
   if (!Array.isArray(jsonData)) {
-    return ''
+    return ""
   }
 
   if (jsonData.length === 0) {
-    return ''
+    return ""
   }
 
   const keys = Object.keys(jsonData[0])
@@ -212,14 +258,14 @@ const convertJsonToCsv = (jsonData: any[]) => {
     csvRows.push(values.join(separator))
   })
 
-  return csvRows.join('\n')
+  return csvRows.join("\n")
 }
 
 const convertJsonToExcelBuffer = (jsonData: unknown[]) => {
   const worksheet = XLSX.utils.json_to_sheet(jsonData)
   const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
-  const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1")
+  const excelBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" })
 
   return excelBuffer
 }
@@ -227,7 +273,7 @@ const convertJsonToExcelBuffer = (jsonData: unknown[]) => {
 const downloadFile = (content: any, filename: string, mimeType: any) => {
   const blob = new Blob([content], { type: mimeType })
   const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
+  const link = document.createElement("a")
   link.href = url
   link.download = filename
   link.click()
@@ -240,15 +286,15 @@ const exportFile = () => {
 
   const jsonData = checkedItems.value.length > 0 ? checkedItems.value : filteredData.value
 
-  const isMac = navigator.userAgent.indexOf('Mac') !== -1
-  const fileExtension = isMac ? 'csv' : 'xlsx'
+  const isMac = navigator.userAgent.indexOf("Mac") !== -1
+  const fileExtension = isMac ? "csv" : "xlsx"
 
-  if (fileExtension === 'csv') {
+  if (fileExtension === "csv") {
     const csvContent = convertJsonToCsv(jsonData)
-    downloadFile(csvContent, `${tableView.value}.csv`, 'text/csv')
+    downloadFile(csvContent, `${tableView.value}.csv`, "text/csv")
   } else {
     const excelBuffer = convertJsonToExcelBuffer(jsonData)
-    downloadFile(excelBuffer, `${tableView.value}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    downloadFile(excelBuffer, `${tableView.value}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
   }
 }
 
@@ -295,7 +341,7 @@ const setTableData = () => {
       let provider = user.value?.accounts.find(i => i.address.toLocaleLowerCase() === item.walletAddress.toLocaleLowerCase())?.walletProvider
       filteredWallets.push(
         {
-          wallet_provider: provider ? provider : 'Unknown',
+          wallet_provider: provider ? provider : "Unknown",
           act: item.walletAddress,
           bal: item.walletBalance,
           stk_amt: item.amount,
@@ -474,7 +520,10 @@ onMounted(() => {
                   v-show="header.value != 'blank_column'"
                   class="ml-[4px] h-min"
                   :class="selectedHeader === header.value ? 'opacity-100 text-primary' : 'opacity-90 text-grey_4'"
-                  @click="selectedHeader = header.value, selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
+                  @click="
+                    selectedHeader = header.value,
+                    selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'
+                  "
                 >
                   <vue-feather
                     type="arrow-up"

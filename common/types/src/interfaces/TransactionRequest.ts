@@ -1,6 +1,6 @@
-import ethers from 'ethers'
-import { ProviderString } from './ProviderString'
-import { Currency } from './Currency'
+import ethers from "ethers"
+import { ProviderString } from "./ProviderString"
+import { Currency } from "./Currency"
 
 export interface TransactionRequest extends ethers.providers.TransactionRequest {
     /** The transaction sender's address */

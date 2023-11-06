@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import VueFeather from 'vue-feather'
-import useBlog from '@/composables/blog'
+import VueFeather from "vue-feather"
+import useBlog from "@/composables/blog"
 
-const appUrl = import.meta.env.PUBLIC_APP_URL || 'https://app.dev.casimir.co'
-const docsUrl = import.meta.env.PUBLIC_DOCS_URL || 'https://docs.dev.casimir.co'
+const appUrl = import.meta.env.PUBLIC_APP_URL || "https://app.dev.casimir.co"
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL || "https://docs.dev.casimir.co"
 const {
-    articles,
-    loadingArticles,
+  articles,
+  loadingArticles,
 } = useBlog()
 
 </script>
