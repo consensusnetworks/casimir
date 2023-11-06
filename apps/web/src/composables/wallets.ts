@@ -6,7 +6,7 @@ const installedWallets = ref([] as ProviderString[])
 const { browserProvidersList, getBrowserProvider } = useEthers()
 
 export default function useWallets() {
-  async function detectActiveNetwork(providerString: ProviderString) {
+  async function detectActiveNetwork(providerString: ProviderString): Promise<number> {
     try {
       if (browserProvidersList.includes(providerString)) {
         const provider = getBrowserProvider(providerString)
@@ -17,16 +17,17 @@ export default function useWallets() {
         const chainId = parseInt(await provider.request({ method: "eth_chainId" }), 16)
         return chainId
       } else if (providerString === "Ledger") {
-        // TODO: Implement Ledger
-        alert("detectActiveNetwork not yet implemented")
-        return "0"
+        // TODO: Determine if there is a way to implement with Ledger or if have to rely on selected network on device
+        return await new Promise(resolve => resolve(5))
       } else if (providerString === "Trezor") {
-        // TODO: Implement Trezor
-        alert("detectActiveNetwork not yet implemented")
-        return "0"
+        // TODO: Determine if there is a way to implement with Ledger or if have to rely on selected network on device
+        return await new Promise(resolve => resolve(5))
+      } else {
+        return await new Promise(resolve => resolve(0))
       }
     } catch (err) {
       console.log("Error in detectActiveNetwork: ", err)
+      return await new Promise(resolve => resolve(0))
     }
   }
       

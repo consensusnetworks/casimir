@@ -266,7 +266,7 @@ watch(openTermsOfService, ()=>{
   }
 })
 
-const handleDeposit = async () => {
+const handleStake = async () => {
   stakeButtonText.value = "Staking..."
 
   // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
@@ -274,7 +274,6 @@ const handleDeposit = async () => {
   //   formattedAmountToStakeOrWithdraw.value = ''
   //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
   // }
-
   const result = await deposit({ 
     amount: formattedAmountToStakeOrWithdraw.value,
     walletProvider: selectedStakingProvider.value,
@@ -655,7 +654,7 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
           || parseFloat(formattedAmountToStakeOrWithdraw) <= 0 
           || (stakeOrWithdraw === 'stake' && !termsOfServiceCheckbox)
       "
-      @click="stakeOrWithdraw === 'stake' ? handleDeposit() : handleWithdraw()"
+      @click="stakeOrWithdraw === 'stake' ? handleStake() : handleWithdraw()"
     >
       <div
         class="flex items-center justify-center gap-[5px]"

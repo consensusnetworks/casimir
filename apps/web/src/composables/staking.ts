@@ -50,11 +50,11 @@ export default function useStaking() {
       if (browserProvidersList.includes(walletProvider)) {
         signer = getEthersBrowserSigner(walletProvider)
       } else if (walletProvider === "WalletConnect") {
-        await getWalletConnectSignerV2()
+        signer = await getWalletConnectSignerV2()
       } else if (walletProvider === "Ledger") {
-        getEthersLedgerSigner()
+        signer = getEthersLedgerSigner()
       } else if (walletProvider === "Trezor") {
-        getEthersTrezorSigner()
+        signer = getEthersTrezorSigner()
       } else {
         throw new Error(`Invalid wallet provider: ${walletProvider}`)
       }
