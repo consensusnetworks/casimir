@@ -30,6 +30,10 @@ export default function useBreakdownMetrics() {
     watch(user, async () => {
         if (user.value) initializeBreakdownMetricsComposable()
         else uninitializeBreakdownMetricsComposable()
+
+        if (user) {
+            await refreshBreakdown()
+        }
     })
 
     const currentStaked = ref<BreakdownAmount>({
