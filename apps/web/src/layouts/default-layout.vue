@@ -175,7 +175,9 @@ const toggleModal = (showModal: boolean) => {
         </div>
 
         <div class="flex items-center justify-between gap-[45px] 600s:gap-[10px] text-white h-[76px]">
-          <button>Goerli Testnet</button>
+          <div class="cursor-default">
+            Goerli Testnet
+          </div>
           <button id="setting_modal_button">
             <vue-feather
               type="settings"
