@@ -1,4 +1,4 @@
-import { AnalyticsData } from '@casimir/types'
+import { AnalyticsData } from "@casimir/types"
 
 export interface UserAnalyticsData {
     oneMonth: {

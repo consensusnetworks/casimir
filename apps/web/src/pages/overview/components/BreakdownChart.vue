@@ -1,40 +1,40 @@
 <script lang="ts" setup>
-import LineChartJS from '@/components/charts/LineChartJS.vue'
-import { onMounted, ref, watch} from 'vue'
-import useAnalytics from '@/composables/analytics'
-import useUser from '@/composables/user'
-import useScreenDimensions from '@/composables/screenDimensions'
-import { AnalyticsData, ProviderString, UserAnalyticsData, UserWithAccountsAndOperators } from '@casimir/types'
-import useBreakdownMetrics from '@/composables/breakdownMetrics'
+import LineChartJS from "@/components/charts/LineChartJS.vue"
+import { onMounted, ref, watch } from "vue"
+import useAnalytics from "@/composables/analytics"
+import useUser from "@/composables/user"
+import useScreenDimensions from "@/composables/screenDimensions"
+import { AnalyticsData, ProviderString, UserAnalyticsData, UserWithAccountsAndOperators } from "@casimir/types"
+import useBreakdownMetrics from "@/composables/breakdownMetrics"
 
 const {  user } = useUser()
 const { currentStaked, stakingRewards, totalWalletBalance, initializeBreakdownMetricsComposable, uninitializeBreakdownMetricsComposable } = useBreakdownMetrics()
 const { screenWidth } = useScreenDimensions()
 
-const chardId = ref('cross_provider_chart')
-const selectedTimeframe = ref('historical')
+const chardId = ref("cross_provider_chart")
+const selectedTimeframe = ref("historical")
 const chartData = ref({} as any)
 
 const getAccountColor = (address: string) => {
-  const walletProvider = user.value?.accounts.find( item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase())?.walletProvider as ProviderString
+  const walletProvider = user.value?.accounts.find(item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase())?.walletProvider as ProviderString
 
-  switch (walletProvider){
-    case 'MetaMask':
-      return '#F6851B'
-    case 'CoinbaseWallet':
-      return '#3773F5'
-    case 'WalletConnect':
-      return '#3396FF'
-    case 'Trezor':
-      return '#00854D'
-    case 'Ledger':
-      return '#D4A0FF'
-    case 'IoPay':
-      return '#00D7C7'
-    case 'TrustWallet':
-      return '#0B65C6'
-    default:
-      return'#80ABFF'
+  switch (walletProvider) {
+  case "MetaMask":
+    return "#F6851B"
+  case "CoinbaseWallet":
+    return "#3773F5"
+  case "WalletConnect":
+    return "#3396FF"
+  case "Trezor":
+    return "#00854D"
+  case "Ledger":
+    return "#D4A0FF"
+  case "IoPay":
+    return "#00D7C7"
+  case "TrustWallet":
+    return "#0B65C6"
+  default:
+    return "#80ABFF"
   }
     
 }
@@ -48,35 +48,35 @@ const formatLegendLabel = (address: string) => {
 
   var start = address.substring(0, 3)
   var end = address.substring(address.length - 3)
-  var middle = '.'.repeat(2)
+  var middle = ".".repeat(2)
 
 
-  return (account? account.walletProvider : 'Unknown') + ' (' + start + middle + end + ')'
+  return (account? account.walletProvider : "Unknown") + " (" + start + middle + end + ")"
 }
 
 const setChartData = (userAnalytics: UserAnalyticsData) => {
   let labels
   let data: Array<AnalyticsData> = []
   switch (selectedTimeframe.value) {
-    case '1 month':
-      labels = userAnalytics.oneMonth.labels
-      data = userAnalytics.oneMonth.data as any
-      break
-    case '6 months':
-      labels = userAnalytics.sixMonth.labels
-      data = userAnalytics.sixMonth.data as any
-      break
-    case '12 months':
-      labels = userAnalytics.oneYear.labels
-      data = userAnalytics.oneYear.data as any
-      break
-    case 'historical':
-      labels = userAnalytics.historical.labels
-      data = userAnalytics.historical.data as any
-      break
+  case "1 month":
+    labels = userAnalytics.oneMonth.labels
+    data = userAnalytics.oneMonth.data as any
+    break
+  case "6 months":
+    labels = userAnalytics.sixMonth.labels
+    data = userAnalytics.sixMonth.data as any
+    break
+  case "12 months":
+    labels = userAnalytics.oneYear.labels
+    data = userAnalytics.oneYear.data as any
+    break
+  case "historical":
+    labels = userAnalytics.historical.labels
+    data = userAnalytics.historical.data as any
+    break
     
-    default:
-      break
+  default:
+    break
   }
 
   chartData.value = {
@@ -96,7 +96,7 @@ const setChartData = (userAnalytics: UserAnalyticsData) => {
   }
 }
 
-const {userAnalytics, updateAnalytics, initializeAnalyticsComposable } = useAnalytics()
+const { userAnalytics, updateAnalytics, initializeAnalyticsComposable } = useAnalytics()
 
 watch(userAnalytics, () => {
   setChartData(userAnalytics.value as UserAnalyticsData)

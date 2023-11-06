@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { computed, ref, onMounted, watch } from 'vue'
-import { FormattedWalletOption, ProviderString } from '@casimir/types'
-import VueFeather from 'vue-feather'
-import useStaking from '@/composables/staking'
-import useEthers from '@/composables/ethers'
-import useFormat from '@/composables/format'
-import usePrice from '@/composables/price'
-import useUser from '@/composables/user'
+import { computed, ref, onMounted, watch } from "vue"
+import { FormattedWalletOption, ProviderString } from "@casimir/types"
+import VueFeather from "vue-feather"
+import useStaking from "@/composables/staking"
+import useEthers from "@/composables/ethers"
+import useFormat from "@/composables/format"
+import usePrice from "@/composables/price"
+import useUser from "@/composables/user"
 
-import TermsOfService from '@/components/TermsOfService.vue'
+import TermsOfService from "@/components/TermsOfService.vue"
 
 const { stakingComposableInitialized, deposit, initializeStakingComposable, withdraw, getWithdrawableBalance } = useStaking()
 const { getEthersBalance } = useEthers()
@@ -19,15 +19,15 @@ const { user, updateUserAgreement } = useUser()
 // Staking Component Refs
 const addressBalance = ref<string | null>(null)
 const currentEthPrice = ref(0)
-const stakeType = ref<'default' | 'eigen'>('default')
+const stakeType = ref<"default" | "eigen">("default")
 const currentUserStake = ref(0)
-const estimatedFees = ref<number | string>('-')
-const estimatedAPY = ref<string>('4.00')
-const formattedAmountToStakeOrWithdraw = ref('')
+const estimatedFees = ref<number | string>("-")
+const estimatedAPY = ref<string>("4.00")
+const formattedAmountToStakeOrWithdraw = ref("")
 const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
-const selectedStakingProvider = ref<ProviderString>('')
+const selectedStakingProvider = ref<ProviderString>("")
 const selectedWalletAddress = ref(null as null | string)
-const selectedOperatorGroup = ref(null as null | 'Default' | 'Eigen')
+const selectedOperatorGroup = ref(null as null | "Default" | "Eigen")
 
 // Wallet Select Refs
 const errorMessage = ref(null as null | string)
@@ -38,16 +38,16 @@ const termsOfServiceCheckbox = ref(false)
 
 // Staking Action Loader Refs
 const loading = ref(false)
-const stakeButtonText = ref('Stake')
+const stakeButtonText = ref("Stake")
 const stakingActionLoader = ref(false)
 const success = ref(false)
 const failure = ref(false)
 
-const stakeOrWithdraw = ref<'stake' | 'withdraw'>('stake')
+const stakeOrWithdraw = ref<"stake" | "withdraw">("stake")
 const eigenDisabled = ref(true) // Keeps eigen disabled until Casimir is ready to support it.
 const isShining = ref(true) // Determines if the shine effect is active
 const eigenIsToggled = ref(false) // Determines the toggle state
-const toggleBackgroundColor = ref('#eee')  // Initial color
+const toggleBackgroundColor = ref("#eee")  // Initial color
 
 const balances = ref<{ [key: string]: string | null }>({})
 
@@ -81,24 +81,24 @@ const toggleShineEffect = () => {
   // toggleEstimatedAPY()
 
   // Change the color based on the toggle state
-  toggleBackgroundColor.value = eigenIsToggled.value ? 'green' : '#eee'
+  toggleBackgroundColor.value = eigenIsToggled.value ? "green" : "#eee"
 
   // Update stakeType
-  stakeType.value = eigenIsToggled.value ? 'eigen' : 'default'
+  stakeType.value = eigenIsToggled.value ? "eigen" : "default"
 }
 
 function toggleEstimatedAPY() {
-  if (estimatedAPY.value === '5.50') {
-    estimatedAPY.value = '10.00'
+  if (estimatedAPY.value === "5.50") {
+    estimatedAPY.value = "10.00"
   } else {
-    estimatedAPY.value = '5.50'
+    estimatedAPY.value = "5.50"
   }
 }
 
 const handleInputOnAmountToStakeOrWithdraw = (event: any) => {
-  const value = event.target.value.replace(/[^\d.]/g, '')
-  const parts = value.split('.')
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  const value = event.target.value.replace(/[^\d.]/g, "")
+  const parts = value.split(".")
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
   // Limit to 18 decimal places
   if (parts[1] && parts[1].length > 18) {
@@ -106,13 +106,13 @@ const handleInputOnAmountToStakeOrWithdraw = (event: any) => {
   }
 
   // Update the model value
-  formattedAmountToStakeOrWithdraw.value = parts.join('.')
+  formattedAmountToStakeOrWithdraw.value = parts.join(".")
 }
 
 const selectAmountInput = () => {
-  const inputElement = document.getElementById('amount_input') as HTMLInputElement
+  const inputElement = document.getElementById("amount_input") as HTMLInputElement
   
-  if(inputElement){
+  if (inputElement) {
 
     inputElement.setSelectionRange(0, inputElement.value.length)
   
@@ -138,9 +138,9 @@ const aggregateAddressesByProvider = () => {
     })
   } else {
     // empty out staking comp
-    selectedStakingProvider.value = ''
+    selectedStakingProvider.value = ""
     selectedWalletAddress.value = null
-    formattedAmountToStakeOrWithdraw.value = ''
+    formattedAmountToStakeOrWithdraw.value = ""
     addressBalance.value = null
     currentUserStake.value = 0
   }
@@ -148,7 +148,7 @@ const aggregateAddressesByProvider = () => {
 
 watch(formattedAmountToStakeOrWithdraw, async () => {
   if (formattedAmountToStakeOrWithdraw.value) {
-    const floatAmount = parseFloat(formattedAmountToStakeOrWithdraw.value?.replace(/,/g, ''))
+    const floatAmount = parseFloat(formattedAmountToStakeOrWithdraw.value?.replace(/,/g, ""))
     let maxAmount
     if (selectedWalletAddress.value) {
       maxAmount = await getEthersBalance(selectedWalletAddress.value)
@@ -157,7 +157,7 @@ watch(formattedAmountToStakeOrWithdraw, async () => {
     }
 
     if (floatAmount > maxAmount) {
-      errorMessage.value = 'Insufficient Funds'
+      errorMessage.value = "Insufficient Funds"
     } else {
       errorMessage.value = null
     }
@@ -169,7 +169,7 @@ watch(formattedAmountToStakeOrWithdraw, async () => {
 watch(selectedWalletAddress, async () => {
   if (!stakingComposableInitialized.value) return
   if (selectedWalletAddress.value) {
-    addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + ' ETH'
+    addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + " ETH"
     isShining.value = true
     // currentUserStake.value = await getUserStake(selectedWalletAddress.value)
   } else {
@@ -183,15 +183,15 @@ watch(user, async () => {
   if (user.value?.id) {
     aggregateAddressesByProvider()
     termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
-    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
+    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
     selectedWalletAddress.value = user.value?.address as string
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
     // estimatedFees.value = await getDepositFees()
   } else {
-    selectedStakingProvider.value = ''
+    selectedStakingProvider.value = ""
     selectedWalletAddress.value = null
-    formattedAmountToStakeOrWithdraw.value = ''
+    formattedAmountToStakeOrWithdraw.value = ""
     addressBalance.value = null
     // currentUserStake.value = 0
   }
@@ -201,10 +201,10 @@ onMounted(async () => {
   // TODO: @ccali11 - Want to make sure this is non-blocking
   await initializeStakingComposable()
   aggregateAddressesByProvider()
-  currentEthPrice.value = Math.round((await getCurrentPrice({ coin: 'ETH', currency: 'USD' })) * 100) / 100
+  currentEthPrice.value = Math.round((await getCurrentPrice({ coin: "ETH", currency: "USD" })) * 100) / 100
   if (user.value?.id) {
     // estimatedFees.value = await getDepositFees()
-    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
+    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
     selectedStakingProvider.value = user.value?.walletProvider as ProviderString
     selectedWalletAddress.value = user.value?.address as string
     if (!stakingComposableInitialized.value) return
@@ -215,59 +215,59 @@ onMounted(async () => {
 })
 
 const handleOutsideClickForWalletInput = (event: any) => {
-  const selectWalletInputContainer = document.getElementById('selectWalletInputContainer')
-  const selectWalletInputButton = document.getElementById('selectWalletInputButton')
+  const selectWalletInputContainer = document.getElementById("selectWalletInputContainer")
+  const selectWalletInputButton = document.getElementById("selectWalletInputButton")
 
-  if(!selectWalletInputContainer?.contains(event.target) && !selectWalletInputButton?.contains(event.target)){
+  if (!selectWalletInputContainer?.contains(event.target) && !selectWalletInputButton?.contains(event.target)) {
     openSelectWalletInput.value = false
   }
 }
 
 const handleOutsideClickForOperatorGroupInput = (event: any) => {
-  const selectOperatorGroupInputContainer = document.getElementById('selectOperatorGroupInputContainer')
-  const selectOperatorGroupInputButton = document.getElementById('selectOperatorGroupInputButton')
+  const selectOperatorGroupInputContainer = document.getElementById("selectOperatorGroupInputContainer")
+  const selectOperatorGroupInputButton = document.getElementById("selectOperatorGroupInputButton")
 
-  if(!selectOperatorGroupInputContainer?.contains(event.target) && !selectOperatorGroupInputButton?.contains(event.target)){
+  if (!selectOperatorGroupInputContainer?.contains(event.target) && !selectOperatorGroupInputButton?.contains(event.target)) {
     openSelectOperatorGroupInput.value = false
   }
 }
 
 const handleOutsideClickForTermsOfService = (event: any) => {
-  const termsOfServiceContainer = document.getElementById('termsOfServiceContainer')
-  const termsOfServiceButton = document.getElementById('termsOfServiceButton')
+  const termsOfServiceContainer = document.getElementById("termsOfServiceContainer")
+  const termsOfServiceButton = document.getElementById("termsOfServiceButton")
 
 
-  if(!termsOfServiceContainer?.contains(event.target) && !termsOfServiceButton?.contains(event.target)){
+  if (!termsOfServiceContainer?.contains(event.target) && !termsOfServiceButton?.contains(event.target)) {
     openTermsOfService.value = false
   }
 }
 
 watch(openSelectWalletInput, ()=>{
-  if(openSelectWalletInput.value){
-    window.addEventListener('click', handleOutsideClickForWalletInput)
-  }else {
-    window.removeEventListener('click', handleOutsideClickForWalletInput)
+  if (openSelectWalletInput.value) {
+    window.addEventListener("click", handleOutsideClickForWalletInput)
+  } else {
+    window.removeEventListener("click", handleOutsideClickForWalletInput)
   }
 })
 
 watch(openSelectOperatorGroupInput, ()=>{
-  if(openSelectWalletInput.value){
-    window.addEventListener('click', handleOutsideClickForOperatorGroupInput)
-  }else {
-    window.removeEventListener('click', handleOutsideClickForOperatorGroupInput)
+  if (openSelectWalletInput.value) {
+    window.addEventListener("click", handleOutsideClickForOperatorGroupInput)
+  } else {
+    window.removeEventListener("click", handleOutsideClickForOperatorGroupInput)
   }
 })
 
 watch(openTermsOfService, ()=>{
-  if(openTermsOfService.value){
-    window.addEventListener('click', handleOutsideClickForTermsOfService)
-  }else {
-    window.removeEventListener('click', handleOutsideClickForTermsOfService)
+  if (openTermsOfService.value) {
+    window.addEventListener("click", handleOutsideClickForTermsOfService)
+  } else {
+    window.removeEventListener("click", handleOutsideClickForTermsOfService)
   }
 })
 
 const handleDeposit = async () => {
-  stakeButtonText.value = 'Staking...'
+  stakeButtonText.value = "Staking..."
 
   // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
   // if (activeAddress !== selectedWalletAddress.value) {
@@ -281,31 +281,31 @@ const handleDeposit = async () => {
     type: stakeType.value 
   })
 
-  if (result === false) stakeButtonText.value = 'User Rejected Signature'
-    else stakeButtonText.value = 'Staked!'
+  if (result === false) stakeButtonText.value = "User Rejected Signature"
+  else stakeButtonText.value = "Staked!"
 
   setTimeout(() =>{
-    stakeButtonText.value = 'Stake'
-    formattedAmountToStakeOrWithdraw.value = ''
+    stakeButtonText.value = "Stake"
+    formattedAmountToStakeOrWithdraw.value = ""
   }, 1000)
 
   if (result) {
     const waitResponse = await result.wait(1)
     eigenIsToggled.value = false
-    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
-    if (waitResponse){
-      alert('Your Stake Has Been Deposited!')
+    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
+    if (waitResponse) {
+      alert("Your Stake Has Been Deposited!")
     } else {
-      alert('Your Stake Action Has Failed, Please Try Again Later!')
+      alert("Your Stake Action Has Failed, Please Try Again Later!")
     }
-    console.log('waitResponse :>> ', waitResponse)
+    console.log("waitResponse :>> ", waitResponse)
   }
 
   // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
 
 const handleWithdraw = async () => {
-  stakeButtonText.value = 'Withdrawing...'
+  stakeButtonText.value = "Withdrawing..."
   selectedOperatorGroup.value = null
   // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
   // if (activeAddress !== selectedWalletAddress.value) {
@@ -319,8 +319,8 @@ const handleWithdraw = async () => {
   })
   
   if (parseFloat(withdrawableBalance) < parseFloat(formattedAmountToStakeOrWithdraw.value)) {
-    stakeButtonText.value = 'Withdraw'
-    formattedAmountToStakeOrWithdraw.value = ''
+    stakeButtonText.value = "Withdraw"
+    formattedAmountToStakeOrWithdraw.value = ""
     return alert(`You can currently withdraw up to ${withdrawableBalance} ETH. Please try again with a smaller amount.`)
   }
 
@@ -330,32 +330,32 @@ const handleWithdraw = async () => {
     type: stakeType.value 
   })
 
-  if (!result) stakeButtonText.value = 'Failed!'
-    else stakeButtonText.value = 'Withdrawn!'
+  if (!result) stakeButtonText.value = "Failed!"
+  else stakeButtonText.value = "Withdrawn!"
 
   setTimeout(() =>{
-    stakeButtonText.value = 'Withdraw'
-    formattedAmountToStakeOrWithdraw.value = ''
+    stakeButtonText.value = "Withdraw"
+    formattedAmountToStakeOrWithdraw.value = ""
   }, 1000)
 
   if (result) {
     const waitResponse = await result.wait(1)
     eigenIsToggled.value = false
-    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + ' ETH'
-    if (waitResponse){
-      alert('Your Stake Has Been Withdrawn!')
+    addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
+    if (waitResponse) {
+      alert("Your Stake Has Been Withdrawn!")
     } else {
-      alert('Your Stake Action Has Failed, Please Try Again Later!')
+      alert("Your Stake Action Has Failed, Please Try Again Later!")
     }
   }
 
   // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
 }
 
-function setStakeOrWithdraw(option: 'stake' | 'withdraw') {
-    stakeOrWithdraw.value = option
-    formattedAmountToStakeOrWithdraw.value = ''
-    stakeButtonText.value = option === 'stake' ? 'Stake' : 'Withdraw'
+function setStakeOrWithdraw(option: "stake" | "withdraw") {
+  stakeOrWithdraw.value = option
+  formattedAmountToStakeOrWithdraw.value = ""
+  stakeButtonText.value = option === "stake" ? "Stake" : "Withdraw"
 }
 </script>
 

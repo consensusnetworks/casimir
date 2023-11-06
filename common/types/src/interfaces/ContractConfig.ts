@@ -1,4 +1,4 @@
-import { ContractArgs } from './ContractArgs'
+import { ContractArgs } from "./ContractArgs"
 
 export interface ContractConfig {
     address: string | undefined

@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue'
-import VueFeather from 'vue-feather'
-import { ProviderString } from '@casimir/types'
-import useAuth from '@/composables/auth'
-import useEnvironment from '@/composables/environment'
+import { onMounted, ref, watch } from "vue"
+import VueFeather from "vue-feather"
+import { ProviderString } from "@casimir/types"
+import useAuth from "@/composables/auth"
+import useEnvironment from "@/composables/environment"
 // import useEthers from '@/composables/ethers'
-import useFiles from '@/composables/files'
-import useFormat from '@/composables/format'
-import useOperators from '@/composables/operators'
-import useUser from '@/composables/user'
+import useFiles from "@/composables/files"
+import useFormat from "@/composables/format"
+import useOperators from "@/composables/operators"
+import useUser from "@/composables/user"
 
 const { loadingSessionLogin } = useAuth()
 const { docsUrl } = useEnvironment()
@@ -28,7 +28,7 @@ const {
 const { user } = useUser()
 
 // Form inputs
-const selectedWallet = ref<{ address: string, walletProvider: ProviderString }>({ address: '', walletProvider: '' })
+const selectedWallet = ref<{ address: string, walletProvider: ProviderString }>({ address: "", walletProvider: "" })
 const openSelectWalletOptions = ref(false)
 const onSelectWalletBlur = () => {
   setTimeout(() => {
@@ -36,15 +36,15 @@ const onSelectWalletBlur = () => {
   }, 200)
 }
 
-const operatorType = ref<'base' | 'eigen'>('base')
+const operatorType = ref<"base" | "eigen">("base")
 const eigenIsShining = ref(true) // Determines if the shine effect is active
 const eigenIsToggled = ref(false) // Determines the toggle state
-const toggleBackgroundColor = ref('#eee')  // Initial color
+const toggleBackgroundColor = ref("#eee")  // Initial color
 
 function toggleEigenLayerSupport() {
   eigenIsToggled.value = !eigenIsToggled.value
-  toggleBackgroundColor.value = eigenIsToggled.value ? 'green' : '#eee'
-  operatorType.value = eigenIsToggled.value ? 'eigen' : 'base'
+  toggleBackgroundColor.value = eigenIsToggled.value ? "green" : "#eee"
+  operatorType.value = eigenIsToggled.value ? "eigen" : "base"
 
   // Update stakeType
   // stakeType.value = eigenIsToggled.value ? 'eigen' : 'base'
@@ -59,16 +59,16 @@ const onSelectOperatorIDBlur = () => {
 }
 
 const availableOperatorIDs = ref([] as string[])
-const selectedPublicNodeURL = ref('')
+const selectedPublicNodeURL = ref("")
 const selectedCollateral = ref()
 
 const openAddOperatorModal = ref(false)
 const itemsPerPage = ref(10)
 const currentPage = ref(1)
 const totalPages = ref(1)
-const searchInput = ref('')
-const selectedHeader = ref('walletProvider')
-const selectedOrientation = ref('ascending')
+const searchInput = ref("")
+const selectedHeader = ref("walletProvider")
+const selectedOrientation = ref("ascending")
 const operatorTableHeaders = ref(
   [
     // {
@@ -76,24 +76,24 @@ const operatorTableHeaders = ref(
     //   value: 'blank_column'
     // },
     {
-      title: 'Operator ID',
-      value: 'id'
+      title: "Operator ID",
+      value: "id"
     },
     {
-      title: 'Wallet Address',
-      value: 'walletAddress'
+      title: "Wallet Address",
+      value: "walletAddress"
     },
     {
-      title: 'Collateral',
-      value: 'collateral'
+      title: "Collateral",
+      value: "collateral"
     },
     {
-      title: 'Active Validators',
-      value: 'poolCount'
+      title: "Active Validators",
+      value: "poolCount"
     },
     {
-      title: 'Node URL',
-      value: 'nodeURL'
+      title: "Node URL",
+      value: "nodeURL"
     },
     // {
     //   title: '',
@@ -112,7 +112,7 @@ const filteredData = ref(tableData.value)
 const checkedItems = ref([] as any)
 
 const loading = ref(false)
-const submitButtonTxt = ref('Submit')
+const submitButtonTxt = ref("Submit")
 
 onMounted(async () => {
   if (user.value) {
@@ -121,13 +121,13 @@ onMounted(async () => {
 
     // Autofill disable
     const disableAutofill = () => {
-      let inputs = document.getElementsByTagName('input')
+      let inputs = document.getElementsByTagName("input")
       for (let i = 0; i < inputs.length; i++) {
-        inputs[i].setAttribute('autocomplete', 'off')
+        inputs[i].setAttribute("autocomplete", "off")
       }
     }
 
-    document.addEventListener('DOMContentLoaded', disableAutofill)
+    document.addEventListener("DOMContentLoaded", disableAutofill)
 
     filterData()
   }
@@ -143,13 +143,13 @@ watch(user, async () => {
 })
 
 watch(selectedWallet, async () => {
-  selectedOperatorID.value = ''
-  selectedPublicNodeURL.value = ''
-  selectedCollateral.value = ''
+  selectedOperatorID.value = ""
+  selectedPublicNodeURL.value = ""
+  selectedCollateral.value = ""
 
-  if (selectedWallet.value.address === '') {
+  if (selectedWallet.value.address === "") {
     availableOperatorIDs.value = []
-  } else if (operatorType.value === 'base') {
+  } else if (operatorType.value === "base") {
     if (nonregisteredBaseOperators.value && nonregisteredBaseOperators.value.length > 0) {
       availableOperatorIDs.value = [...nonregisteredBaseOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
     } else if (nonregisteredEigenOperators.value && nonregisteredEigenOperators.value.length > 0) {
@@ -167,7 +167,7 @@ watch([registeredBaseOperators, registeredEigenOperators], () => {
     return {
       id: operator.id,
       walletAddress: operator.ownerAddress,
-      collateral: operator.collateral + ' ETH',
+      collateral: operator.collateral + " ETH",
       poolCount: operator.poolCount,
       nodeURL: operator.url
     }
@@ -181,21 +181,24 @@ watch(openAddOperatorModal, () => {
   }
 })
 
-watch([searchInput, selectedHeader, selectedOrientation, currentPage], () => {
+watch([searchInput,
+  selectedHeader,
+  selectedOrientation,
+  currentPage], () => {
   filterData()
 })
 
 const openWalletsModal = () => {
-  const el = document.getElementById('connect_wallet_button')
+  const el = document.getElementById("connect_wallet_button")
   if (el) {
     el.click()
   }
 }
 
 const handleInputChangeCollateral = (event: any) => {
-  const value = event.target.value.replace(/[^\d.]/g, '')
-  const parts = value.split('.')
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  const value = event.target.value.replace(/[^\d.]/g, "")
+  const parts = value.split(".")
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
   // Limit to two decimal places
   if (parts[1] && parts[1].length > 2) {
@@ -203,14 +206,14 @@ const handleInputChangeCollateral = (event: any) => {
   }
 
   // Update the model value
-  selectedCollateral.value = parts.join('.')
+  selectedCollateral.value = parts.join(".")
 }
 
 const filterData = () => {
   loading.value = true
   let filteredDataArray
 
-  if (searchInput.value === '') {
+  if (searchInput.value === "") {
     filteredDataArray = tableData.value
   } else {
     const searchTerm = searchInput.value
@@ -223,12 +226,12 @@ const filterData = () => {
     })
   }
 
-  if (selectedHeader.value !== '' && selectedOrientation.value !== '') {
+  if (selectedHeader.value !== "" && selectedOrientation.value !== "") {
     filteredDataArray = filteredDataArray.sort((a: any, b: any) => {
       const valA = a[selectedHeader.value]
       const valB = b[selectedHeader.value]
 
-      if (selectedOrientation.value === 'ascending') {
+      if (selectedOrientation.value === "ascending") {
         return valA < valB ? -1 : valA > valB ? 1 : 0
       } else {
         return valA > valB ? -1 : valA < valB ? 1 : 0
@@ -250,8 +253,11 @@ const removeItemFromCheckedList = (item: any) => {
   }
 }
 
-watch([selectedWallet, selectedOperatorID, selectedPublicNodeURL, selectedCollateral], () => {
-  if (selectedWallet.value.address !== '' && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== '' && selectedCollateral.value !== undefined) {
+watch([selectedWallet,
+  selectedOperatorID,
+  selectedPublicNodeURL,
+  selectedCollateral], () => {
+  if (selectedWallet.value.address !== "" && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== "" && selectedCollateral.value !== undefined) {
     allInputsValid.value = true
   } else {
     allInputsValid.value = false
@@ -277,17 +283,17 @@ async function submitRegisterOperatorForm() {
     })
     openAddOperatorModal.value = false
   } catch (error) {
-    console.log('Error in submitRegisterOperatorForm :>> ', error)
+    console.log("Error in submitRegisterOperatorForm :>> ", error)
     openAddOperatorModal.value = false
   }
 
-  if (selectedWallet.value.address === '') {
+  if (selectedWallet.value.address === "") {
     const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address })
     selectedWallet.value = { address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString }
   }
-  selectedOperatorID.value = ''
-  selectedPublicNodeURL.value = ''
-  selectedCollateral.value = ''
+  selectedOperatorID.value = ""
+  selectedPublicNodeURL.value = ""
+  selectedCollateral.value = ""
   availableOperatorIDs.value = []
 }
 

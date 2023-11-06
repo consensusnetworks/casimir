@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import router from '@/composables/router'
-import VueFeather from 'vue-feather'
-import useAuth from '@/composables/auth'
-import useScreenDimensions from '@/composables/screenDimensions'
-import useUser from '@/composables/user'
-import useWallets from '@/composables/wallets'
+import { ref, onMounted, onUnmounted } from "vue"
+import router from "@/composables/router"
+import VueFeather from "vue-feather"
+import useAuth from "@/composables/auth"
+import useScreenDimensions from "@/composables/screenDimensions"
+import useUser from "@/composables/user"
+import useWallets from "@/composables/wallets"
 
-import ConnectWalletsFlow from '@/components/ConnectWalletsFlow.vue'
+import ConnectWalletsFlow from "@/components/ConnectWalletsFlow.vue"
 
 const { screenWidth } = useScreenDimensions()
 const { logout } = useAuth()
@@ -26,8 +26,8 @@ async function handleConnectWalletButtonClick() {
 }
 
 const handleOutsideClick = (event: any) => {
-  const setting_modal = document.getElementById('setting_modal')
-  const setting_modal_button = document.getElementById('setting_modal_button')
+  const setting_modal = document.getElementById("setting_modal")
+  const setting_modal_button = document.getElementById("setting_modal_button")
   if (setting_modal && setting_modal_button) {
     if (show_setting_modal.value) {
       if (!setting_modal.contains(event.target)) {
@@ -40,8 +40,8 @@ const handleOutsideClick = (event: any) => {
     }
   }
 
-  const connect_wallet_container = document.getElementById('connect_wallet_container')
-  const connect_wallet_card = document.getElementById('connect_wallet_card')
+  const connect_wallet_container = document.getElementById("connect_wallet_container")
+  const connect_wallet_card = document.getElementById("connect_wallet_card")
   if (connect_wallet_container && connect_wallet_card) {
     if (openWalletsModal.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
       openWalletsModal.value = false
@@ -55,11 +55,11 @@ const doesScrollBarExist = ref(true)
 onMounted(() => {
   doesScrollBarExist.value = document.documentElement.scrollHeight > document.documentElement.clientHeight
 
-  window.addEventListener('click', handleOutsideClick)
+  window.addEventListener("click", handleOutsideClick)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('click', handleOutsideClick)
+  window.removeEventListener("click", handleOutsideClick)
 })
 
 const toggleModal = (showModal: boolean) => {

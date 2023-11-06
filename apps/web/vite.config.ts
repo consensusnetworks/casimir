@@ -1,9 +1,9 @@
-import vue from '@vitejs/plugin-vue'
-import { defineConfig } from 'vite'
-import { fileURLToPath } from 'url'
-import * as path from 'path'
-import nodePolyfills from 'rollup-plugin-polyfill-node'
-import nodeResolve from '@rollup/plugin-node-resolve'
+import vue from "@vitejs/plugin-vue"
+import { defineConfig } from "vite"
+import { fileURLToPath } from "url"
+import * as path from "path"
+import nodePolyfills from "rollup-plugin-polyfill-node"
+import nodeResolve from "@rollup/plugin-node-resolve"
 
 export default defineConfig({
   server: { port: 3001 },
@@ -13,22 +13,22 @@ export default defineConfig({
     nodeResolve()
   ],
   define: {
-    'global': 'globalThis'
+    "global": "globalThis"
   },
   resolve: {
     alias: {
-      '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src'),
-      './runtimeConfig': './runtimeConfig.browser'
+      "@": path.resolve(path.dirname(fileURLToPath(import.meta.url)), "src"),
+      "./runtimeConfig": "./runtimeConfig.browser"
     },
     extensions: [
-      '.js',
-      '.json',
-      '.jsx',
-      '.mjs',
-      '.ts',
-      '.tsx',
-      '.vue',
+      ".js",
+      ".json",
+      ".jsx",
+      ".mjs",
+      ".ts",
+      ".tsx",
+      ".vue",
     ]
   },
-  envPrefix: 'PUBLIC_'
+  envPrefix: "PUBLIC_"
 })

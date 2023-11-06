@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import Staking from './components/Staking.vue'
-import StakingAvg from './components/StakingAvg.vue'
-import BreakdownChart from './components/BreakdownChart.vue'
-import BreakdownTable from './components/BreakdownTable.vue'
+import { ref, onMounted, watch } from "vue"
+import Staking from "./components/Staking.vue"
+import StakingAvg from "./components/StakingAvg.vue"
+import BreakdownChart from "./components/BreakdownChart.vue"
+import BreakdownTable from "./components/BreakdownTable.vue"
 
-import useAuth from '@/composables/auth'
-import useBreakdownMetrics from '@/composables/breakdownMetrics'
-import useAnalytics from '@/composables/analytics'
-import useOperators from '@/composables/operators'
+import useAuth from "@/composables/auth"
+import useBreakdownMetrics from "@/composables/breakdownMetrics"
+import useAnalytics from "@/composables/analytics"
+import useOperators from "@/composables/operators"
 
 const { loadingSessionLogin } = useAuth()
 const { loadingInitializeBreakdownMetrics } = useBreakdownMetrics()
@@ -19,13 +19,16 @@ const showSkeleton = ref(true)
 
 onMounted(() => {
   setTimeout(() => {
-    if(loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators){
+    if (loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators) {
       showSkeleton.value = false
     }
   }, 500)
 })
 
-watch([loadingSessionLogin, loadingInitializeBreakdownMetrics, loadingInitializeAnalytics, loadingInitializeOperators], () =>{
+watch([loadingSessionLogin,
+  loadingInitializeBreakdownMetrics,
+  loadingInitializeAnalytics,
+  loadingInitializeOperators], () =>{
   setTimeout(() => {
     if (loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators) {
       showSkeleton.value = false

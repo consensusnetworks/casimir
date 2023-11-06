@@ -1,1 +1,1 @@
-export type BreakdownString = 'currentStaked' | 'totalWalletBalance' | 'stakingRewardsEarned'
+export type BreakdownString = "currentStaked" | "totalWalletBalance" | "stakingRewardsEarned"

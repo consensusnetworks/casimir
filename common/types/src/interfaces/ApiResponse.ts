@@ -1,4 +1,4 @@
-import { ExistingUserCheck } from './ExistingUserCheck'
+import { ExistingUserCheck } from "./ExistingUserCheck"
 
 export interface ApiResponse {
     error: boolean;

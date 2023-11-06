@@ -1,5 +1,5 @@
-import { ProviderString } from './ProviderString'
-import { Currency } from './Currency'
+import { ProviderString } from "./ProviderString"
+import { Currency } from "./Currency"
 
 export interface MessageRequest {
     message: string;

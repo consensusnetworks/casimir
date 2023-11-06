@@ -18,8 +18,8 @@ export interface OperatorDetails {
     logo: string
     type: string
     performance: {
-        '24h': number
-        '30d': number
+        "24h": number
+        "30d": number
     },
     is_active: number
     is_valid: boolean

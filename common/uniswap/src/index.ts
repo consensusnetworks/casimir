@@ -1,3 +1,3 @@
-import { Factory } from './providers/factory'
+import { Factory } from "./providers/factory"
 
 export { Factory }
