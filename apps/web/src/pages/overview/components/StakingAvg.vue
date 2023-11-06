@@ -7,44 +7,44 @@ const openTimeFrameOptions = ref(false)
 const selectedTimeframe = ref("Last Week")
 
 const timeframeOptions = ref(
-  [
-    "Last Week",
-    "1 Month",
-    "6 Months",
-    "12 Months",
-    "Historical"
-  ]
+    [
+        "Last Week",
+        "1 Month",
+        "6 Months",
+        "12 Months",
+        "Historical"
+    ]
 )
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
-  viewId: {
-    type: String,
-    required: true,
-  }
+    viewId: {
+        type: String,
+        required: true,
+    }
 })
 
 const handleOutsideClick = (event: any) => {
-  const staking_avg_timeframe_button = document.getElementById(`${props.viewId}_staking_avg_timeframe_button`)
-  const staking_avg_timeframe_options = document.getElementById(`${props.viewId}_staking_avg_timeframe_options`)
+    const staking_avg_timeframe_button = document.getElementById(`${props.viewId}_staking_avg_timeframe_button`)
+    const staking_avg_timeframe_options = document.getElementById(`${props.viewId}_staking_avg_timeframe_options`)
 
-  if (staking_avg_timeframe_options && staking_avg_timeframe_button) {
-    if (openTimeFrameOptions.value) {
-      if (!staking_avg_timeframe_options.contains(event.target)) {
-        if (!staking_avg_timeframe_button.contains(event.target)) {
-          openTimeFrameOptions.value = false
+    if (staking_avg_timeframe_options && staking_avg_timeframe_button) {
+        if (openTimeFrameOptions.value) {
+            if (!staking_avg_timeframe_options.contains(event.target)) {
+                if (!staking_avg_timeframe_button.contains(event.target)) {
+                    openTimeFrameOptions.value = false
+                }
+            }
         }
-      }
     }
-  }
 }
 
 onMounted(() => {
-  window.addEventListener("click", handleOutsideClick)
+    window.addEventListener("click", handleOutsideClick)
 })
 
 onUnmounted(() =>{
-  window.removeEventListener("click", handleOutsideClick)
+    window.removeEventListener("click", handleOutsideClick)
 })
 
 </script>

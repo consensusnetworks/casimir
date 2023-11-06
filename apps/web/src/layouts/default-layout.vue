@@ -24,63 +24,63 @@ const show_setting_modal = ref(false)
 const showUserAddressesModal = ref(false)
 
 async function handleConnectWalletButtonClick() {
-  openWalletsModal.value = true
-  await detectInstalledWalletProviders()
+    openWalletsModal.value = true
+    await detectInstalledWalletProviders()
 }
 
 const handleOutsideClick = (event: any) => {
-  const setting_modal = document.getElementById("setting_modal")
-  const setting_modal_button = document.getElementById("setting_modal_button")
-  if (setting_modal && setting_modal_button) {
-    if (show_setting_modal.value) {
-      if (!setting_modal.contains(event.target)) {
-        show_setting_modal.value = false
-      }
-    } else {
-      if (setting_modal_button.contains(event.target)) {
-        show_setting_modal.value = true
-      }
+    const setting_modal = document.getElementById("setting_modal")
+    const setting_modal_button = document.getElementById("setting_modal_button")
+    if (setting_modal && setting_modal_button) {
+        if (show_setting_modal.value) {
+            if (!setting_modal.contains(event.target)) {
+                show_setting_modal.value = false
+            }
+        } else {
+            if (setting_modal_button.contains(event.target)) {
+                show_setting_modal.value = true
+            }
+        }
     }
-  }
 
-  const connect_wallet_container = document.getElementById("connect_wallet_container")
-  const connect_wallet_card = document.getElementById("connect_wallet_card")
-  if (connect_wallet_container && connect_wallet_card) {
-    if (openWalletsModal.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
-      openWalletsModal.value = false
-      authFlowCardNumber.value = 1
+    const connect_wallet_container = document.getElementById("connect_wallet_container")
+    const connect_wallet_card = document.getElementById("connect_wallet_card")
+    if (connect_wallet_container && connect_wallet_card) {
+        if (openWalletsModal.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
+            openWalletsModal.value = false
+            authFlowCardNumber.value = 1
+        }
     }
-  }
 
-  const user_addresses_modal = document.getElementById("user_addresses_modal")
-  const connect_wallet_button = document.getElementById("connect_wallet_button")
-  if (user_addresses_modal && connect_wallet_button) {
-    if (showUserAddressesModal.value) {
-      if (!user_addresses_modal.contains(event.target)) {
-        showUserAddressesModal.value = false
-      }
-    } else {
-      if (connect_wallet_button.contains(event.target)) {
-        showUserAddressesModal.value = true
-      }
+    const user_addresses_modal = document.getElementById("user_addresses_modal")
+    const connect_wallet_button = document.getElementById("connect_wallet_button")
+    if (user_addresses_modal && connect_wallet_button) {
+        if (showUserAddressesModal.value) {
+            if (!user_addresses_modal.contains(event.target)) {
+                showUserAddressesModal.value = false
+            }
+        } else {
+            if (connect_wallet_button.contains(event.target)) {
+                showUserAddressesModal.value = true
+            }
+        }
     }
-  }
 }
 
 const doesScrollBarExist = ref(true)
 
 onMounted(() => {
-  doesScrollBarExist.value = document.documentElement.scrollHeight > document.documentElement.clientHeight
+    doesScrollBarExist.value = document.documentElement.scrollHeight > document.documentElement.clientHeight
 
-  window.addEventListener("click", handleOutsideClick)
+    window.addEventListener("click", handleOutsideClick)
 })
 
 onUnmounted(() => {
-  window.removeEventListener("click", handleOutsideClick)
+    window.removeEventListener("click", handleOutsideClick)
 })
 
 const toggleModal = (showModal: boolean) => {
-  openWalletsModal.value = showModal
+    openWalletsModal.value = showModal
 }
 </script>
 
@@ -178,13 +178,6 @@ const toggleModal = (showModal: boolean) => {
           <div class="cursor-default">
             Goerli Testnet
           </div>
-          <button id="setting_modal_button">
-            <vue-feather
-              type="settings"
-              size="36"
-              class="icon w-[19px] h-min"
-            />
-          </button>
           <div class="connect_wallet_gradient">
             <button
               id="connect_wallet_button"
@@ -219,10 +212,31 @@ const toggleModal = (showModal: boolean) => {
           class="absolute right-[60px] 800s:right-[5%] bg-white top-[80%] w-[200px] setting_modal"
         >
           <ul class="dropdown_list">
+            <h6>
+              Primary Account
+            </h6>
             <li
-              v-for="(account, index) in user?.accounts"
+              class="flex align-center items-center py-4 w-full cursor-default"
+            >
+              <img
+                :src="`${user?.walletProvider.toLocaleLowerCase()}.svg`"
+                :alt="`${user?.walletProvider.toLocaleLowerCase()} Icon`"
+                class="h-[26px] mr-6"
+              >
+              <div class="ml-6">
+                {{ user ? convertString(user?.address) : '' }}
+              </div> 
+            </li>
+          </ul>
+          <hr>
+          <ul class="dropdown_list">
+            <h6>
+              Secondary Accounts
+            </h6>
+            <li 
+              v-for="(account, index) in user?.accounts.filter((account) => account.address !== user?.address)"
               :key="index"
-              class="flex align-center items-center border-b border-[#EAECF0] py-4 w-full cursor-default"
+              class="flex align-center items-center py-4 w-full cursor-default"
             >
               <img
                 :src="`${account.walletProvider.toLocaleLowerCase()}.svg`"
@@ -232,49 +246,30 @@ const toggleModal = (showModal: boolean) => {
               <div class="ml-6">
                 {{ convertString(account.address) }}
               </div>
-              <vue-feather
-                v-if="index === 0"
-                type="star"
-                class="ml-auto mr-6"
-                size="20"
-                title="Your Account's Primary Address"
-              />
             </li>
             <li
-              class="flex justify-center align-center items-center py-4 cursor-pointer w-full"
+              class="flex items-center justify-start gap-[8px] cursor-pointer w-full text-[#0d5fff]"
               @click="handleConnectWalletButtonClick"
             >
-              Add Address +
+              <vue-feather
+                type="plus"
+                size="16"
+                class="icon"
+              />
+              Add Account
             </li>
           </ul>
-        </div>
-
-        <!-- Settings Dropdown -->
-        <div
-          v-show="show_setting_modal"
-          id="setting_modal"
-          class="absolute right-[60px] 800s:right-[5%] bg-white top-[80%] w-[200px] rounded-lg"
-        >
-          <ul>
-            <!-- <li class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full h-[41px]">
-            <vue-feather
-              type="user"
-              size="36"
-              class="icon w-[17px] h-min"
-            />
-            <span>
-              Account
-            </span>
-          </li> -->
+          <hr>
+          <ul class="dropdown_list">
             <li
-              class="flex items-center px-[16px] py-[10px] gap-[12px] w-full h-[41px] cursor-pointer"
+              class="flex items-center justify-start gap-[8px] w-full cursor-pointer"
               :disabled="!user"
               @click="logout"
             >
               <vue-feather
                 type="log-out"
-                size="36"
-                class="icon w-[17px] h-min"
+                size="16"
+                class="icon"
               />
               <span>
                 Log out
@@ -402,10 +397,11 @@ body {
 .dropdown_list {
   display: flex;
   flex-direction: column;
-  align-items: center;
   padding: 10px 16px;
   gap: 12px;
   width: 100%;
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 .green_dot {
   width: 8px;

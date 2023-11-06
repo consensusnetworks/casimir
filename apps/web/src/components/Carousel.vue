@@ -2,10 +2,10 @@
 <script setup lang="ts">
 // eslint-disable-next-line no-undef
 const props = defineProps({
-  currentSlide: {
-    type: Number,
-    required: true
-  }
+    currentSlide: {
+        type: Number,
+        required: true
+    }
 })
 </script>
 

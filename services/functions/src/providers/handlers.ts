@@ -11,43 +11,43 @@ import FunctionsBillingRegistryAbi from "@casimir/ethereum/build/abi/FunctionsBi
 const config = getConfig()
 
 export async function fulfillRequestHandler(input: HandlerInput): Promise<void> {
-  const { requestId, data } = input.args as ethers.utils.Result
-  if (!requestId) throw new Error("No request id provided")
-  if (!data) throw new Error("No data provided")
+    const { requestId, data } = input.args as ethers.utils.Result
+    if (!requestId) throw new Error("No request id provided")
+    if (!data) throw new Error("No data provided")
 
-  const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
-  const functionsBillingRegistry = new ethers.Contract(
-    config.functionsBillingRegistryAddress, FunctionsBillingRegistryAbi, provider
-  ) as FunctionsBillingRegistry
+    const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
+    const functionsBillingRegistry = new ethers.Contract(
+        config.functionsBillingRegistryAddress, FunctionsBillingRegistryAbi, provider
+    ) as FunctionsBillingRegistry
 
-  const { args } = decodeDietCBOR(data)
-  const currentRequestConfig = {
-    ...requestConfig,
-    args
-  }
-
-  const { result, resultLog, success } = await simulateRequest(currentRequestConfig)
-  if (success) {
-    const signer = config.wallet.connect(provider)        
-    const dummySigners = Array(31).fill(signer.address)    
-    const fulfillAndBill = await functionsBillingRegistry.connect(signer).fulfillAndBill(
-      requestId,
-      result,
-      "0x",
-      signer.address,
-      dummySigners,
-      4,
-      100_000,
-      500_000,
-      {
-        gasLimit: 500_000,
-      }
-    )
-    await fulfillAndBill.wait()
-    if (process.env.USE_LOGS === "true") {
-      updateExecutionLog("execution.log", resultLog)
+    const { args } = decodeDietCBOR(data)
+    const currentRequestConfig = {
+        ...requestConfig,
+        args
     }
-  } else {
-    throw new Error(resultLog)
-  }
+
+    const { result, resultLog, success } = await simulateRequest(currentRequestConfig)
+    if (success) {
+        const signer = config.wallet.connect(provider)        
+        const dummySigners = Array(31).fill(signer.address)    
+        const fulfillAndBill = await functionsBillingRegistry.connect(signer).fulfillAndBill(
+            requestId,
+            result,
+            "0x",
+            signer.address,
+            dummySigners,
+            4,
+            100_000,
+            500_000,
+            {
+                gasLimit: 500_000,
+            }
+        )
+        await fulfillAndBill.wait()
+        if (process.env.USE_LOGS === "true") {
+            updateExecutionLog("execution.log", resultLog)
+        }
+    } else {
+        throw new Error(resultLog)
+    }
 }
