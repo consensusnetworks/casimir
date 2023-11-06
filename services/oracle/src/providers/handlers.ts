@@ -26,7 +26,9 @@ export async function depositFunctionsBalanceHandler(input: HandlerInput) {
   const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
   const signer = config.wallet.connect(provider)
   const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-  const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, IFunctionsBillingRegistryAbi, provider) as ethers.Contract & IFunctionsBillingRegistry
+  const functionsBillingRegistry = new ethers.Contract(
+    config.functionsBillingRegistryAddress, IFunctionsBillingRegistryAbi, provider
+  ) as ethers.Contract & IFunctionsBillingRegistry
 
   const minimumBalance = 0.2
   const refundBalance = 5
@@ -71,7 +73,9 @@ export async function depositUpkeepBalanceHandler(input: HandlerInput) {
   const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
   const signer = config.wallet.connect(provider)
   const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
-  const keeperRegistry = new ethers.Contract(config.keeperRegistryAddress, IAutomationRegistryAbi, provider) as ethers.Contract & IAutomationRegistry
+  const keeperRegistry = new ethers.Contract(
+    config.keeperRegistryAddress, IAutomationRegistryAbi, provider
+  ) as ethers.Contract & IAutomationRegistry
 
   const minimumBalance = 6.5
   const refundBalance = 13
@@ -119,7 +123,9 @@ export async function initiatePoolHandler(input: HandlerInput) {
   const signer = config.wallet.connect(provider)
   const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
   const views = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
-  const registry = new ethers.Contract(registryAddress, CasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
+  const registry = new ethers.Contract(
+    registryAddress, CasimirRegistryAbi, provider
+  ) as ethers.Contract & CasimirRegistry
 
   const managerNonce = await provider.getTransactionCount(manager.address)
   const poolAddress = ethers.utils.getContractAddress({
@@ -131,7 +137,9 @@ export async function initiatePoolHandler(input: HandlerInput) {
   const operators = await views.getOperators(0, operatorCount)
 
   const eligibleOperators = operators.filter((operator) => {
-    const availableCollateral = parseInt(ethers.utils.formatEther(operator.collateral)) - parseInt(operator.poolCount.toString())
+    const operatorCollateral = parseInt(ethers.utils.formatEther(operator.collateral))
+    const operatorPoolCount = parseInt(operator.poolCount.toString())
+    const availableCollateral = operatorCollateral - operatorPoolCount
     return operator.active && !operator.resharing && availableCollateral > 0
   })
 
@@ -232,7 +240,8 @@ export async function activatePoolsHandler(input: HandlerInput) {
     })
     
     const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * price).toPrecision(9))
-    const minTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9))
+    const formattedRequiredFee = Number(ethers.utils.formatEther(requiredFee)) * 0.99
+    const minTokenAmount = ethers.utils.parseEther((formattedRequiredFee).toPrecision(9))
     
     const activatePool = await manager.connect(signer).activatePool(
       pendingPoolIndex,
@@ -255,7 +264,9 @@ export async function resharePoolsHandler(input: HandlerInput) {
   const signer = config.wallet.connect(provider)
   const manager = new ethers.Contract(managerAddress, ICasimirManagerAbi, signer) as ethers.Contract & CasimirManager
   const views = new ethers.Contract(viewsAddress, CasimirViewsAbi, provider) as ethers.Contract & CasimirViews
-  const registry = new ethers.Contract(registryAddress, CasimirRegistryAbi, provider) as ethers.Contract & CasimirRegistry
+  const registry = new ethers.Contract(
+    registryAddress, CasimirRegistryAbi, provider
+  ) as ethers.Contract & CasimirRegistry
 
   const poolIds = [
     ...await manager.getPendingPoolIds(), ...await manager.getStakedPoolIds()
@@ -271,7 +282,9 @@ export async function resharePoolsHandler(input: HandlerInput) {
       const operators = await views.getOperators(0, operatorCount)
         
       const eligibleOperators = operators.filter((operator) => {
-        const availableCollateral = parseInt(ethers.utils.formatEther(operator.collateral)) - parseInt(operator.poolCount.toString())
+        const operatorCollateral = parseInt(ethers.utils.formatEther(operator.collateral))
+        const operatorPoolCount = parseInt(operator.poolCount.toString())
+        const availableCollateral = operatorCollateral - operatorPoolCount
         return operator.active && !operator.resharing && availableCollateral > 0
       })
         
@@ -330,7 +343,8 @@ export async function resharePoolsHandler(input: HandlerInput) {
           uniswapFeeTier: 3000
         })
             
-        const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * Number(price)).toPrecision(9))
+        const requiredFeeSubOldClusterBalance = requiredFee.sub(oldCluster.balance)
+        const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFeeSubOldClusterBalance)) * Number(price)).toPrecision(9))
         const minTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * 0.99).toPrecision(9))
 
         const reportReshare = await manager.reportReshare(

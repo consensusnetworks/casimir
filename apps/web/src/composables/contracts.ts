@@ -18,9 +18,15 @@ export default function useContracts() {
     const baseRegistry = new ethers.Contract(baseManagerConfig.registryAddress, ICasimirRegistryAbi, provider) as CasimirRegistry
     const baseViews = new ethers.Contract(baseManagerConfig.viewsAddress, ICasimirViewsAbi, provider) as CasimirViews
 
-    const eigenManager = new ethers.Contract(eigenManagerConfig?.managerAddress || ethers.constants.AddressZero, ICasimirManagerAbi, provider) as CasimirManager
-    const eigenRegistry = new ethers.Contract(eigenManagerConfig?.registryAddress || ethers.constants.AddressZero, ICasimirRegistryAbi, provider) as CasimirRegistry
-    const eigenViews = new ethers.Contract(eigenManagerConfig?.viewsAddress || ethers.constants.AddressZero, ICasimirViewsAbi, provider) as CasimirViews
+    const eigenManager = new ethers.Contract(
+      eigenManagerConfig?.managerAddress || ethers.constants.AddressZero, ICasimirManagerAbi, provider
+    ) as CasimirManager
+    const eigenRegistry = new ethers.Contract(
+      eigenManagerConfig?.registryAddress || ethers.constants.AddressZero, ICasimirRegistryAbi, provider
+    ) as CasimirRegistry
+    const eigenViews = new ethers.Contract(
+      eigenManagerConfig?.viewsAddress || ethers.constants.AddressZero, ICasimirViewsAbi, provider
+    ) as CasimirViews
 
     return {
       baseManager,

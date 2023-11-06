@@ -16,7 +16,9 @@ export async function fulfillRequestHandler(input: HandlerInput): Promise<void> 
   if (!data) throw new Error("No data provided")
 
   const provider = new ethers.providers.JsonRpcProvider(config.ethereumUrl)
-  const functionsBillingRegistry = new ethers.Contract(config.functionsBillingRegistryAddress, FunctionsBillingRegistryAbi, provider) as FunctionsBillingRegistry
+  const functionsBillingRegistry = new ethers.Contract(
+    config.functionsBillingRegistryAddress, FunctionsBillingRegistryAbi, provider
+  ) as FunctionsBillingRegistry
 
   const { args } = decodeDietCBOR(data)
   const currentRequestConfig = {

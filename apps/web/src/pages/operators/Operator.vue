@@ -151,9 +151,13 @@ watch(selectedWallet, async () => {
     availableOperatorIDs.value = []
   } else if (operatorType.value === "base") {
     if (nonregisteredBaseOperators.value && nonregisteredBaseOperators.value.length > 0) {
-      availableOperatorIDs.value = [...nonregisteredBaseOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
+      availableOperatorIDs.value = [...nonregisteredBaseOperators.value]
+        .filter((operator: any) => operator.ownerAddress === selectedWallet.value.address)
+        .map((operator: any) => operator.id)
     } else if (nonregisteredEigenOperators.value && nonregisteredEigenOperators.value.length > 0) {
-      availableOperatorIDs.value = [...nonregisteredEigenOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
+      availableOperatorIDs.value = [...nonregisteredEigenOperators.value]
+        .filter((operator: any) => operator.ownerAddress === selectedWallet.value.address)
+        .map((operator: any) => operator.id)
     } else {
       availableOperatorIDs.value = []
     }
@@ -406,7 +410,10 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                     v-show="header.value != 'blank_column'"
                     class="ml-[4px] flex flex-col items-center justify-between"
                     :class="selectedHeader === header.value ? 'opacity-100' : 'opacity-25'"
-                    @click="selectedHeader = header.value, selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
+                    @click="
+                      selectedHeader = header.value, 
+                      selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'
+                    "
                   >
                     <vue-feather
                       type="arrow-up"

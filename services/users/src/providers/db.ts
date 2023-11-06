@@ -66,7 +66,9 @@ export default function useDB() {
      * @returns Promise<OperatorAddedSuccess | undefined>
      */
   // TODO: Need some check to make sure operator is properly registered
-  async function addOperator({ userId, accountId, nodeUrl }: AddOperatorOptions) : Promise<OperatorAddedSuccess | undefined> {
+  async function addOperator(
+    { userId, accountId, nodeUrl }: AddOperatorOptions
+  ) : Promise<OperatorAddedSuccess | undefined> {
     try {
       const created_at = new Date().toISOString()
       const text = "INSERT INTO operators (user_id, account_id, node_url, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;"

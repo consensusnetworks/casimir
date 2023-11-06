@@ -649,7 +649,12 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
     <button
       class="submit-button  h-[37px] w-full"
       :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
-      :disabled="!(selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage) || (stakeButtonText !== 'Stake' && stakeButtonText !== 'Withdraw') || parseFloat(formattedAmountToStakeOrWithdraw) <= 0 || (stakeOrWithdraw === 'stake' && !termsOfServiceCheckbox)"
+      :disabled="
+        !(selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage) 
+          || (stakeButtonText !== 'Stake' && stakeButtonText !== 'Withdraw') 
+          || parseFloat(formattedAmountToStakeOrWithdraw) <= 0 
+          || (stakeOrWithdraw === 'stake' && !termsOfServiceCheckbox)
+      "
       @click="stakeOrWithdraw === 'stake' ? handleDeposit() : handleWithdraw()"
     >
       <div

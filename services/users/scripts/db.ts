@@ -12,7 +12,13 @@ void async function () {
   if (process.env.STAGE !== "local") {
     await loadCredentials()
     const dbCredentials = await getSecret(`${process.env.PROJECT}-users-db-credentials-${process.env.STAGE}`)
-    const { port: dbPort, host: dbHost, dbname: dbName, username: dbUser, password: dbPassword } = JSON.parse(dbCredentials as string)
+    const { 
+      port: dbPort, 
+      host: dbHost,
+      dbname: dbName,
+      username: dbUser,
+      password: dbPassword 
+    } = JSON.parse(dbCredentials as string)
     process.env.DB_HOST = dbHost
     process.env.DB_PORT = dbPort
     process.env.DB_NAME = dbName

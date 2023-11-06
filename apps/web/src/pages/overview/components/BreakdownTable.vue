@@ -128,9 +128,51 @@ const tableHeaderOptions = ref(
 const { user } = useUser()
 
 const tableData = ref({
-  Wallets: [] as { tx_hash: string, wallet_provider: string, status: string, staking_fees: string, type: string, amount: string, bal: string, act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
-  Transactions: [] as { tx_hash: string, wallet_provider: string, status: string, staking_fees: string, type: string, amount: string, bal: string, act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
-  Staking: [] as { tx_hash: string, wallet_provider: string, status: string, staking_fees: string, type: string, amount: string, bal: string, act: string, date: string, blank_column: any, stk_amt: string, tx_type: string, stk_rwd: string }[],
+  Wallets: [] as { 
+    tx_hash: string, 
+    wallet_provider: string, 
+    status: string,
+     staking_fees: string,
+     type: string,
+     amount: string,
+     bal: string,
+     act: string,
+     date: string,
+     blank_column: any,
+     stk_amt: string,
+     tx_type: string,
+     stk_rwd: string 
+    }[],
+  Transactions: [] as { 
+    tx_hash: string,
+     wallet_provider: string,
+     status: string,
+     staking_fees: string,
+     type: string,
+     amount: string,
+     bal: string,
+     act: string,
+     date: string,
+     blank_column: any,
+     stk_amt: string,
+     tx_type: string,
+     stk_rwd: string 
+    }[],
+  Staking: [] as { 
+    tx_hash: string,
+     wallet_provider: string,
+     status: string,
+     staking_fees: string,
+     type: string,
+     amount: string,
+     bal: string,
+     act: string,
+     date: string,
+     blank_column: any,
+     stk_amt: string,
+     tx_type: string,
+     stk_rwd: string 
+    }[],
 })
 
 const filteredData = ref(tableData.value[tableView.value as keyof typeof tableData.value])
@@ -478,7 +520,10 @@ onMounted(() => {
                   v-show="header.value != 'blank_column'"
                   class="ml-[4px] h-min"
                   :class="selectedHeader === header.value ? 'opacity-100 text-primary' : 'opacity-90 text-grey_4'"
-                  @click="selectedHeader = header.value, selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
+                  @click="
+                    selectedHeader = header.value,
+                    selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'
+                  "
                 >
                   <vue-feather
                     type="arrow-up"

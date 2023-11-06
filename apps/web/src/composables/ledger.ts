@@ -104,7 +104,8 @@ export default function useLedger() {
       } as ethers.UnsignedTransaction
       
       // Todo check before click (user can +/- gas limit accordingly)
-      const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumUrl, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+      const { gasPrice, gasLimit } = 
+        await getGasPriceAndLimit(ethereumUrl, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
       const balance = await provider.getBalance(from)
       const required = gasPrice.mul(gasLimit).add(ethers.utils.parseEther(value))
       console.log("Balance", ethers.utils.formatEther(balance))

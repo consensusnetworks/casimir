@@ -91,7 +91,16 @@ describe("Operators", async function () {
   })
 
   it("Pool exits with 31.0 and recovers from the blamed operator", async function () {
-    const { manager, registry, upkeep, views, secondUser, donTransmitter, daoOracle, functionsBillingRegistry } = await loadFixture(secondUserDepositFixture)
+    const { 
+      manager,
+      registry,
+      upkeep,
+      views,
+      secondUser,
+      donTransmitter,
+      daoOracle,
+      functionsBillingRegistry
+    } = await loadFixture(secondUserDepositFixture)
 
     const secondStake = await manager.getUserStake(secondUser.address)
     const withdraw = await manager.connect(secondUser).requestWithdrawal(secondStake)

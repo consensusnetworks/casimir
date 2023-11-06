@@ -52,7 +52,9 @@ export async function initiatePoolHandler({ manager, signer }: { manager: Casimi
   await initiatePool.wait()
 }
 
-export async function activatePoolsHandler({ manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }) {
+export async function activatePoolsHandler(
+  { manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }
+) {
   const count = args.count as number
   if (!count) throw new Error("No count provided")
 
@@ -107,7 +109,9 @@ export async function activatePoolsHandler({ manager, views, signer, args }: { m
   }
 }
 
-export async function resharePoolHandler({ manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }) {
+export async function resharePoolHandler(
+  { manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }
+) {
   const operatorId = args.operatorId as number
   if (!operatorId) throw new Error("No operator id provided")
     
@@ -158,7 +162,8 @@ export async function resharePoolHandler({ manager, views, signer, args }: { man
           uniswapFeeTier: 3000
         })
             
-        const feeAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * Number(price)).toPrecision(9))
+        const unformattedFeeAmount = (Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * Number(price)).toPrecision(9)
+        const feeAmount = ethers.utils.parseEther(unformattedFeeAmount)
         const minTokenAmount = ethers.utils.parseEther((Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) * 0.99).toPrecision(9))
 
         const reportReshare = await manager.connect(signer).resharePool(
@@ -242,7 +247,9 @@ export async function depositUpkeepBalanceHandler({ manager, signer }: { manager
   await depositUpkeepBalance.wait()
 }
 
-export async function reportCompletedExitsHandler({ manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }) {
+export async function reportCompletedExitsHandler(
+  { manager, views, signer, args }: { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }
+) {
   const { count } = args
 
   /**

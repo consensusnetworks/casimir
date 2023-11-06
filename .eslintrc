@@ -25,7 +25,7 @@
         "semi": ["error", "never"],
         "quotes": ["error", "double"],
         "vue/multi-word-component-names": "off",
-        "max-len": ["error", { "code": 120, "ignoreStrings": true, "comments":300, "ignoreTemplateLiterals": true }],
+        "max-len": ["error", { "code": 150, "ignoreStrings": true, "comments":300, "ignoreTemplateLiterals": true }],
         "space-before-blocks": ["error", "always"],
         "object-curly-spacing": ["error", "always"],
         "space-in-parens": ["error", "never"],

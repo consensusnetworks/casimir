@@ -43,7 +43,9 @@ export async function deploymentFixture() {
     functionsOracleAddress: functionsOracle.address
   }
   const functionsBillingRegistryFactory = await ethers.getContractFactory("FunctionsBillingRegistry")
-  const functionsBillingRegistry = await functionsBillingRegistryFactory.deploy(...Object.values(functionsBillingRegistryArgs)) as FunctionsBillingRegistry
+  const functionsBillingRegistry = await functionsBillingRegistryFactory.deploy(
+    ...Object.values(functionsBillingRegistryArgs)
+  ) as FunctionsBillingRegistry
   await functionsBillingRegistry.deployed()
 
   const functionsBillingRegistryConfig = {
@@ -249,7 +251,15 @@ export async function preregistrationFixture() {
 
 /** Fixture to stake 16 for the first user */
 export async function firstUserDepositFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter } = await loadFixture(preregistrationFixture)
+  const { manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter 
+  } = await loadFixture(preregistrationFixture)
   const [, , , firstUser] = await ethers.getSigners()
 
   const depositAmount = round(16 * ((100 + await manager.userFee()) / 100), 10)
@@ -261,7 +271,16 @@ export async function firstUserDepositFixture() {
 
 /** Fixture to stake 24 for the second user */
 export async function secondUserDepositFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser } = await loadFixture(firstUserDepositFixture)
+  const { manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter,
+    firstUser
+  } = await loadFixture(firstUserDepositFixture)
   const [, , , , secondUser] = await ethers.getSigners()
 
   const depositAmount = round(24 * ((100 + await manager.userFee()) / 100), 10)
@@ -305,7 +324,17 @@ export async function secondUserDepositFixture() {
 
 /** Fixture to report increase of 0.105 in total rewards before fees */
 export async function rewardsPostSecondUserDepositFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
+  const { manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter,
+    firstUser,
+    secondUser
+  } = await loadFixture(secondUserDepositFixture)
 
   await time.increase(time.duration.days(1))
   await runUpkeep({ donTransmitter, upkeep })
@@ -337,7 +366,18 @@ export async function rewardsPostSecondUserDepositFixture() {
 
 /** Fixture to sweep 0.105 to the manager */
 export async function sweepPostSecondUserDepositFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser } = await loadFixture(secondUserDepositFixture)
+  const { 
+    manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter,
+    firstUser,
+    secondUser 
+  } = await loadFixture(secondUserDepositFixture)
 
   await time.increase(time.duration.days(1))
   await runUpkeep({ donTransmitter, upkeep })
@@ -379,7 +419,18 @@ export async function sweepPostSecondUserDepositFixture() {
 
 /** Fixture to stake 24 for the third user */
 export async function thirdUserDepositFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser } = await loadFixture(sweepPostSecondUserDepositFixture)
+  const { 
+    manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter,
+    firstUser,
+    secondUser
+  } = await loadFixture(sweepPostSecondUserDepositFixture)
   const [, , , , , thirdUser] = await ethers.getSigners()
 
   const depositAmount = round(24 * ((100 + await manager.userFee()) / 100), 10)
@@ -420,7 +471,18 @@ export async function thirdUserDepositFixture() {
 
 /** Fixture to report increase of 0.21 in total rewards before fees */
 export async function rewardsPostThirdUserDepositFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser } = await loadFixture(thirdUserDepositFixture)
+  const { manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter,
+    firstUser,
+    secondUser,
+    thirdUser 
+  } = await loadFixture(thirdUserDepositFixture)
 
   await time.increase(time.duration.days(1))
   await runUpkeep({ donTransmitter, upkeep })
@@ -452,7 +514,19 @@ export async function rewardsPostThirdUserDepositFixture() {
 
 /** Fixture to sweep 0.21 to the manager */
 export async function sweepPostThirdUserDepositFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser } = await loadFixture(rewardsPostThirdUserDepositFixture)
+  const { 
+    manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter,
+    firstUser,
+    secondUser,
+    thirdUser 
+  } = await loadFixture(rewardsPostThirdUserDepositFixture)
 
   await time.increase(time.duration.days(1))
   await runUpkeep({ donTransmitter, upkeep })
@@ -494,7 +568,19 @@ export async function sweepPostThirdUserDepositFixture() {
 
 /** Fixture to partial withdraw 0.3 to the first user */
 export async function firstUserPartialWithdrawalFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser } = await loadFixture(sweepPostThirdUserDepositFixture)
+  const { 
+    manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter,
+    firstUser,
+    secondUser,
+    thirdUser
+  } = await loadFixture(sweepPostThirdUserDepositFixture)
   const withdrawableBalance = await manager.getWithdrawableBalance()
   const withdraw = await manager.connect(firstUser).requestWithdrawal(withdrawableBalance)
   await withdraw.wait()
@@ -529,7 +615,18 @@ export async function firstUserPartialWithdrawalFixture() {
 
 /** Fixture to stake 72 for the fourth user */
 export async function fourthUserDepositFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser } = await loadFixture(firstUserPartialWithdrawalFixture)
+  const { manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter,
+    firstUser,
+    secondUser,
+    thirdUser 
+  } = await loadFixture(firstUserPartialWithdrawalFixture)
   const [, , , , , , fourthUser] = await ethers.getSigners()
 
   const depositAmount = round(72 * ((100 + await manager.userFee()) / 100), 10)
@@ -567,12 +664,27 @@ export async function fourthUserDepositFixture() {
 
   await runUpkeep({ donTransmitter, upkeep })
 
-  return { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser }
+  return { 
+    manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser 
+  }
 }
 
 /** Fixture to simulate a validator stake penalty that decreases the beacon chain balance */
 export async function beaconBalanceLossFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(fourthUserDepositFixture)
+  const { 
+    manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter,
+    firstUser,
+    secondUser,
+    thirdUser,
+    fourthUser 
+  } = await loadFixture(fourthUserDepositFixture)
 
   await time.increase(time.duration.days(1))
   await runUpkeep({ donTransmitter, upkeep })
@@ -599,12 +711,27 @@ export async function beaconBalanceLossFixture() {
 
   await runUpkeep({ donTransmitter, upkeep })
 
-  return { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser }
+  return { 
+    manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser 
+  }
 }
 
 /** Fixture to simulate a validator reward that brings the beacon chain balance back to expected */
 export async function beaconBalanceRecoveryFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(beaconBalanceLossFixture)
+  const { 
+    manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter,
+    firstUser,
+    secondUser,
+    thirdUser,
+    fourthUser
+  } = await loadFixture(beaconBalanceLossFixture)
 
   let nextBeaconBalance = 127
   for (let i = 0; i < 2; i++) {
@@ -635,12 +762,27 @@ export async function beaconBalanceRecoveryFixture() {
     nextBeaconBalance += 1
   }
 
-  return { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser }
+  return { 
+    manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser 
+  }
 }
 
 /** Fixture to full withdraw ~24.07 */
 export async function thirdUserFullWithdrawalFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(beaconBalanceRecoveryFixture)
+  const { 
+    manager, 
+    registry, 
+    upkeep, 
+    views, 
+    functionsBillingRegistry, 
+    ssvViews, 
+    daoOracle, 
+    donTransmitter, 
+    firstUser, 
+    secondUser, 
+    thirdUser, 
+    fourthUser 
+  } = await loadFixture(beaconBalanceRecoveryFixture)
 
   const thirdStake = await manager.getUserStake(thirdUser.address)
   const withdraw = await manager.connect(thirdUser).requestWithdrawal(thirdStake)
@@ -680,12 +822,27 @@ export async function thirdUserFullWithdrawalFixture() {
 
   await runUpkeep({ donTransmitter, upkeep })
 
-  return { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser }
+  return { 
+    manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser 
+  }
 }
 
 /** Fixture to simulate rewards */
 export async function simulationFixture() {
-  const { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser } = await loadFixture(thirdUserFullWithdrawalFixture)
+  const { 
+    manager,
+    registry,
+    upkeep,
+    views,
+    functionsBillingRegistry,
+    ssvViews,
+    daoOracle,
+    donTransmitter,
+    firstUser,
+    secondUser,
+    thirdUser,
+    fourthUser 
+  } = await loadFixture(thirdUserFullWithdrawalFixture)
 
   const rewardsPerValidator = 0.105
   let nextBeaconBalance = 96
@@ -757,5 +914,7 @@ export async function simulationFixture() {
 
   await runUpkeep({ donTransmitter, upkeep })
 
-  return { manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser }
+  return { 
+    manager, registry, upkeep, views, functionsBillingRegistry, ssvViews, daoOracle, donTransmitter, firstUser, secondUser, thirdUser, fourthUser 
+  }
 }

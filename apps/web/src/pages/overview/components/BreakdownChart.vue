@@ -8,7 +8,13 @@ import { AnalyticsData, ProviderString, UserAnalyticsData, UserWithAccountsAndOp
 import useBreakdownMetrics from "@/composables/breakdownMetrics"
 
 const {  user } = useUser()
-const { currentStaked, stakingRewards, totalWalletBalance, initializeBreakdownMetricsComposable, uninitializeBreakdownMetricsComposable } = useBreakdownMetrics()
+const { 
+  currentStaked,
+  stakingRewards,
+  totalWalletBalance,
+  initializeBreakdownMetricsComposable,
+  uninitializeBreakdownMetricsComposable
+} = useBreakdownMetrics()
 const { screenWidth } = useScreenDimensions()
 
 const chardId = ref("cross_provider_chart")
@@ -16,7 +22,9 @@ const selectedTimeframe = ref("historical")
 const chartData = ref({} as any)
 
 const getAccountColor = (address: string) => {
-  const walletProvider = user.value?.accounts.find(item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase())?.walletProvider as ProviderString
+  const walletProvider = user.value?.accounts.find(
+    item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase()
+  )?.walletProvider as ProviderString
 
   switch (walletProvider) {
   case "MetaMask":

@@ -72,7 +72,12 @@ export default function useBreakdownMetrics() {
           WithdrawalRequested: acc.WithdrawalRequested + (WithdrawalRequested || 0),
           WithdrawalFulfilled: acc.WithdrawalFulfilled + (WithdrawalFulfilled || 0)
         }
-      }, { StakeDeposited: 0, WithdrawalInitiated: 0, WithdrawalRequested: 0, WithdrawalFulfilled: 0 } as { StakeDeposited: number; WithdrawalInitiated: number, WithdrawalRequested: number, WithdrawalFulfilled: number })
+      }, { 
+        StakeDeposited: 0, 
+        WithdrawalInitiated: 0, 
+        WithdrawalRequested: 0, 
+        WithdrawalFulfilled: 0 
+      } as { StakeDeposited: number; WithdrawalInitiated: number, WithdrawalRequested: number, WithdrawalFulfilled: number })
               
               
       const stakedDepositedETH = userEventTotalsSum.StakeDeposited
@@ -82,7 +87,8 @@ export default function useBreakdownMetrics() {
             
 
       /* Get User's All Time Rewards */
-      const currentUserStakeMinusEvents = currentUserStakeETH - stakedDepositedETH + ((withdrawalInitiatedETH) + (withdrawalRequestedETH) + (withdrawalFulfilledETH))
+      const currentUserStakeMinusEvents = 
+        currentUserStakeETH - stakedDepositedETH + ((withdrawalInitiatedETH) + (withdrawalRequestedETH) + (withdrawalFulfilledETH))
 
       return {
         eth: `${formatNumber(currentUserStakeMinusEvents)} ETH`,

@@ -195,7 +195,11 @@ async function dev() {
           const sweptExitedBalance = exitingPoolCount.toNumber() * 32
           const rewardBalance = rewardPerValidator * stakedPoolIds.length
           const latestBeaconBalance = await manager.latestBeaconBalance()
-          const nextBeaconBalance = round(parseFloat(ethers.utils.formatEther(latestBeaconBalance)) + activatedBalance + rewardBalance - sweptRewardBalance - sweptExitedBalance, 10)
+          const formattedBeaconBalance = ethers.utils.formatEther(latestBeaconBalance)
+          const nextBeaconBalance = round(
+            parseFloat(formattedBeaconBalance) + activatedBalance + rewardBalance - sweptRewardBalance - sweptExitedBalance,
+            10
+          )
           const nextActivatedDeposits = (await manager.getPendingPoolIds()).length
           for (const poolId of lastStakedPoolIds) {
             const poolAddress = await manager.getPoolAddress(poolId)

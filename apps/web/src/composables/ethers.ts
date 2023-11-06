@@ -76,7 +76,9 @@ export default function useEthers() {
    * Estimate gas fee using EIP 1559 methodology
    * @returns string in ETH
    */
-  async function estimateEIP1559GasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) : Promise<GasEstimate> {
+  async function estimateEIP1559GasFee(
+    rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+  ) : Promise<GasEstimate> {
     try {
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
       const gasPrice = await provider.getFeeData() as ethers.providers.FeeData
@@ -120,7 +122,9 @@ export default function useEthers() {
    * @deprecated
    * @see estimateEIP1559GasFee
   */
-  async function estimateLegacyGasFee(rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>) : Promise<GasEstimate> {
+  async function estimateLegacyGasFee(
+    rpcUrl: string, unsignedTransaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>
+  ) : Promise<GasEstimate> {
     try {
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
       const gasPrice = await provider.getGasPrice()

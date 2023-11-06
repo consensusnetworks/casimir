@@ -5,7 +5,16 @@ import useDB from "../providers/db"
 import { UserWithAccountsAndOperators } from "@casimir/types"
 
 const router = express.Router()
-const { addAccount, addOperator, getAccounts, getUserByAddress, getUserById, updateUserAddress, updateUserAgreedToTermsOfService, removeAccount } = useDB()
+const { 
+  addAccount, 
+  addOperator, 
+  getAccounts,
+  getUserByAddress,
+  getUserById,
+  updateUserAddress,
+  updateUserAgreedToTermsOfService,
+  removeAccount 
+} = useDB()
 
 router.get("/", verifySession(), async (req: SessionRequest, res: express.Response) => {
   try {

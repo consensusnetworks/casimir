@@ -203,7 +203,9 @@ export default function useOperators() {
       } else {
         throw new Error(`Invalid wallet provider: ${walletProvider}`)
       }
-      const result = await (baseRegistry as CasimirRegistry).connect(signer as ethers.Signer).registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral) })
+      const result = await (baseRegistry as CasimirRegistry)
+        .connect(signer as ethers.Signer)
+        .registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral) })
       // TODO: @shanejearley - How many confirmations do we want to wait?
       await result?.wait(1)
       await addOperator({ address, nodeUrl })
