@@ -8,32 +8,32 @@ import { Article } from "@casimir/types"
 const appUrl = import.meta.env.PUBLIC_APP_URL || "https://app.dev.casimir.co"
 const docsUrl = import.meta.env.PUBLIC_DOCS_URL || "https://docs.dev.casimir.co"
 const {
-  articles,
-  loadingArticles,
+    articles,
+    loadingArticles,
 } = useBlog()
 
 const article = ref<Article>()
 
 function getActiveArticle(activeRoute: string) {
-  const activeArticle = articles.value.filter(item => item.id === activeRoute)[0]
-  article.value = activeArticle
+    const activeArticle = articles.value.filter(item => item.id === activeRoute)[0]
+    article.value = activeArticle
 }
 
 onMounted(() => {
-  let currentRoutes = router.currentRoute.value.fullPath.split("/")
-  let activeRoute = currentRoutes[currentRoutes.length - 1]
+    let currentRoutes = router.currentRoute.value.fullPath.split("/")
+    let activeRoute = currentRoutes[currentRoutes.length - 1]
 
-  // Finds active blog based on route 
-  if (!loadingArticles) getActiveArticle(activeRoute)
+    // Finds active blog based on route 
+    if (!loadingArticles) getActiveArticle(activeRoute)
 })
 
 watch([articles, loadingArticles], () => {
 
-  let currentRoutes = router.currentRoute.value.fullPath.split("/")
-  let activeRoute = currentRoutes[currentRoutes.length - 1]
+    let currentRoutes = router.currentRoute.value.fullPath.split("/")
+    let activeRoute = currentRoutes[currentRoutes.length - 1]
 
-  // Finds active blog based on route 
-  getActiveArticle(activeRoute)
+    // Finds active blog based on route 
+    getActiveArticle(activeRoute)
 })
 
 </script>
