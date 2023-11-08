@@ -166,16 +166,6 @@ export default function useEthers() {
         return parseFloat(ethers.utils.formatEther(balance))
     }
 
-    async function getEthersBrowserProviderSelectedCurrency(providerString: ProviderString) {
-    // IOTEX Smart Contract Address: 0x6fb3e0a217407efff7ca062d46c26e5d60a14d69
-        const browserProvider = getBrowserProvider(providerString)
-        const web3Provider: ethers.providers.Web3Provider = new ethers.providers.Web3Provider(browserProvider as EthersProvider)
-        const network = await web3Provider.getNetwork()
-        // console.log('network.chainId :>> ', network.chainId)
-        const { currency } = currenciesByChainId[network.chainId.toString() as keyof typeof currenciesByChainId]
-        return currency
-    }
-
     function getEthersBrowserSigner(providerString: ProviderString): ethers.Signer | undefined {
         const provider = getBrowserProvider(providerString)
         if (provider) {
@@ -288,79 +278,4 @@ function getTrustWallet() {
     } else {
         window.open("https://trustwallet.com/download", "_blank")
     }
-}
-
-const currenciesByChainId = {
-    "1": {
-        name: "Mainnet ETH",
-        currency: "ETH",
-    },
-    "3": {
-        name: "Ropsten ETH",
-        currency: "ETH",
-    },
-    "4": {
-        name: "Rinkeby ETH",
-        currency: "ETH",
-    },
-    "5": {
-        name: "Goerli ETH",
-        currency: "ETH",
-    },
-    "42": {
-        name: "Kovan ETH",
-        currency: "ETH",
-    },
-    "56": {
-        name: "Binance Smart Chain",
-        currency: "BNB",
-    },
-    "97": {
-        name: "Binance Smart Chain Testnet",
-        currency: "BNB",
-    },
-    "137": {
-        name: "Polygon",
-        currency: "MATIC",
-    },
-    "31337": {
-        name: "Localhost Network",
-        currency: "ETH",
-    },
-    "80001": {
-        name: "Polygon Testnet",
-        currency: "MATIC",
-    },
-    "4690": {
-        name: "IoTeX",
-        currency: "IOTX",
-    },
-    "4691": {
-        name: "IoTeX Testnet",
-        currency: "IOTX",
-    },
-}
-
-const iotexNetwork = {
-    chainId: ethers.utils.hexlify(4690),
-    chainName: "IoTeX",
-    nativeCurrency: {
-        name: "IoTeX",
-        symbol: "IOTX",
-        decimals: 18
-    },
-    rpcUrls: ["https://api.testnet.iotex.one:80", "http://api.testnet.iotex.one:80"],
-    blockExplorerUrls: ["https://iotexscan.io"]
-}
-
-const goerliNetwork = {
-    chainId: "0x5",
-    chainName: "Goerli Testnet",
-    nativeCurrency: {
-        name: "Goerli",
-        symbol: "GÖETH",
-        decimals: 18
-    },
-    rpcUrls: ["https://goerli.infura.io/v3/6b9f3a5d3d5e4c8e9b5d1f0c3e5f1e4a"],
-    blockExplorerUrls: ["https://goerli.etherscan.io"]
 }
