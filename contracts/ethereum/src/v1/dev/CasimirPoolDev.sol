@@ -1,29 +1,35 @@
 // SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
-import "./CasimirCore.sol";
-import "./interfaces/ICasimirPool.sol";
-import "./interfaces/ICasimirManager.sol";
-import "./interfaces/ICasimirRegistry.sol";
-import "./vendor/interfaces/IDepositContract.sol";
+import "../CasimirCore.sol";
+import "./interfaces/ICasimirPoolDev.sol";
+import "../interfaces/ICasimirManager.sol";
+import "../interfaces/ICasimirRegistry.sol";
+import "../vendor/interfaces/IDepositContract.sol";
+import "../vendor/interfaces/IEigenPodManager.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 /// @title Pool that accepts deposits and stakes a validator
-contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
-    /// @inheritdoc ICasimirPool
+contract CasimirPoolDev is ICasimirPoolDev, CasimirCore, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+    /// @inheritdoc ICasimirPoolDev
     bytes public publicKey;
-    /// @inheritdoc ICasimirPool
+    /// @inheritdoc ICasimirPoolDev
     uint256 public reshares;
-    /// @inheritdoc ICasimirPool
+    /// @inheritdoc ICasimirPoolDev
     PoolStatus public status;
     /** 
      * @dev Beacon deposit contract
      * @custom:oz-upgrades-unsafe-allow state-variable-immutable
      */
     IDepositContract private immutable depositContract;
+    /**
+     * @dev Eigen pod manager contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    IEigenPodManager private immutable eigenPodManager;
     /// @dev Pool deposit capacity
     uint256 private constant POOL_CAPACITY = 32 ether;
     /// @dev Operator IDs
@@ -42,11 +48,17 @@ contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgrade
     /**
      * @dev Constructor
      * @param depositContract_ Beacon deposit contract
+     * @param eigenPodManager_ Eigen pod manager contract
      * @custom:oz-upgrades-unsafe-allow constructor
      */
-    constructor(IDepositContract depositContract_) {
+    constructor(
+        IDepositContract depositContract_,
+        IEigenPodManager eigenPodManager_
+    ) {
         onlyAddress(address(depositContract_));
+        onlyAddress(address(eigenPodManager_));
         depositContract = depositContract_;
+        eigenPodManager = eigenPodManager_;
         _disableInitializers();
     }
 
@@ -74,7 +86,7 @@ contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgrade
         shares = shares_;
     }
 
-    /// @inheritdoc ICasimirPool
+    /// @inheritdoc ICasimirPoolDev
     function depositStake(
         bytes32 depositDataRoot,
         bytes memory signature,
@@ -94,7 +106,7 @@ contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgrade
         depositContract.deposit{value: msg.value}(publicKey, withdrawalCredentials, signature, depositDataRoot);
     }
 
-    /// @inheritdoc ICasimirPool
+    /// @inheritdoc ICasimirPoolDev
     function depositRewards() external onlyOwner {
         if (status != PoolStatus.ACTIVE) {
             revert PoolNotActive();
@@ -103,25 +115,25 @@ contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgrade
         manager.depositRewards{value: balance}(poolId);
     }
 
-    /// @inheritdoc ICasimirPool
+    /// @inheritdoc ICasimirPoolDev
     function setOperatorIds(uint64[] memory newOperatorIds) external onlyOwner {
         operatorIds = newOperatorIds;
         emit OperatorIdsSet(newOperatorIds);
     }
 
-    /// @inheritdoc ICasimirPool
+    /// @inheritdoc ICasimirPoolDev
     function setReshares(uint256 newReshares) external onlyOwner {
         reshares = newReshares;
         emit ResharesSet(newReshares);
     }
 
-    /// @inheritdoc ICasimirPool
+    /// @inheritdoc ICasimirPoolDev
     function setStatus(PoolStatus newStatus) external onlyOwner {
         status = newStatus;
         emit StatusSet(newStatus);
     }
 
-    /// @inheritdoc ICasimirPool
+    /// @inheritdoc ICasimirPoolDev
     function withdrawBalance(uint32[] memory blamePercents) external onlyOwner {
         if (status != PoolStatus.EXITING_FORCED && status != PoolStatus.EXITING_REQUESTED) {
             revert PoolNotExiting();
@@ -146,12 +158,12 @@ contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgrade
         manager.depositExitedBalance{value: balance}(poolId);
     }
 
-    /// @inheritdoc ICasimirPool
+    /// @inheritdoc ICasimirPoolDev
     function getOperatorIds() external view returns (uint64[] memory) {
         return operatorIds;
     }
 
-    /// @inheritdoc ICasimirPool
+    /// @inheritdoc ICasimirPoolDev
     function getRegistration() external view returns (PoolRegistration memory) {
         return PoolRegistration({operatorIds: operatorIds, publicKey: publicKey, shares: shares, status: status});
     }
