@@ -23,30 +23,40 @@ export class Dkg {
     async init(input: InitInput, retries: number | undefined = 25): Promise<Validator> {
         try {
             const operatorsInfo = await Promise.all(input.operatorIds.map(async (operatorId) => {
-                const response = await fetch(`https://api.ssv.network/v4/prater/operators/${operatorId}`)
+                const response = await fetch(`https://api.ssv.network/api/v4/prater/operators/${operatorId}`)
                 const { public_key, dkg_address: ip } = await response.json() as SSVOperator
                 return { id: operatorId, public_key, ip }
             }))
-            
+
+            const outputDir = "./data"
+
+            const operatorsInfoPath = `${outputDir}/operators.json`
+            if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir)
+            fs.writeFileSync(operatorsInfoPath, JSON.stringify(operatorsInfo))
+        
+            const ceremonyOutputPath = `${outputDir}/ceremony-${Date.now()}` 
+            if (!fs.existsSync(ceremonyOutputPath)) fs.mkdirSync(ceremonyOutputPath)
+
             const flags = [
                 `--configPath ${this.configPath}`,
                 `--operatorIDs ${input.operatorIds.join(",")}`,
-                `--operatorsInfo ${JSON.stringify(operatorsInfo)}`,
+                `--operatorsInfoPath ${operatorsInfoPath}`,
+                `--outputPath ${ceremonyOutputPath}`,
                 `--owner ${input.ownerAddress}`,
                 `--nonce ${input.ownerNonce}`,
-                `--withdrawAddress ${input.withdrawalAddress.split("0x")[1]}`
+                `--withdrawAddress ${input.withdrawalAddress}`
             ]
     
             const command = `${this.cliPath} init ${flags.join(" ")}`
-            const response = await run(`${command}`) as string
-    
-            const depositFileLine = response.split("Writing deposit data json to file")[1]
-            const depositFilePath = depositFileLine.split("{\"path\": \"")[1].split("\"}")[0]
+            await run(`${command}`)
+            
+            const depositFileName = fs.readdirSync(ceremonyOutputPath).find((file) => file.startsWith("deposit-"))
+            const depositFilePath = `${ceremonyOutputPath}/${depositFileName}`
             const [deposit] = JSON.parse(fs.readFileSync(depositFilePath, "utf8"))
             const { deposit_data_root, pubkey, signature, withdrawal_credentials } = deposit
     
-            const keysharesFileLine = response.split("Writing keyshares payload to file")[1]
-            const keysharesFilePath = keysharesFileLine.split("{\"path\": \"")[1].split("\"}")[0]
+            const keysharesFileName = fs.readdirSync(ceremonyOutputPath).find((file) => file.startsWith("keyshares-"))
+            const keysharesFilePath = `${ceremonyOutputPath}/${keysharesFileName}`
             const { payload } = JSON.parse(fs.readFileSync(`${keysharesFilePath}`, "utf8"))
             const shares = payload.sharesData
     
@@ -62,8 +72,9 @@ export class Dkg {
             if (retries === 0) {
                 throw error
             }
-            await new Promise(resolve => setTimeout(resolve, 2500))
+            console.log(error)
             console.log(`Retrying init ${retries} more times`)
+            await new Promise(resolve => setTimeout(resolve, 2500))
             return await this.init(input, retries - 1)
         }
     }
@@ -82,18 +93,28 @@ export class Dkg {
                 return { id: operatorId, public_key, ip }
             }))
 
+            const outputDir = "./data"
+
+            const operatorsInfoPath = `${outputDir}/operators.json`
+            if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir)
+            fs.writeFileSync(operatorsInfoPath, JSON.stringify(operatorsInfo))
+        
+            const ceremonyOutputPath = `${outputDir}/ceremony-${Date.now()}` 
+            if (!fs.existsSync(ceremonyOutputPath)) fs.mkdirSync(ceremonyOutputPath)
+
             const flags = [
                 `--configPath ${this.configPath}`,
                 `--oldOperatorIDs ${input.oldOperatorIds.join(",")}`,
                 `--operatorIDs ${input.operatorIds.join(",")}`,
-                `--operatorsInfo ${JSON.stringify(operatorsInfo)}`
+                `--operatorsInfo ${JSON.stringify(operatorsInfo)}`,
+                `--outputPath ${ceremonyOutputPath}`
             ]
     
             const command = `${this.cliPath} reshare ${flags.join(" ")}`
-            const response = await run(`${command}`) as string
+            await run(`${command}`)
     
-            const keysharesFileLine = response.split("Writing keyshares payload to file")[1]
-            const keysharesFilePath = keysharesFileLine.split("{\"path\": \"")[1].split("\"}")[0]
+            const keysharesFileName = fs.readdirSync(ceremonyOutputPath).find((file) => file.startsWith("keyshares-"))
+            const keysharesFilePath = `${ceremonyOutputPath}/${keysharesFileName}`
             const { payload } = JSON.parse(fs.readFileSync(`${keysharesFilePath}`, "utf8"))
             const shares = payload.sharesData
     
@@ -108,8 +129,9 @@ export class Dkg {
             if (retries === 0) {
                 throw error
             }
-            await new Promise(resolve => setTimeout(resolve, 2500))
+            console.log(error)
             console.log(`Retrying reshare ${retries} more times`)
+            await new Promise(resolve => setTimeout(resolve, 2500))
             return await this.reshare(input, retries - 1)
         }
     }
