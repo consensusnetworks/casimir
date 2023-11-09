@@ -5,4 +5,4 @@
 [submodule "services/oracle/lib/dkg"]
 	path = services/oracle/lib/dkg
 	url = https://github.com/consensusnetworks/ssv-dkg.git
-	branch = feature/operator-env
+	branch = update/makefile

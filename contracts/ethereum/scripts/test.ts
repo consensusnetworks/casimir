@@ -4,7 +4,7 @@ import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from "@ca
 import { run } from "@casimir/shell"
 
 /**
- * Test ethereum contracts and services
+ * Test ethereum contracts
  */
 async function test() {
     if (process.env.USE_SECRETS !== "false") {
@@ -26,8 +26,9 @@ async function test() {
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
 
-    // Account for the mock, beacon, and library deployments
-    const walletNonce = await provider.getTransactionCount(wallet.address) + 14
+    const factoryNonceDiff = 13 // Account for the mock, beacon, and library deployments
+    const walletNonce = await provider.getTransactionCount(wallet.address) + factoryNonceDiff
+    process.env.FACTORY_NONCE_DIFF = factoryNonceDiff.toString()
 
     process.env.FACTORY_ADDRESS = ethers.utils.getContractAddress({
         from: wallet.address,
@@ -39,8 +40,9 @@ async function test() {
     process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
     process.env.SWAP_FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SWAP_FACTORY_ADDRESS
 
+    process.env.KEYS_DIR = `${process.cwd()}/keys`
     await run("npm run generate --workspace @casimir/oracle")
-    run("npm hardhat test")
+    run("npx hardhat test")
 }
 
 test().catch(error => {

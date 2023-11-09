@@ -1,9 +1,8 @@
 import fs from "fs"
-import { MOCK_OPERATORS } from "@casimir/env"
 import { run } from "@casimir/shell"
 import { InitInput } from "../interfaces/InitInput"
 import { ReshareInput } from "../interfaces/ReshareInput"
-import { Reshare, Validator } from "@casimir/types"
+import { Reshare, SSVOperator, Validator } from "@casimir/types"
 import { DkgOptions } from "../interfaces/DkgOptions"
 
 export class Dkg {
@@ -23,13 +22,16 @@ export class Dkg {
      */
     async init(input: InitInput, retries: number | undefined = 25): Promise<Validator> {
         try {
-            const operators = MOCK_OPERATORS.filter((operator) => input.operatorIds.includes(operator.id))
-            if (!fs.existsSync("./data")) fs.mkdirSync("./data")
-            fs.writeFileSync("./data/operators.json", JSON.stringify(operators))
-    
+            const operatorsInfo = await Promise.all(input.operatorIds.map(async (operatorId) => {
+                const response = await fetch(`https://api.ssv.network/v4/prater/operators/${operatorId}`)
+                const { public_key, dkg_address: ip } = await response.json() as SSVOperator
+                return { id: operatorId, public_key, ip }
+            }))
+            
             const flags = [
                 `--configPath ${this.configPath}`,
                 `--operatorIDs ${input.operatorIds.join(",")}`,
+                `--operatorsInfo ${JSON.stringify(operatorsInfo)}`,
                 `--owner ${input.ownerAddress}`,
                 `--nonce ${input.ownerNonce}`,
                 `--withdrawAddress ${input.withdrawalAddress.split("0x")[1]}`
@@ -74,14 +76,17 @@ export class Dkg {
      */
     async reshare(input: ReshareInput, retries: number | undefined = 25): Promise<Reshare> {
         try {
-            const operators = MOCK_OPERATORS.filter((operator) => input.operatorIds.includes(operator.id))
-            if (!fs.existsSync("./data")) fs.mkdirSync("./data")
-            fs.writeFileSync("./data/operators.json", JSON.stringify(operators))
-    
+            const operatorsInfo = await Promise.all(input.operatorIds.map(async (operatorId) => {
+                const response = await fetch(`https://api.ssv.network/v4/prater/operators/${operatorId}`)
+                const { public_key, dkg_address: ip } = await response.json() as SSVOperator
+                return { id: operatorId, public_key, ip }
+            }))
+
             const flags = [
                 `--configPath ${this.configPath}`,
                 `--oldOperatorIDs ${input.oldOperatorIds.join(",")}`,
-                `--operatorIDs ${input.operatorIds.join(",")}`
+                `--operatorIDs ${input.operatorIds.join(",")}`,
+                `--operatorsInfo ${JSON.stringify(operatorsInfo)}`
             ]
     
             const command = `${this.cliPath} reshare ${flags.join(" ")}`

@@ -1,10 +1,10 @@
+import fs from "fs"
 import { ethers } from "hardhat"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 import { CasimirManager, CasimirViews } from "../build/@types"
 import { PoolStatus, Reshare, Validator } from "@casimir/types"
 import { Scanner } from "@casimir/ssv"
 import { Factory } from "@casimir/uniswap"
-import { MOCK_VALIDATORS, MOCK_RESHARES } from "@casimir/env"
 
 const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS as string
 if (!linkTokenAddress) throw new Error("No link token address provided")
@@ -20,14 +20,21 @@ const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS as string
 if (!wethTokenAddress) throw new Error("No weth token address provided")
 
 export async function initiatePoolHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
-    const mockValidators: Validator[] = MOCK_VALIDATORS[signer.address as keyof typeof MOCK_VALIDATORS]
+    const keysDir = process.env.KEYS_DIR || "keys"
+    let mockValidators: Record<string, Validator[]> = {}
+    try {
+        mockValidators = JSON.parse(fs.readFileSync(`${keysDir}/example.validators.json`).toString())
+    } catch (error) {
+        throw new Error("No mock validator data found")
+    }
+    const signerMockValidators: Validator[] = mockValidators[signer.address]
     const nonce = await ethers.provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
         from: manager.address,
         nonce
     })
     const poolWithdrawalCredentials = "0x" + "01" + "0".repeat(22) + poolAddress.split("0x")[1]
-    const validator = mockValidators.find((validator) => {
+    const validator = signerMockValidators.find((validator) => {
         return validator.withdrawalCredentials.toLowerCase() === poolWithdrawalCredentials.toLowerCase()
     })
     if (!validator) throw new Error(`No validator found for withdrawal credentials ${poolWithdrawalCredentials}`)
@@ -118,6 +125,13 @@ export async function resharePoolHandler(
     { manager, views, signer, args }: 
     { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }
 ) {
+    const keysDir = process.env.KEYS_DIR || "keys"
+    let mockReshares: Record<number, Reshare[]> = {}
+    try {
+        mockReshares = JSON.parse(fs.readFileSync(`${keysDir}/example.reshares.json`).toString())
+    } catch (error) {
+        throw new Error("No mock reshare data found")
+    }
     const operatorId = args.operatorId as number
     if (!operatorId) throw new Error("No operator id provided")
     
@@ -129,10 +143,10 @@ export async function resharePoolHandler(
         const poolConfig = await views.getPoolConfig(poolId)
         const oldOperatorIds = poolConfig.operatorIds.map(id => id.toNumber())
         if (oldOperatorIds.includes(operatorId)) {
-            const mockReshares: Reshare[] = MOCK_RESHARES[poolId as keyof typeof MOCK_RESHARES]
+            const poolMockReshares: Reshare[] = mockReshares[poolId]
             const poolReshareCount = poolConfig.reshares.toNumber()
-            if (mockReshares.length && poolReshareCount < 2) {
-                const reshare = mockReshares.find((reshare) => {
+            if (poolMockReshares.length && poolReshareCount < 2) {
+                const reshare = poolMockReshares.find((reshare) => {
                     return JSON.stringify(reshare.oldOperatorIds) === JSON.stringify(oldOperatorIds)
                 })
                 if (!reshare) throw new Error(`No reshare found for pool ${poolId} with old operator ids ${oldOperatorIds}`)
