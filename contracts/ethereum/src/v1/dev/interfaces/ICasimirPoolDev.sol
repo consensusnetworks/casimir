@@ -2,12 +2,14 @@
 pragma solidity 0.8.18;
 
 import "../../interfaces/ICasimirCore.sol";
+import "../../vendor/interfaces/IEigenPod.sol";
 
 interface ICasimirPoolDev is ICasimirCore {
     event OperatorIdsSet(uint64[] operatorIds);
     event ResharesSet(uint256 reshares);
     event StatusSet(PoolStatus status);
 
+    error PoolNotEigenStake();
     error InvalidDepositAmount();
     error InvalidWithdrawalCredentials();
 
@@ -43,6 +45,22 @@ interface ICasimirPoolDev is ICasimirCore {
      * @param newStatus New status
      */
     function setStatus(PoolStatus newStatus) external;
+
+    /**
+     * @notice Verify the withdrawal credentials for the eigen pod
+     * @param oracleTimestamp Beacon chain timestamp whose state root the `proof` will be proven against
+     * @param stateRootProof Proof against the `beaconStateRoot` for a block root fetched from the oracle
+     * @param validatorIndices List of indices of the validators being proven
+     * @param validatorFieldsProofs Proofs against the `beaconStateRoot` for each validator in `validatorFields`
+     * @param validatorFields Fields of the "Validator Container" referenced in the consensus specs
+     */
+    function verifyWithdrawalCredentials(
+        uint64 oracleTimestamp,
+        BeaconChainProofs.StateRootProof calldata stateRootProof,
+        uint40[] calldata validatorIndices,
+        bytes[] calldata validatorFieldsProofs,
+        bytes32 [][] calldata validatorFields
+    ) external;
 
     /**
      * @notice Withdraw pool balance to the manager

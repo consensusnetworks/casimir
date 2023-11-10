@@ -6,6 +6,7 @@ import "./interfaces/ICasimirPoolDev.sol";
 import "../interfaces/ICasimirManager.sol";
 import "../interfaces/ICasimirRegistry.sol";
 import "../vendor/interfaces/IDepositContract.sol";
+import "../vendor/interfaces/IEigenPod.sol";
 import "../vendor/interfaces/IEigenPodManager.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
@@ -42,8 +43,10 @@ contract CasimirPoolDev is ICasimirPoolDev, CasimirCore, Initializable, OwnableU
     ICasimirManager private manager;
     /// @dev Registry contract
     ICasimirRegistry private registry;
+    /// @dev Eigen pod contract
+    IEigenPod private eigenPod;
     /// @dev Storage gap
-    uint256[50] private __gap;
+    uint256[49] private __gap;
 
     /**
      * @dev Constructor
@@ -98,12 +101,15 @@ contract CasimirPoolDev is ICasimirPoolDev, CasimirCore, Initializable, OwnableU
         if (msg.value != POOL_CAPACITY) {
             revert InvalidDepositAmount();
         }
-        bytes memory computedWithdrawalCredentials = abi.encodePacked(bytes1(uint8(1)), bytes11(0), address(this));
-        if (keccak256(computedWithdrawalCredentials) != keccak256(withdrawalCredentials)) {
-            revert InvalidWithdrawalCredentials();
-        }
         status = PoolStatus.PENDING;
-        depositContract.deposit{value: msg.value}(publicKey, withdrawalCredentials, signature, depositDataRoot);
+        if (manager.eigenStake()) {
+            eigenPod = eigenPodManager.getPod(address(this));
+            validateWithdrawalCredentials(address(eigenPod), withdrawalCredentials);
+            eigenPodManager.stake{value: msg.value}(publicKey, signature, depositDataRoot);
+        } else {
+            validateWithdrawalCredentials(address(this), withdrawalCredentials);
+            depositContract.deposit{value: msg.value}(publicKey, withdrawalCredentials, signature, depositDataRoot);
+        }
     }
 
     /// @inheritdoc ICasimirPoolDev
@@ -131,6 +137,26 @@ contract CasimirPoolDev is ICasimirPoolDev, CasimirCore, Initializable, OwnableU
     function setStatus(PoolStatus newStatus) external onlyOwner {
         status = newStatus;
         emit StatusSet(newStatus);
+    }
+
+    /// @inheritdoc ICasimirPoolDev
+    function verifyWithdrawalCredentials(
+        uint64 oracleTimestamp,
+        BeaconChainProofs.StateRootProof calldata stateRootProof,
+        uint40[] calldata validatorIndices,
+        bytes[] calldata validatorFieldsProofs,
+        bytes32 [][] calldata validatorFields
+    ) external onlyOwner {
+        if (!manager.eigenStake()) {
+            revert PoolNotEigenStake();
+        }
+        eigenPod.verifyWithdrawalCredentials(
+            oracleTimestamp,
+            stateRootProof,
+            validatorIndices,
+            validatorFieldsProofs,
+            validatorFields
+        );
     }
 
     /// @inheritdoc ICasimirPoolDev
@@ -166,5 +192,13 @@ contract CasimirPoolDev is ICasimirPoolDev, CasimirCore, Initializable, OwnableU
     /// @inheritdoc ICasimirPoolDev
     function getRegistration() external view returns (PoolRegistration memory) {
         return PoolRegistration({operatorIds: operatorIds, publicKey: publicKey, shares: shares, status: status});
+    }
+
+    /// @dev Validate the withdrawal credentials are correct for the withdrawal address
+    function validateWithdrawalCredentials(address withdrawalAddress, bytes memory withdrawalCredentials) internal pure {
+        bytes memory computedWithdrawalCredentials = abi.encodePacked(bytes1(uint8(1)), bytes11(0), withdrawalAddress);
+        if (keccak256(computedWithdrawalCredentials) != keccak256(withdrawalCredentials)) {
+            revert InvalidWithdrawalCredentials();
+        }
     }
 }
