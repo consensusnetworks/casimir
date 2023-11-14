@@ -1,8 +1,7 @@
-import { ref } from "vue"
+import { readonly, ref, watch } from "vue"
 import { ethers } from "ethers"
 import { ProviderString } from "@casimir/types"
 import useContracts from "@/composables/contracts"
-import useEnvironment from "@/composables/environment"
 import useEthers from "@/composables/ethers"
 import useLedger from "@/composables/ledger"
 import useTrezor from "@/composables/trezor"
@@ -10,8 +9,7 @@ import useWallets from "@/composables/wallets"
 import useWalletConnectV2 from "./walletConnectV2"
 import { CasimirManager } from "@casimir/ethereum/build/@types"
 
-const { getContracts } = useContracts()
-const { provider } = useEnvironment()
+const { getBaseManager, getEigenManager, contractsAreInitialized } = useContracts()
 const { browserProvidersList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
@@ -19,25 +17,30 @@ const { detectActiveNetwork, switchEthersNetwork } = useWallets()
 const { getWalletConnectSignerV2 } = useWalletConnectV2()
 
 const stakingComposableInitialized = ref(false)
+const awaitingStakeOrWithdrawConfirmation = ref(false)
 
 let baseManager: CasimirManager
 let eigenManager: CasimirManager
 
 export default function useStaking() {
 
+    watch(contractsAreInitialized, async () => {
+        if (contractsAreInitialized.value) {
+            await initializeStakingComposable()
+        }
+    })
+
     async function initializeStakingComposable() {
+        baseManager = getBaseManager()
+        eigenManager = getEigenManager()
         if (stakingComposableInitialized.value) return
         try {
-            /* Get Managers */
-            const { baseManager: baseManagerFromContracts, eigenManager: eigenManagerFromContracts } = await getContracts()
-            baseManager = baseManagerFromContracts
-            eigenManager = eigenManagerFromContracts
             stakingComposableInitialized.value = true
         } catch (error) {
             console.log("Error initializing staking component :>> ", error)
         }
     }
-    
+
     async function deposit({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: "default" | "eigen" }) {
         try {
             const activeNetwork = await detectActiveNetwork(walletProvider)
@@ -63,9 +66,14 @@ export default function useStaking() {
             const fees = await getDepositFees()
             const depositAmount = parseFloat(amount) * ((100 + fees) / 100)
             const value = ethers.utils.parseEther(depositAmount.toString())
-            return await managerSigner.depositStake({ value, type: 2 })
+            awaitingStakeOrWithdrawConfirmation.value = true
+            const result = await managerSigner.depositStake({ value, type: 2 })
+            const confirmation = await result.wait(1)
+            if (confirmation) awaitingStakeOrWithdrawConfirmation.value = false
+            return confirmation
         } catch (err) {
             console.error(`There was an error in deposit function: ${JSON.stringify(err)}`)
+            awaitingStakeOrWithdrawConfirmation.value = false
             return false
         }
     }
@@ -81,7 +89,7 @@ export default function useStaking() {
             console.error(`There was an error in getDepositFees function: ${JSON.stringify(err)}`)
             throw new Error(err)
         }
-    }    
+    }
 
     async function getUserStake(address: string): Promise<number> {
         if (!stakingComposableInitialized.value) return 0
@@ -98,7 +106,7 @@ export default function useStaking() {
         }
     }
 
-    async function getWithdrawableBalance({ walletProvider, type }: {walletProvider: ProviderString, type: "default" | "eigen"}) {
+    async function getWithdrawableBalance({ walletProvider, type }: { walletProvider: ProviderString, type: "default" | "eigen" }) {
         let signer
         if (browserProvidersList.includes(walletProvider)) {
             signer = getEthersBrowserSigner(walletProvider)
@@ -119,37 +127,48 @@ export default function useStaking() {
     }
 
     async function withdraw({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: "default" | "eigen" }) {
-        const activeNetwork = await detectActiveNetwork(walletProvider)
-        if (activeNetwork !== 5) {
-            await switchEthersNetwork(walletProvider, "0x5")
-            return window.location.reload()
+        try {
+            const activeNetwork = await detectActiveNetwork(walletProvider)
+            if (activeNetwork !== 5) {
+                await switchEthersNetwork(walletProvider, "0x5")
+                return window.location.reload()
+            }
+    
+            let signer
+            if (browserProvidersList.includes(walletProvider)) {
+                signer = getEthersBrowserSigner(walletProvider)
+            } else if (walletProvider === "WalletConnect") {
+                await getWalletConnectSignerV2()
+            } else if (walletProvider === "Ledger") {
+                getEthersLedgerSigner()
+            } else if (walletProvider === "Trezor") {
+                getEthersTrezorSigner()
+            } else {
+                throw new Error(`Invalid wallet provider: ${walletProvider}`)
+            }
+            const manager = type === "default" ? baseManager : eigenManager
+            const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
+            const value = ethers.utils.parseEther(amount)
+            awaitingStakeOrWithdrawConfirmation.value = true
+            const result = await managerSigner.requestWithdrawal(value)
+            const confirmation = await result.wait(1)
+            if (confirmation) awaitingStakeOrWithdrawConfirmation.value = false
+            return confirmation
+        } catch (err) {
+            console.error(`There was an error in withdraw function: ${JSON.stringify(err)}`)
+            awaitingStakeOrWithdrawConfirmation.value = false
+            return false
         }
-
-        let signer
-        if (browserProvidersList.includes(walletProvider)) {
-            signer = getEthersBrowserSigner(walletProvider)
-        } else if (walletProvider === "WalletConnect") {
-            await getWalletConnectSignerV2()
-        } else if (walletProvider === "Ledger") {
-            getEthersLedgerSigner()
-        } else if (walletProvider === "Trezor") {
-            getEthersTrezorSigner()
-        } else {
-            throw new Error(`Invalid wallet provider: ${walletProvider}`)
-        }
-        const manager = type === "default" ? baseManager : eigenManager
-        const managerSigner = (manager as CasimirManager).connect(signer as ethers.Signer)
-        const value = ethers.utils.parseEther(amount)
-        return await managerSigner.requestWithdrawal(value)
     }
 
-    return { 
+    return {
+        awaitingStakeOrWithdrawConfirmation: readonly(awaitingStakeOrWithdrawConfirmation),
         stakingComposableInitialized,
         initializeStakingComposable,
-        deposit, 
+        deposit,
         getDepositFees,
         getUserStake,
         getWithdrawableBalance,
-        withdraw 
+        withdraw
     }
 }

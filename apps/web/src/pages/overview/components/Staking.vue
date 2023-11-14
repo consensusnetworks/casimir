@@ -1,18 +1,19 @@
 <script lang="ts" setup>
-import { computed, ref, onMounted, watch } from "vue"
+import { ref, onMounted, watch } from "vue"
 import { FormattedWalletOption, ProviderString } from "@casimir/types"
 import VueFeather from "vue-feather"
+import useEnvironment from "@/composables/environment"
 import useStaking from "@/composables/staking"
-import useEthers from "@/composables/ethers"
 import useFormat from "@/composables/format"
 import usePrice from "@/composables/price"
 import useUser from "@/composables/user"
+import { ethers } from "ethers"
 
 import TermsOfService from "@/components/TermsOfService.vue"
 
+const { batchProvider } = useEnvironment()
 const { stakingComposableInitialized, deposit, initializeStakingComposable, withdraw, getWithdrawableBalance } = useStaking()
-const { getEthersBalance } = useEthers()
-const { convertString, formatNumber } = useFormat()
+const { convertString, formatEthersCasimir } = useFormat()
 const { getCurrentPrice } = usePrice()
 const { user, updateUserAgreement } = useUser()
 
@@ -51,31 +52,22 @@ const toggleBackgroundColor = ref("#eee")  // Initial color
 
 const balances = ref<{ [key: string]: string | null }>({})
 
-const fetchBalances = async () => {
-    const balancePromises = formattedWalletOptions.value.map(async (walletOption) => {
-        for (const address of walletOption.addresses) {
-            balances.value[address] = formatNumber(await getEthersBalance(address))
-        }
-    })
-
-    await Promise.all(balancePromises)
+async function fetchBalances() {
+    const addresses = formattedWalletOptions.value.map((walletOption) => walletOption.addresses).flat()
+    const balancePromises = addresses.map((address: string) => batchProvider.getBalance(address))
+    const resolvedBalancePromises = await Promise.all(balancePromises)
+    balances.value = resolvedBalancePromises.reduce((acc, balance, index) => {
+        const formattedBalance = formatEthersCasimir(parseFloat(ethers.utils.formatEther(balance)), 2)
+        acc[addresses[index]] = formattedBalance
+        return acc
+    }, {} as { [key: string]: string | null })
 }
 
 watch(formattedWalletOptions, async () => {
     await fetchBalances()
 })
 
-// const walletOptionsWithBalances = computed(() => {
-//   return formattedWalletOptions.value.map(walletOption => ({
-//     ...walletOption,
-//     addresses: walletOption.addresses.map(address => ({
-//       address,
-//       balance: balances.value[address]
-//     }))
-//   }))
-// })
-
-const toggleShineEffect = () => {
+function toggleShineEffect() {
     eigenIsToggled.value = !eigenIsToggled.value
     isShining.value = eigenIsToggled.value
     // toggleEstimatedAPY()
@@ -111,18 +103,18 @@ const handleInputOnAmountToStakeOrWithdraw = (event: any) => {
 
 const selectAmountInput = () => {
     const inputElement = document.getElementById("amount_input") as HTMLInputElement
-  
+
     if (inputElement) {
 
         inputElement.setSelectionRange(0, inputElement.value.length)
-  
+
         // For mobile devices
         inputElement.select()
     }
-  
+
 }
 
-const aggregateAddressesByProvider = () => {
+function aggregateAddressesByProvider() {
     formattedWalletOptions.value = []
     // Iterate over user.value.accounts and aggregate addresses by provider
     if (user.value) {
@@ -137,7 +129,7 @@ const aggregateAddressesByProvider = () => {
             })
         })
     } else {
-    // empty out staking comp
+        // empty out staking comp
         selectedStakingProvider.value = ""
         selectedWalletAddress.value = null
         formattedAmountToStakeOrWithdraw.value = ""
@@ -151,7 +143,7 @@ watch(formattedAmountToStakeOrWithdraw, async () => {
         const floatAmount = parseFloat(formattedAmountToStakeOrWithdraw.value?.replace(/,/g, ""))
         let maxAmount
         if (selectedWalletAddress.value) {
-            maxAmount = await getEthersBalance(selectedWalletAddress.value)
+            // maxAmount = await getEthersBalance(selectedWalletAddress.value)
         } else {
             maxAmount = 0
         }
@@ -169,7 +161,7 @@ watch(formattedAmountToStakeOrWithdraw, async () => {
 watch(selectedWalletAddress, async () => {
     if (!stakingComposableInitialized.value) return
     if (selectedWalletAddress.value) {
-        addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + " ETH"
+    // addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + " ETH"
         isShining.value = true
     // currentUserStake.value = await getUserStake(selectedWalletAddress.value)
     } else {
@@ -179,39 +171,29 @@ watch(selectedWalletAddress, async () => {
 })
 
 watch(user, async () => {
-    if (!stakingComposableInitialized.value) return
     if (user.value?.id) {
         aggregateAddressesByProvider()
         termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
-        addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
         selectedWalletAddress.value = user.value?.address as string
         selectedStakingProvider.value = user.value?.walletProvider as ProviderString
-    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
-    // estimatedFees.value = await getDepositFees()
     } else {
         selectedStakingProvider.value = ""
         selectedWalletAddress.value = null
         formattedAmountToStakeOrWithdraw.value = ""
         addressBalance.value = null
-    // currentUserStake.value = 0
     }
 })
 
 onMounted(async () => {
-    // TODO: @ccali11 - Want to make sure this is non-blocking
-    await initializeStakingComposable()
     aggregateAddressesByProvider()
     currentEthPrice.value = Math.round((await getCurrentPrice({ coin: "ETH", currency: "USD" })) * 100) / 100
     if (user.value?.id) {
-    // estimatedFees.value = await getDepositFees()
-        addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
+        // estimatedFees.value = await getDepositFees()
         selectedStakingProvider.value = user.value?.walletProvider as ProviderString
         selectedWalletAddress.value = user.value?.address as string
         if (!stakingComposableInitialized.value) return
-        // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
         isShining.value = true
     }
-    await fetchBalances()
 })
 
 const handleOutsideClickForWalletInput = (event: any) => {
@@ -242,7 +224,7 @@ const handleOutsideClickForTermsOfService = (event: any) => {
     }
 }
 
-watch(openSelectWalletInput, ()=>{
+watch(openSelectWalletInput, () => {
     if (openSelectWalletInput.value) {
         window.addEventListener("click", handleOutsideClickForWalletInput)
     } else {
@@ -250,7 +232,7 @@ watch(openSelectWalletInput, ()=>{
     }
 })
 
-watch(openSelectOperatorGroupInput, ()=>{
+watch(openSelectOperatorGroupInput, () => {
     if (openSelectWalletInput.value) {
         window.addEventListener("click", handleOutsideClickForOperatorGroupInput)
     } else {
@@ -258,7 +240,7 @@ watch(openSelectOperatorGroupInput, ()=>{
     }
 })
 
-watch(openTermsOfService, ()=>{
+watch(openTermsOfService, () => {
     if (openTermsOfService.value) {
         window.addEventListener("click", handleOutsideClickForTermsOfService)
     } else {
@@ -274,33 +256,23 @@ const handleStake = async () => {
     //   formattedAmountToStakeOrWithdraw.value = ''
     //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
     // }
-    const result = await deposit({ 
+    eigenIsToggled.value = false
+    const result = await deposit({
         amount: formattedAmountToStakeOrWithdraw.value,
         walletProvider: selectedStakingProvider.value,
-        type: stakeType.value 
+        type: stakeType.value
     })
 
     if (result === false) stakeButtonText.value = "User Rejected Signature"
     else stakeButtonText.value = "Staked!"
 
-    setTimeout(() =>{
+    setTimeout(() => {
         stakeButtonText.value = "Stake"
         formattedAmountToStakeOrWithdraw.value = ""
     }, 1000)
 
-    if (result) {
-        const waitResponse = await result.wait(1)
-        eigenIsToggled.value = false
-        addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
-        if (waitResponse) {
-            alert("Your Stake Has Been Deposited!")
-        } else {
-            alert("Your Stake Action Has Failed, Please Try Again Later!")
-        }
-        console.log("waitResponse :>> ", waitResponse)
-    }
-
-    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    if (result) alert("Your Stake Has Been Deposited!")
+    else alert("Your Stake Action Has Failed, Please Try Again Later!")
 }
 
 const handleWithdraw = async () => {
@@ -316,39 +288,30 @@ const handleWithdraw = async () => {
         walletProvider: selectedStakingProvider.value,
         type: stakeType.value
     })
-  
+
     if (parseFloat(withdrawableBalance) < parseFloat(formattedAmountToStakeOrWithdraw.value)) {
         stakeButtonText.value = "Withdraw"
         formattedAmountToStakeOrWithdraw.value = ""
         return alert(`You can currently withdraw up to ${withdrawableBalance} ETH. Please try again with a smaller amount.`)
     }
 
-    const result = await withdraw({ 
+    eigenIsToggled.value = false
+    const confirmation = await withdraw({
         amount: formattedAmountToStakeOrWithdraw.value,
         walletProvider: selectedStakingProvider.value,
-        type: stakeType.value 
+        type: stakeType.value
     })
 
-    if (!result) stakeButtonText.value = "Failed!"
+    if (!confirmation) stakeButtonText.value = "Failed!"
     else stakeButtonText.value = "Withdrawn!"
 
-    setTimeout(() =>{
+    setTimeout(() => {
         stakeButtonText.value = "Withdraw"
         formattedAmountToStakeOrWithdraw.value = ""
     }, 1000)
 
-    if (result) {
-        const waitResponse = await result.wait(1)
-        eigenIsToggled.value = false
-        addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
-        if (waitResponse) {
-            alert("Your Stake Has Been Withdrawn!")
-        } else {
-            alert("Your Stake Action Has Failed, Please Try Again Later!")
-        }
-    }
-
-    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    if (confirmation) alert("Your Stake Has Been Withdrawn!")
+    else alert("Your Stake Action Has Failed, Please Try Again Later!")
 }
 
 function setStakeOrWithdraw(option: "stake" | "withdraw") {
@@ -364,14 +327,14 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
     <div class="stake-withdraw-selector mt-[12px] mb-[12px]">
       <div
         class="action-button stake"
-        :class="{active: stakeOrWithdraw === 'stake'}"
+        :class="{ active: stakeOrWithdraw === 'stake' }"
         @click="setStakeOrWithdraw('stake')"
       >
         Stake
       </div>
       <div
         class="action-button withdraw"
-        :class="{active: stakeOrWithdraw === 'withdraw'}"
+        :class="{ active: stakeOrWithdraw === 'withdraw' }"
         @click="setStakeOrWithdraw('withdraw')"
       >
         Withdraw
@@ -396,7 +359,7 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
         @click="openSelectWalletInput = !openSelectWalletInput"
       >
         <div class="flex justify-between w-full">
-          <div>{{ selectedWalletAddress ? convertString(selectedWalletAddress) : 'Select wallet' }}</div> 
+          <div>{{ selectedWalletAddress ? convertString(selectedWalletAddress) : 'Select wallet' }}</div>
           <div class="flex gap-10 font-[400]">
             {{ addressBalance ? addressBalance : '' }}
             <vue-feather
@@ -536,7 +499,7 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
           @click="openSelectOperatorGroupInput = !openSelectOperatorGroupInput"
         >
           <div class="flex justify-between w-full">
-            <div>{{ selectedOperatorGroup ? selectedOperatorGroup : 'Select Operator Group' }}</div> 
+            <div>{{ selectedOperatorGroup ? selectedOperatorGroup : 'Select Operator Group' }}</div>
             <div class="flex gap-10 font-[400]">
               <!-- {{ addressBalance ? addressBalance : '' }} -->
               <!-- TODO: This needs to be the amount available to withdraw -->
@@ -567,7 +530,7 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
             <button
               class="w-full text-left rounded-[8px] py-[10px] px-[14px]
             hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
-              @click="selectedOperatorGroup = 'Default', openSelectOperatorGroupInput = false, stakeType='default'"
+              @click="selectedOperatorGroup = 'Default', openSelectOperatorGroupInput = false, stakeType = 'default'"
             >
               Default
               <vue-feather
@@ -579,7 +542,7 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
             <button
               class="w-full text-left rounded-[8px] py-[10px] px-[14px]
             hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
-              @click="selectedOperatorGroup = 'Eigen', openSelectOperatorGroupInput = false, stakeType='eigen'"
+              @click="selectedOperatorGroup = 'Eigen', openSelectOperatorGroupInput = false, stakeType = 'eigen'"
             >
               Eigen
               <vue-feather
@@ -648,17 +611,14 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
     <button
       class="submit-button  h-[37px] w-full"
       :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
-      :disabled="
-        !(selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage) 
-          || (stakeButtonText !== 'Stake' && stakeButtonText !== 'Withdraw') 
-          || parseFloat(formattedAmountToStakeOrWithdraw) <= 0 
-          || (stakeOrWithdraw === 'stake' && !termsOfServiceCheckbox)
+      :disabled="!(selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage)
+        || (stakeButtonText !== 'Stake' && stakeButtonText !== 'Withdraw')
+        || parseFloat(formattedAmountToStakeOrWithdraw) <= 0
+        || (stakeOrWithdraw === 'stake' && !termsOfServiceCheckbox)
       "
       @click="stakeOrWithdraw === 'stake' ? handleStake() : handleWithdraw()"
     >
-      <div
-        class="flex items-center justify-center gap-[5px]"
-      >
+      <div class="flex items-center justify-center gap-[5px]">
         {{ stakeButtonText }}
         <vue-feather
           v-if="success"
@@ -726,7 +686,8 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
 
 .addressBalance_amount {
   font-style: normal;
-  font-size: 22px; /* Temporary */
+  font-size: 22px;
+  /* Temporary */
   line-height: 20px;
   letter-spacing: -0.01em;
   color: #344054;
@@ -853,53 +814,60 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-left: 10px; /* space from the left edge */
+  padding-left: 10px;
+  /* space from the left edge */
   position: relative;
-  width: 100%; /* takes full width of parent container */
-  height: 44px; /* adjust as needed if required */
+  width: 100%;
+  /* takes full width of parent container */
+  height: 44px;
+  /* adjust as needed if required */
   background-color: rgb(26 12 109);
   /* overflow: hidden; */
   text-align: center;
-  color: #fff; /* or any suitable color for better visibility */
+  color: #fff;
+  /* or any suitable color for better visibility */
   font-size: 14px;
   border-radius: 8px;
-  transition: background-color 0.3s; /* This will animate the color change */
+  transition: background-color 0.3s;
+  /* This will animate the color change */
 }
 
 .eigen-toggle-container:disabled {
-    background-color: rgba(26, 12, 109, 0.5); /* This makes the purple color lighter (grayed out) */
-    /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
+  background-color: rgba(26, 12, 109, 0.5);
+  /* This makes the purple color lighter (grayed out) */
+  /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
 }
 
 /* .shine_effect {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -150%;
-  width: 200%;
-  height: 200%;
-  background: rgba(255, 255, 255, 0.5);
-  transform: rotate(30deg);
-  pointer-events: none;
-  animation: shine 2.5s infinite;
-}
-
-@keyframes shine {
-  0% {
+    content: '';
+    position: absolute;
+    top: -50%;
     left: -150%;
+    width: 200%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: rotate(30deg);
+    pointer-events: none;
+    animation: shine 2.5s infinite;
   }
-  50% {
-    left: 150%;
-  }
-  100% {
-    left: 150%;
-  }
-} */
+
+  @keyframes shine {
+    0% {
+      left: -150%;
+    }
+    50% {
+      left: 150%;
+    }
+    100% {
+      left: 150%;
+    }
+  } */
 
 .toggle_button {
   position: absolute;
   top: 50%;
-  right: 10px; /* space from the right edge */
+  right: 10px;
+  /* space from the right edge */
   transform: translateY(-50%);
   width: 50px;
   height: 25px;
@@ -910,7 +878,7 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
 }
 
 .card_container .eigen-toggle-container.toggle-on .toggle_button {
-    background-color: green !important;
+  background-color: green !important;
 }
 
 .toggle_circle {
@@ -936,42 +904,59 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
 
 .tooltip_container {
   position: absolute;
-  bottom: 100%; /* position it above the button */
-  left: 50%; /* center it horizontally */
-  transform: translateX(-50%); /* shift it back by half its width to truly center it */
-  padding: 8px 12px; /* space around the text */
-  background-color: #000; /* or any desired tooltip color */
-  color: #fff; /* text color */
-  border-radius: 4px; /* round the corners */
-  opacity: 0; /* starts hidden */
-  transition: opacity 0.3s; /* smooth fade in */
-  white-space: nowrap; /* prevents the text from wrapping */
+  bottom: 100%;
+  /* position it above the button */
+  left: 50%;
+  /* center it horizontally */
+  transform: translateX(-50%);
+  /* shift it back by half its width to truly center it */
+  padding: 8px 12px;
+  /* space around the text */
+  background-color: #000;
+  /* or any desired tooltip color */
+  color: #fff;
+  /* text color */
+  border-radius: 4px;
+  /* round the corners */
+  opacity: 0;
+  /* starts hidden */
+  transition: opacity 0.3s;
+  /* smooth fade in */
+  white-space: nowrap;
+  /* prevents the text from wrapping */
   font-size: 12px;
-  pointer-events: none; /* ensures it doesn't block any interactions */
-  z-index: 10; /* positions it above other elements */
+  pointer-events: none;
+  /* ensures it doesn't block any interactions */
+  z-index: 10;
+  /* positions it above other elements */
 }
 
 .eigen-toggle-container:hover .tooltip_container {
-  opacity: 1; /* show on hover */
+  opacity: 1;
+  /* show on hover */
 }
 
 .tooltip_triangle {
   position: absolute;
-  bottom: -5px; /* position at the bottom of the tooltip */
-  left: 50%; /* center it horizontally */
-  transform: translateX(-50%); /* shift it back by half its width to truly center it */
+  bottom: -5px;
+  /* position at the bottom of the tooltip */
+  left: 50%;
+  /* center it horizontally */
+  transform: translateX(-50%);
+  /* shift it back by half its width to truly center it */
   width: 0;
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 5px solid #000; /* same color as the tooltip background */
+  border-top: 5px solid #000;
+  /* same color as the tooltip background */
 }
 
 .stake-withdraw-selector {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
 }
 
 .action-button {
@@ -984,24 +969,25 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
 }
 
 .action-button.stake {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-    border-right: none;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-right: none;
 }
 
 .action-button.withdraw {
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-    border-left: none;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-left: none;
 }
 
 .action-button:hover {
-    background-color: #ddd;
+  background-color: #ddd;
 }
 
 .action-button.active {
-    background-color: rgb(13, 95, 255); /* Assuming this is the blue from the screenshot */
-    color: white; /* Set text color to white for better contrast */
+  background-color: rgb(13, 95, 255);
+  /* Assuming this is the blue from the screenshot */
+  color: white;
+  /* Set text color to white for better contrast */
 }
-
 </style>@/composables/user@/composables/staking

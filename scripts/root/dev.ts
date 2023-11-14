@@ -1,6 +1,6 @@
 import { ethers } from "ethers"
 import { loadCredentials, getSecret } from "@casimir/aws"
-import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from "@casimir/env"
+import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL, ETHEREUM_WEBSOCKET_URL } from "@casimir/env"
 import { run, runSync } from "@casimir/shell"
 
 /**
@@ -97,6 +97,7 @@ async function root() {
         if (process.env.NETWORK) {
             const networkName = ETHEREUM_NETWORK_NAME[networkKey]
             process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
+            process.env.ETHEREUM_WEBSOCKET_URL = ETHEREUM_WEBSOCKET_URL[networkKey]
             console.log(`Connecting to ${networkName} network at ${process.env.ETHEREUM_RPC_URL}`)
         } else {
             const networkName = ETHEREUM_NETWORK_NAME[networkKey]
@@ -121,6 +122,7 @@ async function root() {
     process.env.PUBLIC_BLOG_URL = process.env.BLOG_URL
     process.env.PUBLIC_USERS_URL = process.env.USERS_URL
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
+    process.env.PUBLIC_ETHEREUM_WEBSOCKET_URL = process.env.ETHEREUM_WEBSOCKET_URL
     process.env.PUBLIC_FACTORY_ADDRESS = process.env.FACTORY_ADDRESS
     process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
     process.env.PUBLIC_SSV_VIEWS_ADDRESS = process.env.SSV_VIEWS_ADDRESS

@@ -43,6 +43,10 @@ enum ETHEREUM_RPC_URL {
     TESTNET = "https://goerli.infura.io/v3/46a379ac6895489f812f33beb726b03b" // 'https://nodes.casimir.co/eth/goerli/limited'
 }
 
+enum ETHEREUM_WEBSOCKET_URL {
+    TESTNET = "wss://goerli.infura.io/ws/v3/46a379ac6895489f812f33beb726b03b"
+}
+
 const ETHEREUM_SIGNERS = {
     TESTNET: {
         DAO_ORACLE_ADDRESS: "0x728474D29c2F81eb17a669a7582A2C17f1042b57",
@@ -61,6 +65,7 @@ export {
     ETHEREUM_CONTRACTS,
     ETHEREUM_NETWORK_NAME,
     ETHEREUM_RPC_URL,
+    ETHEREUM_WEBSOCKET_URL,
     ETHEREUM_SIGNERS,
     HARDHAT_NETWORK_KEY,
     MOCK_OPERATORS,

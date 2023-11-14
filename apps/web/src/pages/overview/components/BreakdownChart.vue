@@ -1,20 +1,14 @@
 <script lang="ts" setup>
-import LineChartJS from "@/components/charts/LineChartJS.vue"
 import { onMounted, ref, watch } from "vue"
 import useAnalytics from "@/composables/analytics"
-import useUser from "@/composables/user"
-import useScreenDimensions from "@/composables/screenDimensions"
-import { AnalyticsData, ProviderString, UserAnalyticsData, UserWithAccountsAndOperators } from "@casimir/types"
 import useBreakdownMetrics from "@/composables/breakdownMetrics"
+import useScreenDimensions from "@/composables/screenDimensions"
+import useUser from "@/composables/user"
+import LineChartJS from "@/components/charts/LineChartJS.vue"
+import { AnalyticsData, ProviderString, UserAnalyticsData } from "@casimir/types"
 
 const {  user } = useUser()
-const { 
-    currentStaked,
-    stakingRewards,
-    totalWalletBalance,
-    initializeBreakdownMetricsComposable,
-    uninitializeBreakdownMetricsComposable
-} = useBreakdownMetrics()
+const { currentStaked, stakingRewards, totalWalletBalance } = useBreakdownMetrics()
 const { screenWidth } = useScreenDimensions()
 
 const chardId = ref("cross_provider_chart")
@@ -106,17 +100,9 @@ const setChartData = (userAnalytics: UserAnalyticsData) => {
 
 const { userAnalytics, updateAnalytics, initializeAnalyticsComposable } = useAnalytics()
 
-watch(userAnalytics, () => {
-    setChartData(userAnalytics.value as UserAnalyticsData)
-})
+onMounted(() => { setChartData(userAnalytics.value as UserAnalyticsData) })
 
-onMounted(() => {
-    setChartData(userAnalytics.value as UserAnalyticsData)
-})
-
-watch(selectedTimeframe, () => {
-    setChartData(userAnalytics.value as UserAnalyticsData)
-})
+watch([userAnalytics, selectedTimeframe], () => { setChartData(userAnalytics.value as UserAnalyticsData) })
 
 watch(user, async () => {
     await updateAnalytics()

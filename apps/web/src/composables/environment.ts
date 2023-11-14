@@ -8,7 +8,10 @@ const origin = window.location.origin
 
 /* Ethereum environment */
 const ethereumUrl = import.meta.env.PUBLIC_ETHEREUM_RPC_URL || "http://127.0.0.1:8545"
+const ethereumWebSocketUrl = import.meta.env.PUBLIC_ETHEREUM_WEBSOCKET_URL
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
+const batchProvider: ethers.providers.JsonRpcBatchProvider = new ethers.providers.JsonRpcBatchProvider(ethereumUrl)
+const webSocketProvider: ethers.providers.WebSocketProvider | null = ethereumWebSocketUrl !== "undefined" ? new ethers.providers.WebSocketProvider(ethereumWebSocketUrl) : null
 
 /* Casimir environment */
 const docsUrl = import.meta.env.PUBLIC_DOCS_URL || "https://docs.dev.casimir.co"
@@ -34,6 +37,7 @@ const speculosUrl = import.meta.env.PUBLIC_SPECULOS_URL ? "http://localhost:5001
 export default function useEnvironment() {
 
     return {
+        batchProvider,
         domain,
         cryptoCompareApiKey,
         ethereumUrl,
@@ -47,6 +51,7 @@ export default function useEnvironment() {
         ssvViewsAddress,
         docsUrl,
         usersUrl,
-        walletConnectProjectId
+        walletConnectProjectId,
+        webSocketProvider,
     }
 }
