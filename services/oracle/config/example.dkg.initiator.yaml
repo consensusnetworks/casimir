@@ -1,6 +1,3 @@
-fork: 'prater'
-depositOutputPath: ./data
-initiatorPrivKey: ./keys/example.encrypted.initiator.json
-initiatorPrivKeyPassword: ./keys/example.password.initiator.txt
-keysharesOutputPath: ./data
-operatorsInfoPath: ./data/operators.json
+network: 'prater'
+privKey: ./keys/example.encrypted.initiator.json
+privKeyPassword: ./keys/example.password.initiator.txt

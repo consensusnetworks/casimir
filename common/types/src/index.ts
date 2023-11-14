@@ -29,6 +29,7 @@ import { PoolConfig } from "./interfaces/PoolConfig"
 import { PoolStatus } from "./interfaces/PoolStatus"
 import { ProviderString } from "./interfaces/ProviderString"
 import { SignInWithEthereumCredentials } from "./interfaces/SignInWithEthereumCredentials"
+import { SSVOperator } from "./interfaces/SSVOperator"
 import { TransactionRequest } from "./interfaces/TransactionRequest"
 import { RegisteredOperator } from "./interfaces/RegisteredOperator"
 import { RegisterOperatorWithCasimirParams } from "./interfaces/RegisterOperatorWithCasimirParams"
@@ -72,6 +73,7 @@ export type {
     PoolConfig,
     ProviderString,
     SignInWithEthereumCredentials,
+    SSVOperator,
     TransactionRequest,
     RegisteredOperator,
     RegisterOperatorWithCasimirParams,

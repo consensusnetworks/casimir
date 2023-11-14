@@ -22,8 +22,13 @@ export async function deploymentFixture() {
     if (!process.env.SWAP_ROUTER_ADDRESS) throw new Error("No swap router address provided")
     if (!process.env.WETH_TOKEN_ADDRESS) throw new Error("No weth token address provided")
 
-    const [, daoOracle,
-        donTransmitter] = await ethers.getSigners()
+    const [
+        owner,
+        daoOracle,
+        donTransmitter
+    ] = await ethers.getSigners()
+
+    const startNonce = await ethers.provider.getTransactionCount(owner.address)
 
     const functionsOracleFactoryFactory = await ethers.getContractFactory("FunctionsOracleFactory")
     const functionsOracleFactory = await functionsOracleFactoryFactory.deploy() as FunctionsOracleFactory
@@ -131,6 +136,11 @@ export async function deploymentFixture() {
         unsafeAllow: ["external-library-linking"] 
     }) as CasimirFactory
     await factory.deployed()
+
+    const factoryNonceDiff = await ethers.provider.getTransactionCount(owner.address) - startNonce - 1
+    if (factoryNonceDiff.toString() !== process.env.FACTORY_NONCE_DIFF) {
+        throw new Error(`FACTORY_NONCE_DIFF needs to be set to ${factoryNonceDiff}`)
+    }
 
     const simpleStrategy = {
         minCollateral: ethers.utils.parseEther("1.0"),

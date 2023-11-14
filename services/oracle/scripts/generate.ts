@@ -2,15 +2,12 @@ import fs from "fs"
 import { ethers } from "ethers"
 import { run } from "@casimir/shell"
 import { Dkg } from "../src/providers/dkg"
-import { MOCK_VALIDATORS/*, MOCK_RESHARES*/ } from "@casimir/env"
 import { Validator/*, Reshare*/ } from "@casimir/types"
 
 /**
  * Generate validator keys for ethereum testing
  */
 void async function () {
-    const outputPath = "../../common/env/src/mock"
-
     process.env.CLI_PATH = process.env.CLI_PATH || "./lib/dkg/bin/ssv-dkg"
     process.env.CONFIG_PATH = process.env.CONFIG_PATH || "./config/example.dkg.initiator.yaml"
 
@@ -28,7 +25,14 @@ void async function () {
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, accountPath)
 
     const validatorCount = 4
-    const mockValidators = MOCK_VALIDATORS || {}
+    const keysDir = process.env.KEYS_DIR || "keys"
+    if (!fs.existsSync(keysDir)) fs.mkdirSync(keysDir, { recursive: true })
+    let mockValidators: Record<string, Validator[]> = {}
+    try {
+        mockValidators = JSON.parse(fs.readFileSync(`${keysDir}/example.validators.json`).toString())
+    } catch (error) {
+        mockValidators = {}
+    }
     if (!mockValidators[wallet.address] || Object.keys(mockValidators[wallet.address]).length < validatorCount) {
         await run("GOWORK=off make -C lib/dkg build") 
 
@@ -91,7 +95,7 @@ void async function () {
 
         mockValidators[wallet.address] = newValidators
 
-        fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify(mockValidators))
-    // fs.writeFileSync(`${outputPath}/reshares.json`, JSON.stringify(MOCK_RESHARES))
+        fs.writeFileSync(`${keysDir}/example.validators.json`, JSON.stringify(mockValidators))
+    // fs.writeFileSync(`${keysDir}/example.reshares.json`, JSON.stringify(MOCK_RESHARES))
     }
 }()

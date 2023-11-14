@@ -43,14 +43,19 @@ export async function fulfillReport({
 }) {
     const { beaconBalance, sweptBalance, activatedDeposits, forcedExits, completedExits, compoundablePoolIds } = values
 
-    const requestIds = 
-        (await upkeep.queryFilter(upkeep.filters.ReportRequestSent(), -2)).map((event) => event.args.requestId)
+    const reportRequests = (await upkeep.queryFilter(upkeep.filters.ReportRequestSent())).slice(-2)
+    const requestIds = reportRequests.map((event) => event.args.requestId)
     
     const balancesRequestId = requestIds[0]
-
     const balancesResponse = ethers.utils.defaultAbiCoder.encode(
-        ["uint128", "uint128"],
-        [ethers.utils.parseEther(beaconBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
+        [
+            "uint128",
+            "uint128"
+        ],
+        [
+            ethers.utils.parseEther(beaconBalance.toString()),
+            ethers.utils.parseEther(sweptBalance.toString())
+        ]
     )
     
     await fulfillFunctionsRequest({
@@ -62,14 +67,18 @@ export async function fulfillReport({
 
     const detailsRequestId = requestIds[1]
     const detailsResponse = ethers.utils.defaultAbiCoder.encode(
-        ["uint32",
+        [
             "uint32",
             "uint32",
-            "uint32[5]"],
-        [activatedDeposits,
+            "uint32",
+            "uint32[5]"
+        ],
+        [
+            activatedDeposits,
             forcedExits,
             completedExits,
-            compoundablePoolIds]
+            compoundablePoolIds
+        ]
     )
 
     await fulfillFunctionsRequest({
