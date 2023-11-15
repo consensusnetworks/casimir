@@ -46,6 +46,32 @@ export default function useFormat() {
         return formattedFloat + siSymbol
     }
 
+    function parseEthersCasimir(inputString: string): number {
+        const siSymbols: { [key: string]: number } = {
+            "K": 1e3,
+            "M": 1e6,
+            "B": 1e9
+        }
+    
+        // Extract the numeric part and the SI symbol
+        const matches = inputString.match(/([0-9.,]+)([KMB])?/)
+        if (!matches) {
+            throw new Error("Invalid input format")
+        }
+    
+        const [ , numericPart, siSymbol] = matches
+    
+        // Replace commas and convert to a float
+        let value = parseFloat(numericPart.replace(/,/g, ""))
+    
+        // Apply the multiplication factor if an SI symbol is present
+        if (siSymbol && siSymbols[siSymbol]) {
+            value *= siSymbols[siSymbol]
+        }
+    
+        return value
+    }
+
     function trimAndLowercaseAddress(address: string) {
         return address.trim().toLowerCase()
     }
@@ -54,6 +80,7 @@ export default function useFormat() {
         convertString, 
         formatDecimalString,
         formatEthersCasimir,
+        parseEthersCasimir,
         trimAndLowercaseAddress,
     }
 }

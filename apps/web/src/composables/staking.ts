@@ -5,19 +5,23 @@ import useContracts from "@/composables/contracts"
 import useEthers from "@/composables/ethers"
 import useLedger from "@/composables/ledger"
 import useTrezor from "@/composables/trezor"
+import useUser from "@/composables/user"
 import useWallets from "@/composables/wallets"
 import useWalletConnectV2 from "./walletConnectV2"
 import { CasimirManager } from "@casimir/ethereum/build/@types"
+import { StakeDetails } from "@casimir/types"
 
 const { getBaseManager, getEigenManager, contractsAreInitialized } = useContracts()
 const { browserProvidersList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
+const { user } = useUser()
 const { detectActiveNetwork, switchEthersNetwork } = useWallets()
 const { getWalletConnectSignerV2 } = useWalletConnectV2()
 
 const stakingComposableInitialized = ref(false)
 const awaitingStakeOrWithdrawConfirmation = ref(false)
+const userStakeDetails = ref<Array<StakeDetails>>([])
 
 let baseManager: CasimirManager
 let eigenManager: CasimirManager
@@ -31,11 +35,12 @@ export default function useStaking() {
     })
 
     async function initializeStakingComposable() {
-        baseManager = getBaseManager()
-        eigenManager = getEigenManager()
         if (stakingComposableInitialized.value) return
         try {
             stakingComposableInitialized.value = true
+            baseManager = getBaseManager()
+            eigenManager = getEigenManager()
+            await getUserStakeDetails()
         } catch (error) {
             console.log("Error initializing staking component :>> ", error)
         }
@@ -106,6 +111,48 @@ export default function useStaking() {
         }
     }
 
+    async function getUserStakeDetails() {
+        const result: Array<StakeDetails> = []
+        const addresses = user.value?.accounts.map((account) => account.address) as Array<string>
+    
+        async function getUserStakeAndWithdrawable(manager: CasimirManager, address: string) {
+            const userStake = await (manager as CasimirManager).getUserStake(address)
+            const userStakeNumber = parseFloat(ethers.utils.formatEther(userStake))
+            const availableToWithdraw = await (manager as CasimirManager).getWithdrawableBalance()
+            const availableToWithdrawNumber = parseFloat(ethers.utils.formatEther(availableToWithdraw))
+    
+            return { userStakeNumber, availableToWithdrawNumber }
+        }
+    
+        const promises = addresses.map(async (address) => {
+            const [baseManagerData, /* eigenManagerData */] = await Promise.all([
+                getUserStakeAndWithdrawable(baseManager, address),
+                // getUserStakeAndWithdrawable(eigenManager, address),
+            ])
+    
+            if (baseManagerData.userStakeNumber > 0) {
+                result.push({
+                    operatorType: "Default",
+                    address,
+                    amountStaked: baseManagerData.userStakeNumber,
+                    availableToWithdraw: baseManagerData.availableToWithdrawNumber,
+                })
+            }
+    
+            // if (eigenManagerData.userStakeNumber > 0) {
+            //     result.push({
+            //         operatorType: "Eigen",
+            //         address,
+            //         amountStaked: eigenManagerData.userStakeNumber,
+            //         availableToWithdraw: eigenManagerData.availableToWithdrawNumber,
+            //     })
+            // }
+        })
+    
+        await Promise.all(promises)
+        userStakeDetails.value = result
+    }
+    
     async function getWithdrawableBalance({ walletProvider, type }: { walletProvider: ProviderString, type: "default" | "eigen" }) {
         let signer
         if (browserProvidersList.includes(walletProvider)) {
@@ -164,6 +211,7 @@ export default function useStaking() {
     return {
         awaitingStakeOrWithdrawConfirmation: readonly(awaitingStakeOrWithdrawConfirmation),
         stakingComposableInitialized,
+        userStakeDetails,
         initializeStakingComposable,
         deposit,
         getDepositFees,
