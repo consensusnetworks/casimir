@@ -91,6 +91,15 @@ async function dev() {
         })
         await managerBeacon.deployed()
 
+        const poolBeaconFactory = await ethers.getContractFactory("CasimirPoolDev")
+        const poolBeacon = await upgrades.upgradeBeacon(process.env.POOL_BEACON_ADDRESS, poolBeaconFactory, {
+            constructorArgs: [
+                process.env.DEPOSIT_CONTRACT_ADDRESS,
+                process.env.EIGENPOD_MANAGER_ADDRESS
+            ]
+        })
+        await poolBeacon.deployed()
+
         const registryBeaconFactory = await ethers.getContractFactory("CasimirRegistryDev")
         const registryBeacon = await upgrades
             .upgradeBeacon(process.env.REGISTRY_BEACON_ADDRESS, registryBeaconFactory, { 
@@ -164,9 +173,11 @@ async function dev() {
         )).wait()
 
         const functionsOracleSenders = await functionsOracle.getAuthorizedSenders()
-        const newFunctionsOracleSenders = [...functionsOracleSenders,
+        const newFunctionsOracleSenders = [
+            ...functionsOracleSenders,
             eigenManager.address,
-            eigenUpkeep.address]
+            eigenUpkeep.address
+        ]
         await functionsOracle.connect(owner).setAuthorizedSenders(newFunctionsOracleSenders)
     }
 
