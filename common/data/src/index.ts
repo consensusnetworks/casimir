@@ -10,15 +10,15 @@ import { JsonType, GlueType, PostgresType, Schema } from "./providers/schema"
 import { JsonSchema } from "./interfaces/JsonSchema"
 
 export {
-	accountSchema,
-	actionSchema,
-	eventSchema,
-	nonceSchema,
-	operatorSchema,
-	userAccountSchema,
-	userSchema,
-	Postgres,
-	Schema
+    accountSchema,
+    actionSchema,
+    eventSchema,
+    nonceSchema,
+    operatorSchema,
+    userAccountSchema,
+    userSchema,
+    Postgres,
+    Schema
 }
 
 export type { JsonSchema, JsonType, GlueType, PostgresType }

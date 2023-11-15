@@ -6,9 +6,9 @@ import TransportWebUSB from "@ledgerhq/hw-transport-webusb"
 import { CryptoAddress } from "@casimir/types"
 
 const transports = {
-	"usb": async function createUSBTransport(): Promise<Transport> {
-		return await TransportWebUSB.create()
-	}
+    "usb": async function createUSBTransport(): Promise<Transport> {
+        return await TransportWebUSB.create()
+    }
 }
 
 export interface LedgerSignerOptions {
@@ -120,149 +120,149 @@ export interface LedgerSignerOptions {
 // }
 
 export class EthersLedgerSigner extends ethers.Signer {
-	readonly type: string = "usb"
-	readonly path: string = "m/44'/60'/0'/0/0"
-	readonly eth?: Promise<Eth>
+    readonly type: string = "usb"
+    readonly path: string = "m/44'/60'/0'/0/0"
+    readonly eth?: Promise<Eth>
 
-	constructor(options: LedgerSignerOptions) {
-		super()
+    constructor(options: LedgerSignerOptions) {
+        super()
 
-		if (options.type) this.type = options.type
-		if (options.path) this.path = options.path        
+        if (options.type) this.type = options.type
+        if (options.path) this.path = options.path        
 
-		// Override readonly provider for ethers.Signer
-		if (options.provider) {
-			ethers.utils.defineReadOnly(this, "provider", options.provider)
-		}
+        // Override readonly provider for ethers.Signer
+        if (options.provider) {
+            ethers.utils.defineReadOnly(this, "provider", options.provider)
+        }
 
-		// Set readonly eth to Promise<Eth>
-		const transportCreatorType = this.type as keyof typeof transports
-		const transportCreator = transports[transportCreatorType]
-		if (!transportCreator) console.log("Unknown or unsupported type", this.type)
-		ethers.utils.defineReadOnly(this, "eth", transportCreator().then(transport => {
-			return new Eth(transport)
-		}))
-	}
+        // Set readonly eth to Promise<Eth>
+        const transportCreatorType = this.type as keyof typeof transports
+        const transportCreator = transports[transportCreatorType]
+        if (!transportCreator) console.log("Unknown or unsupported type", this.type)
+        ethers.utils.defineReadOnly(this, "eth", transportCreator().then(transport => {
+            return new Eth(transport)
+        }))
+    }
 
-	retry<T = unknown>(callback: (eth: Eth) => Promise<T>, timeout?: number): Promise<T> {
-		// The async-promise-executor is ok since retry handles necessary errors 
-		// eslint-disable-next-line no-async-promise-executor
-		return new Promise(async (resolve, reject) => {
-			const ledgerConnectionError = "Please make sure Ledger is ready and retry"
-			if (timeout && timeout > 0) {
-				setTimeout(() => reject(new Error(ledgerConnectionError)), timeout)
-			}
+    retry<T = unknown>(callback: (eth: Eth) => Promise<T>, timeout?: number): Promise<T> {
+        // The async-promise-executor is ok since retry handles necessary errors 
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
+            const ledgerConnectionError = "Please make sure Ledger is ready and retry"
+            if (timeout && timeout > 0) {
+                setTimeout(() => reject(new Error(ledgerConnectionError)), timeout)
+            }
 
-			const eth = await this.eth as Eth
+            const eth = await this.eth as Eth
 
-			// Wait up to 5 seconds
-			for (let i = 0; i < 50; i++) {
-				try {
-					const result = await callback(eth)
-					return resolve(result)
-				} catch (error) {
-					if ((error as { id: string }).id !== "TransportLocked") {
-						return reject(error)
-					}
-				}
-				await new Promise((resolve) => {
-					setTimeout(resolve, 100)
-				})
-			}
+            // Wait up to 5 seconds
+            for (let i = 0; i < 50; i++) {
+                try {
+                    const result = await callback(eth)
+                    return resolve(result)
+                } catch (error) {
+                    if ((error as { id: string }).id !== "TransportLocked") {
+                        return reject(error)
+                    }
+                }
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 100)
+                })
+            }
 
-			return reject(new Error(ledgerConnectionError))
-		})
-	}
+            return reject(new Error(ledgerConnectionError))
+        })
+    }
 
-	async getAddresses(): Promise<Array<CryptoAddress> | null> {
-		const ledgerAddresses = []
+    async getAddresses(): Promise<Array<CryptoAddress> | null> {
+        const ledgerAddresses = []
         
-		for (let i = 0; i < 5; i++) {
-			// m/coin_type'/account_index'/external_chain_index'/address_index/change_index
-			const path = `m/44'/60'/${i}'/0/0`
-			const { address } = await this.retry((eth) => eth.getAddress(path))
-			// TODO: Replace with our own provider depending on environment
-			const provider = new ethers.providers.JsonRpcProvider("https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7")
-			const balance = await provider.getBalance(address)
-			const ethBalance = ethers.utils.formatEther(balance)
-			if (parseFloat(ethBalance) > 0) 
-				ledgerAddresses.push({ address, balance: ethBalance, pathIndex: i.toString() })
-		}
-		return ledgerAddresses.length ? ledgerAddresses : null
-	}
+        for (let i = 0; i < 5; i++) {
+            // m/coin_type'/account_index'/external_chain_index'/address_index/change_index
+            const path = `m/44'/60'/${i}'/0/0`
+            const { address } = await this.retry((eth) => eth.getAddress(path))
+            // TODO: Replace with our own provider depending on environment
+            const provider = new ethers.providers.JsonRpcProvider("https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7")
+            const balance = await provider.getBalance(address)
+            const ethBalance = ethers.utils.formatEther(balance)
+            if (parseFloat(ethBalance) > 0) 
+                ledgerAddresses.push({ address, balance: ethBalance, pathIndex: i.toString() })
+        }
+        return ledgerAddresses.length ? ledgerAddresses : null
+    }
 
-	async getAddress(): Promise<string> {
-		const { address } = await this.retry((eth) => eth.getAddress(this.path))
-		return address
-	}
+    async getAddress(): Promise<string> {
+        const { address } = await this.retry((eth) => eth.getAddress(this.path))
+        return address
+    }
 
-	async signMessage(message: ethers.utils.Bytes | string): Promise<string> {
-		if (typeof (message) === "string") {
-			message = ethers.utils.toUtf8Bytes(message)
-		}
-		const messageHex = ethers.utils.hexlify(message).substring(2)
-		const testPath = "m/44'/60'/1'/0/0"
-		const signature = await this.retry((eth) => eth.signPersonalMessage(testPath, messageHex))
-		signature.r = "0x" + signature.r
-		signature.s = "0x" + signature.s
-		return ethers.utils.joinSignature(signature)
-	}
+    async signMessage(message: ethers.utils.Bytes | string): Promise<string> {
+        if (typeof (message) === "string") {
+            message = ethers.utils.toUtf8Bytes(message)
+        }
+        const messageHex = ethers.utils.hexlify(message).substring(2)
+        const testPath = "m/44'/60'/1'/0/0"
+        const signature = await this.retry((eth) => eth.signPersonalMessage(testPath, messageHex))
+        signature.r = "0x" + signature.r
+        signature.s = "0x" + signature.s
+        return ethers.utils.joinSignature(signature)
+    }
     
-	async signMessageWithIndex(message: ethers.utils.Bytes | string, pathIndex: number): Promise<string> {
-		if (typeof (message) === "string") {
-			console.log("message :>> ", message)
-			message = ethers.utils.toUtf8Bytes(message)
-		}
-		const messageHex = ethers.utils.hexlify(message).substring(2)
-		const path = `m/44'/60'/${pathIndex}'/0/0`
-		const signature = await this.retry((eth) => eth.signPersonalMessage(path, messageHex))
-		console.log("signature :>> ", signature)
-		signature.r = "0x" + signature.r
-		signature.s = "0x" + signature.s
-		console.log("signature :>> ", signature)
-		return ethers.utils.joinSignature(signature)
-	}
+    async signMessageWithIndex(message: ethers.utils.Bytes | string, pathIndex: number): Promise<string> {
+        if (typeof (message) === "string") {
+            console.log("message :>> ", message)
+            message = ethers.utils.toUtf8Bytes(message)
+        }
+        const messageHex = ethers.utils.hexlify(message).substring(2)
+        const path = `m/44'/60'/${pathIndex}'/0/0`
+        const signature = await this.retry((eth) => eth.signPersonalMessage(path, messageHex))
+        console.log("signature :>> ", signature)
+        signature.r = "0x" + signature.r
+        signature.s = "0x" + signature.s
+        console.log("signature :>> ", signature)
+        return ethers.utils.joinSignature(signature)
+    }
 
-	async signTransaction(transaction: ethers.providers.TransactionRequest): Promise<string> {
-		const tx = await ethers.utils.resolveProperties(transaction)
-		const baseTx: ethers.utils.UnsignedTransaction = {
-			chainId: (tx.chainId || undefined),
-			data: (tx.data || undefined),
-			gasLimit: (tx.gasLimit || undefined),
-			gasPrice: (tx.gasPrice || undefined),
-			nonce: (tx.nonce ? ethers.BigNumber.from(tx.nonce).toNumber() : undefined),
-			to: (tx.to || undefined),
-			value: (tx.value || undefined),
-			type: (tx.type || undefined)
-		}
+    async signTransaction(transaction: ethers.providers.TransactionRequest): Promise<string> {
+        const tx = await ethers.utils.resolveProperties(transaction)
+        const baseTx: ethers.utils.UnsignedTransaction = {
+            chainId: (tx.chainId || undefined),
+            data: (tx.data || undefined),
+            gasLimit: (tx.gasLimit || undefined),
+            gasPrice: (tx.gasPrice || undefined),
+            nonce: (tx.nonce ? ethers.BigNumber.from(tx.nonce).toNumber() : undefined),
+            to: (tx.to || undefined),
+            value: (tx.value || undefined),
+            type: (tx.type || undefined)
+        }
 
-		const unsignedTx = ethers.utils.serializeTransaction(baseTx).substring(2)
-		const resolution = await ledgerService.resolveTransaction(unsignedTx, {}, {})
-		const signature = await this.retry((eth) => eth.signTransaction(this.path, unsignedTx, resolution))
+        const unsignedTx = ethers.utils.serializeTransaction(baseTx).substring(2)
+        const resolution = await ledgerService.resolveTransaction(unsignedTx, {}, {})
+        const signature = await this.retry((eth) => eth.signTransaction(this.path, unsignedTx, resolution))
 
-		return ethers.utils.serializeTransaction(baseTx, {
-			v: ethers.BigNumber.from("0x" + signature.v).toNumber(),
-			r: ("0x" + signature.r),
-			s: ("0x" + signature.s),
-		})
-	}
+        return ethers.utils.serializeTransaction(baseTx, {
+            v: ethers.BigNumber.from("0x" + signature.v).toNumber(),
+            r: ("0x" + signature.r),
+            s: ("0x" + signature.s),
+        })
+    }
 
-	// Populates all fields in a transaction, signs it and sends it to the network
-	async sendTransaction(transaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    // Populates all fields in a transaction, signs it and sends it to the network
+    async sendTransaction(transaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
         : Promise<ethers.providers.TransactionResponse> 
-	{
-		this._checkProvider("sendTransaction")
-		const tx = await this.populateTransaction(transaction)
-		const signedTx = await this.signTransaction(tx)
-		return await (this.provider as ethers.providers.JsonRpcProvider).sendTransaction(signedTx)
-	}
+    {
+        this._checkProvider("sendTransaction")
+        const tx = await this.populateTransaction(transaction)
+        const signedTx = await this.signTransaction(tx)
+        return await (this.provider as ethers.providers.JsonRpcProvider).sendTransaction(signedTx)
+    }
 
-	connect(provider: ethers.providers.Provider): ethers.Signer {
-		const options = {
-			provider,
-			type: this.type,
-			path: this.path
-		}
-		return new EthersLedgerSigner(options)
-	}
+    connect(provider: ethers.providers.Provider): ethers.Signer {
+        const options = {
+            provider,
+            type: this.type,
+            path: this.path
+        }
+        return new EthersLedgerSigner(options)
+    }
 }

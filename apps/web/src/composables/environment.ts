@@ -33,20 +33,20 @@ const speculosUrl = import.meta.env.PUBLIC_SPECULOS_URL ? "http://localhost:5001
 
 export default function useEnvironment() {
 
-	return {
-		domain,
-		cryptoCompareApiKey,
-		ethereumUrl,
-		factory,
-		provider,
-		origin,
-		ledgerType,
-		requiredNetwork,
-		speculosUrl,
-		ssvNetworkAddress,
-		ssvViewsAddress,
-		docsUrl,
-		usersUrl,
-		walletConnectProjectId
-	}
+    return {
+        domain,
+        cryptoCompareApiKey,
+        ethereumUrl,
+        factory,
+        provider,
+        origin,
+        ledgerType,
+        requiredNetwork,
+        speculosUrl,
+        ssvNetworkAddress,
+        ssvViewsAddress,
+        docsUrl,
+        usersUrl,
+        walletConnectProjectId
+    }
 }

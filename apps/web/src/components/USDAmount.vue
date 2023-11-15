@@ -10,17 +10,17 @@ const usdAmount = ref(0)
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
-	etherAmount: {
-		type: String,
-		required: true,
-	}
+    etherAmount: {
+        type: String,
+        required: true,
+    }
 })
 const etherAmount = toRef(props, "etherAmount")
 onMounted(async () => {
-	usdAmount.value = await getExchangeRate(props.etherAmount)
+    usdAmount.value = await getExchangeRate(props.etherAmount)
 })
 watch(etherAmount, async () => {
-	usdAmount.value = await getExchangeRate(props.etherAmount)
+    usdAmount.value = await getExchangeRate(props.etherAmount)
 })
 
 </script>

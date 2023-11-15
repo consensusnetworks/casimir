@@ -4,34 +4,34 @@ import { run } from "@casimir/shell"
 import { getSecret, loadCredentials } from "@casimir/aws"
 
 async function simulate() {
-	if (process.env.USE_SECRETS !== "false") {
-		await loadCredentials()
-		process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret("consensus-networks-bip39-seed") as string
-	} else {
-		process.env.BIP39_SEED = process.env.BIP39_SEED || "inflict ball claim confirm cereal cost note dad mix donate traffic patient"
-	}
-	const networkKey = process.env.FORK?.toUpperCase() || "TESTNET"
-	const networkName = ETHEREUM_NETWORK_NAME[networkKey]
-	process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_RPC_URL[networkKey]
-	process.env.ETHEREUM_RPC_URL = "http://127.0.0.1:8545"
-	console.log(`Connecting to ${networkName} network fork at ${process.env.ETHEREUM_RPC_URL}`)
+    if (process.env.USE_SECRETS !== "false") {
+        await loadCredentials()
+        process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret("consensus-networks-bip39-seed") as string
+    } else {
+        process.env.BIP39_SEED = process.env.BIP39_SEED || "inflict ball claim confirm cereal cost note dad mix donate traffic patient"
+    }
+    const networkKey = process.env.FORK?.toUpperCase() || "TESTNET"
+    const networkName = ETHEREUM_NETWORK_NAME[networkKey]
+    process.env.ETHEREUM_FORK_RPC_URL = ETHEREUM_RPC_URL[networkKey]
+    process.env.ETHEREUM_RPC_URL = "http://127.0.0.1:8545"
+    console.log(`Connecting to ${networkName} network fork at ${process.env.ETHEREUM_RPC_URL}`)
 
-	const forkProvider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
-	process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await forkProvider.getBlockNumber() - 10}`
-	console.log(`📍 Forking started at ${process.env.ETHEREUM_FORK_BLOCK}`)
+    const forkProvider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
+    process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await forkProvider.getBlockNumber() - 10}`
+    console.log(`📍 Forking started at ${process.env.ETHEREUM_FORK_BLOCK}`)
 
-	process.env.TUNNEL = process.env.TUNNEL || "false"
-	process.env.MINING_INTERVAL = "12"
-	process.env.SIMULATE_UPGRADES = "true"
-	process.env.SIMULATE_UPKEEP = "true"
+    process.env.TUNNEL = process.env.TUNNEL || "false"
+    process.env.MINING_INTERVAL = "12"
+    process.env.SIMULATE_UPGRADES = "true"
+    process.env.SIMULATE_UPKEEP = "true"
 
-	await run("npm run build --workspace @casimir/ethereum")
-	run("npm run dev --workspace @casimir/ethereum -- --network localhost")
-	run("npm run report --workspace @casimir/ethereum -- --network localhost")    
-	run("npm run dev --workspace @casimir/functions")
+    await run("npm run build --workspace @casimir/ethereum")
+    run("npm run dev --workspace @casimir/ethereum -- --network localhost")
+    run("npm run report --workspace @casimir/ethereum -- --network localhost")    
+    run("npm run dev --workspace @casimir/functions")
 }
 
 simulate().catch(error => {
-	console.error(error)
-	process.exit(1)
+    console.error(error)
+    process.exit(1)
 })

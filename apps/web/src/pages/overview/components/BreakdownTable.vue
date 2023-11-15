@@ -21,114 +21,114 @@ const selectedOrientation = ref("ascending")
 const checkedItems = ref([] as any)
 
 const tableHeaderOptions = ref(
-	{
-		Wallets: {
-			headers: [
-				// {
-				//   title: '',
-				//   value: 'blank_column'
-				// },
-				{
-					title: "Wallet Provider",
-					value: "wallet_provider"
-				},
-				{
-					title: "Account",
-					value: "act"
-				},
-				{
-					title: "Wallet Balance",
-					value: "bal"
-				},
-				{
-					title: "Stake Balance",
-					value: "stk_amt"
-				}, // Need to fetch based on wallet (FE SIDE)
-				{
-					title: "Stake Rewards (All-Time)",
-					value: "stk_rwd"
-				}, // Need to fetch based on wallet (FE SIDE)
-			]
-		},
-		Transactions: {
-			headers: [
-				// {
-				//   title: '',
-				//   value: 'blank_column'
-				// },
-				{
-					title: "Hash",
-					value: "tx_hash"
-				},
-				{
-					title: "Type",
-					value: "tx_type"
-				},
-				{
-					title: "Date",
-					value: "date"
-				},
-				{
-					title: "Amount",
-					value: "stk_amt"
-				},
-				{
-					title: "Price",
-					value: "price"
-				},
-				{
-					title: "From",
-					value: "from"
-				},
-				{
-					title: "To",
-					value: "to"
-				},
-			]
-		},
-		Staking: {
-			headers: [
-				// {
-				//   title: '',
-				//   value: 'blank_column'
-				// },
-				{
-					title: "Date",
-					value: "date"
-				},
-				{
-					title: "Wallet Address",
-					value: "wallet_address"
-				},
-				{
-					title: "Type",
-					value: "type"
-				},
-				{
-					title: "Amount",
-					value: "amount"
-				},
-				{
-					title: "Fees",
-					value: "fees"
-				},
-				{
-					title: "Status",
-					value: "status"
-				},
-				{
-					title: "Hash",
-					value: "tx_hash"
-				},
-			]
-		},
-	}
+    {
+        Wallets: {
+            headers: [
+                // {
+                //   title: '',
+                //   value: 'blank_column'
+                // },
+                {
+                    title: "Wallet Provider",
+                    value: "wallet_provider"
+                },
+                {
+                    title: "Account",
+                    value: "act"
+                },
+                {
+                    title: "Wallet Balance",
+                    value: "bal"
+                },
+                {
+                    title: "Stake Balance",
+                    value: "stk_amt"
+                }, // Need to fetch based on wallet (FE SIDE)
+                {
+                    title: "Stake Rewards (All-Time)",
+                    value: "stk_rwd"
+                }, // Need to fetch based on wallet (FE SIDE)
+            ]
+        },
+        Transactions: {
+            headers: [
+                // {
+                //   title: '',
+                //   value: 'blank_column'
+                // },
+                {
+                    title: "Hash",
+                    value: "tx_hash"
+                },
+                {
+                    title: "Type",
+                    value: "tx_type"
+                },
+                {
+                    title: "Date",
+                    value: "date"
+                },
+                {
+                    title: "Amount",
+                    value: "stk_amt"
+                },
+                {
+                    title: "Price",
+                    value: "price"
+                },
+                {
+                    title: "From",
+                    value: "from"
+                },
+                {
+                    title: "To",
+                    value: "to"
+                },
+            ]
+        },
+        Staking: {
+            headers: [
+                // {
+                //   title: '',
+                //   value: 'blank_column'
+                // },
+                {
+                    title: "Date",
+                    value: "date"
+                },
+                {
+                    title: "Wallet Address",
+                    value: "wallet_address"
+                },
+                {
+                    title: "Type",
+                    value: "type"
+                },
+                {
+                    title: "Amount",
+                    value: "amount"
+                },
+                {
+                    title: "Fees",
+                    value: "fees"
+                },
+                {
+                    title: "Status",
+                    value: "status"
+                },
+                {
+                    title: "Hash",
+                    value: "tx_hash"
+                },
+            ]
+        },
+    }
 )
 
 const { user } = useUser()
 
 const tableData = ref({
-	Wallets: [] as { 
+    Wallets: [] as { 
     tx_hash: string, 
     wallet_provider: string, 
     status: string,
@@ -143,7 +143,7 @@ const tableData = ref({
      tx_type: string,
      stk_rwd: string 
     }[],
-	Transactions: [] as { 
+    Transactions: [] as { 
     tx_hash: string,
      wallet_provider: string,
      status: string,
@@ -158,7 +158,7 @@ const tableData = ref({
      tx_type: string,
      stk_rwd: string 
     }[],
-	Staking: [] as { 
+    Staking: [] as { 
     tx_hash: string,
      wallet_provider: string,
      status: string,
@@ -178,131 +178,131 @@ const tableData = ref({
 const filteredData = ref(tableData.value[tableView.value as keyof typeof tableData.value])
 
 const filterData = () => {
-	let filteredDataArray
+    let filteredDataArray
 
-	filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
-	if (searchInput.value === "") {
-		filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
-	} else {
-		const searchTerm = searchInput.value.toLocaleLowerCase()
-		filteredDataArray = (tableData.value[tableView.value as keyof typeof tableData.value] as Array<any>).filter(item => {
-			return true
-			// return (
-			// Might need to modify to match types each variable
-			// {tx_hash: string, wallet_provider: string,  status: string, 
-			// staking_fees: string, type: string, amount: string, bal: string,
-			// act: string, date: string, blank_column: any, stk_amt: string, 
-			// tx_type: string, stk_rwd: string }
-			// item.wallet_provider?.toString().toLocaleLowerCase().includes(searchTerm) ||
-			// item.act?.toString().toLocaleLowerCase().includes(searchTerm) ||
-			// item.bal?.toString().toLocaleLowerCase().includes(searchTerm) ||
-			// item.stk_amt?.toString().toLocaleLowerCase().includes(searchTerm) ||
-			// item.stk_rwd?.toString().toLocaleLowerCase().includes(searchTerm) ||
-			// item.tx_hash?.toString().toLocaleLowerCase().includes(searchTerm) ||
-			// item.date?.toString().toLocaleLowerCase().includes(searchTerm) ||
-			// item.apy?.toString().toLocaleLowerCase().includes(searchTerm) ||
-			// item.status?.toString().toLocaleLowerCase().includes(searchTerm) ||
-			// item.type?.toString().toLocaleLowerCase().includes(searchTerm) ||
-			// item.staking_fees?.toString().toLocaleLowerCase().includes(searchTerm)
-			// )
-		})
-	}
+    filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
+    if (searchInput.value === "") {
+        filteredDataArray = tableData.value[tableView.value as keyof typeof tableData.value]
+    } else {
+        const searchTerm = searchInput.value.toLocaleLowerCase()
+        filteredDataArray = (tableData.value[tableView.value as keyof typeof tableData.value] as Array<any>).filter(item => {
+            return true
+            // return (
+            // Might need to modify to match types each variable
+            // {tx_hash: string, wallet_provider: string,  status: string, 
+            // staking_fees: string, type: string, amount: string, bal: string,
+            // act: string, date: string, blank_column: any, stk_amt: string, 
+            // tx_type: string, stk_rwd: string }
+            // item.wallet_provider?.toString().toLocaleLowerCase().includes(searchTerm) ||
+            // item.act?.toString().toLocaleLowerCase().includes(searchTerm) ||
+            // item.bal?.toString().toLocaleLowerCase().includes(searchTerm) ||
+            // item.stk_amt?.toString().toLocaleLowerCase().includes(searchTerm) ||
+            // item.stk_rwd?.toString().toLocaleLowerCase().includes(searchTerm) ||
+            // item.tx_hash?.toString().toLocaleLowerCase().includes(searchTerm) ||
+            // item.date?.toString().toLocaleLowerCase().includes(searchTerm) ||
+            // item.apy?.toString().toLocaleLowerCase().includes(searchTerm) ||
+            // item.status?.toString().toLocaleLowerCase().includes(searchTerm) ||
+            // item.type?.toString().toLocaleLowerCase().includes(searchTerm) ||
+            // item.staking_fees?.toString().toLocaleLowerCase().includes(searchTerm)
+            // )
+        })
+    }
 
-	if (selectedHeader.value !== "" && selectedOrientation.value !== "") {
-		filteredDataArray = filteredDataArray.sort((a, b) => {
-			const valA = a[selectedHeader.value]
-			const valB = b[selectedHeader.value]
+    if (selectedHeader.value !== "" && selectedOrientation.value !== "") {
+        filteredDataArray = filteredDataArray.sort((a, b) => {
+            const valA = a[selectedHeader.value]
+            const valB = b[selectedHeader.value]
 
-			if (selectedOrientation.value === "ascending") {
-				return valA < valB ? -1 : valA > valB ? 1 : 0
-			} else {
-				return valA > valB ? -1 : valA < valB ? 1 : 0
-			}
-		})
-	}
-	totalPages.value = Math.round(filteredDataArray.length / itemsPerPage.value)
+            if (selectedOrientation.value === "ascending") {
+                return valA < valB ? -1 : valA > valB ? 1 : 0
+            } else {
+                return valA > valB ? -1 : valA < valB ? 1 : 0
+            }
+        })
+    }
+    totalPages.value = Math.round(filteredDataArray.length / itemsPerPage.value)
 
-	const start = (currentPage.value - 1) * itemsPerPage.value
-	const end = start + itemsPerPage.value
-	filteredData.value = filteredDataArray.slice(start, end) as any
+    const start = (currentPage.value - 1) * itemsPerPage.value
+    const end = start + itemsPerPage.value
+    filteredData.value = filteredDataArray.slice(start, end) as any
 }
 
 watch([searchInput,
-	tableView,
-	selectedHeader,
-	selectedOrientation,
-	currentPage], () => {
-	filterData()
+    tableView,
+    selectedHeader,
+    selectedOrientation,
+    currentPage], () => {
+    filterData()
 })
 
 const convertJsonToCsv = (jsonData: any[]) => {
-	const separator = ","
-	const csvRows = []
+    const separator = ","
+    const csvRows = []
 
-	if (!Array.isArray(jsonData)) {
-		return ""
-	}
+    if (!Array.isArray(jsonData)) {
+        return ""
+    }
 
-	if (jsonData.length === 0) {
-		return ""
-	}
+    if (jsonData.length === 0) {
+        return ""
+    }
 
-	const keys = Object.keys(jsonData[0])
+    const keys = Object.keys(jsonData[0])
 
-	// Add headers
-	csvRows.push(keys.join(separator))
+    // Add headers
+    csvRows.push(keys.join(separator))
 
-	// Convert JSON data to CSV rows
-	jsonData.forEach(obj => {
-		const values = keys.map(key => obj[key])
-		csvRows.push(values.join(separator))
-	})
+    // Convert JSON data to CSV rows
+    jsonData.forEach(obj => {
+        const values = keys.map(key => obj[key])
+        csvRows.push(values.join(separator))
+    })
 
-	return csvRows.join("\n")
+    return csvRows.join("\n")
 }
 
 const convertJsonToExcelBuffer = (jsonData: unknown[]) => {
-	const worksheet = XLSX.utils.json_to_sheet(jsonData)
-	const workbook = XLSX.utils.book_new()
-	XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1")
-	const excelBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" })
+    const worksheet = XLSX.utils.json_to_sheet(jsonData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1")
+    const excelBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" })
 
-	return excelBuffer
+    return excelBuffer
 }
 
 const downloadFile = (content: any, filename: string, mimeType: any) => {
-	const blob = new Blob([content], { type: mimeType })
-	const url = URL.createObjectURL(blob)
-	const link = document.createElement("a")
-	link.href = url
-	link.download = filename
-	link.click()
+    const blob = new Blob([content], { type: mimeType })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = filename
+    link.click()
 
-	// Cleanup
-	URL.revokeObjectURL(url)
+    // Cleanup
+    URL.revokeObjectURL(url)
 }
 
 const exportFile = () => {
 
-	const jsonData = checkedItems.value.length > 0 ? checkedItems.value : filteredData.value
+    const jsonData = checkedItems.value.length > 0 ? checkedItems.value : filteredData.value
 
-	const isMac = navigator.userAgent.indexOf("Mac") !== -1
-	const fileExtension = isMac ? "csv" : "xlsx"
+    const isMac = navigator.userAgent.indexOf("Mac") !== -1
+    const fileExtension = isMac ? "csv" : "xlsx"
 
-	if (fileExtension === "csv") {
-		const csvContent = convertJsonToCsv(jsonData)
-		downloadFile(csvContent, `${tableView.value}.csv`, "text/csv")
-	} else {
-		const excelBuffer = convertJsonToExcelBuffer(jsonData)
-		downloadFile(excelBuffer, `${tableView.value}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	}
+    if (fileExtension === "csv") {
+        const csvContent = convertJsonToCsv(jsonData)
+        downloadFile(csvContent, `${tableView.value}.csv`, "text/csv")
+    } else {
+        const excelBuffer = convertJsonToExcelBuffer(jsonData)
+        downloadFile(excelBuffer, `${tableView.value}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    }
 }
 
 const removeItemFromCheckedList = (item: any) => {
-	const index = checkedItems.value.indexOf(item)
-	if (index > -1) {
-		checkedItems.value.splice(index, 1)
-	}
+    const index = checkedItems.value.indexOf(item)
+    if (index > -1) {
+        checkedItems.value.splice(index, 1)
+    }
 }
 
 const { rawUserAnalytics } = useAnalytics()
@@ -310,84 +310,84 @@ const { rawUserAnalytics } = useAnalytics()
 
 const setTableData = () => {
 
-	if (!rawUserAnalytics.value) return
+    if (!rawUserAnalytics.value) return
 
-	const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
-		new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
-	})
+    const sortedTransactions = rawUserAnalytics.value.sort((a: any, b: any) => {
+        new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
+    })
 
-	const newTable = tableData.value
+    const newTable = tableData.value
 
-	newTable.Transactions = sortedTransactions.map((item: any) => {
-		return {
-			tx_hash: item.txId,
-			stk_amt: item.amount,
-			tx_type: item.txDirection,
-			date: item.receivedAt,
-			status: item.status,
-		}
-	})
+    newTable.Transactions = sortedTransactions.map((item: any) => {
+        return {
+            tx_hash: item.txId,
+            stk_amt: item.amount,
+            tx_type: item.txDirection,
+            date: item.receivedAt,
+            status: item.status,
+        }
+    })
 
-	let filteredWallets = [] as any
-	let filteredStakingTransactions = [] as any
-	sortedTransactions.forEach((item: any) => {
-		const index = filteredWallets.findIndex((i: any) => i.act === item.walletAddress)
+    let filteredWallets = [] as any
+    let filteredStakingTransactions = [] as any
+    sortedTransactions.forEach((item: any) => {
+        const index = filteredWallets.findIndex((i: any) => i.act === item.walletAddress)
 
-		if (index > -1) {
-			if (new Date(filteredWallets[index].date).getTime() < new Date(item.receivedAt).getTime()) {
-				filteredWallets[index].bal === item.walletBalance
-			}
-		} else {
-			let provider = user.value?.accounts.find(i => i.address.toLocaleLowerCase() === item.walletAddress.toLocaleLowerCase())?.walletProvider
-			filteredWallets.push(
-				{
-					wallet_provider: provider ? provider : "Unknown",
-					act: item.walletAddress,
-					bal: item.walletBalance,
-					stk_amt: item.amount,
-					stk_rwd: item.rewards, // TODO: @Chris we need all-time staking rewards fetched here based on wallet
-				}
-			)
-		}
+        if (index > -1) {
+            if (new Date(filteredWallets[index].date).getTime() < new Date(item.receivedAt).getTime()) {
+                filteredWallets[index].bal === item.walletBalance
+            }
+        } else {
+            let provider = user.value?.accounts.find(i => i.address.toLocaleLowerCase() === item.walletAddress.toLocaleLowerCase())?.walletProvider
+            filteredWallets.push(
+                {
+                    wallet_provider: provider ? provider : "Unknown",
+                    act: item.walletAddress,
+                    bal: item.walletBalance,
+                    stk_amt: item.amount,
+                    stk_rwd: item.rewards, // TODO: @Chris we need all-time staking rewards fetched here based on wallet
+                }
+            )
+        }
 
-		if (item.type) {
-			filteredStakingTransactions.push({
-				date: item.receivedAt,
-				act: item.walletAddress,
-				type: item.type,
-				amount: item.amount,
-				staking_fees: item.stakeFee,
-				status: item.status,
-				tx_hash: item.txId
-			})
-		}
-	})
+        if (item.type) {
+            filteredStakingTransactions.push({
+                date: item.receivedAt,
+                act: item.walletAddress,
+                type: item.type,
+                amount: item.amount,
+                staking_fees: item.stakeFee,
+                status: item.status,
+                tx_hash: item.txId
+            })
+        }
+    })
 
-	newTable.Wallets = filteredWallets
-	newTable.Staking = filteredStakingTransactions
-	tableData.value = newTable
+    newTable.Wallets = filteredWallets
+    newTable.Staking = filteredStakingTransactions
+    tableData.value = newTable
 
 }
 
 const checkAll = ref(false)
 watch(checkAll, () => {
-	filteredData.value.map(item => {
-		if (checkAll.value && !checkedItems.value.includes(item)) {
-			checkedItems.value.push(item)
-		} else if (!checkAll && checkedItems.value.includes(item)) {
-			removeItemFromCheckedList(item)
-		}
-	})
+    filteredData.value.map(item => {
+        if (checkAll.value && !checkedItems.value.includes(item)) {
+            checkedItems.value.push(item)
+        } else if (!checkAll && checkedItems.value.includes(item)) {
+            removeItemFromCheckedList(item)
+        }
+    })
 })
 
 watch(rawUserAnalytics, () => {
-	setTableData()
-	filterData()
+    setTableData()
+    filterData()
 })
 
 onMounted(() => {
-	setTableData()
-	filterData()
+    setTableData()
+    filterData()
 })
 
 

@@ -9,11 +9,11 @@ import useBreakdownMetrics from "@/composables/breakdownMetrics"
 
 const {  user } = useUser()
 const { 
-	currentStaked,
-	stakingRewards,
-	totalWalletBalance,
-	initializeBreakdownMetricsComposable,
-	uninitializeBreakdownMetricsComposable
+    currentStaked,
+    stakingRewards,
+    totalWalletBalance,
+    initializeBreakdownMetricsComposable,
+    uninitializeBreakdownMetricsComposable
 } = useBreakdownMetrics()
 const { screenWidth } = useScreenDimensions()
 
@@ -22,105 +22,105 @@ const selectedTimeframe = ref("historical")
 const chartData = ref({} as any)
 
 const getAccountColor = (address: string) => {
-	const walletProvider = user.value?.accounts.find(
-		item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase()
-	)?.walletProvider as ProviderString
+    const walletProvider = user.value?.accounts.find(
+        item =>  item.address.toLocaleLowerCase() === address.toLocaleLowerCase()
+    )?.walletProvider as ProviderString
 
-	switch (walletProvider) {
-	case "MetaMask":
-		return "#F6851B"
-	case "CoinbaseWallet":
-		return "#3773F5"
-	case "WalletConnect":
-		return "#3396FF"
-	case "Trezor":
-		return "#00854D"
-	case "Ledger":
-		return "#D4A0FF"
-	case "IoPay":
-		return "#00D7C7"
-	case "TrustWallet":
-		return "#0B65C6"
-	default:
-		return "#80ABFF"
-	}
+    switch (walletProvider) {
+    case "MetaMask":
+        return "#F6851B"
+    case "CoinbaseWallet":
+        return "#3773F5"
+    case "WalletConnect":
+        return "#3396FF"
+    case "Trezor":
+        return "#00854D"
+    case "Ledger":
+        return "#D4A0FF"
+    case "IoPay":
+        return "#00D7C7"
+    case "TrustWallet":
+        return "#0B65C6"
+    default:
+        return "#80ABFF"
+    }
     
 }
 
 const formatLegendLabel = (address: string) => {
-	const account = user.value?.accounts.find(item => item.address.toLocaleLowerCase() === address.toLocaleLowerCase())
+    const account = user.value?.accounts.find(item => item.address.toLocaleLowerCase() === address.toLocaleLowerCase())
 
-	if (address.length <= 4) {
-		return address
-	}
+    if (address.length <= 4) {
+        return address
+    }
 
-	var start = address.substring(0, 3)
-	var end = address.substring(address.length - 3)
-	var middle = ".".repeat(2)
+    var start = address.substring(0, 3)
+    var end = address.substring(address.length - 3)
+    var middle = ".".repeat(2)
 
 
-	return (account? account.walletProvider : "Unknown") + " (" + start + middle + end + ")"
+    return (account? account.walletProvider : "Unknown") + " (" + start + middle + end + ")"
 }
 
 const setChartData = (userAnalytics: UserAnalyticsData) => {
-	let labels
-	let data: Array<AnalyticsData> = []
-	switch (selectedTimeframe.value) {
-	case "1 month":
-		labels = userAnalytics.oneMonth.labels
-		data = userAnalytics.oneMonth.data as any
-		break
-	case "6 months":
-		labels = userAnalytics.sixMonth.labels
-		data = userAnalytics.sixMonth.data as any
-		break
-	case "12 months":
-		labels = userAnalytics.oneYear.labels
-		data = userAnalytics.oneYear.data as any
-		break
-	case "historical":
-		labels = userAnalytics.historical.labels
-		data = userAnalytics.historical.data as any
-		break
+    let labels
+    let data: Array<AnalyticsData> = []
+    switch (selectedTimeframe.value) {
+    case "1 month":
+        labels = userAnalytics.oneMonth.labels
+        data = userAnalytics.oneMonth.data as any
+        break
+    case "6 months":
+        labels = userAnalytics.sixMonth.labels
+        data = userAnalytics.sixMonth.data as any
+        break
+    case "12 months":
+        labels = userAnalytics.oneYear.labels
+        data = userAnalytics.oneYear.data as any
+        break
+    case "historical":
+        labels = userAnalytics.historical.labels
+        data = userAnalytics.historical.data as any
+        break
     
-	default:
-		break
-	}
+    default:
+        break
+    }
 
-	chartData.value = {
-		labels : labels,
-		datasets : data.map((item: any) => {
-			const primaryAccount = item.walletAddress.toLocaleLowerCase() === user.value?.address.toLocaleLowerCase()
-			return {
-				data : item.walletBalance,
-				label : formatLegendLabel(item.walletAddress),
-				borderColor : getAccountColor(item.walletAddress),
-				fill: primaryAccount,
-				backgroundColor: primaryAccount? getAccountColor(item.walletAddress) : null,
-				pointRadius: 0,
-				tension: 0.1
-			}
-		})
-	}
+    chartData.value = {
+        labels : labels,
+        datasets : data.map((item: any) => {
+            const primaryAccount = item.walletAddress.toLocaleLowerCase() === user.value?.address.toLocaleLowerCase()
+            return {
+                data : item.walletBalance,
+                label : formatLegendLabel(item.walletAddress),
+                borderColor : getAccountColor(item.walletAddress),
+                fill: primaryAccount,
+                backgroundColor: primaryAccount? getAccountColor(item.walletAddress) : null,
+                pointRadius: 0,
+                tension: 0.1
+            }
+        })
+    }
 }
 
 const { userAnalytics, updateAnalytics, initializeAnalyticsComposable } = useAnalytics()
 
 watch(userAnalytics, () => {
-	setChartData(userAnalytics.value as UserAnalyticsData)
+    setChartData(userAnalytics.value as UserAnalyticsData)
 })
 
 onMounted(() => {
-	setChartData(userAnalytics.value as UserAnalyticsData)
+    setChartData(userAnalytics.value as UserAnalyticsData)
 })
 
 watch(selectedTimeframe, () => {
-	setChartData(userAnalytics.value as UserAnalyticsData)
+    setChartData(userAnalytics.value as UserAnalyticsData)
 })
 
 watch(user, async () => {
-	await updateAnalytics()
-	setChartData(userAnalytics.value as UserAnalyticsData)
+    await updateAnalytics()
+    setChartData(userAnalytics.value as UserAnalyticsData)
 })
 
 </script>

@@ -18,15 +18,15 @@ const { hostedZone, certificate } = new DnsStack(app, config.getFullStackName("d
 const { vpc } = new NetworkStack(app, config.getFullStackName("network"), { env })
 
 if (stage !== "prod") {
-	new AnalyticsStack(app, config.getFullStackName("analytics"), { env })
-	new BlogStack(app, config.getFullStackName("blog"), { env, certificate, hostedZone, vpc })
-	new DocsStack(app, config.getFullStackName("docs"), { env, certificate, hostedZone })
-	new LandingStack(app, config.getFullStackName("landing"), { env, certificate, hostedZone })
-	new UsersStack(app, config.getFullStackName("users"), { env, certificate, hostedZone, vpc })
-	new WebStack(app, config.getFullStackName("web"), { env, certificate, hostedZone })
+    new AnalyticsStack(app, config.getFullStackName("analytics"), { env })
+    new BlogStack(app, config.getFullStackName("blog"), { env, certificate, hostedZone, vpc })
+    new DocsStack(app, config.getFullStackName("docs"), { env, certificate, hostedZone })
+    new LandingStack(app, config.getFullStackName("landing"), { env, certificate, hostedZone })
+    new UsersStack(app, config.getFullStackName("users"), { env, certificate, hostedZone, vpc })
+    new WebStack(app, config.getFullStackName("web"), { env, certificate, hostedZone })
 } else {
-	new BlogStack(app, config.getFullStackName("blog"), { env, certificate, hostedZone, vpc })
-	new DocsStack(app, config.getFullStackName("docs"), { env, certificate, hostedZone })
-	new LandingStack(app, config.getFullStackName("landing"), { env, certificate, hostedZone })
-	new NodesStack(app, config.getFullStackName("nodes"), { env, hostedZone })
+    new BlogStack(app, config.getFullStackName("blog"), { env, certificate, hostedZone, vpc })
+    new DocsStack(app, config.getFullStackName("docs"), { env, certificate, hostedZone })
+    new LandingStack(app, config.getFullStackName("landing"), { env, certificate, hostedZone })
+    new NodesStack(app, config.getFullStackName("nodes"), { env, hostedZone })
 }
